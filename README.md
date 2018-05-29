@@ -1,11 +1,6 @@
 [![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
 
-This project explores common infrastructure and coding standards for open source Google Cloud PLatform projects.
-
-[End user documentation and installation instructions can be found on cloud.google.com.](https://cloud.google.com/eclipse/docs/)
-
-_TL;DR_: `mvn package` should
-generate a p2-accessible repository in `gcp-repo/target/repository`.
+This project explores common infrastructure and coding standards for open source Google Cloud Platform projects.
 
 # Development
 
