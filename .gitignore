@@ -1,0 +1,8 @@
+.DS_Store
+bin/
+proxy_bin/
+target/
+generated-sources/
+.metadata/
+**/.*.swp
+RemoteSystemsTempFiles/
