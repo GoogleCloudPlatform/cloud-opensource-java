@@ -1,0 +1,75 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.google.cloud.tools.dependencies</groupId>
+	<artifactId>dependencytest</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+
+	<name>Dependency Tests for Google Cloud Libraries</name>
+	<description>
+    Verification that the recommended client libraries for GCP
+    development have a consistent dependency tree.
+  </description>
+
+	<organization>
+		<name>Google LLC.</name>
+		<url>https://cloud.google.com</url>
+	</organization>
+
+	<licenses>
+		<license>
+			<name>The Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+
+<dependency>
+  <groupId>com.google.cloud</groupId>
+  <artifactId>google-cloud-bom</artifactId>
+  <version>0.47.0-alpha</version>
+				<type>pom</type>
+				<scope>import</scope>
+</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud</artifactId>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.0.0-M1</version>
+				<executions>
+					<execution>
+						<id>enforce</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+					</execution>
+				</executions>
+        <configuration>
+          <rules>
+            <dependencyConvergence />
+          </rules>
+        </configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
