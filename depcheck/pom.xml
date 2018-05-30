@@ -31,14 +31,13 @@
 
   <dependencyManagement>
     <dependencies>
-
-<dependency>
-  <groupId>com.google.cloud</groupId>
-  <artifactId>google-cloud-bom</artifactId>
-  <version>0.47.0-alpha</version>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-bom</artifactId>
+        <version>0.47.0-alpha</version>
         <type>pom</type>
         <scope>import</scope>
-</dependency>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
