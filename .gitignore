@@ -6,3 +6,7 @@ generated-sources/
 .metadata/
 **/.*.swp
 RemoteSystemsTempFiles/
+.project
+.classpath
+.settings
+
