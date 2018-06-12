@@ -27,6 +27,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,8 +46,9 @@ public class DashboardMain {
     Template template = configuration.getTemplate("/templates/dashboard.ftl");
     Map<String, Object> templateData = new HashMap<>();
     
-    Path output = Files.createTempDirectory("dashboard");
-    
+    Path relativePath = Paths.get("target", "dashboard");
+    Path output = Files.createDirectories(relativePath);
+
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(output.resolve("dashboard.html").toFile()), StandardCharsets.UTF_8)) {
       template.process(templateData, out);
