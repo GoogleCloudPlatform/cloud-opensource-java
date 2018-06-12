@@ -6,4 +6,4 @@ set -e
 set -x
 
 cd github/cloud-opensource-java/dashboard
-mvn -V --fail-at-end verify
+mvn exec:java -Dexec.mainClass="com.google.cloud.tools.opensource.dashboard.DashboardMain"
