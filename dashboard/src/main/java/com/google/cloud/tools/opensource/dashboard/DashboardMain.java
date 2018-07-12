@@ -29,9 +29,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import com.google.common.base.Splitter;
 
 public class DashboardMain {
+  
+  static String[] ARTIFACTS = {
+    "com.google.cloud:google-cloud-datastore:1.33.0"
+  };
   
   public static void main(String[] args) 
       throws IOException, TemplateException {
@@ -43,16 +49,35 @@ public class DashboardMain {
     Configuration configuration = new Configuration(new Version("2.3.28"));
     configuration.setDefaultEncoding("UTF-8");
     configuration.setClassForTemplateLoading(DashboardMain.class, "/");
-    Template template = configuration.getTemplate("/templates/dashboard.ftl");
-    Map<String, Object> templateData = new HashMap<>();
     
     Path relativePath = Paths.get("target", "dashboard");
     Path output = Files.createDirectories(relativePath);
 
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(output.resolve("dashboard.html").toFile()), StandardCharsets.UTF_8)) {
-      template.process(templateData, out);
+      Template dashboard = configuration.getTemplate("/templates/dashboard.ftl");
+      Map<String, Object> templateData = new HashMap<>();
+      templateData.put("artifacts", ARTIFACTS);
+
+      dashboard.process(templateData, out);
       out.flush();
+    }
+    
+    for (String coordinates : ARTIFACTS) {
+      try (Writer out = new OutputStreamWriter(
+          new FileOutputStream(output.resolve(coordinates + ".html").toFile()), StandardCharsets.UTF_8)) {
+        Template report = configuration.getTemplate("/templates/component.ftl");
+        Map<String, Object> templateData = new HashMap<>();
+        
+        List<String> coords = Splitter.on(":").splitToList(coordinates);
+        
+        templateData.put("groupId", coords.get(0));
+        templateData.put("artifactId", coords.get(1));
+        templateData.put("version", coords.get(2));
+        report.process(templateData, out);
+
+        out.flush();
+      }
     }
     
     return output;
