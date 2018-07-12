@@ -121,7 +121,7 @@ public class DashboardMain {
       invoker.setOutputHandler(handler);
       
       InvocationResult result = invoker.execute(request);
-      
+      String mavenOutput = handler.getOutput();
       
       Template report = configuration.getTemplate("/templates/component.ftl");
 
@@ -129,7 +129,7 @@ public class DashboardMain {
       templateData.put("groupId", groupId);
       templateData.put("artifactId", artifactId);
       templateData.put("version", version);
-      templateData.put("mavenOutput", handler.getOutput());
+      templateData.put("mavenOutput", mavenOutput);
       report.process(templateData, out);
 
       out.flush();

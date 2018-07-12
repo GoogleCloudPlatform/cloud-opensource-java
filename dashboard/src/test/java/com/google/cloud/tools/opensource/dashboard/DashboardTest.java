@@ -30,6 +30,9 @@ import nu.xom.ValidityException;
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * M2_HOME must be set to point to a local Maven installation for this to work.
+ */
 public class DashboardTest {
 
   @Test
