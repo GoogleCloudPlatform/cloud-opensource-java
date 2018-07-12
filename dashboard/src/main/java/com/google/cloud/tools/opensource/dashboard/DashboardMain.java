@@ -21,21 +21,32 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.Version;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import org.apache.maven.shared.invoker.DefaultInvocationRequest;
+import org.apache.maven.shared.invoker.DefaultInvoker;
+import org.apache.maven.shared.invoker.InvocationRequest;
+import org.apache.maven.shared.invoker.InvocationResult;
+import org.apache.maven.shared.invoker.Invoker;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import com.google.common.base.Splitter;
 
 public class DashboardMain {
   
+  // todo move this to config file
   static String[] ARTIFACTS = {
     "com.google.cloud:google-cloud-datastore:1.33.0"
   };
@@ -60,25 +71,57 @@ public class DashboardMain {
     return output;
   }
 
-  private static void generateReports(Configuration configuration, Path output)
-      throws ParseException, IOException, TemplateException {
+  private static void generateReports(Configuration configuration, Path output) {
     for (String coordinates : ARTIFACTS) {
-      generateReport(configuration, output, coordinates);
+      try {
+        generateReport(configuration, output, coordinates);
+      } catch (MavenInvocationException | IOException | TemplateException ex) {
+        // todo logger
+        System.err.println("Error generating report for " + coordinates);
+        System.err.println(ex.getMessage());
+      }
     }
   }
 
   private static void generateReport(Configuration configuration, Path output, String coordinates)
-      throws ParseException, IOException, TemplateException {
+      throws ParseException, IOException, TemplateException, MavenInvocationException {
+
+    File outputFile = output.resolve(coordinates.replace(':', '_') + ".html").toFile();
     try (Writer out = new OutputStreamWriter(
-        new FileOutputStream(output.resolve(coordinates + ".html").toFile()), StandardCharsets.UTF_8)) {
-      Template report = configuration.getTemplate("/templates/component.ftl");
-      Map<String, Object> templateData = new HashMap<>();
+        new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
       
       List<String> coords = Splitter.on(":").splitToList(coordinates);
       
-      templateData.put("groupId", coords.get(0));
-      templateData.put("artifactId", coords.get(1));
-      templateData.put("version", coords.get(2));
+      // invoke maven programmatically; see
+      // https://stackoverflow.com/questions/2146580/how-to-programmatically-call-a-maven-task
+      
+      String groupId = coords.get(0);
+      String artifactId = coords.get(1);
+      String version = coords.get(2);
+      
+      InvocationRequest request = new DefaultInvocationRequest();
+      
+      ClassLoader classLoader = DashboardMain.class.getClassLoader();
+      File pom = new File(classLoader.getResource("poms/demo.xml").getFile());
+      
+      request.setPomFile(pom);
+      request.setGoals(Arrays.asList("clean", "compile"));
+      Properties properties = new Properties();
+      properties.put("dependencyGroupId", groupId);
+      properties.put("dependencyArtifactId", artifactId);
+      properties.put("dependencyVersion", version);
+      request.setProperties(properties );
+
+      Invoker invoker = new DefaultInvoker();
+      invoker.setMavenHome(new File("/usr/local/Cellar/maven/3.5.0"));
+      
+      InvocationResult result = invoker.execute(request);
+      Template report = configuration.getTemplate("/templates/component.ftl");
+
+      Map<String, Object> templateData = new HashMap<>();
+      templateData.put("groupId", groupId);
+      templateData.put("artifactId", artifactId);
+      templateData.put("version", version);
       report.process(templateData, out);
 
       out.flush();

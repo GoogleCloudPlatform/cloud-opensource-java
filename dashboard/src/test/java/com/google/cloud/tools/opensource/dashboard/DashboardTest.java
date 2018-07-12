@@ -59,12 +59,12 @@ public class DashboardTest {
       Assert.assertEquals(1, href.size());
       for (int i = 0; i < href.size(); i++) {
         String fileName = href.get(i).getValue();
-        Assert.assertEquals(DashboardMain.ARTIFACTS[i] + ".html", 
+        Assert.assertEquals(DashboardMain.ARTIFACTS[i].replace(':', '_') + ".html", 
             URLDecoder.decode(fileName, "UTF-8"));
         Path componentReport = outputDirectory.resolve(fileName);
         Assert.assertTrue(fileName + " is missing", Files.isRegularFile(componentReport));
         Document report = builder.build(componentReport.toFile());
-
+       
       }
 
     }  

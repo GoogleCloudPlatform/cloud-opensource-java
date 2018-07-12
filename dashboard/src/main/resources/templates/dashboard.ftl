@@ -7,7 +7,7 @@
     <h2>Projects</h2>
       <ul>
       <#list artifacts as artifact>
-        <li><a href='${artifact}.html'>${artifact}</a></li>
+        <li><a href='${artifact?replace(":", "_")}.html'>${artifact}</a></li>
       </#list>
       </ul>
   </body>
