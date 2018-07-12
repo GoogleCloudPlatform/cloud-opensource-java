@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import freemarker.core.ParseException;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -53,6 +54,39 @@ public class DashboardMain {
     Path relativePath = Paths.get("target", "dashboard");
     Path output = Files.createDirectories(relativePath);
 
+    generateDashboard(configuration, output);
+    generateReports(configuration, output);
+    
+    return output;
+  }
+
+  private static void generateReports(Configuration configuration, Path output)
+      throws ParseException, IOException, TemplateException {
+    for (String coordinates : ARTIFACTS) {
+      generateReport(configuration, output, coordinates);
+    }
+  }
+
+  private static void generateReport(Configuration configuration, Path output, String coordinates)
+      throws ParseException, IOException, TemplateException {
+    try (Writer out = new OutputStreamWriter(
+        new FileOutputStream(output.resolve(coordinates + ".html").toFile()), StandardCharsets.UTF_8)) {
+      Template report = configuration.getTemplate("/templates/component.ftl");
+      Map<String, Object> templateData = new HashMap<>();
+      
+      List<String> coords = Splitter.on(":").splitToList(coordinates);
+      
+      templateData.put("groupId", coords.get(0));
+      templateData.put("artifactId", coords.get(1));
+      templateData.put("version", coords.get(2));
+      report.process(templateData, out);
+
+      out.flush();
+    }
+  }
+
+  private static void generateDashboard(Configuration configuration, Path output)
+      throws ParseException, IOException, TemplateException {
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(output.resolve("dashboard.html").toFile()), StandardCharsets.UTF_8)) {
       Template dashboard = configuration.getTemplate("/templates/dashboard.ftl");
@@ -62,25 +96,6 @@ public class DashboardMain {
       dashboard.process(templateData, out);
       out.flush();
     }
-    
-    for (String coordinates : ARTIFACTS) {
-      try (Writer out = new OutputStreamWriter(
-          new FileOutputStream(output.resolve(coordinates + ".html").toFile()), StandardCharsets.UTF_8)) {
-        Template report = configuration.getTemplate("/templates/component.ftl");
-        Map<String, Object> templateData = new HashMap<>();
-        
-        List<String> coords = Splitter.on(":").splitToList(coordinates);
-        
-        templateData.put("groupId", coords.get(0));
-        templateData.put("artifactId", coords.get(1));
-        templateData.put("version", coords.get(2));
-        report.process(templateData, out);
-
-        out.flush();
-      }
-    }
-    
-    return output;
   }
   
 }
