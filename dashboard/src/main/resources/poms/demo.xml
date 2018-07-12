@@ -15,6 +15,7 @@
 		<java.version>1.8</java.version>
 	</properties>
 
+<!-- 
 	<build>
 		<plugins>
 			<plugin>
@@ -27,7 +28,7 @@
 				</configuration>
 			</plugin>
 		</plugins>
-	</build>
+	</build> -->
 
 	<dependencies>
 		<dependency>
@@ -37,4 +38,27 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	
+	<build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.0.0-M1</version>
+        <executions>
+          <execution>
+            <id>enforce</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <rules>
+            <dependencyConvergence />
+          </rules>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

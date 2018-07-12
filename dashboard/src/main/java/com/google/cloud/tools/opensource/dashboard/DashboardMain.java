@@ -26,7 +26,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,13 +37,15 @@ import java.util.Map;
 import java.util.Properties;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
-import org.apache.maven.shared.invoker.InvocationOutputHandler;
 import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.InvocationResult;
 import org.apache.maven.shared.invoker.Invoker;
 import org.apache.maven.shared.invoker.MavenInvocationException;
 import com.google.common.base.Splitter;
 
+/**
+ * M2_HOME must be set to point to a local Maven installation for this to work.
+ */
 public class DashboardMain {
   
   // todo move this to config file
@@ -105,7 +106,7 @@ public class DashboardMain {
       File pom = new File(classLoader.getResource("poms/demo.xml").getFile());
       
       request.setPomFile(pom);
-      request.setGoals(Arrays.asList("clean", "compile"));
+      request.setGoals(Arrays.asList("clean", "enforcer:enforce"));
       Properties properties = new Properties();
       properties.put("dependencyGroupId", groupId);
       properties.put("dependencyArtifactId", artifactId);
@@ -115,7 +116,7 @@ public class DashboardMain {
       Invoker invoker = new DefaultInvoker();
       
       // todo how to parameterize?
-      invoker.setMavenHome(new File("/usr/local/Cellar/maven/3.5.0"));
+      // invoker.setMavenHome(new File("/usr/local/Cellar/maven/3.5.0"));
       StringBuilderHandler handler = new StringBuilderHandler();
       invoker.setOutputHandler(handler);
       
