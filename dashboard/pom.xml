@@ -1,61 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.google.cloud.tools.opensource</groupId>
-  <artifactId>dashboard</artifactId>
-  <version>1.0-SNAPSHOT</version>
+	<groupId>com.google.cloud.tools.opensource</groupId>
+	<artifactId>dashboard</artifactId>
+	<version>1.0-SNAPSHOT</version>
 
-  <name>opensource</name>
-  <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java</url>
-  <organization>
-    <name>Google LLC.</name>
-    <url>http://www.google.com</url>
-  </organization>
+	<name>opensource</name>
+	<url>https://github.com/GoogleCloudPlatform/cloud-opensource-java</url>
+	<organization>
+		<name>Google LLC.</name>
+		<url>http://www.google.com</url>
+	</organization>
 
-  <licenses>
-    <license>
-      <name>The Apache License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-    </license>
-  </licenses>
+	<licenses>
+		<license>
+			<name>The Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-  </properties>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+	</properties>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.freemarker</groupId>
-      <artifactId>freemarker</artifactId>
-      <version>2.3.28</version>
-    </dependency>  
+	<dependencies>
 		<dependency>
-		  <groupId>com.google.guava</groupId>
-		  <artifactId>guava</artifactId>
-      <version>25.1-jre</version>
+			<groupId>org.freemarker</groupId>
+			<artifactId>freemarker</artifactId>
+			<version>2.3.28</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>25.1-jre</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven.shared</groupId>
 			<artifactId>maven-invoker</artifactId>
 			<version>3.0.1</version>
 		</dependency>
-		
+
 		<dependency>
-		  <groupId>com.io7m.xom</groupId>
-		  <artifactId>xom</artifactId>
-      <version>1.2.10</version>
-		  <scope>test</scope>
-		</dependency>  
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.12</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+			<groupId>com.io7m.xom</groupId>
+			<artifactId>xom</artifactId>
+			<version>1.2.10</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
 </project>

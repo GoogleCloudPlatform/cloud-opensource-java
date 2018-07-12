@@ -5,7 +5,7 @@
   <body>
     <h1>Google Cloud Platform Code Health Open Source for ${groupId}:${artifactId}:${version}</h1>
     <pre>
-    Put Maven output here
+${mavenOutput}
     </pre>
   </body>
 </html>

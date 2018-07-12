@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Properties;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
+import org.apache.maven.shared.invoker.InvocationOutputHandler;
 import org.apache.maven.shared.invoker.InvocationRequest;
 import org.apache.maven.shared.invoker.InvocationResult;
 import org.apache.maven.shared.invoker.Invoker;
@@ -85,20 +86,19 @@ public class DashboardMain {
 
   private static void generateReport(Configuration configuration, Path output, String coordinates)
       throws ParseException, IOException, TemplateException, MavenInvocationException {
-
+    
+    List<String> coords = Splitter.on(":").splitToList(coordinates);  
+    String groupId = coords.get(0);
+    String artifactId = coords.get(1);
+    String version = coords.get(2);
+    
     File outputFile = output.resolve(coordinates.replace(':', '_') + ".html").toFile();
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
-      
-      List<String> coords = Splitter.on(":").splitToList(coordinates);
-      
+
       // invoke maven programmatically; see
       // https://stackoverflow.com/questions/2146580/how-to-programmatically-call-a-maven-task
-      
-      String groupId = coords.get(0);
-      String artifactId = coords.get(1);
-      String version = coords.get(2);
-      
+      // todo don't use maven invoker CLI; call in Java instead
       InvocationRequest request = new DefaultInvocationRequest();
       
       ClassLoader classLoader = DashboardMain.class.getClassLoader();
@@ -113,15 +113,22 @@ public class DashboardMain {
       request.setProperties(properties );
 
       Invoker invoker = new DefaultInvoker();
+      
+      // todo how to parameterize?
       invoker.setMavenHome(new File("/usr/local/Cellar/maven/3.5.0"));
+      StringBuilderHandler handler = new StringBuilderHandler();
+      invoker.setOutputHandler(handler);
       
       InvocationResult result = invoker.execute(request);
+      
+      
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
       templateData.put("groupId", groupId);
       templateData.put("artifactId", artifactId);
       templateData.put("version", version);
+      templateData.put("mavenOutput", handler.getOutput());
       report.process(templateData, out);
 
       out.flush();
