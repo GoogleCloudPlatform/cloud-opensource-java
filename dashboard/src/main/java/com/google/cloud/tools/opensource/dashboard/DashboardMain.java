@@ -115,8 +115,6 @@ public class DashboardMain {
 
       Invoker invoker = new DefaultInvoker();
       
-      // todo how to parameterize?
-      // invoker.setMavenHome(new File("/usr/local/Cellar/maven/3.5.0"));
       StringBuilderHandler handler = new StringBuilderHandler();
       invoker.setOutputHandler(handler);
       
