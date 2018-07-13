@@ -5,8 +5,10 @@
   <body>
     <h1>Google Cloud Platform Code Health Open Source Dashboard</h1>
     <h2>Projects</h2>
-    <ul>
-    
-    </ul>
+      <ul>
+      <#list artifacts as artifact>
+        <li><a href='${artifact?replace(":", "_")}.html'>${artifact}</a></li>
+      </#list>
+      </ul>
   </body>
 </html>
