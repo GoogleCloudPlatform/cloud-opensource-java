@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.google.cloud</groupId>
+  <artifactId>zero-pom</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>Google Cloud Platform Supported Libraries</name>
+  <description>
+    A compatible set of Google Cloud open source libraries.
+  </description>
+  <url>TBD</url>
+
+  <organization>
+    <name>Google LLC</name>
+    <url>https://cloud.google.com</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>20.0</version>
+      </dependency>
+
+      <!-- Google Cloud Java APIs -->
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-bigquery</artifactId>
+        <version>1.36.0</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <!-- This only works for inheritance, not import. -->
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <version>3.0.0-M1</version>
+          <executions>
+            <execution>
+              <id>enforce</id>
+              <phase>validate</phase>
+              <goals>
+                <goal>enforce</goal>
+              </goals>
+
+            </execution>
+          </executions>
+          <configuration>
+            <rules>
+              <dependencyConvergence/>
+            </rules>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+</project>
