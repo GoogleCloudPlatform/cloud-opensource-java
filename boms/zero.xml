@@ -30,6 +30,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <google.cloud.java.ga.version>1.36.0</google.cloud.java.ga.version>
+    <google.cloud.java.ga.version>1.36.0</google.cloud.java.ga.version>
   </properties>
 
   <dependencyManagement>
