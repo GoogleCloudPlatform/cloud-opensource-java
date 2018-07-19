@@ -89,32 +89,4 @@
     </dependencies>
   </dependencyManagement>
 
-  <!-- This only works for inheritance, not import. -->
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-enforcer-plugin</artifactId>
-          <version>3.0.0-M1</version>
-          <executions>
-            <execution>
-              <id>enforce</id>
-              <phase>validate</phase>
-              <goals>
-                <goal>enforce</goal>
-              </goals>
-
-            </execution>
-          </executions>
-          <configuration>
-            <rules>
-              <dependencyConvergence/>
-            </rules>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
-
 </project>
