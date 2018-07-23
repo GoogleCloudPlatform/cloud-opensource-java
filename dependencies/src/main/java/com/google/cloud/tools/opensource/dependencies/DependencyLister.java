@@ -16,6 +16,11 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -23,6 +28,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.impl.DefaultServiceLocator;
@@ -30,18 +36,13 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
-
-import com.google.common.base.Preconditions;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
-import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.common.io.Files;
 
 /**
  * Based on <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact Resolver</a>
@@ -57,9 +58,8 @@ public class DependencyLister {
       throws DependencyCollectionException, DependencyResolutionException {
     
     if (args.length != 1 || !args[0].contains(":")) {
-      System.err.println("Usage: java "
-          + "com.google.cloud.tools.opensource.dependencies.Dependencies "
-          + "groupdId:artifactId:version");
+      System.err.println("Usage: java " + DependencyLister.class.getCanonicalName()
+          + " groupdId:artifactId:version");
       return;
     }
     
@@ -68,14 +68,15 @@ public class DependencyLister {
     String artifactId = coordinates[1];
     String version = coordinates[2];
     
-    DependencyNode node = resolveNode(groupId, artifactId, version);
+    DependencyNode node = resolveCompileTimeDependencies(groupId, artifactId, version);
     
     for (DependencyNode dependency : node.getChildren()) {
       System.out.println(dependency.toString());
     }
   }
 
-  private static DependencyNode resolveNode(String groupId, String artifactId, String version)
+  private static DependencyNode resolveCompileTimeDependencies(
+      String groupId, String artifactId, String version)
       throws DependencyCollectionException, DependencyResolutionException {
     
     RepositorySystemSession session = newSession();
@@ -98,8 +99,11 @@ public class DependencyLister {
   private static RepositorySystemSession newSession() {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
 
-    LocalRepository localRepo = new LocalRepository("target/local-repo");
-    session.setLocalRepositoryManager(SYSTEM.newLocalRepositoryManager(session, localRepo));
+    // todo find the local repository
+    File temporaryDirectory = Files.createTempDir();
+    temporaryDirectory.deleteOnExit();
+    LocalRepository localRepository = new LocalRepository(temporaryDirectory.getAbsolutePath());
+    session.setLocalRepositoryManager(SYSTEM.newLocalRepositoryManager(session, localRepository));
     session.setReadOnly();
     return session;
   }
@@ -125,7 +129,7 @@ public class DependencyLister {
     
     List<Artifact> result = new ArrayList<>();
     
-    DependencyNode node = resolveNode(groupId, artifactId, version);
+    DependencyNode node = resolveCompileTimeDependencies(groupId, artifactId, version);
     for (DependencyNode child : node.getChildren()) {
       result.add(child.getArtifact());
     }
