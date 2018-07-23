@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
@@ -46,8 +47,12 @@ import org.eclipse.aether.transport.http.HttpTransporterFactory;
  */
 public class Dependencies {
   
-  public static void main(String[] args) throws DependencyCollectionException, DependencyResolutionException {
+  private static final RepositorySystem SYSTEM = newRepositorySystem();
+  private static final RemoteRepository CENTRAL =
+      new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
 
+  public static void main(String[] args)
+      throws DependencyCollectionException, DependencyResolutionException {
     DependencyNode node = resolveNode("com.google.cloud", "google-cloud-bigquery", "1.37.1");
 
     PreorderNodeListGenerator nlg = new PreorderNodeListGenerator();
@@ -61,28 +66,31 @@ public class Dependencies {
 
   private static DependencyNode resolveNode(String groupId, String artifactId, String version)
       throws DependencyCollectionException, DependencyResolutionException {
-    RepositorySystem repoSystem = newRepositorySystem();
-    DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
-
-    LocalRepository localRepo = new LocalRepository("target/local-repo");
-    session.setLocalRepositoryManager(repoSystem.newLocalRepositoryManager(session, localRepo));
+    
+    RepositorySystemSession session = newSession();
 
     Artifact artifact = new DefaultArtifact(groupId + ':' + artifactId + ':' + version);
     Dependency dependency = new Dependency(artifact, "compile");
-    RemoteRepository central =
-        new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/")
-            .build();
 
     CollectRequest collectRequest = new CollectRequest();
     collectRequest.setRoot(dependency);
-    collectRequest.addRepository(central);
-    DependencyNode node = repoSystem.collectDependencies(session, collectRequest).getRoot();
+    collectRequest.addRepository(CENTRAL);
+    DependencyNode node = SYSTEM.collectDependencies(session, collectRequest).getRoot();
 
     DependencyRequest dependencyRequest = new DependencyRequest();
     dependencyRequest.setRoot(node);
 
-    repoSystem.resolveDependencies(session, dependencyRequest);
+    SYSTEM.resolveDependencies(session, dependencyRequest);
     return node;
+  }
+
+  private static RepositorySystemSession newSession() {
+    DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
+
+    LocalRepository localRepo = new LocalRepository("target/local-repo");
+    session.setLocalRepositoryManager(SYSTEM.newLocalRepositoryManager(session, localRepo));
+    session.setReadOnly();
+    return session;
   }
 
   private static RepositorySystem newRepositorySystem() {
