@@ -28,6 +28,7 @@ import org.junit.Test;
 import com.google.common.truth.Truth;
 
 public class DependenciesTest {
+  
 
   @Test
   public void testGetImmediateDependencies()
