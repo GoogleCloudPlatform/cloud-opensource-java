@@ -32,6 +32,8 @@ import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
 
+import com.google.common.base.Preconditions;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -104,6 +106,11 @@ public class Dependencies {
 
   public static List<Artifact> getDependencies(String groupId, String artifactId, String version) 
       throws DependencyCollectionException, DependencyResolutionException {
+    
+    Preconditions.checkNotNull(groupId, "Group ID cannot be null");
+    Preconditions.checkNotNull(artifactId, "Artifact ID cannot be null");
+    Preconditions.checkNotNull(version, "Version cannot be null");
+    
     List<Artifact> result = new ArrayList<>();
     
     DependencyNode node = resolveNode(groupId, artifactId, version);
