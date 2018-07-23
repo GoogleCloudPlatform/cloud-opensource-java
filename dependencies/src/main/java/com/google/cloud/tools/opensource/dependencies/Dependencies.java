@@ -104,7 +104,10 @@ public class Dependencies {
     return locator.getService(RepositorySystem.class);
   }
 
-  public static List<Artifact> getDependencies(String groupId, String artifactId, String version) 
+  /**
+   * Returns the direct compile time dependencies of an artifact.
+   */
+  public static List<Artifact> getImmediateDependencies(String groupId, String artifactId, String version) 
       throws DependencyCollectionException, DependencyResolutionException {
     
     Preconditions.checkNotNull(groupId, "Group ID cannot be null");
