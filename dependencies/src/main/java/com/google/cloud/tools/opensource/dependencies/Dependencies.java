@@ -44,7 +44,8 @@ import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 
 /**
- * Based on Apache Maven Artifact Resolver; formerly Eclipse Aether.
+ * Based on <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact Resolver</a>
+ * (formerly known as Eclipse Aether).
  */
 public class Dependencies {
   
