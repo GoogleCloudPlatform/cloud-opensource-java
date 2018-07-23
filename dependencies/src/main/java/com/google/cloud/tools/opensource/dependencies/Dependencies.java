@@ -30,7 +30,6 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
-import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
 
 import com.google.common.base.Preconditions;
 
@@ -55,14 +54,23 @@ public class Dependencies {
 
   public static void main(String[] args)
       throws DependencyCollectionException, DependencyResolutionException {
-    DependencyNode node = resolveNode("com.google.cloud", "google-cloud-bigquery", "1.37.1");
-
-    PreorderNodeListGenerator nlg = new PreorderNodeListGenerator();
-    node.accept(nlg);
-    System.out.println(nlg.getClassPath());
     
-    for (DependencyNode dep : node.getChildren()) {
-      System.out.println(dep.toString());
+    if (args.length != 1 || !args[0].contains(":")) {
+      System.err.println("Usage: java "
+          + "com.google.cloud.tools.opensource.dependencies.Dependencies "
+          + "groupdId:artifactId:version");
+      return;
+    }
+    
+    String[] coordinates = args[0].split(":");
+    String groupId = coordinates[0];
+    String artifactId = coordinates[1];
+    String version = coordinates[2];
+    
+    DependencyNode node = resolveNode(groupId, artifactId, version);
+    
+    for (DependencyNode dependency : node.getChildren()) {
+      System.out.println(dependency.toString());
     }
   }
 
