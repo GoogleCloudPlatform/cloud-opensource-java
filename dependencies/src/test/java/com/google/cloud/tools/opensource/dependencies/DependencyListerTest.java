@@ -27,13 +27,13 @@ import org.junit.Test;
 
 import com.google.common.truth.Truth;
 
-public class DependenciesTest {
+public class DependencyListerTest {
   
 
   @Test
   public void testGetImmediateDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
-    List<Artifact> artifacts = Dependencies.getImmediateDependencies("com.google.guava", "guava", "25.1-jre");
+    List<Artifact> artifacts = DependencyLister.getImmediateDependencies("com.google.guava", "guava", "25.1-jre");
     List<String> coordinates = new ArrayList<>();
     for (Artifact artifact : artifacts) {
       coordinates.add(artifact.toString());
@@ -45,7 +45,7 @@ public class DependenciesTest {
   @Test
   public void testGetImmediateDependencies_fails() throws DependencyCollectionException {
     try {
-      Dependencies.getImmediateDependencies("com.google.guava", "guava", "25-1.jre");
+      DependencyLister.getImmediateDependencies("com.google.guava", "guava", "25-1.jre");
       Assert.fail();
     } catch (DependencyResolutionException ex) {
       Assert.assertTrue(ex.getMessage().contains("guava"));
@@ -56,7 +56,7 @@ public class DependenciesTest {
   public void testGetImmediateDependencies_NullGroupId()
       throws DependencyCollectionException, DependencyResolutionException {
     try {
-      Dependencies.getImmediateDependencies(null, "guava", "25-1.jre");
+      DependencyLister.getImmediateDependencies(null, "guava", "25-1.jre");
       Assert.fail();
     } catch (NullPointerException ex) {
       Assert.assertEquals("Group ID cannot be null", ex.getMessage());
@@ -67,7 +67,7 @@ public class DependenciesTest {
   public void testGetImmediateDependencies_nullArtifactId()
       throws DependencyCollectionException, DependencyResolutionException {
     try {
-      Dependencies.getImmediateDependencies("foo", null, "25-1.jre");
+      DependencyLister.getImmediateDependencies("foo", null, "25-1.jre");
       Assert.fail();
     } catch (NullPointerException ex) {
       Assert.assertEquals("Artifact ID cannot be null", ex.getMessage());
@@ -78,7 +78,7 @@ public class DependenciesTest {
   public void testGetImmediateDependencies_emptyArtifactId()
       throws DependencyCollectionException, DependencyResolutionException {
     try {
-      Dependencies.getImmediateDependencies("foo", "", "25-1.jre");
+      DependencyLister.getImmediateDependencies("foo", "", "25-1.jre");
       Assert.fail();
     } catch (IllegalArgumentException ex) {
       Assert.assertNotNull(ex.getMessage());
@@ -89,7 +89,7 @@ public class DependenciesTest {
   public void testGetDependencies_nullVersion()
       throws DependencyCollectionException, DependencyResolutionException {
     try {
-      Dependencies.getImmediateDependencies("foo", "bar", null);
+      DependencyLister.getImmediateDependencies("foo", "bar", null);
       Assert.fail();
     } catch (NullPointerException ex) {
       Assert.assertEquals("Version cannot be null", ex.getMessage());
