@@ -58,6 +58,12 @@
       <version>0.42</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava-testlib</artifactId>
+      <version>25.1-jre</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   
   <build>
