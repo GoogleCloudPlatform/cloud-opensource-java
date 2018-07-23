@@ -33,7 +33,8 @@ public class DependencyListerTest {
   @Test
   public void testGetImmediateDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
-    List<Artifact> artifacts = DependencyLister.getImmediateDependencies("com.google.guava", "guava", "25.1-jre");
+    List<Artifact> artifacts =
+        DependencyLister.getImmediateDependencies("com.google.guava", "guava", "25.1-jre");
     List<String> coordinates = new ArrayList<>();
     for (Artifact artifact : artifacts) {
       coordinates.add(artifact.toString());
