@@ -50,7 +50,7 @@ import com.google.common.io.Files;
  */
 public class DependencyLister {
   
-  private static final RepositorySystem SYSTEM = newRepositorySystem();
+  private static final RepositorySystem system = newRepositorySystem();
   private static final RemoteRepository CENTRAL =
       new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
 
@@ -87,12 +87,12 @@ public class DependencyLister {
     CollectRequest collectRequest = new CollectRequest();
     collectRequest.setRoot(dependency);
     collectRequest.addRepository(CENTRAL);
-    DependencyNode node = SYSTEM.collectDependencies(session, collectRequest).getRoot();
+    DependencyNode node = system.collectDependencies(session, collectRequest).getRoot();
 
     DependencyRequest dependencyRequest = new DependencyRequest();
     dependencyRequest.setRoot(node);
 
-    SYSTEM.resolveDependencies(session, dependencyRequest);
+    system.resolveDependencies(session, dependencyRequest);
     return node;
   }
 
@@ -103,7 +103,7 @@ public class DependencyLister {
     File temporaryDirectory = Files.createTempDir();
     temporaryDirectory.deleteOnExit();
     LocalRepository localRepository = new LocalRepository(temporaryDirectory.getAbsolutePath());
-    session.setLocalRepositoryManager(SYSTEM.newLocalRepositoryManager(session, localRepository));
+    session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
     session.setReadOnly();
     return session;
   }
