@@ -76,11 +76,11 @@ final class DependencyPath {
         && artifact1.getVersion().equals(artifact2.getVersion());
   }
 
-  public int size() {
+  int size() {
     return path.size();
   }
 
-  public Artifact getLeaf() {
+  Artifact getLeaf() {
     return path.get(size() - 1);
   }
 

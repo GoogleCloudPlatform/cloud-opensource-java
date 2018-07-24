@@ -18,7 +18,10 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
@@ -69,13 +72,17 @@ public class DependencyLister {
     String artifactId = coordinates[1];
     String version = coordinates[2];
     
+    Date now = new Date();
     DependencyGraph graph = getFullDependencyPath(groupId, artifactId, version);
+    Date then = new Date();
     
     List<DependencyPath> paths = graph.list();
     for (DependencyPath path : paths) { 
       System.err.println(path);
     }
+    System.out.println("Took " + (then.getTime() - now.getTime()) / 1000.0 + " seconds");
 
+    
     DependencyNode node = resolveCompileTimeDependencies(groupId, artifactId, version);
     
     for (DependencyNode dependency : node.getChildren()) {
@@ -91,9 +98,18 @@ public class DependencyLister {
 
     return resolveCompileTimeDependencies(artifact);
   }
+  
+  // caching cuts time by about a factor of 4.
+  private static final Map<String, DependencyNode> cache = new HashMap<>();
 
   private static DependencyNode resolveCompileTimeDependencies(Artifact artifact)
       throws DependencyCollectionException, DependencyResolutionException {
+
+    String key = artifact.getGroupId() + ':' + artifact.getArtifactId() + ':' + artifact.getVersion();
+    if (cache.containsKey(key)) {
+      return cache.get(key);
+    }
+    
     RepositorySystemSession session = newSession();
 
     Dependency dependency = new Dependency(artifact, "compile");
@@ -107,6 +123,9 @@ public class DependencyLister {
     dependencyRequest.setRoot(node);
 
     SYSTEM.resolveDependencies(session, dependencyRequest);
+    
+    cache.put(key, node);
+    
     return node;
   }
 
