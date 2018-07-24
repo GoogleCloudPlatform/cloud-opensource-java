@@ -54,7 +54,7 @@ import com.google.common.io.Files;
  */
 public class DependencyLister {
   
-  private static final RepositorySystem SYSTEM = newRepositorySystem();
+  private static final RepositorySystem system = newRepositorySystem();
   private static final RemoteRepository CENTRAL =
       new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
 
@@ -117,13 +117,12 @@ public class DependencyLister {
     CollectRequest collectRequest = new CollectRequest();
     collectRequest.setRoot(dependency);
     collectRequest.addRepository(CENTRAL);
-    DependencyNode node = SYSTEM.collectDependencies(session, collectRequest).getRoot();
+    DependencyNode node = system.collectDependencies(session, collectRequest).getRoot();
 
     DependencyRequest dependencyRequest = new DependencyRequest();
     dependencyRequest.setRoot(node);
+    system.resolveDependencies(session, dependencyRequest);
 
-    SYSTEM.resolveDependencies(session, dependencyRequest);
-    
     cache.put(key, node);
     
     return node;
@@ -136,7 +135,7 @@ public class DependencyLister {
     File temporaryDirectory = Files.createTempDir();
     temporaryDirectory.deleteOnExit();
     LocalRepository localRepository = new LocalRepository(temporaryDirectory.getAbsolutePath());
-    session.setLocalRepositoryManager(SYSTEM.newLocalRepositoryManager(session, localRepository));
+    session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
     session.setReadOnly();
     return session;
   }
@@ -153,8 +152,8 @@ public class DependencyLister {
   /**
    * Returns the direct compile time dependencies of an artifact.
    */
-  public static List<Artifact> getImmediateDependencies(String groupId, String artifactId, String version) 
-      throws DependencyCollectionException, DependencyResolutionException {
+  public static List<Artifact> getImmediateDependencies(String groupId, String artifactId,
+      String version)      throws DependencyCollectionException, DependencyResolutionException {
     
     Preconditions.checkNotNull(groupId, "Group ID cannot be null");
     Preconditions.checkNotNull(artifactId, "Artifact ID cannot be null");
@@ -203,7 +202,8 @@ public class DependencyLister {
   
   // this finds the actual graph that maven sees with no duplicates and at most one version per
   // library.
-  private static void preorder(Stack<DependencyNode> path, DependencyNode node, DependencyGraph graph) {
+  private static void preorder(Stack<DependencyNode> path, DependencyNode node,
+      DependencyGraph graph) {
     path.push(node);
     DependencyPath forPath = new DependencyPath();
     for (DependencyNode dn : path) {
@@ -216,8 +216,8 @@ public class DependencyLister {
     }
   }
 
-  private static void fullPreorder(Stack<DependencyNode> path, DependencyNode node, DependencyGraph graph) 
-      throws DependencyCollectionException, DependencyResolutionException {
+  private static void fullPreorder(Stack<DependencyNode> path, DependencyNode node,
+      DependencyGraph graph) throws DependencyCollectionException, DependencyResolutionException {
     
     path.push(node);
     
