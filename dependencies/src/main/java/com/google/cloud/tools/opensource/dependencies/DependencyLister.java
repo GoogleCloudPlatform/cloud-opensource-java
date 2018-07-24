@@ -48,8 +48,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 
 /**
+<<<<<<< HEAD
  * Based on <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact
  * Resolver</a> (formerly known as Eclipse Aether).
+=======
+ * Based on <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact Resolver</a>
+ * (formerly known as Eclipse Aether).
+>>>>>>> master
  */
 public class DependencyLister {
   
@@ -78,11 +83,6 @@ public class DependencyLister {
       System.err.println(path);
     }
     
-    DependencyNode node = resolveCompileTimeDependencies(groupId, artifactId, version);
-    
-    for (DependencyNode dependency : node.getChildren()) {
-      System.out.println(dependency.toString());
-    }
   }
 
   private static DependencyNode resolveCompileTimeDependencies(
@@ -148,7 +148,7 @@ public class DependencyLister {
    * Returns the direct compile time dependencies of an artifact.
    */
   public static List<Artifact> getImmediateDependencies(String groupId, String artifactId,
-      String version)      throws DependencyCollectionException, DependencyResolutionException {
+      String version) throws DependencyCollectionException, DependencyResolutionException {
     
     Preconditions.checkNotNull(groupId, "Group ID cannot be null");
     Preconditions.checkNotNull(artifactId, "Artifact ID cannot be null");
