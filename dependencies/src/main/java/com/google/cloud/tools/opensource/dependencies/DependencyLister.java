@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,8 +48,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 
 /**
- * Based on <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact Resolver</a>
- * (formerly known as Eclipse Aether).
+ * Based on <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact
+ * Resolver</a> (formerly known as Eclipse Aether).
  */
 public class DependencyLister {
   
@@ -72,16 +71,12 @@ public class DependencyLister {
     String artifactId = coordinates[1];
     String version = coordinates[2];
     
-    Date now = new Date();
     DependencyGraph graph = getFullDependencyPath(groupId, artifactId, version);
-    Date then = new Date();
     
     List<DependencyPath> paths = graph.list();
     for (DependencyPath path : paths) { 
       System.err.println(path);
     }
-    System.out.println("Took " + (then.getTime() - now.getTime()) / 1000.0 + " seconds");
-
     
     DependencyNode node = resolveCompileTimeDependencies(groupId, artifactId, version);
     
