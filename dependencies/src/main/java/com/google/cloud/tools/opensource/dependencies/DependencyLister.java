@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.dependencies;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -68,6 +69,13 @@ public class DependencyLister {
     String artifactId = coordinates[1];
     String version = coordinates[2];
     
+    DependencyGraph graph = getFullDependencyPath(groupId, artifactId, version);
+    
+    List<DependencyPath> paths = graph.list();
+    for (DependencyPath path : paths) { 
+      System.err.println(path);
+    }
+
     DependencyNode node = resolveCompileTimeDependencies(groupId, artifactId, version);
     
     for (DependencyNode dependency : node.getChildren()) {
@@ -79,9 +87,15 @@ public class DependencyLister {
       String groupId, String artifactId, String version)
       throws DependencyCollectionException, DependencyResolutionException {
     
+    Artifact artifact = new DefaultArtifact(groupId + ':' + artifactId + ':' + version);
+
+    return resolveCompileTimeDependencies(artifact);
+  }
+
+  private static DependencyNode resolveCompileTimeDependencies(Artifact artifact)
+      throws DependencyCollectionException, DependencyResolutionException {
     RepositorySystemSession session = newSession();
 
-    Artifact artifact = new DefaultArtifact(groupId + ':' + artifactId + ':' + version);
     Dependency dependency = new Dependency(artifact, "compile");
 
     CollectRequest collectRequest = new CollectRequest();
@@ -134,6 +148,70 @@ public class DependencyLister {
       result.add(child.getArtifact());
     }
     return result;
+  }
+  
+  /**
+   * Finds the complete transitive dependency graph with duplicates and conflicting versions.
+   * This method makes a lot of network connections
+   * and runs for multiple minutes. Better support for local repos may help.
+   */
+  public static DependencyGraph getFullDependencyPath(String groupId, String artifactId,
+      String version) throws DependencyCollectionException, DependencyResolutionException {
+    
+    // root node
+    DependencyNode node = resolveCompileTimeDependencies(groupId, artifactId, version);  
+    DependencyGraph graph = new DependencyGraph();
+    fullPreorder(new Stack<DependencyNode>(), node, graph);    
+    
+    return graph;
+  }
+  
+  /**
+   * Finds the complete transitive dependency graph with duplicates and conflicting versions.
+   * This method makes a lot of network connections
+   * and runs for multiple minutes. Better support for local repos may help.
+   */
+  public static DependencyGraph getTransitiveDependencies(String groupId, String artifactId,
+      String version) throws DependencyCollectionException, DependencyResolutionException {
+    
+    // root node
+    DependencyNode node = resolveCompileTimeDependencies(groupId, artifactId, version);  
+    DependencyGraph graph = new DependencyGraph();
+    preorder(new Stack<DependencyNode>(), node, graph);    
+    
+    return graph;
+  }
+  
+  // this finds the actual graph that maven sees with no duplicates and at most one version per
+  // library.
+  private static void preorder(Stack<DependencyNode> path, DependencyNode node, DependencyGraph graph) {
+    path.push(node);
+    DependencyPath forPath = new DependencyPath();
+    for (DependencyNode dn : path) {
+      forPath.add(dn.getArtifact());
+    }
+    graph.addPath(forPath);
+    
+    for (DependencyNode child : node.getChildren()) {
+      preorder((Stack<DependencyNode>) path.clone(), child, graph);
+    }
+  }
+
+  private static void fullPreorder(Stack<DependencyNode> path, DependencyNode node, DependencyGraph graph) 
+      throws DependencyCollectionException, DependencyResolutionException {
+    
+    path.push(node);
+    
+    DependencyPath forPath = new DependencyPath();
+    for (DependencyNode dn : path) {
+      forPath.add(dn.getArtifact());
+    }
+    graph.addPath(forPath);
+    
+    for (DependencyNode child : node.getChildren()) {
+      child = resolveCompileTimeDependencies(child.getArtifact());
+      fullPreorder((Stack<DependencyNode>) path.clone(), child, graph);
+    }
   }
 
 }

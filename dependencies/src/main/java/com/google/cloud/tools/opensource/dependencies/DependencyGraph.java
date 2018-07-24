@@ -37,7 +37,6 @@ import com.google.common.collect.TreeMultimap;
  * 
  * Artifacts are considered to be the same if they have the same group ID,
  * artifact ID, and version.
- *
  */
 public class DependencyGraph {
 
@@ -69,10 +68,12 @@ public class DependencyGraph {
           result.addAll(paths.get(coordinates + ":" + conflictingVersion));
         }
       }
-      
     }
     return result;
   }
-  
+
+  public List<DependencyPath> list() {
+    return new ArrayList<>(graph);
+  }
   
 }

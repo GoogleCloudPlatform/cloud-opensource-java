@@ -21,6 +21,8 @@ import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
 
+import com.google.common.base.Joiner;
+
 /**
  * Artifacts are considered to be the same if they have the same group ID,
  * artifact ID, and version.
@@ -33,6 +35,12 @@ final class DependencyPath {
     path.add(artifact);
   }
   
+  @Override
+  public String toString() {
+    return Joiner.on(" / ").join(path);
+  }
+  
+  @Override
   public boolean equals(Object o) {
     if (o == null || !(o instanceof DependencyPath)) {
       return false;
@@ -51,6 +59,7 @@ final class DependencyPath {
     return true;
   }
 
+  @Override
   public int hashCode() {
     int hashCode = 31;
     for (Artifact artifact : path) {
@@ -58,8 +67,7 @@ final class DependencyPath {
           + (artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion())
               .hashCode();
     }
-    return hashCode;
-    
+    return hashCode; 
   }
   
   private static boolean artifactsEqual(Artifact artifact1, Artifact artifact2) {

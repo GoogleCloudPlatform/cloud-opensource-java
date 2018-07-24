@@ -20,8 +20,9 @@ import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.junit.Assert;
 import org.junit.Test;
+
+import com.google.common.truth.Truth;
 
 public class DependencyGraphTest {
 
@@ -33,8 +34,7 @@ public class DependencyGraphTest {
   
   
   @Test
-  public void testAdd() {
-    
+  public void testConflicts() {
     DependencyPath path1 = new DependencyPath();
     path1.add(foo);
     DependencyPath path2 = new DependencyPath();
@@ -54,7 +54,31 @@ public class DependencyGraphTest {
     graph.addPath(path4);
     
     List<DependencyPath> conflicts = graph.findConflicts();
-    Assert.assertEquals(2, conflicts.size());
+    Truth.assertThat(conflicts).containsExactly(path3, path4).inOrder();;
+  }
+  
+  @Test
+  public void testAdd() {
+    DependencyPath path1 = new DependencyPath();
+    path1.add(foo);
+    DependencyPath path2 = new DependencyPath();
+    path2.add(foo);
+    path2.add(bar);
+    DependencyPath path3 = new DependencyPath();
+    path3.add(foo);
+    path3.add(baz1);
+    DependencyPath path4 = new DependencyPath();
+    path4.add(foo);
+    path4.add(bar);
+    path4.add(baz2);
+    
+    graph.addPath(path1);
+    graph.addPath(path2);
+    graph.addPath(path3);
+    graph.addPath(path4);
+    
+    List<DependencyPath> all = graph.list();
+    Truth.assertThat(all).containsExactly(path1, path2, path3, path4).inOrder();;
   }
 
 }

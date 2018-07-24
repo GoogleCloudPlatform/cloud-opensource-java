@@ -28,8 +28,15 @@ import org.junit.Test;
 import com.google.common.truth.Truth;
 
 public class DependencyListerTest {
-  
 
+  @Test
+  public void testGetTransitiveDependencyPaths()
+      throws DependencyCollectionException, DependencyResolutionException {
+    DependencyGraph graph =
+        DependencyLister.getFullDependencyPath("com.google.cloud", "google-cloud-datastore", "1.37.1");
+    Assert.assertTrue(graph.list().size() > 10);
+  }
+  
   @Test
   public void testGetImmediateDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
