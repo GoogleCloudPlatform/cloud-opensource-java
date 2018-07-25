@@ -140,9 +140,9 @@ public class DependencyLister {
   }
 
   /**
-   * Returns the direct compile time dependencies of an artifact.
+   * Returns the non-transitive compile time dependencies of an artifact.
    */
-  public static List<Artifact> getImmediateDependencies(String groupId, String artifactId,
+  public static List<Artifact> getDirectDependencies(String groupId, String artifactId,
       String version) throws DependencyCollectionException, DependencyResolutionException {
     
     Preconditions.checkNotNull(groupId, "Group ID cannot be null");

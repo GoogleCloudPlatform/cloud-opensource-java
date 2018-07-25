@@ -38,7 +38,7 @@ public class DependencyListerTest {
   }
   
   @Test
-  public void testGetImmediateDependencies()
+  public void testGetDirectDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
     List<Artifact> artifacts =
         DependencyLister.getImmediateDependencies("com.google.guava", "guava", "25.1-jre");
@@ -51,7 +51,7 @@ public class DependencyListerTest {
   }
   
   @Test
-  public void testGetImmediateDependencies_fails() throws DependencyCollectionException {
+  public void testGetDirectDependencies_fails() throws DependencyCollectionException {
     try {
       DependencyLister.getImmediateDependencies("com.google.guava", "guava", "25-1.jre");
       Assert.fail();
