@@ -41,7 +41,7 @@ public class DependencyListerTest {
   public void testGetDirectDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
     List<Artifact> artifacts =
-        DependencyLister.getImmediateDependencies("com.google.guava", "guava", "25.1-jre");
+        DependencyLister.getDirectDependencies("com.google.guava", "guava", "25.1-jre");
     List<String> coordinates = new ArrayList<>();
     for (Artifact artifact : artifacts) {
       coordinates.add(artifact.toString());
@@ -53,7 +53,7 @@ public class DependencyListerTest {
   @Test
   public void testGetDirectDependencies_fails() throws DependencyCollectionException {
     try {
-      DependencyLister.getImmediateDependencies("com.google.guava", "guava", "25-1.jre");
+      DependencyLister.getDirectDependencies("com.google.guava", "guava", "25-1.jre");
       Assert.fail();
     } catch (DependencyResolutionException ex) {
       Assert.assertTrue(ex.getMessage().contains("guava"));
@@ -64,7 +64,7 @@ public class DependencyListerTest {
   public void testGetImmediateDependencies_NullGroupId()
       throws DependencyCollectionException, DependencyResolutionException {
     try {
-      DependencyLister.getImmediateDependencies(null, "guava", "25-1.jre");
+      DependencyLister.getDirectDependencies(null, "guava", "25-1.jre");
       Assert.fail();
     } catch (NullPointerException ex) {
       Assert.assertEquals("Group ID cannot be null", ex.getMessage());
@@ -75,7 +75,7 @@ public class DependencyListerTest {
   public void testGetImmediateDependencies_nullArtifactId()
       throws DependencyCollectionException, DependencyResolutionException {
     try {
-      DependencyLister.getImmediateDependencies("foo", null, "25-1.jre");
+      DependencyLister.getDirectDependencies("foo", null, "25-1.jre");
       Assert.fail();
     } catch (NullPointerException ex) {
       Assert.assertEquals("Artifact ID cannot be null", ex.getMessage());
@@ -86,7 +86,7 @@ public class DependencyListerTest {
   public void testGetImmediateDependencies_emptyArtifactId()
       throws DependencyCollectionException, DependencyResolutionException {
     try {
-      DependencyLister.getImmediateDependencies("foo", "", "25-1.jre");
+      DependencyLister.getDirectDependencies("foo", "", "25-1.jre");
       Assert.fail();
     } catch (IllegalArgumentException ex) {
       Assert.assertNotNull(ex.getMessage());
@@ -97,7 +97,7 @@ public class DependencyListerTest {
   public void testGetDependencies_nullVersion()
       throws DependencyCollectionException, DependencyResolutionException {
     try {
-      DependencyLister.getImmediateDependencies("foo", "bar", null);
+      DependencyLister.getDirectDependencies("foo", "bar", null);
       Assert.fail();
     } catch (NullPointerException ex) {
       Assert.assertEquals("Version cannot be null", ex.getMessage());
