@@ -38,6 +38,14 @@ public class DependencyPathTest {
   }
   
   @Test
+  public void testToString() {
+    DependencyPath path = new DependencyPath();
+    path.add(foo);
+    path.add(bar);
+    Assert.assertEquals("com.google:foo:1 / com.google:bar:1", path.toString());
+  }
+  
+  @Test
   public void testEquals() {
     DependencyPath path1 = new DependencyPath();
     DependencyPath path2 = new DependencyPath();

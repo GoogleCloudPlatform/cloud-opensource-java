@@ -21,8 +21,6 @@ import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
 
-import com.google.common.base.Joiner;
-
 /**
  * Artifacts are considered to be the same if they have the same group ID,
  * artifact ID, and version.
@@ -37,7 +35,15 @@ final class DependencyPath {
   
   @Override
   public String toString() {
-    return Joiner.on(" / ").join(path);
+    
+    StringBuilder builder = new StringBuilder();
+    for (Artifact artifact : path) {
+      builder.append(Artifacts.toCoordinates(artifact));
+      builder.append(" / ");
+    }
+    String s = builder.toString();
+    // chop end
+    return s.substring(0, s.length() - 3);
   }
   
   @Override
