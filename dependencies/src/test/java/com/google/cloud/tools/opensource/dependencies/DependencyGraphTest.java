@@ -30,7 +30,7 @@ public class DependencyGraphTest {
   private Artifact foo = new DefaultArtifact("com.google:foo:1");
   private Artifact bar = new DefaultArtifact("com.google:bar:1");
   private Artifact baz1 = new DefaultArtifact("com.google:baz:1");
-  private Artifact baz2= new DefaultArtifact("com.google:baz:2");
+  private Artifact baz2 = new DefaultArtifact("com.google:baz:2");
   
   
   @Test

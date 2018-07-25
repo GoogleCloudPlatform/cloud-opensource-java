@@ -75,7 +75,7 @@ public class DependencyLister {
     
     List<DependencyPath> paths = graph.list();
     for (DependencyPath path : paths) { 
-      System.err.println(path);
+      System.out.println(path);
     }
     
   }
@@ -160,7 +160,7 @@ public class DependencyLister {
   
   /**
    * Finds the full compile time, transitive dependency graph including duplicates
-   *  and conflicting versions. This method makes a lot of network connections
+   * and conflicting versions. This method makes a lot of network connections
    * and runs for multiple minutes. Better support for local repos may help.
    */
   public static DependencyGraph getCompleteDependencies(String groupId, String artifactId,
@@ -191,9 +191,9 @@ public class DependencyLister {
     return graph;
   }
   
+  // TODO next two methods are duplicate code with only one line difference
   // this finds the actual graph that Maven sees with no duplicates and at most one version per
   // library.
-  // todo next two methods are duplicate code with only one line difference
   @SuppressWarnings("unchecked")
   private static void preorder(Stack<DependencyNode> path, DependencyNode current,
       DependencyGraph graph) {
