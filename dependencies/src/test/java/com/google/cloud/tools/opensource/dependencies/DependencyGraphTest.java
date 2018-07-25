@@ -54,7 +54,7 @@ public class DependencyGraphTest {
     graph.addPath(path4);
     
     List<DependencyPath> conflicts = graph.findConflicts();
-    Truth.assertThat(conflicts).containsExactly(path3, path4).inOrder();;
+    Truth.assertThat(conflicts).containsExactly(path3, path4).inOrder();
   }
   
   @Test

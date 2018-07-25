@@ -32,7 +32,7 @@ import com.google.common.collect.TreeMultimap;
  * 
  * The representation is unusual. Imagine we perform a breadth first search 
  * through the tree. As we go we build up a list of dependencies. The path
- * to eqch dependency node is placed in a list. Although each path should appear only
+ * to each dependency node is placed in a list. Although each path should appear only
  * once, each dependency may appear many times in different paths.
  * 
  * Artifacts are considered to be the same if they have the same group ID,
@@ -51,8 +51,9 @@ public class DependencyGraph {
   void addPath(DependencyPath path) {
     graph.add(path);
     Artifact leaf = path.getLeaf();
+    String coordinates = Artifacts.toCoordinates(leaf);
     versions.put(leaf.getGroupId() + ":" + leaf.getArtifactId(), leaf.getVersion());
-    paths.put(leaf.getGroupId() + ":" + leaf.getArtifactId() + ":" + leaf.getVersion(), path);
+    paths.put(coordinates, path);
   }
   
   /**
