@@ -29,12 +29,12 @@ import org.junit.Test;
 import com.google.common.collect.Sets;
 import com.google.common.truth.Truth;
 
-public class DependencyListerTest {
+public class DependencyGraphBuilderTest {
 
   @Test
   public void testGetTransitiveDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
-    DependencyGraph graph = DependencyLister.getTransitiveDependencies("com.google.cloud",
+    DependencyGraph graph = DependencyGraphBuilder.getTransitiveDependencies("com.google.cloud",
         "google-cloud-datastore", "1.37.1");
     List<DependencyPath> list = graph.list();
     
@@ -48,7 +48,7 @@ public class DependencyListerTest {
   @Test
   public void testGetCompleteDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
-    DependencyGraph graph = DependencyLister.getCompleteDependencies("com.google.cloud",
+    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies("com.google.cloud",
         "google-cloud-datastore", "1.37.1");
     List<DependencyPath> paths = graph.list();
     Assert.assertTrue(paths.size() > 10);
@@ -66,7 +66,6 @@ public class DependencyListerTest {
     int guavaCount = 0;
     for (DependencyPath path : graph.list()) {
       if (path.getLeaf().getArtifactId().equals("guava")) {
-        System.out.println(path);
         guavaCount++;
       }
     }
@@ -77,7 +76,7 @@ public class DependencyListerTest {
   public void testGetDirectDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
     List<Artifact> artifacts =
-        DependencyLister.getDirectDependencies("com.google.guava", "guava", "25.1-jre");
+        DependencyGraphBuilder.getDirectDependencies("com.google.guava", "guava", "25.1-jre");
     List<String> coordinates = new ArrayList<>();
     for (Artifact artifact : artifacts) {
       coordinates.add(artifact.toString());
@@ -89,7 +88,7 @@ public class DependencyListerTest {
   @Test
   public void testGetDirectDependencies_fails() throws DependencyCollectionException {
     try {
-      DependencyLister.getDirectDependencies("com.google.guava", "guava", "25-1.jre");
+      DependencyGraphBuilder.getDirectDependencies("com.google.guava", "guava", "25-1.jre");
       Assert.fail();
     } catch (DependencyResolutionException ex) {
       Assert.assertTrue(ex.getMessage().contains("guava"));
@@ -97,10 +96,10 @@ public class DependencyListerTest {
   }
   
   @Test
-  public void testGetDorectDependencies_NullGroupId()
+  public void testGetDirectDependencies_NullGroupId()
       throws DependencyCollectionException, DependencyResolutionException {
     try {
-      DependencyLister.getDirectDependencies(null, "guava", "25-1.jre");
+      DependencyGraphBuilder.getDirectDependencies(null, "guava", "25-1.jre");
       Assert.fail();
     } catch (NullPointerException ex) {
       Assert.assertEquals("Group ID cannot be null", ex.getMessage());
@@ -111,7 +110,7 @@ public class DependencyListerTest {
   public void testGetDirectDependencies_nullArtifactId()
       throws DependencyCollectionException, DependencyResolutionException {
     try {
-      DependencyLister.getDirectDependencies("foo", null, "25-1.jre");
+      DependencyGraphBuilder.getDirectDependencies("foo", null, "25-1.jre");
       Assert.fail();
     } catch (NullPointerException ex) {
       Assert.assertEquals("Artifact ID cannot be null", ex.getMessage());
@@ -122,7 +121,7 @@ public class DependencyListerTest {
   public void testGetDirectDependencies_emptyArtifactId()
       throws DependencyCollectionException, DependencyResolutionException {
     try {
-      DependencyLister.getDirectDependencies("foo", "", "25-1.jre");
+      DependencyGraphBuilder.getDirectDependencies("foo", "", "25-1.jre");
       Assert.fail();
     } catch (IllegalArgumentException ex) {
       Assert.assertNotNull(ex.getMessage());
@@ -133,7 +132,7 @@ public class DependencyListerTest {
   public void testGetDirectDependencies_nullVersion()
       throws DependencyCollectionException, DependencyResolutionException {
     try {
-      DependencyLister.getDirectDependencies("foo", "bar", null);
+      DependencyGraphBuilder.getDirectDependencies("foo", "bar", null);
       Assert.fail();
     } catch (NullPointerException ex) {
       Assert.assertEquals("Version cannot be null", ex.getMessage());

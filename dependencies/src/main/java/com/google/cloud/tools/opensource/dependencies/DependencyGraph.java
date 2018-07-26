@@ -47,6 +47,10 @@ public class DependencyGraph {
   
   // map of groupId:artifactId:version to paths
   private SetMultimap<String, DependencyPath> paths = HashMultimap.create();
+  
+  // hide constructor
+  DependencyGraph() {
+  }
 
   void addPath(DependencyPath path) {
     graph.add(path);
