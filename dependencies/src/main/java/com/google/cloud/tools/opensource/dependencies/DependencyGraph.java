@@ -80,5 +80,13 @@ public class DependencyGraph {
   public List<DependencyPath> list() {
     return new ArrayList<>(graph);
   }
+
+  public Set<DependencyPath> getPaths(String coordinates) {
+    return paths.get(coordinates);
+  }
+
+  public Set<String> getVersions(String coordinates) {
+    return versions.get(coordinates);
+  }
   
 }

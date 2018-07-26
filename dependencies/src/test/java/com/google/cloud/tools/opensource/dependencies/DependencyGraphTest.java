@@ -17,9 +17,12 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.truth.Truth;
@@ -31,19 +34,18 @@ public class DependencyGraphTest {
   private Artifact bar = new DefaultArtifact("com.google:bar:1");
   private Artifact baz1 = new DefaultArtifact("com.google:baz:1");
   private Artifact baz2 = new DefaultArtifact("com.google:baz:2");
+  private DependencyPath path1 = new DependencyPath();
+  private DependencyPath path2 = new DependencyPath();
+  private DependencyPath path3 = new DependencyPath();
+  private DependencyPath path4 = new DependencyPath();
   
-  
-  @Test
-  public void testFindConflicts() {
-    DependencyPath path1 = new DependencyPath();
+  @Before
+  public void setUp() {
     path1.add(foo);
-    DependencyPath path2 = new DependencyPath();
     path2.add(foo);
     path2.add(bar);
-    DependencyPath path3 = new DependencyPath();
     path3.add(foo);
     path3.add(baz1);
-    DependencyPath path4 = new DependencyPath();
     path4.add(foo);
     path4.add(bar);
     path4.add(baz2);
@@ -52,33 +54,44 @@ public class DependencyGraphTest {
     graph.addPath(path2);
     graph.addPath(path3);
     graph.addPath(path4);
-    
+  }
+  
+  @Test
+  public void testFindConflicts() {
     List<DependencyPath> conflicts = graph.findConflicts();
     Truth.assertThat(conflicts).containsExactly(path3, path4).inOrder();
   }
   
   @Test
   public void testAdd() {
-    DependencyPath path1 = new DependencyPath();
-    path1.add(foo);
-    DependencyPath path2 = new DependencyPath();
-    path2.add(foo);
-    path2.add(bar);
-    DependencyPath path3 = new DependencyPath();
-    path3.add(foo);
-    path3.add(baz1);
-    DependencyPath path4 = new DependencyPath();
-    path4.add(foo);
-    path4.add(bar);
-    path4.add(baz2);
-    
-    graph.addPath(path1);
-    graph.addPath(path2);
-    graph.addPath(path3);
-    graph.addPath(path4);
-    
     List<DependencyPath> all = graph.list();
     Truth.assertThat(all).containsExactly(path1, path2, path3, path4).inOrder();;
+  }
+  
+  @Test
+  public void testGetPaths() {
+    Set<DependencyPath> paths = graph.getPaths("com.google:baz:2");
+    Assert.assertEquals(1, paths.size());
+    Assert.assertEquals(path4, paths.iterator().next());
+  }
+  
+  @Test
+  public void testGetVersions() {
+    Set<String> paths = graph.getVersions("com.google:baz");
+    Assert.assertEquals(2, paths.size());
+    Truth.assertThat(paths).containsExactly("1", "2");
+  }
+  
+  @Test
+  public void testGetVersions_notFound() {
+    Set<String> versions = graph.getVersions("com.google:nonesuch");
+    Assert.assertEquals(0, versions.size());
+  }
+
+  @Test
+  public void testGetPaths_notFound() {
+    Set<String> paths = graph.getVersions("com.google:baz:56.9");
+    Assert.assertEquals(0, paths.size());
   }
 
 }
