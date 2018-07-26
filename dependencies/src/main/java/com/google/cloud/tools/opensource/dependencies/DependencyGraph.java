@@ -27,16 +27,15 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
 
 /**
- * A representation of the complete non-cyclic transitive dependency tree of 
- * a Maven artifact.
+ * A representation of the complete non-cyclic transitive dependency tree of a Maven artifact.
  * 
- * The representation is unusual. Imagine we perform a breadth first search 
- * through the tree. As we go we build up a list of dependencies. The path
- * to each dependency node is placed in a list. Although each path should appear only
- * once, each dependency may appear many times in different paths.
+ * Imagine performing a breadth first search through the tree. As we go we build up a list of
+ * dependencies. The path to each dependency node is placed in a list. Although each path should
+ * appear only once, each dependency may appear many times in different paths. This representation
+ * is unusual because it represents a tree as a list of every path from the root to each node,
+ * instead of a network of nodes.
  * 
- * Artifacts are considered to be the same if they have the same group ID,
- * artifact ID, and version.
+ * Artifacts are considered to be the same if they have the same group ID, artifact ID, and version.
  */
 public class DependencyGraph {
 

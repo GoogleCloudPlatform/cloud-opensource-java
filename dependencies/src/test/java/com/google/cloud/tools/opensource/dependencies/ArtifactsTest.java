@@ -21,7 +21,6 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
 import org.junit.Test;
 
-
 public class ArtifactsTest {
 
   @Test
