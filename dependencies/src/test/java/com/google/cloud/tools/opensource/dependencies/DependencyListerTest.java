@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -25,6 +26,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.collect.Sets;
 import com.google.common.truth.Truth;
 
 public class DependencyListerTest {
@@ -48,7 +50,12 @@ public class DependencyListerTest {
       throws DependencyCollectionException, DependencyResolutionException {
     DependencyGraph graph =
         DependencyLister.getCompleteDependencies("com.google.cloud", "google-cloud-datastore", "1.37.1");
-    Assert.assertTrue(graph.list().size() > 10);
+    List<DependencyPath> paths = graph.list();
+    Assert.assertTrue(paths.size() > 10);
+    
+    // verify we didn't double count anything
+    HashSet<DependencyPath> noDups = Sets.newHashSet(paths);
+    Assert.assertEquals(paths.size(), noDups.size());
     
     // This method should find Guava multiple times.
     int guavaCount = countGuava(graph);
@@ -59,6 +66,7 @@ public class DependencyListerTest {
     int guavaCount = 0;
     for (DependencyPath path : graph.list()) {
       if (path.getLeaf().getArtifactId().equals("guava")) {
+        System.out.println(path);
         guavaCount++;
       }
     }
