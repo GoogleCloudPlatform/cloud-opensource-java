@@ -33,9 +33,12 @@ public class DependencyListerTest {
   public void testGetTransitiveDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
     DependencyGraph graph =
-        DependencyLister.getCompleteDependencies("com.google.cloud", "google-cloud-datastore", "1.37.1");
-    Assert.assertTrue(graph.list().size() > 10);
+        DependencyLister.getTransitiveDependencies("com.google.cloud", "google-cloud-datastore", "1.37.1");
+    List<DependencyPath> list = graph.list();
     
+    Assert.assertTrue(list.size() > 10);
+    
+    // This method should find Guava exactly once.
     int guavaCount = countGuava(graph);
     Assert.assertEquals(1, guavaCount);
   }
@@ -47,14 +50,14 @@ public class DependencyListerTest {
         DependencyLister.getCompleteDependencies("com.google.cloud", "google-cloud-datastore", "1.37.1");
     Assert.assertTrue(graph.list().size() > 10);
     
+    // This method should find Guava multiple times.
     int guavaCount = countGuava(graph);
     Assert.assertEquals(31, guavaCount);
   }
 
   private static int countGuava(DependencyGraph graph) {
-    List<DependencyPath> conflicts = graph.findConflicts();
     int guavaCount = 0;
-    for (DependencyPath path : conflicts) {
+    for (DependencyPath path : graph.list()) {
       if (path.getLeaf().getArtifactId().equals("guava")) {
         guavaCount++;
       }
