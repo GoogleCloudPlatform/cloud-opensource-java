@@ -30,11 +30,36 @@ import com.google.common.truth.Truth;
 public class DependencyListerTest {
 
   @Test
-  public void testGetTransitiveDependencyPaths()
+  public void testGetTransitiveDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
     DependencyGraph graph =
         DependencyLister.getCompleteDependencies("com.google.cloud", "google-cloud-datastore", "1.37.1");
     Assert.assertTrue(graph.list().size() > 10);
+    
+    int guavaCount = countGuava(graph);
+    Assert.assertEquals(1, guavaCount);
+  }
+  
+  @Test
+  public void testGetCompleteDependencies()
+      throws DependencyCollectionException, DependencyResolutionException {
+    DependencyGraph graph =
+        DependencyLister.getCompleteDependencies("com.google.cloud", "google-cloud-datastore", "1.37.1");
+    Assert.assertTrue(graph.list().size() > 10);
+    
+    int guavaCount = countGuava(graph);
+    Assert.assertEquals(31, guavaCount);
+  }
+
+  private static int countGuava(DependencyGraph graph) {
+    List<DependencyPath> conflicts = graph.findConflicts();
+    int guavaCount = 0;
+    for (DependencyPath path : conflicts) {
+      if (path.getLeaf().getArtifactId().equals("guava")) {
+        guavaCount++;
+      }
+    }
+    return guavaCount;
   }
   
   @Test
@@ -61,7 +86,7 @@ public class DependencyListerTest {
   }
   
   @Test
-  public void testGetImmediateDependencies_NullGroupId()
+  public void testGetDorectDependencies_NullGroupId()
       throws DependencyCollectionException, DependencyResolutionException {
     try {
       DependencyLister.getDirectDependencies(null, "guava", "25-1.jre");
@@ -72,7 +97,7 @@ public class DependencyListerTest {
   }
   
   @Test
-  public void testGetImmediateDependencies_nullArtifactId()
+  public void testGetDirectDependencies_nullArtifactId()
       throws DependencyCollectionException, DependencyResolutionException {
     try {
       DependencyLister.getDirectDependencies("foo", null, "25-1.jre");
@@ -83,7 +108,7 @@ public class DependencyListerTest {
   }
   
   @Test
-  public void testGetImmediateDependencies_emptyArtifactId()
+  public void testGetDirectDependencies_emptyArtifactId()
       throws DependencyCollectionException, DependencyResolutionException {
     try {
       DependencyLister.getDirectDependencies("foo", "", "25-1.jre");
@@ -94,7 +119,7 @@ public class DependencyListerTest {
   }
   
   @Test
-  public void testGetDependencies_nullVersion()
+  public void testGetDirectDependencies_nullVersion()
       throws DependencyCollectionException, DependencyResolutionException {
     try {
       DependencyLister.getDirectDependencies("foo", "bar", null);

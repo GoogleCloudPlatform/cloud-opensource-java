@@ -34,7 +34,7 @@ public class DependencyGraphTest {
   
   
   @Test
-  public void testConflicts() {
+  public void testFindConflicts() {
     DependencyPath path1 = new DependencyPath();
     path1.add(foo);
     DependencyPath path2 = new DependencyPath();
