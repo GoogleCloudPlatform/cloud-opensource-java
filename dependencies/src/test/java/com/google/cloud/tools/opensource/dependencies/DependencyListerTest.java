@@ -34,8 +34,8 @@ public class DependencyListerTest {
   @Test
   public void testGetTransitiveDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
-    DependencyGraph graph =
-        DependencyLister.getTransitiveDependencies("com.google.cloud", "google-cloud-datastore", "1.37.1");
+    DependencyGraph graph = DependencyLister.getTransitiveDependencies("com.google.cloud",
+        "google-cloud-datastore", "1.37.1");
     List<DependencyPath> list = graph.list();
     
     Assert.assertTrue(list.size() > 10);
@@ -48,8 +48,8 @@ public class DependencyListerTest {
   @Test
   public void testGetCompleteDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
-    DependencyGraph graph =
-        DependencyLister.getCompleteDependencies("com.google.cloud", "google-cloud-datastore", "1.37.1");
+    DependencyGraph graph = DependencyLister.getCompleteDependencies("com.google.cloud",
+        "google-cloud-datastore", "1.37.1");
     List<DependencyPath> paths = graph.list();
     Assert.assertTrue(paths.size() > 10);
     
