@@ -168,7 +168,7 @@ public class DependencyGraphBuilder {
     return graph;
   }
   
-  // TODO next two methods are duplicate code with only one line difference
+  // TODO Dedup the next two methods. They are duplicate code with only one line difference.
   // this finds the actual graph that Maven sees with no duplicates and at most one version per
   // library.
   @SuppressWarnings("unchecked")
