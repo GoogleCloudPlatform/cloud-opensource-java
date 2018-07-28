@@ -16,24 +16,18 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import org.eclipse.aether.artifact.Artifact;
+import java.util.Comparator;
+
+import org.apache.maven.artifact.versioning.ComparableVersion;
 
 /**
- * Common utilities for operating on {@code org.eclipse.aether.artifact.Artifact} objects.
+ * Compare semantically by version.
  */
-public class Artifacts {
+public class VersionComparator implements Comparator<String> {
 
-  /**
-   * Returns the artifact's Maven coordinates in the form groupId:artifactId:version.
-   * Repo and packaging are not included.
-   */
-  public static String toCoordinates(Artifact artifact) {
-    return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion();
-  }
-
-  // todo push into Artifacts
-  static String makeKey(Artifact artifact) {
-    return artifact.getGroupId() + ":" + artifact.getArtifactId();
+  @Override
+  public int compare(String version1, String version2) {
+    return new ComparableVersion(version1).compareTo(new ComparableVersion(version2));
   }
 
 }

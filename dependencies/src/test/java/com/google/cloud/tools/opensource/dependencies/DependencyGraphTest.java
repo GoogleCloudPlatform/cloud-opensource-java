@@ -16,11 +16,14 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,6 +63,21 @@ public class DependencyGraphTest {
   public void testFindConflicts() {
     List<DependencyPath> conflicts = graph.findConflicts();
     Truth.assertThat(conflicts).containsExactly(path3, path4).inOrder();
+  }
+  
+  @Test
+  public void testFindConflicts_cloudLanguage() throws DependencyCollectionException, DependencyResolutionException {
+    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies("com.google.cloud",
+        "google-cloud-language", "1.37.1");
+    List<DependencyPath> conflicts = graph.findConflicts();
+    List<String> leaves = new ArrayList<>();
+    for (DependencyPath path : conflicts) {
+      leaves.add(Artifacts.toCoordinates(path.getLeaf()));
+    }
+    
+    Truth.assertThat(leaves).contains("com.google.api.grpc:proto-google-common-protos:1.0.0");
+    Truth.assertThat(leaves).contains("com.google.api.grpc:proto-google-common-protos:1.11.0");
+    Truth.assertThat(leaves).contains("com.google.api.grpc:proto-google-common-protos:1.12.0");
   }
   
   @Test

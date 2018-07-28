@@ -16,24 +16,18 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import org.eclipse.aether.artifact.Artifact;
+import org.junit.Assert;
+import org.junit.Test;
 
-/**
- * Common utilities for operating on {@code org.eclipse.aether.artifact.Artifact} objects.
- */
-public class Artifacts {
+public class VersionComparatorTest {
 
-  /**
-   * Returns the artifact's Maven coordinates in the form groupId:artifactId:version.
-   * Repo and packaging are not included.
-   */
-  public static String toCoordinates(Artifact artifact) {
-    return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion();
-  }
-
-  // todo push into Artifacts
-  static String makeKey(Artifact artifact) {
-    return artifact.getGroupId() + ":" + artifact.getArtifactId();
-  }
-
+  private VersionComparator comparator = new VersionComparator();
+  
+  @Test
+  public void testGuava() {
+    Assert.assertTrue(comparator.compare("20.0","10.0") > 0);
+    Assert.assertTrue(comparator.compare("20.0.1","20.0") > 0);
+    Assert.assertTrue(comparator.compare("20.0.1","20.0.0") > 0);
+    Assert.assertTrue(comparator.compare("25.1-jre","25.1-android") > 0);
+  }  
 }
