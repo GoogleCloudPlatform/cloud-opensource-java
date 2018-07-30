@@ -44,6 +44,8 @@ import com.google.common.collect.TreeMultimap;
  */
 public class DependencyGraph {
 
+  // DependencyGraphBuilder builds this in breadth first order.
+  // That is, this list contains the paths to each node in breadth first order 
   private List<DependencyPath> graph = new ArrayList<>();
   
   // map of groupId:artifactId to versions
@@ -132,7 +134,7 @@ public class DependencyGraph {
       }
     }
     
-    // todo sort by path
+    // todo sort by path by comparing with the graph
     
     return new ArrayList<String>(upgrades);
   }
