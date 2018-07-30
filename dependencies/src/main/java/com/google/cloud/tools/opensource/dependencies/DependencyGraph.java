@@ -114,7 +114,7 @@ public class DependencyGraph {
     }
     
     // now generate necessary upgrades
-    LinkedHashSet<String> upgrades = new LinkedHashSet<>();
+   LinkedHashSet<String> upgrades = new LinkedHashSet<>();
     for (DependencyPath path : paths) {
       Artifact leaf = path.getLeaf();
       String key = Artifacts.makeKey(leaf);
@@ -131,6 +131,9 @@ public class DependencyGraph {
         }
       }
     }
+    
+    // todo sort by path
+    
     return new ArrayList<String>(upgrades);
   }
   

@@ -66,6 +66,28 @@ public class DependencyGraphTest {
   }
   
   @Test
+  public void testFindUpdates()
+      throws DependencyCollectionException, DependencyResolutionException {
+    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies("com.google.cloud",
+        "google-cloud-core", "1.37.1");
+    List<String> updates = graph.findUpdates();
+    
+    // manually verified that for this version of google-cloud-core
+    // this should be first in the list in breadth first tree traversal
+    Assert.assertEquals(5, updates.size());
+    Assert.assertEquals(
+        "com.google.guava:guava:20.0 needs to upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
+        updates.get(0));
+    Assert.assertEquals(
+        "com.google.http-client:google-http-client:1.23.0 needs to upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
+        updates.get(1));
+    Assert.assertEquals(
+        "com.google.api:api-common:1.6.0 needs to upgrade com.google.code.findbugs:jsr305:3.0.0 to 3.0.2",
+        updates.get(2));
+  }
+  
+  
+  @Test
   public void testFindConflicts_cloudLanguage() throws DependencyCollectionException, DependencyResolutionException {
     DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies("com.google.cloud",
         "google-cloud-language", "1.37.1");
