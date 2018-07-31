@@ -1,0 +1,61 @@
+/*
+ * Copyright 2018 Google LLC.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.cloud.tools.opensource.dependencies;
+
+import java.util.List;
+
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.resolution.DependencyResolutionException;
+
+public class DirectReport {
+
+  /** Generate a list of direct dependencies. This captures the state of a published
+   * artifact in Maven Central. It does not capture updates that may have already been
+   * made at head but not published to Maven central, or dependencies
+   * that have been updated but not yet incorporated in the tree.
+   */
+  public static void main(String[] args)
+      throws DependencyCollectionException, DependencyResolutionException {
+    
+    if (args.length != 1 || !args[0].contains(":")) {
+      System.err.println("Usage: java " + DirectReport.class.getCanonicalName()
+          + " groupdId:artifactId:version");
+      return;
+    }
+    
+    String[] coordinates = args[0].split(":");
+    String groupId = coordinates[0];
+    String artifactId = coordinates[1];
+    String version = coordinates[2];
+    
+    System.out.println("Dependencies of " + args[0] +":");
+    System.out.println();
+    
+    List<Artifact> dependencies =
+        DependencyGraphBuilder.getDirectDependencies(groupId, artifactId, version);
+    
+    for (Artifact artifact : dependencies) {
+      System.out.println("  <dependency>");
+      System.out.println("    <groupId>" + artifact.getGroupId() + "</groupId>");
+      System.out.println("    <artifactId>" + artifact.getArtifactId() + "</artifactId>");
+      System.out.println("    <version>" + artifact.getVersion() + "</version>");
+      System.out.println("  </dependency>");
+    }
+  }
+
+}
