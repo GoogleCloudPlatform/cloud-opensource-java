@@ -109,20 +109,13 @@ public class DependencyGraph {
   List<String> findUpdates() {
     List<DependencyPath> paths = findConflicts();
     
-    // doubt it matters; but this can likely be combined into a single
-    // iteration across the list
-    
-    Set<String> artifacts = new HashSet<>();
+    Map<String, String> latestVersions = new HashMap<>();
     for (DependencyPath path : paths) {
       Artifact leaf = path.getLeaf();
-      artifacts.add(Artifacts.makeKey(leaf));
-    }
-    
-    Map<String, String> latestVersions = new HashMap<>();
-    for (String artifact : artifacts) {
-      List<String> versions = new ArrayList<>(getVersions(artifact));
+      String key = Artifacts.makeKey(leaf);
+      List<String> versions = new ArrayList<>(getVersions(key));
       String highestVersion = Collections.max(versions, new VersionComparator());
-      latestVersions.put(artifact, highestVersion);
+      latestVersions.put(key, highestVersion);
     }
     
     // now generate necessary upgrades
@@ -130,7 +123,7 @@ public class DependencyGraph {
     for (DependencyPath path : paths) {
       Artifact leaf = path.getLeaf();
       String key = Artifacts.makeKey(leaf);
-      String highestVersion = latestVersions.get(key);
+      String highestVersion = getLatestVersion(latestVersions, key);
       if (!leaf.getVersion().equals(highestVersion)) {
         Artifact parent = path.get(path.size() - 2);
         // when the parent is out of date, update the parent instead
@@ -147,6 +140,10 @@ public class DependencyGraph {
     // todo sort by path by comparing with the graph
     
     return new ArrayList<String>(upgrades);
+  }
+
+  private String getLatestVersion(Map<String, String> latestVersions, String key) {
+    return latestVersions.get(key);
   }
   
 }
