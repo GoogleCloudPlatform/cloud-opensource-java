@@ -74,21 +74,25 @@ public class DependencyGraphTest {
     
     // manually verified that for this version of google-cloud-core
     // this should be first in the list in breadth first tree traversal
-    Assert.assertEquals(5, updates.size());
+    Truth.assertThat(updates).hasSize(5);
     Assert.assertEquals(
-        "com.google.guava:guava:20.0 needs to upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
+        "com.google.guava:guava:20.0 needs to "
+        + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
         updates.get(0));
     Assert.assertEquals(
-        "com.google.http-client:google-http-client:1.23.0 needs to upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
+        "com.google.http-client:google-http-client:1.23.0 needs to "
+        + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
         updates.get(1));
     Assert.assertEquals(
-        "com.google.api:api-common:1.6.0 needs to upgrade com.google.code.findbugs:jsr305:3.0.0 to 3.0.2",
+        "com.google.api:api-common:1.6.0 needs to "
+        + "upgrade com.google.code.findbugs:jsr305:3.0.0 to 3.0.2",
         updates.get(2));
   }
   
   
   @Test
-  public void testFindConflicts_cloudLanguage() throws DependencyCollectionException, DependencyResolutionException {
+  public void testFindConflicts_cloudLanguage()
+      throws DependencyCollectionException, DependencyResolutionException {
     DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies("com.google.cloud",
         "google-cloud-language", "1.37.1");
     List<DependencyPath> conflicts = graph.findConflicts();
@@ -111,21 +115,20 @@ public class DependencyGraphTest {
   @Test
   public void testGetPaths() {
     Set<DependencyPath> paths = graph.getPaths("com.google:baz:2");
-    Assert.assertEquals(1, paths.size());
-    Assert.assertEquals(path4, paths.iterator().next());
+    Truth.assertThat(paths).containsExactly(path4);
   }
   
   @Test
   public void testGetVersions() {
-    Set<String> paths = graph.getVersions("com.google:baz");
-    Assert.assertEquals(2, paths.size());
-    Truth.assertThat(paths).containsExactly("1", "2");
+    Set<String> versions = graph.getVersions("com.google:baz");
+    Assert.assertEquals(2, versions.size());
+    Truth.assertThat(versions).containsExactly("1", "2");
   }
   
   @Test
   public void testGetVersions_notFound() {
     Set<String> versions = graph.getVersions("com.google:nonesuch");
-    Assert.assertEquals(0, versions.size());
+    Truth.assertThat(versions.isEmpty());
   }
 
   @Test

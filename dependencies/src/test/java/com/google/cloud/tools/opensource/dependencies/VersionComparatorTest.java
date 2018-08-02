@@ -25,9 +25,13 @@ public class VersionComparatorTest {
   
   @Test
   public void testGuava() {
-    Assert.assertTrue(comparator.compare("20.0","10.0") > 0);
-    Assert.assertTrue(comparator.compare("20.0.1","20.0") > 0);
-    Assert.assertTrue(comparator.compare("20.0.1","20.0.0") > 0);
-    Assert.assertTrue(comparator.compare("25.1-jre","25.1-android") > 0);
+    Assert.assertEquals(0, comparator.compare("20.0", "20.0"));
+    Assert.assertTrue(comparator.compare("20.0", "10.0") > 0);
+    Assert.assertTrue(comparator.compare("10.0", "20.0") < 0);
+    Assert.assertTrue(comparator.compare("20.0.1", "20.0") > 0);
+    Assert.assertTrue(comparator.compare("20.0.1", "20.0.0") > 0);
+    Assert.assertTrue(comparator.compare("25.1-jre", "25.1-android") > 0);
+    
+    
   }  
 }

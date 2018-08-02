@@ -47,15 +47,11 @@ public class UpdateReport {
     System.out.println();
     
     DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(groupId, artifactId, version);
-    List<String> upgrades = graph.findUpdates();
+    List<String> updates = graph.findUpdates();
     
-    for (String upgrade : upgrades) {
-      System.out.println(upgrade);
+    for (String update : updates) {
+      System.out.println(update);
     }
-    
-    // todo we need to account for the possibility that an upgrade higher up the path
-    // may make an upgrade closer to the leaf moot. Perhaps collect and order them
-    // from top of tree down.
   }
 
 }
