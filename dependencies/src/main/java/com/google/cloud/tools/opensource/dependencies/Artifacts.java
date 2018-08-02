@@ -31,7 +31,6 @@ public class Artifacts {
     return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion();
   }
 
-  // todo push into Artifacts
   static String makeKey(Artifact artifact) {
     return artifact.getGroupId() + ":" + artifact.getArtifactId();
   }

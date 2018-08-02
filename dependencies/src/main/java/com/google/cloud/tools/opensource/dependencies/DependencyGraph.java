@@ -32,15 +32,15 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
 
 /**
- * A representation of the complete non-cyclic transitive dependency tree of a Maven artifact.
+ * <p>A representation of the complete non-cyclic transitive dependency tree of a Maven artifact.
  * 
- * Imagine performing a breadth first search through the tree. As we go we build up a list of
+ * <p>Imagine performing a breadth first search through the tree. As we go we build up a list of
  * dependencies. The path to each dependency node is placed in a list. Although each path should
  * appear only once, each dependency may appear many times in different paths. This representation
  * is unusual because it represents a tree as a list of every path from the root to each node,
  * instead of a network of nodes.
  * 
- * Artifacts are considered to be the same if they have the same group ID, artifact ID, and version.
+ * <p>Artifacts are considered to be the same if they have the same group ID, artifact ID, and version.
  */
 public class DependencyGraph {
 
@@ -49,6 +49,8 @@ public class DependencyGraph {
   private List<DependencyPath> graph = new ArrayList<>();
   
   // map of groupId:artifactId to versions
+  // todo If versions's values were the whole coordinate string 
+  // (or even the Artifact itself), would this be simpler?
   private SetMultimap<String, String> versions = TreeMultimap.create();
   
   // map of groupId:artifactId:version to paths
@@ -62,7 +64,7 @@ public class DependencyGraph {
     graph.add(path);
     Artifact leaf = path.getLeaf();
     String coordinates = Artifacts.toCoordinates(leaf);
-    versions.put(leaf.getGroupId() + ":" + leaf.getArtifactId(), leaf.getVersion());
+    versions.put(Artifacts.makeKey(leaf), leaf.getVersion());
     paths.put(coordinates, path);
   }
   
@@ -71,7 +73,7 @@ public class DependencyGraph {
    * There can be multiple paths to a single version.
    */
   List<DependencyPath> findConflicts() {
-    ArrayList<DependencyPath> result = new ArrayList<>();
+    List<DependencyPath> result = new ArrayList<>();
     for (String coordinates : versions.keySet()) {
       Set<String> artifactVersions = versions.get(coordinates);
       if (artifactVersions.size() > 1) { // multiple versions
@@ -83,14 +85,23 @@ public class DependencyGraph {
     return result;
   }
 
+  /**
+   * @return a mutable copy of the paths in this graph, usually in breadth first order
+   */
   public List<DependencyPath> list() {
     return new ArrayList<>(graph);
   }
 
+  /**
+   * @return all paths to the specified artifact
+   */
   public Set<DependencyPath> getPaths(String coordinates) {
     return paths.get(coordinates);
   }
-
+  
+  /**
+   * @return all versions of the specified artifact found in the graph
+   */
   public Set<String> getVersions(String coordinates) {
     return versions.get(coordinates);
   }
