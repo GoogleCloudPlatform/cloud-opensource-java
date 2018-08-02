@@ -17,14 +17,11 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
 
-/**
- * Artifacts are considered to be the same if they have the same group ID,
- * artifact ID, and version.
- */
 final class DependencyPath {
 
   private List<Artifact> path = new ArrayList<>();
@@ -35,15 +32,13 @@ final class DependencyPath {
   
   @Override
   public String toString() {
-    
-    StringBuilder builder = new StringBuilder();
-    for (Artifact artifact : path) {
-      builder.append(Artifacts.toCoordinates(artifact));
+    Iterator<Artifact> iterator = path.iterator();
+    StringBuilder builder = new StringBuilder(Artifacts.toCoordinates(iterator.next()));
+    while (iterator.hasNext()) {
       builder.append(" / ");
+      builder.append(Artifacts.toCoordinates(iterator.next()));
     }
-    String s = builder.toString();
-    // chop end
-    return s.substring(0, s.length() - 3);
+    return builder.toString();
   }
   
   @Override
@@ -76,6 +71,10 @@ final class DependencyPath {
     return hashCode; 
   }
   
+  /**
+   * Artifacts are considered to be the same if they have the same group ID,
+   * artifact ID, and version.
+   */
   private static boolean artifactsEqual(Artifact artifact1, Artifact artifact2) {
     return artifact1.getArtifactId().equals(artifact2.getArtifactId())
         && artifact1.getGroupId().equals(artifact2.getGroupId())
