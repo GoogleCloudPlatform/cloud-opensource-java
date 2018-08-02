@@ -121,13 +121,12 @@ public class DependencyGraph {
     Map<String, String> latestVersions = new HashMap<>();
     for (String artifact : artifacts) {
       List<String> versions = new ArrayList<>(getVersions(artifact));
-      // sort into ascending order
       String highestVersion = Collections.max(versions, new VersionComparator());
       latestVersions.put(artifact, highestVersion);
     }
     
     // now generate necessary upgrades
-   LinkedHashSet<String> upgrades = new LinkedHashSet<>();
+    LinkedHashSet<String> upgrades = new LinkedHashSet<>();
     for (DependencyPath path : paths) {
       Artifact leaf = path.getLeaf();
       String key = Artifacts.makeKey(leaf);
