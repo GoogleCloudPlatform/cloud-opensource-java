@@ -123,7 +123,7 @@ public class DependencyGraph {
     for (DependencyPath path : paths) {
       Artifact leaf = path.getLeaf();
       String key = Artifacts.makeKey(leaf);
-      String highestVersion = getLatestVersion(latestVersions, key);
+      String highestVersion = latestVersions.get(key);
       if (!leaf.getVersion().equals(highestVersion)) {
         Artifact parent = path.get(path.size() - 2);
         // when the parent is out of date, update the parent instead
@@ -140,10 +140,6 @@ public class DependencyGraph {
     // todo sort by path by comparing with the graph
     
     return new ArrayList<String>(upgrades);
-  }
-
-  private String getLatestVersion(Map<String, String> latestVersions, String key) {
-    return latestVersions.get(key);
   }
   
 }
