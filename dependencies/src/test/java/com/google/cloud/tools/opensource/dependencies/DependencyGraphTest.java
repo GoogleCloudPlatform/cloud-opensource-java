@@ -68,6 +68,13 @@ public class DependencyGraphTest {
   @Test
   public void testFindConflicts() {
     List<DependencyPath> conflicts = graph.findConflicts();
+    // todo should appear in this order but right now doesn't.
+    // This may be the easiest test to approach to fix this.
+    // Note that even if the manually set order above is not breadth-first
+    // conflicts should still appear in the manually set order. That is,
+    // we rely on dependencies being built in breadth first order and 
+    // not reordered by findConflicts. It appears, however, findConflicts is
+    // not preserving order. 
     Truth.assertThat(conflicts).containsExactly(path3, path4, path5); // .inOrder();
   }
   
@@ -91,9 +98,19 @@ public class DependencyGraphTest {
         "com.google.api:api-common:1.6.0 needs to "
         + "upgrade com.google.code.findbugs:jsr305:3.0.0 to 3.0.2",
         "com.google.api.grpc:proto-google-common-protos:1.12.0 needs to "
-        + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0"
-        
-        );
+        + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
+        "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
+        + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
+        "com.google.api:api-common:1.6.0 needs to "
+        + "upgrade com.google.guava:guava:19.0 to 20.0",
+        "com.google.auth:google-auth-library-oauth2-http:0.9.1 needs to "
+        + "upgrade com.google.guava:guava:19.0 to 20.0",
+        "com.google.protobuf:protobuf-java-util:3.6.0 needs to "
+        + "upgrade com.google.guava:guava:19.0 to 20.0",
+        "com.google.auth:google-auth-library-oauth2-http:0.9.1 needs to "
+        + "upgrade com.google.http-client:google-http-client:1.19.0 to 1.23.0",
+        "com.google.http-client:google-http-client-jackson2:1.19.0 needs to "
+        + "upgrade com.google.http-client:google-http-client:1.19.0 to 1.23.0");
   }
   
   // todo test beam and make it work
