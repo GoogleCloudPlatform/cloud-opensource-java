@@ -71,12 +71,6 @@ public class DependencyGraphBuilder {
 
   private static DependencyNode resolveCompileTimeDependencies(Artifact artifact)
       throws DependencyCollectionException, DependencyResolutionException {
-
-    // work around ${os.detected.classifier} problems by nulling out the classifier 
-    if (artifact.getClassifier() != null) {
-      artifact = new DefaultArtifact(artifact.getGroupId(), artifact.getArtifactId(),
-          artifact.getExtension(), artifact.getVersion());
-    }
     
     String key = Artifacts.toCoordinates(artifact);
     if (cache.containsKey(key)) {
@@ -95,7 +89,6 @@ public class DependencyGraphBuilder {
     DependencyRequest dependencyRequest = new DependencyRequest();
     dependencyRequest.setRoot(node);
     system.resolveDependencies(session, dependencyRequest);
-
     cache.put(key, node);
     
     return node;

@@ -32,6 +32,7 @@ public class UpdateReport {
   public static void main(String[] args)
       throws DependencyCollectionException, DependencyResolutionException {
     
+    // todo use regex or DefaultArtifact class to test format
     if (args.length != 1 || !args[0].contains(":")) {
       System.err.println("Usage: java " + UpdateReport.class.getCanonicalName()
           + " groupdId:artifactId:version");
@@ -48,6 +49,8 @@ public class UpdateReport {
     
     DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(groupId, artifactId, version);
     List<String> updates = graph.findUpdates();
+    
+    // todo handle no updates needed
     
     for (String update : updates) {
       System.out.println(update);
