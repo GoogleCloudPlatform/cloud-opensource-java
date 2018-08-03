@@ -72,6 +72,12 @@ public class DependencyGraphBuilder {
   private static DependencyNode resolveCompileTimeDependencies(Artifact artifact)
       throws DependencyCollectionException, DependencyResolutionException {
 
+    // work around ${os.detected.classifier} problems by nulling out the classifier 
+    if (artifact.getClassifier() != null) {
+      artifact = new DefaultArtifact(artifact.getGroupId(), artifact.getArtifactId(),
+          artifact.getExtension(), artifact.getVersion());
+    }
+    
     String key = Artifacts.toCoordinates(artifact);
     if (cache.containsKey(key)) {
       return cache.get(key);
@@ -195,13 +201,22 @@ public class DependencyGraphBuilder {
     
     DependencyPath forPath = new DependencyPath();
     for (DependencyNode node : path) {
-      forPath.add(node.getArtifact());
+      if (!"system".equals(node.getDependency().getScope())) {
+        forPath.add(node.getArtifact());
+      }
     }
     graph.addPath(forPath);
     
     for (DependencyNode child : current.getChildren()) {
-      child = resolveCompileTimeDependencies(child.getArtifact());
-      fullPreorder((Stack<DependencyNode>) path.clone(), child, graph);
+      if (!"system".equals(child.getDependency().getScope())) {
+        try {
+          child = resolveCompileTimeDependencies(child.getArtifact());
+        } catch (DependencyResolutionException ex) {
+          System.err.println("Error resolving " + forPath);
+          throw ex;
+        }
+        fullPreorder((Stack<DependencyNode>) path.clone(), child, graph);
+      }
     }
   }
 

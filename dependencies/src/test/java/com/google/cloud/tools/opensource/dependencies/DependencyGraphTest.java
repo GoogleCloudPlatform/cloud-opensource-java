@@ -36,11 +36,13 @@ public class DependencyGraphTest {
   private Artifact foo = new DefaultArtifact("com.google:foo:1");
   private Artifact bar = new DefaultArtifact("com.google:bar:1");
   private Artifact baz1 = new DefaultArtifact("com.google:baz:1");
+  private Artifact bat1 = new DefaultArtifact("com.google:bat:1");
   private Artifact baz2 = new DefaultArtifact("com.google:baz:2");
   private DependencyPath path1 = new DependencyPath();
   private DependencyPath path2 = new DependencyPath();
   private DependencyPath path3 = new DependencyPath();
   private DependencyPath path4 = new DependencyPath();
+  private DependencyPath path5 = new DependencyPath();
   
   @Before
   public void setUp() {
@@ -52,6 +54,9 @@ public class DependencyGraphTest {
     path4.add(foo);
     path4.add(bar);
     path4.add(baz2);
+    path5.add(foo);
+    path5.add(bat1);
+    path5.add(baz1); // 2 paths to baz1
     
     graph.addPath(path1);
     graph.addPath(path2);
@@ -74,7 +79,7 @@ public class DependencyGraphTest {
     
     // manually verified that for this version of google-cloud-core
     // this should be first in the list in breadth first tree traversal
-    Truth.assertThat(updates).hasSize(5);
+    Truth.assertThat(updates).hasSize(12);
     Assert.assertEquals(
         "com.google.guava:guava:20.0 needs to "
         + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
@@ -101,9 +106,9 @@ public class DependencyGraphTest {
       leaves.add(Artifacts.toCoordinates(path.getLeaf()));
     }
     
-    Truth.assertThat(leaves).contains("com.google.api.grpc:proto-google-common-protos:1.0.0");
-    Truth.assertThat(leaves).contains("com.google.api.grpc:proto-google-common-protos:1.11.0");
-    Truth.assertThat(leaves).contains("com.google.api.grpc:proto-google-common-protos:1.12.0");
+    Truth.assertThat(leaves).containsAllOf("com.google.api.grpc:proto-google-common-protos:1.0.0",
+        "com.google.api.grpc:proto-google-common-protos:1.11.0",
+        "com.google.api.grpc:proto-google-common-protos:1.12.0");
   }
   
   @Test
@@ -116,6 +121,12 @@ public class DependencyGraphTest {
   public void testGetPaths() {
     Set<DependencyPath> paths = graph.getPaths("com.google:baz:2");
     Truth.assertThat(paths).containsExactly(path4);
+  }
+
+  @Test
+  public void testGetPaths_multiple() {
+    Set<DependencyPath> paths = graph.getPaths("com.google:baz:1");
+    Truth.assertThat(paths).containsExactly(path3, path5);
   }
   
   @Test

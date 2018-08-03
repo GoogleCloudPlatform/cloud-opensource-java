@@ -17,11 +17,9 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -31,7 +29,7 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
 
 /**
- * <p>A representation of the complete non-cyclic transitive dependency tree of a Maven artifact.
+ * A representation of the complete non-cyclic transitive dependency tree of a Maven artifact.
  * 
  * <p>Imagine performing a breadth first search through the tree. As we go we build up a list of
  * dependencies. The path to each dependency node is placed in a list. Although each path should
@@ -45,12 +43,13 @@ public class DependencyGraph {
 
   // DependencyGraphBuilder builds this in breadth first order.
   // That is, this list contains the paths to each node in breadth first order 
-  private List<DependencyPath> graph = new ArrayList<>();
+  private final List<DependencyPath> graph = new ArrayList<>();
   
   // map of groupId:artifactId to versions
-  // todo If versions's values were the whole coordinate string 
+  // todo if versions' values were the whole coordinate string 
   // (or even the Artifact itself), would this be simpler?
-  private SetMultimap<String, String> versions = TreeMultimap.create();
+  private final TreeMultimap<String, String> versions =
+      TreeMultimap.create(Comparator.naturalOrder(), new VersionComparator());
   
   // map of groupId:artifactId:version to paths
   private SetMultimap<String, DependencyPath> paths = HashMultimap.create();
@@ -108,28 +107,20 @@ public class DependencyGraph {
   List<String> findUpdates() {
     List<DependencyPath> paths = findConflicts();
     
-    Map<String, String> latestVersions = new HashMap<>();
-    for (DependencyPath path : paths) {
-      Artifact leaf = path.getLeaf();
-      String key = Artifacts.makeKey(leaf);
-      List<String> versions = new ArrayList<>(getVersions(key));
-      String highestVersion = Collections.max(versions, new VersionComparator());
-      latestVersions.put(key, highestVersion);
-    }
-    
     // now generate necessary upgrades
     LinkedHashSet<String> upgrades = new LinkedHashSet<>();
     for (DependencyPath path : paths) {
       Artifact leaf = path.getLeaf();
       String key = Artifacts.makeKey(leaf);
-      String highestVersion = latestVersions.get(key);
+      String highestVersion = versions.get(key).last();
       if (!leaf.getVersion().equals(highestVersion)) {
         Artifact parent = path.get(path.size() - 2);
         // when the parent is out of date, update the parent instead
         // todo drop if any ancestor needs an update, instead of just the parent
         // or perhaps we just order the updates from root down, and then rerun after
         // each fix. Maybe even calculate what will be needed postfix
-        if (parent.getVersion().equals(latestVersions.get(Artifacts.makeKey(parent)))) {
+        String lastParentVersion = versions.get(Artifacts.makeKey(parent)).last();
+        if (parent.getVersion().equals(lastParentVersion)) {
           upgrades.add(Artifacts.toCoordinates(parent) + " needs to upgrade " 
               + Artifacts.toCoordinates(leaf) + " to " + highestVersion); 
         }
