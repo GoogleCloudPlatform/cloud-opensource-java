@@ -62,12 +62,13 @@ public class DependencyGraphTest {
     graph.addPath(path2);
     graph.addPath(path3);
     graph.addPath(path4);
+    graph.addPath(path5);
   }
   
   @Test
   public void testFindConflicts() {
     List<DependencyPath> conflicts = graph.findConflicts();
-    Truth.assertThat(conflicts).containsExactly(path3, path4).inOrder();
+    Truth.assertThat(conflicts).containsExactly(path3, path4, path5); // .inOrder();
   }
   
   @Test
@@ -88,7 +89,11 @@ public class DependencyGraphTest {
         "com.google.http-client:google-http-client:1.23.0 needs to "
         + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
         "com.google.api:api-common:1.6.0 needs to "
-        + "upgrade com.google.code.findbugs:jsr305:3.0.0 to 3.0.2");
+        + "upgrade com.google.code.findbugs:jsr305:3.0.0 to 3.0.2",
+        "com.google.api.grpc:proto-google-common-protos:1.12.0 needs to "
+        + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0"
+        
+        );
   }
   
   // todo test beam and make it work
@@ -105,7 +110,8 @@ public class DependencyGraphTest {
       leaves.add(Artifacts.toCoordinates(path.getLeaf()));
     }
     
-    Truth.assertThat(leaves).containsAllOf("com.google.api.grpc:proto-google-common-protos:1.0.0",
+    Truth.assertThat(leaves).containsAllOf(
+        "com.google.api.grpc:proto-google-common-protos:1.0.0",
         "com.google.api.grpc:proto-google-common-protos:1.11.0",
         "com.google.api.grpc:proto-google-common-protos:1.12.0");
   }
@@ -113,7 +119,7 @@ public class DependencyGraphTest {
   @Test
   public void testAdd() {
     List<DependencyPath> all = graph.list();
-    Truth.assertThat(all).containsExactly(path1, path2, path3, path4).inOrder();;
+    Truth.assertThat(all).containsExactly(path1, path2, path3, path4, path5).inOrder();
   }
   
   @Test
