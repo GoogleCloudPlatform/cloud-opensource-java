@@ -113,8 +113,16 @@ public class DependencyGraphTest {
         + "upgrade com.google.http-client:google-http-client:1.19.0 to 1.23.0");
   }
   
-  // todo test beam and make it work
-  
+  @Test
+  // beam has a more complex dependency graph that hits some corner cases
+  public void testFindUpdates_beam()
+      throws DependencyCollectionException, DependencyResolutionException {    
+
+    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies("org.apache.beam",
+        "beam-sdks-java-io-google-cloud-platform", "2.5.0");
+    
+    graph.findUpdates();
+  }
   
   @Test
   public void testFindConflicts_cloudLanguage()

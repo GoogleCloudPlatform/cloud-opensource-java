@@ -20,6 +20,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Stack;
 
@@ -56,6 +57,22 @@ public class DependencyGraphBuilder {
   private static final RepositorySystem system = newRepositorySystem();
   private static final RemoteRepository CENTRAL =
       new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
+  
+  static {
+    // os.detected.classifier system property used to select Netty deps
+    String OS = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH);
+    if ((OS.indexOf("mac") >= 0) || (OS.indexOf("darwin") >= 0)) {
+      System.setProperty("os.detected.classifier", "osx-x86_64");
+    } else if (OS.indexOf("win") >= 0) {
+      System.setProperty("os.detected.classifier", "windows-x86_64");
+    } else if (OS.indexOf("nux") >= 0) {
+      System.setProperty("os.detected.classifier", "linux-x86_64");
+    } else {
+      // Since we only load the dependency graph, not actually use the 
+      // dependency, it doesn't matter a great deal which one we pick.
+      System.setProperty("os.detected.classifier", "linux-x86_64");      
+    }
+  }
 
   private static DependencyNode resolveCompileTimeDependencies(
       String groupId, String artifactId, String version)
@@ -117,6 +134,8 @@ public class DependencyGraphBuilder {
 
   /**
    * Returns the non-transitive compile time dependencies of an artifact.
+   * 
+   * @throws IllegalArgumentException if group ID, artifact ID, or version is malformed
    */
   public static List<Artifact> getDirectDependencies(String groupId, String artifactId,
       String version) throws DependencyCollectionException, DependencyResolutionException {
@@ -138,6 +157,8 @@ public class DependencyGraphBuilder {
    * Finds the full compile time, transitive dependency graph including duplicates
    * and conflicting versions. This method makes a lot of network connections
    * and runs for multiple minutes. Better support for local repos may help.
+   * 
+   * @throws IllegalArgumentException if group ID, artifact ID, or version is malformed
    */
   public static DependencyGraph getCompleteDependencies(String groupId, String artifactId,
       String version) throws DependencyCollectionException, DependencyResolutionException {
@@ -155,6 +176,8 @@ public class DependencyGraphBuilder {
    * It does not include duplicates and conflicting versions. That is,
    * this resolves conflicting versions by picking the first version
    * seen. This is how Maven normally operates.
+   * 
+   * @throws IllegalArgumentException if group ID, artifact ID, or version is malformed
    */
   public static DependencyGraph getTransitiveDependencies(String groupId, String artifactId,
       String version) throws DependencyCollectionException, DependencyResolutionException {
@@ -177,7 +200,9 @@ public class DependencyGraphBuilder {
     path.push(current);
     DependencyPath forPath = new DependencyPath();
     for (DependencyNode node : path) {
-      forPath.add(node.getArtifact());
+      if (!"system".equals(node.getDependency().getScope())) {
+        forPath.add(node.getArtifact());
+      }
     }
     graph.addPath(forPath);
     
@@ -206,6 +231,7 @@ public class DependencyGraphBuilder {
           child = resolveCompileTimeDependencies(child.getArtifact());
         } catch (DependencyResolutionException ex) {
           System.err.println("Error resolving " + forPath);
+          System.err.println(ex.getMessage());
           throw ex;
         }
         fullPreorder((Stack<DependencyNode>) path.clone(), child, graph);
