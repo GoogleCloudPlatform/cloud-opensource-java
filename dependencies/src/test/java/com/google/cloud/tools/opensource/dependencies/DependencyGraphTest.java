@@ -85,13 +85,9 @@ public class DependencyGraphTest {
         "google-cloud-core", "1.37.1");
     List<String> updates = graph.findUpdates();
     
-    // manually verified that for this version of google-cloud-core
-    // this should be first in the list in breadth first tree traversal
-    Truth.assertThat(updates).hasSize(12);
-    
     // ordering not working yet
     // todo get order working
-    Truth.assertThat(updates).containsAllOf("com.google.guava:guava:20.0 needs to "
+    Truth.assertThat(updates).containsExactly("com.google.guava:guava:20.0 needs to "
         + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
         "com.google.http-client:google-http-client:1.23.0 needs to "
         + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
@@ -101,6 +97,10 @@ public class DependencyGraphTest {
         + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
         "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
         + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
+        "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
+        + "upgrade com.google.api.grpc:proto-google-common-protos:1.11.0 to 1.12.0",
+        "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
+        + "upgrade com.google.api:api-common:1.5.0 to 1.6.0",
         "com.google.api:api-common:1.6.0 needs to "
         + "upgrade com.google.guava:guava:19.0 to 20.0",
         "com.google.auth:google-auth-library-oauth2-http:0.9.1 needs to "

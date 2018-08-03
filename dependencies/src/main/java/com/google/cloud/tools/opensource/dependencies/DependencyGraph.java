@@ -104,6 +104,8 @@ public class DependencyGraph {
     return versions.get(coordinates);
   }
 
+  // todo consider whether we need an update class with parent, from, and to, and
+  // a toString method rather than returning strings
   List<String> findUpdates() {
     List<DependencyPath> paths = findConflicts();
     
