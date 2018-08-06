@@ -26,7 +26,6 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.collect.Sets;
 import com.google.common.truth.Truth;
 
 public class DependencyGraphBuilderTest {
@@ -54,7 +53,7 @@ public class DependencyGraphBuilderTest {
     Assert.assertTrue(paths.size() > 10);
     
     // verify we didn't double count anything
-    HashSet<DependencyPath> noDups = Sets.newHashSet(paths);
+    HashSet<DependencyPath> noDups = new HashSet<>(paths);
     Assert.assertEquals(paths.size(), noDups.size());
     
     // This method should find Guava multiple times.
