@@ -46,15 +46,16 @@ public class UpdateReport {
       String artifactId = artifact.getArtifactId();
       String version = artifact.getVersion();
       
-      DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(groupId, artifactId, version);
+      DependencyGraph graph =
+          DependencyGraphBuilder.getCompleteDependencies(groupId, artifactId, version);
       List<String> updates = graph.findUpdates();
       
       if (updates.isEmpty()) {
         System.out.println(args[0] + " is consistent.");
         System.out.println();        
       } else {
-          System.out.println("Upgrades needed for " + args[0] +":");
-          System.out.println();
+        System.out.println("Upgrades needed for " + args[0] +":");
+        System.out.println();
         for (String update : updates) {
           System.out.println(update);
         }
