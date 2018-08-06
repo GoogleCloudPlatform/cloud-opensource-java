@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import java.util.List;
 
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 
@@ -31,29 +32,36 @@ public class UpdateReport {
    */
   public static void main(String[] args)
       throws DependencyCollectionException, DependencyResolutionException {
-    
-    // todo use regex or DefaultArtifact class to test format
+
     if (args.length != 1 || !args[0].contains(":")) {
       System.err.println("Usage: java " + UpdateReport.class.getCanonicalName()
           + " groupdId:artifactId:version");
       return;
     }
     
-    String[] coordinates = args[0].split(":");
-    String groupId = coordinates[0];
-    String artifactId = coordinates[1];
-    String version = coordinates[2];
+    try {
+      DefaultArtifact artifact = new DefaultArtifact(args[0]);
     
-    System.out.println("Upgrades needed for " + args[0] +":");
-    System.out.println();
-    
-    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(groupId, artifactId, version);
-    List<String> updates = graph.findUpdates();
-    
-    // todo handle no updates needed
-    
-    for (String update : updates) {
-      System.out.println(update);
+      String groupId = artifact.getGroupId();
+      String artifactId = artifact.getArtifactId();
+      String version = artifact.getVersion();
+      
+      DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(groupId, artifactId, version);
+      List<String> updates = graph.findUpdates();
+      
+      if (updates.isEmpty()) {
+        System.out.println(args[0] + " is consistent.");
+        System.out.println();        
+      } else {
+          System.out.println("Upgrades needed for " + args[0] +":");
+          System.out.println();
+        for (String update : updates) {
+          System.out.println(update);
+        }
+      }
+    } catch (IllegalArgumentException ex) {
+      System.err.println("Bad Maven coordinates " + args[0]);
+      return;      
     }
   }
 
