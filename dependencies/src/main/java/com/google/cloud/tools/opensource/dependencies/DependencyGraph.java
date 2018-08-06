@@ -46,7 +46,7 @@ public class DependencyGraph {
   private final List<DependencyPath> graph = new ArrayList<>();
   
   // map of groupId:artifactId to versions
-  // todo if versions' values were the whole coordinate string 
+  // TODO if versions' values were the whole coordinate string 
   // (or even the Artifact itself), would this be simpler?
   private final TreeMultimap<String, String> versions =
       TreeMultimap.create(Comparator.naturalOrder(), new VersionComparator());
@@ -104,7 +104,7 @@ public class DependencyGraph {
     return versions.get(coordinates);
   }
 
-  // todo consider whether we need an update class with parent, from, and to, and
+  // TODO consider whether we need an update class with parent, from, and to, and
   // a toString method rather than returning strings
   List<String> findUpdates() {
     List<DependencyPath> paths = findConflicts();
@@ -118,7 +118,7 @@ public class DependencyGraph {
       if (!leaf.getVersion().equals(highestVersion)) {
         Artifact parent = path.get(path.size() - 2);
         // when the parent is out of date, update the parent instead
-        // todo drop if any ancestor needs an update, instead of just the parent
+        // TODO drop if any ancestor needs an update, instead of just the parent
         // or perhaps we just order the updates from root down, and then rerun after
         // each fix. Maybe even calculate what will be needed postfix
         String lastParentVersion = versions.get(Artifacts.makeKey(parent)).last();
@@ -129,7 +129,7 @@ public class DependencyGraph {
       }
     }
     
-    // todo sort by path by comparing with the graph
+    // TODO sort by path by comparing with the graph
     
     return new ArrayList<String>(upgrades);
   }

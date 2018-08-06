@@ -89,7 +89,7 @@ final class DependencyPath {
     return path.get(size() - 1);
   }
 
-  // todo think about index out of bounds
+  // TODO think about index out of bounds
   Artifact get(int i) {
     return path.get(i);
   }

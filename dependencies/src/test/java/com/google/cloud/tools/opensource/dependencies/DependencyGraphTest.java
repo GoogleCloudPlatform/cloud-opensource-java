@@ -68,7 +68,7 @@ public class DependencyGraphTest {
   @Test
   public void testFindConflicts() {
     List<DependencyPath> conflicts = graph.findConflicts();
-    // todo should appear in this order but right now doesn't.
+    // TODO should appear in this order but right now doesn't.
     // This may be the easiest test to approach to fix this.
     // Note that even if the manually set order above is not breadth-first
     // conflicts should still appear in the manually set order. That is,
@@ -86,7 +86,7 @@ public class DependencyGraphTest {
     List<String> updates = graph.findUpdates();
     
     // ordering not working yet
-    // todo get order working
+    // TODO get order working
     Truth.assertThat(updates).containsExactly("com.google.guava:guava:20.0 needs to "
         + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
         "com.google.http-client:google-http-client:1.23.0 needs to "

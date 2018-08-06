@@ -114,7 +114,7 @@ public class DependencyGraphBuilder {
   private static RepositorySystemSession newSession() {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
 
-    // todo find the local repository
+    // TODO find the local repository
     File temporaryDirectory = Files.createTempDir();
     temporaryDirectory.deleteOnExit();
     LocalRepository localRepository = new LocalRepository(temporaryDirectory.getAbsolutePath());
