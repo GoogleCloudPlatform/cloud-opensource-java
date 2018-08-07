@@ -12,6 +12,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <guavaVersion>26.0-jre</guavaVersion>
   </properties>
 
   <dependencies>
@@ -43,7 +44,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>25.1-jre</version>
+      <version>${guavaVersion}</version>
     </dependency>
     
     <dependency>
@@ -56,6 +57,12 @@
       <groupId>com.google.truth</groupId>
       <artifactId>truth</artifactId>
       <version>0.42</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava-testlib</artifactId>
+      <version>${guavaVersion}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
