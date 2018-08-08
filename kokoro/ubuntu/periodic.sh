@@ -8,4 +8,4 @@ set -x
 export M2_HOME=/usr/local/apache-maven
 
 cd github/cloud-opensource-java/dashboard
-mvn clean compile exec:java -Dexec.mainClass="com.google.cloud.tools.opensource.dashboard.DashboardMain"
+mvn -B clean compile exec:java -Dexec.mainClass="com.google.cloud.tools.opensource.dashboard.DashboardMain"
