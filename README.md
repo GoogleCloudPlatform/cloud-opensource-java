@@ -2,7 +2,7 @@
 
 This project explores common infrastructure and coding standards for open source Google Cloud Platform projects.
 
-[Code Hygeine Dashboard](https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/target/dashboard/dashboard.html) (runs daily; work in progress)
+[Code Hygiene Dashboard](https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/target/dashboard/dashboard.html) (runs daily; work in progress)
 
 # Development
 
