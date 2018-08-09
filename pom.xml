@@ -15,6 +15,11 @@
     <url>http://www.google.com</url>
   </organization>
 
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <guavaVersion>26.0-jre</guavaVersion>	
+  </properties>
+
   <licenses>
     <license>
       <name>The Apache License, Version 2.0</name>
@@ -32,7 +37,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>26.0-jre</version>
+        <version>${guavaVersion}</version>
       </dependency>
 
       <dependency>
@@ -44,11 +49,10 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava-testlib</artifactId>
-        <version>26.0-jre</version>
+        <version>${guavaVersion}</version>
         <scope>test</scope>
     </dependency>
     </dependencies>
   </dependencyManagement>
-
 
 </project>
