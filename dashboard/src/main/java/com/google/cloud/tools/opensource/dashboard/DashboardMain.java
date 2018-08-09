@@ -50,7 +50,7 @@ public class DashboardMain {
   
   // todo move this to config file
   static String[] ARTIFACTS = {
-    "com.google.cloud:google-cloud-datastore:1.33.0"
+    "com.google.cloud:google-cloud-datastore:1.38.0"
   };
   
   public static void main(String[] args) 
