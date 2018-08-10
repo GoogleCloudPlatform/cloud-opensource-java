@@ -22,7 +22,7 @@ jobs:
     
     steps:
       - checkout:
-          path: ~/cloud-openbsource-java
+          path: ~/cloud-opensource-java
 
       # Download and cache dependencies
       - restore_cache:
