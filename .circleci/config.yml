@@ -22,6 +22,8 @@ jobs:
     
     steps:
       - checkout
+      checkout:
+          path: ~/dependencies
 
       # Download and cache dependencies
       - restore_cache:
