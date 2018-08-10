@@ -21,9 +21,9 @@ jobs:
       MAVEN_OPTS: -Xmx3200m
     
     steps:
-      - checkout
-      checkout:
-          path: ~/dependencies
+      - checkout:
+          path: 
+          - ~/dependencies
 
       # Download and cache dependencies
       - restore_cache:
