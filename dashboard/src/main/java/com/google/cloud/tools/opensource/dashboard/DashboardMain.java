@@ -128,7 +128,7 @@ public class DashboardMain {
       templateData.put("groupId", groupId);
       templateData.put("artifactId", artifactId);
       templateData.put("version", version);
-      // TODO should probably do this in freemarker template instead
+      // TODO should probably escape reserved characters in freemarker template instead
       templateData.put("mavenOutput",
           mavenOutput.replaceAll("&", "&amp;").replaceAll("<", "&lt;"));
       report.process(templateData, out);
