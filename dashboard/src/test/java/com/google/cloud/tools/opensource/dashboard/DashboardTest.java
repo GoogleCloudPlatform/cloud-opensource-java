@@ -72,7 +72,8 @@ public class DashboardTest {
           // TODO test the content of the report
         } catch (ParsingException ex) {
           byte[] data = Files.readAllBytes(componentReport);
-          String message = "Could not parse " + componentReport + "\r\n";
+          String message = "Could not parse " + componentReport + " at line " +
+            ex.getLineNumber() +", column " + ex.getColumnNumber() + "\r\n";
           message += ex.getMessage() + "\r\n";
           message += new String(data, StandardCharsets.UTF_8);
           Assert.fail(message);
