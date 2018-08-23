@@ -50,7 +50,7 @@ public class DashboardMain {
   
   // todo move this to config file
   static String[] ARTIFACTS = {
-    "com.google.cloud:google-cloud-datastore:1.33.0"
+    "com.google.cloud:google-cloud-datastore:1.38.0"
   };
   
   public static void main(String[] args) 
@@ -118,6 +118,7 @@ public class DashboardMain {
       StringBuilderHandler handler = new StringBuilderHandler();
       invoker.setOutputHandler(handler);
       
+      // TODO check exit code
       InvocationResult result = invoker.execute(request);
       String mavenOutput = handler.getOutput();
       
@@ -127,7 +128,9 @@ public class DashboardMain {
       templateData.put("groupId", groupId);
       templateData.put("artifactId", artifactId);
       templateData.put("version", version);
-      templateData.put("mavenOutput", mavenOutput);
+      // TODO should probably escape reserved characters in freemarker template instead
+      templateData.put("mavenOutput",
+          mavenOutput.replaceAll("&", "&amp;").replaceAll("<", "&lt;"));
       report.process(templateData, out);
 
       out.flush();

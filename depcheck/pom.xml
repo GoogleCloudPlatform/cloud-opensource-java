@@ -34,7 +34,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bom</artifactId>
-        <version>0.51.0-alpha</version>
+        <version>0.55.1-alpha</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -45,7 +45,7 @@
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-datastore</artifactId>
-      <version>1.33.0</version>
+      <version>1.37.1</version>
     </dependency>
   </dependencies>
 

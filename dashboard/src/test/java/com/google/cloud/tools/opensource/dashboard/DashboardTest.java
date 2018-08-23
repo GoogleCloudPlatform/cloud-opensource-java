@@ -20,6 +20,7 @@ import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import nu.xom.Builder;
@@ -66,11 +67,19 @@ public class DashboardTest {
             URLDecoder.decode(fileName, "UTF-8"));
         Path componentReport = outputDirectory.resolve(fileName);
         Assert.assertTrue(fileName + " is missing", Files.isRegularFile(componentReport));
-        Document report = builder.build(componentReport.toFile());
-       
+        try {
+          Document report = builder.build(componentReport.toFile());
+          // TODO test the content of the report
+        } catch (ParsingException ex) {
+          byte[] data = Files.readAllBytes(componentReport);
+          String message = "Could not parse " + componentReport + " at line " +
+            ex.getLineNumber() +", column " + ex.getColumnNumber() + "\r\n";
+          message += ex.getMessage() + "\r\n";
+          message += new String(data, StandardCharsets.UTF_8);
+          Assert.fail(message);
+        }
       }
-
-    }  
-    
+    }
   }
+
 }
