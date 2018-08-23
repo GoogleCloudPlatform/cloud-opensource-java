@@ -29,26 +29,11 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <google.cloud.java.ga.version>1.38.0</google.cloud.java.ga.version>
+    <google.cloud.java.ga.version>1.40.0</google.cloud.java.ga.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>org.apache.beam</groupId>
-        <artifactId>beam-sdks-java-core</artifactId>
-        <version>2.5.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.beam</groupId>
-        <artifactId>beam-sdks-java-extensions-google-cloud-platform-core</artifactId>
-        <version>2.5.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.beam</groupId>
-        <artifactId>beam-sdks-java-extensions-protobuf</artifactId>
-        <version>2.5.0</version>
-      </dependency>
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
