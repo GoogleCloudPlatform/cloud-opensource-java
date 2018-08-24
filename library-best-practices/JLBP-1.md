@@ -12,12 +12,9 @@ Some specific notes about minimizing dependencies:
   need to use compile scope, and can instead use compile-only,
   since it doesn't need to appear on the classpath of consumers.
   - All libraries used only for testing should have test scope
-    (e.g. junit, mockito, and truth).
+    (for example junit, mockito, and truth).
 - Scrutinize all dependency additions. Check the result of
   `mvn dependency:tree` (after running `mvn install -DskipTests`
   to build the library) to see which transitive dependencies are
   added by just adding a single dependency to your own library,
   and if you require all of the transitive dependencies.
-- Avoid cyclic dependencies
-  - E.g., gRPC depends on OpenCensus which depends on gRPC.
-  - Maven can detect this.
