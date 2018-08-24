@@ -29,56 +29,21 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <google.cloud.java.ga.version>1.40.0</google.cloud.java.ga.version>
+    <google.cloud.java.ga.version>1.36.0</google.cloud.java.ga.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
-      <!-- GRPC -->
+      <!-- GRPC; specifically https://github.com/grpc/grpc-java -->
       <dependency>
         <groupId>io.grpc</groupId>
-        <artifactId>grpc-core</artifactId>
-        <version>1.2.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-all</artifactId>
-        <version>1.2.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.api</groupId>
-        <artifactId>gax-grpc</artifactId>
-        <version>1.29.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-core-grpc</artifactId>
-        <version>1.2.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.api.grpc</groupId>
-        <artifactId>grpc-google-cloud-pubsub-v1</artifactId>
-        <version>1.18.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.api.grpc</groupId>
-        <artifactId>proto-google-cloud-pubsub-v1</artifactId>
-        <version>1.18.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-auth</artifactId>
+        <artifactId>grpc-netty-shaded</artifactId>
         <version>1.2.0</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
-        <artifactId>grpc-netty</artifactId>
+        <artifactId>grpc-protobuf</artifactId>
         <version>1.2.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.netty</groupId>
-        <artifactId>netty-handler</artifactId>
-        <version>4.1.8.Final</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
@@ -86,68 +51,30 @@
         <version>1.2.0</version>
       </dependency>
       <dependency>
-        <groupId>com.google.api.grpc</groupId>
-        <artifactId>proto-google-cloud-spanner-admin-database-v1</artifactId>
-        <version>0.19.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.api.grpc</groupId>
-        <artifactId>proto-google-common-protos</artifactId>
-        <version>0.19.0</version>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-core</artifactId>
+        <version>1.2.0</version>
       </dependency>
 
-      <!-- protobufs -->
+      <!-- protobufs from https://github.com/protocolbuffers/protobuf/tree/master/java -->
       <dependency>
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java</artifactId>
         <version>3.6.0</version>
       </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java-util</artifactId>
+        <version>3.6.0</version>
+      </dependency>
 
-      <!-- google-cloud-java -->
-      <dependency>
-        <groupId>com.google.apis</groupId>
-        <artifactId>google-api-services-bigquery</artifactId>
-        <version>v2-rev374-1.23.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.apis</groupId>
-        <artifactId>google-api-services-pubsub</artifactId>
-        <version>v1-rev382-1.23.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.cloud.bigdataoss</groupId>
-        <artifactId>util</artifactId>
-        <version>1.4.5</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.cloud.datastore</groupId>
-        <artifactId>datastore-v1-proto-client</artifactId>
-        <version>1.6.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.cloud.datastore</groupId>
-        <artifactId>datastore-v1-protos</artifactId>
-        <version>1.5.0</version>
-      </dependency>
+      <!-- google-cloud-java from https://github.com/GoogleCloudPlatform/google-cloud-java -->
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-core</artifactId>
-        <version>1.36.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-spanner</artifactId>
-        <version>0.20.0b-beta</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.cloud.bigtable</groupId>
-        <artifactId>bigtable-protos</artifactId>
-        <version>1.0.0-pre3</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.cloud.bigtable</groupId>
-        <artifactId>bigtable-client-core</artifactId>
-        <version>1.4.0</version>
+        <artifactId>google-cloud-bom</artifactId>
+        <version>${google.cloud.java.ga.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
