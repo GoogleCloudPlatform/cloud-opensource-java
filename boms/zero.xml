@@ -29,7 +29,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <google.cloud.java.ga.version>1.36.0</google.cloud.java.ga.version>
+    <google.cloud.java.ga.version>1.41.0</google.cloud.java.ga.version>
+    <io.grpc.version>1.14.0</io.grpc.version>
   </properties>
 
   <dependencyManagement>
@@ -38,22 +39,22 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-netty-shaded</artifactId>
-        <version>1.2.0</version>
+        <version>${io.grpc.version}</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-protobuf</artifactId>
-        <version>1.2.0</version>
+        <version>${io.grpc.version}</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-stub</artifactId>
-        <version>1.2.0</version>
+        <version>${io.grpc.version}</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-core</artifactId>
-        <version>1.2.0</version>
+        <version>${io.grpc.version}</version>
       </dependency>
 
       <!-- protobufs from https://github.com/protocolbuffers/protobuf/tree/master/java -->
