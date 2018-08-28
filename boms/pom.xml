@@ -28,7 +28,7 @@
 
   <modules>
     <module>zero-bom</module>
-    <module>convergence-check</module>
+    <module>upperBoundsCheck</module>
   </modules>
 
 </project>
