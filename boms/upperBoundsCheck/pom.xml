@@ -33,18 +33,20 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>com.google.cloud</groupId>
-				<artifactId>zero-bom</artifactId>
-				<version>0.0.1-SNAPSHOT</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>		
-	</dependencyManagement>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>zero-bom</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>    
+  </dependencyManagement>
 
+  <!-- TODO is there a way to run this test directly on the BOM
+       instead of on a pom.xml that imports the BOM? -->
   <dependencies>
     <dependency>
       <groupId>com.google.cloud</groupId>
