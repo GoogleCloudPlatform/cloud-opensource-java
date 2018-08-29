@@ -13,8 +13,8 @@ Definition of semver: https://semver.org
     - Google-cloud-java uses `@BetaApi`, `@InternalApi`, and
       `@InternalExtensionOnly`
   - Library documentation should point users to a tool (or tools) that can
-    help them automatically detect when they are inadvertently using features
-    marked with these annotations.
+    help them detect when they are using features marked with these
+    annotations.
   - Even though semver rules don't apply to unstable features, it is
     recommended to bump a library's minor version if unstable features have
     surface breakages.
@@ -24,13 +24,13 @@ Definition of semver: https://semver.org
   - http://www.mojohaus.org/clirr-maven-plugin/
   - Example compatibility report for grpc-core:
     https://abi-laboratory.pro/index.php?view=timeline&lang=java&l=grpc-core 
-- Examples of breaking changes to a stable Public API that require a new
-  major version:
+- Examples of breaking changes to a Public API that require a new major
+  version:
   - Upgrading to a non-compatible dependency that is exposed through a
     library's Public API (for dependencies that follow semver, this happens
     when a dependency is bumped to a higher major version)
   - Changing a method signature
-  - Removing a deprecated method
+  - Removing a method (deprecated or not)
 - Examples of additions that require a new minor version:
   - Upgrading a dependency to a new minor version (compatible, but new
     features) that is exposed through a library's Public API
