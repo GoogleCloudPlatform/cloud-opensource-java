@@ -12,8 +12,9 @@ Definition of semver: https://semver.org
     - grpc-java uses `@ExperimentalApi`
     - Google-cloud-java uses `@BetaApi`, `@InternalApi`, and
       `@InternalExtensionOnly`
-  - Library documentation should let users know how to detect usage of
-    features that use these annotations
+  - Library documentation should point users to a tool (or tools) that can
+    help them automatically detect when they are inadvertently using features
+    marked with these annotations.
   - Even though semver rules don't apply to unstable features, it is
     recommended to bump a library's minor version if unstable features have
     surface breakages.
@@ -23,7 +24,8 @@ Definition of semver: https://semver.org
   - http://www.mojohaus.org/clirr-maven-plugin/
   - Example compatibility report for grpc-core:
     https://abi-laboratory.pro/index.php?view=timeline&lang=java&l=grpc-core 
-- Examples of breaking changes that require a new major version:
+- Examples of breaking changes to a stable Public API that require a new
+  major version:
   - Upgrading to a non-compatible dependency that is exposed through a
     library's Public API (for dependencies that follow semver, this happens
     when a dependency is bumped to a higher major version)
@@ -34,12 +36,12 @@ Definition of semver: https://semver.org
     features) that is exposed through a library's Public API
   - Adding a new class
   - Adding a new method
-- Special case: Bumping up the minimum required Java version doesn't always
-  require a major version bump. Requirements for skipping the major version
-  bump:
-  - Requirement 1: Only a pure change in the minimum required Java version
-    is allowed. Any surface change that breaks users still requires a major
-    version bump.
-  - Requirement 2: The major version can be kept only when the obsoleted
-    version has minimal usage. If an obsoleted version has medium or high
-    usage, a major version bump may be warranted.
+- Special case: Merely bumping up the minimum required Java version (and not
+  making any breaking surface changes) shouldn't necessarily mean that a
+  library should bump its major version, because new Java versions break
+  very little surface from prior versions. When considering a bump in the
+  minimum required Java version, prefer to wait until the abandoned version
+  has minimal usage, so that the splash damage of breakage is minimized.
+  If an obsoleted version has medium or high usage, a major version bump may
+  be warranted; however, it makes little sense to do this if it is the only
+  reason the major version is being bumped.
