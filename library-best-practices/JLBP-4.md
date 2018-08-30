@@ -1,33 +1,44 @@
-[JLBP-4] Avoid dependencies known to cause runtime conflicts
-------------------------------
+[JLBP-4] Avoid dependencies on unstable libraries and features
+--------------------------------------------------------------
 
-- Avoid using dependencies that are not stable.
-  - Example violation: The App Engine SDK introduced a non-final version of the
-    JCache API into its classpath, which conflicts with the final version of
-    JCache.
-  - The current exception is JSR 305 (`@NonNull`). It is widely referenced in
+- Unstable libraries are defined as libraries that allow for breaking changes to
+  their Public API within the same major version. For libraries following
+  semver, this means libraries with a 0.x.y version. (See [JLBP-3.md] for more
+  details on the recommendations for following semver.)
+- Unstable features are defined as features that are not part of the stable
+  Public API of a stable library, often marked with annotations like `@Beta`.
+  (See [JLBP-3.md] for more details on the recommendations for annotating
+  unstable features.)
+- If your library depends on an unstable library or feature, and that feature
+  experiences a breaking change between versions, your library will be locked to
+  a specific version of your dependency.
+  - If you expose the unstable feature on your library's surface, then your
+    library's current major version will be permanently locked to the version
+    you initially exposed, and you won't be able to upgrade without making a
+    breaking change to your users.
+  - If you only use the unstable feature in your implementation, then each minor
+    or patch version of your library will require a very specific version of
+    your dependency, and it will be unsafe for your users to upgrade your
+    library on its own, creating opportunities for hard-to-diagnose runtime
+    conflicts for users.
+- Given the consequences of depending unstable features in dependencies, avoid
+  doing so.
+  - Depending on unstable features between submodules of a single library is
+    considered acceptable, given there is a way for users to ensure they are
+    using compatible versions of the submodules together easily, e.g. by having
+    the library use the same version for all submodules, or by providing a BOM.
+- Additionally, avoid depending on libraries that implement non-finalized JSRs,
+  even if the library otherwise meets the criteria for stability.
+  - Example: App Engine depended on JSR-107 (JCache) before it was finalized,
+    and now the version that App Engine requires conflicts with the final
+    version.  This shouldn't be read as a warning to avoid App Engine, but
+    instead an example to warn other library implementers when making new
+    dependency choices.
+  - The current exception is JSR 305 (`@NonNull`), specifically as implemented
+    in `com.google.code.findbugs:jsr305`. This library is widely referenced in
     existing libraries and there is no compelling alternative, so it is allowed
-    as a dependency. However, it should also be noted that jsr305 has classes in
-    the javax.annotation package, which means that under the Java module system
-    introduced in Java 9, it conflicts with other artifacts that use that
+    as a dependency. However, it should also be noted that `jsr305` has classes
+    in the `javax.annotation` package, which means that under the Java module
+    system introduced in Java 9, it conflicts with other artifacts that use that
     package. The Error Prone team and others are in conversation with Jetbrains
     and others to produce a good replacement.
-- Avoid using dependencies that duplicate classes with other dependencies.
-  - Most common case: a library that has published the same classes under
-    multiple artifact names. Always use the primary variant.
-  - Example: Guava's main artifact is `guava`, but from versions 13.0 to 17.0,
-    another artifact `guava-jdk5` was also published with classes that overlap
-    with `guava`. Maven doesn't dedupe `guava-jdk5` with `guava` because the
-    artifact names are different, which means that the same class names are
-    provided by multiple jars, and runtime errors result from classes and
-    methods not being found. The only known Google library propagating this
-    dependency is google-api-client <= 1.23.0, and it has removed the
-    `guava-jdk5` dependency (and switched to the `guava` artifact) since 1.24.1.
-- Avoid depending on `servlet-api` if not necessary.
-  - The only type of library that should depend on `servlet-api` is one
-    functioning as a utility library for use in web apps. Even in this case, the
-    `servlet-api` dependency should use `provided` scope. Other libraries should
-    not use `servlet-api` as a dependency at all, for example, to get http
-    status code definitions. Usage of this library needs to be restricted
-    because there are multiple published versions that conflict with each other.
-- New problematic dependencies may be added here later.
