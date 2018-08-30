@@ -27,8 +27,8 @@
     your dependency, and it will be unsafe for your users to upgrade your
     library on its own, creating opportunities for hard-to-diagnose runtime
     conflicts for users.
-- Given the consequences of depending unstable features in dependencies, avoid
-  doing so.
+- Given the consequences of depending on unstable features in dependencies,
+  avoid doing so.
   - Depending on unstable features between submodules of a single library is
     acceptable, provided that users can easily force their build system to use
     compatible versions of the submodules. Some strategies for library owners

@@ -3,7 +3,7 @@
 
 - Definition: When two artifacts (with either a distinct group or distinct
   artifact id) "overlap classes," that means that there is at least one
-  full-qualified class name provided by both of the artifacts.
+  fully qualified class name provided by both of the artifacts.
 - This most commonly happens when a library has published the same classes in
   multiple artifacts having different names. Always use the primary variant.
 - Example 1: Guava's main artifact is `guava`, but from versions 13.0 to 17.0,
