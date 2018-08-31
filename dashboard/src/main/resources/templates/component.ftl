@@ -4,8 +4,10 @@
   </head>
   <body>
     <h1>Google Cloud Platform Code Health Open Source for ${groupId}:${artifactId}:${version}</h1>
-    <pre>
-${mavenOutput}
-    </pre>
+    <ul>
+      <#list updates as update>
+        <li>${update}</li>
+      </#list>
+    </ul>
   </body>
 </html>

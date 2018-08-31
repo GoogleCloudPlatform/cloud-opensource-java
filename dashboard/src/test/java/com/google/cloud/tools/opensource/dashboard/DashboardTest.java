@@ -31,9 +31,6 @@ import nu.xom.ValidityException;
 import org.junit.Assert;
 import org.junit.Test;
 
-/**
- * M2_HOME must be set to point to a local Maven installation for this to work.
- */
 public class DashboardTest {
 
   @Test
@@ -69,7 +66,8 @@ public class DashboardTest {
         Assert.assertTrue(fileName + " is missing", Files.isRegularFile(componentReport));
         try {
           Document report = builder.build(componentReport.toFile());
-          // TODO test the content of the report
+          Nodes updates = report.query("//li");
+          Assert.assertTrue("didn't find updates", updates.size() > 2);
         } catch (ParsingException ex) {
           byte[] data = Files.readAllBytes(componentReport);
           String message = "Could not parse " + componentReport + " at line " +
