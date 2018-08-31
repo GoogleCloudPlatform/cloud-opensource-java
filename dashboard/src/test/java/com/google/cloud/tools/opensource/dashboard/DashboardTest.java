@@ -52,7 +52,7 @@ public class DashboardTest {
     try (InputStream source = Files.newInputStream(dashboardHtml)) {
       Document document = builder.build(dashboardHtml.toFile());
       Nodes li = document.query("//li");
-      Assert.assertEquals(1, li.size());
+      Assert.assertEquals(2, li.size());
       for (int i = 0; i < li.size(); i++) {
         Assert.assertEquals(DashboardMain.ARTIFACTS[i], li.get(i).getValue());
       }
