@@ -2,14 +2,15 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <name>Dependency Lister</name>
+  <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/dependencies</url>
+
   <parent>
     <groupId>com.google.cloud.tools.opensource</groupId>
     <artifactId>cloud-tools-opensource-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
-
-  <name>Dependency Lister</name>
-  <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/dependencies</url>
+  
   <artifactId>dependency-lister</artifactId>
   <packaging>jar</packaging>
 

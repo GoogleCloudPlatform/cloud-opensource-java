@@ -14,4 +14,4 @@ cd github/cloud-opensource-java
 mvn -B clean install
 
 cd dashboard
-mvn -B clean compile exec:java -Dexec.mainClass="com.google.cloud.tools.opensource.dashboard.DashboardMain"
+mvn -B exec:java -Dexec.mainClass="com.google.cloud.tools.opensource.dashboard.DashboardMain"
