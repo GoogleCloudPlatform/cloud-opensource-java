@@ -11,6 +11,10 @@
 
   <name>Dependency Lister</name>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/dependencies</url>
+  <organization>
+    <name>Google LLC.</name>
+    <url>https://cloud.google.com</url>
+  </organization>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
