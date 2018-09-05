@@ -33,14 +33,14 @@ library A:
 
 Now when breaking changes are introduced to library A between major version 1
 and major version 2, a choice needs to be made: to rename or not rename? This
-question applies to both items listed above, the Maven coordinates (1) and the
-Java package (2). Consider the following renaming scenario:
+question applies to both items listed above, the Maven ID (1) and the Java
+package (2). Consider the following renaming scenario:
 
 - The Maven coordinates start as `g1:a1:1.0.0`
-  - With no rename, the new major version's Maven coordinates are
-    `g1:a1:2.0.0`. (Only one of the versions can be present in the dependency
-    tree.)
-  - With a rename, the new major version's Maven coordinates are
+  - With no rename of the Maven ID, the new major version's Maven coordinates
+    are `g1:a1:2.0.0`. (Only one of the versions can be present in the
+    dependency tree.)
+  - With a rename of the Maven ID, the new major version's Maven coordinates are
     `g2:a2:2.0.0`. (Both versions can be present in the dependency tree.)
 - The Java package starts as `com.google.a1`
   - With no rename, the new major version's Java package is still
@@ -54,15 +54,15 @@ Given this scenario, here are the possible combinations of renamings:
     dependency conflicts because different branches of a dependency tree can
     depend on different major versions, and only one of them can be pulled in by
     Maven in a particular dependency tree. Users are forced to change their code
-    between versions.
+    between versions, but only for library surface that was changed.
   - **Rename Maven ID (case 2)**: Users can easily pull in both the old jar
     (`g1:a1:1.0.0`) and the new jar (`g2:a2:2.0.0`) accidentally through
     transitive dependencies, because Maven treats the two artifacts as distinct,
     but since they have classes with the same Java packages, they are loaded in
     unpredictable ways, leading to runtime exceptions (for example
-    `ClassNotFoundException`). It is difficult for users to ensure their build
-    tree only includes one of the artifacts. **NEVER DO THIS**. Example: guava
-    vs guava-jdk5.
+    `ClassNotFoundException`). It is difficult for users to ensure that their
+    build tree only includes one of the artifacts. **NEVER DO THIS**. Example:
+    guava vs guava-jdk5.
 - **Rename Java package**:
   - **Don't rename Maven ID (case 3)**: The classes from `g1:a1:1.0.0` and
     `g1:a1:2.0.0` could technically be used together, but since they share the
@@ -70,16 +70,17 @@ Given this scenario, here are the possible combinations of renamings:
     forced to change their code between versions. It is strictly better to also
     rename the Maven ID, so that the major versions can be used side by side.
     Alternatively, if the old Java package and new Java package are bundled
-    together in the same Maven artifact, then both can be used side by side
-    (same as case 4 below). The slight drawback is that the user's class space
-    is polluted with both versions, whether both are used or not.
+    together in the same Maven artifact, then both can be used side by side.
+    This has the same impact as case 4 below, except with the slight drawback
+    that the user's class space is polluted with both versions, whether both are
+    used or not.
   - **Rename Maven ID (case 4)**: The two major versions can be used side by
     side, allowing users to incrementally transition from the old to the new
     version, or even use them side by side indefinitely if
     necessary. Transitioning fully to the new version does require code changes
-    between versions, though. There will be no conflicts using this
-    approach. This is the approach taken by Go, described in
-    https://research.swtch.com/vgo-import .
+    between versions though, even for classes whose surface remains the
+    same. There will be no conflicts using this approach. This is the approach
+    taken by Go, described in https://research.swtch.com/vgo-import .
 
 Given the consequences, it seems clear that the two worst options are case 2
 (renaming the Maven ID while keeping the Java package the same) and case 3
