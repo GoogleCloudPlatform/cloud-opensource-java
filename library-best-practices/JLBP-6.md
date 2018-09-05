@@ -69,6 +69,10 @@ Given this scenario, here are the possible combinations of renamings:
     Maven group ID and artifact ID, only one jar can be pulled in. Users are
     forced to change their code between versions. It is strictly better to also
     rename the Maven ID, so that the major versions can be used side by side.
+    Alternatively, if the old Java package and new Java package are bundled
+    together in the same Maven artifact, then both can be used side by side
+    (same as case 4 below). The slight drawback is that the user's class space
+    is polluted with both versions, whether both are used or not.
   - **Rename Maven ID (case 4)**: The two major versions can be used side by
     side, allowing users to incrementally transition from the old to the new
     version, or even use them side by side indefinitely if
