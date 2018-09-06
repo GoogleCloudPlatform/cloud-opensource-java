@@ -27,7 +27,7 @@
   </licenses>
 
   <modules>
-    <module>zero-bom</module>
+    <module>cloud-oss-bom</module>
     <module>upper-bounds-check</module>
   </modules>
 
