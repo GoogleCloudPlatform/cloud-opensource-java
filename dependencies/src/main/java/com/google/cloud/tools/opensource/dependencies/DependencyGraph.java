@@ -104,9 +104,12 @@ public class DependencyGraph {
     return versions.get(coordinates);
   }
 
-  // TODO consider whether we need an update class with parent, from, and to, and
+  // TODO consider whether we need an update class with parent, from, and to; and
   // a toString method rather than returning strings
-  List<String> findUpdates() {
+  /**
+   * Returns a list of strings indicating desired updates formatted for a person to read.
+   */
+  public List<String> findUpdates() {
     List<DependencyPath> paths = findConflicts();
     
     // now generate necessary upgrades

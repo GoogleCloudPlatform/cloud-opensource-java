@@ -31,9 +31,6 @@ import nu.xom.ValidityException;
 import org.junit.Assert;
 import org.junit.Test;
 
-/**
- * M2_HOME must be set to point to a local Maven installation for this to work.
- */
 public class DashboardTest {
 
   @Test
@@ -55,12 +52,12 @@ public class DashboardTest {
     try (InputStream source = Files.newInputStream(dashboardHtml)) {
       Document document = builder.build(dashboardHtml.toFile());
       Nodes li = document.query("//li");
-      Assert.assertEquals(1, li.size());
+      Assert.assertEquals(2, li.size());
       for (int i = 0; i < li.size(); i++) {
         Assert.assertEquals(DashboardMain.ARTIFACTS[i], li.get(i).getValue());
       }
       Nodes href = document.query("//li/a/@href");
-      Assert.assertEquals(1, href.size());
+      Assert.assertEquals(2, href.size());
       for (int i = 0; i < href.size(); i++) {
         String fileName = href.get(i).getValue();
         Assert.assertEquals(DashboardMain.ARTIFACTS[i].replace(':', '_') + ".html", 
@@ -69,7 +66,8 @@ public class DashboardTest {
         Assert.assertTrue(fileName + " is missing", Files.isRegularFile(componentReport));
         try {
           Document report = builder.build(componentReport.toFile());
-          // TODO test the content of the report
+          Nodes updates = report.query("//li");
+          Assert.assertTrue("didn't find updates", updates.size() > 2);
         } catch (ParsingException ex) {
           byte[] data = Files.readAllBytes(componentReport);
           String message = "Could not parse " + componentReport + " at line " +
