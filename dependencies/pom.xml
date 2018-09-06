@@ -4,6 +4,10 @@
 
   <name>Dependency Lister</name>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/dependencies</url>
+  <organization>
+    <name>Google LLC.</name>
+    <url>https://www.google.com</url>
+  </organization>
 
   <parent>
     <groupId>com.google.cloud.tools.opensource</groupId>

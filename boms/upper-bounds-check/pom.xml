@@ -1,21 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.google.cloud.tools.dependencies</groupId>
-  <artifactId>dependencytest</artifactId>
+  <groupId>com.google.cloud</groupId>
+  <artifactId>upper-bounds-check</artifactId>
   <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
 
-  <name>Dependency Tests for Google Cloud Libraries</name>
+  <name>Cloud Platform Supported Libraries Upper Bounds Check</name>
   <description>
-    Verify that the recommended client libraries for GCP
-    development have a consistent dependency tree.
+    Import the Cloud Platform Supported Libraries and verify that 
+    each library imported is the most recent of the versions
+    available in the dependency tree.
   </description>
 
   <organization>
-    <name>Google LLC.</name>
-    <url>https://www.google.com</url>
+    <name>Google LLC</name>
+    <url>https://cloud.google.com</url>
   </organization>
 
   <licenses>
@@ -33,19 +37,24 @@
     <dependencies>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-bom</artifactId>
-        <version>0.55.1-alpha</version>
+        <artifactId>cloud-oss-bom</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-    </dependencies>
+    </dependencies>    
   </dependencyManagement>
 
+  <!-- TODO is there a way to run this test directly on the BOM
+       instead of on a pom.xml that imports the BOM? -->
   <dependencies>
     <dependency>
       <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-datastore</artifactId>
-      <version>1.37.1</version>
+      <artifactId>google-cloud-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-storage</artifactId>
     </dependency>
   </dependencies>
 
@@ -54,7 +63,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.0.0-M1</version>
+        <version>3.0.0-M2</version>
         <executions>
           <execution>
             <id>enforce</id>
@@ -65,7 +74,7 @@
         </executions>
         <configuration>
           <rules>
-            <dependencyConvergence />
+            <requireUpperBoundDeps/>
           </rules>
         </configuration>
       </plugin>
