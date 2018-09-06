@@ -7,5 +7,11 @@ set -x
 
 export M2_HOME=/usr/local/apache-maven
 
-cd github/cloud-opensource-java/dashboard
-mvn -B clean compile exec:java -Dexec.mainClass="com.google.cloud.tools.opensource.dashboard.DashboardMain"
+# https://stackoverflow.com/questions/3459928/running-a-specific-maven-plugin-goal-from-the-command-line-in-a-sub-module-of-a/26448447#26448447
+# https://stackoverflow.com/questions/11091311/maven-execjava-goal-on-a-multi-module-project
+
+cd github/cloud-opensource-java
+mvn -B clean install
+
+cd dashboard
+mvn -B exec:java -Dexec.mainClass="com.google.cloud.tools.opensource.dashboard.DashboardMain"

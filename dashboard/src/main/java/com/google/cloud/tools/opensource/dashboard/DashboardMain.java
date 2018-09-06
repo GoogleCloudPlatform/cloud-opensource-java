@@ -30,27 +30,23 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-import org.apache.maven.shared.invoker.DefaultInvocationRequest;
-import org.apache.maven.shared.invoker.DefaultInvoker;
-import org.apache.maven.shared.invoker.InvocationRequest;
-import org.apache.maven.shared.invoker.InvocationResult;
-import org.apache.maven.shared.invoker.Invoker;
-import org.apache.maven.shared.invoker.MavenInvocationException;
+// TODO this is leaking aether too far
+import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.resolution.DependencyResolutionException;
+
+import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.common.base.Splitter;
 
-/**
- * M2_HOME must be set to point to a local Maven installation for this to work.
- */
 public class DashboardMain {
   
   // todo move this to config file
   static String[] ARTIFACTS = {
-    "com.google.cloud:google-cloud-datastore:1.38.0"
+      "com.google.cloud:google-cloud-core:1.41.0",
+      "com.google.cloud:google-cloud-datastore:1.41.0"
   };
   
   public static void main(String[] args) 
@@ -77,7 +73,8 @@ public class DashboardMain {
     for (String coordinates : ARTIFACTS) {
       try {
         generateReport(configuration, output, coordinates);
-      } catch (MavenInvocationException | IOException | TemplateException ex) {
+      } catch (DependencyCollectionException | DependencyResolutionException | IOException
+          | TemplateException ex) {
         // todo logger
         System.err.println("Error generating report for " + coordinates);
         System.err.println(ex.getMessage());
@@ -86,7 +83,8 @@ public class DashboardMain {
   }
 
   private static void generateReport(Configuration configuration, Path output, String coordinates)
-      throws ParseException, IOException, TemplateException, MavenInvocationException {
+      throws ParseException, IOException, TemplateException, DependencyCollectionException,
+      DependencyResolutionException {
     
     List<String> coords = Splitter.on(":").splitToList(coordinates);  
     String groupId = coords.get(0);
@@ -97,40 +95,17 @@ public class DashboardMain {
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
 
-      // invoke maven programmatically; see
-      // https://stackoverflow.com/questions/2146580/how-to-programmatically-call-a-maven-task
-      // todo don't use maven invoker CLI; call in Java instead
-      InvocationRequest request = new DefaultInvocationRequest();
-      
-      ClassLoader classLoader = DashboardMain.class.getClassLoader();
-      File pom = new File(classLoader.getResource("poms/demo.xml").getFile());
-      
-      request.setPomFile(pom);
-      request.setGoals(Arrays.asList("clean", "enforcer:enforce"));
-      Properties properties = new Properties();
-      properties.put("dependencyGroupId", groupId);
-      properties.put("dependencyArtifactId", artifactId);
-      properties.put("dependencyVersion", version);
-      request.setProperties(properties );
-
-      Invoker invoker = new DefaultInvoker();
-      
-      StringBuilderHandler handler = new StringBuilderHandler();
-      invoker.setOutputHandler(handler);
-      
-      // TODO check exit code
-      InvocationResult result = invoker.execute(request);
-      String mavenOutput = handler.getOutput();
-      
+      DependencyGraph graph =
+          DependencyGraphBuilder.getCompleteDependencies(groupId, artifactId, version);
+      List<String> updates = graph.findUpdates();
+            
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
       templateData.put("groupId", groupId);
       templateData.put("artifactId", artifactId);
       templateData.put("version", version);
-      // TODO should probably escape reserved characters in freemarker template instead
-      templateData.put("mavenOutput",
-          mavenOutput.replaceAll("&", "&amp;").replaceAll("<", "&lt;"));
+      templateData.put("updates", updates);
       report.process(templateData, out);
 
       out.flush();

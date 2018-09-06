@@ -9,7 +9,7 @@
 
   <name>Dependency Tests for Google Cloud Libraries</name>
   <description>
-    Verification that the recommended client libraries for GCP
+    Verify that the recommended client libraries for GCP
     development have a consistent dependency tree.
   </description>
 
