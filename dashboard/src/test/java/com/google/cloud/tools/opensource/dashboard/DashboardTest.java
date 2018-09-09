@@ -68,6 +68,7 @@ public class DashboardTest {
           Document report = builder.build(componentReport.toFile());
           Nodes updates = report.query("//li");
           Assert.assertTrue("didn't find updates", updates.size() > 2);
+          
         } catch (ParsingException ex) {
           byte[] data = Files.readAllBytes(componentReport);
           String message = "Could not parse " + componentReport + " at line " +
@@ -77,6 +78,9 @@ public class DashboardTest {
           Assert.fail(message);
         }
       }
+      
+      Nodes updated = document.query("//p[@id='updated']");
+      Assert.assertEquals("didn't find updated" + document.toXML(), 1, updated.size());
     }
   }
 

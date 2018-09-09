@@ -10,7 +10,7 @@
         <li><a href='${artifact?replace(":", "_")}.html'>${artifact}</a></li>
       </#list>
       </ul>
-      
-      <p>Last generated at ${lastUpdated}</p>
+      foo
+      <p id='updated'>Last generated at ${lastUpdated}</p>
   </body>
 </html>
