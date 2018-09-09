@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,6 +120,7 @@ public class DashboardMain {
       Template dashboard = configuration.getTemplate("/templates/dashboard.ftl");
       Map<String, Object> templateData = new HashMap<>();
       templateData.put("artifacts", ARTIFACTS);
+      templateData.put("lastUpdated", LocalDateTime.now());
 
       dashboard.process(templateData, out);
       out.flush();
