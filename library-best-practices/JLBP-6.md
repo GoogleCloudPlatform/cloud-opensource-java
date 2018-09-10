@@ -1,59 +1,72 @@
-[JLBP-6] Avoid creating conflicts between major versions
-------------------------------------------------------------------------
-
-- A new major version should generally use a different Java package.
-- There is a tradeoff: if an extremely large library (for example thousands of
-  classes) breaks a single method, the cost of a package rename may be higher
-  than dealing with the fallout of dealing with diamond dependency conflicts for
-  that particular method. Only perform an in-place breakage if users can easily
-  replace their usage of the old library with the new library. The larger the
-  portion of a library that breaks between major versions, the higher the value
-  is from renaming the java package.
-- *If* the Java package is changed, use a different Maven ID (different group ID
-  or artifact ID)
-- *If* the Java package is kept the same, use the same Maven ID (same group ID
-  and same artifact ID).
-- In other words, rename the Java package if and only if the Maven ID changes.
-
-Background
-----------
+[JLBP-6] Package and artifact renaming rules
+--------------------------------------------
 
 When a library B in Java depends on another library A through the Maven
-repository system, there are two handles that library B needs to use to access
-library A:
+repository system, there are two types of handles that library B needs to use to
+access classes in library A:
 
-1. The Maven coordinates, following the form
+1. The Maven coordinates of library A, following the form
    `${groupId}:${artifactId}:${version}`, for example
    `com.google.guava:guava:26.0-jre`. The Maven coordinates are used to pull the
-   library's jar from Maven Central. Given a group ID and artifact ID, Maven
-   will choose only one version to pull in.
-2. The Java package (the package used in `import` statements), for example
-   `com.google.common.collect.ImmutableList`. The Java package is used to select
-   a particular class within the jar pulled from Maven Central.
+   library's jar from Maven Central. For each pair of group ID and artifact ID
+   (hereafter referenced as "Maven ID"), the user's build system (for example
+   Maven or Gradle) will make a final selection of only one version to put on
+   the classpath. The different build systems use different rules for which
+   version to select.
+2. The fully-qualified class names of the classes in library A. These classes
+   will generally share a Java package (the package as defined in `package`
+   statements, for example `package com.google.common.collect`). The classpath,
+   which is formed from Maven artifacts and possibly non-Maven sources, will be
+   searched for each fully-qualified class name at runtime. In order to simplify
+   the discussion, we will only talk about the Java package, assuming that the
+   classes of the library will be located in that package or subpackages.
 
-Now when breaking changes are introduced to library A between major version 1
-and major version 2, a choice needs to be made: to rename or not rename? This
+When breaking changes are introduced to library A between major version 1 and
+major version 2, a choice needs to be made: to rename or not rename? This
 question applies to both items listed above, the Maven ID (1) and the Java
-package (2). Consider the following renaming scenario:
+package (2).
+
+Recommendations:
+
+- *If* the new library surface is delivered under a new Java package, either use
+  a different Maven ID (different group ID or artifact ID) or bundle the old and
+  new packages together in the under the original Maven ID.
+- *If* the breaking change is made in-place and the Java package is kept the
+  same, use the same Maven ID (same group ID and same artifact ID).
+- There is a tradeoff: if an extremely large library (for example thousands of
+  classes) breaks a single method, the cost of a package rename will be higher
+  than dealing with the fallout of dealing with diamond dependency conflicts for
+  that particular method. The larger the portion of a library that breaks
+  between major versions, the higher the value is from renaming the Java
+  package.
+- Whether making breaking changes or making no breaking changes, don't publish
+  the same classes under multiple Maven IDs. Or put another way: Once you have
+  published under a particular Maven ID, you are stuck with it until you rename
+  your Java package.
+
+Extended discussion
+-------------------
+
+Consider the following renaming scenario:
 
 - The Maven coordinates start as `g1:a1:1.0.0`
   - With no rename of the Maven ID, the new major version's Maven coordinates
-    are `g1:a1:2.0.0`. (Only one of the versions can be present in the
-    dependency tree.)
+    are `g1:a1:2.0.0`. (Only one of the versions will be present on the
+    classpath even if both are in the dependency tree.)
   - With a rename of the Maven ID, the new major version's Maven coordinates are
-    `g2:a2:2.0.0`. (Both versions can be present in the dependency tree.)
+    `g2:a2:2.0.0`. (Both versions can be present on the classpath.)
 - The Java package starts as `com.google.a1`
   - With no rename, the new major version's Java package is still
-    `com.google.a1`
-  - With a rename, the new major version's Java package is `com.google.a2`
+    `com.google.a1`.
+  - With a rename, the new major version's Java package is `com.google.a2`.
 
 Given this scenario, here are the possible combinations of renamings:
 
 - **Don't rename Java package**:
   - **Don't rename Maven ID (case 1)**: This approach can result in diamond
     dependency conflicts because different branches of a dependency tree can
-    depend on different major versions, and only one of them can be pulled in by
-    Maven in a particular dependency tree. Users are forced to change their code
+    depend on different major versions, and the build system (Maven or Gradle)
+    will only choose one of them to use. Users are forced to change their code
     between versions, but only for library surface that was changed.
   - **Rename Maven ID (case 2)**: Users can easily pull in both the old jar
     (`g1:a1:1.0.0`) and the new jar (`g2:a2:2.0.0`) accidentally through
@@ -61,45 +74,47 @@ Given this scenario, here are the possible combinations of renamings:
     but since they have classes with the same Java packages, they are loaded in
     unpredictable ways, leading to runtime exceptions (for example
     `ClassNotFoundException`). It is difficult for users to ensure that their
-    build tree only includes one of the artifacts. **NEVER DO THIS**. Example:
-    guava vs guava-jdk5.
+    build tree only includes one of the artifacts. **NEVER DO THIS**.
 - **Rename Java package**:
   - **Don't rename Maven ID (case 3)**: The classes from `g1:a1:1.0.0` and
     `g1:a1:2.0.0` could technically be used together, but since they share the
     Maven group ID and artifact ID, only one jar can be pulled in. Users are
-    forced to change their code between versions. It is strictly better to also
-    rename the Maven ID, so that the major versions can be used side by side.
-    Alternatively, if the old Java package and new Java package are bundled
-    together in the same Maven artifact, then both can be used side by side.
-    This has the same impact as case 4 below, except with the slight drawback
-    that the user's class space is polluted with both versions, whether both are
-    used or not.
+    forced to change their code if they want to add any references to the new
+    version. It is strictly better to either also rename the Maven ID (case 4)
+    or to keep the Maven ID and also bundle the old package (case 5), so that
+    the major versions can be used side by side.
   - **Rename Maven ID (case 4)**: The two major versions can be used side by
     side, allowing users to incrementally transition from the old to the new
-    version, or even use them side by side indefinitely if
-    necessary. Transitioning fully to the new version does require code changes
-    between versions though, even for classes whose surface remains the
-    same. There will be no conflicts using this approach. This is the approach
-    taken by Go, described in https://research.swtch.com/vgo-import .
+    version, or even use them side by side indefinitely if necessary. This is
+    similar to the approach taken by Go, described in
+    https://research.swtch.com/vgo-import . The difference between Java and Go
+    is that Go can accept types with the same structure even though they have
+    different identities, so this approach is more disruptive in Java. In Go, a
+    single method can accept types from multiple interface declarations, but
+    Java can accept only one. Transitioning fully to the new version in Java
+    requires code changes between versions, even for classes whose surface
+    remains the same, because all import statements need to be updated. There
+    will be no diamond dependency conflicts using this approach, but adoption
+    can be blocked if there are consuming libraries that have not also created
+    new major versions that can accept new types from this library.
+  - **Bundle old and new in the existing Maven ID (case 5)**: Like case 4, the
+    two versions can be used side by side. The impact is the same as case 4,
+    except with the slight drawback that the user's class space is polluted with
+    both versions, whether both are used or not, but with the benefit that users
+    don't have to think about which Maven artifact to use and can just keep
+    advancing the version.
 
 Given the consequences, it seems clear that the two worst options are case 2
 (renaming the Maven ID while keeping the Java package the same) and case 3
 (renaming the Java package while keeping the Maven ID the same), and both should
-be avoided.
+be avoided. The remaining three cases need to be weighed carefully. Among the
+remaining three cases, the impact of tha Maven ID change is miniscule compared
+to the impact of a Java package rename, so the remaining discussion will focus
+just on the Java package rename.
 
-Of the remaining two, case 4 (renaming both the Maven ID and the Java
-package) is the least disruptive and the only option that won't lead to diamond
-dependency conflicts, so it should be the generally preferred approach. However,
-given that a full transition from one major version to the next requires
-updating all import statements regardless of whether the corresponding classes
-have changed, there is potentially a very high cost to this option, which should
-be weighed carefully. Case 1 (neither renaming the Maven ID nor the
-Java package) doesn't have this code updating cost, and the fewer the breakages,
-the easier the transition is between major versions. Basically, the cost of
-diamond dependency conflicts has to be weighed against the cost of updating
-import statements everywhere the library is used.
-
-Let's take examples from two extremes.
+Basically, the cost of diamond dependency conflicts (due to not renaming) has to
+be weighed against the cost of updating import statements everywhere the library
+is used. Let's take examples from two extremes.
 
 1. A library with 10,000 classes, and 1 function is deprecated between major
    version 1 to major version 2, and it is used in one place in a large
@@ -109,44 +124,42 @@ In this case, moving 10,000 classes to a new package in a large dependency tree
 would be a very expensive endeavor. In contrast, updating the one place where
 the old function is used to use the new function instead would be considerably
 less work and could be rolled out much more quickly. In this scenario, it is
-clearly superior to keep the same Maven ID and Java package.
+clearly superior to keep the same Java package.
 
 3. A library with 1,000 classes, and a large refactoring touching 750 of the
    classes is done between major version 1 and major version 2.
 
 In this case, changing consuming code would be a large undertaking, and it's not
 certain that all consuming code would feel it's worth it to migrate to the new
-major version. If the library author decided to opt for keeping the same Maven
-ID and same Java package, the ecosystem would need to bifurcate in
-order to handle code paths requiring one versus the other major version. Either
-the ecosystem would generally opt to retain the old major version, or there
-would be an extended period of difficult diamond dependency conflicts before
-everyone had transitioned. In this scenario, it is clearly superior to rename
-both the Maven ID and Java package.
+major version. If the library author decided to opt for keeping the same Java
+package, the ecosystem would need to bifurcate in order to handle code paths
+requiring one versus the other major version. Either the ecosystem would
+generally opt to retain the old major version, or there would be an extended
+period of difficult diamond dependency conflicts before everyone had
+transitioned. In this scenario, it is clearly superior to rename the Java
+package.
 
-Given these considerations, the rule to follow can be summed up as:
+Examples in open source
+-----------------------
 
-*When making breaking changes between major versions, prefer to rename both the
-Maven ID and the Java package. However, if the ratio of surface
-breakage to library size is sufficiently low and the number of usage points of
-breaking code is sufficiently low, keeping the same Maven ID and Java
-package can be preferred instead. Under no circumstance should only one of the
-two be renamed without the other being renamed also.*
-
-Example renames in open source 
-[Square has established it as a policy](http://jakewharton.com/java-interoperability-policy-for-major-version-updates/)
-for its Java libraries (examples include OkHttp and Retrofit). Numerous open
-source packages have performed such a rename between large major version
-updates:
-- OkHttp (com.squareup.okhttp -> com.squareup.okhttp3)
-- Apache Commons Lang (org.apache.commons.lang -> org.apache.commons.lang3)
-- RxJava (rx (version 1.x) -> io.reactivex (version 2.x))
-- JDOM (org.jdom -> org.jdom2)
-- JUnit (junit.framework (versions 1.x-3.x) -> org.junit (version 4))
-- jdeferred (org.jdeferred -> org.jdeferred2)
-
-Numerous open source packages have chosen to retain package names between
-major version updates:
+**Case 1**
 - Guava
 - Hibernate
 - Joda Time
+
+**Case 2**
+- `guava` vs `guava-jdk5`
+  - This technically wasn't a new major version, but it is an example of case 2
+    that has caused a lot of problems.
+
+**Case 4**
+- [Square has established it as a policy](http://jakewharton.com/java-interoperability-policy-for-major-version-updates/)
+for its Java libraries (examples include OkHttp and Retrofit).
+  - OkHttp (com.squareup.okhttp -> com.squareup.okhttp3)
+- Apache Commons Lang (org.apache.commons.lang -> org.apache.commons.lang3)
+- RxJava (rx (version 1.x) -> io.reactivex (version 2.x))
+- JDOM (org.jdom -> org.jdom2)
+- jdeferred (org.jdeferred -> org.jdeferred2)
+
+**Case 5**
+- JUnit (junit.framework (versions 1.x-3.x) -> org.junit (version 4))
