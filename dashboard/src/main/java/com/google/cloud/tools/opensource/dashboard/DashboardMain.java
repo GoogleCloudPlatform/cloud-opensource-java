@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,9 +57,7 @@ public class DashboardMain {
   }
 
   public static Path generate() throws IOException, TemplateException {
-    Configuration configuration = new Configuration(new Version("2.3.28"));
-    configuration.setDefaultEncoding("UTF-8");
-    configuration.setClassForTemplateLoading(DashboardMain.class, "/");
+    Configuration configuration = configure();
     
     Path relativePath = Paths.get("target", "dashboard");
     Path output = Files.createDirectories(relativePath);
@@ -69,13 +68,20 @@ public class DashboardMain {
     return output;
   }
 
+  private static Configuration configure() {
+    Configuration configuration = new Configuration(new Version("2.3.28"));
+    configuration.setDefaultEncoding("UTF-8");
+    configuration.setClassForTemplateLoading(DashboardMain.class, "/");
+    return configuration;
+  }
+
   private static void generateReports(Configuration configuration, Path output) {
     for (String coordinates : ARTIFACTS) {
       try {
         generateReport(configuration, output, coordinates);
       } catch (DependencyCollectionException | DependencyResolutionException | IOException
           | TemplateException ex) {
-        // todo logger
+        // TODO logger
         System.err.println("Error generating report for " + coordinates);
         System.err.println(ex.getMessage());
       }
@@ -114,11 +120,13 @@ public class DashboardMain {
 
   private static void generateDashboard(Configuration configuration, Path output)
       throws ParseException, IOException, TemplateException {
+    File dashboardFile = output.resolve("dashboard.html").toFile();
     try (Writer out = new OutputStreamWriter(
-        new FileOutputStream(output.resolve("dashboard.html").toFile()), StandardCharsets.UTF_8)) {
+        new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
       Template dashboard = configuration.getTemplate("/templates/dashboard.ftl");
       Map<String, Object> templateData = new HashMap<>();
       templateData.put("artifacts", ARTIFACTS);
+      templateData.put("lastUpdated", LocalDateTime.now());
 
       dashboard.process(templateData, out);
       out.flush();
