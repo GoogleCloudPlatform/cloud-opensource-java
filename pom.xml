@@ -28,6 +28,7 @@
   </licenses>
 
   <modules>
+    <module>boms</module>
     <module>dependencies</module>
     <module>dashboard</module>
   </modules>
