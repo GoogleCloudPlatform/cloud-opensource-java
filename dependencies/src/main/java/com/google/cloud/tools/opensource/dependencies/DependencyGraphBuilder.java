@@ -54,8 +54,9 @@ import com.google.common.io.Files;
  */
 public class DependencyGraphBuilder {
   
+  // todo create a maven utils class
   private static final RepositorySystem system = newRepositorySystem();
-  private static final RemoteRepository CENTRAL =
+  static final RemoteRepository CENTRAL =
       new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
   
   static {
@@ -111,7 +112,7 @@ public class DependencyGraphBuilder {
     return node;
   }
 
-  private static RepositorySystemSession newSession() {
+  static RepositorySystemSession newSession() {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
 
     // TODO find the local repository
@@ -123,7 +124,7 @@ public class DependencyGraphBuilder {
     return session;
   }
 
-  private static RepositorySystem newRepositorySystem() {
+  static RepositorySystem newRepositorySystem() {
     DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
     locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
     locator.addService(TransporterFactory.class, FileTransporterFactory.class);

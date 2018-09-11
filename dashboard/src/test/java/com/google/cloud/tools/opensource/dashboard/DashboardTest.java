@@ -23,6 +23,8 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Nodes;
@@ -32,6 +34,12 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class DashboardTest {
+  
+  @Test
+  public void testReadBom() throws IOException {
+    List<String> artifacts = DashboardMain.readBom();
+    Assert.assertTrue(artifacts.size() > 3);
+  }
 
   @Test
   public void testMain() throws IOException, TemplateException {
@@ -48,19 +56,21 @@ public class DashboardTest {
     Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
     
+    List<String> artifacts = DashboardMain.readBom();
+    
     Builder builder = new Builder();
     try (InputStream source = Files.newInputStream(dashboardHtml)) {
       Document document = builder.build(dashboardHtml.toFile());
       Nodes li = document.query("//li");
       Assert.assertEquals(2, li.size());
       for (int i = 0; i < li.size(); i++) {
-        Assert.assertEquals(DashboardMain.ARTIFACTS[i], li.get(i).getValue());
+        Assert.assertEquals(artifacts.get(i), li.get(i).getValue());
       }
       Nodes href = document.query("//li/a/@href");
       Assert.assertEquals(2, href.size());
       for (int i = 0; i < href.size(); i++) {
         String fileName = href.get(i).getValue();
-        Assert.assertEquals(DashboardMain.ARTIFACTS[i].replace(':', '_') + ".html", 
+        Assert.assertEquals(artifacts.get(i).replace(':', '_') + ".html", 
             URLDecoder.decode(fileName, "UTF-8"));
         Path componentReport = outputDirectory.resolve(fileName);
         Assert.assertTrue(fileName + " is missing", Files.isRegularFile(componentReport));

@@ -24,6 +24,7 @@ import freemarker.template.Version;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,12 +42,12 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 
 public class DashboardMain {
   
-  // todo move this to config file
-  static String[] ARTIFACTS = {
+  private static String[] ARTIFACTS = {
       "com.google.cloud:google-cloud-core:1.41.0",
       "com.google.cloud:google-cloud-datastore:1.41.0"
   };
@@ -75,8 +77,9 @@ public class DashboardMain {
     return configuration;
   }
 
-  private static void generateReports(Configuration configuration, Path output) {
-    for (String coordinates : ARTIFACTS) {
+  private static void generateReports(Configuration configuration, Path output) throws IOException {
+    List<String> artifacts = readBom();
+    for (String coordinates : artifacts ) {
       try {
         generateReport(configuration, output, coordinates);
       } catch (DependencyCollectionException | DependencyResolutionException | IOException
@@ -86,6 +89,20 @@ public class DashboardMain {
         System.err.println(ex.getMessage());
       }
     }
+  }
+
+  @VisibleForTesting
+  // to get the URL of pom can I tell if we're loaded from maven central or file system?
+  static List<String> readBom() throws IOException {
+    
+    // todo move resource to special directory
+    InputStream in = DashboardMain.class.getResourceAsStream("pom.xml");
+    in.read();
+    // we need to get a org.apache.maven.model.DependencyManagement from the pom.xml
+    // we get this from a org.apache.maven.model.ModelBase
+    
+    // see https://github.com/fuinorg/utils4maven/blob/master/src/main/java/org/fuin/utils4maven/MavenPomReader.java
+    return Arrays.asList(ARTIFACTS);
   }
 
   private static void generateReport(Configuration configuration, Path output, String coordinates)
