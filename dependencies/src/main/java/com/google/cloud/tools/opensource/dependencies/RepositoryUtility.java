@@ -17,6 +17,9 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -30,7 +33,7 @@ import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 
-import com.google.common.io.Files;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Aether initialization.
@@ -49,13 +52,23 @@ class RepositoryUtility {
   static RepositorySystemSession newSession(RepositorySystem system ) {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
   
-    // TODO find the local repository
-    File temporaryDirectory = Files.createTempDir();
-    temporaryDirectory.deleteOnExit();
-    LocalRepository localRepository = new LocalRepository(temporaryDirectory.getAbsolutePath());
+    LocalRepository localRepository = new LocalRepository(findLocalRepository().getAbsolutePath());
     session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
     session.setReadOnly();
     return session;
+  }
+
+  @VisibleForTesting
+  static File findLocalRepository() {
+    Path home = Paths.get(System.getProperty("user.home"));
+    Path localRepo = home.resolve(".m2").resolve("repository");
+    if (Files.isDirectory(localRepo)) {
+      return localRepo.toFile();
+    } else {
+      File temporaryDirectory = com.google.common.io.Files.createTempDir();
+      temporaryDirectory.deleteOnExit();
+      return temporaryDirectory; 
+    }
   }
 
 }
