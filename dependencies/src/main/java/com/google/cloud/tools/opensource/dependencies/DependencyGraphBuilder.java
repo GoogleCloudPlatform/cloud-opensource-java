@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,29 +23,19 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Stack;
 
-import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionException;
-import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.impl.DefaultServiceLocator;
-import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
-import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
-import org.eclipse.aether.spi.connector.transport.TransporterFactory;
-import org.eclipse.aether.transport.file.FileTransporterFactory;
-import org.eclipse.aether.transport.http.HttpTransporterFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.io.Files;
 
 /**
  * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact Resolver</a>
@@ -54,7 +43,7 @@ import com.google.common.io.Files;
  */
 public class DependencyGraphBuilder {
   
-  private static final RepositorySystem system = newRepositorySystem();
+  private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
   private static final RemoteRepository CENTRAL =
       new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
   
@@ -94,7 +83,7 @@ public class DependencyGraphBuilder {
       return cache.get(key);
     }
     
-    RepositorySystemSession session = newSession();
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
 
     Dependency dependency = new Dependency(artifact, "compile");
 
@@ -109,27 +98,6 @@ public class DependencyGraphBuilder {
     cache.put(key, node);
     
     return node;
-  }
-
-  private static RepositorySystemSession newSession() {
-    DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
-
-    // TODO find the local repository
-    File temporaryDirectory = Files.createTempDir();
-    temporaryDirectory.deleteOnExit();
-    LocalRepository localRepository = new LocalRepository(temporaryDirectory.getAbsolutePath());
-    session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
-    session.setReadOnly();
-    return session;
-  }
-
-  private static RepositorySystem newRepositorySystem() {
-    DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
-    locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
-    locator.addService(TransporterFactory.class, FileTransporterFactory.class);
-    locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
-
-    return locator.getService(RepositorySystem.class);
   }
 
   /**
