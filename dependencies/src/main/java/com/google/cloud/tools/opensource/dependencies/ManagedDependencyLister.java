@@ -25,19 +25,19 @@ import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 
 /**
- * Demo converting maven coordinates to URL of POM file.
+ * Demo retrieving list of managed dependencies from Maven coordinates.
  */
-public class PomUrl {
+public class ManagedDependencyLister {
 
-  private static final RepositorySystem system = DependencyGraphBuilder.newRepositorySystem();
+  private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
   
   public static void main(String[] args) throws ArtifactDescriptorException {
-    DefaultArtifact artifact = new DefaultArtifact("com.google.cloud:google-cloud-bom:pom:0.61.0-alpha");   
+    DefaultArtifact artifact = new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.0.1-SNAPSHOT");   
 
-    RepositorySystemSession session = DependencyGraphBuilder.newSession();
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
 
     ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
-    request.addRepository(DependencyGraphBuilder.CENTRAL);
+    request.addRepository(RepositoryUtility.CENTRAL);
     request.setArtifact(artifact);
 
     ArtifactDescriptorResult resolved = system.readArtifactDescriptor(session, request);

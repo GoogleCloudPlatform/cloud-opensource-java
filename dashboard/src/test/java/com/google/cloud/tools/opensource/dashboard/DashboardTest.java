@@ -29,26 +29,21 @@ import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
-import nu.xom.ValidityException;
+
+import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class DashboardTest {
-  
-  @Test
-  public void testReadBom() throws IOException {
-    List<String> artifacts = DashboardMain.readBom();
-    Assert.assertTrue(artifacts.size() > 3);
-  }
 
   @Test
-  public void testMain() throws IOException, TemplateException {
+  public void testMain() throws IOException, TemplateException, ArtifactDescriptorException {
     DashboardMain.main(null);
   }
   
   @Test
   public void testGenerateDashboard()
-      throws IOException, TemplateException, ValidityException, ParsingException {
+      throws IOException, TemplateException, ParsingException, ArtifactDescriptorException {
     Path outputDirectory = DashboardMain.generate();
     Assert.assertTrue(Files.exists(outputDirectory));
     Assert.assertTrue(Files.isDirectory(outputDirectory));

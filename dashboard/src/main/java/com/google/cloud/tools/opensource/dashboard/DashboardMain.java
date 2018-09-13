@@ -24,7 +24,6 @@ import freemarker.template.Version;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -32,16 +31,26 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 // TODO this is leaking aether too far
 import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.resolution.ArtifactDescriptorException;
+import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
+import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 
@@ -53,12 +62,12 @@ public class DashboardMain {
   };
   
   public static void main(String[] args) 
-      throws IOException, TemplateException {
+      throws IOException, TemplateException, ArtifactDescriptorException {
 
     generate();
   }
 
-  public static Path generate() throws IOException, TemplateException {
+  public static Path generate() throws IOException, TemplateException, ArtifactDescriptorException {
     Configuration configuration = configure();
     
     Path relativePath = Paths.get("target", "dashboard");
@@ -77,7 +86,8 @@ public class DashboardMain {
     return configuration;
   }
 
-  private static void generateReports(Configuration configuration, Path output) throws IOException {
+  private static void generateReports(Configuration configuration, Path output) 
+      throws ArtifactDescriptorException {
     List<String> artifacts = readBom();
     for (String coordinates : artifacts ) {
       try {
@@ -92,17 +102,25 @@ public class DashboardMain {
   }
 
   @VisibleForTesting
-  // to get the URL of pom can I tell if we're loaded from maven central or file system?
-  static List<String> readBom() throws IOException {
+  static List<String> readBom() throws ArtifactDescriptorException {
     
-    // todo move resource to special directory
-    InputStream in = DashboardMain.class.getResourceAsStream("pom.xml");
-    in.read();
-    // we need to get a org.apache.maven.model.DependencyManagement from the pom.xml
-    // we get this from a org.apache.maven.model.ModelBase
-    
-    // see https://github.com/fuinorg/utils4maven/blob/master/src/main/java/org/fuin/utils4maven/MavenPomReader.java
-    return Arrays.asList(ARTIFACTS);
+    DefaultArtifact artifact = new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.0.1-SNAPSHOT");   
+
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
+
+    ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
+    request.addRepository(RepositoryUtility.CENTRAL);
+    request.setArtifact(artifact);
+
+    ArtifactDescriptorResult resolved = system.readArtifactDescriptor(session, request);
+    List<String> result = new ArrayList<>();
+    for (Dependency dependency : resolved.getManagedDependencies()) {
+      System.err.println(dependency);
+      Artifact managed = dependency.getArtifact();
+      result.add(managed.getGroupId() + ":" + managed.getArtifactId() + ":" + managed.getVersion());
+    }
+    return result;
   }
 
   private static void generateReport(Configuration configuration, Path output, String coordinates)
