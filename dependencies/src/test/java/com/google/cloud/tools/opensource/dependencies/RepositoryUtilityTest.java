@@ -18,6 +18,8 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import java.io.File;
 
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -25,8 +27,13 @@ public class RepositoryUtilityTest {
 
   @Test
   public void testFindLocalRepository() {
-    File local = RepositoryUtility.findLocalRepository();
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
+    
+    File local = session.getLocalRepository().getBasedir();
     Assert.assertTrue(local.exists());
+    Assert.assertTrue(local.canRead());
+    Assert.assertTrue(local.canWrite());
   }
   
   

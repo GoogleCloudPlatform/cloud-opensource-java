@@ -33,12 +33,12 @@ import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-
 /**
  * Aether initialization.
  */
-class RepositoryUtility {
+final class RepositoryUtility {
+  
+  private RepositoryUtility() {}
 
   static RepositorySystem newRepositorySystem() {
     DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
@@ -55,11 +55,11 @@ class RepositoryUtility {
     LocalRepository localRepository = new LocalRepository(findLocalRepository().getAbsolutePath());
     session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
     session.setReadOnly();
+    
     return session;
   }
 
-  @VisibleForTesting
-  static File findLocalRepository() {
+  private static File findLocalRepository() {
     Path home = Paths.get(System.getProperty("user.home"));
     Path localRepo = home.resolve(".m2").resolve("repository");
     if (Files.isDirectory(localRepo)) {
