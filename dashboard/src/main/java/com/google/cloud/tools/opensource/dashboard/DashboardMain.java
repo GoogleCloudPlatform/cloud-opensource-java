@@ -111,6 +111,11 @@ public class DashboardMain {
     request.setArtifact(artifact);
 
     ArtifactDescriptorResult resolved = system.readArtifactDescriptor(session, request);
+    List<Exception> exceptions = resolved.getExceptions();
+    if (!exceptions.isEmpty()) {
+      throw new ArtifactDescriptorException(resolved, exceptions.get(0).getMessage());
+    }
+    
     List<String> result = new ArrayList<>();
     for (Dependency dependency : resolved.getManagedDependencies()) {
       Artifact managed = dependency.getArtifact();

@@ -68,7 +68,7 @@ public class DashboardTest {
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
     
     List<String> artifacts = DashboardMain.readBom();
-    Assert.assertFalse(artifacts.isEmpty());
+    Assert.assertFalse("No artifacts found", artifacts.isEmpty());
     
     Builder builder = new Builder();
     try (InputStream source = Files.newInputStream(dashboardHtml)) {
