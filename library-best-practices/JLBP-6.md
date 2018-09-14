@@ -28,17 +28,21 @@ package (2).
 
 Recommendations:
 
-- *If* the new library surface is delivered under a new Java package, either use
-  a different Maven ID (different group ID or artifact ID) or bundle the old and
-  new packages together in the under the original Maven ID.
-- *If* the breaking change is made in-place and the Java package is kept the
-  same, use the same Maven ID (same group ID and same artifact ID).
-- There is a tradeoff: if an extremely large library (for example thousands of
-  classes) breaks a single method, the cost of a package rename will be higher
-  than dealing with the fallout of dealing with diamond dependency conflicts for
-  that particular method. The larger the portion of a library that breaks
-  between major versions, the higher the value is from renaming the Java
-  package.
+- When making a breaking change, take one of the two following approaches:
+  - *If* the new library surface is delivered under a new Java package, either
+    use a different Maven ID (different group ID or artifact ID) or bundle the
+    old and new packages together under the original Maven ID.
+  - *If* the breaking change is made in-place and the Java package is kept the
+    same, use the same Maven ID (same group ID and same artifact ID).
+  - There is a tradeoff between the two options above: if a library breaks the
+    surface for a method that is not used in any consumers, there would be no
+    diamond dependency conflicts due to the breakage, so a package rename would
+    be a high-cost transition with no real benefit. Conversely, if a breaks the
+    surface for a method that is used at every call site across libraries at
+    multiple levels of the dependency graph, there would be a huge amount of
+    diamond dependency conflicts if the package isn't renamed, so a package
+    rename would be preferrable. Generally, the wider the usage of the features
+    that need to break, the higher the value is from renaming the Java package.
 - Whether making breaking changes or making no breaking changes, don't publish
   the same classes under multiple Maven IDs. Or put another way: Once you have
   published under a particular Maven ID, you are stuck with it until you rename
@@ -69,12 +73,15 @@ Given this scenario, here are the possible combinations of renamings:
     will only choose one of them to use. Users are forced to change their code
     between versions, but only for library surface that was changed.
   - **Rename Maven ID (case 2)**: Users can easily pull in both the old jar
-    (`g1:a1:1.0.0`) and the new jar (`g2:a2:2.0.0`) accidentally through
-    transitive dependencies, because Maven treats the two artifacts as distinct,
-    but since they have classes with the same Java packages, they are loaded in
-    unpredictable ways, leading to runtime exceptions (for example
-    `ClassNotFoundException`). It is difficult for users to ensure that their
-    build tree only includes one of the artifacts. **NEVER DO THIS**.
+    (`g1:a1:1.0.0`) and the new jar (`g2:a2:2.0.0`) into their classpath
+    accidentally through transitive dependencies because Maven artifact
+    resolution treats the two artifacts as distinct.  This results in
+    "overlapping classes" since they have classes with the same fully-qualified
+    path. As a result, the classes are loaded in unpredictable ways, leading to
+    runtime exceptions (for example `ClassNotFoundException`). It is difficult
+    for users to ensure that their build tree only includes one of the
+    artifacts. Another best practice, [JLBP-5](JLBP-5.md), covers how consumers
+    need to handle such problematic scenarios.  **NEVER DO THIS**.
 - **Rename Java package**:
   - **Don't rename Maven ID (case 3)**: The classes from `g1:a1:1.0.0` and
     `g1:a1:2.0.0` could technically be used together, but since they share the
@@ -85,18 +92,14 @@ Given this scenario, here are the possible combinations of renamings:
     the major versions can be used side by side.
   - **Rename Maven ID (case 4)**: The two major versions can be used side by
     side, allowing users to incrementally transition from the old to the new
-    version, or even use them side by side indefinitely if necessary. This is
-    similar to the approach taken by Go, described in
-    https://research.swtch.com/vgo-import . The difference between Java and Go
-    is that Go can accept types with the same structure even though they have
-    different identities, so this approach is more disruptive in Java. In Go, a
-    single method can accept types from multiple interface declarations, but
-    Java can accept only one. Transitioning fully to the new version in Java
-    requires code changes between versions, even for classes whose surface
-    remains the same, because all import statements need to be updated. There
-    will be no diamond dependency conflicts using this approach, but adoption
-    can be blocked if there are consuming libraries that have not also created
-    new major versions that can accept new types from this library.
+    version, or even use them side by side indefinitely if
+    necessary. Transitioning fully to the new version in Java requires code
+    changes between versions, even for classes whose surface remains the same,
+    because all import statements need to be updated. There will be no diamond
+    dependency conflicts using this approach, but adoption can be blocked if
+    there are consuming libraries that have not also created new major versions
+    that can accept new types from this library. This approach is essentially
+    like creating a new library.
   - **Bundle old and new in the existing Maven ID (case 5)**: Like case 4, the
     two versions can be used side by side. The impact is the same as case 4,
     except with the slight drawback that the user's class space is polluted with
@@ -116,18 +119,19 @@ Basically, the cost of diamond dependency conflicts (due to not renaming) has to
 be weighed against the cost of updating import statements everywhere the library
 is used. Let's take examples from two extremes.
 
-1. A library with 10,000 classes, and 1 function is deprecated between major
-   version 1 to major version 2, and it is used in one place in a large
-   dependency tree.
+1. A library with 10,000 references throughout 100 packages, and which has a
+   function with one reference in a leaf of the dependency graph that is deleted
+   between major version 1 to major version 2.
 
-In this case, moving 10,000 classes to a new package in a large dependency tree
-would be a very expensive endeavor. In contrast, updating the one place where
-the old function is used to use the new function instead would be considerably
-less work and could be rolled out much more quickly. In this scenario, it is
-clearly superior to keep the same Java package.
+In this case, moving 10,000 references to a new package in a large dependency
+tree would be a very expensive endeavor. In contrast, updating the one place
+where the old function is used to use the new function instead would be
+considerably less work and could be rolled out much more quickly. In this
+scenario, it is clearly superior to keep the same Java package.
 
-3. A library with 1,000 classes, and a large refactoring touching 750 of the
-   classes is done between major version 1 and major version 2.
+2. A library with 10,000 references throughout 100 packages, and a large
+   refactoring breaks the surface of 5,000 of those references between major
+   version 1 to major version 2.
 
 In this case, changing consuming code would be a large undertaking, and it's not
 certain that all consuming code would feel it's worth it to migrate to the new
@@ -137,7 +141,12 @@ requiring one versus the other major version. Either the ecosystem would
 generally opt to retain the old major version, or there would be an extended
 period of difficult diamond dependency conflicts before everyone had
 transitioned. In this scenario, it is clearly superior to rename the Java
-package.
+package, and essentially treat the new major version as a new library.
+
+Note that both of these examples are for a library with a large number of places
+that reference it. The fewer places that a library is referenced, and the closer
+to the leaves of the graph that the library is referenced, the less impact there
+is to the decision.
 
 Examples in open source
 -----------------------
@@ -151,10 +160,11 @@ Examples in open source
 - `guava` vs `guava-jdk5`
   - This technically wasn't a new major version, but it is an example of case 2
     that has caused a lot of problems.
+- `javax.servlet:javax.servlet-api:3.1.0` vs  `javax.servlet:servlet-api:2.5`
 
 **Case 4**
-- [Square has established it as a policy](http://jakewharton.com/java-interoperability-policy-for-major-version-updates/)
-for its Java libraries (examples include OkHttp and Retrofit).
+- Square has [established this approach as a policy for its Java libraries](http://jakewharton.com/java-interoperability-policy-for-major-version-updates/)
+  (examples include OkHttp and Retrofit).
   - OkHttp (com.squareup.okhttp -> com.squareup.okhttp3)
 - Apache Commons Lang (org.apache.commons.lang -> org.apache.commons.lang3)
 - RxJava (rx (version 1.x) -> io.reactivex (version 2.x))
