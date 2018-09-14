@@ -36,4 +36,8 @@ jobs:
           key: v1-dependencies-{{ checksum "pom.xml" }}
         
       # run tests!
-      - run: mvn integration-test -Dmaven.home=/opt/apache-maven
+      - run: |
+          cd boms/cloud-oss-bom
+          mvn install
+          cd ../..
+          mvn integration-test -Dmaven.home=/opt/apache-maven
