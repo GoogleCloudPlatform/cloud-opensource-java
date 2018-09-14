@@ -44,9 +44,14 @@ Recommendations:
     rename would be preferrable. Generally, the wider the usage of the features
     that need to break, the higher the value is from renaming the Java package.
 - Whether making breaking changes or making no breaking changes, don't publish
-  the same classes under multiple Maven IDs. Or put another way: Once you have
-  published under a particular Maven ID, you are stuck with it until you rename
-  your Java package.
+  the same classes under multiple Maven IDs; this creates a situation where
+  artifacts have "overlapping classes." Another best practice,
+  [JLBP-5](JLBP-5.md), covers how consumers need to handle such problematic
+  scenarios - don't create new cases!
+  - Corollary 1: Once you have published under a particular Maven ID, you are
+    stuck with it until you rename your Java package.
+  - Corollary 2: Don't fork an artifact owned by someone else and publish
+    classes with the same fully-qualified classnames.
 
 Extended discussion
 -------------------
@@ -80,8 +85,7 @@ Given this scenario, here are the possible combinations of renamings:
     path. As a result, the classes are loaded in unpredictable ways, leading to
     runtime exceptions (for example `ClassNotFoundException`). It is difficult
     for users to ensure that their build tree only includes one of the
-    artifacts. Another best practice, [JLBP-5](JLBP-5.md), covers how consumers
-    need to handle such problematic scenarios.  **NEVER DO THIS**.
+    artifacts. **NEVER DO THIS**.
 - **Rename Java package**:
   - **Don't rename Maven ID (case 3)**: The classes from `g1:a1:1.0.0` and
     `g1:a1:2.0.0` could technically be used together, but since they share the
