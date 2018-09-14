@@ -59,7 +59,8 @@ public class DashboardMain {
   public static void main(String[] args) 
       throws IOException, TemplateException, ArtifactDescriptorException {
 
-    generate();
+    Path output = generate();
+    System.out.println("Wrote dashboard into " + output.toAbsolutePath());
   }
 
   public static Path generate() throws IOException, TemplateException, ArtifactDescriptorException {
