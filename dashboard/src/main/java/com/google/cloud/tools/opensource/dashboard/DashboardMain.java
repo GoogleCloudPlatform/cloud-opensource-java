@@ -56,11 +56,6 @@ import com.google.common.base.Splitter;
 
 public class DashboardMain {
   
-  private static String[] ARTIFACTS = {
-      "com.google.cloud:google-cloud-core:1.41.0",
-      "com.google.cloud:google-cloud-datastore:1.41.0"
-  };
-  
   public static void main(String[] args) 
       throws IOException, TemplateException, ArtifactDescriptorException {
 
@@ -72,9 +67,10 @@ public class DashboardMain {
     
     Path relativePath = Paths.get("target", "dashboard");
     Path output = Files.createDirectories(relativePath);
-
-    generateDashboard(configuration, output);
-    generateReports(configuration, output);
+    
+    List<String> artifacts = readBom();
+    generateDashboard(configuration, output, artifacts);
+    generateReports(configuration, output, artifacts);
     
     return output;
   }
@@ -86,9 +82,8 @@ public class DashboardMain {
     return configuration;
   }
 
-  private static void generateReports(Configuration configuration, Path output) 
-      throws ArtifactDescriptorException {
-    List<String> artifacts = readBom();
+  private static void generateReports(Configuration configuration, Path output,
+      List<String> artifacts) throws ArtifactDescriptorException {
     for (String coordinates : artifacts ) {
       try {
         generateReport(configuration, output, coordinates);
@@ -116,9 +111,11 @@ public class DashboardMain {
     ArtifactDescriptorResult resolved = system.readArtifactDescriptor(session, request);
     List<String> result = new ArrayList<>();
     for (Dependency dependency : resolved.getManagedDependencies()) {
-      System.err.println(dependency);
       Artifact managed = dependency.getArtifact();
-      result.add(managed.getGroupId() + ":" + managed.getArtifactId() + ":" + managed.getVersion());
+      if (!managed.getArtifactId().contains("contrib")) {
+        System.err.println(dependency);
+        result.add(managed.getGroupId() + ":" + managed.getArtifactId() + ":" + managed.getVersion());
+      }
     }
     return result;
   }
@@ -139,7 +136,7 @@ public class DashboardMain {
       DependencyGraph graph =
           DependencyGraphBuilder.getCompleteDependencies(groupId, artifactId, version);
       List<String> updates = graph.findUpdates();
-            
+   
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
@@ -153,14 +150,15 @@ public class DashboardMain {
     }
   }
 
-  private static void generateDashboard(Configuration configuration, Path output)
-      throws ParseException, IOException, TemplateException {
+  private static void generateDashboard(Configuration configuration, Path output,
+      List<String> artifacts) throws ParseException, IOException, TemplateException {
+    
     File dashboardFile = output.resolve("dashboard.html").toFile();
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
       Template dashboard = configuration.getTemplate("/templates/dashboard.ftl");
       Map<String, Object> templateData = new HashMap<>();
-      templateData.put("artifacts", ARTIFACTS);
+      templateData.put("artifacts", artifacts);
       templateData.put("lastUpdated", LocalDateTime.now());
 
       dashboard.process(templateData, out);

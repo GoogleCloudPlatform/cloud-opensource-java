@@ -44,7 +44,10 @@ public class DashboardTest {
   @Test
   public void testGenerateDashboard()
       throws IOException, TemplateException, ParsingException, ArtifactDescriptorException {
+    
+    // TODO clean this up after test
     Path outputDirectory = DashboardMain.generate();
+    System.err.println(outputDirectory.toAbsolutePath());
     Assert.assertTrue(Files.exists(outputDirectory));
     Assert.assertTrue(Files.isDirectory(outputDirectory));
     
@@ -52,12 +55,13 @@ public class DashboardTest {
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
     
     List<String> artifacts = DashboardMain.readBom();
+    Assert.assertFalse(artifacts.isEmpty());
     
     Builder builder = new Builder();
     try (InputStream source = Files.newInputStream(dashboardHtml)) {
       Document document = builder.build(dashboardHtml.toFile());
       Nodes li = document.query("//li");
-      Assert.assertEquals(2, li.size());
+      Assert.assertEquals(artifacts.size(), li.size());
       for (int i = 0; i < li.size(); i++) {
         Assert.assertEquals(artifacts.get(i), li.get(i).getValue());
       }
@@ -73,7 +77,6 @@ public class DashboardTest {
           Document report = builder.build(componentReport.toFile());
           Nodes updates = report.query("//li");
           Assert.assertTrue("didn't find updates", updates.size() > 2);
-          
         } catch (ParsingException ex) {
           byte[] data = Files.readAllBytes(componentReport);
           String message = "Could not parse " + componentReport + " at line " +
