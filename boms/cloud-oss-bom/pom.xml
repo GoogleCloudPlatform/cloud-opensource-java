@@ -56,7 +56,7 @@
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
-        <artifactId>grpclb</artifactId>
+        <artifactId>grpc-grpclb</artifactId>
         <version>${io.grpc.version}</version>
       </dependency>
       <dependency>

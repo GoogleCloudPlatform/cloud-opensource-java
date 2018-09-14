@@ -199,6 +199,7 @@ public class DependencyGraphBuilder {
           System.err.println(ex.getMessage());
           throw ex;
         }
+        // TODO somehow we've got an infinite recursion here
         fullPreorder((Stack<DependencyNode>) path.clone(), child, graph);
       }
     }
