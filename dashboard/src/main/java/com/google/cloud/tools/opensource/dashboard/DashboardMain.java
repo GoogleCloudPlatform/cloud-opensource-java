@@ -114,9 +114,15 @@ public class DashboardMain {
     List<String> result = new ArrayList<>();
     for (Dependency dependency : resolved.getManagedDependencies()) {
       Artifact managed = dependency.getArtifact();
-      if (!managed.getArtifactId().contains("contrib")) {
+      if (managed.getArtifactId().contains("logback")
+          || managed.getArtifactId().contains("contrib")) {
+        continue;
+      }
+      String coords =
+          managed.getGroupId() + ":" + managed.getArtifactId() + ":" + managed.getVersion();
+      if (!result.contains(coords)) {
         System.err.println(dependency);
-        result.add(managed.getGroupId() + ":" + managed.getArtifactId() + ":" + managed.getVersion());
+        result.add(coords);
       }
     }
     return result;
