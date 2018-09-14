@@ -66,7 +66,6 @@ public class DashboardTest {
         Assert.assertEquals(artifacts.get(i), li.get(i).getValue());
       }
       Nodes href = document.query("//li/a/@href");
-      Assert.assertEquals(2, href.size());
       for (int i = 0; i < href.size(); i++) {
         String fileName = href.get(i).getValue();
         Assert.assertEquals(artifacts.get(i).replace(':', '_') + ".html", 
