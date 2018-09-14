@@ -31,10 +31,26 @@ import nu.xom.Nodes;
 import nu.xom.ParsingException;
 
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.io.MoreFiles;
+
 public class DashboardTest {
+  
+  private Path outputDirectory;
+  
+  @Before
+  public void setUp() throws ArtifactDescriptorException, IOException, TemplateException {
+    outputDirectory = DashboardMain.generate();
+  }
+  
+  @After
+  public void cleanUp() throws IOException {
+    MoreFiles.deleteRecursively(outputDirectory);
+  }
 
   @Test
   public void testMain() throws IOException, TemplateException, ArtifactDescriptorException {
@@ -45,9 +61,6 @@ public class DashboardTest {
   public void testGenerateDashboard()
       throws IOException, TemplateException, ParsingException, ArtifactDescriptorException {
     
-    // TODO clean this up after test
-    Path outputDirectory = DashboardMain.generate();
-    System.err.println(outputDirectory.toAbsolutePath());
     Assert.assertTrue(Files.exists(outputDirectory));
     Assert.assertTrue(Files.isDirectory(outputDirectory));
     

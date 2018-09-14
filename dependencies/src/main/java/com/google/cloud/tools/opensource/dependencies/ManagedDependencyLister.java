@@ -30,9 +30,10 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 public class ManagedDependencyLister {
 
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
-  
+
   public static void main(String[] args) throws ArtifactDescriptorException {
-    DefaultArtifact artifact = new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.0.1-SNAPSHOT");   
+    DefaultArtifact artifact =
+        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.0.1-SNAPSHOT");
 
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 
@@ -42,7 +43,7 @@ public class ManagedDependencyLister {
 
     ArtifactDescriptorResult resolved = system.readArtifactDescriptor(session, request);
     for (Dependency dependency : resolved.getManagedDependencies()) {
-      System.err.println(dependency);
+      System.out.println(dependency);
     }
   }
 
