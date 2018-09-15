@@ -118,5 +118,24 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+  
+  <build>
+    <pluginManagement>
+      <plugins>
+        <!-- TODO figure out why this isn't inheriting -->
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>1.6.0</version>
+          <configuration>
+            <skip>true</skip>
+            <exec>java</exec>
+            <executable>maven</executable>
+            <mainClass>none</mainClass>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 
 </project>

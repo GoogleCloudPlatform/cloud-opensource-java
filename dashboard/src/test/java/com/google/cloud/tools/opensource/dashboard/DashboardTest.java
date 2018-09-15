@@ -37,6 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
 
 public class DashboardTest {
   
@@ -49,7 +50,7 @@ public class DashboardTest {
   
   @After
   public void cleanUp() throws IOException {
-    MoreFiles.deleteRecursively(outputDirectory);
+    MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
   }
 
   @Test
