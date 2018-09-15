@@ -91,7 +91,7 @@ public class DependencyGraphBuilder {
 
     DependencyRequest dependencyRequest = new DependencyRequest();
     dependencyRequest.setRoot(node);
-    // todo might be able to speed up by using collectDependencies here instead
+    // TODO might be able to speed up by using collectDependencies here instead
     system.resolveDependencies(session, dependencyRequest);
     cache.put(key, node);
     

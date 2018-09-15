@@ -119,6 +119,8 @@ public class DashboardMain {
     List<String> result = new ArrayList<>();
     for (Dependency dependency : resolved.getManagedDependencies()) {
       Artifact managed = dependency.getArtifact();
+      // TODO remove this hack once we get these out of 
+      // google-cloud-java's BOM
       if (managed.getArtifactId().contains("logback")
           || managed.getArtifactId().contains("contrib")) {
         continue;
