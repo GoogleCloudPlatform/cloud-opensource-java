@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
@@ -42,11 +42,11 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-    </dependencies>    
+    </dependencies>
   </dependencyManagement>
 
-  <!-- TODO is there a way to run this test directly on the BOM
-       instead of on a pom.xml that imports the BOM? -->
+  <!-- TODO is there a way to run this test directly on the BOM instead of 
+    on a pom.xml that imports the BOM? -->
   <dependencies>
     <dependency>
       <groupId>com.google.cloud</groupId>
@@ -58,39 +58,39 @@
     </dependency>
   </dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>3.0.0-M2</version>
-				<executions>
-					<execution>
-						<id>enforce</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<rules>
-						<requireUpperBoundDeps />
-					</rules>
-				</configuration>
-			</plugin>
-			<!-- TODO figure out why this isn't inheriting -->
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<version>1.6.0</version>
-				<configuration>
-					<skip>true</skip>
-					<exec>java</exec>
-					<executable>maven</executable>
-					<mainClass>none</mainClass>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.0.0-M2</version>
+        <executions>
+          <execution>
+            <id>enforce</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <rules>
+            <requireUpperBoundDeps />
+          </rules>
+        </configuration>
+      </plugin>
+      <!-- TODO figure out why this isn't inheriting -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.6.0</version>
+        <configuration>
+          <skip>true</skip>
+          <exec>java</exec>
+          <executable>maven</executable>
+          <mainClass>none</mainClass>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>
