@@ -10,8 +10,6 @@ To generate the dashboard from the root directory run
 $ mvn exec:java
 ```
 
-TBD: this may require a ```mvn clean install``` to install the BOM into the local repo first.
-
 # Development
 
 This project is built using _Maven_.
