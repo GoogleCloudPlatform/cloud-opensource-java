@@ -101,7 +101,7 @@ public class DashboardMain {
   static List<String> readBom() throws ArtifactDescriptorException {
     
     DefaultArtifact artifact =
-        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.0.1-SNAPSHOT");
+        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
 
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     RepositorySystemSession session = RepositoryUtility.newSession(system);

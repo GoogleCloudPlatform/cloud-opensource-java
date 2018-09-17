@@ -4,9 +4,10 @@ This project explores common infrastructure and coding standards for open source
 
 [Code Hygiene Dashboard](https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/target/dashboard/dashboard.html) (runs daily; work in progress)
 
-To generate the dashboard from the root directory run
+To generate the dashboard from the root directory run:
 
 ```
+$ mvn clean install
 $ mvn exec:java
 ```
 
