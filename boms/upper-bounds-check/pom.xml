@@ -5,6 +5,12 @@
                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+    <groupId>com.google.cloud.tools.opensource</groupId>
+    <artifactId>cloud-tools-opensource-boms</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+
   <groupId>com.google.cloud</groupId>
   <artifactId>upper-bounds-check</artifactId>
   <version>0.0.1-SNAPSHOT</version>
@@ -76,18 +82,6 @@
           <rules>
             <requireUpperBoundDeps />
           </rules>
-        </configuration>
-      </plugin>
-      <!-- TODO figure out why this isn't inheriting -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.6.0</version>
-        <configuration>
-          <skip>true</skip>
-          <exec>java</exec>
-          <executable>maven</executable>
-          <mainClass>none</mainClass>
         </configuration>
       </plugin>
     </plugins>
