@@ -48,6 +48,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
@@ -121,14 +122,13 @@ public class DashboardMain {
       Artifact managed = dependency.getArtifact();
       // TODO remove this hack once we get these out of 
       // google-cloud-java's BOM
-      if (managed.getArtifactId().contains("logback")
-          || managed.getArtifactId().contains("contrib")) {
+      if (managed.getArtifactId().equals("google-cloud-logging-logback")
+          || managed.getArtifactId().equals("google-cloud-contrib")) {
         continue;
       }
-      String coords =
-          managed.getGroupId() + ":" + managed.getArtifactId() + ":" + managed.getVersion();
+      String coords = Artifacts.toCoordinates(managed);
       if (!result.contains(coords)) {
-        System.err.println(dependency);
+        System.err.println("Duplicate dependency " + dependency);
         result.add(coords);
       }
     }

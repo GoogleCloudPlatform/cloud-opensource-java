@@ -31,7 +31,6 @@ import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
-import org.eclipse.aether.transport.classpath.ClasspathTransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 
@@ -45,16 +44,23 @@ public final class RepositoryUtility {
 
   private RepositoryUtility() {}
 
+  /**
+   * Create a new system configured for file and HTTP repository resolution.
+   */
   public static RepositorySystem newRepositorySystem() {
     DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
     locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
-    locator.addService(TransporterFactory.class, ClasspathTransporterFactory.class);
     locator.addService(TransporterFactory.class, FileTransporterFactory.class);
     locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
   
     return locator.getService(RepositorySystem.class);
   }
 
+  /**
+   * Open a new Maven repository session that looks for the local repository in the
+   * customary ~/.m2 directory. If not found, it creates an initially empty repository in
+   * a temporary location.
+   */
   public static RepositorySystemSession newSession(RepositorySystem system ) {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
   
