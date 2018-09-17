@@ -3,15 +3,19 @@
      xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>com.google.cloud.tools.opensource</groupId>
+    <artifactId>cloud-tools-opensource-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
 
-  <groupId>com.google.cloud.tools.opensource</groupId>
   <artifactId>cloud-tools-opensource-boms</artifactId>
   <packaging>pom</packaging>
-  <version>1.0-SNAPSHOT</version>
   <name>BOM Parent</name>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/boms</url>
   <organization>
-    <name>Google LLC.</name>
+    <name>Google LLC</name>
     <url>http://www.google.com</url>
   </organization>
 
@@ -30,25 +34,5 @@
     <module>cloud-oss-bom</module>
     <module>upper-bounds-check</module>
   </modules>
-
-  <build>
-    <pluginManagement>
-      <plugins>
-        <!-- TODO figure out why this isn't inheriting.
-             Maybe the parent isn't what I think it is. -->
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>exec-maven-plugin</artifactId>
-          <version>1.6.0</version>
-          <configuration>
-            <skip>true</skip>
-            <exec>java</exec>
-            <executable>maven</executable>
-            <mainClass>none</mainClass>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
 
 </project>
