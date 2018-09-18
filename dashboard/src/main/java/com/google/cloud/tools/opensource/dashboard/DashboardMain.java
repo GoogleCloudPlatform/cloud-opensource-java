@@ -128,8 +128,9 @@ public class DashboardMain {
       }
       String coords = Artifacts.toCoordinates(managed);
       if (!result.contains(coords)) {
-        System.err.println("Duplicate dependency " + dependency);
         result.add(coords);
+      } else {
+        System.err.println("Duplicate dependency " + dependency);
       }
     }
     return result;
