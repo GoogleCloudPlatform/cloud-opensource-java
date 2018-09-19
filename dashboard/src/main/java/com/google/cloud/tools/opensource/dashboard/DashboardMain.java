@@ -68,9 +68,11 @@ public class DashboardMain {
     Path relativePath = Paths.get("target", "dashboard");
     Path output = Files.createDirectories(relativePath);
     
-    List<String> artifacts = readBom();
-    generateDashboard(configuration, output, artifacts);
-    generateReports(configuration, output, artifacts);
+    DefaultArtifact bom =
+        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
+    List<String> managedDependencies = readBom(bom);
+    generateDashboard(configuration, output, managedDependencies);
+    generateReports(configuration, output, managedDependencies);
     
     return output;
   }
@@ -97,11 +99,10 @@ public class DashboardMain {
   }
 
   @VisibleForTesting
-  static List<String> readBom() throws ArtifactDescriptorException {
-    
-    DefaultArtifact artifact =
-        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
-
+  // TODO pull out to utility class. When we do this, we need to consider the
+  // possibility that the artifact is not a BOM; that is, that it does not have
+  // a dependecny management section.
+  static List<String> readBom(Artifact artifact) throws ArtifactDescriptorException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 

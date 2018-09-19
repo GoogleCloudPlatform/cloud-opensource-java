@@ -30,6 +30,7 @@ import nu.xom.Document;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
 
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.junit.After;
 import org.junit.Assert;
@@ -68,7 +69,9 @@ public class DashboardTest {
     Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
     
-    List<String> artifacts = DashboardMain.readBom();
+    DefaultArtifact bom =
+        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
+    List<String> artifacts = DashboardMain.readBom(bom);
     Assert.assertFalse("No artifacts found", artifacts.isEmpty());
     
     Builder builder = new Builder();
