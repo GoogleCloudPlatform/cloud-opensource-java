@@ -132,7 +132,7 @@ public class DashboardMain {
         continue;
       }
       if (!managedDependencies.contains(artifact)) {
-        managedDependencies.add(artifact);
+        managedDependencies.add(managed);
       } else {
         System.err.println("Duplicate dependency " + dependency);
       }
