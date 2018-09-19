@@ -31,7 +31,6 @@ import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 
@@ -44,8 +43,6 @@ import com.google.common.base.Preconditions;
 public class DependencyGraphBuilder {
   
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
-  private static final RemoteRepository CENTRAL =
-      new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
   
   static {
     // os.detected.classifier system property used to select Netty deps
@@ -89,11 +86,12 @@ public class DependencyGraphBuilder {
 
     CollectRequest collectRequest = new CollectRequest();
     collectRequest.setRoot(dependency);
-    collectRequest.addRepository(CENTRAL);
+    collectRequest.addRepository(RepositoryUtility.CENTRAL);
     DependencyNode node = system.collectDependencies(session, collectRequest).getRoot();
 
     DependencyRequest dependencyRequest = new DependencyRequest();
     dependencyRequest.setRoot(node);
+    // TODO might be able to speed up by using collectDependencies here instead
     system.resolveDependencies(session, dependencyRequest);
     cache.put(key, node);
     
@@ -197,12 +195,20 @@ public class DependencyGraphBuilder {
       if (!"system".equals(child.getDependency().getScope())) {
         try {
           child = resolveCompileTimeDependencies(child.getArtifact());
+          // somehow we've got an infinite recursion here
+          // requires equals
+          if (path.contains(child)) {
+            System.err.println("Infinite recursion resolving " + current);
+            System.err.println("Likely cycle in " + forPath);              
+            System.err.println("Child " + child);
+          } else {
+            fullPreorder((Stack<DependencyNode>) path.clone(), child, graph);
+          }
         } catch (DependencyResolutionException ex) {
           System.err.println("Error resolving " + forPath);
           System.err.println(ex.getMessage());
           throw ex;
         }
-        fullPreorder((Stack<DependencyNode>) path.clone(), child, graph);
       }
     }
   }

@@ -31,39 +31,48 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 // TODO this is leaking aether too far
 import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.resolution.ArtifactDescriptorException;
+import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
+import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 
 public class DashboardMain {
   
-  // todo move this to config file
-  static String[] ARTIFACTS = {
-      "com.google.cloud:google-cloud-core:1.41.0",
-      "com.google.cloud:google-cloud-datastore:1.41.0"
-  };
-  
   public static void main(String[] args) 
-      throws IOException, TemplateException {
+      throws IOException, TemplateException, ArtifactDescriptorException {
 
-    generate();
+    Path output = generate();
+    System.out.println("Wrote dashboard into " + output.toAbsolutePath());
   }
 
-  public static Path generate() throws IOException, TemplateException {
+  public static Path generate() throws IOException, TemplateException, ArtifactDescriptorException {
     Configuration configuration = configure();
     
     Path relativePath = Paths.get("target", "dashboard");
     Path output = Files.createDirectories(relativePath);
-
-    generateDashboard(configuration, output);
-    generateReports(configuration, output);
+    
+    List<String> artifacts = readBom();
+    generateDashboard(configuration, output, artifacts);
+    generateReports(configuration, output, artifacts);
     
     return output;
   }
@@ -75,8 +84,9 @@ public class DashboardMain {
     return configuration;
   }
 
-  private static void generateReports(Configuration configuration, Path output) {
-    for (String coordinates : ARTIFACTS) {
+  private static void generateReports(Configuration configuration, Path output,
+      List<String> artifacts) throws ArtifactDescriptorException {
+    for (String coordinates : artifacts ) {
       try {
         generateReport(configuration, output, coordinates);
       } catch (DependencyCollectionException | DependencyResolutionException | IOException
@@ -86,6 +96,44 @@ public class DashboardMain {
         System.err.println(ex.getMessage());
       }
     }
+  }
+
+  @VisibleForTesting
+  static List<String> readBom() throws ArtifactDescriptorException {
+    
+    DefaultArtifact artifact =
+        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
+
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
+
+    ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
+    request.addRepository(RepositoryUtility.CENTRAL);
+    request.setArtifact(artifact);
+
+    ArtifactDescriptorResult resolved = system.readArtifactDescriptor(session, request);
+    List<Exception> exceptions = resolved.getExceptions();
+    if (!exceptions.isEmpty()) {
+      throw new ArtifactDescriptorException(resolved, exceptions.get(0).getMessage());
+    }
+    
+    List<String> result = new ArrayList<>();
+    for (Dependency dependency : resolved.getManagedDependencies()) {
+      Artifact managed = dependency.getArtifact();
+      // TODO remove this hack once we get these out of 
+      // google-cloud-java's BOM
+      if (managed.getArtifactId().equals("google-cloud-logging-logback")
+          || managed.getArtifactId().equals("google-cloud-contrib")) {
+        continue;
+      }
+      String coords = Artifacts.toCoordinates(managed);
+      if (!result.contains(coords)) {
+        result.add(coords);
+      } else {
+        System.err.println("Duplicate dependency " + dependency);
+      }
+    }
+    return result;
   }
 
   private static void generateReport(Configuration configuration, Path output, String coordinates)
@@ -104,7 +152,7 @@ public class DashboardMain {
       DependencyGraph graph =
           DependencyGraphBuilder.getCompleteDependencies(groupId, artifactId, version);
       List<String> updates = graph.findUpdates();
-            
+   
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
@@ -118,14 +166,15 @@ public class DashboardMain {
     }
   }
 
-  private static void generateDashboard(Configuration configuration, Path output)
-      throws ParseException, IOException, TemplateException {
+  private static void generateDashboard(Configuration configuration, Path output,
+      List<String> artifacts) throws ParseException, IOException, TemplateException {
+    
     File dashboardFile = output.resolve("dashboard.html").toFile();
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
       Template dashboard = configuration.getTemplate("/templates/dashboard.ftl");
       Map<String, Object> templateData = new HashMap<>();
-      templateData.put("artifacts", ARTIFACTS);
+      templateData.put("artifacts", artifacts);
       templateData.put("lastUpdated", LocalDateTime.now());
 
       dashboard.process(templateData, out);
