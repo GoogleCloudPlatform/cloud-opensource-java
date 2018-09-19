@@ -30,12 +30,15 @@ import nu.xom.Document;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
 
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 
@@ -68,7 +71,9 @@ public class DashboardTest {
     Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
     
-    List<String> artifacts = DashboardMain.readBom();
+    DefaultArtifact bom =
+        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
+    List<Artifact> artifacts = DashboardMain.readBom(bom);
     Assert.assertFalse("No artifacts found", artifacts.isEmpty());
     
     Builder builder = new Builder();
@@ -77,12 +82,12 @@ public class DashboardTest {
       Nodes li = document.query("//li");
       Assert.assertEquals(artifacts.size(), li.size());
       for (int i = 0; i < li.size(); i++) {
-        Assert.assertEquals(artifacts.get(i), li.get(i).getValue());
+        Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i)), li.get(i).getValue());
       }
       Nodes href = document.query("//li/a/@href");
       for (int i = 0; i < href.size(); i++) {
         String fileName = href.get(i).getValue();
-        Assert.assertEquals(artifacts.get(i).replace(':', '_') + ".html", 
+        Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i)).replace(':', '_') + ".html", 
             URLDecoder.decode(fileName, "UTF-8"));
         Path componentReport = outputDirectory.resolve(fileName);
         Assert.assertTrue(fileName + " is missing", Files.isRegularFile(componentReport));

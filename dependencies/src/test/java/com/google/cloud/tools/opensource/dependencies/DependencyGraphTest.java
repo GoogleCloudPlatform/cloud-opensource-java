@@ -81,8 +81,11 @@ public class DependencyGraphTest {
   @Test
   public void testFindUpdates()
       throws DependencyCollectionException, DependencyResolutionException {
-    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies("com.google.cloud",
-        "google-cloud-core", "1.37.1");
+    
+    DefaultArtifact core =
+        new DefaultArtifact("com.google.cloud:google-cloud-core:1.37.1");
+    
+    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(core);
     List<String> updates = graph.findUpdates();
     
     // ordering not working yet
@@ -118,8 +121,9 @@ public class DependencyGraphTest {
   public void testFindUpdates_beam()
       throws DependencyCollectionException, DependencyResolutionException {    
 
-    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies("org.apache.beam",
-        "beam-sdks-java-io-google-cloud-platform", "2.5.0");
+    DefaultArtifact beam =
+        new DefaultArtifact("org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.5.0");
+    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(beam);
     
     graph.findUpdates();
   }
@@ -127,8 +131,8 @@ public class DependencyGraphTest {
   @Test
   public void testFindConflicts_cloudLanguage()
       throws DependencyCollectionException, DependencyResolutionException {
-    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies("com.google.cloud",
-        "google-cloud-language", "1.37.1");
+    DefaultArtifact artifact = new DefaultArtifact("com.google.cloud:google-cloud-language:1.37.1");
+    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(artifact);
     List<DependencyPath> conflicts = graph.findConflicts();
     List<String> leaves = new ArrayList<>();
     for (DependencyPath path : conflicts) {

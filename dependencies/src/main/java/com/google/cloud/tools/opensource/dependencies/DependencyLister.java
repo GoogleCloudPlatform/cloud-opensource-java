@@ -36,12 +36,8 @@ public class DependencyLister {
     try {
       DefaultArtifact artifact = new DefaultArtifact(args[0]);
     
-      String groupId = artifact.getGroupId();
-      String artifactId = artifact.getArtifactId();
-      String version = artifact.getVersion();
-    
       DependencyGraph graph =
-          DependencyGraphBuilder.getCompleteDependencies(groupId, artifactId, version);
+          DependencyGraphBuilder.getCompleteDependencies(artifact);
       
       List<DependencyPath> paths = graph.list();
       for (DependencyPath path : paths) { 

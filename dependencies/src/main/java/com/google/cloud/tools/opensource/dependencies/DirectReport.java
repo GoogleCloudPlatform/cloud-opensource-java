@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.dependencies;
 import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 
@@ -38,16 +39,12 @@ public class DirectReport {
       return;
     }
     
-    String[] coordinates = args[0].split(":");
-    String groupId = coordinates[0];
-    String artifactId = coordinates[1];
-    String version = coordinates[2];
-    
     System.out.println("Dependencies of " + args[0] +":");
     System.out.println();
     
+    Artifact input = new DefaultArtifact(args[0]);
     List<Artifact> dependencies =
-        DependencyGraphBuilder.getDirectDependencies(groupId, artifactId, version);
+        DependencyGraphBuilder.getDirectDependencies(input);
     
     for (Artifact artifact : dependencies) {
       System.out.println("  <dependency>");

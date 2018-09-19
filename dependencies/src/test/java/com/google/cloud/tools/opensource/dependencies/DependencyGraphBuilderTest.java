@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
@@ -30,11 +31,15 @@ import com.google.common.truth.Truth;
 
 public class DependencyGraphBuilderTest {
 
+  private DefaultArtifact datastore =
+      new DefaultArtifact("com.google.cloud:google-cloud-datastore:1.37.1");
+  private DefaultArtifact guava =
+      new DefaultArtifact("com.google.guava:guava:25.1-jre");
+  
   @Test
   public void testGetTransitiveDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
-    DependencyGraph graph = DependencyGraphBuilder.getTransitiveDependencies("com.google.cloud",
-        "google-cloud-datastore", "1.37.1");
+    DependencyGraph graph = DependencyGraphBuilder.getTransitiveDependencies(datastore);
     List<DependencyPath> list = graph.list();
     
     Assert.assertTrue(list.size() > 10);
@@ -47,8 +52,7 @@ public class DependencyGraphBuilderTest {
   @Test
   public void testGetCompleteDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
-    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies("com.google.cloud",
-        "google-cloud-datastore", "1.37.1");
+    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(datastore);
     List<DependencyPath> paths = graph.list();
     Assert.assertTrue(paths.size() > 10);
     
@@ -75,67 +79,13 @@ public class DependencyGraphBuilderTest {
   public void testGetDirectDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
     List<Artifact> artifacts =
-        DependencyGraphBuilder.getDirectDependencies("com.google.guava", "guava", "25.1-jre");
+        DependencyGraphBuilder.getDirectDependencies(guava);
     List<String> coordinates = new ArrayList<>();
     for (Artifact artifact : artifacts) {
       coordinates.add(artifact.toString());
     }
     
     Truth.assertThat(coordinates).contains("com.google.code.findbugs:jsr305:jar:3.0.2");
-  }
-  
-  @Test
-  public void testGetDirectDependencies_fails() throws DependencyCollectionException {
-    try {
-      DependencyGraphBuilder.getDirectDependencies("com.google.guava", "guava", "25-1.jre");
-      Assert.fail();
-    } catch (DependencyResolutionException ex) {
-      Assert.assertTrue(ex.getMessage().contains("guava"));
-    }
-  }
-  
-  @Test
-  public void testGetDirectDependencies_NullGroupId()
-      throws DependencyCollectionException, DependencyResolutionException {
-    try {
-      DependencyGraphBuilder.getDirectDependencies(null, "guava", "25-1.jre");
-      Assert.fail();
-    } catch (NullPointerException ex) {
-      Assert.assertEquals("Group ID cannot be null", ex.getMessage());
-    }
-  }
-  
-  @Test
-  public void testGetDirectDependencies_nullArtifactId()
-      throws DependencyCollectionException, DependencyResolutionException {
-    try {
-      DependencyGraphBuilder.getDirectDependencies("foo", null, "25-1.jre");
-      Assert.fail();
-    } catch (NullPointerException ex) {
-      Assert.assertEquals("Artifact ID cannot be null", ex.getMessage());
-    }
-  }
-  
-  @Test
-  public void testGetDirectDependencies_emptyArtifactId()
-      throws DependencyCollectionException, DependencyResolutionException {
-    try {
-      DependencyGraphBuilder.getDirectDependencies("foo", "", "25-1.jre");
-      Assert.fail();
-    } catch (IllegalArgumentException ex) {
-      Assert.assertNotNull(ex.getMessage());
-    }
-  }
-  
-  @Test
-  public void testGetDirectDependencies_nullVersion()
-      throws DependencyCollectionException, DependencyResolutionException {
-    try {
-      DependencyGraphBuilder.getDirectDependencies("foo", "bar", null);
-      Assert.fail();
-    } catch (NullPointerException ex) {
-      Assert.assertEquals("Version cannot be null", ex.getMessage());
-    }
   }
 
 }
