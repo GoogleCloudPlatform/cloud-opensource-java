@@ -131,7 +131,6 @@ public class DashboardMain {
           || managed.getArtifactId().equals("google-cloud-contrib")) {
         continue;
       }
-      // String coords = Artifacts.toCoordinates(managed);
       if (!managedDependencies.contains(artifact)) {
         managedDependencies.add(artifact);
       } else {
