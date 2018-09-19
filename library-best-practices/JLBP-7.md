@@ -7,8 +7,8 @@ this can create a lot of work for consumers to adapt to the change. If a change
 is "atomic" (meaning that the old version of something like a method is removed
 at the same time the new version is added), all usages of the old method must be
 converted to the new method in a single change to each consumer's codebase. If
-the usage is wide enough, and especially if usage spans packages by multiple
-owners and spans multiple levels of the dependency tree, the cost of
+the usage is widespread enough, and especially if usage spans packages by
+multiple owners and spans multiple levels of the dependency tree, the cost of
 transitioning may be too high to do at all.
 
 Consequently, libraries should instead make two-phase breaking changes to stable
