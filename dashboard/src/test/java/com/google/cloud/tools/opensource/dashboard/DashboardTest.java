@@ -39,6 +39,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 
@@ -73,8 +74,8 @@ public class DashboardTest {
     
     DefaultArtifact bom =
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
-    List<Artifact> artifacts = DashboardMain.readBom(bom);
-    Assert.assertFalse("No artifacts found", artifacts.isEmpty());
+    List<Artifact> artifacts = RepositoryUtility.readBom(bom);
+    Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
     
     Builder builder = new Builder();
     try (InputStream source = Files.newInputStream(dashboardHtml)) {
