@@ -73,10 +73,7 @@ public class DashboardMain {
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
     List<Artifact> managedDependencies = readBom(bom);
     
-    List<String> coordinateList =
-        managedDependencies.stream().map(Artifacts::toCoordinates).collect(Collectors.toList());
-    
-    generateDashboard(configuration, output, coordinateList);
+    generateDashboard(configuration, output, managedDependencies);
     generateReports(configuration, output, managedDependencies);
     
     return output;
@@ -165,24 +162,25 @@ public class DashboardMain {
       templateData.put("version", artifact.getVersion());
       templateData.put("updates", updates);
       report.process(templateData, out);
-
-      out.flush();
     }
   }
 
   private static void generateDashboard(Configuration configuration, Path output,
-      List<String> artifacts) throws ParseException, IOException, TemplateException {
+      List<Artifact> artifacts) throws ParseException, IOException, TemplateException {
+    
+    List<String> coordinateList =
+        artifacts.stream().map(Artifacts::toCoordinates).collect(Collectors.toList());
     
     File dashboardFile = output.resolve("dashboard.html").toFile();
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
       Template dashboard = configuration.getTemplate("/templates/dashboard.ftl");
       Map<String, Object> templateData = new HashMap<>();
-      templateData.put("artifacts", artifacts);
+      // TODO change template to accept a list of artifacts instead of strings
+      templateData.put("artifacts", coordinateList);
       templateData.put("lastUpdated", LocalDateTime.now());
 
       dashboard.process(templateData, out);
-      out.flush();
     }
   }
   
