@@ -89,7 +89,6 @@ public final class RepositoryUtility {
       return temporaryDirectory; 
    }
   }
-  
 
   /**
    * Parse the dependencyManagement section of an artifact and return the
