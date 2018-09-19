@@ -40,7 +40,6 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-// TODO this is leaking aether too far
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -53,7 +52,6 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Splitter;
 
 public class DashboardMain {
   
@@ -140,25 +138,22 @@ public class DashboardMain {
       throws ParseException, IOException, TemplateException, DependencyCollectionException,
       DependencyResolutionException {
     
-    List<String> coords = Splitter.on(":").splitToList(coordinates);  
-    String groupId = coords.get(0);
-    String artifactId = coords.get(1);
-    String version = coords.get(2);
-    
+    DefaultArtifact artifact = new DefaultArtifact(coordinates);
+
     File outputFile = output.resolve(coordinates.replace(':', '_') + ".html").toFile();
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
 
       DependencyGraph graph =
-          DependencyGraphBuilder.getCompleteDependencies(groupId, artifactId, version);
+          DependencyGraphBuilder.getCompleteDependencies(artifact);
       List<String> updates = graph.findUpdates();
    
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
-      templateData.put("groupId", groupId);
-      templateData.put("artifactId", artifactId);
-      templateData.put("version", version);
+      templateData.put("groupId", artifact.getGroupId());
+      templateData.put("artifactId", artifact.getArtifactId());
+      templateData.put("version", artifact.getVersion());
       templateData.put("updates", updates);
       report.process(templateData, out);
 

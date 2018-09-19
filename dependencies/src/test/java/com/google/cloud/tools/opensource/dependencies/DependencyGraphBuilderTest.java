@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
@@ -30,6 +31,9 @@ import com.google.common.truth.Truth;
 
 public class DependencyGraphBuilderTest {
 
+  private DefaultArtifact datastore =
+      new DefaultArtifact("com.google.cloud:google-cloud-datastore:1.37.1");
+  
   @Test
   public void testGetTransitiveDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
@@ -47,8 +51,7 @@ public class DependencyGraphBuilderTest {
   @Test
   public void testGetCompleteDependencies()
       throws DependencyCollectionException, DependencyResolutionException {
-    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies("com.google.cloud",
-        "google-cloud-datastore", "1.37.1");
+    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(datastore);
     List<DependencyPath> paths = graph.list();
     Assert.assertTrue(paths.size() > 10);
     

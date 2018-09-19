@@ -121,16 +121,13 @@ public class DependencyGraphBuilder {
   
   /**
    * Finds the full compile time, transitive dependency graph including duplicates
-   * and conflicting versions. This method makes a lot of network connections
-   * and runs for multiple minutes. Better support for local repos may help.
-   * 
-   * @throws IllegalArgumentException if group ID, artifact ID, or version is malformed
+   * and conflicting versions.
    */
-  public static DependencyGraph getCompleteDependencies(String groupId, String artifactId,
-      String version) throws DependencyCollectionException, DependencyResolutionException {
+  public static DependencyGraph getCompleteDependencies(Artifact artifact)
+      throws DependencyCollectionException, DependencyResolutionException {
     
     // root node
-    DependencyNode node = resolveCompileTimeDependencies(groupId, artifactId, version);  
+    DependencyNode node = resolveCompileTimeDependencies(artifact);  
     DependencyGraph graph = new DependencyGraph();
     fullPreorder(new Stack<DependencyNode>(), node, graph);    
     
