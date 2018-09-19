@@ -26,15 +26,12 @@ import java.util.Stack;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
-
-import com.google.common.base.Preconditions;
 
 /**
  * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact Resolver</a>
@@ -60,15 +57,6 @@ public class DependencyGraphBuilder {
     }
   }
 
-  private static DependencyNode resolveCompileTimeDependencies(
-      String groupId, String artifactId, String version)
-      throws DependencyCollectionException, DependencyResolutionException {
-    
-    Artifact artifact = new DefaultArtifact(groupId + ':' + artifactId + ':' + version);
-
-    return resolveCompileTimeDependencies(artifact);
-  }
-  
   // caching cuts time by about a factor of 4.
   private static final Map<String, DependencyNode> cache = new HashMap<>();
 
@@ -100,19 +88,13 @@ public class DependencyGraphBuilder {
 
   /**
    * Returns the non-transitive compile time dependencies of an artifact.
-   * 
-   * @throws IllegalArgumentException if group ID, artifact ID, or version is malformed
    */
-  public static List<Artifact> getDirectDependencies(String groupId, String artifactId,
-      String version) throws DependencyCollectionException, DependencyResolutionException {
-    
-    Preconditions.checkNotNull(groupId, "Group ID cannot be null");
-    Preconditions.checkNotNull(artifactId, "Artifact ID cannot be null");
-    Preconditions.checkNotNull(version, "Version cannot be null");
+  public static List<Artifact> getDirectDependencies(Artifact artifact)
+      throws DependencyCollectionException, DependencyResolutionException {
     
     List<Artifact> result = new ArrayList<>();
     
-    DependencyNode node = resolveCompileTimeDependencies(groupId, artifactId, version);
+    DependencyNode node = resolveCompileTimeDependencies(artifact);
     for (DependencyNode child : node.getChildren()) {
       result.add(child.getArtifact());
     }
@@ -139,14 +121,12 @@ public class DependencyGraphBuilder {
    * It does not include duplicates and conflicting versions. That is,
    * this resolves conflicting versions by picking the first version
    * seen. This is how Maven normally operates.
-   * 
-   * @throws IllegalArgumentException if group ID, artifact ID, or version is malformed
    */
-  public static DependencyGraph getTransitiveDependencies(String groupId, String artifactId,
-      String version) throws DependencyCollectionException, DependencyResolutionException {
+  public static DependencyGraph getTransitiveDependencies(Artifact artifact)
+      throws DependencyCollectionException, DependencyResolutionException {
     
     // root node
-    DependencyNode node = resolveCompileTimeDependencies(groupId, artifactId, version);  
+    DependencyNode node = resolveCompileTimeDependencies(artifact);  
     DependencyGraph graph = new DependencyGraph();
     preorder(new Stack<DependencyNode>(), node, graph);    
     
