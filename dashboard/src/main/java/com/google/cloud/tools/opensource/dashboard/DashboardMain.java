@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -63,21 +64,25 @@ public class DashboardMain {
   }
 
   public static Path generate() throws IOException, TemplateException, ArtifactDescriptorException {
-    Configuration configuration = configure();
+    Configuration configuration = configureFreemarker();
     
     Path relativePath = Paths.get("target", "dashboard");
     Path output = Files.createDirectories(relativePath);
     
     DefaultArtifact bom =
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
-    List<String> managedDependencies = readBom(bom);
-    generateDashboard(configuration, output, managedDependencies);
+    List<Artifact> managedDependencies = readBom(bom);
+    
+    List<String> coordinateList =
+        managedDependencies.stream().map(Artifacts::toCoordinates).collect(Collectors.toList());
+    
+    generateDashboard(configuration, output, coordinateList);
     generateReports(configuration, output, managedDependencies);
     
     return output;
   }
 
-  private static Configuration configure() {
+  private static Configuration configureFreemarker() {
     Configuration configuration = new Configuration(new Version("2.3.28"));
     configuration.setDefaultEncoding("UTF-8");
     configuration.setClassForTemplateLoading(DashboardMain.class, "/");
@@ -85,24 +90,28 @@ public class DashboardMain {
   }
 
   private static void generateReports(Configuration configuration, Path output,
-      List<String> artifacts) throws ArtifactDescriptorException {
-    for (String coordinates : artifacts ) {
+      List<Artifact> artifacts) throws ArtifactDescriptorException {
+    for (Artifact artifact : artifacts ) {
       try {
-        generateReport(configuration, output, coordinates);
+        generateReport(configuration, output, artifact);
       } catch (DependencyCollectionException | DependencyResolutionException | IOException
           | TemplateException ex) {
         // TODO logger
-        System.err.println("Error generating report for " + coordinates);
+        System.err.println("Error generating report for " + artifact);
         System.err.println(ex.getMessage());
       }
     }
   }
 
+  /**
+   * Parse the dependencyManagement section of an artifact and return the
+   * artifacts included there.
+   */
   @VisibleForTesting
   // TODO pull out to utility class. When we do this, we need to consider the
   // possibility that the artifact is not a BOM; that is, that it does not have
-  // a dependecny management section.
-  static List<String> readBom(Artifact artifact) throws ArtifactDescriptorException {
+  // a dependency management section.
+  static List<Artifact> readBom(Artifact artifact) throws ArtifactDescriptorException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 
@@ -116,7 +125,7 @@ public class DashboardMain {
       throw new ArtifactDescriptorException(resolved, exceptions.get(0).getMessage());
     }
     
-    List<String> result = new ArrayList<>();
+    List<Artifact> managedDependencies = new ArrayList<>();
     for (Dependency dependency : resolved.getManagedDependencies()) {
       Artifact managed = dependency.getArtifact();
       // TODO remove this hack once we get these out of 
@@ -125,22 +134,21 @@ public class DashboardMain {
           || managed.getArtifactId().equals("google-cloud-contrib")) {
         continue;
       }
-      String coords = Artifacts.toCoordinates(managed);
-      if (!result.contains(coords)) {
-        result.add(coords);
+      // String coords = Artifacts.toCoordinates(managed);
+      if (!managedDependencies.contains(artifact)) {
+        managedDependencies.add(artifact);
       } else {
         System.err.println("Duplicate dependency " + dependency);
       }
     }
-    return result;
+    return managedDependencies;
   }
 
-  private static void generateReport(Configuration configuration, Path output, String coordinates)
+  private static void generateReport(Configuration configuration, Path output, Artifact artifact)
       throws ParseException, IOException, TemplateException, DependencyCollectionException,
       DependencyResolutionException {
     
-    DefaultArtifact artifact = new DefaultArtifact(coordinates);
-
+    String coordinates = Artifacts.toCoordinates(artifact);
     File outputFile = output.resolve(coordinates.replace(':', '_') + ".html").toFile();
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
