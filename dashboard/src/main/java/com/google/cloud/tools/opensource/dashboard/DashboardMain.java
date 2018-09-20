@@ -31,28 +31,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
-import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
-import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
-import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.common.annotations.VisibleForTesting;
 
 public class DashboardMain {
   
@@ -71,7 +64,7 @@ public class DashboardMain {
     
     DefaultArtifact bom =
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
-    List<Artifact> managedDependencies = readBom(bom);
+    List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
     
     generateDashboard(configuration, output, managedDependencies);
     generateReports(configuration, output, managedDependencies);
@@ -100,45 +93,6 @@ public class DashboardMain {
     }
   }
 
-  /**
-   * Parse the dependencyManagement section of an artifact and return the
-   * artifacts included there.
-   */
-  @VisibleForTesting
-  // TODO pull out to utility class. When we do this, we need to consider the
-  // possibility that the artifact is not a BOM; that is, that it does not have
-  // a dependency management section.
-  static List<Artifact> readBom(Artifact artifact) throws ArtifactDescriptorException {
-    RepositorySystem system = RepositoryUtility.newRepositorySystem();
-    RepositorySystemSession session = RepositoryUtility.newSession(system);
-
-    ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
-    request.addRepository(RepositoryUtility.CENTRAL);
-    request.setArtifact(artifact);
-
-    ArtifactDescriptorResult resolved = system.readArtifactDescriptor(session, request);
-    List<Exception> exceptions = resolved.getExceptions();
-    if (!exceptions.isEmpty()) {
-      throw new ArtifactDescriptorException(resolved, exceptions.get(0).getMessage());
-    }
-    
-    List<Artifact> managedDependencies = new ArrayList<>();
-    for (Dependency dependency : resolved.getManagedDependencies()) {
-      Artifact managed = dependency.getArtifact();
-      // TODO remove this hack once we get these out of 
-      // google-cloud-java's BOM
-      if (managed.getArtifactId().equals("google-cloud-logging-logback")
-          || managed.getArtifactId().equals("google-cloud-contrib")) {
-        continue;
-      }
-      if (!managedDependencies.contains(artifact)) {
-        managedDependencies.add(artifact);
-      } else {
-        System.err.println("Duplicate dependency " + dependency);
-      }
-    }
-    return managedDependencies;
-  }
 
   private static void generateReport(Configuration configuration, Path output, Artifact artifact)
       throws ParseException, IOException, TemplateException, DependencyCollectionException,

@@ -20,15 +20,22 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.ArtifactDescriptorException;
+import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
+import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
@@ -81,6 +88,44 @@ public final class RepositoryUtility {
       temporaryDirectory.deleteOnExit();
       return temporaryDirectory; 
    }
+  }
+
+  /**
+   * Parse the dependencyManagement section of an artifact and return the
+   * artifacts included there.
+   */
+  // TODO Consider the possibility that the artifact is not a BOM; 
+  // that is, that it does not have a dependency management section.
+  public static List<Artifact> readBom(Artifact artifact) throws ArtifactDescriptorException {
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
+
+    ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
+    request.addRepository(RepositoryUtility.CENTRAL);
+    request.setArtifact(artifact);
+
+    ArtifactDescriptorResult resolved = system.readArtifactDescriptor(session, request);
+    List<Exception> exceptions = resolved.getExceptions();
+    if (!exceptions.isEmpty()) {
+      throw new ArtifactDescriptorException(resolved, exceptions.get(0).getMessage());
+    }
+    
+    List<Artifact> managedDependencies = new ArrayList<>();
+    for (Dependency dependency : resolved.getManagedDependencies()) {
+      Artifact managed = dependency.getArtifact();
+      // TODO remove this hack once we get these out of 
+      // google-cloud-java's BOM
+      if (managed.getArtifactId().equals("google-cloud-logging-logback")
+          || managed.getArtifactId().equals("google-cloud-contrib")) {
+        continue;
+      }
+      if (!managedDependencies.contains(managed)) {
+        managedDependencies.add(managed);
+      } else {
+        System.err.println("Duplicate dependency " + dependency);
+      }
+    }
+    return managedDependencies;
   }
 
 }
