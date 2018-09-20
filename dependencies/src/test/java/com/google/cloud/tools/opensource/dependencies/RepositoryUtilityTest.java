@@ -41,7 +41,7 @@ public class RepositoryUtilityTest {
   }
   
   @Test
-  public void tesReadBom() throws ArtifactDescriptorException {
+  public void testReadBom() throws ArtifactDescriptorException {
     Artifact artifact = new DefaultArtifact("com.google.cloud:google-cloud-bom:0.61.0-alpha");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(artifact);
     // Characterization test. As long as the artifact doesn't change (and it shouldn't)

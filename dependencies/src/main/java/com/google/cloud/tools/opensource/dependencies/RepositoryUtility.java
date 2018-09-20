@@ -94,9 +94,8 @@ public final class RepositoryUtility {
    * Parse the dependencyManagement section of an artifact and return the
    * artifacts included there.
    */
-  // TODO Need to consider the
-  // possibility that the artifact is not a BOM; that is, that it does not have
-  // a dependency management section.
+  // TODO Consider the possibility that the artifact is not a BOM; 
+  // that is, that it does not have a dependency management section.
   public static List<Artifact> readBom(Artifact artifact) throws ArtifactDescriptorException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     RepositorySystemSession session = RepositoryUtility.newSession(system);
@@ -120,7 +119,7 @@ public final class RepositoryUtility {
           || managed.getArtifactId().equals("google-cloud-contrib")) {
         continue;
       }
-      if (!managedDependencies.contains(artifact)) {
+      if (!managedDependencies.contains(managed)) {
         managedDependencies.add(managed);
       } else {
         System.err.println("Duplicate dependency " + dependency);
