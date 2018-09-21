@@ -16,7 +16,10 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import freemarker.core.ParseException;
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -35,17 +38,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
-
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 
 public class DashboardMain {
   
@@ -80,7 +77,7 @@ public class DashboardMain {
   }
 
   private static void generateReports(Configuration configuration, Path output,
-      List<Artifact> artifacts) throws ArtifactDescriptorException {
+      List<Artifact> artifacts) {
     for (Artifact artifact : artifacts ) {
       try {
         generateReport(configuration, output, artifact);
@@ -95,7 +92,7 @@ public class DashboardMain {
 
 
   private static void generateReport(Configuration configuration, Path output, Artifact artifact)
-      throws ParseException, IOException, TemplateException, DependencyCollectionException,
+      throws IOException, TemplateException, DependencyCollectionException,
       DependencyResolutionException {
     
     String coordinates = Artifacts.toCoordinates(artifact);
@@ -119,7 +116,7 @@ public class DashboardMain {
   }
 
   private static void generateDashboard(Configuration configuration, Path output,
-      List<Artifact> artifacts) throws ParseException, IOException, TemplateException {
+      List<Artifact> artifacts) throws IOException, TemplateException {
     
     List<String> coordinateList =
         artifacts.stream().map(Artifacts::toCoordinates).collect(Collectors.toList());

@@ -16,12 +16,17 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.base.Joiner;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import java.util.stream.Collectors;
 import org.eclipse.aether.artifact.Artifact;
 
+/**
+ * A representation of a dependency path from a root Artifact to a node Artifact.
+ */
 final class DependencyPath {
 
   private List<Artifact> path = new ArrayList<>();
@@ -32,13 +37,8 @@ final class DependencyPath {
   
   @Override
   public String toString() {
-    Iterator<Artifact> iterator = path.iterator();
-    StringBuilder builder = new StringBuilder(Artifacts.toCoordinates(iterator.next()));
-    while (iterator.hasNext()) {
-      builder.append(" / ");
-      builder.append(Artifacts.toCoordinates(iterator.next()));
-    }
-    return builder.toString();
+    return Joiner.on(" / ")
+        .join(path.stream().map(Artifacts::toCoordinates).collect(Collectors.toList()));
   }
   
   @Override

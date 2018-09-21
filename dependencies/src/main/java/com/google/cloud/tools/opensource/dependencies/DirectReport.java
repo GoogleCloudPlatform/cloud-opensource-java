@@ -25,7 +25,8 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 
 public class DirectReport {
 
-  /** Generate a list of direct dependencies. This captures the state of a published
+  /**
+   * Generate a list of direct dependencies. This captures the state of a published
    * artifact in Maven Central. It does not capture updates that may have already been
    * made at head but not published to Maven central, or dependencies
    * that have been updated but not yet incorporated in the tree.

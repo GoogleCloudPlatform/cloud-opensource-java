@@ -134,7 +134,7 @@ public class DependencyGraph {
     
     // TODO sort by path by comparing with the graph
     
-    return new ArrayList<String>(upgrades);
+    return new ArrayList<>(upgrades);
   }
   
 }
