@@ -17,3 +17,6 @@ list is open-ended, so new ones may be added from time to time.
   dependencies
 - [JLBP-6](JLBP-6.md): Package and artifact renaming rules
 - [JLBP-7](JLBP-7.md): Make breaking transitions easy
+- [JLBP-9](JLBP-9.md): Ensure consumers always use a higher or equal minimum
+  Java version
+
