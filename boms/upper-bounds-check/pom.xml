@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.google.cloud.tools.opensource</groupId>
+    <artifactId>cloud-tools-opensource-boms</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
 
   <groupId>com.google.cloud</groupId>
   <artifactId>upper-bounds-check</artifactId>
@@ -38,15 +44,15 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>cloud-oss-bom</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.62.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-    </dependencies>    
+    </dependencies>
   </dependencyManagement>
 
-  <!-- TODO is there a way to run this test directly on the BOM
-       instead of on a pom.xml that imports the BOM? -->
+  <!-- TODO is there a way to run this test directly on the BOM instead of 
+    on a pom.xml that imports the BOM? -->
   <dependencies>
     <dependency>
       <groupId>com.google.cloud</groupId>
@@ -74,7 +80,7 @@
         </executions>
         <configuration>
           <rules>
-            <requireUpperBoundDeps/>
+            <requireUpperBoundDeps />
           </rules>
         </configuration>
       </plugin>

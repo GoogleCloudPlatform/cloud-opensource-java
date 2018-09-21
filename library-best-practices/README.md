@@ -16,4 +16,5 @@ list is open-ended, so new ones may be added from time to time.
 - [JLBP-5](JLBP-5.md): Avoid dependencies that overlap classes with other
   dependencies
 - [JLBP-6](JLBP-6.md): Package and artifact renaming rules
+- [JLBP-7](JLBP-7.md): Make breaking transitions easy
 - [JLBP-8](JLBP-8.md): Advance widely used functionality to a stable version

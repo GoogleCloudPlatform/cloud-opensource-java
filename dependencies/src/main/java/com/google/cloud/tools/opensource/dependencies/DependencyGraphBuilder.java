@@ -26,16 +26,12 @@ import java.util.Stack;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
-
-import com.google.common.base.Preconditions;
 
 /**
  * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact Resolver</a>
@@ -44,8 +40,6 @@ import com.google.common.base.Preconditions;
 public class DependencyGraphBuilder {
   
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
-  private static final RemoteRepository CENTRAL =
-      new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
   
   static {
     // os.detected.classifier system property used to select Netty deps
@@ -63,15 +57,6 @@ public class DependencyGraphBuilder {
     }
   }
 
-  private static DependencyNode resolveCompileTimeDependencies(
-      String groupId, String artifactId, String version)
-      throws DependencyCollectionException, DependencyResolutionException {
-    
-    Artifact artifact = new DefaultArtifact(groupId + ':' + artifactId + ':' + version);
-
-    return resolveCompileTimeDependencies(artifact);
-  }
-  
   // caching cuts time by about a factor of 4.
   private static final Map<String, DependencyNode> cache = new HashMap<>();
 
@@ -89,11 +74,12 @@ public class DependencyGraphBuilder {
 
     CollectRequest collectRequest = new CollectRequest();
     collectRequest.setRoot(dependency);
-    collectRequest.addRepository(CENTRAL);
+    collectRequest.addRepository(RepositoryUtility.CENTRAL);
     DependencyNode node = system.collectDependencies(session, collectRequest).getRoot();
 
     DependencyRequest dependencyRequest = new DependencyRequest();
     dependencyRequest.setRoot(node);
+    // TODO might be able to speed up by using collectDependencies here instead
     system.resolveDependencies(session, dependencyRequest);
     cache.put(key, node);
     
@@ -102,19 +88,13 @@ public class DependencyGraphBuilder {
 
   /**
    * Returns the non-transitive compile time dependencies of an artifact.
-   * 
-   * @throws IllegalArgumentException if group ID, artifact ID, or version is malformed
    */
-  public static List<Artifact> getDirectDependencies(String groupId, String artifactId,
-      String version) throws DependencyCollectionException, DependencyResolutionException {
-    
-    Preconditions.checkNotNull(groupId, "Group ID cannot be null");
-    Preconditions.checkNotNull(artifactId, "Artifact ID cannot be null");
-    Preconditions.checkNotNull(version, "Version cannot be null");
+  public static List<Artifact> getDirectDependencies(Artifact artifact)
+      throws DependencyCollectionException, DependencyResolutionException {
     
     List<Artifact> result = new ArrayList<>();
     
-    DependencyNode node = resolveCompileTimeDependencies(groupId, artifactId, version);
+    DependencyNode node = resolveCompileTimeDependencies(artifact);
     for (DependencyNode child : node.getChildren()) {
       result.add(child.getArtifact());
     }
@@ -123,16 +103,13 @@ public class DependencyGraphBuilder {
   
   /**
    * Finds the full compile time, transitive dependency graph including duplicates
-   * and conflicting versions. This method makes a lot of network connections
-   * and runs for multiple minutes. Better support for local repos may help.
-   * 
-   * @throws IllegalArgumentException if group ID, artifact ID, or version is malformed
+   * and conflicting versions.
    */
-  public static DependencyGraph getCompleteDependencies(String groupId, String artifactId,
-      String version) throws DependencyCollectionException, DependencyResolutionException {
+  public static DependencyGraph getCompleteDependencies(Artifact artifact)
+      throws DependencyCollectionException, DependencyResolutionException {
     
     // root node
-    DependencyNode node = resolveCompileTimeDependencies(groupId, artifactId, version);  
+    DependencyNode node = resolveCompileTimeDependencies(artifact);  
     DependencyGraph graph = new DependencyGraph();
     fullPreorder(new Stack<DependencyNode>(), node, graph);    
     
@@ -144,14 +121,12 @@ public class DependencyGraphBuilder {
    * It does not include duplicates and conflicting versions. That is,
    * this resolves conflicting versions by picking the first version
    * seen. This is how Maven normally operates.
-   * 
-   * @throws IllegalArgumentException if group ID, artifact ID, or version is malformed
    */
-  public static DependencyGraph getTransitiveDependencies(String groupId, String artifactId,
-      String version) throws DependencyCollectionException, DependencyResolutionException {
+  public static DependencyGraph getTransitiveDependencies(Artifact artifact)
+      throws DependencyCollectionException, DependencyResolutionException {
     
     // root node
-    DependencyNode node = resolveCompileTimeDependencies(groupId, artifactId, version);  
+    DependencyNode node = resolveCompileTimeDependencies(artifact);  
     DependencyGraph graph = new DependencyGraph();
     preorder(new Stack<DependencyNode>(), node, graph);    
     
@@ -197,12 +172,20 @@ public class DependencyGraphBuilder {
       if (!"system".equals(child.getDependency().getScope())) {
         try {
           child = resolveCompileTimeDependencies(child.getArtifact());
+          // somehow we've got an infinite recursion here
+          // requires equals
+          if (path.contains(child)) {
+            System.err.println("Infinite recursion resolving " + current);
+            System.err.println("Likely cycle in " + forPath);              
+            System.err.println("Child " + child);
+          } else {
+            fullPreorder((Stack<DependencyNode>) path.clone(), child, graph);
+          }
         } catch (DependencyResolutionException ex) {
           System.err.println("Error resolving " + forPath);
           System.err.println(ex.getMessage());
           throw ex;
         }
-        fullPreorder((Stack<DependencyNode>) path.clone(), child, graph);
       }
     }
   }

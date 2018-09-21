@@ -34,102 +34,106 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-// TODO this is leaking aether too far
+import java.util.stream.Collectors;
+
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
-import com.google.common.base.Splitter;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 
 public class DashboardMain {
   
-  // todo move this to config file
-  static String[] ARTIFACTS = {
-      "com.google.cloud:google-cloud-core:1.41.0",
-      "com.google.cloud:google-cloud-datastore:1.41.0"
-  };
-  
   public static void main(String[] args) 
-      throws IOException, TemplateException {
+      throws IOException, TemplateException, ArtifactDescriptorException {
 
-    generate();
+    Path output = generate();
+    System.out.println("Wrote dashboard into " + output.toAbsolutePath());
   }
 
-  public static Path generate() throws IOException, TemplateException {
-    Configuration configuration = configure();
+  public static Path generate() throws IOException, TemplateException, ArtifactDescriptorException {
+    Configuration configuration = configureFreemarker();
     
     Path relativePath = Paths.get("target", "dashboard");
     Path output = Files.createDirectories(relativePath);
-
-    generateDashboard(configuration, output);
-    generateReports(configuration, output);
+    
+    DefaultArtifact bom =
+        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
+    List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
+    
+    generateDashboard(configuration, output, managedDependencies);
+    generateReports(configuration, output, managedDependencies);
     
     return output;
   }
 
-  private static Configuration configure() {
+  private static Configuration configureFreemarker() {
     Configuration configuration = new Configuration(new Version("2.3.28"));
     configuration.setDefaultEncoding("UTF-8");
     configuration.setClassForTemplateLoading(DashboardMain.class, "/");
     return configuration;
   }
 
-  private static void generateReports(Configuration configuration, Path output) {
-    for (String coordinates : ARTIFACTS) {
+  private static void generateReports(Configuration configuration, Path output,
+      List<Artifact> artifacts) throws ArtifactDescriptorException {
+    for (Artifact artifact : artifacts ) {
       try {
-        generateReport(configuration, output, coordinates);
+        generateReport(configuration, output, artifact);
       } catch (DependencyCollectionException | DependencyResolutionException | IOException
           | TemplateException ex) {
         // TODO logger
-        System.err.println("Error generating report for " + coordinates);
+        System.err.println("Error generating report for " + artifact);
         System.err.println(ex.getMessage());
       }
     }
   }
 
-  private static void generateReport(Configuration configuration, Path output, String coordinates)
+
+  private static void generateReport(Configuration configuration, Path output, Artifact artifact)
       throws ParseException, IOException, TemplateException, DependencyCollectionException,
       DependencyResolutionException {
     
-    List<String> coords = Splitter.on(":").splitToList(coordinates);  
-    String groupId = coords.get(0);
-    String artifactId = coords.get(1);
-    String version = coords.get(2);
-    
+    String coordinates = Artifacts.toCoordinates(artifact);
     File outputFile = output.resolve(coordinates.replace(':', '_') + ".html").toFile();
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
 
       DependencyGraph graph =
-          DependencyGraphBuilder.getCompleteDependencies(groupId, artifactId, version);
+          DependencyGraphBuilder.getCompleteDependencies(artifact);
       List<String> updates = graph.findUpdates();
-            
+   
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
-      templateData.put("groupId", groupId);
-      templateData.put("artifactId", artifactId);
-      templateData.put("version", version);
+      templateData.put("groupId", artifact.getGroupId());
+      templateData.put("artifactId", artifact.getArtifactId());
+      templateData.put("version", artifact.getVersion());
       templateData.put("updates", updates);
       report.process(templateData, out);
-
-      out.flush();
     }
   }
 
-  private static void generateDashboard(Configuration configuration, Path output)
-      throws ParseException, IOException, TemplateException {
+  private static void generateDashboard(Configuration configuration, Path output,
+      List<Artifact> artifacts) throws ParseException, IOException, TemplateException {
+    
+    List<String> coordinateList =
+        artifacts.stream().map(Artifacts::toCoordinates).collect(Collectors.toList());
+    
     File dashboardFile = output.resolve("dashboard.html").toFile();
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
       Template dashboard = configuration.getTemplate("/templates/dashboard.ftl");
       Map<String, Object> templateData = new HashMap<>();
-      templateData.put("artifacts", ARTIFACTS);
+      // TODO change template to accept a list of artifacts instead of strings
+      templateData.put("artifacts", coordinateList);
       templateData.put("lastUpdated", LocalDateTime.now());
 
       dashboard.process(templateData, out);
-      out.flush();
     }
   }
   

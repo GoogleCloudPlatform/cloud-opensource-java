@@ -24,7 +24,8 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 
 public class UpdateReport {
 
-  /** Generate a prioritized and ordered list of 
+  /** 
+   * Generate a prioritized and ordered list of 
    * necessary dependency updates. This captures the state of a published
    * artifact in Maven Central. It does not capture updates that may have already been
    * made at head but not published to Maven central, or dependencies
@@ -41,13 +42,9 @@ public class UpdateReport {
     
     try {
       DefaultArtifact artifact = new DefaultArtifact(args[0]);
-    
-      String groupId = artifact.getGroupId();
-      String artifactId = artifact.getArtifactId();
-      String version = artifact.getVersion();
       
       DependencyGraph graph =
-          DependencyGraphBuilder.getCompleteDependencies(groupId, artifactId, version);
+          DependencyGraphBuilder.getCompleteDependencies(artifact);
       List<String> updates = graph.findUpdates();
       
       if (updates.isEmpty()) {

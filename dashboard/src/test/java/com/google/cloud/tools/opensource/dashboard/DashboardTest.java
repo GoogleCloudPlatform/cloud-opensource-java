@@ -23,52 +23,78 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
-import nu.xom.ValidityException;
+
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.resolution.ArtifactDescriptorException;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
+
 public class DashboardTest {
+  
+  private Path outputDirectory;
+  
+  @Before
+  public void setUp() throws ArtifactDescriptorException, IOException, TemplateException {
+    outputDirectory = DashboardMain.generate();
+  }
+  
+  @After
+  public void cleanUp() throws IOException {
+    MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
+  }
 
   @Test
-  public void testMain() throws IOException, TemplateException {
+  public void testMain() throws IOException, TemplateException, ArtifactDescriptorException {
     DashboardMain.main(null);
   }
   
   @Test
   public void testGenerateDashboard()
-      throws IOException, TemplateException, ValidityException, ParsingException {
-    Path outputDirectory = DashboardMain.generate();
+      throws IOException, TemplateException, ParsingException, ArtifactDescriptorException {
+    
     Assert.assertTrue(Files.exists(outputDirectory));
     Assert.assertTrue(Files.isDirectory(outputDirectory));
     
     Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
     
+    DefaultArtifact bom =
+        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
+    List<Artifact> artifacts = RepositoryUtility.readBom(bom);
+    Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
+    
     Builder builder = new Builder();
     try (InputStream source = Files.newInputStream(dashboardHtml)) {
       Document document = builder.build(dashboardHtml.toFile());
       Nodes li = document.query("//li");
-      Assert.assertEquals(2, li.size());
+      Assert.assertEquals(artifacts.size(), li.size());
       for (int i = 0; i < li.size(); i++) {
-        Assert.assertEquals(DashboardMain.ARTIFACTS[i], li.get(i).getValue());
+        Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i)), li.get(i).getValue());
       }
       Nodes href = document.query("//li/a/@href");
-      Assert.assertEquals(2, href.size());
       for (int i = 0; i < href.size(); i++) {
         String fileName = href.get(i).getValue();
-        Assert.assertEquals(DashboardMain.ARTIFACTS[i].replace(':', '_') + ".html", 
+        Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i)).replace(':', '_') + ".html", 
             URLDecoder.decode(fileName, "UTF-8"));
         Path componentReport = outputDirectory.resolve(fileName);
         Assert.assertTrue(fileName + " is missing", Files.isRegularFile(componentReport));
         try {
           Document report = builder.build(componentReport.toFile());
           Nodes updates = report.query("//li");
-          Assert.assertTrue("didn't find updates", updates.size() > 2);
-          
         } catch (ParsingException ex) {
           byte[] data = Files.readAllBytes(componentReport);
           String message = "Could not parse " + componentReport + " at line " +

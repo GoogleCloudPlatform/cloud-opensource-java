@@ -16,37 +16,35 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import java.io.File;
-import java.util.List;
-
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
-import org.junit.Assert;
-import org.junit.Test;
+import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
+import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 
-public class RepositoryUtilityTest {
+/**
+ * Demo retrieving list of managed dependencies from Maven coordinates.
+ */
+public class ManagedDependencyLister {
 
-  @Test
-  public void testFindLocalRepository() {
-    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+  private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
+
+  public static void main(String[] args) throws ArtifactDescriptorException {
+    DefaultArtifact artifact =
+        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.0.1-SNAPSHOT");
+
     RepositorySystemSession session = RepositoryUtility.newSession(system);
-    
-    File local = session.getLocalRepository().getBasedir();
-    Assert.assertTrue(local.exists());
-    Assert.assertTrue(local.canRead());
-    Assert.assertTrue(local.canWrite());
+
+    ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
+    request.addRepository(RepositoryUtility.CENTRAL);
+    request.setArtifact(artifact);
+
+    ArtifactDescriptorResult resolved = system.readArtifactDescriptor(session, request);
+    for (Dependency dependency : resolved.getManagedDependencies()) {
+      System.out.println(dependency);
+    }
   }
-  
-  @Test
-  public void testReadBom() throws ArtifactDescriptorException {
-    Artifact artifact = new DefaultArtifact("com.google.cloud:google-cloud-bom:0.61.0-alpha");
-    List<Artifact> managedDependencies = RepositoryUtility.readBom(artifact);
-    // Characterization test. As long as the artifact doesn't change (and it shouldn't)
-    // the answer won't change.
-    Assert.assertEquals(134, managedDependencies.size());
-  }
-  
+
 }
