@@ -28,6 +28,7 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DefaultServiceLocator;
@@ -113,6 +114,16 @@ public final class RepositoryUtility {
     List<Artifact> managedDependencies = new ArrayList<>();
     for (Dependency dependency : resolved.getManagedDependencies()) {
       Artifact managed = dependency.getArtifact();
+      if ("testlib".equals(managed.getClassifier())) {
+        // we don't report on test libraries
+        continue;
+      }
+      
+      String type = managed.getProperty(ArtifactProperties.TYPE, "jar");
+      if ("test-jar".equals(type)) {
+        continue;
+      }
+      
       // TODO remove this hack once we get these out of 
       // google-cloud-java's BOM
       if (managed.getArtifactId().equals("google-cloud-logging-logback")

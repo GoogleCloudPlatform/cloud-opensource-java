@@ -46,7 +46,7 @@ public class RepositoryUtilityTest {
     List<Artifact> managedDependencies = RepositoryUtility.readBom(artifact);
     // Characterization test. As long as the artifact doesn't change (and it shouldn't)
     // the answer won't change.
-    Assert.assertEquals(172, managedDependencies.size());
+    Assert.assertEquals(134, managedDependencies.size());
   }
   
 }
