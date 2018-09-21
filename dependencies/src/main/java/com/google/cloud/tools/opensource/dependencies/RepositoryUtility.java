@@ -113,6 +113,10 @@ public final class RepositoryUtility {
     List<Artifact> managedDependencies = new ArrayList<>();
     for (Dependency dependency : resolved.getManagedDependencies()) {
       Artifact managed = dependency.getArtifact();
+      if ("testlib".equals(managed.getClassifier())) {
+        // we don't report on test libraries
+        continue;
+      }
       // TODO remove this hack once we get these out of 
       // google-cloud-java's BOM
       if (managed.getArtifactId().equals("google-cloud-logging-logback")
