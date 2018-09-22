@@ -104,16 +104,14 @@ public class DependencyGraph {
     return versions.get(coordinates);
   }
 
-  // TODO consider whether we need an update class with parent, from, and to; and
-  // a toString method rather than returning strings
   /**
-   * Returns a list of strings indicating desired updates formatted for a person to read.
+   * Returns a list of updates indicating desired updates formatted for a person to read.
    */
-  public List<String> findUpdates() {
+  public List<Update> findUpdates() {
     List<DependencyPath> paths = findConflicts();
     
     // now generate necessary upgrades
-    LinkedHashSet<String> upgrades = new LinkedHashSet<>();
+    LinkedHashSet<Update> upgrades = new LinkedHashSet<>();
     for (DependencyPath path : paths) {
       Artifact leaf = path.getLeaf();
       String key = Artifacts.makeKey(leaf);
@@ -126,15 +124,23 @@ public class DependencyGraph {
         // each fix. Maybe even calculate what will be needed postfix
         String lastParentVersion = versions.get(Artifacts.makeKey(parent)).last();
         if (parent.getVersion().equals(lastParentVersion)) {
-          upgrades.add(Artifacts.toCoordinates(parent) + " needs to upgrade " 
-              + Artifacts.toCoordinates(leaf) + " to " + highestVersion); 
+          
+          // setVersion returns a new instance on change
+          Artifact updated = leaf.setVersion(highestVersion);
+          Update update = Update.builder()
+              .setParent(parent)
+              .setFrom(leaf)
+              .setTo(updated)
+              .build();
+          
+          upgrades.add(update); 
         }
       }
     }
     
     // TODO sort by path by comparing with the graph
     
-    return new ArrayList<String>(upgrades);
+    return new ArrayList<>(upgrades);
   }
   
 }

@@ -34,5 +34,5 @@ public class ArtifactsTest {
     Artifact artifact = new DefaultArtifact("com.google.example", "example", "jar", "1.3.2");
     Assert.assertEquals("com.google.example:example:1.3.2", Artifacts.toCoordinates(artifact));
   }
-
+  
 }
