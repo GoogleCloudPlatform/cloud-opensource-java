@@ -45,7 +45,7 @@ public class UpdateReport {
       
       DependencyGraph graph =
           DependencyGraphBuilder.getCompleteDependencies(artifact);
-      List<String> updates = graph.findUpdates();
+      List<Update> updates = graph.findUpdates();
       
       if (updates.isEmpty()) {
         System.out.println(args[0] + " is consistent.");
@@ -53,7 +53,7 @@ public class UpdateReport {
       } else {
         System.out.println("Upgrades needed for " + args[0] +":");
         System.out.println();
-        for (String update : updates) {
+        for (Update update : updates) {
           System.out.println(update);
         }
       }

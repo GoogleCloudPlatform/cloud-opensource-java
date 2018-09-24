@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.dependencies;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -86,11 +87,12 @@ public class DependencyGraphTest {
         new DefaultArtifact("com.google.cloud:google-cloud-core:1.37.1");
     
     DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(core);
-    List<String> updates = graph.findUpdates();
+    List<Update> updates = graph.findUpdates();
+    List<String> strings = updates.stream().map(e -> e.toString()).collect(Collectors.toList());
     
     // ordering not working yet
     // TODO get order working
-    Truth.assertThat(updates).containsExactly("com.google.guava:guava:20.0 needs to "
+    Truth.assertThat(strings).containsExactly("com.google.guava:guava:20.0 needs to "
         + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
         "com.google.http-client:google-http-client:1.23.0 needs to "
         + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
