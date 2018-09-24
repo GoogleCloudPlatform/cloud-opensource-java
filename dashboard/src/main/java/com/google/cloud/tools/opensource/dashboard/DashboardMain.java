@@ -46,6 +46,7 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.cloud.tools.opensource.dependencies.Update;
 
 public class DashboardMain {
   
@@ -105,7 +106,7 @@ public class DashboardMain {
 
       DependencyGraph graph =
           DependencyGraphBuilder.getCompleteDependencies(artifact);
-      List<String> updates = graph.findUpdates();
+      List<Update> updates = graph.findUpdates();
    
       Template report = configuration.getTemplate("/templates/component.ftl");
 
