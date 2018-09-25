@@ -96,10 +96,10 @@ public class DependencyGraphIntegrationTest {
     DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(jaxen);
     
     List<Update> updates = graph.findUpdates();
-    Assert.assertEquals(5, updates.size());
+    Truth.assertThat(updates).hasSize(5);
     
     List<DependencyPath> conflicts = graph.findConflicts();
-    Assert.assertEquals(33, conflicts.size());
+    Truth.assertThat(conflicts).hasSize(33);
     
     Map<String, String> versions = graph.getHighestVersionMap();
     Assert.assertEquals("2.6.2", versions.get("xerces:xercesImpl"));
@@ -120,8 +120,8 @@ public class DependencyGraphIntegrationTest {
     Set<String> transitiveKeySet = transitive.keySet();
     
     // The complete dependencies sees a path to com.google.j2objc:j2objc-annotations that's
-    // been removed in newer versions.
-    Assert.assertTrue(completeKeyset.contains("com.google.j2objc:j2objc-annotations"));
+    // been removed in newer versions so this is not bidirectional set equality.
+    Assert.assertTrue(complete.containsKey("com.google.j2objc:j2objc-annotations"));
     Truth.assertThat(completeKeyset).containsAllIn(transitiveKeySet);
   }
   

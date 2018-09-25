@@ -145,7 +145,7 @@ public class DependencyGraph {
     Map<String, String> output = new HashMap<>();
     
     VersionComparator comparator = new VersionComparator();
-    
+
     for (Map.Entry<String, Collection<String>> entry : input.entrySet()) {
       String highestVersion = Collections.max(entry.getValue(), comparator);
       output.put(entry.getKey(), highestVersion);
