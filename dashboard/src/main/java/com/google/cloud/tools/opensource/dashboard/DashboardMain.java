@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import freemarker.core.ParseException;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -81,7 +80,7 @@ public class DashboardMain {
   }
 
   private static void generateReports(Configuration configuration, Path output,
-      List<Artifact> artifacts) throws ArtifactDescriptorException {
+      List<Artifact> artifacts) {
     for (Artifact artifact : artifacts ) {
       try {
         generateReport(configuration, output, artifact);
@@ -96,7 +95,7 @@ public class DashboardMain {
 
 
   private static void generateReport(Configuration configuration, Path output, Artifact artifact)
-      throws ParseException, IOException, TemplateException, DependencyCollectionException,
+      throws IOException, TemplateException, DependencyCollectionException,
       DependencyResolutionException {
     
     String coordinates = Artifacts.toCoordinates(artifact);
@@ -120,7 +119,7 @@ public class DashboardMain {
   }
 
   private static void generateDashboard(Configuration configuration, Path output,
-      List<Artifact> artifacts) throws ParseException, IOException, TemplateException {
+      List<Artifact> artifacts) throws IOException, TemplateException {
     
     List<String> coordinateList =
         artifacts.stream().map(Artifacts::toCoordinates).collect(Collectors.toList());

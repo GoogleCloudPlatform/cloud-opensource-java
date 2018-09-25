@@ -111,7 +111,7 @@ public class DependencyGraphBuilder {
     // root node
     DependencyNode node = resolveCompileTimeDependencies(artifact);  
     DependencyGraph graph = new DependencyGraph();
-    fullPreorder(new Stack<DependencyNode>(), node, graph);    
+    fullPreorder(new Stack<>(), node, graph);
     
     return graph;
   }
@@ -128,7 +128,7 @@ public class DependencyGraphBuilder {
     // root node
     DependencyNode node = resolveCompileTimeDependencies(artifact);  
     DependencyGraph graph = new DependencyGraph();
-    preorder(new Stack<DependencyNode>(), node, graph);    
+    preorder(new Stack<>(), node, graph);
     
     return graph;
   }
