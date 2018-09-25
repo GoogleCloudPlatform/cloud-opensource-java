@@ -15,7 +15,9 @@
         </#list>
       </ul>
     <#else>
-      <h3 style="color: green">${groupId}:${artifactId}:${version} Converges</h3>
+      <h3 style="color: green">
+        ${groupId}:${artifactId}:${version} selects the highest version of all dependencies.
+      </h3>
     </#if>
         
     <h2>Dependency Convergence</h2>

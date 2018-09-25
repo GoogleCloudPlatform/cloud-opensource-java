@@ -24,8 +24,6 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
 import java.util.Set;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -143,12 +141,12 @@ public class DependencyGraph {
   }
 
   public Map<String, String> getHighestVersionMap() {
-    NavigableMap<String, Collection<String>> input = versions.asMap();
+    Map<String, Collection<String>> input = versions.asMap();
     Map<String, String> output = new HashMap<>();
     
     VersionComparator comparator = new VersionComparator();
     
-    for (Entry<String, Collection<String>> entry : input.entrySet()) {
+    for (Map.Entry<String, Collection<String>> entry : input.entrySet()) {
       String highestVersion = Collections.max(entry.getValue(), comparator);
       output.put(entry.getKey(), highestVersion);
     }
