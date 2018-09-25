@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,9 +45,16 @@ public class DependencyGraphTest {
   private DependencyPath path3 = new DependencyPath();
   private DependencyPath path4 = new DependencyPath();
   private DependencyPath path5 = new DependencyPath();
+  private DependencyPath path6 = new DependencyPath();
   
   @Before
   public void setUp() {
+    
+    // WARNING the way the path is built here does not necessarily meet 
+    // all the preconditions of a path built from a real artifact. In
+    // particular, there can be a path to a leaf without including all 
+    // the subpaths of that path. 
+    
     path1.add(foo);
     path2.add(foo);
     path2.add(bar);
@@ -58,12 +66,25 @@ public class DependencyGraphTest {
     path5.add(foo);
     path5.add(bat1);
     path5.add(baz1); // 2 paths to baz1
+    path6.add(foo);
+    path6.add(bat1);
     
     graph.addPath(path1);
     graph.addPath(path2);
     graph.addPath(path3);
     graph.addPath(path4);
     graph.addPath(path5);
+    graph.addPath(path6);
+  }
+  
+  @Test
+  public void testGetHighestVersionMap() {
+    Map<String, String> map = graph.getHighestVersionMap();
+    Assert.assertEquals("2", map.get("com.google:baz"));
+    Assert.assertEquals("1", map.get("com.google:foo"));
+    Assert.assertEquals("1", map.get("com.google:bar"));
+    Assert.assertEquals("1", map.get("com.google:bat"));
+    Assert.assertEquals(4, map.keySet().size());
   }
   
   @Test
@@ -79,6 +100,8 @@ public class DependencyGraphTest {
     Truth.assertThat(conflicts).containsExactly(path3, path4, path5); // .inOrder();
   }
   
+  
+  // TODO next several methods should move to new test class with different fixture
   @Test
   public void testFindUpdates()
       throws DependencyCollectionException, DependencyResolutionException {
@@ -131,6 +154,46 @@ public class DependencyGraphTest {
   }
   
   @Test
+  // a non-Google dependency graph that's well understood and thus useful for debugging
+  public void testJaxen()
+      throws DependencyCollectionException, DependencyResolutionException {    
+
+    DefaultArtifact jaxen =
+        new DefaultArtifact("jaxen:jaxen:1.1.6");
+    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(jaxen);
+    
+    List<Update> updates = graph.findUpdates();
+    Assert.assertEquals(5, updates.size());
+    
+    List<DependencyPath> conflicts = graph.findConflicts();
+    Assert.assertEquals(33, conflicts.size());
+    
+    Map<String, String> versions = graph.getHighestVersionMap();
+    Assert.assertEquals("2.6.2", versions.get("xerces:xercesImpl"));
+  }
+  
+  @Test
+  // a non-Google dependency graph that's well understood and thus useful for debugging
+  public void testGrpcAuth()
+      throws DependencyCollectionException, DependencyResolutionException {    
+
+    DefaultArtifact grpc = new DefaultArtifact("io.grpc:grpc-auth:1.15.0");
+    DependencyGraph completeDependencies = DependencyGraphBuilder.getCompleteDependencies(grpc);
+    DependencyGraph transitiveDependencies = DependencyGraphBuilder.getTransitiveDependencies(grpc);
+    
+    Map<String, String> complete = completeDependencies.getHighestVersionMap();    
+    Map<String, String> transitive =
+        transitiveDependencies.getHighestVersionMap();
+    Set<String> completeKeyset = complete.keySet();
+    Set<String> transitiveKeySet = transitive.keySet();
+    
+    // The complete dependencies sees a path to com.google.j2objc:j2objc-annotations that's
+    // been removed in newer versions.
+    Assert.assertTrue(completeKeyset.contains("com.google.j2objc:j2objc-annotations"));
+    Truth.assertThat(completeKeyset).containsAllIn(transitiveKeySet);
+  }
+  
+  @Test
   public void testFindConflicts_cloudLanguage()
       throws DependencyCollectionException, DependencyResolutionException {
     DefaultArtifact artifact = new DefaultArtifact("com.google.cloud:google-cloud-language:1.37.1");
@@ -150,7 +213,7 @@ public class DependencyGraphTest {
   @Test
   public void testAdd() {
     List<DependencyPath> all = graph.list();
-    Truth.assertThat(all).containsExactly(path1, path2, path3, path4, path5).inOrder();
+    Truth.assertThat(all).containsExactly(path1, path2, path3, path4, path5, path6).inOrder();
   }
   
   @Test
@@ -163,25 +226,6 @@ public class DependencyGraphTest {
   public void testGetPaths_multiple() {
     Set<DependencyPath> paths = graph.getPaths("com.google:baz:1");
     Truth.assertThat(paths).containsExactly(path3, path5);
-  }
-  
-  @Test
-  public void testGetVersions() {
-    Set<String> versions = graph.getVersions("com.google:baz");
-    Assert.assertEquals(2, versions.size());
-    Truth.assertThat(versions).containsExactly("1", "2");
-  }
-  
-  @Test
-  public void testGetVersions_notFound() {
-    Set<String> versions = graph.getVersions("com.google:nonesuch");
-    Truth.assertThat(versions.isEmpty());
-  }
-
-  @Test
-  public void testGetPaths_notFound() {
-    Set<String> paths = graph.getVersions("com.google:baz:56.9");
-    Assert.assertEquals(0, paths.size());
   }
 
 }
