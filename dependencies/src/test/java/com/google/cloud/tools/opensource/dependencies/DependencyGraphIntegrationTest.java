@@ -74,8 +74,12 @@ public class DependencyGraphIntegrationTest {
         + "upgrade com.google.http-client:google-http-client:1.19.0 to 1.23.0");
   }
   
+  // Beam has a more complex dependency graph that hits some corner cases.
+  // In particular it pulls in Netty, which pulls in native code, the 
+  // exact artifact depending on which operating system you're running on.
+  // This is the static block that sets the os.detected.classifier system property.
+  // Take that out and this test will fail while others still pass. 
   @Test
-  // beam has a more complex dependency graph that hits some corner cases
   public void testFindUpdates_beam()
       throws DependencyCollectionException, DependencyResolutionException {    
 
