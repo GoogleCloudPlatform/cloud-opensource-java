@@ -5,10 +5,10 @@
   public API within the same major version. For libraries following semantic
   versioning, this means libraries with a 0.x.y version. (See [JLBP-3](JLBP-3.md) 
   for more details on the recommendations for semantic versioning.)
-- Unstable features are not part of the public API of a
-  stable library. They are often marked with annotations like `@Beta`. (See
-  [JLBP-3](JLBP-3.md) for more details on the recommendations for annotating
-  unstable features.)
+- Features that are not part of the public API of a
+  stable library are called *unstable*. Unstable features in a stable library 
+  should be marked with annotations such as `@Beta`. (See
+  [JLBP-3](JLBP-3.md) for more details on annotating unstable features.)
 - If your library depends on an unstable library or feature, and that feature
   experiences a breaking change between versions, your library will be locked to
   a specific version of that dependency.
