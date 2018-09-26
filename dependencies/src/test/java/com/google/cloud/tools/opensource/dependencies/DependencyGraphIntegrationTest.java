@@ -77,8 +77,8 @@ public class DependencyGraphIntegrationTest {
   // Beam has a more complex dependency graph that hits some corner cases.
   // In particular it pulls in Netty, which pulls in native code, the 
   // exact artifact depending on which operating system you're running on.
-  // This is the static block that sets the os.detected.classifier system property.
-  // Take that out and this test will fail while others still pass. 
+  // This tests verifies that DependencyGraphBuilder sets the os.detected.classifier
+  // system property. Take that out and this test will fail while others still pass. 
   @Test
   public void testFindUpdates_beam()
       throws DependencyCollectionException, DependencyResolutionException {    
@@ -87,6 +87,7 @@ public class DependencyGraphIntegrationTest {
         new DefaultArtifact("org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.5.0");
     DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(beam);
     
+    // should not throw
     graph.findUpdates();
   }
   
