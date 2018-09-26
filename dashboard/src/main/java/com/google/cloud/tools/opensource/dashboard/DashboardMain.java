@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -93,7 +94,6 @@ public class DashboardMain {
     }
   }
 
-
   private static void generateReport(Configuration configuration, Path output, Artifact artifact)
       throws IOException, TemplateException, DependencyCollectionException,
       DependencyResolutionException {
@@ -103,10 +103,18 @@ public class DashboardMain {
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
 
-      DependencyGraph graph =
+      // includes all versions
+      DependencyGraph completeDependencies =
           DependencyGraphBuilder.getCompleteDependencies(artifact);
-      List<Update> updates = graph.findUpdates();
-   
+      List<Update> updates = completeDependencies.findUpdates();      
+      
+      // picks versions according to Maven rules
+      DependencyGraph transitiveDependencies =
+          DependencyGraphBuilder.getTransitiveDependencies(artifact);
+
+      List<String> upperBoundFailures =
+          findUpperBoundsFailures(completeDependencies, transitiveDependencies);
+      
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
@@ -114,8 +122,34 @@ public class DashboardMain {
       templateData.put("artifactId", artifact.getArtifactId());
       templateData.put("version", artifact.getVersion());
       templateData.put("updates", updates);
+      templateData.put("upperBoundFailures", upperBoundFailures);
       report.process(templateData, out);
     }
+  }
+
+  // TODO may want to push this into DependencyGraph. However this probably first
+  // needs some caching of the graphs so we don't end up traversing the dependency graph
+  // extra times.
+  private static List<String> findUpperBoundsFailures(DependencyGraph graph,
+      DependencyGraph transitiveDependencies) {
+    Map<String, String> expectedVersionMap = graph.getHighestVersionMap();
+    Map<String, String> actualVersionMap = transitiveDependencies.getHighestVersionMap();
+    
+    List<String> upperBoundFailures = new ArrayList<>(); 
+    for (String id : expectedVersionMap.keySet()) {
+      String expectedVersion = expectedVersionMap.get(id);
+      String actualVersion = actualVersionMap.get(id);
+      // Check that the actual version is not null because it is 
+      // possible for dependencies to appear or disappear from the tree
+      // depending on which version of another dependency is loaded.
+      // In both cases, no action is needed.
+      if (actualVersion != null &&
+          !expectedVersion.equals(actualVersion)) {
+        // Maven did not choose highest version
+        upperBoundFailures.add("Upgrade " + id + ":" + actualVersion + " to " + expectedVersion);
+      }
+    }
+    return upperBoundFailures;
   }
 
   private static void generateDashboard(Configuration configuration, Path output,

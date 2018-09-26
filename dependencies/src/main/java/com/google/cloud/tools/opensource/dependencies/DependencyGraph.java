@@ -17,9 +17,13 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.aether.artifact.Artifact;
@@ -96,13 +100,6 @@ public class DependencyGraph {
   public Set<DependencyPath> getPaths(String coordinates) {
     return paths.get(coordinates);
   }
-  
-  /**
-   * @return all versions of the specified artifact found in the graph
-   */
-  public Set<String> getVersions(String coordinates) {
-    return versions.get(coordinates);
-  }
 
   /**
    * Returns a list of updates indicating desired updates formatted for a person to read.
@@ -141,6 +138,20 @@ public class DependencyGraph {
     // TODO sort by path by comparing with the graph
     
     return new ArrayList<>(upgrades);
+  }
+
+  public Map<String, String> getHighestVersionMap() {
+    Map<String, Collection<String>> input = versions.asMap();
+    Map<String, String> output = new HashMap<>();
+    
+    VersionComparator comparator = new VersionComparator();
+
+    for (Map.Entry<String, Collection<String>> entry : input.entrySet()) {
+      String highestVersion = Collections.max(entry.getValue(), comparator);
+      output.put(entry.getKey(), highestVersion);
+    }
+    
+    return output;
   }
   
 }

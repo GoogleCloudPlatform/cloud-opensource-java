@@ -7,8 +7,19 @@
     
     <h2>Upper Bounds Check</h2>
     
-    <p>Work in Progress</p>
-    
+   <#if upperBoundFailures?size gt 0>
+      <h3>Upper Bounds Fixes</h3>
+      <ul>
+        <#list upperBoundFailures as upper>
+          <li>${upper}</li>
+        </#list>
+      </ul>
+    <#else>
+      <h3 style="color: green">
+        ${groupId}:${artifactId}:${version} selects the highest version of all dependencies.
+      </h3>
+    </#if>
+        
     <h2>Dependency Convergence</h2>
     
     <#if updates?size gt 0>
