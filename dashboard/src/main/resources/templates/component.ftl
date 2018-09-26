@@ -1,4 +1,4 @@
-<html>
+<html lang="en-US">
   <head>
     <title>Google Cloud Platform Code Health Open Source Report for ${groupId}:${artifactId}:${version}</title>
   </head>
