@@ -80,6 +80,9 @@ public class DashboardTest {
     Builder builder = new Builder();
     try (InputStream source = Files.newInputStream(dashboardHtml)) {
       Document document = builder.build(dashboardHtml.toFile());
+
+      Assert.assertEquals("en-US", document.getRootElement().getAttribute("lang").getValue());
+      
       Nodes li = document.query("//li");
       Assert.assertEquals(artifacts.size(), li.size());
       for (int i = 0; i < li.size(); i++) {
@@ -94,7 +97,7 @@ public class DashboardTest {
         Assert.assertTrue(fileName + " is missing", Files.isRegularFile(componentReport));
         try {
           Document report = builder.build(componentReport.toFile());
-          Nodes updates = report.query("//li");
+          Assert.assertEquals("en-US", report.getRootElement().getAttribute("lang").getValue());
         } catch (ParsingException ex) {
           byte[] data = Files.readAllBytes(componentReport);
           String message = "Could not parse " + componentReport + " at line " +
