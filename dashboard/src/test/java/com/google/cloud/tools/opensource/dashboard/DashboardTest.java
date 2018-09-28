@@ -83,12 +83,12 @@ public class DashboardTest {
 
       Assert.assertEquals("en-US", document.getRootElement().getAttribute("lang").getValue());
       
-      Nodes li = document.query("//li");
-      Assert.assertEquals(artifacts.size(), li.size());
-      for (int i = 0; i < li.size(); i++) {
-        Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i)), li.get(i).getValue());
+      Nodes td = document.query("//tr/td[1]");
+      Assert.assertEquals(artifacts.size(), td.size()); // extra header row
+      for (int i = 0; i < td.size(); i++) {
+        Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i)), td.get(i).getValue());
       }
-      Nodes href = document.query("//li/a/@href");
+      Nodes href = document.query("//tr/td/a/@href");
       for (int i = 0; i < href.size(); i++) {
         String fileName = href.get(i).getValue();
         Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i)).replace(':', '_') + ".html", 

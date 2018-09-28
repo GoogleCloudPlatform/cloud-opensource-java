@@ -68,8 +68,8 @@ public class DashboardMain {
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
     
-    generateDashboard(configuration, output, managedDependencies);
-    generateReports(configuration, output, managedDependencies);
+    List<String[]> table = generateReports(configuration, output, managedDependencies);
+    generateDashboard(configuration, output, table);
     
     return output;
   }
@@ -81,11 +81,15 @@ public class DashboardMain {
     return configuration;
   }
 
-  private static void generateReports(Configuration configuration, Path output,
+  private static List<String[]> generateReports(Configuration configuration, Path output,
       List<Artifact> artifacts) {
+    
+    List<String[]> table = new ArrayList<>();
+
     for (Artifact artifact : artifacts ) {
       try {
-        generateReport(configuration, output, artifact);
+        String[] results = generateReport(configuration, output, artifact);
+        table.add(results);
       } catch (DependencyCollectionException | DependencyResolutionException | IOException
           | TemplateException ex) {
         // TODO logger
@@ -93,21 +97,26 @@ public class DashboardMain {
         System.err.println(ex.getMessage());
       }
     }
+    
+    return table;
   }
 
-  private static void generateReport(Configuration configuration, Path output, Artifact artifact)
-      throws IOException, TemplateException, DependencyCollectionException,
+  private static String[] generateReport(Configuration configuration, Path output,
+      Artifact artifact) throws IOException, TemplateException, DependencyCollectionException,
       DependencyResolutionException {
     
     String coordinates = Artifacts.toCoordinates(artifact);
     File outputFile = output.resolve(coordinates.replace(':', '_') + ".html").toFile();
+ 
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
 
+      String[] row = new String[3];
+      
       // includes all versions
       DependencyGraph completeDependencies =
           DependencyGraphBuilder.getCompleteDependencies(artifact);
-      List<Update> updates = completeDependencies.findUpdates();      
+      List<Update> convergenceIssues = completeDependencies.findUpdates();      
       
       // picks versions according to Maven rules
       DependencyGraph transitiveDependencies =
@@ -122,9 +131,15 @@ public class DashboardMain {
       templateData.put("groupId", artifact.getGroupId());
       templateData.put("artifactId", artifact.getArtifactId());
       templateData.put("version", artifact.getVersion());
-      templateData.put("updates", updates);
+      templateData.put("updates", convergenceIssues);
       templateData.put("upperBoundFailures", upperBoundFailures);
       report.process(templateData, out);
+      
+      row[0] = Artifacts.toCoordinates(artifact);
+      row[1] = upperBoundFailures.size() > 0 ? "FAIL" : "PASS";
+      row[2] = convergenceIssues.size() > 0 ? "FAIL" : "PASS";
+      
+      return row;
     }
   }
 
@@ -155,18 +170,14 @@ public class DashboardMain {
   }
 
   private static void generateDashboard(Configuration configuration, Path output,
-      List<Artifact> artifacts) throws IOException, TemplateException {
-    
-    List<String> coordinateList =
-        artifacts.stream().map(Artifacts::toCoordinates).collect(Collectors.toList());
+      List<String[]> table) throws IOException, TemplateException {
     
     File dashboardFile = output.resolve("dashboard.html").toFile();
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
       Template dashboard = configuration.getTemplate("/templates/dashboard.ftl");
       Map<String, Object> templateData = new HashMap<>();
-      // TODO change template to accept a list of artifacts instead of strings
-      templateData.put("artifacts", coordinateList);
+      templateData.put("table", table);
       templateData.put("lastUpdated", LocalDateTime.now());
 
       dashboard.process(templateData, out);
