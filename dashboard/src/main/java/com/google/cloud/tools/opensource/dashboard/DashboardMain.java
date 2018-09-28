@@ -47,6 +47,7 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.Update;
+import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 
 public class DashboardMain {
   
@@ -135,6 +136,8 @@ public class DashboardMain {
     Map<String, String> expectedVersionMap = graph.getHighestVersionMap();
     Map<String, String> actualVersionMap = transitiveDependencies.getHighestVersionMap();
     
+    VersionComparator comparator = new VersionComparator();
+    
     List<String> upperBoundFailures = new ArrayList<>(); 
     for (String id : expectedVersionMap.keySet()) {
       String expectedVersion = expectedVersionMap.get(id);
@@ -143,8 +146,7 @@ public class DashboardMain {
       // possible for dependencies to appear or disappear from the tree
       // depending on which version of another dependency is loaded.
       // In both cases, no action is needed.
-      if (actualVersion != null &&
-          !expectedVersion.equals(actualVersion)) {
+      if (actualVersion != null && comparator.compare(actualVersion, expectedVersion) < 0) {
         // Maven did not choose highest version
         upperBoundFailures.add("Upgrade " + id + ":" + actualVersion + " to " + expectedVersion);
       }
