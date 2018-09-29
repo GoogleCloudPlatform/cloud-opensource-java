@@ -21,9 +21,9 @@
       </tr>
       <#list table as row>
         <tr>
-          <td><a href='${row[0]?replace(":", "_")}.html'>${row[0]}</a></td>
-          <td class='${row[1]}'>${row[1]}</td>
-          <td class='${row[2]}'>${row[2]}</td>
+          <td><a href='${row.getCoordinates()?replace(":", "_")}.html'>${row.getCoordinates()}</a></td>   
+          <td class='${row.getResult("Upper Bounds")?string('PASS', 'FAIL')}'>${row.getResult("Upper Bounds")?string('PASS', 'FAIL')}</td>
+          <td class='${row.getResult("Dependency Convergence")?string('PASS', 'FAIL')}'>${row.getResult("Dependency Convergence")?string('PASS', 'FAIL')}</td>
         </tr>
       </#list>
       </table>

@@ -27,6 +27,8 @@ import java.util.List;
 
 import nu.xom.Builder;
 import nu.xom.Document;
+import nu.xom.Element;
+import nu.xom.Node;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
 
@@ -42,6 +44,7 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
+import com.google.common.truth.Truth;
 
 public class DashboardTest {
   
@@ -83,10 +86,18 @@ public class DashboardTest {
 
       Assert.assertEquals("en-US", document.getRootElement().getAttribute("lang").getValue());
       
-      Nodes td = document.query("//tr/td[1]");
-      Assert.assertEquals(artifacts.size(), td.size()); // extra header row
-      for (int i = 0; i < td.size(); i++) {
-        Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i)), td.get(i).getValue());
+      Nodes tr = document.query("//tr");
+      Assert.assertEquals(artifacts.size() + 1, tr.size()); // header row adds 1
+      for (int i = 1; i < tr.size(); i++) { // start at 1 to skip header row 
+        Nodes td = tr.get(i).query("td");
+        Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i-1)), td.get(0).getValue());
+        Element firstResult = (Element) (td.get(1));
+        Truth.assertThat(firstResult.getValue()).isAnyOf("PASS", "FAIL");
+        Truth.assertThat(firstResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
+        
+        Element secondResult = (Element) (td.get(2));
+        Truth.assertThat(secondResult.getValue()).isAnyOf("PASS", "FAIL");
+        Truth.assertThat(secondResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
       }
       Nodes href = document.query("//tr/td/a/@href");
       for (int i = 0; i < href.size(); i++) {
