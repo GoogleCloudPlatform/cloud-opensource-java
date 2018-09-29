@@ -29,11 +29,12 @@ Some specific notes about minimizing dependencies:
 
 - For any given functionality, pick exactly one library. For example,
   GSON, Jackson, and javax.json all parse JSON files. If one is already
-  pulled in by another dependency, use that. Otherwise choose the one
-  you prefer. Do not include more than one in your dependency tree.
+  pulled in by another dependency, use that. Otherwise choose one
+  and standardize on it. Do not include more than one in your dependency tree.
+  Do not allow different team members to choose different libraries.
 
 - If you can reasonably reimplement functionality instead of adding
   another dependency, do so. For example, if the only classes you're 
   using from Guava are `Preconditions` and `Strings`, it's not 
-  worth it. You can easily reimplement any methods in those classes
-  you're using.  
+  worth adding a dependency on Guava. You can easily reimplement 
+  any methods in those classes you're using.  
