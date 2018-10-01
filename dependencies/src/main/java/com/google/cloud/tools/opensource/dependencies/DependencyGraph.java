@@ -140,6 +140,9 @@ public class DependencyGraph {
     return new ArrayList<>(upgrades);
   }
 
+  /**
+   * @return a map of groupId:artifactId to the highest version found in the tree
+   */
   public Map<String, String> getHighestVersionMap() {
     Map<String, Collection<String>> input = versions.asMap();
     Map<String, String> output = new HashMap<>();

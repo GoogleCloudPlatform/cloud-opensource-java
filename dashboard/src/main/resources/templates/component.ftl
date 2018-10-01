@@ -10,8 +10,18 @@
    <#if upperBoundFailures?size gt 0>
       <h3>Upper Bounds Fixes</h3>
       <ul>
-        <#list upperBoundFailures as upper>
-          <li>${upper}</li>
+        <#list upperBoundFailures as lower, upper>
+          <li>Upgrade ${lower} to ${upper}:
+          
+          <p>Add this dependency element to your pom.xml:</p>
+          
+<pre><code>&lt;dependency>
+  &lt;groupId>${upper.getGroupId()}&lt;/groupId>
+  &lt;artifactId>${upper.getArtifactId()}&lt;/artifactId>
+  &lt;version>${upper.getVersion()}&lt;/version>
+&lt;/dependency></code></pre>
+          
+          </li>
         </#list>
       </ul>
     <#else>
