@@ -63,6 +63,12 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.google.truth</groupId>
+      <artifactId>truth</artifactId>
+      <scope>test</scope>
+      <version>0.42</version>
+    </dependency>
   </dependencies>
 
   <build>
