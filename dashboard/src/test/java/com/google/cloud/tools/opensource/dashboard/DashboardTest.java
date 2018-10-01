@@ -30,13 +30,14 @@ import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
+import nu.xom.ValidityException;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -47,15 +48,16 @@ import com.google.common.truth.Truth;
 
 public class DashboardTest {
   
-  private Path outputDirectory;
+  private static Path outputDirectory;
+  private Builder builder = new Builder();
   
-  @Before
-  public void setUp() throws ArtifactDescriptorException, IOException, TemplateException {
+  @BeforeClass
+  public static void setUp() throws ArtifactDescriptorException, IOException, TemplateException {
     outputDirectory = DashboardMain.generate();
   }
   
-  @After
-  public void cleanUp() throws IOException {
+  @AfterClass
+  public static void cleanUp() throws IOException {
     MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
   }
 
@@ -65,7 +67,7 @@ public class DashboardTest {
   }
   
   @Test
-  public void testGenerateDashboard()
+  public void testDashboard()
       throws IOException, TemplateException, ParsingException, ArtifactDescriptorException {
     
     Assert.assertTrue(Files.exists(outputDirectory));
@@ -79,7 +81,6 @@ public class DashboardTest {
     List<Artifact> artifacts = RepositoryUtility.readBom(bom);
     Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
     
-    Builder builder = new Builder();
     try (InputStream source = Files.newInputStream(dashboardHtml)) {
       Document document = builder.build(dashboardHtml.toFile());
 
@@ -120,6 +121,29 @@ public class DashboardTest {
       
       Nodes updated = document.query("//p[@id='updated']");
       Assert.assertEquals("didn't find updated" + document.toXML(), 1, updated.size());
+    }
+  }
+  
+  @Test
+  public void testComponent_success() throws IOException, ValidityException, ParsingException {
+    Path successHtml = outputDirectory.resolve(
+        "com.google.api.grpc_grpc-google-common-protos_1.12.0.html");
+    Assert.assertTrue(Files.isRegularFile(successHtml));
+    
+    try (InputStream source = Files.newInputStream(successHtml)) {
+      Document document = builder.build(successHtml.toFile());
+    }
+
+  }
+  
+  @Test
+  public void testComponent_failure() throws IOException, ValidityException, ParsingException {
+    Path failureHtml = outputDirectory.resolve(
+        "com.google.api.grpc_grpc-google-common-protos_1.12.0.html");
+    Assert.assertTrue(Files.isRegularFile(failureHtml));
+    
+    try (InputStream source = Files.newInputStream(failureHtml)) {
+      Document document = builder.build(failureHtml.toFile());
     }
   }
 
