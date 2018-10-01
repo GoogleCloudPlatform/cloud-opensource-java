@@ -127,11 +127,15 @@ public class DashboardTest {
   @Test
   public void testComponent_success() throws IOException, ValidityException, ParsingException {
     Path successHtml = outputDirectory.resolve(
-        "com.google.api.grpc_grpc-google-common-protos_1.12.0.html");
+        "com.google.api.grpc_proto-google-common-protos_1.12.0.html");
     Assert.assertTrue(Files.isRegularFile(successHtml));
     
     try (InputStream source = Files.newInputStream(successHtml)) {
       Document document = builder.build(successHtml.toFile());
+      Nodes greens = document.query("//h3[@style='color: green']");
+      Assert.assertTrue(greens.size() >= 2);
+      Nodes pres = document.query("//pre");
+      Assert.assertEquals(0, pres.size());
     }
 
   }
@@ -144,6 +148,10 @@ public class DashboardTest {
     
     try (InputStream source = Files.newInputStream(failureHtml)) {
       Document document = builder.build(failureHtml.toFile());
+      Nodes greens = document.query("//h3[@style='color: green']");
+      Assert.assertEquals(0, greens.size());
+      Nodes pres = document.query("//pre");
+      Assert.assertTrue(pres.size() >= 1);
     }
   }
 
