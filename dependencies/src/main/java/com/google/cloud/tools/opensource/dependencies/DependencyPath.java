@@ -27,7 +27,7 @@ import org.eclipse.aether.artifact.Artifact;
 /**
  * A representation of a dependency path from a root Artifact to a node Artifact.
  */
-final class DependencyPath {
+public final class DependencyPath {
 
   private List<Artifact> path = new ArrayList<>();
 
@@ -81,11 +81,11 @@ final class DependencyPath {
         && artifact1.getVersion().equals(artifact2.getVersion());
   }
 
-  int size() {
+  public int size() {
     return path.size();
   }
 
-  Artifact getLeaf() {
+  public Artifact getLeaf() {
     return path.get(size() - 1);
   }
 
