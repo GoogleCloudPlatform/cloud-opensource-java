@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import java.io.PrintStream;
 import java.util.List;
@@ -31,7 +32,7 @@ class DependencyTreeFormatter {
   public static void main(String[] args) {
     if (args.length < 1) {
       System.err.println("Artifact coordinate not provided. E.g., 'io.grpc:grpc-auth:1.15.0'");
-      System.exit(1);
+      return;
     }
     for (String coordinate : args) {
       try {
@@ -46,9 +47,9 @@ class DependencyTreeFormatter {
   /**
    * Prints dependencies for the coordinate of an artifact
    *
-   * @param coordinate Coordinate of an artifact to print its dependencies
+   * @param coordinate Maven coordinate of an artifact to print its dependencies
    * @throws DependencyCollectionException when dependencies cannot be collected
-   * @throws DependencyResolutionException When dependencies cannot be resolved
+   * @throws DependencyResolutionException when dependencies cannot be resolved
    */
   private static void printDependencyTree(String coordinate)
       throws DependencyCollectionException, DependencyResolutionException {
@@ -63,6 +64,7 @@ class DependencyTreeFormatter {
    *
    * @param dependencyPaths sorted dependency paths
    */
+  @VisibleForTesting
   static void printDependencyPaths(List<DependencyPath> dependencyPaths,
       PrintStream outputStream) {
     for (DependencyPath dependencyPath : dependencyPaths) {
