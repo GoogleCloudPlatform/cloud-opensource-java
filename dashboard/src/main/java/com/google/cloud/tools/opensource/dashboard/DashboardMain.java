@@ -16,6 +16,13 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.cloud.tools.opensource.dependencies.Update;
+import com.google.cloud.tools.opensource.dependencies.VersionComparator;
+import com.google.common.annotations.VisibleForTesting;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -35,23 +42,18 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.cloud.tools.opensource.dependencies.Update;
-import com.google.cloud.tools.opensource.dependencies.VersionComparator;
-
 public class DashboardMain {
-  
-  public static void main(String[] args) 
+  public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
+  public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
+
+  public static void main(String[] args)
       throws IOException, TemplateException, ArtifactDescriptorException {
 
     Path output = generate();
@@ -60,71 +62,71 @@ public class DashboardMain {
 
   public static Path generate() throws IOException, TemplateException, ArtifactDescriptorException {
     Configuration configuration = configureFreemarker();
-    
+
     Path relativePath = Paths.get("target", "dashboard");
     Path output = Files.createDirectories(relativePath);
-    
-    DefaultArtifact bom =
-        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
+
+    DefaultArtifact bom = new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
-    
+
     List<ArtifactResults> table = generateReports(configuration, output, managedDependencies);
     generateDashboard(configuration, output, table);
-    
+
     return output;
   }
 
-  private static Configuration configureFreemarker() {
+  @VisibleForTesting
+  static Configuration configureFreemarker() {
     Configuration configuration = new Configuration(new Version("2.3.28"));
     configuration.setDefaultEncoding("UTF-8");
     configuration.setClassForTemplateLoading(DashboardMain.class, "/");
     return configuration;
   }
 
-  private static List<ArtifactResults> generateReports(Configuration configuration, Path output,
-      List<Artifact> artifacts) {
-    
+  @VisibleForTesting
+  static List<ArtifactResults> generateReports(
+      Configuration configuration, Path output, List<Artifact> artifacts) {
+
     List<ArtifactResults> table = new ArrayList<>();
 
-    for (Artifact artifact : artifacts ) {
+    for (Artifact artifact : artifacts) {
       try {
         ArtifactResults results = generateReport(configuration, output, artifact);
         table.add(results);
-      } catch (DependencyCollectionException | DependencyResolutionException | IOException
-          | TemplateException ex) {
-        // TODO the dashboard should somehow show that it failed to generate this report;
-        // not just silently drop it from the index
-        System.err.println("Error generating report for " + artifact);
-        System.err.println(ex.getMessage());
+      } catch (RepositoryException|IOException|TemplateException ex) {
+        ArtifactResults unavailableTestResult = new ArtifactResults(artifact);
+        unavailableTestResult.setExceptionMessage(ex.getMessage());
+        // Even when there's problem generating test result, show the error in the dashboard
+        table.add(unavailableTestResult);
       }
     }
-    
+
     return table;
   }
 
-  private static ArtifactResults generateReport(Configuration configuration, Path output,
-      Artifact artifact) throws IOException, TemplateException, DependencyCollectionException,
-      DependencyResolutionException {
-    
+  private static ArtifactResults generateReport(
+      Configuration configuration, Path output, Artifact artifact)
+      throws IOException, TemplateException, DependencyCollectionException,
+          DependencyResolutionException {
+
     String coordinates = Artifacts.toCoordinates(artifact);
     File outputFile = output.resolve(coordinates.replace(':', '_') + ".html").toFile();
- 
-    try (Writer out = new OutputStreamWriter(
-        new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
 
-      
+    try (Writer out =
+        new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
+
       // includes all versions
       DependencyGraph completeDependencies =
           DependencyGraphBuilder.getCompleteDependencies(artifact);
-      List<Update> convergenceIssues = completeDependencies.findUpdates();      
-      
+      List<Update> convergenceIssues = completeDependencies.findUpdates();
+
       // picks versions according to Maven rules
       DependencyGraph transitiveDependencies =
           DependencyGraphBuilder.getTransitiveDependencies(artifact);
 
       Map<Artifact, Artifact> upperBoundFailures =
           findUpperBoundsFailures(completeDependencies, transitiveDependencies);
-      
+
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
@@ -137,9 +139,9 @@ public class DashboardMain {
 
       ArtifactResults results = new ArtifactResults(artifact);
       // TODO the keys/report names probably belong in named constants somewhere
-      results.addResult("Upper Bounds", upperBoundFailures.size() == 0);
-      results.addResult("Dependency Convergence", convergenceIssues.size() == 0);
-      
+      results.addResult(TEST_NAME_UPPER_BOUND, upperBoundFailures.size() == 0);
+      results.addResult(TEST_NAME_DEPENDENCY_CONVERGENCE, convergenceIssues.size() == 0);
+
       return results;
     }
   }
@@ -147,19 +149,19 @@ public class DashboardMain {
   // TODO may want to push this into DependencyGraph. However this probably first
   // needs some caching of the graphs so we don't end up traversing the dependency graph
   // extra times.
-  private static Map<Artifact, Artifact> findUpperBoundsFailures(DependencyGraph graph,
-      DependencyGraph transitiveDependencies) {
+  private static Map<Artifact, Artifact> findUpperBoundsFailures(
+      DependencyGraph graph, DependencyGraph transitiveDependencies) {
     Map<String, String> expectedVersionMap = graph.getHighestVersionMap();
     Map<String, String> actualVersionMap = transitiveDependencies.getHighestVersionMap();
-    
+
     VersionComparator comparator = new VersionComparator();
-    
+
     Map<Artifact, Artifact> upperBoundFailures = new LinkedHashMap<>();
-    
+
     for (String id : expectedVersionMap.keySet()) {
       String expectedVersion = expectedVersionMap.get(id);
       String actualVersion = actualVersionMap.get(id);
-      // Check that the actual version is not null because it is 
+      // Check that the actual version is not null because it is
       // possible for dependencies to appear or disappear from the tree
       // depending on which version of another dependency is loaded.
       // In both cases, no action is needed.
@@ -168,15 +170,16 @@ public class DashboardMain {
         // upperBoundFailures.add("Upgrade " + id + ":" + actualVersion + " to " + expectedVersion);
         DefaultArtifact lower = new DefaultArtifact(id + ":" + actualVersion);
         DefaultArtifact upper = new DefaultArtifact(id + ":" + expectedVersion);
-        upperBoundFailures.put(lower,  upper);
+        upperBoundFailures.put(lower, upper);
       }
     }
     return upperBoundFailures;
   }
 
-  private static void generateDashboard(Configuration configuration, Path output,
-      List<ArtifactResults> table) throws IOException, TemplateException {
-    
+  @VisibleForTesting
+  static void generateDashboard(Configuration configuration, Path output,
+      List<ArtifactResults> table)
+      throws IOException, TemplateException {
     File dashboardFile = output.resolve("dashboard.html").toFile();
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
@@ -188,5 +191,4 @@ public class DashboardMain {
       dashboard.process(templateData, out);
     }
   }
-  
 }

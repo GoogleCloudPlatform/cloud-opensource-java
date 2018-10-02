@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,6 +24,9 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import nu.xom.Builder;
@@ -47,15 +51,15 @@ import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Truth;
 
 public class DashboardTest {
-  
+
   private static Path outputDirectory;
   private Builder builder = new Builder();
-  
+
   @BeforeClass
-  public static void setUp() throws ArtifactDescriptorException, IOException, TemplateException {
-    outputDirectory = DashboardMain.generate();
+  public static void setUp() throws IOException {
+    outputDirectory = Files.createDirectories(Paths.get("target", "dashboard"));
   }
-  
+
   @AfterClass
   public static void cleanUp() throws IOException {
     MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
@@ -63,16 +67,19 @@ public class DashboardTest {
 
   @Test
   public void testMain() throws IOException, TemplateException, ArtifactDescriptorException {
+    // Ensuring normal execution doesn't cause any exception
     DashboardMain.main(null);
   }
-  
+
   @Test
   public void testDashboard()
       throws IOException, TemplateException, ParsingException, ArtifactDescriptorException {
-    
+    // Creates "dashboard.html" in outputDirectory
+    outputDirectory = DashboardMain.generate();
+
     Assert.assertTrue(Files.exists(outputDirectory));
     Assert.assertTrue(Files.isDirectory(outputDirectory));
-    
+
     Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
     
@@ -80,21 +87,21 @@ public class DashboardTest {
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
     List<Artifact> artifacts = RepositoryUtility.readBom(bom);
     Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
-    
+
     try (InputStream source = Files.newInputStream(dashboardHtml)) {
       Document document = builder.build(dashboardHtml.toFile());
 
       Assert.assertEquals("en-US", document.getRootElement().getAttribute("lang").getValue());
-      
+
       Nodes tr = document.query("//tr");
       Assert.assertEquals(artifacts.size() + 1, tr.size()); // header row adds 1
-      for (int i = 1; i < tr.size(); i++) { // start at 1 to skip header row 
+      for (int i = 1; i < tr.size(); i++) { // start at 1 to skip header row
         Nodes td = tr.get(i).query("td");
-        Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i-1)), td.get(0).getValue());
+        Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i - 1)), td.get(0).getValue());
         Element firstResult = (Element) (td.get(1));
         Truth.assertThat(firstResult.getValue()).isAnyOf("PASS", "FAIL");
         Truth.assertThat(firstResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
-        
+
         Element secondResult = (Element) (td.get(2));
         Truth.assertThat(secondResult.getValue()).isAnyOf("PASS", "FAIL");
         Truth.assertThat(secondResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
@@ -118,18 +125,18 @@ public class DashboardTest {
           Assert.fail(message);
         }
       }
-      
+
       Nodes updated = document.query("//p[@id='updated']");
       Assert.assertEquals("didn't find updated" + document.toXML(), 1, updated.size());
     }
   }
-  
+
   @Test
   public void testComponent_success() throws IOException, ValidityException, ParsingException {
     Path successHtml = outputDirectory.resolve(
         "com.google.api.grpc_proto-google-common-protos_1.12.0.html");
     Assert.assertTrue(Files.isRegularFile(successHtml));
-    
+
     try (InputStream source = Files.newInputStream(successHtml)) {
       Document document = builder.build(successHtml.toFile());
       Nodes greens = document.query("//h3[@style='color: green']");
@@ -137,15 +144,14 @@ public class DashboardTest {
       Nodes pres = document.query("//pre");
       Assert.assertEquals(0, pres.size());
     }
-
   }
-  
+
   @Test
   public void testComponent_failure() throws IOException, ValidityException, ParsingException {
     Path failureHtml = outputDirectory.resolve(
         "com.google.api.grpc_grpc-google-common-protos_1.12.0.html");
     Assert.assertTrue(Files.isRegularFile(failureHtml));
-    
+
     try (InputStream source = Files.newInputStream(failureHtml)) {
       Document document = builder.build(failureHtml.toFile());
       Nodes greens = document.query("//h3[@style='color: green']");
@@ -155,4 +161,76 @@ public class DashboardTest {
     }
   }
 
+  @Test
+  public void testDashboardForRepositoryException() {
+    Configuration configuration = DashboardMain.configureFreemarker();
+    Artifact validArtifact = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
+    Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nonexistent:jar:1.15.0");
+
+    List<ArtifactResults> artifactResults =
+        DashboardMain.generateReports(
+            configuration, outputDirectory, Arrays.asList(validArtifact, nonExistentArtifact));
+
+    Assert.assertEquals(
+        "The length fo the ArtifactResults should match the length of artifacts",
+        2,
+        artifactResults.size());
+    Assert.assertEquals(
+        "The first artifact result should be valid",
+        true,
+        artifactResults.get(0).getResult(DashboardMain.TEST_NAME_UPPER_BOUND));
+    ArtifactResults errorArtifactResult = artifactResults.get(1);
+    Assert.assertNull(
+        "The second artifact result should be null",
+        errorArtifactResult.getResult(DashboardMain.TEST_NAME_UPPER_BOUND));
+    Assert.assertEquals(
+        "The error artifact result should contain error message",
+        "Could not find artifact io.grpc:nonexistent:jar:1.15.0 in central (http://repo1.maven.org/maven2/)",
+        errorArtifactResult.getExceptionMessage());
+  }
+
+  @Test
+  public void testDashboardWithRepositoryException()
+      throws IOException, TemplateException, ArtifactDescriptorException, ParsingException {
+    Configuration configuration = DashboardMain.configureFreemarker();
+
+    Artifact validArtifact = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
+    ArtifactResults validArtifactResult = new ArtifactResults(validArtifact);
+    validArtifactResult.addResult(DashboardMain.TEST_NAME_UPPER_BOUND, true);
+    validArtifactResult.addResult(DashboardMain.TEST_NAME_DEPENDENCY_CONVERGENCE, true);
+
+    Artifact invalidArtifact = new DefaultArtifact("io.grpc:nonexistent:jar:1.15.0");
+    ArtifactResults errorArtifactResult = new ArtifactResults(invalidArtifact);
+    errorArtifactResult.setExceptionMessage(
+        "Could not find artifact io.grpc:nonexistent:jar:1.15.0 in central (http://repo1.maven.org/maven2/)");
+    List<ArtifactResults> table = new ArrayList<>();
+    table.add(validArtifactResult);
+    table.add(errorArtifactResult);
+
+    DashboardMain.generateDashboard(configuration, outputDirectory, table);
+
+    Path generatedDashboardHtml = outputDirectory.resolve("dashboard.html");
+    Assert.assertTrue(Files.isRegularFile(generatedDashboardHtml));
+    Document document = builder.build(generatedDashboardHtml.toFile());
+    Assert.assertEquals("en-US", document.getRootElement().getAttribute("lang").getValue());
+    Nodes tr = document.query("//tr");
+
+    Assert.assertEquals(
+        "The size of rows in table should match the number of artifacts + 1 (header)",
+        tr.size(),table.size() + 1);
+
+    Nodes tdForValidArtifact = tr.get(1).query("td");
+    Assert.assertEquals(
+        Artifacts.toCoordinates(validArtifact), tdForValidArtifact.get(0).getValue());
+    Element firstResult = (Element) (tdForValidArtifact.get(1));
+    Truth.assertThat(firstResult.getValue()).isEqualTo("PASS");
+    Truth.assertThat(firstResult.getAttributeValue("class")).isEqualTo("PASS");
+
+    Nodes tdForErrorArtifact = tr.get(2).query("td");
+    Assert.assertEquals(
+        Artifacts.toCoordinates(invalidArtifact), tdForErrorArtifact.get(0).getValue());
+    Element secondResult = (Element) (tdForErrorArtifact.get(1));
+    Truth.assertThat(secondResult.getValue()).isEqualTo("UNAVAILABLE");
+    Truth.assertThat(secondResult.getAttributeValue("class")).isEqualTo("UNAVAILABLE");
+  }
 }
