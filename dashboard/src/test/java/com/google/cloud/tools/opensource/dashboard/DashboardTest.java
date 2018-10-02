@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
@@ -32,6 +31,7 @@ import nu.xom.Nodes;
 import nu.xom.ParsingException;
 import nu.xom.ValidityException;
 
+import freemarker.template.TemplateException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -52,7 +52,7 @@ public class DashboardTest {
   private Builder builder = new Builder();
 
   @BeforeClass
-  public static void setUp() throws ArtifactDescriptorException, IOException, TemplateException{
+  public static void setUp() throws ArtifactDescriptorException, IOException, TemplateException {
     // Creates "dashboard.html" in outputDirectory
     outputDirectory = DashboardMain.generate();
   }

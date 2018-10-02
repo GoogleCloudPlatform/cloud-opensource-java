@@ -16,12 +16,6 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.common.io.MoreFiles;
-import com.google.common.io.RecursiveDeleteOption;
-import com.google.common.truth.Truth;
-import freemarker.template.Configuration;
-import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,6 +23,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import freemarker.template.Configuration;
+import freemarker.template.TemplateException;
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
@@ -40,6 +37,12 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
+import com.google.common.truth.Truth;
+
 
 public class DashboardUnavailableArtifactTest {
 
