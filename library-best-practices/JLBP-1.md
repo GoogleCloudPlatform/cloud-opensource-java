@@ -4,8 +4,8 @@
 Use the minimum number of dependencies that is reasonable.
 Adding a dependency for a large amount of functionality may be ok,
 but avoid pulling in dependencies just to save a few lines of code,
-because every dependency is a liability inherited by your own
-dependents.
+because every dependency of a library is a liability of both
+that library and that library's dependents.
 
 Some specific notes about minimizing dependencies:
 
@@ -23,7 +23,7 @@ Some specific notes about minimizing dependencies:
 
 - Prefer JDK classes where available. For example, XOM and JDOM
   are very convenient and far easier to use than DOM. However, most 
-  uses of these library can be satisfied with the `org.w3c.dom` 
+  uses of these libraries can be satisfied with the `org.w3c.dom` 
   or other packages bundled with the JDK at some cost in development
   time.
 
