@@ -56,7 +56,7 @@ class DependencyTreeFormatter {
     DefaultArtifact rootArtifact = new DefaultArtifact(coordinate);
     DependencyGraph dependencyGraph = DependencyGraphBuilder.getCompleteDependencies(rootArtifact);
     System.out.println("Dependencies for " + coordinate);
-    printDependencyPaths(dependencyGraph.list(), System.out);
+    System.out.println(formatDependencyPaths(dependencyGraph.list()));
   }
 
   /**
@@ -65,12 +65,13 @@ class DependencyTreeFormatter {
    * @param dependencyPaths sorted dependency paths
    */
   @VisibleForTesting
-  static void printDependencyPaths(List<DependencyPath> dependencyPaths,
-      PrintStream outputStream) {
+  static String formatDependencyPaths(List<DependencyPath> dependencyPaths) {
+    StringBuilder stringBuilder = new StringBuilder();
     for (DependencyPath dependencyPath : dependencyPaths) {
       int depth = dependencyPath.size();
       String indentCharacter = "  ";
-      outputStream.println(Strings.repeat(indentCharacter, depth) + dependencyPath.getLeaf());
+      stringBuilder.append(Strings.repeat(indentCharacter, depth) + dependencyPath.getLeaf()+"\n");
     }
+    return stringBuilder.toString();
   }
 }

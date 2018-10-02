@@ -28,10 +28,9 @@ public class DependencyTreeFormatterTest {
 
   @Test
   public void testDependencyTree() {
-    ByteArrayOutputStream dummyStream = new ByteArrayOutputStream();
-    PrintStream printStream = new PrintStream(dummyStream);
     List<DependencyPath> dependencyPathList = new ArrayList<>();
-    // Given these 4 artifacts as DependencyPath
+
+    // 4 artifacts as DependencyPath dummy inputs
     DependencyPath dependency1 = new DependencyPath();
     dependency1.add(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"));
     dependencyPathList.add(dependency1);
@@ -53,8 +52,7 @@ public class DependencyTreeFormatterTest {
     dependency4.add(new DefaultArtifact("com.google.code.gson:gson:jar:2.7"));
     dependencyPathList.add(dependency4);
 
-    DependencyTreeFormatter.printDependencyPaths(dependencyPathList, printStream);
-    String outputContent = dummyStream.toString();
+    String actualTreeOutput = DependencyTreeFormatter.formatDependencyPaths(dependencyPathList);
     String expectedTreeOutput =
         "  io.grpc:grpc-auth:jar:1.15.0\n"
             + "    io.grpc:grpc-core:jar:1.15.0\n"
@@ -62,6 +60,6 @@ public class DependencyTreeFormatterTest {
             + "      com.google.code.gson:gson:jar:2.7\n";
     Assert.assertEquals(
         "The dependency should be output as tree with indentation",
-        expectedTreeOutput, outputContent);
+        expectedTreeOutput, actualTreeOutput);
   }
 }
