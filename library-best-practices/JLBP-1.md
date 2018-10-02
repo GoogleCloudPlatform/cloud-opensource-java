@@ -5,7 +5,7 @@ Use the minimum number of dependencies that is reasonable.
 Adding a dependency for a large amount of functionality may be ok,
 but avoid pulling in dependencies just to save a few lines of code,
 because every dependency of a library is a liability of both
-that library and that library's dependents.
+that library and that library's consumers.
 
 Some specific notes about minimizing dependencies:
 
