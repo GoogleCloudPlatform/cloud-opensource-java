@@ -61,6 +61,7 @@ public final class ArtifactResults {
   /**
    *  @return message of exception occurred when running test, null for no exception
    */
+  @Nullable
   public String getExceptionMessage() {
     return exceptionMessage;
   }

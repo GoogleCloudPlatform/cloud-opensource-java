@@ -94,11 +94,14 @@ public class DashboardMain {
       try {
         ArtifactResults results = generateReport(configuration, output, artifact);
         table.add(results);
-      } catch (RepositoryException | IOException | TemplateException ex) {
+      } catch (RepositoryException | IOException ex) {
         ArtifactResults unavailableTestResult = new ArtifactResults(artifact);
         unavailableTestResult.setExceptionMessage(ex.getMessage());
         // Even when there's problem generating test result, show the error in the dashboard
         table.add(unavailableTestResult);
+      } catch (TemplateException ex) {
+        // This failure is ours. No need to report it in dashboard for an artifact
+        throw new RuntimeException("Error in template setting in this project", ex);
       }
     }
 

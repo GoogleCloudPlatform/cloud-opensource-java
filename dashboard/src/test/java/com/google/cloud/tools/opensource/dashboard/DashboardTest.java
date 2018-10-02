@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,9 +23,6 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import nu.xom.Builder;
@@ -56,8 +52,9 @@ public class DashboardTest {
   private Builder builder = new Builder();
 
   @BeforeClass
-  public static void setUp() throws IOException {
-    outputDirectory = Files.createDirectories(Paths.get("target", "dashboard"));
+  public static void setUp() throws ArtifactDescriptorException, IOException, TemplateException{
+    // Creates "dashboard.html" in outputDirectory
+    outputDirectory = DashboardMain.generate();
   }
 
   @AfterClass
@@ -74,9 +71,6 @@ public class DashboardTest {
   @Test
   public void testDashboard()
       throws IOException, TemplateException, ParsingException, ArtifactDescriptorException {
-    // Creates "dashboard.html" in outputDirectory
-    outputDirectory = DashboardMain.generate();
-
     Assert.assertTrue(Files.exists(outputDirectory));
     Assert.assertTrue(Files.isDirectory(outputDirectory));
 
@@ -159,78 +153,5 @@ public class DashboardTest {
       Nodes pres = document.query("//pre");
       Assert.assertTrue(pres.size() >= 1);
     }
-  }
-
-  @Test
-  public void testDashboardForRepositoryException() {
-    Configuration configuration = DashboardMain.configureFreemarker();
-    Artifact validArtifact = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
-    Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nonexistent:jar:1.15.0");
-
-    List<ArtifactResults> artifactResults =
-        DashboardMain.generateReports(
-            configuration, outputDirectory, Arrays.asList(validArtifact, nonExistentArtifact));
-
-    Assert.assertEquals(
-        "The length fo the ArtifactResults should match the length of artifacts",
-        2,
-        artifactResults.size());
-    Assert.assertEquals(
-        "The first artifact result should be valid",
-        true,
-        artifactResults.get(0).getResult(DashboardMain.TEST_NAME_UPPER_BOUND));
-    ArtifactResults errorArtifactResult = artifactResults.get(1);
-    Assert.assertNull(
-        "The second artifact result should be null",
-        errorArtifactResult.getResult(DashboardMain.TEST_NAME_UPPER_BOUND));
-    Assert.assertEquals(
-        "The error artifact result should contain error message",
-        "Could not find artifact io.grpc:nonexistent:jar:1.15.0 in central (http://repo1.maven.org/maven2/)",
-        errorArtifactResult.getExceptionMessage());
-  }
-
-  @Test
-  public void testDashboardWithRepositoryException()
-      throws IOException, TemplateException, ArtifactDescriptorException, ParsingException {
-    Configuration configuration = DashboardMain.configureFreemarker();
-
-    Artifact validArtifact = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
-    ArtifactResults validArtifactResult = new ArtifactResults(validArtifact);
-    validArtifactResult.addResult(DashboardMain.TEST_NAME_UPPER_BOUND, true);
-    validArtifactResult.addResult(DashboardMain.TEST_NAME_DEPENDENCY_CONVERGENCE, true);
-
-    Artifact invalidArtifact = new DefaultArtifact("io.grpc:nonexistent:jar:1.15.0");
-    ArtifactResults errorArtifactResult = new ArtifactResults(invalidArtifact);
-    errorArtifactResult.setExceptionMessage(
-        "Could not find artifact io.grpc:nonexistent:jar:1.15.0 in central (http://repo1.maven.org/maven2/)");
-    List<ArtifactResults> table = new ArrayList<>();
-    table.add(validArtifactResult);
-    table.add(errorArtifactResult);
-
-    DashboardMain.generateDashboard(configuration, outputDirectory, table);
-
-    Path generatedDashboardHtml = outputDirectory.resolve("dashboard.html");
-    Assert.assertTrue(Files.isRegularFile(generatedDashboardHtml));
-    Document document = builder.build(generatedDashboardHtml.toFile());
-    Assert.assertEquals("en-US", document.getRootElement().getAttribute("lang").getValue());
-    Nodes tr = document.query("//tr");
-
-    Assert.assertEquals(
-        "The size of rows in table should match the number of artifacts + 1 (header)",
-        tr.size(),table.size() + 1);
-
-    Nodes tdForValidArtifact = tr.get(1).query("td");
-    Assert.assertEquals(
-        Artifacts.toCoordinates(validArtifact), tdForValidArtifact.get(0).getValue());
-    Element firstResult = (Element) (tdForValidArtifact.get(1));
-    Truth.assertThat(firstResult.getValue()).isEqualTo("PASS");
-    Truth.assertThat(firstResult.getAttributeValue("class")).isEqualTo("PASS");
-
-    Nodes tdForErrorArtifact = tr.get(2).query("td");
-    Assert.assertEquals(
-        Artifacts.toCoordinates(invalidArtifact), tdForErrorArtifact.get(0).getValue());
-    Element secondResult = (Element) (tdForErrorArtifact.get(1));
-    Truth.assertThat(secondResult.getValue()).isEqualTo("UNAVAILABLE");
-    Truth.assertThat(secondResult.getAttributeValue("class")).isEqualTo("UNAVAILABLE");
   }
 }
