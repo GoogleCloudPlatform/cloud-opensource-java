@@ -10,6 +10,10 @@
       background-color: red;
       font-weight: bold;
     }
+    .UNAVAILABLE {
+      background-color: gray;
+      font-weight: bold;
+    }
     </style>
   </head>
   <body>
@@ -21,9 +25,20 @@
       </tr>
       <#list table as row>
         <tr>
-          <td><a href='${row.getCoordinates()?replace(":", "_")}.html'>${row.getCoordinates()}</a></td>   
-          <td class='${row.getResult("Upper Bounds")?string('PASS', 'FAIL')}'>${row.getResult("Upper Bounds")?string('PASS', 'FAIL')}</td>
-          <td class='${row.getResult("Dependency Convergence")?string('PASS', 'FAIL')}'>${row.getResult("Dependency Convergence")?string('PASS', 'FAIL')}</td>
+          <#if row.getResult("Upper Bounds")?? >
+            <#assign upper_bound_test_label = row.getResult("Upper Bounds")?then('PASS', 'FAIL') >
+          <#else>
+            <#assign upper_bound_test_label = "UNAVAILABLE">
+          </#if>
+          <td><a href='${row.getCoordinates()?replace(":", "_")}.html'>${row.getCoordinates()}</a></td>
+          <td class='${upper_bound_test_label}' title="${row.getExceptionMessage()!""}">${upper_bound_test_label}</td>
+
+          <#if row.getResult("Dependency Convergence")?? >
+            <#assign dependency_convergence_test_label = row.getResult("Dependency Convergence")?then('PASS', 'FAIL') >
+          <#else>
+            <#assign dependency_convergence_test_label = "UNAVAILABLE">
+          </#if>
+          <td class='${dependency_convergence_test_label}' title="${row.getExceptionMessage()!""}">${dependency_convergence_test_label}</td>
         </tr>
       </#list>
       </table>
