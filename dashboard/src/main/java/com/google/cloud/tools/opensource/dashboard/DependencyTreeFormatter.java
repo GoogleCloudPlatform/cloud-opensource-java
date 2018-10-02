@@ -29,14 +29,9 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 
 public class DependencyTreeFormatter {
 
-  /**
-   * @param args
-   * @throws DependencyCollectionException
-   * @throws DependencyResolutionException
-   */
   public static void main(String[] args) {
     if (args.length < 1) {
-      System.err.println("Artifact not provided");
+      System.err.println("Artifact coordinate not provided. E.g., 'io.grpc:grpc-auth:1.15.0'");
       System.exit(1);
     }
     String coord = args[0];
