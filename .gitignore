@@ -9,4 +9,5 @@ RemoteSystemsTempFiles/
 .project
 .classpath
 .settings
-
+*.iml
+.idea
