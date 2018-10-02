@@ -13,7 +13,7 @@
         <#list upperBoundFailures as lower, upper>
           <li>Upgrade ${lower} to ${upper}:
           
-          <p>Add this dependency element to your pom.xml:</p>
+          <p>Add this dependency element to the pom.xml for ${groupId}:${artifactId}:${version}:</p>
           
 <pre><code>&lt;dependency>
   &lt;groupId>${upper.getGroupId()}&lt;/groupId>
@@ -24,6 +24,11 @@
           </li>
         </#list>
       </ul>
+      
+      <p>If the pom.xml already includes a dependency on ${groupId}:${artifactId}, update the version
+         on the existing <code>dependency</code> element. Otherwise add these <code>dependency</code>
+         elements to the <code>dependencyManagement</code> section.</p>
+      
     <#else>
       <h3 style="color: green">
         ${groupId}:${artifactId}:${version} selects the highest version of all dependencies.
