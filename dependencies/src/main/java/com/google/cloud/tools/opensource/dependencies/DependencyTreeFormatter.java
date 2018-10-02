@@ -16,9 +16,9 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.base.Strings;
 import java.io.PrintStream;
 import java.util.List;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
@@ -65,7 +65,7 @@ class DependencyTreeFormatter {
     for (DependencyPath dependencyPath : dependencyPaths) {
       int depth = dependencyPath.size();
       String indentCharacter = "  ";
-      outputStream.println(StringUtils.repeat(indentCharacter, depth) + dependencyPath.getLeaf());
+      outputStream.println(Strings.repeat(indentCharacter, depth) + dependencyPath.getLeaf());
     }
   }
 }
