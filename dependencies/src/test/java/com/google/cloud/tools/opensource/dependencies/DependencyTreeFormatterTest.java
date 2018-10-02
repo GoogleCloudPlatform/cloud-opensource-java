@@ -16,9 +16,7 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.util.ArrayList;
+=import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;

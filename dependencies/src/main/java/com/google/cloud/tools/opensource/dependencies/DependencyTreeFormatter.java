@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import java.io.PrintStream;
 import java.util.List;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
