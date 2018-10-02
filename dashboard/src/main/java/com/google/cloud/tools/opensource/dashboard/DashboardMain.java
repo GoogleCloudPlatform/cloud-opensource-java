@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -68,7 +67,7 @@ public class DashboardMain {
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
     
-    List<String[]> table = generateReports(configuration, output, managedDependencies);
+    List<ArtifactResults> table = generateReports(configuration, output, managedDependencies);
     generateDashboard(configuration, output, table);
     
     return output;
@@ -81,18 +80,19 @@ public class DashboardMain {
     return configuration;
   }
 
-  private static List<String[]> generateReports(Configuration configuration, Path output,
+  private static List<ArtifactResults> generateReports(Configuration configuration, Path output,
       List<Artifact> artifacts) {
     
-    List<String[]> table = new ArrayList<>();
+    List<ArtifactResults> table = new ArrayList<>();
 
     for (Artifact artifact : artifacts ) {
       try {
-        String[] results = generateReport(configuration, output, artifact);
+        ArtifactResults results = generateReport(configuration, output, artifact);
         table.add(results);
       } catch (DependencyCollectionException | DependencyResolutionException | IOException
           | TemplateException ex) {
-        // TODO logger
+        // TODO the dashboard should somehow show that it failed to generate this report;
+        // not just silently drop it from the index
         System.err.println("Error generating report for " + artifact);
         System.err.println(ex.getMessage());
       }
@@ -101,7 +101,7 @@ public class DashboardMain {
     return table;
   }
 
-  private static String[] generateReport(Configuration configuration, Path output,
+  private static ArtifactResults generateReport(Configuration configuration, Path output,
       Artifact artifact) throws IOException, TemplateException, DependencyCollectionException,
       DependencyResolutionException {
     
@@ -111,7 +111,6 @@ public class DashboardMain {
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
 
-      String[] row = new String[3];
       
       // includes all versions
       DependencyGraph completeDependencies =
@@ -134,12 +133,13 @@ public class DashboardMain {
       templateData.put("updates", convergenceIssues);
       templateData.put("upperBoundFailures", upperBoundFailures);
       report.process(templateData, out);
+
+      ArtifactResults results = new ArtifactResults(artifact);
+      // TODO the keys/report names probably belong in named constants somewhere
+      results.addResult("Upper Bounds", upperBoundFailures.size() == 0);
+      results.addResult("Dependency Convergence", convergenceIssues.size() == 0);
       
-      row[0] = Artifacts.toCoordinates(artifact);
-      row[1] = upperBoundFailures.size() > 0 ? "FAIL" : "PASS";
-      row[2] = convergenceIssues.size() > 0 ? "FAIL" : "PASS";
-      
-      return row;
+      return results;
     }
   }
 
@@ -170,7 +170,7 @@ public class DashboardMain {
   }
 
   private static void generateDashboard(Configuration configuration, Path output,
-      List<String[]> table) throws IOException, TemplateException {
+      List<ArtifactResults> table) throws IOException, TemplateException {
     
     File dashboardFile = output.resolve("dashboard.html").toFile();
     try (Writer out = new OutputStreamWriter(
