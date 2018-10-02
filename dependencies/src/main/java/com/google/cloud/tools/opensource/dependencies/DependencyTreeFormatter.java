@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.cloud.tools.opensource.dashboard;
+package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
@@ -34,26 +34,28 @@ public class DependencyTreeFormatter {
       System.err.println("Artifact coordinate not provided. E.g., 'io.grpc:grpc-auth:1.15.0'");
       System.exit(1);
     }
-    String coord = args[0];
-    try {
-      printDependencyTree(coord);
-    } catch (DependencyCollectionException | DependencyResolutionException e) {
-      System.err.println("Failed to retrieve dependency information" + e.getMessage());
+    for (String coordinate : args) {
+      try {
+        printDependencyTree(coordinate);
+      } catch (DependencyCollectionException | DependencyResolutionException e) {
+        System.err.println(coordinate + " : Failed to retrieve dependency information:"
+            + e.getMessage());
+      }
     }
   }
 
   /**
    * Prints dependencies for the coordinate of an artifact
    *
-   * @param coord Coordinate of an artifact to print its dependencies
+   * @param coordinate Coordinate of an artifact to print its dependencies
    * @throws DependencyCollectionException when dependencies cannot be collected
    * @throws DependencyResolutionException When dependencies cannot be resolved
    */
-  private static void printDependencyTree(String coord)
+  private static void printDependencyTree(String coordinate)
       throws DependencyCollectionException, DependencyResolutionException {
-    DefaultArtifact rootArtifact = new DefaultArtifact(coord);
+    DefaultArtifact rootArtifact = new DefaultArtifact(coordinate);
     DependencyGraph dependencyGraph = DependencyGraphBuilder.getCompleteDependencies(rootArtifact);
-    System.out.println("Dependencies for " + coord);
+    System.out.println("Dependencies for " + coordinate);
     printDependencyPaths(dependencyGraph.list(), System.out);
   }
 
