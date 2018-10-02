@@ -19,6 +19,8 @@ package com.google.cloud.tools.opensource.dashboard;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -57,7 +59,7 @@ public class DependencyTreeFormatter {
     DefaultArtifact rootArtifact = new DefaultArtifact(coord);
     DependencyGraph dependencyGraph = DependencyGraphBuilder.getCompleteDependencies(rootArtifact);
     System.out.println("Dependencies for " + coord);
-    printDependencyPaths(dependencyGraph.list());
+    printDependencyPaths(dependencyGraph.list(), System.out);
   }
 
   /**
@@ -65,11 +67,12 @@ public class DependencyTreeFormatter {
    *
    * @param dependencyPaths sorted dependency paths
    */
-  private static void printDependencyPaths(List<DependencyPath> dependencyPaths) {
+  static void printDependencyPaths(List<DependencyPath> dependencyPaths,
+      PrintStream outputStream) {
     for (DependencyPath dependencyPath : dependencyPaths) {
       int depth = dependencyPath.size();
       String indentCharacter = "  ";
-      System.out.println(StringUtils.repeat(indentCharacter, depth) + dependencyPath.getLeaf());
+      outputStream.println(StringUtils.repeat(indentCharacter, depth) + dependencyPath.getLeaf());
     }
   }
 }
