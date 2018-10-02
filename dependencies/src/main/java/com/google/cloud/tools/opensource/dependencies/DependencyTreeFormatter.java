@@ -30,7 +30,7 @@ class DependencyTreeFormatter {
 
   public static void main(String[] args) {
     if (args.length < 1) {
-      System.err.println("Artifact coordinate not provided. E.g., 'io.grpc:grpc-auth:1.15.0'");
+      System.err.println("Maven coordinate not provided. E.g., 'io.grpc:grpc-auth:1.15.0'");
       return;
     }
     for (String coordinate : args) {
