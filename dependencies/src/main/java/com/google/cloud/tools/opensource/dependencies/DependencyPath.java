@@ -31,7 +31,7 @@ public final class DependencyPath {
 
   private List<Artifact> path = new ArrayList<>();
 
-  void add(Artifact artifact) {
+  public void add(Artifact artifact) {
     path.add(artifact);
   }
   
