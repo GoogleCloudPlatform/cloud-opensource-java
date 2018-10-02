@@ -66,7 +66,8 @@ public class DashboardMain {
     Path relativePath = Paths.get("target", "dashboard");
     Path output = Files.createDirectories(relativePath);
 
-    DefaultArtifact bom = new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
+    DefaultArtifact bom =
+        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
 
     List<ArtifactResults> table = generateReports(configuration, output, managedDependencies);
@@ -84,8 +85,8 @@ public class DashboardMain {
   }
 
   @VisibleForTesting
-  static List<ArtifactResults> generateReports(
-      Configuration configuration, Path output, List<Artifact> artifacts) {
+  static List<ArtifactResults> generateReports( Configuration configuration, Path output,
+      List<Artifact> artifacts) {
 
     List<ArtifactResults> table = new ArrayList<>();
 
@@ -93,7 +94,7 @@ public class DashboardMain {
       try {
         ArtifactResults results = generateReport(configuration, output, artifact);
         table.add(results);
-      } catch (RepositoryException|IOException|TemplateException ex) {
+      } catch (RepositoryException | IOException | TemplateException ex) {
         ArtifactResults unavailableTestResult = new ArtifactResults(artifact);
         unavailableTestResult.setExceptionMessage(ex.getMessage());
         // Even when there's problem generating test result, show the error in the dashboard
@@ -104,16 +105,15 @@ public class DashboardMain {
     return table;
   }
 
-  private static ArtifactResults generateReport(
-      Configuration configuration, Path output, Artifact artifact)
-      throws IOException, TemplateException, DependencyCollectionException,
+  private static ArtifactResults generateReport(Configuration configuration, Path output,
+      Artifact artifact) throws IOException, TemplateException, DependencyCollectionException,
           DependencyResolutionException {
 
     String coordinates = Artifacts.toCoordinates(artifact);
     File outputFile = output.resolve(coordinates.replace(':', '_') + ".html").toFile();
 
-    try (Writer out =
-        new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
+    try (Writer out = new OutputStreamWriter(
+        new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
 
       // includes all versions
       DependencyGraph completeDependencies =
@@ -138,7 +138,6 @@ public class DashboardMain {
       report.process(templateData, out);
 
       ArtifactResults results = new ArtifactResults(artifact);
-      // TODO the keys/report names probably belong in named constants somewhere
       results.addResult(TEST_NAME_UPPER_BOUND, upperBoundFailures.size() == 0);
       results.addResult(TEST_NAME_DEPENDENCY_CONVERGENCE, convergenceIssues.size() == 0);
 
@@ -149,8 +148,8 @@ public class DashboardMain {
   // TODO may want to push this into DependencyGraph. However this probably first
   // needs some caching of the graphs so we don't end up traversing the dependency graph
   // extra times.
-  private static Map<Artifact, Artifact> findUpperBoundsFailures(
-      DependencyGraph graph, DependencyGraph transitiveDependencies) {
+  private static Map<Artifact, Artifact> findUpperBoundsFailures(DependencyGraph graph,
+      DependencyGraph transitiveDependencies) {
     Map<String, String> expectedVersionMap = graph.getHighestVersionMap();
     Map<String, String> actualVersionMap = transitiveDependencies.getHighestVersionMap();
 
