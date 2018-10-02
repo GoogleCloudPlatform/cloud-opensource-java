@@ -16,8 +16,6 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;

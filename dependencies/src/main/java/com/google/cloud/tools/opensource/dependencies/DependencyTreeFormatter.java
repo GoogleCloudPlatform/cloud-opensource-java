@@ -16,10 +16,6 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
@@ -27,7 +23,7 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 
-public class DependencyTreeFormatter {
+class DependencyTreeFormatter {
 
   public static void main(String[] args) {
     if (args.length < 1) {
