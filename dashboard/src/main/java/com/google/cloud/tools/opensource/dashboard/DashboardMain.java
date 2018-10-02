@@ -32,6 +32,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -121,7 +122,7 @@ public class DashboardMain {
       DependencyGraph transitiveDependencies =
           DependencyGraphBuilder.getTransitiveDependencies(artifact);
 
-      List<String> upperBoundFailures =
+      Map<Artifact, Artifact> upperBoundFailures =
           findUpperBoundsFailures(completeDependencies, transitiveDependencies);
       
       Template report = configuration.getTemplate("/templates/component.ftl");
@@ -146,14 +147,15 @@ public class DashboardMain {
   // TODO may want to push this into DependencyGraph. However this probably first
   // needs some caching of the graphs so we don't end up traversing the dependency graph
   // extra times.
-  private static List<String> findUpperBoundsFailures(DependencyGraph graph,
+  private static Map<Artifact, Artifact> findUpperBoundsFailures(DependencyGraph graph,
       DependencyGraph transitiveDependencies) {
     Map<String, String> expectedVersionMap = graph.getHighestVersionMap();
     Map<String, String> actualVersionMap = transitiveDependencies.getHighestVersionMap();
     
     VersionComparator comparator = new VersionComparator();
     
-    List<String> upperBoundFailures = new ArrayList<>(); 
+    Map<Artifact, Artifact> upperBoundFailures = new LinkedHashMap<>();
+    
     for (String id : expectedVersionMap.keySet()) {
       String expectedVersion = expectedVersionMap.get(id);
       String actualVersion = actualVersionMap.get(id);
@@ -163,7 +165,10 @@ public class DashboardMain {
       // In both cases, no action is needed.
       if (actualVersion != null && comparator.compare(actualVersion, expectedVersion) < 0) {
         // Maven did not choose highest version
-        upperBoundFailures.add("Upgrade " + id + ":" + actualVersion + " to " + expectedVersion);
+        // upperBoundFailures.add("Upgrade " + id + ":" + actualVersion + " to " + expectedVersion);
+        DefaultArtifact lower = new DefaultArtifact(id + ":" + actualVersion);
+        DefaultArtifact upper = new DefaultArtifact(id + ":" + expectedVersion);
+        upperBoundFailures.put(lower,  upper);
       }
     }
     return upperBoundFailures;
