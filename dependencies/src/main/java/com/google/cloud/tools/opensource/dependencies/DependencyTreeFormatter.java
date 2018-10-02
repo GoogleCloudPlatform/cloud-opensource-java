@@ -23,6 +23,9 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 
+/**
+ * Formats and prints artifact dependency tree represented by list of {@link DependencyPath}
+ */
 class DependencyTreeFormatter {
 
   public static void main(String[] args) {
