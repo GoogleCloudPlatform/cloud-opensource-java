@@ -25,9 +25,11 @@
       </tr>
       <#list table as row>
         <tr>
-          <#if row.getResult("Upper Bounds")?? >
+          <#if row.getResult("Upper Bounds")?? ><#-- checking isNotNull() -->
+            <#-- When it's not null, it means the test ran. It's either PASS or FAIL -->
             <#assign upper_bound_test_label = row.getResult("Upper Bounds")?then('PASS', 'FAIL') >
           <#else>
+            <#-- Null means there's an exception and test couldn't run -->
             <#assign upper_bound_test_label = "UNAVAILABLE">
           </#if>
           <td><a href='${row.getCoordinates()?replace(":", "_")}.html'>${row.getCoordinates()}</a></td>
