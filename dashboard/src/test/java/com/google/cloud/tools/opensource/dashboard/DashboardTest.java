@@ -16,6 +16,12 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
+import com.google.common.truth.Truth;
+import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
@@ -23,15 +29,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
 import nu.xom.ValidityException;
-
-import freemarker.template.TemplateException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -39,12 +42,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.common.io.MoreFiles;
-import com.google.common.io.RecursiveDeleteOption;
-import com.google.common.truth.Truth;
 
 public class DashboardTest {
 
@@ -136,7 +133,8 @@ public class DashboardTest {
       Nodes greens = document.query("//h3[@style='color: green']");
       Assert.assertTrue(greens.size() >= 2);
       Nodes pres = document.query("//pre");
-      Assert.assertEquals(0, pres.size());
+      // There's a pre tag for dependency
+      Assert.assertEquals(1, pres.size());
     }
   }
 

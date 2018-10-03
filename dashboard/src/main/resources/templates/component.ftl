@@ -47,6 +47,8 @@
     <#else>
       <h3 style="color: green">${groupId}:${artifactId}:${version} Converges</h3>
     </#if>
-    
+
+    <h2>Dependencies</h2>
+    <pre>${dependencyTree}</pre>
   </body>
 </html>

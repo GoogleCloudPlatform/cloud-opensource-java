@@ -46,6 +46,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.Update;
 import com.google.cloud.tools.opensource.dependencies.VersionComparator;
@@ -132,6 +133,7 @@ public class DashboardMain {
       Map<Artifact, Artifact> upperBoundFailures =
           findUpperBoundsFailures(completeDependencies, transitiveDependencies);
 
+      String dependencyTree = DependencyTreeFormatter.formatDependencyPaths(completeDependencies.list());
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
@@ -140,6 +142,7 @@ public class DashboardMain {
       templateData.put("version", artifact.getVersion());
       templateData.put("updates", convergenceIssues);
       templateData.put("upperBoundFailures", upperBoundFailures);
+      templateData.put("dependencyTree", dependencyTree);
       report.process(templateData, out);
 
       ArtifactResults results = new ArtifactResults(artifact);
