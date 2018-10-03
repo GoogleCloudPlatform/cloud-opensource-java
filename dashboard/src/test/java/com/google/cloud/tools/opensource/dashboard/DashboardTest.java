@@ -31,6 +31,7 @@ import nu.xom.Nodes;
 import nu.xom.ParsingException;
 import nu.xom.ValidityException;
 
+import freemarker.template.TemplateException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -44,7 +45,6 @@ import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Truth;
-import freemarker.template.TemplateException;
 
 
 public class DashboardTest {
