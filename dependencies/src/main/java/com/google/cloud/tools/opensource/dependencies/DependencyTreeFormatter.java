@@ -26,7 +26,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 /**
  * Formats and prints artifact dependency tree represented by list of {@link DependencyPath}
  */
-class DependencyTreeFormatter {
+public class DependencyTreeFormatter {
 
   public static void main(String[] args) {
     if (args.length < 1) {
@@ -63,8 +63,7 @@ class DependencyTreeFormatter {
    *
    * @param dependencyPaths sorted dependency paths
    */
-  @VisibleForTesting
-  static String formatDependencyPaths(List<DependencyPath> dependencyPaths) {
+  public static String formatDependencyPaths(List<DependencyPath> dependencyPaths) {
     StringBuilder stringBuilder = new StringBuilder();
     for (DependencyPath dependencyPath : dependencyPaths) {
       int depth = dependencyPath.size();

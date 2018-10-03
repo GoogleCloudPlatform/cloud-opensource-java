@@ -15,7 +15,7 @@
           
           <p>Add this dependency element to the pom.xml for ${groupId}:${artifactId}:${version}:</p>
           
-<pre><code>&lt;dependency>
+<pre class="suggested-dependency-mediation"><code>&lt;dependency>
   &lt;groupId>${upper.getGroupId()}&lt;/groupId>
   &lt;artifactId>${upper.getArtifactId()}&lt;/artifactId>
   &lt;version>${upper.getVersion()}&lt;/version>
@@ -47,6 +47,8 @@
     <#else>
       <h3 style="color: green">${groupId}:${artifactId}:${version} Converges</h3>
     </#if>
-    
+
+    <h2>Dependencies</h2>
+    <pre class="dependency-tree">${dependencyTree}</pre>
   </body>
 </html>
