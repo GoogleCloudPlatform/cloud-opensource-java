@@ -46,7 +46,6 @@ import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Truth;
 
-
 public class DashboardTest {
 
   private static Path outputDirectory;
