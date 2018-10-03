@@ -32,9 +32,14 @@ public final class ArtifactResults {
 
   private final Map<String, Boolean> results = new HashMap<>();
   private final Artifact artifact;
-  
+  private String exceptionMessage;
+
   public ArtifactResults(Artifact artifact) {
     this.artifact = artifact;
+  }
+
+  public void setExceptionMessage(String exceptionMessage) {
+    this.exceptionMessage = exceptionMessage;
   }
 
   void addResult(String testName, boolean result) {
@@ -53,4 +58,11 @@ public final class ArtifactResults {
     return Artifacts.toCoordinates(artifact);
   }
 
+  /**
+   *  @return message of exception occurred when running test, null for no exception
+   */
+  @Nullable
+  public String getExceptionMessage() {
+    return exceptionMessage;
+  }
 }

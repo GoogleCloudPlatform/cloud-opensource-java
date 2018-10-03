@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
@@ -32,6 +31,7 @@ import nu.xom.Nodes;
 import nu.xom.ParsingException;
 import nu.xom.ValidityException;
 
+import freemarker.template.TemplateException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -47,15 +47,16 @@ import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Truth;
 
 public class DashboardTest {
-  
+
   private static Path outputDirectory;
   private Builder builder = new Builder();
-  
+
   @BeforeClass
   public static void setUp() throws ArtifactDescriptorException, IOException, TemplateException {
+    // Creates "dashboard.html" in outputDirectory
     outputDirectory = DashboardMain.generate();
   }
-  
+
   @AfterClass
   public static void cleanUp() throws IOException {
     MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
@@ -63,16 +64,16 @@ public class DashboardTest {
 
   @Test
   public void testMain() throws IOException, TemplateException, ArtifactDescriptorException {
+    // Ensuring normal execution doesn't cause any exception
     DashboardMain.main(null);
   }
-  
+
   @Test
   public void testDashboard()
       throws IOException, TemplateException, ParsingException, ArtifactDescriptorException {
-    
     Assert.assertTrue(Files.exists(outputDirectory));
     Assert.assertTrue(Files.isDirectory(outputDirectory));
-    
+
     Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
     
@@ -80,21 +81,21 @@ public class DashboardTest {
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
     List<Artifact> artifacts = RepositoryUtility.readBom(bom);
     Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
-    
+
     try (InputStream source = Files.newInputStream(dashboardHtml)) {
       Document document = builder.build(dashboardHtml.toFile());
 
       Assert.assertEquals("en-US", document.getRootElement().getAttribute("lang").getValue());
-      
+
       Nodes tr = document.query("//tr");
       Assert.assertEquals(artifacts.size() + 1, tr.size()); // header row adds 1
-      for (int i = 1; i < tr.size(); i++) { // start at 1 to skip header row 
+      for (int i = 1; i < tr.size(); i++) { // start at 1 to skip header row
         Nodes td = tr.get(i).query("td");
-        Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i-1)), td.get(0).getValue());
+        Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i - 1)), td.get(0).getValue());
         Element firstResult = (Element) (td.get(1));
         Truth.assertThat(firstResult.getValue()).isAnyOf("PASS", "FAIL");
         Truth.assertThat(firstResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
-        
+
         Element secondResult = (Element) (td.get(2));
         Truth.assertThat(secondResult.getValue()).isAnyOf("PASS", "FAIL");
         Truth.assertThat(secondResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
@@ -118,18 +119,18 @@ public class DashboardTest {
           Assert.fail(message);
         }
       }
-      
+
       Nodes updated = document.query("//p[@id='updated']");
       Assert.assertEquals("didn't find updated" + document.toXML(), 1, updated.size());
     }
   }
-  
+
   @Test
   public void testComponent_success() throws IOException, ValidityException, ParsingException {
     Path successHtml = outputDirectory.resolve(
         "com.google.api.grpc_proto-google-common-protos_1.12.0.html");
     Assert.assertTrue(Files.isRegularFile(successHtml));
-    
+
     try (InputStream source = Files.newInputStream(successHtml)) {
       Document document = builder.build(successHtml.toFile());
       Nodes greens = document.query("//h3[@style='color: green']");
@@ -137,15 +138,14 @@ public class DashboardTest {
       Nodes pres = document.query("//pre");
       Assert.assertEquals(0, pres.size());
     }
-
   }
-  
+
   @Test
   public void testComponent_failure() throws IOException, ValidityException, ParsingException {
     Path failureHtml = outputDirectory.resolve(
         "com.google.api.grpc_grpc-google-common-protos_1.12.0.html");
     Assert.assertTrue(Files.isRegularFile(failureHtml));
-    
+
     try (InputStream source = Files.newInputStream(failureHtml)) {
       Document document = builder.build(failureHtml.toFile());
       Nodes greens = document.query("//h3[@style='color: green']");
@@ -154,5 +154,4 @@ public class DashboardTest {
       Assert.assertTrue(pres.size() >= 1);
     }
   }
-
 }
