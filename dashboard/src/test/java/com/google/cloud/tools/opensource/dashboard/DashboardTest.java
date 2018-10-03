@@ -135,9 +135,13 @@ public class DashboardTest {
       Document document = builder.build(successHtml.toFile());
       Nodes greens = document.query("//h3[@style='color: green']");
       Assert.assertTrue(greens.size() >= 2);
-      Nodes pres = document.query("//pre");
+      Nodes presDependencyMediation = document.query("//pre[@class='suggested-dependency-mediation']");
       // There's a pre tag for dependency
-      Assert.assertEquals(1, pres.size());
+      Assert.assertEquals(0, presDependencyMediation.size());
+
+      Nodes presDependencyTree = document.query("//pre[@class='dependency-tree']");
+      Assert.assertEquals("Dependency Tree should be shown in pre tag",
+          1, presDependencyTree.size());
     }
   }
 
@@ -151,8 +155,12 @@ public class DashboardTest {
       Document document = builder.build(failureHtml.toFile());
       Nodes greens = document.query("//h3[@style='color: green']");
       Assert.assertEquals(0, greens.size());
-      Nodes pres = document.query("//pre");
-      Assert.assertTrue(pres.size() >= 1);
+      Nodes presDependencyMediation = document.query("//pre[@class='suggested-dependency-mediation']");
+      Assert.assertTrue("For failed component, suggested dependency should be shown",
+          presDependencyMediation.size() >= 1);
+      Nodes presDependencyTree = document.query("//pre[@class='dependency-tree']");
+      Assert.assertEquals("Dependency Tree should be shown in pre tag even when FAILED",
+          1, presDependencyTree.size());
     }
   }
 }
