@@ -30,7 +30,7 @@ public class ClassDumperTest {
 
   // We're sure that FirestoreGrpc class comes from this class file because
   // this project (cloud-opensource-java) doesn't have dependency for Cloud Firestore
-  private String classFileName = "testdata/FirestoreGrpc.class";
+  private String classFileName = "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0_FirestoreGrpc.class";
   private InputStream classFileInputStream;
 
   @Before
@@ -104,13 +104,14 @@ public class ClassDumperTest {
     Truth.assertThat(signatures).hasSize(45);
 
     // getRunQueryMethod is a method defined in FirestoreGrpc class
-    // Its string representation contains type parameters:
+    // About type parameters:
+    // While getRunQueryMethod's string representation contains type parameters:
     //   "public static io.grpc.MethodDescriptor getRunQueryMethod() [Signature: ()Lio/grpc/MethodDescriptor<Lcom/google/firestore/v1beta1/RunQueryRequest;Lcom/google/firestore/v1beta1/RunQueryResponse;>;][RuntimeInvisibleAnnotations]";
-    // Type parameters don't appear in signature field of BCEL Method class
+    // , these parameters don't appear in signature field of BCEL Method class
     MethodAndSignature oneExpectedMethodInClass =
         new MethodAndSignature(
             "getRunQueryMethod",
-            "()Lio/grpc/MethodDescriptor;");
+            "()Lio/grpc/MethodDescriptor;"); // No type parameter in signature field
     Truth.assertThat(signatures).contains(oneExpectedMethodInClass);
   }
 }
