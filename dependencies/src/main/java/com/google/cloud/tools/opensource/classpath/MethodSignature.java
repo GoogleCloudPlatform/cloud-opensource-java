@@ -21,8 +21,8 @@ import java.util.Objects;
 
 /**
  * A representation of a tuple of method name and descriptor (type information) in a Method entry
- * in a class file. The descriptor part helps to distinguish method entries when method overloading
- * is used.
+ * in a class file. The descriptor part helps to distinguish methods with same name and different
+ * parameter types (method overloading)
  */
 public class MethodSignature {
   private String methodName;
