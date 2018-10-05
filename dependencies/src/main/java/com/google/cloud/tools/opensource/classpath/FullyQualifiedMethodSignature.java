@@ -21,7 +21,7 @@ import java.util.Objects;
 
 /**
  * A representation of a method with its descriptor (type information) and fully-qualified
- * class name
+ * class name.
  */
 class FullyQualifiedMethodSignature {
   private String className;

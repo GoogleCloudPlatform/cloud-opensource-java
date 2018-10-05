@@ -40,7 +40,7 @@ import org.apache.bcel.classfile.Method;
  *
  * <ol>
  *   <li>source (defined methods) via Method fields in the class, and</li>
- *   <li>targets (what's attempted to be invoked) via the constant pool table of the class</li>
+ *   <li>targets (what's attempted to be invoked) via the constant pool table of the class.</li>
  * </ol>
  */
 class ClassDumper {
@@ -77,7 +77,7 @@ class ClassDumper {
 
   /**
    *  Lists all method references from the class file. The output corresponds to
-   *  CONSTANT_Methodref_info entries its constant pool table
+   *  CONSTANT_Methodref_info entries its constant pool table.
    *
    * @param classFileStream stream of a class file
    * @param fileName name of the file that contains class
@@ -94,7 +94,7 @@ class ClassDumper {
 
   /**
    *  Lists all internal method references from the class file. The output corresponds to
-   *  CONSTANT_Methodref_info entries in the file's constant pool table
+   *  CONSTANT_Methodref_info entries in the file's constant pool table.
    *
    * @param classFileStream stream of a class file
    * @param fileName name of the file that contains class
@@ -116,7 +116,7 @@ class ClassDumper {
 
   /**
    *  Lists all external method references from the class file. The output corresponds to
-   *  CONSTANT_Methodref_info entries in the file's constant pool table
+   *  CONSTANT_Methodref_info entries in the file's constant pool table.
    *
    * @param classFileStream stream of a class file
    * @param fileName name of the file that contains class
@@ -138,7 +138,7 @@ class ClassDumper {
 
   /**
    * Lists method signatures from the class file. The output corresponds to entries in the
-   * method table in the file
+   * method table in the file.
    *
    * @param classFileStream stream of a class file
    * @param fileName name of the file that contains class
@@ -158,7 +158,7 @@ class ClassDumper {
   }
 
   /**
-   * Lists the content of the constant pool table in the class file
+   * Lists the content of the constant pool table in the class file.
    *
    * @param inputStream stream of a class file
    * @param fileName name of the file that contains class
