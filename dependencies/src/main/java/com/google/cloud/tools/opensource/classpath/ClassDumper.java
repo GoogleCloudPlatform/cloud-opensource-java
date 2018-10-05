@@ -76,7 +76,8 @@ class ClassDumper {
   }
 
   /**
-   *  Lists all Methodref entries defined in a constant pool table of a class file
+   *  Lists all method references from the class file. The output corresponds to
+   *  CONSTANT_Methodref_info entries its constant pool table
    *
    * @param classFileStream stream of a class file
    * @param fileName name of the file that contains class
@@ -92,7 +93,8 @@ class ClassDumper {
   }
 
   /**
-   *  Lists Methodref entries internal to a class file
+   *  Lists all internal method references from the class file. The output corresponds to
+   *  CONSTANT_Methodref_info entries in the file's constant pool table
    *
    * @param classFileStream stream of a class file
    * @param fileName name of the file that contains class
@@ -113,7 +115,8 @@ class ClassDumper {
   }
 
   /**
-   *  Lists Methodref entries external to a class file
+   *  Lists all external method references from the class file. The output corresponds to
+   *  CONSTANT_Methodref_info entries in the file's constant pool table
    *
    * @param classFileStream stream of a class file
    * @param fileName name of the file that contains class
@@ -134,15 +137,16 @@ class ClassDumper {
   }
 
   /**
-   * Lists Method entries defined in a class file
+   * Lists method signatures from the class file. The output corresponds to entries in the
+   * method table in the file
    *
    * @param classFileStream stream of a class file
    * @param fileName name of the file that contains class
    * @return method and signature entries defined in the class file
    * @throws IOException when there is a problem in reading classFileStream
    */
-  public static List<MethodSignature> listDeclaredMethods(InputStream classFileStream,
-      String fileName) throws IOException {
+  public static List<MethodSignature> listDeclaredMethods(
+      InputStream classFileStream, String fileName) throws IOException {
     final ClassParser parser = new ClassParser(classFileStream, fileName);
     final JavaClass javaClass = parser.parse();
     Method[] methods = javaClass.getMethods();
@@ -154,7 +158,7 @@ class ClassDumper {
   }
 
   /**
-   * Lists the content of a constant pool table in a class file
+   * Lists the content of the constant pool table in the class file
    *
    * @param inputStream stream of a class file
    * @param fileName name of the file that contains class

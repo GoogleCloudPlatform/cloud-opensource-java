@@ -51,7 +51,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testListMethodref() throws IOException {
+  public void testListMethodReferences() throws IOException {
     List<FullyQualifiedMethodSignature> methodrefs =
         ClassDumper.listMethodReferences(classFileInputStream, EXAMPLE_CLASS_FILE);
 
@@ -106,12 +106,9 @@ public class ClassDumperTest {
     Truth.assertThat(signatures).hasSize(45);
 
     // getRunQueryMethod is a method defined in FirestoreGrpc class
-    // About type parameters:
-    // While getRunQueryMethod's string representation contains type parameters:
-    //   "public static io.grpc.MethodDescriptor getRunQueryMethod() [Signature: ()Lio/grpc/MethodDescriptor<Lcom/google/firestore/v1beta1/RunQueryRequest;Lcom/google/firestore/v1beta1/RunQueryResponse;>;][RuntimeInvisibleAnnotations]";
-    // , these parameters don't appear in signature field of BCEL Method class
+    // Because of type erasure, type parameters don't appear in signature of BCEL Method class
     MethodSignature oneExpectedMethodInClass = new MethodSignature("getRunQueryMethod",
-        "()Lio/grpc/MethodDescriptor;"); // No type parameter in descriptor field
+        "()Lio/grpc/MethodDescriptor;"); // No type parameter expected
     Truth.assertThat(signatures).contains(oneExpectedMethodInClass);
   }
 }
