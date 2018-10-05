@@ -36,9 +36,12 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 
 /**
- * This class reads Java class file to analyze
- * 1. source (defining methods) via Method field, and
- * 2. targets (what's attempted to be invoked) via ConstantPool field.
+ * This class reads Java class file to analyze following attributes:
+ *
+ * <ol>
+ *   <li>source (defined methods) via Method fields in the class, and</li>
+ *   <li>targets (what's attempted to be invoked) via ConstantPool field of the class</li>
+ * </ol>
  */
 class ClassDumper {
 
@@ -127,7 +130,6 @@ class ClassDumper {
             .collect(Collectors.toList());
     return owningMethodrefs;
   }
-
 
   /**
    * Lists methods entries defined in the class file

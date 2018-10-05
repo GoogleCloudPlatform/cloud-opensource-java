@@ -2,6 +2,10 @@ package com.google.cloud.tools.opensource.classpath;
 
 import java.util.Objects;
 
+/**
+ * A representation of tuple of method name and signature in a Method entry in a class file
+ * Signature helps to distinguish entries when method overloading is used
+ */
 public class MethodAndSignature {
   private String methodName;
   private String signature;

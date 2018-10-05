@@ -20,7 +20,7 @@ import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
 /**
- * Represents an Methodref entry in constant pool.
+ * A representation of an Methodref entry in constant pool.
  * In Java class file ConstantPool section,
  * a methodref entry has a pointer (index) of the actual value of class name, method name and its
  * type information
