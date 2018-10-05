@@ -20,33 +20,25 @@ import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
 /**
- * A representation of an Methodref entry in constant pool.
- * In Java class file ConstantPool section,
- * a methodref entry has a pointer (index) of the actual value of class name, method name and its
- * type information
- * On the other hand, this class holds these values store directly so that we can read them easily
+ * A representation of a method with its descriptor (type information) and fully-qualified
+ * class name
  */
-class ConstantPoolMethodref {
+class FullyQualifiedMethodSignature {
   private String className;
-  private String methodName;
-  private String signature;
+  private MethodSignature methodSignature;
 
-  public ConstantPoolMethodref(String className, String methodName, String signature) {
+  /**
+   * @param className fully-qualified class name
+   * @param methodName method name
+   * @param descriptor descriptor of the method
+   */
+  public FullyQualifiedMethodSignature(String className, String methodName, String descriptor) {
     this.className = className;
-    this.methodName = methodName;
-    this.signature = signature;
+    this.methodSignature = new MethodSignature(methodName, descriptor);
   }
 
   public String getClassName() {
     return className;
-  }
-
-  public String getMethodName() {
-    return methodName;
-  }
-
-  public String getSignature() {
-    return signature;
   }
 
   @Override
@@ -54,26 +46,24 @@ class ConstantPoolMethodref {
     if (this == o) {
       return true;
     }
-    if (!(o instanceof ConstantPoolMethodref)) {
+    if (!(o instanceof FullyQualifiedMethodSignature)) {
       return false;
     }
-    ConstantPoolMethodref that = (ConstantPoolMethodref) o;
-    return Objects.equals(className, that.className)
-        && Objects.equals(methodName, that.methodName)
-        && Objects.equals(signature, that.signature);
+    FullyQualifiedMethodSignature that = (FullyQualifiedMethodSignature) o;
+    return Objects.equals(className, that.className) &&
+        Objects.equals(methodSignature, that.methodSignature);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(className, methodName, signature);
+    return Objects.hash(className, methodSignature);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("className", className)
-        .add("methodName", methodName)
-        .add("signature", signature)
+        .add("methodSignature", methodSignature)
         .toString();
   }
 }

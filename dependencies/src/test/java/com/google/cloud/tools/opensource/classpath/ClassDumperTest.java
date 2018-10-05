@@ -30,12 +30,12 @@ public class ClassDumperTest {
 
   // We're sure that FirestoreGrpc class comes from this class file because
   // this project (cloud-opensource-java) doesn't have dependency for Cloud Firestore
-  private String classFileName = "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0_FirestoreGrpc.class";
+  private final String EXAMPLE_CLASS_FILE = "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0_FirestoreGrpc.class";
   private InputStream classFileInputStream;
 
   @Before
   public void setup() {
-    classFileInputStream = URLClassLoader.getSystemResourceAsStream(classFileName);
+    classFileInputStream = URLClassLoader.getSystemResourceAsStream(EXAMPLE_CLASS_FILE);
   }
 
   @After
@@ -44,19 +44,20 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void listConstantPool() throws IOException {
-    List<String> constantPool = ClassDumper.listConstantPool(classFileInputStream, classFileName);
+  public void testListConstantPool() throws IOException {
+    List<String> constantPool = ClassDumper.listConstantPool(classFileInputStream,
+        EXAMPLE_CLASS_FILE);
     Truth.assertThat(constantPool).hasSize(491);
   }
 
   @Test
   public void testListMethodref() throws IOException {
-    List<ConstantPoolMethodref> methodrefs =
-        ClassDumper.listConstantPoolMethodref(classFileInputStream, classFileName);
+    List<FullyQualifiedMethodSignature> methodrefs =
+        ClassDumper.listMethodReferences(classFileInputStream, EXAMPLE_CLASS_FILE);
 
     Truth.assertThat(methodrefs).hasSize(56);
-    ConstantPoolMethodref methodCallToListenRequest =
-        new ConstantPoolMethodref(
+    FullyQualifiedMethodSignature methodCallToListenRequest =
+        new FullyQualifiedMethodSignature(
             "com.google.firestore.v1beta1.ListenRequest",
             "getDefaultInstance",
             "()Lcom/google/firestore/v1beta1/ListenRequest;");
@@ -64,12 +65,12 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testListOwningConstantPoolMethodref() throws IOException {
-    List<ConstantPoolMethodref> owningMethodrefs =
-        ClassDumper.listOwningConstantPoolMethodref(classFileInputStream, classFileName);
+  public void testListInternalMethodReferences() throws IOException {
+    List<FullyQualifiedMethodSignature> owningMethodrefs =
+        ClassDumper.listInternalMethodReferences(classFileInputStream, EXAMPLE_CLASS_FILE);
 
     Truth.assertThat(owningMethodrefs).hasSize(13);
-    for (ConstantPoolMethodref methodref : owningMethodrefs) {
+    for (FullyQualifiedMethodSignature methodref : owningMethodrefs) {
       Assert.assertEquals(
           "All of the methods here should be defined in this files",
           "com.google.firestore.v1beta1.FirestoreGrpc",
@@ -78,19 +79,19 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testListExternalConstantPoolMethodref() throws IOException {
-    List<ConstantPoolMethodref> externalMethodrefs =
-        ClassDumper.listExternalConstantPoolMethodref(classFileInputStream, classFileName);
+  public void testListExternalMethodReferences() throws IOException {
+    List<FullyQualifiedMethodSignature> externalMethodrefs =
+        ClassDumper.listExternalMethodReferences(classFileInputStream, EXAMPLE_CLASS_FILE);
 
     Truth.assertThat(externalMethodrefs).hasSize(43);
-    for (ConstantPoolMethodref methodref : externalMethodrefs) {
+    for (FullyQualifiedMethodSignature methodref : externalMethodrefs) {
       Assert.assertNotEquals(
           "All of the methods here should be defined in other files",
           "com.google.firestore.v1beta1.FirestoreGrpc",
           methodref.getClassName());
     }
-    ConstantPoolMethodref methodCallToListenRequest =
-        new ConstantPoolMethodref(
+    FullyQualifiedMethodSignature methodCallToListenRequest =
+        new FullyQualifiedMethodSignature(
             "com.google.firestore.v1beta1.ListenRequest",
             "getDefaultInstance",
             "()Lcom/google/firestore/v1beta1/ListenRequest;");
@@ -99,7 +100,8 @@ public class ClassDumperTest {
 
   @Test
   public void testListDeclaredMethods() throws IOException {
-    List<MethodAndSignature> signatures = ClassDumper.listDeclaredMethods(classFileInputStream, classFileName);
+    List<MethodSignature> signatures = ClassDumper.listDeclaredMethods(classFileInputStream,
+        EXAMPLE_CLASS_FILE);
 
     Truth.assertThat(signatures).hasSize(45);
 
@@ -108,10 +110,8 @@ public class ClassDumperTest {
     // While getRunQueryMethod's string representation contains type parameters:
     //   "public static io.grpc.MethodDescriptor getRunQueryMethod() [Signature: ()Lio/grpc/MethodDescriptor<Lcom/google/firestore/v1beta1/RunQueryRequest;Lcom/google/firestore/v1beta1/RunQueryResponse;>;][RuntimeInvisibleAnnotations]";
     // , these parameters don't appear in signature field of BCEL Method class
-    MethodAndSignature oneExpectedMethodInClass =
-        new MethodAndSignature(
-            "getRunQueryMethod",
-            "()Lio/grpc/MethodDescriptor;"); // No type parameter in signature field
+    MethodSignature oneExpectedMethodInClass = new MethodSignature("getRunQueryMethod",
+        "()Lio/grpc/MethodDescriptor;"); // No type parameter in descriptor field
     Truth.assertThat(signatures).contains(oneExpectedMethodInClass);
   }
 }

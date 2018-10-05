@@ -36,17 +36,17 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 
 /**
- * This class reads Java class file to analyze following attributes:
+ * This class reads a Java class file to analyze following attributes:
  *
  * <ol>
  *   <li>source (defined methods) via Method fields in the class, and</li>
- *   <li>targets (what's attempted to be invoked) via ConstantPool field of the class</li>
+ *   <li>targets (what's attempted to be invoked) via the constant pool table of the class</li>
  * </ol>
  */
 class ClassDumper {
 
-  private static List<ConstantPoolMethodref> listConstantPoolMethodRef(JavaClass javaClass) {
-    List<ConstantPoolMethodref> constantPoolMethodrefs = new ArrayList<>();
+  private static List<FullyQualifiedMethodSignature> listMethodReferences(JavaClass javaClass) {
+    List<FullyQualifiedMethodSignature> methodReferences = new ArrayList<>();
     ConstantPool constantPool = javaClass.getConstantPool();
     Constant[] constants = constantPool.getConstantPool();
     List<Constant> methodrefConstants = Arrays.stream(constants)
@@ -57,107 +57,109 @@ class ClassDumper {
       ConstantMethodref constantMethodref = (ConstantMethodref) constant;
       String className = constantMethodref.getClass(constantPool);
       int nameAndTypeIndex = constantMethodref.getNameAndTypeIndex();
-      Constant constantNameAndTypeRaw = constantPool.getConstant(nameAndTypeIndex);
-      if (!(constantNameAndTypeRaw instanceof ConstantNameAndType)) {
+      Constant constantAtNameAndTypeIndex = constantPool.getConstant(nameAndTypeIndex);
+      if (!(constantAtNameAndTypeIndex instanceof ConstantNameAndType)) {
+        // This constant_pool entry must be a CONSTANT_NameAndType_info
+        // as specified https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4.2
         throw new RuntimeException(
-            "Failed to lookup nameAndType constant indexed " + nameAndTypeIndex);
+            "Failed to lookup nameAndType constant indexed " + nameAndTypeIndex
+                + ". This class file is not compliant with CONSTANT_Methodref_info specification");
       }
-      ConstantNameAndType constantNameAndType = (ConstantNameAndType) constantNameAndTypeRaw;
+      ConstantNameAndType constantNameAndType = (ConstantNameAndType) constantAtNameAndTypeIndex;
       String methodName = constantNameAndType.getName(constantPool);
-      String signature = constantNameAndType.getSignature(constantPool);
-      ConstantPoolMethodref methodref = new ConstantPoolMethodref(className, methodName, signature);
-      constantPoolMethodrefs.add(methodref);
+      String descriptor = constantNameAndType.getSignature(constantPool);
+      FullyQualifiedMethodSignature methodref = new FullyQualifiedMethodSignature(className,
+          methodName, descriptor);
+      methodReferences.add(methodref);
     }
-    return constantPoolMethodrefs;
+    return methodReferences;
   }
 
   /**
-   *  Lists all methodref entries defined in ConstantPool of class file
+   *  Lists all Methodref entries defined in a constant pool table of a class file
    *
    * @param classFileStream stream of a class file
    * @param fileName name of the file that contains class
-   * @return List of all methodref entries defined in ConstantPool
-   * @throws IOException when there is problem in reading classFileStream
+   * @return list of the method signatures with their fully-qualified classes
+   * @throws IOException when there is a problem in reading classFileStream
    */
   @VisibleForTesting
-  static List<ConstantPoolMethodref> listConstantPoolMethodref(InputStream classFileStream,
+  static List<FullyQualifiedMethodSignature> listMethodReferences(InputStream classFileStream,
       String fileName) throws IOException {
     ClassParser parser = new ClassParser(classFileStream, fileName);
     JavaClass javaClass = parser.parse();
-    return listConstantPoolMethodRef(javaClass);
+    return listMethodReferences(javaClass);
   }
 
   /**
-   *  Lists the methodref entries owned by the defined class in class file
+   *  Lists Methodref entries internal to a class file
    *
    * @param classFileStream stream of a class file
    * @param fileName name of the file that contains class
-   * @return methodref entries owned by the class
-   * @throws IOException when there is problem in reading classFileStream
+   * @return list of the method signatures with their fully-qualified classes
+   * @throws IOException when there is a problem in reading classFileStream
    */
-  public static List<ConstantPoolMethodref> listOwningConstantPoolMethodref(InputStream classFileStream,
-      String fileName) throws IOException {
-    ClassParser parser = new ClassParser(classFileStream, fileName);
-    JavaClass javaClass = parser.parse();
-    List<ConstantPoolMethodref> methodrefs = listConstantPoolMethodRef(javaClass);
-    Set<String> owningClass = Sets.newHashSet(javaClass.getClassName());
-    List<ConstantPoolMethodref> owningMethodrefs =  methodrefs
-            .stream()
-            .filter(methodref -> owningClass.contains(methodref.getClassName()))
-            .collect(Collectors.toList());
-    return owningMethodrefs;
-  }
-
-  /**
-   *  Lists the methodref entries not owned by the defined class in class file
-   *  The list the class attemts to invoke the methods defined elsewhere
-   *
-   * @param classFileStream stream of a class file
-   * @param fileName name of the file that contains class
-   * @return methodref entries external to the class
-   * @throws IOException when there is problem in reading classFileStream
-   */
-  public static List<ConstantPoolMethodref> listExternalConstantPoolMethodref(
+  public static List<FullyQualifiedMethodSignature> listInternalMethodReferences(
       InputStream classFileStream, String fileName) throws IOException {
     ClassParser parser = new ClassParser(classFileStream, fileName);
     JavaClass javaClass = parser.parse();
-    List<ConstantPoolMethodref> methodrefs = listConstantPoolMethodRef(javaClass);
-    Set<String> owningClass = Sets.newHashSet(javaClass.getClassName());
-    List<ConstantPoolMethodref> owningMethodrefs =
-        methodrefs
+    List<FullyQualifiedMethodSignature> methodrefs = listMethodReferences(javaClass);
+    Set<String> internalClasses = Sets.newHashSet(javaClass.getClassName());
+    List<FullyQualifiedMethodSignature> internalMethodrefs =  methodrefs
             .stream()
-            .filter(methodref -> !owningClass.contains(methodref.getClassName()))
+            .filter(methodref -> internalClasses.contains(methodref.getClassName()))
             .collect(Collectors.toList());
-    return owningMethodrefs;
+    return internalMethodrefs;
   }
 
   /**
-   * Lists methods entries defined in the class file
+   *  Lists Methodref entries external to a class file
+   *
+   * @param classFileStream stream of a class file
+   * @param fileName name of the file that contains class
+   * @return list of the method signatures with their fully-qualified classes
+   * @throws IOException when there is a problem in reading classFileStream
+   */
+  public static List<FullyQualifiedMethodSignature> listExternalMethodReferences(
+      InputStream classFileStream, String fileName) throws IOException {
+    ClassParser parser = new ClassParser(classFileStream, fileName);
+    JavaClass javaClass = parser.parse();
+    List<FullyQualifiedMethodSignature> methodrefs = listMethodReferences(javaClass);
+    Set<String> internalClasses = Sets.newHashSet(javaClass.getClassName());
+    List<FullyQualifiedMethodSignature> externalMethodrefs = methodrefs
+            .stream()
+            .filter(methodref -> !internalClasses.contains(methodref.getClassName()))
+            .collect(Collectors.toList());
+    return externalMethodrefs;
+  }
+
+  /**
+   * Lists Method entries defined in a class file
    *
    * @param classFileStream stream of a class file
    * @param fileName name of the file that contains class
    * @return method and signature entries defined in the class file
-   * @throws IOException when there is problem in reading classFileStream
+   * @throws IOException when there is a problem in reading classFileStream
    */
-  public static List<MethodAndSignature> listDeclaredMethods(InputStream classFileStream, String fileName)
-      throws IOException {
+  public static List<MethodSignature> listDeclaredMethods(InputStream classFileStream,
+      String fileName) throws IOException {
     final ClassParser parser = new ClassParser(classFileStream, fileName);
     final JavaClass javaClass = parser.parse();
     Method[] methods = javaClass.getMethods();
 
-    List<MethodAndSignature> signatures = Arrays.stream(methods)
-        .map(method -> new MethodAndSignature(method.getName(), method.getSignature()))
+    List<MethodSignature> signatures = Arrays.stream(methods)
+        .map(method -> new MethodSignature(method.getName(), method.getSignature()))
         .collect(Collectors.toList());
     return signatures;
   }
 
   /**
-   * Lists the content of ConstantPool in a class file
+   * Lists the content of a constant pool table in a class file
    *
    * @param inputStream stream of a class file
    * @param fileName name of the file that contains class
-   * @return String representation of ConstantPool entries
-   * @throws IOException when there is problem in reading classFileStream
+   * @return String representation of constant pool entries
+   * @throws IOException when there is a problem in reading classFileStream
    */
   @VisibleForTesting
   static List<String> listConstantPool(InputStream inputStream, String fileName)
