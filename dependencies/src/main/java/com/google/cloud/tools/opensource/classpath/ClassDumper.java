@@ -105,9 +105,9 @@ class ClassDumper {
       InputStream classFileStream, String fileName) throws IOException {
     ClassParser parser = new ClassParser(classFileStream, fileName);
     JavaClass javaClass = parser.parse();
-    List<FullyQualifiedMethodSignature> methodrefs = listMethodReferences(javaClass);
+    List<FullyQualifiedMethodSignature> methodReferences = listMethodReferences(javaClass);
     Set<String> internalClasses = Sets.newHashSet(javaClass.getClassName());
-    List<FullyQualifiedMethodSignature> internalMethodrefs =  methodrefs
+    List<FullyQualifiedMethodSignature> internalMethodrefs =  methodReferences
             .stream()
             .filter(methodref -> internalClasses.contains(methodref.getClassName()))
             .collect(Collectors.toList());
@@ -127,9 +127,9 @@ class ClassDumper {
       InputStream classFileStream, String fileName) throws IOException {
     ClassParser parser = new ClassParser(classFileStream, fileName);
     JavaClass javaClass = parser.parse();
-    List<FullyQualifiedMethodSignature> methodrefs = listMethodReferences(javaClass);
+    List<FullyQualifiedMethodSignature> methodReferences = listMethodReferences(javaClass);
     Set<String> internalClasses = Sets.newHashSet(javaClass.getClassName());
-    List<FullyQualifiedMethodSignature> externalMethodrefs = methodrefs
+    List<FullyQualifiedMethodSignature> externalMethodrefs = methodReferences
             .stream()
             .filter(methodref -> !internalClasses.contains(methodref.getClassName()))
             .collect(Collectors.toList());
