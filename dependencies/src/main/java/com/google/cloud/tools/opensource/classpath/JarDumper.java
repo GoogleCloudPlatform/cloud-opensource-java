@@ -37,7 +37,7 @@ import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
 /**
- * This class reads a jar file and list method references in its class files
+ * This class reads a jar file and lists method references in its class files.
  */
 class JarDumper {
 
