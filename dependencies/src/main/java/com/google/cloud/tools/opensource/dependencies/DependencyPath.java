@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.base.Joiner;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import java.util.stream.Collectors;
