@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class JarDumperTest {
@@ -35,7 +34,7 @@ public class JarDumperTest {
       "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0_FirestoreGrpc.class";
 
   @Test
-  public void testListExternalMethodReferences() throws IOException {
+  public void testListExternalMethodReferences() throws IOException, ClassNotFoundException {
     URL jarFileUrl = JarDumperTest.class.getClassLoader().getResource(EXAMPLE_JAR_FILE);
     List<FullyQualifiedMethodSignature> signatures = JarDumper.listExternalMethodReferences(
         jarFileUrl);

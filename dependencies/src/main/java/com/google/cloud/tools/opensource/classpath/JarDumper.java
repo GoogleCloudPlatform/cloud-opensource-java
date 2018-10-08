@@ -47,9 +47,11 @@ class JarDumper {
    * @param jarFileUrl URL for the jar file
    * @return list of the method signatures with their fully-qualified classes
    * @throws IOException when there is a problem in reading the jar file
+   * @throws ClassNotFoundException when a class visible by Guava's reflect was unexpectedly
+   * not found by BCEL API
    */
   public static List<FullyQualifiedMethodSignature> listExternalMethodReferences(
-      URL jarFileUrl) throws IOException {
+      URL jarFileUrl) throws IOException, ClassNotFoundException {
     List<FullyQualifiedMethodSignature> methodReferences = new ArrayList<>();
 
     SyntheticRepository repository = SyntheticRepository.getInstance(
@@ -57,13 +59,7 @@ class JarDumper {
     Set<String> internalClassNames = new HashSet<>();
     for (ClassInfo classInfo : listTopLevelClassesFromJar(jarFileUrl)) {
       String className = classInfo.getName();
-      JavaClass javaClass;
-      try {
-        javaClass = repository.loadClass(className);
-      } catch (ClassNotFoundException ex) {
-        throw new RuntimeException(
-            "A class visible by Guava's reflect was unexpectedly not found by BCEL API", ex);
-      }
+      JavaClass javaClass = repository.loadClass(className);
       String topLevelClassName = javaClass.getClassName();
       internalClassNames.add(topLevelClassName);
       internalClassNames.addAll(listInnerClassNames(javaClass));
@@ -89,9 +85,9 @@ class JarDumper {
       for (InnerClass innerClass : innerClasses.getInnerClasses()) {
         int classIndex = innerClass.getInnerClassIndex();
         String innerClassName =  constantPool.getConstantString(classIndex, Const.CONSTANT_Class);
-        // Class names stored in constant pool have '/' as separator. We want '.'
-        String binaryClassName = innerClassName.replace('/', '.');
-        innerClassNames.add(binaryClassName);
+        // Class names stored in constant pool have '/' as separator. We want '.' (as binary name)
+        String normalInnerClassName = innerClassName.replace('/', '.');
+        innerClassNames.add(normalInnerClassName);
       }
     }
     return innerClassNames;

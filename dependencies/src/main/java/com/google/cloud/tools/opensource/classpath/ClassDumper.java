@@ -51,7 +51,6 @@ class ClassDumper {
    *
    * @param javaClass Java class to list its method references
    * @return list of the method signatures with their fully-qualified classes
-   * @throws IOException when there is a problem in reading classFileStream
    */
   public static List<FullyQualifiedMethodSignature> listMethodReferences(JavaClass javaClass) {
     List<FullyQualifiedMethodSignature> methodReferences = new ArrayList<>();
