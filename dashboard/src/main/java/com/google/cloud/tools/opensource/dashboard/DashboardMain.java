@@ -70,7 +70,7 @@ public class DashboardMain {
     Path output = Files.createDirectories(relativePath);
 
     DefaultArtifact bom =
-        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
+        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.66.0-SNAPSHOT");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
 
     List<ArtifactResults> table = generateReports(configuration, output, managedDependencies);
@@ -88,7 +88,7 @@ public class DashboardMain {
   }
 
   @VisibleForTesting
-  static List<ArtifactResults> generateReports( Configuration configuration, Path output,
+  static List<ArtifactResults> generateReports(Configuration configuration, Path output,
       List<Artifact> artifacts) {
 
     List<ArtifactResults> table = new ArrayList<>();

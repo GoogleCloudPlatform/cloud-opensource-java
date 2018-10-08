@@ -84,7 +84,7 @@ public class DashboardTest {
 
     try (InputStream source = Files.newInputStream(dashboardHtml)) {
       Document document = builder.build(dashboardHtml.toFile());
-
+      System.err.println(dashboardHtml.toAbsolutePath());
       Assert.assertEquals("en-US", document.getRootElement().getAttribute("lang").getValue());
 
       Nodes tr = document.query("//tr");
