@@ -75,6 +75,7 @@ class JarDumper {
   @VisibleForTesting
   static Set<String> listInnerClassNames(JavaClass javaClass) {
     Set<String> innerClassNames = new HashSet<>();
+    String topLevelClassName = javaClass.getClassName();
     Attribute[] attributes = javaClass.getAttributes();
     ConstantPool constantPool = javaClass.getConstantPool();
     for (Attribute attribute : attributes) {
@@ -84,7 +85,17 @@ class JarDumper {
       InnerClasses innerClasses = (InnerClasses) attribute;
       for (InnerClass innerClass : innerClasses.getInnerClasses()) {
         int classIndex = innerClass.getInnerClassIndex();
-        String innerClassName =  constantPool.getConstantString(classIndex, Const.CONSTANT_Class);
+        String innerClassName = constantPool.getConstantString(classIndex, Const.CONSTANT_Class);
+        int outerClassIndex = innerClass.getOuterClassIndex();
+        if (outerClassIndex > 0) {
+          String outerClassName = constantPool.getConstantString(outerClassIndex,
+              Const.CONSTANT_Class);
+          String normalOuterClassName = outerClassName.replace('/', '.');
+          if (! normalOuterClassName.equals(topLevelClassName)) {
+            continue;
+          }
+        }
+
         // Class names stored in constant pool have '/' as separator. We want '.' (as binary name)
         String normalInnerClassName = innerClassName.replace('/', '.');
         innerClassNames.add(normalInnerClassName);

@@ -38,7 +38,7 @@ public class JarDumperTest {
     URL jarFileUrl = JarDumperTest.class.getClassLoader().getResource(EXAMPLE_JAR_FILE);
     List<FullyQualifiedMethodSignature> signatures = JarDumper.listExternalMethodReferences(
         jarFileUrl);
-    Truth.assertThat(signatures).hasSize(28);
+    Truth.assertThat(signatures).hasSize(38);
     FullyQualifiedMethodSignature expectedExternalMethodReference =
         new FullyQualifiedMethodSignature(
             "io.grpc.protobuf.ProtoUtils",
@@ -63,16 +63,12 @@ public class JarDumperTest {
         "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFutureStub",
         "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreMethodDescriptorSupplier",
         "com.google.firestore.v1beta1.FirestoreGrpc$1",
-        "io.grpc.MethodDescriptor$Builder",
         "com.google.firestore.v1beta1.FirestoreGrpc$MethodHandlers",
         "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub",
         "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreBaseDescriptorSupplier",
         "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreBlockingStub",
-        "io.grpc.ServiceDescriptor$Builder",
         "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreImplBase",
-        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFileDescriptorSupplier",
-        "io.grpc.MethodDescriptor$MethodType",
-        "io.grpc.MethodDescriptor$Marshaller"
+        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFileDescriptorSupplier"
     );
   }
 }
