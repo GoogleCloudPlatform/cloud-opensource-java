@@ -30,7 +30,8 @@ public class ClassDumperTest {
 
   // We're sure that FirestoreGrpc class comes from this class file because
   // this project (cloud-opensource-java) doesn't have dependency for Cloud Firestore
-  private final String EXAMPLE_CLASS_FILE = "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0_FirestoreGrpc.class";
+  private final String EXAMPLE_CLASS_FILE =
+      "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0_FirestoreGrpc.class";
   private InputStream classFileInputStream;
 
   @Before

@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import java.util.List;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -59,7 +58,8 @@ public class DependencyTreeFormatter {
   }
 
   /**
-   * Prints dependencies expressed in dependency paths in tree in similar way to mvn dependency:tree
+   * Prints dependencies expressed in dependency paths in tree in similar way to mvn
+   * dependency:tree.
    *
    * @param dependencyPaths sorted dependency paths
    */
