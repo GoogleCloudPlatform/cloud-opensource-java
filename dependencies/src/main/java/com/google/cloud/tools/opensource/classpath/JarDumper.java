@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.ClassPath.ClassInfo;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -42,21 +43,23 @@ import org.apache.bcel.util.SyntheticRepository;
 class JarDumper {
 
   /**
-   *  Lists all external method references from the jar file.
+   * Lists all external method references from the jar file.
    *
-   * @param jarFileUrl URL for the jar file
+   * @param jarFile the jar file to analyze
    * @return list of the method signatures with their fully-qualified classes
    * @throws IOException when there is a problem in reading the jar file
-   * @throws ClassNotFoundException when a class visible by Guava's reflect was unexpectedly
-   * not found by BCEL API
+   * @throws ClassNotFoundException when a class visible by Guava's reflect was unexpectedly not
+   *     found by BCEL API
    */
-  public static List<FullyQualifiedMethodSignature> listExternalMethodReferences(
-      URL jarFileUrl) throws IOException, ClassNotFoundException {
+  static List<FullyQualifiedMethodSignature> listExternalMethodReferences(
+      File jarFile) throws IOException, ClassNotFoundException {
     List<FullyQualifiedMethodSignature> methodReferences = new ArrayList<>();
-
-    SyntheticRepository repository = SyntheticRepository.getInstance(
-        new ClassPath(jarFileUrl.getFile()));
     Set<String> internalClassNames = new HashSet<>();
+
+    String fileName = jarFile.getAbsolutePath();
+    SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(fileName));
+
+    URL jarFileUrl = jarFile.toURI().toURL();
     for (ClassInfo classInfo : listTopLevelClassesFromJar(jarFileUrl)) {
       String className = classInfo.getName();
       JavaClass javaClass = repository.loadClass(className);
@@ -105,7 +108,7 @@ class JarDumper {
   }
 
   private static ImmutableSet<ClassInfo> listTopLevelClassesFromJar(URL jarFileUrl)
-    throws IOException {
+      throws IOException {
     URL[] jarFileUrls = new URL[] {jarFileUrl};
 
     // Setting parent as null because we don't want other classes than this jar file
@@ -116,7 +119,7 @@ class JarDumper {
         com.google.common.reflect.ClassPath.from(classLoaderFromJar);
 
     // Nested (inner) classes reside in one of top-level class files.
-    ImmutableSet<ClassInfo> allClassesInJar =  classPath.getTopLevelClasses();
+    ImmutableSet<ClassInfo> allClassesInJar = classPath.getTopLevelClasses();
     return allClassesInJar;
   }
 }

@@ -52,7 +52,7 @@ class ClassDumper {
    * @param javaClass Java class to list its method references
    * @return list of the method signatures with their fully-qualified classes
    */
-  public static List<FullyQualifiedMethodSignature> listMethodReferences(JavaClass javaClass) {
+  static List<FullyQualifiedMethodSignature> listMethodReferences(JavaClass javaClass) {
     List<FullyQualifiedMethodSignature> methodReferences = new ArrayList<>();
     ConstantPool constantPool = javaClass.getConstantPool();
     Constant[] constants = constantPool.getConstantPool();

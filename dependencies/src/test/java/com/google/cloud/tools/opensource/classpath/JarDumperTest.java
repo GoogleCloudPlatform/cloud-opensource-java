@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.truth.Truth;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -35,9 +36,11 @@ public class JarDumperTest {
 
   @Test
   public void testListExternalMethodReferences() throws IOException, ClassNotFoundException {
-    URL jarFileUrl = JarDumperTest.class.getClassLoader().getResource(EXAMPLE_JAR_FILE);
-    List<FullyQualifiedMethodSignature> signatures = JarDumper.listExternalMethodReferences(
-        jarFileUrl);
+    URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
+    File jarFile = new File(jarFileUrl.getFile());
+    List<FullyQualifiedMethodSignature> signatures =
+        JarDumper.listExternalMethodReferences(jarFile);
+
     Truth.assertThat(signatures).hasSize(38);
     FullyQualifiedMethodSignature expectedExternalMethodReference =
         new FullyQualifiedMethodSignature(
