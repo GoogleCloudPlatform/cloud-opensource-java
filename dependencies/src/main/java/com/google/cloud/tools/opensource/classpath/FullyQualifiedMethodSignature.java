@@ -41,6 +41,10 @@ class FullyQualifiedMethodSignature {
     return className;
   }
 
+  public MethodSignature getMethodSignature() {
+    return methodSignature;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {

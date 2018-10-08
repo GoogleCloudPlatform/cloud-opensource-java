@@ -18,11 +18,13 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -34,33 +36,119 @@ import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.classfile.InnerClass;
 import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.Method;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
 /**
- * This class reads a jar file and lists method references in its class files.
+ * This class reads jar files and run static linkage analysis among them
  */
-class JarDumper {
+class StaticLinkageChecker {
+
+  /**
+   * Given list of the jar files as file names in filesystem, outputs the report of static linkage
+   * check.
+   *
+   * @param arguments jar files available in the file system
+   * @throws IOException when there is a problem in reading a jar file
+   * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
+   */
+  public static void main(String[] arguments) throws IOException, ClassNotFoundException {
+    String report = generateStaticLinkageReport(arguments);
+    System.out.println(report);
+  }
+
+  @VisibleForTesting
+  static String generateStaticLinkageReport(String[] jarFileNames) throws IOException,
+      ClassNotFoundException {
+    StringBuilder stringBuilder = new StringBuilder();
+    Set<FullyQualifiedMethodSignature> externalMethodReferences = new HashSet<>();
+    List<Path> paths = new ArrayList<>();
+    for (String jarFileName : jarFileNames) {
+      File jarFile = new File(jarFileName);
+      Path jarFilePath = jarFile.toPath();
+      paths.add(jarFilePath);
+      externalMethodReferences.addAll(listExternalMethodReferences(jarFilePath));
+    }
+    List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
+        resolvedMethodReferences(paths, Lists.newArrayList(externalMethodReferences));
+    if (unresolvedMethodReferences.isEmpty()) {
+      stringBuilder.append("There was no unresolved method references from the jar file(s) :");
+      stringBuilder.append(paths);
+    } else {
+      stringBuilder.append("There was unresolved method references from the jar file(s):\n");
+      for (FullyQualifiedMethodSignature methodReference : unresolvedMethodReferences) {
+        stringBuilder.append("  ");
+        stringBuilder.append(methodReference);
+        stringBuilder.append("\n");
+      }
+    }
+    return stringBuilder.toString();
+  }
+
+  /**
+   * Checks the availability of the methods through the jar files, and lists the unavailable
+   * methods.
+   *
+   * @param paths jar files to search for the availability of the methods
+   * @param methodReferences methods to search for with the jar files
+   * @return list of methods that are not found in the jar files
+   */
+  static List<FullyQualifiedMethodSignature> resolvedMethodReferences(List<Path> paths,
+      List<FullyQualifiedMethodSignature> methodReferences) {
+    List<FullyQualifiedMethodSignature> unresolvedMethods = new ArrayList<>();
+
+    // Creates chain of ClassPath element in the same order as paths
+    ClassPath classPath = null;
+    for (Path path : paths) {
+      String pathFileName = path.toFile().getAbsolutePath();
+      classPath = new ClassPath(classPath, pathFileName);
+    }
+    SyntheticRepository repository = SyntheticRepository.getInstance(classPath);
+
+    for (FullyQualifiedMethodSignature methodReference : methodReferences) {
+      try {
+        JavaClass javaClass = repository.loadClass(methodReference.getClassName());
+        MethodSignature methodSignature = methodReference.getMethodSignature();
+        boolean methodFound = false;
+        // Opportunity to get better performance to create a cache (from class name to method list)
+        for (Method method : javaClass.getMethods()) {
+          String signature = method.getSignature();
+          if (method.getName().equals(methodSignature.getMethodName())
+              && signature.equals(methodSignature.getDescriptor())) {
+            methodFound = true;
+            break;
+          }
+        }
+        if (! methodFound) {
+          unresolvedMethods.add(methodReference);
+        }
+      } catch (ClassNotFoundException ex) {
+        unresolvedMethods.add(methodReference);
+      }
+    }
+    return unresolvedMethods;
+  }
 
   /**
    * Lists all external methods called from the classes in the jar file. The output list does not
    * include the methods defined in the file.
    *
-   * @param jarFile the jar file to analyze
+   * @param jarFilePath the jar file to analyze
    * @return list of the method signatures with their fully-qualified classes
    * @throws IOException when there is a problem in reading the jar file
    * @throws ClassNotFoundException when a class visible by Guava's reflect was unexpectedly not
    *     found by BCEL API
    */
   static List<FullyQualifiedMethodSignature> listExternalMethodReferences(
-      File jarFile) throws IOException, ClassNotFoundException {
+      Path jarFilePath) throws IOException, ClassNotFoundException {
     List<FullyQualifiedMethodSignature> methodReferences = new ArrayList<>();
     Set<String> internalClassNames = new HashSet<>();
 
-    String fileName = jarFile.getAbsolutePath();
+    String fileName = jarFilePath.toFile().getAbsolutePath();
     SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(fileName));
 
-    URL jarFileUrl = jarFile.toURI().toURL();
+    URL jarFileUrl = jarFilePath.toUri().toURL();
     for (ClassInfo classInfo : listTopLevelClassesFromJar(jarFileUrl)) {
       String className = classInfo.getName();
       JavaClass javaClass = repository.loadClass(className);
