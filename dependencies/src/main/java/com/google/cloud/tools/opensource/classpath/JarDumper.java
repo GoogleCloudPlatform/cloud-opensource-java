@@ -43,7 +43,8 @@ import org.apache.bcel.util.SyntheticRepository;
 class JarDumper {
 
   /**
-   * Lists all external method references from the jar file.
+   * Lists all external methods called from the classes in the jar file. The output list does not
+   * include the methods defined in the file.
    *
    * @param jarFile the jar file to analyze
    * @return list of the method signatures with their fully-qualified classes

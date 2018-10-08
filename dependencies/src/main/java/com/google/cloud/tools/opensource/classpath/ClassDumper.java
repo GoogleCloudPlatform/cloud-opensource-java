@@ -46,10 +46,11 @@ import org.apache.bcel.classfile.Method;
 class ClassDumper {
 
   /**
-   *  Lists all method references from the Java class. The output corresponds to
-   *  CONSTANT_Methodref_info entries its constant pool table.
+   *  Lists all method references from the Java class file. The output corresponds to
+   *  CONSTANT_Methodref_info entries in the .class file's constant pool. The output list includes
+   *  both (internal) methods defined in the file and (external) methods called by the class.
    *
-   * @param javaClass Java class to list its method references
+   * @param javaClass .class file to list its method references
    * @return list of the method signatures with their fully-qualified classes
    */
   static List<FullyQualifiedMethodSignature> listMethodReferences(JavaClass javaClass) {
@@ -84,7 +85,7 @@ class ClassDumper {
 
   /**
    *  Lists all method references from the class file. The output corresponds to
-   *  CONSTANT_Methodref_info entries its constant pool table.
+   *  CONSTANT_Methodref_info entries in the .class file's constant pool.
    *
    * @param classFileStream stream of a class file
    * @param fileName name of the file that contains class
@@ -101,7 +102,7 @@ class ClassDumper {
 
   /**
    *  Lists all internal method references from the class file. The output corresponds to
-   *  CONSTANT_Methodref_info entries in the file's constant pool table.
+   *  CONSTANT_Methodref_info entries in the .class file's constant pool.
    *
    * @param classFileStream stream of a class file
    * @param fileName name of the file that contains class
@@ -123,7 +124,7 @@ class ClassDumper {
 
   /**
    *  Lists all external method references from the class file. The output corresponds to
-   *  CONSTANT_Methodref_info entries in the file's constant pool table.
+   *  CONSTANT_Methodref_info entries in the .class file's constant pool.
    *
    * @param classFileStream stream of a class file
    * @param fileName name of the file that contains class
@@ -145,7 +146,7 @@ class ClassDumper {
 
   /**
    * Lists method signatures from the class file. The output corresponds to entries in the
-   * method table in the file.
+   * method table in the .class file.
    *
    * @param classFileStream stream of a class file
    * @param fileName name of the file that contains class
@@ -165,7 +166,7 @@ class ClassDumper {
   }
 
   /**
-   * Lists the content of the constant pool table in the class file.
+   * Lists the content of the constant pool table in the .class file.
    *
    * @param inputStream stream of a class file
    * @param fileName name of the file that contains class
