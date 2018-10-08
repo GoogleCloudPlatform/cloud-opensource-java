@@ -41,7 +41,7 @@ import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
 /**
- * This class reads jar files and run static linkage analysis among them
+ * This class reads jar files and runs static linkage analysis on them
  */
 class StaticLinkageChecker {
 
@@ -73,10 +73,10 @@ class StaticLinkageChecker {
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         resolvedMethodReferences(paths, Lists.newArrayList(externalMethodReferences));
     if (unresolvedMethodReferences.isEmpty()) {
-      stringBuilder.append("There was no unresolved method references from the jar file(s) :");
+      stringBuilder.append("There were no unresolved method references from the jar file(s) :");
       stringBuilder.append(paths);
     } else {
-      stringBuilder.append("There was unresolved method references from the jar file(s):\n");
+      stringBuilder.append("There were unresolved method references from the jar file(s):\n");
       for (FullyQualifiedMethodSignature methodReference : unresolvedMethodReferences) {
         stringBuilder.append("  ");
         stringBuilder.append(methodReference);
@@ -98,7 +98,7 @@ class StaticLinkageChecker {
       List<FullyQualifiedMethodSignature> methodReferences) {
     List<FullyQualifiedMethodSignature> unresolvedMethods = new ArrayList<>();
 
-    // Creates chain of ClassPath element in the same order as paths
+    // Creates chain of ClassPath items in the same order as paths
     ClassPath classPath = null;
     for (Path path : paths) {
       String pathFileName = path.toFile().getAbsolutePath();
