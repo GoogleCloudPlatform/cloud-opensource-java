@@ -45,7 +45,15 @@ import org.apache.bcel.classfile.Method;
  */
 class ClassDumper {
 
-  private static List<FullyQualifiedMethodSignature> listMethodReferences(JavaClass javaClass) {
+  /**
+   *  Lists all method references from the Java class. The output corresponds to
+   *  CONSTANT_Methodref_info entries its constant pool table.
+   *
+   * @param javaClass Java class to list its method references
+   * @return list of the method signatures with their fully-qualified classes
+   * @throws IOException when there is a problem in reading classFileStream
+   */
+  public static List<FullyQualifiedMethodSignature> listMethodReferences(JavaClass javaClass) {
     List<FullyQualifiedMethodSignature> methodReferences = new ArrayList<>();
     ConstantPool constantPool = javaClass.getConstantPool();
     Constant[] constants = constantPool.getConstantPool();
