@@ -65,7 +65,7 @@ class StaticLinkageChecker {
         .map(name -> (Paths.get(name)).toAbsolutePath())
         .collect(Collectors.toList());
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        findUnresolvedMethodReferencesInJars(jarFilePaths);
+        findUnresolvedMethodReferences(jarFilePaths);
     if (unresolvedMethodReferences.isEmpty()) {
       stringBuilder.append("There were no unresolved method references from the jar file(s) :");
       stringBuilder.append(Arrays.toString(arguments));
@@ -92,7 +92,7 @@ class StaticLinkageChecker {
    * @throws IOException when there is a problem in reading a jar file
    * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
    */
-  static List<FullyQualifiedMethodSignature> findUnresolvedMethodReferencesInJars(
+  static List<FullyQualifiedMethodSignature> findUnresolvedMethodReferences(
       List<Path> jarFilePaths)
       throws IOException, ClassNotFoundException {
     Set<FullyQualifiedMethodSignature> externalMethodReferences = new HashSet<>();

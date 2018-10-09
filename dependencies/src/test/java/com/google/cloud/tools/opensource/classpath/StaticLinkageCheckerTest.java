@@ -120,7 +120,7 @@ public class StaticLinkageCheckerTest {
     );
 
     List<FullyQualifiedMethodSignature> report =
-        StaticLinkageChecker.findUnresolvedMethodReferencesInJars(pathsForJar);
+        StaticLinkageChecker.findUnresolvedMethodReferences(pathsForJar);
 
     // com.google.protobuf.Int32Value is defined in protobuf-java-X.Y.Z.jar, not in the file list
     Truth.assertThat(report).contains(
@@ -176,9 +176,9 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testNonExistentJarFileInput() throws ClassNotFoundException {
     try {
-      StaticLinkageChecker.findUnresolvedMethodReferencesInJars(
+      StaticLinkageChecker.findUnresolvedMethodReferences(
           Arrays.asList(Paths.get("nosuchfile.jar")));
-      Assert.fail("findUnresolvedMethodReferencesInJars should raise IOException");
+      Assert.fail("findUnresolvedMethodReferences should raise IOException");
     } catch (IOException ex) {
       Assert.assertEquals("The file is not readable: nosuchfile.jar", ex.getMessage());
     }
