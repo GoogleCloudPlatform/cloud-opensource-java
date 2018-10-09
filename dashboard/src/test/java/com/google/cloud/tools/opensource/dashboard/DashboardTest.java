@@ -78,13 +78,12 @@ public class DashboardTest {
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
     
     DefaultArtifact bom =
-        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.62.0-SNAPSHOT");
+        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.66.0-SNAPSHOT");
     List<Artifact> artifacts = RepositoryUtility.readBom(bom);
     Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
 
     try (InputStream source = Files.newInputStream(dashboardHtml)) {
       Document document = builder.build(dashboardHtml.toFile());
-
       Assert.assertEquals("en-US", document.getRootElement().getAttribute("lang").getValue());
 
       Nodes tr = document.query("//tr");
