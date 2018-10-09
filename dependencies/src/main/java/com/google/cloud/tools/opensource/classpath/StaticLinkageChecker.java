@@ -83,7 +83,7 @@ class StaticLinkageChecker {
   }
 
   /**
-   * Given the jar file paths, runs static linkage check and returns unresolved methods.
+   * Given the jar file paths, runs the static linkage check and returns unresolved methods.
    *
    * @param jarFilePaths absolute paths to jar files to scan for static linkage check
    * @return list of methods that are not found in the jar files
