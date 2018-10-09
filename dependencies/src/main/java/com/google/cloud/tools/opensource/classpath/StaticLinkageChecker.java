@@ -42,7 +42,10 @@ import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
 /**
- * This class reads jar files and runs static linkage analysis on them
+ * This class reads jar files and runs static linkage analysis on them.
+ * Static linkage check finds discrepancies between methods referred by classes in the jar files,
+ * and methods defined in them.
+ * TODO: enhance scope to include fields and classes
  */
 class StaticLinkageChecker {
 
@@ -80,8 +83,7 @@ class StaticLinkageChecker {
   }
 
   /**
-   * Given the jar file names (relative to current working directory), runs static linkage check
-   * and returns unresolved methods.
+   * Given the jar file paths, runs static linkage check and returns unresolved methods.
    *
    * @param jarFilePaths absolute paths to jar files to scan for static linkage check
    * @return list of methods that are not found in the jar files
@@ -107,7 +109,7 @@ class StaticLinkageChecker {
    * methods.
    *
    * @param jarFilePaths absolute paths to the jar files to search for the methods
-   * @param methodReferences methods to search for with the jar files
+   * @param methodReferences methods to search for within the jar files
    * @return list of methods that are not found in the jar files
    */
   static List<FullyQualifiedMethodSignature> findUnresolvedReferences(List<Path> jarFilePaths,

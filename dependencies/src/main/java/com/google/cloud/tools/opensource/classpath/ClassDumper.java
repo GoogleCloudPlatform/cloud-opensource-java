@@ -155,8 +155,8 @@ class ClassDumper {
    */
   static List<MethodSignature> listDeclaredMethods(
       InputStream classFileStream, String fileName) throws IOException {
-    final ClassParser parser = new ClassParser(classFileStream, fileName);
-    final JavaClass javaClass = parser.parse();
+    ClassParser parser = new ClassParser(classFileStream, fileName);
+    JavaClass javaClass = parser.parse();
     return listDeclaredMethods(javaClass);
   }
 
@@ -164,7 +164,7 @@ class ClassDumper {
    * Lists method signatures from the class file. The output corresponds to entries in the
    * method table in the .class file.
    *
-   * @param javaClass
+   * @param javaClass .class file to search methods
    * @return method and signature entries defined in the class file
    */
   static List<MethodSignature> listDeclaredMethods(JavaClass javaClass) {
@@ -186,8 +186,8 @@ class ClassDumper {
   @VisibleForTesting
   static List<String> listConstantPool(InputStream inputStream, String fileName)
       throws IOException {
-    final ClassParser parser = new ClassParser(inputStream, fileName);
-    final JavaClass javaClass = parser.parse();
+    ClassParser parser = new ClassParser(inputStream, fileName);
+    JavaClass javaClass = parser.parse();
     ConstantPool constantPool = javaClass.getConstantPool();
     Constant[] constants = constantPool.getConstantPool();
 
