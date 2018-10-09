@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class StaticLinkageCheckerTest {
@@ -170,5 +171,16 @@ public class StaticLinkageCheckerTest {
         StaticLinkageChecker.findUnresolvedReferences(pathsForJarWithVersion66First,
             Arrays.asList(methodAddedInVersion66));
     Truth.assertThat(unresolvedMethodReferencesWithPath2).hasSize(0);
+  }
+
+  @Test
+  public void testInvalidInput() throws ClassNotFoundException {
+    try {
+      StaticLinkageChecker.generateStaticLinkageReport(
+          Arrays.asList(Paths.get("nosuchfile.jar")));
+      Assert.fail("generateStaticLinkageReport should raise IOException");
+    } catch (IOException ex) {
+      Assert.assertEquals("The file is not readable: nosuchfile.jar", ex.getMessage());
+    }
   }
 }

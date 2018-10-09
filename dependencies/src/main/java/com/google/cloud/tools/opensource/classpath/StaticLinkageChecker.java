@@ -23,6 +23,7 @@ import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -90,8 +91,11 @@ class StaticLinkageChecker {
   static List<FullyQualifiedMethodSignature> generateStaticLinkageReport(List<Path> jarFilePaths)
       throws IOException, ClassNotFoundException {
     Set<FullyQualifiedMethodSignature> externalMethodReferences = new HashSet<>();
-    for (Path jarFilePath : jarFilePaths) {
-      externalMethodReferences.addAll(listExternalMethodReferences(jarFilePath));
+    for (Path absolutePathToJar : jarFilePaths) {
+      if (!Files.isReadable(absolutePathToJar)) {
+        throw new IOException("The file is not readable: " + absolutePathToJar);
+      }
+      externalMethodReferences.addAll(listExternalMethodReferences(absolutePathToJar));
     }
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         findUnresolvedReferences(jarFilePaths, Lists.newArrayList(externalMethodReferences));
