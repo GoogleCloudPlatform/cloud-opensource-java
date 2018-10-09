@@ -113,13 +113,13 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testResolvedMethodReferencesWithJarFiles()
       throws IOException, ClassNotFoundException, URISyntaxException {
-    List<Path> jarFileNames = Arrays.asList(
+    List<Path> pathsForJar = Arrays.asList(
         absolutePathOfResource(EXAMPLE_JAR_FILE),
         absolutePathOfResource(EXAMPLE_PROTO_JAR_FILE)
     );
 
     List<FullyQualifiedMethodSignature> report =
-        StaticLinkageChecker.generateStaticLinkageReport(jarFileNames);
+        StaticLinkageChecker.generateStaticLinkageReport(pathsForJar);
 
     // com.google.protobuf.Int32Value is defined in protobuf-java-X.Y.Z.jar, not in the file list
     Truth.assertThat(report).contains(
@@ -137,5 +137,38 @@ public class StaticLinkageCheckerTest {
     // As FirestoreGrpc is defined in the example jar file, it should not appear in the report
     Truth.assertThat(report.toString())
         .doesNotContain("com.google.firestore.v1beta1.FirestoreGrpc");
+  }
+
+  @Test
+  public void testJarPathOrderInResolvingReferences() throws URISyntaxException {
+    // listDocuments method on CollectionReference class is added at version 0.66.0-beta
+    // https://github.com/googleapis/google-cloud-java/releases/tag/v0.66.0
+    List<Path> pathsForJarWithVersion65First =
+        Arrays.asList(
+            absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"),
+            absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"));
+
+    List<Path> pathsForJarWithVersion66First =
+        Arrays.asList(
+            absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"),
+            absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"));
+
+    FullyQualifiedMethodSignature methodAddedInVersion66 =
+        new FullyQualifiedMethodSignature(
+            "com.google.cloud.firestore.CollectionReference",
+            "listDocuments",
+            "()Ljava/lang/Iterable;");
+
+    // When version 65 (old) comes first in the jar list, it cannot find listDocuments method
+    List<FullyQualifiedMethodSignature> unresolvedMethodReferencesWithPath1 =
+        StaticLinkageChecker.findUnresolvedReferences(pathsForJarWithVersion65First,
+            Arrays.asList(methodAddedInVersion66));
+    Truth.assertThat(unresolvedMethodReferencesWithPath1).hasSize(1);
+
+    // When version 66 (new) comes first, it finds the method correctly
+    List<FullyQualifiedMethodSignature> unresolvedMethodReferencesWithPath2 =
+        StaticLinkageChecker.findUnresolvedReferences(pathsForJarWithVersion66First,
+            Arrays.asList(methodAddedInVersion66));
+    Truth.assertThat(unresolvedMethodReferencesWithPath2).hasSize(0);
   }
 }
