@@ -153,12 +153,22 @@ class ClassDumper {
    * @return method and signature entries defined in the class file
    * @throws IOException when there is a problem in reading classFileStream
    */
-  public static List<MethodSignature> listDeclaredMethods(
+  static List<MethodSignature> listDeclaredMethods(
       InputStream classFileStream, String fileName) throws IOException {
     final ClassParser parser = new ClassParser(classFileStream, fileName);
     final JavaClass javaClass = parser.parse();
-    Method[] methods = javaClass.getMethods();
+    return listDeclaredMethods(javaClass);
+  }
 
+  /**
+   * Lists method signatures from the class file. The output corresponds to entries in the
+   * method table in the .class file.
+   *
+   * @param javaClass
+   * @return method and signature entries defined in the class file
+   */
+  static List<MethodSignature> listDeclaredMethods(JavaClass javaClass) {
+    Method[] methods = javaClass.getMethods();
     List<MethodSignature> signatures = Arrays.stream(methods)
         .map(method -> new MethodSignature(method.getName(), method.getSignature()))
         .collect(Collectors.toList());

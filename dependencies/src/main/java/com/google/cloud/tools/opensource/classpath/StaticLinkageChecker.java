@@ -26,6 +26,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,7 +37,6 @@ import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.classfile.InnerClass;
 import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.classfile.Method;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
@@ -54,14 +54,39 @@ class StaticLinkageChecker {
    * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
    */
   public static void main(String[] arguments) throws IOException, ClassNotFoundException {
-    String report = generateStaticLinkageReport(arguments);
-    System.out.println(report);
+    StringBuilder stringBuilder = new StringBuilder();
+    List<String> jarFileNames = Arrays.asList(arguments);
+    List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
+        generateStaticLinkageReport(jarFileNames);
+    if (unresolvedMethodReferences.isEmpty()) {
+      stringBuilder.append("There were no unresolved method references from the jar file(s) :");
+      stringBuilder.append(Arrays.toString(arguments));
+    } else {
+      stringBuilder.append("There were unresolved method references from the jar file(s):\n");
+      for (FullyQualifiedMethodSignature methodReference : unresolvedMethodReferences) {
+        stringBuilder.append("Class: '");
+        stringBuilder.append(methodReference.getClassName());
+        stringBuilder.append("', method: '");
+        stringBuilder.append(methodReference.getMethodSignature().getMethodName());
+        stringBuilder.append("' with descriptor ");
+        stringBuilder.append(methodReference.getMethodSignature().getDescriptor());
+        stringBuilder.append("\n");
+      }
+    }
+    System.out.println(stringBuilder.toString());
   }
 
-  @VisibleForTesting
-  static String generateStaticLinkageReport(String[] jarFileNames) throws IOException,
-      ClassNotFoundException {
-    StringBuilder stringBuilder = new StringBuilder();
+  /**
+   * Given the jar file names (relative to current working directory), runs static linkage check
+   * and returns unresolved methods.
+   *
+   * @param jarFileNames jar files to scan for static linkage check
+   * @return list of methods that are not found in the jar files
+   * @throws IOException when there is a problem in reading a jar file
+   * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
+   */
+  static List<FullyQualifiedMethodSignature> generateStaticLinkageReport(List<String> jarFileNames)
+      throws IOException, ClassNotFoundException {
     Set<FullyQualifiedMethodSignature> externalMethodReferences = new HashSet<>();
     List<Path> paths = new ArrayList<>();
     for (String jarFileName : jarFileNames) {
@@ -71,19 +96,8 @@ class StaticLinkageChecker {
       externalMethodReferences.addAll(listExternalMethodReferences(jarFilePath));
     }
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        resolvedMethodReferences(paths, Lists.newArrayList(externalMethodReferences));
-    if (unresolvedMethodReferences.isEmpty()) {
-      stringBuilder.append("There were no unresolved method references from the jar file(s) :");
-      stringBuilder.append(paths);
-    } else {
-      stringBuilder.append("There were unresolved method references from the jar file(s):\n");
-      for (FullyQualifiedMethodSignature methodReference : unresolvedMethodReferences) {
-        stringBuilder.append("  ");
-        stringBuilder.append(methodReference);
-        stringBuilder.append("\n");
-      }
-    }
-    return stringBuilder.toString();
+        findUnresolvedReferences(paths, Lists.newArrayList(externalMethodReferences));
+    return unresolvedMethodReferences;
   }
 
   /**
@@ -94,7 +108,7 @@ class StaticLinkageChecker {
    * @param methodReferences methods to search for with the jar files
    * @return list of methods that are not found in the jar files
    */
-  static List<FullyQualifiedMethodSignature> resolvedMethodReferences(List<Path> paths,
+  static List<FullyQualifiedMethodSignature> findUnresolvedReferences(List<Path> paths,
       List<FullyQualifiedMethodSignature> methodReferences) {
     List<FullyQualifiedMethodSignature> unresolvedMethods = new ArrayList<>();
 
@@ -104,30 +118,48 @@ class StaticLinkageChecker {
       String pathFileName = path.toFile().getAbsolutePath();
       classPath = new ClassPath(classPath, pathFileName);
     }
+    Set<String> classesNotFound = new HashSet<>();
+    Set<FullyQualifiedMethodSignature> availableMethodsInJars = new HashSet<>();
     SyntheticRepository repository = SyntheticRepository.getInstance(classPath);
 
     for (FullyQualifiedMethodSignature methodReference : methodReferences) {
+      String className = methodReference.getClassName();
+
+      // Case 1: we know that the class doesn't exist in the jar files
+      if (classesNotFound.contains(className)) {
+        unresolvedMethods.add(methodReference);
+        continue;
+      }
+      // Case 2: we know that the class and method exist in the jar files
+      if (availableMethodsInJars.contains(methodReference)) {
+        continue;
+      }
+
+      // Case 3: we need to check the availability through repository
       try {
-        JavaClass javaClass = repository.loadClass(methodReference.getClassName());
-        MethodSignature methodSignature = methodReference.getMethodSignature();
-        boolean methodFound = false;
-        // Opportunity to get better performance to create a cache (from class name to method list)
-        for (Method method : javaClass.getMethods()) {
-          String signature = method.getSignature();
-          if (method.getName().equals(methodSignature.getMethodName())
-              && signature.equals(methodSignature.getDescriptor())) {
-            methodFound = true;
-            break;
-          }
-        }
-        if (! methodFound) {
+        JavaClass javaClass = repository.loadClass(className);
+        List<FullyQualifiedMethodSignature> availableMethodsOnClass = listMethodsOnClass(javaClass);
+
+        availableMethodsInJars.addAll(availableMethodsOnClass);
+
+        if (!availableMethodsOnClass.contains(methodReference)) {
           unresolvedMethods.add(methodReference);
         }
       } catch (ClassNotFoundException ex) {
         unresolvedMethods.add(methodReference);
+        classesNotFound.add(className);
       }
     }
     return unresolvedMethods;
+  }
+
+  static List<FullyQualifiedMethodSignature> listMethodsOnClass(JavaClass javaClass) {
+    List<MethodSignature> methods = ClassDumper.listDeclaredMethods(javaClass);
+    List<FullyQualifiedMethodSignature> fullyQualifiedMethodSignatures = methods.stream()
+        .map(method -> new FullyQualifiedMethodSignature(
+        javaClass.getClassName(), method.getMethodName(), method.getDescriptor()))
+        .collect(Collectors.toList());
+    return fullyQualifiedMethodSignatures;
   }
 
   /**

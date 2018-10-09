@@ -102,35 +102,37 @@ public class StaticLinkageCheckerTest {
         internalMethodReference, externalMethodReference
     );
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        StaticLinkageChecker.resolvedMethodReferences(pathsForJar, methodReferences);
+        StaticLinkageChecker.findUnresolvedReferences(pathsForJar, methodReferences);
     Truth.assertThat(unresolvedMethodReferences).hasSize(1);
   }
 
   @Test
   public void testResolvedMethodReferencesWithJarFiles()
       throws IOException, ClassNotFoundException {
-    String[] jarFileNames = new String[] {
-        URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE).getFile(),
-        URLClassLoader.getSystemResource(EXAMPLE_PROTO_JAR_FILE).getFile()
-    };
+    List<String> jarFileNames = Arrays.asList(
+            URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE).getFile(),
+            URLClassLoader.getSystemResource(EXAMPLE_PROTO_JAR_FILE).getFile());
 
-    String report = StaticLinkageChecker.generateStaticLinkageReport(jarFileNames);
+    List<FullyQualifiedMethodSignature> report =
+        StaticLinkageChecker.generateStaticLinkageReport(jarFileNames);
 
     // com.google.protobuf.Int32Value is defined in protobuf-java-X.Y.Z.jar, not in the file list
-    Truth.assertThat(report).contains(
-        "FullyQualifiedMethodSignature{className=com.google.protobuf.Int32Value, methodSignature=MethodSignature{methodName=parser, descriptor=()Lcom/google/protobuf/Parser;}}"
-    );
+    Truth.assertThat(report)
+        .contains(
+            new FullyQualifiedMethodSignature(
+                "com.google.protobuf.Int32Value", "parser",
+                "()Lcom/google/protobuf/Parser;"));
     // io.grpc.MethodDescriptor is defined in grpc-core-X.Y.Z.jar, not in the file list
-    Truth.assertThat(report).contains(
-        "FullyQualifiedMethodSignature{className=io.grpc.MethodDescriptor, methodSignature=MethodSignature{methodName=newBuilder, descriptor=()Lio/grpc/MethodDescriptor$Builder;}}"
-    );
+    Truth.assertThat(report)
+        .contains(
+            new FullyQualifiedMethodSignature(
+                "io.grpc.MethodDescriptor", "newBuilder",
+                "()Lio/grpc/MethodDescriptor$Builder;"));
     // As RunQueryRequest is defined in the proto jar file, it should not appear in the report
-    Truth.assertThat(report).doesNotContain(
-        "com.google.firestore.v1beta1.RunQueryRequest"
-    );
+    Truth.assertThat(report.toString())
+        .doesNotContain("com.google.firestore.v1beta1.RunQueryRequest");
     // As FirestoreGrpc is defined in the example jar file, it should not appear in the report
-    Truth.assertThat(report).doesNotContain(
-        "com.google.firestore.v1beta1.FirestoreGrpc"
-    );
+    Truth.assertThat(report.toString())
+        .doesNotContain("com.google.firestore.v1beta1.FirestoreGrpc");
   }
 }
