@@ -42,9 +42,11 @@ import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
 /**
- * This class reads jar files and runs static linkage analysis on them.
- * Static linkage check finds discrepancies between methods referred by classes in the jar files,
- * and methods defined in them.
+ * This class reads jar files and runs static linkage check on them.
+ * Static linkage check finds discrepancies between methods referenced by classes in the jar files,
+ * and methods defined in them. This happens when the signature of a non-private method or class in
+ * a dependency has changed in an incompatible way between the version supplied at compile time
+ * and the version invoked at runtime.
  * TODO: enhance scope to include fields and classes
  */
 class StaticLinkageChecker {
@@ -63,7 +65,7 @@ class StaticLinkageChecker {
         .map(name -> (Paths.get(name)).toAbsolutePath())
         .collect(Collectors.toList());
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        generateStaticLinkageReport(jarFilePaths);
+        findUnresolvedMethodReferencesInJars(jarFilePaths);
     if (unresolvedMethodReferences.isEmpty()) {
       stringBuilder.append("There were no unresolved method references from the jar file(s) :");
       stringBuilder.append(Arrays.toString(arguments));
@@ -90,7 +92,8 @@ class StaticLinkageChecker {
    * @throws IOException when there is a problem in reading a jar file
    * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
    */
-  static List<FullyQualifiedMethodSignature> generateStaticLinkageReport(List<Path> jarFilePaths)
+  static List<FullyQualifiedMethodSignature> findUnresolvedMethodReferencesInJars(
+      List<Path> jarFilePaths)
       throws IOException, ClassNotFoundException {
     Set<FullyQualifiedMethodSignature> externalMethodReferences = new HashSet<>();
     for (Path absolutePathToJar : jarFilePaths) {
