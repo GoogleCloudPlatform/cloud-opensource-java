@@ -33,6 +33,14 @@ public class MethodSignature {
     this.descriptor = descriptor;
   }
 
+  public String getMethodName() {
+    return methodName;
+  }
+
+  public String getDescriptor() {
+    return descriptor;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
