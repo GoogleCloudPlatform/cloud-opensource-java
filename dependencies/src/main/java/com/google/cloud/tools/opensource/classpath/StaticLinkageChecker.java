@@ -20,11 +20,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.ClassPath.ClassInfo;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -55,9 +55,11 @@ class StaticLinkageChecker {
    */
   public static void main(String[] arguments) throws IOException, ClassNotFoundException {
     StringBuilder stringBuilder = new StringBuilder();
-    List<String> jarFileNames = Arrays.asList(arguments);
+    List<Path> jarFilePaths = Arrays.asList(arguments).stream()
+        .map(name -> (Paths.get(name)).toAbsolutePath())
+        .collect(Collectors.toList());
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        generateStaticLinkageReport(jarFileNames);
+        generateStaticLinkageReport(jarFilePaths);
     if (unresolvedMethodReferences.isEmpty()) {
       stringBuilder.append("There were no unresolved method references from the jar file(s) :");
       stringBuilder.append(Arrays.toString(arguments));
@@ -80,23 +82,19 @@ class StaticLinkageChecker {
    * Given the jar file names (relative to current working directory), runs static linkage check
    * and returns unresolved methods.
    *
-   * @param jarFileNames jar files to scan for static linkage check
+   * @param jarFilePaths absolute paths to jar files to scan for static linkage check
    * @return list of methods that are not found in the jar files
    * @throws IOException when there is a problem in reading a jar file
    * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
    */
-  static List<FullyQualifiedMethodSignature> generateStaticLinkageReport(List<String> jarFileNames)
+  static List<FullyQualifiedMethodSignature> generateStaticLinkageReport(List<Path> jarFilePaths)
       throws IOException, ClassNotFoundException {
     Set<FullyQualifiedMethodSignature> externalMethodReferences = new HashSet<>();
-    List<Path> paths = new ArrayList<>();
-    for (String jarFileName : jarFileNames) {
-      File jarFile = new File(jarFileName);
-      Path jarFilePath = jarFile.toPath();
-      paths.add(jarFilePath);
+    for (Path jarFilePath : jarFilePaths) {
       externalMethodReferences.addAll(listExternalMethodReferences(jarFilePath));
     }
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        findUnresolvedReferences(paths, Lists.newArrayList(externalMethodReferences));
+        findUnresolvedReferences(jarFilePaths, Lists.newArrayList(externalMethodReferences));
     return unresolvedMethodReferences;
   }
 
@@ -104,19 +102,18 @@ class StaticLinkageChecker {
    * Checks the availability of the methods through the jar files, and lists the unavailable
    * methods.
    *
-   * @param paths jar files to search for the availability of the methods
+   * @param jarFilePaths absolute paths to the jar files to search for the methods
    * @param methodReferences methods to search for with the jar files
    * @return list of methods that are not found in the jar files
    */
-  static List<FullyQualifiedMethodSignature> findUnresolvedReferences(List<Path> paths,
+  static List<FullyQualifiedMethodSignature> findUnresolvedReferences(List<Path> jarFilePaths,
       List<FullyQualifiedMethodSignature> methodReferences) {
     List<FullyQualifiedMethodSignature> unresolvedMethods = new ArrayList<>();
 
-    // Creates chain of ClassPath items in the same order as paths
+    // Creates chain of ClassPath items in the same order as jarFilePaths
     ClassPath classPath = null;
-    for (Path path : paths) {
-      String pathFileName = path.toFile().getAbsolutePath();
-      classPath = new ClassPath(classPath, pathFileName);
+    for (Path absolutePathToJar : jarFilePaths) {
+      classPath = new ClassPath(classPath, absolutePathToJar.toString());
     }
     Set<String> classesNotFound = new HashSet<>();
     Set<FullyQualifiedMethodSignature> availableMethodsInJars = new HashSet<>();
@@ -166,7 +163,7 @@ class StaticLinkageChecker {
    * Lists all external methods called from the classes in the jar file. The output list does not
    * include the methods defined in the file.
    *
-   * @param jarFilePath the jar file to analyze
+   * @param jarFilePath the absolute path to jar file to analyze
    * @return list of the method signatures with their fully-qualified classes
    * @throws IOException when there is a problem in reading the jar file
    * @throws ClassNotFoundException when a class visible by Guava's reflect was unexpectedly not
@@ -177,8 +174,8 @@ class StaticLinkageChecker {
     List<FullyQualifiedMethodSignature> methodReferences = new ArrayList<>();
     Set<String> internalClassNames = new HashSet<>();
 
-    String fileName = jarFilePath.toFile().getAbsolutePath();
-    SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(fileName));
+    String pathToJar = jarFilePath.toString();
+    SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
 
     URL jarFileUrl = jarFilePath.toUri().toURL();
     for (ClassInfo classInfo : listTopLevelClassesFromJar(jarFileUrl)) {
@@ -191,7 +188,7 @@ class StaticLinkageChecker {
     }
 
     List<FullyQualifiedMethodSignature> externalMethodReferences = methodReferences.stream()
-        .filter(reference -> ! internalClassNames.contains(reference.getClassName()))
+        .filter(reference -> !internalClassNames.contains(reference.getClassName()))
         .collect(Collectors.toList());
     return externalMethodReferences;
   }
@@ -215,7 +212,7 @@ class StaticLinkageChecker {
           String outerClassName = constantPool.getConstantString(outerClassIndex,
               Const.CONSTANT_Class);
           String normalOuterClassName = outerClassName.replace('/', '.');
-          if (! normalOuterClassName.equals(topLevelClassName)) {
+          if (!normalOuterClassName.equals(topLevelClassName)) {
             continue;
           }
         }

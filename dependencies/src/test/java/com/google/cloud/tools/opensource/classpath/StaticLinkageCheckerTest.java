@@ -106,28 +106,31 @@ public class StaticLinkageCheckerTest {
     Truth.assertThat(unresolvedMethodReferences).hasSize(1);
   }
 
+  private Path absolutePathOfResource(String resourceName) throws URISyntaxException {
+    return Paths.get(URLClassLoader.getSystemResource(resourceName).toURI()).toAbsolutePath();
+  }
+
   @Test
   public void testResolvedMethodReferencesWithJarFiles()
-      throws IOException, ClassNotFoundException {
-    List<String> jarFileNames = Arrays.asList(
-            URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE).getFile(),
-            URLClassLoader.getSystemResource(EXAMPLE_PROTO_JAR_FILE).getFile());
+      throws IOException, ClassNotFoundException, URISyntaxException {
+    List<Path> jarFileNames = Arrays.asList(
+        absolutePathOfResource(EXAMPLE_JAR_FILE),
+        absolutePathOfResource(EXAMPLE_PROTO_JAR_FILE)
+    );
 
     List<FullyQualifiedMethodSignature> report =
         StaticLinkageChecker.generateStaticLinkageReport(jarFileNames);
 
     // com.google.protobuf.Int32Value is defined in protobuf-java-X.Y.Z.jar, not in the file list
-    Truth.assertThat(report)
-        .contains(
-            new FullyQualifiedMethodSignature(
-                "com.google.protobuf.Int32Value", "parser",
-                "()Lcom/google/protobuf/Parser;"));
+    Truth.assertThat(report).contains(
+        new FullyQualifiedMethodSignature(
+            "com.google.protobuf.Int32Value", "parser",
+            "()Lcom/google/protobuf/Parser;"));
     // io.grpc.MethodDescriptor is defined in grpc-core-X.Y.Z.jar, not in the file list
-    Truth.assertThat(report)
-        .contains(
-            new FullyQualifiedMethodSignature(
-                "io.grpc.MethodDescriptor", "newBuilder",
-                "()Lio/grpc/MethodDescriptor$Builder;"));
+    Truth.assertThat(report).contains(
+        new FullyQualifiedMethodSignature(
+            "io.grpc.MethodDescriptor", "newBuilder",
+            "()Lio/grpc/MethodDescriptor$Builder;"));
     // As RunQueryRequest is defined in the proto jar file, it should not appear in the report
     Truth.assertThat(report.toString())
         .doesNotContain("com.google.firestore.v1beta1.RunQueryRequest");
