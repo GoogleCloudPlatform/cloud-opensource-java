@@ -27,20 +27,25 @@
         <tr>
           <#if row.getResult("Upper Bounds")?? ><#-- checking isNotNull() -->
             <#-- When it's not null, it means the test ran. It's either PASS or FAIL -->
-            <#assign upper_bound_test_label = row.getResult("Upper Bounds")?then('PASS', 'FAIL') >
+            <#assign upper_bound_test_label = row.getResult("Upper Bounds")?then('PASS', 'FAIL')>
+            <#assign upper_bound_failure_count = row.getFailureCount("Upper Bounds")>
           <#else>
             <#-- Null means there's an exception and test couldn't run -->
             <#assign upper_bound_test_label = "UNAVAILABLE">
           </#if>
           <td><a href='${row.getCoordinates()?replace(":", "_")}.html'>${row.getCoordinates()}</a></td>
-          <td class='${upper_bound_test_label}' title="${row.getExceptionMessage()!""}">${upper_bound_test_label}</td>
-
+          <td class='${upper_bound_test_label}' title="${row.getExceptionMessage()!""}">
+            ${upper_bound_test_label} ${upper_bound_failure_count}
+          </td>
           <#if row.getResult("Dependency Convergence")?? >
             <#assign dependency_convergence_test_label = row.getResult("Dependency Convergence")?then('PASS', 'FAIL') >
+            <#assign dependency_convergence_failure_count = row.getFailureCount("Dependency Convergence")>
           <#else>
             <#assign dependency_convergence_test_label = "UNAVAILABLE">
           </#if>
-          <td class='${dependency_convergence_test_label}' title="${row.getExceptionMessage()!""}">${dependency_convergence_test_label}</td>
+          <td class='${dependency_convergence_test_label}' title="${row.getExceptionMessage()!""}">
+            ${dependency_convergence_test_label} ${dependency_convergence_failure_count}
+          </td>
         </tr>
       </#list>
       </table>

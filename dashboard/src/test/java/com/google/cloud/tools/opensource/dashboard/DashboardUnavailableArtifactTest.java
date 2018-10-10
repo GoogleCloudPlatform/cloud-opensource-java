@@ -93,8 +93,8 @@ public class DashboardUnavailableArtifactTest {
 
     Artifact validArtifact = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
     ArtifactResults validArtifactResult = new ArtifactResults(validArtifact);
-    validArtifactResult.addResult(DashboardMain.TEST_NAME_UPPER_BOUND, true);
-    validArtifactResult.addResult(DashboardMain.TEST_NAME_DEPENDENCY_CONVERGENCE, true);
+    validArtifactResult.addResult(DashboardMain.TEST_NAME_UPPER_BOUND, 0);
+    validArtifactResult.addResult(DashboardMain.TEST_NAME_DEPENDENCY_CONVERGENCE, 0);
 
     Artifact invalidArtifact = new DefaultArtifact("io.grpc:nonexistent:jar:1.15.0");
     ArtifactResults errorArtifactResult = new ArtifactResults(invalidArtifact);

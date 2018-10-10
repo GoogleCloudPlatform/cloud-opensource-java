@@ -30,7 +30,7 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
  */
 public final class ArtifactResults {
 
-  private final Map<String, Boolean> results = new HashMap<>();
+  private final Map<String, Integer> results = new HashMap<>();
   private final Artifact artifact;
   private String exceptionMessage;
 
@@ -42,7 +42,7 @@ public final class ArtifactResults {
     this.exceptionMessage = exceptionMessage;
   }
 
-  void addResult(String testName, boolean result) {
+  void addResult(String testName, int result) {
     results.put(testName, result);
   }
 
@@ -51,7 +51,11 @@ public final class ArtifactResults {
    */
   @Nullable
   public Boolean getResult(String testName) {
-    return results.get(testName);
+    Integer failures = results.get(testName);
+    if (failures != null) {
+      return failures == 0;
+    }
+    return null;
   }
 
   public String getCoordinates() {
@@ -64,5 +68,18 @@ public final class ArtifactResults {
   @Nullable
   public String getExceptionMessage() {
     return exceptionMessage;
+  }
+
+  /**
+   * 
+   * @return number of times the specified test failed. Returns 0
+   *     if the test was not run.
+   */
+  public int getFailureCount(String testName) {
+    Integer failures = results.get(testName);
+    if (failures == null) {
+      return 0;
+    }
+    return failures;
   }
 }

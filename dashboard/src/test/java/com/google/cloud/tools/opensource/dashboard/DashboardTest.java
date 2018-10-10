@@ -92,11 +92,11 @@ public class DashboardTest {
         Nodes td = tr.get(i).query("td");
         Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i - 1)), td.get(0).getValue());
         Element firstResult = (Element) (td.get(1));
-        Truth.assertThat(firstResult.getValue()).isAnyOf("PASS", "FAIL");
+        Truth.assertThat(firstResult.getValue().trim()).containsMatch("PASS|FAIL \\d+");
         Truth.assertThat(firstResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
 
         Element secondResult = (Element) (td.get(2));
-        Truth.assertThat(secondResult.getValue()).isAnyOf("PASS", "FAIL");
+        Truth.assertThat(secondResult.getValue().trim()).containsMatch("PASS|FAIL \\d+");
         Truth.assertThat(secondResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
       }
       Nodes href = document.query("//tr/td/a/@href");

@@ -146,8 +146,8 @@ public class DashboardMain {
       report.process(templateData, out);
 
       ArtifactResults results = new ArtifactResults(artifact);
-      results.addResult(TEST_NAME_UPPER_BOUND, upperBoundFailures.size() == 0);
-      results.addResult(TEST_NAME_DEPENDENCY_CONVERGENCE, convergenceIssues.size() == 0);
+      results.addResult(TEST_NAME_UPPER_BOUND, upperBoundFailures.size());
+      results.addResult(TEST_NAME_DEPENDENCY_CONVERGENCE, convergenceIssues.size());
 
       return results;
     }
