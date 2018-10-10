@@ -35,7 +35,9 @@
           </#if>
           <td><a href='${row.getCoordinates()?replace(":", "_")}.html'>${row.getCoordinates()}</a></td>
           <td class='${upper_bound_test_label}' title="${row.getExceptionMessage()!""}">
-            ${upper_bound_test_label} ${upper_bound_failure_count}
+            ${upper_bound_test_label} <#if upper_bound_failure_count gt 0>
+              ${upper_bound_failure_count}
+            </#if>
           </td>
           <#if row.getResult("Dependency Convergence")?? >
             <#assign dependency_convergence_test_label = row.getResult("Dependency Convergence")?then('PASS', 'FAIL') >
@@ -44,7 +46,8 @@
             <#assign dependency_convergence_test_label = "UNAVAILABLE">
           </#if>
           <td class='${dependency_convergence_test_label}' title="${row.getExceptionMessage()!""}">
-            ${dependency_convergence_test_label} ${dependency_convergence_failure_count}
+            ${dependency_convergence_test_label} <#if dependency_convergence_failure_count gt 0>
+            ${dependency_convergence_failure_count} </#if>
           </td>
         </tr>
       </#list>
