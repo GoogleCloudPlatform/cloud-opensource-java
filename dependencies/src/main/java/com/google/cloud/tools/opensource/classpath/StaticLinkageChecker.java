@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
 import org.apache.bcel.classfile.ConstantPool;
@@ -139,7 +138,7 @@ class StaticLinkageChecker {
     if (jarFilePaths.isEmpty()) {
       System.err.println("No jar files to scan");
       formatter.printHelp("StaticLinkageChecker", options);
-      throw new RuntimeException("Could not list jar files for given argument.");
+      throw new IllegalArgumentException("Could not list jar files for given argument.");
     }
     return jarFilePaths;
   }
