@@ -43,7 +43,7 @@
       font-size: 24pt;
     }
     th, td {
-      padding: 10pt;
+      padding: 5pt;
     }
     </style>
   </head>
