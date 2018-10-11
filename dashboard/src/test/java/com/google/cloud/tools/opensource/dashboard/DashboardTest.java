@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import nu.xom.Builder;
@@ -133,29 +134,17 @@ public class DashboardTest {
       }
       
       ArrayList<String> sorted = new ArrayList<>(coordinateList);
-      Collections.sort(sorted);
+      Comparator<String> comparator = new SortWithoutVersion();
+      Collections.sort(sorted, comparator );
       
       for (int i = 0; i < sorted.size(); i++) {
-        Assert.assertEquals("Coordinates are not sorted: " + i, sorted.get(i),
+        Assert.assertEquals("Coordinates are not sorted: ", sorted.get(i),
             coordinateList.get(i));
       }
       
       Nodes updated = document.query("//p[@id='updated']");
       Assert.assertEquals("didn't find updated" + document.toXML(), 1, updated.size());
     }
-  }
-  
-  @Test
-  public void testCompare() {
-    String gax = "com.google.api:gax";
-    String gaxRpc = "com.google.api:gax-grpc";
-    
-    Assert.assertTrue(gax.compareTo(gaxRpc) < 0);
-    
-    String gaxVersioned = gax + ":1.32.0";
-    String gaxRpcVersioned = gaxRpc + ":1.32.0";
-    
-    Assert.assertTrue("This assert fails!", gaxVersioned.compareTo(gaxRpcVersioned) < 0);
   }
 
   @Test
@@ -196,4 +185,16 @@ public class DashboardTest {
           1, presDependencyTree.size());
     }
   }
+  
+  private static class SortWithoutVersion implements Comparator<String> {
+
+    @Override
+    public int compare(String s1, String s2) {  
+      s1 = s1.substring(0, s1.lastIndexOf(':'));
+      s2 = s2.substring(0, s2.lastIndexOf(':'));
+      return s1.compareTo(s2);
+    }
+
+  }
+
 }
