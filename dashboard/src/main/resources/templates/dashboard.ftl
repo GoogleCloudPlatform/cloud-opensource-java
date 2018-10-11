@@ -14,12 +14,40 @@
       background-color: gray;
       font-weight: bold;
     }
+    
+    body {
+      font-family: "Poppins", sans-serif;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 1.625;
+    }
+
+    h1,
+    h2,
+    h3 {
+      color: #333333;
+      font-weight: 700;
+      margin: 0;
+      line-height: 1.2;
+    }
+    
+    h1 {
+      font-size: 36pt;
+    }
+    
+    h2 {
+      font-size: 30pt;
+    }
+    
+    h3 {
+      font-size: 24pt;
+    }
     </style>
   </head>
   <body>
-    <h1>Google Cloud Platform Code Health Open Source Dashboard</h1>
-    <h2>Projects</h2>
-      <table>
+    <h1>Google Cloud Platform Dependency Dashboard</h1>
+    <h2>Artifact Details</h2>
+    <table>
       <tr>
         <th>Artifact</th><th>Upper Bounds</th><th>Dependency Convergence</th>
       </tr>
@@ -51,7 +79,19 @@
           </td>
         </tr>
       </#list>
-      </table>
+    </table>
+      
+     <h2>Recommended Versions</h2>
+      
+     <p>These are the most recent versions of dependencies used by any of the covered artifacts.</p> 
+      
+     <ul>
+       <#list latestArtifacts as artifact, version>
+         <li>${artifact}:${version}</li>
+       </#list>
+     </ul>
+      
+      <hr />
       <p id='updated'>Last generated at ${lastUpdated}</p>
   </body>
 </html>
