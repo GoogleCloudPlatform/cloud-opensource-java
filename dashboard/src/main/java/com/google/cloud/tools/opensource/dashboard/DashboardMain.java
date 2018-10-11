@@ -76,10 +76,10 @@ public class DashboardMain {
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.66.0-SNAPSHOT");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
 
-    Map<Artifact, ArtifactInfo> cache = loadArtifactInfo(managedDependencies);
+    ArtifactCache cache = loadArtifactInfo(managedDependencies);
     
-    List<ArtifactResults> table = generateReports(configuration, output, cache);
-    generateDashboard(configuration, output, table);
+    List<ArtifactResults> table = generateReports(configuration, output, cache.getInfoMap());
+    generateDashboard(configuration, output, table, cache.getGlobalDependencies());
 
     return output;
   }
@@ -123,16 +123,12 @@ public class DashboardMain {
     return table;
   }
   
-  // TODO this is really ugly but avoids reparsing the graph.
-  // Need to think about better factoring here. Maybe parse the graph higher up
-  // and pass the results into the report generating methods.
-  private static List<DependencyGraph> globalDependencies;
-  
-  private static Map<Artifact, ArtifactInfo> loadArtifactInfo(List<Artifact> artifacts) {
-    Map<Artifact, ArtifactInfo> artifactCache = new LinkedHashMap<>();
-    if (globalDependencies == null) {
-      globalDependencies = new ArrayList<>();
-    }
+  /**
+   * This is the only method that queries the Maven repository.
+   */
+  private static ArtifactCache loadArtifactInfo(List<Artifact> artifacts) {
+    Map<Artifact, ArtifactInfo> infoMap = new LinkedHashMap<>();
+    List<DependencyGraph> globalDependencies = new ArrayList<>();
     
     for (Artifact artifact : artifacts) {
       try {
@@ -145,14 +141,18 @@ public class DashboardMain {
             DependencyGraphBuilder.getTransitiveDependencies(artifact);
   
         ArtifactInfo info = new ArtifactInfo(completeDependencies, transitiveDependencies);
-        artifactCache.put(artifact, info);
+        infoMap.put(artifact, info);
       } catch (DependencyCollectionException | DependencyResolutionException ex) {
         ArtifactInfo info = new ArtifactInfo(ex);
-        artifactCache.put(artifact, info);
+        infoMap.put(artifact, info);
       }
     }
     
-    return artifactCache;
+    ArtifactCache cache = new ArtifactCache();
+    cache.setInfoMap(infoMap);
+    cache.setGlobalDependencies(globalDependencies);
+    
+    return cache;
   }
 
   private static ArtifactResults generateReport(Configuration configuration, Path output,
@@ -228,7 +228,7 @@ public class DashboardMain {
 
   @VisibleForTesting
   static void generateDashboard(Configuration configuration, Path output,
-      List<ArtifactResults> table)
+      List<ArtifactResults> table, List<DependencyGraph> globalDependencies)
       throws IOException, TemplateException {
     File dashboardFile = output.resolve("dashboard.html").toFile();
     

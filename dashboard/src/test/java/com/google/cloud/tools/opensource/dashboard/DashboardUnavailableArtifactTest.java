@@ -114,7 +114,7 @@ public class DashboardUnavailableArtifactTest {
     table.add(validArtifactResult);
     table.add(errorArtifactResult);
 
-    DashboardMain.generateDashboard(configuration, outputDirectory, table);
+    DashboardMain.generateDashboard(configuration, outputDirectory, table, null);
 
     Path generatedDashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(generatedDashboardHtml));
