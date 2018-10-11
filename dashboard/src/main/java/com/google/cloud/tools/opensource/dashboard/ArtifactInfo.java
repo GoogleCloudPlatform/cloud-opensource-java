@@ -35,7 +35,7 @@ class ArtifactInfo {
     this.transitiveDependencies = transitiveDependencies;
   }
 
-  public ArtifactInfo(RepositoryException ex) {
+  ArtifactInfo(RepositoryException ex) {
     this.exception = ex;
   }
 
