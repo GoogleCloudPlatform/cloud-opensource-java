@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -130,6 +131,9 @@ public class DashboardMain {
       // includes all versions
       DependencyGraph completeDependencies =
           DependencyGraphBuilder.getCompleteDependencies(artifact);
+      if (globalDependencies == null) {
+        globalDependencies = new ArrayList<>();
+      }
       globalDependencies.add(completeDependencies);
       List<Update> convergenceIssues = completeDependencies.findUpdates();
 
@@ -140,7 +144,8 @@ public class DashboardMain {
       Map<Artifact, Artifact> upperBoundFailures =
           findUpperBoundsFailures(completeDependencies, transitiveDependencies);
 
-      String dependencyTree = DependencyTreeFormatter.formatDependencyPaths(completeDependencies.list());
+      String dependencyTree =
+          DependencyTreeFormatter.formatDependencyPaths(completeDependencies.list());
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
@@ -196,15 +201,18 @@ public class DashboardMain {
       throws IOException, TemplateException {
     File dashboardFile = output.resolve("dashboard.html").toFile();
     
-    Map<String, String> latestArtifacts = new HashMap<>(); 
+    Map<String, String> latestArtifacts = new TreeMap<>(); 
     VersionComparator comparator = new VersionComparator();
-    for (DependencyGraph graph : globalDependencies) {
-      Map<String, String> map = graph.getHighestVersionMap();
-      for (String key : map.keySet()) {
-        String newVersion = map.get(key);
-        String oldVersion = latestArtifacts.get(key);
-        if (oldVersion == null || comparator.compare(newVersion, oldVersion) > 0) {
-          latestArtifacts.put(key, map.get(key));
+    
+    if (globalDependencies != null) {
+      for (DependencyGraph graph : globalDependencies) {
+        Map<String, String> map = graph.getHighestVersionMap();
+        for (String key : map.keySet()) {
+          String newVersion = map.get(key);
+          String oldVersion = latestArtifacts.get(key);
+          if (oldVersion == null || comparator.compare(newVersion, oldVersion) > 0) {
+            latestArtifacts.put(key, map.get(key));
+          }
         }
       }
     }

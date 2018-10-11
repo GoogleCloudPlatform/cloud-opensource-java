@@ -22,6 +22,9 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import nu.xom.Builder;
@@ -121,10 +124,22 @@ public class DashboardTest {
 
       Nodes li = document.query("//li");
       Assert.assertTrue(li.size() > 100);
+      ArrayList<String> coordinateList = new ArrayList<>();
+
       for (int i = 0; i < li.size(); i++) {
         String coordinates = li.get(i).getValue();
         // fails if these are not valid Maven coordinates
         new DefaultArtifact(coordinates);
+        coordinateList.add(coordinates);
+      }
+      
+      ArrayList<String> sorted = new ArrayList<>(coordinateList);
+      Comparator<String> comparator = new SortWithoutVersion();
+      Collections.sort(sorted, comparator);
+      
+      for (int i = 0; i < sorted.size(); i++) {
+        Assert.assertEquals("Coordinates are not sorted: ", sorted.get(i),
+            coordinateList.get(i));
       }
       
       Nodes updated = document.query("//p[@id='updated']");
@@ -170,4 +185,16 @@ public class DashboardTest {
           1, presDependencyTree.size());
     }
   }
+  
+  private static class SortWithoutVersion implements Comparator<String> {
+
+    @Override
+    public int compare(String s1, String s2) {  
+      s1 = s1.substring(0, s1.lastIndexOf(':'));
+      s2 = s2.substring(0, s2.lastIndexOf(':'));
+      return s1.compareTo(s2);
+    }
+
+  }
+
 }
