@@ -45,6 +45,12 @@ import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
@@ -70,23 +76,38 @@ class StaticLinkageChecker {
    */
   public static void main(String[] arguments)
       throws IOException, ClassNotFoundException, RepositoryException {
-    if (arguments.length < 1) {
-      System.out.println("No argument specified.");
+    Options options = new Options();
+    options.addOption("c", "coordinate", true, "Maven coordinates (separated by ',')");
+    options.addOption("j", "jars", true, "Jar files (separated by ',')");
+
+    HelpFormatter formatter = new HelpFormatter();
+    CommandLineParser parser = new DefaultParser();
+    List<Path> jarFilePaths = new ArrayList<>();
+    try {
+      CommandLine cmd = parser.parse(options, arguments);
+      if (cmd.hasOption("c")) {
+        String mavenCoordinates = cmd.getOptionValue("c");
+        for (String coordinate : mavenCoordinates.split(",")) {
+          jarFilePaths.addAll(coordinateToJarPaths(coordinate));
+        }
+      }
+      if (cmd.hasOption("j")) {
+        String jarFiles = cmd.getOptionValue("j");
+        List<Path> jarFilesInArguments =
+            Arrays.stream(jarFiles.split(","))
+                .map(name -> (Paths.get(name)).toAbsolutePath())
+                .collect(Collectors.toList());
+        jarFilePaths.addAll(jarFilesInArguments);
+      }
+    } catch (ParseException ex) {
+      System.err.println("Failed to parse command line arguments: " + ex.getMessage());
+      formatter.printHelp("StaticLinkageChecker", options);
       return;
     }
-    List<Path> jarFilePaths;
-    if (arguments.length == 1) {
-      // Case 1: Maven coordinate is given. e.g., io.grpc:grpc-auth:1.15.1
-      // TODO: Add support for BOM (pom) com.google.cloud:cloud-oss-bom:pom:0.66.0-SNAPSHOT
-      String mavenCoordinate = arguments[0];
-      jarFilePaths = coordinateToJarPaths(mavenCoordinate);
-    } else {
-      // Case 2: jar files are given
-      jarFilePaths =
-          Arrays.asList(arguments)
-              .stream()
-              .map(name -> (Paths.get(name)).toAbsolutePath())
-              .collect(Collectors.toList());
+    if (jarFilePaths.size() < 1) {
+      System.err.println("No jar files to scan.");
+      formatter.printHelp("StaticLinkageChecker", options);
+      return;
     }
     System.out.println("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
 
