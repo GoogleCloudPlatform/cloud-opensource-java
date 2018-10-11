@@ -78,7 +78,7 @@ class StaticLinkageChecker {
       throws IOException, ClassNotFoundException, RepositoryException {
     List<Path> jarFilePaths = parseArguments(arguments);
     if (jarFilePaths == null) {
-      System.err.println("Could not parse arguments to jar files.");
+      // error messages are already printed in parseArguments
       return;
     }
 
