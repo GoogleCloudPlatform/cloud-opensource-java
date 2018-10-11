@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
+import org.eclipse.aether.RepositoryException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -181,6 +182,36 @@ public class StaticLinkageCheckerTest {
       Assert.fail("findUnresolvedMethodReferences should raise IOException");
     } catch (IOException ex) {
       Assert.assertEquals("The file is not readable: nosuchfile.jar", ex.getMessage());
+    }
+  }
+
+  @Test
+  public void testCoordinateToJarPaths_validCoordinate() throws RepositoryException {
+    List<Path> paths = StaticLinkageChecker.coordinateToJarPaths("io.grpc:grpc-auth:1.15.1");
+    Truth.assertThat(paths).hasSize(11);
+
+    String pathsString = paths.toString();
+
+    Truth.assertThat(pathsString).contains("io/grpc/grpc-auth/1.15.1/grpc-auth-1.15.1.jar");
+    Truth.assertThat(pathsString)
+        .contains(
+            "com/google/auth/google-auth-library-credentials/0.9.0/google-auth-library-credentials-0.9.0.jar");
+    paths.forEach(
+        path -> {
+          Truth.assertWithMessage("Every returned path should be an absolute path")
+              .that(path.toString())
+              .startsWith("/");
+        });
+  }
+
+  @Test
+  public void testCoordinateToJarPaths_invalidCoordinate() {
+    try {
+      StaticLinkageChecker.coordinateToJarPaths("io.grpc:nosuchartifact:1.2.3");
+      Assert.fail("Invalid Maven coodinate should raise RepositoryException");
+    } catch (RepositoryException ex) {
+      Truth.assertThat(ex.getMessage())
+          .contains("Could not find artifact io.grpc:nosuchartifact:jar:1.2.3");
     }
   }
 }

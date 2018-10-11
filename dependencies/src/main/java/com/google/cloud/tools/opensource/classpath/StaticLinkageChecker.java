@@ -16,10 +16,14 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.ClassPath.ClassInfo;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -30,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.bcel.Const;
@@ -40,6 +45,14 @@ import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
  * This class reads jar files and runs static linkage check on them.
@@ -52,25 +65,29 @@ import org.apache.bcel.util.SyntheticRepository;
 class StaticLinkageChecker {
 
   /**
-   * Given list of the jar files as file names in filesystem, outputs the report of static linkage
-   * check.
+   * Given Maven coordinates or list of the jar files as file names in filesystem, outputs the
+   * report of static linkage check.
    *
-   * @param arguments jar files available in the file system
    * @throws IOException when there is a problem in reading a jar file
    * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
+   * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
+   *     files
    */
-  public static void main(String[] arguments) throws IOException, ClassNotFoundException {
+  public static void main(String[] arguments)
+      throws IOException, ClassNotFoundException, RepositoryException {
+    List<Path> jarFilePaths = parseArguments(arguments);
+
+    System.out.println("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
     StringBuilder stringBuilder = new StringBuilder();
-    List<Path> jarFilePaths = Arrays.asList(arguments).stream()
-        .map(name -> (Paths.get(name)).toAbsolutePath())
-        .collect(Collectors.toList());
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         findUnresolvedMethodReferences(jarFilePaths);
     if (unresolvedMethodReferences.isEmpty()) {
       stringBuilder.append("There were no unresolved method references from the jar file(s) :");
       stringBuilder.append(Arrays.toString(arguments));
     } else {
-      stringBuilder.append("There were unresolved method references from the jar file(s):\n");
+      int count = unresolvedMethodReferences.size();
+      stringBuilder.append(
+          "There were " + count + " unresolved method references from the jar file(s):\n");
       for (FullyQualifiedMethodSignature methodReference : unresolvedMethodReferences) {
         stringBuilder.append("Class: '");
         stringBuilder.append(methodReference.getClassName());
@@ -82,6 +99,72 @@ class StaticLinkageChecker {
       }
     }
     System.out.println(stringBuilder.toString());
+  }
+
+  /**
+   * Parses arguments to get list of jar file paths.
+   *
+   * @param arguments command-line arguments
+   * @return list of the absolute paths to jar files
+   * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
+   */
+  static List<Path> parseArguments(String[] arguments) throws RepositoryException {
+    Options options = new Options();
+    options.addOption("c", "coordinate", true, "Maven coordinates (separated by ',')");
+    options.addOption("j", "jars", true, "Jar files (separated by ',')");
+
+    HelpFormatter formatter = new HelpFormatter();
+    CommandLineParser parser = new DefaultParser();
+    List<Path> jarFilePaths = new ArrayList<>();
+    try {
+      CommandLine cmd = parser.parse(options, arguments);
+      if (cmd.hasOption("c")) {
+        String mavenCoordinates = cmd.getOptionValue("c");
+        for (String coordinate : mavenCoordinates.split(",")) {
+          jarFilePaths.addAll(coordinateToJarPaths(coordinate));
+        }
+      }
+      if (cmd.hasOption("j")) {
+        String jarFiles = cmd.getOptionValue("j");
+        List<Path> jarFilesInArguments =
+            Arrays.stream(jarFiles.split(","))
+                .map(name -> (Paths.get(name)).toAbsolutePath())
+                .collect(Collectors.toList());
+        jarFilePaths.addAll(jarFilesInArguments);
+      }
+    } catch (ParseException ex) {
+      System.err.println("Failed to parse command line arguments: " + ex.getMessage());
+    }
+    if (jarFilePaths.isEmpty()) {
+      System.err.println("No jar files to scan");
+      formatter.printHelp("StaticLinkageChecker", options);
+      throw new IllegalArgumentException("Could not list jar files for given argument.");
+    }
+    return jarFilePaths;
+  }
+
+  /**
+   * Finds jar file paths for the dependencies of the Maven coordinate.
+   *
+   * @param coordinate Maven coordinate of an artifact to check its dependencies
+   * @return list of absolute paths to jar files
+   * @throws RepositoryException when there is a problem in retrieving jar files
+   */
+  static List<Path> coordinateToJarPaths(String coordinate) throws RepositoryException {
+    DefaultArtifact artifact = new DefaultArtifact(coordinate);
+    DependencyGraph transitiveDependencies =
+        DependencyGraphBuilder.getTransitiveDependencies(artifact);
+    List<DependencyPath> dependencyPaths = transitiveDependencies.list();
+    List<Path> jarPaths = dependencyPaths.stream().map(dependencyPath -> {
+      File artifactFile = dependencyPath.getLeaf().getFile();
+      Path artifactFilePath = artifactFile.toPath();
+      if (artifactFilePath.toString().endsWith(".jar")) {
+        return artifactFilePath.toAbsolutePath();
+      } else {
+        return null;
+      }
+    }).filter(Objects::nonNull).collect(Collectors.toList());
+    return jarPaths;
   }
 
   /**
