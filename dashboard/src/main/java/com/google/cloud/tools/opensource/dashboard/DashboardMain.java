@@ -131,6 +131,9 @@ public class DashboardMain {
       // includes all versions
       DependencyGraph completeDependencies =
           DependencyGraphBuilder.getCompleteDependencies(artifact);
+      if (globalDependencies == null) {
+        globalDependencies = new ArrayList<>();
+      }
       globalDependencies.add(completeDependencies);
       List<Update> convergenceIssues = completeDependencies.findUpdates();
 
@@ -200,13 +203,16 @@ public class DashboardMain {
     
     Map<String, String> latestArtifacts = new TreeMap<>(); 
     VersionComparator comparator = new VersionComparator();
-    for (DependencyGraph graph : globalDependencies) {
-      Map<String, String> map = graph.getHighestVersionMap();
-      for (String key : map.keySet()) {
-        String newVersion = map.get(key);
-        String oldVersion = latestArtifacts.get(key);
-        if (oldVersion == null || comparator.compare(newVersion, oldVersion) > 0) {
-          latestArtifacts.put(key, map.get(key));
+    
+    if (globalDependencies != null) {
+      for (DependencyGraph graph : globalDependencies) {
+        Map<String, String> map = graph.getHighestVersionMap();
+        for (String key : map.keySet()) {
+          String newVersion = map.get(key);
+          String oldVersion = latestArtifacts.get(key);
+          if (oldVersion == null || comparator.compare(newVersion, oldVersion) > 0) {
+            latestArtifacts.put(key, map.get(key));
+          }
         }
       }
     }
