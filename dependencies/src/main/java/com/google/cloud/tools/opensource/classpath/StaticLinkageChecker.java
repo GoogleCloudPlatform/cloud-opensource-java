@@ -65,7 +65,7 @@ class StaticLinkageChecker {
    * @param arguments one Maven artifact, or multiple jar files available in the file system
    * @throws IOException when there is a problem in reading a jar file
    * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
-   * @throws RepositoryException when there is a problem in resolving the maven coordinate to jar
+   * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
    *     files
    */
   public static void main(String[] arguments)
