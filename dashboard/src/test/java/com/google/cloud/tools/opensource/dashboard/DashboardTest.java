@@ -124,6 +124,7 @@ public class DashboardTest {
       Nodes li = document.query("//li");
       Assert.assertTrue(li.size() > 100);
       ArrayList<String> coordinateList = new ArrayList<>();
+
       for (int i = 0; i < li.size(); i++) {
         String coordinates = li.get(i).getValue();
         // fails if these are not valid Maven coordinates
@@ -138,8 +139,6 @@ public class DashboardTest {
         Assert.assertEquals("Coordinates are not sorted: " + i, sorted.get(i),
             coordinateList.get(i));
       }
-      
-      Assert.assertEquals("Coordinates are not sorted", sorted, coordinateList);
       
       Nodes updated = document.query("//p[@id='updated']");
       Assert.assertEquals("didn't find updated" + document.toXML(), 1, updated.size());
