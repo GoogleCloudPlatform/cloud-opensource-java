@@ -6,7 +6,7 @@
       background-color: green;
       font-weight: bold;
     }
-    .FAILURES {
+    .FAIL {
       background-color: red;
       font-weight: bold;
     }
@@ -55,7 +55,7 @@
         <tr>
           <#if row.getResult("Upper Bounds")?? ><#-- checking isNotNull() -->
             <#-- When it's not null, it means the test ran. It's either PASS or FAIL -->
-            <#assign upper_bound_test_label = row.getResult("Upper Bounds")?then('PASS', 'FAILURES')>
+            <#assign upper_bound_test_label = row.getResult("Upper Bounds")?then('PASS', 'FAIL')>
             <#assign upper_bound_failure_count = row.getFailureCount("Upper Bounds")>
           <#else>
             <#-- Null means there's an exception and test couldn't run -->
@@ -63,17 +63,22 @@
           </#if>
           <td><a href='${row.getCoordinates()?replace(":", "_")}.html'>${row.getCoordinates()}</a></td>
           <td class='${upper_bound_test_label}' title="${row.getExceptionMessage()!""}">
-            <#if upper_bound_failure_count gt 0> ${upper_bound_failure_count}</#if> ${upper_bound_test_label}
+            <#if upper_bound_failure_count == 1>1 FAILURE
+            <#elseif upper_bound_failure_count gt 1>${upper_bound_failure_count} FAILURES
+            <#else>PASS
+            </#if>
           </td>
           <#if row.getResult("Dependency Convergence")?? >
-            <#assign dependency_convergence_test_label = row.getResult("Dependency Convergence")?then('PASS', 'FAILURES') >
+            <#assign dependency_convergence_test_label = row.getResult("Dependency Convergence")?then('PASS', 'FAIL') >
             <#assign dependency_convergence_failure_count = row.getFailureCount("Dependency Convergence")>
           <#else>
             <#assign dependency_convergence_test_label = "UNAVAILABLE">
           </#if>
           <td class='${dependency_convergence_test_label}' title="${row.getExceptionMessage()!""}">
-            <#if dependency_convergence_failure_count gt 0>
-            ${dependency_convergence_failure_count} </#if>${dependency_convergence_test_label} 
+            <#if dependency_convergence_failure_count == 1>1 FAILURE
+            <#elseif dependency_convergence_failure_count gt 1>${dependency_convergence_failure_count} FAILURES
+            <#else>PASS
+            </#if>
           </td>
         </tr>
       </#list>
