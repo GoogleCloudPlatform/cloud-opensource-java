@@ -73,6 +73,7 @@ public class DashboardMain {
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.66.0-SNAPSHOT");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
 
+    globalDependencies = new ArrayList<>();
     List<ArtifactResults> table = generateReports(configuration, output, managedDependencies);
     generateDashboard(configuration, output, table);
 
@@ -110,6 +111,11 @@ public class DashboardMain {
 
     return table;
   }
+  
+  // TODO this is really ugly but avoids reparsing the graph.
+  // Need to think about better factoring here. Maybe parse the graph higher up
+  // and pass the results into the report generating methods.
+  private static List<DependencyGraph> globalDependencies;
 
   private static ArtifactResults generateReport(Configuration configuration, Path output,
       Artifact artifact) throws IOException, TemplateException, DependencyCollectionException,
@@ -117,13 +123,14 @@ public class DashboardMain {
 
     String coordinates = Artifacts.toCoordinates(artifact);
     File outputFile = output.resolve(coordinates.replace(':', '_') + ".html").toFile();
-
+    
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
 
       // includes all versions
       DependencyGraph completeDependencies =
           DependencyGraphBuilder.getCompleteDependencies(artifact);
+      globalDependencies.add(completeDependencies);
       List<Update> convergenceIssues = completeDependencies.findUpdates();
 
       // picks versions according to Maven rules
@@ -188,12 +195,27 @@ public class DashboardMain {
       List<ArtifactResults> table)
       throws IOException, TemplateException {
     File dashboardFile = output.resolve("dashboard.html").toFile();
+    
+    Map<String, String> latestArtifacts = new HashMap<>(); 
+    VersionComparator comparator = new VersionComparator();
+    for (DependencyGraph graph : globalDependencies) {
+      Map<String, String> map = graph.getHighestVersionMap();
+      for (String key : map.keySet()) {
+        String newVersion = map.get(key);
+        String oldVersion = latestArtifacts.get(key);
+        if (oldVersion == null || comparator.compare(newVersion, oldVersion) > 0) {
+          latestArtifacts.put(key, map.get(key));
+        }
+      }
+    }
+    
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
       Template dashboard = configuration.getTemplate("/templates/dashboard.ftl");
       Map<String, Object> templateData = new HashMap<>();
       templateData.put("table", table);
       templateData.put("lastUpdated", LocalDateTime.now());
+      templateData.put("latestArtifacts", latestArtifacts);
 
       dashboard.process(templateData, out);
     }

@@ -58,6 +58,7 @@ public class DashboardUnavailableArtifactTest {
   public static void cleanUp() throws IOException {
     MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
   }
+
   @Test
   public void testDashboardForRepositoryException() {
     Configuration configuration = DashboardMain.configureFreemarker();
@@ -69,7 +70,7 @@ public class DashboardUnavailableArtifactTest {
             configuration, outputDirectory, Arrays.asList(validArtifact, nonExistentArtifact));
 
     Assert.assertEquals(
-        "The length fo the ArtifactResults should match the length of artifacts",
+        "The length of the ArtifactResults should match the length of artifacts",
         2,
         artifactResults.size());
     Assert.assertEquals(

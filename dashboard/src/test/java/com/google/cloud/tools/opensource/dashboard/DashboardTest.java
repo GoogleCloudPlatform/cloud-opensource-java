@@ -119,6 +119,14 @@ public class DashboardTest {
         }
       }
 
+      Nodes li = document.query("//li");
+      Assert.assertTrue(li.size() > 100);
+      for (int i = 0; i < li.size(); i++) {
+        String coordinates = li.get(i).getValue();
+        // fails if these are not valid Maven coordinates
+        new DefaultArtifact(coordinates);
+      }
+      
       Nodes updated = document.query("//p[@id='updated']");
       Assert.assertEquals("didn't find updated" + document.toXML(), 1, updated.size());
     }
