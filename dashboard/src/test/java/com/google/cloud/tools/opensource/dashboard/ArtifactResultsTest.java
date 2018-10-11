@@ -27,11 +27,20 @@ public class ArtifactResultsTest {
   
   @Test
   public void testAddResult() {
-    results.addResult("foo", true);
-    results.addResult("bar", false);
+    results.addResult("foo", 0);
+    results.addResult("bar", 10);
     Assert.assertTrue(results.getResult("foo"));    
     Assert.assertFalse(results.getResult("bar"));
     Assert.assertNull(results.getResult("baz"));
+  }
+  
+  @Test
+  public void testGetFailureCount() {
+    results.addResult("foo", 0);
+    results.addResult("bar", 10);
+    Assert.assertEquals(0, results.getFailureCount("foo"));    
+    Assert.assertEquals(10, results.getFailureCount("bar"));    
+    Assert.assertEquals(0, results.getFailureCount("baz"));
   }
   
   @Test
