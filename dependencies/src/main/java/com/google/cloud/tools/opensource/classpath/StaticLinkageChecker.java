@@ -65,10 +65,9 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 class StaticLinkageChecker {
 
   /**
-   * Given one Maven coordinate or list of the jar files as file names in filesystem, outputs the
+   * Given Maven coordinates or list of the jar files as file names in filesystem, outputs the
    * report of static linkage check.
    *
-   * @param arguments one Maven artifact, or multiple jar files available in the file system
    * @throws IOException when there is a problem in reading a jar file
    * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
    * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
@@ -109,8 +108,8 @@ class StaticLinkageChecker {
       formatter.printHelp("StaticLinkageChecker", options);
       return;
     }
-    System.out.println("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
 
+    System.out.println("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
     StringBuilder stringBuilder = new StringBuilder();
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         findUnresolvedMethodReferences(jarFilePaths);
