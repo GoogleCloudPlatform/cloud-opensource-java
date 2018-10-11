@@ -99,7 +99,7 @@ class StaticLinkageChecker {
     } else {
       int count = unresolvedMethodReferences.size();
       stringBuilder.append(
-          "There were" + count + " unresolved method references from the jar file(s):\n");
+          "There were " + count + " unresolved method references from the jar file(s):\n");
       for (FullyQualifiedMethodSignature methodReference : unresolvedMethodReferences) {
         stringBuilder.append("Class: '");
         stringBuilder.append(methodReference.getClassName());
