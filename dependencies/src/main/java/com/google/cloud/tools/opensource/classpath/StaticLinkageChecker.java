@@ -77,10 +77,6 @@ class StaticLinkageChecker {
   public static void main(String[] arguments)
       throws IOException, ClassNotFoundException, RepositoryException {
     List<Path> jarFilePaths = parseArguments(arguments);
-    if (jarFilePaths == null) {
-      // error messages are already printed in parseArguments
-      return;
-    }
 
     System.out.println("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
     StringBuilder stringBuilder = new StringBuilder();
@@ -110,10 +106,9 @@ class StaticLinkageChecker {
    * Parses arguments to get list of jar file paths.
    *
    * @param arguments command-line arguments
-   * @return list of the absolute paths to jar files, or null if arguments are invalid
+   * @return list of the absolute paths to jar files
    * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
    */
-  @Nullable
   static List<Path> parseArguments(String[] arguments) throws RepositoryException {
     Options options = new Options();
     options.addOption("c", "coordinate", true, "Maven coordinates (separated by ',')");
@@ -140,13 +135,11 @@ class StaticLinkageChecker {
       }
     } catch (ParseException ex) {
       System.err.println("Failed to parse command line arguments: " + ex.getMessage());
-      formatter.printHelp("StaticLinkageChecker", options);
-      return null;
     }
-    if (jarFilePaths.size() < 1) {
-      System.err.println("No jar files to scan.");
+    if (jarFilePaths.isEmpty()) {
+      System.err.println("No jar files to scan");
       formatter.printHelp("StaticLinkageChecker", options);
-      return null;
+      throw new RuntimeException("Could not list jar files for given argument.");
     }
     return jarFilePaths;
   }
