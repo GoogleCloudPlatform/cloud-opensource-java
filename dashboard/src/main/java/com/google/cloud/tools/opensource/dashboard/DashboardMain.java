@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -140,7 +141,8 @@ public class DashboardMain {
       Map<Artifact, Artifact> upperBoundFailures =
           findUpperBoundsFailures(completeDependencies, transitiveDependencies);
 
-      String dependencyTree = DependencyTreeFormatter.formatDependencyPaths(completeDependencies.list());
+      String dependencyTree =
+          DependencyTreeFormatter.formatDependencyPaths(completeDependencies.list());
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
@@ -196,7 +198,7 @@ public class DashboardMain {
       throws IOException, TemplateException {
     File dashboardFile = output.resolve("dashboard.html").toFile();
     
-    Map<String, String> latestArtifacts = new HashMap<>(); 
+    Map<String, String> latestArtifacts = new TreeMap<>(); 
     VersionComparator comparator = new VersionComparator();
     for (DependencyGraph graph : globalDependencies) {
       Map<String, String> map = graph.getHighestVersionMap();

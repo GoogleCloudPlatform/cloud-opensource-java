@@ -22,6 +22,8 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import nu.xom.Builder;
@@ -121,15 +123,40 @@ public class DashboardTest {
 
       Nodes li = document.query("//li");
       Assert.assertTrue(li.size() > 100);
+      ArrayList<String> coordinateList = new ArrayList<>();
       for (int i = 0; i < li.size(); i++) {
         String coordinates = li.get(i).getValue();
         // fails if these are not valid Maven coordinates
         new DefaultArtifact(coordinates);
+        coordinateList.add(coordinates);
       }
+      
+      ArrayList<String> sorted = new ArrayList<>(coordinateList);
+      Collections.sort(sorted);
+      
+      for (int i = 0; i < sorted.size(); i++) {
+        Assert.assertEquals("Coordinates are not sorted: " + i, sorted.get(i),
+            coordinateList.get(i));
+      }
+      
+      Assert.assertEquals("Coordinates are not sorted", sorted, coordinateList);
       
       Nodes updated = document.query("//p[@id='updated']");
       Assert.assertEquals("didn't find updated" + document.toXML(), 1, updated.size());
     }
+  }
+  
+  @Test
+  public void testCompare() {
+    String gax = "com.google.api:gax";
+    String gaxRpc = "com.google.api:gax-grpc";
+    
+    Assert.assertTrue(gax.compareTo(gaxRpc) < 0);
+    
+    String gaxVersioned = gax + ":1.32.0";
+    String gaxRpcVersioned = gaxRpc + ":1.32.0";
+    
+    Assert.assertTrue("This assert fails!", gaxVersioned.compareTo(gaxRpcVersioned) < 0);
   }
 
   @Test
