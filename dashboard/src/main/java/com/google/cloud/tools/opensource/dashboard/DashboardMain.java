@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import freemarker.template.Configuration;
@@ -64,7 +65,8 @@ public class DashboardMain {
     System.out.println("Wrote dashboard into " + output.toAbsolutePath());
   }
 
-  public static Path generate() throws IOException, TemplateException, ArtifactDescriptorException {
+  public static Path generate()
+      throws IOException, TemplateException, ArtifactDescriptorException {
     Configuration configuration = configureFreemarker();
 
     Path relativePath = Paths.get("target", "dashboard");
@@ -74,8 +76,9 @@ public class DashboardMain {
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.66.0-SNAPSHOT");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
 
-    globalDependencies = new ArrayList<>();
-    List<ArtifactResults> table = generateReports(configuration, output, managedDependencies);
+    Map<Artifact, ArtifactInfo> cache = loadArtifactInfo(managedDependencies);
+    
+    List<ArtifactResults> table = generateReports(configuration, output, cache);
     generateDashboard(configuration, output, table);
 
     return output;
@@ -91,16 +94,23 @@ public class DashboardMain {
 
   @VisibleForTesting
   static List<ArtifactResults> generateReports(Configuration configuration, Path output,
-      List<Artifact> artifacts) {
+      Map<Artifact, ArtifactInfo> artifacts) {
 
     List<ArtifactResults> table = new ArrayList<>();
-
-    for (Artifact artifact : artifacts) {
+    for (Entry<Artifact, ArtifactInfo> entry : artifacts.entrySet()) {
+      ArtifactInfo info = entry.getValue();
       try {
-        ArtifactResults results = generateReport(configuration, output, artifact);
-        table.add(results);
+        if (info.getException() != null) {
+          ArtifactResults unavailable = new ArtifactResults(entry.getKey());
+          unavailable.setExceptionMessage(info.getException().getMessage());
+          table.add(unavailable);
+        } else {
+          ArtifactResults results =
+              generateReport(configuration, output, entry.getKey(), entry.getValue());
+          table.add(results);
+        }
       } catch (RepositoryException | IOException ex) {
-        ArtifactResults unavailableTestResult = new ArtifactResults(artifact);
+        ArtifactResults unavailableTestResult = new ArtifactResults(entry.getKey());
         unavailableTestResult.setExceptionMessage(ex.getMessage());
         // Even when there's problem generating test result, show the error in the dashboard
         table.add(unavailableTestResult);
@@ -117,30 +127,51 @@ public class DashboardMain {
   // Need to think about better factoring here. Maybe parse the graph higher up
   // and pass the results into the report generating methods.
   private static List<DependencyGraph> globalDependencies;
+  
+  private static Map<Artifact, ArtifactInfo> loadArtifactInfo(List<Artifact> artifacts) {
+    Map<Artifact, ArtifactInfo> artifactCache = new LinkedHashMap<>();
+    if (globalDependencies == null) {
+      globalDependencies = new ArrayList<>();
+    }
+    
+    for (Artifact artifact : artifacts) {
+      try {
+        DependencyGraph completeDependencies =
+            DependencyGraphBuilder.getCompleteDependencies(artifact);
+        globalDependencies.add(completeDependencies);
+        
+        // picks versions according to Maven rules
+        DependencyGraph transitiveDependencies =
+            DependencyGraphBuilder.getTransitiveDependencies(artifact);
+  
+        ArtifactInfo info = new ArtifactInfo(completeDependencies, transitiveDependencies);
+        artifactCache.put(artifact, info);
+      } catch (DependencyCollectionException | DependencyResolutionException ex) {
+        ArtifactInfo info = new ArtifactInfo(ex);
+        artifactCache.put(artifact, info);
+      }
+    }
+    
+    return artifactCache;
+  }
 
   private static ArtifactResults generateReport(Configuration configuration, Path output,
-      Artifact artifact) throws IOException, TemplateException, DependencyCollectionException,
-          DependencyResolutionException {
+      Artifact artifact, ArtifactInfo artifactInfo) throws IOException, TemplateException,
+      DependencyCollectionException, DependencyResolutionException {
 
     String coordinates = Artifacts.toCoordinates(artifact);
     File outputFile = output.resolve(coordinates.replace(':', '_') + ".html").toFile();
     
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
-
+      
       // includes all versions
-      DependencyGraph completeDependencies =
-          DependencyGraphBuilder.getCompleteDependencies(artifact);
-      if (globalDependencies == null) {
-        globalDependencies = new ArrayList<>();
-      }
-      globalDependencies.add(completeDependencies);
+      DependencyGraph completeDependencies = artifactInfo.getCompleteDependencies();
       List<Update> convergenceIssues = completeDependencies.findUpdates();
 
       // picks versions according to Maven rules
-      DependencyGraph transitiveDependencies =
-          DependencyGraphBuilder.getTransitiveDependencies(artifact);
-
+      DependencyGraph transitiveDependencies = artifactInfo.getTransitiveDependencies();
+      
       Map<Artifact, Artifact> upperBoundFailures =
           findUpperBoundsFailures(completeDependencies, transitiveDependencies);
 
