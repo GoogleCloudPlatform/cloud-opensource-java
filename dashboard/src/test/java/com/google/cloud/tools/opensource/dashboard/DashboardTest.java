@@ -135,7 +135,7 @@ public class DashboardTest {
       
       ArrayList<String> sorted = new ArrayList<>(coordinateList);
       Comparator<String> comparator = new SortWithoutVersion();
-      Collections.sort(sorted, comparator );
+      Collections.sort(sorted, comparator);
       
       for (int i = 0; i < sorted.size(); i++) {
         Assert.assertEquals("Coordinates are not sorted: ", sorted.get(i),
