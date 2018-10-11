@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
 import org.apache.bcel.classfile.ConstantPool;
@@ -75,6 +76,45 @@ class StaticLinkageChecker {
    */
   public static void main(String[] arguments)
       throws IOException, ClassNotFoundException, RepositoryException {
+    List<Path> jarFilePaths = parseArguments(arguments);
+    if (jarFilePaths == null) {
+      System.err.println("Could not parse arguments to jar files.");
+      return;
+    }
+
+    System.out.println("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
+    StringBuilder stringBuilder = new StringBuilder();
+    List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
+        findUnresolvedMethodReferences(jarFilePaths);
+    if (unresolvedMethodReferences.isEmpty()) {
+      stringBuilder.append("There were no unresolved method references from the jar file(s) :");
+      stringBuilder.append(Arrays.toString(arguments));
+    } else {
+      int count = unresolvedMethodReferences.size();
+      stringBuilder.append(
+          "There were " + count + " unresolved method references from the jar file(s):\n");
+      for (FullyQualifiedMethodSignature methodReference : unresolvedMethodReferences) {
+        stringBuilder.append("Class: '");
+        stringBuilder.append(methodReference.getClassName());
+        stringBuilder.append("', method: '");
+        stringBuilder.append(methodReference.getMethodSignature().getMethodName());
+        stringBuilder.append("' with descriptor ");
+        stringBuilder.append(methodReference.getMethodSignature().getDescriptor());
+        stringBuilder.append("\n");
+      }
+    }
+    System.out.println(stringBuilder.toString());
+  }
+
+  /**
+   * Parses arguments to get list of jar file paths.
+   *
+   * @param arguments command-line arguments
+   * @return list of the absolute paths to jar files, or null if arguments are invalid
+   * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
+   */
+  @Nullable
+  static List<Path> parseArguments(String[] arguments) throws RepositoryException {
     Options options = new Options();
     options.addOption("c", "coordinate", true, "Maven coordinates (separated by ',')");
     options.addOption("j", "jars", true, "Jar files (separated by ',')");
@@ -101,36 +141,14 @@ class StaticLinkageChecker {
     } catch (ParseException ex) {
       System.err.println("Failed to parse command line arguments: " + ex.getMessage());
       formatter.printHelp("StaticLinkageChecker", options);
-      return;
+      return null;
     }
     if (jarFilePaths.size() < 1) {
       System.err.println("No jar files to scan.");
       formatter.printHelp("StaticLinkageChecker", options);
-      return;
+      return null;
     }
-
-    System.out.println("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
-    StringBuilder stringBuilder = new StringBuilder();
-    List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        findUnresolvedMethodReferences(jarFilePaths);
-    if (unresolvedMethodReferences.isEmpty()) {
-      stringBuilder.append("There were no unresolved method references from the jar file(s) :");
-      stringBuilder.append(Arrays.toString(arguments));
-    } else {
-      int count = unresolvedMethodReferences.size();
-      stringBuilder.append(
-          "There were " + count + " unresolved method references from the jar file(s):\n");
-      for (FullyQualifiedMethodSignature methodReference : unresolvedMethodReferences) {
-        stringBuilder.append("Class: '");
-        stringBuilder.append(methodReference.getClassName());
-        stringBuilder.append("', method: '");
-        stringBuilder.append(methodReference.getMethodSignature().getMethodName());
-        stringBuilder.append("' with descriptor ");
-        stringBuilder.append(methodReference.getMethodSignature().getDescriptor());
-        stringBuilder.append("\n");
-      }
-    }
-    System.out.println(stringBuilder.toString());
+    return jarFilePaths;
   }
 
   /**
