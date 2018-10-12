@@ -75,8 +75,10 @@ public class DashboardUnavailableArtifactTest {
     map.put(validArtifact, new ArtifactInfo(graph1, graph2));
     map.put(nonExistentArtifact, new ArtifactInfo(new RepositoryException("foo")));
     
+    ArtifactCache cache = new ArtifactCache();
+    cache.setInfoMap(map);
     List<ArtifactResults> artifactResults =
-        DashboardMain.generateReports(configuration, outputDirectory, map);
+        DashboardMain.generateReports(configuration, outputDirectory, cache );
 
     Assert.assertEquals(
         "The length of the ArtifactResults should match the length of artifacts",

@@ -52,10 +52,12 @@
     <h2>Artifact Details</h2>
     <table>
       <tr>
-        <th>Artifact</th><th>Upper Bounds</th><th>Dependency Convergence</th>
+        <th>Artifact</th><th>Upper Bounds</th><th>Dependency Convergence</th><th>Global Upper Bounds</th>
       </tr>
       <#list table as row>
+        <!-- TODO use a macro to remove duplicate code for each td --> 
         <tr>
+          <td><a href='${row.getCoordinates()?replace(":", "_")}.html'>${row.getCoordinates()}</a></td>
           <#if row.getResult("Upper Bounds")?? ><#-- checking isNotNull() -->
             <#-- When it's not null, it means the test ran. It's either PASS or FAIL -->
             <#assign upper_bound_test_label = row.getResult("Upper Bounds")?then('PASS', 'FAIL')>
@@ -64,7 +66,6 @@
             <#-- Null means there's an exception and test couldn't run -->
             <#assign upper_bound_test_label = "UNAVAILABLE">
           </#if>
-          <td><a href='${row.getCoordinates()?replace(":", "_")}.html'>${row.getCoordinates()}</a></td>
           <td class='${upper_bound_test_label}' title="${row.getExceptionMessage()!""}">
             <#if row.getResult("Upper Bounds")?? >
               <#if upper_bound_failure_count == 1>1 FAILURE
@@ -84,6 +85,23 @@
             <#if row.getResult("Dependency Convergence")?? >
               <#if dependency_convergence_failure_count == 1>1 FAILURE
               <#elseif dependency_convergence_failure_count gt 1>${dependency_convergence_failure_count} FAILURES
+              <#else>PASS
+              </#if>
+            <#else>UNAVAILABLE
+            </#if>
+          </td>
+          <#if row.getResult("Global Upper Bounds")?? ><#-- checking isNotNull() -->
+            <#-- When it's not null, it means the test ran. It's either PASS or FAIL -->
+            <#assign global_upper_bound_test_label = row.getResult("Global Upper Bounds")?then('PASS', 'FAIL')>
+            <#assign global_upper_bound_failure_count = row.getFailureCount("Global Upper Bounds")>
+          <#else>
+            <#-- Null means there's an exception and test couldn't run -->
+            <#assign upper_bound_test_label = "UNAVAILABLE">
+          </#if>
+          <td class='${global_upper_bound_test_label}' title="${row.getExceptionMessage()!""}">
+            <#if row.getResult("Upper Bounds")?? >
+              <#if global_upper_bound_failure_count == 1>1 FAILURE
+              <#elseif global_upper_bound_failure_count gt 1>${global_upper_bound_failure_count} FAILURES
               <#else>PASS
               </#if>
             <#else>UNAVAILABLE

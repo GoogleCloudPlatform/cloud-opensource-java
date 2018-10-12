@@ -56,6 +56,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class DashboardMain {
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
+  public static final String TEST_NAME_GLOBAL_UPPER_BOUND = "Global Upper Bounds";
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
 
   public static void main(String[] args)
@@ -78,7 +79,7 @@ public class DashboardMain {
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
     
-    List<ArtifactResults> table = generateReports(configuration, output, cache.getInfoMap());
+    List<ArtifactResults> table = generateReports(configuration, output, cache);
     generateDashboard(configuration, output, table, cache.getGlobalDependencies());
 
     return output;
@@ -94,8 +95,9 @@ public class DashboardMain {
 
   @VisibleForTesting
   static List<ArtifactResults> generateReports(Configuration configuration, Path output,
-      Map<Artifact, ArtifactInfo> artifacts) {
+      ArtifactCache cache) {
 
+    Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();
     for (Entry<Artifact, ArtifactInfo> entry : artifacts.entrySet()) {
       ArtifactInfo info = entry.getValue();
@@ -106,7 +108,8 @@ public class DashboardMain {
           table.add(unavailable);
         } else {
           ArtifactResults results =
-              generateReport(configuration, output, entry.getKey(), entry.getValue());
+              generateArtifactReport(configuration, output, entry.getKey(), entry.getValue(),
+                  cache.getGlobalDependencies());
           table.add(results);
         }
       } catch (RepositoryException | IOException ex) {
@@ -155,9 +158,10 @@ public class DashboardMain {
     return cache;
   }
 
-  private static ArtifactResults generateReport(Configuration configuration, Path output,
-      Artifact artifact, ArtifactInfo artifactInfo) throws IOException, TemplateException,
-      DependencyCollectionException, DependencyResolutionException {
+  private static ArtifactResults generateArtifactReport(Configuration configuration, Path output,
+      Artifact artifact, ArtifactInfo artifactInfo, List<DependencyGraph> globalDependencies)
+      throws IOException, TemplateException, DependencyCollectionException,
+      DependencyResolutionException {
 
     String coordinates = Artifacts.toCoordinates(artifact);
     File outputFile = output.resolve(coordinates.replace(':', '_') + ".html").toFile();
@@ -173,7 +177,10 @@ public class DashboardMain {
       DependencyGraph transitiveDependencies = artifactInfo.getTransitiveDependencies();
       
       Map<Artifact, Artifact> upperBoundFailures =
-          findUpperBoundsFailures(completeDependencies, transitiveDependencies);
+          findLocalUpperBoundsFailures(completeDependencies, transitiveDependencies);
+
+      Map<Artifact, Artifact> globalUpperBoundFailures =
+          findGlobalUpperBoundsFailures(globalDependencies, transitiveDependencies);
 
       String dependencyTree =
           DependencyTreeFormatter.formatDependencyPaths(completeDependencies.list());
@@ -185,23 +192,50 @@ public class DashboardMain {
       templateData.put("version", artifact.getVersion());
       templateData.put("updates", convergenceIssues);
       templateData.put("upperBoundFailures", upperBoundFailures);
+      templateData.put("globalUpperBoundFailures", globalUpperBoundFailures);
       templateData.put("dependencyTree", dependencyTree);
       report.process(templateData, out);
 
       ArtifactResults results = new ArtifactResults(artifact);
       results.addResult(TEST_NAME_UPPER_BOUND, upperBoundFailures.size());
+      results.addResult(TEST_NAME_GLOBAL_UPPER_BOUND, globalUpperBoundFailures.size());
       results.addResult(TEST_NAME_DEPENDENCY_CONVERGENCE, convergenceIssues.size());
 
       return results;
     }
   }
 
-  // TODO may want to push this into DependencyGraph. However this probably first
-  // needs some caching of the graphs so we don't end up traversing the dependency graph
-  // extra times.
-  private static Map<Artifact, Artifact> findUpperBoundsFailures(DependencyGraph graph,
+  private static Map<Artifact, Artifact> findLocalUpperBoundsFailures(DependencyGraph graph,
       DependencyGraph transitiveDependencies) {
     Map<String, String> expectedVersionMap = graph.getHighestVersionMap();
+    Map<String, String> actualVersionMap = transitiveDependencies.getHighestVersionMap();
+
+    VersionComparator comparator = new VersionComparator();
+
+    Map<Artifact, Artifact> upperBoundFailures = new LinkedHashMap<>();
+
+    for (String id : expectedVersionMap.keySet()) {
+      String expectedVersion = expectedVersionMap.get(id);
+      String actualVersion = actualVersionMap.get(id);
+      // Check that the actual version is not null because it is
+      // possible for dependencies to appear or disappear from the tree
+      // depending on which version of another dependency is loaded.
+      // In both cases, no action is needed.
+      if (actualVersion != null && comparator.compare(actualVersion, expectedVersion) < 0) {
+        // Maven did not choose highest version
+        // upperBoundFailures.add("Upgrade " + id + ":" + actualVersion + " to " + expectedVersion);
+        DefaultArtifact lower = new DefaultArtifact(id + ":" + actualVersion);
+        DefaultArtifact upper = new DefaultArtifact(id + ":" + expectedVersion);
+        upperBoundFailures.put(lower, upper);
+      }
+    }
+    return upperBoundFailures;
+  }
+  
+  // TODO combine with above method; only first line is different
+  private static Map<Artifact, Artifact> findGlobalUpperBoundsFailures(List<DependencyGraph> graphs,
+      DependencyGraph transitiveDependencies) {
+    Map<String, String> expectedVersionMap = collectLatestVersions(graphs);
     Map<String, String> actualVersionMap = transitiveDependencies.getHighestVersionMap();
 
     VersionComparator comparator = new VersionComparator();
@@ -232,6 +266,22 @@ public class DashboardMain {
       throws IOException, TemplateException {
     File dashboardFile = output.resolve("dashboard.html").toFile();
     
+    Map<String, String> latestArtifacts = collectLatestVersions(globalDependencies);
+    
+    try (Writer out = new OutputStreamWriter(
+        new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
+      Template dashboard = configuration.getTemplate("/templates/dashboard.ftl");
+      Map<String, Object> templateData = new HashMap<>();
+      templateData.put("table", table);
+      templateData.put("lastUpdated", LocalDateTime.now());
+      templateData.put("latestArtifacts", latestArtifacts);
+
+      dashboard.process(templateData, out);
+    }
+  }
+
+  private static Map<String, String> collectLatestVersions(
+      List<DependencyGraph> globalDependencies) {
     Map<String, String> latestArtifacts = new TreeMap<>(); 
     VersionComparator comparator = new VersionComparator();
     
@@ -247,16 +297,6 @@ public class DashboardMain {
         }
       }
     }
-    
-    try (Writer out = new OutputStreamWriter(
-        new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
-      Template dashboard = configuration.getTemplate("/templates/dashboard.ftl");
-      Map<String, Object> templateData = new HashMap<>();
-      templateData.put("table", table);
-      templateData.put("lastUpdated", LocalDateTime.now());
-      templateData.put("latestArtifacts", latestArtifacts);
-
-      dashboard.process(templateData, out);
-    }
+    return latestArtifacts;
   }
 }
