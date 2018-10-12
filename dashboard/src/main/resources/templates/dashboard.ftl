@@ -42,6 +42,9 @@
     h3 {
       font-size: 24pt;
     }
+    th, td {
+      padding: 5pt;
+    }
     </style>
   </head>
   <body>
@@ -63,8 +66,12 @@
           </#if>
           <td><a href='${row.getCoordinates()?replace(":", "_")}.html'>${row.getCoordinates()}</a></td>
           <td class='${upper_bound_test_label}' title="${row.getExceptionMessage()!""}">
-            ${upper_bound_test_label} <#if upper_bound_failure_count gt 0>
-              ${upper_bound_failure_count}
+            <#if row.getResult("Upper Bounds")?? >
+              <#if upper_bound_failure_count == 1>1 FAILURE
+              <#elseif upper_bound_failure_count gt 1>${upper_bound_failure_count} FAILURES
+              <#else>PASS
+              </#if>
+            <#else>UNAVAILABLE
             </#if>
           </td>
           <#if row.getResult("Dependency Convergence")?? >
@@ -74,8 +81,13 @@
             <#assign dependency_convergence_test_label = "UNAVAILABLE">
           </#if>
           <td class='${dependency_convergence_test_label}' title="${row.getExceptionMessage()!""}">
-            ${dependency_convergence_test_label} <#if dependency_convergence_failure_count gt 0>
-            ${dependency_convergence_failure_count} </#if>
+            <#if row.getResult("Dependency Convergence")?? >
+              <#if dependency_convergence_failure_count == 1>1 FAILURE
+              <#elseif dependency_convergence_failure_count gt 1>${dependency_convergence_failure_count} FAILURES
+              <#else>PASS
+              </#if>
+            <#else>UNAVAILABLE
+            </#if>
           </td>
         </tr>
       </#list>
