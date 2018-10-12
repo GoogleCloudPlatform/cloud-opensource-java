@@ -25,6 +25,8 @@ import com.google.common.collect.Lists;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -43,6 +45,7 @@ import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.classfile.InnerClass;
 import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.generic.Type;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 import org.apache.commons.cli.CommandLine;
@@ -108,7 +111,7 @@ class StaticLinkageChecker {
    * @return list of the absolute paths to jar files
    * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
    */
-  static List<Path> parseArguments(String[] arguments) throws RepositoryException {
+  private static List<Path> parseArguments(String[] arguments) throws RepositoryException {
     Options options = new Options();
     options.addOption("c", "coordinate", true, "Maven coordinates (separated by ',')");
     options.addOption("j", "jars", true, "Jar files (separated by ',')");
@@ -209,10 +212,24 @@ class StaticLinkageChecker {
     }
     Set<String> classesNotFound = new HashSet<>();
     Set<FullyQualifiedMethodSignature> availableMethodsInJars = new HashSet<>();
-    SyntheticRepository repository = SyntheticRepository.getInstance(classPath);
+
+    URL[] jarFileUrls = jarFilePaths.stream().map(jarPath -> {
+      try {
+        return jarPath.toUri().toURL();
+      } catch (MalformedURLException ex) {
+        System.err.println("Jar file " + jarPath + " was not converted to URL: " + ex.getMessage());
+        return null;
+      }
+    }).filter(Objects::nonNull).toArray(URL[]::new);
+    URLClassLoader classLoaderFromJars = new URLClassLoader(jarFileUrls);
 
     for (FullyQualifiedMethodSignature methodReference : methodReferences) {
       String className = methodReference.getClassName();
+      if (className.startsWith("java.") || className.startsWith("sun.")
+          || className.startsWith("javax.")) {
+        // If there's invalid reference to 'java' package, then such jar would not be compiled
+        continue;
+      }
 
       // Case 1: we know that the class doesn't exist in the jar files
       if (classesNotFound.contains(className)) {
@@ -224,17 +241,14 @@ class StaticLinkageChecker {
         continue;
       }
 
-      // Case 3: we need to check the availability through repository
+      // Case 3: we need to check the availability of the method through the class loader
       try {
-        JavaClass javaClass = repository.loadClass(className);
-        List<FullyQualifiedMethodSignature> availableMethodsOnClass = listMethodsOnClass(javaClass);
-
-        availableMethodsInJars.addAll(availableMethodsOnClass);
-
-        if (!availableMethodsOnClass.contains(methodReference)) {
+        if (methodDefinitionExists(methodReference, classLoaderFromJars)) {
+          availableMethodsInJars.add(methodReference);
+        } else {
           unresolvedMethods.add(methodReference);
         }
-      } catch (ClassNotFoundException ex) {
+      } catch (ClassNotFoundException|NoClassDefFoundError ex) {
         unresolvedMethods.add(methodReference);
         classesNotFound.add(className);
       }
@@ -242,13 +256,70 @@ class StaticLinkageChecker {
     return unresolvedMethods;
   }
 
-  static List<FullyQualifiedMethodSignature> listMethodsOnClass(JavaClass javaClass) {
-    List<MethodSignature> methods = ClassDumper.listDeclaredMethods(javaClass);
-    List<FullyQualifiedMethodSignature> fullyQualifiedMethodSignatures = methods.stream()
-        .map(method -> new FullyQualifiedMethodSignature(
-        javaClass.getClassName(), method.getMethodName(), method.getDescriptor()))
-        .collect(Collectors.toList());
-    return fullyQualifiedMethodSignatures;
+  @VisibleForTesting
+  static boolean methodDefinitionExists(FullyQualifiedMethodSignature methodReference,
+      ClassLoader classLoader) throws ClassNotFoundException {
+    String className = methodReference.getClassName();
+    MethodSignature methodSignature = methodReference.getMethodSignature();
+    String methodName = methodSignature.getMethodName();
+    Class clazz =
+        className.startsWith("[") ? Array.class : classLoader.loadClass(className);
+    Class[] parameterTypes = methodDescriptorToClass(methodSignature.getDescriptor(),
+        classLoader);
+    try {
+      if ("<init>".equals(methodName)) {
+        clazz.getConstructor(parameterTypes);
+      } else if ("clone".equals(methodName) && clazz == Array.class) {
+        // Array's clone method is not returned by getMethod
+        // https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html#getMethod-java.lang.String-java.lang.Class...-
+      } else {
+        clazz.getMethod(methodSignature.getMethodName(),
+            parameterTypes);
+      }
+    } catch (NoSuchMethodException ex) {
+      return false;
+    }
+    return true;
+  }
+
+  private static Class bcelTypeToJavaClass(Type type, ClassLoader classLoader) {
+    switch (type.getType()) {
+      case Const.T_BOOLEAN:
+        return boolean.class;
+      case Const.T_INT:
+        return int.class;
+      case Const.T_SHORT:
+        return short.class;
+      case Const.T_BYTE:
+        return byte.class;
+      case Const.T_LONG:
+        return long.class;
+      case Const.T_DOUBLE:
+        return double.class;
+      case Const.T_FLOAT:
+        return float.class;
+      case Const.T_CHAR:
+        return char.class;
+      case Const.T_ARRAY:
+        return Object[].class;
+      default:
+        String typeName = type.toString();
+        try {
+          return classLoader.loadClass(typeName);
+        } catch (ClassNotFoundException ex) {
+          return null;
+        }
+    }
+  }
+
+  @VisibleForTesting
+  static Class[] methodDescriptorToClass(String methodDescriptor, ClassLoader classLoader) {
+    Type[] argumentTypes = Type.getArgumentTypes(methodDescriptor);
+    Class[] parameterTypes =
+        Arrays.stream(argumentTypes)
+            .map(type -> bcelTypeToJavaClass(type, classLoader))
+            .toArray(Class[]::new);
+    return parameterTypes;
   }
 
   /**

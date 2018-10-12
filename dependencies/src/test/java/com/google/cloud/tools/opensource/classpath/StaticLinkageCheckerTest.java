@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.common.collect.Lists;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.InputStream;
@@ -85,9 +86,17 @@ public class StaticLinkageCheckerTest {
 
   @Test
   public void testResolvedMethodReferences() throws URISyntaxException {
-    List<Path> pathsForJar = Arrays.asList(
-        Paths.get(URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE).toURI()),
-        Paths.get(URLClassLoader.getSystemResource(EXAMPLE_PROTO_JAR_FILE).toURI()));
+    List<Path> pathsForJar = Lists.newArrayList(
+        absolutePathOfResource(EXAMPLE_JAR_FILE),
+        absolutePathOfResource(EXAMPLE_PROTO_JAR_FILE));
+    List<Path> firestoreDependencies = Arrays.asList(
+        absolutePathOfResource("testdata/protobuf-java-3.6.1.jar"),
+        absolutePathOfResource("testdata/grpc-core-1.13.1.jar"),
+        absolutePathOfResource("testdata/grpc-stub-1.13.1.jar"),
+        absolutePathOfResource("testdata/grpc-protobuf-1.13.1.jar")
+    );
+    pathsForJar.addAll(firestoreDependencies);
+
     FullyQualifiedMethodSignature internalMethodReference =
         new FullyQualifiedMethodSignature(
             "com.google.firestore.v1beta1.FirestoreGrpc",
@@ -115,24 +124,27 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testResolvedMethodReferencesWithJarFiles()
       throws IOException, ClassNotFoundException, URISyntaxException {
-    List<Path> pathsForJar = Arrays.asList(
+    List<Path> pathsForJar = Lists.newArrayList(
         absolutePathOfResource(EXAMPLE_JAR_FILE),
         absolutePathOfResource(EXAMPLE_PROTO_JAR_FILE)
     );
+    List<Path> firestoreDependencies = Arrays.asList(
+        absolutePathOfResource("testdata/protobuf-java-3.6.1.jar"),
+        absolutePathOfResource("testdata/grpc-core-1.13.1.jar"),
+        absolutePathOfResource("testdata/grpc-stub-1.13.1.jar"),
+        absolutePathOfResource("testdata/grpc-protobuf-1.13.1.jar")
+    );
+    pathsForJar.addAll(firestoreDependencies);
+
 
     List<FullyQualifiedMethodSignature> report =
         StaticLinkageChecker.findUnresolvedMethodReferences(pathsForJar);
-
-    // com.google.protobuf.Int32Value is defined in protobuf-java-X.Y.Z.jar, not in the file list
-    Truth.assertThat(report).contains(
+    FullyQualifiedMethodSignature methodNotExpectedToFound =
         new FullyQualifiedMethodSignature(
-            "com.google.protobuf.Int32Value", "parser",
-            "()Lcom/google/protobuf/Parser;"));
-    // io.grpc.MethodDescriptor is defined in grpc-core-X.Y.Z.jar, not in the file list
-    Truth.assertThat(report).contains(
-        new FullyQualifiedMethodSignature(
-            "io.grpc.MethodDescriptor", "newBuilder",
-            "()Lio/grpc/MethodDescriptor$Builder;"));
+            "com.google.common.io.BaseEncoding",
+            "encode",
+            "([B)Ljava/lang/String;");
+    Truth.assertThat(report).contains(methodNotExpectedToFound);
     // As RunQueryRequest is defined in the proto jar file, it should not appear in the report
     Truth.assertThat(report.toString())
         .doesNotContain("com.google.firestore.v1beta1.RunQueryRequest");
@@ -145,15 +157,23 @@ public class StaticLinkageCheckerTest {
   public void testJarPathOrderInResolvingReferences() throws URISyntaxException {
     // listDocuments method on CollectionReference class is added at version 0.66.0-beta
     // https://github.com/googleapis/google-cloud-java/releases/tag/v0.66.0
+    List<Path> firestoreDependencies = Lists.newArrayList(
+        absolutePathOfResource("testdata/gax-1.32.0.jar"),
+        absolutePathOfResource("testdata/api-common-1.7.0.jar"),
+        absolutePathOfResource("testdata/google-cloud-core-1.48.0.jar"),
+        absolutePathOfResource("testdata/google-cloud-core-grpc-1.48.0.jar"));
+
     List<Path> pathsForJarWithVersion65First =
-        Arrays.asList(
+        Lists.newArrayList(
             absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"),
             absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"));
+    pathsForJarWithVersion65First.addAll(firestoreDependencies);
 
     List<Path> pathsForJarWithVersion66First =
-        Arrays.asList(
+        Lists.newArrayList(
             absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"),
             absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"));
+    pathsForJarWithVersion66First.addAll(firestoreDependencies);
 
     FullyQualifiedMethodSignature methodAddedInVersion66 =
         new FullyQualifiedMethodSignature(
@@ -213,5 +233,52 @@ public class StaticLinkageCheckerTest {
       Truth.assertThat(ex.getMessage())
           .contains("Could not find artifact io.grpc:nosuchartifact:jar:1.2.3");
     }
+  }
+
+  @Test
+  public void testInheritanceWithGuavaCollectionInheritance() throws URISyntaxException {
+    FullyQualifiedMethodSignature guavaCollectionPut =
+        new FullyQualifiedMethodSignature(
+            "com.google.common.collect.ArrayListMultimapGwtSerializationDependencies",
+            "put",
+            "(Ljava/lang/Object;Ljava/lang/Object;)Z");
+    List<Path> pathsForJar =
+        Arrays.asList(
+            Paths.get(URLClassLoader.getSystemResource("testdata/guava-26.0-jre.jar").toURI()));
+    List<FullyQualifiedMethodSignature> methodsNotFound =
+        StaticLinkageChecker.findUnresolvedReferences(
+            pathsForJar, Arrays.asList(guavaCollectionPut));
+    Truth.assertThat(methodsNotFound).hasSize(0);
+  }
+
+  @Test
+  public void testArrayCloneMethod() throws URISyntaxException {
+    FullyQualifiedMethodSignature arrayCloneMethod =
+        new FullyQualifiedMethodSignature(
+            "[Lio.grpc.InternalKnownTransport;", "clone", "()Ljava/lang/Object");
+    List<Path> pathsForJar =
+        Arrays.asList(
+            Paths.get(URLClassLoader.getSystemResource("testdata/guava-26.0-jre.jar").toURI()));
+    List<FullyQualifiedMethodSignature> methodsNotFound =
+        StaticLinkageChecker.findUnresolvedReferences(pathsForJar, Arrays.asList(arrayCloneMethod));
+    Truth.assertThat(methodsNotFound).hasSize(0);
+  }
+
+  @Test
+  public void testMethodDefinitionExists_arrayType() throws ClassNotFoundException {
+    ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+    FullyQualifiedMethodSignature checkArgument =
+        new FullyQualifiedMethodSignature(
+            "com.google.common.base.Preconditions", "checkArgument", "(ZLjava/lang/Object;)V");
+    boolean exist = StaticLinkageChecker.methodDefinitionExists(checkArgument, classLoader);
+    Assert.assertTrue(exist);
+  }
+
+  @Test
+  public void testMethodDescriptorToClass_byteArray() {
+    ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+    Class[] byteArrayClass =
+        StaticLinkageChecker.methodDescriptorToClass("([B)Ljava/lang/String;", classLoader);
+    Assert.assertTrue(byteArrayClass[0].isArray());
   }
 }
