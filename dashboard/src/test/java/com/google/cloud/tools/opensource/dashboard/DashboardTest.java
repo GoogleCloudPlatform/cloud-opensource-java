@@ -167,7 +167,7 @@ public class DashboardTest {
       Assert.assertTrue(greens.size() >= 2);
       Nodes presDependencyMediation = document.query("//pre[@class='suggested-dependency-mediation']");
       // There's a pre tag for dependency
-      Assert.assertEquals(0, presDependencyMediation.size());
+      Assert.assertEquals(1, presDependencyMediation.size());
 
       Nodes presDependencyTree = document.query("//pre[@class='dependency-tree']");
       Assert.assertEquals("Dependency Tree should be shown in pre tag",
