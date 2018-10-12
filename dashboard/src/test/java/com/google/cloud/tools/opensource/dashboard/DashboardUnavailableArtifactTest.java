@@ -21,8 +21,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
@@ -31,6 +32,8 @@ import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
+
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.AfterClass;
@@ -39,6 +42,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Truth;
@@ -65,9 +69,14 @@ public class DashboardUnavailableArtifactTest {
     Artifact validArtifact = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
     Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nonexistent:jar:1.15.0");
 
+    Map<Artifact, ArtifactInfo> map = new LinkedHashMap<>();
+    DependencyGraph graph1 = new DependencyGraph();
+    DependencyGraph graph2 = new DependencyGraph();
+    map.put(validArtifact, new ArtifactInfo(graph1, graph2));
+    map.put(nonExistentArtifact, new ArtifactInfo(new RepositoryException("foo")));
+    
     List<ArtifactResults> artifactResults =
-        DashboardMain.generateReports(
-            configuration, outputDirectory, Arrays.asList(validArtifact, nonExistentArtifact));
+        DashboardMain.generateReports(configuration, outputDirectory, map);
 
     Assert.assertEquals(
         "The length of the ArtifactResults should match the length of artifacts",
@@ -83,7 +92,7 @@ public class DashboardUnavailableArtifactTest {
         errorArtifactResult.getResult(DashboardMain.TEST_NAME_UPPER_BOUND));
     Assert.assertEquals(
         "The error artifact result should contain error message",
-        "Could not find artifact io.grpc:nonexistent:jar:1.15.0 in central (http://repo1.maven.org/maven2/)",
+        "foo",
         errorArtifactResult.getExceptionMessage());
   }
 
@@ -105,7 +114,7 @@ public class DashboardUnavailableArtifactTest {
     table.add(validArtifactResult);
     table.add(errorArtifactResult);
 
-    DashboardMain.generateDashboard(configuration, outputDirectory, table);
+    DashboardMain.generateDashboard(configuration, outputDirectory, table, null);
 
     Path generatedDashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(generatedDashboardHtml));

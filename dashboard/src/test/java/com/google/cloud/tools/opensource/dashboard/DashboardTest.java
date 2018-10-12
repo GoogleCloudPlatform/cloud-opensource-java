@@ -37,7 +37,9 @@ import nu.xom.ValidityException;
 import freemarker.template.TemplateException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
+import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -55,7 +57,8 @@ public class DashboardTest {
   private Builder builder = new Builder();
 
   @BeforeClass
-  public static void setUp() throws ArtifactDescriptorException, IOException, TemplateException {
+  public static void setUp() throws ArtifactDescriptorException, IOException, TemplateException,
+      DependencyCollectionException, DependencyResolutionException {
     // Creates "dashboard.html" in outputDirectory
     outputDirectory = DashboardMain.generate();
   }
@@ -66,7 +69,8 @@ public class DashboardTest {
   }
 
   @Test
-  public void testMain() throws IOException, TemplateException, ArtifactDescriptorException {
+  public void testMain() throws IOException, TemplateException, ArtifactDescriptorException,
+      DependencyCollectionException, DependencyResolutionException {
     // Ensuring normal execution doesn't cause any exception
     DashboardMain.main(null);
   }
