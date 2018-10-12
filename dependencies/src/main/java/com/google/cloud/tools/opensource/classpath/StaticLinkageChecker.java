@@ -258,6 +258,7 @@ class StaticLinkageChecker {
   }
 
   @VisibleForTesting
+  @SuppressWarnings("unchecked")
   static boolean methodDefinitionExists(FullyQualifiedMethodSignature methodReference,
       ClassLoader classLoader, SyntheticRepository repository) throws ClassNotFoundException {
     String className = methodReference.getClassName();

@@ -196,6 +196,23 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
+  public void testFindUnresolvedReferences_packagePrivateInnerClass()
+      throws RepositoryException {
+    List<Path> paths = StaticLinkageChecker.coordinateToJarPaths("io.grpc:grpc-auth:1.15.1");
+
+    FullyQualifiedMethodSignature constructorOfPrivateInnerClass =
+        new FullyQualifiedMethodSignature(
+            "io.opencensus.stats.View$AggregationWindow$Interval",
+            "<init>",
+            "()V");
+
+    List<FullyQualifiedMethodSignature> unresolvedReferences = StaticLinkageChecker
+        .findUnresolvedReferences(paths,
+            Arrays.asList(constructorOfPrivateInnerClass));
+    Truth.assertThat(unresolvedReferences).isEmpty();
+  }
+
+  @Test
   public void testNonExistentJarFileInput() throws ClassNotFoundException {
     try {
       StaticLinkageChecker.findUnresolvedMethodReferences(
@@ -291,23 +308,6 @@ public class StaticLinkageCheckerTest {
         StaticLinkageChecker.methodDefinitionExists(
             constructorInAbstract, classLoader, SyntheticRepository.getInstance());
     Assert.assertTrue(exist);
-  }
-
-  @Test
-  public void testMethodDefinitionExists_packagePrivateInnerClass()
-      throws RepositoryException {
-    List<Path> paths = StaticLinkageChecker.coordinateToJarPaths("io.grpc:grpc-auth:1.15.1");
-
-    FullyQualifiedMethodSignature constructorOfPrivateInnerClass =
-        new FullyQualifiedMethodSignature(
-            "io.opencensus.stats.View$AggregationWindow$Interval",
-            "<init>",
-            "()V");
-
-    List<FullyQualifiedMethodSignature> unresolvedReferences = StaticLinkageChecker
-        .findUnresolvedReferences(paths,
-            Arrays.asList(constructorOfPrivateInnerClass));
-    Truth.assertThat(unresolvedReferences).isEmpty();
   }
 
   @Test
