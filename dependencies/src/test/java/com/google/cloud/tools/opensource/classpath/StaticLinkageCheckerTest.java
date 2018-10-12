@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Set;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.util.SyntheticRepository;
 import org.eclipse.aether.RepositoryException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -139,12 +140,12 @@ public class StaticLinkageCheckerTest {
 
     List<FullyQualifiedMethodSignature> report =
         StaticLinkageChecker.findUnresolvedMethodReferences(pathsForJar);
-    FullyQualifiedMethodSignature methodNotExpectedToFound =
+    FullyQualifiedMethodSignature methodExpectedToBeUnresolved =
         new FullyQualifiedMethodSignature(
-            "com.google.common.io.BaseEncoding",
-            "encode",
-            "([B)Ljava/lang/String;");
-    Truth.assertThat(report).contains(methodNotExpectedToFound);
+            "com.google.api.pathtemplate.PathTemplate",
+            "instantiate",
+            "([Ljava/lang/String;)Ljava/lang/String;");
+    Truth.assertThat(report).contains(methodExpectedToBeUnresolved);
     // As RunQueryRequest is defined in the proto jar file, it should not appear in the report
     Truth.assertThat(report.toString())
         .doesNotContain("com.google.firestore.v1beta1.RunQueryRequest");
@@ -267,10 +268,28 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testMethodDefinitionExists_arrayType() throws ClassNotFoundException {
     ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-    FullyQualifiedMethodSignature checkArgument =
+    FullyQualifiedMethodSignature checkArgumentMethod =
         new FullyQualifiedMethodSignature(
-            "com.google.common.base.Preconditions", "checkArgument", "(ZLjava/lang/Object;)V");
-    boolean exist = StaticLinkageChecker.methodDefinitionExists(checkArgument, classLoader);
+            "com.google.common.base.Preconditions",
+            "checkArgument", "(ZLjava/lang/Object;)V");
+    boolean exist =
+        StaticLinkageChecker.methodDefinitionExists(
+            checkArgumentMethod, classLoader, SyntheticRepository.getInstance());
+    Assert.assertTrue(exist);
+  }
+
+  @Test
+  public void testMethodDefinitionExists_constructorInAbstractClass()
+      throws ClassNotFoundException {
+    ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+    FullyQualifiedMethodSignature constructorInAbstract =
+        new FullyQualifiedMethodSignature(
+            "com.google.common.collect.LinkedHashMultimapGwtSerializationDependencies",
+            "<init>",
+            "(Ljava/util/Map;)V");
+    boolean exist =
+        StaticLinkageChecker.methodDefinitionExists(
+            constructorInAbstract, classLoader, SyntheticRepository.getInstance());
     Assert.assertTrue(exist);
   }
 

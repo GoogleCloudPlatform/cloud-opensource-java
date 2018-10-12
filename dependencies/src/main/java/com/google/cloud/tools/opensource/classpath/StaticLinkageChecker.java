@@ -26,6 +26,7 @@ import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -201,6 +202,7 @@ class StaticLinkageChecker {
    * @param methodReferences methods to search for within the jar files
    * @return list of methods that are not found in the jar files
    */
+  @VisibleForTesting
   static List<FullyQualifiedMethodSignature> findUnresolvedReferences(List<Path> jarFilePaths,
       List<FullyQualifiedMethodSignature> methodReferences) {
     List<FullyQualifiedMethodSignature> unresolvedMethods = new ArrayList<>();
@@ -212,6 +214,7 @@ class StaticLinkageChecker {
     }
     Set<String> classesNotFound = new HashSet<>();
     Set<FullyQualifiedMethodSignature> availableMethodsInJars = new HashSet<>();
+    SyntheticRepository repository = SyntheticRepository.getInstance(classPath);
 
     URL[] jarFileUrls = jarFilePaths.stream().map(jarPath -> {
       try {
@@ -243,7 +246,7 @@ class StaticLinkageChecker {
 
       // Case 3: we need to check the availability of the method through the class loader
       try {
-        if (methodDefinitionExists(methodReference, classLoaderFromJars)) {
+        if (methodDefinitionExists(methodReference, classLoaderFromJars, repository)) {
           availableMethodsInJars.add(methodReference);
         } else {
           unresolvedMethods.add(methodReference);
@@ -258,7 +261,7 @@ class StaticLinkageChecker {
 
   @VisibleForTesting
   static boolean methodDefinitionExists(FullyQualifiedMethodSignature methodReference,
-      ClassLoader classLoader) throws ClassNotFoundException {
+      ClassLoader classLoader, SyntheticRepository repository) throws ClassNotFoundException {
     String className = methodReference.getClassName();
     MethodSignature methodSignature = methodReference.getMethodSignature();
     String methodName = methodSignature.getMethodName();
@@ -277,7 +280,14 @@ class StaticLinkageChecker {
             parameterTypes);
       }
     } catch (NoSuchMethodException ex) {
-      return false;
+      // BCEL helps to search availability of private constructors and methods inaccessible to
+      // Java's reflection API
+      JavaClass javaClass = repository.loadClass(className);
+      List<FullyQualifiedMethodSignature> availableMethodsOnClass =
+          listMethodsOnClass(javaClass);
+      if (!availableMethodsOnClass.contains(methodReference)) {
+        return false;
+      }
     }
     return true;
   }
@@ -320,6 +330,15 @@ class StaticLinkageChecker {
             .map(type -> bcelTypeToJavaClass(type, classLoader))
             .toArray(Class[]::new);
     return parameterTypes;
+  }
+
+  private static List<FullyQualifiedMethodSignature> listMethodsOnClass(JavaClass javaClass) {
+    List<MethodSignature> methods = ClassDumper.listDeclaredMethods(javaClass);
+    List<FullyQualifiedMethodSignature> fullyQualifiedMethodSignatures = methods.stream()
+        .map(method -> new FullyQualifiedMethodSignature(
+            javaClass.getClassName(), method.getMethodName(), method.getDescriptor()))
+        .collect(Collectors.toList());
+    return fullyQualifiedMethodSignatures;
   }
 
   /**
