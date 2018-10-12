@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.eclipse.aether.artifact.Artifact;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
@@ -58,8 +59,8 @@ public class DependencyGraph {
   // map of groupId:artifactId:version to paths
   private SetMultimap<String, DependencyPath> paths = HashMultimap.create();
   
-  // hide constructor
-  DependencyGraph() {
+  @VisibleForTesting
+  public DependencyGraph() {
   }
 
   void addPath(DependencyPath path) {
