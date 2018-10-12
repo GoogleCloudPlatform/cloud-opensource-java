@@ -26,7 +26,6 @@ import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -207,14 +206,15 @@ class StaticLinkageChecker {
       List<FullyQualifiedMethodSignature> methodReferences) {
     List<FullyQualifiedMethodSignature> unresolvedMethods = new ArrayList<>();
 
-    // Creates chain of ClassPath items in the same order as jarFilePaths
+    // Creates chain of ClassPath items in the same order as jarFilePaths for BCEL API
     ClassPath classPath = null;
     for (Path absolutePathToJar : jarFilePaths) {
       classPath = new ClassPath(classPath, absolutePathToJar.toString());
     }
+    SyntheticRepository repository = SyntheticRepository.getInstance(classPath);
+
     Set<String> classesNotFound = new HashSet<>();
     Set<FullyQualifiedMethodSignature> availableMethodsInJars = new HashSet<>();
-    SyntheticRepository repository = SyntheticRepository.getInstance(classPath);
 
     URL[] jarFileUrls = jarFilePaths.stream().map(jarPath -> {
       try {
@@ -228,9 +228,8 @@ class StaticLinkageChecker {
 
     for (FullyQualifiedMethodSignature methodReference : methodReferences) {
       String className = methodReference.getClassName();
-      if (className.startsWith("java.") || className.startsWith("sun.")
-          || className.startsWith("javax.")) {
-        // If there's invalid reference to 'java' package, then such jar would not be compiled
+      if (className.startsWith("java.") || className.startsWith("sun.")) {
+        // Ignore references to JDK package
         continue;
       }
 
@@ -251,7 +250,7 @@ class StaticLinkageChecker {
         } else {
           unresolvedMethods.add(methodReference);
         }
-      } catch (ClassNotFoundException|NoClassDefFoundError ex) {
+      } catch (ClassNotFoundException | NoClassDefFoundError ex) {
         unresolvedMethods.add(methodReference);
         classesNotFound.add(className);
       }
