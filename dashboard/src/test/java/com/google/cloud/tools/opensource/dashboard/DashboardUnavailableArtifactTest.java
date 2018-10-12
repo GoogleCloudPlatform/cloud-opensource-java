@@ -107,6 +107,7 @@ public class DashboardUnavailableArtifactTest {
     ArtifactResults validArtifactResult = new ArtifactResults(validArtifact);
     validArtifactResult.addResult(DashboardMain.TEST_NAME_UPPER_BOUND, 0);
     validArtifactResult.addResult(DashboardMain.TEST_NAME_DEPENDENCY_CONVERGENCE, 0);
+    validArtifactResult.addResult(DashboardMain.TEST_NAME_GLOBAL_UPPER_BOUND, 0);
 
     Artifact invalidArtifact = new DefaultArtifact("io.grpc:nonexistent:jar:1.15.0");
     ArtifactResults errorArtifactResult = new ArtifactResults(invalidArtifact);
