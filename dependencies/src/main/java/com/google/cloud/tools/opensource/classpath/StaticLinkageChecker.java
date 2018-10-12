@@ -206,7 +206,7 @@ class StaticLinkageChecker {
       List<FullyQualifiedMethodSignature> methodReferences) {
     List<FullyQualifiedMethodSignature> unresolvedMethods = new ArrayList<>();
 
-    // Creates chain of ClassPath items in the same order as jarFilePaths for BCEL API
+    // Creates chain of classpath in the same order as jarFilePaths for BCEL API
     ClassPath classPath = null;
     for (Path absolutePathToJar : jarFilePaths) {
       classPath = new ClassPath(classPath, absolutePathToJar.toString());
