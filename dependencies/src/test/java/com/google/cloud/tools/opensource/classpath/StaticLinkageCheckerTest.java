@@ -104,14 +104,14 @@ public class StaticLinkageCheckerTest {
             "getListCollectionIdsMethodHelper",
             "()Lio/grpc/MethodDescriptor;");
 
-    FullyQualifiedMethodSignature externalMethodReference =
+    FullyQualifiedMethodSignature undefinedMethodReference =
         new FullyQualifiedMethodSignature(
-            "io.grpc.protobuf.ProtoUtils",
+            "dummy.ProtoUtils",
             "marshaller",
             "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;");
 
     List<FullyQualifiedMethodSignature> methodReferences = Arrays.asList(
-        internalMethodReference, externalMethodReference
+        internalMethodReference, undefinedMethodReference
     );
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         StaticLinkageChecker.findUnresolvedReferences(pathsForJar, methodReferences);
@@ -193,6 +193,23 @@ public class StaticLinkageCheckerTest {
         StaticLinkageChecker.findUnresolvedReferences(pathsForJarWithVersion66First,
             Arrays.asList(methodAddedInVersion66));
     Truth.assertThat(unresolvedMethodReferencesWithPath2).hasSize(0);
+  }
+
+  @Test
+  public void testFindUnresolvedReferences_packagePrivateInnerClass()
+      throws RepositoryException {
+    List<Path> paths = StaticLinkageChecker.coordinateToJarPaths("io.grpc:grpc-auth:1.15.1");
+
+    FullyQualifiedMethodSignature constructorOfPrivateInnerClass =
+        new FullyQualifiedMethodSignature(
+            "io.opencensus.stats.View$AggregationWindow$Interval",
+            "<init>",
+            "()V");
+
+    List<FullyQualifiedMethodSignature> unresolvedReferences = StaticLinkageChecker
+        .findUnresolvedReferences(paths,
+            Arrays.asList(constructorOfPrivateInnerClass));
+    Truth.assertThat(unresolvedReferences).isEmpty();
   }
 
   @Test
