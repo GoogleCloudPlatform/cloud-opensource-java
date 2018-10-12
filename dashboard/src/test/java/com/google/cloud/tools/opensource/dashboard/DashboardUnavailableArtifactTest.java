@@ -78,7 +78,7 @@ public class DashboardUnavailableArtifactTest {
     ArtifactCache cache = new ArtifactCache();
     cache.setInfoMap(map);
     List<ArtifactResults> artifactResults =
-        DashboardMain.generateReports(configuration, outputDirectory, cache );
+        DashboardMain.generateReports(configuration, outputDirectory, cache);
 
     Assert.assertEquals(
         "The length of the ArtifactResults should match the length of artifacts",
