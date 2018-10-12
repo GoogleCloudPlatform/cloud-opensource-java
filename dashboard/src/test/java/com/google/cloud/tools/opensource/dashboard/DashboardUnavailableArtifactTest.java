@@ -75,8 +75,10 @@ public class DashboardUnavailableArtifactTest {
     map.put(validArtifact, new ArtifactInfo(graph1, graph2));
     map.put(nonExistentArtifact, new ArtifactInfo(new RepositoryException("foo")));
     
+    ArtifactCache cache = new ArtifactCache();
+    cache.setInfoMap(map);
     List<ArtifactResults> artifactResults =
-        DashboardMain.generateReports(configuration, outputDirectory, map);
+        DashboardMain.generateReports(configuration, outputDirectory, cache);
 
     Assert.assertEquals(
         "The length of the ArtifactResults should match the length of artifacts",
@@ -105,6 +107,7 @@ public class DashboardUnavailableArtifactTest {
     ArtifactResults validArtifactResult = new ArtifactResults(validArtifact);
     validArtifactResult.addResult(DashboardMain.TEST_NAME_UPPER_BOUND, 0);
     validArtifactResult.addResult(DashboardMain.TEST_NAME_DEPENDENCY_CONVERGENCE, 0);
+    validArtifactResult.addResult(DashboardMain.TEST_NAME_GLOBAL_UPPER_BOUND, 0);
 
     Artifact invalidArtifact = new DefaultArtifact("io.grpc:nonexistent:jar:1.15.0");
     ArtifactResults errorArtifactResult = new ArtifactResults(invalidArtifact);

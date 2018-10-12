@@ -50,45 +50,37 @@
   <body>
     <h1>Google Cloud Platform Dependency Dashboard</h1>
     <h2>Artifact Details</h2>
+    
+    <#macro testResult row name>
+      <#if row.getResult(name)?? ><#-- checking isNotNull() -->
+        <#-- When it's not null, the test ran. It's either PASS or FAIL -->
+        <#assign test_label = row.getResult(name)?then('PASS', 'FAIL')>
+        <#assign failure_count = row.getFailureCount(name)>
+      <#else>
+        <#-- Null means there's an exception and test couldn't run -->
+        <#assign test_label = "UNAVAILABLE">
+      </#if>
+      <td class='${test_label}' title="${row.getExceptionMessage()!""}">
+        <#if row.getResult(name)?? >
+          <#if failure_count == 1>1 FAILURE
+          <#elseif failure_count gt 1>${failure_count} FAILURES
+          <#else>PASS
+          </#if>
+        <#else>UNAVAILABLE
+        </#if>
+      </td>
+    </#macro>
+    
     <table>
       <tr>
-        <th>Artifact</th><th>Upper Bounds</th><th>Dependency Convergence</th>
+        <th>Artifact</th><th>Upper Bounds</th><th>Dependency Convergence</th><th>Global Upper Bounds</th>
       </tr>
       <#list table as row>
         <tr>
-          <#if row.getResult("Upper Bounds")?? ><#-- checking isNotNull() -->
-            <#-- When it's not null, it means the test ran. It's either PASS or FAIL -->
-            <#assign upper_bound_test_label = row.getResult("Upper Bounds")?then('PASS', 'FAIL')>
-            <#assign upper_bound_failure_count = row.getFailureCount("Upper Bounds")>
-          <#else>
-            <#-- Null means there's an exception and test couldn't run -->
-            <#assign upper_bound_test_label = "UNAVAILABLE">
-          </#if>
           <td><a href='${row.getCoordinates()?replace(":", "_")}.html'>${row.getCoordinates()}</a></td>
-          <td class='${upper_bound_test_label}' title="${row.getExceptionMessage()!""}">
-            <#if row.getResult("Upper Bounds")?? >
-              <#if upper_bound_failure_count == 1>1 FAILURE
-              <#elseif upper_bound_failure_count gt 1>${upper_bound_failure_count} FAILURES
-              <#else>PASS
-              </#if>
-            <#else>UNAVAILABLE
-            </#if>
-          </td>
-          <#if row.getResult("Dependency Convergence")?? >
-            <#assign dependency_convergence_test_label = row.getResult("Dependency Convergence")?then('PASS', 'FAIL') >
-            <#assign dependency_convergence_failure_count = row.getFailureCount("Dependency Convergence")>
-          <#else>
-            <#assign dependency_convergence_test_label = "UNAVAILABLE">
-          </#if>
-          <td class='${dependency_convergence_test_label}' title="${row.getExceptionMessage()!""}">
-            <#if row.getResult("Dependency Convergence")?? >
-              <#if dependency_convergence_failure_count == 1>1 FAILURE
-              <#elseif dependency_convergence_failure_count gt 1>${dependency_convergence_failure_count} FAILURES
-              <#else>PASS
-              </#if>
-            <#else>UNAVAILABLE
-            </#if>
-          </td>
+          <@testResult row=row name="Upper Bounds"/>
+          <@testResult row=row name="Global Upper Bounds"/>
+          <@testResult row=row name="Dependency Convergence"/>
         </tr>
       </#list>
     </table>

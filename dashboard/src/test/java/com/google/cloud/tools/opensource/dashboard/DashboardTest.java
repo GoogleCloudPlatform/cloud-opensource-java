@@ -105,6 +105,10 @@ public class DashboardTest {
         Element secondResult = (Element) (td.get(2));
         Truth.assertThat(secondResult.getValue().replaceAll("\\s","")).containsMatch("PASS|\\d+FAILURES?");
         Truth.assertThat(secondResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
+        
+        Element thirdResult = (Element) (td.get(3));
+        Truth.assertThat(thirdResult.getValue().replaceAll("\\s","")).containsMatch("PASS|\\d+FAILURES?");
+        Truth.assertThat(thirdResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
       }
       Nodes href = document.query("//tr/td/a/@href");
       for (int i = 0; i < href.size(); i++) {
