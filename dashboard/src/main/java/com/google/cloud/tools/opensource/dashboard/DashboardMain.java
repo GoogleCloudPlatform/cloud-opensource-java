@@ -177,10 +177,10 @@ public class DashboardMain {
       DependencyGraph transitiveDependencies = artifactInfo.getTransitiveDependencies();
       
       Map<Artifact, Artifact> upperBoundFailures =
-          findLocalUpperBoundsFailures(completeDependencies, transitiveDependencies);
+          findUpperBoundsFailures(completeDependencies.getHighestVersionMap(), transitiveDependencies);
 
-      Map<Artifact, Artifact> globalUpperBoundFailures =
-          findGlobalUpperBoundsFailures(globalDependencies, transitiveDependencies);
+      Map<Artifact, Artifact> globalUpperBoundFailures = findUpperBoundsFailures(
+          collectLatestVersions(globalDependencies), transitiveDependencies);
 
       String dependencyTree =
           DependencyTreeFormatter.formatDependencyPaths(completeDependencies.list());
@@ -204,38 +204,11 @@ public class DashboardMain {
       return results;
     }
   }
-
-  private static Map<Artifact, Artifact> findLocalUpperBoundsFailures(DependencyGraph graph,
-      DependencyGraph transitiveDependencies) {
-    Map<String, String> expectedVersionMap = graph.getHighestVersionMap();
-    Map<String, String> actualVersionMap = transitiveDependencies.getHighestVersionMap();
-
-    VersionComparator comparator = new VersionComparator();
-
-    Map<Artifact, Artifact> upperBoundFailures = new LinkedHashMap<>();
-
-    for (String id : expectedVersionMap.keySet()) {
-      String expectedVersion = expectedVersionMap.get(id);
-      String actualVersion = actualVersionMap.get(id);
-      // Check that the actual version is not null because it is
-      // possible for dependencies to appear or disappear from the tree
-      // depending on which version of another dependency is loaded.
-      // In both cases, no action is needed.
-      if (actualVersion != null && comparator.compare(actualVersion, expectedVersion) < 0) {
-        // Maven did not choose highest version
-        // upperBoundFailures.add("Upgrade " + id + ":" + actualVersion + " to " + expectedVersion);
-        DefaultArtifact lower = new DefaultArtifact(id + ":" + actualVersion);
-        DefaultArtifact upper = new DefaultArtifact(id + ":" + expectedVersion);
-        upperBoundFailures.put(lower, upper);
-      }
-    }
-    return upperBoundFailures;
-  }
   
-  // TODO combine with above method; only first line is different
-  private static Map<Artifact, Artifact> findGlobalUpperBoundsFailures(List<DependencyGraph> graphs,
+  private static Map<Artifact, Artifact> findUpperBoundsFailures(
+      Map<String, String> expectedVersionMap,
       DependencyGraph transitiveDependencies) {
-    Map<String, String> expectedVersionMap = collectLatestVersions(graphs);
+
     Map<String, String> actualVersionMap = transitiveDependencies.getHighestVersionMap();
 
     VersionComparator comparator = new VersionComparator();
