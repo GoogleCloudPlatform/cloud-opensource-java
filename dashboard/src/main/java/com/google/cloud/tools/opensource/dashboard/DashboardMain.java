@@ -193,6 +193,7 @@ public class DashboardMain {
       templateData.put("updates", convergenceIssues);
       templateData.put("upperBoundFailures", upperBoundFailures);
       templateData.put("globalUpperBoundFailures", globalUpperBoundFailures);
+      templateData.put("lastUpdated", LocalDateTime.now());
       templateData.put("dependencyTree", dependencyTree);
       report.process(templateData, out);
 
