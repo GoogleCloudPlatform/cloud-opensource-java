@@ -206,11 +206,10 @@ class StaticLinkageChecker {
       List<FullyQualifiedMethodSignature> methodReferences) {
     List<FullyQualifiedMethodSignature> unresolvedMethods = new ArrayList<>();
 
-    // Creates chain of classpath in the same order as jarFilePaths for BCEL API
-    ClassPath classPath = null;
-    for (Path absolutePathToJar : jarFilePaths) {
-      classPath = new ClassPath(classPath, absolutePathToJar.toString());
-    }
+    // Creates classpath in the same order as jarFilePaths for BCEL API
+    String pathAsString =
+        jarFilePaths.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator));
+    ClassPath classPath = new ClassPath(pathAsString);
     SyntheticRepository repository = SyntheticRepository.getInstance(classPath);
 
     Set<String> classesNotFound = new HashSet<>();
@@ -264,23 +263,27 @@ class StaticLinkageChecker {
     String className = methodReference.getClassName();
     MethodSignature methodSignature = methodReference.getMethodSignature();
     String methodName = methodSignature.getMethodName();
-    Class clazz =
-        className.startsWith("[") ? Array.class : classLoader.loadClass(className);
     Class[] parameterTypes = methodDescriptorToClass(methodSignature.getDescriptor(),
         classLoader);
     try {
+      // Attempt 1: Find the class and method in the class loader
+      // Class loader helps to resolve class hierarchy, such as methods defined in parent class
+      Class clazz =
+          className.startsWith("[") ? Array.class : classLoader.loadClass(className);
       if ("<init>".equals(methodName)) {
         clazz.getConstructor(parameterTypes);
       } else if ("clone".equals(methodName) && clazz == Array.class) {
         // Array's clone method is not returned by getMethod
         // https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html#getMethod-java.lang.String-java.lang.Class...-
+        return true;
       } else {
         clazz.getMethod(methodSignature.getMethodName(),
             parameterTypes);
       }
-    } catch (NoSuchMethodException ex) {
-      // BCEL helps to search availability of private constructors and methods inaccessible to
-      // Java's reflection API
+    } catch (NoSuchMethodException | ClassNotFoundException ex) {
+      // Attempt 2: Find the class and method in BCEL API
+      // BCEL helps to search availability of (package) private class, constructors and methods
+      // that are inaccessible to Java's reflection API or the class loader
       JavaClass javaClass = repository.loadClass(className);
       List<FullyQualifiedMethodSignature> availableMethodsOnClass =
           listMethodsOnClass(javaClass);
