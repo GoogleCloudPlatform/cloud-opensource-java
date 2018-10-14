@@ -74,6 +74,14 @@ public class DashboardTest {
     // Ensuring normal execution doesn't cause any exception
     DashboardMain.main(null);
   }
+  
+  @Test
+  public void testCss()
+      throws IOException, TemplateException, ParsingException, ArtifactDescriptorException {
+    Path dashboardCss = outputDirectory.resolve("dashboard.css");
+    Assert.assertTrue(Files.exists(dashboardCss));
+    Assert.assertTrue(Files.isRegularFile(dashboardCss));
+  }
 
   @Test
   public void testDashboard()

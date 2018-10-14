@@ -72,6 +72,8 @@ public class DashboardMain {
 
     Path relativePath = Paths.get("target", "dashboard");
     Path output = Files.createDirectories(relativePath);
+    
+    copyCss(output);
 
     DefaultArtifact bom =
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.66.0-SNAPSHOT");
@@ -83,6 +85,15 @@ public class DashboardMain {
     generateDashboard(configuration, output, table, cache.getGlobalDependencies());
 
     return output;
+  }
+
+  private static void copyCss(Path output) throws IOException {
+    ClassLoader classLoader = DashboardMain.class.getClassLoader();
+    Path input = Paths.get(classLoader.getResource("css/dashboard.css").getPath());
+    Path copy = output.resolve(input.getFileName());
+    if (!Files.exists(copy)) {
+      Files.copy(input, copy);
+    }
   }
 
   @VisibleForTesting
