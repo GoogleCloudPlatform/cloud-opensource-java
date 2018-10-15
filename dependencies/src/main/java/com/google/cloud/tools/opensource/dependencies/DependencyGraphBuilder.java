@@ -149,11 +149,12 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Lists dependencies for the artifact shown in pre-order. This is useful for printing
-   * dependencies as tree
+   * Lists compile time dependencies for the artifact shown in pre-order.
+   * Although Maven uses BFS to build dependency list, this method is useful for printing the
+   * dependencies of the artifact as tree.
    *
-   * @param artifact artifact to get dependencies
-   * @return list of dependencies for the artifact
+   * @param artifact Maven artifact
+   * @return list of dependencies for the artifact in pre-order
    */
   public static DependencyGraph getCompleteDependenciesInPreorder(Artifact artifact)
       throws DependencyCollectionException, DependencyResolutionException {

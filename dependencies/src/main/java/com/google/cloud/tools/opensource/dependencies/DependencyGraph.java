@@ -46,7 +46,7 @@ import com.google.common.collect.TreeMultimap;
  */
 public class DependencyGraph {
 
-  // DependencyGraphBuilder builds this in breadth first order, unless explicitly stated otherwise
+  // DependencyGraphBuilder builds this in breadth first order, unless explicitly stated otherwise.
   // That is, this list contains the paths to each node in breadth first order 
   private final List<DependencyPath> graph = new ArrayList<>();
 
