@@ -16,19 +16,6 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.cloud.tools.opensource.dependencies.Update;
-import com.google.cloud.tools.opensource.dependencies.VersionComparator;
-import com.google.common.annotations.VisibleForTesting;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
-import freemarker.template.Version;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -46,12 +33,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import freemarker.template.Version;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
+
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.cloud.tools.opensource.dependencies.Update;
+import com.google.cloud.tools.opensource.dependencies.VersionComparator;
+import com.google.common.annotations.VisibleForTesting;
 
 public class DashboardMain {
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";

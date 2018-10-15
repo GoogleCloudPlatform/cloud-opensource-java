@@ -16,17 +16,19 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import com.google.common.truth.Truth;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.google.common.truth.Truth;
 
 public class DependencyGraphBuilderTest {
 
