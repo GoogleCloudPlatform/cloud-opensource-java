@@ -55,6 +55,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
@@ -115,16 +116,24 @@ class StaticLinkageChecker {
     Options options = new Options();
     options.addOption("c", "coordinate", true, "Maven coordinates (separated by ',')");
     options.addOption("j", "jars", true, "Jar files (separated by ',')");
+    options.addOption("e", "exclude", true,
+        "artifacts to exclude as targets. '<groupId>:<artifactId>' (separated by ',')");
 
     HelpFormatter formatter = new HelpFormatter();
     CommandLineParser parser = new DefaultParser();
     List<Path> jarFilePaths = new ArrayList<>();
+    Set<String> exclusionJars = new HashSet<>();
     try {
       CommandLine cmd = parser.parse(options, arguments);
+      if (cmd.hasOption("e")) {
+        String exclusionJarsOption = cmd.getOptionValue("e");
+        exclusionJars.addAll(Arrays.asList(exclusionJarsOption.split(",")));
+        System.out.println("Not checking dependency from following jars: " + exclusionJars);
+      }
       if (cmd.hasOption("c")) {
         String mavenCoordinates = cmd.getOptionValue("c");
         for (String coordinate : mavenCoordinates.split(",")) {
-          jarFilePaths.addAll(coordinateToJarPaths(coordinate));
+          jarFilePaths.addAll(coordinateToJarPaths(coordinate, exclusionJars));
         }
       }
       if (cmd.hasOption("j")) {
@@ -153,13 +162,20 @@ class StaticLinkageChecker {
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem in retrieving jar files
    */
-  static List<Path> coordinateToJarPaths(String coordinate) throws RepositoryException {
+  static List<Path> coordinateToJarPaths(String coordinate, Set<String> exclusion)
+      throws RepositoryException {
     DefaultArtifact artifact = new DefaultArtifact(coordinate);
     DependencyGraph transitiveDependencies =
         DependencyGraphBuilder.getTransitiveDependencies(artifact);
     List<DependencyPath> dependencyPaths = transitiveDependencies.list();
     List<Path> jarPaths = dependencyPaths.stream().map(dependencyPath -> {
-      File artifactFile = dependencyPath.getLeaf().getFile();
+      Artifact dependencyArtifact = dependencyPath.getLeaf();
+      String exclusionKey = dependencyArtifact.getGroupId()
+          + ":" + dependencyArtifact.getArtifactId();
+      if (exclusion.contains(exclusionKey)) {
+        return null;
+      }
+      File artifactFile = dependencyArtifact.getFile();
       Path artifactFilePath = artifactFile.toPath();
       if (artifactFilePath.toString().endsWith(".jar")) {
         return artifactFilePath.toAbsolutePath();
