@@ -4,7 +4,7 @@
     <link rel="stylesheet" type="text/css" href="dashboard.css" />
   </head>
   <body>
-    <h1>Google Cloud Platform Dependency Analysis for ${groupId}:${artifactId}:${version}</h1>
+    <h1>Dependency Analysis of ${groupId}:${artifactId}:${version}</h1>
     
     
     <h2>Global Upper Bounds Check</h2>
