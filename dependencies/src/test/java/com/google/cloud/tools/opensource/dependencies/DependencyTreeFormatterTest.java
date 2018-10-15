@@ -29,14 +29,17 @@ public class DependencyTreeFormatterTest {
     List<DependencyPath> dependencyPathList = new ArrayList<>();
 
     // 4 artifacts as DependencyPath dummy inputs
-    DependencyPath dependency1 = new DependencyPath();
-    dependency1.add(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"));
-    dependencyPathList.add(dependency1);
 
     DependencyPath dependency2 = new DependencyPath();
     dependency2.add(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"));
     dependency2.add(new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"));
     dependencyPathList.add(dependency2);
+
+    // dependency1 and dependency2 are intentionally added in wrong order
+    // formatDependencyPaths is responsible to sort the items in the tree
+    DependencyPath dependency1 = new DependencyPath();
+    dependency1.add(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"));
+    dependencyPathList.add(dependency1);
 
     DependencyPath dependency3 = new DependencyPath();
     dependency3.add(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"));

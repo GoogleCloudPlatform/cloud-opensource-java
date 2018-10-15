@@ -17,7 +17,11 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import java.util.List;
+import java.util.Set;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
@@ -66,11 +70,51 @@ public class DependencyTreeFormatter {
    */
   public static String formatDependencyPaths(List<DependencyPath> dependencyPaths) {
     StringBuilder stringBuilder = new StringBuilder();
-    for (DependencyPath dependencyPath : dependencyPaths) {
-      int depth = dependencyPath.size();
-      String indentCharacter = "  ";
-      stringBuilder.append(Strings.repeat(indentCharacter, depth) + dependencyPath.getLeaf()+"\n");
-    }
+    ListMultimap<DependencyPath, DependencyPath> tree = buildDependencyPathTree(dependencyPaths);
+    // Empty dependency path to retrieve children of root node
+    formatDependencyPathTree(stringBuilder, tree, new DependencyPath());
     return stringBuilder.toString();
+  }
+
+  private static void formatDependencyPathTree(
+      StringBuilder stringBuilder,
+      ListMultimap<DependencyPath, DependencyPath> tree,
+      DependencyPath currentNode) {
+    String indentCharacter = "  ";
+    int depth = currentNode.size();
+    if (depth > 0) {
+      // Nodes at top have one or more depth
+      stringBuilder.append(Strings.repeat(indentCharacter, depth));
+      stringBuilder.append(currentNode.getLeaf());
+      stringBuilder.append("\n");
+    }
+    for (DependencyPath childPath : tree.get(currentNode)) {
+      formatDependencyPathTree(stringBuilder, tree, childPath);
+    }
+  }
+
+  /**
+   * Builds ListMultiMap that represents a Maven dependency tree of parent-children relationship.
+   * The root node is represented as an empty {@link DependencyPath} and its children are
+   * the values for the root node. As Maven dependency is retrieved via BFS, the order of children
+   * matters.
+   *
+   * @param dependencyPaths a list of dependency path without assuming any order
+   * @return ListMultiMap representing a Maven dependency tree
+   */
+  private static ListMultimap<DependencyPath, DependencyPath> buildDependencyPathTree(
+      List<DependencyPath> dependencyPaths) {
+    ListMultimap<DependencyPath, DependencyPath> tree = ArrayListMultimap.create();
+    for (DependencyPath dependencyPath : dependencyPaths) {
+      List<Artifact> artifactPath = dependencyPath.getPath();
+      // empty list if the node is at root
+      List<Artifact> parentArtifactPath = artifactPath.subList(0, artifactPath.size() - 1);
+      DependencyPath parentDependencyPath = new DependencyPath();
+      parentArtifactPath.forEach(
+          parentArtifactPathNode -> parentDependencyPath.add(parentArtifactPathNode));
+      // Relying on DependencyPath's equality
+      tree.put(parentDependencyPath, dependencyPath);
+    }
+    return tree;
   }
 }

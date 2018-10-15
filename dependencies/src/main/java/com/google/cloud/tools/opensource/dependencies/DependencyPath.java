@@ -88,6 +88,10 @@ public final class DependencyPath {
     return path.get(size() - 1);
   }
 
+  public List<Artifact> getPath() {
+    return path;
+  }
+
   // TODO think about index out of bounds
   Artifact get(int i) {
     return path.get(i);
