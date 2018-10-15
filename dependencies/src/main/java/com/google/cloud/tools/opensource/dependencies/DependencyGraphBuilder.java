@@ -16,9 +16,9 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -91,7 +91,6 @@ public class DependencyGraphBuilder {
 
   private static DependencyNode resolveCompileTimeDependencies(List<Artifact> artifacts)
       throws DependencyCollectionException, DependencyResolutionException {
-    RepositorySystemSession session = RepositoryUtility.newSession(system);
     String key = artifacts.stream().map(Artifacts::toCoordinates).collect(Collectors.joining(","));
     if (cache.containsKey(key)) {
       return cache.get(key);
@@ -106,6 +105,7 @@ public class DependencyGraphBuilder {
     CollectRequest collectRequest = new CollectRequest();
     collectRequest.setDependencies(dependencyList);
     collectRequest.addRepository(RepositoryUtility.CENTRAL);
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
     CollectResult collectResult = system.collectDependencies(session, collectRequest);
     // Root node's artifact is set to null
     DependencyNode node = collectResult.getRoot();
@@ -143,7 +143,7 @@ public class DependencyGraphBuilder {
     // root node
     DependencyNode node = resolveCompileTimeRootDependencies(artifact);
     DependencyGraph graph = new DependencyGraph();
-    fullLevelorder(node, graph);
+    fullLevelOrder(node, graph);
     
     return graph;
   }
@@ -159,7 +159,7 @@ public class DependencyGraphBuilder {
     // root node
     DependencyNode node = resolveCompileTimeRootDependencies(artifact);
     DependencyGraph graph = new DependencyGraph();
-    levelorder(node, graph);
+    levelOrder(node, graph);
     return graph;
   }
 
@@ -168,21 +168,13 @@ public class DependencyGraphBuilder {
     // root node is dummy (artifact: null) and has dependencies as children
     DependencyNode node = resolveCompileTimeDependencies(artifacts);
     DependencyGraph graph = new DependencyGraph();
-    levelorder(node, graph);
+    levelOrder(node, graph);
     return graph;
   }
 
-  private static class LevelOrderQueueItem {
+  private static final class LevelOrderQueueItem {
     DependencyNode dependencyNode;
     Stack<DependencyNode> parentNodes;
-
-    DependencyNode getDependencyNode() {
-      return dependencyNode;
-    }
-
-    Stack<DependencyNode> getParentNodes() {
-      return parentNodes;
-    }
 
     LevelOrderQueueItem(DependencyNode dependencyNode,
         Stack<DependencyNode> parentNodes) {
@@ -192,14 +184,14 @@ public class DependencyGraphBuilder {
   }
 
   @SuppressWarnings("unchecked")
-  private static void levelorder(DependencyNode node, DependencyGraph graph) {
-    Queue<LevelOrderQueueItem> queue = new LinkedList<>();
+  private static void levelOrder(DependencyNode node, DependencyGraph graph) {
+    Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(node, new Stack<>()));
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
-      DependencyNode dependencyNode = item.getDependencyNode();
+      DependencyNode dependencyNode = item.dependencyNode;
       DependencyPath forPath = new DependencyPath();
-      Stack<DependencyNode> parentNodes = item.getParentNodes();
+      Stack<DependencyNode> parentNodes = item.parentNodes;
       parentNodes.forEach(parentNode -> forPath.add(parentNode.getArtifact()));
       if (dependencyNode.getArtifact() != null) {
         // When requesting dependencies of 2 or more artifacts, root is null
@@ -213,15 +205,15 @@ public class DependencyGraphBuilder {
     }
   }
 
-  private static void fullLevelorder(DependencyNode node, DependencyGraph graph)
+  private static void fullLevelOrder(DependencyNode node, DependencyGraph graph)
       throws DependencyCollectionException, DependencyResolutionException {
-    Queue<LevelOrderQueueItem> queue = new LinkedList<>();
+    Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(node, new Stack<>()));
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
-      DependencyNode dependencyNode = item.getDependencyNode();
+      DependencyNode dependencyNode = item.dependencyNode;
       DependencyPath forPath = new DependencyPath();
-      Stack<DependencyNode> parentNodes = item.getParentNodes();
+      Stack<DependencyNode> parentNodes = item.parentNodes;
       parentNodes.forEach(parentNode -> forPath.add(parentNode.getArtifact()));
       if (dependencyNode.getArtifact() != null) {
         // When requesting dependencies of 2 or more artifacts, root is null
