@@ -82,7 +82,7 @@
       </h3>
     </#if>
         
-    <h2>Dependency Convergence (Experimental)</h2>
+    <h2>Dependency Convergence</h2>
     
     <p>There is exactly one version of each dependency in the library's transitive dependency tree.
        That is, two artifacts with the same group ID and artifact ID but different versions
@@ -90,6 +90,10 @@
     
     <#if updates?size gt 0>
       <h3 style="color: red">Suggested Dependency Updates</h3>
+      
+      <p>Caution: The algorithm for suggesting updates is imperfect.
+         They are not ordered by importance, and one change 
+         may render another moot.</p>
       
     <p>Suggested updates to bring this artifact and its dependencies 
        into sync with the highest versions
