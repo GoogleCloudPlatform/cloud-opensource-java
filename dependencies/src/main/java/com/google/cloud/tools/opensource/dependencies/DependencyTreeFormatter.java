@@ -20,7 +20,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import java.util.List;
-import java.util.Set;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
@@ -57,7 +56,7 @@ public class DependencyTreeFormatter {
       throws DependencyCollectionException, DependencyResolutionException {
     DefaultArtifact rootArtifact = new DefaultArtifact(coordinate);
     DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.getCompleteDependenciesInPreorder(rootArtifact);
+        DependencyGraphBuilder.getCompleteDependencies(rootArtifact);
     System.out.println("Dependencies for " + coordinate);
     System.out.println(formatDependencyPaths(dependencyGraph.list()));
   }
@@ -66,17 +65,20 @@ public class DependencyTreeFormatter {
    * Prints dependencies expressed in dependency paths in tree in similar way to mvn
    * dependency:tree.
    *
-   * @param dependencyPaths sorted dependency paths in pre-order
+   * @param dependencyPaths dependency paths from @{@link
+   *     DependencyGraphBuilder#getCompleteDependencies(Artifact)}. Each element must have its
+   *     parent in the list, except the ones at the root.
    */
   public static String formatDependencyPaths(List<DependencyPath> dependencyPaths) {
     StringBuilder stringBuilder = new StringBuilder();
+    // Printing text representing a tree requires traversing the items in pre-order
     ListMultimap<DependencyPath, DependencyPath> tree = buildDependencyPathTree(dependencyPaths);
-    // Empty dependency path to retrieve children of root node
-    formatDependencyPathTree(stringBuilder, tree, new DependencyPath());
+    // Empty dependency path is to retrieve children of root node
+    formatDependencyPathTreePreOrder(stringBuilder, tree, new DependencyPath());
     return stringBuilder.toString();
   }
 
-  private static void formatDependencyPathTree(
+  private static void formatDependencyPathTreePreOrder(
       StringBuilder stringBuilder,
       ListMultimap<DependencyPath, DependencyPath> tree,
       DependencyPath currentNode) {
@@ -89,7 +91,7 @@ public class DependencyTreeFormatter {
       stringBuilder.append("\n");
     }
     for (DependencyPath childPath : tree.get(currentNode)) {
-      formatDependencyPathTree(stringBuilder, tree, childPath);
+      formatDependencyPathTreePreOrder(stringBuilder, tree, childPath);
     }
   }
 

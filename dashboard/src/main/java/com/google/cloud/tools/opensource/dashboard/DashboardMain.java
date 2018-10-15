@@ -48,7 +48,6 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.Update;
@@ -148,9 +147,8 @@ public class DashboardMain {
     
     for (Artifact artifact : artifacts) {
       try {
-        // Pre-order is for showing dependency tree
         DependencyGraph completeDependencies =
-            DependencyGraphBuilder.getCompleteDependenciesInPreorder(artifact);
+            DependencyGraphBuilder.getCompleteDependencies(artifact);
         globalDependencies.add(completeDependencies);
         
         // picks versions according to Maven rules
@@ -196,9 +194,8 @@ public class DashboardMain {
       Map<Artifact, Artifact> globalUpperBoundFailures = findUpperBoundsFailures(
           collectLatestVersions(globalDependencies), transitiveDependencies);
 
-      List<DependencyPath> dependenciesInPreorder = completeDependencies.list();
       String dependencyTree =
-          DependencyTreeFormatter.formatDependencyPaths(dependenciesInPreorder);
+          DependencyTreeFormatter.formatDependencyPaths(completeDependencies.list());
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
