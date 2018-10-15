@@ -52,7 +52,8 @@ public class DependencyTreeFormatter {
   private static void printDependencyTree(String coordinate)
       throws DependencyCollectionException, DependencyResolutionException {
     DefaultArtifact rootArtifact = new DefaultArtifact(coordinate);
-    DependencyGraph dependencyGraph = DependencyGraphBuilder.getCompleteDependencies(rootArtifact);
+    DependencyGraph dependencyGraph =
+        DependencyGraphBuilder.getCompleteDependenciesInPreorder(rootArtifact);
     System.out.println("Dependencies for " + coordinate);
     System.out.println(formatDependencyPaths(dependencyGraph.list()));
   }

@@ -147,6 +147,21 @@ public class DependencyGraphBuilder {
     
     return graph;
   }
+
+  /**
+   * Lists dependencies for the artifact shown in pre-order. This is useful for printing
+   * dependencies as tree
+   *
+   * @param artifact artifact to get dependencies
+   * @return list of dependencies for the artifact
+   */
+  public static DependencyGraph getCompleteDependenciesInPreorder(Artifact artifact)
+      throws DependencyCollectionException, DependencyResolutionException {
+    DependencyNode node = resolveCompileTimeRootDependencies(artifact);
+    DependencyGraph graph = new DependencyGraph();
+    fullPreorder(new Stack<>(), node, graph);
+    return graph;
+  }
   
   /**
    * Finds the complete transitive dependency graph as seen by Maven.
@@ -165,7 +180,7 @@ public class DependencyGraphBuilder {
 
   static DependencyGraph getTransitiveDependencies(List<Artifact> artifacts)
       throws DependencyCollectionException, DependencyResolutionException {
-    // node is dummy (null) and it has dependencies as children
+    // root node is dummy (artifact: null) and has dependencies as children
     DependencyNode node = resolveCompileTimeDependencies(artifacts);
     DependencyGraph graph = new DependencyGraph();
     levelorder(node, graph);
@@ -247,6 +262,42 @@ public class DependencyGraphBuilder {
       }
       for (DependencyNode child : dependencyNode.getChildren()) {
         queue.add(new LevelOrderQueueItem(child, (Stack<DependencyNode>) parentNodes.clone()));
+      }
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private static void fullPreorder(Stack<DependencyNode> path, DependencyNode current,
+      DependencyGraph graph) throws DependencyCollectionException, DependencyResolutionException {
+
+    path.push(current);
+
+    DependencyPath forPath = new DependencyPath();
+    for (DependencyNode node : path) {
+      if (!"system".equals(node.getDependency().getScope())) {
+        forPath.add(node.getArtifact());
+      }
+    }
+    graph.addPath(forPath);
+
+    for (DependencyNode child : current.getChildren()) {
+      if (!"system".equals(child.getDependency().getScope())) {
+        try {
+          child = resolveCompileTimeRootDependencies(child.getArtifact());
+          // somehow we've got an infinite recursion here
+          // requires equals
+          if (path.contains(child)) {
+            System.err.println("Infinite recursion resolving " + current);
+            System.err.println("Likely cycle in " + forPath);
+            System.err.println("Child " + child);
+          } else {
+            fullPreorder((Stack<DependencyNode>) path.clone(), child, graph);
+          }
+        } catch (DependencyResolutionException ex) {
+          System.err.println("Error resolving " + forPath);
+          System.err.println(ex.getMessage());
+          throw ex;
+        }
       }
     }
   }
