@@ -16,18 +16,17 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.truth.Truth;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.google.common.truth.Truth;
 
 public class DependencyGraphBuilderTest {
 
@@ -88,4 +87,19 @@ public class DependencyGraphBuilderTest {
     Truth.assertThat(coordinates).contains("com.google.code.findbugs:jsr305:jar:3.0.2");
   }
 
+  @Test
+  public void testGetTransitiveDependenciesWithMultipleArtifacts()
+      throws DependencyCollectionException, DependencyResolutionException {
+    DependencyGraph graph =
+        DependencyGraphBuilder.getTransitiveDependencies(Arrays.asList(datastore, guava));
+
+    List<DependencyPath> list = graph.list();
+    Assert.assertTrue(list.size() > 10);
+    DependencyPath firstElement = list.get(0);
+    Assert.assertEquals("BFS should pick up datastore as first element in the list",
+        "google-cloud-datastore", firstElement.getLeaf().getArtifactId());
+    DependencyPath secondElement = list.get(1);
+    Assert.assertEquals("BFS should pick up guava before dependencies from datastore",
+        "guava", secondElement.getLeaf().getArtifactId());
+  }
 }
