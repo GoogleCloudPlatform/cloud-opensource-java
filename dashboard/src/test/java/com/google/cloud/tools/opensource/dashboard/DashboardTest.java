@@ -74,6 +74,14 @@ public class DashboardTest {
     // Ensuring normal execution doesn't cause any exception
     DashboardMain.main(null);
   }
+  
+  @Test
+  public void testCss()
+      throws IOException, TemplateException, ParsingException, ArtifactDescriptorException {
+    Path dashboardCss = outputDirectory.resolve("dashboard.css");
+    Assert.assertTrue(Files.exists(dashboardCss));
+    Assert.assertTrue(Files.isRegularFile(dashboardCss));
+  }
 
   @Test
   public void testDashboard()
@@ -165,7 +173,8 @@ public class DashboardTest {
       Document document = builder.build(successHtml.toFile());
       Nodes greens = document.query("//h3[@style='color: green']");
       Assert.assertTrue(greens.size() >= 2);
-      Nodes presDependencyMediation = document.query("//pre[@class='suggested-dependency-mediation']");
+      Nodes presDependencyMediation =
+          document.query("//pre[@class='suggested-dependency-mediation']");
       // There's a pre tag for dependency
       Assert.assertEquals(1, presDependencyMediation.size());
 

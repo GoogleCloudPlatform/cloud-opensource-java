@@ -1,51 +1,7 @@
 <html lang="en-US">
   <head>
     <title>Google Cloud Platform Code Health Open Source Dashboard</title>
-    <style>
-    .PASS {
-      background-color: green;
-      font-weight: bold;
-    }
-    .FAIL {
-      background-color: red;
-      font-weight: bold;
-    }
-    .UNAVAILABLE {
-      background-color: gray;
-      font-weight: bold;
-    }
-    
-    body {
-      font-family: "Poppins", sans-serif;
-      font-weight: 400;
-      font-size: 16px;
-      line-height: 1.625;
-    }
-
-    h1,
-    h2,
-    h3 {
-      color: #333333;
-      font-weight: 700;
-      margin: 0;
-      line-height: 1.2;
-    }
-    
-    h1 {
-      font-size: 36pt;
-    }
-    
-    h2 {
-      font-size: 30pt;
-    }
-    
-    h3 {
-      font-size: 24pt;
-    }
-    th, td {
-      padding: 5pt;
-    }
-    </style>
+    <link rel="stylesheet" type="text/css" href="dashboard.css" />
   </head>
   <body>
     <h1>Google Cloud Platform Dependency Dashboard</h1>
