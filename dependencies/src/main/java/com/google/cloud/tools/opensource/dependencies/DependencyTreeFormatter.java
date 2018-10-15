@@ -62,7 +62,7 @@ public class DependencyTreeFormatter {
    * Prints dependencies expressed in dependency paths in tree in similar way to mvn
    * dependency:tree.
    *
-   * @param dependencyPaths sorted dependency paths
+   * @param dependencyPaths sorted dependency paths in pre-order
    */
   public static String formatDependencyPaths(List<DependencyPath> dependencyPaths) {
     StringBuilder stringBuilder = new StringBuilder();
