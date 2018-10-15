@@ -173,7 +173,8 @@ public class DashboardTest {
       Document document = builder.build(successHtml.toFile());
       Nodes greens = document.query("//h3[@style='color: green']");
       Assert.assertTrue(greens.size() >= 2);
-      Nodes presDependencyMediation = document.query("//pre[@class='suggested-dependency-mediation']");
+      Nodes presDependencyMediation =
+          document.query("//pre[@class='suggested-dependency-mediation']");
       // There's a pre tag for dependency
       Assert.assertEquals(1, presDependencyMediation.size());
 

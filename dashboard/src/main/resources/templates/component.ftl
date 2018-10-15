@@ -1,7 +1,7 @@
 <html lang="en-US">
   <head>
     <title>Google Cloud Platform Dependency Analysis Report for ${groupId}:${artifactId}:${version}</title>
-    <link rel="stylesheet" type="text/css" href="dashboard.css">
+    <link rel="stylesheet" type="text/css" href="dashboard.css" />
   </head>
   <body>
     <h1>Google Cloud Platform Dependency Analysis for ${groupId}:${artifactId}:${version}</h1>
