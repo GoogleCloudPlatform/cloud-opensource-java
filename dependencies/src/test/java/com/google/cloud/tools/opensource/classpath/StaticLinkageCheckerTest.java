@@ -26,6 +26,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.bcel.classfile.ClassParser;
@@ -198,7 +199,8 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testFindUnresolvedReferences_packagePrivateInnerClass()
       throws RepositoryException {
-    List<Path> paths = StaticLinkageChecker.coordinateToJarPaths("io.grpc:grpc-auth:1.15.1");
+    List<Path> paths = StaticLinkageChecker.coordinateToJarPaths("io.grpc:grpc-auth:1.15.1",
+        new HashSet<>());
 
     FullyQualifiedMethodSignature constructorOfPrivateInnerClass =
         new FullyQualifiedMethodSignature(
@@ -225,7 +227,8 @@ public class StaticLinkageCheckerTest {
 
   @Test
   public void testCoordinateToJarPaths_validCoordinate() throws RepositoryException {
-    List<Path> paths = StaticLinkageChecker.coordinateToJarPaths("io.grpc:grpc-auth:1.15.1");
+    List<Path> paths = StaticLinkageChecker.coordinateToJarPaths("io.grpc:grpc-auth:1.15.1",
+        new HashSet<>());
     Truth.assertThat(paths).hasSize(11);
 
     String pathsString = paths.toString();
@@ -245,7 +248,8 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testCoordinateToJarPaths_invalidCoordinate() {
     try {
-      StaticLinkageChecker.coordinateToJarPaths("io.grpc:nosuchartifact:1.2.3");
+      StaticLinkageChecker.coordinateToJarPaths("io.grpc:nosuchartifact:1.2.3",
+          new HashSet<>());
       Assert.fail("Invalid Maven coodinate should raise RepositoryException");
     } catch (RepositoryException ex) {
       Truth.assertThat(ex.getMessage())
