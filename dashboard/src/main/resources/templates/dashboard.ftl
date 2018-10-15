@@ -74,13 +74,13 @@
     <table>
       <tr>
         <th>Artifact</th>
-        <th title='For each transitive dependency the library pulls in, the highest version 
-       found anywhere in the dependency tree is picked.'>Upper Bounds</th>
-        <th title='There is exactly one version of each dependency in the library's transitive dependency tree.
+        <th title="For each transitive dependency the library pulls in, the highest version 
+       found anywhere in the dependency tree is picked.">Upper Bounds</th>
+        <th title="There is exactly one version of each dependency in the library's transitive dependency tree.
        That is, two artifacts with the same group ID and artifact ID but different versions
-       do not appear in the tree. No dependency mediation is necessary.'>Dependency Convergence</th>
-        <th title='For each transitive dependency the library pulls in, the highest version 
-       found anywhere in the union of the BOM's dependency trees is picked.'>Global Upper Bounds</th>
+       do not appear in the tree. No dependency mediation is necessary.">Dependency Convergence</th>
+        <th title="For each transitive dependency the library pulls in, the highest version 
+       found anywhere in the union of the BOM's dependency trees is picked.">Global Upper Bounds</th>
       </tr>
       <#list table as row>
         <tr>
