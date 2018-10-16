@@ -41,3 +41,7 @@
  th, td {
    padding: 5pt;
  }
+ 
+ pre {
+  line-height: normal;
+ }
