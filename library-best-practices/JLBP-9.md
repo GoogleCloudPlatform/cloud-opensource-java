@@ -12,9 +12,9 @@ consumers advance their minimum version of Java before they advance it
 themselves. (Waiting for every last consumer could block an upgrade permanently,
 due to cases like abandoned projects.)
 
-As an alternative, if there is sufficient need for supporting both consumers on
-the old version of Java and consumers wanting features provided by a newer
-version of Java, a long-term support (LTS) release can be created to continue
-supporting the old Java version, and a new major version of the library can be
-released with a higher minimum Java version. The Java package and maven ID
-should be kept the same in the new major version.
+As an alternative, if you need to support both consumers on the old version of
+Java and consumers wanting features provided by a newer version of Java, a
+long-term support (LTS) release can be created to continue supporting the old
+Java version, and a new major version of the library can be released with a
+higher minimum Java version. The Java package and maven ID should be kept the
+same in the new major version.
