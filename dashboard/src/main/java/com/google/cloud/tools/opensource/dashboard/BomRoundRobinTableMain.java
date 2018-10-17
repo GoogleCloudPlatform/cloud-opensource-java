@@ -55,7 +55,7 @@ class BomRoundRobinTableMain {
   public static void main(String[] args)
       throws IOException, TemplateException, ArtifactDescriptorException {
     Path output = generate();
-    System.out.println("Wrote dashboard into " + output.toAbsolutePath());
+    System.out.println("Wrote round-robin table into " + output.toAbsolutePath());
   }
 
   private static Path generate()
