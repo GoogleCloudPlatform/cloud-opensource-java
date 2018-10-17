@@ -58,7 +58,8 @@ class BomRoundRobinTableMain {
     System.out.println("Wrote dashboard into " + output.toAbsolutePath());
   }
 
-  private static Path generate() throws ArtifactDescriptorException, IOException, TemplateException {
+  private static Path generate()
+      throws ArtifactDescriptorException, IOException, TemplateException {
     DefaultArtifact bom = new DefaultArtifact(GOOGLE_CLOUD_OSS_BOM);
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
     Path relativeOutputPath = Paths.get("target", "round-robin-table");
