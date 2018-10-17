@@ -12,13 +12,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.cloud.tools.opensource.dashboard.DashboardMain.GOOGLE_CLOUD_OSS_BOM;
 import static com.google.cloud.tools.opensource.dashboard.DashboardMain.configureFreemarker;
+import static com.google.cloud.tools.opensource.dashboard.DashboardMain.copyCss;
 
 import com.google.cloud.tools.opensource.classpath.FullyQualifiedMethodSignature;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -44,6 +44,11 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 
+/**
+ * This tool is to generate a table to show the result of {@link
+ * com.google.cloud.tools.opensource.classpath.StaticLinkageChecker} for each possible pair from
+ * artifacts in Cloud OSS BOM.
+ */
 public class BomRoundRobinTableMain {
 
   public static void main(String[] args)
@@ -104,6 +109,7 @@ public class BomRoundRobinTableMain {
             new FileOutputStream(outputFilePath.toFile()), StandardCharsets.UTF_8)) {
       report.process(templateData, out);
     }
+    copyCss(outputDirectory);
     return outputFilePath;
   }
 

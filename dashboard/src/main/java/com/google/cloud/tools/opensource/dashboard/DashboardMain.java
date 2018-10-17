@@ -87,7 +87,7 @@ public class DashboardMain {
     return output;
   }
 
-  private static void copyCss(Path output) throws IOException {
+  static void copyCss(Path output) throws IOException {
     ClassLoader classLoader = DashboardMain.class.getClassLoader();
     Path input = Paths.get(classLoader.getResource("css/dashboard.css").getPath());
     Path copy = output.resolve(input.getFileName());

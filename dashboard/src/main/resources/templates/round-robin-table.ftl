@@ -4,17 +4,25 @@
     <link rel="stylesheet" type="text/css" href="dashboard.css" />
   </head>
   <body>
-    <h1>Round-robin Table</h1>
-    <table>
-      <th>
+    <h1>Static Linkage Check: BOM Round-robin Table</h1>
+    <table class='round-robin-table'>
+      <tr>
+        <th></th>
         <#list artifactList as artifactColumn>
-          <td>artifactColumn</td>
+        <th>${artifactColumn}</th>
         </#list>
-      </th>
+      </tr>
       <#list artifactList as artifactRow>
         <tr>
+          <th>${artifactRow}</th>
         <#list artifactList as artifactColumn>
-          <td>${artifactRow}:${artifactColumn}</td>
+          <td class='round-robin-table-cell'>
+          <#if artifactRow == artifactColumn>
+            ${artifactRow}
+          <#else>
+            ${artifactRow}:${artifactColumn}
+          </#if>
+          </td>
         </#list>
         </tr>
       </#list>
