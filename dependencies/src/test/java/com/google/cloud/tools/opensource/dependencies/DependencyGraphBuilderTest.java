@@ -112,9 +112,21 @@ public class DependencyGraphBuilderTest {
         new DefaultArtifact("com.google.cloud:google-cloud-bigtable:0.66.0-alpha");
     Artifact commonsLoggingArtifact = new DefaultArtifact("commons-logging:commons-logging:1.2");
 
-    DependencyGraph graph = DependencyGraphBuilder.getTransitiveDependencies(Arrays.asList(commonsLoggingArtifact));
+    DependencyGraph graphFromRoot =
+        DependencyGraphBuilder.getTransitiveDependencies(commonsLoggingArtifact);
     Assert.assertTrue(
-        graph.list().stream().anyMatch(path -> "log4j".equals(path.getLeaf().getArtifactId())));
+        graphFromRoot
+            .list()
+            .stream()
+            .anyMatch(path -> "log4j".equals(path.getLeaf().getArtifactId())));
+
+    DependencyGraph graphFromNonRoot =
+        DependencyGraphBuilder.getTransitiveDependencies(Arrays.asList(commonsLoggingArtifact));
+    Assert.assertTrue(
+        graphFromNonRoot
+            .list()
+            .stream()
+            .anyMatch(path -> "log4j".equals(path.getLeaf().getArtifactId())));
   }
 
   @Test
