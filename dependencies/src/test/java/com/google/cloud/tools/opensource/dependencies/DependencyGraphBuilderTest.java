@@ -21,9 +21,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -108,8 +110,17 @@ public class DependencyGraphBuilderTest {
       throws DependencyCollectionException, DependencyResolutionException {
     Artifact cloudBigtableArtifact =
         new DefaultArtifact("com.google.cloud:google-cloud-bigtable:0.66.0-alpha");
-    DependencyGraph graph = DependencyGraphBuilder.getTransitiveDependencies(cloudBigtableArtifact);
+    Artifact commonsLoggingArtifact = new DefaultArtifact("commons-logging:commons-logging:1.2");
+
+    DependencyGraph graph = DependencyGraphBuilder.getTransitiveDependencies(Arrays.asList(commonsLoggingArtifact));
     Assert.assertTrue(
         graph.list().stream().anyMatch(path -> "log4j".equals(path.getLeaf().getArtifactId())));
+  }
+
+  @Test
+  public void testResolveCompileTimeRootDependenciesWithOptionalDependency() throws RepositoryException {
+    Artifact cloudBigtableArtifact =
+        new DefaultArtifact("com.google.cloud:google-cloud-bigtable:0.66.0-alpha");
+    DependencyNode dependencyNode = DependencyGraphBuilder.resolveCompileTimeRootDependencies(cloudBigtableArtifact);
   }
 }

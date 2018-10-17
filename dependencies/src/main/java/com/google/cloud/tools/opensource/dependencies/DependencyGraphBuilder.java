@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,6 +38,7 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
+import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 
 /**
  * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact
@@ -65,7 +67,8 @@ public class DependencyGraphBuilder {
   // caching cuts time by about a factor of 4.
   private static final Map<String, DependencyNode> cache = new HashMap<>();
 
-  private static DependencyNode resolveCompileTimeRootDependencies(Artifact artifact)
+  @VisibleForTesting
+  static DependencyNode resolveCompileTimeRootDependencies(Artifact artifact)
       throws DependencyCollectionException, DependencyResolutionException {
     
     String key = Artifacts.toCoordinates(artifact);
@@ -109,6 +112,8 @@ public class DependencyGraphBuilder {
     collectRequest.addRepository(RepositoryUtility.CENTRAL);
     RepositorySystemSession session = RepositoryUtility.newSession(system);
     DependencySelector dependencySelector = session.getDependencySelector();
+    // Can we modify the behavior of OptionalDependencySelector behind andDependencySelector?
+    AndDependencySelector andDependencySelector = (AndDependencySelector) dependencySelector;
     CollectResult collectResult = system.collectDependencies(session, collectRequest);
     // This root DependencyNode's artifact is set to null, as root dependency was null in request
     DependencyNode node = collectResult.getRoot();
