@@ -18,5 +18,4 @@ list is open-ended, so new ones may be added from time to time.
 - [JLBP-6](JLBP-6.md): Package and artifact renaming rules
 - [JLBP-7](JLBP-7.md): Make breaking transitions easy
 - [JLBP-8](JLBP-8.md): Advance widely used functionality to a stable version
-- [JLBP-9](JLBP-9.md): Ensure consumers always use a higher or equal minimum
-  Java version
+- [JLBP-9](JLBP-9.md): Support the minimum Java version of your consumers
