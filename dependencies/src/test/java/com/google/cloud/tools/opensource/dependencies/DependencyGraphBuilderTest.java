@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
@@ -88,4 +89,19 @@ public class DependencyGraphBuilderTest {
     Truth.assertThat(coordinates).contains("com.google.code.findbugs:jsr305:jar:3.0.2");
   }
 
+  @Test
+  public void testGetTransitiveDependenciesWithMultipleArtifacts()
+      throws DependencyCollectionException, DependencyResolutionException {
+    DependencyGraph graph =
+        DependencyGraphBuilder.getTransitiveDependencies(Arrays.asList(datastore, guava));
+
+    List<DependencyPath> list = graph.list();
+    Assert.assertTrue(list.size() > 10);
+    DependencyPath firstElement = list.get(0);
+    Assert.assertEquals("BFS should pick up datastore as first element in the list",
+        "google-cloud-datastore", firstElement.getLeaf().getArtifactId());
+    DependencyPath secondElement = list.get(1);
+    Assert.assertEquals("BFS should pick up guava before dependencies from datastore",
+        "guava", secondElement.getLeaf().getArtifactId());
+  }
 }
