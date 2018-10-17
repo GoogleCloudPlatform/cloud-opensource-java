@@ -206,9 +206,9 @@ public class DependencyGraphBuilder {
    * @param resolveFullDependency flag to resolve dependency for each node in the tree. Useful for
    *     building a complete tree of dependencies including <i>provided</i> scope
    * @throws DependencyCollectionException when there is a problem in collecting dependency. This
-   *     happens only when resolveFullDependency is true
+   *     happens only when resolveFullDependency is true.
    * @throws DependencyResolutionException when there is a problem in resolving dependency. This
-   *     happens only when resolveFullDependency is true
+   *     happens only when resolveFullDependency is true.
    */
   private static void levelOrder(
       DependencyNode firstNode, DependencyGraph graph, boolean resolveFullDependency)
