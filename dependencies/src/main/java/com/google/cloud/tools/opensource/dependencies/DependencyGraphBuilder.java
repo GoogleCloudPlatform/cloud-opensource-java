@@ -174,8 +174,8 @@ public class DependencyGraphBuilder {
   }
 
   private static final class LevelOrderQueueItem {
-    DependencyNode dependencyNode;
-    Stack<DependencyNode> parentNodes;
+    final DependencyNode dependencyNode;
+    final Stack<DependencyNode> parentNodes;
 
     LevelOrderQueueItem(DependencyNode dependencyNode,
         Stack<DependencyNode> parentNodes) {
