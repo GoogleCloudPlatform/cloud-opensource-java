@@ -157,7 +157,7 @@ public class DashboardMain {
   
         ArtifactInfo info = new ArtifactInfo(completeDependencies, transitiveDependencies);
         infoMap.put(artifact, info);
-      } catch (DependencyCollectionException | DependencyResolutionException ex) {
+      } catch (RepositoryException ex) {
         ArtifactInfo info = new ArtifactInfo(ex);
         infoMap.put(artifact, info);
       }

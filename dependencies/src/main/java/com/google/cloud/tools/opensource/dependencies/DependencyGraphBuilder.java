@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.stream.Collectors;
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -107,7 +108,7 @@ public class DependencyGraphBuilder {
     collectRequest.addRepository(RepositoryUtility.CENTRAL);
     RepositorySystemSession session = RepositoryUtility.newSession(system);
     CollectResult collectResult = system.collectDependencies(session, collectRequest);
-    // Root node's artifact is set to null
+    // This root DependencyNode's artifact is set to null, as root dependency was null in request
     DependencyNode node = collectResult.getRoot();
     DependencyRequest dependencyRequest = new DependencyRequest();
     dependencyRequest.setCollectRequest(collectRequest);
@@ -143,7 +144,7 @@ public class DependencyGraphBuilder {
     // root node
     DependencyNode node = resolveCompileTimeRootDependencies(artifact);
     DependencyGraph graph = new DependencyGraph();
-    fullLevelOrder(node, graph);
+    levelOrder(node, graph, true);
     
     return graph;
   }
@@ -165,7 +166,7 @@ public class DependencyGraphBuilder {
 
   static DependencyGraph getTransitiveDependencies(List<Artifact> artifacts)
       throws DependencyCollectionException, DependencyResolutionException {
-    // root node is dummy (artifact: null) and has dependencies as children
+    // root node artifact is null and the node has dependencies as children
     DependencyNode node = resolveCompileTimeDependencies(artifacts);
     DependencyGraph graph = new DependencyGraph();
     levelOrder(node, graph);
@@ -183,32 +184,37 @@ public class DependencyGraphBuilder {
     }
   }
 
-  @SuppressWarnings("unchecked")
   private static void levelOrder(DependencyNode node, DependencyGraph graph) {
-    Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
-    queue.add(new LevelOrderQueueItem(node, new Stack<>()));
-    while (!queue.isEmpty()) {
-      LevelOrderQueueItem item = queue.poll();
-      DependencyNode dependencyNode = item.dependencyNode;
-      DependencyPath forPath = new DependencyPath();
-      Stack<DependencyNode> parentNodes = item.parentNodes;
-      parentNodes.forEach(parentNode -> forPath.add(parentNode.getArtifact()));
-      if (dependencyNode.getArtifact() != null) {
-        // When requesting dependencies of 2 or more artifacts, root is null
-        forPath.add(dependencyNode.getArtifact());
-        graph.addPath(forPath);
-        parentNodes.push(dependencyNode);
-      }
-      for (DependencyNode childNode : dependencyNode.getChildren()) {
-        queue.add(new LevelOrderQueueItem(childNode, (Stack<DependencyNode>) parentNodes.clone()));
-      }
+    try {
+      levelOrder(node, graph, false);
+    } catch (RepositoryException ex) {
+      throw new RuntimeException(
+          "There was problem in resolving dependencies even when it is not supposed to resolve dependency",
+          ex);
     }
   }
 
-  private static void fullLevelOrder(DependencyNode node, DependencyGraph graph)
+  /**
+   * Traverses dependency tree in level-order (breadth-first search) and stores {@link
+   * DependencyPath} instances corresponding to tree nodes to {@link DependencyGraph}. When
+   * resolveFullDependency flag is true, then it resolves the dependency of the artifact of the each
+   * node in the dependency tree; otherwise it just follows the given dependency tree starting with
+   * firstNode.
+   *
+   * @param firstNode node to start traversal
+   * @param graph graph to store {@link DependencyPath} instances
+   * @param resolveFullDependency flag to resolve dependency for each node in the tree. Useful for
+   *     building a complete tree of dependencies including <i>provided</i> scope
+   * @throws DependencyCollectionException when there is a problem in collecting dependency. This
+   *     happens only when resolveFullDependency is true
+   * @throws DependencyResolutionException when there is a problem in resolving dependency. This
+   *     happens only when resolveFullDependency is true
+   */
+  private static void levelOrder(
+      DependencyNode firstNode, DependencyGraph graph, boolean resolveFullDependency)
       throws DependencyCollectionException, DependencyResolutionException {
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
-    queue.add(new LevelOrderQueueItem(node, new Stack<>()));
+    queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
       DependencyNode dependencyNode = item.dependencyNode;
@@ -216,9 +222,11 @@ public class DependencyGraphBuilder {
       Stack<DependencyNode> parentNodes = item.parentNodes;
       parentNodes.forEach(parentNode -> forPath.add(parentNode.getArtifact()));
       if (dependencyNode.getArtifact() != null) {
-        // When requesting dependencies of 2 or more artifacts, root is null
+        // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
+        // set to null
         forPath.add(dependencyNode.getArtifact());
-        if (parentNodes.contains(dependencyNode)) {
+        if (resolveFullDependency && parentNodes.contains(dependencyNode)) {
+          // TODO: change to logger
           System.err.println("Infinite recursion resolving " + dependencyNode);
           System.err.println("Likely cycle in " + parentNodes);
           System.err.println("Child " + dependencyNode);
@@ -227,11 +235,12 @@ public class DependencyGraphBuilder {
         parentNodes.push(dependencyNode);
         graph.addPath(forPath);
 
-        if (!"system".equals(dependencyNode.getDependency().getScope())) {
+        if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
           try {
             dependencyNode = resolveCompileTimeRootDependencies(dependencyNode.getArtifact());
           } catch (DependencyResolutionException ex) {
-            System.err.println("Error resolving " + parentNodes);
+            // TODO: change to logger
+            System.err.println("Error resolving " + dependencyNode + " under " + parentNodes);
             System.err.println(ex.getMessage());
             throw ex;
           }

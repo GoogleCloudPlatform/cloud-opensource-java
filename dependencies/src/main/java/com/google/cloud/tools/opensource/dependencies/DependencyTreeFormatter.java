@@ -19,7 +19,9 @@ package com.google.cloud.tools.opensource.dependencies;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+import java.util.Collection;
 import java.util.List;
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
@@ -38,7 +40,7 @@ public class DependencyTreeFormatter {
     for (String coordinate : args) {
       try {
         printDependencyTree(coordinate);
-      } catch (DependencyCollectionException | DependencyResolutionException e) {
+      } catch (RepositoryException e) {
         System.err.println(coordinate + " : Failed to retrieve dependency information:"
             + e.getMessage());
       }
@@ -49,8 +51,7 @@ public class DependencyTreeFormatter {
    * Prints dependencies for the coordinate of an artifact
    *
    * @param coordinate Maven coordinate of an artifact to print its dependencies
-   * @throws DependencyCollectionException when dependencies cannot be collected
-   * @throws DependencyResolutionException when dependencies cannot be resolved
+   * @throws RepositoryException when dependencies cannot be collected or resolved
    */
   private static void printDependencyTree(String coordinate)
       throws DependencyCollectionException, DependencyResolutionException {
@@ -71,14 +72,15 @@ public class DependencyTreeFormatter {
    */
   public static String formatDependencyPaths(List<DependencyPath> dependencyPaths) {
     StringBuilder stringBuilder = new StringBuilder();
-    // Printing text representing a tree requires traversing the items in pre-order
+    // While Maven dependencies are resolved in level-order, printing text representing a tree
+    // requires traversing the items in pre-order
     ListMultimap<DependencyPath, DependencyPath> tree = buildDependencyPathTree(dependencyPaths);
     // Empty dependency path is to retrieve children of root node
-    formatDependencyPathTreePreOrder(stringBuilder, tree, new DependencyPath());
+    formatDependencyPathTree(stringBuilder, tree, new DependencyPath());
     return stringBuilder.toString();
   }
 
-  private static void formatDependencyPathTreePreOrder(
+  private static void formatDependencyPathTree(
       StringBuilder stringBuilder,
       ListMultimap<DependencyPath, DependencyPath> tree,
       DependencyPath currentNode) {
@@ -91,21 +93,20 @@ public class DependencyTreeFormatter {
       stringBuilder.append("\n");
     }
     for (DependencyPath childPath : tree.get(currentNode)) {
-      formatDependencyPathTreePreOrder(stringBuilder, tree, childPath);
+      formatDependencyPathTree(stringBuilder, tree, childPath);
     }
   }
 
   /**
    * Builds ListMultiMap that represents a Maven dependency tree of parent-children relationship.
    * The root node is represented as an empty {@link DependencyPath} and its children are
-   * the values for the root node. As Maven dependency is retrieved via BFS, the order of children
-   * matters.
+   * the values for the root node.
    *
-   * @param dependencyPaths a list of dependency path without assuming any order
+   * @param dependencyPaths dependency path instances without assuming any order
    * @return ListMultiMap representing a Maven dependency tree
    */
   private static ListMultimap<DependencyPath, DependencyPath> buildDependencyPathTree(
-      List<DependencyPath> dependencyPaths) {
+      Collection<DependencyPath> dependencyPaths) {
     ListMultimap<DependencyPath, DependencyPath> tree = ArrayListMultimap.create();
     for (DependencyPath dependencyPath : dependencyPaths) {
       List<Artifact> artifactPath = dependencyPath.getPath();
