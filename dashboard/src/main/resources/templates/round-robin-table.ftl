@@ -18,9 +18,12 @@
         <#list artifactList as artifactColumn>
           <td class='round-robin-table-cell'>
           <#if artifactRow == artifactColumn>
-            ${artifactRow}
+            <#assign linkageCheckResult=table[artifactRow]>
+            <span title='${artifactRow}'>${linkageCheckResult?size}</span>
           <#else>
-            ${artifactRow}:${artifactColumn}
+            <#assign key=artifactColumn+","+artifactRow>
+            <#assign linkageCheckResult=table[key]>
+            <span title='${artifactRow}:${artifactColumn}'>${linkageCheckResult?size}</span>
           </#if>
           </td>
         </#list>

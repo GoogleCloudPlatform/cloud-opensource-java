@@ -23,6 +23,7 @@ import static com.google.cloud.tools.opensource.dashboard.DashboardMain.copyCss;
 import com.google.cloud.tools.opensource.classpath.FullyQualifiedMethodSignature;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.annotations.VisibleForTesting;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -39,17 +40,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.stream.Collectors;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 
 /**
- * This tool is to generate a table to show the result of {@link
+ * This tool generates a table to show the result of {@link
  * com.google.cloud.tools.opensource.classpath.StaticLinkageChecker} for each possible pair from
  * artifacts in Cloud OSS BOM.
  */
-public class BomRoundRobinTableMain {
+class BomRoundRobinTableMain {
 
   public static void main(String[] args)
       throws IOException, TemplateException, ArtifactDescriptorException {
@@ -57,35 +58,7 @@ public class BomRoundRobinTableMain {
     System.out.println("Wrote dashboard into " + output.toAbsolutePath());
   }
 
-  private static final class TableKey {
-    private final String artifact1Coordinate;
-    private final String artifact2Coordinate;
-
-    TableKey(String artifact1Coordinate, String artifact2Coordinate) {
-      this.artifact1Coordinate = artifact1Coordinate;
-      this.artifact2Coordinate = artifact2Coordinate;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (!(o instanceof TableKey)) {
-        return false;
-      }
-      TableKey tableKey = (TableKey) o;
-      return Objects.equals(artifact1Coordinate, tableKey.artifact1Coordinate)
-          && Objects.equals(artifact2Coordinate, tableKey.artifact2Coordinate);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(artifact1Coordinate, artifact2Coordinate);
-    }
-  }
-
-  static Path generate() throws ArtifactDescriptorException, IOException, TemplateException {
+  private static Path generate() throws ArtifactDescriptorException, IOException, TemplateException {
     DefaultArtifact bom = new DefaultArtifact(GOOGLE_CLOUD_OSS_BOM);
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
     Path relativeOutputPath = Paths.get("target", "round-robin-table");
@@ -93,15 +66,18 @@ public class BomRoundRobinTableMain {
     return generateRoundRobinTable(outputDirectoryPath, managedDependencies);
   }
 
+  @VisibleForTesting
   static Path generateRoundRobinTable(Path outputDirectory, List<Artifact> artifacts)
       throws IOException, TemplateException {
     Path outputFilePath = outputDirectory.resolve("index.html");
-    Map<TableKey, List<FullyQualifiedMethodSignature>> linkageCheckTable =
+    Map<String, List<FullyQualifiedMethodSignature>> linkageCheckTable =
         buildRoundRobinLinkageCheckTable(artifacts);
     Configuration freemarkerConfiguration = configureFreemarker();
     Template report = freemarkerConfiguration.getTemplate("/templates/round-robin-table.ftl");
     Map<String, Object> templateData = new HashMap<>();
-    templateData.put("artifactList", artifacts);
+    templateData.put(
+        "artifactList",
+        artifacts.stream().map(Artifacts::toCoordinates).collect(Collectors.toList()));
     templateData.put("lastUpdated", LocalDateTime.now());
     templateData.put("table", linkageCheckTable);
     try (Writer out =
@@ -113,20 +89,20 @@ public class BomRoundRobinTableMain {
     return outputFilePath;
   }
 
-  static Map<TableKey, List<FullyQualifiedMethodSignature>> buildRoundRobinLinkageCheckTable(
+  private static Map<String, List<FullyQualifiedMethodSignature>> buildRoundRobinLinkageCheckTable(
       List<Artifact> dependencies) {
-    Map<TableKey, List<FullyQualifiedMethodSignature>> table = new HashMap<>();
+    Map<String, List<FullyQualifiedMethodSignature>> table = new HashMap<>();
     for (Artifact artifact1 : dependencies) {
+      String artifact1Coordinate = Artifacts.toCoordinates(artifact1);
+      // TODO: Add logic to call StaticLinkageChecker for the class path from this artifact
+      table.put(artifact1Coordinate, new ArrayList<>());
       for (Artifact artifact2 : dependencies) {
-        String artifact1Coordinate =  Artifacts.toCoordinates(artifact1);
-        String artifact2Coordinate =  Artifacts.toCoordinates(artifact2);
+        String artifact2Coordinate = Artifacts.toCoordinates(artifact2);
 
         // TODO: Add logic to call StaticLinkageChecker for the class path from the 2 artifacts
-        table.put(new TableKey(artifact1Coordinate, artifact2Coordinate),
-            new ArrayList<>());
+        table.put(artifact1Coordinate + "," + artifact2Coordinate, new ArrayList<>());
       }
     }
     return table;
   }
-
 }
