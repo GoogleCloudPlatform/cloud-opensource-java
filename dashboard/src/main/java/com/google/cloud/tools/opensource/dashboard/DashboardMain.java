@@ -58,6 +58,7 @@ public class DashboardMain {
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
   public static final String TEST_NAME_GLOBAL_UPPER_BOUND = "Global Upper Bounds";
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
+  static final String GOOGLE_CLOUD_OSS_BOM = "com.google.cloud:cloud-oss-bom:pom:0.67.0-SNAPSHOT";
 
   public static void main(String[] args)
       throws IOException, TemplateException, ArtifactDescriptorException {
@@ -77,7 +78,7 @@ public class DashboardMain {
 
     // TODO should pass in maven coordinates as argument
     DefaultArtifact bom =
-        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.67.0-SNAPSHOT");
+        new DefaultArtifact(GOOGLE_CLOUD_OSS_BOM);
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
@@ -88,7 +89,7 @@ public class DashboardMain {
     return output;
   }
 
-  private static void copyCss(Path output) throws IOException {
+  static void copyCss(Path output) throws IOException {
     ClassLoader classLoader = DashboardMain.class.getClassLoader();
     Path input = Paths.get(classLoader.getResource("css/dashboard.css").getPath());
     Path copy = output.resolve(input.getFileName());

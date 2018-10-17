@@ -10,6 +10,15 @@
    background-color: gray;
    font-weight: bold;
  }
+
+ table.round-robin-table {
+   border-collapse: collapse;
+ }
+
+ table.round-robin-table td, table.round-robin-table th {
+   border: 1px solid black;
+   margin: 0;
+ }
  
  body {
    font-family: "Poppins", sans-serif;
