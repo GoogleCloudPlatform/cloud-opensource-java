@@ -16,17 +16,21 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Stack;
-
+import java.util.stream.Collectors;
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
@@ -34,8 +38,8 @@ import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 
 /**
- * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact Resolver</a>
- * (formerly known as Eclipse Aether).
+ * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact
+ * Resolver</a> (formerly known as Eclipse Aether).
  */
 public class DependencyGraphBuilder {
   
@@ -60,7 +64,7 @@ public class DependencyGraphBuilder {
   // caching cuts time by about a factor of 4.
   private static final Map<String, DependencyNode> cache = new HashMap<>();
 
-  private static DependencyNode resolveCompileTimeDependencies(Artifact artifact)
+  private static DependencyNode resolveCompileTimeRootDependencies(Artifact artifact)
       throws DependencyCollectionException, DependencyResolutionException {
     
     String key = Artifacts.toCoordinates(artifact);
@@ -86,6 +90,35 @@ public class DependencyGraphBuilder {
     return node;
   }
 
+  private static DependencyNode resolveCompileTimeDependencies(List<Artifact> artifacts)
+      throws DependencyCollectionException, DependencyResolutionException {
+    String key = artifacts.stream().map(Artifacts::toCoordinates).collect(Collectors.joining(","));
+    if (cache.containsKey(key)) {
+      return cache.get(key);
+    }
+
+    List<Dependency> dependencyList =
+        artifacts
+            .stream()
+            .map(artifact -> new Dependency(artifact, "compile"))
+            .collect(Collectors.toList());
+
+    CollectRequest collectRequest = new CollectRequest();
+    collectRequest.setDependencies(dependencyList);
+    collectRequest.addRepository(RepositoryUtility.CENTRAL);
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
+    CollectResult collectResult = system.collectDependencies(session, collectRequest);
+    // This root DependencyNode's artifact is set to null, as root dependency was null in request
+    DependencyNode node = collectResult.getRoot();
+    DependencyRequest dependencyRequest = new DependencyRequest();
+    dependencyRequest.setCollectRequest(collectRequest);
+
+    system.resolveDependencies(session, dependencyRequest);
+    cache.put(key, node);
+
+    return node;
+  }
+
   /**
    * Returns the non-transitive compile time dependencies of an artifact.
    */
@@ -94,7 +127,7 @@ public class DependencyGraphBuilder {
     
     List<Artifact> result = new ArrayList<>();
     
-    DependencyNode node = resolveCompileTimeDependencies(artifact);
+    DependencyNode node = resolveCompileTimeRootDependencies(artifact);
     for (DependencyNode child : node.getChildren()) {
       result.add(child.getArtifact());
     }
@@ -109,9 +142,9 @@ public class DependencyGraphBuilder {
       throws DependencyCollectionException, DependencyResolutionException {
     
     // root node
-    DependencyNode node = resolveCompileTimeDependencies(artifact);  
+    DependencyNode node = resolveCompileTimeRootDependencies(artifact);
     DependencyGraph graph = new DependencyGraph();
-    fullPreorder(new Stack<DependencyNode>(), node, graph);    
+    levelOrder(node, graph, true);
     
     return graph;
   }
@@ -124,70 +157,98 @@ public class DependencyGraphBuilder {
    */
   public static DependencyGraph getTransitiveDependencies(Artifact artifact)
       throws DependencyCollectionException, DependencyResolutionException {
-    
     // root node
-    DependencyNode node = resolveCompileTimeDependencies(artifact);  
+    DependencyNode node = resolveCompileTimeRootDependencies(artifact);
     DependencyGraph graph = new DependencyGraph();
-    preorder(new Stack<DependencyNode>(), node, graph);    
-    
+    levelOrder(node, graph);
     return graph;
   }
-  
-  // TODO Dedup the next two methods. They are duplicate code with only one line difference.
-  // this finds the actual graph that Maven sees with no duplicates and at most one version per
-  // library.
-  @SuppressWarnings("unchecked")
-  private static void preorder(Stack<DependencyNode> path, DependencyNode current,
-      DependencyGraph graph) {
-    
-    path.push(current);
-    DependencyPath forPath = new DependencyPath();
-    for (DependencyNode node : path) {
-      if (!"system".equals(node.getDependency().getScope())) {
-        forPath.add(node.getArtifact());
-      }
-    }
-    graph.addPath(forPath);
-    
-    for (DependencyNode child : current.getChildren()) {
-      preorder((Stack<DependencyNode>) path.clone(), child, graph);
+
+  static DependencyGraph getTransitiveDependencies(List<Artifact> artifacts)
+      throws DependencyCollectionException, DependencyResolutionException {
+    // root node artifact is null and the node has dependencies as children
+    DependencyNode node = resolveCompileTimeDependencies(artifacts);
+    DependencyGraph graph = new DependencyGraph();
+    levelOrder(node, graph);
+    return graph;
+  }
+
+  private static final class LevelOrderQueueItem {
+    final DependencyNode dependencyNode;
+    final Stack<DependencyNode> parentNodes;
+
+    LevelOrderQueueItem(DependencyNode dependencyNode,
+        Stack<DependencyNode> parentNodes) {
+      this.dependencyNode = dependencyNode;
+      this.parentNodes = parentNodes;
     }
   }
 
-  @SuppressWarnings("unchecked")
-  private static void fullPreorder(Stack<DependencyNode> path, DependencyNode current,
-      DependencyGraph graph) throws DependencyCollectionException, DependencyResolutionException {
-    
-    path.push(current);
-    
-    DependencyPath forPath = new DependencyPath();
-    for (DependencyNode node : path) {
-      if (!"system".equals(node.getDependency().getScope())) {
-        forPath.add(node.getArtifact());
-      }
+  private static void levelOrder(DependencyNode node, DependencyGraph graph) {
+    try {
+      levelOrder(node, graph, false);
+    } catch (RepositoryException ex) {
+      throw new RuntimeException(
+          "There was problem in resolving dependencies even when it is not supposed to resolve dependency",
+          ex);
     }
-    graph.addPath(forPath);
-    
-    for (DependencyNode child : current.getChildren()) {
-      if (!"system".equals(child.getDependency().getScope())) {
-        try {
-          child = resolveCompileTimeDependencies(child.getArtifact());
-          // somehow we've got an infinite recursion here
-          // requires equals
-          if (path.contains(child)) {
-            System.err.println("Infinite recursion resolving " + current);
-            System.err.println("Likely cycle in " + forPath);              
-            System.err.println("Child " + child);
-          } else {
-            fullPreorder((Stack<DependencyNode>) path.clone(), child, graph);
+  }
+
+  /**
+   * Traverses dependency tree in level-order (breadth-first search) and stores {@link
+   * DependencyPath} instances corresponding to tree nodes to {@link DependencyGraph}. When
+   * resolveFullDependency flag is true, then it resolves the dependency of the artifact of the each
+   * node in the dependency tree; otherwise it just follows the given dependency tree starting with
+   * firstNode.
+   *
+   * @param firstNode node to start traversal
+   * @param graph graph to store {@link DependencyPath} instances
+   * @param resolveFullDependency flag to resolve dependency for each node in the tree. Useful for
+   *     building a complete tree of dependencies including <i>provided</i> scope
+   * @throws DependencyCollectionException when there is a problem in collecting dependency. This
+   *     happens only when resolveFullDependency is true.
+   * @throws DependencyResolutionException when there is a problem in resolving dependency. This
+   *     happens only when resolveFullDependency is true.
+   */
+  private static void levelOrder(
+      DependencyNode firstNode, DependencyGraph graph, boolean resolveFullDependency)
+      throws DependencyCollectionException, DependencyResolutionException {
+    Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
+    queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
+    while (!queue.isEmpty()) {
+      LevelOrderQueueItem item = queue.poll();
+      DependencyNode dependencyNode = item.dependencyNode;
+      DependencyPath forPath = new DependencyPath();
+      Stack<DependencyNode> parentNodes = item.parentNodes;
+      parentNodes.forEach(parentNode -> forPath.add(parentNode.getArtifact()));
+      if (dependencyNode.getArtifact() != null) {
+        // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
+        // set to null
+        forPath.add(dependencyNode.getArtifact());
+        if (resolveFullDependency && parentNodes.contains(dependencyNode)) {
+          // TODO: change to logger
+          System.err.println("Infinite recursion resolving " + dependencyNode);
+          System.err.println("Likely cycle in " + parentNodes);
+          System.err.println("Child " + dependencyNode);
+          return;
+        }
+        parentNodes.push(dependencyNode);
+        graph.addPath(forPath);
+
+        if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
+          try {
+            dependencyNode = resolveCompileTimeRootDependencies(dependencyNode.getArtifact());
+          } catch (DependencyResolutionException ex) {
+            // TODO: change to logger
+            System.err.println("Error resolving " + dependencyNode + " under " + parentNodes);
+            System.err.println(ex.getMessage());
+            throw ex;
           }
-        } catch (DependencyResolutionException ex) {
-          System.err.println("Error resolving " + forPath);
-          System.err.println(ex.getMessage());
-          throw ex;
         }
       }
+      for (DependencyNode child : dependencyNode.getChildren()) {
+        queue.add(new LevelOrderQueueItem(child, (Stack<DependencyNode>) parentNodes.clone()));
+      }
     }
   }
-
 }

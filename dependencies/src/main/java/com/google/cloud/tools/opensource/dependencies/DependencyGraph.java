@@ -17,13 +17,18 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.aether.artifact.Artifact;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
@@ -41,10 +46,10 @@ import com.google.common.collect.TreeMultimap;
  */
 public class DependencyGraph {
 
-  // DependencyGraphBuilder builds this in breadth first order.
+  // DependencyGraphBuilder builds this in breadth first order, unless explicitly stated otherwise.
   // That is, this list contains the paths to each node in breadth first order 
   private final List<DependencyPath> graph = new ArrayList<>();
-  
+
   // map of groupId:artifactId to versions
   // TODO if versions' values were the whole coordinate string 
   // (or even the Artifact itself), would this be simpler?
@@ -54,8 +59,8 @@ public class DependencyGraph {
   // map of groupId:artifactId:version to paths
   private SetMultimap<String, DependencyPath> paths = HashMultimap.create();
   
-  // hide constructor
-  DependencyGraph() {
+  @VisibleForTesting
+  public DependencyGraph() {
   }
 
   void addPath(DependencyPath path) {
@@ -96,24 +101,15 @@ public class DependencyGraph {
   public Set<DependencyPath> getPaths(String coordinates) {
     return paths.get(coordinates);
   }
-  
-  /**
-   * @return all versions of the specified artifact found in the graph
-   */
-  public Set<String> getVersions(String coordinates) {
-    return versions.get(coordinates);
-  }
 
-  // TODO consider whether we need an update class with parent, from, and to; and
-  // a toString method rather than returning strings
   /**
-   * Returns a list of strings indicating desired updates formatted for a person to read.
+   * Returns a list of updates indicating desired updates formatted for a person to read.
    */
-  public List<String> findUpdates() {
+  public List<Update> findUpdates() {
     List<DependencyPath> paths = findConflicts();
     
     // now generate necessary upgrades
-    LinkedHashSet<String> upgrades = new LinkedHashSet<>();
+    LinkedHashSet<Update> upgrades = new LinkedHashSet<>();
     for (DependencyPath path : paths) {
       Artifact leaf = path.getLeaf();
       String key = Artifacts.makeKey(leaf);
@@ -126,15 +122,40 @@ public class DependencyGraph {
         // each fix. Maybe even calculate what will be needed postfix
         String lastParentVersion = versions.get(Artifacts.makeKey(parent)).last();
         if (parent.getVersion().equals(lastParentVersion)) {
-          upgrades.add(Artifacts.toCoordinates(parent) + " needs to upgrade " 
-              + Artifacts.toCoordinates(leaf) + " to " + highestVersion); 
+          
+          // setVersion returns a new instance on change
+          Artifact updated = leaf.setVersion(highestVersion);
+          Update update = Update.builder()
+              .setParent(parent)
+              .setFrom(leaf)
+              .setTo(updated)
+              .build();
+          
+          upgrades.add(update); 
         }
       }
     }
     
     // TODO sort by path by comparing with the graph
     
-    return new ArrayList<String>(upgrades);
+    return new ArrayList<>(upgrades);
+  }
+
+  /**
+   * @return a map of groupId:artifactId to the highest version found in the tree
+   */
+  public Map<String, String> getHighestVersionMap() {
+    Map<String, Collection<String>> input = versions.asMap();
+    Map<String, String> output = new HashMap<>();
+    
+    VersionComparator comparator = new VersionComparator();
+
+    for (Map.Entry<String, Collection<String>> entry : input.entrySet()) {
+      String highestVersion = Collections.max(entry.getValue(), comparator);
+      output.put(entry.getKey(), highestVersion);
+    }
+    
+    return output;
   }
   
 }
