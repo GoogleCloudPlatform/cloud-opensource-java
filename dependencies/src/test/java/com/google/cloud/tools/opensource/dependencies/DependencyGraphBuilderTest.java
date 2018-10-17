@@ -16,19 +16,17 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.truth.Truth;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.google.common.truth.Truth;
 
 public class DependencyGraphBuilderTest {
 
@@ -103,5 +101,15 @@ public class DependencyGraphBuilderTest {
     DependencyPath secondElement = list.get(1);
     Assert.assertEquals("BFS should pick up guava before dependencies from datastore",
         "guava", secondElement.getLeaf().getArtifactId());
+  }
+
+  @Test
+  public void testGetTransitiveDependenciesWithOptionalDependency()
+      throws DependencyCollectionException, DependencyResolutionException {
+    Artifact cloudBigtableArtifact =
+        new DefaultArtifact("com.google.cloud:google-cloud-bigtable:0.66.0-alpha");
+    DependencyGraph graph = DependencyGraphBuilder.getTransitiveDependencies(cloudBigtableArtifact);
+    Assert.assertTrue(
+        graph.list().stream().anyMatch(path -> "log4j".equals(path.getLeaf().getArtifactId())));
   }
 }
