@@ -157,11 +157,13 @@ class StaticLinkageChecker {
    */
   static List<Path> coordinateToJarPaths(String coordinate) throws RepositoryException {
     DefaultArtifact rootArtifact = new DefaultArtifact(coordinate);
-    DependencyGraph transitiveDependencies =
+    // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
+    DependencyGraph dependencyGraph =
         DependencyGraphBuilder.getCompleteDependencies(rootArtifact);
-    List<DependencyPath> dependencyPaths = transitiveDependencies.list();
+    List<DependencyPath> dependencyPaths = dependencyGraph.list();
 
     // When building a class path, we only need the first version found in breadth-first search
+    // for each artifact key
     Set<String> artifactKeySet = new HashSet<>();
 
     List<Path> jarPaths = dependencyPaths.stream().map(dependencyPath -> {
