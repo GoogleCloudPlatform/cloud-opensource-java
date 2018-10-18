@@ -393,19 +393,30 @@ class StaticLinkageChecker {
     SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
 
     URL jarFileUrl = jarFilePath.toUri().toURL();
-    for (ClassInfo classInfo : listTopLevelClassesFromJar(jarFileUrl)) {
+    Set<ClassInfo> classes = listTopLevelClassesFromJar(jarFileUrl);
+    for (ClassInfo classInfo : classes) {
       String className = classInfo.getName();
       JavaClass javaClass = repository.loadClass(className);
       String topLevelClassName = javaClass.getClassName();
       classesAlreadyInQueue.add(topLevelClassName);
       internalClassNames.add(topLevelClassName);
       internalClassNames.addAll(listInnerClassNames(javaClass));
-      methodReferences.addAll(ClassDumper.listMethodReferences(javaClass));
+      List<FullyQualifiedMethodSignature> refs = ClassDumper.listMethodReferences(javaClass);
+      if (refs.stream().anyMatch(s -> "com.google.bigtable.v2.MutateRowRequest".equals(s.getClassName()) && s.getMethodSignature().getMethodName().equals("checkByteStringIsUtf8"))) {
+        System.out.println(jarFilePath + " contains MutateRowRequest");
+      }
+
+      methodReferences.addAll(refs);
     }
 
     List<FullyQualifiedMethodSignature> externalMethodReferences = methodReferences.stream()
         .filter(reference -> !internalClassNames.contains(reference.getClassName()))
         .collect(Collectors.toList());
+
+    if (externalMethodReferences.stream().anyMatch(s -> "com.google.bigtable.v2.MutateRowRequest".equals(s.getClassName()) && s.getMethodSignature().getMethodName().equals("checkByteStringIsUtf8"))) {
+      System.out.println(jarFilePath + " contains MutateRowRequest");
+    }
+
     return externalMethodReferences;
   }
 
