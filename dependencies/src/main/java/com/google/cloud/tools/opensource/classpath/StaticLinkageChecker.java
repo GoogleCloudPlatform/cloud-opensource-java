@@ -166,22 +166,22 @@ class StaticLinkageChecker {
     // for each artifact key. This set is to filter such duplicates.
     Set<String> artifactKeySet = new HashSet<>();
 
-    List<Path> jarPaths = dependencyPaths.stream().map(dependencyPath -> {
+    List<Path> jarPaths = new ArrayList<>();
+    for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();
-      // When "groupId:artifactId" is already found in iteration, then not picking up this jar
       String artifactKey = Artifacts.makeKey(artifact);
       if (artifactKeySet.contains(artifactKey)) {
-        return null;
+        // When "groupId:artifactId" is already found in iteration, then not picking up this jar
+        continue;
       }
       artifactKeySet.add(artifactKey);
+
       File artifactFile = artifact.getFile();
       Path artifactFilePath = artifactFile.toPath();
       if (artifactFilePath.toString().endsWith(".jar")) {
-        return artifactFilePath.toAbsolutePath();
-      } else {
-        return null;
+        jarPaths.add(artifactFilePath.toAbsolutePath());
       }
-    }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
     return jarPaths;
   }
 
