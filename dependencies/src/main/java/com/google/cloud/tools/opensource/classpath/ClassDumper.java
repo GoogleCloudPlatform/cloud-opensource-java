@@ -21,9 +21,15 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.bcel.Const;
@@ -34,6 +40,7 @@ import org.apache.bcel.classfile.ConstantNameAndType;
 import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
+import org.apache.bcel.util.SyntheticRepository;
 
 /**
  * This class reads a Java class file to analyze following attributes:
@@ -81,6 +88,57 @@ class ClassDumper {
       methodReferences.add(methodref);
     }
     return methodReferences;
+  }
+
+  /**
+   * Lists external method references for a class. The returned list does not include method
+   * references that points to a class defined in the same jar file as the class specified in the
+   * first argument.
+   *
+   * @param className class name to list its method references. The class must be available through
+   *     the class loader and BCEL repository.
+   * @param jarFileToClasses mapping of jar file paths to classes. This helps to distinguish whether
+   *     the class in a method reference is in the same jar file or not.
+   * @param classLoader class loader to locate the jar file for the class
+   * @param repository BCEL repository to list method references for the class
+   * @return list of external method references from the class
+   */
+  static List<FullyQualifiedMethodSignature> listExternalMethodReferences(
+      String className,
+      Map<Path, Set<String>> jarFileToClasses,
+      ClassLoader classLoader,
+      SyntheticRepository repository) {
+    try {
+      JavaClass javaClass = repository.loadClass(className);
+      Class clazz = classLoader.loadClass(className);
+      CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
+      if (codeSource == null) {
+        // Code in bootstrap class loader (e.g., javax) will not have source and we do not
+        // need it
+        return Collections.emptyList();
+      }
+      Path jarPathForTheClass = Paths.get(codeSource.getLocation().toURI());
+      Set<String> classesDefinedInSameJar = jarFileToClasses.get(jarPathForTheClass);
+      if (classesDefinedInSameJar == null) {
+        // TODO: Library used in this project (e.g., Guava) interferes the jar files of the class
+        // Fix the interference
+        return Collections.emptyList();
+      }
+      List<FullyQualifiedMethodSignature> nextMethodReferences =
+          ClassDumper.listMethodReferences(javaClass);
+      List<FullyQualifiedMethodSignature> nextExternalMethodReferences = new ArrayList<>();
+      for (FullyQualifiedMethodSignature methodReference : nextMethodReferences) {
+        String classNameInMethodReference = methodReference.getClassName();
+        if (!className.equals(classNameInMethodReference)
+            && !classesDefinedInSameJar.contains(classNameInMethodReference)) {
+          nextExternalMethodReferences.add(methodReference);
+        }
+      }
+      return nextExternalMethodReferences;
+    } catch (ClassNotFoundException | URISyntaxException ex) {
+      throw new RuntimeException(
+          "There was an error to read method references from the class: " + className, ex);
+    }
   }
 
   /**

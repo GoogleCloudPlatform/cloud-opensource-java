@@ -34,8 +34,10 @@ import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
@@ -86,8 +88,8 @@ class StaticLinkageChecker {
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         findUnresolvedMethodReferences(jarFilePaths);
     if (unresolvedMethodReferences.isEmpty()) {
-      stringBuilder.append("There were no unresolved method references from the jar file(s) :");
-      stringBuilder.append(Arrays.toString(arguments));
+      stringBuilder.append("There were no unresolved method references from the first jar file :");
+      stringBuilder.append(jarFilePaths.get(0));
     } else {
       int count = unresolvedMethodReferences.size();
       stringBuilder.append(
@@ -182,19 +184,22 @@ class StaticLinkageChecker {
   static List<FullyQualifiedMethodSignature> findUnresolvedMethodReferences(
       List<Path> jarFilePaths)
       throws IOException, ClassNotFoundException {
+    if (jarFilePaths.size() < 1) {
+      throw new IllegalArgumentException("The size of jar file paths is zero");
+    }
     Path absolutePathToFirstJar = jarFilePaths.get(0);
     if (!Files.isReadable(absolutePathToFirstJar)) {
       throw new IOException("The file is not readable: " + absolutePathToFirstJar);
     }
-    Set<String> classesAlreadyInQueue = new HashSet<>();
-    List<FullyQualifiedMethodSignature> methodReferencesFromRootJar = listExternalMethodReferences(absolutePathToFirstJar, classesAlreadyInQueue);
-    if (methodReferencesFromRootJar.stream().anyMatch(s -> "com.google.bigtable.v2.MutateRowRequest".equals(s.getClassName()))) {
-      System.out.println(methodReferencesFromRootJar + " contains MutateRowRequest");
-    } else {
-      System.out.println(methodReferencesFromRootJar + " not containing MutateRowRequest");
-    }
+    Set<String> classesCheckedMethodReference = new HashSet<>();
+
+    // To avoid false positives from unused classes in 3rd-party library (e.g., grpc-netty-shaded),
+    // it builds usage graph starting with the method references from the first artifact
+    List<FullyQualifiedMethodSignature> methodReferencesFromRootJar =
+        listExternalMethodReferences(absolutePathToFirstJar, classesCheckedMethodReference);
+
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        findUnresolvedReferences(jarFilePaths, methodReferencesFromRootJar, classesAlreadyInQueue);
+        findUnresolvedReferences(jarFilePaths, methodReferencesFromRootJar, classesCheckedMethodReference);
     return unresolvedMethodReferences;
   }
 
@@ -205,6 +210,7 @@ class StaticLinkageChecker {
    *
    * @param jarFilePaths absolute paths to the jar files to search for the methods
    * @param initialMethodReferences methods to search for within the jar files
+   * @param classesAlreadyInQueue class names already checked for their method references
    * @return list of methods that are not found in the jar files
    */
   @VisibleForTesting
@@ -218,6 +224,9 @@ class StaticLinkageChecker {
         jarFilePaths.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator));
     ClassPath classPath = new ClassPath(pathAsString);
     SyntheticRepository repository = SyntheticRepository.getInstance(classPath);
+
+    // This map helps to distinguish whether a method reference from a class is external or not
+    Map<Path, Set<String>> jarFileToClasses = jarFilesToDefinedClasses(jarFilePaths);
 
     Set<String> classesNotFound = new HashSet<>();
     Set<FullyQualifiedMethodSignature> availableMethodsInJars = new HashSet<>();
@@ -255,15 +264,17 @@ class StaticLinkageChecker {
       try {
         if (methodDefinitionExists(methodReference, classLoaderFromJars, repository)) {
           availableMethodsInJars.add(methodReference);
+
+          // If the class is available, then check the method references from the class recursively
           if (!classesAlreadyInQueue.contains(className)) {
+            // This list does not include internal method references: classes defined within the
+            // same jar file as the one with `className`
+            List<FullyQualifiedMethodSignature> nextExternalMethodReferences =
+                ClassDumper.listExternalMethodReferences(
+                    className, jarFileToClasses, classLoaderFromJars, repository);
+
+            queue.addAll(nextExternalMethodReferences);
             classesAlreadyInQueue.add(className);
-            try {
-              JavaClass javaClass = repository.loadClass(className);
-              queue.addAll(ClassDumper.listMethodReferences(javaClass));
-            } catch (ClassNotFoundException ex) {
-              // Primitive types is not found in BCEL repository and no need to follow its dependency
-              continue;
-            }
           }
         } else {
           unresolvedMethods.add(methodReference);
@@ -273,7 +284,41 @@ class StaticLinkageChecker {
         classesNotFound.add(className);
       }
     }
+    System.out.println(
+        "Available method references in jar files: " + availableMethodsInJars.size());
     return unresolvedMethods;
+  }
+
+  /**
+   * @param jarFilePaths absolute paths to jar files
+   * @return map of jar file paths to classes defined in them
+   */
+  private static Map<Path, Set<String>> jarFilesToDefinedClasses(List<Path> jarFilePaths) {
+    Map<Path, Set<String>> pathToClasses = new HashMap<>();
+    for (Path jarFilePath : jarFilePaths) {
+      Set<String> internalClassNames = new HashSet<>();
+
+      String pathToJar = jarFilePath.toString();
+      SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
+      try {
+        URL jarFileUrl = jarFilePath.toUri().toURL();
+        Set<ClassInfo> classes = listTopLevelClassesFromJar(jarFileUrl);
+        for (ClassInfo classInfo : classes) {
+          String className = classInfo.getName();
+          JavaClass javaClass = repository.loadClass(className);
+          String topLevelClassName = javaClass.getClassName();
+          internalClassNames.add(topLevelClassName);
+          // This does not take double-nested classes. As long as such classes are accessed
+          // only from the outer class, static linkage checker does not report false positives
+          // TODO: enhance this so that it can work with double-nested classes
+          internalClassNames.addAll(listInnerClassNames(javaClass));
+        }
+        pathToClasses.put(jarFilePath, internalClassNames);
+      } catch (IOException | ClassNotFoundException ex) {
+        throw new RuntimeException("There was problem in loading classes in jar file", ex);
+      }
+    }
+    return pathToClasses;
   }
 
   private static boolean isBuiltinClassName(String className) {
@@ -360,11 +405,6 @@ class StaticLinkageChecker {
     return parameterTypes;
   }
 
-  static Class typeNameToClass(String typeName, ClassLoader classLoader) {
-    Type bcelType = Type.getType(typeName);
-    return bcelTypeToJavaClass(bcelType, classLoader);
-  }
-
   private static List<FullyQualifiedMethodSignature> listMethodsOnClass(JavaClass javaClass) {
     List<MethodSignature> methods = ClassDumper.listDeclaredMethods(javaClass);
     List<FullyQualifiedMethodSignature> fullyQualifiedMethodSignatures = methods.stream()
@@ -379,13 +419,14 @@ class StaticLinkageChecker {
    * include the methods defined in the file.
    *
    * @param jarFilePath the absolute path to jar file to analyze
+   * @param classesChecked to populate classes that are checked for method references
    * @return list of the method signatures with their fully-qualified classes
    * @throws IOException when there is a problem in reading the jar file
    * @throws ClassNotFoundException when a class visible by Guava's reflect was unexpectedly not
    *     found by BCEL API
    */
   static List<FullyQualifiedMethodSignature> listExternalMethodReferences(
-      Path jarFilePath, Set<String> classesAlreadyInQueue) throws IOException, ClassNotFoundException {
+      Path jarFilePath, Set<String> classesChecked) throws IOException, ClassNotFoundException {
     List<FullyQualifiedMethodSignature> methodReferences = new ArrayList<>();
     Set<String> internalClassNames = new HashSet<>();
 
@@ -398,24 +439,16 @@ class StaticLinkageChecker {
       String className = classInfo.getName();
       JavaClass javaClass = repository.loadClass(className);
       String topLevelClassName = javaClass.getClassName();
-      classesAlreadyInQueue.add(topLevelClassName);
+      classesChecked.add(topLevelClassName);
       internalClassNames.add(topLevelClassName);
       internalClassNames.addAll(listInnerClassNames(javaClass));
       List<FullyQualifiedMethodSignature> refs = ClassDumper.listMethodReferences(javaClass);
-      if (refs.stream().anyMatch(s -> "com.google.bigtable.v2.MutateRowRequest".equals(s.getClassName()) && s.getMethodSignature().getMethodName().equals("checkByteStringIsUtf8"))) {
-        System.out.println(jarFilePath + " contains MutateRowRequest");
-      }
-
       methodReferences.addAll(refs);
     }
 
     List<FullyQualifiedMethodSignature> externalMethodReferences = methodReferences.stream()
         .filter(reference -> !internalClassNames.contains(reference.getClassName()))
         .collect(Collectors.toList());
-
-    if (externalMethodReferences.stream().anyMatch(s -> "com.google.bigtable.v2.MutateRowRequest".equals(s.getClassName()) && s.getMethodSignature().getMethodName().equals("checkByteStringIsUtf8"))) {
-      System.out.println(jarFilePath + " contains MutateRowRequest");
-    }
 
     return externalMethodReferences;
   }
@@ -430,6 +463,7 @@ class StaticLinkageChecker {
       if (attribute.getTag() != Const.ATTR_INNER_CLASSES) {
         continue;
       }
+      // This innerClasses don't include double-nested inner classes
       InnerClasses innerClasses = (InnerClasses) attribute;
       for (InnerClass innerClass : innerClasses.getInnerClasses()) {
         int classIndex = innerClass.getInnerClassIndex();
