@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static org.hamcrest.CoreMatchers.is;
+
 import com.google.common.collect.Lists;
 import com.google.common.truth.Truth;
 import java.io.IOException;
@@ -118,7 +120,7 @@ public class StaticLinkageCheckerTest {
     Truth.assertThat(unresolvedMethodReferences).hasSize(1);
   }
 
-  private Path absolutePathOfResource(String resourceName) throws URISyntaxException {
+  private static Path absolutePathOfResource(String resourceName) throws URISyntaxException {
     return Paths.get(URLClassLoader.getSystemResource(resourceName).toURI()).toAbsolutePath();
   }
 
@@ -267,6 +269,23 @@ public class StaticLinkageCheckerTest {
         StaticLinkageChecker.findUnresolvedReferences(
             pathsForJar, Arrays.asList(guavaCollectionPut));
     Truth.assertThat(methodsNotFound).hasSize(0);
+  }
+
+  @Test
+  public void testFindUnresolvedReferences_unusedLzmaClassByGrpc()
+      throws RepositoryException, IOException, ClassNotFoundException {
+    String bigTableCoordinate = "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
+    List<Path> paths = StaticLinkageChecker.coordinateToJarPaths(bigTableCoordinate);
+    Truth.assertThat(paths).hasSize(36);
+    List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
+        StaticLinkageChecker.findUnresolvedMethodReferences(paths);
+    Assert.assertThat(unresolvedMethodReferences.size(), is(10));
+    Assert.assertFalse(
+        "As lzma-java classes are not used by google-cloud-bigtable, it should not appear as unresolved method references",
+        unresolvedMethodReferences
+            .stream()
+            .anyMatch(
+                methodReference -> "lzma.sdk.lzma.Encoder".equals(methodReference.getClassName())));
   }
 
   @Test

@@ -21,7 +21,6 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
 import java.io.IOException;
@@ -32,11 +31,13 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.bcel.Const;
@@ -181,29 +182,28 @@ class StaticLinkageChecker {
   static List<FullyQualifiedMethodSignature> findUnresolvedMethodReferences(
       List<Path> jarFilePaths)
       throws IOException, ClassNotFoundException {
-    Set<FullyQualifiedMethodSignature> externalMethodReferences = new HashSet<>();
-    for (Path absolutePathToJar : jarFilePaths) {
-      if (!Files.isReadable(absolutePathToJar)) {
-        throw new IOException("The file is not readable: " + absolutePathToJar);
-      }
-      externalMethodReferences.addAll(listExternalMethodReferences(absolutePathToJar));
+    Path absolutePathToFirstJar = jarFilePaths.get(0);
+    if (!Files.isReadable(absolutePathToFirstJar)) {
+      throw new IOException("The file is not readable: " + absolutePathToFirstJar);
     }
+    List<FullyQualifiedMethodSignature> methodReferencesFromRootJar = listExternalMethodReferences(absolutePathToFirstJar);
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        findUnresolvedReferences(jarFilePaths, Lists.newArrayList(externalMethodReferences));
+        findUnresolvedReferences(jarFilePaths, methodReferencesFromRootJar);
     return unresolvedMethodReferences;
   }
 
   /**
-   * Checks the availability of the methods through the jar files, and lists the unavailable
-   * methods.
+   * Checks the availability of the methods through the jar files and lists the unavailable methods.
+   * Starting with the initialMethodReferences, this method recursively search for the method
+   * references in class usage graph.
    *
    * @param jarFilePaths absolute paths to the jar files to search for the methods
-   * @param methodReferences methods to search for within the jar files
+   * @param initialMethodReferences methods to search for within the jar files
    * @return list of methods that are not found in the jar files
    */
   @VisibleForTesting
-  static List<FullyQualifiedMethodSignature> findUnresolvedReferences(List<Path> jarFilePaths,
-      List<FullyQualifiedMethodSignature> methodReferences) {
+  static List<FullyQualifiedMethodSignature> findUnresolvedReferences(
+      List<Path> jarFilePaths, List<FullyQualifiedMethodSignature> initialMethodReferences) {
     List<FullyQualifiedMethodSignature> unresolvedMethods = new ArrayList<>();
 
     // Creates classpath in the same order as jarFilePaths for BCEL API
@@ -225,9 +225,12 @@ class StaticLinkageChecker {
     }).filter(Objects::nonNull).toArray(URL[]::new);
     URLClassLoader classLoaderFromJars = new URLClassLoader(jarFileUrls);
 
-    for (FullyQualifiedMethodSignature methodReference : methodReferences) {
+    Queue<FullyQualifiedMethodSignature> queue = new ArrayDeque<>(initialMethodReferences);
+    Set<String> classesAlreadyInQueue = new HashSet<>();
+    while (!queue.isEmpty()) {
+      FullyQualifiedMethodSignature methodReference = queue.poll();
       String className = methodReference.getClassName();
-      if (className.startsWith("java.") || className.startsWith("sun.")) {
+      if (isBuiltinClassName(className)) {
         // Ignore references to JDK package
         continue;
       }
@@ -246,6 +249,16 @@ class StaticLinkageChecker {
       try {
         if (methodDefinitionExists(methodReference, classLoaderFromJars, repository)) {
           availableMethodsInJars.add(methodReference);
+          if (!classesAlreadyInQueue.contains(className)) {
+            classesAlreadyInQueue.add(className);
+            try {
+              JavaClass javaClass = repository.loadClass(className);
+              queue.addAll(ClassDumper.listMethodReferences(javaClass));
+            } catch (ClassNotFoundException ex) {
+              // Primitive types is not found in BCEL repository and no need to follow its dependency
+              continue;
+            }
+          }
         } else {
           unresolvedMethods.add(methodReference);
         }
@@ -255,6 +268,12 @@ class StaticLinkageChecker {
       }
     }
     return unresolvedMethods;
+  }
+
+  private static boolean isBuiltinClassName(String className) {
+    return className.startsWith("java.")
+        || className.startsWith("sun.")
+        || className.startsWith("[");
   }
 
   @VisibleForTesting
@@ -333,6 +352,11 @@ class StaticLinkageChecker {
             .map(type -> bcelTypeToJavaClass(type, classLoader))
             .toArray(Class[]::new);
     return parameterTypes;
+  }
+
+  static Class typeNameToClass(String typeName, ClassLoader classLoader) {
+    Type bcelType = Type.getType(typeName);
+    return bcelTypeToJavaClass(bcelType, classLoader);
   }
 
   private static List<FullyQualifiedMethodSignature> listMethodsOnClass(JavaClass javaClass) {
