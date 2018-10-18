@@ -1,8 +1,16 @@
-[JLBP-12] Make level of support and level of API stability clear
-----------------------------------------------------------------
+[JLBP-12] Make level of support and API stability clear
+-------------------------------------------------------
 
-- Surface stability should be clearly described.
-- Feedback mechanisms should be outlined (for example, file an issue).
-- Clearly describe when a library is abandoned.
-- Clearly label 0.x libraries as unstable (as in, they can experience
-  breakages and are not recommended for production use).
+- Clearly describe the lifecycle status (and corresponding level of expected support) of the library. Examples include:
+  - Incubating (no support expected)
+  - Stable (SLOs in place to handle issues)
+  - Maintenance only (only bugs will be addressed)
+  - Deprecated (no work is expected, use a replacement instead)
+  - Abandoned (no work is expected, no clear replacement)
+- Clearly state the API stability clients can expect from the library surface. Example statements:
+  - This API is stable and suitable for production use, aside from packages, classes, and methods marked internal or unstable.
+  - This API is beta and will not experience an API-breaking change unless a bug or design flaw is uncovered.
+  - This API is in development. Anything may change at any time. Stable products should not depend on it.
+- Document a feedback mechanism. For example:
+  - File an issue at https://github.com/...
+  - Send email to dev@fooproject.example.com
