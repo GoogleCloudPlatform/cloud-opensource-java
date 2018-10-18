@@ -9,6 +9,9 @@ made. We have found that following these rules will result in higher quality
 Java libraries with fewer dependency conflicts and other kinds of problems. The
 list is open-ended, so new ones may be added from time to time.
 
+- [Glossary](glossary.md): Terms used in the best practices, and other places in
+  cloud-opensource-java.
+
 - [JLBP-1](JLBP-1.md): Minimize dependencies
 - [JLBP-2](JLBP-2.md): Minimize API surface
 - [JLBP-3](JLBP-3.md): Use Semantic versioning
