@@ -65,20 +65,18 @@ public class DependencyGraphBuilder {
   // caching cuts time by about a factor of 4.
   private static final Map<String, DependencyNode> cache = new HashMap<>();
 
-  @VisibleForTesting
-  static DependencyNode resolveCompileTimeRootDependencies(Artifact artifact)
+  private static DependencyNode resolveCompileTimeDependencies(Artifact rootDependencyArtifact)
       throws DependencyCollectionException, DependencyResolutionException {
     
-    String key = Artifacts.toCoordinates(artifact);
+    String key = Artifacts.toCoordinates(rootDependencyArtifact);
     if (cache.containsKey(key)) {
       return cache.get(key);
     }
     
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 
-    Dependency dependency = new Dependency(artifact, "compile");
-
     CollectRequest collectRequest = new CollectRequest();
+    Dependency dependency = new Dependency(rootDependencyArtifact, "compile");
     collectRequest.setRoot(dependency);
     collectRequest.addRepository(RepositoryUtility.CENTRAL);
     DependencyNode node = system.collectDependencies(session, collectRequest).getRoot();
@@ -92,22 +90,17 @@ public class DependencyGraphBuilder {
     return node;
   }
 
-  private static DependencyNode resolveCompileTimeDependencies(List<Artifact> artifacts)
+  private static DependencyNode resolveCompileTimeDependencies(List<Artifact> dependencyArtifacts)
       throws DependencyCollectionException, DependencyResolutionException {
-    String key = artifacts.stream().map(Artifacts::toCoordinates).collect(Collectors.joining(","));
-    if (cache.containsKey(key)) {
-      return cache.get(key);
-    }
-
+    CollectRequest collectRequest = new CollectRequest();
     List<Dependency> dependencyList =
-        artifacts
+        dependencyArtifacts
             .stream()
             .map(artifact -> new Dependency(artifact, "compile"))
             .collect(Collectors.toList());
-
-    CollectRequest collectRequest = new CollectRequest();
     collectRequest.setDependencies(dependencyList);
     collectRequest.addRepository(RepositoryUtility.CENTRAL);
+
     RepositorySystemSession session = RepositoryUtility.newSession(system);
     CollectResult collectResult = system.collectDependencies(session, collectRequest);
     // This root DependencyNode's artifact is set to null, as root dependency was null in request
@@ -116,8 +109,6 @@ public class DependencyGraphBuilder {
     dependencyRequest.setCollectRequest(collectRequest);
 
     system.resolveDependencies(session, dependencyRequest);
-    cache.put(key, node);
-
     return node;
   }
 
@@ -129,7 +120,7 @@ public class DependencyGraphBuilder {
     
     List<Artifact> result = new ArrayList<>();
     
-    DependencyNode node = resolveCompileTimeRootDependencies(artifact);
+    DependencyNode node = resolveCompileTimeDependencies(artifact);
     for (DependencyNode child : node.getChildren()) {
       result.add(child.getArtifact());
     }
@@ -144,7 +135,7 @@ public class DependencyGraphBuilder {
       throws DependencyCollectionException, DependencyResolutionException {
     
     // root node
-    DependencyNode node = resolveCompileTimeRootDependencies(artifact);
+    DependencyNode node = resolveCompileTimeDependencies(artifact);
     DependencyGraph graph = new DependencyGraph();
     levelOrder(node, graph, true);
     
@@ -160,7 +151,7 @@ public class DependencyGraphBuilder {
   public static DependencyGraph getTransitiveDependencies(Artifact artifact)
       throws DependencyCollectionException, DependencyResolutionException {
     // root node
-    DependencyNode node = resolveCompileTimeRootDependencies(artifact);
+    DependencyNode node = resolveCompileTimeDependencies(artifact);
     DependencyGraph graph = new DependencyGraph();
     levelOrder(node, graph);
     return graph;
@@ -239,7 +230,7 @@ public class DependencyGraphBuilder {
 
         if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
           try {
-            dependencyNode = resolveCompileTimeRootDependencies(dependencyNode.getArtifact());
+            dependencyNode = resolveCompileTimeDependencies(dependencyNode.getArtifact());
           } catch (DependencyResolutionException ex) {
             // TODO: change to logger
             System.err.println("Error resolving " + dependencyNode + " under " + parentNodes);
