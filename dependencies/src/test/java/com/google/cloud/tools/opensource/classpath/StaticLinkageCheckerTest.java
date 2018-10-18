@@ -198,7 +198,7 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testFindUnresolvedReferences_packagePrivateInnerClass()
       throws RepositoryException {
-    List<Path> paths = StaticLinkageChecker.coordinateToJarPaths("io.grpc:grpc-auth:1.15.1");
+    List<Path> paths = StaticLinkageChecker.coordinateToClasspath("io.grpc:grpc-auth:1.15.1");
 
     FullyQualifiedMethodSignature constructorOfPrivateInnerClass =
         new FullyQualifiedMethodSignature(
@@ -225,7 +225,7 @@ public class StaticLinkageCheckerTest {
 
   @Test
   public void testCoordinateToJarPaths_validCoordinate() throws RepositoryException {
-    List<Path> paths = StaticLinkageChecker.coordinateToJarPaths("io.grpc:grpc-auth:1.15.1");
+    List<Path> paths = StaticLinkageChecker.coordinateToClasspath("io.grpc:grpc-auth:1.15.1");
     Truth.assertThat(paths).hasSize(12);
 
     String pathsString = paths.toString();
@@ -244,7 +244,7 @@ public class StaticLinkageCheckerTest {
 
   @Test
   public void testCoordinateToJarPaths_optionalDependency() throws RepositoryException {
-    List<Path> paths = StaticLinkageChecker.coordinateToJarPaths("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
+    List<Path> paths = StaticLinkageChecker.coordinateToClasspath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
 
     // The tree from google-cloud-bigtable to log4j:
     //   com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha (optional: false)
@@ -259,7 +259,7 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testCoordinateToJarPaths_invalidCoordinate() {
     try {
-      StaticLinkageChecker.coordinateToJarPaths("io.grpc:nosuchartifact:1.2.3");
+      StaticLinkageChecker.coordinateToClasspath("io.grpc:nosuchartifact:1.2.3");
       Assert.fail("Invalid Maven coodinate should raise RepositoryException");
     } catch (RepositoryException ex) {
       Truth.assertThat(ex.getMessage())

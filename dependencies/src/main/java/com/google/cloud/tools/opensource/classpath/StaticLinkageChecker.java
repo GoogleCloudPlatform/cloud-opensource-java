@@ -126,7 +126,7 @@ class StaticLinkageChecker {
       if (cmd.hasOption("c")) {
         String mavenCoordinates = cmd.getOptionValue("c");
         for (String coordinate : mavenCoordinates.split(",")) {
-          jarFilePaths.addAll(coordinateToJarPaths(coordinate));
+          jarFilePaths.addAll(coordinateToClasspath(coordinate));
         }
       }
       if (cmd.hasOption("j")) {
@@ -155,7 +155,7 @@ class StaticLinkageChecker {
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem in retrieving jar files
    */
-  static List<Path> coordinateToJarPaths(String coordinate) throws RepositoryException {
+  static List<Path> coordinateToClasspath(String coordinate) throws RepositoryException {
     DefaultArtifact rootArtifact = new DefaultArtifact(coordinate);
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph dependencyGraph =
@@ -163,12 +163,12 @@ class StaticLinkageChecker {
     List<DependencyPath> dependencyPaths = dependencyGraph.list();
 
     // When building a class path, we only need the first version found in breadth-first search
-    // for each artifact key
+    // for each artifact key. This set is to filter such duplicates.
     Set<String> artifactKeySet = new HashSet<>();
 
     List<Path> jarPaths = dependencyPaths.stream().map(dependencyPath -> {
       Artifact artifact = dependencyPath.getLeaf();
-      // groupId:artifactId
+      // When "groupId:artifactId" is already found in iteration, then not picking up this jar
       String artifactKey = Artifacts.makeKey(artifact);
       if (artifactKeySet.contains(artifactKey)) {
         return null;
