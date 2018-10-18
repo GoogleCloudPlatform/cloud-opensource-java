@@ -8,8 +8,8 @@ Java Dependency Glossary
   compile time and the version invoked at runtime. For example, a public method
   may be removed from a class or a class may be made final. Linkage conflicts
   detected at runtime manifest as ReflectiveOperationException,
-  NoClassDefFoundError, NoSuchFieldException, MethodNotFoundException,
-  LinkageError, or other related exceptions.
+  `NoClassDefFoundError`, `NoSuchFieldException`, `MethodNotFoundException`,
+  `LinkageError`, or other related exceptions.
   - Or, another perspective: In cases where binary compatibility and source
     compatibility are the same, a linkage conflict is when compilation would
     fail if the libraries in the classpath were all built together from their
