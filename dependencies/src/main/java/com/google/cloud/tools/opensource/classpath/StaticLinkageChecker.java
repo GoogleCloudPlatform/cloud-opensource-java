@@ -160,15 +160,18 @@ class StaticLinkageChecker {
     DependencyGraph transitiveDependencies =
         DependencyGraphBuilder.getCompleteDependencies(rootArtifact);
     List<DependencyPath> dependencyPaths = transitiveDependencies.list();
-    Set<String> foundKey = new HashSet<>();
+
+    // When building a class path, we only need the first version found in breadth-first search
+    Set<String> artifactKeySet = new HashSet<>();
+
     List<Path> jarPaths = dependencyPaths.stream().map(dependencyPath -> {
       Artifact artifact = dependencyPath.getLeaf();
       // groupId:artifactId
-      String key = Artifacts.makeKey(artifact);
-      if (foundKey.contains(key)) {
+      String artifactKey = Artifacts.makeKey(artifact);
+      if (artifactKeySet.contains(artifactKey)) {
         return null;
       }
-      foundKey.add(key);
+      artifactKeySet.add(artifactKey);
       File artifactFile = artifact.getFile();
       Path artifactFilePath = artifactFile.toPath();
       if (artifactFilePath.toString().endsWith(".jar")) {
