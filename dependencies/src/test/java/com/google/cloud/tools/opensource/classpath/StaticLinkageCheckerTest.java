@@ -226,7 +226,7 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testCoordinateToJarPaths_validCoordinate() throws RepositoryException {
     List<Path> paths = StaticLinkageChecker.coordinateToJarPaths("io.grpc:grpc-auth:1.15.1");
-    Truth.assertThat(paths).hasSize(11);
+    Truth.assertThat(paths).hasSize(12);
 
     String pathsString = paths.toString();
 
@@ -240,6 +240,20 @@ public class StaticLinkageCheckerTest {
               .that(path.toString())
               .startsWith("/");
         });
+  }
+
+  @Test
+  public void testCoordinateToJarPaths_optionalDependency() throws RepositoryException {
+    List<Path> paths = StaticLinkageChecker.coordinateToJarPaths("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
+
+    // The tree from google-cloud-bigtable to log4j:
+    //   com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha (optional: false)
+    //    com.google.cloud:google-cloud-core:jar:1.48.0 (optional: false)
+    //      com.google.http-client:google-http-client:jar:1.24.1 (optional: false)
+    //        org.apache.httpcomponents:httpclient:jar:4.5.3 (optional: false)
+    //          commons-logging:commons-logging:jar:1.2 (optional: false)
+    //            log4j:log4j:jar:1.2.17 (optional: true)
+    Assert.assertTrue(paths.stream().anyMatch(path -> path.endsWith("log4j-1.2.17.jar")));
   }
 
   @Test

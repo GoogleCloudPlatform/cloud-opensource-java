@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -55,6 +56,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
@@ -154,12 +156,20 @@ class StaticLinkageChecker {
    * @throws RepositoryException when there is a problem in retrieving jar files
    */
   static List<Path> coordinateToJarPaths(String coordinate) throws RepositoryException {
-    DefaultArtifact artifact = new DefaultArtifact(coordinate);
+    DefaultArtifact rootArtifact = new DefaultArtifact(coordinate);
     DependencyGraph transitiveDependencies =
-        DependencyGraphBuilder.getTransitiveDependencies(artifact);
+        DependencyGraphBuilder.getCompleteDependencies(rootArtifact);
     List<DependencyPath> dependencyPaths = transitiveDependencies.list();
+    Set<String> foundKey = new HashSet<>();
     List<Path> jarPaths = dependencyPaths.stream().map(dependencyPath -> {
-      File artifactFile = dependencyPath.getLeaf().getFile();
+      Artifact artifact = dependencyPath.getLeaf();
+      // groupId:artifactId
+      String key = Artifacts.makeKey(artifact);
+      if (foundKey.contains(key)) {
+        return null;
+      }
+      foundKey.add(key);
+      File artifactFile = artifact.getFile();
       Path artifactFilePath = artifactFile.toPath();
       if (artifactFilePath.toString().endsWith(".jar")) {
         return artifactFilePath.toAbsolutePath();

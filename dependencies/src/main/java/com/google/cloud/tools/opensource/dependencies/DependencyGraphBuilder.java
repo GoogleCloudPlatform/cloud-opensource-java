@@ -33,12 +33,10 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
-import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
-import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 
 /**
  * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact
@@ -111,9 +109,6 @@ public class DependencyGraphBuilder {
     collectRequest.setDependencies(dependencyList);
     collectRequest.addRepository(RepositoryUtility.CENTRAL);
     RepositorySystemSession session = RepositoryUtility.newSession(system);
-    DependencySelector dependencySelector = session.getDependencySelector();
-    // Can we modify the behavior of OptionalDependencySelector behind andDependencySelector?
-    AndDependencySelector andDependencySelector = (AndDependencySelector) dependencySelector;
     CollectResult collectResult = system.collectDependencies(session, collectRequest);
     // This root DependencyNode's artifact is set to null, as root dependency was null in request
     DependencyNode node = collectResult.getRoot();

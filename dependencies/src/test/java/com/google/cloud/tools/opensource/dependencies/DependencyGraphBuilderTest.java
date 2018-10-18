@@ -21,11 +21,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
-import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -103,36 +101,5 @@ public class DependencyGraphBuilderTest {
     DependencyPath secondElement = list.get(1);
     Assert.assertEquals("BFS should pick up guava before dependencies from datastore",
         "guava", secondElement.getLeaf().getArtifactId());
-  }
-
-  @Test
-  public void testGetTransitiveDependenciesWithOptionalDependency()
-      throws DependencyCollectionException, DependencyResolutionException {
-    Artifact cloudBigtableArtifact =
-        new DefaultArtifact("com.google.cloud:google-cloud-bigtable:0.66.0-alpha");
-    Artifact commonsLoggingArtifact = new DefaultArtifact("commons-logging:commons-logging:1.2");
-
-    DependencyGraph graphFromRoot =
-        DependencyGraphBuilder.getTransitiveDependencies(commonsLoggingArtifact);
-    Assert.assertTrue(
-        graphFromRoot
-            .list()
-            .stream()
-            .anyMatch(path -> "log4j".equals(path.getLeaf().getArtifactId())));
-
-    DependencyGraph graphFromNonRoot =
-        DependencyGraphBuilder.getTransitiveDependencies(Arrays.asList(commonsLoggingArtifact));
-    Assert.assertTrue(
-        graphFromNonRoot
-            .list()
-            .stream()
-            .anyMatch(path -> "log4j".equals(path.getLeaf().getArtifactId())));
-  }
-
-  @Test
-  public void testResolveCompileTimeRootDependenciesWithOptionalDependency() throws RepositoryException {
-    Artifact cloudBigtableArtifact =
-        new DefaultArtifact("com.google.cloud:google-cloud-bigtable:0.66.0-alpha");
-    DependencyNode dependencyNode = DependencyGraphBuilder.resolveCompileTimeRootDependencies(cloudBigtableArtifact);
   }
 }
