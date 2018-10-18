@@ -222,7 +222,7 @@ public class DependencyGraphBuilder {
           System.err.println("Infinite recursion resolving " + dependencyNode);
           System.err.println("Likely cycle in " + parentNodes);
           System.err.println("Child " + dependencyNode);
-          return;
+          continue;
         }
         parentNodes.push(dependencyNode);
         graph.addPath(forPath);
