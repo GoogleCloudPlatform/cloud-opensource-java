@@ -28,6 +28,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.bcel.classfile.ClassParser;
@@ -50,7 +51,7 @@ public class StaticLinkageCheckerTest {
       throws IOException, ClassNotFoundException, URISyntaxException {
     URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
     List<FullyQualifiedMethodSignature> signatures =
-        StaticLinkageChecker.listExternalMethodReferences(Paths.get(jarFileUrl.toURI()));
+        StaticLinkageChecker.listExternalMethodReferences(Paths.get(jarFileUrl.toURI()), new HashSet<>());
 
     Truth.assertThat(signatures).hasSize(38);
     FullyQualifiedMethodSignature expectedExternalMethodReference =
@@ -116,7 +117,7 @@ public class StaticLinkageCheckerTest {
         internalMethodReference, undefinedMethodReference
     );
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        StaticLinkageChecker.findUnresolvedReferences(pathsForJar, methodReferences);
+        StaticLinkageChecker.findUnresolvedReferences(pathsForJar, methodReferences, new HashSet<>());
     Truth.assertThat(unresolvedMethodReferences).hasSize(1);
   }
 
@@ -187,13 +188,13 @@ public class StaticLinkageCheckerTest {
     // When version 65 (old) comes first in the jar list, it cannot find listDocuments method
     List<FullyQualifiedMethodSignature> unresolvedMethodReferencesWithPath1 =
         StaticLinkageChecker.findUnresolvedReferences(pathsForJarWithVersion65First,
-            Arrays.asList(methodAddedInVersion66));
+            Arrays.asList(methodAddedInVersion66), new HashSet<>());
     Truth.assertThat(unresolvedMethodReferencesWithPath1).hasSize(1);
 
     // When version 66 (new) comes first, it finds the method correctly
     List<FullyQualifiedMethodSignature> unresolvedMethodReferencesWithPath2 =
         StaticLinkageChecker.findUnresolvedReferences(pathsForJarWithVersion66First,
-            Arrays.asList(methodAddedInVersion66));
+            Arrays.asList(methodAddedInVersion66), new HashSet<>());
     Truth.assertThat(unresolvedMethodReferencesWithPath2).hasSize(0);
   }
 
@@ -210,7 +211,7 @@ public class StaticLinkageCheckerTest {
 
     List<FullyQualifiedMethodSignature> unresolvedReferences = StaticLinkageChecker
         .findUnresolvedReferences(paths,
-            Arrays.asList(constructorOfPrivateInnerClass));
+            Arrays.asList(constructorOfPrivateInnerClass), new HashSet<>());
     Truth.assertThat(unresolvedReferences).isEmpty();
   }
 
@@ -267,7 +268,7 @@ public class StaticLinkageCheckerTest {
             Paths.get(URLClassLoader.getSystemResource("testdata/guava-26.0-jre.jar").toURI()));
     List<FullyQualifiedMethodSignature> methodsNotFound =
         StaticLinkageChecker.findUnresolvedReferences(
-            pathsForJar, Arrays.asList(guavaCollectionPut));
+            pathsForJar, Arrays.asList(guavaCollectionPut), new HashSet<>());
     Truth.assertThat(methodsNotFound).hasSize(0);
   }
 
@@ -297,7 +298,7 @@ public class StaticLinkageCheckerTest {
         Arrays.asList(
             Paths.get(URLClassLoader.getSystemResource("testdata/guava-26.0-jre.jar").toURI()));
     List<FullyQualifiedMethodSignature> methodsNotFound =
-        StaticLinkageChecker.findUnresolvedReferences(pathsForJar, Arrays.asList(arrayCloneMethod));
+        StaticLinkageChecker.findUnresolvedReferences(pathsForJar, Arrays.asList(arrayCloneMethod), new HashSet<>());
     Truth.assertThat(methodsNotFound).hasSize(0);
   }
 

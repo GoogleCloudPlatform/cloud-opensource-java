@@ -186,9 +186,15 @@ class StaticLinkageChecker {
     if (!Files.isReadable(absolutePathToFirstJar)) {
       throw new IOException("The file is not readable: " + absolutePathToFirstJar);
     }
-    List<FullyQualifiedMethodSignature> methodReferencesFromRootJar = listExternalMethodReferences(absolutePathToFirstJar);
+    Set<String> classesAlreadyInQueue = new HashSet<>();
+    List<FullyQualifiedMethodSignature> methodReferencesFromRootJar = listExternalMethodReferences(absolutePathToFirstJar, classesAlreadyInQueue);
+    if (methodReferencesFromRootJar.stream().anyMatch(s -> "com.google.bigtable.v2.MutateRowRequest".equals(s.getClassName()))) {
+      System.out.println(methodReferencesFromRootJar + " contains MutateRowRequest");
+    } else {
+      System.out.println(methodReferencesFromRootJar + " not containing MutateRowRequest");
+    }
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        findUnresolvedReferences(jarFilePaths, methodReferencesFromRootJar);
+        findUnresolvedReferences(jarFilePaths, methodReferencesFromRootJar, classesAlreadyInQueue);
     return unresolvedMethodReferences;
   }
 
@@ -203,7 +209,8 @@ class StaticLinkageChecker {
    */
   @VisibleForTesting
   static List<FullyQualifiedMethodSignature> findUnresolvedReferences(
-      List<Path> jarFilePaths, List<FullyQualifiedMethodSignature> initialMethodReferences) {
+      List<Path> jarFilePaths, List<FullyQualifiedMethodSignature> initialMethodReferences,
+      Set<String> classesAlreadyInQueue) {
     List<FullyQualifiedMethodSignature> unresolvedMethods = new ArrayList<>();
 
     // Creates classpath in the same order as jarFilePaths for BCEL API
@@ -226,7 +233,6 @@ class StaticLinkageChecker {
     URLClassLoader classLoaderFromJars = new URLClassLoader(jarFileUrls);
 
     Queue<FullyQualifiedMethodSignature> queue = new ArrayDeque<>(initialMethodReferences);
-    Set<String> classesAlreadyInQueue = new HashSet<>();
     while (!queue.isEmpty()) {
       FullyQualifiedMethodSignature methodReference = queue.poll();
       String className = methodReference.getClassName();
@@ -379,7 +385,7 @@ class StaticLinkageChecker {
    *     found by BCEL API
    */
   static List<FullyQualifiedMethodSignature> listExternalMethodReferences(
-      Path jarFilePath) throws IOException, ClassNotFoundException {
+      Path jarFilePath, Set<String> classesAlreadyInQueue) throws IOException, ClassNotFoundException {
     List<FullyQualifiedMethodSignature> methodReferences = new ArrayList<>();
     Set<String> internalClassNames = new HashSet<>();
 
@@ -391,6 +397,7 @@ class StaticLinkageChecker {
       String className = classInfo.getName();
       JavaClass javaClass = repository.loadClass(className);
       String topLevelClassName = javaClass.getClassName();
+      classesAlreadyInQueue.add(topLevelClassName);
       internalClassNames.add(topLevelClassName);
       internalClassNames.addAll(listInnerClassNames(javaClass));
       methodReferences.addAll(ClassDumper.listMethodReferences(javaClass));
