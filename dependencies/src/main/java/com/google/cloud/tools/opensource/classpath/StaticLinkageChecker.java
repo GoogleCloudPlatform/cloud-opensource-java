@@ -34,6 +34,7 @@ import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +42,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -88,14 +91,17 @@ class StaticLinkageChecker {
     StringBuilder stringBuilder = new StringBuilder();
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         findUnresolvedMethodReferences(jarFilePaths);
-    if (unresolvedMethodReferences.isEmpty()) {
+    SortedSet<FullyQualifiedMethodSignature> sortedUnresolvedMethodReferences =
+        new TreeSet<>(Comparator.comparing(FullyQualifiedMethodSignature::toString));
+    sortedUnresolvedMethodReferences.addAll(unresolvedMethodReferences);
+    if (sortedUnresolvedMethodReferences.isEmpty()) {
       stringBuilder.append("There were no unresolved method references from the first jar file :");
       stringBuilder.append(jarFilePaths.get(0));
     } else {
-      int count = unresolvedMethodReferences.size();
+      int count = sortedUnresolvedMethodReferences.size();
       stringBuilder.append(
           "There were " + count + " unresolved method references from the jar file(s):\n");
-      for (FullyQualifiedMethodSignature methodReference : unresolvedMethodReferences) {
+      for (FullyQualifiedMethodSignature methodReference : sortedUnresolvedMethodReferences) {
         stringBuilder.append("Class: '");
         stringBuilder.append(methodReference.getClassName());
         stringBuilder.append("', method: '");

@@ -22,7 +22,11 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -44,14 +48,18 @@ class BOMStaticLinkageChecker {
       StringBuilder stringBuilder = new StringBuilder();
       List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
           findUnresolvedMethodReferences(jarFilePaths);
-      if (unresolvedMethodReferences.isEmpty()) {
-        stringBuilder.append("There were no unresolved method references from the first jar file :");
+      SortedSet<FullyQualifiedMethodSignature> sortedUnresolvedMethodReferences =
+          new TreeSet<>(Comparator.comparing(FullyQualifiedMethodSignature::toString));
+      sortedUnresolvedMethodReferences.addAll(unresolvedMethodReferences);
+      if (sortedUnresolvedMethodReferences.isEmpty()) {
+        stringBuilder.append(
+            "There were no unresolved method references from the first jar file :");
         stringBuilder.append(jarFilePaths.get(0));
       } else {
-        int count = unresolvedMethodReferences.size();
+        int count = sortedUnresolvedMethodReferences.size();
         stringBuilder.append(
             "There were " + count + " unresolved method references from the jar file(s):\n");
-        for (FullyQualifiedMethodSignature methodReference : unresolvedMethodReferences) {
+        for (FullyQualifiedMethodSignature methodReference : sortedUnresolvedMethodReferences) {
           stringBuilder.append("Class: '");
           stringBuilder.append(methodReference.getClassName());
           stringBuilder.append("', method: '");
