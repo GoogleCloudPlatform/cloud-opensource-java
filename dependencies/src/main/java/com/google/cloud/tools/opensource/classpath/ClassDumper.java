@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.cloud.tools.opensource.classpath.StaticLinkageChecker.debug;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Sets;
@@ -25,11 +27,14 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.CodeSource;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.bcel.Const;
@@ -124,28 +129,90 @@ class ClassDumper {
         // Fix the interference
         return Collections.emptyList();
       }
-      List<FullyQualifiedMethodSignature> nextMethodReferences =
-          ClassDumper.listMethodReferences(javaClass);
+      List<FullyQualifiedMethodSignature> nextMethodReferences = listMethodReferences(javaClass);
       List<FullyQualifiedMethodSignature> nextExternalMethodReferences = new ArrayList<>();
+      List<String> referencedInternalClasses = new ArrayList<>();
       for (FullyQualifiedMethodSignature methodReference : nextMethodReferences) {
         String classNameInMethodReference = methodReference.getClassName();
         if (!className.equals(classNameInMethodReference)
             && !classesDefinedInSameJar.contains(classNameInMethodReference)) {
           nextExternalMethodReferences.add(methodReference);
+          if (debug) {
+            System.out.println(className + " -> " + classNameInMethodReference);
+          }
+        } else {
+          // The methodReference is within the same jar but we want to follow usage graph
+          String nextInternalClassName = methodReference.getClassName();
+          referencedInternalClasses.add(nextInternalClassName);
         }
       }
+
+      // Follows usage graph from the internal classes to external references
+      List<FullyQualifiedMethodSignature> externalReferencesFromInternalClasses =
+          findExternalMethodReferencesByUsageGraph(
+              referencedInternalClasses, repository, classesDefinedInSameJar);
+      nextExternalMethodReferences.addAll(externalReferencesFromInternalClasses);
+
       return nextExternalMethodReferences;
     } catch (ClassNotFoundException | URISyntaxException ex) {
-      try {
-        Class k = ClassDumper.class.getClassLoader().loadClass(className);
-        System.out.println("Class was loaded in this class loader: " + k);
-      } catch (ClassNotFoundException e) {
-        System.out.println("Couldn't get class" + className);
-        e.printStackTrace();
-      }
+      // TODO: Investigate why 'mvn exec:java' causes ClassNotFoundException for Guava
+      // Running withinStaticLinkageChecker via IntelliJ does not cause the problem
       throw new RuntimeException(
           "There was an error in reading method references from the class: " + className, ex);
     }
+  }
+
+  /**
+   * Finds external method references by following usage graph from `initialClassNames` through
+   * other internal classes. For example, given following usage graph of 4 classes in 2 jar files:
+   *
+   * <pre>
+   *   'Class A' -> 'Class B' -> 'Class C' -> 'Class D'
+   *   |<-        in X.jar               ->|<- in Y.jar ->
+   * </pre>
+   *
+   * and `initialClassNames: ['Class A']`, this function returns list of method references to 'Class
+   * D', not including references to 'Class B' or 'Class C'.
+   *
+   * @param initialClassNames list of classes to follow usage graph. they must be within same jar
+   *     file.
+   * @param repository BCEL repository to list method references
+   * @param classesDefinedInSameJar set of classes defined in the same jar file as
+   *     `initialClassNames`
+   * @return list of method references external to the the jar file of `initialClassNames`
+   * @throws ClassNotFoundException when there is a problem in accessing a class via BCEL repository
+   */
+  private static List<FullyQualifiedMethodSignature> findExternalMethodReferencesByUsageGraph(
+      List<String> initialClassNames,
+      SyntheticRepository repository,
+      Set<String> classesDefinedInSameJar)
+      throws ClassNotFoundException {
+    Set<String> classesAddedToQueue = new HashSet<>(initialClassNames);
+    Queue<String> classQueue = new ArrayDeque<>(initialClassNames);
+    List<FullyQualifiedMethodSignature> nextExternalMethodReferences = new ArrayList<>();
+    while (!classQueue.isEmpty()) {
+      String internalClassName = classQueue.poll();
+      JavaClass internalJavaClass = repository.loadClass(internalClassName);
+      List<FullyQualifiedMethodSignature> nextMethodReferencesFromInternalClass =
+          listMethodReferences(internalJavaClass);
+      for (FullyQualifiedMethodSignature methodReference : nextMethodReferencesFromInternalClass) {
+        String nextClassName = methodReference.getClassName();
+        if (classesAddedToQueue.contains(nextClassName)) {
+          continue;
+        }
+        if (debug) {
+          System.out.println(internalClassName + " -> " + nextClassName);
+        }
+        if (classesDefinedInSameJar.contains(nextClassName)) {
+          classQueue.add(nextClassName);
+          classesAddedToQueue.add(nextClassName);
+        } else {
+          // While iterating the graph, record method references external to the jar file
+          nextExternalMethodReferences.add(methodReference);
+        }
+      }
+    }
+    return nextExternalMethodReferences;
   }
 
   /**

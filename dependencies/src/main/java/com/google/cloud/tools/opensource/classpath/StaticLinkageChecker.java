@@ -69,6 +69,7 @@ import org.eclipse.aether.artifact.DefaultArtifact;
  * TODO: enhance scope to include fields and classes
  */
 class StaticLinkageChecker {
+  static boolean debug = false;
 
   /**
    * Given Maven coordinates or list of the jar files as file names in filesystem, outputs the
@@ -240,16 +241,8 @@ class StaticLinkageChecker {
         return null;
       }
     }).filter(Objects::nonNull).toArray(URL[]::new);
-    URLClassLoader classLoaderFromJars = new URLClassLoader(jarFileUrls, ClassLoader.getSystemClassLoader());
-    try {
-      // System.out.println("parent class loader: " + classLoaderFromJars.getParent());
-      // When parent is sun.misc.Launcher$AppClassLoader@18b4aac2, then the below resolves
-      classLoaderFromJars.loadClass("com.google.common.collect.CollectCollectors");
-    } catch (ClassNotFoundException ex) {
-      System.out.println("com.google.common.collect.CollectCollectors was not found");
-      ex.printStackTrace();
-      System.exit(1);
-    }
+    URLClassLoader classLoaderFromJars =
+        new URLClassLoader(jarFileUrls, ClassLoader.getSystemClassLoader());
 
     Queue<FullyQualifiedMethodSignature> queue = new ArrayDeque<>(initialMethodReferences);
     while (!queue.isEmpty()) {
@@ -278,7 +271,7 @@ class StaticLinkageChecker {
           // If the class is available, then check the method references from the class recursively
           if (!classesAlreadyInQueue.contains(className)) {
             // This list does not include internal method references: classes defined within the
-            // same jar file as the one with `className`
+            // same jar file as the one with `className`.
             List<FullyQualifiedMethodSignature> nextExternalMethodReferences =
                 ClassDumper.listExternalMethodReferences(
                     className, jarFileToClasses, classLoaderFromJars, repository);
@@ -295,7 +288,8 @@ class StaticLinkageChecker {
       }
     }
     System.out.println(
-        "The number of method references found during linkage check: " + availableMethodsInJars.size());
+        "The number of resolved method references during linkage check: "
+            + availableMethodsInJars.size());
     return unresolvedMethods;
   }
 
