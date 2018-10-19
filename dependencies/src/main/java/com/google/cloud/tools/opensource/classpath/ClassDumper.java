@@ -136,8 +136,15 @@ class ClassDumper {
       }
       return nextExternalMethodReferences;
     } catch (ClassNotFoundException | URISyntaxException ex) {
+      try {
+        Class k = ClassDumper.class.getClassLoader().loadClass(className);
+        System.out.println("Class was loaded in this class loader: " + k);
+      } catch (ClassNotFoundException e) {
+        System.out.println("Couldn't get class" + className);
+        e.printStackTrace();
+      }
       throw new RuntimeException(
-          "There was an error to read method references from the class: " + className, ex);
+          "There was an error in reading method references from the class: " + className, ex);
     }
   }
 

@@ -114,7 +114,7 @@ class StaticLinkageChecker {
    * @return list of the absolute paths to jar files
    * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
    */
-  private static List<Path> parseArguments(String[] arguments) throws RepositoryException {
+  static List<Path> parseArguments(String[] arguments) throws RepositoryException {
     Options options = new Options();
     options.addOption("c", "coordinate", true, "Maven coordinates (separated by ',')");
     options.addOption("j", "jars", true, "Jar files (separated by ',')");
@@ -199,7 +199,8 @@ class StaticLinkageChecker {
         listExternalMethodReferences(absolutePathToFirstJar, classesCheckedMethodReference);
 
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        findUnresolvedReferences(jarFilePaths, methodReferencesFromRootJar, classesCheckedMethodReference);
+        findUnresolvedReferences(
+            jarFilePaths, methodReferencesFromRootJar, classesCheckedMethodReference);
     return unresolvedMethodReferences;
   }
 
@@ -239,7 +240,16 @@ class StaticLinkageChecker {
         return null;
       }
     }).filter(Objects::nonNull).toArray(URL[]::new);
-    URLClassLoader classLoaderFromJars = new URLClassLoader(jarFileUrls);
+    URLClassLoader classLoaderFromJars = new URLClassLoader(jarFileUrls, ClassLoader.getSystemClassLoader());
+    try {
+      // System.out.println("parent class loader: " + classLoaderFromJars.getParent());
+      // When parent is sun.misc.Launcher$AppClassLoader@18b4aac2, then the below resolves
+      classLoaderFromJars.loadClass("com.google.common.collect.CollectCollectors");
+    } catch (ClassNotFoundException ex) {
+      System.out.println("com.google.common.collect.CollectCollectors was not found");
+      ex.printStackTrace();
+      System.exit(1);
+    }
 
     Queue<FullyQualifiedMethodSignature> queue = new ArrayDeque<>(initialMethodReferences);
     while (!queue.isEmpty()) {
@@ -285,7 +295,7 @@ class StaticLinkageChecker {
       }
     }
     System.out.println(
-        "Available method references in jar files: " + availableMethodsInJars.size());
+        "The number of method references found during linkage check: " + availableMethodsInJars.size());
     return unresolvedMethods;
   }
 
