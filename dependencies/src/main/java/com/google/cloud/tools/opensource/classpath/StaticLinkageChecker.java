@@ -20,12 +20,16 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.SetMultimap;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -75,6 +79,18 @@ class StaticLinkageChecker {
   static boolean debug = false;
 
   /**
+   * Map to record class references in reverse order to show the referencing classes for a classes
+   * When 'Class A' uses 'Class B' and 'Class C', then we call
+   *
+   * <pre>
+   *   classReferenceGraph.put('Class B', 'Class A');
+   *   classReferenceGraph.put('Class C', 'Class A');
+   * </pre>
+   */
+  static SetMultimap<String, String> classReferenceGraph = HashMultimap.create();
+  static String classToTraceUsageGraph = null;
+
+  /**
    * Given Maven coordinates or list of the jar files as file names in filesystem, outputs the
    * report of static linkage check.
    *
@@ -114,6 +130,39 @@ class StaticLinkageChecker {
     System.out.println(stringBuilder.toString());
   }
 
+  private static void printUsageGraphTrace(
+      SetMultimap<String, String> classReferenceGraph,
+      String className,
+      Set<String> parentNodes,
+      int depth,
+      ClassLoader classLoader) {
+    Set<String> callersOfClass = classReferenceGraph.get(className);
+    String indent = Strings.repeat("    ", depth);
+    if (parentNodes.contains(className)) {
+      System.out.println(indent + "(Cyclic dependency of " + className + ")");
+      return;
+    }
+    if (callersOfClass.isEmpty()) {
+      System.out.println(indent + className + " is at root");
+    } else {
+      for (String callerClassName : callersOfClass) {
+        try {
+          Class clazz = classLoader.loadClass(callerClassName);
+          URL codeLocation = clazz.getProtectionDomain().getCodeSource().getLocation();
+          Path sourceFileName = Paths.get(codeLocation.toURI()).getFileName();
+          System.out.println(
+              indent + className + " <- " + callerClassName + " in " + sourceFileName);
+        } catch (ClassNotFoundException | URISyntaxException ex) {
+          // source file not found
+        }
+        Set<String> nextParentNodes = new HashSet<>(parentNodes);
+        nextParentNodes.add(className);
+        printUsageGraphTrace(
+            classReferenceGraph, callerClassName, nextParentNodes, depth + 1, classLoader);
+      }
+    }
+  }
+
   /**
    * Parses arguments to get list of jar file paths.
    *
@@ -125,6 +174,7 @@ class StaticLinkageChecker {
     Options options = new Options();
     options.addOption("c", "coordinate", true, "Maven coordinates (separated by ',')");
     options.addOption("j", "jars", true, "Jar files (separated by ',')");
+    options.addOption("t", "--trace", true, "class to trace usage graph");
 
     HelpFormatter formatter = new HelpFormatter();
     CommandLineParser parser = new DefaultParser();
@@ -144,6 +194,9 @@ class StaticLinkageChecker {
                 .map(name -> (Paths.get(name)).toAbsolutePath())
                 .collect(Collectors.toList());
         jarFilePaths.addAll(jarFilesInArguments);
+      }
+      if (cmd.hasOption("t")) {
+        classToTraceUsageGraph = cmd.getOptionValue("t");
       }
     } catch (ParseException ex) {
       System.err.println("Failed to parse command line arguments: " + ex.getMessage());
@@ -275,16 +328,17 @@ class StaticLinkageChecker {
           availableMethodsInJars.add(methodReference);
 
           // If the class is available, then check the method references from the class recursively
-          if (!classesAlreadyInQueue.contains(className)) {
-            // This list does not include internal method references: classes defined within the
-            // same jar file as the one with `className`.
-            List<FullyQualifiedMethodSignature> nextExternalMethodReferences =
-                ClassDumper.listExternalMethodReferences(
-                    className, jarFileToClasses, classLoaderFromJars, repository);
-
-            queue.addAll(nextExternalMethodReferences);
-            classesAlreadyInQueue.add(className);
+          if (classesAlreadyInQueue.contains(className)) {
+            continue;
           }
+          // This list does not include internal method references: classes defined within the
+          // same jar file as the one with `className`.
+          List<FullyQualifiedMethodSignature> nextExternalMethodReferences =
+              ClassDumper.listExternalMethodReferences(
+                  className, jarFileToClasses, classLoaderFromJars, repository);
+
+          queue.addAll(nextExternalMethodReferences);
+          classesAlreadyInQueue.add(className);
         } else {
           unresolvedMethods.add(methodReference);
         }
@@ -296,6 +350,12 @@ class StaticLinkageChecker {
     System.out.println(
         "The number of resolved method references during linkage check: "
             + availableMethodsInJars.size());
+
+    if (classToTraceUsageGraph != null) {
+      printUsageGraphTrace(
+          classReferenceGraph, classToTraceUsageGraph, new HashSet<>(), 0, classLoaderFromJars);
+    }
+
     return unresolvedMethods;
   }
 

@@ -75,7 +75,7 @@ class ClassDumper {
             .collect(Collectors.toList());
     for (Constant constant : methodrefConstants) {
       ConstantMethodref constantMethodref = (ConstantMethodref) constant;
-      String className = constantMethodref.getClass(constantPool);
+      String classNameInMethodReference = constantMethodref.getClass(constantPool);
       int nameAndTypeIndex = constantMethodref.getNameAndTypeIndex();
       Constant constantAtNameAndTypeIndex = constantPool.getConstant(nameAndTypeIndex);
       if (!(constantAtNameAndTypeIndex instanceof ConstantNameAndType)) {
@@ -88,9 +88,10 @@ class ClassDumper {
       ConstantNameAndType constantNameAndType = (ConstantNameAndType) constantAtNameAndTypeIndex;
       String methodName = constantNameAndType.getName(constantPool);
       String descriptor = constantNameAndType.getSignature(constantPool);
-      FullyQualifiedMethodSignature methodref = new FullyQualifiedMethodSignature(className,
+      FullyQualifiedMethodSignature methodref = new FullyQualifiedMethodSignature(classNameInMethodReference,
           methodName, descriptor);
       methodReferences.add(methodref);
+      StaticLinkageChecker.classReferenceGraph.put(classNameInMethodReference, javaClass.getClassName());
     }
     return methodReferences;
   }
@@ -137,6 +138,7 @@ class ClassDumper {
         if (!className.equals(classNameInMethodReference)
             && !classesDefinedInSameJar.contains(classNameInMethodReference)) {
           nextExternalMethodReferences.add(methodReference);
+          StaticLinkageChecker.classReferenceGraph.put(classNameInMethodReference, className);
           if (debug) {
             System.out.println(className + " -> " + classNameInMethodReference);
           }
@@ -200,6 +202,7 @@ class ClassDumper {
         if (classesAddedToQueue.contains(nextClassName)) {
           continue;
         }
+        StaticLinkageChecker.classReferenceGraph.put(nextClassName, internalClassName);
         if (debug) {
           System.out.println(internalClassName + " -> " + nextClassName);
         }
