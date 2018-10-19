@@ -5,9 +5,8 @@
   support) of the library. Examples include:
   - Incubating (no support expected)
   - Stable (SLOs in place to handle issues)
-  - Maintenance only (only bugs will be addressed)
-  - Deprecated (no work is expected, use a replacement instead)
-  - Abandoned (no work is expected, no clear replacement)
+  - Maintenance (only bugs will be addressed)
+  - Deprecated / Abandoned / Inactive (no work is expected)
 - Clearly state the API stability clients can expect from the library
   surface. Example statements:
   - This API is stable and suitable for production use, aside from packages,
