@@ -112,7 +112,7 @@ class StaticLinkageChecker {
     sortedUnresolvedMethodReferences.addAll(unresolvedMethodReferences);
     if (sortedUnresolvedMethodReferences.isEmpty()) {
       stringBuilder.append("There were no unresolved method references from the first jar file :");
-      stringBuilder.append(jarFilePaths.get(0));
+      stringBuilder.append(jarFilePaths.get(0).getFileName());
     } else {
       int count = sortedUnresolvedMethodReferences.size();
       stringBuilder.append(
@@ -143,15 +143,21 @@ class StaticLinkageChecker {
       return;
     }
     if (callersOfClass.isEmpty()) {
-      System.out.println(indent + className + " is at root");
+      System.out.println(indent + className + " is at root; no class referenced it)");
     } else {
+      int count = 0;
       for (String callerClassName : callersOfClass) {
+        count++;
         try {
           Class clazz = classLoader.loadClass(callerClassName);
           URL codeLocation = clazz.getProtectionDomain().getCodeSource().getLocation();
           Path sourceFileName = Paths.get(codeLocation.toURI()).getFileName();
           System.out.println(
               indent + className + " <- " + callerClassName + " in " + sourceFileName);
+          if (count > 10) {
+            System.out.println(indent + "...(too many usage for " + className + ". Truncated output)...");
+            break;
+          }
         } catch (ClassNotFoundException | URISyntaxException ex) {
           // source file not found
         }

@@ -69,13 +69,12 @@ public final class RepositoryUtility {
    * customary ~/.m2 directory. If not found, it creates an initially empty repository in
    * a temporary location.
    */
-  public static RepositorySystemSession newSession(RepositorySystem system ) {
+  public static DefaultRepositorySystemSession newSession(RepositorySystem system ) {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
   
     LocalRepository localRepository = new LocalRepository(findLocalRepository().getAbsolutePath());
     session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
-    session.setReadOnly();
-    
+
     return session;
   }
 

@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.stream.Collectors;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -32,10 +33,15 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
+import org.eclipse.aether.util.graph.selector.AndDependencySelector;
+import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
+import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
+import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 
 /**
  * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact
@@ -71,9 +77,19 @@ public class DependencyGraphBuilder {
     if (cache.containsKey(key)) {
       return cache.get(key);
     }
-    
-    RepositorySystemSession session = RepositoryUtility.newSession(system);
 
+    DefaultRepositorySystemSession session = RepositoryUtility.newSession(system);
+
+    // These combination of DependencySelector comes from `MavenRepositorySystemUtils.newSession`.
+    // StaticLinkageChecker needs to include 'provided' scope.
+    DependencySelector dependencySelector =
+        new AndDependencySelector(
+            new DependencySelector[] {
+                new ScopeDependencySelector(new String[] {"test"}), // "provided" is not here
+                new OptionalDependencySelector(),
+                new ExclusionDependencySelector()
+            });
+    session.setDependencySelector(dependencySelector);
     CollectRequest collectRequest = new CollectRequest();
     Dependency dependency = new Dependency(rootDependencyArtifact, "compile");
     collectRequest.setRoot(dependency);
