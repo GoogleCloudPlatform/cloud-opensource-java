@@ -138,6 +138,7 @@ class StaticLinkageChecker {
       Set<String> parentNodes,
       int depth,
       ClassLoader classLoader) {
+    // TODO: Use breadth-first search to find shortest path from start nodes to the the traced node
     Set<String> callersOfClass = classReferenceGraph.get(className);
     String indent = Strings.repeat("    ", depth);
     if (parentNodes.contains(className)) {
@@ -157,7 +158,8 @@ class StaticLinkageChecker {
           System.out.println(
               indent + className + " <- " + callerClassName + " in " + sourceFileName);
           if (count > 10) {
-            System.out.println(indent + "...(too many usage for " + className + ". Truncated output)...");
+            System.out.println(
+                indent + "...(too many usage for " + className + ". Truncated output)...");
             break;
           }
         } catch (ClassNotFoundException | URISyntaxException ex) {
