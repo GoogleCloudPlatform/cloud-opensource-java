@@ -1,4 +1,4 @@
-/Library/Java/JavaVirtualMachines/default/Contents/Home/bin/java "-javaagent:/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar=63868:/Applications/IntelliJ IDEA.app/Contents/bin" -Dfile.encoding=UTF-8 -classpath /Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/charsets.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/deploy.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/cldrdata.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/dnsns.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/jaccess.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/jfxrt.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/localedata.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/nashorn.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/sunec.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/sunjce_provider.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/sunpkcs11.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/zipfs.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/javaws.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/jce.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/jfr.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/jfxswt.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/jsse.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/management-agent.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/plugin.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/resources.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/rt.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/lib/ant-javafx.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/lib/dt.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/lib/javafx-mx.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/lib/jconsole.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/lib/packager.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/lib/sa-jdi.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/lib/tools.jar:/Users/suztomo/Documents/cloud-opensource-java/dependencies/target/classes:/Users/suztomo/.m2/repository/org/apache/bcel/bcel/6.2/bcel-6.2.jar:/Users/suztomo/.m2/repository/org/apache/maven/maven-resolver-provider/3.5.4/maven-resolver-provider-3.5.4.jar:/Users/suztomo/.m2/repository/org/apache/maven/maven-model/3.5.4/maven-model-3.5.4.jar:/Users/suztomo/.m2/repository/org/apache/maven/maven-model-builder/3.5.4/maven-model-builder-3.5.4.jar:/Users/suztomo/.m2/repository/org/codehaus/plexus/plexus-interpolation/1.24/plexus-interpolation-1.24.jar:/Users/suztomo/.m2/repository/org/codehaus/plexus/plexus-component-annotations/1.7.1/plexus-component-annotations-1.7.1.jar:/Users/suztomo/.m2/repository/org/apache/maven/maven-artifact/3.5.4/maven-artifact-3.5.4.jar:/Users/suztomo/.m2/repository/org/apache/maven/maven-builder-support/3.5.4/maven-builder-support-3.5.4.jar:/Users/suztomo/.m2/repository/org/apache/maven/maven-repository-metadata/3.5.4/maven-repository-metadata-3.5.4.jar:/Users/suztomo/.m2/repository/org/apache/maven/resolver/maven-resolver-api/1.1.1/maven-resolver-api-1.1.1.jar:/Users/suztomo/.m2/repository/org/apache/maven/resolver/maven-resolver-spi/1.1.1/maven-resolver-spi-1.1.1.jar:/Users/suztomo/.m2/repository/org/apache/maven/resolver/maven-resolver-util/1.1.1/maven-resolver-util-1.1.1.jar:/Users/suztomo/.m2/repository/org/apache/maven/resolver/maven-resolver-impl/1.1.1/maven-resolver-impl-1.1.1.jar:/Users/suztomo/.m2/repository/org/codehaus/plexus/plexus-utils/3.1.0/plexus-utils-3.1.0.jar:/Users/suztomo/.m2/repository/javax/inject/javax.inject/1/javax.inject-1.jar:/Users/suztomo/.m2/repository/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar:/Users/suztomo/.m2/repository/org/apache/maven/resolver/maven-resolver-transport-http/1.3.1/maven-resolver-transport-http-1.3.1.jar:/Users/suztomo/.m2/repository/org/apache/httpcomponents/httpcore/4.4.10/httpcore-4.4.10.jar:/Users/suztomo/.m2/repository/org/slf4j/jcl-over-slf4j/1.7.25/jcl-over-slf4j-1.7.25.jar:/Users/suztomo/.m2/repository/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar:/Users/suztomo/.m2/repository/org/apache/maven/resolver/maven-resolver-transport-file/1.3.1/maven-resolver-transport-file-1.3.1.jar:/Users/suztomo/.m2/repository/org/apache/maven/resolver/maven-resolver-connector-basic/1.3.1/maven-resolver-connector-basic-1.3.1.jar:/Users/suztomo/.m2/repository/org/apache/httpcomponents/httpclient/4.5.6/httpclient-4.5.6.jar:/Users/suztomo/.m2/repository/commons-logging/commons-logging/1.2/commons-logging-1.2.jar:/Users/suztomo/.m2/repository/commons-codec/commons-codec/1.10/commons-codec-1.10.jar:/Users/suztomo/.m2/repository/commons-cli/commons-cli/1.4/commons-cli-1.4.jar:/Users/suztomo/.m2/repository/com/google/guava/guava/26.0-jre/guava-26.0-jre.jar:/Users/suztomo/.m2/repository/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar:/Users/suztomo/.m2/repository/org/checkerframework/checker-qual/2.5.2/checker-qual-2.5.2.jar:/Users/suztomo/.m2/repository/com/google/errorprone/error_prone_annotations/2.1.3/error_prone_annotations-2.1.3.jar:/Users/suztomo/.m2/repository/com/google/j2objc/j2objc-annotations/1.1/j2objc-annotations-1.1.jar:/Users/suztomo/.m2/repository/org/codehaus/mojo/animal-sniffer-annotations/1.14/animal-sniffer-annotations-1.14.jar com.google.cloud.tools.opensource.classpath.BOMStaticLinkageChecker
+/Library/Java/JavaVirtualMachines/default/Contents/Home/bin/java "-javaagent:/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar=49294:/Applications/IntelliJ IDEA.app/Contents/bin" -Dfile.encoding=UTF-8 -classpath /Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/charsets.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/deploy.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/cldrdata.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/dnsns.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/jaccess.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/jfxrt.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/localedata.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/nashorn.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/sunec.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/sunjce_provider.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/sunpkcs11.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/ext/zipfs.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/javaws.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/jce.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/jfr.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/jfxswt.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/jsse.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/management-agent.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/plugin.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/resources.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/jre/lib/rt.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/lib/ant-javafx.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/lib/dt.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/lib/javafx-mx.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/lib/jconsole.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/lib/packager.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/lib/sa-jdi.jar:/Library/Java/JavaVirtualMachines/default/Contents/Home/lib/tools.jar:/Users/suztomo/Documents/cloud-opensource-java/dependencies/target/classes:/Users/suztomo/.m2/repository/org/apache/bcel/bcel/6.2/bcel-6.2.jar:/Users/suztomo/.m2/repository/org/apache/maven/maven-resolver-provider/3.5.4/maven-resolver-provider-3.5.4.jar:/Users/suztomo/.m2/repository/org/apache/maven/maven-model/3.5.4/maven-model-3.5.4.jar:/Users/suztomo/.m2/repository/org/apache/maven/maven-model-builder/3.5.4/maven-model-builder-3.5.4.jar:/Users/suztomo/.m2/repository/org/codehaus/plexus/plexus-interpolation/1.24/plexus-interpolation-1.24.jar:/Users/suztomo/.m2/repository/org/codehaus/plexus/plexus-component-annotations/1.7.1/plexus-component-annotations-1.7.1.jar:/Users/suztomo/.m2/repository/org/apache/maven/maven-artifact/3.5.4/maven-artifact-3.5.4.jar:/Users/suztomo/.m2/repository/org/apache/maven/maven-builder-support/3.5.4/maven-builder-support-3.5.4.jar:/Users/suztomo/.m2/repository/org/apache/maven/maven-repository-metadata/3.5.4/maven-repository-metadata-3.5.4.jar:/Users/suztomo/.m2/repository/org/apache/maven/resolver/maven-resolver-api/1.1.1/maven-resolver-api-1.1.1.jar:/Users/suztomo/.m2/repository/org/apache/maven/resolver/maven-resolver-spi/1.1.1/maven-resolver-spi-1.1.1.jar:/Users/suztomo/.m2/repository/org/apache/maven/resolver/maven-resolver-util/1.1.1/maven-resolver-util-1.1.1.jar:/Users/suztomo/.m2/repository/org/apache/maven/resolver/maven-resolver-impl/1.1.1/maven-resolver-impl-1.1.1.jar:/Users/suztomo/.m2/repository/org/codehaus/plexus/plexus-utils/3.1.0/plexus-utils-3.1.0.jar:/Users/suztomo/.m2/repository/javax/inject/javax.inject/1/javax.inject-1.jar:/Users/suztomo/.m2/repository/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar:/Users/suztomo/.m2/repository/org/apache/maven/resolver/maven-resolver-transport-http/1.3.1/maven-resolver-transport-http-1.3.1.jar:/Users/suztomo/.m2/repository/org/apache/httpcomponents/httpcore/4.4.10/httpcore-4.4.10.jar:/Users/suztomo/.m2/repository/org/slf4j/jcl-over-slf4j/1.7.25/jcl-over-slf4j-1.7.25.jar:/Users/suztomo/.m2/repository/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar:/Users/suztomo/.m2/repository/org/apache/maven/resolver/maven-resolver-transport-file/1.3.1/maven-resolver-transport-file-1.3.1.jar:/Users/suztomo/.m2/repository/org/apache/maven/resolver/maven-resolver-connector-basic/1.3.1/maven-resolver-connector-basic-1.3.1.jar:/Users/suztomo/.m2/repository/org/apache/httpcomponents/httpclient/4.5.6/httpclient-4.5.6.jar:/Users/suztomo/.m2/repository/commons-logging/commons-logging/1.2/commons-logging-1.2.jar:/Users/suztomo/.m2/repository/commons-codec/commons-codec/1.10/commons-codec-1.10.jar:/Users/suztomo/.m2/repository/commons-cli/commons-cli/1.4/commons-cli-1.4.jar:/Users/suztomo/.m2/repository/com/google/guava/guava/26.0-jre/guava-26.0-jre.jar:/Users/suztomo/.m2/repository/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar:/Users/suztomo/.m2/repository/org/checkerframework/checker-qual/2.5.2/checker-qual-2.5.2.jar:/Users/suztomo/.m2/repository/com/google/errorprone/error_prone_annotations/2.1.3/error_prone_annotations-2.1.3.jar:/Users/suztomo/.m2/repository/com/google/j2objc/j2objc-annotations/1.1/j2objc-annotations-1.1.jar:/Users/suztomo/.m2/repository/org/codehaus/mojo/animal-sniffer-annotations/1.14/animal-sniffer-annotations-1.14.jar com.google.cloud.tools.opensource.classpath.BOMStaticLinkageChecker
 SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
 SLF4J: Defaulting to no-operation (NOP) logger implementation
 SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
@@ -29,8 +29,8 @@ There were no unresolved method references from the first jar file :/Users/suzto
 Managed Dependency: io.grpc:grpc-netty:1.15.1
 Starting to read 20 files:
 [grpc-netty-1.15.1.jar, grpc-core-1.15.1.jar, netty-codec-http2-4.1.27.Final.jar, netty-handler-proxy-4.1.27.Final.jar, grpc-context-1.15.1.jar, gson-2.7.jar, guava-20.0.jar, error_prone_annotations-2.2.0.jar, jsr305-3.0.0.jar, animal-sniffer-annotations-1.17.jar, opencensus-api-0.12.3.jar, opencensus-contrib-grpc-metrics-0.12.3.jar, netty-codec-http-4.1.27.Final.jar, netty-handler-4.1.27.Final.jar, netty-transport-4.1.27.Final.jar, netty-codec-socks-4.1.27.Final.jar, netty-codec-4.1.27.Final.jar, netty-buffer-4.1.27.Final.jar, netty-resolver-4.1.27.Final.jar, netty-common-4.1.27.Final.jar]
-The number of resolved method references during linkage check: 890
-There were 134 unresolved method references from the jar file(s):
+The number of resolved method references during linkage check: 892
+There were 132 unresolved method references from the jar file(s):
 Class: 'io.netty.handler.ssl.ConscryptAlpnSslEngine$ClientEngine$1', method: '<init>' with descriptor (Lio/netty/handler/ssl/ConscryptAlpnSslEngine$ClientEngine;)V
 Class: 'io.netty.handler.ssl.ConscryptAlpnSslEngine$ServerEngine$1', method: '<init>' with descriptor (Lio/netty/handler/ssl/ConscryptAlpnSslEngine$ServerEngine;)V
 Class: 'io.netty.handler.ssl.JettyAlpnSslEngine$ClientEngine$1', method: '<init>' with descriptor (Lio/netty/handler/ssl/JettyAlpnSslEngine$ClientEngine;Lio/netty/handler/ssl/JdkApplicationProtocolNegotiator;Lio/netty/handler/ssl/JdkApplicationProtocolNegotiator$ProtocolSelectionListener;)V
@@ -142,8 +142,6 @@ Class: 'io.netty.internal.tcnative.SSLContext', method: 'setSniHostnameMatcher' 
 Class: 'io.netty.internal.tcnative.SSLContext', method: 'setTmpDHLength' with descriptor (JI)V
 Class: 'io.netty.internal.tcnative.SSLContext', method: 'setVerify' with descriptor (JII)V
 Class: 'io.netty.internal.tcnative.SessionTicketKey', method: '<init>' with descriptor ([B[B[B)V
-Class: 'io.netty.util.concurrent.DefaultProgressivePromise', method: 'checkDeadLock' with descriptor ()V
-Class: 'io.netty.util.concurrent.DefaultProgressivePromise', method: 'executor' with descriptor ()Lio/netty/util/concurrent/EventExecutor;
 Class: 'org.bouncycastle.asn1.x500.X500Name', method: '<init>' with descriptor (Ljava/lang/String;)V
 Class: 'org.bouncycastle.cert.X509v3CertificateBuilder', method: 'build' with descriptor (Lorg/bouncycastle/operator/ContentSigner;)Lorg/bouncycastle/cert/X509CertificateHolder;
 Class: 'org.bouncycastle.cert.jcajce.JcaX509CertificateConverter', method: '<init>' with descriptor ()V
@@ -244,10 +242,8 @@ Class: 'org.eclipse.jetty.npn.NextProtoNego', method: 'remove' with descriptor (
 Managed Dependency: io.grpc:grpc-okhttp:1.15.1
 Starting to read 12 files:
 [grpc-okhttp-1.15.1.jar, grpc-core-1.15.1.jar, okhttp-2.5.0.jar, okio-1.13.0.jar, grpc-context-1.15.1.jar, gson-2.7.jar, guava-20.0.jar, error_prone_annotations-2.2.0.jar, jsr305-3.0.0.jar, animal-sniffer-annotations-1.17.jar, opencensus-api-0.12.3.jar, opencensus-contrib-grpc-metrics-0.12.3.jar]
-The number of resolved method references during linkage check: 365
-There were 1 unresolved method references from the jar file(s):
-Class: 'io.grpc.internal.Http2ClientStreamTransportState', method: 'onStreamAllocated' with descriptor ()V
-
+The number of resolved method references during linkage check: 366
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/io/grpc/grpc-okhttp/1.15.1/grpc-okhttp-1.15.1.jar
 
 Managed Dependency: io.grpc:grpc-protobuf:1.15.1
 Starting to read 13 files:
@@ -415,11 +411,8 @@ There were no unresolved method references from the first jar file :/Users/suzto
 Managed Dependency: com.google.cloud:google-cloud-bigquery:1.49.0
 Starting to read 37 files:
 [google-cloud-bigquery-1.49.0.jar, google-cloud-core-1.49.0.jar, google-cloud-core-http-1.49.0.jar, auto-value-1.4.jar, google-api-services-bigquery-v2-rev397-1.24.1.jar, guava-20.0.jar, joda-time-2.9.2.jar, google-http-client-1.24.1.jar, jsr305-3.0.2.jar, api-common-1.7.0.jar, gax-1.32.0.jar, protobuf-java-util-3.6.1.jar, proto-google-common-protos-1.12.0.jar, proto-google-iam-v1-0.12.0.jar, google-auth-library-credentials-0.11.0.jar, google-auth-library-oauth2-http-0.11.0.jar, google-oauth-client-1.24.1.jar, google-api-client-1.24.1.jar, google-http-client-appengine-1.24.1.jar, google-http-client-jackson2-1.24.1.jar, gax-httpjson-0.49.0.jar, opencensus-api-0.15.0.jar, opencensus-contrib-http-util-0.15.0.jar, android-1.5_r4.jar, httpclient-4.5.3.jar, commons-codec-1.6.jar, threetenbp-1.3.3.jar, protobuf-java-3.6.1.jar, gson-2.7.jar, appengine-api-1.0-sdk-1.7.7.jar, jackson-core-2.9.2.jar, grpc-context-1.13.1.jar, commons-logging-1.1.1.jar, opengl-api-gl1.1-android-2.1_r1.jar, xmlParserAPIs-2.6.2.jar, xpp3-1.1.4c.jar, httpcore-4.4.6.jar]
-The number of resolved method references during linkage check: 1054
-There were 2 unresolved method references from the jar file(s):
-Class: 'com.google.api.client.googleapis.services.json.AbstractGoogleJsonClient', method: 'initialize' with descriptor (Lcom/google/api/client/googleapis/services/AbstractGoogleClientRequest;)V
-Class: 'com.google.cloud.bigquery.$AutoValue_Labels', method: 'toPb' with descriptor ()Ljava/util/Map;
-
+The number of resolved method references during linkage check: 1056
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/cloud/google-cloud-bigquery/1.49.0/google-cloud-bigquery-1.49.0.jar
 
 Managed Dependency: com.google.cloud:google-cloud-bigquerydatatransfer:0.67.0-beta
 Starting to read 40 files:
@@ -442,10 +435,8 @@ There were no unresolved method references from the first jar file :/Users/suzto
 Managed Dependency: com.google.cloud:google-cloud-compute:0.67.0-alpha
 Starting to read 36 files:
 [google-cloud-compute-0.67.0-alpha.jar, google-cloud-core-1.49.0.jar, google-cloud-core-http-1.49.0.jar, google-api-services-compute-v1-rev193-1.24.1.jar, guava-20.0.jar, joda-time-2.9.2.jar, google-http-client-1.24.1.jar, jsr305-3.0.2.jar, api-common-1.7.0.jar, gax-1.32.0.jar, protobuf-java-util-3.6.1.jar, proto-google-common-protos-1.12.0.jar, proto-google-iam-v1-0.12.0.jar, google-auth-library-credentials-0.11.0.jar, google-auth-library-oauth2-http-0.11.0.jar, google-oauth-client-1.24.1.jar, google-api-client-1.24.1.jar, google-http-client-appengine-1.24.1.jar, google-http-client-jackson2-1.24.1.jar, gax-httpjson-0.49.0.jar, opencensus-api-0.15.0.jar, opencensus-contrib-http-util-0.15.0.jar, android-1.5_r4.jar, httpclient-4.5.3.jar, commons-codec-1.6.jar, threetenbp-1.3.3.jar, protobuf-java-3.6.1.jar, gson-2.7.jar, appengine-api-1.0-sdk-1.7.7.jar, jackson-core-2.9.2.jar, grpc-context-1.13.1.jar, commons-logging-1.1.1.jar, opengl-api-gl1.1-android-2.1_r1.jar, xmlParserAPIs-2.6.2.jar, xpp3-1.1.4c.jar, httpcore-4.4.6.jar]
-The number of resolved method references during linkage check: 1669
-There were 1 unresolved method references from the jar file(s):
-Class: 'com.google.api.client.googleapis.services.json.AbstractGoogleJsonClient', method: 'initialize' with descriptor (Lcom/google/api/client/googleapis/services/AbstractGoogleClientRequest;)V
-
+The number of resolved method references during linkage check: 1670
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/cloud/google-cloud-compute/0.67.0-alpha/google-cloud-compute-0.67.0-alpha.jar
 
 Managed Dependency: com.google.cloud:google-cloud-container:0.67.0-beta
 Starting to read 40 files:
@@ -486,10 +477,8 @@ There were no unresolved method references from the first jar file :/Users/suzto
 Managed Dependency: com.google.cloud:google-cloud-nio:0.67.0-alpha
 Starting to read 41 files:
 [google-cloud-nio-0.67.0-alpha.jar, google-cloud-storage-1.49.0.jar, guava-20.0.jar, jsr305-3.0.2.jar, javax.inject-1.jar, auto-service-1.0-rc3.jar, auto-value-1.4.jar, google-cloud-core-1.49.0.jar, google-cloud-core-http-1.49.0.jar, google-api-services-storage-v1-rev135-1.24.1.jar, auto-common-0.3.jar, joda-time-2.9.2.jar, google-http-client-1.24.1.jar, api-common-1.7.0.jar, gax-1.32.0.jar, protobuf-java-util-3.6.1.jar, proto-google-common-protos-1.12.0.jar, proto-google-iam-v1-0.12.0.jar, google-auth-library-credentials-0.11.0.jar, google-auth-library-oauth2-http-0.11.0.jar, google-oauth-client-1.24.1.jar, google-api-client-1.24.1.jar, google-http-client-appengine-1.24.1.jar, google-http-client-jackson2-1.24.1.jar, gax-httpjson-0.49.0.jar, opencensus-api-0.15.0.jar, opencensus-contrib-http-util-0.15.0.jar, android-1.5_r4.jar, httpclient-4.5.3.jar, commons-codec-1.6.jar, threetenbp-1.3.3.jar, protobuf-java-3.6.1.jar, gson-2.7.jar, appengine-api-1.0-sdk-1.7.7.jar, jackson-core-2.9.2.jar, grpc-context-1.13.1.jar, commons-logging-1.1.1.jar, opengl-api-gl1.1-android-2.1_r1.jar, xmlParserAPIs-2.6.2.jar, xpp3-1.1.4c.jar, httpcore-4.4.6.jar]
-The number of resolved method references during linkage check: 1264
-There were 1 unresolved method references from the jar file(s):
-Class: 'com.google.api.client.googleapis.services.json.AbstractGoogleJsonClient', method: 'initialize' with descriptor (Lcom/google/api/client/googleapis/services/AbstractGoogleClientRequest;)V
-
+The number of resolved method references during linkage check: 1265
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/cloud/google-cloud-nio/0.67.0-alpha/google-cloud-nio-0.67.0-alpha.jar
 
 Managed Dependency: com.google.cloud:google-cloud-core:1.49.0
 Starting to read 25 files:
@@ -602,10 +591,8 @@ There were no unresolved method references from the first jar file :/Users/suzto
 Managed Dependency: com.google.cloud:google-cloud-dns:0.67.0-alpha
 Starting to read 40 files:
 [google-cloud-dns-0.67.0-alpha.jar, google-cloud-core-1.49.0.jar, google-cloud-core-http-1.49.0.jar, google-api-services-dns-v1-rev86-1.24.1.jar, commons-fileupload-1.3.2.jar, guava-20.0.jar, joda-time-2.9.2.jar, google-http-client-1.24.1.jar, jsr305-3.0.2.jar, api-common-1.7.0.jar, gax-1.32.0.jar, protobuf-java-util-3.6.1.jar, proto-google-common-protos-1.12.0.jar, proto-google-iam-v1-0.12.0.jar, google-auth-library-credentials-0.11.0.jar, google-auth-library-oauth2-http-0.11.0.jar, google-oauth-client-1.24.1.jar, google-api-client-1.24.1.jar, google-http-client-appengine-1.24.1.jar, google-http-client-jackson2-1.24.1.jar, gax-httpjson-0.49.0.jar, opencensus-api-0.15.0.jar, opencensus-contrib-http-util-0.15.0.jar, servlet-api-2.4.jar, portlet-api-1.0.jar, commons-io-2.2.jar, android-1.5_r4.jar, httpclient-4.5.3.jar, commons-codec-1.6.jar, threetenbp-1.3.3.jar, protobuf-java-3.6.1.jar, gson-2.7.jar, appengine-api-1.0-sdk-1.7.7.jar, jackson-core-2.9.2.jar, grpc-context-1.13.1.jar, commons-logging-1.1.1.jar, opengl-api-gl1.1-android-2.1_r1.jar, xmlParserAPIs-2.6.2.jar, xpp3-1.1.4c.jar, httpcore-4.4.6.jar]
-The number of resolved method references during linkage check: 638
-There were 1 unresolved method references from the jar file(s):
-Class: 'com.google.api.client.googleapis.services.json.AbstractGoogleJsonClient', method: 'initialize' with descriptor (Lcom/google/api/client/googleapis/services/AbstractGoogleClientRequest;)V
-
+The number of resolved method references during linkage check: 639
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/cloud/google-cloud-dns/0.67.0-alpha/google-cloud-dns-0.67.0-alpha.jar
 
 Managed Dependency: com.google.cloud:google-cloud-errorreporting:0.67.0-beta
 Starting to read 39 files:
@@ -796,10 +783,8 @@ There were no unresolved method references from the first jar file :/Users/suzto
 Managed Dependency: com.google.cloud:google-cloud-resourcemanager:0.67.0-alpha
 Starting to read 36 files:
 [google-cloud-resourcemanager-0.67.0-alpha.jar, google-cloud-core-1.49.0.jar, google-cloud-core-http-1.49.0.jar, google-api-services-cloudresourcemanager-v1-rev498-1.24.1.jar, guava-20.0.jar, joda-time-2.9.2.jar, google-http-client-1.24.1.jar, jsr305-3.0.2.jar, api-common-1.7.0.jar, gax-1.32.0.jar, protobuf-java-util-3.6.1.jar, proto-google-common-protos-1.12.0.jar, proto-google-iam-v1-0.12.0.jar, google-auth-library-credentials-0.11.0.jar, google-auth-library-oauth2-http-0.11.0.jar, google-oauth-client-1.24.1.jar, google-api-client-1.24.1.jar, google-http-client-appengine-1.24.1.jar, google-http-client-jackson2-1.24.1.jar, gax-httpjson-0.49.0.jar, opencensus-api-0.15.0.jar, opencensus-contrib-http-util-0.15.0.jar, android-1.5_r4.jar, httpclient-4.5.3.jar, commons-codec-1.6.jar, threetenbp-1.3.3.jar, protobuf-java-3.6.1.jar, gson-2.7.jar, appengine-api-1.0-sdk-1.7.7.jar, jackson-core-2.9.2.jar, grpc-context-1.13.1.jar, commons-logging-1.1.1.jar, opengl-api-gl1.1-android-2.1_r1.jar, xmlParserAPIs-2.6.2.jar, xpp3-1.1.4c.jar, httpcore-4.4.6.jar]
-The number of resolved method references during linkage check: 677
-There were 1 unresolved method references from the jar file(s):
-Class: 'com.google.api.client.googleapis.services.json.AbstractGoogleJsonClient', method: 'initialize' with descriptor (Lcom/google/api/client/googleapis/services/AbstractGoogleClientRequest;)V
-
+The number of resolved method references during linkage check: 678
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/cloud/google-cloud-resourcemanager/0.67.0-alpha/google-cloud-resourcemanager-0.67.0-alpha.jar
 
 Managed Dependency: com.google.cloud:google-cloud-spanner:0.67.0-beta
 Starting to read 48 files:
@@ -888,10 +873,8 @@ There were no unresolved method references from the first jar file :/Users/suzto
 Managed Dependency: com.google.cloud:google-cloud-storage:1.49.0
 Starting to read 36 files:
 [google-cloud-storage-1.49.0.jar, google-cloud-core-1.49.0.jar, google-cloud-core-http-1.49.0.jar, google-api-services-storage-v1-rev135-1.24.1.jar, guava-20.0.jar, joda-time-2.9.2.jar, google-http-client-1.24.1.jar, jsr305-3.0.2.jar, api-common-1.7.0.jar, gax-1.32.0.jar, protobuf-java-util-3.6.1.jar, proto-google-common-protos-1.12.0.jar, proto-google-iam-v1-0.12.0.jar, google-auth-library-credentials-0.11.0.jar, google-auth-library-oauth2-http-0.11.0.jar, google-oauth-client-1.24.1.jar, google-api-client-1.24.1.jar, google-http-client-appengine-1.24.1.jar, google-http-client-jackson2-1.24.1.jar, gax-httpjson-0.49.0.jar, opencensus-api-0.15.0.jar, opencensus-contrib-http-util-0.15.0.jar, android-1.5_r4.jar, httpclient-4.5.3.jar, commons-codec-1.6.jar, threetenbp-1.3.3.jar, protobuf-java-3.6.1.jar, gson-2.7.jar, appengine-api-1.0-sdk-1.7.7.jar, jackson-core-2.9.2.jar, grpc-context-1.13.1.jar, commons-logging-1.1.1.jar, opengl-api-gl1.1-android-2.1_r1.jar, xmlParserAPIs-2.6.2.jar, xpp3-1.1.4c.jar, httpcore-4.4.6.jar]
-The number of resolved method references during linkage check: 1197
-There were 1 unresolved method references from the jar file(s):
-Class: 'com.google.api.client.googleapis.services.json.AbstractGoogleJsonClient', method: 'initialize' with descriptor (Lcom/google/api/client/googleapis/services/AbstractGoogleClientRequest;)V
-
+The number of resolved method references during linkage check: 1198
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/cloud/google-cloud-storage/1.49.0/google-cloud-storage-1.49.0.jar
 
 Managed Dependency: com.google.cloud:google-cloud-tasks:0.67.0-beta
 Starting to read 40 files:
@@ -986,10 +969,8 @@ There were no unresolved method references from the first jar file :/Users/suzto
 Managed Dependency: com.google.cloud:google-cloud-translate:1.49.0
 Starting to read 36 files:
 [google-cloud-translate-1.49.0.jar, google-cloud-core-1.49.0.jar, google-cloud-core-http-1.49.0.jar, google-api-services-translate-v2-rev51-1.24.1.jar, guava-20.0.jar, joda-time-2.9.2.jar, google-http-client-1.24.1.jar, jsr305-3.0.2.jar, api-common-1.7.0.jar, gax-1.32.0.jar, protobuf-java-util-3.6.1.jar, proto-google-common-protos-1.12.0.jar, proto-google-iam-v1-0.12.0.jar, google-auth-library-credentials-0.11.0.jar, google-auth-library-oauth2-http-0.11.0.jar, google-oauth-client-1.24.1.jar, google-api-client-1.24.1.jar, google-http-client-appengine-1.24.1.jar, google-http-client-jackson2-1.24.1.jar, gax-httpjson-0.49.0.jar, opencensus-api-0.15.0.jar, opencensus-contrib-http-util-0.15.0.jar, android-1.5_r4.jar, httpclient-4.5.3.jar, commons-codec-1.6.jar, threetenbp-1.3.3.jar, protobuf-java-3.6.1.jar, gson-2.7.jar, appengine-api-1.0-sdk-1.7.7.jar, jackson-core-2.9.2.jar, grpc-context-1.13.1.jar, commons-logging-1.1.1.jar, opengl-api-gl1.1-android-2.1_r1.jar, xmlParserAPIs-2.6.2.jar, xpp3-1.1.4c.jar, httpcore-4.4.6.jar]
-The number of resolved method references during linkage check: 548
-There were 1 unresolved method references from the jar file(s):
-Class: 'com.google.api.client.googleapis.services.json.AbstractGoogleJsonClient', method: 'initialize' with descriptor (Lcom/google/api/client/googleapis/services/AbstractGoogleClientRequest;)V
-
+The number of resolved method references during linkage check: 549
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/cloud/google-cloud-translate/1.49.0/google-cloud-translate-1.49.0.jar
 
 Managed Dependency: com.google.cloud:google-cloud-vision:1.49.0
 Starting to read 42 files:
@@ -1018,3 +999,122 @@ There were no unresolved method references from the first jar file :/Users/suzto
 Managed Dependency: com.google.api.grpc:grpc-google-cloud-vision-v1p1beta1:0.32.0
 Starting to read 15 files:
 [grpc-google-cloud-vision-v1p1beta1-0.32.0.jar, grpc-stub-1.13.1.jar, grpc-protobuf-1.13.1.jar, proto-google-cloud-vision-v1p1beta1-0.32.0.jar, grpc-core-1.13.1.jar, protobuf-java-3.6.1.jar, guava-20.0.jar, proto-google-common-protos-1.12.0.jar, grpc-protobuf-lite-1.13.1.jar, grpc-context-1.13.1.jar, gson-2.7.jar, error_prone_annotations-2.1.2.jar, jsr305-3.0.0.jar, opencensus-api-0.12.3.jar, opencensus-contrib-grpc-metrics-0.12.3.jar]
+The number of resolved method references during linkage check: 575
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/grpc-google-cloud-vision-v1p1beta1/0.32.0/grpc-google-cloud-vision-v1p1beta1-0.32.0.jar
+
+Managed Dependency: com.google.api.grpc:proto-google-cloud-vision-v1p2beta1:1.31.0
+Starting to read 3 files:
+[proto-google-cloud-vision-v1p2beta1-1.31.0.jar, protobuf-java-3.6.1.jar, proto-google-common-protos-1.12.0.jar]
+The number of resolved method references during linkage check: 502
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/proto-google-cloud-vision-v1p2beta1/1.31.0/proto-google-cloud-vision-v1p2beta1-1.31.0.jar
+
+Managed Dependency: com.google.api.grpc:grpc-google-cloud-vision-v1p2beta1:1.31.0
+Starting to read 15 files:
+[grpc-google-cloud-vision-v1p2beta1-1.31.0.jar, grpc-stub-1.13.1.jar, grpc-protobuf-1.13.1.jar, proto-google-cloud-vision-v1p2beta1-1.31.0.jar, grpc-core-1.13.1.jar, protobuf-java-3.6.1.jar, guava-20.0.jar, proto-google-common-protos-1.12.0.jar, grpc-protobuf-lite-1.13.1.jar, grpc-context-1.13.1.jar, gson-2.7.jar, error_prone_annotations-2.1.2.jar, jsr305-3.0.0.jar, opencensus-api-0.12.3.jar, opencensus-contrib-grpc-metrics-0.12.3.jar]
+The number of resolved method references during linkage check: 586
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/grpc-google-cloud-vision-v1p2beta1/1.31.0/grpc-google-cloud-vision-v1p2beta1-1.31.0.jar
+
+Managed Dependency: com.google.api.grpc:proto-google-cloud-vision-v1p3beta1:0.32.0
+Starting to read 6 files:
+[proto-google-cloud-vision-v1p3beta1-0.32.0.jar, protobuf-java-3.6.1.jar, api-common-1.7.0.jar, proto-google-common-protos-1.12.0.jar, jsr305-3.0.2.jar, guava-19.0.jar]
+The number of resolved method references during linkage check: 553
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/proto-google-cloud-vision-v1p3beta1/0.32.0/proto-google-cloud-vision-v1p3beta1-0.32.0.jar
+
+Managed Dependency: com.google.api.grpc:grpc-google-cloud-vision-v1p3beta1:0.32.0
+Starting to read 16 files:
+[grpc-google-cloud-vision-v1p3beta1-0.32.0.jar, grpc-stub-1.13.1.jar, grpc-protobuf-1.13.1.jar, proto-google-cloud-vision-v1p3beta1-0.32.0.jar, grpc-core-1.13.1.jar, protobuf-java-3.6.1.jar, guava-20.0.jar, proto-google-common-protos-1.12.0.jar, grpc-protobuf-lite-1.13.1.jar, api-common-1.7.0.jar, grpc-context-1.13.1.jar, gson-2.7.jar, error_prone_annotations-2.1.2.jar, jsr305-3.0.0.jar, opencensus-api-0.12.3.jar, opencensus-contrib-grpc-metrics-0.12.3.jar]
+The number of resolved method references during linkage check: 646
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/grpc-google-cloud-vision-v1p3beta1/0.32.0/grpc-google-cloud-vision-v1p3beta1-0.32.0.jar
+
+Managed Dependency: com.google.cloud:google-cloud-video-intelligence:0.67.0-beta
+Starting to read 43 files:
+[google-cloud-video-intelligence-0.67.0-beta.jar, google-cloud-core-1.49.0.jar, google-cloud-core-grpc-1.49.0.jar, proto-google-cloud-video-intelligence-v1beta1-0.32.0.jar, proto-google-cloud-video-intelligence-v1beta2-0.32.0.jar, proto-google-cloud-video-intelligence-v1-0.32.0.jar, proto-google-cloud-video-intelligence-v1p1beta1-0.32.0.jar, proto-google-cloud-video-intelligence-v1p2beta1-0.32.0.jar, grpc-netty-shaded-1.13.1.jar, grpc-stub-1.13.1.jar, grpc-auth-1.13.1.jar, guava-20.0.jar, joda-time-2.9.2.jar, google-http-client-1.24.1.jar, jsr305-3.0.2.jar, api-common-1.7.0.jar, gax-1.32.0.jar, protobuf-java-util-3.6.1.jar, proto-google-common-protos-1.12.0.jar, proto-google-iam-v1-0.12.0.jar, google-auth-library-credentials-0.11.0.jar, protobuf-java-3.6.1.jar, grpc-protobuf-1.13.1.jar, grpc-context-1.13.1.jar, gax-grpc-1.32.0.jar, grpc-core-1.13.1.jar, android-1.5_r4.jar, httpclient-4.5.3.jar, commons-codec-1.6.jar, threetenbp-1.3.3.jar, google-auth-library-oauth2-http-0.11.0.jar, gson-2.7.jar, grpc-protobuf-lite-1.13.1.jar, error_prone_annotations-2.2.0.jar, opencensus-api-0.15.0.jar, opencensus-contrib-grpc-metrics-0.12.3.jar, commons-logging-1.1.1.jar, opengl-api-gl1.1-android-2.1_r1.jar, xmlParserAPIs-2.6.2.jar, xpp3-1.1.4c.jar, httpcore-4.4.6.jar, google-http-client-jackson2-1.24.1.jar, jackson-core-2.9.2.jar]
+The number of resolved method references during linkage check: 962
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/cloud/google-cloud-video-intelligence/0.67.0-beta/google-cloud-video-intelligence-0.67.0-beta.jar
+
+Managed Dependency: com.google.api.grpc:proto-google-cloud-video-intelligence-v1beta1:0.32.0
+Starting to read 3 files:
+[proto-google-cloud-video-intelligence-v1beta1-0.32.0.jar, protobuf-java-3.6.1.jar, proto-google-common-protos-1.12.0.jar]
+The number of resolved method references during linkage check: 447
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/proto-google-cloud-video-intelligence-v1beta1/0.32.0/proto-google-cloud-video-intelligence-v1beta1-0.32.0.jar
+
+Managed Dependency: com.google.api.grpc:grpc-google-cloud-video-intelligence-v1beta1:0.32.0
+Starting to read 15 files:
+[grpc-google-cloud-video-intelligence-v1beta1-0.32.0.jar, grpc-stub-1.13.1.jar, grpc-protobuf-1.13.1.jar, proto-google-cloud-video-intelligence-v1beta1-0.32.0.jar, grpc-core-1.13.1.jar, protobuf-java-3.6.1.jar, guava-20.0.jar, proto-google-common-protos-1.12.0.jar, grpc-protobuf-lite-1.13.1.jar, grpc-context-1.13.1.jar, gson-2.7.jar, error_prone_annotations-2.1.2.jar, jsr305-3.0.0.jar, opencensus-api-0.12.3.jar, opencensus-contrib-grpc-metrics-0.12.3.jar]
+The number of resolved method references during linkage check: 480
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/grpc-google-cloud-video-intelligence-v1beta1/0.32.0/grpc-google-cloud-video-intelligence-v1beta1-0.32.0.jar
+
+Managed Dependency: com.google.api.grpc:proto-google-cloud-video-intelligence-v1beta2:0.32.0
+Starting to read 3 files:
+[proto-google-cloud-video-intelligence-v1beta2-0.32.0.jar, protobuf-java-3.6.1.jar, proto-google-common-protos-1.12.0.jar]
+The number of resolved method references during linkage check: 456
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/proto-google-cloud-video-intelligence-v1beta2/0.32.0/proto-google-cloud-video-intelligence-v1beta2-0.32.0.jar
+
+Managed Dependency: com.google.api.grpc:grpc-google-cloud-video-intelligence-v1beta2:0.32.0
+Starting to read 15 files:
+[grpc-google-cloud-video-intelligence-v1beta2-0.32.0.jar, grpc-stub-1.13.1.jar, grpc-protobuf-1.13.1.jar, proto-google-cloud-video-intelligence-v1beta2-0.32.0.jar, grpc-core-1.13.1.jar, protobuf-java-3.6.1.jar, guava-20.0.jar, proto-google-common-protos-1.12.0.jar, grpc-protobuf-lite-1.13.1.jar, grpc-context-1.13.1.jar, gson-2.7.jar, error_prone_annotations-2.1.2.jar, jsr305-3.0.0.jar, opencensus-api-0.12.3.jar, opencensus-contrib-grpc-metrics-0.12.3.jar]
+The number of resolved method references during linkage check: 491
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/grpc-google-cloud-video-intelligence-v1beta2/0.32.0/grpc-google-cloud-video-intelligence-v1beta2-0.32.0.jar
+
+Managed Dependency: com.google.api.grpc:proto-google-cloud-video-intelligence-v1:0.32.0
+Starting to read 3 files:
+[proto-google-cloud-video-intelligence-v1-0.32.0.jar, protobuf-java-3.6.1.jar, proto-google-common-protos-1.12.0.jar]
+The number of resolved method references during linkage check: 456
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/proto-google-cloud-video-intelligence-v1/0.32.0/proto-google-cloud-video-intelligence-v1-0.32.0.jar
+
+Managed Dependency: com.google.api.grpc:grpc-google-cloud-video-intelligence-v1:0.32.0
+Starting to read 15 files:
+[grpc-google-cloud-video-intelligence-v1-0.32.0.jar, grpc-stub-1.13.1.jar, grpc-protobuf-1.13.1.jar, proto-google-cloud-video-intelligence-v1-0.32.0.jar, grpc-core-1.13.1.jar, protobuf-java-3.6.1.jar, guava-20.0.jar, proto-google-common-protos-1.12.0.jar, grpc-protobuf-lite-1.13.1.jar, grpc-context-1.13.1.jar, gson-2.7.jar, error_prone_annotations-2.1.2.jar, jsr305-3.0.0.jar, opencensus-api-0.12.3.jar, opencensus-contrib-grpc-metrics-0.12.3.jar]
+The number of resolved method references during linkage check: 491
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/grpc-google-cloud-video-intelligence-v1/0.32.0/grpc-google-cloud-video-intelligence-v1-0.32.0.jar
+
+Managed Dependency: com.google.api.grpc:proto-google-cloud-video-intelligence-v1p1beta1:0.32.0
+Starting to read 3 files:
+[proto-google-cloud-video-intelligence-v1p1beta1-0.32.0.jar, protobuf-java-3.6.1.jar, proto-google-common-protos-1.12.0.jar]
+The number of resolved method references during linkage check: 459
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/proto-google-cloud-video-intelligence-v1p1beta1/0.32.0/proto-google-cloud-video-intelligence-v1p1beta1-0.32.0.jar
+
+Managed Dependency: com.google.api.grpc:grpc-google-cloud-video-intelligence-v1p1beta1:0.32.0
+Starting to read 15 files:
+[grpc-google-cloud-video-intelligence-v1p1beta1-0.32.0.jar, grpc-stub-1.13.1.jar, grpc-protobuf-1.13.1.jar, proto-google-cloud-video-intelligence-v1p1beta1-0.32.0.jar, grpc-core-1.13.1.jar, protobuf-java-3.6.1.jar, guava-20.0.jar, proto-google-common-protos-1.12.0.jar, grpc-protobuf-lite-1.13.1.jar, grpc-context-1.13.1.jar, gson-2.7.jar, error_prone_annotations-2.1.2.jar, jsr305-3.0.0.jar, opencensus-api-0.12.3.jar, opencensus-contrib-grpc-metrics-0.12.3.jar]
+The number of resolved method references during linkage check: 495
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/grpc-google-cloud-video-intelligence-v1p1beta1/0.32.0/grpc-google-cloud-video-intelligence-v1p1beta1-0.32.0.jar
+
+Managed Dependency: com.google.api.grpc:proto-google-cloud-video-intelligence-v1p2beta1:0.32.0
+Starting to read 3 files:
+[proto-google-cloud-video-intelligence-v1p2beta1-0.32.0.jar, protobuf-java-3.6.1.jar, proto-google-common-protos-1.12.0.jar]
+The number of resolved method references during linkage check: 457
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/proto-google-cloud-video-intelligence-v1p2beta1/0.32.0/proto-google-cloud-video-intelligence-v1p2beta1-0.32.0.jar
+
+Managed Dependency: com.google.api.grpc:grpc-google-cloud-video-intelligence-v1p2beta1:0.32.0
+Starting to read 15 files:
+[grpc-google-cloud-video-intelligence-v1p2beta1-0.32.0.jar, grpc-stub-1.13.1.jar, grpc-protobuf-1.13.1.jar, proto-google-cloud-video-intelligence-v1p2beta1-0.32.0.jar, grpc-core-1.13.1.jar, protobuf-java-3.6.1.jar, guava-20.0.jar, proto-google-common-protos-1.12.0.jar, grpc-protobuf-lite-1.13.1.jar, grpc-context-1.13.1.jar, gson-2.7.jar, error_prone_annotations-2.1.2.jar, jsr305-3.0.0.jar, opencensus-api-0.12.3.jar, opencensus-contrib-grpc-metrics-0.12.3.jar]
+The number of resolved method references during linkage check: 493
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/grpc-google-cloud-video-intelligence-v1p2beta1/0.32.0/grpc-google-cloud-video-intelligence-v1p2beta1-0.32.0.jar
+
+Managed Dependency: com.google.api.grpc:proto-google-cloud-iot-v1:0.32.0
+Starting to read 7 files:
+[proto-google-cloud-iot-v1-0.32.0.jar, protobuf-java-3.6.1.jar, api-common-1.7.0.jar, proto-google-common-protos-1.12.0.jar, proto-google-iam-v1-0.12.0.jar, jsr305-3.0.2.jar, guava-19.0.jar]
+The number of resolved method references during linkage check: 520
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/proto-google-cloud-iot-v1/0.32.0/proto-google-cloud-iot-v1-0.32.0.jar
+
+Managed Dependency: com.google.api.grpc:grpc-google-cloud-iot-v1:0.32.0
+Starting to read 17 files:
+[grpc-google-cloud-iot-v1-0.32.0.jar, grpc-stub-1.13.1.jar, grpc-protobuf-1.13.1.jar, proto-google-cloud-iot-v1-0.32.0.jar, grpc-core-1.13.1.jar, protobuf-java-3.6.1.jar, guava-20.0.jar, proto-google-common-protos-1.12.0.jar, grpc-protobuf-lite-1.13.1.jar, api-common-1.7.0.jar, proto-google-iam-v1-0.12.0.jar, grpc-context-1.13.1.jar, gson-2.7.jar, error_prone_annotations-2.1.2.jar, jsr305-3.0.0.jar, opencensus-api-0.12.3.jar, opencensus-contrib-grpc-metrics-0.12.3.jar]
+The number of resolved method references during linkage check: 549
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/grpc-google-cloud-iot-v1/0.32.0/grpc-google-cloud-iot-v1-0.32.0.jar
+
+Managed Dependency: com.google.api.grpc:proto-google-cloud-websecurityscanner-v1alpha:0.32.0
+Starting to read 6 files:
+[proto-google-cloud-websecurityscanner-v1alpha-0.32.0.jar, protobuf-java-3.6.1.jar, api-common-1.7.0.jar, proto-google-common-protos-1.12.0.jar, jsr305-3.0.2.jar, guava-19.0.jar]
+The number of resolved method references during linkage check: 551
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/proto-google-cloud-websecurityscanner-v1alpha/0.32.0/proto-google-cloud-websecurityscanner-v1alpha-0.32.0.jar
+
+Managed Dependency: com.google.api.grpc:grpc-google-cloud-websecurityscanner-v1alpha:0.32.0
+Starting to read 16 files:
+[grpc-google-cloud-websecurityscanner-v1alpha-0.32.0.jar, grpc-stub-1.13.1.jar, grpc-protobuf-1.13.1.jar, proto-google-cloud-websecurityscanner-v1alpha-0.32.0.jar, grpc-core-1.13.1.jar, protobuf-java-3.6.1.jar, guava-20.0.jar, proto-google-common-protos-1.12.0.jar, grpc-protobuf-lite-1.13.1.jar, api-common-1.7.0.jar, grpc-context-1.13.1.jar, gson-2.7.jar, error_prone_annotations-2.1.2.jar, jsr305-3.0.0.jar, opencensus-api-0.12.3.jar, opencensus-contrib-grpc-metrics-0.12.3.jar]
+The number of resolved method references during linkage check: 547
+There were no unresolved method references from the first jar file :/Users/suztomo/.m2/repository/com/google/api/grpc/grpc-google-cloud-websecurityscanner-v1alpha/0.32.0/grpc-google-cloud-websecurityscanner-v1alpha-0.32.0.jar
+
+
+Process finished with exit code 0

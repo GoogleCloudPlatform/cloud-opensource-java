@@ -89,6 +89,8 @@ class StaticLinkageChecker {
    */
   static SetMultimap<String, String> classReferenceGraph = HashMultimap.create();
   static String classToTraceUsageGraph = null;
+  static String traceClassName = null;
+  static String traceMethodName = null;
 
   /**
    * Given Maven coordinates or list of the jar files as file names in filesystem, outputs the
@@ -181,6 +183,11 @@ class StaticLinkageChecker {
     options.addOption("c", "coordinate", true, "Maven coordinates (separated by ',')");
     options.addOption("j", "jars", true, "Jar files (separated by ',')");
     options.addOption("t", "--trace", true, "class to trace usage graph");
+    options.addOption(
+        "m",
+        "--trace-method",
+        true,
+        "class and method to identify the callers. Format: '<fully-qualified class>:<method>'");
 
     HelpFormatter formatter = new HelpFormatter();
     CommandLineParser parser = new DefaultParser();
@@ -203,6 +210,19 @@ class StaticLinkageChecker {
       }
       if (cmd.hasOption("t")) {
         classToTraceUsageGraph = cmd.getOptionValue("t");
+      }
+      if (cmd.hasOption("m")) {
+        String traceMethodValue = cmd.getOptionValue("m");
+        String[] classAndMethod = traceMethodValue.split(":");
+        if (classAndMethod.length != 2) {
+          throw new IllegalArgumentException(
+              "Invalid method name specified: "
+                  + traceMethodValue
+                  + "\n"
+                  + "format: '<fully-qualified class>:<method>'");
+        }
+        traceClassName = classAndMethod[0];
+        traceMethodName = classAndMethod[1];
       }
     } catch (ParseException ex) {
       System.err.println("Failed to parse command line arguments: " + ex.getMessage());
@@ -430,13 +450,26 @@ class StaticLinkageChecker {
     } catch (NoSuchMethodException | ClassNotFoundException ex) {
       // Attempt 2: Find the class and method in BCEL API
       // BCEL helps to search availability of (package) private class, constructors and methods
-      // that are inaccessible to Java's reflection API or the class loader
+      // that are inaccessible to Java's reflection API or the class loader.
       JavaClass javaClass = repository.loadClass(className);
-      List<FullyQualifiedMethodSignature> availableMethodsOnClass =
-          listMethodsOnClass(javaClass);
-      if (!availableMethodsOnClass.contains(methodReference)) {
-        return false;
+      boolean methodFoundInBcel = false;
+      while (javaClass != null) {
+        // Inherited methods need checking with the parent class name
+        FullyQualifiedMethodSignature methodReferenceForClass = new FullyQualifiedMethodSignature(
+            javaClass.getClassName(),
+            methodName,
+            methodSignature.getDescriptor()
+        );
+        List<FullyQualifiedMethodSignature> availableMethodsOnClass =
+            listMethodsOnClass(javaClass);
+        if (availableMethodsOnClass.contains(methodReferenceForClass)) {
+          methodFoundInBcel = true;
+          break;
+        }
+        // null if java.lang.Object.
+        javaClass = javaClass.getSuperClass();
       }
+      return methodFoundInBcel;
     }
     return true;
   }

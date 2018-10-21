@@ -24,6 +24,7 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.CodeSource;
@@ -88,10 +89,11 @@ class ClassDumper {
       ConstantNameAndType constantNameAndType = (ConstantNameAndType) constantAtNameAndTypeIndex;
       String methodName = constantNameAndType.getName(constantPool);
       String descriptor = constantNameAndType.getSignature(constantPool);
-      FullyQualifiedMethodSignature methodref = new FullyQualifiedMethodSignature(classNameInMethodReference,
-          methodName, descriptor);
+      FullyQualifiedMethodSignature methodref =
+          new FullyQualifiedMethodSignature(classNameInMethodReference, methodName, descriptor);
       methodReferences.add(methodref);
-      StaticLinkageChecker.classReferenceGraph.put(classNameInMethodReference, javaClass.getClassName());
+      StaticLinkageChecker.classReferenceGraph.put(
+          classNameInMethodReference, javaClass.getClassName());
     }
     return methodReferences;
   }
@@ -138,9 +140,23 @@ class ClassDumper {
         if (!className.equals(classNameInMethodReference)
             && !classesDefinedInSameJar.contains(classNameInMethodReference)) {
           nextExternalMethodReferences.add(methodReference);
+          MethodSignature methodSignature = methodReference.getMethodSignature();
           StaticLinkageChecker.classReferenceGraph.put(classNameInMethodReference, className);
           if (debug) {
             System.out.println(className + " -> " + classNameInMethodReference);
+          }
+          if (classNameInMethodReference.equals(StaticLinkageChecker.traceClassName) &&
+              methodSignature.getMethodName().equals(StaticLinkageChecker.traceMethodName)) {
+            URL codeLocation = clazz.getProtectionDomain().getCodeSource().getLocation();
+            Path sourceFileName = Paths.get(codeLocation.toURI()).getFileName();
+            System.out.println(
+                className
+                    + " ("
+                    + sourceFileName
+                    + ") calls "
+                    + StaticLinkageChecker.traceClassName
+                    + ":"
+                    + StaticLinkageChecker.traceMethodName);
           }
         } else {
           // The methodReference is within the same jar but we want to follow usage graph
