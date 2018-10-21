@@ -17,8 +17,9 @@
     api-common-java 1.7, the code was changed to instead call
     `Futures.transform(ListenableFuture, Function, Executor)`,
     which is not deprecated. The oldest version of api-common-java that
-    can be used with Guava 26.0 or later is 1.7.0, because 1.6 and earlier
+    can be used with Guava 26.0 or later is 1.7.0, because 1.6.0 and earlier
     refers to a deleted method. If api-common-java had moved to the new
     method even earlier (for example, if this had been done in 1.0.0), then
     more versions of api-common-java would be compatible with Guava 26.0 and
-    later, making it easier to find compatible combinations of versions.
+    later (1.0.0+ instead of 1.7.0+), making it easier to find compatible
+    combinations of versions.
