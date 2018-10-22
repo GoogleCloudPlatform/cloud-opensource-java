@@ -25,3 +25,4 @@ declared "Stable."
 - [JLBP-9](JLBP-9.md): Support the minimum Java version of your consumers
 - [JLBP-10](JLBP-10.md): Maintain API stability as long as needed for consumers
 - [JLBP-11](JLBP-11.md): Stay up to date with compatible dependencies
+- [JLBP-12](JLBP-12.md): Make level of support and API stability clear
