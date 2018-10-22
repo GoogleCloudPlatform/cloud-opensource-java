@@ -71,11 +71,7 @@ public class DependencyGraphIntegrationTest {
         "com.google.auth:google-auth-library-oauth2-http:0.9.1 needs to "
         + "upgrade com.google.http-client:google-http-client:1.19.0 to 1.23.0",
         "com.google.http-client:google-http-client-jackson2:1.19.0 needs to "
-        + "upgrade com.google.http-client:google-http-client:1.19.0 to 1.23.0",
-        "com.google.guava:guava-jdk5:17.0 needs to "
-        + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
-        "org.apache.httpcomponents:httpclient:4.0.1 needs to "
-        + "upgrade commons-codec:commons-codec:1.3 to 1.6");
+        + "upgrade com.google.http-client:google-http-client:1.19.0 to 1.23.0");
   }
   
   // Beam has a more complex dependency graph that hits some corner cases.
@@ -105,10 +101,10 @@ public class DependencyGraphIntegrationTest {
     DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(jaxen);
     
     List<Update> updates = graph.findUpdates();
-    Truth.assertThat(updates).hasSize(8);
+    Truth.assertThat(updates).hasSize(5);
     
     List<DependencyPath> conflicts = graph.findConflicts();
-    Truth.assertThat(conflicts).hasSize(44);
+    Truth.assertThat(conflicts).hasSize(34);
     
     Map<String, String> versions = graph.getHighestVersionMap();
     Assert.assertEquals("2.6.2", versions.get("xerces:xercesImpl"));

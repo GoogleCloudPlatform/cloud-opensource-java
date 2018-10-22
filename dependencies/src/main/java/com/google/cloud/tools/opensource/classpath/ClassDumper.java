@@ -166,12 +166,12 @@ class ClassDumper {
    * and `initialClassNames: ['Class A']`, this function returns list of method references to 'Class
    * D', not including references to 'Class B' or 'Class C'.
    *
-   * @param initialClassNames list of classes to follow usage graph. they must be within same jar
+   * @param initialClassNames list of classes to follow usage graph. They must be within same jar
    *     file.
    * @param repository BCEL repository to list method references
    * @param classesDefinedInSameJar set of classes defined in the same jar file as
    *     `initialClassNames`
-   * @return list of method references external to the the jar file of `initialClassNames`
+   * @return list of method references external to the jar file of `initialClassNames`
    * @throws ClassNotFoundException when there is a problem in accessing a class via BCEL repository
    */
   private static List<FullyQualifiedMethodSignature> findExternalMethodReferencesByUsageGraph(

@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.stream.Collectors;
-import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -33,15 +32,10 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
-import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
-import org.eclipse.aether.util.graph.selector.AndDependencySelector;
-import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
-import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
-import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 
 /**
  * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact
@@ -72,24 +66,23 @@ public class DependencyGraphBuilder {
 
   private static DependencyNode resolveCompileTimeDependencies(Artifact rootDependencyArtifact)
       throws DependencyCollectionException, DependencyResolutionException {
+    return resolveCompileTimeDependencies(rootDependencyArtifact, false);
+  }
+
+  private static DependencyNode resolveCompileTimeDependencies(Artifact rootDependencyArtifact,
+      boolean includeProvidedScope)
+      throws DependencyCollectionException, DependencyResolutionException {
     
     String key = Artifacts.toCoordinates(rootDependencyArtifact);
     if (cache.containsKey(key)) {
       return cache.get(key);
     }
 
-    DefaultRepositorySystemSession session = RepositoryUtility.newSession(system);
+    RepositorySystemSession session =
+        includeProvidedScope
+            ? RepositoryUtility.newSessionWithProvidedScope(system)
+            : RepositoryUtility.newSession(system);
 
-    // These combination of DependencySelector comes from `MavenRepositorySystemUtils.newSession`.
-    // StaticLinkageChecker needs to include 'provided' scope.
-    DependencySelector dependencySelector =
-        new AndDependencySelector(
-            new DependencySelector[] {
-                new ScopeDependencySelector(new String[] {"test"}), // "provided" is not here
-                new OptionalDependencySelector(),
-                new ExclusionDependencySelector()
-            });
-    session.setDependencySelector(dependencySelector);
     CollectRequest collectRequest = new CollectRequest();
     Dependency dependency = new Dependency(rootDependencyArtifact, "compile");
     collectRequest.setRoot(dependency);
@@ -141,7 +134,23 @@ public class DependencyGraphBuilder {
     }
     return result;
   }
-  
+
+  /**
+   * Finds the full dependency graph including duplicates and
+   * @param artifact
+   * @return
+   * @throws DependencyCollectionException
+   * @throws DependencyResolutionException
+   */
+  public static DependencyGraph getStaticLinkageCheckDependencies(Artifact artifact)
+      throws DependencyCollectionException, DependencyResolutionException {
+    DependencyNode node = resolveCompileTimeDependencies(artifact, true);
+    DependencyGraph graph = new DependencyGraph();
+    levelOrder(node, graph, true);
+
+    return graph;
+  }
+
   /**
    * Finds the full compile time, transitive dependency graph including duplicates
    * and conflicting versions.

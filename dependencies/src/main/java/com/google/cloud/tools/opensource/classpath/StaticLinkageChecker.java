@@ -174,7 +174,7 @@ class StaticLinkageChecker {
     DefaultArtifact rootArtifact = new DefaultArtifact(coordinate);
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.getCompleteDependencies(rootArtifact);
+        DependencyGraphBuilder.getStaticLinkageCheckDependencies(rootArtifact);
     List<DependencyPath> dependencyPaths = dependencyGraph.list();
 
     // When building a class path, we only need the first version found in breadth-first search
@@ -220,8 +220,9 @@ class StaticLinkageChecker {
     }
     Set<String> classesCheckedMethodReference = new HashSet<>();
 
-    // To avoid false positives from unused classes in 3rd-party library (e.g., grpc-netty-shaded),
-    // it traverses class usage graph starting with the method references from the input class path.
+    // To avoid false positives from unused classes in 3rd-party libraries (e.g.,
+    // grpc-netty-shaded), it traverses the class usage graph starting with the method references
+    // from the input class path.
     List<FullyQualifiedMethodSignature> methodReferencesFromInputClassPath =
         listExternalMethodReferences(absolutePathToFirstJar, classesCheckedMethodReference);
 
@@ -507,7 +508,7 @@ class StaticLinkageChecker {
       if (attribute.getTag() != Const.ATTR_INNER_CLASSES) {
         continue;
       }
-      // This innerClasses don't include double-nested inner classes
+      // This innerClasses variable does not include double-nested inner classes
       InnerClasses innerClasses = (InnerClasses) attribute;
       for (InnerClass innerClass : innerClasses.getInnerClasses()) {
         int classIndex = innerClass.getInnerClassIndex();
