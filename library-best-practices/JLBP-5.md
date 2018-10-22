@@ -6,7 +6,7 @@ Definition: When two artifacts (with either a distinct group or distinct
   fully qualified class name provided by both of the artifacts.
 
 This commonly happens when a library has published the same classes in
-artifacts with different group ID or artifact IDs. Always use the primary variant.
+artifacts with different group ID or artifact IDs. In this case, always use the primary variant.
 This also happens when a third party forks a library under their own group
 ID but does not repackage the classes.
 
