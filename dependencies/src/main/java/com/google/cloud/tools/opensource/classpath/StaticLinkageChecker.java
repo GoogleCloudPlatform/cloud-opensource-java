@@ -487,14 +487,13 @@ class StaticLinkageChecker {
       classesChecked.add(topLevelClassName);
       internalClassNames.add(topLevelClassName);
       internalClassNames.addAll(listInnerClassNames(javaClass));
-      List<FullyQualifiedMethodSignature> refs = ClassDumper.listMethodReferences(javaClass);
-      methodReferences.addAll(refs);
+      List<FullyQualifiedMethodSignature> references = ClassDumper.listMethodReferences(javaClass);
+      methodReferences.addAll(references);
     }
 
     List<FullyQualifiedMethodSignature> externalMethodReferences = methodReferences.stream()
         .filter(reference -> !internalClassNames.contains(reference.getClassName()))
         .collect(Collectors.toList());
-
     return externalMethodReferences;
   }
 

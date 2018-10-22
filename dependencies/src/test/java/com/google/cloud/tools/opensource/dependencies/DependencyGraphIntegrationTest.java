@@ -45,7 +45,7 @@ public class DependencyGraphIntegrationTest {
     DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(core);
     List<Update> updates = graph.findUpdates();
     List<String> strings = updates.stream().map(e -> e.toString()).collect(Collectors.toList());
-
+    
     // ordering not working yet
     // TODO get order working
     Truth.assertThat(strings).containsExactly("com.google.guava:guava:20.0 needs to "
