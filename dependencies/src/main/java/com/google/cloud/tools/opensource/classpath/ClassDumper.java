@@ -16,15 +16,12 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.StaticLinkageChecker.debug;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.CodeSource;
@@ -92,8 +89,6 @@ class ClassDumper {
       FullyQualifiedMethodSignature methodref =
           new FullyQualifiedMethodSignature(classNameInMethodReference, methodName, descriptor);
       methodReferences.add(methodref);
-      StaticLinkageChecker.classReferenceGraph.put(
-          classNameInMethodReference, javaClass.getClassName());
     }
     return methodReferences;
   }
@@ -141,23 +136,6 @@ class ClassDumper {
             && !classesDefinedInSameJar.contains(classNameInMethodReference)) {
           nextExternalMethodReferences.add(methodReference);
           MethodSignature methodSignature = methodReference.getMethodSignature();
-          StaticLinkageChecker.classReferenceGraph.put(classNameInMethodReference, className);
-          if (debug) {
-            System.out.println(className + " -> " + classNameInMethodReference);
-          }
-          if (classNameInMethodReference.equals(StaticLinkageChecker.traceClassName) &&
-              methodSignature.getMethodName().equals(StaticLinkageChecker.traceMethodName)) {
-            URL codeLocation = clazz.getProtectionDomain().getCodeSource().getLocation();
-            Path sourceFileName = Paths.get(codeLocation.toURI()).getFileName();
-            System.out.println(
-                className
-                    + " ("
-                    + sourceFileName
-                    + ") calls "
-                    + StaticLinkageChecker.traceClassName
-                    + ":"
-                    + StaticLinkageChecker.traceMethodName);
-          }
         } else {
           // The methodReference is within the same jar but we want to follow usage graph
           String nextInternalClassName = methodReference.getClassName();
@@ -217,10 +195,6 @@ class ClassDumper {
         String nextClassName = methodReference.getClassName();
         if (classesAddedToQueue.contains(nextClassName)) {
           continue;
-        }
-        StaticLinkageChecker.classReferenceGraph.put(nextClassName, internalClassName);
-        if (debug) {
-          System.out.println(internalClassName + " -> " + nextClassName);
         }
         if (classesDefinedInSameJar.contains(nextClassName)) {
           classQueue.add(nextClassName);

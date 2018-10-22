@@ -17,16 +17,13 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.StaticLinkageChecker.findUnresolvedMethodReferences;
+import static com.google.cloud.tools.opensource.classpath.StaticLinkageChecker.printStaticLinkageError;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -46,35 +43,17 @@ class BOMStaticLinkageChecker {
       String coordinate = Artifacts.toCoordinates(artifact);
       List<Path> jarFilePaths = StaticLinkageChecker.parseArguments(new String[]{"-c", coordinate});
       System.out.println("Managed Dependency: " + coordinate);
-      List<Path> fileNames = jarFilePaths.stream().map(p -> p.getFileName()).collect(Collectors.toList());
+      List<Path> fileNames =
+          jarFilePaths.stream().map(p -> p.getFileName()).collect(Collectors.toList());
       System.out.println("Starting to read " + jarFilePaths.size() + " files: \n" + fileNames);
-      StringBuilder stringBuilder = new StringBuilder();
       List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
           findUnresolvedMethodReferences(jarFilePaths);
-      SortedSet<FullyQualifiedMethodSignature> sortedUnresolvedMethodReferences =
-          new TreeSet<>(Comparator.comparing(FullyQualifiedMethodSignature::toString));
-      sortedUnresolvedMethodReferences.addAll(unresolvedMethodReferences);
-      if (sortedUnresolvedMethodReferences.isEmpty()) {
-        stringBuilder.append(
-            "There were no unresolved method references from the first jar file :");
-        stringBuilder.append(jarFilePaths.get(0));
+      if (unresolvedMethodReferences.isEmpty()) {
+        System.out.println("There were no unresolved method references from the first jar file :");
+        System.out.println(jarFilePaths.get(0).getFileName());
       } else {
-        int count = sortedUnresolvedMethodReferences.size();
-        stringBuilder.append(
-            "There were " + count + " unresolved method references from the jar file(s):\n");
-        for (FullyQualifiedMethodSignature methodReference : sortedUnresolvedMethodReferences) {
-          stringBuilder.append("Class: '");
-          stringBuilder.append(methodReference.getClassName());
-          stringBuilder.append("', method: '");
-          stringBuilder.append(methodReference.getMethodSignature().getMethodName());
-          stringBuilder.append("' with descriptor ");
-          stringBuilder.append(methodReference.getMethodSignature().getDescriptor());
-          stringBuilder.append("\n");
-        }
+        printStaticLinkageError(unresolvedMethodReferences);
       }
-      stringBuilder.append("\n");
-      System.out.println(stringBuilder.toString());
-
     }
   }
 

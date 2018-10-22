@@ -21,16 +21,12 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.SetMultimap;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -78,21 +74,6 @@ import org.eclipse.aether.artifact.DefaultArtifact;
  * TODO: enhance scope to include fields and classes
  */
 class StaticLinkageChecker {
-  static boolean debug = false;
-
-  /**
-   * Map to record class references in reverse order to show the referencing classes for a classes
-   * When 'Class A' uses 'Class B' and 'Class C', then we call
-   *
-   * <pre>
-   *   classReferenceGraph.put('Class B', 'Class A');
-   *   classReferenceGraph.put('Class C', 'Class A');
-   * </pre>
-   */
-  static SetMultimap<String, String> classReferenceGraph = HashMultimap.create();
-  static String classToTraceUsageGraph = null;
-  static String traceClassName = null;
-  static String traceMethodName = null;
 
   /**
    * Given Maven coordinates or list of the jar files as file names in filesystem, outputs the
@@ -108,71 +89,36 @@ class StaticLinkageChecker {
     List<Path> jarFilePaths = parseArguments(arguments);
 
     System.out.println("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
-    StringBuilder stringBuilder = new StringBuilder();
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         findUnresolvedMethodReferences(jarFilePaths);
+    if (unresolvedMethodReferences.isEmpty()) {
+      System.out.println(
+          "There were no unresolved method references from the first jar file :"
+              + jarFilePaths.get(0).getFileName());
+    } else {
+      printStaticLinkageError(unresolvedMethodReferences);
+    }
+  }
+
+  static void printStaticLinkageError(
+      List<FullyQualifiedMethodSignature> unresolvedMethodReferences) {
     SortedSet<FullyQualifiedMethodSignature> sortedUnresolvedMethodReferences =
         new TreeSet<>(Comparator.comparing(FullyQualifiedMethodSignature::toString));
     sortedUnresolvedMethodReferences.addAll(unresolvedMethodReferences);
-    if (sortedUnresolvedMethodReferences.isEmpty()) {
-      stringBuilder.append("There were no unresolved method references from the first jar file :");
-      stringBuilder.append(jarFilePaths.get(0).getFileName());
-    } else {
-      int count = sortedUnresolvedMethodReferences.size();
-      stringBuilder.append(
-          "There were " + count + " unresolved method references from the jar file(s):\n");
-      for (FullyQualifiedMethodSignature methodReference : sortedUnresolvedMethodReferences) {
-        stringBuilder.append("Class: '");
-        stringBuilder.append(methodReference.getClassName());
-        stringBuilder.append("', method: '");
-        stringBuilder.append(methodReference.getMethodSignature().getMethodName());
-        stringBuilder.append("' with descriptor ");
-        stringBuilder.append(methodReference.getMethodSignature().getDescriptor());
-        stringBuilder.append("\n");
-      }
+    int count = sortedUnresolvedMethodReferences.size();
+    StringBuilder stringBuilder = new StringBuilder();
+    stringBuilder.append(
+        "There were " + count + " unresolved method references from the jar file(s):\n");
+    for (FullyQualifiedMethodSignature methodReference : sortedUnresolvedMethodReferences) {
+      stringBuilder.append("Class: '");
+      stringBuilder.append(methodReference.getClassName());
+      stringBuilder.append("', method: '");
+      stringBuilder.append(methodReference.getMethodSignature().getMethodName());
+      stringBuilder.append("' with descriptor ");
+      stringBuilder.append(methodReference.getMethodSignature().getDescriptor());
+      stringBuilder.append("\n");
     }
     System.out.println(stringBuilder.toString());
-  }
-
-  private static void printUsageGraphTrace(
-      SetMultimap<String, String> classReferenceGraph,
-      String className,
-      Set<String> parentNodes,
-      int depth,
-      ClassLoader classLoader) {
-    // TODO: Use breadth-first search to find shortest path from start nodes to the the traced node
-    Set<String> callersOfClass = classReferenceGraph.get(className);
-    String indent = Strings.repeat("    ", depth);
-    if (parentNodes.contains(className)) {
-      System.out.println(indent + "(Cyclic dependency of " + className + ")");
-      return;
-    }
-    if (callersOfClass.isEmpty()) {
-      System.out.println(indent + className + " is at root; no class referenced it)");
-    } else {
-      int count = 0;
-      for (String callerClassName : callersOfClass) {
-        count++;
-        try {
-          Class clazz = classLoader.loadClass(callerClassName);
-          URL codeLocation = clazz.getProtectionDomain().getCodeSource().getLocation();
-          Path sourceFileName = Paths.get(codeLocation.toURI()).getFileName();
-          System.out.println(
-              indent + className + " <- " + callerClassName + " in " + sourceFileName);
-          if (count > 10) {
-            System.out.println(
-                indent + "...(too many usage for " + className + ". Truncated output)...");
-            break;
-          }
-        } catch (ClassNotFoundException | URISyntaxException ex) {
-          // source file not found
-        }
-        Set<String> nextParentNodes = new HashSet<>(parentNodes);
-        nextParentNodes.add(className);
-        printUsageGraphTrace(
-            classReferenceGraph, callerClassName, nextParentNodes, depth + 1, classLoader);
-      }
-    }
   }
 
   /**
@@ -186,12 +132,6 @@ class StaticLinkageChecker {
     Options options = new Options();
     options.addOption("c", "coordinate", true, "Maven coordinates (separated by ',')");
     options.addOption("j", "jars", true, "Jar files (separated by ',')");
-    options.addOption("t", "--trace", true, "class to trace class usage graph");
-    options.addOption(
-        "m",
-        "--trace-method",
-        true,
-        "class and method to identify the callers. Format: '<fully-qualified class>:<method>'");
 
     HelpFormatter formatter = new HelpFormatter();
     CommandLineParser parser = new DefaultParser();
@@ -211,22 +151,6 @@ class StaticLinkageChecker {
                 .map(name -> (Paths.get(name)).toAbsolutePath())
                 .collect(Collectors.toList());
         jarFilePaths.addAll(jarFilesInArguments);
-      }
-      if (cmd.hasOption("t")) {
-        classToTraceUsageGraph = cmd.getOptionValue("t");
-      }
-      if (cmd.hasOption("m")) {
-        String traceMethodValue = cmd.getOptionValue("m");
-        String[] classAndMethod = traceMethodValue.split(":");
-        if (classAndMethod.length != 2) {
-          throw new IllegalArgumentException(
-              "Invalid method name specified: "
-                  + traceMethodValue
-                  + "\n"
-                  + "format: '<fully-qualified class>:<method>'");
-        }
-        traceClassName = classAndMethod[0];
-        traceMethodName = classAndMethod[1];
       }
     } catch (ParseException ex) {
       System.err.println("Failed to parse command line arguments: " + ex.getMessage());
@@ -395,11 +319,6 @@ class StaticLinkageChecker {
     System.out.println(
         "The number of resolved method references during linkage check: "
             + availableMethodsInJars.size());
-
-    if (classToTraceUsageGraph != null) {
-      printUsageGraphTrace(
-          classReferenceGraph, classToTraceUsageGraph, new HashSet<>(), 0, classLoaderFromJars);
-    }
 
     return unresolvedMethods;
   }
