@@ -10,7 +10,7 @@ artifacts with different group ID or artifact IDs. Always use the primary varian
 This also happens when a third party forks a library under their own group
 ID but does not repackage the classes.
 
-It can also occur when a third library copies an existing libraries packages
+It can also occur when a third library copies an existing library's packages
 into its own jar file without shading the dependency. This case is particularly
 insidous since it may not be obvious that there's an unexpected, undocumented
 version of the classes is hiding inside the seemingly unrelated jar. 
