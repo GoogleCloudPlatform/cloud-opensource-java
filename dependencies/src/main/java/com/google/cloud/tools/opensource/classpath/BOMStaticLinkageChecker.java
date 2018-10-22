@@ -32,6 +32,9 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
+/**
+ * Tool to run StaticLinkageCheck for each artifacts listed in Google Cloud OSS BOM
+ */
 class BOMStaticLinkageChecker {
 
   public static void main(String[] arguments)
