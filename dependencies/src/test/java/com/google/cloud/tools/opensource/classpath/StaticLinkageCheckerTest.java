@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static org.hamcrest.CoreMatchers.is;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.InputStream;
@@ -117,8 +118,12 @@ public class StaticLinkageCheckerTest {
     List<FullyQualifiedMethodSignature> methodReferences = Arrays.asList(
         internalMethodReference, undefinedMethodReference
     );
+
+    // findUnresolvedReferences does not follow references from this set
+    Set<String> checkedClasses = Sets.newHashSet("com.google.firestore.v1beta1.FirestoreGrpc");
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        StaticLinkageChecker.findUnresolvedReferences(pathsForJar, methodReferences, new HashSet<>());
+        StaticLinkageChecker.findUnresolvedReferences(
+            pathsForJar, methodReferences, checkedClasses);
     Truth.assertThat(unresolvedMethodReferences).hasSize(1);
   }
 
@@ -221,7 +226,7 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testCoordinateToJarPaths_validCoordinate() throws RepositoryException {
+  public void testCoordinateToClasspath_validCoordinate() throws RepositoryException {
     List<Path> paths = StaticLinkageChecker.coordinateToClasspath("io.grpc:grpc-auth:1.15.1");
     Truth.assertThat(paths).hasSize(12);
 
@@ -240,7 +245,7 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testCoordinateToJarPaths_optionalDependency() throws RepositoryException {
+  public void testCoordinateToClasspath_optionalDependency() throws RepositoryException {
     List<Path> paths = StaticLinkageChecker.coordinateToClasspath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
 
     // The tree from google-cloud-bigtable to log4j:
@@ -250,11 +255,11 @@ public class StaticLinkageCheckerTest {
     //        org.apache.httpcomponents:httpclient:jar:4.5.3 (optional: false)
     //          commons-logging:commons-logging:jar:1.2 (optional: false)
     //            log4j:log4j:jar:1.2.17 (optional: true)
-    Assert.assertTrue(paths.stream().anyMatch(path -> path.endsWith("log4j-1.2.17.jar")));
+    Assert.assertTrue(paths.stream().anyMatch(path -> path.getFileName().toString().startsWith("log4j-1.2")));
   }
 
   @Test
-  public void testCoordinateToJarPaths_invalidCoordinate() {
+  public void testCoordinateToClasspath_invalidCoordinate() {
     try {
       StaticLinkageChecker.coordinateToClasspath("io.grpc:nosuchartifact:1.2.3");
       Assert.fail("Invalid Maven coodinate should raise RepositoryException");
@@ -284,17 +289,15 @@ public class StaticLinkageCheckerTest {
   public void testFindUnresolvedReferences_unusedLzmaClassByGrpc()
       throws RepositoryException, IOException, ClassNotFoundException {
     String bigTableCoordinate = "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
-    List<Path> paths = StaticLinkageChecker.coordinateToJarPaths(bigTableCoordinate);
-    Truth.assertThat(paths).hasSize(36);
+    List<Path> paths = StaticLinkageChecker.coordinateToClasspath(bigTableCoordinate);
+    Truth.assertThat(paths).hasSize(53);
+
+    // Prior to class usage graph traversal, there was linkage error for lzma-java classes.
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         StaticLinkageChecker.findUnresolvedMethodReferences(paths);
-    Assert.assertThat(unresolvedMethodReferences.size(), is(0));
-    Assert.assertFalse(
-        "As lzma-java classes are not used by google-cloud-bigtable, it should not appear as unresolved method references",
-        unresolvedMethodReferences
-            .stream()
-            .anyMatch(
-                methodReference -> "lzma.sdk.lzma.Encoder".equals(methodReference.getClassName())));
+
+    Assert.assertThat("Because lzma-java classes are not used by google-cloud-bigtable and its dependencies, the classes should not appear as unresolved method references.",
+        unresolvedMethodReferences.size(), is(0));
   }
 
   @Test

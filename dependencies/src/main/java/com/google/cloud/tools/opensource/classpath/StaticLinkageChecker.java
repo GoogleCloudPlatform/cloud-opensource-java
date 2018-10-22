@@ -309,18 +309,19 @@ class StaticLinkageChecker {
 
   /**
    * Checks the availability of the methods through the jar files and lists the unavailable methods.
-   * Starting with the initialMethodReferences, this method recursively search for the method
-   * references in class usage graph.
+   * Starting with the initialMethodReferences, this method recursively search (breadth-first
+   * search) for the references in class usage graph.
    *
    * @param jarFilePaths absolute paths to the jar files to search for the methods
    * @param initialMethodReferences methods to search for within the jar files
-   * @param classesAlreadyInQueue class names already checked for their method references
+   * @param classesVisited class names already checked for their method references
    * @return list of methods that are not found in the jar files
    */
   @VisibleForTesting
   static List<FullyQualifiedMethodSignature> findUnresolvedReferences(
-      List<Path> jarFilePaths, List<FullyQualifiedMethodSignature> initialMethodReferences,
-      Set<String> classesAlreadyInQueue) {
+      List<Path> jarFilePaths,
+      List<FullyQualifiedMethodSignature> initialMethodReferences,
+      Set<String> classesVisited) {
     List<FullyQualifiedMethodSignature> unresolvedMethods = new ArrayList<>();
 
     // Creates classpath in the same order as jarFilePaths for BCEL API
@@ -346,6 +347,7 @@ class StaticLinkageChecker {
     URLClassLoader classLoaderFromJars =
         new URLClassLoader(jarFileUrls, ClassLoader.getSystemClassLoader());
 
+    // Breadth-first search
     Queue<FullyQualifiedMethodSignature> queue = new ArrayDeque<>(initialMethodReferences);
     while (!queue.isEmpty()) {
       FullyQualifiedMethodSignature methodReference = queue.poll();
@@ -371,7 +373,7 @@ class StaticLinkageChecker {
           availableMethodsInJars.add(methodReference);
 
           // If the class is available, then check the method references from the class recursively
-          if (classesAlreadyInQueue.contains(className)) {
+          if (classesVisited.contains(className)) {
             continue;
           }
           // This list does not include internal method references: classes defined within the
@@ -381,7 +383,7 @@ class StaticLinkageChecker {
                   className, jarFileToClasses, classLoaderFromJars, repository);
 
           queue.addAll(nextExternalMethodReferences);
-          classesAlreadyInQueue.add(className);
+          classesVisited.add(className);
         } else {
           unresolvedMethods.add(methodReference);
         }
