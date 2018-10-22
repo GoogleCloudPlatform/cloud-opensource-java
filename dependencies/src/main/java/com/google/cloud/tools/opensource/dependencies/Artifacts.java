@@ -31,7 +31,7 @@ public class Artifacts {
     return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion();
   }
 
-  static String makeKey(Artifact artifact) {
+  public static String makeKey(Artifact artifact) {
     return artifact.getGroupId() + ":" + artifact.getArtifactId();
   }
 
