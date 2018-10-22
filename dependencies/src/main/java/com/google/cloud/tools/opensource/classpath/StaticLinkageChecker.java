@@ -234,8 +234,8 @@ class StaticLinkageChecker {
 
   /**
    * Checks the availability of the methods through the jar files and lists the unavailable methods.
-   * Starting with the initialMethodReferences, this method recursively search (breadth-first
-   * search) for the references in class usage graph.
+   * Starting with the initialMethodReferences, this method recursively searches (breadth-first
+   * search) for the references in the class usage graph.
    *
    * @param jarFilePaths absolute paths to the jar files to search for the methods
    * @param initialMethodReferences methods to search for within the jar files
