@@ -184,7 +184,7 @@ class StaticLinkageChecker {
     Options options = new Options();
     options.addOption("c", "coordinate", true, "Maven coordinates (separated by ',')");
     options.addOption("j", "jars", true, "Jar files (separated by ',')");
-    options.addOption("t", "--trace", true, "class to trace usage graph");
+    options.addOption("t", "--trace", true, "class to trace class usage graph");
     options.addOption(
         "m",
         "--trace-method",
@@ -282,13 +282,13 @@ class StaticLinkageChecker {
     Set<String> classesCheckedMethodReference = new HashSet<>();
 
     // To avoid false positives from unused classes in 3rd-party library (e.g., grpc-netty-shaded),
-    // it builds usage graph starting with the method references from the first artifact
-    List<FullyQualifiedMethodSignature> methodReferencesFromRootJar =
+    // it traverses class usage graph starting with the method references from the input class path.
+    List<FullyQualifiedMethodSignature> methodReferencesFromInputClassPath =
         listExternalMethodReferences(absolutePathToFirstJar, classesCheckedMethodReference);
 
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         findUnresolvedReferences(
-            jarFilePaths, methodReferencesFromRootJar, classesCheckedMethodReference);
+            jarFilePaths, methodReferencesFromInputClassPath, classesCheckedMethodReference);
     return unresolvedMethodReferences;
   }
 
