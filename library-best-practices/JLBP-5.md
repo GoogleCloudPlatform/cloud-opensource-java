@@ -13,7 +13,7 @@ ID but does not repackage the classes.
 It can also occur when a third library copies an existing library's packages
 into its own jar file without shading the dependency. This case is particularly
 insidous since it may not be obvious that there's an unexpected, undocumented
-version of the classes is hiding inside the seemingly unrelated jar. 
+version of the classes hiding inside the seemingly unrelated jar. 
 
 Example 1: Guava's main artifact is `guava`, but from versions 13.0 to 17.0,
   another artifact `guava-jdk5` was also published with classes that overlap
