@@ -59,7 +59,8 @@ public class StaticLinkageCheckerTest {
       throws IOException, ClassNotFoundException, URISyntaxException {
     URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
     List<FullyQualifiedMethodSignature> signatures =
-        StaticLinkageChecker.listExternalMethodReferences(Paths.get(jarFileUrl.toURI()), new HashSet<>());
+        StaticLinkageChecker.listExternalMethodReferences(
+            Paths.get(jarFileUrl.toURI()), new HashSet<>());
 
     Truth.assertThat(signatures).hasSize(38);
     FullyQualifiedMethodSignature expectedExternalMethodReference =
@@ -246,7 +247,9 @@ public class StaticLinkageCheckerTest {
 
   @Test
   public void testCoordinateToClasspath_optionalDependency() throws RepositoryException {
-    List<Path> paths = StaticLinkageChecker.coordinateToClasspath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
+    List<Path> paths =
+        StaticLinkageChecker.coordinateToClasspath(
+            "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
 
     // The tree from google-cloud-bigtable to log4j:
     //   com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha (optional: false)
@@ -255,7 +258,8 @@ public class StaticLinkageCheckerTest {
     //        org.apache.httpcomponents:httpclient:jar:4.5.3 (optional: false)
     //          commons-logging:commons-logging:jar:1.2 (optional: false)
     //            log4j:log4j:jar:1.2.17 (optional: true)
-    Assert.assertTrue(paths.stream().anyMatch(path -> path.getFileName().toString().startsWith("log4j-1.2")));
+    Assert.assertTrue(
+        paths.stream().anyMatch(path -> path.getFileName().toString().startsWith("log4j-1.2")));
   }
 
   @Test
@@ -296,8 +300,10 @@ public class StaticLinkageCheckerTest {
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         StaticLinkageChecker.findUnresolvedMethodReferences(paths);
 
-    Assert.assertThat("Because lzma-java classes are not used by google-cloud-bigtable and its dependencies, the classes should not appear as unresolved method references.",
-        unresolvedMethodReferences.size(), is(0));
+    Assert.assertThat(
+        "Because lzma-java classes are not used by google-cloud-bigtable and its dependencies, the classes should not appear as unresolved method references.",
+        unresolvedMethodReferences.size(),
+        is(0));
   }
 
   @Test
@@ -309,7 +315,8 @@ public class StaticLinkageCheckerTest {
         Arrays.asList(
             Paths.get(URLClassLoader.getSystemResource("testdata/guava-26.0-jre.jar").toURI()));
     List<FullyQualifiedMethodSignature> methodsNotFound =
-        StaticLinkageChecker.findUnresolvedReferences(pathsForJar, Arrays.asList(arrayCloneMethod), new HashSet<>());
+        StaticLinkageChecker.findUnresolvedReferences(
+            pathsForJar, Arrays.asList(arrayCloneMethod), new HashSet<>());
     Truth.assertThat(methodsNotFound).hasSize(0);
   }
 

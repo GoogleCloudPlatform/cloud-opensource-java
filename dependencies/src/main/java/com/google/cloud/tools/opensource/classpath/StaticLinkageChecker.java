@@ -296,18 +296,15 @@ class StaticLinkageChecker {
         if (methodDefinitionExists(methodReference, classLoaderFromJars, repository)) {
           availableMethodsInJars.add(methodReference);
 
-          // If the class is available, then check the method references from the class recursively
+          // Enqueue references from the class unless it is already visited in class usage graph
           if (classesVisited.contains(className)) {
             continue;
           }
-          // This list does not include internal method references: classes defined within the
-          // same jar file as the one with `className`.
+          classesVisited.add(className);
           List<FullyQualifiedMethodSignature> nextExternalMethodReferences =
               ClassDumper.listExternalMethodReferences(
                   className, jarFileToClasses, classLoaderFromJars, repository);
-
           queue.addAll(nextExternalMethodReferences);
-          classesVisited.add(className);
         } else {
           unresolvedMethods.add(methodReference);
         }
@@ -404,7 +401,7 @@ class StaticLinkageChecker {
           methodFoundInBcel = true;
           break;
         }
-        // null if java.lang.Object.
+        // null if java.lang.Object
         javaClass = javaClass.getSuperClass();
       }
       return methodFoundInBcel;

@@ -95,8 +95,7 @@ class ClassDumper {
 
   /**
    * Lists external method references for a class. The returned list does not include method
-   * references that points to a class defined in the same jar file as the class specified in the
-   * first argument.
+   * references that points to other classes defined in the same jar file as the class.
    *
    * @param className class name to list its method references. The class must be available through
    *     the class loader and BCEL repository.
@@ -116,16 +115,14 @@ class ClassDumper {
       Class clazz = classLoader.loadClass(className);
       CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
       if (codeSource == null) {
-        // Code in bootstrap class loader (e.g., javax) will not have source and we do not
-        // need it
+        // Code in bootstrap class loader (e.g., javax) does not have source
         return Collections.emptyList();
       }
       Path jarPathForTheClass = Paths.get(codeSource.getLocation().toURI());
       Set<String> classesDefinedInSameJar = jarFileToClasses.get(jarPathForTheClass);
       if (classesDefinedInSameJar == null) {
-        // TODO: Library used in this project (e.g., Guava) interferes the jar files of the class
-        // Fix the interference
-        return Collections.emptyList();
+        // The class is not in linkage class path
+        classesDefinedInSameJar = new HashSet<>();
       }
       List<FullyQualifiedMethodSignature> nextMethodReferences = listMethodReferences(javaClass);
       List<FullyQualifiedMethodSignature> nextExternalMethodReferences = new ArrayList<>();
@@ -135,7 +132,6 @@ class ClassDumper {
         if (!className.equals(classNameInMethodReference)
             && !classesDefinedInSameJar.contains(classNameInMethodReference)) {
           nextExternalMethodReferences.add(methodReference);
-          MethodSignature methodSignature = methodReference.getMethodSignature();
         } else {
           // The methodReference is within the same jar but we want to follow usage graph
           String nextInternalClassName = methodReference.getClassName();
