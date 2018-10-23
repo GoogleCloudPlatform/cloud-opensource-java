@@ -37,6 +37,7 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.util.SyntheticRepository;
 import org.eclipse.aether.RepositoryException;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class StaticLinkageCheckerTest {
@@ -53,6 +54,11 @@ public class StaticLinkageCheckerTest {
       absolutePathOfResource("testdata/grpc-protobuf-1.13.1.jar"),
       absolutePathOfResource("testdata/grpc-protobuf-lite-1.13.1.jar")
   );
+
+  @Before
+  public void setup() {
+    StaticLinkageChecker.checkAllClasses = false;
+  }
 
   @Test
   public void testListExternalMethodReferences()
@@ -304,6 +310,25 @@ public class StaticLinkageCheckerTest {
         "Because lzma-java classes are not used by google-cloud-bigtable and its dependencies, the classes should not appear as unresolved method references.",
         unresolvedMethodReferences.size(),
         is(0));
+  }
+
+  @Test
+  public void testFindUnresolvedReferences_checkAllOption()
+      throws RepositoryException, IOException, ClassNotFoundException {
+    String bigTableCoordinate = "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
+    List<Path> paths = StaticLinkageChecker.coordinateToClasspath(bigTableCoordinate);
+
+    // grpc-netty-shaded pom.xml does not have dependency to lzma-java even though netty-codec
+    // refers lzma.sdk.lzma.Encoder. StaticLinkageChecker should be able to detect it.
+    StaticLinkageChecker.checkAllClasses = true;
+    List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
+        StaticLinkageChecker.findUnresolvedMethodReferences(paths);
+
+    Assert.assertTrue(
+        "StaticLinkageChecker.checkAllClasses should check all classes in the classpath",
+        unresolvedMethodReferences
+            .stream()
+            .anyMatch(reference -> "lzma.sdk.lzma.Encoder".equals(reference.getClassName())));
   }
 
   @Test

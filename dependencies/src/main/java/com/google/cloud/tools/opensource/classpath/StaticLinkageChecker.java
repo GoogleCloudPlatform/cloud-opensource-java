@@ -35,6 +35,7 @@ import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -74,6 +75,8 @@ import org.eclipse.aether.artifact.DefaultArtifact;
  * TODO: enhance scope to include fields and classes
  */
 class StaticLinkageChecker {
+  @VisibleForTesting
+  static boolean checkAllClasses = false;
 
   /**
    * Given Maven coordinates or list of the jar files as file names in filesystem, outputs the
@@ -130,8 +133,9 @@ class StaticLinkageChecker {
    */
   static List<Path> parseArguments(String[] arguments) throws RepositoryException {
     Options options = new Options();
-    options.addOption("c", "coordinate", true, "Maven coordinates (separated by ',')");
-    options.addOption("j", "jars", true, "Jar files (separated by ',')");
+    options.addOption("c", "coordinate", true, "Maven coordinates (separated by ',') to generate a classpath");
+    options.addOption("j", "jars", true, "Jar files (separated by ',') to generate a classpath");
+    options.addOption("a", "all-classes", false, "Check all classes in the classpath");
 
     HelpFormatter formatter = new HelpFormatter();
     CommandLineParser parser = new DefaultParser();
@@ -152,6 +156,7 @@ class StaticLinkageChecker {
                 .collect(Collectors.toList());
         jarFilePaths.addAll(jarFilesInArguments);
       }
+      checkAllClasses = cmd.hasOption("a");
     } catch (ParseException ex) {
       System.err.println("Failed to parse command line arguments: " + ex.getMessage());
     }
@@ -214,17 +219,22 @@ class StaticLinkageChecker {
     if (jarFilePaths.size() < 1) {
       throw new IllegalArgumentException("The size of jar file paths is zero");
     }
-    Path absolutePathToFirstJar = jarFilePaths.get(0);
-    if (!Files.isReadable(absolutePathToFirstJar)) {
-      throw new IOException("The file is not readable: " + absolutePathToFirstJar);
-    }
-    Set<String> classesCheckedMethodReference = new HashSet<>();
 
-    // To avoid false positives from unused classes in 3rd-party libraries (e.g.,
-    // grpc-netty-shaded), it traverses the class usage graph starting with the method references
-    // from the input class path.
-    List<FullyQualifiedMethodSignature> methodReferencesFromInputClassPath =
-        listExternalMethodReferences(absolutePathToFirstJar, classesCheckedMethodReference);
+    Set<String> classesCheckedMethodReference = new HashSet<>();
+    List<FullyQualifiedMethodSignature> methodReferencesFromInputClassPath = new ArrayList<>();
+
+    // Unless checkAllClasses is true, to avoid false positives from unused classes in 3rd-party
+    // libraries (e.g., grpc-netty-shaded), it traverses the class usage graph starting with the
+    // method references from the input class path.
+    List<Path> jarPathsInInputClasspath =
+        checkAllClasses ? jarFilePaths : Collections.singletonList(jarFilePaths.get(0));
+    for (Path absolutePathToJar : jarPathsInInputClasspath) {
+      if (!Files.isReadable(absolutePathToJar)) {
+        throw new IOException("The file is not readable: " + absolutePathToJar);
+      }
+      methodReferencesFromInputClassPath.addAll(
+          listExternalMethodReferences(absolutePathToJar, classesCheckedMethodReference));
+    }
 
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         findUnresolvedReferences(
