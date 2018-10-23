@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -55,6 +56,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
@@ -124,7 +126,7 @@ class StaticLinkageChecker {
       if (cmd.hasOption("c")) {
         String mavenCoordinates = cmd.getOptionValue("c");
         for (String coordinate : mavenCoordinates.split(",")) {
-          jarFilePaths.addAll(coordinateToJarPaths(coordinate));
+          jarFilePaths.addAll(coordinateToClasspath(coordinate));
         }
       }
       if (cmd.hasOption("j")) {
@@ -153,20 +155,33 @@ class StaticLinkageChecker {
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem in retrieving jar files
    */
-  static List<Path> coordinateToJarPaths(String coordinate) throws RepositoryException {
-    DefaultArtifact artifact = new DefaultArtifact(coordinate);
-    DependencyGraph transitiveDependencies =
-        DependencyGraphBuilder.getTransitiveDependencies(artifact);
-    List<DependencyPath> dependencyPaths = transitiveDependencies.list();
-    List<Path> jarPaths = dependencyPaths.stream().map(dependencyPath -> {
-      File artifactFile = dependencyPath.getLeaf().getFile();
+  static List<Path> coordinateToClasspath(String coordinate) throws RepositoryException {
+    DefaultArtifact rootArtifact = new DefaultArtifact(coordinate);
+    // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
+    DependencyGraph dependencyGraph =
+        DependencyGraphBuilder.getCompleteDependencies(rootArtifact);
+    List<DependencyPath> dependencyPaths = dependencyGraph.list();
+
+    // When building a class path, we only need the first version found in breadth-first search
+    // for each artifact key. This set is to filter such duplicates.
+    Set<String> artifactKeySet = new HashSet<>();
+
+    List<Path> jarPaths = new ArrayList<>();
+    for (DependencyPath dependencyPath : dependencyPaths) {
+      Artifact artifact = dependencyPath.getLeaf();
+      String artifactKey = Artifacts.makeKey(artifact);
+      if (artifactKeySet.contains(artifactKey)) {
+        // When "groupId:artifactId" is already found in iteration, then not picking up this jar
+        continue;
+      }
+      artifactKeySet.add(artifactKey);
+
+      File artifactFile = artifact.getFile();
       Path artifactFilePath = artifactFile.toPath();
       if (artifactFilePath.toString().endsWith(".jar")) {
-        return artifactFilePath.toAbsolutePath();
-      } else {
-        return null;
+        jarPaths.add(artifactFilePath.toAbsolutePath());
       }
-    }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
     return jarPaths;
   }
 

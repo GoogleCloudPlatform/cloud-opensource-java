@@ -9,6 +9,10 @@ made. We have found that following these rules will result in higher quality
 Java libraries with fewer dependency conflicts and other kinds of problems. The
 list is open-ended, so new ones may be added from time to time.
 
+*Note* This list is currently in "Beta," which means that we don't anticipate
+fundamentally altering them, but there may be tweaks and additions until it is
+declared "Stable."
+
 - [Glossary](glossary.md): Terms used in the best practices and other places in
   cloud-opensource-java.
 
@@ -23,3 +27,5 @@ list is open-ended, so new ones may be added from time to time.
 - [JLBP-8](JLBP-8.md): Advance widely used functionality to a stable version
 - [JLBP-9](JLBP-9.md): Support the minimum Java version of your consumers
 - [JLBP-10](JLBP-10.md): Maintain API stability as long as needed for consumers
+- [JLBP-11](JLBP-11.md): Stay up to date with compatible dependencies
+- [JLBP-12](JLBP-12.md): Make level of support and API stability clear
