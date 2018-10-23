@@ -294,7 +294,7 @@ public class StaticLinkageCheckerTest {
       throws RepositoryException, IOException, ClassNotFoundException {
     String bigTableCoordinate = "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
     List<Path> paths = StaticLinkageChecker.coordinateToClasspath(bigTableCoordinate);
-    Truth.assertThat(paths).hasSize(51);
+    Truth.assertThat(paths).hasSize(53);
 
     // Prior to class usage graph traversal, there was linkage error for lzma-java classes.
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
