@@ -44,8 +44,8 @@
         <tr>
           <td><a href='${row.getCoordinates()?replace(":", "_")}.html'>${row.getCoordinates()}</a></td>
           <@testResult row=row name="Upper Bounds"/>
-          <@testResult row=row name="Global Upper Bounds"/>
           <@testResult row=row name="Dependency Convergence"/>
+          <@testResult row=row name="Global Upper Bounds"/>
         </tr>
       </#list>
     </table>
