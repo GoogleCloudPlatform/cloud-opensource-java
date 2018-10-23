@@ -146,7 +146,7 @@ public class DependencyGraphBuilder {
       throws DependencyCollectionException, DependencyResolutionException {
     DependencyNode node = resolveCompileTimeDependencies(artifact, true);
     DependencyGraph graph = new DependencyGraph();
-    levelOrder(node, graph, true);
+    levelOrder(node, graph, true, true);
 
     return graph;
   }
@@ -161,7 +161,7 @@ public class DependencyGraphBuilder {
     // root node
     DependencyNode node = resolveCompileTimeDependencies(artifact);
     DependencyGraph graph = new DependencyGraph();
-    levelOrder(node, graph, true);
+    levelOrder(node, graph, true, false);
     
     return graph;
   }
@@ -203,7 +203,7 @@ public class DependencyGraphBuilder {
 
   private static void levelOrder(DependencyNode node, DependencyGraph graph) {
     try {
-      levelOrder(node, graph, false);
+      levelOrder(node, graph, false, false);
     } catch (RepositoryException ex) {
       throw new RuntimeException(
           "There was problem in resolving dependencies even when it is not supposed to resolve dependency",
@@ -220,15 +220,19 @@ public class DependencyGraphBuilder {
    *
    * @param firstNode node to start traversal
    * @param graph graph to store {@link DependencyPath} instances
-   * @param resolveFullDependency flag to resolve dependency for each node in the tree. Useful for
-   *     building a complete tree of dependencies including <i>provided</i> scope
+   * @param resolveFullDependency flag to resolve dependency for each node in the tree
+   * @param includeProvidedScope flag to include dependencies with <i>provided</i> scope when
+   *     `resolveFullDependency` is true
    * @throws DependencyCollectionException when there is a problem in collecting dependency. This
    *     happens only when resolveFullDependency is true.
    * @throws DependencyResolutionException when there is a problem in resolving dependency. This
    *     happens only when resolveFullDependency is true.
    */
   private static void levelOrder(
-      DependencyNode firstNode, DependencyGraph graph, boolean resolveFullDependency)
+      DependencyNode firstNode,
+      DependencyGraph graph,
+      boolean resolveFullDependency,
+      boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
@@ -254,7 +258,8 @@ public class DependencyGraphBuilder {
 
         if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
           try {
-            dependencyNode = resolveCompileTimeDependencies(dependencyNode.getArtifact());
+            dependencyNode =
+                resolveCompileTimeDependencies(dependencyNode.getArtifact(), includeProvidedScope);
           } catch (DependencyResolutionException ex) {
             // TODO: change to logger
             System.err.println("Error resolving " + dependencyNode + " under " + parentNodes);

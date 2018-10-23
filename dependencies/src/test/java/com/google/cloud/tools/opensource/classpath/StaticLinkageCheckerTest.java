@@ -294,7 +294,7 @@ public class StaticLinkageCheckerTest {
       throws RepositoryException, IOException, ClassNotFoundException {
     String bigTableCoordinate = "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
     List<Path> paths = StaticLinkageChecker.coordinateToClasspath(bigTableCoordinate);
-    Truth.assertThat(paths).hasSize(47);
+    Truth.assertThat(paths).hasSize(53);
 
     // Prior to class usage graph traversal, there was linkage error for lzma-java classes.
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
@@ -302,6 +302,23 @@ public class StaticLinkageCheckerTest {
 
     Assert.assertThat(
         "Because lzma-java classes are not used by google-cloud-bigtable and its dependencies, the classes should not appear as unresolved method references.",
+        unresolvedMethodReferences.size(),
+        is(0));
+  }
+
+  @Test
+  public void testFindUnresolvedReferences_appengineSdkWithProvidedScope()
+      throws RepositoryException, IOException, ClassNotFoundException {
+    String bigTableCoordinate = "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha";
+    List<Path> paths = StaticLinkageChecker.coordinateToClasspath(bigTableCoordinate);
+
+    // Prior to 'provided' scope inclusion, there was linkage error for classes in
+    // com.google.appengine.api.urlfetch package.
+    List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
+        StaticLinkageChecker.findUnresolvedMethodReferences(paths);
+
+    Assert.assertThat(
+        "Classes in com.google.appengine.api.urlfetch package are provided from appengine-api-1.0-sdk",
         unresolvedMethodReferences.size(),
         is(0));
   }
