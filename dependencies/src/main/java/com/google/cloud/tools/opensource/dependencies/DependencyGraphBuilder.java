@@ -136,17 +136,19 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Finds the full dependency graph including duplicates and
-   * @param artifact
-   * @return
-   * @throws DependencyCollectionException
-   * @throws DependencyResolutionException
+   * Finds the full compile time, transitive dependency graph including duplicates,
+   * conflicting versions, and dependencies with 'provided' scope.
+   *
+   * @param artifact Maven artifact to retrieve its dependencies
+   * @return dependency graph representing the tree of Maven artifacts
+   * @throws DependencyCollectionException when there is a problem in collecting dependency
+   * @throws DependencyResolutionException when there is a problem in resolving dependency
    */
   public static DependencyGraph getStaticLinkageCheckDependencies(Artifact artifact)
       throws DependencyCollectionException, DependencyResolutionException {
     DependencyNode node = resolveCompileTimeDependencies(artifact, true);
     DependencyGraph graph = new DependencyGraph();
-    levelOrder(node, graph, true, true);
+    levelOrder(node, graph, LevelOrderOption.FULL_DEPENDENCY_WITH_PROVIDED);
 
     return graph;
   }
@@ -161,7 +163,7 @@ public class DependencyGraphBuilder {
     // root node
     DependencyNode node = resolveCompileTimeDependencies(artifact);
     DependencyGraph graph = new DependencyGraph();
-    levelOrder(node, graph, true, false);
+    levelOrder(node, graph, LevelOrderOption.FULL_DEPENDENCY);
     
     return graph;
   }
@@ -203,13 +205,15 @@ public class DependencyGraphBuilder {
 
   private static void levelOrder(DependencyNode node, DependencyGraph graph) {
     try {
-      levelOrder(node, graph, false, false);
+      levelOrder(node, graph, LevelOrderOption.NONE);
     } catch (RepositoryException ex) {
       throw new RuntimeException(
           "There was problem in resolving dependencies even when it is not supposed to resolve dependency",
           ex);
     }
   }
+
+  private enum LevelOrderOption { NONE, FULL_DEPENDENCY, FULL_DEPENDENCY_WITH_PROVIDED }
 
   /**
    * Traverses dependency tree in level-order (breadth-first search) and stores {@link
@@ -220,20 +224,19 @@ public class DependencyGraphBuilder {
    *
    * @param firstNode node to start traversal
    * @param graph graph to store {@link DependencyPath} instances
-   * @param resolveFullDependency flag to resolve dependency for each node in the tree
-   * @param includeProvidedScope flag to include dependencies with <i>provided</i> scope when
-   *     `resolveFullDependency` is true
+   * @param recursiveOption option to recursively resolve the dependency to build complete
+   *     dependency tree, with or without dependencies of provided scope
    * @throws DependencyCollectionException when there is a problem in collecting dependency. This
-   *     happens only when resolveFullDependency is true.
+   *     happens only when recursiveOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
    * @throws DependencyResolutionException when there is a problem in resolving dependency. This
-   *     happens only when resolveFullDependency is true.
+   *     happens only when recursiveOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
    */
   private static void levelOrder(
-      DependencyNode firstNode,
-      DependencyGraph graph,
-      boolean resolveFullDependency,
-      boolean includeProvidedScope)
+      DependencyNode firstNode, DependencyGraph graph, LevelOrderOption recursiveOption)
       throws DependencyCollectionException, DependencyResolutionException {
+    boolean resolveFullDependency =
+        recursiveOption == LevelOrderOption.FULL_DEPENDENCY
+            || recursiveOption == LevelOrderOption.FULL_DEPENDENCY_WITH_PROVIDED;
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
     while (!queue.isEmpty()) {
@@ -259,7 +262,8 @@ public class DependencyGraphBuilder {
         if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
           try {
             dependencyNode =
-                resolveCompileTimeDependencies(dependencyNode.getArtifact(), includeProvidedScope);
+                resolveCompileTimeDependencies(dependencyNode.getArtifact(),
+                    recursiveOption == LevelOrderOption.FULL_DEPENDENCY_WITH_PROVIDED);
           } catch (DependencyResolutionException ex) {
             // TODO: change to logger
             System.err.println("Error resolving " + dependencyNode + " under " + parentNodes);

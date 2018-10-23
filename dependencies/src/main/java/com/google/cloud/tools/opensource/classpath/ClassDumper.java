@@ -95,7 +95,7 @@ class ClassDumper {
 
   /**
    * Lists external method references for a class. The returned list does not include method
-   * references that points to other classes defined in the same jar file as the class.
+   * references that point to other classes defined in the same jar file as the class.
    *
    * @param className class name to list its method references. The class must be available through
    *     the class loader and BCEL repository.
