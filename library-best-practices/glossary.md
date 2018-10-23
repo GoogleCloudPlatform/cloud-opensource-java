@@ -3,13 +3,14 @@ Java Dependency Glossary
 
 ### Types of conflicts and compatibility
 
-- **Linkage conflict**: The signature of a non-private method or class in a
-  dependency has changed in an incompatible way between the version supplied at
-  compile time and the version invoked at runtime. For example, a public method
-  may be removed from a class or a class may be made final. Linkage conflicts
-  detected at runtime manifest as `ReflectiveOperationException`,
-  `NoClassDefFoundError`, `NoSuchFieldException`, `MethodNotFoundException`,
-  `LinkageError`, or other related exceptions.
+- **Linkage conflict**: The signature, return type, modifiers, or throws
+  declaration of a non-private method or class in a dependency has changed in an
+  incompatible way between the version supplied at compile time and the version
+  invoked at runtime. For example, a public method may be removed from a class
+  or a class may be made final. Linkage conflicts detected at runtime manifest
+  as `ReflectiveOperationException`, `NoClassDefFoundError`,
+  `NoSuchFieldException`, `MethodNotFoundException`, `LinkageError`, or other
+  related exceptions. 
   - Or, another perspective: In cases where binary compatibility and source
     compatibility are the same, a linkage conflict is when compilation would
     fail if the libraries in the classpath were all built together from their
