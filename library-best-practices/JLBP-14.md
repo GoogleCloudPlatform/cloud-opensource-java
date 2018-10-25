@@ -3,8 +3,8 @@
 
 - If the pom.xml of your library specifies a version range instead of a
   single version for any particular dependency, builds at different points
-  in time can get different versions of that dependency (as your dependency
-  releases new versions), which could break your library unexpectedly.
+  in time can see different versions of that dependency (as your dependency
+  releases new versions), which can break your library unexpectedly.
   - Version ranges can even pull in incomplete releases that break your
     library's build (example:
     https://github.com/GoogleCloudPlatform/appengine-gcs-client/issues/71).
