@@ -29,3 +29,4 @@ declared "Stable."
 - [JLBP-13](JLBP-13.md): Quickly remove references to deprecated features in
    dependencies
 - [JLBP-14](JLBP-14.md): Do not use version ranges
+- [JLBP-15](JLBP-15.md): Avoid dependency and project cycles
