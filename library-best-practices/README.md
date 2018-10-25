@@ -28,3 +28,4 @@ declared "Stable."
 - [JLBP-12](JLBP-12.md): Make level of support and API stability clear
 - [JLBP-13](JLBP-13.md): Quickly remove references to deprecated features in
    dependencies
+- [JLBP-14](JLBP-14.md): Do not use version ranges
