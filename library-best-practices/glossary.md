@@ -37,10 +37,6 @@ Java Dependency Glossary
   at the same time (they are mutually exclusive).
 - A combination of jars at runtime can have any number of linkage conflicts and
   behavior conflicts.
-- Version disagreement is a report by a tool, not an actual conflict. You can
-  have version disagreement without either linkage or behavior
-  conflicts (a false positive report), or either linkage or behavior conflicts
-  without version disagreement (a false negative report).
 
 ### States of compatibility
 
