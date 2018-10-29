@@ -26,26 +26,10 @@ Java Dependency Glossary
   example, if a method that has been returning mutable lists begins returning
   immutable lists without updating its signature, dependents that mutate the
   list will fail, possibly far away from the original call site. By contrast, a
-  change in return type from List to ImmutableList would be a linkage conflict.
+  change in return type from `ImmutableList` to `List` would be a linkage
+  conflict if the calling code references anything in `ImmutableList` that is
+  absent from `List` (for example, `ImmutableList.reverse()`).
   - Opposite: **Behavior-compatible**.
-
-- **Version disagreement**: This is a class of failure reported by build systems
-  with strict version checking on. The main example is dependency convergence
-  failures when using the Maven enforcer plugin, which checks that all branches
-  of a dependency tree agree on the version of every dependency. A failure of
-  dependency convergence doesn't guarantee a linkage or behavior conflict, and
-  the passing of a dependency convergence check doesn't guarantee there will be
-  no linkage or behavior conflicts. Consequently, version disagreement is a poor
-  proxy for real problems (linkage and behavior conflicts).
-  - Dependency convergence will fail even if the dependency tree only disagrees
-    at the level of a patch version (1.10.0 vs 1.10.1) and there is no linkage
-    or behavioral conflict.
-  - It is possible for dependency convergence to pass when a version of a
-    library is chosen at build time which is incompatible with another library
-    in the tree. This is possible by forcing Maven to pick the "wrong" version
-    using something like dependency management or dependency exclusion, which
-    silences the Maven enforcer plugin.
-  - Opposite: **Version agreement**.
 
 #### Conflict relationships
 
