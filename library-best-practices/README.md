@@ -32,3 +32,4 @@ declared "Stable."
 - [JLBP-13](JLBP-13.md): Quickly remove references to deprecated features in
    dependencies
 - [JLBP-14](JLBP-14.md): Do not use version ranges
+- [JLBP-16](JLBP-16.md): Produce a BOM for multi-module projects
