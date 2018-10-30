@@ -1,8 +1,8 @@
-[JLBP-17] Ensure version alignment of dependencies for consumers
+[JLBP-16] Ensure version alignment of dependencies for consumers
 ----------------------------------------------------------------
 
 For multi-module projects, this best practice assumes you have already applied
-[JLBP-16](JLBP-16.md), so that your project has a BOM.
+[JLBP-15](JLBP-15.md), so that your project has a BOM.
 
 ### Achieving version alignment
 
