@@ -4,6 +4,7 @@
 ### The BOM (Bill of Materials)
 
 - A BOM is a `pom.xml` file that has a `<dependencyManagement>` section that lists all the modules of a project. It can omit the `<modules>` section, and it has no `<dependencies>` section. It also has `<packaging>pom</packaging>`.
+  - Documentation is available at https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html .
   - All of the modules of the project should be included. Otherwise, a consumer who depends on an unspecified module must specify and upgrade the version of that module, defeating the purpose of the BOM.
 - The purpose of a BOM is to enable consumers of a library to select a consistent set of versions for artifacts released by a single project. When imported, a BOM operates as a filter. It does not cause any modules to be added as dependencies. Instead, for any dependency in a project's dependency tree, *if* that module appears in the BOM, the version from the BOM is used.
 - If all modules in a project use the same version as each other, use that same version for the BOM. Example: grpc-bom v1.15.0 would specify grpc-auth v1.15.0, gprc-core v1.15.0, etc.
