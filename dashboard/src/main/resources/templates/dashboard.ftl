@@ -75,7 +75,7 @@
     
     <ul id="unstable">
       <#list latestArtifacts as artifact, version>
-        <#if ${version}.startsWith("0")>
+        <#if version[0] == '0'>
           <li>${artifact}:${version}</li>
         </#if>
       </#list>
