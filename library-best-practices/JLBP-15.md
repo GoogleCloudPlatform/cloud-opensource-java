@@ -1,4 +1,4 @@
-[JLBP-16] Produce a BOM for multi-module projects
+[JLBP-15] Produce a BOM for multi-module projects
 -------------------------------------------------
 
 ### The BOM (Bill of Materials)
