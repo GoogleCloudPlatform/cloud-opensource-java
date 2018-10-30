@@ -7,9 +7,9 @@ For multi-module projects, this best practice assumes you have already applied
 ### Achieving version alignment
 
 - Version alignment is defined in the [glossary](glossary.md).
-- Version alignment increases the likelihood that consumers' build systems will
-  pick the right versions of direct and transitive dependencies, reducing the
-  number of conflicts.
+- Version alignment increases the likelihood that consumers' build systems pick
+  the right versions of direct and transitive dependencies, reducing the number
+  of conflicts.
 - As noted in the definition, to fix a version misalignment caused by a shorter
   path to a version of a dependency that is not the upper bound in the
   dependency tree, a direct dependency needs to be added so that Maven consumers
@@ -19,7 +19,7 @@ For multi-module projects, this best practice assumes you have already applied
 ### Maven
 
 - Use `requireUpperBoundDeps` enforcement to ensure that you are using the
-  version of each dependency that is the highest in your dependency tree.
+  highest version of each dependency in your dependency tree.
 - To ensure that dependencies between modules in the project are consistent,
   have the parent POM import the library's own BOM into its
   `<dependencyManagement>` section.
@@ -35,16 +35,16 @@ For multi-module projects, this best practice assumes you have already applied
       imports. (Order between BOMs matters - the earliest import of a dependency
       takes precedence over later imports of the same dependency.)
 - For direct dependencies that don't have a BOM (for example, Joda-Time), make
-  sure there is only one location to define the version, so that the library
-  doesn't accidentally depend on different versions in different modules.
+  sure only one pom.xml defines the version, so that the library doesn't
+  accidentally depend on different versions in different modules.
   - The first option is to specify dependency versions in the
     `<dependencyManagement>` section of the parent POM. Use this option by
     default because it is the most structured.
     - When declaring a dependency anywhere in the project, omit the version
       number so that the version from the parent's `<dependencyManagement>`
-      section can take effect.
+      section takes effect.
   - The second option is to use version properties in the parent that are
-    referenced by children modules.
+    referenced by child modules.
     - When declaring a dependency anywhere in the project, use the Maven
       property declared in the parent.
 - For any transitive dependency that fails a `requireUpperBoundDeps` check, add
