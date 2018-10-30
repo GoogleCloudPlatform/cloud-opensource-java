@@ -9,9 +9,9 @@ made. We have found that following these rules will result in higher quality
 Java libraries with fewer dependency conflicts and other kinds of problems. The
 list is open-ended, so new ones may be added from time to time.
 
-*Note* This list is currently in "Beta," which means that we don't anticipate
-fundamentally altering them, but there may be tweaks and additions until it is
-declared "Stable."
+*Note* This list is currently in "Alpha," which means we are still figuring out
+the complete set of best practices to use. Best practices here could be removed
+or significantly changed before the set is classified as Beta.
 
 - [Glossary](glossary.md): Terms used in the best practices and other places in
   cloud-opensource-java.
