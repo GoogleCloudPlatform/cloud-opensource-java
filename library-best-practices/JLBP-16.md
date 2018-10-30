@@ -3,11 +3,11 @@
 
 ### The BOM (Bill of Materials)
 
-- A BOM is a `pom.xml` file that has a `<dependencyManagement>` section that lists all the modules of a project. It does not have `<modules>` or `<dependencies>` elements itself. It also has `<type>pom</type>` declared.
-  - All of the modules of the project should be included, otherwise a consumer trying to use an unspecified module will have to manually specify and upgrade the version of that module, defeating the purpose of the BOM.
-- The purpose of a BOM is to allow consumers of a library to ensure that they are using a consistent set of versions for artifacts released by a single project. When imported, a BOM operates as a filter. It does not cause any modules to be added as dependencies. Instead, for any dependency in a project's dependency tree, *if* that module appears in the BOM, the version from the BOM is used.
+- A BOM is a `pom.xml` file that has a `<dependencyManagement>` section that lists all the modules of a project. It does not have `<modules>` or `<dependencies>` elements itself. It also has `<type>pom</type>`.
+  - All of the modules of the project should be included. Otherwise, a consumer who depends on an unspecified module must specify and upgrade the version of that module, defeating the purpose of the BOM.
+- The purpose of a BOM is to enable consumers of a library to select a consistent set of versions for artifacts released by a single project. When imported, a BOM operates as a filter. It does not cause any modules to be added as dependencies. Instead, for any dependency in a project's dependency tree, *if* that module appears in the BOM, the version from the BOM is used.
 - If all modules in a project use the same version as each other, use that same version for the BOM. Example: grpc-bom v1.15.0 would specify grpc-auth v1.15.0, gprc-core v1.15.0, etc.
-- A BOM is not necessary for projects having only one module, since there is no consistency problem in that case.
+- A BOM is not necessary for projects that only have one module, since there is no consistency problem in that case.
 - See the details specific to each build system in the sections below.
 
 ### Libraries using Maven
