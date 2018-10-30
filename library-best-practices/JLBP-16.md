@@ -7,9 +7,9 @@ For multi-module projects, this best practice assumes you have already applied
 ### Achieving version alignment
 
 - Version alignment is defined in the [glossary](glossary.md).
-- Having version alignment increases the likelihood that consumers' build
-  systems will pick the right versions of direct and transitive dependencies,
-  reducing the amount of conflicts.
+- Version alignment increases the likelihood that consumers' build systems will
+  pick the right versions of direct and transitive dependencies, reducing the
+  number of conflicts.
 - As noted in the definition, to fix a version misalignment caused by a shorter
   path to a version of a dependency that is not the upper bound in the
   dependency tree, a direct dependency needs to be added so that Maven consumers
@@ -50,7 +50,7 @@ For multi-module projects, this best practice assumes you have already applied
 - For any transitive dependency that fails a `requireUpperBoundDeps` check, add
   the dependency as a direct dependency so that the path to the correct version
   is shorter, leading Maven to pick it instead of the wrong version.
-- Have each module POM inherent from the parent POM of the library so that the
+- Have each module POM inherit from the parent POM of the library so that the
   parent's `<dependencyManagement>` section is used.
 
 ### Gradle
