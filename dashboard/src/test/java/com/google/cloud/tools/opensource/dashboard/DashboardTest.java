@@ -158,7 +158,8 @@ public class DashboardTest {
             coordinateList.get(i));
       }
       
-      Nodes unstable = document.query("//ul[@id='unstable']/li");      
+      Nodes unstable = document.query("//ul[@id='unstable']/li");
+      Assert.assertTrue(unstable.size() > 1);
       for (int i = 0; i < unstable.size(); i++) {
         String value = unstable.get(i).getValue();
         Assert.assertTrue(value, value.contains(":0"));
