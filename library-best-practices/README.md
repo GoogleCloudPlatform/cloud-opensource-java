@@ -32,3 +32,4 @@ or significantly changed before the set is classified as Beta.
 - [JLBP-13](JLBP-13.md): Quickly remove references to deprecated features in
    dependencies
 - [JLBP-14](JLBP-14.md): Do not use version ranges
+- [JLBP-17](JLBP-17.md): Ensure version alignment of dependencies for consumers
