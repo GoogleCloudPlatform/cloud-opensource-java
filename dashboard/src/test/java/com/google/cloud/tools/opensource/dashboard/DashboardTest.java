@@ -158,6 +158,12 @@ public class DashboardTest {
             coordinateList.get(i));
       }
       
+      Nodes unstable = document.query("//ul[@id='unstable']/li");      
+      for (int i = 0; i < unstable.size(); i++) {
+        String value = unstable.get(i).getValue();
+        Assert.assertTrue(value, value.contains(":0"));
+      }      
+      
       Nodes updated = document.query("//p[@id='updated']");
       Assert.assertEquals("didn't find updated" + document.toXML(), 1, updated.size());
     }
