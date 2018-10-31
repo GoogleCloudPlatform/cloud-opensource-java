@@ -73,13 +73,20 @@
       Otherwise replace the dependency with something else.
     </p> 
     
+    <#assign x = 0>
     <ul id="unstable">
       <#list latestArtifacts as artifact, version>
+        <#assign x++>
         <#if version[0] == '0'>
           <li>${artifact}:${version}</li>
         </#if>
       </#list>
     </ul>
+     
+    <#if x gt 0>
+      <p>All versions are 1.0 or later.</p> 
+    </#if>
+    
      
     <hr />
     <p id='updated'>Last generated at ${lastUpdated}</p>
