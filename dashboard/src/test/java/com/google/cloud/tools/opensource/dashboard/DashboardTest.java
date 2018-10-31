@@ -138,7 +138,7 @@ public class DashboardTest {
         }
       }
 
-      Nodes li = document.query("//li");
+      Nodes li = document.query("//ul[@id='recommended']/li");
       Assert.assertTrue(li.size() > 100);
       ArrayList<String> coordinateList = new ArrayList<>();
 
@@ -167,6 +167,9 @@ public class DashboardTest {
       
       Nodes updated = document.query("//p[@id='updated']");
       Assert.assertEquals("didn't find updated" + document.toXML(), 1, updated.size());
+      
+      Nodes stable = document.query("//p[@id='stable_notice']");
+      Assert.assertEquals(0, stable.size());
     }
   }
 

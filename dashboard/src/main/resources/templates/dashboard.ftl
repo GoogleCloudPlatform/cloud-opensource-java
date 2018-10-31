@@ -56,7 +56,7 @@
       
     <p>These are the most recent versions of dependencies used by any of the covered artifacts.</p> 
       
-    <ul>
+    <ul id="recommended">
       <#list latestArtifacts as artifact, version>
         <li>${artifact}:${version}</li>
       </#list>
@@ -83,8 +83,8 @@
       </#list>
     </ul>
      
-    <#if x gt 0>
-      <p>All versions are 1.0 or later.</p> 
+    <#if x == 0>
+      <p id="stable_notice">All versions are 1.0 or later.</p> 
     </#if>
     
      
