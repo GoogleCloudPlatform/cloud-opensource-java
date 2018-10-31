@@ -76,8 +76,8 @@
     <#assign x = 0>
     <ul id="unstable">
       <#list latestArtifacts as artifact, version>
-        <#assign x++>
         <#if version[0] == '0'>
+          <#assign x++>
           <li>${artifact}:${version}</li>
         </#if>
       </#list>
