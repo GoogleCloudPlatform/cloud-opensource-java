@@ -9,9 +9,12 @@ made. We have found that following these rules will result in higher quality
 Java libraries with fewer dependency conflicts and other kinds of problems. The
 list is open-ended, so new ones may be added from time to time.
 
-*Note* This list is currently in "Beta," which means that we don't anticipate
-fundamentally altering them, but there may be tweaks and additions until it is
-declared "Stable."
+*Note* This list is currently in "Alpha," which means we are still figuring out
+the complete set of best practices to use. Best practices here could be removed
+or significantly changed before the set is classified as Beta.
+
+- [Glossary](glossary.md): Terms used in the best practices and other places in
+  cloud-opensource-java.
 
 - [JLBP-1](JLBP-1.md): Minimize dependencies
 - [JLBP-2](JLBP-2.md): Minimize API surface
@@ -26,3 +29,7 @@ declared "Stable."
 - [JLBP-10](JLBP-10.md): Maintain API stability as long as needed for consumers
 - [JLBP-11](JLBP-11.md): Stay up to date with compatible dependencies
 - [JLBP-12](JLBP-12.md): Make level of support and API stability clear
+- [JLBP-13](JLBP-13.md): Quickly remove references to deprecated features in
+   dependencies
+- [JLBP-14](JLBP-14.md): Do not use version ranges
+- [JLBP-15](JLBP-15.md): Produce a BOM for multi-module projects
