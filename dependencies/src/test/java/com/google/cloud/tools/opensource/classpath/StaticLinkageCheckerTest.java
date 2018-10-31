@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.concurrent.NotThreadSafe;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.util.SyntheticRepository;
@@ -40,6 +41,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+@NotThreadSafe
 public class StaticLinkageCheckerTest {
   private final String EXAMPLE_JAR_FILE =
       "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar";
@@ -57,7 +59,8 @@ public class StaticLinkageCheckerTest {
 
   @Before
   public void setup() {
-    StaticLinkageChecker.checkAllClasses = false;
+    // Because of this static variable, this test class cannot run in parallel (@NotThreadSafe)
+    StaticLinkageChecker.reportOnlyReachable = true;
   }
 
   @Test
@@ -320,12 +323,12 @@ public class StaticLinkageCheckerTest {
 
     // grpc-netty-shaded pom.xml does not have dependency to lzma-java even though netty-codec
     // refers lzma.sdk.lzma.Encoder. StaticLinkageChecker should be able to detect it.
-    StaticLinkageChecker.checkAllClasses = true;
+    StaticLinkageChecker.reportOnlyReachable = false;
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         StaticLinkageChecker.findUnresolvedMethodReferences(paths);
 
     Assert.assertTrue(
-        "StaticLinkageChecker.checkAllClasses should check all classes in the classpath",
+        "StaticLinkageChecker.reportOnlyReachable should check all classes in the classpath",
         unresolvedMethodReferences
             .stream()
             .anyMatch(reference -> "lzma.sdk.lzma.Encoder".equals(reference.getClassName())));

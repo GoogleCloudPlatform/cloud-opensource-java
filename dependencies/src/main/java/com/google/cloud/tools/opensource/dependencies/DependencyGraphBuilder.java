@@ -213,7 +213,7 @@ public class DependencyGraphBuilder {
     }
   }
 
-  private enum LevelOrderOption { NONE, FULL_DEPENDENCY, FULL_DEPENDENCY_WITH_PROVIDED }
+  private enum LevelOrderOption{NONE, FULL_DEPENDENCY, FULL_DEPENDENCY_WITH_PROVIDED}
 
   /**
    * Traverses dependency tree in level-order (breadth-first search) and stores {@link

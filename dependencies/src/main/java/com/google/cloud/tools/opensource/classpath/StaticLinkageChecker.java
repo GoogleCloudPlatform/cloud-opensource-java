@@ -75,8 +75,13 @@ import org.eclipse.aether.artifact.DefaultArtifact;
  * TODO: enhance scope to include fields and classes
  */
 class StaticLinkageChecker {
+
+  /**
+   * Flag on whether the report excludes the linkage errors on classes that are not reachable
+   * from the entry point of the class usage graph.
+   */
   @VisibleForTesting
-  static boolean checkAllClasses = false;
+  static boolean reportOnlyReachable = false;
 
   /**
    * Given Maven coordinates or list of the jar files as file names in filesystem, outputs the
@@ -103,7 +108,7 @@ class StaticLinkageChecker {
     }
   }
 
-  static void printStaticLinkageError(
+  private static void printStaticLinkageError(
       List<FullyQualifiedMethodSignature> unresolvedMethodReferences) {
     SortedSet<FullyQualifiedMethodSignature> sortedUnresolvedMethodReferences =
         new TreeSet<>(Comparator.comparing(FullyQualifiedMethodSignature::toString));
@@ -135,7 +140,7 @@ class StaticLinkageChecker {
     Options options = new Options();
     options.addOption("c", "coordinate", true, "Maven coordinates (separated by ',') to generate a classpath");
     options.addOption("j", "jars", true, "Jar files (separated by ',') to generate a classpath");
-    options.addOption("a", "all-classes", false, "Check all classes in the classpath");
+    options.addOption("o", "--report-only-reachable", false, "It only reports linkage errors reachable from entry point");
 
     HelpFormatter formatter = new HelpFormatter();
     CommandLineParser parser = new DefaultParser();
@@ -156,7 +161,7 @@ class StaticLinkageChecker {
                 .collect(Collectors.toList());
         jarFilePaths.addAll(jarFilesInArguments);
       }
-      checkAllClasses = cmd.hasOption("a");
+      reportOnlyReachable = cmd.hasOption("o");
     } catch (ParseException ex) {
       System.err.println("Failed to parse command line arguments: " + ex.getMessage());
     }
@@ -223,11 +228,12 @@ class StaticLinkageChecker {
     Set<String> classesCheckedMethodReference = new HashSet<>();
     List<FullyQualifiedMethodSignature> methodReferencesFromInputClassPath = new ArrayList<>();
 
-    // Unless checkAllClasses is true, to avoid false positives from unused classes in 3rd-party
+    // When reportOnlyReachable is true, to avoid false positives from unused classes in 3rd-party
     // libraries (e.g., grpc-netty-shaded), it traverses the class usage graph starting with the
     // method references from the input class path.
+    // If the flag is false, it checks all references in the classpath.
     List<Path> jarPathsInInputClasspath =
-        checkAllClasses ? jarFilePaths : Collections.singletonList(jarFilePaths.get(0));
+        reportOnlyReachable ? Collections.singletonList(jarFilePaths.get(0)) : jarFilePaths;
     for (Path absolutePathToJar : jarPathsInInputClasspath) {
       if (!Files.isReadable(absolutePathToJar)) {
         throw new IOException("The file is not readable: " + absolutePathToJar);
@@ -287,7 +293,7 @@ class StaticLinkageChecker {
     while (!queue.isEmpty()) {
       FullyQualifiedMethodSignature methodReference = queue.poll();
       String className = methodReference.getClassName();
-      if (isBuiltinClassName(className)) {
+      if (isBuiltInClassName(className)) {
         // Ignore references to JDK package
         continue;
       }
@@ -363,7 +369,7 @@ class StaticLinkageChecker {
     return pathToClasses;
   }
 
-  private static boolean isBuiltinClassName(String className) {
+  private static boolean isBuiltInClassName(String className) {
     return className.startsWith("java.")
         || className.startsWith("sun.")
         || className.startsWith("[");
