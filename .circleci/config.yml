@@ -38,7 +38,7 @@ jobs:
       # run tests!
       - run: |
           cd boms/cloud-oss-bom
-          mvn install
+          mvn install -DforkMode=never
           cd ../..
-          mvn integration-test -Dmaven.home=/opt/apache-maven
+          mvn integration-test -Dmaven.home=/opt/apache-maven -DforkMode=never
 
