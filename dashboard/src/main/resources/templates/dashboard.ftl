@@ -73,17 +73,17 @@
       Otherwise replace the dependency with something else.
     </p> 
     
-    <#assign x = 0>
+    <#assign unstableCount = 0>
     <ul id="unstable">
       <#list latestArtifacts as artifact, version>
         <#if version[0] == '0'>
-          <#assign x++>
+          <#assign unstableCount++>
           <li>${artifact}:${version}</li>
         </#if>
       </#list>
     </ul>
      
-    <#if x == 0>
+    <#if unstableCount == 0>
       <p id="stable_notice">All versions are 1.0 or later.</p> 
     </#if>
     
