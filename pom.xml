@@ -74,7 +74,7 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.22.1</version>
           <configuration>
-            <!-- This is to avoid ForkedBooter loading issue -->
+            <!-- To avoid ForkedBooter loading issue -->
             <useSystemClassLoader>false</useSystemClassLoader>
           </configuration>
         </plugin>
