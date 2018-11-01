@@ -32,7 +32,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.annotation.concurrent.NotThreadSafe;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.util.SyntheticRepository;
@@ -41,7 +40,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-@NotThreadSafe
 public class StaticLinkageCheckerTest {
   private final String EXAMPLE_JAR_FILE =
       "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar";
@@ -57,10 +55,12 @@ public class StaticLinkageCheckerTest {
       absolutePathOfResource("testdata/grpc-protobuf-lite-1.13.1.jar")
   );
 
+  private StaticLinkageChecker staticLinkageChecker;
+
   @Before
   public void setup() {
-    // Because of this static variable, this test class cannot run in parallel (@NotThreadSafe)
-    StaticLinkageChecker.reportOnlyReachable = true;
+    staticLinkageChecker = new StaticLinkageChecker();
+    staticLinkageChecker.reportOnlyReachable = true;
   }
 
   @Test
@@ -156,7 +156,7 @@ public class StaticLinkageCheckerTest {
 
 
     List<FullyQualifiedMethodSignature> report =
-        StaticLinkageChecker.findUnresolvedMethodReferences(pathsForJar);
+        staticLinkageChecker.findUnresolvedMethodReferences(pathsForJar);
     Truth.assertThat(report.toString()).doesNotContain("com.google.api.pathtemplate.PathTemplate");
     // As RunQueryRequest is defined in the proto jar file, it should not appear in the report
     Truth.assertThat(report.toString())
@@ -227,7 +227,7 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testNonExistentJarFileInput() throws ClassNotFoundException {
     try {
-      StaticLinkageChecker.findUnresolvedMethodReferences(
+      staticLinkageChecker.findUnresolvedMethodReferences(
           Arrays.asList(Paths.get("nosuchfile.jar")));
       Assert.fail("findUnresolvedMethodReferences should raise IOException");
     } catch (IOException ex) {
@@ -307,7 +307,7 @@ public class StaticLinkageCheckerTest {
 
     // Prior to class usage graph traversal, there was linkage error for lzma-java classes.
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        StaticLinkageChecker.findUnresolvedMethodReferences(paths);
+        staticLinkageChecker.findUnresolvedMethodReferences(paths);
 
     Assert.assertThat(
         "Because lzma-java classes are not used by google-cloud-bigtable and its dependencies, the classes should not appear as unresolved method references.",
@@ -323,9 +323,9 @@ public class StaticLinkageCheckerTest {
 
     // grpc-netty-shaded pom.xml does not have dependency to lzma-java even though netty-codec
     // refers lzma.sdk.lzma.Encoder. StaticLinkageChecker should be able to detect it.
-    StaticLinkageChecker.reportOnlyReachable = false;
+    staticLinkageChecker.reportOnlyReachable = false;
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        StaticLinkageChecker.findUnresolvedMethodReferences(paths);
+        staticLinkageChecker.findUnresolvedMethodReferences(paths);
 
     Assert.assertTrue(
         "StaticLinkageChecker.reportOnlyReachable should check all classes in the classpath",
@@ -343,7 +343,7 @@ public class StaticLinkageCheckerTest {
     // Prior to 'provided' scope inclusion, there was linkage error for classes in
     // com.google.appengine.api.urlfetch package.
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        StaticLinkageChecker.findUnresolvedMethodReferences(paths);
+        staticLinkageChecker.findUnresolvedMethodReferences(paths);
 
     Assert.assertThat(
         "Classes in com.google.appengine.api.urlfetch package are provided from appengine-api-1.0-sdk",

@@ -81,7 +81,7 @@ class StaticLinkageChecker {
    * from the entry point of the class usage graph.
    */
   @VisibleForTesting
-  static boolean reportOnlyReachable = false;
+  boolean reportOnlyReachable = false;
 
   /**
    * Given Maven coordinates or list of the jar files as file names in filesystem, outputs the
@@ -94,11 +94,12 @@ class StaticLinkageChecker {
    */
   public static void main(String[] arguments)
       throws IOException, ClassNotFoundException, RepositoryException {
-    List<Path> jarFilePaths = parseArguments(arguments);
+    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker();
+    List<Path> jarFilePaths = staticLinkageChecker.parseArguments(arguments);
 
     System.out.println("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        findUnresolvedMethodReferences(jarFilePaths);
+        staticLinkageChecker.findUnresolvedMethodReferences(jarFilePaths);
     if (unresolvedMethodReferences.isEmpty()) {
       System.out.println(
           "There were no unresolved method references from the first jar file :"
@@ -136,11 +137,16 @@ class StaticLinkageChecker {
    * @return list of the absolute paths to jar files
    * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
    */
-  static List<Path> parseArguments(String[] arguments) throws RepositoryException {
+  private List<Path> parseArguments(String[] arguments) throws RepositoryException {
     Options options = new Options();
-    options.addOption("c", "coordinate", true, "Maven coordinates (separated by ',') to generate a classpath");
+    options.addOption(
+        "c", "coordinate", true, "Maven coordinates (separated by ',') to generate a classpath");
     options.addOption("j", "jars", true, "Jar files (separated by ',') to generate a classpath");
-    options.addOption("o", "--report-only-reachable", false, "It only reports linkage errors reachable from entry point");
+    options.addOption(
+        "o",
+        "--report-only-reachable",
+        false,
+        "To report only linkage errors reachable from entry point");
 
     HelpFormatter formatter = new HelpFormatter();
     CommandLineParser parser = new DefaultParser();
@@ -161,7 +167,7 @@ class StaticLinkageChecker {
                 .collect(Collectors.toList());
         jarFilePaths.addAll(jarFilesInArguments);
       }
-      reportOnlyReachable = cmd.hasOption("o");
+      this.reportOnlyReachable = cmd.hasOption("o");
     } catch (ParseException ex) {
       System.err.println("Failed to parse command line arguments: " + ex.getMessage());
     }
@@ -218,7 +224,7 @@ class StaticLinkageChecker {
    * @throws IOException when there is a problem in reading a jar file
    * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
    */
-  static List<FullyQualifiedMethodSignature> findUnresolvedMethodReferences(
+  List<FullyQualifiedMethodSignature> findUnresolvedMethodReferences(
       List<Path> jarFilePaths)
       throws IOException, ClassNotFoundException {
     if (jarFilePaths.size() < 1) {
