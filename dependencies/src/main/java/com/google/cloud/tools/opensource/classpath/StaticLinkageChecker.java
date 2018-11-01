@@ -118,7 +118,9 @@ class StaticLinkageChecker {
       return;
     }
     SortedSet<FullyQualifiedMethodSignature> sortedUnresolvedMethodReferences =
-        new TreeSet<>(Comparator.comparing(FullyQualifiedMethodSignature::toString));
+        new TreeSet<>(
+            Comparator.comparing(FullyQualifiedMethodSignature::getClassName)
+                .thenComparing(FullyQualifiedMethodSignature:getMethodName));
     sortedUnresolvedMethodReferences.addAll(unresolvedMethodReferences);
     int count = sortedUnresolvedMethodReferences.size();
     StringBuilder stringBuilder = new StringBuilder();
