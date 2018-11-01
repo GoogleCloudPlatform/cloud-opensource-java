@@ -41,3 +41,4 @@ jobs:
           mvn install
           cd ../..
           mvn integration-test -Dmaven.home=/opt/apache-maven
+
