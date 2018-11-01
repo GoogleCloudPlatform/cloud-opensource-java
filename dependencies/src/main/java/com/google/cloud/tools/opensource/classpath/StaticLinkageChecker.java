@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.SetMultimap;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
@@ -47,8 +48,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -117,11 +116,8 @@ class StaticLinkageChecker {
       System.out.println("There were no unresolved method references");
       return;
     }
-    SortedSet<FullyQualifiedMethodSignature> sortedUnresolvedMethodReferences =
-        new TreeSet<>(
-            Comparator.comparing(FullyQualifiedMethodSignature::getClassName)
-                .thenComparing(FullyQualifiedMethodSignature:getMethodName));
-    sortedUnresolvedMethodReferences.addAll(unresolvedMethodReferences);
+    ImmutableSortedSet<FullyQualifiedMethodSignature> sortedUnresolvedMethodReferences =
+        ImmutableSortedSet.copyOf(Comparator.naturalOrder(), unresolvedMethodReferences);
     int count = sortedUnresolvedMethodReferences.size();
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append(

@@ -23,7 +23,7 @@ import java.util.Objects;
  * A representation of a method with its descriptor (type information) and fully-qualified
  * class name.
  */
-class FullyQualifiedMethodSignature {
+class FullyQualifiedMethodSignature implements Comparable<FullyQualifiedMethodSignature> {
   private String className;
   private MethodSignature methodSignature;
 
@@ -69,5 +69,20 @@ class FullyQualifiedMethodSignature {
         .add("className", className)
         .add("methodSignature", methodSignature)
         .toString();
+  }
+
+  @Override
+  public int compareTo(FullyQualifiedMethodSignature other) {
+    int classNameComparision = this.className.compareTo(other.className);
+    if (classNameComparision != 0) {
+      return classNameComparision;
+    }
+    int methodNameComparison =
+        this.methodSignature.getMethodName().compareTo(other.methodSignature.getMethodName());
+
+    if (methodNameComparison != 0) {
+      return methodNameComparison;
+    }
+    return this.methodSignature.getDescriptor().compareTo(other.methodSignature.getDescriptor());
   }
 }
