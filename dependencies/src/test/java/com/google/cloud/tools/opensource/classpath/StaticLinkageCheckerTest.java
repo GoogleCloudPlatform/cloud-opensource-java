@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static org.hamcrest.CoreMatchers.is;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.truth.Truth;
@@ -59,8 +60,9 @@ public class StaticLinkageCheckerTest {
 
   @Before
   public void setup() {
-    staticLinkageChecker = new StaticLinkageChecker();
-    staticLinkageChecker.reportOnlyReachable = true;
+    boolean reportOnlyReachable = true;
+    staticLinkageChecker = new StaticLinkageChecker(reportOnlyReachable,
+        ImmutableList.of());
   }
 
   @Test
@@ -323,7 +325,9 @@ public class StaticLinkageCheckerTest {
 
     // grpc-netty-shaded pom.xml does not have dependency to lzma-java even though netty-codec
     // refers lzma.sdk.lzma.Encoder. StaticLinkageChecker should be able to detect it.
-    staticLinkageChecker.reportOnlyReachable = false;
+    boolean reportOnlyReachable = false;
+    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(reportOnlyReachable,
+        ImmutableList.of());
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         staticLinkageChecker.findUnresolvedMethodReferences(paths);
 

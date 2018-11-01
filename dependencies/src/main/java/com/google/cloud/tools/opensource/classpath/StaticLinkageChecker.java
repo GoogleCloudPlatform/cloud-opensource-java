@@ -21,7 +21,11 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.SetMultimap;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
 import java.io.IOException;
@@ -37,10 +41,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
+import java.util.Formatter;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
@@ -80,8 +83,13 @@ class StaticLinkageChecker {
    * Flag on whether the report excludes the linkage errors on classes that are not reachable
    * from the entry point of the class usage graph.
    */
-  @VisibleForTesting
-  boolean reportOnlyReachable = false;
+  final boolean reportOnlyReachable;
+  final ImmutableList<Path> jarFilePaths;
+
+  StaticLinkageChecker(boolean reportOnlyReachable, List<Path> jarFilePaths) {
+    this.reportOnlyReachable = reportOnlyReachable;
+    this.jarFilePaths = ImmutableList.copyOf(jarFilePaths);
+  }
 
   /**
    * Given Maven coordinates or list of the jar files as file names in filesystem, outputs the
@@ -94,23 +102,21 @@ class StaticLinkageChecker {
    */
   public static void main(String[] arguments)
       throws IOException, ClassNotFoundException, RepositoryException {
-    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker();
-    List<Path> jarFilePaths = staticLinkageChecker.parseArguments(arguments);
+    StaticLinkageChecker staticLinkageChecker = getInstanceFromArguments(arguments);
+    List<Path> jarFilePaths = staticLinkageChecker.jarFilePaths;
 
     System.out.println("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         staticLinkageChecker.findUnresolvedMethodReferences(jarFilePaths);
-    if (unresolvedMethodReferences.isEmpty()) {
-      System.out.println(
-          "There were no unresolved method references from the first jar file :"
-              + jarFilePaths.get(0).getFileName());
-    } else {
-      printStaticLinkageError(unresolvedMethodReferences);
-    }
+    printStaticLinkageErrors(unresolvedMethodReferences);
   }
 
-  private static void printStaticLinkageError(
+  private static void printStaticLinkageErrors(
       List<FullyQualifiedMethodSignature> unresolvedMethodReferences) {
+    if (unresolvedMethodReferences.isEmpty()) {
+      System.out.println("There were no unresolved method references");
+      return;
+    }
     SortedSet<FullyQualifiedMethodSignature> sortedUnresolvedMethodReferences =
         new TreeSet<>(Comparator.comparing(FullyQualifiedMethodSignature::toString));
     sortedUnresolvedMethodReferences.addAll(unresolvedMethodReferences);
@@ -119,32 +125,31 @@ class StaticLinkageChecker {
     stringBuilder.append(
         "There were " + count + " unresolved method references from the jar file(s):\n");
     for (FullyQualifiedMethodSignature methodReference : sortedUnresolvedMethodReferences) {
-      stringBuilder.append("Class: '");
-      stringBuilder.append(methodReference.getClassName());
-      stringBuilder.append("', method: '");
-      stringBuilder.append(methodReference.getMethodSignature().getMethodName());
-      stringBuilder.append("' with descriptor ");
-      stringBuilder.append(methodReference.getMethodSignature().getDescriptor());
-      stringBuilder.append("\n");
+      Formatter formatter = new Formatter(stringBuilder);
+      formatter.format(
+          "Class: '%s', method: '%s' with descriptor %s\n",
+          methodReference.getClassName(),
+          methodReference.getMethodSignature().getMethodName(),
+          methodReference.getMethodSignature().getDescriptor());
     }
-    System.out.println(stringBuilder.toString());
+    System.out.println(stringBuilder);
   }
 
   /**
-   * Parses arguments to get list of jar file paths.
+   * Parses arguments to instantiate the class with configuration specified in arguments.
    *
    * @param arguments command-line arguments
-   * @return list of the absolute paths to jar files
+   * @return static linkage checker instance with its variables populated from the arguments
    * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
    */
-  private List<Path> parseArguments(String[] arguments) throws RepositoryException {
+  static StaticLinkageChecker getInstanceFromArguments(String[] arguments) throws RepositoryException {
     Options options = new Options();
     options.addOption(
         "c", "coordinate", true, "Maven coordinates (separated by ',') to generate a classpath");
     options.addOption("j", "jars", true, "Jar files (separated by ',') to generate a classpath");
     options.addOption(
-        "o",
-        "--report-only-reachable",
+        "r",
+        "report-only-reachable",
         false,
         "To report only linkage errors reachable from entry point");
 
@@ -167,16 +172,18 @@ class StaticLinkageChecker {
                 .collect(Collectors.toList());
         jarFilePaths.addAll(jarFilesInArguments);
       }
-      this.reportOnlyReachable = cmd.hasOption("o");
+      boolean reportOnlyReachable = cmd.hasOption("r");
+
+      if (jarFilePaths.isEmpty()) {
+        System.err.println("No jar files to scan");
+        formatter.printHelp("StaticLinkageChecker", options);
+        throw new IllegalArgumentException("Could not list jar files for given argument.");
+      }
+      return new StaticLinkageChecker(reportOnlyReachable, jarFilePaths);
     } catch (ParseException ex) {
       System.err.println("Failed to parse command line arguments: " + ex.getMessage());
+      throw new IllegalArgumentException();
     }
-    if (jarFilePaths.isEmpty()) {
-      System.err.println("No jar files to scan");
-      formatter.printHelp("StaticLinkageChecker", options);
-      throw new IllegalArgumentException("Could not list jar files for given argument.");
-    }
-    return jarFilePaths;
   }
 
   /**
@@ -227,16 +234,14 @@ class StaticLinkageChecker {
   List<FullyQualifiedMethodSignature> findUnresolvedMethodReferences(
       List<Path> jarFilePaths)
       throws IOException, ClassNotFoundException {
-    if (jarFilePaths.size() < 1) {
-      throw new IllegalArgumentException("The size of jar file paths is zero");
-    }
+    Preconditions.checkArgument(!jarFilePaths.isEmpty(), "no jar files specified");
 
     Set<String> classesCheckedMethodReference = new HashSet<>();
     List<FullyQualifiedMethodSignature> methodReferencesFromInputClassPath = new ArrayList<>();
 
     // When reportOnlyReachable is true, to avoid false positives from unused classes in 3rd-party
-    // libraries (e.g., grpc-netty-shaded), it traverses the class usage graph starting with the
-    // method references from the input class path.
+    // libraries (e.g., grpc-netty-shaded), we traverse the class usage graph starting with the
+    // method references from the input class path and report only errors reachable from there.
     // If the flag is false, it checks all references in the classpath.
     List<Path> jarPathsInInputClasspath =
         reportOnlyReachable ? Collections.singletonList(jarFilePaths.get(0)) : jarFilePaths;
@@ -278,7 +283,7 @@ class StaticLinkageChecker {
     SyntheticRepository repository = SyntheticRepository.getInstance(classPath);
 
     // This map helps to distinguish whether a method reference from a class is external or not
-    Map<Path, Set<String>> jarFileToClasses = jarFilesToDefinedClasses(jarFilePaths);
+    SetMultimap<Path, String> jarFileToClasses = jarFilesToDefinedClasses(jarFilePaths);
 
     Set<String> classesNotFound = new HashSet<>();
     Set<FullyQualifiedMethodSignature> availableMethodsInJars = new HashSet<>();
@@ -347,11 +352,10 @@ class StaticLinkageChecker {
    * @param jarFilePaths absolute paths to jar files
    * @return map of jar file paths to classes defined in them
    */
-  private static Map<Path, Set<String>> jarFilesToDefinedClasses(List<Path> jarFilePaths) {
-    Map<Path, Set<String>> pathToClasses = new HashMap<>();
-    for (Path jarFilePath : jarFilePaths) {
-      Set<String> internalClassNames = new HashSet<>();
+  private static SetMultimap<Path, String> jarFilesToDefinedClasses(List<Path> jarFilePaths) {
+    SetMultimap<Path, String>  pathToClasses = HashMultimap.create();
 
+    for (Path jarFilePath : jarFilePaths) {
       String pathToJar = jarFilePath.toString();
       SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
       try {
@@ -361,13 +365,12 @@ class StaticLinkageChecker {
           String className = classInfo.getName();
           JavaClass javaClass = repository.loadClass(className);
           String topLevelClassName = javaClass.getClassName();
-          internalClassNames.add(topLevelClassName);
+          pathToClasses.put(jarFilePath, topLevelClassName);
           // This does not take double-nested classes. As long as such classes are accessed
           // only from the outer class, static linkage checker does not report false positives
           // TODO: enhance this so that it can work with double-nested classes
-          internalClassNames.addAll(listInnerClassNames(javaClass));
+          pathToClasses.putAll(jarFilePath, listInnerClassNames(javaClass));
         }
-        pathToClasses.put(jarFilePath, internalClassNames);
       } catch (IOException | ClassNotFoundException ex) {
         throw new RuntimeException("There was problem in loading classes in jar file", ex);
       }

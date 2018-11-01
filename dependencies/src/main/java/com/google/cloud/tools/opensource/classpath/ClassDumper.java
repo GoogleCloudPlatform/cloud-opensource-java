@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicates;
+import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.io.InputStream;
@@ -107,7 +108,7 @@ class ClassDumper {
    */
   static List<FullyQualifiedMethodSignature> listExternalMethodReferences(
       String className,
-      Map<Path, Set<String>> jarFileToClasses,
+      SetMultimap<Path, String> jarFileToClasses,
       ClassLoader classLoader,
       SyntheticRepository repository) {
     try {
@@ -120,22 +121,17 @@ class ClassDumper {
       }
       Path jarPathForTheClass = Paths.get(codeSource.getLocation().toURI());
       Set<String> classesDefinedInSameJar = jarFileToClasses.get(jarPathForTheClass);
-      if (classesDefinedInSameJar == null) {
-        // The class is not in linkage class path
-        classesDefinedInSameJar = new HashSet<>();
-      }
       List<FullyQualifiedMethodSignature> nextMethodReferences = listMethodReferences(javaClass);
       List<FullyQualifiedMethodSignature> nextExternalMethodReferences = new ArrayList<>();
       List<String> referencedInternalClasses = new ArrayList<>();
       for (FullyQualifiedMethodSignature methodReference : nextMethodReferences) {
         String classNameInMethodReference = methodReference.getClassName();
-        if (!className.equals(classNameInMethodReference)
-            && !classesDefinedInSameJar.contains(classNameInMethodReference)) {
-          nextExternalMethodReferences.add(methodReference);
-        } else {
+        if (classesDefinedInSameJar.contains(classNameInMethodReference)) {
           // The methodReference is within the same jar but we want to follow usage graph
           String nextInternalClassName = methodReference.getClassName();
           referencedInternalClasses.add(nextInternalClassName);
+        } else {
+          nextExternalMethodReferences.add(methodReference);
         }
       }
 
@@ -155,23 +151,24 @@ class ClassDumper {
   }
 
   /**
-   * Finds external method references by following usage graph from `initialClassNames` through
-   * other internal classes. For example, given following usage graph of 4 classes in 2 jar files:
+   * Finds external method references by following usage graph from {@code initialClassNames}
+   * through other internal classes. For example, given following usage graph of 4 classes in
+   * 2 jar files:
    *
    * <pre>
-   *   'Class A' -> 'Class B' -> 'Class C' -> 'Class D'
-   *   |<-        in X.jar               ->|<- in Y.jar ->
+   *   'Class A' → 'Class B' → 'Class C' → 'Class D'
+   *   |←         in X.jar              →|← in Y.jar →
    * </pre>
    *
-   * and `initialClassNames: ['Class A']`, this function returns list of method references to 'Class
-   * D', not including references to 'Class B' or 'Class C'.
+   * and {@code initialClassNames: ['Class A']}, this function returns list of method references to
+   * 'Class D', not including references to 'Class B' or 'Class C'.
    *
    * @param initialClassNames list of classes to follow usage graph. They must be within same jar
    *     file.
    * @param repository BCEL repository to list method references
    * @param classesDefinedInSameJar set of classes defined in the same jar file as
-   *     `initialClassNames`
-   * @return list of method references external to the jar file of `initialClassNames`
+   *     {@code initialClassNames}
+   * @return list of method references external to the jar file of {@code initialClassNames}
    * @throws ClassNotFoundException when there is a problem in accessing a class via BCEL repository
    */
   private static List<FullyQualifiedMethodSignature> findExternalMethodReferencesByUsageGraph(
@@ -179,7 +176,7 @@ class ClassDumper {
       SyntheticRepository repository,
       Set<String> classesDefinedInSameJar)
       throws ClassNotFoundException {
-    Set<String> classesAddedToQueue = new HashSet<>(initialClassNames);
+    Set<String> visitedClasses = new HashSet<>(initialClassNames);
     Queue<String> classQueue = new ArrayDeque<>(initialClassNames);
     List<FullyQualifiedMethodSignature> nextExternalMethodReferences = new ArrayList<>();
     while (!classQueue.isEmpty()) {
@@ -189,12 +186,12 @@ class ClassDumper {
           listMethodReferences(internalJavaClass);
       for (FullyQualifiedMethodSignature methodReference : nextMethodReferencesFromInternalClass) {
         String nextClassName = methodReference.getClassName();
-        if (classesAddedToQueue.contains(nextClassName)) {
-          continue;
-        }
         if (classesDefinedInSameJar.contains(nextClassName)) {
+          if (visitedClasses.contains(nextClassName)) {
+            continue;
+          }
           classQueue.add(nextClassName);
-          classesAddedToQueue.add(nextClassName);
+          visitedClasses.add(nextClassName);
         } else {
           // While iterating the graph, record method references external to the jar file
           nextExternalMethodReferences.add(methodReference);
