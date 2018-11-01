@@ -49,18 +49,46 @@
         </tr>
       </#list>
     </table>
+    
+    <hr />
       
-     <h2>Recommended Versions</h2>
+    <h2>Recommended Versions</h2>
       
-     <p>These are the most recent versions of dependencies used by any of the covered artifacts.</p> 
+    <p>These are the most recent versions of dependencies used by any of the covered artifacts.</p> 
       
-     <ul>
-       <#list latestArtifacts as artifact, version>
-         <li>${artifact}:${version}</li>
-       </#list>
-     </ul>
+    <ul id="recommended">
+      <#list latestArtifacts as artifact, version>
+        <li>${artifact}:${version}</li>
+      </#list>
+    </ul>
+ 
+    <hr />
       
-      <hr />
-      <p id='updated'>Last generated at ${lastUpdated}</p>
+    <h2>Pre 1.0 Versions</h2>
+      
+    <p>
+      These are dependencies found in the GCP orbit which have not yet reached 1.0.
+      No 1.0 or later library should depend on them.
+      If the libraries are stable, advance them to 1.0.
+      Otherwise replace the dependency with something else.
+    </p> 
+    
+    <#assign unstableCount = 0>
+    <ul id="unstable">
+      <#list latestArtifacts as artifact, version>
+        <#if version[0] == '0'>
+          <#assign unstableCount++>
+          <li>${artifact}:${version}</li>
+        </#if>
+      </#list>
+    </ul>
+     
+    <#if unstableCount == 0>
+      <p id="stable_notice">All versions are 1.0 or later.</p> 
+    </#if>
+    
+     
+    <hr />
+    <p id='updated'>Last generated at ${lastUpdated}</p>
   </body>
 </html>
