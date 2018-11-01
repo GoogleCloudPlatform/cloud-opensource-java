@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ComparisonChain;
 import java.util.Objects;
 
 /**
@@ -72,17 +73,11 @@ class FullyQualifiedMethodSignature implements Comparable<FullyQualifiedMethodSi
   }
 
   @Override
-  public int compareTo(FullyQualifiedMethodSignature other) {
-    int classNameComparision = this.className.compareTo(other.className);
-    if (classNameComparision != 0) {
-      return classNameComparision;
-    }
-    int methodNameComparison =
-        this.methodSignature.getMethodName().compareTo(other.methodSignature.getMethodName());
-
-    if (methodNameComparison != 0) {
-      return methodNameComparison;
-    }
-    return this.methodSignature.getDescriptor().compareTo(other.methodSignature.getDescriptor());
+  public int compareTo(FullyQualifiedMethodSignature that) {
+    return ComparisonChain.start()
+        .compare(this.className, that.className)
+        .compare(this.methodSignature.getMethodName(), that.methodSignature.getMethodName())
+        .compare(this.methodSignature.getDescriptor(), that.methodSignature.getDescriptor())
+        .result();
   }
 }
