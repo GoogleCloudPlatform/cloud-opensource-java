@@ -3,12 +3,12 @@
 
 For any particular library dependency chain, the libraries involved need to
 coordinate the adoption of new major versions of any shared dependency that has
-breaking changes. This is necessary to enable consumers to easily use the latest
+breaking changes. This is necessary so that consumers can easily use the latest
 version of all of the functionality together.  This best practice doesn't apply
-to adoption of new major versions where the package was renamed, because the old
-and new packages can co-exist.
+to the adoption of new major versions where the package was renamed, because the
+old and new packages can co-exist.
 
-As an example of what happens when this is not followed, imagine a partial
+As an example of what happens when this is not followed, imagine the partial
 adoption of a new major version of a leaf library. Start with the following
 dependency chain (both gax-java and grpc-java depend on guava 20.0):
 
@@ -19,11 +19,12 @@ gax-java 1.29.0 ->
   guava 20.0
 ```
 
-Suppose Guava version 26.0 which deletes a public method.  If gax-java 1.29.0
-and grpc-java 1.13.1 invoke that method, it is impossible for a user to depend
-on the latest version of all three artifacts. The following dependency chain has
-static linkage conflicts. This assumes that the end user overrides grpc-java's
-dependency on guava to the latest at that point in time, 26.0:
+Suppose Guava version 26.0 deletes a public method. If gax-java 1.29.0 and
+grpc-java 1.13.1 invoke that method, it is impossible for a user to depend on
+the latest version of all three artifacts because they would experience static
+linkage conflicts. The following dependency chain demonstrates this. This
+assumes that the consumer selects the latest version of guava at that point in
+time, 26.0, which overrides the version that gax-java and grpc-java select:
 
 ```
 gax-java 1.29.0 ->
@@ -42,7 +43,7 @@ gax-java 1.29.0 ->
   (ERROR) guava 26.0
 ```
 
-Only when gax-java and grpc-jav aboth upgrade their dependency on Guava are
+Only when gax-java and grpc-java both upgrade their dependency on Guava are
 there no longer any conflicts:
 
 ```
