@@ -25,10 +25,21 @@ public class StaticLinkageCheckReportTest {
 
   @Test
   public void testStaticLinkageCheckReportInstantiation() {
-    ImmutableList<MissingClassReport> missingClassReports =
-        ImmutableList.of(MissingClassReport.create("ClassA", "ClassB"));
+    ImmutableList<MissingClass> missingClasses =
+        ImmutableList.of(MissingClass.create("ClassA", "ClassB"));
+    MissingMethod missingMethod =
+        MissingMethod.builder()
+            .setClassName("ClassA")
+            .setMethodName("methodX")
+            .setDescriptor("java.lang.String")
+            .setSourceClassName("ClassB")
+            .build();
     JarLinkageReport jarLinkageReport =
-        JarLinkageReport.create(Paths.get("a", "b", "c"), missingClassReports);
+        JarLinkageReport.create(
+            Paths.get("a", "b", "c"),
+            missingClasses,
+            ImmutableList.of(missingMethod),
+            ImmutableList.of(MissingField.create("ClassC", "fieldX", "ClassD")));
     StaticLinkageCheckReport staticLinkageCheckReport =
         StaticLinkageCheckReport.create(ImmutableList.of(jarLinkageReport));
 
@@ -39,22 +50,21 @@ public class StaticLinkageCheckReportTest {
         staticLinkageCheckReport
             .jarLinkageReports()
             .get(0)
-            .missingClassReports()
+            .missingClasses()
             .get(0)
             .missingClassName());
   }
 
   @Test
   public void testMissingMethodReport_builder() {
-    MissingMethodReport missingMethodReport =
-        MissingMethodReport.builder()
+    MissingMethod missingMethod =
+        MissingMethod.builder()
             .setClassName("ClassA")
             .setMethodName("methodX")
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassB")
             .build();
 
-    Assert.assertEquals("ClassB", missingMethodReport.sourceClassName());
+    Assert.assertEquals("ClassB", missingMethod.sourceClassName());
   }
-
 }

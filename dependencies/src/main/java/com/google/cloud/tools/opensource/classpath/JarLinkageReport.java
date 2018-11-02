@@ -20,11 +20,22 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
+/**
+ * The result of static linkage check per a jar file
+ */
 @AutoValue
 abstract class JarLinkageReport {
-  static JarLinkageReport create(Path jarPath, ImmutableList<MissingClassReport> missingClassReports) {
-    return new AutoValue_JarLinkageReport(jarPath, missingClassReports);
+  static JarLinkageReport create(Path jarPath, ImmutableList<MissingClass> missingClasses,
+      ImmutableList<MissingMethod> missingMethods, ImmutableList<MissingField> missingFields) {
+    return new AutoValue_JarLinkageReport(jarPath, missingClasses, missingMethods, missingFields);
   }
+
+  /**
+   * @return the jar file containing source classes of linkage errors
+   */
   abstract Path jarPath();
-  abstract ImmutableList<MissingClassReport> missingClassReports();
+
+  abstract ImmutableList<MissingClass> missingClasses();
+  abstract ImmutableList<MissingMethod> missingMethods();
+  abstract ImmutableList<MissingField> missingFields();
 }

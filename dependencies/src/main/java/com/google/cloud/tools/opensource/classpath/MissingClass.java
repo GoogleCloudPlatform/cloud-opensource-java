@@ -20,12 +20,12 @@ import com.google.auto.value.AutoValue;
 
 /**
  * Representation of a linkage error where {@code sourceClassName} expects {@code missingClassName},
- * however the latter does not exist in the classpath of the static linkage check.
+ * however the latter does not exist in the classpath of the static linkage check
  */
 @AutoValue
-abstract class MissingClassReport {
-  static MissingClassReport create(String missingClassName, String sourceClassName) {
-    return new AutoValue_MissingClassReport(missingClassName, sourceClassName);
+abstract class MissingClass {
+  static MissingClass create(String missingClassName, String sourceClassName) {
+    return new AutoValue_MissingClass(missingClassName, sourceClassName);
   }
   abstract String missingClassName();
   abstract String sourceClassName();

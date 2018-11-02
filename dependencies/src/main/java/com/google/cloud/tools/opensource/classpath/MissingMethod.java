@@ -18,15 +18,20 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
 
+/**
+ * Representation of a linkage error where {@code sourceClassName} expects {@code methodName}
+ * in {@code className}, however the method with the {@code descriptor} is not available in the
+ * class or is inaccessible to {@code sourceClassName}
+ */
 @AutoValue
-abstract class MissingMethodReport {
+abstract class MissingMethod {
   abstract String className();
   abstract String methodName();
   abstract String descriptor();
   abstract String sourceClassName();
 
   static Builder builder() {
-    return new AutoValue_MissingMethodReport.Builder();
+    return new AutoValue_MissingMethod.Builder();
   }
 
   @AutoValue.Builder
@@ -35,6 +40,6 @@ abstract class MissingMethodReport {
     abstract Builder setMethodName(String value);
     abstract Builder setDescriptor(String value);
     abstract Builder setSourceClassName(String value);
-    abstract MissingMethodReport build();
+    abstract MissingMethod build();
   }
 }
