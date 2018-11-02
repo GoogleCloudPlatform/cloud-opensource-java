@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -198,8 +199,6 @@ public class DashboardMain {
 
       ListMultimap<DependencyPath, DependencyPath> dependencyTree =
           DependencyTreeFormatter.buildDependencyPathTree(completeDependencies.list());
-      String dependencyTreeClass = dependencyTree.getClass().getName();
-      System.out.println("dependencyTree class " + dependencyTreeClass);
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
@@ -211,7 +210,8 @@ public class DashboardMain {
       templateData.put("globalUpperBoundFailures", globalUpperBoundFailures);
       templateData.put("lastUpdated", LocalDateTime.now());
       // In `dependencyTree`, the root node is represented by empty DependencyPath
-      templateData.put("dependencyTree", dependencyTree);
+      // Casting avoids Freemarker's error on `AbstractListMultimap.get` in CircleCI
+      templateData.put("dependencyTree", (ArrayListMultimap) dependencyTree);
       templateData.put("dependencyTreeRoot", new DependencyPath());
       report.process(templateData, out);
 
