@@ -189,7 +189,7 @@ public class DashboardMain {
 
       // picks versions according to Maven rules
       DependencyGraph transitiveDependencies = artifactInfo.getTransitiveDependencies();
-      
+
       Map<Artifact, Artifact> upperBoundFailures =
           findUpperBoundsFailures(completeDependencies.getHighestVersionMap(), transitiveDependencies);
 
@@ -198,6 +198,8 @@ public class DashboardMain {
 
       ListMultimap<DependencyPath, DependencyPath> dependencyTree =
           DependencyTreeFormatter.buildDependencyPathTree(completeDependencies.list());
+      String dependencyTreeClass = dependencyTree.getClass().getName();
+      System.out.println("dependencyTree class " + dependencyTreeClass);
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
