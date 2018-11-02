@@ -105,7 +105,7 @@ public class DependencyTreeFormatter {
    * @param dependencyPaths dependency path instances without assuming any order
    * @return ListMultiMap representing a Maven dependency tree
    */
-  private static ListMultimap<DependencyPath, DependencyPath> buildDependencyPathTree(
+  public static ListMultimap<DependencyPath, DependencyPath> buildDependencyPathTree(
       Collection<DependencyPath> dependencyPaths) {
     ListMultimap<DependencyPath, DependencyPath> tree = ArrayListMultimap.create();
     for (DependencyPath dependencyPath : dependencyPaths) {

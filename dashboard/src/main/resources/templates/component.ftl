@@ -110,8 +110,28 @@
     </#if>
 
     <h2>Dependencies</h2>
-    <pre class="dependency-tree">${dependencyTree}</pre>
-    
+
+    <#macro formatDependencyNode tree currentNode parent>
+      <#-- tree: ListMultimap<DependencyPath, DependencyPath>, currentNode: DependencyPath -->
+      <#if currentNode.size() gt 0>
+        <#-- root node does not have any leaf -->
+        <#if parent.size() gt 0>
+          <#assign label = 'required by ' + parent.getLeaf() />
+        <#else>
+          <#assign label = 'root' />
+        </#if>
+        <p title="${label}">${currentNode.getLeaf()}</p>
+      </#if>
+      <ul>
+        <#list tree.get(currentNode) as childNode>
+          <li>
+            <@formatDependencyNode tree childNode currentNode />
+          </li>
+        </#list>
+      </ul>
+    </#macro>
+    <@formatDependencyNode dependencyTree dependencyTreeRoot dependencyTreeRoot/>
+
      <hr />
      <p id='updated'>Last generated at ${lastUpdated}</p>
   </body>

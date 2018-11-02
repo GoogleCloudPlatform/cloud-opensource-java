@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.common.collect.ListMultimap;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -194,8 +196,8 @@ public class DashboardMain {
       Map<Artifact, Artifact> globalUpperBoundFailures = findUpperBoundsFailures(
           collectLatestVersions(globalDependencies), transitiveDependencies);
 
-      String dependencyTree =
-          DependencyTreeFormatter.formatDependencyPaths(completeDependencies.list());
+      ListMultimap<DependencyPath, DependencyPath> dependencyTree =
+          DependencyTreeFormatter.buildDependencyPathTree(completeDependencies.list());
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
@@ -206,7 +208,9 @@ public class DashboardMain {
       templateData.put("upperBoundFailures", upperBoundFailures);
       templateData.put("globalUpperBoundFailures", globalUpperBoundFailures);
       templateData.put("lastUpdated", LocalDateTime.now());
+      // In `dependencyTree`, the root node is represented by empty DependencyPath
       templateData.put("dependencyTree", dependencyTree);
+      templateData.put("dependencyTreeRoot", new DependencyPath());
       report.process(templateData, out);
 
       ArtifactResults results = new ArtifactResults(artifact);
