@@ -382,7 +382,7 @@ class StaticLinkageChecker {
     String className = methodReference.getClassName();
     MethodSignature methodSignature = methodReference.getMethodSignature();
     String methodName = methodSignature.getMethodName();
-    Class[] parameterTypes = methodDescriptorToClass(methodSignature.getDescriptor(),
+    Class[] parameterTypes = ClassDumper.methodDescriptorToClass(methodSignature.getDescriptor(),
         classLoader);
     try {
       // Attempt 1: Find the class and method in the class loader
@@ -413,7 +413,7 @@ class StaticLinkageChecker {
             methodSignature.getDescriptor()
         );
         List<FullyQualifiedMethodSignature> availableMethodsOnClass =
-            listMethodsOnClass(javaClass);
+            ClassDumper.listMethodsOnClass(javaClass);
         if (availableMethodsOnClass.contains(methodReferenceForClass)) {
           return true;
         }
@@ -422,55 +422,6 @@ class StaticLinkageChecker {
       }
       return false;
     }
-  }
-
-  private static Class bcelTypeToJavaClass(Type type, ClassLoader classLoader) {
-    switch (type.getType()) {
-      case Const.T_BOOLEAN:
-        return boolean.class;
-      case Const.T_INT:
-        return int.class;
-      case Const.T_SHORT:
-        return short.class;
-      case Const.T_BYTE:
-        return byte.class;
-      case Const.T_LONG:
-        return long.class;
-      case Const.T_DOUBLE:
-        return double.class;
-      case Const.T_FLOAT:
-        return float.class;
-      case Const.T_CHAR:
-        return char.class;
-      case Const.T_ARRAY:
-        return Object[].class;
-      default:
-        String typeName = type.toString();
-        try {
-          return classLoader.loadClass(typeName);
-        } catch (ClassNotFoundException ex) {
-          return null;
-        }
-    }
-  }
-
-  @VisibleForTesting
-  static Class[] methodDescriptorToClass(String methodDescriptor, ClassLoader classLoader) {
-    Type[] argumentTypes = Type.getArgumentTypes(methodDescriptor);
-    Class[] parameterTypes =
-        Arrays.stream(argumentTypes)
-            .map(type -> bcelTypeToJavaClass(type, classLoader))
-            .toArray(Class[]::new);
-    return parameterTypes;
-  }
-
-  private static List<FullyQualifiedMethodSignature> listMethodsOnClass(JavaClass javaClass) {
-    List<MethodSignature> methods = ClassDumper.listDeclaredMethods(javaClass);
-    List<FullyQualifiedMethodSignature> fullyQualifiedMethodSignatures = methods.stream()
-        .map(method -> new FullyQualifiedMethodSignature(
-            javaClass.getClassName(), method.getMethodName(), method.getDescriptor()))
-        .collect(Collectors.toList());
-    return fullyQualifiedMethodSignatures;
   }
 
   /**

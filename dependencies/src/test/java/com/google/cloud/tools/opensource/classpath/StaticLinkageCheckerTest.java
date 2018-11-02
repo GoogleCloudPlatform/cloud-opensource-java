@@ -402,33 +402,4 @@ public class StaticLinkageCheckerTest {
             constructorInAbstract, classLoader, SyntheticRepository.getInstance());
     Assert.assertTrue(exist);
   }
-
-  @Test
-  public void testMethodDescriptorToClass_byteArray() {
-    ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-    Class[] byteArrayClass =
-        StaticLinkageChecker.methodDescriptorToClass("([B)Ljava/lang/String;", classLoader);
-    Assert.assertTrue(byteArrayClass[0].isArray());
-  }
-
-  @Test
-  public void testMethodDescriptorToClass_primitiveTypes() {
-    ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-    // List of primitive types that appear in descriptor:
-    // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3
-    Class[] types =
-        StaticLinkageChecker.methodDescriptorToClass("(BCDFIJSZ)Ljava/lang/String;", classLoader);
-    Truth.assertThat(types)
-        .asList()
-        .containsExactly(
-            byte.class,
-            char.class,
-            double.class,
-            float.class,
-            int.class,
-            long.class,
-            short.class,
-            boolean.class)
-        .inOrder();
-  }
 }

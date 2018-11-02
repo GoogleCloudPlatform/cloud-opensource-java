@@ -43,6 +43,7 @@ import org.apache.bcel.classfile.ConstantNameAndType;
 import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
+import org.apache.bcel.generic.Type;
 import org.apache.bcel.util.SyntheticRepository;
 
 /**
@@ -259,6 +260,15 @@ class ClassDumper {
     return externalMethodrefs;
   }
 
+  static List<FullyQualifiedMethodSignature> listMethodsOnClass(JavaClass javaClass) {
+    List<MethodSignature> methods = listDeclaredMethods(javaClass);
+    List<FullyQualifiedMethodSignature> fullyQualifiedMethodSignatures = methods.stream()
+        .map(method -> new FullyQualifiedMethodSignature(
+            javaClass.getClassName(), method.getMethodName(), method.getDescriptor()))
+        .collect(Collectors.toList());
+    return fullyQualifiedMethodSignatures;
+  }
+
   /**
    * Lists method signatures from the class file. The output corresponds to entries in the
    * method table in the .class file.
@@ -315,5 +325,45 @@ class ClassDumper {
             .map(Constant::toString)
             .collect(Collectors.toList());
     return constantStrings;
+  }
+
+  @VisibleForTesting
+  static Class[] methodDescriptorToClass(String methodDescriptor, ClassLoader classLoader) {
+    Type[] argumentTypes = Type.getArgumentTypes(methodDescriptor);
+    Class[] parameterTypes =
+        Arrays.stream(argumentTypes)
+            .map(type -> bcelTypeToJavaClass(type, classLoader))
+            .toArray(Class[]::new);
+    return parameterTypes;
+  }
+
+  private static Class bcelTypeToJavaClass(Type type, ClassLoader classLoader) {
+    switch (type.getType()) {
+      case Const.T_BOOLEAN:
+        return boolean.class;
+      case Const.T_INT:
+        return int.class;
+      case Const.T_SHORT:
+        return short.class;
+      case Const.T_BYTE:
+        return byte.class;
+      case Const.T_LONG:
+        return long.class;
+      case Const.T_DOUBLE:
+        return double.class;
+      case Const.T_FLOAT:
+        return float.class;
+      case Const.T_CHAR:
+        return char.class;
+      case Const.T_ARRAY:
+        return Object[].class;
+      default:
+        String typeName = type.toString();
+        try {
+          return classLoader.loadClass(typeName);
+        } catch (ClassNotFoundException ex) {
+          return null;
+        }
+    }
   }
 }
