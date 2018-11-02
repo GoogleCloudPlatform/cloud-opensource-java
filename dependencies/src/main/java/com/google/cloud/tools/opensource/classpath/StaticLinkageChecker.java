@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -54,7 +55,6 @@ import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.classfile.InnerClass;
 import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.generic.Type;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 import org.apache.commons.cli.CommandLine;
@@ -351,12 +351,8 @@ class StaticLinkageChecker {
       String pathToJar = jarFilePath.toString();
       SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
       try {
-        URL jarFileUrl = jarFilePath.toUri().toURL();
-        Set<ClassInfo> classes = listTopLevelClassesFromJar(jarFileUrl);
-        for (ClassInfo classInfo : classes) {
-          String className = classInfo.getName();
-          JavaClass javaClass = repository.loadClass(className);
-          pathToClasses.put(jarFilePath, className);
+        for (JavaClass javaClass: topLevelJavaClassesInJar(jarFilePath, repository)) {
+          pathToClasses.put(jarFilePath, javaClass.getClassName());
           // This does not take double-nested classes. As long as such classes are accessed
           // only from the outer class, static linkage checker does not report false positives
           // TODO: enhance this so that it can work with double-nested classes
@@ -367,6 +363,19 @@ class StaticLinkageChecker {
       }
     }
     return pathToClasses;
+  }
+
+  private static ImmutableSet<JavaClass> topLevelJavaClassesInJar(Path jarFilePath,
+      SyntheticRepository repository) throws IOException, ClassNotFoundException {
+    Set<JavaClass> javaClasses = new HashSet<>();
+    URL jarFileUrl = jarFilePath.toUri().toURL();
+    Set<ClassInfo> classes = listTopLevelClassesFromJar(jarFileUrl);
+    for (ClassInfo classInfo : classes) {
+      String className = classInfo.getName();
+      JavaClass javaClass = repository.loadClass(className);
+      javaClasses.add(javaClass);
+    }
+    return ImmutableSet.copyOf(javaClasses);
   }
 
   private static boolean isBuiltInClassName(String className) {
@@ -443,19 +452,14 @@ class StaticLinkageChecker {
     String pathToJar = jarFilePath.toString();
     SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
 
-    URL jarFileUrl = jarFilePath.toUri().toURL();
-    Set<ClassInfo> classes = listTopLevelClassesFromJar(jarFileUrl);
-    for (ClassInfo classInfo : classes) {
-      String className = classInfo.getName();
-      JavaClass javaClass = repository.loadClass(className);
-      String topLevelClassName = javaClass.getClassName();
-      classesChecked.add(topLevelClassName);
-      internalClassNames.add(topLevelClassName);
+    for (JavaClass javaClass: topLevelJavaClassesInJar(jarFilePath, repository)) {
+      String className = javaClass.getClassName();
+      classesChecked.add(className);
+      internalClassNames.add(className);
       internalClassNames.addAll(listInnerClassNames(javaClass));
       List<FullyQualifiedMethodSignature> references = ClassDumper.listMethodReferences(javaClass);
       methodReferences.addAll(references);
     }
-
     List<FullyQualifiedMethodSignature> externalMethodReferences = methodReferences.stream()
         .filter(reference -> !internalClassNames.contains(reference.getClassName()))
         .collect(Collectors.toList());
