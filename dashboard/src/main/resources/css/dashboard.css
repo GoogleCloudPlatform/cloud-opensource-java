@@ -10,6 +10,11 @@
    background-color: gray;
    font-weight: bold;
  }
+
+ p.DEPENDENCY_TREE_NODE {
+   margin-top: 0;
+   margin-bottom: 0;
+ }
  
  body {
    font-family: "Poppins", sans-serif;

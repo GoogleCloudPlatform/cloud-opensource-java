@@ -116,11 +116,11 @@
       <#if currentNode.size() gt 0>
         <#-- root node does not have any leaf -->
         <#if parent.size() gt 0>
-          <#assign label = 'required by ' + parent.getLeaf() />
+          <#assign label = 'parent: ' + parent.getLeaf() />
         <#else>
           <#assign label = 'root' />
         </#if>
-        <p title="${label}">${currentNode.getLeaf()}</p>
+        <p class="DEPENDENCY_TREE_NODE" title="${label}">${currentNode.getLeaf()}</p>
       </#if>
       <ul>
         <#list tree.get(currentNode) as childNode>
