@@ -62,7 +62,8 @@ public class DependencyGraphBuilder {
   }
 
   // caching cuts time by about a factor of 4.
-  private static final Map<String, DependencyNode> cache = new HashMap<>();
+  private static final Map<String, DependencyNode> cacheWithProvidedScope = new HashMap<>();
+  private static final Map<String, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
 
   private static DependencyNode resolveCompileTimeDependencies(Artifact rootDependencyArtifact)
       throws DependencyCollectionException, DependencyResolutionException {
@@ -74,6 +75,9 @@ public class DependencyGraphBuilder {
       throws DependencyCollectionException, DependencyResolutionException {
     
     String key = Artifacts.toCoordinates(rootDependencyArtifact);
+
+    Map<String, DependencyNode> cache =
+        includeProvidedScope ? cacheWithProvidedScope : cacheWithoutProvidedScope;
     if (cache.containsKey(key)) {
       return cache.get(key);
     }

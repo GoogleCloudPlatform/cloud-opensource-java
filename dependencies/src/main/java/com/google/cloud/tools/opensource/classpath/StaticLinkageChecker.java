@@ -47,7 +47,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -85,6 +84,7 @@ class StaticLinkageChecker {
   private final ImmutableList<Path> jarFilePaths;
 
   StaticLinkageChecker(boolean reportOnlyReachable, List<Path> jarFilePaths) {
+    // TODO(suztomo): Create immutable instance variable for class repository issue#208
     this.reportOnlyReachable = reportOnlyReachable;
     this.jarFilePaths = ImmutableList.copyOf(jarFilePaths);
   }
@@ -131,6 +131,8 @@ class StaticLinkageChecker {
 
   /**
    * Parses arguments to instantiate the class with configuration specified in arguments.
+   *
+   * TODO(suztomo): create a class to represent command line option #209
    *
    * @param arguments command-line arguments
    * @return static linkage checker instance with its variables populated from the arguments
@@ -219,6 +221,9 @@ class StaticLinkageChecker {
 
   /**
    * Given the jar file paths, runs the static linkage check and returns unresolved methods.
+   *
+   * TODO(suztomo): Separate logic between data retrieval and traverse
+   * https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/187/files
    *
    * @return list of methods that are not found in the jar files
    * @throws IOException when there is a problem in reading a jar file

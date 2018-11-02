@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import java.io.IOException;
@@ -123,7 +124,7 @@ class ClassDumper {
       Set<String> classesDefinedInSameJar = jarFileToClasses.get(jarPathForTheClass);
       List<FullyQualifiedMethodSignature> nextMethodReferences = listMethodReferences(javaClass);
       List<FullyQualifiedMethodSignature> nextExternalMethodReferences = new ArrayList<>();
-      List<String> referencedInternalClasses = new ArrayList<>();
+      Set<String> referencedInternalClasses = new HashSet<>();
       for (FullyQualifiedMethodSignature methodReference : nextMethodReferences) {
         String classNameInMethodReference = methodReference.getClassName();
         if (classesDefinedInSameJar.contains(classNameInMethodReference)) {
@@ -136,7 +137,7 @@ class ClassDumper {
       }
 
       // Follows usage graph from the internal classes to external references
-      List<FullyQualifiedMethodSignature> externalReferencesFromInternalClasses =
+      ImmutableSet<FullyQualifiedMethodSignature> externalReferencesFromInternalClasses =
           findExternalMethodReferencesByUsageGraph(
               referencedInternalClasses, repository, classesDefinedInSameJar);
       nextExternalMethodReferences.addAll(externalReferencesFromInternalClasses);
@@ -152,8 +153,8 @@ class ClassDumper {
 
   /**
    * Finds external method references by following usage graph from {@code initialClassNames}
-   * through other internal classes. For example, given following usage graph of 4 classes in
-   * 2 jar files:
+   * through other internal classes. For example, given following usage graph of 4 classes in 2 jar
+   * files:
    *
    * <pre>
    *   'Class A' → 'Class B' → 'Class C' → 'Class D'
@@ -166,19 +167,20 @@ class ClassDumper {
    * @param initialClassNames list of classes to follow usage graph. They must be within same jar
    *     file.
    * @param repository BCEL repository to list method references
-   * @param classesDefinedInSameJar set of classes defined in the same jar file as
-   *     {@code initialClassNames}
-   * @return list of method references external to the jar file of {@code initialClassNames}
+   * @param classesDefinedInSameJar set of classes defined in the same jar file as {@code
+   *     initialClassNames}
+   * @return set of method references external to the jar file of {@code initialClassNames}
    * @throws ClassNotFoundException when there is a problem in accessing a class via BCEL repository
    */
-  private static List<FullyQualifiedMethodSignature> findExternalMethodReferencesByUsageGraph(
-      List<String> initialClassNames,
-      SyntheticRepository repository,
-      Set<String> classesDefinedInSameJar)
-      throws ClassNotFoundException {
+  private static ImmutableSet<FullyQualifiedMethodSignature>
+      findExternalMethodReferencesByUsageGraph(
+          Set<String> initialClassNames,
+          SyntheticRepository repository,
+          Set<String> classesDefinedInSameJar)
+          throws ClassNotFoundException {
     Set<String> visitedClasses = new HashSet<>(initialClassNames);
     Queue<String> classQueue = new ArrayDeque<>(initialClassNames);
-    List<FullyQualifiedMethodSignature> nextExternalMethodReferences = new ArrayList<>();
+    Set<FullyQualifiedMethodSignature> nextExternalMethodReferences = new HashSet<>();
     while (!classQueue.isEmpty()) {
       String internalClassName = classQueue.remove();
       JavaClass internalJavaClass = repository.loadClass(internalClassName);
@@ -196,7 +198,7 @@ class ClassDumper {
         }
       }
     }
-    return nextExternalMethodReferences;
+    return ImmutableSet.copyOf(nextExternalMethodReferences);
   }
 
   /**
