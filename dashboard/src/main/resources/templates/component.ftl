@@ -124,13 +124,15 @@
       </#if>
       <ul>
         <#list tree.get(currentNode) as childNode>
-          <li>
+          <li class="DEPENDENCY_TREE_NODE">
             <@formatDependencyNode tree childNode currentNode />
           </li>
         </#list>
       </ul>
     </#macro>
-    <@formatDependencyNode dependencyTree dependencyTreeRoot dependencyTreeRoot/>
+    <@formatDependencyNode dependencyTree
+        objectConstructor('com.google.cloud.tools.opensource.dependencies.DependencyPath')
+        objectConstructor('com.google.cloud.tools.opensource.dependencies.DependencyPath') />
 
      <hr />
      <p id='updated'>Last generated at ${lastUpdated}</p>

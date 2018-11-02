@@ -16,9 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
+import freemarker.template.utility.ObjectConstructor;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -51,11 +49,14 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.Update;
 import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 
 public class DashboardMain {
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
@@ -202,6 +203,7 @@ public class DashboardMain {
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
+      templateData.put("objectConstructor", new ObjectConstructor());
       templateData.put("groupId", artifact.getGroupId());
       templateData.put("artifactId", artifact.getArtifactId());
       templateData.put("version", artifact.getVersion());
@@ -212,7 +214,6 @@ public class DashboardMain {
       // In `dependencyTree`, the root node is represented by empty DependencyPath
       // Casting avoids Freemarker's error on `AbstractListMultimap.get` in CircleCI
       templateData.put("dependencyTree", (ArrayListMultimap) dependencyTree);
-      templateData.put("dependencyTreeRoot", new DependencyPath());
       report.process(templateData, out);
 
       ArtifactResults results = new ArtifactResults(artifact);
