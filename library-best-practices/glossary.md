@@ -38,18 +38,18 @@ Java Dependency Glossary
   - Direct (first-order) dependencies will trivially comply with this rule in
     all major build systems, so the real concern is transitive (second-order and
     higher) dependencies.
-  - Generally, to achieve linkage compatibility (when assuming breaking changes
-    aren't made within major versions), the upper bound of the versions in the
-    tree should be selected.
-    - This should fix all cases of linkage conflicts caused by purely additive
-      functionality.
   - To achieve version alignment when multiple versions of a transitive
     dependency are present, a direct dependency on the transitive dependency
-    will need to be added, in order to support Maven's dependency resolution
-    logic (which selects the version with the fewest hops on the dependency
-    tree).
+    needs to be added, in order to support Maven's dependency resolution logic
+    (which selects the version with the fewest hops on the dependency tree).
   - Linkage compatibility is the desired result from version alignment, but not
     an inherent characteristic of the definition.
+  - Sub-type: **Upper version alignment**: Version alignment where the version
+    that is selected is the highest version in the dependency tree.
+    - Using upper version alignment ensures that when packages are upgraded
+      to higher versions which only add functionality and don't make any
+      breaking changes, there will be no new linkage conflicts.
+
 
 #### Conflict relationships
 

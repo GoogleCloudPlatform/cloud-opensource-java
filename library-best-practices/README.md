@@ -33,4 +33,5 @@ or significantly changed before the set is classified as Beta.
    dependencies
 - [JLBP-14](JLBP-14.md): Do not use version ranges
 - [JLBP-15](JLBP-15.md): Produce a BOM for multi-module projects
-- [JLBP-16](JLBP-16.md): Ensure version alignment of dependencies for consumers
+- [JLBP-16](JLBP-16.md): Ensure upper version alignment of dependencies for
+  consumers
