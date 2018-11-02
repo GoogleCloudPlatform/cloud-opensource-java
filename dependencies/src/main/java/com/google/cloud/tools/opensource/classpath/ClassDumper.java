@@ -32,7 +32,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -180,18 +179,16 @@ class ClassDumper {
     Queue<String> classQueue = new ArrayDeque<>(initialClassNames);
     List<FullyQualifiedMethodSignature> nextExternalMethodReferences = new ArrayList<>();
     while (!classQueue.isEmpty()) {
-      String internalClassName = classQueue.poll();
+      String internalClassName = classQueue.remove();
       JavaClass internalJavaClass = repository.loadClass(internalClassName);
       List<FullyQualifiedMethodSignature> nextMethodReferencesFromInternalClass =
           listMethodReferences(internalJavaClass);
       for (FullyQualifiedMethodSignature methodReference : nextMethodReferencesFromInternalClass) {
         String nextClassName = methodReference.getClassName();
         if (classesDefinedInSameJar.contains(nextClassName)) {
-          if (visitedClasses.contains(nextClassName)) {
-            continue;
+          if (visitedClasses.add(nextClassName)) {
+            classQueue.add(nextClassName);
           }
-          classQueue.add(nextClassName);
-          visitedClasses.add(nextClassName);
         } else {
           // While iterating the graph, record method references external to the jar file
           nextExternalMethodReferences.add(methodReference);

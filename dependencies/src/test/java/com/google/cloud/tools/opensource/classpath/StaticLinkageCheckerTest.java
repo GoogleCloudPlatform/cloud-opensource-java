@@ -21,6 +21,7 @@ import static org.hamcrest.CoreMatchers.is;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +39,6 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.util.SyntheticRepository;
 import org.eclipse.aether.RepositoryException;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 public class StaticLinkageCheckerTest {
@@ -48,7 +48,7 @@ public class StaticLinkageCheckerTest {
       "testdata/proto-google-cloud-firestore-v1beta1-0.28.0.jar";
   private final String EXAMPLE_CLASS_FILE =
       "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0_FirestoreGrpc.class";
-  private final List<Path> firestoreDependencies = Arrays.asList(
+  private final ImmutableList<Path> FIRESTORE_DEPENDENCIES = ImmutableList.of(
       absolutePathOfResource("testdata/protobuf-java-3.6.1.jar"),
       absolutePathOfResource("testdata/grpc-core-1.13.1.jar"),
       absolutePathOfResource("testdata/grpc-stub-1.13.1.jar"),
@@ -56,14 +56,16 @@ public class StaticLinkageCheckerTest {
       absolutePathOfResource("testdata/grpc-protobuf-lite-1.13.1.jar")
   );
 
-  private StaticLinkageChecker staticLinkageChecker;
+  private static final Correspondence<FullyQualifiedMethodSignature, String> CLASS_NAMES =
+      new Correspondence<FullyQualifiedMethodSignature, String>() {
+        public boolean compare(FullyQualifiedMethodSignature actual, String expected) {
+          return actual.getClassName().equals(expected);
+        }
 
-  @Before
-  public void setup() {
-    boolean reportOnlyReachable = true;
-    staticLinkageChecker = new StaticLinkageChecker(reportOnlyReachable,
-        ImmutableList.of());
-  }
+        public String toString() {
+          return "has class name equal to";
+        }
+      };
 
   @Test
   public void testListExternalMethodReferences()
@@ -109,11 +111,11 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testResolvedMethodReferences() throws URISyntaxException {
+  public void testResolvedMethodReferences() {
     List<Path> pathsForJar = Lists.newArrayList(
         absolutePathOfResource(EXAMPLE_JAR_FILE),
         absolutePathOfResource(EXAMPLE_PROTO_JAR_FILE));
-    pathsForJar.addAll(firestoreDependencies);
+    pathsForJar.addAll(FIRESTORE_DEPENDENCIES);
 
     FullyQualifiedMethodSignature internalMethodReference =
         new FullyQualifiedMethodSignature(
@@ -154,11 +156,11 @@ public class StaticLinkageCheckerTest {
         absolutePathOfResource(EXAMPLE_JAR_FILE),
         absolutePathOfResource(EXAMPLE_PROTO_JAR_FILE)
     );
-    pathsForJar.addAll(firestoreDependencies);
+    pathsForJar.addAll(FIRESTORE_DEPENDENCIES);
 
-
+    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(true, pathsForJar);
     List<FullyQualifiedMethodSignature> report =
-        staticLinkageChecker.findUnresolvedMethodReferences(pathsForJar);
+        staticLinkageChecker.findUnresolvedMethodReferences();
     Truth.assertThat(report.toString()).doesNotContain("com.google.api.pathtemplate.PathTemplate");
     // As RunQueryRequest is defined in the proto jar file, it should not appear in the report
     Truth.assertThat(report.toString())
@@ -229,8 +231,9 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testNonExistentJarFileInput() throws ClassNotFoundException {
     try {
-      staticLinkageChecker.findUnresolvedMethodReferences(
-          Arrays.asList(Paths.get("nosuchfile.jar")));
+      StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(true,
+          ImmutableList.of(Paths.get("nosuchfile.jar")));
+      staticLinkageChecker.findUnresolvedMethodReferences();
       Assert.fail("findUnresolvedMethodReferences should raise IOException");
     } catch (IOException ex) {
       Assert.assertEquals("The file is not readable: nosuchfile.jar", ex.getMessage());
@@ -308,13 +311,14 @@ public class StaticLinkageCheckerTest {
     Truth.assertThat(paths).isNotEmpty();
 
     // Prior to class usage graph traversal, there was linkage error for lzma-java classes.
+    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(true, paths);
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        staticLinkageChecker.findUnresolvedMethodReferences(paths);
+        staticLinkageChecker.findUnresolvedMethodReferences();
 
-    Assert.assertThat(
-        "Because lzma-java classes are not used by google-cloud-bigtable and its dependencies, the classes should not appear as unresolved method references.",
-        unresolvedMethodReferences.size(),
-        is(0));
+    Truth.assertWithMessage(
+            "Because lzma-java classes are not reachable from google-cloud-bigtable as entry point, the classes should not appear as unresolved method references.")
+        .that(unresolvedMethodReferences)
+        .isEmpty();
   }
 
   @Test
@@ -327,15 +331,15 @@ public class StaticLinkageCheckerTest {
     // refers lzma.sdk.lzma.Encoder. StaticLinkageChecker should be able to detect it.
     boolean reportOnlyReachable = false;
     StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(reportOnlyReachable,
-        ImmutableList.of());
+        paths);
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        staticLinkageChecker.findUnresolvedMethodReferences(paths);
+        staticLinkageChecker.findUnresolvedMethodReferences();
 
-    Assert.assertTrue(
-        "StaticLinkageChecker.reportOnlyReachable should check all classes in the classpath",
-        unresolvedMethodReferences
-            .stream()
-            .anyMatch(reference -> "lzma.sdk.lzma.Encoder".equals(reference.getClassName())));
+    Truth.assertWithMessage(
+            "StaticLinkageChecker.reportOnlyReachable should check all classes in the classpath")
+        .that(unresolvedMethodReferences)
+        .comparingElementsUsing(CLASS_NAMES)
+        .contains("lzma.sdk.lzma.Encoder");
   }
 
   @Test
@@ -346,8 +350,10 @@ public class StaticLinkageCheckerTest {
 
     // Prior to 'provided' scope inclusion, there was linkage error for classes in
     // com.google.appengine.api.urlfetch package.
+    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(true,
+        paths);
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        staticLinkageChecker.findUnresolvedMethodReferences(paths);
+        staticLinkageChecker.findUnresolvedMethodReferences();
 
     Assert.assertThat(
         "Classes in com.google.appengine.api.urlfetch package are provided from appengine-api-1.0-sdk",

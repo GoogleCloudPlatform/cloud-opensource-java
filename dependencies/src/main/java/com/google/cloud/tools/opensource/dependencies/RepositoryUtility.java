@@ -68,18 +68,22 @@ public final class RepositoryUtility {
     return locator.getService(RepositorySystem.class);
   }
 
+  private static DefaultRepositorySystemSession createDefaultRepositorySystemSession(
+      RepositorySystem system) {
+    DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
+    LocalRepository localRepository = new LocalRepository(findLocalRepository().getAbsolutePath());
+    session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
+    return session;
+  }
+
   /**
    * Opens a new Maven repository session that looks for the local repository in the
    * customary ~/.m2 directory. If not found, it creates an initially empty repository in
    * a temporary location.
    */
   public static RepositorySystemSession newSession(RepositorySystem system) {
-    DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
-  
-    LocalRepository localRepository = new LocalRepository(findLocalRepository().getAbsolutePath());
-    session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
+    DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
     session.setReadOnly();
-
     return session;
   }
 
@@ -89,10 +93,7 @@ public final class RepositoryUtility {
    * dependencies with 'provided' scope.
    */
   public static RepositorySystemSession newSessionWithProvidedScope(RepositorySystem system) {
-    DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
-
-    LocalRepository localRepository = new LocalRepository(findLocalRepository().getAbsolutePath());
-    session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
+    DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
 
     // This combination of DependencySelector comes from the default specified in
     // `MavenRepositorySystemUtils.newSession`.

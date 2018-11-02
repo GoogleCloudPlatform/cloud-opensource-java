@@ -41,7 +41,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Formatter;
 import java.util.HashSet;
 import java.util.List;
@@ -82,8 +81,8 @@ class StaticLinkageChecker {
    * Flag on whether the report excludes the linkage errors on classes that are not reachable
    * from the entry point of the class usage graph.
    */
-  final boolean reportOnlyReachable;
-  final ImmutableList<Path> jarFilePaths;
+  private final boolean reportOnlyReachable;
+  private final ImmutableList<Path> jarFilePaths;
 
   StaticLinkageChecker(boolean reportOnlyReachable, List<Path> jarFilePaths) {
     this.reportOnlyReachable = reportOnlyReachable;
@@ -102,11 +101,9 @@ class StaticLinkageChecker {
   public static void main(String[] arguments)
       throws IOException, ClassNotFoundException, RepositoryException {
     StaticLinkageChecker staticLinkageChecker = getInstanceFromArguments(arguments);
-    List<Path> jarFilePaths = staticLinkageChecker.jarFilePaths;
 
-    System.out.println("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        staticLinkageChecker.findUnresolvedMethodReferences(jarFilePaths);
+        staticLinkageChecker.findUnresolvedMethodReferences();
     printStaticLinkageErrors(unresolvedMethodReferences);
   }
 
@@ -117,20 +114,19 @@ class StaticLinkageChecker {
       return;
     }
     ImmutableSortedSet<FullyQualifiedMethodSignature> sortedUnresolvedMethodReferences =
-        ImmutableSortedSet.copyOf(Comparator.naturalOrder(), unresolvedMethodReferences);
+        ImmutableSortedSet.copyOf(unresolvedMethodReferences);
     int count = sortedUnresolvedMethodReferences.size();
-    StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append(
-        "There were " + count + " unresolved method references from the jar file(s):\n");
+    Formatter formatter = new Formatter();
+    formatter.format(
+        "There were %d unresolved method references from the jar file(s):\n", count);
     for (FullyQualifiedMethodSignature methodReference : sortedUnresolvedMethodReferences) {
-      Formatter formatter = new Formatter(stringBuilder);
       formatter.format(
           "Class: '%s', method: '%s' with descriptor %s\n",
           methodReference.getClassName(),
           methodReference.getMethodSignature().getMethodName(),
           methodReference.getMethodSignature().getDescriptor());
     }
-    System.out.println(stringBuilder);
+    System.out.println(formatter);
   }
 
   /**
@@ -224,17 +220,17 @@ class StaticLinkageChecker {
   /**
    * Given the jar file paths, runs the static linkage check and returns unresolved methods.
    *
-   * @param jarFilePaths absolute paths to jar files to scan for static linkage check
    * @return list of methods that are not found in the jar files
    * @throws IOException when there is a problem in reading a jar file
    * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
    */
-  List<FullyQualifiedMethodSignature> findUnresolvedMethodReferences(
-      List<Path> jarFilePaths)
+  List<FullyQualifiedMethodSignature> findUnresolvedMethodReferences()
       throws IOException, ClassNotFoundException {
     Preconditions.checkArgument(!jarFilePaths.isEmpty(), "no jar files specified");
 
-    Set<String> classesCheckedMethodReference = new HashSet<>();
+    System.out.println("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
+
+    Set<String> visitedClasses = new HashSet<>();
     List<FullyQualifiedMethodSignature> methodReferencesFromInputClassPath = new ArrayList<>();
 
     // When reportOnlyReachable is true, to avoid false positives from unused classes in 3rd-party
@@ -248,12 +244,12 @@ class StaticLinkageChecker {
         throw new IOException("The file is not readable: " + absolutePathToJar);
       }
       methodReferencesFromInputClassPath.addAll(
-          listExternalMethodReferences(absolutePathToJar, classesCheckedMethodReference));
+          listExternalMethodReferences(absolutePathToJar, visitedClasses));
     }
 
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         findUnresolvedReferences(
-            jarFilePaths, methodReferencesFromInputClassPath, classesCheckedMethodReference);
+            jarFilePaths, methodReferencesFromInputClassPath, visitedClasses);
     return unresolvedMethodReferences;
   }
 
@@ -300,7 +296,7 @@ class StaticLinkageChecker {
     // Breadth-first search
     Queue<FullyQualifiedMethodSignature> queue = new ArrayDeque<>(initialMethodReferences);
     while (!queue.isEmpty()) {
-      FullyQualifiedMethodSignature methodReference = queue.poll();
+      FullyQualifiedMethodSignature methodReference = queue.remove();
       String className = methodReference.getClassName();
       if (isBuiltInClassName(className)) {
         // Ignore references to JDK package
@@ -323,14 +319,12 @@ class StaticLinkageChecker {
           availableMethodsInJars.add(methodReference);
 
           // Enqueue references from the class unless it is already visited in class usage graph
-          if (classesVisited.contains(className)) {
-            continue;
+          if (classesVisited.add(className)) {
+            List<FullyQualifiedMethodSignature> nextExternalMethodReferences =
+                ClassDumper.listExternalMethodReferences(
+                    className, jarFileToClasses, classLoaderFromJars, repository);
+            queue.addAll(nextExternalMethodReferences);
           }
-          classesVisited.add(className);
-          List<FullyQualifiedMethodSignature> nextExternalMethodReferences =
-              ClassDumper.listExternalMethodReferences(
-                  className, jarFileToClasses, classLoaderFromJars, repository);
-          queue.addAll(nextExternalMethodReferences);
         } else {
           unresolvedMethods.add(methodReference);
         }
@@ -362,8 +356,7 @@ class StaticLinkageChecker {
         for (ClassInfo classInfo : classes) {
           String className = classInfo.getName();
           JavaClass javaClass = repository.loadClass(className);
-          String topLevelClassName = javaClass.getClassName();
-          pathToClasses.put(jarFilePath, topLevelClassName);
+          pathToClasses.put(jarFilePath, className);
           // This does not take double-nested classes. As long as such classes are accessed
           // only from the outer class, static linkage checker does not report false positives
           // TODO: enhance this so that it can work with double-nested classes
@@ -406,12 +399,12 @@ class StaticLinkageChecker {
         clazz.getMethod(methodSignature.getMethodName(),
             parameterTypes);
       }
+      return true;
     } catch (NoSuchMethodException | ClassNotFoundException ex) {
       // Attempt 2: Find the class and method in BCEL API
       // BCEL helps to search availability of (package) private class, constructors and methods
       // that are inaccessible to Java's reflection API or the class loader.
       JavaClass javaClass = repository.loadClass(className);
-      boolean methodFoundInBcel = false;
       while (javaClass != null) {
         // Inherited methods need checking with the parent class name
         FullyQualifiedMethodSignature methodReferenceForClass = new FullyQualifiedMethodSignature(
@@ -422,15 +415,13 @@ class StaticLinkageChecker {
         List<FullyQualifiedMethodSignature> availableMethodsOnClass =
             listMethodsOnClass(javaClass);
         if (availableMethodsOnClass.contains(methodReferenceForClass)) {
-          methodFoundInBcel = true;
-          break;
+          return true;
         }
         // null if java.lang.Object
         javaClass = javaClass.getSuperClass();
       }
-      return methodFoundInBcel;
+      return false;
     }
-    return true;
   }
 
   private static Class bcelTypeToJavaClass(Type type, ClassLoader classLoader) {

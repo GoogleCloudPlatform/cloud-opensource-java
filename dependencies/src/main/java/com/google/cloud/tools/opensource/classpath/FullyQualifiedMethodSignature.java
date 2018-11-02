@@ -17,7 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ComparisonChain;
+import java.util.Comparator;
 import java.util.Objects;
 
 /**
@@ -25,6 +25,15 @@ import java.util.Objects;
  * class name.
  */
 class FullyQualifiedMethodSignature implements Comparable<FullyQualifiedMethodSignature> {
+  private static final Comparator<FullyQualifiedMethodSignature> comparator =
+      Comparator.comparing(FullyQualifiedMethodSignature::getClassName)
+          .thenComparing(
+              fullyQualifiedMethodSignature ->
+                  fullyQualifiedMethodSignature.getMethodSignature().getMethodName())
+          .thenComparing(
+              fullyQualifiedMethodSignature ->
+                  fullyQualifiedMethodSignature.getMethodSignature().getDescriptor());
+
   private String className;
   private MethodSignature methodSignature;
 
@@ -74,10 +83,6 @@ class FullyQualifiedMethodSignature implements Comparable<FullyQualifiedMethodSi
 
   @Override
   public int compareTo(FullyQualifiedMethodSignature that) {
-    return ComparisonChain.start()
-        .compare(this.className, that.className)
-        .compare(this.methodSignature.getMethodName(), that.methodSignature.getMethodName())
-        .compare(this.methodSignature.getDescriptor(), that.methodSignature.getDescriptor())
-        .result();
+    return comparator.compare(this, that);
   }
 }

@@ -148,7 +148,7 @@ public class DependencyGraphBuilder {
       throws DependencyCollectionException, DependencyResolutionException {
     DependencyNode node = resolveCompileTimeDependencies(artifact, true);
     DependencyGraph graph = new DependencyGraph();
-    levelOrder(node, graph, LevelOrderOption.FULL_DEPENDENCY_WITH_PROVIDED);
+    levelOrder(node, graph, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
 
     return graph;
   }
@@ -163,7 +163,7 @@ public class DependencyGraphBuilder {
     // root node
     DependencyNode node = resolveCompileTimeDependencies(artifact);
     DependencyGraph graph = new DependencyGraph();
-    levelOrder(node, graph, LevelOrderOption.FULL_DEPENDENCY);
+    levelOrder(node, graph, GraphTraversalOption.FULL_DEPENDENCY);
     
     return graph;
   }
@@ -205,7 +205,7 @@ public class DependencyGraphBuilder {
 
   private static void levelOrder(DependencyNode node, DependencyGraph graph) {
     try {
-      levelOrder(node, graph, LevelOrderOption.NONE);
+      levelOrder(node, graph, GraphTraversalOption.NONE);
     } catch (RepositoryException ex) {
       throw new RuntimeException(
           "There was problem in resolving dependencies even when it is not supposed to resolve dependency",
@@ -213,30 +213,38 @@ public class DependencyGraphBuilder {
     }
   }
 
-  private enum LevelOrderOption{NONE, FULL_DEPENDENCY, FULL_DEPENDENCY_WITH_PROVIDED}
+  private enum GraphTraversalOption {
+    NONE,
+    FULL_DEPENDENCY,
+    FULL_DEPENDENCY_WITH_PROVIDED;
+
+    private boolean resolveFullDependencies() {
+      return this == FULL_DEPENDENCY
+          || this == FULL_DEPENDENCY_WITH_PROVIDED;
+    }
+  }
 
   /**
    * Traverses dependency tree in level-order (breadth-first search) and stores {@link
    * DependencyPath} instances corresponding to tree nodes to {@link DependencyGraph}. When
-   * resolveFullDependency flag is true, then it resolves the dependency of the artifact of the each
+   * {@code graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED,
+   * then it resolves the dependency of the artifact of the each
    * node in the dependency tree; otherwise it just follows the given dependency tree starting with
    * firstNode.
    *
    * @param firstNode node to start traversal
    * @param graph graph to store {@link DependencyPath} instances
-   * @param recursiveOption option to recursively resolve the dependency to build complete
+   * @param graphTraversalOption option to recursively resolve the dependency to build complete
    *     dependency tree, with or without dependencies of provided scope
    * @throws DependencyCollectionException when there is a problem in collecting dependency. This
-   *     happens only when recursiveOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
+   *     happens only when graphTraversalOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
    * @throws DependencyResolutionException when there is a problem in resolving dependency. This
-   *     happens only when recursiveOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
+   *     happens only when graphTraversalOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
    */
   private static void levelOrder(
-      DependencyNode firstNode, DependencyGraph graph, LevelOrderOption recursiveOption)
+      DependencyNode firstNode, DependencyGraph graph, GraphTraversalOption graphTraversalOption)
       throws DependencyCollectionException, DependencyResolutionException {
-    boolean resolveFullDependency =
-        recursiveOption == LevelOrderOption.FULL_DEPENDENCY
-            || recursiveOption == LevelOrderOption.FULL_DEPENDENCY_WITH_PROVIDED;
+    boolean resolveFullDependency = graphTraversalOption.resolveFullDependencies();
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
     while (!queue.isEmpty()) {
@@ -261,9 +269,10 @@ public class DependencyGraphBuilder {
 
         if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
           try {
+            boolean includeProvidedScope =
+                graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
             dependencyNode =
-                resolveCompileTimeDependencies(dependencyNode.getArtifact(),
-                    recursiveOption == LevelOrderOption.FULL_DEPENDENCY_WITH_PROVIDED);
+                resolveCompileTimeDependencies(dependencyNode.getArtifact(), includeProvidedScope);
           } catch (DependencyResolutionException ex) {
             // TODO: change to logger
             System.err.println("Error resolving " + dependencyNode + " under " + parentNodes);
