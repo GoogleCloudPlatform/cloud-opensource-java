@@ -198,7 +198,6 @@ public class DashboardMain {
 
       ListMultimap<DependencyPath, DependencyPath> dependencyTree =
           DependencyTreeFormatter.buildDependencyPathTree(completeDependencies.list());
-      System.out.println("dependencyTree class " + dependencyTree.getClass().getName());
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
