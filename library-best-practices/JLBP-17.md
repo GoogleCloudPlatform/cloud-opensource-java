@@ -2,11 +2,11 @@
 -------------------------------------------
 
 For any particular library dependency chain, the libraries involved need to
-coordinate the adoption of a new major version of any particular shared library
-which doesn't rename its package so that consumers can continue using all
-functionality together. (This best practice doesn't apply to adoption of new
-major versions where the java package was renamed, because the old and new
-packages can co-exist.)
+coordinate the adoption of new major versions of any shared dependency that has
+breaking changes. This is necessary to enable consumers to easily use the latest
+version of all of the functionality together.  This best practice doesn't apply
+to adoption of new major versions where the package was renamed, because the old
+and new packages can co-exist.
 
 As an example of what happens when this is not followed, imagine a partial
 adoption of a new major version of a leaf library. Start with the following
@@ -19,12 +19,11 @@ gax-java 1.29.0 ->
   guava 20.0
 ```
 
-Next, guava releases a later version (26.0) which has a breaking change (a
-method is deleted). If gax-java 1.29.0 and grpc-java 1.13.1 depend on the
-feature that is deleted, then it would be impossible for a user to depend on the
-latest version of all of these artifacts. The following dependency chain will
-have static linkage conflicts (this assumes that the end user overrides
-grpc-java's dependency on guava to the latest at that point in time, 26.0):
+Suppose Guava version 26.0 which deletes a public method.  If gax-java 1.29.0
+and grpc-java 1.13.1 invoke that method, it is impossible for a user to depend
+on the latest version of all three artifacts. The following dependency chain has
+static linkage conflicts. This assumes that the end user overrides grpc-java's
+dependency on guava to the latest at that point in time, 26.0:
 
 ```
 gax-java 1.29.0 ->
@@ -34,7 +33,7 @@ gax-java 1.29.0 ->
 ```
 
 After grpc-java releases a new version (1.16.0) which depends on the new version
-of guava, gax-java will still experience conflicts:
+of guava, gax-java still experiences conflicts:
 
 ```
 gax-java 1.29.0 ->
@@ -43,8 +42,8 @@ gax-java 1.29.0 ->
   (ERROR) guava 26.0
 ```
 
-Finally after gax-java upgrades its dependency on Guava, there will no longer be
-conflicts:
+Only when gax-java and grpc-jav aboth upgrade their dependency on Guava are
+there no longer any conflicts:
 
 ```
 gax-java 1.35.0 ->
@@ -56,7 +55,6 @@ gax-java 1.35.0 ->
 This state is impossible to avoid completely (particularly during the process of
 rolling out such a breaking change), but the amount of time that the dependency
 chain is in this state should be minimized. Each library in the chain should be
-prepared for such an upgrade before it starts, and the upgrade should be
-propagated up the tree in as little time as possible, so that consumers can
-continue to safely use the rule of depending on the latest version of every
-package in the tree.
+prepared for such an upgrade before it starts. The upgrade should be propagated
+up the tree in as little time as possible, so that consumers can continue to
+safely depend on the latest version of every package.
