@@ -198,6 +198,8 @@ public class DashboardMain {
       Map<Artifact, Artifact> globalUpperBoundFailures = findUpperBoundsFailures(
           collectLatestVersions(globalDependencies), transitiveDependencies);
 
+      // In this representation of Maven dependency tree, the root can be queried by empty
+      // DependencyPath instance
       ListMultimap<DependencyPath, DependencyPath> dependencyTree =
           DependencyTreeFormatter.buildDependencyPathTree(completeDependencies.list());
       Template report = configuration.getTemplate("/templates/component.ftl");
@@ -211,7 +213,6 @@ public class DashboardMain {
       templateData.put("upperBoundFailures", upperBoundFailures);
       templateData.put("globalUpperBoundFailures", globalUpperBoundFailures);
       templateData.put("lastUpdated", LocalDateTime.now());
-      // In `dependencyTree`, the root node is represented by empty DependencyPath
       // Casting avoids Freemarker's error on `AbstractListMultimap.get` in CircleCI
       templateData.put("dependencyTree", (ArrayListMultimap) dependencyTree);
       report.process(templateData, out);

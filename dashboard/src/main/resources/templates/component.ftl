@@ -130,9 +130,12 @@
         </#list>
       </ul>
     </#macro>
+
+    <#assign emptyNodeToQueryRootNode
+        = objectConstructor('com.google.cloud.tools.opensource.dependencies.DependencyPath') />
     <@formatDependencyNode dependencyTree
-        objectConstructor('com.google.cloud.tools.opensource.dependencies.DependencyPath')
-        objectConstructor('com.google.cloud.tools.opensource.dependencies.DependencyPath') />
+        emptyNodeToQueryRootNode
+        emptyNodeToQueryRootNode />
 
      <hr />
      <p id='updated'>Last generated at ${lastUpdated}</p>
