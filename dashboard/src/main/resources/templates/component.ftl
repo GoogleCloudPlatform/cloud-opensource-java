@@ -111,33 +111,25 @@
 
     <h2>Dependencies</h2>
 
-    <#macro formatDependencyNode tree currentNode parent>
-      <#-- tree: ListMultimap<DependencyPath, DependencyPath>, currentNode: DependencyPath -->
-      <#if currentNode.size() gt 0>
-        <#-- root node does not have any leaf -->
-        <#if parent.size() gt 0>
-          <#assign label = 'parent: ' + parent.getLeaf() />
-        <#else>
-          <#assign label = 'root' />
-        </#if>
-        <p class="DEPENDENCY_TREE_NODE" title="${label}">${currentNode.getLeaf()}</p>
+    <@formatDependencyNode dependencyRootNode dependencyRootNode />
+
+    <#macro formatDependencyNode currentNode parent>
+      <#if parent == currentNode>
+        <#assign label = 'root' />
+      <#else>
+        <#assign label = 'parent: ' + parent.getLeaf() />
       </#if>
+      <p class="DEPENDENCY_TREE_NODE" title="${label}">${currentNode.getLeaf()}</p>
       <ul>
-        <#list tree.get(currentNode) as childNode>
+        <#list dependencyTree.get(currentNode) as childNode>
           <li class="DEPENDENCY_TREE_NODE">
-            <@formatDependencyNode tree childNode currentNode />
+            <@formatDependencyNode childNode currentNode />
           </li>
         </#list>
       </ul>
     </#macro>
 
-    <#assign emptyNodeToQueryRootNode
-        = objectConstructor('com.google.cloud.tools.opensource.dependencies.DependencyPath') />
-    <@formatDependencyNode dependencyTree
-        emptyNodeToQueryRootNode
-        emptyNodeToQueryRootNode />
-
-     <hr />
-     <p id='updated'>Last generated at ${lastUpdated}</p>
+    <hr />
+    <p id='updated'>Last generated at ${lastUpdated}</p>
   </body>
 </html>

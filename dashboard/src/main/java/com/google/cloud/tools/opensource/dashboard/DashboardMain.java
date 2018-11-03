@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import freemarker.template.utility.ObjectConstructor;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -55,7 +54,7 @@ import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.Update;
 import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 
 public class DashboardMain {
@@ -129,6 +128,7 @@ public class DashboardMain {
           table.add(results);
         }
       } catch (RepositoryException | IOException ex) {
+        System.err.println(ex.getMessage());
         ArtifactResults unavailableTestResult = new ArtifactResults(entry.getKey());
         unavailableTestResult.setExceptionMessage(ex.getMessage());
         // Even when there's problem generating test result, show the error in the dashboard
@@ -198,14 +198,11 @@ public class DashboardMain {
       Map<Artifact, Artifact> globalUpperBoundFailures = findUpperBoundsFailures(
           collectLatestVersions(globalDependencies), transitiveDependencies);
 
-      // In this representation of Maven dependency tree, the root can be queried by empty
-      // DependencyPath instance
       ListMultimap<DependencyPath, DependencyPath> dependencyTree =
           DependencyTreeFormatter.buildDependencyPathTree(completeDependencies.list());
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
-      templateData.put("objectConstructor", new ObjectConstructor());
       templateData.put("groupId", artifact.getGroupId());
       templateData.put("artifactId", artifact.getArtifactId());
       templateData.put("version", artifact.getVersion());
@@ -213,8 +210,9 @@ public class DashboardMain {
       templateData.put("upperBoundFailures", upperBoundFailures);
       templateData.put("globalUpperBoundFailures", globalUpperBoundFailures);
       templateData.put("lastUpdated", LocalDateTime.now());
-      // Casting avoids Freemarker's error on `AbstractListMultimap.get` in CircleCI
-      templateData.put("dependencyTree", (ArrayListMultimap) dependencyTree);
+      // Explicit casting avoids Freemarker's error on `AbstractListMultimap.get` in CircleCI
+      templateData.put("dependencyTree", (LinkedListMultimap) dependencyTree);
+      templateData.put("dependencyRootNode", dependencyTree.values().iterator().next());
       report.process(templateData, out);
 
       ArtifactResults results = new ArtifactResults(artifact);
