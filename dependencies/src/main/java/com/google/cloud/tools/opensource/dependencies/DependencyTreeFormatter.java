@@ -101,9 +101,10 @@ public class DependencyTreeFormatter {
    * Builds ListMultimap that represents a Maven dependency tree of parent-children relationship.
    *
    * @param dependencyPaths dependency path instances without assuming any order
-   * @return ListMultimap representing a Maven dependency tree. The root Maven artifact is available
-   *     by querying the tree with an empty {@link DependencyPath}. For a node in the tree, its
-   *     children are retrieved by {@code tree.get(node)}.
+   * @return ListMultimap representing a Maven dependency tree of parent-children relationship. The
+   *     {@link DependencyPath} representing the root Maven artifact is available by querying the
+   *     tree with an empty {@link DependencyPath} instance. For a {@code node} in the returned
+   *     {@code tree}, its children are retrieved by {@code tree.get(node)}.
    */
   public static ListMultimap<DependencyPath, DependencyPath> buildDependencyPathTree(
       Collection<DependencyPath> dependencyPaths) {
