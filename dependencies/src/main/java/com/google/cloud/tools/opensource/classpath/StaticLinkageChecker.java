@@ -336,10 +336,11 @@ class StaticLinkageChecker {
         classesNotFound.add(className);
       }
     }
-    System.out.println(
-        "The number of resolved method references during linkage check: "
-            + availableMethodsInJars.size());
-
+    Formatter formatter = new Formatter();
+    formatter.format(
+        "The number of resolved method references during linkage check: %,d",
+        availableMethodsInJars.size());
+    System.out.println(formatter);
     return unresolvedMethods;
   }
 
