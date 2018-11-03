@@ -111,7 +111,11 @@
 
     <h2>Dependencies</h2>
 
-    <@formatDependencyNode dependencyRootNode dependencyRootNode />
+    <#if dependencyRootNode?? >
+      <@formatDependencyNode dependencyRootNode dependencyRootNode />
+    <#else>
+      <p>Dependency information is unavailable</p>
+    </#if>
 
     <#macro formatDependencyNode currentNode parent>
       <#if parent == currentNode>

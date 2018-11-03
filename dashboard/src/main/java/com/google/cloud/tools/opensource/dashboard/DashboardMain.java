@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -212,7 +213,7 @@ public class DashboardMain {
       templateData.put("lastUpdated", LocalDateTime.now());
       // Explicit casting avoids Freemarker's error on `AbstractListMultimap.get` in CircleCI
       templateData.put("dependencyTree", (LinkedListMultimap) dependencyTree);
-      templateData.put("dependencyRootNode", dependencyTree.values().iterator().next());
+      templateData.put("dependencyRootNode", Iterables.getFirst(dependencyTree.values(), null));
       report.process(templateData, out);
 
       ArtifactResults results = new ArtifactResults(artifact);
