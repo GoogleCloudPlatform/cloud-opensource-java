@@ -17,13 +17,23 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.base.MoreObjects;
+import java.util.Comparator;
 import java.util.Objects;
 
 /**
  * A representation of a method with its descriptor (type information) and fully-qualified
  * class name.
  */
-class FullyQualifiedMethodSignature {
+class FullyQualifiedMethodSignature implements Comparable<FullyQualifiedMethodSignature> {
+  private static final Comparator<FullyQualifiedMethodSignature> COMPARATOR =
+      Comparator.comparing(FullyQualifiedMethodSignature::getClassName)
+          .thenComparing(
+              fullyQualifiedMethodSignature ->
+                  fullyQualifiedMethodSignature.getMethodSignature().getMethodName())
+          .thenComparing(
+              fullyQualifiedMethodSignature ->
+                  fullyQualifiedMethodSignature.getMethodSignature().getDescriptor());
+
   private String className;
   private MethodSignature methodSignature;
 
@@ -69,5 +79,10 @@ class FullyQualifiedMethodSignature {
         .add("className", className)
         .add("methodSignature", methodSignature)
         .toString();
+  }
+
+  @Override
+  public int compareTo(FullyQualifiedMethodSignature that) {
+    return COMPARATOR.compare(this, that);
   }
 }

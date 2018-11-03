@@ -62,17 +62,30 @@ public class DependencyGraphBuilder {
   }
 
   // caching cuts time by about a factor of 4.
-  private static final Map<String, DependencyNode> cache = new HashMap<>();
+  private static final Map<String, DependencyNode> cacheWithProvidedScope = new HashMap<>();
+  private static final Map<String, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
 
   private static DependencyNode resolveCompileTimeDependencies(Artifact rootDependencyArtifact)
       throws DependencyCollectionException, DependencyResolutionException {
+    return resolveCompileTimeDependencies(rootDependencyArtifact, false);
+  }
+
+  private static DependencyNode resolveCompileTimeDependencies(Artifact rootDependencyArtifact,
+      boolean includeProvidedScope)
+      throws DependencyCollectionException, DependencyResolutionException {
     
     String key = Artifacts.toCoordinates(rootDependencyArtifact);
+
+    Map<String, DependencyNode> cache =
+        includeProvidedScope ? cacheWithProvidedScope : cacheWithoutProvidedScope;
     if (cache.containsKey(key)) {
       return cache.get(key);
     }
-    
-    RepositorySystemSession session = RepositoryUtility.newSession(system);
+
+    RepositorySystemSession session =
+        includeProvidedScope
+            ? RepositoryUtility.newSessionWithProvidedScope(system)
+            : RepositoryUtility.newSession(system);
 
     CollectRequest collectRequest = new CollectRequest();
     Dependency dependency = new Dependency(rootDependencyArtifact, "compile");
@@ -125,7 +138,25 @@ public class DependencyGraphBuilder {
     }
     return result;
   }
-  
+
+  /**
+   * Finds the full compile time, transitive dependency graph including duplicates,
+   * conflicting versions, and dependencies with 'provided' scope.
+   *
+   * @param artifact Maven artifact to retrieve its dependencies
+   * @return dependency graph representing the tree of Maven artifacts
+   * @throws DependencyCollectionException when there is a problem in collecting dependency
+   * @throws DependencyResolutionException when there is a problem in resolving dependency
+   */
+  public static DependencyGraph getStaticLinkageCheckDependencies(Artifact artifact)
+      throws DependencyCollectionException, DependencyResolutionException {
+    DependencyNode node = resolveCompileTimeDependencies(artifact, true);
+    DependencyGraph graph = new DependencyGraph();
+    levelOrder(node, graph, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
+
+    return graph;
+  }
+
   /**
    * Finds the full compile time, transitive dependency graph including duplicates
    * and conflicting versions.
@@ -136,7 +167,7 @@ public class DependencyGraphBuilder {
     // root node
     DependencyNode node = resolveCompileTimeDependencies(artifact);
     DependencyGraph graph = new DependencyGraph();
-    levelOrder(node, graph, true);
+    levelOrder(node, graph, GraphTraversalOption.FULL_DEPENDENCY);
     
     return graph;
   }
@@ -178,7 +209,7 @@ public class DependencyGraphBuilder {
 
   private static void levelOrder(DependencyNode node, DependencyGraph graph) {
     try {
-      levelOrder(node, graph, false);
+      levelOrder(node, graph, GraphTraversalOption.NONE);
     } catch (RepositoryException ex) {
       throw new RuntimeException(
           "There was problem in resolving dependencies even when it is not supposed to resolve dependency",
@@ -186,25 +217,38 @@ public class DependencyGraphBuilder {
     }
   }
 
+  private enum GraphTraversalOption {
+    NONE,
+    FULL_DEPENDENCY,
+    FULL_DEPENDENCY_WITH_PROVIDED;
+
+    private boolean resolveFullDependencies() {
+      return this == FULL_DEPENDENCY
+          || this == FULL_DEPENDENCY_WITH_PROVIDED;
+    }
+  }
+
   /**
    * Traverses dependency tree in level-order (breadth-first search) and stores {@link
    * DependencyPath} instances corresponding to tree nodes to {@link DependencyGraph}. When
-   * resolveFullDependency flag is true, then it resolves the dependency of the artifact of the each
+   * {@code graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED,
+   * then it resolves the dependency of the artifact of the each
    * node in the dependency tree; otherwise it just follows the given dependency tree starting with
    * firstNode.
    *
    * @param firstNode node to start traversal
    * @param graph graph to store {@link DependencyPath} instances
-   * @param resolveFullDependency flag to resolve dependency for each node in the tree. Useful for
-   *     building a complete tree of dependencies including <i>provided</i> scope
+   * @param graphTraversalOption option to recursively resolve the dependency to build complete
+   *     dependency tree, with or without dependencies of provided scope
    * @throws DependencyCollectionException when there is a problem in collecting dependency. This
-   *     happens only when resolveFullDependency is true.
+   *     happens only when graphTraversalOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
    * @throws DependencyResolutionException when there is a problem in resolving dependency. This
-   *     happens only when resolveFullDependency is true.
+   *     happens only when graphTraversalOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
    */
   private static void levelOrder(
-      DependencyNode firstNode, DependencyGraph graph, boolean resolveFullDependency)
+      DependencyNode firstNode, DependencyGraph graph, GraphTraversalOption graphTraversalOption)
       throws DependencyCollectionException, DependencyResolutionException {
+    boolean resolveFullDependency = graphTraversalOption.resolveFullDependencies();
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
     while (!queue.isEmpty()) {
@@ -229,7 +273,10 @@ public class DependencyGraphBuilder {
 
         if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
           try {
-            dependencyNode = resolveCompileTimeDependencies(dependencyNode.getArtifact());
+            boolean includeProvidedScope =
+                graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
+            dependencyNode =
+                resolveCompileTimeDependencies(dependencyNode.getArtifact(), includeProvidedScope);
           } catch (DependencyResolutionException ex) {
             // TODO: change to logger
             System.err.println("Error resolving " + dependencyNode + " under " + parentNodes);
