@@ -25,7 +25,7 @@ import java.util.Objects;
  * class name.
  */
 class FullyQualifiedMethodSignature implements Comparable<FullyQualifiedMethodSignature> {
-  private static final Comparator<FullyQualifiedMethodSignature> comparator =
+  private static final Comparator<FullyQualifiedMethodSignature> COMPARATOR =
       Comparator.comparing(FullyQualifiedMethodSignature::getClassName)
           .thenComparing(
               fullyQualifiedMethodSignature ->
@@ -83,6 +83,6 @@ class FullyQualifiedMethodSignature implements Comparable<FullyQualifiedMethodSi
 
   @Override
   public int compareTo(FullyQualifiedMethodSignature that) {
-    return comparator.compare(this, that);
+    return COMPARATOR.compare(this, that);
   }
 }

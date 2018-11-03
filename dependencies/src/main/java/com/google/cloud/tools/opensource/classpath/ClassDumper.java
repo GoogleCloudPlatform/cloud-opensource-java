@@ -30,7 +30,6 @@ import java.security.CodeSource;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
@@ -107,42 +106,26 @@ class ClassDumper {
    * @param repository BCEL repository to list method references for the class
    * @return list of external method references from the class
    */
-  static List<FullyQualifiedMethodSignature> listExternalMethodReferences(
+  static ImmutableSet<FullyQualifiedMethodSignature> listExternalMethodReferences(
       String className,
       SetMultimap<Path, String> jarFileToClasses,
       ClassLoader classLoader,
       SyntheticRepository repository) {
+    // TODO(suztomo): ClassDumper to have instance methods and make immutable data to instance
+    // Issue #208
     try {
-      JavaClass javaClass = repository.loadClass(className);
       Class clazz = classLoader.loadClass(className);
       CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
       if (codeSource == null) {
         // Code in bootstrap class loader (e.g., javax) does not have source
-        return Collections.emptyList();
+        return ImmutableSet.of();
       }
       Path jarPathForTheClass = Paths.get(codeSource.getLocation().toURI());
       Set<String> classesDefinedInSameJar = jarFileToClasses.get(jarPathForTheClass);
-      List<FullyQualifiedMethodSignature> nextMethodReferences = listMethodReferences(javaClass);
-      List<FullyQualifiedMethodSignature> nextExternalMethodReferences = new ArrayList<>();
-      Set<String> referencedInternalClasses = new HashSet<>();
-      for (FullyQualifiedMethodSignature methodReference : nextMethodReferences) {
-        String classNameInMethodReference = methodReference.getClassName();
-        if (classesDefinedInSameJar.contains(classNameInMethodReference)) {
-          // The methodReference is within the same jar but we want to follow usage graph
-          String nextInternalClassName = methodReference.getClassName();
-          referencedInternalClasses.add(nextInternalClassName);
-        } else {
-          nextExternalMethodReferences.add(methodReference);
-        }
-      }
 
       // Follows usage graph from the internal classes to external references
-      ImmutableSet<FullyQualifiedMethodSignature> externalReferencesFromInternalClasses =
-          findExternalMethodReferencesByUsageGraph(
-              referencedInternalClasses, repository, classesDefinedInSameJar);
-      nextExternalMethodReferences.addAll(externalReferencesFromInternalClasses);
-
-      return nextExternalMethodReferences;
+      return findExternalMethodReferencesByUsageGraph(
+          ImmutableSet.of(className), repository, classesDefinedInSameJar);
     } catch (ClassNotFoundException | URISyntaxException ex) {
       // TODO: Investigate why 'mvn exec:java' causes ClassNotFoundException for Guava
       // Running withinStaticLinkageChecker via IntelliJ does not cause the problem
@@ -180,7 +163,8 @@ class ClassDumper {
           throws ClassNotFoundException {
     Set<String> visitedClasses = new HashSet<>(initialClassNames);
     Queue<String> classQueue = new ArrayDeque<>(initialClassNames);
-    Set<FullyQualifiedMethodSignature> nextExternalMethodReferences = new HashSet<>();
+    ImmutableSet.Builder<FullyQualifiedMethodSignature> nextExternalMethodReferences =
+        ImmutableSet.builder();
     while (!classQueue.isEmpty()) {
       String internalClassName = classQueue.remove();
       JavaClass internalJavaClass = repository.loadClass(internalClassName);
@@ -198,7 +182,7 @@ class ClassDumper {
         }
       }
     }
-    return ImmutableSet.copyOf(nextExternalMethodReferences);
+    return nextExternalMethodReferences.build();
   }
 
   /**

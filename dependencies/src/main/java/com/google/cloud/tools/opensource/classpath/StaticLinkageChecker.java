@@ -72,19 +72,20 @@ import org.eclipse.aether.artifact.DefaultArtifact;
  * and methods defined in them. This happens when the signature of a non-private method or class in
  * a dependency has changed in an incompatible way between the version supplied at compile time
  * and the version invoked at runtime.
- * TODO: enhance scope to include fields and classes
  */
 class StaticLinkageChecker {
+  // TODO(suztomo): enhance scope to include fields and classes. Issue #207
 
   /**
-   * Flag on whether the report excludes the linkage errors on classes that are not reachable
-   * from the entry point of the class usage graph.
+   * Flag on whether the report excludes the linkage errors on classes that are not reachable from
+   * the entry point of the class usage graph.
    */
   private final boolean reportOnlyReachable;
+
   private final ImmutableList<Path> jarFilePaths;
 
   StaticLinkageChecker(boolean reportOnlyReachable, List<Path> jarFilePaths) {
-    // TODO(suztomo): Create immutable instance variable for class repository issue#208
+    // TODO(suztomo): Create immutable instance variable for class repository. Issue #208
     this.reportOnlyReachable = reportOnlyReachable;
     this.jarFilePaths = ImmutableList.copyOf(jarFilePaths);
   }
@@ -118,7 +119,7 @@ class StaticLinkageChecker {
     int count = sortedUnresolvedMethodReferences.size();
     Formatter formatter = new Formatter();
     formatter.format(
-        "There were %d unresolved method references from the jar file(s):\n", count);
+        "There were %,d unresolved method references from the jar file(s):\n", count);
     for (FullyQualifiedMethodSignature methodReference : sortedUnresolvedMethodReferences) {
       formatter.format(
           "Class: '%s', method: '%s' with descriptor %s\n",
@@ -132,13 +133,12 @@ class StaticLinkageChecker {
   /**
    * Parses arguments to instantiate the class with configuration specified in arguments.
    *
-   * TODO(suztomo): create a class to represent command line option #209
-   *
    * @param arguments command-line arguments
    * @return static linkage checker instance with its variables populated from the arguments
    * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
    */
   static StaticLinkageChecker getInstanceFromArguments(String[] arguments) throws RepositoryException {
+    // TODO(suztomo): create a class to represent command line option. Issue #209
     Options options = new Options();
     options.addOption(
         "c", "coordinate", true, "Maven coordinates (separated by ',') to generate a classpath");
@@ -222,15 +222,13 @@ class StaticLinkageChecker {
   /**
    * Given the jar file paths, runs the static linkage check and returns unresolved methods.
    *
-   * TODO(suztomo): Separate logic between data retrieval and traverse
-   * https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/187/files
-   *
    * @return list of methods that are not found in the jar files
    * @throws IOException when there is a problem in reading a jar file
    * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
    */
   List<FullyQualifiedMethodSignature> findUnresolvedMethodReferences()
       throws IOException, ClassNotFoundException {
+    // TODO(suztomo): Separate logic between data retrieval and usage graph traversal. Issue #203
     Preconditions.checkArgument(!jarFilePaths.isEmpty(), "no jar files specified");
 
     System.out.println("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
@@ -325,7 +323,7 @@ class StaticLinkageChecker {
 
           // Enqueue references from the class unless it is already visited in class usage graph
           if (classesVisited.add(className)) {
-            List<FullyQualifiedMethodSignature> nextExternalMethodReferences =
+            ImmutableSet<FullyQualifiedMethodSignature> nextExternalMethodReferences =
                 ClassDumper.listExternalMethodReferences(
                     className, jarFileToClasses, classLoaderFromJars, repository);
             queue.addAll(nextExternalMethodReferences);
@@ -372,7 +370,7 @@ class StaticLinkageChecker {
 
   private static ImmutableSet<JavaClass> topLevelJavaClassesInJar(Path jarFilePath,
       SyntheticRepository repository) throws IOException, ClassNotFoundException {
-    Set<JavaClass> javaClasses = new HashSet<>();
+    ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     URL jarFileUrl = jarFilePath.toUri().toURL();
     Set<ClassInfo> classes = listTopLevelClassesFromJar(jarFileUrl);
     for (ClassInfo classInfo : classes) {
@@ -380,7 +378,7 @@ class StaticLinkageChecker {
       JavaClass javaClass = repository.loadClass(className);
       javaClasses.add(javaClass);
     }
-    return ImmutableSet.copyOf(javaClasses);
+    return javaClasses.build();
   }
 
   private static boolean isBuiltInClassName(String className) {

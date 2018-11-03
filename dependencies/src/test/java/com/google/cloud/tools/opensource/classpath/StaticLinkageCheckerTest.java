@@ -42,13 +42,13 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class StaticLinkageCheckerTest {
-  private final String EXAMPLE_JAR_FILE =
+  private static final String EXAMPLE_JAR_FILE =
       "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar";
-  private final String EXAMPLE_PROTO_JAR_FILE =
+  private static final String EXAMPLE_PROTO_JAR_FILE =
       "testdata/proto-google-cloud-firestore-v1beta1-0.28.0.jar";
-  private final String EXAMPLE_CLASS_FILE =
+  private static final String EXAMPLE_CLASS_FILE =
       "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0_FirestoreGrpc.class";
-  private final ImmutableList<Path> FIRESTORE_DEPENDENCIES = ImmutableList.of(
+  private  static final ImmutableList<Path> FIRESTORE_DEPENDENCIES = ImmutableList.of(
       absolutePathOfResource("testdata/protobuf-java-3.6.1.jar"),
       absolutePathOfResource("testdata/grpc-core-1.13.1.jar"),
       absolutePathOfResource("testdata/grpc-stub-1.13.1.jar"),
@@ -58,10 +58,11 @@ public class StaticLinkageCheckerTest {
 
   private static final Correspondence<FullyQualifiedMethodSignature, String> CLASS_NAMES =
       new Correspondence<FullyQualifiedMethodSignature, String>() {
+        @Override
         public boolean compare(FullyQualifiedMethodSignature actual, String expected) {
           return actual.getClassName().equals(expected);
         }
-
+        @Override
         public String toString() {
           return "has class name equal to";
         }
@@ -316,7 +317,8 @@ public class StaticLinkageCheckerTest {
         staticLinkageChecker.findUnresolvedMethodReferences();
 
     Truth.assertWithMessage(
-            "Because lzma-java classes are not reachable from google-cloud-bigtable as entry point, the classes should not appear as unresolved method references.")
+            "Because lzma-java classes are unreachable from google-cloud-bigtable (entry point),"
+                + "the classes should not appear as unresolved method references.")
         .that(unresolvedMethodReferences)
         .isEmpty();
   }
