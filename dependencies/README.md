@@ -1,9 +1,11 @@
 Static Linkage Checker
 ======================
 
-To solve linkage conflicts caused by dependencies, Static Linkage Checker identifies the linkage
-conflicts by reading the class files in jar files, and verifying availability of the implementation
-of classes, methods and fields referenced by the files.
+Static Linkage Checker identifies the
+[linkage conflicts](../library-best-practices/glossary.md#types-of-conflicts-and-compatibility)
+that would be caused by 3rd-party dependencies of Java projects at runtime. The tool scans
+the class files in dependencies, and verifies availability of the implementation of the classes,
+methods, and fields referenced by the files.
 
 ### Use Cases
 
