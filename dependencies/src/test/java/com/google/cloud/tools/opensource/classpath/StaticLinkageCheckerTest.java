@@ -16,7 +16,12 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static org.hamcrest.CoreMatchers.is;
+
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +31,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.bcel.classfile.ClassParser;
@@ -36,19 +42,39 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class StaticLinkageCheckerTest {
-  private final String EXAMPLE_JAR_FILE =
+  private static final String EXAMPLE_JAR_FILE =
       "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar";
-  private final String EXAMPLE_PROTO_JAR_FILE =
+  private static final String EXAMPLE_PROTO_JAR_FILE =
       "testdata/proto-google-cloud-firestore-v1beta1-0.28.0.jar";
-  private final String EXAMPLE_CLASS_FILE =
+  private static final String EXAMPLE_CLASS_FILE =
       "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0_FirestoreGrpc.class";
+  private  static final ImmutableList<Path> FIRESTORE_DEPENDENCIES = ImmutableList.of(
+      absolutePathOfResource("testdata/protobuf-java-3.6.1.jar"),
+      absolutePathOfResource("testdata/grpc-core-1.13.1.jar"),
+      absolutePathOfResource("testdata/grpc-stub-1.13.1.jar"),
+      absolutePathOfResource("testdata/grpc-protobuf-1.13.1.jar"),
+      absolutePathOfResource("testdata/grpc-protobuf-lite-1.13.1.jar")
+  );
+
+  private static final Correspondence<FullyQualifiedMethodSignature, String> CLASS_NAMES =
+      new Correspondence<FullyQualifiedMethodSignature, String>() {
+        @Override
+        public boolean compare(FullyQualifiedMethodSignature actual, String expected) {
+          return actual.getClassName().equals(expected);
+        }
+        @Override
+        public String toString() {
+          return "has class name equal to";
+        }
+      };
 
   @Test
   public void testListExternalMethodReferences()
       throws IOException, ClassNotFoundException, URISyntaxException {
     URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
     List<FullyQualifiedMethodSignature> signatures =
-        StaticLinkageChecker.listExternalMethodReferences(Paths.get(jarFileUrl.toURI()));
+        StaticLinkageChecker.listExternalMethodReferences(
+            Paths.get(jarFileUrl.toURI()), new HashSet<>());
 
     Truth.assertThat(signatures).hasSize(38);
     FullyQualifiedMethodSignature expectedExternalMethodReference =
@@ -86,17 +112,11 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testResolvedMethodReferences() throws URISyntaxException {
+  public void testResolvedMethodReferences() {
     List<Path> pathsForJar = Lists.newArrayList(
         absolutePathOfResource(EXAMPLE_JAR_FILE),
         absolutePathOfResource(EXAMPLE_PROTO_JAR_FILE));
-    List<Path> firestoreDependencies = Arrays.asList(
-        absolutePathOfResource("testdata/protobuf-java-3.6.1.jar"),
-        absolutePathOfResource("testdata/grpc-core-1.13.1.jar"),
-        absolutePathOfResource("testdata/grpc-stub-1.13.1.jar"),
-        absolutePathOfResource("testdata/grpc-protobuf-1.13.1.jar")
-    );
-    pathsForJar.addAll(firestoreDependencies);
+    pathsForJar.addAll(FIRESTORE_DEPENDENCIES);
 
     FullyQualifiedMethodSignature internalMethodReference =
         new FullyQualifiedMethodSignature(
@@ -113,39 +133,36 @@ public class StaticLinkageCheckerTest {
     List<FullyQualifiedMethodSignature> methodReferences = Arrays.asList(
         internalMethodReference, undefinedMethodReference
     );
+
+    // findUnresolvedReferences does not follow references from this set
+    Set<String> checkedClasses = Sets.newHashSet("com.google.firestore.v1beta1.FirestoreGrpc");
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        StaticLinkageChecker.findUnresolvedReferences(pathsForJar, methodReferences);
+        StaticLinkageChecker.findUnresolvedReferences(
+            pathsForJar, methodReferences, checkedClasses);
     Truth.assertThat(unresolvedMethodReferences).hasSize(1);
   }
 
-  private Path absolutePathOfResource(String resourceName) throws URISyntaxException {
-    return Paths.get(URLClassLoader.getSystemResource(resourceName).toURI()).toAbsolutePath();
+  private static Path absolutePathOfResource(String resourceName) {
+    try {
+      return Paths.get(URLClassLoader.getSystemResource(resourceName).toURI()).toAbsolutePath();
+    } catch (URISyntaxException ex) {
+      throw new RuntimeException("Could not create URI for the files in resources directory");
+    }
   }
 
   @Test
   public void testResolvedMethodReferencesWithJarFiles()
-      throws IOException, ClassNotFoundException, URISyntaxException {
+      throws IOException, ClassNotFoundException {
     List<Path> pathsForJar = Lists.newArrayList(
         absolutePathOfResource(EXAMPLE_JAR_FILE),
         absolutePathOfResource(EXAMPLE_PROTO_JAR_FILE)
     );
-    List<Path> firestoreDependencies = Arrays.asList(
-        absolutePathOfResource("testdata/protobuf-java-3.6.1.jar"),
-        absolutePathOfResource("testdata/grpc-core-1.13.1.jar"),
-        absolutePathOfResource("testdata/grpc-stub-1.13.1.jar"),
-        absolutePathOfResource("testdata/grpc-protobuf-1.13.1.jar")
-    );
-    pathsForJar.addAll(firestoreDependencies);
+    pathsForJar.addAll(FIRESTORE_DEPENDENCIES);
 
-
+    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(true, pathsForJar);
     List<FullyQualifiedMethodSignature> report =
-        StaticLinkageChecker.findUnresolvedMethodReferences(pathsForJar);
-    FullyQualifiedMethodSignature methodExpectedToBeUnresolved =
-        new FullyQualifiedMethodSignature(
-            "com.google.api.pathtemplate.PathTemplate",
-            "instantiate",
-            "([Ljava/lang/String;)Ljava/lang/String;");
-    Truth.assertThat(report).contains(methodExpectedToBeUnresolved);
+        staticLinkageChecker.findUnresolvedMethodReferences();
+    Truth.assertThat(report.toString()).doesNotContain("com.google.api.pathtemplate.PathTemplate");
     // As RunQueryRequest is defined in the proto jar file, it should not appear in the report
     Truth.assertThat(report.toString())
         .doesNotContain("com.google.firestore.v1beta1.RunQueryRequest");
@@ -155,7 +172,7 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testJarPathOrderInResolvingReferences() throws URISyntaxException {
+  public void testJarPathOrderInResolvingReferences() {
     // listDocuments method on CollectionReference class is added at version 0.66.0-beta
     // https://github.com/googleapis/google-cloud-java/releases/tag/v0.66.0
     List<Path> firestoreDependencies = Lists.newArrayList(
@@ -185,14 +202,14 @@ public class StaticLinkageCheckerTest {
     // When version 65 (old) comes first in the jar list, it cannot find listDocuments method
     List<FullyQualifiedMethodSignature> unresolvedMethodReferencesWithPath1 =
         StaticLinkageChecker.findUnresolvedReferences(pathsForJarWithVersion65First,
-            Arrays.asList(methodAddedInVersion66));
+            Arrays.asList(methodAddedInVersion66), new HashSet<>());
     Truth.assertThat(unresolvedMethodReferencesWithPath1).hasSize(1);
 
     // When version 66 (new) comes first, it finds the method correctly
     List<FullyQualifiedMethodSignature> unresolvedMethodReferencesWithPath2 =
         StaticLinkageChecker.findUnresolvedReferences(pathsForJarWithVersion66First,
-            Arrays.asList(methodAddedInVersion66));
-    Truth.assertThat(unresolvedMethodReferencesWithPath2).hasSize(0);
+            Arrays.asList(methodAddedInVersion66), new HashSet<>());
+    Truth.assertThat(unresolvedMethodReferencesWithPath2).doesNotContain(methodAddedInVersion66);
   }
 
   @Test
@@ -208,15 +225,16 @@ public class StaticLinkageCheckerTest {
 
     List<FullyQualifiedMethodSignature> unresolvedReferences = StaticLinkageChecker
         .findUnresolvedReferences(paths,
-            Arrays.asList(constructorOfPrivateInnerClass));
+            Arrays.asList(constructorOfPrivateInnerClass), new HashSet<>());
     Truth.assertThat(unresolvedReferences).isEmpty();
   }
 
   @Test
   public void testNonExistentJarFileInput() throws ClassNotFoundException {
     try {
-      StaticLinkageChecker.findUnresolvedMethodReferences(
-          Arrays.asList(Paths.get("nosuchfile.jar")));
+      StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(true,
+          ImmutableList.of(Paths.get("nosuchfile.jar")));
+      staticLinkageChecker.findUnresolvedMethodReferences();
       Assert.fail("findUnresolvedMethodReferences should raise IOException");
     } catch (IOException ex) {
       Assert.assertEquals("The file is not readable: nosuchfile.jar", ex.getMessage());
@@ -224,7 +242,7 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testCoordinateToJarPaths_validCoordinate() throws RepositoryException {
+  public void testCoordinateToClasspath_validCoordinate() throws RepositoryException {
     List<Path> paths = StaticLinkageChecker.coordinateToClasspath("io.grpc:grpc-auth:1.15.1");
     Truth.assertThat(paths).hasSize(12);
 
@@ -243,8 +261,10 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testCoordinateToJarPaths_optionalDependency() throws RepositoryException {
-    List<Path> paths = StaticLinkageChecker.coordinateToClasspath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
+  public void testCoordinateToClasspath_optionalDependency() throws RepositoryException {
+    List<Path> paths =
+        StaticLinkageChecker.coordinateToClasspath(
+            "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
 
     // The tree from google-cloud-bigtable to log4j:
     //   com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha (optional: false)
@@ -253,11 +273,12 @@ public class StaticLinkageCheckerTest {
     //        org.apache.httpcomponents:httpclient:jar:4.5.3 (optional: false)
     //          commons-logging:commons-logging:jar:1.2 (optional: false)
     //            log4j:log4j:jar:1.2.17 (optional: true)
-    Assert.assertTrue(paths.stream().anyMatch(path -> path.endsWith("log4j-1.2.17.jar")));
+    Assert.assertTrue(
+        paths.stream().anyMatch(path -> path.getFileName().toString().startsWith("log4j-1.2")));
   }
 
   @Test
-  public void testCoordinateToJarPaths_invalidCoordinate() {
+  public void testCoordinateToClasspath_invalidCoordinate() {
     try {
       StaticLinkageChecker.coordinateToClasspath("io.grpc:nosuchartifact:1.2.3");
       Assert.fail("Invalid Maven coodinate should raise RepositoryException");
@@ -279,8 +300,67 @@ public class StaticLinkageCheckerTest {
             Paths.get(URLClassLoader.getSystemResource("testdata/guava-26.0-jre.jar").toURI()));
     List<FullyQualifiedMethodSignature> methodsNotFound =
         StaticLinkageChecker.findUnresolvedReferences(
-            pathsForJar, Arrays.asList(guavaCollectionPut));
+            pathsForJar, Arrays.asList(guavaCollectionPut), new HashSet<>());
     Truth.assertThat(methodsNotFound).hasSize(0);
+  }
+
+  @Test
+  public void testFindUnresolvedReferences_unusedLzmaClassByGrpc()
+      throws RepositoryException, IOException, ClassNotFoundException {
+    String bigTableCoordinate = "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
+    List<Path> paths = StaticLinkageChecker.coordinateToClasspath(bigTableCoordinate);
+    Truth.assertThat(paths).isNotEmpty();
+
+    // Prior to class usage graph traversal, there was linkage error for lzma-java classes.
+    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(true, paths);
+    List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
+        staticLinkageChecker.findUnresolvedMethodReferences();
+
+    Truth.assertWithMessage(
+            "Because lzma-java classes are unreachable from google-cloud-bigtable (entry point),"
+                + "the classes should not appear as unresolved method references.")
+        .that(unresolvedMethodReferences)
+        .isEmpty();
+  }
+
+  @Test
+  public void testFindUnresolvedReferences_checkAllOption()
+      throws RepositoryException, IOException, ClassNotFoundException {
+    String bigTableCoordinate = "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
+    List<Path> paths = StaticLinkageChecker.coordinateToClasspath(bigTableCoordinate);
+
+    // grpc-netty-shaded pom.xml does not have dependency to lzma-java even though netty-codec
+    // refers lzma.sdk.lzma.Encoder. StaticLinkageChecker should be able to detect it.
+    boolean reportOnlyReachable = false;
+    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(reportOnlyReachable,
+        paths);
+    List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
+        staticLinkageChecker.findUnresolvedMethodReferences();
+
+    Truth.assertWithMessage(
+            "StaticLinkageChecker.reportOnlyReachable should check all classes in the classpath")
+        .that(unresolvedMethodReferences)
+        .comparingElementsUsing(CLASS_NAMES)
+        .contains("lzma.sdk.lzma.Encoder");
+  }
+
+  @Test
+  public void testFindUnresolvedReferences_appengineSdkWithProvidedScope()
+      throws RepositoryException, IOException, ClassNotFoundException {
+    String bigTableCoordinate = "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha";
+    List<Path> paths = StaticLinkageChecker.coordinateToClasspath(bigTableCoordinate);
+
+    // Prior to 'provided' scope inclusion, there was linkage error for classes in
+    // com.google.appengine.api.urlfetch package.
+    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(true,
+        paths);
+    List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
+        staticLinkageChecker.findUnresolvedMethodReferences();
+
+    Assert.assertThat(
+        "Classes in com.google.appengine.api.urlfetch package are provided from appengine-api-1.0-sdk",
+        unresolvedMethodReferences.size(),
+        is(0));
   }
 
   @Test
@@ -292,7 +372,8 @@ public class StaticLinkageCheckerTest {
         Arrays.asList(
             Paths.get(URLClassLoader.getSystemResource("testdata/guava-26.0-jre.jar").toURI()));
     List<FullyQualifiedMethodSignature> methodsNotFound =
-        StaticLinkageChecker.findUnresolvedReferences(pathsForJar, Arrays.asList(arrayCloneMethod));
+        StaticLinkageChecker.findUnresolvedReferences(
+            pathsForJar, Arrays.asList(arrayCloneMethod), new HashSet<>());
     Truth.assertThat(methodsNotFound).hasSize(0);
   }
 
@@ -322,34 +403,5 @@ public class StaticLinkageCheckerTest {
         StaticLinkageChecker.methodDefinitionExists(
             constructorInAbstract, classLoader, SyntheticRepository.getInstance());
     Assert.assertTrue(exist);
-  }
-
-  @Test
-  public void testMethodDescriptorToClass_byteArray() {
-    ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-    Class[] byteArrayClass =
-        StaticLinkageChecker.methodDescriptorToClass("([B)Ljava/lang/String;", classLoader);
-    Assert.assertTrue(byteArrayClass[0].isArray());
-  }
-
-  @Test
-  public void testMethodDescriptorToClass_primitiveTypes() {
-    ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-    // List of primitive types that appear in descriptor:
-    // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3
-    Class[] types =
-        StaticLinkageChecker.methodDescriptorToClass("(BCDFIJSZ)Ljava/lang/String;", classLoader);
-    Truth.assertThat(types)
-        .asList()
-        .containsExactly(
-            byte.class,
-            char.class,
-            double.class,
-            float.class,
-            int.class,
-            long.class,
-            short.class,
-            boolean.class)
-        .inOrder();
   }
 }

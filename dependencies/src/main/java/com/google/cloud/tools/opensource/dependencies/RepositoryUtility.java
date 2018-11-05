@@ -22,13 +22,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
+import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DefaultServiceLocator;
@@ -41,6 +41,10 @@ import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
+import org.eclipse.aether.util.graph.selector.AndDependencySelector;
+import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
+import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
+import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 
 /**
  * Aether initialization.
@@ -53,7 +57,7 @@ public final class RepositoryUtility {
   private RepositoryUtility() {}
 
   /**
-   * Create a new system configured for file and HTTP repository resolution.
+   * Creates a new system configured for file and HTTP repository resolution.
    */
   public static RepositorySystem newRepositorySystem() {
     DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
@@ -64,18 +68,46 @@ public final class RepositoryUtility {
     return locator.getService(RepositorySystem.class);
   }
 
+  private static DefaultRepositorySystemSession createDefaultRepositorySystemSession(
+      RepositorySystem system) {
+    DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
+    LocalRepository localRepository = new LocalRepository(findLocalRepository().getAbsolutePath());
+    session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
+    return session;
+  }
+
   /**
-   * Open a new Maven repository session that looks for the local repository in the
+   * Opens a new Maven repository session that looks for the local repository in the
    * customary ~/.m2 directory. If not found, it creates an initially empty repository in
    * a temporary location.
    */
-  public static RepositorySystemSession newSession(RepositorySystem system ) {
-    DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
-  
-    LocalRepository localRepository = new LocalRepository(findLocalRepository().getAbsolutePath());
-    session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
+  public static RepositorySystemSession newSession(RepositorySystem system) {
+    DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
     session.setReadOnly();
-    
+    return session;
+  }
+
+  /**
+   * Opens a new Maven repository session in the same way as {@link
+   * RepositoryUtility#newSession(RepositorySystem)}, with its dependency selector to include
+   * dependencies with 'provided' scope.
+   */
+  public static RepositorySystemSession newSessionWithProvidedScope(RepositorySystem system) {
+    DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
+
+    // This combination of DependencySelector comes from the default specified in
+    // `MavenRepositorySystemUtils.newSession`.
+    // StaticLinkageChecker needs to include 'provided' scope.
+    DependencySelector dependencySelector =
+        new AndDependencySelector(
+            // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
+            // false positive in StaticLinkageChecker.
+            new ScopeDependencySelector(new String[] {"test"}),
+            new OptionalDependencySelector(),
+            new ExclusionDependencySelector());
+    session.setDependencySelector(dependencySelector);
+    session.setReadOnly();
+
     return session;
   }
 

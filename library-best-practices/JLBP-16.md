@@ -1,19 +1,19 @@
-[JLBP-16] Ensure version alignment of dependencies for consumers
-----------------------------------------------------------------
+[JLBP-16] Ensure upper version alignment of dependencies for consumers
+----------------------------------------------------------------------
 
 For multi-module projects, this best practice assumes you have already applied
 [JLBP-15](JLBP-15.md), so that your project has a BOM.
 
-### Achieving version alignment
+### Achieving upper version alignment
 
-- Version alignment is defined in the [glossary](glossary.md).
-- Version alignment increases the likelihood that consumers' build systems pick
-  the right versions of direct and transitive dependencies, reducing the number
-  of conflicts.
+- Upper version alignment is defined in the [glossary](glossary.md).
+- Upper version alignment increases the likelihood that consumers' build systems
+  select the right versions of direct and transitive dependencies, reducing the
+  number of conflicts.
 - As noted in the definition, to fix a version misalignment caused by a shorter
   path to a version of a dependency that is not the upper bound in the
   dependency tree, a direct dependency needs to be added so that Maven consumers
-  will pick the correct version.
+  select the correct version.
 - See the details specific to each build system in the sections below.
 
 ### Maven
@@ -49,7 +49,7 @@ For multi-module projects, this best practice assumes you have already applied
       property declared in the parent.
 - For any transitive dependency that fails a `requireUpperBoundDeps` check, add
   the dependency as a direct dependency so that the path to the correct version
-  is shorter, leading Maven to pick it instead of the wrong version.
+  is shorter, leading Maven to select it instead of the wrong version.
 - Have each module POM inherit from the parent POM of the library so that the
   parent's `<dependencyManagement>` section is used.
 
