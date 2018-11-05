@@ -92,7 +92,7 @@ There are three use cases for Static Linkage Checker:
 - **Reachability** is the attribute of static linkage errors to indicate whether a linkage
   error caused by a reference is _reachable_ from the _entry point classes_ of the class usage
   graph; in other words, when a static linkage error is _reachable_, there exists a path of
-  references in the graph between one of entry point classes and the reference causing linkage
+  references in the graph from one of entry point classes to the reference causing linkage
   error.
   The path helps to diagnose why static linkage errors are introduced to the dependencies.
 
