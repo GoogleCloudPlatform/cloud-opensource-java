@@ -70,30 +70,12 @@ Java Dependency Glossary
 
 ### Static Linkage Check
 
-- **Static linkage check**: a process to identify the existence of static
-  linkage errors for a given classpath, by scanning Java classes and
+- **Static linkage check**:   a process to identify the existence of _static
+  linkage conflicts_ for a given classpath, by scanning Java classes and
   verifying the availability in the classpath.
 
 - **Static linkage report**: the outcome of a static linkage check. It reports
-  zero or more static linkage errors.
-
-- **Static linkage error**: a reported error for a reference as the result of
-  a static linkage check.
-  A static linkage error contains the information on the source class and
-  the destination class of the reference. Each static linkage error has
-  one of the three types:
-
-  - _Missing class type_ is for errors when where the destination class of a
-    class reference does not exist in the linkage classpath. This error
-    happens when a class is removed in a different version of a library,
-    or there is a dependency missed when constructing the linkage classpath.
-    The reference that causes a missing class error is called a _dangling reference_.
-
-  - _Missing method type_ is for errors when a method reference has a  static
-    linkage conflict.
-
-  - _Missing field type_ is for errors when a field reference has a static
-     linkage conflict.
+  zero or more _static linkage errors_.
 
 - **Linkage classpath**: the classpath which a static linkage check
   runs against. For a Maven project, a linkage classpath consists of the
@@ -128,6 +110,24 @@ Java Dependency Glossary
   A reference is called to have a _linkage conflict_
   when there is a static linkage conflict caused by the reference.
 
+- **Static linkage error**: a reported error for a reference as the result of
+  a static linkage check.
+  A static linkage error contains the information on the source class and
+  the destination class of the reference. Each static linkage error has
+  one of the three types:
+
+  - _Missing class type_ is for errors when where the destination class of a
+    class reference does not exist in the linkage classpath. This error
+    happens when a class is removed in a different version of a library,
+    or there is a dependency missed when constructing the linkage classpath.
+    The reference that causes a missing class error is called a _dangling reference_.
+
+  - _Missing method type_ is for errors when a method reference has a  static
+    linkage conflict.
+
+  - _Missing field type_ is for errors when a field reference has a static
+     linkage conflict.
+
 - **Reachability** is the attribute of static linkage errors to indicate
   whether a linkage error caused by a reference is _reachable_ from the _entry
   point classes_ of the class usage graph. In other words, when a static
@@ -136,7 +136,7 @@ Java Dependency Glossary
   The path helps to diagnose why static linkage errors are introduced to the
   linkage classpath.
 
-- **Entry point Classes** are classes in the class usage graph that are used
+- **Entry point classes** are classes in the class usage graph that are used
   to analyze the reachability of static linkage errors. These are the initial
   classes to start the graph traversal.
 
