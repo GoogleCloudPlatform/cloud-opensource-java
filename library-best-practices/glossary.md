@@ -106,9 +106,9 @@ Java Dependency Glossary
   For example, when 'Class A' has reference to 'Class B' on calling a method X,
   the class usage graph holds an edge between two nodes:
 
-```
-[Class A] --(method X of class B)-> [Class B]
-```
+  ```
+  [Class A] --(method X of class B)-> [Class B]
+  ```
 
   In this case, 'Class A' is called the _source class_ of the reference and
   'Class B' is called the _destination class_.
