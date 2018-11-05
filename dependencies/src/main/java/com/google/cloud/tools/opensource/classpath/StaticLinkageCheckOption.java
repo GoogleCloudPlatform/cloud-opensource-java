@@ -36,6 +36,18 @@ public class StaticLinkageCheckOption {
   private final Optional<ImmutableList<Path>> jarFileList;
   private final boolean reportOnlyReachable;
 
+  public Optional<ImmutableList<String>> getMavenCoordinates() {
+    return mavenCoordinates;
+  }
+
+  public Optional<ImmutableList<Path>> getJarFileList() {
+    return jarFileList;
+  }
+
+  public boolean isReportOnlyReachable() {
+    return reportOnlyReachable;
+  }
+
   private StaticLinkageCheckOption(Optional<ImmutableList<String>> mavenCoordinates,
       Optional<ImmutableList<Path>> jarFileList, boolean reportOnlyReachable) {
     this.mavenCoordinates = mavenCoordinates;
@@ -75,11 +87,6 @@ public class StaticLinkageCheckOption {
       }
       boolean reportOnlyReachable = cmd.hasOption("r");
 
-      if (jarFilePaths.isEmpty()) {
-        System.err.println("No jar files to scan");
-        formatter.printHelp("StaticLinkageChecker", options);
-        throw new IllegalArgumentException("Could not list jar files for given argument.");
-      }
       return new StaticLinkageCheckOption(
           mavenCoordinates,
           Optional.of(ImmutableList.copyOf(jarFilePaths)),

@@ -84,10 +84,13 @@ class StaticLinkageChecker {
 
   private final ImmutableList<Path> jarFilePaths;
 
+  private final ClassDumper classDumper;
+
   StaticLinkageChecker(boolean reportOnlyReachable, List<Path> jarFilePaths) {
     // TODO(suztomo): Create immutable instance variable for class repository. Issue #208
     this.reportOnlyReachable = reportOnlyReachable;
     this.jarFilePaths = ImmutableList.copyOf(jarFilePaths);
+    this.classDumper = ClassDumper.create(this.jarFilePaths);
   }
 
   /**
@@ -101,7 +104,8 @@ class StaticLinkageChecker {
    */
   public static void main(String[] arguments)
       throws IOException, ClassNotFoundException, RepositoryException {
-    StaticLinkageChecker staticLinkageChecker = getInstanceFromArguments(arguments);
+    StaticLinkageCheckOption commandLineOption = StaticLinkageCheckOption.parseArgument(arguments);
+    StaticLinkageChecker staticLinkageChecker = getInstanceFromOption(commandLineOption);
 
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         staticLinkageChecker.findUnresolvedMethodReferences();
@@ -133,12 +137,23 @@ class StaticLinkageChecker {
   /**
    * Parses arguments to instantiate the class with configuration specified in arguments.
    *
-   * @param arguments command-line arguments
+   * @param commnadLineOption command-line arguments
    * @return static linkage checker instance with its variables populated from the arguments
    * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
    */
-  static StaticLinkageChecker getInstanceFromArguments(String[] arguments) throws RepositoryException {
-    // TODO(suztomo): create a class to represent command line option. Issue #209
+  static StaticLinkageChecker getInstanceFromOption(StaticLinkageCheckOption commnadLineOption)
+      throws RepositoryException {
+    ImmutableList.Builder<Path> jarFileBuilder = ImmutableList.builder();
+    if (commnadLineOption.getJarFileList().isPresent()) {
+      jarFileBuilder.addAll(commnadLineOption.getJarFileList().get());
+    }
+    if (commnadLineOption.getMavenCoordinates().isPresent()) {
+      for (String mavenCoordinates : commnadLineOption.getMavenCoordinates().get()) {
+        jarFileBuilder.addAll(coordinateToClasspath(mavenCoordinates));
+      }
+    }
+    return new StaticLinkageChecker(commnadLineOption.isReportOnlyReachable(),
+        jarFileBuilder.build());
   }
 
   /**

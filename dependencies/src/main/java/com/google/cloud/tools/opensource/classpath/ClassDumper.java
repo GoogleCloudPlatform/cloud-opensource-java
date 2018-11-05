@@ -75,7 +75,7 @@ class ClassDumper {
     this.classLoader = classLoader;
   }
 
-  ClassDumper create(List<Path> jarFilePaths) {
+  static ClassDumper create(List<Path> jarFilePaths) {
     // Creates classpath in the same order as jarFilePaths for BCEL API
     String pathAsString =
         jarFilePaths.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator));
