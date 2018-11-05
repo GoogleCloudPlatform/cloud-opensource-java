@@ -21,9 +21,13 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.CodeSource;
@@ -32,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -44,10 +49,11 @@ import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.Type;
+import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
 /**
- * This class reads a Java class file to analyze following attributes:
+ * This class is responsible to load Java class file and to analyze following attributes:
  *
  * <ol>
  *   <li>source (defined methods) via Method fields in the class, and</li>
@@ -55,6 +61,41 @@ import org.apache.bcel.util.SyntheticRepository;
  * </ol>
  */
 class ClassDumper {
+
+  private final ImmutableSet<Path> jarFilePaths;
+  private final SyntheticRepository syntheticRepository;
+  private final ClassLoader classLoader;
+
+  private ClassDumper(
+      ImmutableSet<Path> jarFilePaths,
+      SyntheticRepository syntheticRepository,
+      ClassLoader classLoader) {
+    this.jarFilePaths = jarFilePaths;
+    this.syntheticRepository = syntheticRepository;
+    this.classLoader = classLoader;
+  }
+
+  ClassDumper create(List<Path> jarFilePaths) {
+    // Creates classpath in the same order as jarFilePaths for BCEL API
+    String pathAsString =
+        jarFilePaths.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator));
+    ClassPath classPath = new ClassPath(pathAsString);
+    SyntheticRepository syntheticRepository = SyntheticRepository.getInstance(classPath);
+
+    URL[] jarFileUrls = jarFilePaths.stream().map(jarPath -> {
+      try {
+        return jarPath.toUri().toURL();
+      } catch (MalformedURLException ex) {
+        System.err.println("Jar file " + jarPath + " was not converted to URL: " + ex.getMessage());
+        return null;
+      }
+    }).filter(Objects::nonNull).toArray(URL[]::new);
+    URLClassLoader classLoaderFromJars =
+        new URLClassLoader(jarFileUrls, ClassLoader.getSystemClassLoader());
+
+    return new ClassDumper(
+        ImmutableSet.copyOf(jarFilePaths), syntheticRepository, classLoaderFromJars);
+  }
 
   /**
    *  Lists all method references from the Java class file. The output corresponds to

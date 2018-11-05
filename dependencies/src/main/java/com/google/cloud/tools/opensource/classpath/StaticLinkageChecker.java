@@ -139,47 +139,6 @@ class StaticLinkageChecker {
    */
   static StaticLinkageChecker getInstanceFromArguments(String[] arguments) throws RepositoryException {
     // TODO(suztomo): create a class to represent command line option. Issue #209
-    Options options = new Options();
-    options.addOption(
-        "c", "coordinate", true, "Maven coordinates (separated by ',') to generate a classpath");
-    options.addOption("j", "jars", true, "Jar files (separated by ',') to generate a classpath");
-    options.addOption(
-        "r",
-        "report-only-reachable",
-        false,
-        "To report only linkage errors reachable from entry point");
-
-    HelpFormatter formatter = new HelpFormatter();
-    CommandLineParser parser = new DefaultParser();
-    List<Path> jarFilePaths = new ArrayList<>();
-    try {
-      CommandLine cmd = parser.parse(options, arguments);
-      if (cmd.hasOption("c")) {
-        String mavenCoordinates = cmd.getOptionValue("c");
-        for (String coordinate : mavenCoordinates.split(",")) {
-          jarFilePaths.addAll(coordinateToClasspath(coordinate));
-        }
-      }
-      if (cmd.hasOption("j")) {
-        String jarFiles = cmd.getOptionValue("j");
-        List<Path> jarFilesInArguments =
-            Arrays.stream(jarFiles.split(","))
-                .map(name -> (Paths.get(name)).toAbsolutePath())
-                .collect(Collectors.toList());
-        jarFilePaths.addAll(jarFilesInArguments);
-      }
-      boolean reportOnlyReachable = cmd.hasOption("r");
-
-      if (jarFilePaths.isEmpty()) {
-        System.err.println("No jar files to scan");
-        formatter.printHelp("StaticLinkageChecker", options);
-        throw new IllegalArgumentException("Could not list jar files for given argument.");
-      }
-      return new StaticLinkageChecker(reportOnlyReachable, jarFilePaths);
-    } catch (ParseException ex) {
-      System.err.println("Failed to parse command line arguments: " + ex.getMessage());
-      throw new IllegalArgumentException();
-    }
   }
 
   /**
