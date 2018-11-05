@@ -2,7 +2,7 @@ Static Linkage Checker
 ======================
 
 Static Linkage Checker is the tool to perform [static linkage check](
-../library-best-practices/glossary.md#types-of-conflicts-and-compatibility#static_linkage_check).
+../library-best-practices/glossary.md#types-of-conflicts-and-compatibility#static-linkage-check).
 The tool identifies static linkage conflicts that would be caused by Java projects and their
 dependencies at runtime. Given a classpath provided from
 user (e.g., a Maven project and its dependency), it scans the class files in the classpath

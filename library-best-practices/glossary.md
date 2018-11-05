@@ -95,7 +95,7 @@ Java Dependency Glossary
      linkage conflict.
 
 - **Linkage classpath**: a list of jar files which the static linkage check
-  runs against. For a Maven project, a linkage classpath corresponds to the
+  runs against. For a Maven project, a linkage classpath consists of the
   project's class files and the transitive dependencies induced by the direct
   dependencies in the project's pom.xml file.
 
