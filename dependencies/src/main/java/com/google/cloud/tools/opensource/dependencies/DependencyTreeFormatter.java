@@ -17,7 +17,7 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import java.util.Collection;
 import java.util.List;
@@ -98,19 +98,23 @@ public class DependencyTreeFormatter {
   }
 
   /**
-   * Builds ListMultiMap that represents a Maven dependency tree of parent-children relationship.
-   * The root node is represented as an empty {@link DependencyPath} and its children are
-   * the values for the root node.
+   * Builds ListMultimap that represents a Maven dependency tree of parent-children relationship.
+   * Each node in the tree has a corresponding key in the ListMultimap. The value associated with
+   * that key is a list of the children of the node. The root node is available at the first
+   * element in {@code listMultimap.values()}.
    *
    * @param dependencyPaths dependency path instances without assuming any order
-   * @return ListMultiMap representing a Maven dependency tree
+   * @return ListMultimap representing a Maven dependency tree of parent-children relationship. Each
+   *     node in the tree has a corresponding key in the ListMultimap and the children of the node
+   *     are the values for the key in the map. The {@link DependencyPath} representing the root
+   *     Maven artifact is available at the first element in {@code listMultimap.values()}.
    */
-  private static ListMultimap<DependencyPath, DependencyPath> buildDependencyPathTree(
+  public static ListMultimap<DependencyPath, DependencyPath> buildDependencyPathTree(
       Collection<DependencyPath> dependencyPaths) {
-    ListMultimap<DependencyPath, DependencyPath> tree = ArrayListMultimap.create();
+    // LinkedListMultimap preserves insertion order for values
+    ListMultimap<DependencyPath, DependencyPath> tree = LinkedListMultimap.create();
     for (DependencyPath dependencyPath : dependencyPaths) {
       List<Artifact> artifactPath = dependencyPath.getPath();
-      // empty list if the node is at root
       List<Artifact> parentArtifactPath = artifactPath.subList(0, artifactPath.size() - 1);
       DependencyPath parentDependencyPath = new DependencyPath();
       parentArtifactPath.forEach(

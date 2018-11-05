@@ -80,7 +80,7 @@ public final class DependencyPath {
         && artifact1.getVersion().equals(artifact2.getVersion());
   }
 
-  int size() {
+  public int size() {
     return path.size();
   }
 
