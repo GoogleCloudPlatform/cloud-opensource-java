@@ -77,24 +77,25 @@ Java Dependency Glossary
 - **Static linkage report**: the outcome of a static linkage check. It reports
   zero or more static linkage errors.
 
-- **Static linkage errors**: the error reported in a static linkage report.
+- **Static linkage errors**: a reported error for a reference as the result of
+  a static linkage check.
   A static linkage error contains the information on the source class and
   the destination class of the reference. Each static linkage error has
   one of the three types:
 
-  - _Missing class_ is the error when where the destination class of a
+  - _Missing class type_ is the error when where the destination class of a
     class reference does not exist in the linkage classpath. This error
     happens when a class is removed in a different version of a library,
     or there is a dependency missed when constructing the linkage classpath.
-    The reference is called _dangling reference_.
+    The reference that causes a missing class error is called a _dangling reference_.
 
-  - _Missing method_ is the error when a method reference has a  static
+  - _Missing method type_ is the error when a method reference has a  static
     linkage conflict.
 
-  - _Missing field_ is the error when a field reference has a static
+  - _Missing field type_ is the error when a field reference has a static
      linkage conflict.
 
-- **Linkage classpath**: a list of jar files which the static linkage check
+- **Linkage classpath**: the classpath which a static linkage check
   runs against. For a Maven project, a linkage classpath consists of the
   project's class files and the transitive dependencies induced by the direct
   dependencies in the project's pom.xml file.
@@ -105,7 +106,9 @@ Java Dependency Glossary
   For example, when 'Class A' has reference to 'Class B' on calling a method X,
   the class usage graph holds an edge between two nodes:
 
-    [Class A] --(method X of class B)-> [Class B]
+```
+[Class A] --(method X of class B)-> [Class B]
+```
 
   In this case, 'Class A' is called the _source class_ of the reference and
   'Class B' is called the _destination class_.
