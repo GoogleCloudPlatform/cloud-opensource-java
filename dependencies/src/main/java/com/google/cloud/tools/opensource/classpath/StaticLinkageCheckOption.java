@@ -31,25 +31,25 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-public class StaticLinkageCheckOption {
-  private final Optional<ImmutableList<String>> mavenCoordinates;
-  private final Optional<ImmutableList<Path>> jarFileList;
+class StaticLinkageCheckOption {
+  private final ImmutableList<String> mavenCoordinates;
+  private final ImmutableList<Path> jarFileList;
   private final boolean reportOnlyReachable;
 
-  public Optional<ImmutableList<String>> getMavenCoordinates() {
+  ImmutableList<String> getMavenCoordinates() {
     return mavenCoordinates;
   }
 
-  public Optional<ImmutableList<Path>> getJarFileList() {
+  ImmutableList<Path> getJarFileList() {
     return jarFileList;
   }
 
-  public boolean isReportOnlyReachable() {
+  boolean isReportOnlyReachable() {
     return reportOnlyReachable;
   }
 
-  private StaticLinkageCheckOption(Optional<ImmutableList<String>> mavenCoordinates,
-      Optional<ImmutableList<Path>> jarFileList, boolean reportOnlyReachable) {
+  private StaticLinkageCheckOption(ImmutableList<String> mavenCoordinates,
+      ImmutableList<Path> jarFileList, boolean reportOnlyReachable) {
     this.mavenCoordinates = mavenCoordinates;
     this.jarFileList = jarFileList;
     this.reportOnlyReachable = reportOnlyReachable;
@@ -70,12 +70,12 @@ public class StaticLinkageCheckOption {
     CommandLineParser parser = new DefaultParser();
     List<Path> jarFilePaths = new ArrayList<>();
 
-    Optional<ImmutableList<String>> mavenCoordinates = Optional.empty();
+    ImmutableList.Builder<String> mavenCoordinates = ImmutableList.builder();
     try {
       CommandLine cmd = parser.parse(options, arguments);
       if (cmd.hasOption("c")) {
         String mavenCoordinatesOption = cmd.getOptionValue("c");
-        mavenCoordinates = Optional.of(ImmutableList.copyOf(mavenCoordinatesOption.split(",")));
+        mavenCoordinates.addAll(Arrays.asList(mavenCoordinatesOption.split(",")));
       }
       if (cmd.hasOption("j")) {
         String jarFiles = cmd.getOptionValue("j");
@@ -88,8 +88,8 @@ public class StaticLinkageCheckOption {
       boolean reportOnlyReachable = cmd.hasOption("r");
 
       return new StaticLinkageCheckOption(
-          mavenCoordinates,
-          Optional.of(ImmutableList.copyOf(jarFilePaths)),
+          mavenCoordinates.build(),
+          ImmutableList.copyOf(jarFilePaths),
           reportOnlyReachable);
     } catch (ParseException ex) {
       System.err.println("Failed to parse command line arguments: " + ex.getMessage());

@@ -144,11 +144,10 @@ class StaticLinkageChecker {
   static StaticLinkageChecker getInstanceFromOption(StaticLinkageCheckOption commnadLineOption)
       throws RepositoryException {
     ImmutableList.Builder<Path> jarFileBuilder = ImmutableList.builder();
-    if (commnadLineOption.getJarFileList().isPresent()) {
-      jarFileBuilder.addAll(commnadLineOption.getJarFileList().get());
-    }
-    if (commnadLineOption.getMavenCoordinates().isPresent()) {
-      for (String mavenCoordinates : commnadLineOption.getMavenCoordinates().get()) {
+    if (!commnadLineOption.getJarFileList().isEmpty()) {
+      jarFileBuilder.addAll(commnadLineOption.getJarFileList());
+    } else if (!commnadLineOption.getMavenCoordinates().isEmpty()) {
+      for (String mavenCoordinates : commnadLineOption.getMavenCoordinates()) {
         jarFileBuilder.addAll(coordinateToClasspath(mavenCoordinates));
       }
     }
