@@ -77,22 +77,22 @@ Java Dependency Glossary
 - **Static linkage report**: the outcome of a static linkage check. It reports
   zero or more static linkage errors.
 
-- **Static linkage errors**: a reported error for a reference as the result of
+- **Static linkage error**: a reported error for a reference as the result of
   a static linkage check.
   A static linkage error contains the information on the source class and
   the destination class of the reference. Each static linkage error has
   one of the three types:
 
-  - _Missing class type_ is the error when where the destination class of a
+  - _Missing class type_ is for errors when where the destination class of a
     class reference does not exist in the linkage classpath. This error
     happens when a class is removed in a different version of a library,
     or there is a dependency missed when constructing the linkage classpath.
     The reference that causes a missing class error is called a _dangling reference_.
 
-  - _Missing method type_ is the error when a method reference has a  static
+  - _Missing method type_ is for errors when a method reference has a  static
     linkage conflict.
 
-  - _Missing field type_ is the error when a field reference has a static
+  - _Missing field type_ is for errors when a field reference has a static
      linkage conflict.
 
 - **Linkage classpath**: the classpath which a static linkage check
