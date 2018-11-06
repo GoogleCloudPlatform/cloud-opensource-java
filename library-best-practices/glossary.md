@@ -70,20 +70,12 @@ Java Dependency Glossary
 
 ### Static Linkage Check
 
-- **Static linkage check**:   a process to identify the existence of _static
+- **Static linkage check**: a process to identify the existence of _static
   linkage conflicts_ for a given classpath, by scanning Java classes and
   verifying the availability in the classpath.
 
-- **Static linkage report**: the outcome of a static linkage check. It reports
-  zero or more _static linkage errors_.
-
-- **Linkage classpath**: the classpath which a static linkage check
-  runs against. For a Maven project, a linkage classpath consists of the
-  project's class files and the transitive dependencies induced by the direct
-  dependencies in the project's pom.xml file.
-
-- **Class usage graph**: a directed graph that represents the relationship between
-  classes in the linkage classpath. The nodes (vertex) of the graph correspond to
+- **Class usage graph**: a possibly cyclic directed graph of references between classes
+  in the classpath. The nodes (vertices) of the graph correspond to
   Java classes and the directed edges are references between classes.
   For example, when 'Class A' has reference to 'Class B' on calling a method X,
   the class usage graph holds an edge between two nodes:
@@ -94,21 +86,22 @@ Java Dependency Glossary
 
   In this case, 'Class A' is called the _source class_ of the reference and
   'Class B' is called the _destination class_.
+  There can be multiple (parallel) edges between two nodes when a class is calling two or
+  more methods and fields on another class.
+  To avoid unnecessary graph traversal, self-loops (references between the same class)
+  are omitted.
 
 - **A reference**: in the class usage graph, the relationship between two 
   classes is either _class reference_, _method reference_ or _field reference_.
 
-  A _method reference_ indicates that the source class uses the (static or
+  A _method reference_ indicates that the source class invokes a (static or
   non-static) method of the destination class.
 
-  A _field reference_ indicates that the source class accesses the (static or
+  A _field reference_ indicates that the source class accesses a (static or
   non-static) field of the destination class.
 
   A _class reference_ indicates that the source class uses the destination
   class without referencing a specific field or method (e.g., class inheritance).
-
-  A reference is called to have a _linkage conflict_
-  when there is a static linkage conflict caused by the reference.
 
 - **Static linkage error**: a reported error for a reference as the result of
   a static linkage check.
@@ -117,12 +110,12 @@ Java Dependency Glossary
   one of the three types:
 
   - _Missing class type_ is for errors when where the destination class of a
-    class reference does not exist in the linkage classpath. This error
+    class reference does not exist in the classpath. This error
     happens when a class is removed in a different version of a library,
-    or there is a dependency missed when constructing the linkage classpath.
+    or there is a dependency missed when constructing the classpath.
     The reference that causes a missing class error is called a _dangling reference_.
 
-  - _Missing method type_ is for errors when a method reference has a  static
+  - _Missing method type_ is for errors when a method reference has a static
     linkage conflict.
 
   - _Missing field type_ is for errors when a field reference has a static
@@ -130,11 +123,11 @@ Java Dependency Glossary
 
 - **Reachability** is the attribute of static linkage errors to indicate
   whether a linkage error caused by a reference is _reachable_ from the _entry
-  point classes_ of the class usage graph. In other words, when a static
-  linkage error is _reachable_, there exists a path of references in the graph
-  from one of the entry point classes to the reference causing linkage error.
-  The path helps to diagnose why static linkage errors are introduced to the
-  linkage classpath.
+  point classes_. In other words, when a static linkage error is marked as _reachable_,
+  there exists a path of references in the class usage graph from one of
+  the entry point classes to the reference causing linkage error.
+  The path helps to diagnose how static linkage errors are introduced to the
+  classpath.
 
 - **Entry point classes** are classes in the class usage graph that are used
   to analyze the reachability of static linkage errors. These are the initial
