@@ -9,8 +9,7 @@ to the adoption of new major versions where the package was renamed, because the
 old and new packages can co-exist.
 
 Below is an example of what happens when a new major version of a leaf library
-is partially adopted. Start with the following dependency chain (both gax-java
-and grpc-java depend on guava 20.0):
+is partially adopted. Suppose gax-java and grpc-java depend on guava 20.0:
 
 ```
 gax-java 1.29.0 ->
@@ -19,12 +18,13 @@ gax-java 1.29.0 ->
   guava 20.0
 ```
 
-Suppose Guava version 26.0 deletes a public method. If gax-java 1.29.0 and
-grpc-java 1.13.1 invoke that method, it is impossible for a user to depend on
-the latest version of all three artifacts without static linkage conflicts. The
-following dependency chain demonstrates this. This assumes that the consumer
-selects the latest version of guava at that point in time, 26.0, which overrides
-the version that gax-java and grpc-java select:
+Suppose Guava version 26.0 deletes a public method and it is now the latest
+version. If gax-java 1.29.0 and grpc-java 1.13.1 invoke that method, it is
+impossible for a user to depend on the latest version of all three artifacts
+without static linkage conflicts. The following dependency chain demonstrates
+this. This assumes that the consumer selects the latest version of guava at
+that point in time, 26.0, which overrides the version that gax-java and
+grpc-java select:
 
 ```
 gax-java 1.29.0 ->
