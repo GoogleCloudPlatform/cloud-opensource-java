@@ -81,7 +81,7 @@ public class DashboardMain {
 
     // TODO should pass in maven coordinates as argument
     DefaultArtifact bom =
-        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.67.0-SNAPSHOT");
+        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
