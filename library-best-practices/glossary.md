@@ -76,6 +76,11 @@ Java Dependency Glossary
 
 ### Static Linkage Checking
 
+- **Static linkage**: a reference from a class to another class that is
+  statically found in the Java class file of the former class.
+
+- **Static linkage error**: a linkage error for a static linkage.
+
 - **Static linkage check**: a process to identify the existence of _static
   linkage conflicts_ for a given classpath, by scanning Java classes and
   verifying the availability in the classpath.
@@ -94,11 +99,10 @@ Java Dependency Glossary
   'Class B' is called the _destination class_.
 
   In general, there can be multiple (parallel) edges between two nodes when
-  a class is calling two or more methods and fields on another class.
+  a class references two or more methods and fields of another class.
   Self-loops (references between the same class) are possible and
-  common, however, it is safe to omit such references during static linkage checks,
-  because the self-loop references are ensured to be linkage compatible
-  by the Java compiler.
+  common. However, it is safe to omit such references during static linkage checks,
+  because the Java compiler ensures that the self-loop references are linkage compatible.
 
 - **A reference**: in the class usage graph, the relationship between two 
   classes is either a _class reference_, _method reference_ or _field reference_.

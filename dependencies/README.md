@@ -43,16 +43,16 @@ The tool reports zero or more static linkage errors for the linkage classpath, a
 with _reachability_. Each of the static linkage errors contains the information on the
 source class and the destination class of the reference, and has one of the three types:
 
-  - _Missing class type_ is for errors when where the destination class of a
+  - _Missing class type_: the destination class of a
     class reference does not exist in the classpath. This error
     happens when a class is removed in a different version of a library,
     or there is a dependency missed when constructing the classpath.
     The reference that causes a missing class error is called a _dangling reference_.
 
-  - _Missing method type_ is for errors when a method reference has a static
+  - _Missing method type_: a method reference has a static
     linkage conflict.
 
-  - _Missing field type_ is for errors when a field reference has a static
+  - _Missing field type_: a field reference has a static
      linkage conflict.
      
 ### Class Usage Graph and Reachability
