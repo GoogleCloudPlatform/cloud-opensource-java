@@ -1,13 +1,13 @@
 [JLBP-18] Only shade dependencies as a last resort
 --------------------------------------------------
 
-Shading is a process where selected classes (generally from dependencies)
-from the classpath of a library are relocated to different Java packages and
-then copied into the final jar of the library. The main purpose of shading
-is to avoid conflicts between the versions of dependencies used by a library
-and the versions used by the consumers of that library. Most implementations
-of shading do a simple search and replace of Java package strings in the
-byte code of the dependency classes and the code using the dependency classes.
+Shading is a process where selected classes from a library and its
+dependencies are relocated to different Java packages and then copied into the
+final jar of the library. The main purpose of shading is to avoid conflicts
+between the versions of dependencies used by a library and the versions used
+by the consumers of that library. Most implementations of shading do a simple
+search and replace of Java package strings in the byte code of the dependency
+classes and the code using the dependency classes.
 
 There are a number of problems with shading:
 
@@ -34,7 +34,7 @@ One area where shading has been put to good use is in frameworks, which need to
 allow for user-space code to choose their own dependencies that might not be
 compatible with the framework's dependencies.
 
-If you do shade, you need intimate knowledge of how your dependencies work, and
+If you shade, you need intimate knowledge of how your dependencies work, and
 you need to read the source code. Make sure you do all of the following:
 
 - Add a test to make sure that all classes and other files copied into your jar
