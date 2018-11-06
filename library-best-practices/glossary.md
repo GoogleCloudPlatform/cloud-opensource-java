@@ -128,7 +128,8 @@ Java Dependency Glossary
   The path helps to diagnose how linkage errors are introduced to the
   classpath from which the graph is built.
 
-- **Entry point classes** are classes in the class usage graph that are used
-  to analyze the reachability of linkage errors. These are the initial
-  classes to start the graph traversal.
+- **Entry point classes** are a set of classes in the classpath in to analyze
+  the reachability to a linkage errors. A graph traversal on the reachability
+  of a linkage error starts with the nodes that correspond to the entry point classes.
+  
 
