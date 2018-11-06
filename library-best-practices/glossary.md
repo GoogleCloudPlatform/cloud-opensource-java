@@ -86,10 +86,12 @@ Java Dependency Glossary
 
   In this case, 'Class A' is called the _source class_ of the reference and
   'Class B' is called the _destination class_.
-  There can be multiple (parallel) edges between two nodes when a class is calling two or
-  more methods and fields on another class.
-  To avoid unnecessary graph traversal, self-loops (references between the same class)
-  are omitted.
+
+  In general, there can be multiple (parallel) edges between two nodes when
+  a class is calling two or more methods and fields on another class.
+  Self-loops (references between the same class) are possible and
+  common, however, it is safe to omit such references in static linkage checks,
+  because the self-loop references are ensured to be linkage compatible by Java compiler.
 
 - **A reference**: in the class usage graph, the relationship between two 
   classes is either _class reference_, _method reference_ or _field reference_.
