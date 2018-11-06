@@ -4,8 +4,8 @@ Static Linkage Checker
 Static Linkage Checker is a tool that finds [static linkage errors](
 ../library-best-practices/glossary.md) on a classpath and reports the errors to the console.
 It scans the class files in a classpath provided as input for references
-to other classes. Each reference is verified to find linkage conflicts
-in the classpath.
+to other classes.
+It then verifies each of the references to find linkage errors in the classpath.
 The tool also provides analysis on reachability to the errors from entry point
 classes through class usage graphs.
 
