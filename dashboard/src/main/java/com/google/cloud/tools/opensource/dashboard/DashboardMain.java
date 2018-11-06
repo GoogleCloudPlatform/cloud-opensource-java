@@ -48,11 +48,15 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.Update;
 import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ListMultimap;
 
 public class DashboardMain {
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
@@ -125,6 +129,7 @@ public class DashboardMain {
           table.add(results);
         }
       } catch (RepositoryException | IOException ex) {
+        System.err.println(ex.getMessage());
         ArtifactResults unavailableTestResult = new ArtifactResults(entry.getKey());
         unavailableTestResult.setExceptionMessage(ex.getMessage());
         // Even when there's problem generating test result, show the error in the dashboard
@@ -187,15 +192,15 @@ public class DashboardMain {
 
       // picks versions according to Maven rules
       DependencyGraph transitiveDependencies = artifactInfo.getTransitiveDependencies();
-      
+
       Map<Artifact, Artifact> upperBoundFailures =
           findUpperBoundsFailures(completeDependencies.getHighestVersionMap(), transitiveDependencies);
 
       Map<Artifact, Artifact> globalUpperBoundFailures = findUpperBoundsFailures(
           collectLatestVersions(globalDependencies), transitiveDependencies);
 
-      String dependencyTree =
-          DependencyTreeFormatter.formatDependencyPaths(completeDependencies.list());
+      ListMultimap<DependencyPath, DependencyPath> dependencyTree =
+          DependencyTreeFormatter.buildDependencyPathTree(completeDependencies.list());
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
@@ -206,7 +211,9 @@ public class DashboardMain {
       templateData.put("upperBoundFailures", upperBoundFailures);
       templateData.put("globalUpperBoundFailures", globalUpperBoundFailures);
       templateData.put("lastUpdated", LocalDateTime.now());
-      templateData.put("dependencyTree", dependencyTree);
+      // Explicit casting avoids Freemarker's error on `AbstractListMultimap.get` in CircleCI
+      templateData.put("dependencyTree", (LinkedListMultimap) dependencyTree);
+      templateData.put("dependencyRootNode", Iterables.getFirst(dependencyTree.values(), null));
       report.process(templateData, out);
 
       ArtifactResults results = new ArtifactResults(artifact);
