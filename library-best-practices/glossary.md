@@ -4,9 +4,9 @@ Java Dependency Glossary
 ### Types of conflicts and compatibility
 
 - **Linkage error**: an error when a Java class in a classpath has reference to
-  another class for inheritance, field or methods, and the reference can not be
+  another class file for a class, field or method, and the reference can not be
   satisfied with the available classes in the classpath.
-  A linkage error is caused by a reference to missing classes and a linkage conflict.
+  A linkage error is caused by a reference to missing classes or a linkage conflict.
   Linkage errors detected at runtime manifest as `ReflectiveOperationException`,
   `NoClassDefFoundError`, `NoSuchFieldException`, `MethodNotFoundException`,
   `LinkageError`, or other related exceptions.

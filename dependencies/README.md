@@ -18,7 +18,7 @@ There are two use cases for Static Linkage Checker:
   the tool helps to ensure that there are no static linkage conflicts among the libraries and their
   dependencies.
 
-- **For library/application developers** the tool will assess the risk of static linkage
+- **For library/application developers** the tool assesses the risk of static linkage
   conflicts in their projects, and will help to avoid incompatible versions of libraries
   in their dependencies.
 
