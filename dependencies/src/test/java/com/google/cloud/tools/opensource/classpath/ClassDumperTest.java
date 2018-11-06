@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.InputStream;
@@ -115,19 +116,19 @@ public class ClassDumperTest {
 
   @Test
   public void testMethodDescriptorToClass_byteArray() {
-    ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+    ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
     Class[] byteArrayClass =
-        ClassDumper.methodDescriptorToClass("([B)Ljava/lang/String;", classLoader);
+        classDumper.methodDescriptorToClass("([B)Ljava/lang/String;");
     Assert.assertTrue(byteArrayClass[0].isArray());
   }
 
   @Test
   public void testMethodDescriptorToClass_primitiveTypes() {
-    ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+    ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
     // List of primitive types that appear in descriptor:
     // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3
     Class[] types =
-        ClassDumper.methodDescriptorToClass("(BCDFIJSZ)Ljava/lang/String;", classLoader);
+        classDumper.methodDescriptorToClass("(BCDFIJSZ)Ljava/lang/String;");
     Truth.assertThat(types)
         .asList()
         .containsExactly(
@@ -142,4 +143,26 @@ public class ClassDumperTest {
         .inOrder();
   }
 
+  @Test
+  public void testMethodDefinitionExists_arrayType() throws ClassNotFoundException {
+    FullyQualifiedMethodSignature checkArgumentMethod =
+        new FullyQualifiedMethodSignature(
+            "com.google.common.base.Preconditions", "checkArgument", "(ZLjava/lang/Object;)V");
+    ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
+
+    Assert.assertTrue(classDumper.methodDefinitionExists(checkArgumentMethod));
+  }
+
+  @Test
+  public void testMethodDefinitionExists_constructorInAbstractClass()
+      throws ClassNotFoundException {
+    ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
+    FullyQualifiedMethodSignature constructorInAbstract =
+        new FullyQualifiedMethodSignature(
+            "com.google.common.collect.LinkedHashMultimapGwtSerializationDependencies",
+            "<init>",
+            "(Ljava/util/Map;)V");
+
+    Assert.assertTrue(classDumper.methodDefinitionExists(constructorInAbstract));
+  }
 }

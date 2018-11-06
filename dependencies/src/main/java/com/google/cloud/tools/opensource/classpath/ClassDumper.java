@@ -24,6 +24,7 @@ import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -36,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -66,6 +66,18 @@ class ClassDumper {
   private final SyntheticRepository syntheticRepository;
   private final ClassLoader classLoader;
 
+  public ImmutableSet<Path> getJarFilePaths() {
+    return jarFilePaths;
+  }
+
+  public SyntheticRepository getSyntheticRepository() {
+    return syntheticRepository;
+  }
+
+  public ClassLoader getClassLoader() {
+    return classLoader;
+  }
+
   private ClassDumper(
       ImmutableSet<Path> jarFilePaths,
       SyntheticRepository syntheticRepository,
@@ -75,6 +87,10 @@ class ClassDumper {
     this.classLoader = classLoader;
   }
 
+  JavaClass loadJavaClass(String javaClassName) throws ClassNotFoundException {
+    return syntheticRepository.loadClass(javaClassName);
+  }
+
   static ClassDumper create(List<Path> jarFilePaths) {
     // Creates classpath in the same order as jarFilePaths for BCEL API
     String pathAsString =
@@ -82,14 +98,16 @@ class ClassDumper {
     ClassPath classPath = new ClassPath(pathAsString);
     SyntheticRepository syntheticRepository = SyntheticRepository.getInstance(classPath);
 
-    URL[] jarFileUrls = jarFilePaths.stream().map(jarPath -> {
+    URL[] jarFileUrls = new URL[jarFilePaths.size()];
+    for (int i = 0; i < jarFilePaths.size(); i++) {
+      Path jarPath = jarFilePaths.get(i);
       try {
-        return jarPath.toUri().toURL();
+        jarFileUrls[i] = jarPath.toUri().toURL();
       } catch (MalformedURLException ex) {
-        System.err.println("Jar file " + jarPath + " was not converted to URL: " + ex.getMessage());
-        return null;
+        System.err.println("Failed to convert jar path to URL" + ex.getMessage());
+        throw new IllegalArgumentException("Jar file " + jarPath + " was not converted to URL", ex);
       }
-    }).filter(Objects::nonNull).toArray(URL[]::new);
+    }
     URLClassLoader classLoaderFromJars =
         new URLClassLoader(jarFileUrls, ClassLoader.getSystemClassLoader());
 
@@ -143,15 +161,11 @@ class ClassDumper {
    *     the class loader and BCEL repository.
    * @param jarFileToClasses mapping of jar file paths to classes. This helps to distinguish whether
    *     the class in a method reference is in the same jar file or not.
-   * @param classLoader class loader to locate the jar file for the class
-   * @param repository BCEL repository to list method references for the class
    * @return list of external method references from the class
    */
-  static ImmutableSet<FullyQualifiedMethodSignature> listExternalMethodReferences(
+  ImmutableSet<FullyQualifiedMethodSignature> listExternalMethodReferences(
       String className,
-      SetMultimap<Path, String> jarFileToClasses,
-      ClassLoader classLoader,
-      SyntheticRepository repository) {
+      SetMultimap<Path, String> jarFileToClasses) {
     // TODO(suztomo): ClassDumper to have instance methods and make immutable data to instance
     // Issue #208
     try {
@@ -166,7 +180,7 @@ class ClassDumper {
 
       // Follows usage graph from the internal classes to external references
       return findExternalMethodReferencesByUsageGraph(
-          ImmutableSet.of(className), repository, classesDefinedInSameJar);
+          ImmutableSet.of(className), syntheticRepository, classesDefinedInSameJar);
     } catch (ClassNotFoundException | URISyntaxException ex) {
       // TODO: Investigate why 'mvn exec:java' causes ClassNotFoundException for Guava
       // Running withinStaticLinkageChecker via IntelliJ does not cause the problem
@@ -355,7 +369,7 @@ class ClassDumper {
   }
 
   @VisibleForTesting
-  static Class[] methodDescriptorToClass(String methodDescriptor, ClassLoader classLoader) {
+  Class[] methodDescriptorToClass(String methodDescriptor) {
     Type[] argumentTypes = Type.getArgumentTypes(methodDescriptor);
     Class[] parameterTypes =
         Arrays.stream(argumentTypes)
@@ -391,6 +405,57 @@ class ClassDumper {
         } catch (ClassNotFoundException ex) {
           return null;
         }
+    }
+  }
+
+
+  @VisibleForTesting
+  @SuppressWarnings("unchecked")
+  boolean methodDefinitionExists(FullyQualifiedMethodSignature methodReference)
+      throws ClassNotFoundException {
+    String className = methodReference.getClassName();
+    MethodSignature methodSignature = methodReference.getMethodSignature();
+    String methodName = methodSignature.getMethodName();
+    Class[] parameterTypes = methodDescriptorToClass(methodSignature.getDescriptor());
+    try {
+      // Attempt 1: Find the class and method in the class loader
+      // Class loader helps to resolve class hierarchy, such as methods defined in parent class
+      Class clazz =
+          className.startsWith("[")
+              ? Array.class
+              : classLoader.loadClass(className);
+      if ("<init>".equals(methodName)) {
+        clazz.getConstructor(parameterTypes);
+      } else if ("clone".equals(methodName) && clazz == Array.class) {
+        // Array's clone method is not returned by getMethod
+        // https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html#getMethod-java.lang.String-java.lang.Class...-
+        return true;
+      } else {
+        clazz.getMethod(methodSignature.getMethodName(),
+            parameterTypes);
+      }
+      return true;
+    } catch (NoSuchMethodException | ClassNotFoundException ex) {
+      // Attempt 2: Find the class and method in BCEL API
+      // BCEL helps to search availability of (package) private class, constructors and methods
+      // that are inaccessible to Java's reflection API or the class loader.
+      JavaClass javaClass = loadJavaClass(className);
+      while (javaClass != null) {
+        // Inherited methods need checking with the parent class name
+        FullyQualifiedMethodSignature methodReferenceForClass = new FullyQualifiedMethodSignature(
+            javaClass.getClassName(),
+            methodName,
+            methodSignature.getDescriptor()
+        );
+        List<FullyQualifiedMethodSignature> availableMethodsOnClass =
+            ClassDumper.listMethodsOnClass(javaClass);
+        if (availableMethodsOnClass.contains(methodReferenceForClass)) {
+          return true;
+        }
+        // null if java.lang.Object
+        javaClass = javaClass.getSuperClass();
+      }
+      return false;
     }
   }
 }

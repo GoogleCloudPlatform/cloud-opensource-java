@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Set;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.util.SyntheticRepository;
 import org.eclipse.aether.RepositoryException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -118,6 +117,10 @@ public class StaticLinkageCheckerTest {
         absolutePathOfResource(EXAMPLE_PROTO_JAR_FILE));
     pathsForJar.addAll(FIRESTORE_DEPENDENCIES);
 
+    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(
+        true,
+        pathsForJar);
+
     FullyQualifiedMethodSignature internalMethodReference =
         new FullyQualifiedMethodSignature(
             "com.google.firestore.v1beta1.FirestoreGrpc",
@@ -137,8 +140,8 @@ public class StaticLinkageCheckerTest {
     // findUnresolvedReferences does not follow references from this set
     Set<String> checkedClasses = Sets.newHashSet("com.google.firestore.v1beta1.FirestoreGrpc");
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        StaticLinkageChecker.findUnresolvedReferences(
-            pathsForJar, methodReferences, checkedClasses);
+        staticLinkageChecker.findUnresolvedReferences(
+            methodReferences, checkedClasses);
     Truth.assertThat(unresolvedMethodReferences).hasSize(1);
   }
 
@@ -186,12 +189,18 @@ public class StaticLinkageCheckerTest {
             absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"),
             absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"));
     pathsForJarWithVersion65First.addAll(firestoreDependencies);
+    StaticLinkageChecker staticLinkageChecker65First = new StaticLinkageChecker(
+        true,
+        pathsForJarWithVersion65First);
 
     List<Path> pathsForJarWithVersion66First =
         Lists.newArrayList(
             absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"),
             absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"));
     pathsForJarWithVersion66First.addAll(firestoreDependencies);
+    StaticLinkageChecker staticLinkageChecker66First = new StaticLinkageChecker(
+        true,
+        pathsForJarWithVersion66First);
 
     FullyQualifiedMethodSignature methodAddedInVersion66 =
         new FullyQualifiedMethodSignature(
@@ -201,13 +210,13 @@ public class StaticLinkageCheckerTest {
 
     // When version 65 (old) comes first in the jar list, it cannot find listDocuments method
     List<FullyQualifiedMethodSignature> unresolvedMethodReferencesWithPath1 =
-        StaticLinkageChecker.findUnresolvedReferences(pathsForJarWithVersion65First,
+        staticLinkageChecker65First.findUnresolvedReferences(
             Arrays.asList(methodAddedInVersion66), new HashSet<>());
     Truth.assertThat(unresolvedMethodReferencesWithPath1).hasSize(1);
 
     // When version 66 (new) comes first, it finds the method correctly
     List<FullyQualifiedMethodSignature> unresolvedMethodReferencesWithPath2 =
-        StaticLinkageChecker.findUnresolvedReferences(pathsForJarWithVersion66First,
+        staticLinkageChecker66First.findUnresolvedReferences(
             Arrays.asList(methodAddedInVersion66), new HashSet<>());
     Truth.assertThat(unresolvedMethodReferencesWithPath2).doesNotContain(methodAddedInVersion66);
   }
@@ -216,6 +225,9 @@ public class StaticLinkageCheckerTest {
   public void testFindUnresolvedReferences_packagePrivateInnerClass()
       throws RepositoryException {
     List<Path> paths = StaticLinkageChecker.coordinateToClasspath("io.grpc:grpc-auth:1.15.1");
+    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(
+        true,
+        paths);
 
     FullyQualifiedMethodSignature constructorOfPrivateInnerClass =
         new FullyQualifiedMethodSignature(
@@ -223,8 +235,8 @@ public class StaticLinkageCheckerTest {
             "<init>",
             "()V");
 
-    List<FullyQualifiedMethodSignature> unresolvedReferences = StaticLinkageChecker
-        .findUnresolvedReferences(paths,
+    List<FullyQualifiedMethodSignature> unresolvedReferences =
+        staticLinkageChecker.findUnresolvedReferences(
             Arrays.asList(constructorOfPrivateInnerClass), new HashSet<>());
     Truth.assertThat(unresolvedReferences).isEmpty();
   }
@@ -298,9 +310,13 @@ public class StaticLinkageCheckerTest {
     List<Path> pathsForJar =
         Arrays.asList(
             Paths.get(URLClassLoader.getSystemResource("testdata/guava-26.0-jre.jar").toURI()));
+    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(
+        true,
+        pathsForJar);
+
     List<FullyQualifiedMethodSignature> methodsNotFound =
-        StaticLinkageChecker.findUnresolvedReferences(
-            pathsForJar, Arrays.asList(guavaCollectionPut), new HashSet<>());
+        staticLinkageChecker.findUnresolvedReferences(
+            Arrays.asList(guavaCollectionPut), new HashSet<>());
     Truth.assertThat(methodsNotFound).hasSize(0);
   }
 
@@ -371,37 +387,13 @@ public class StaticLinkageCheckerTest {
     List<Path> pathsForJar =
         Arrays.asList(
             Paths.get(URLClassLoader.getSystemResource("testdata/guava-26.0-jre.jar").toURI()));
+    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(
+        true,
+        pathsForJar);
+
     List<FullyQualifiedMethodSignature> methodsNotFound =
-        StaticLinkageChecker.findUnresolvedReferences(
-            pathsForJar, Arrays.asList(arrayCloneMethod), new HashSet<>());
+        staticLinkageChecker.findUnresolvedReferences(
+            Arrays.asList(arrayCloneMethod), new HashSet<>());
     Truth.assertThat(methodsNotFound).hasSize(0);
-  }
-
-  @Test
-  public void testMethodDefinitionExists_arrayType() throws ClassNotFoundException {
-    ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-    FullyQualifiedMethodSignature checkArgumentMethod =
-        new FullyQualifiedMethodSignature(
-            "com.google.common.base.Preconditions",
-            "checkArgument", "(ZLjava/lang/Object;)V");
-    boolean exist =
-        StaticLinkageChecker.methodDefinitionExists(
-            checkArgumentMethod, classLoader, SyntheticRepository.getInstance());
-    Assert.assertTrue(exist);
-  }
-
-  @Test
-  public void testMethodDefinitionExists_constructorInAbstractClass()
-      throws ClassNotFoundException {
-    ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-    FullyQualifiedMethodSignature constructorInAbstract =
-        new FullyQualifiedMethodSignature(
-            "com.google.common.collect.LinkedHashMultimapGwtSerializationDependencies",
-            "<init>",
-            "(Ljava/util/Map;)V");
-    boolean exist =
-        StaticLinkageChecker.methodDefinitionExists(
-            constructorInAbstract, classLoader, SyntheticRepository.getInstance());
-    Assert.assertTrue(exist);
   }
 }
