@@ -2,11 +2,11 @@
 -------------------------------------------
 
 For any particular library dependency chain, the libraries involved need to
-coordinate the adoption of new major versions of any shared dependency that has
+coordinate the adoption of new major versions of shared dependencies that has
 breaking changes. This is necessary so that consumers can easily use the latest
-version of all of the functionality together.  This best practice doesn't apply
-to the adoption of new major versions where the package was renamed, because the
-old and new packages can co-exist.
+version of all the functionality together. This best practice doesn't apply
+to new major versions where the package was renamed, because the old and new
+packages can co-exist.
 
 Below is an example of what happens when a new major version of a leaf library
 is partially adopted. Suppose gax-java and grpc-java depend on guava 20.0:
