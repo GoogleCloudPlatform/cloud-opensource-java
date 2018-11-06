@@ -35,4 +35,4 @@ or significantly changed before the set is classified as Beta.
 - [JLBP-15](JLBP-15.md): Produce a BOM for multi-module projects
 - [JLBP-16](JLBP-16.md): Ensure upper version alignment of dependencies for
   consumers
-- [JLBP-18](JLBP-18.md): Use shading sparingly and carefully
+- [JLBP-18](JLBP-18.md): Only shade dependencies as a last resort
