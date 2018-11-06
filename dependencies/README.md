@@ -1,27 +1,26 @@
 Static Linkage Checker
 ======================
 
-Static Linkage Checker is a tool that inspects classpaths for [static linkage check](
-../library-best-practices/glossary.md#static-linkage-check).
-The tool identifies static linkage errors that appear in Java projects at runtime.
+Static Linkage Checker is a tool that performs a [static linkage check](
+../library-best-practices/glossary.md#static-linkage-check) on a classpath
+and reports static linkage errors to the console.
 It scans the class files in a classpath provided as input for references
-to other classes. Then it verifies compatibility of the methods and fields
-in the referenced classes, with regard to their type signatures and accessors.
+to other classes. Each reference is verified to find linkage conflicts
+in the classpath.
+The tool also provides analysis on reachability to the errors from entry point
+classes through class usage graphs.
 
 ### Use Cases
 
-There are three use cases for Static Linkage Checker:
+There are two use cases for Static Linkage Checker:
 
 -  **For organizations** that provide multiple libraries developed by different teams,
   the tool helps to ensure that there are no static linkage conflicts among the libraries and their
-  dependencies when some of them are used at the same time.
+  dependencies.
 
-- **For library developers**, the tool ensures that the users of the library will not suffer
-  static linkage conflicts caused solely by the dependencies of the library.
-
-- (future plan) **For application developers** consuming libraries, the tool will
-  assess the risk of static linkage conflicts among the application's dependencies, and will help
-  to avoid incompatible versions of libraries.
+- **For library/application developers** the tool will assess the risk of static linkage
+  conflicts in their projects, and will help to avoid incompatible versions of libraries
+  in their dependencies.
 
 ### Approach
 
@@ -41,11 +40,24 @@ There are three use cases for Static Linkage Checker:
 ### Output
 
 The tool reports zero or more static linkage errors for the linkage classpath, annotated
-with _reachability_.
+with _reachability_. Each of the static linkage errors contains the information on the
+source class and the destination class of the reference, and has one of the three types:
 
+  - _Missing class type_ is for errors when where the destination class of a
+    class reference does not exist in the classpath. This error
+    happens when a class is removed in a different version of a library,
+    or there is a dependency missed when constructing the classpath.
+    The reference that causes a missing class error is called a _dangling reference_.
+
+  - _Missing method type_ is for errors when a method reference has a static
+    linkage conflict.
+
+  - _Missing field type_ is for errors when a field reference has a static
+     linkage conflict.
+     
 ### Class Usage Graph and Reachability
 
-In order to provide diagnosis on the output report, the tool builds _class usage graphs_,
+In order to provide a diagnosis on the output report, the tool builds _class usage graphs_,
 and annotates linkage errors with _reachability_ from _entry point classes_.
 The tool allows users to choose the scope of entry point classes:
 
@@ -53,10 +65,10 @@ The tool allows users to choose the scope of entry point classes:
     target project, it ensures that the current functionality used in the dependencies will not
     cause static linkage errors.
     The output may fail to report potential static linkage errors, which would be introduced
-    by starting to use a new class in one of the dependencies.
+    by starting to use a previously unreachable class in one of the dependencies.
 
   - **Direct dependencies of the target project**: when the scope of the entry point is the all
-    classes in direct dependencies of the target project, it ensures that functionality of the
+    classes in the direct dependencies of the target project, it ensures that functionality of the
     dependencies will not cause static linkage errors. The output may contain linkage errors for
-    unused classes from user's perspective.
+    unreachable classes from user's perspective.
 

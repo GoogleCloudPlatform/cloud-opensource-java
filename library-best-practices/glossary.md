@@ -3,14 +3,20 @@ Java Dependency Glossary
 
 ### Types of conflicts and compatibility
 
+- **Linkage error**: an error when a Java class in a classpath has reference to
+  another class for inheritance, field or methods, and the reference can not be
+  satisfied with the available classes in the classpath.
+  A linkage error is caused by a reference to missing classes and a linkage conflict.
+  Linkage errors detected at runtime manifest as `ReflectiveOperationException`,
+  `NoClassDefFoundError`, `NoSuchFieldException`, `MethodNotFoundException`,
+  `LinkageError`, or other related exceptions.
+  - Sub-type: **Linkage conflict**
+
 - **Linkage conflict**: The signature, return type, modifiers, or throws
   declaration of a non-private method or class in a dependency has changed in an
   incompatible way between the version supplied at compile time and the version
   invoked at runtime. For example, a public method may be removed from a class
-  or a class may be made final. Linkage conflicts detected at runtime manifest
-  as `ReflectiveOperationException`, `NoClassDefFoundError`,
-  `NoSuchFieldException`, `MethodNotFoundException`, `LinkageError`, or other
-  related exceptions. 
+  or a class may be made final.
   - Or, another perspective: In cases where binary compatibility and source
     compatibility are the same, a linkage conflict is when compilation would
     fail if the libraries in the classpath were all built together from their
@@ -68,7 +74,7 @@ Java Dependency Glossary
   A and the version of B are linkage-compatible.
 
 
-### Static Linkage Check
+### Static Linkage Checking
 
 - **Static linkage check**: a process to identify the existence of _static
   linkage conflicts_ for a given classpath, by scanning Java classes and
@@ -91,10 +97,11 @@ Java Dependency Glossary
   a class is calling two or more methods and fields on another class.
   Self-loops (references between the same class) are possible and
   common, however, it is safe to omit such references during static linkage checks,
-  because the self-loop references are ensured to be linkage compatible by Java compiler.
+  because the self-loop references are ensured to be linkage compatible
+  by the Java compiler.
 
 - **A reference**: in the class usage graph, the relationship between two 
-  classes is either _class reference_, _method reference_ or _field reference_.
+  classes is either a _class reference_, _method reference_ or _field reference_.
 
   A _method reference_ indicates that the source class invokes a (static or
   non-static) method of the destination class.
@@ -105,33 +112,17 @@ Java Dependency Glossary
   A _class reference_ indicates that the source class uses the destination
   class without referencing a specific field or method (e.g., class inheritance).
 
-- **Static linkage error**: a reported error for a reference as the result of
-  a static linkage check.
-  A static linkage error contains the information on the source class and
-  the destination class of the reference. Each static linkage error has
-  one of the three types:
 
-  - _Missing class type_ is for errors when where the destination class of a
-    class reference does not exist in the classpath. This error
-    happens when a class is removed in a different version of a library,
-    or there is a dependency missed when constructing the classpath.
-    The reference that causes a missing class error is called a _dangling reference_.
-
-  - _Missing method type_ is for errors when a method reference has a static
-    linkage conflict.
-
-  - _Missing field type_ is for errors when a field reference has a static
-     linkage conflict.
-
-- **Reachability** is the attribute of static linkage errors to indicate
-  whether a linkage error caused by a reference is _reachable_ from the _entry
-  point classes_. In other words, when a static linkage error is marked as _reachable_,
-  there exists a path of references in the class usage graph from one of
-  the entry point classes to the reference causing linkage error.
-  The path helps to diagnose how static linkage errors are introduced to the
-  classpath.
+- **Reachability** is the attribute of classes (nodes in the graph)
+  and references (edges in the graph) to indicate whether they are
+  _reachable_ from a class. For example, when a reference that causes
+  a linkage error is marked as _reachable_ from 'Class A', it means that
+  there exists a path of edges in the class usage graph from 'Class A'
+  to the reference causing linkage error.
+  The path helps to diagnose how linkage errors are introduced to the
+  classpath from which the graph is built.
 
 - **Entry point classes** are classes in the class usage graph that are used
-  to analyze the reachability of static linkage errors. These are the initial
+  to analyze the reachability of linkage errors. These are the initial
   classes to start the graph traversal.
 
