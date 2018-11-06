@@ -1,9 +1,8 @@
 Static Linkage Checker
 ======================
 
-Static Linkage Checker is a tool that performs a [static linkage check](
-../library-best-practices/glossary.md#static-linkage-check) on a classpath
-and reports static linkage errors to the console.
+Static Linkage Checker is a tool that to find [static linkage errors](
+../library-best-practices/glossary.md) on a classpath and reports the errors to the console.
 It scans the class files in a classpath provided as input for references
 to other classes. Each reference is verified to find linkage conflicts
 in the classpath.
@@ -15,11 +14,11 @@ classes through class usage graphs.
 There are two use cases for Static Linkage Checker:
 
 -  **For organizations** that provide multiple libraries developed by different teams,
-  the tool helps to ensure that there are no static linkage conflicts among the libraries and their
+  the tool helps to ensure that there are no static linkage errors among the libraries and their
   dependencies.
 
-- **For library/application developers** the tool assesses the risk of static linkage
-  conflicts in their projects, and will help to avoid incompatible versions of libraries
+- **For library/application developers** the tool finds static linkage
+  errors in their projects, and will help to avoid incompatible versions of libraries
   in their dependencies.
 
 ### Approach
@@ -31,7 +30,7 @@ There are two use cases for Static Linkage Checker:
 2. The tool extracts all _references_ from the all class files in the classpath.
 
 3. The tool checks the linkage compatibility of the references through the classpath, and records
-  static linkage conflicts.
+  static linkage errors.
   
 4. The tool traverses a _class usage graph_ to annotate the linkage errors with _reachability_.
 
@@ -39,21 +38,15 @@ There are two use cases for Static Linkage Checker:
 
 ### Output
 
-The tool reports zero or more static linkage errors for the linkage classpath, annotated
+The tool reports static linkage errors for the input linkage classpath, annotated
 with _reachability_. Each of the static linkage errors contains the information on the
 source class and the destination class of the reference, and has one of the three types:
 
-  - _Missing class type_: the destination class of a
-    class reference does not exist in the classpath. This error
-    happens when a class is removed in a different version of a library,
-    or there is a dependency missed when constructing the classpath.
-    The reference that causes a missing class error is called a _dangling reference_.
+  - _Missing class type_: a class reference causes a static missing class error.
 
-  - _Missing method type_: a method reference has a static
-    linkage conflict.
+  - _Missing method type_: a method reference has a static linkage conflict.
 
-  - _Missing field type_: a field reference has a static
-     linkage conflict.
+  - _Missing field type_: a field reference has a static linkage conflict.
      
 ### Class Usage Graph and Reachability
 

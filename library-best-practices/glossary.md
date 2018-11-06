@@ -3,29 +3,38 @@ Java Dependency Glossary
 
 ### Types of conflicts and compatibility
 
-- **Linkage error**: an error when a Java class in a classpath has reference to
-  another class file for a class, field or method, and the reference can not be
-  satisfied with the available classes in the classpath.
+- **Linkage error**: an error when a Java class in a classpath references
+  another class (for the class itself, its field, or its method), and the reference
+  cannot be satisfied with the available classes in the classpath.
   A linkage error is caused by a reference to missing classes or a linkage conflict.
   Linkage errors detected at runtime manifest as `ReflectiveOperationException`,
   `NoClassDefFoundError`, `NoSuchFieldException`, `MethodNotFoundException`,
   `LinkageError`, or other related exceptions.
   - Sub-type: **Linkage conflict**
+  - Sub-type: **Missing class error**
 
-- **Linkage conflict**: The signature, return type, modifiers, or throws
-  declaration of a non-private method or class in a dependency has changed in an
-  incompatible way between the version supplied at compile time and the version
-  invoked at runtime. For example, a public method may be removed from a class
-  or a class may be made final.
-  - Or, another perspective: In cases where binary compatibility and source
-    compatibility are the same, a linkage conflict is when compilation would
-    fail if the libraries in the classpath were all built together from their
-    originating source code, or when reflection would fail.
-  - Opposite: **Linkage-compatible**.
-  - Sub-type: **Static linkage conflict**: A linkage conflict caused by a direct
-    code reference (non-reflective).
-  - Sub-type: **Reflective linkage conflict**: A linkage conflict caused by a
-    reflective reference.
+  - **Linkage conflict**: The signature, return type, modifiers, or throws
+    declaration of a non-private method or class in a dependency has changed in an
+    incompatible way between the version supplied at compile time and the version
+    invoked at runtime. For example, a public method may be removed from a class
+    or a class may be made final.
+    - Or, another perspective: In cases where binary compatibility and source
+      compatibility are the same, a linkage conflict is when compilation would
+      fail if the libraries in the classpath were all built together from their
+      originating source code, or when reflection would fail.
+    - Opposite: **Linkage-compatible**.
+    - Sub-type: **Static linkage conflict**: A linkage conflict caused by a direct
+      code reference (non-reflective).
+    - Sub-type: **Reflective linkage conflict**: A linkage conflict caused by a
+      reflective reference.
+
+  - **Missing class error**: an error when a class referenced does not exist
+    in the classpath. This error happens when a class is removed in a different
+    version of a library, or there is a dependency missed when constructing the classpath.
+
+  - **Static**: Said of a linkage error when the linkage error is caused by a
+    direct code reference (e.g., _static linkage error_ and _static linkage conflict_').
+    The references from a class is written in the class file when the class is compiled.
 
 - **Behavior conflict**: The class's implementation has changed in a way that
   can break clients at runtime although all signatures remain compatible. For
@@ -74,22 +83,13 @@ Java Dependency Glossary
   A and the version of B are linkage-compatible.
 
 
-### Static Linkage Checking
-
-- **Static linkage**: a reference from a class to another class that is
-  statically found in the Java class file of the former class.
-
-- **Static linkage error**: a linkage error for a static linkage.
-
-- **Static linkage check**: a process to identify the existence of _static
-  linkage conflicts_ for a given classpath, by scanning Java classes and
-  verifying the availability in the classpath.
+### Class usage graph
 
 - **Class usage graph**: a possibly cyclic directed graph of references between classes
   in the classpath. The nodes (vertices) of the graph correspond to
   Java classes and the directed edges are references between classes.
-  For example, when 'Class A' has reference to 'Class B' on calling a method X,
-  the class usage graph holds an edge between two nodes:
+  For example, when 'Class A' invokes method X on 'Class B',
+  the class usage graph holds an edge between the two nodes:
 
   ```
   [Class A] --(method X of class B)-> [Class B]
@@ -101,20 +101,22 @@ Java Dependency Glossary
   In general, there can be multiple (parallel) edges between two nodes when
   a class references two or more methods and fields of another class.
   Self-loops (references between the same class) are possible and
-  common. However, it is safe to omit such references during static linkage checks,
-  because the Java compiler ensures that the self-loop references are linkage compatible.
+  common. However, it is safe to omit such references when checking the reachability
+  to static linkage errors, because the Java compiler ensures that the self-loop
+  references are linkage compatible.
 
-- **A reference**: in the class usage graph, the relationship between two 
-  classes is either a _class reference_, _method reference_ or _field reference_.
-
-  A _method reference_ indicates that the source class invokes a (static or
-  non-static) method of the destination class.
-
-  A _field reference_ indicates that the source class accesses a (static or
-  non-static) field of the destination class.
+- **Reference**: a relationship from a class to another class on how the former
+  uses the latter. A reference is represented as an edge a class usage graph.
+  A reference is either a _class reference_, _method reference_ or _field reference_:
 
   A _class reference_ indicates that the source class uses the destination
   class without referencing a specific field or method (e.g., class inheritance).
+
+  A _method reference_ indicates that the source class invokes a method of the
+  destination class.
+
+  A _field reference_ indicates that the source class accesses a field of the
+  destination class.
 
 
 - **Reachability** is the attribute of classes (nodes in the graph)
@@ -122,7 +124,7 @@ Java Dependency Glossary
   _reachable_ from a class. For example, when a reference that causes
   a linkage error is marked as _reachable_ from 'Class A', it means that
   there exists a path of edges in the class usage graph from 'Class A'
-  to the reference causing linkage error.
+  to the reference causing a linkage error.
   The path helps to diagnose how linkage errors are introduced to the
   classpath from which the graph is built.
 
