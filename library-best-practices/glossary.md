@@ -16,7 +16,8 @@ Java Dependency Glossary
     modifiers, or throws declaration of a non-private method, field, or class
     in a dependency has changed (or removed) in an incompatible way between
     the version supplied at compile time and the version invoked at runtime.
-    For example, a public method may be removed from a class or a class may be made final.
+    For example, a public method may be removed from a class or an extended
+    class may be made final.
     - Or, another perspective: In cases where binary compatibility and source
       compatibility are the same, a linkage conflict is when compilation would
       fail if the libraries in the classpath were all built together from their
@@ -32,7 +33,7 @@ Java Dependency Glossary
     version of a library, or there is a dependency missed when constructing the classpath.
 
   - **Static**: Said of a linkage error when the linkage error is caused by a
-    direct code reference (e.g., _static linkage error_ and _static linkage conflict_).
+    direct code reference (for example, _static linkage error_ and _static linkage conflict_).
     The references from a class is written in the class file when the class is compiled.
 
 - **Behavior conflict**: The class's implementation has changed in a way that
@@ -82,46 +83,43 @@ Java Dependency Glossary
   A and the version of B are linkage-compatible.
 
 
-### Class usage graph
+### Class reference graph
 
-- **Class usage graph**: a possibly cyclic directed graph of references
-  between classes. The nodes (vertices) of the graph correspond to
-  Java classes and the directed edges are references between classes.
+- **Method reference**: a reference indicating that the _source class_ links to a method of the
+  _target_ class.
+
+- **Field reference**: a reference indicating that the _source class_ accesses a field of the
+  target class.
+
+- **Class reference**: a reference indicating that the _source class_ uses the _target
+  class_ without referencing a specific field or method
+  (for example, by inheriting from the class).
+
+- **Class reference graph**: a possibly cyclic directed graph where each node represents
+  a class and each edge represents a method, field or class reference from the
+  source class to the target class.
+
   For example, when 'Class A' invokes method X on 'Class B',
-  the class usage graph holds an edge between the two nodes:
+  the class reference graph holds an edge between the two nodes:
 
   ```
   [Class A] --(method X of class B)-> [Class B]
   ```
 
   In this case, 'Class A' is called the _source class_ of the reference and
-  'Class B' is called the _destination class_.
+  'Class B' is called the _target class_.
 
-  In general, there can be multiple (parallel) edges between two nodes when
-  a class references two or more methods and fields of another class.
-  Self-loops (references between the same class) are possible and
+  In general, there can be multiple edges between two nodes when
+  a class references two or more members of another class.
+
+  Self-loops, references from a class to a member of the same class, are possible and
   common.
-
-- **Reference**: A relationship from one class to another class such that
-  the first class requires the presence of the second class in a particular
-  form in order to function. A reference is represented as an edge a class usage graph.
-  A reference is either a _class reference_, _method reference_ or _field reference_:
-
-  A _class reference_ indicates that the source class uses the destination
-  class without referencing a specific field or method (e.g., class inheritance).
-
-  A _method reference_ indicates that the source class invokes a method of the
-  destination class.
-
-  A _field reference_ indicates that the source class accesses a field of the
-  destination class.
-
 
 - **Reachability** is the attribute of classes (nodes in the graph)
   and references (edges in the graph) to indicate whether they are
   _reachable_ from a class. For example, when a reference that causes
   a linkage error is marked as _reachable_ from 'Class A', it means that
-  there exists a path of edges in the class usage graph from 'Class A'
+  there exists a path of edges in the class reference graph from 'Class A'
   to the reference causing a linkage error.
   The path helps to diagnose how linkage errors are introduced to the
   classpath from which the graph is built.

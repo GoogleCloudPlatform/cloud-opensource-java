@@ -1,7 +1,8 @@
 # Static Linkage Checker
 
 Static Linkage Checker is a tool that finds [static linkage errors](
-../library-best-practices/glossary.md) on a classpath and reports the errors to the console.
+../library-best-practices/glossary.md#types-of-conflicts-and-compatibility)
+on a classpath and reports the errors to the console.
 It scans the class files in a classpath for references to other classes and
 reports any reference that cannot be satisfied in the classpath.
 It can report all such missing references or only those that are reachable from
@@ -21,17 +22,14 @@ There are two use cases for Static Linkage Checker:
 
 ### Approach
 
-1. The tool takes a classpath as required input, through either a list of jar and
-  class files in filesystems, a list of Maven coordinates, or a Maven BOM.
-  A Maven BOM is converted to a list of Maven coordinates, and a list of Maven
-  coordinates is resolved to a list of jar files that consists of the artifacts
-  and their dependencies.
+1. The tool takes a classpath as required input.
+
   The classpath is called as _linkage classpath_ on which the tool operates
   to find linkage errors and is separated from the runtime classpath of the tool itself.
 
 2. The tool extracts all _references_ from the all class files in the classpath.
 
-3. The tool records references cannot be satisfied in the classpath as
+3. The tool records references that cannot be satisfied in the classpath as
   static linkage errors.
   
 4. Optionally, the user can specify a subset of the classpath as _entry points_.
@@ -39,6 +37,16 @@ There are two use cases for Static Linkage Checker:
   from the classes in the entry points.
 
 5. At the end, the tool outputs a report on the linkage errors.
+
+### Input
+
+The tool takes a classpath through either a list of class and
+jar files in filesystems, a list of Maven coordinates, or a Maven BOM.
+
+A Maven BOM specified as a Maven coordinate is converted to a list of Maven coordinates.
+A list of Maven coordinates is resolved to a list of jar files
+that consists of the artifacts and their dependencies.
+The list of jar files forms a classpath, on which the tool operate.
 
 ### Output
 
@@ -52,9 +60,9 @@ source class and the destination class of the reference, and has one of the thre
 
   - _Missing field type_: a field reference has a static linkage conflict.
      
-### Class Usage Graph and Reachability
+### Class Reference Graph and Reachability
 
-In order to provide a diagnosis on the output report, the tool builds _class usage graphs_,
+In order to provide a diagnosis on the output report, the tool builds _class reference graphs_,
 and annotates linkage errors with _reachability_ from _entry point classes_.
 The tool allows users to choose the scope of entry point classes:
 
