@@ -111,9 +111,7 @@ Java Dependency Glossary
 
   In general, there can be multiple edges between two nodes when
   a class references two or more members of another class.
-
-  Self-loops, references from a class to a member of the same class, are possible and
-  common.
+  Self-loops, references from a class to a member of the same class, are possible and common.
 
 - **Reachability** is the attribute of classes (nodes in the graph)
   and references (edges in the graph) to indicate whether they are
