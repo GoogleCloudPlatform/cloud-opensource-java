@@ -2,10 +2,10 @@
 
 Static Linkage Checker is a tool that finds [static linkage errors](
 ../library-best-practices/glossary.md#types-of-conflicts-and-compatibility)
-on a classpath and reports the errors to the console.
-It scans the class files in a classpath for references to other classes and
-reports any reference that cannot be satisfied in the classpath.
-It can report all such missing references or only those that are reachable from
+on a class path and reports the errors to the console.
+It scans the class files in the class path for references to other classes and
+reports any reference that cannot be satisfied in the class path.
+It can report all such unsatisfied references or only those that are reachable from
 a given set of entry point classes.
 
 ### Use Cases
@@ -22,17 +22,17 @@ There are two use cases for Static Linkage Checker:
 
 ### Approach
 
-1. The tool takes a classpath as required input.
+1. The tool takes a class path as required input.
 
-  The classpath is called as _linkage classpath_ on which the tool operates
-  to find linkage errors and is separated from the runtime classpath of the tool itself.
+  The class path is called as _linkage class path_ on which the tool operates
+  to find linkage errors and is separated from the runtime class path of the tool itself.
 
-2. The tool extracts all _references_ from the all class files in the classpath.
+2. The tool extracts all _references_ from the all class files in the class path.
 
-3. The tool records references that cannot be satisfied in the classpath as
+3. The tool records references that cannot be satisfied in the class path as
   static linkage errors.
   
-4. Optionally, the user can specify a subset of the classpath as _entry points_.
+4. Optionally, the user can specify a subset of the class path as _entry points_.
   In that case, the tool will list only those references that are reachable
   from the classes in the entry points.
 
@@ -40,17 +40,17 @@ There are two use cases for Static Linkage Checker:
 
 ### Input
 
-The tool takes a classpath through either a list of class and
+The tool takes a class path through either a list of class and
 jar files in filesystems, a list of Maven coordinates, or a Maven BOM.
 
 A Maven BOM specified as a Maven coordinate is converted to a list of Maven coordinates.
 A list of Maven coordinates is resolved to a list of jar files
 that consists of the artifacts and their dependencies.
-The list of jar files forms a classpath, on which the tool operate.
+The list of jar files forms a class path, on which the tool operate.
 
 ### Output
 
-The tool reports static linkage errors for the input linkage classpath, annotated
+The tool reports static linkage errors for the input linkage class path, annotated
 with _reachability_. Each of the static linkage errors contains the information on the
 source class and the destination class of the reference, and has one of the three types:
 

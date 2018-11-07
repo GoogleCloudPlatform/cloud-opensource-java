@@ -3,9 +3,9 @@ Java Dependency Glossary
 
 ### Types of conflicts and compatibility
 
-- **Linkage error**: an error when a Java class in a classpath references
+- **Linkage error**: an error when a Java class in a class path references
   another class (as a class literal, a field access, or a method invocation),
-  and the reference cannot be satisfied with the available classes in the classpath.
+  and the reference cannot be satisfied with the available classes in the class path.
   Linkage errors detected at runtime manifest as `ReflectiveOperationException`,
   `NoClassDefFoundError`, `NoSuchFieldException`, `MethodNotFoundException`,
   `LinkageError`, or other related exceptions.
@@ -20,7 +20,7 @@ Java Dependency Glossary
     class may be made final.
     - Or, another perspective: In cases where binary compatibility and source
       compatibility are the same, a linkage conflict is when compilation would
-      fail if the libraries in the classpath were all built together from their
+      fail if the libraries in the class path were all built together from their
       originating source code, or when reflection would fail.
     - Opposite: **Linkage-compatible**.
     - Sub-type: **Static linkage conflict**: A linkage conflict caused by a direct
@@ -29,8 +29,8 @@ Java Dependency Glossary
       reflective reference.
 
   - **Missing class error**: an error when a class referenced does not exist
-    in the classpath. This error happens when a class is removed in a different
-    version of a library, or there is a dependency missed when constructing the classpath.
+    in the class path. This error happens when a class is removed in a different
+    version of a library, or there is a dependency missed when constructing the class path.
 
   - **Static**: Said of a linkage error when the linkage error is caused by a
     direct code reference (for example, _static linkage error_ and _static linkage conflict_).
@@ -85,10 +85,10 @@ Java Dependency Glossary
 
 ### Class reference graph
 
-- **Method reference**: a reference indicating that a _source class_ links to a method of the
+- **Method reference**: a reference indicating that a _source class_ links to a method of
   a _target_ class.
 
-- **Field reference**: a reference indicating that a _source class_ accesses a field of the
+- **Field reference**: a reference indicating that a _source class_ accesses a field of
   a target class.
 
 - **Class reference**: a reference indicating that a _source class_ uses a _target
@@ -120,9 +120,9 @@ Java Dependency Glossary
   there exists a path of edges in the class reference graph from 'Class A'
   to the reference causing a linkage error.
   The path helps to diagnose how linkage errors are introduced to the
-  classpath from which the graph is built.
+  class path from which the graph is built.
 
-- **Entry point classes** are a set of classes in the classpath to analyze
+- **Entry point classes** are a set of classes in the class path to analyze
   the reachability to a linkage errors. A graph traversal on the reachability
   of a linkage error starts with the nodes that correspond to the
   entry point classes.
