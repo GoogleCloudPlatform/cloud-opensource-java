@@ -188,9 +188,9 @@ public class DashboardTest {
       // There's a pre tag for dependency
       Assert.assertEquals(1, presDependencyMediation.size());
 
-      Nodes presDependencyTree = document.query("//pre[@class='dependency-tree']");
-      Assert.assertEquals("Dependency Tree should be shown in pre tag",
-          1, presDependencyTree.size());
+      Nodes presDependencyTree = document.query("//p[@class='DEPENDENCY_TREE_NODE']");
+      Assert.assertTrue("Dependency Tree should be shown in dashboard",
+          presDependencyTree.size() > 0);
     }
   }
 
@@ -209,9 +209,9 @@ public class DashboardTest {
       Nodes presDependencyMediation = document.query("//pre[@class='suggested-dependency-mediation']");
       Assert.assertTrue("For failed component, suggested dependency should be shown",
           presDependencyMediation.size() >= 1);
-      Nodes presDependencyTree = document.query("//pre[@class='dependency-tree']");
-      Assert.assertEquals("Dependency Tree should be shown in pre tag even when FAILED",
-          1, presDependencyTree.size());
+      Nodes presDependencyTree = document.query("//p[@class='DEPENDENCY_TREE_NODE']");
+      Assert.assertTrue("Dependency Tree should be shown in dashboard even when FAILED",
+          presDependencyTree.size() > 0);
     }
   }
   
