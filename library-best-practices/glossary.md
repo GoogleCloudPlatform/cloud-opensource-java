@@ -85,13 +85,13 @@ Java Dependency Glossary
 
 ### Class reference graph
 
-- **Method reference**: a reference indicating that the _source class_ links to a method of the
-  _target_ class.
+- **Method reference**: a reference indicating that a _source class_ links to a method of the
+  a _target_ class.
 
-- **Field reference**: a reference indicating that the _source class_ accesses a field of the
-  target class.
+- **Field reference**: a reference indicating that a _source class_ accesses a field of the
+  a target class.
 
-- **Class reference**: a reference indicating that the _source class_ uses the _target
+- **Class reference**: a reference indicating that a _source class_ uses a _target
   class_ without referencing a specific field or method
   (for example, by inheriting from the class).
 
