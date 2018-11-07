@@ -12,7 +12,7 @@ Java Dependency Glossary
   - Sub-type: **Linkage conflict**
   - Sub-type: **Missing class error**
 
-  - **Linkage conflict**: an linkage error when the signature, return type,
+  - **Linkage conflict**: a linkage error when the signature, return type,
     modifiers, or throws declaration of a non-private method, field, or class
     in a dependency has changed (or removed) in an incompatible way between
     the version supplied at compile time and the version invoked at runtime.
@@ -126,7 +126,7 @@ Java Dependency Glossary
   The path helps to diagnose how linkage errors are introduced to the
   classpath from which the graph is built.
 
-- **Entry point classes** are a set of classes in the classpath in to analyze
+- **Entry point classes** are a set of classes in the classpath to analyze
   the reachability to a linkage errors. A graph traversal on the reachability
   of a linkage error starts with the nodes that correspond to the
   entry point classes.
