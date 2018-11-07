@@ -93,7 +93,7 @@ public class DashboardTest {
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
     
     DefaultArtifact bom =
-        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.67.0-SNAPSHOT");
+        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
     List<Artifact> artifacts = RepositoryUtility.readBom(bom);
     Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
 
