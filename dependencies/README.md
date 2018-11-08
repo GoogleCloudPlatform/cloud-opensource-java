@@ -9,7 +9,7 @@ It can report all such unsatisfied references or only those that are reachable f
 a given set of entry point classes.
 
 ### Use Cases
-
+ 
 There are two use cases for Static Linkage Checker:
 
 - **For library/application developers** the tool finds static linkage
@@ -23,16 +23,15 @@ There are two use cases for Static Linkage Checker:
 ### Approach
 
 1. The tool takes a class path as required input.
+  This class path is called the _input class path_. The tool operates on this class path
+  to find linkage errors and it is separated from the runtime class path of the tool itself.
 
-  The class path is called as _linkage class path_ on which the tool operates
-  to find linkage errors and is separated from the runtime class path of the tool itself.
+2. The tool extracts all symbolic references from the all class files in the class path.
 
-2. The tool extracts all _references_ from the all class files in the class path.
-
-3. The tool records references that cannot be satisfied in the class path as
-  static linkage errors.
+3. The tool records static linkage errors for symbolic references which cannot be satisfied
+  in the class path.
   
-4. Optionally, the user can specify a subset of the class path as _entry points_.
+4. Optionally, the user can specify a subset of elements in the class path as _entry points_.
   In that case, the tool will list only those references that are reachable
   from the classes in the entry points.
 
@@ -40,25 +39,30 @@ There are two use cases for Static Linkage Checker:
 
 ### Input
 
-The tool takes a class path through either a list of class and
-jar files in filesystems, a list of Maven coordinates, or a Maven BOM.
+The tool takes a class path through either a BOM as a Maven coordinates, 
+a list of Maven coordinates, or a list of class and jar files in the filesystem.
 
-A Maven BOM specified as a Maven coordinate is converted to a list of Maven coordinates.
-A list of Maven coordinates is resolved to a list of jar files
+When the input is a Maven BOM, the elements in the BOM are
+converted to a list of Maven coordinates.
+If the BOM imports another BOM, the elements of the second BOM are recursively
+added to the list of Maven coordinates.
+
+When the input is a list of Maven coordinates, they are resolved to a list of jar files
 that consists of the artifacts and their dependencies.
-The list of jar files forms a class path, on which the tool operate.
+
+The list of class and jar files forms the _input class path_.
 
 ### Output
 
-The tool reports static linkage errors for the input linkage class path, annotated
+The tool reports static linkage errors for the input class path, annotated
 with _reachability_. Each of the static linkage errors contains the information on the
 source class and the destination class of the reference, and has one of the three types:
 
-  - _Missing class type_: a class reference causes a static missing class error.
+  - _Missing class_: a class reference causes a static missing class error.
 
-  - _Missing method type_: a method reference has a static linkage conflict.
+  - _Missing method_: a method reference has a static linkage conflict.
 
-  - _Missing field type_: a field reference has a static linkage conflict.
+  - _Missing field_: a field reference has a static linkage conflict.
      
 ### Class Reference Graph and Reachability
 
