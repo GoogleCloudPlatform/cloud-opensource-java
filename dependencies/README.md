@@ -65,9 +65,9 @@ _missing class_, _missing method_, or _missing field_.
      
 ### Class Reference Graph and Reachability
 
-In order to provide a diagnosis on the output report, the tool builds _class reference graphs_,
+In order to provide a diagnosis in the output report, the tool builds a _class reference graph_,
 and annotates linkage errors with _reachability_ from _entry point classes_.
-Optionally the tool outputs a report only including _reachable_ static linkage errors.
+Optionally the tool outputs a report including only _reachable_ static linkage errors.
 The tool allows users to choose the scope of entry point classes:
 
   - **Classes in the target project**: when the scope of the entry point is only the classes in the
@@ -76,8 +76,12 @@ The tool allows users to choose the scope of entry point classes:
     The output may fail to report potential static linkage errors, which would be introduced
     by starting to use a previously unreachable class in one of the dependencies.
 
-  - **Direct dependencies of the target project**: when the scope of the entry point is the all
-    classes in the direct dependencies of the target project, it ensures that functionality of the
+  - **With direct dependencies of the target project**: when the scope of the entry point is
+    the classes in the target project and the all
+    classes in the direct dependencies of the project, it ensures that functionality of the
     dependencies will not cause static linkage errors. The output may contain linkage errors for
     unreachable classes from user's perspective.
 
+  - **(All classes in the input class path)**: when reachability check is off, then
+    all static linkage errors from all classes in the classpath, regardless of the reachability,
+    are reported.
