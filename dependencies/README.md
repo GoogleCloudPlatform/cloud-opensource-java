@@ -54,8 +54,8 @@ The list of class and jar files forms the _input class path_.
 
 ### Output
 
-The tool reports static linkage errors for the input class path, annotated
-with _reachability_. Each of the static linkage errors contains the information on the
+The tool reports static linkage errors for the input class path.
+Each of the static linkage errors contains the information on the
 source class and the destination class of the reference, and has one of the three types:
 
   - _Missing class_: a class reference causes a static missing class error.
@@ -68,6 +68,7 @@ source class and the destination class of the reference, and has one of the thre
 
 In order to provide a diagnosis on the output report, the tool builds _class reference graphs_,
 and annotates linkage errors with _reachability_ from _entry point classes_.
+Optionally the tool outputs a report only including _reachable_ static linkage errors.
 The tool allows users to choose the scope of entry point classes:
 
   - **Classes in the target project**: when the scope of the entry point is only the classes in the
