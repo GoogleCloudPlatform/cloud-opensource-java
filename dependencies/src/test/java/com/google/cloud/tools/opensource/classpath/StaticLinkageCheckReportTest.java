@@ -25,22 +25,26 @@ public class StaticLinkageCheckReportTest {
 
   @Test
   public void testCreation() {
-    ImmutableList<LinkageErrorMissingClass> linkageErrorMissingClasses =
-        ImmutableList.of(LinkageErrorMissingClass.create("ClassA", "ClassB"));
-    LinkageErrorMissingMethod linkageErrorMissingMethod =
-        LinkageErrorMissingMethod.builder()
-            .setTargetClassName("ClassA")
-            .setMethodName("methodX")
-            .setDescriptor("java.lang.String")
-            .setSourceClassName("ClassB")
-            .build();
     JarLinkageReport jarLinkageReport =
         JarLinkageReport.builder()
             .setJarPath(Paths.get("a", "b", "c"))
-            .setMissingClassErrors(linkageErrorMissingClasses)
-            .setMissingMethodErrors(ImmutableList.of(linkageErrorMissingMethod))
+            .setMissingClassErrors(
+                ImmutableList.of(LinkageErrorMissingClass.create("ClassA", "ClassB")))
+            .setMissingMethodErrors(
+                ImmutableList.of(
+                    LinkageErrorMissingMethod.builder()
+                        .setTargetClassName("ClassA")
+                        .setMethodName("methodX")
+                        .setDescriptor("java.lang.String")
+                        .setSourceClassName("ClassB")
+                        .build()))
             .setMissingFieldErrors(
-                ImmutableList.of(LinkageErrorMissingField.create("ClassC", "fieldX", "ClassD")))
+                ImmutableList.of(
+                    LinkageErrorMissingField.builder()
+                        .setTargetClassName("ClassC")
+                        .setFieldName("fieldX")
+                        .setSourceClassName("ClassD")
+                        .build()))
             .build();
     StaticLinkageCheckReport staticLinkageCheckReport =
         StaticLinkageCheckReport.create(ImmutableList.of(jarLinkageReport));

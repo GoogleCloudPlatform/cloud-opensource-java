@@ -27,8 +27,15 @@ abstract class LinkageErrorMissingField {
   abstract String getFieldName();
   abstract String getSourceClassName();
 
-  static LinkageErrorMissingField create(
-      String targetClassName, String fieldName, String sourceClassName) {
-    return new AutoValue_LinkageErrorMissingField(targetClassName, fieldName, sourceClassName);
+  static Builder builder() {
+    return new AutoValue_LinkageErrorMissingField.Builder();
+  }
+
+  @AutoValue.Builder
+  abstract static class Builder {
+    abstract Builder setTargetClassName(String value);
+    abstract Builder setFieldName(String value);
+    abstract Builder setSourceClassName(String value);
+    abstract LinkageErrorMissingField build();
   }
 }

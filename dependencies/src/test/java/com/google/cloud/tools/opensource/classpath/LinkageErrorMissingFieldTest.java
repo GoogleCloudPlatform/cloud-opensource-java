@@ -23,7 +23,11 @@ public class LinkageErrorMissingFieldTest {
   @Test
   public void testCreation() {
     LinkageErrorMissingField linkageErrorMissingField =
-        LinkageErrorMissingField.create("ClassC", "fieldX", "ClassD");
+        LinkageErrorMissingField.builder()
+            .setTargetClassName("ClassC")
+            .setFieldName("fieldX")
+            .setSourceClassName("ClassD")
+            .build();
 
     Assert.assertEquals("ClassC", linkageErrorMissingField.getTargetClassName());
     Assert.assertEquals("fieldX", linkageErrorMissingField.getFieldName());
