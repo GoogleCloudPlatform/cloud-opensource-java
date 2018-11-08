@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -75,6 +76,8 @@ import org.eclipse.aether.artifact.DefaultArtifact;
  */
 class StaticLinkageChecker {
   // TODO(suztomo): enhance scope to include fields and classes. Issue #207
+
+  private static final Logger logger = Logger.getLogger(StaticLinkageChecker.class.getName());
 
   /**
    * Flag on whether the report excludes the linkage errors on classes that are not reachable from
@@ -111,7 +114,7 @@ class StaticLinkageChecker {
   private static void printStaticLinkageErrors(
       List<FullyQualifiedMethodSignature> unresolvedMethodReferences) {
     if (unresolvedMethodReferences.isEmpty()) {
-      System.out.println("There were no unresolved method references");
+      logger.info("There were no unresolved method references");
       return;
     }
     ImmutableSortedSet<FullyQualifiedMethodSignature> sortedUnresolvedMethodReferences =
@@ -127,7 +130,7 @@ class StaticLinkageChecker {
           methodReference.getMethodSignature().getMethodName(),
           methodReference.getMethodSignature().getDescriptor());
     }
-    System.out.println(formatter);
+    logger.info(formatter.toString());
   }
 
   /**
@@ -171,13 +174,13 @@ class StaticLinkageChecker {
       boolean reportOnlyReachable = cmd.hasOption("r");
 
       if (jarFilePaths.isEmpty()) {
-        System.err.println("No jar files to scan");
+        logger.severe("No jar files to scan");
         formatter.printHelp("StaticLinkageChecker", options);
         throw new IllegalArgumentException("Could not list jar files for given argument.");
       }
       return new StaticLinkageChecker(reportOnlyReachable, jarFilePaths);
     } catch (ParseException ex) {
-      System.err.println("Failed to parse command line arguments: " + ex.getMessage());
+      logger.severe("Failed to parse command line arguments: " + ex.getMessage());
       throw new IllegalArgumentException();
     }
   }
@@ -231,7 +234,7 @@ class StaticLinkageChecker {
     // TODO(suztomo): Separate logic between data retrieval and usage graph traversal. Issue #203
     Preconditions.checkArgument(!jarFilePaths.isEmpty(), "no jar files specified");
 
-    System.out.println("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
+    logger.info("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
 
     Set<String> visitedClasses = new HashSet<>();
     List<FullyQualifiedMethodSignature> methodReferencesFromInputClassPath = new ArrayList<>();
@@ -289,7 +292,7 @@ class StaticLinkageChecker {
       try {
         return jarPath.toUri().toURL();
       } catch (MalformedURLException ex) {
-        System.err.println("Jar file " + jarPath + " was not converted to URL: " + ex.getMessage());
+        logger.warning("Jar file " + jarPath + " was not converted to URL: " + ex.getMessage());
         return null;
       }
     }).filter(Objects::nonNull).toArray(URL[]::new);
@@ -336,11 +339,8 @@ class StaticLinkageChecker {
         classesNotFound.add(className);
       }
     }
-    Formatter formatter = new Formatter();
-    formatter.format(
-        "The number of resolved method references during linkage check: %,d",
-        availableMethodsInJars.size());
-    System.out.println(formatter);
+    logger.fine("The number of resolved method references during linkage check: "
+        + availableMethodsInJars.size());
     return unresolvedMethods;
   }
 

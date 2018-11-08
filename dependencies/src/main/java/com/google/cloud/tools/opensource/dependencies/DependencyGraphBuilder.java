@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
@@ -42,6 +43,8 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
  * Resolver</a> (formerly known as Eclipse Aether).
  */
 public class DependencyGraphBuilder {
+
+  private static final Logger logger = Logger.getLogger(DependencyGraphBuilder.class.getName());
   
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
   
@@ -262,10 +265,11 @@ public class DependencyGraphBuilder {
         // set to null
         forPath.add(dependencyNode.getArtifact());
         if (resolveFullDependency && parentNodes.contains(dependencyNode)) {
-          // TODO: change to logger
-          System.err.println("Infinite recursion resolving " + dependencyNode);
-          System.err.println("Likely cycle in " + parentNodes);
-          System.err.println("Child " + dependencyNode);
+          logger.info(
+              "Infinite recursion resolving "
+                  + dependencyNode
+                  + ". Likely cycle in "
+                  + parentNodes);
           continue;
         }
         parentNodes.push(dependencyNode);
@@ -278,9 +282,8 @@ public class DependencyGraphBuilder {
             dependencyNode =
                 resolveCompileTimeDependencies(dependencyNode.getArtifact(), includeProvidedScope);
           } catch (DependencyResolutionException ex) {
-            // TODO: change to logger
-            System.err.println("Error resolving " + dependencyNode + " under " + parentNodes);
-            System.err.println(ex.getMessage());
+            logger.info("Error resolving " + dependencyNode + " under " + parentNodes
+                + " Exception: " + ex.getMessage());
             throw ex;
           }
         }
