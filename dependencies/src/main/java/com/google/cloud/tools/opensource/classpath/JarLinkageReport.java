@@ -25,17 +25,21 @@ import java.nio.file.Path;
  */
 @AutoValue
 abstract class JarLinkageReport {
-  static JarLinkageReport create(Path jarPath, ImmutableList<MissingClass> missingClasses,
-      ImmutableList<MissingMethod> missingMethods, ImmutableList<MissingField> missingFields) {
-    return new AutoValue_JarLinkageReport(jarPath, missingClasses, missingMethods, missingFields);
-  }
-
   /**
-   * @return the jar file containing source classes of linkage errors
+   * @return the absolute path of the jar file containing source classes of linkage errors
    */
   abstract Path jarPath();
 
-  abstract ImmutableList<MissingClass> missingClasses();
-  abstract ImmutableList<MissingMethod> missingMethods();
-  abstract ImmutableList<MissingField> missingFields();
+  abstract ImmutableList<MissingClassError> missingClassErrors();
+  abstract ImmutableList<MissingMethodError> missingMethodErrors();
+  abstract ImmutableList<MissingFieldError> missingFieldErrors();
+
+  static JarLinkageReport create(
+      Path jarPath,
+      ImmutableList<MissingClassError> missingClassErrors,
+      ImmutableList<MissingMethodError> missingMethodErrors,
+      ImmutableList<MissingFieldError> missingFieldErrors) {
+    return new AutoValue_JarLinkageReport(
+        jarPath, missingClassErrors, missingMethodErrors, missingFieldErrors);
+  }
 }

@@ -25,11 +25,11 @@ public class StaticLinkageCheckReportTest {
 
   @Test
   public void testStaticLinkageCheckReportInstantiation() {
-    ImmutableList<MissingClass> missingClasses =
-        ImmutableList.of(MissingClass.create("ClassA", "ClassB"));
-    MissingMethod missingMethod =
-        MissingMethod.builder()
-            .setClassName("ClassA")
+    ImmutableList<MissingClassError> missingClassErrors =
+        ImmutableList.of(MissingClassError.create("ClassA", "ClassB"));
+    MissingMethodError missingMethodError =
+        MissingMethodError.builder()
+            .setTargetClassName("ClassA")
             .setMethodName("methodX")
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassB")
@@ -37,9 +37,9 @@ public class StaticLinkageCheckReportTest {
     JarLinkageReport jarLinkageReport =
         JarLinkageReport.create(
             Paths.get("a", "b", "c"),
-            missingClasses,
-            ImmutableList.of(missingMethod),
-            ImmutableList.of(MissingField.create("ClassC", "fieldX", "ClassD")));
+            missingClassErrors,
+            ImmutableList.of(missingMethodError),
+            ImmutableList.of(MissingFieldError.create("ClassC", "fieldX", "ClassD")));
     StaticLinkageCheckReport staticLinkageCheckReport =
         StaticLinkageCheckReport.create(ImmutableList.of(jarLinkageReport));
 
@@ -50,21 +50,21 @@ public class StaticLinkageCheckReportTest {
         staticLinkageCheckReport
             .jarLinkageReports()
             .get(0)
-            .missingClasses()
+            .missingClassErrors()
             .get(0)
-            .missingClassName());
+            .targetClassName());
   }
 
   @Test
   public void testMissingMethodReport_builder() {
-    MissingMethod missingMethod =
-        MissingMethod.builder()
-            .setClassName("ClassA")
+    MissingMethodError missingMethodError =
+        MissingMethodError.builder()
+            .setTargetClassName("ClassA")
             .setMethodName("methodX")
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassB")
             .build();
 
-    Assert.assertEquals("ClassB", missingMethod.sourceClassName());
+    Assert.assertEquals("ClassB", missingMethodError.sourceClassName());
   }
 }
