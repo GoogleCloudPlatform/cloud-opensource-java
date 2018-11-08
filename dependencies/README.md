@@ -16,7 +16,7 @@ There are two use cases for Static Linkage Checker:
   errors in their projects, and will help to avoid incompatible versions of libraries
   in their dependencies.
 
--  **For organizations** that provide multiple libraries developed by different teams,
+- **For organizations** that provide multiple libraries developed by different teams,
   the tool helps to ensure that users depending on the libraries will not see any
   static linkage errors at runtime.
 
