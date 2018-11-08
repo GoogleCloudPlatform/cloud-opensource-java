@@ -114,7 +114,7 @@ class StaticLinkageChecker {
   private static void printStaticLinkageErrors(
       List<FullyQualifiedMethodSignature> unresolvedMethodReferences) {
     if (unresolvedMethodReferences.isEmpty()) {
-      logger.info("There were no unresolved method references");
+      System.out.println("There were no unresolved method references");
       return;
     }
     ImmutableSortedSet<FullyQualifiedMethodSignature> sortedUnresolvedMethodReferences =
@@ -130,7 +130,7 @@ class StaticLinkageChecker {
           methodReference.getMethodSignature().getMethodName(),
           methodReference.getMethodSignature().getDescriptor());
     }
-    logger.info(formatter.toString());
+    System.out.println(formatter);
   }
 
   /**
