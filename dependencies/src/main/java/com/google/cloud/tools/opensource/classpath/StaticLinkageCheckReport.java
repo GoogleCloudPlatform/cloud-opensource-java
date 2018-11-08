@@ -25,9 +25,9 @@ import java.util.Date;
  */
 @AutoValue
 abstract class StaticLinkageCheckReport {
+  abstract ImmutableList<JarLinkageReport> jarLinkageReports();
+
   static StaticLinkageCheckReport create(ImmutableList<JarLinkageReport> jarLinkageReports) {
     return new AutoValue_StaticLinkageCheckReport(jarLinkageReports);
   }
-
-  abstract ImmutableList<JarLinkageReport> jarLinkageReports();
 }
