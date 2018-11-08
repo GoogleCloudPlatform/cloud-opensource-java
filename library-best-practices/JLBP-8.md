@@ -25,5 +25,7 @@ To avoid getting stuck in the first place, do not evangelize your pre-1.0 librar
 or suggest other teams and projects depend on it. Be very clear with any teams and
 projects you work with that the library is unstable, and should only be adopted
 if they are prepared to provide feedback and upgrade their own product regularly.
-Consider not pushing a pre-1.0 artifact to the Central repository. Once the API
-is stable and has reached 1.0 is the time to seek customers, not before. 
+Add an [unstable or experimental badge](https://github.com/badges/stability-badges)
+to your Github README.md. Consider not pushing a pre-1.0 artifact to the Central
+repository. Once the API is stable and has reached 1.0 is the time to seek customers,
+not before. 
