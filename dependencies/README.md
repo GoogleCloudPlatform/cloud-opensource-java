@@ -77,11 +77,10 @@ The tool allows users to choose the scope of entry point classes:
     by starting to use a previously unreachable class in one of the dependencies.
 
   - **With direct dependencies of the target project**: when the scope of the entry point is
-    the classes in the target project and the all
-    classes in the direct dependencies of the project, it ensures that functionality of the
-    dependencies will not cause static linkage errors. The output may contain linkage errors for
-    unreachable classes from user's perspective.
+    the classes in the target project and the all classes in the direct dependencies of the project,
+    it ensures that functionality of the dependencies will not cause static linkage errors.
+    The output may contain linkage errors for unreachable classes from user's perspective.
 
-  - **(All classes in the input class path)**: when reachability check is off, then
+  - **All classes in the input class path**: when reachability check is off, then
     all static linkage errors from all classes in the classpath, regardless of the reachability,
     are reported.

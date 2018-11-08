@@ -12,29 +12,29 @@ Java Dependency Glossary
   - Sub-type: **Linkage conflict**
   - Sub-type: **Missing class error**
 
-  - **Linkage conflict**: a linkage error when the signature, return type,
-    modifiers, or throws declaration of a non-private method, field, or class
-    in a dependency has changed (or removed) in an incompatible way between
-    the version supplied at compile time and the version invoked at runtime.
-    For example, a public method may be removed from a class or an extended
-    class may be made final.
-    - Or, another perspective: In cases where binary compatibility and source
-      compatibility are the same, a linkage conflict is when compilation would
-      fail if the libraries in the class path were all built together from their
-      originating source code, or when reflection would fail.
-    - Opposite: **Linkage-compatible**.
-    - Sub-type: **Static linkage conflict**: A linkage conflict caused by a direct
-      code reference (non-reflective).
-    - Sub-type: **Dynamic linkage conflict**: A linkage conflict caused by a
-      reflective reference.
+- **Linkage conflict**: a linkage error when the signature, return type,
+  modifiers, or throws declaration of a non-private method, field, or class
+  in a dependency has changed (or removed) in an incompatible way between
+  the version supplied at compile time and the version invoked at runtime.
+  For example, a public method may be removed from a class or an extended
+  class may be made final.
+  - Or, another perspective: In cases where binary compatibility and source
+    compatibility are the same, a linkage conflict is when compilation would
+    fail if the libraries in the class path were all built together from their
+    originating source code, or when reflection would fail.
+  - Opposite: **Linkage-compatible**.
+  - Sub-type: **Static linkage conflict**: A linkage conflict caused by a direct
+    code reference (non-reflective).
+  - Sub-type: **Dynamic linkage conflict**: A linkage conflict caused by a
+    reflective reference.
 
-  - **Missing class error**: an error when a class referenced does not exist
-    in the class path. This error happens when a class is removed in a different
-    version of a library, or there is a dependency missed when constructing the class path.
+- **Missing class error**: an error when a class referenced does not exist
+  in the class path. This error happens when a class is removed in a different
+  version of a library, or there is a dependency missed when constructing the class path.
 
-  - **Static**: Said of a linkage error when the linkage error is caused by a
-    direct code reference (for example, _static linkage error_ and _static linkage conflict_).
-    The references from a class is written in the class file when the class is compiled.
+- **Static**: Said of a linkage error when the linkage error is caused by a
+  direct code reference (for example, _static linkage error_ and _static linkage conflict_).
+  The references from a class is written in the class file when the class is compiled.
 
 - **Behavior conflict**: The class's implementation has changed in a way that
   can break clients at runtime although all signatures remain compatible. For
