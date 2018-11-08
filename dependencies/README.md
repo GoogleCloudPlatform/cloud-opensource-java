@@ -30,7 +30,7 @@ There are two use cases for Static Linkage Checker:
 
 3. The tool records static linkage errors for symbolic references which cannot be satisfied
   in the class path.
-  
+
 4. Optionally, the user can specify a subset of elements in the class path as _entry points_.
   In that case, the tool will list only those references that are reachable
   from the classes in the entry points.
@@ -39,30 +39,29 @@ There are two use cases for Static Linkage Checker:
 
 ### Input
 
-The tool takes a class path through either a BOM as a Maven coordinates, 
+The input of the tool is either the Maven coordinate of a BOM, 
 a list of Maven coordinates, or a list of class and jar files in the filesystem.
+All of these inputs are converted to a class path for the static linkage check,
+which is the _input class path_.
 
 When the input is a Maven BOM, the elements in the BOM are
 converted to a list of Maven coordinates.
 If the BOM imports another BOM, the elements of the second BOM are recursively
-added to the list of Maven coordinates.
+added to the list of Maven coordinates. This list of Maven coordinates is handled
+in the same way as a directly-provided list of coordinates (see below).
 
 When the input is a list of Maven coordinates, they are resolved to a list of jar files
-that consists of the artifacts and their dependencies.
+that consists of the artifacts and their dependencies. This list of jar files is
+handled in the same way as a directly-provided list of jar files (see below).
 
-The list of class and jar files forms the _input class path_.
+When the input is a list of class and jar files, they are used directly as the _input class path_.
 
 ### Output
 
 The tool reports static linkage errors for the input class path.
-Each of the static linkage errors contains the information on the
+Each of the static linkage errors contains information on the
 source class and the destination class of the reference, and has one of the three types:
-
-  - _Missing class_: a class reference causes a static missing class error.
-
-  - _Missing method_: a method reference has a static linkage conflict.
-
-  - _Missing field_: a field reference has a static linkage conflict.
+_missing class_, _missing method_, or _missing field_.
      
 ### Class Reference Graph and Reachability
 
