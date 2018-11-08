@@ -20,13 +20,13 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Representation of the result of a static linkage check
+ * The result of a static linkage check.
  */
 @AutoValue
 abstract class StaticLinkageCheckReport {
   abstract ImmutableList<JarLinkageReport> getJarLinkageReports();
 
-  static StaticLinkageCheckReport create(ImmutableList<JarLinkageReport> jarLinkageReports) {
-    return new AutoValue_StaticLinkageCheckReport(jarLinkageReports);
+  static StaticLinkageCheckReport create(Iterable<JarLinkageReport> jarLinkageReports) {
+    return new AutoValue_StaticLinkageCheckReport(ImmutableList.copyOf(jarLinkageReports));
   }
 }

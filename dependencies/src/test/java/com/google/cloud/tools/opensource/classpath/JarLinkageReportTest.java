@@ -26,7 +26,11 @@ public class JarLinkageReportTest {
   @Test
   public void testCreation() {
     ImmutableList<LinkageErrorMissingClass> linkageErrorMissingClasses =
-        ImmutableList.of(LinkageErrorMissingClass.create("ClassA", "ClassB"));
+        ImmutableList.of(
+            LinkageErrorMissingClass.builder()
+                .setSourceClassName("ClassA")
+                .setTargetClassName("ClassB")
+                .build());
     LinkageErrorMissingMethod linkageErrorMissingMethod =
         LinkageErrorMissingMethod.builder()
             .setTargetClassName("ClassA")

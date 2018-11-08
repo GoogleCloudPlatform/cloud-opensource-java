@@ -23,7 +23,10 @@ public class LinkageErrorMissingClassTest {
   @Test
   public void testCreation() {
     LinkageErrorMissingClass linkageErrorMissingClass =
-        LinkageErrorMissingClass.create("ClassA", "ClassB");
+        LinkageErrorMissingClass.builder()
+            .setTargetClassName("ClassA")
+            .setSourceClassName("ClassB")
+            .build();
 
     Assert.assertEquals("ClassA", linkageErrorMissingClass.getTargetClassName());
     Assert.assertEquals("ClassB", linkageErrorMissingClass.getSourceClassName());

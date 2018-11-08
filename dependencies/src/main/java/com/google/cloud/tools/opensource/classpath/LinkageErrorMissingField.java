@@ -19,7 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.auto.value.AutoValue;
 
 /**
- * Representation of a linkage error with missing field type.
+ * A missing field linkage error.
  */
 @AutoValue
 abstract class LinkageErrorMissingField {

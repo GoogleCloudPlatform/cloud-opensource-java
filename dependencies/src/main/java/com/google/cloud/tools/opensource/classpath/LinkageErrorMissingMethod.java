@@ -19,7 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.auto.value.AutoValue;
 
 /**
- * Representation of a linkage error with missing method type.
+ * A missing method linkage error.
  */
 @AutoValue
 abstract class LinkageErrorMissingMethod {

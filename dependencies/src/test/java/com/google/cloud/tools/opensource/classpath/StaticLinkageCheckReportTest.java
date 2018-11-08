@@ -29,7 +29,11 @@ public class StaticLinkageCheckReportTest {
         JarLinkageReport.builder()
             .setJarPath(Paths.get("a", "b", "c"))
             .setMissingClassErrors(
-                ImmutableList.of(LinkageErrorMissingClass.create("ClassA", "ClassB")))
+                ImmutableList.of(
+                    LinkageErrorMissingClass.builder()
+                        .setTargetClassName("ClassA")
+                        .setSourceClassName("ClassB")
+                        .build()))
             .setMissingMethodErrors(
                 ImmutableList.of(
                     LinkageErrorMissingMethod.builder()

@@ -19,14 +19,21 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.auto.value.AutoValue;
 
 /**
- * Representation of a linkage error of missing class type.
+ * A missing class linkage error.
  */
 @AutoValue
 abstract class LinkageErrorMissingClass {
   abstract String getTargetClassName();
   abstract String getSourceClassName();
 
-  static LinkageErrorMissingClass create(String targetClassName, String sourceClassName) {
-    return new AutoValue_LinkageErrorMissingClass(targetClassName, sourceClassName);
+  static Builder builder() {
+    return new AutoValue_LinkageErrorMissingClass.Builder();
+  }
+
+  @AutoValue.Builder
+  abstract static class Builder {
+    abstract Builder setTargetClassName(String value);
+    abstract Builder setSourceClassName(String value);
+    abstract LinkageErrorMissingClass build();
   }
 }

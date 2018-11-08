@@ -21,12 +21,12 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 /**
- * The result of static linkage check per a jar file
+ * The result of checking linkage linkages in one jar file.
  */
 @AutoValue
 abstract class JarLinkageReport {
   /**
-   * @return the absolute path of the jar file containing source classes of linkage errors
+   * Returns the absolute path of the jar file containing source classes of linkage errors
    */
   abstract Path getJarPath();
 
@@ -41,9 +41,9 @@ abstract class JarLinkageReport {
   @AutoValue.Builder
   abstract static class Builder {
     abstract Builder setJarPath(Path value);
-    abstract Builder setMissingClassErrors(ImmutableList<LinkageErrorMissingClass> value);
-    abstract Builder setMissingMethodErrors(ImmutableList<LinkageErrorMissingMethod> value);
-    abstract Builder setMissingFieldErrors(ImmutableList<LinkageErrorMissingField> value);
+    abstract Builder setMissingClassErrors(Iterable<LinkageErrorMissingClass> value);
+    abstract Builder setMissingMethodErrors(Iterable<LinkageErrorMissingMethod> value);
+    abstract Builder setMissingFieldErrors(Iterable<LinkageErrorMissingField> value);
     abstract JarLinkageReport build();
   }
 }
