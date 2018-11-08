@@ -16,17 +16,12 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.common.collect.ImmutableList;
-import java.nio.file.Paths;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class StaticLinkageCheckReportTest {
-
+public class LinkageErrorMissingMethodTest {
   @Test
   public void testCreation() {
-    ImmutableList<LinkageErrorMissingClass> linkageErrorMissingClasses =
-        ImmutableList.of(LinkageErrorMissingClass.create("ClassA", "ClassB"));
     LinkageErrorMissingMethod linkageErrorMissingMethod =
         LinkageErrorMissingMethod.builder()
             .setTargetClassName("ClassA")
@@ -34,23 +29,10 @@ public class StaticLinkageCheckReportTest {
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassB")
             .build();
-    JarLinkageReport jarLinkageReport =
-        JarLinkageReport.create(
-            Paths.get("a", "b", "c"),
-            linkageErrorMissingClasses,
-            ImmutableList.of(linkageErrorMissingMethod),
-            ImmutableList.of(LinkageErrorMissingField.create("ClassC", "fieldX", "ClassD")));
-    StaticLinkageCheckReport staticLinkageCheckReport =
-        StaticLinkageCheckReport.create(ImmutableList.of(jarLinkageReport));
 
-    Assert.assertEquals(jarLinkageReport, staticLinkageCheckReport.getJarLinkageReports().get(0));
-    Assert.assertEquals(
-        "ClassA",
-        staticLinkageCheckReport
-            .getJarLinkageReports()
-            .get(0)
-            .getMissingClassErrors()
-            .get(0)
-            .getTargetClassName());
+    Assert.assertEquals("ClassA", linkageErrorMissingMethod.getTargetClassName());
+    Assert.assertEquals("methodX", linkageErrorMissingMethod.getMethodName());
+    Assert.assertEquals("java.lang.String", linkageErrorMissingMethod.getDescriptor());
+    Assert.assertEquals("ClassB", linkageErrorMissingMethod.getSourceClassName());
   }
 }

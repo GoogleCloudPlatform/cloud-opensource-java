@@ -21,7 +21,7 @@ import java.nio.file.Paths;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class StaticLinkageCheckReportTest {
+public class JarLinkageReportTest {
 
   @Test
   public void testCreation() {
@@ -34,23 +34,20 @@ public class StaticLinkageCheckReportTest {
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassB")
             .build();
+    ImmutableList<LinkageErrorMissingMethod> missingMethodErrors =
+        ImmutableList.of(linkageErrorMissingMethod);
+    ImmutableList<LinkageErrorMissingField> missingFieldErrors =
+        ImmutableList.of(LinkageErrorMissingField.create("ClassC", "fieldX", "ClassD"));
     JarLinkageReport jarLinkageReport =
         JarLinkageReport.create(
             Paths.get("a", "b", "c"),
             linkageErrorMissingClasses,
-            ImmutableList.of(linkageErrorMissingMethod),
-            ImmutableList.of(LinkageErrorMissingField.create("ClassC", "fieldX", "ClassD")));
-    StaticLinkageCheckReport staticLinkageCheckReport =
-        StaticLinkageCheckReport.create(ImmutableList.of(jarLinkageReport));
+            missingMethodErrors,
+            missingFieldErrors);
 
-    Assert.assertEquals(jarLinkageReport, staticLinkageCheckReport.getJarLinkageReports().get(0));
-    Assert.assertEquals(
-        "ClassA",
-        staticLinkageCheckReport
-            .getJarLinkageReports()
-            .get(0)
-            .getMissingClassErrors()
-            .get(0)
-            .getTargetClassName());
+    Assert.assertEquals(Paths.get("a", "b", "c"), jarLinkageReport.getJarPath());
+    Assert.assertEquals(missingMethodErrors, jarLinkageReport.getMissingMethodErrors());
+    Assert.assertEquals(missingFieldErrors, jarLinkageReport.getMissingFieldErrors());
+    Assert.assertEquals(linkageErrorMissingClasses, jarLinkageReport.getMissingClassErrors());
   }
 }
