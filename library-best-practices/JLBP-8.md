@@ -20,3 +20,10 @@ phase 2 (remove all references to the old surface), consider promoting the
 library or feature to stable before phase 2 is completed, because there is more
 value to having a stable surface than there is to having a surface with zero
 deprecated methods.
+
+To avoid getting stuck in the first place, do not evangelize your pre-1.0 library
+or suggest other teams and projects depend on it. Be very clear with any teams and
+projects you work with that the library is unstable, and should only be adopted
+if they are prepared to provide feedback and upgrade their own product regularly.
+Consider not pushing a pre-1.0 artifact to the Central repository. Once the API
+is stable and has reached 1.0 is the time to seek customers, not before. 
