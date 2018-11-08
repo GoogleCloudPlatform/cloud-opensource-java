@@ -65,8 +65,8 @@ class StaticLinkageChecker {
   // TODO(suztomo): enhance scope to include fields and classes. Issue #207
 
   /**
-   * Flag on whether the report excludes the linkage errors on classes that are not reachable from
-   * the entry point of the class usage graph.
+   * Flag on the reachability. This flag controls whether the report excludes the linkage errors
+   * on classes that are not reachable from the entry points of the class usage graph.
    */
   private final boolean reportOnlyReachable;
 
@@ -76,7 +76,8 @@ class StaticLinkageChecker {
 
   private final ImmutableSet<Path> entryPoints;
 
-  StaticLinkageChecker(boolean reportOnlyReachable, List<Path> jarFilePaths, Set<Path> entryPoints) {
+  StaticLinkageChecker(
+      boolean reportOnlyReachable, List<Path> jarFilePaths, Set<Path> entryPoints) {
     Preconditions.checkArgument(
         !jarFilePaths.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
