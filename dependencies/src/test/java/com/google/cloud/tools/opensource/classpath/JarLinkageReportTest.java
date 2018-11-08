@@ -39,11 +39,12 @@ public class JarLinkageReportTest {
     ImmutableList<LinkageErrorMissingField> missingFieldErrors =
         ImmutableList.of(LinkageErrorMissingField.create("ClassC", "fieldX", "ClassD"));
     JarLinkageReport jarLinkageReport =
-        JarLinkageReport.create(
-            Paths.get("a", "b", "c"),
-            linkageErrorMissingClasses,
-            missingMethodErrors,
-            missingFieldErrors);
+        JarLinkageReport.builder()
+            .setJarPath(Paths.get("a", "b", "c"))
+            .setMissingClassErrors(linkageErrorMissingClasses)
+            .setMissingMethodErrors(missingMethodErrors)
+            .setMissingFieldErrors(missingFieldErrors)
+            .build();
 
     Assert.assertEquals(Paths.get("a", "b", "c"), jarLinkageReport.getJarPath());
     Assert.assertEquals(missingMethodErrors, jarLinkageReport.getMissingMethodErrors());

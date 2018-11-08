@@ -35,11 +35,13 @@ public class StaticLinkageCheckReportTest {
             .setSourceClassName("ClassB")
             .build();
     JarLinkageReport jarLinkageReport =
-        JarLinkageReport.create(
-            Paths.get("a", "b", "c"),
-            linkageErrorMissingClasses,
-            ImmutableList.of(linkageErrorMissingMethod),
-            ImmutableList.of(LinkageErrorMissingField.create("ClassC", "fieldX", "ClassD")));
+        JarLinkageReport.builder()
+            .setJarPath(Paths.get("a", "b", "c"))
+            .setMissingClassErrors(linkageErrorMissingClasses)
+            .setMissingMethodErrors(ImmutableList.of(linkageErrorMissingMethod))
+            .setMissingFieldErrors(
+                ImmutableList.of(LinkageErrorMissingField.create("ClassC", "fieldX", "ClassD")))
+            .build();
     StaticLinkageCheckReport staticLinkageCheckReport =
         StaticLinkageCheckReport.create(ImmutableList.of(jarLinkageReport));
 

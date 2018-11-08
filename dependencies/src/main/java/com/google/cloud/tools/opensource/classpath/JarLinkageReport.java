@@ -34,12 +34,16 @@ abstract class JarLinkageReport {
   abstract ImmutableList<LinkageErrorMissingMethod> getMissingMethodErrors();
   abstract ImmutableList<LinkageErrorMissingField> getMissingFieldErrors();
 
-  static JarLinkageReport create(
-      Path jarPath,
-      ImmutableList<LinkageErrorMissingClass> linkageErrorMissingClasses,
-      ImmutableList<LinkageErrorMissingMethod> linkageErrorMissingMethods,
-      ImmutableList<LinkageErrorMissingField> linkageErrorMissingFields) {
-    return new AutoValue_JarLinkageReport(
-        jarPath, linkageErrorMissingClasses, linkageErrorMissingMethods, linkageErrorMissingFields);
+  static Builder builder() {
+    return new AutoValue_JarLinkageReport.Builder();
+  }
+
+  @AutoValue.Builder
+  abstract static class Builder {
+    abstract Builder setJarPath(Path value);
+    abstract Builder setMissingClassErrors(ImmutableList<LinkageErrorMissingClass> value);
+    abstract Builder setMissingMethodErrors(ImmutableList<LinkageErrorMissingMethod> value);
+    abstract Builder setMissingFieldErrors(ImmutableList<LinkageErrorMissingField> value);
+    abstract JarLinkageReport build();
   }
 }
