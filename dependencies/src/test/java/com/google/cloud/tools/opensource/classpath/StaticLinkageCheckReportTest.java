@@ -49,6 +49,7 @@ public class StaticLinkageCheckReportTest {
     StaticLinkageCheckReport staticLinkageCheckReport =
         StaticLinkageCheckReport.create(ImmutableList.of(jarLinkageReport));
 
+    Assert.assertEquals(1, staticLinkageCheckReport.getJarLinkageReports().size());
     Assert.assertEquals(jarLinkageReport, staticLinkageCheckReport.getJarLinkageReports().get(0));
     Assert.assertEquals(
         "ClassA",
