@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.Date;
 
 /**
- * Representation on the result of the static linkage check
+ * Representation of the result of a static linkage check
  */
 @AutoValue
 abstract class StaticLinkageCheckReport {
