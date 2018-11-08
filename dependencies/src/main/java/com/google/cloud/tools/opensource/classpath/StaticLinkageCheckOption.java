@@ -31,6 +31,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 class StaticLinkageCheckOption {
+  // TODO(suztomo): Add option to specify entry point classes
+
   private final String mavenBomCoordinate;
   private final ImmutableList<String> mavenCoordinates;
   private final ImmutableList<Path> jarFileList;
@@ -109,6 +111,5 @@ class StaticLinkageCheckOption {
       throw new IllegalArgumentException("Failed to parse command line arguments",
           ex);
     }
-
   }
 }

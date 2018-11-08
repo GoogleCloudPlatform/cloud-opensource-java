@@ -445,7 +445,7 @@ public class StaticLinkageCheckerTest {
     StaticLinkageCheckOption parsedOption =
         StaticLinkageCheckOption.parseArgument(
             new String[] {
-                "--jars", "dir1/foo.jar,dir2/bar.jar"
+                "--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar"
             });
 
     List<Path> inputClasspath =
@@ -453,8 +453,8 @@ public class StaticLinkageCheckerTest {
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
-        .containsAllOf(
-            "foo.jar", "bar.jar");
+        .containsExactly(
+            "foo.jar", "bar.jar", "baz.jar");
   }
 
 }

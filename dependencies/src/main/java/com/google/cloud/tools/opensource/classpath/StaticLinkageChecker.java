@@ -100,6 +100,7 @@ class StaticLinkageChecker {
     StaticLinkageCheckOption commandLineOption = StaticLinkageCheckOption.parseArgument(arguments);
     ImmutableList<Path> inputClasspath =
         generateInputClasspathFromLinkageCheckOption(commandLineOption);
+    // TODO(suztomo): to take command-line option to choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(inputClasspath.get(0));
     StaticLinkageChecker staticLinkageChecker =
         new StaticLinkageChecker(commandLineOption.isReportOnlyReachable(), inputClasspath,
@@ -204,8 +205,6 @@ class StaticLinkageChecker {
     // TODO(suztomo): Separate logic between data retrieval and usage graph traversal. Issue #203
     Preconditions.checkArgument(!jarFilePaths.isEmpty(), "no jar files specified");
 
-    System.out.println("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
-
     Set<String> visitedClasses = new HashSet<>();
     List<FullyQualifiedMethodSignature> methodReferencesFromInputClassPath = new ArrayList<>();
 
@@ -293,11 +292,6 @@ class StaticLinkageChecker {
         classesNotFound.add(className);
       }
     }
-    Formatter formatter = new Formatter();
-    formatter.format(
-        "The number of resolved method references during linkage check: %,d",
-        availableMethodsInJars.size());
-    System.out.println(formatter);
     return unresolvedMethods;
   }
 
