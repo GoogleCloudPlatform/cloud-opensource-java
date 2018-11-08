@@ -99,6 +99,7 @@ class ClassDumper {
     SyntheticRepository syntheticRepository = SyntheticRepository.getInstance(classPath);
 
     URL[] jarFileUrls = new URL[jarFilePaths.size()];
+
     for (int i = 0; i < jarFilePaths.size(); i++) {
       Path jarPath = jarFilePaths.get(i);
       try {

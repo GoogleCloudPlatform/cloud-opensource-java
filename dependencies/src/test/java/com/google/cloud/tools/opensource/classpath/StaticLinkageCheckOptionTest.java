@@ -36,7 +36,7 @@ public class StaticLinkageCheckOptionTest {
     Assert.assertEquals(parsedOption.getJarFileList(),
         ImmutableList.of(Paths.get("foo.jar").toAbsolutePath(),
             Paths.get("dir/bar.jar").toAbsolutePath()));
-    Assert.assertEquals(Optional.of("abc.com:dummy:1.2"), parsedOption.getBomMavenCoordinate());
+    Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBomMavenCoordinate());
     Assert.assertEquals(ImmutableList.of("abc.com:abc:1.1", "abc.com:abc-util:1.2"),
         parsedOption.getMavenCoordinates());
     Assert.assertTrue(parsedOption.isReportOnlyReachable());
@@ -55,7 +55,7 @@ public class StaticLinkageCheckOptionTest {
     Assert.assertEquals(parsedOption.getJarFileList(),
         ImmutableList.of(Paths.get("foo.jar").toAbsolutePath(),
             Paths.get("dir/bar.jar").toAbsolutePath()));
-    Assert.assertEquals(Optional.of("abc.com:dummy:1.2"), parsedOption.getBomMavenCoordinate());
+    Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBomMavenCoordinate());
     Assert.assertEquals(ImmutableList.of("abc.com:abc:1.1", "abc.com:abc-util:1.2"),
         parsedOption.getMavenCoordinates());
     Assert.assertTrue(parsedOption.isReportOnlyReachable());
@@ -66,7 +66,7 @@ public class StaticLinkageCheckOptionTest {
     StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArgument(new String[0]);
 
     Assert.assertTrue(parsedOption.getJarFileList().isEmpty());
-    Assert.assertFalse(parsedOption.getBomMavenCoordinate().isPresent());
+    Assert.assertNull(parsedOption.getBomMavenCoordinate());
     Assert.assertTrue(parsedOption.getMavenCoordinates().isEmpty());
     Assert.assertFalse(parsedOption.isReportOnlyReachable());
   }

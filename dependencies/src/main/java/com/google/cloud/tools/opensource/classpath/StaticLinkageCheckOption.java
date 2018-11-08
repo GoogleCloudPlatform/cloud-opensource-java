@@ -22,22 +22,22 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 class StaticLinkageCheckOption {
-  private final Optional<String> mavenBomCoordinate;
+  private final String mavenBomCoordinate;
   private final ImmutableList<String> mavenCoordinates;
   private final ImmutableList<Path> jarFileList;
   private final boolean reportOnlyReachable;
 
-  Optional<String> getBomMavenCoordinate() {
+  @Nullable
+  String getBomMavenCoordinate() {
     return mavenBomCoordinate;
   }
 
@@ -53,9 +53,11 @@ class StaticLinkageCheckOption {
     return reportOnlyReachable;
   }
 
-  private StaticLinkageCheckOption(Optional<String> mavenBomCoordinate,
+  private StaticLinkageCheckOption(
+      @Nullable String mavenBomCoordinate,
       ImmutableList<String> mavenCoordinates,
-      ImmutableList<Path> jarFileList, boolean reportOnlyReachable) {
+      ImmutableList<Path> jarFileList,
+      boolean reportOnlyReachable) {
     this.mavenBomCoordinate = mavenBomCoordinate;
     this.mavenCoordinates = mavenCoordinates;
     this.jarFileList = jarFileList;
@@ -75,12 +77,10 @@ class StaticLinkageCheckOption {
         false,
         "To report only linkage errors reachable from entry point");
 
-    HelpFormatter formatter = new HelpFormatter();
     CommandLineParser parser = new DefaultParser();
     List<Path> jarFilePaths = new ArrayList<>();
 
     ImmutableList.Builder<String> mavenCoordinates = ImmutableList.builder();
-    Optional<String> mavenBomCoordinate = Optional.empty();
     try {
       CommandLine cmd = parser.parse(options, arguments);
       if (cmd.hasOption("c")) {
@@ -95,9 +95,9 @@ class StaticLinkageCheckOption {
                 .collect(Collectors.toList());
         jarFilePaths.addAll(jarFilesInArguments);
       }
-      if (cmd.hasOption("b")) {
-        mavenBomCoordinate = Optional.of(cmd.getOptionValue("b"));
-      }
+
+      String mavenBomCoordinate = cmd.getOptionValue("b");
+
       boolean reportOnlyReachable = cmd.hasOption("r");
 
       return new StaticLinkageCheckOption(

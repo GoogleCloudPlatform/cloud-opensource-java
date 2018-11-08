@@ -36,7 +36,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Formatter;
 import java.util.HashSet;
 import java.util.List;
@@ -71,17 +70,20 @@ class StaticLinkageChecker {
    */
   private final boolean reportOnlyReachable;
 
-  private final ImmutableList<Path> jarFilePaths;
+  private final ImmutableSet<Path> jarFilePaths;
 
   private final ClassDumper classDumper;
 
-  StaticLinkageChecker(boolean reportOnlyReachable, List<Path> jarFilePaths) {
+  private final ImmutableSet<Path> entryPoints;
+
+  StaticLinkageChecker(boolean reportOnlyReachable, List<Path> jarFilePaths, Set<Path> entryPoints) {
     Preconditions.checkArgument(
         !jarFilePaths.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
     this.reportOnlyReachable = reportOnlyReachable;
-    this.jarFilePaths = ImmutableList.copyOf(jarFilePaths);
-    this.classDumper = ClassDumper.create(this.jarFilePaths);
+    this.jarFilePaths = ImmutableSet.copyOf(jarFilePaths);
+    this.classDumper = ClassDumper.create(ImmutableList.copyOf(this.jarFilePaths));
+    this.entryPoints = ImmutableSet.copyOf(entryPoints);
   }
 
   /**
@@ -96,7 +98,12 @@ class StaticLinkageChecker {
   public static void main(String[] arguments)
       throws IOException, ClassNotFoundException, RepositoryException {
     StaticLinkageCheckOption commandLineOption = StaticLinkageCheckOption.parseArgument(arguments);
-    StaticLinkageChecker staticLinkageChecker = getInstanceFromOption(commandLineOption);
+    ImmutableList<Path> inputClasspath =
+        generateInputClasspathFromLinkageCheckOption(commandLineOption);
+    ImmutableSet<Path> entryPoints = ImmutableSet.of(inputClasspath.get(0));
+    StaticLinkageChecker staticLinkageChecker =
+        new StaticLinkageChecker(commandLineOption.isReportOnlyReachable(), inputClasspath,
+            entryPoints);
 
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         staticLinkageChecker.findUnresolvedMethodReferences();
@@ -126,15 +133,18 @@ class StaticLinkageChecker {
   }
 
   /**
-   * Parses arguments to instantiate the class with configuration specified in arguments.
+   * Resolves command line option to list of jar files as input class path for static linkage
+   * checker.
    *
    * @param linkageCheckOption option through command-line arguments
-   * @return static linkage checker instance with its variables populated from the arguments
+   * @return input class path resolved as a list of absolute paths to jar files
    * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
    */
-  static StaticLinkageChecker getInstanceFromOption(StaticLinkageCheckOption linkageCheckOption)
-      throws RepositoryException {
+  static ImmutableList<Path> generateInputClasspathFromLinkageCheckOption(
+      StaticLinkageCheckOption linkageCheckOption) throws RepositoryException {
     ImmutableList.Builder<Path> jarFileBuilder = ImmutableList.builder();
+
+    // TODO(suztomo): add logic to convert Maven BOM to list of Maven coordinates as per README.md
     if (!linkageCheckOption.getJarFileList().isEmpty()) {
       jarFileBuilder.addAll(linkageCheckOption.getJarFileList());
     } else if (!linkageCheckOption.getMavenCoordinates().isEmpty()) {
@@ -142,8 +152,7 @@ class StaticLinkageChecker {
         jarFileBuilder.addAll(coordinateToClasspath(mavenCoordinates));
       }
     }
-    return new StaticLinkageChecker(linkageCheckOption.isReportOnlyReachable(),
-        jarFileBuilder.build());
+    return jarFileBuilder.build();
   }
 
   /**
@@ -204,8 +213,8 @@ class StaticLinkageChecker {
     // libraries (e.g., grpc-netty-shaded), we traverse the class usage graph starting with the
     // method references from the input class path and report only errors reachable from there.
     // If the flag is false, it checks all references in the classpath.
-    List<Path> jarPathsInInputClasspath =
-        reportOnlyReachable ? Collections.singletonList(jarFilePaths.get(0)) : jarFilePaths;
+    ImmutableSet<Path> jarPathsInInputClasspath =
+        reportOnlyReachable ? entryPoints : jarFilePaths;
     for (Path absolutePathToJar : jarPathsInInputClasspath) {
       if (!Files.isReadable(absolutePathToJar)) {
         throw new IOException("The file is not readable: " + absolutePathToJar);
@@ -296,8 +305,9 @@ class StaticLinkageChecker {
    * @param jarFilePaths absolute paths to jar files
    * @return map of jar file paths to classes defined in them
    */
-  private static SetMultimap<Path, String> jarFilesToDefinedClasses(List<Path> jarFilePaths) {
-    SetMultimap<Path, String>  pathToClasses = HashMultimap.create();
+  private static SetMultimap<Path, String> jarFilesToDefinedClasses(
+      ImmutableSet<Path> jarFilePaths) {
+    SetMultimap<Path, String> pathToClasses = HashMultimap.create();
 
     for (Path jarFilePath : jarFilePaths) {
       String pathToJar = jarFilePath.toString();
