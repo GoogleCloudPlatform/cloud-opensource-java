@@ -168,7 +168,7 @@ public final class RepositoryUtility {
       if (!managedDependencies.contains(managed)) {
         managedDependencies.add(managed);
       } else {
-        logger.info("Duplicate dependency " + dependency);
+        logger.severe("Duplicate dependency " + dependency);
       }
     }
     return managedDependencies;

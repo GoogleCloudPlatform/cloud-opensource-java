@@ -265,7 +265,7 @@ public class DependencyGraphBuilder {
         // set to null
         forPath.add(dependencyNode.getArtifact());
         if (resolveFullDependency && parentNodes.contains(dependencyNode)) {
-          logger.info(
+          logger.severe(
               "Infinite recursion resolving "
                   + dependencyNode
                   + ". Likely cycle in "
@@ -282,7 +282,7 @@ public class DependencyGraphBuilder {
             dependencyNode =
                 resolveCompileTimeDependencies(dependencyNode.getArtifact(), includeProvidedScope);
           } catch (DependencyResolutionException ex) {
-            logger.info("Error resolving " + dependencyNode + " under " + parentNodes
+            logger.severe("Error resolving " + dependencyNode + " under " + parentNodes
                 + " Exception: " + ex.getMessage());
             throw ex;
           }

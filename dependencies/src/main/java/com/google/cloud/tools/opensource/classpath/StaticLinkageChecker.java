@@ -174,14 +174,11 @@ class StaticLinkageChecker {
       boolean reportOnlyReachable = cmd.hasOption("r");
 
       if (jarFilePaths.isEmpty()) {
-        logger.severe("No jar files to scan");
-        formatter.printHelp("StaticLinkageChecker", options);
-        throw new IllegalArgumentException("Could not list jar files for given argument.");
+        throw new IllegalArgumentException("Could not get list of jar files for given argument.");
       }
       return new StaticLinkageChecker(reportOnlyReachable, jarFilePaths);
     } catch (ParseException ex) {
-      logger.severe("Failed to parse command line arguments: " + ex.getMessage());
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException("Failed to parse command line arguments", ex);
     }
   }
 
