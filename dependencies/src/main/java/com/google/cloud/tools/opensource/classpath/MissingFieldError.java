@@ -27,7 +27,8 @@ abstract class MissingFieldError {
   abstract String fieldName();
   abstract String sourceClassName();
 
-  static MissingFieldError create(String targetClassName, String fieldName, String sourceClassName) {
+  static MissingFieldError create(
+      String targetClassName, String fieldName, String sourceClassName) {
     return new AutoValue_MissingFieldError(targetClassName, fieldName, sourceClassName);
   }
 }
