@@ -22,11 +22,11 @@ import com.google.auto.value.AutoValue;
  * Representation of a linkage error of missing class type.
  */
 @AutoValue
-abstract class MissingClassError {
-  abstract String targetClassName();
-  abstract String sourceClassName();
+abstract class LinkageErrorMissingClass {
+  abstract String getTargetClassName();
+  abstract String getSourceClassName();
 
-  static MissingClassError create(String targetClassName, String sourceClassName) {
-    return new AutoValue_MissingClassError(targetClassName, sourceClassName);
+  static LinkageErrorMissingClass create(String targetClassName, String sourceClassName) {
+    return new AutoValue_LinkageErrorMissingClass(targetClassName, sourceClassName);
   }
 }

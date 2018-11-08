@@ -19,16 +19,25 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.auto.value.AutoValue;
 
 /**
- * Representation of a linkage error with missing field type.
+ * Representation of a linkage error with missing method type.
  */
 @AutoValue
-abstract class MissingFieldError {
-  abstract String targetClassName();
-  abstract String fieldName();
-  abstract String sourceClassName();
+abstract class LinkageErrorMissingMethod {
+  abstract String getTargetClassName();
+  abstract String getMethodName();
+  abstract String getDescriptor();
+  abstract String getSourceClassName();
 
-  static MissingFieldError create(
-      String targetClassName, String fieldName, String sourceClassName) {
-    return new AutoValue_MissingFieldError(targetClassName, fieldName, sourceClassName);
+  static Builder builder() {
+    return new AutoValue_LinkageErrorMissingMethod.Builder();
+  }
+
+  @AutoValue.Builder
+  abstract static class Builder {
+    abstract Builder setTargetClassName(String value);
+    abstract Builder setMethodName(String value);
+    abstract Builder setDescriptor(String value);
+    abstract Builder setSourceClassName(String value);
+    abstract LinkageErrorMissingMethod build();
   }
 }

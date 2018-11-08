@@ -28,18 +28,18 @@ abstract class JarLinkageReport {
   /**
    * @return the absolute path of the jar file containing source classes of linkage errors
    */
-  abstract Path jarPath();
+  abstract Path getJarPath();
 
-  abstract ImmutableList<MissingClassError> missingClassErrors();
-  abstract ImmutableList<MissingMethodError> missingMethodErrors();
-  abstract ImmutableList<MissingFieldError> missingFieldErrors();
+  abstract ImmutableList<LinkageErrorMissingClass> getMissingClassErrors();
+  abstract ImmutableList<LinkageErrorMissingMethod> getMissingMethodErrors();
+  abstract ImmutableList<LinkageErrorMissingField> getMissingFieldErrors();
 
   static JarLinkageReport create(
       Path jarPath,
-      ImmutableList<MissingClassError> missingClassErrors,
-      ImmutableList<MissingMethodError> missingMethodErrors,
-      ImmutableList<MissingFieldError> missingFieldErrors) {
+      ImmutableList<LinkageErrorMissingClass> linkageErrorMissingClasses,
+      ImmutableList<LinkageErrorMissingMethod> linkageErrorMissingMethods,
+      ImmutableList<LinkageErrorMissingField> linkageErrorMissingFields) {
     return new AutoValue_JarLinkageReport(
-        jarPath, missingClassErrors, missingMethodErrors, missingFieldErrors);
+        jarPath, linkageErrorMissingClasses, linkageErrorMissingMethods, linkageErrorMissingFields);
   }
 }

@@ -18,14 +18,13 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
-import java.util.Date;
 
 /**
  * Representation of the result of a static linkage check
  */
 @AutoValue
 abstract class StaticLinkageCheckReport {
-  abstract ImmutableList<JarLinkageReport> jarLinkageReports();
+  abstract ImmutableList<JarLinkageReport> getJarLinkageReports();
 
   static StaticLinkageCheckReport create(ImmutableList<JarLinkageReport> jarLinkageReports) {
     return new AutoValue_StaticLinkageCheckReport(jarLinkageReports);

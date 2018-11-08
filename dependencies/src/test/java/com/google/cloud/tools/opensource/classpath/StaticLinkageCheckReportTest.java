@@ -25,10 +25,10 @@ public class StaticLinkageCheckReportTest {
 
   @Test
   public void testStaticLinkageCheckReportInstantiation() {
-    ImmutableList<MissingClassError> missingClassErrors =
-        ImmutableList.of(MissingClassError.create("ClassA", "ClassB"));
-    MissingMethodError missingMethodError =
-        MissingMethodError.builder()
+    ImmutableList<LinkageErrorMissingClass> linkageErrorMissingClasses =
+        ImmutableList.of(LinkageErrorMissingClass.create("ClassA", "ClassB"));
+    LinkageErrorMissingMethod linkageErrorMissingMethod =
+        LinkageErrorMissingMethod.builder()
             .setTargetClassName("ClassA")
             .setMethodName("methodX")
             .setDescriptor("java.lang.String")
@@ -37,34 +37,34 @@ public class StaticLinkageCheckReportTest {
     JarLinkageReport jarLinkageReport =
         JarLinkageReport.create(
             Paths.get("a", "b", "c"),
-            missingClassErrors,
-            ImmutableList.of(missingMethodError),
-            ImmutableList.of(MissingFieldError.create("ClassC", "fieldX", "ClassD")));
+            linkageErrorMissingClasses,
+            ImmutableList.of(linkageErrorMissingMethod),
+            ImmutableList.of(LinkageErrorMissingField.create("ClassC", "fieldX", "ClassD")));
     StaticLinkageCheckReport staticLinkageCheckReport =
         StaticLinkageCheckReport.create(ImmutableList.of(jarLinkageReport));
 
     Assert.assertEquals(
-        staticLinkageCheckReport.jarLinkageReports().get(0).jarPath(), Paths.get("a", "b", "c"));
+        staticLinkageCheckReport.getJarLinkageReports().get(0).getJarPath(), Paths.get("a", "b", "c"));
     Assert.assertEquals(
         "ClassA",
         staticLinkageCheckReport
-            .jarLinkageReports()
+            .getJarLinkageReports()
             .get(0)
-            .missingClassErrors()
+            .getMissingClassErrors()
             .get(0)
-            .targetClassName());
+            .getTargetClassName());
   }
 
   @Test
   public void testMissingMethodReport_builder() {
-    MissingMethodError missingMethodError =
-        MissingMethodError.builder()
+    LinkageErrorMissingMethod linkageErrorMissingMethod =
+        LinkageErrorMissingMethod.builder()
             .setTargetClassName("ClassA")
             .setMethodName("methodX")
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassB")
             .build();
 
-    Assert.assertEquals("ClassB", missingMethodError.sourceClassName());
+    Assert.assertEquals("ClassB", linkageErrorMissingMethod.getSourceClassName());
   }
 }
