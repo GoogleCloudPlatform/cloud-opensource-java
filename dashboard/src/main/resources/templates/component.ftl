@@ -110,9 +110,30 @@
     </#if>
 
     <h2>Dependencies</h2>
-    <pre class="dependency-tree">${dependencyTree}</pre>
-    
-     <hr />
-     <p id='updated'>Last generated at ${lastUpdated}</p>
+
+    <#if dependencyRootNode?? >
+      <@formatDependencyNode dependencyRootNode dependencyRootNode />
+    <#else>
+      <p>Dependency information is unavailable</p>
+    </#if>
+
+    <#macro formatDependencyNode currentNode parent>
+      <#if parent == currentNode>
+        <#assign label = 'root' />
+      <#else>
+        <#assign label = 'parent: ' + parent.getLeaf() />
+      </#if>
+      <p class="DEPENDENCY_TREE_NODE" title="${label}">${currentNode.getLeaf()}</p>
+      <ul>
+        <#list dependencyTree.get(currentNode) as childNode>
+          <li class="DEPENDENCY_TREE_NODE">
+            <@formatDependencyNode childNode currentNode />
+          </li>
+        </#list>
+      </ul>
+    </#macro>
+
+    <hr />
+    <p id='updated'>Last generated at ${lastUpdated}</p>
   </body>
 </html>
