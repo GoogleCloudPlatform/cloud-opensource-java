@@ -46,11 +46,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
- * This class reads jar files and runs static linkage check on them.
- * Static linkage check finds discrepancies between methods referenced by classes in the jar files,
- * and methods defined in them. This happens when the signature of a non-private method or class in
- * a dependency has changed in an incompatible way between the version supplied at compile time
- * and the version invoked at runtime.
+ * A tool to find static linkage errors for a class path.
  */
 class StaticLinkageChecker {
   // TODO(suztomo): enhance scope to include fields and classes. Issue #207
