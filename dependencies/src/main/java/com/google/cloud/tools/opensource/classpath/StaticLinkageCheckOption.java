@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,40 +31,26 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-class StaticLinkageCheckOption {
+@AutoValue
+abstract class StaticLinkageCheckOption {
   // TODO(suztomo): Add option to specify entry point classes
 
-  private final String mavenBomCoordinate;
-  private final ImmutableList<String> mavenCoordinates;
-  private final ImmutableList<Path> jarFileList;
-  private final boolean reportOnlyReachable;
+  @Nullable abstract String getBomCoordinate();
+  abstract ImmutableList<String> getMavenCoordinates();
+  abstract ImmutableList<Path> getJarFileList();
+  abstract boolean isReportOnlyReachable();
 
-  @Nullable
-  String getBomMavenCoordinate() {
-    return mavenBomCoordinate;
+  static Builder builder() {
+    return new AutoValue_StaticLinkageCheckOption.Builder();
   }
 
-  ImmutableList<String> getMavenCoordinates() {
-    return mavenCoordinates;
-  }
-
-  ImmutableList<Path> getJarFileList() {
-    return jarFileList;
-  }
-
-  boolean isReportOnlyReachable() {
-    return reportOnlyReachable;
-  }
-
-  private StaticLinkageCheckOption(
-      @Nullable String mavenBomCoordinate,
-      ImmutableList<String> mavenCoordinates,
-      ImmutableList<Path> jarFileList,
-      boolean reportOnlyReachable) {
-    this.mavenBomCoordinate = mavenBomCoordinate;
-    this.mavenCoordinates = mavenCoordinates;
-    this.jarFileList = jarFileList;
-    this.reportOnlyReachable = reportOnlyReachable;
+  @AutoValue.Builder
+  abstract static class Builder {
+    abstract Builder setBomCoordinate(@Nullable String value);
+    abstract Builder setMavenCoordinates(List<String> value);
+    abstract Builder setJarFileList(List<Path> value);
+    abstract Builder setReportOnlyReachable(boolean value);
+    abstract StaticLinkageCheckOption build();
   }
 
   static StaticLinkageCheckOption parseArgument(String[] arguments) {
@@ -102,11 +89,12 @@ class StaticLinkageCheckOption {
 
       boolean reportOnlyReachable = cmd.hasOption("r");
 
-      return new StaticLinkageCheckOption(
-          mavenBomCoordinate,
-          mavenCoordinates.build(),
-          ImmutableList.copyOf(jarFilePaths),
-          reportOnlyReachable);
+      return builder()
+          .setBomCoordinate(mavenBomCoordinate)
+          .setMavenCoordinates(mavenCoordinates.build())
+          .setJarFileList(jarFilePaths)
+          .setReportOnlyReachable(reportOnlyReachable)
+          .build();
     } catch (ParseException ex) {
       throw new IllegalArgumentException("Failed to parse command line arguments",
           ex);
