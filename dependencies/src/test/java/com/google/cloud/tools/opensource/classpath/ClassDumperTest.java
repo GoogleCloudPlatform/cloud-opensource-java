@@ -21,6 +21,7 @@ import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLClassLoader;
+import java.nio.file.Paths;
 import java.util.Set;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
@@ -118,5 +119,15 @@ public class ClassDumperTest {
         "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreImplBase",
         "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFileDescriptorSupplier"
     );
+  }
+
+  @Test
+  public void testCreationInvalidInput() {
+    try {
+      ClassDumper.create(ImmutableList.of(Paths.get("")));
+      Assert.fail("Empty path should generate IOException");
+    } catch (RuntimeException ex) {
+      // pass
+    }
   }
 }

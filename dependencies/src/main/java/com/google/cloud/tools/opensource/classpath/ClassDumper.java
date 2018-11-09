@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.reflect.ClassPath.ClassInfo;
@@ -59,20 +60,20 @@ import org.apache.bcel.util.SyntheticRepository;
  */
 class ClassDumper {
 
-  private final ImmutableSet<Path> inputClasspath;
+  private final ImmutableList<Path> inputClasspath;
   private final SyntheticRepository syntheticRepository;
   private final ClassLoader classLoader;
   private final ImmutableSetMultimap<Path, String> jarFileToClasses;
 
-  ImmutableSetMultimap<Path, String> getJarFileToClasses() {
-    return jarFileToClasses;
+  ImmutableList<Path> getInputClasspath() {
+    return inputClasspath;
   }
 
   private ClassDumper(
-      ImmutableSet<Path> inputClasspath,
+      List<Path> inputClasspath,
       SyntheticRepository syntheticRepository,
       ClassLoader classLoader) {
-    this.inputClasspath = inputClasspath;
+    this.inputClasspath = ImmutableList.copyOf(inputClasspath);
     this.syntheticRepository = syntheticRepository;
     this.classLoader = classLoader;
     this.jarFileToClasses = jarFilesToDefinedClasses(inputClasspath);
@@ -101,8 +102,7 @@ class ClassDumper {
     URLClassLoader classLoaderFromJars =
         new URLClassLoader(jarFileUrls, ClassLoader.getSystemClassLoader());
 
-    return new ClassDumper(
-        ImmutableSet.copyOf(jarFilePaths), syntheticRepository, classLoaderFromJars);
+    return new ClassDumper(jarFilePaths, syntheticRepository, classLoaderFromJars);
   }
 
   /**
@@ -152,8 +152,7 @@ class ClassDumper {
    *     the class loader and BCEL repository.
    * @return list of external method references from the class
    */
-  ImmutableSet<FullyQualifiedMethodSignature> listExternalMethodReferences(
-      String className) {
+  ImmutableSet<FullyQualifiedMethodSignature> listExternalMethodReferences(String className) {
     try {
       Class clazz = classLoader.loadClass(className);
       CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
@@ -166,7 +165,7 @@ class ClassDumper {
 
       // Follows usage graph from the internal classes to external references
       return findExternalMethodReferencesByUsageGraph(
-          ImmutableSet.of(className), syntheticRepository, classesDefinedInSameJar);
+          ImmutableSet.of(className), classesDefinedInSameJar);
     } catch (ClassNotFoundException | URISyntaxException ex) {
       // TODO: Investigate why 'mvn exec:java' causes ClassNotFoundException for Guava
       // Running withinStaticLinkageChecker via IntelliJ does not cause the problem
@@ -190,16 +189,14 @@ class ClassDumper {
    *
    * @param initialClassNames list of classes to follow usage graph. They must be within same jar
    *     file.
-   * @param repository BCEL repository to list method references
    * @param classesDefinedInSameJar set of classes defined in the same jar file as {@code
    *     initialClassNames}
    * @return set of method references external to the jar file of {@code initialClassNames}
    * @throws ClassNotFoundException when there is a problem in accessing a class via BCEL repository
    */
-  private static ImmutableSet<FullyQualifiedMethodSignature>
+  private ImmutableSet<FullyQualifiedMethodSignature>
       findExternalMethodReferencesByUsageGraph(
           Set<String> initialClassNames,
-          SyntheticRepository repository,
           Set<String> classesDefinedInSameJar)
           throws ClassNotFoundException {
     Set<String> visitedClasses = new HashSet<>(initialClassNames);
@@ -208,7 +205,7 @@ class ClassDumper {
         ImmutableSet.builder();
     while (!classQueue.isEmpty()) {
       String internalClassName = classQueue.remove();
-      JavaClass internalJavaClass = repository.loadClass(internalClassName);
+      JavaClass internalJavaClass = syntheticRepository.loadClass(internalClassName);
       List<FullyQualifiedMethodSignature> nextMethodReferencesFromInternalClass =
           listMethodReferences(internalJavaClass);
       for (FullyQualifiedMethodSignature methodReference : nextMethodReferencesFromInternalClass) {
@@ -344,7 +341,7 @@ class ClassDumper {
    * @return map of jar file paths to classes defined in them
    */
   private static ImmutableSetMultimap<Path, String> jarFilesToDefinedClasses(
-      ImmutableSet<Path> jarFilePaths) {
+      List<Path> jarFilePaths) {
     ImmutableSetMultimap.Builder<Path, String> pathToClasses =
         ImmutableSetMultimap.builder();
 
