@@ -31,6 +31,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -85,8 +86,14 @@ public class StaticLinkageCheckerTest {
   public void testListExternalMethodReferences()
       throws IOException, ClassNotFoundException, URISyntaxException {
     URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
+
+    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(
+        true,
+        ImmutableList.of(Paths.get(EXAMPLE_JAR_FILE)),
+        ImmutableSet.of(Paths.get(EXAMPLE_JAR_FILE)));
+
     List<FullyQualifiedMethodSignature> signatures =
-        StaticLinkageChecker.listExternalMethodReferences(
+        staticLinkageChecker.listExternalMethodReferences(
             Paths.get(jarFileUrl.toURI()), new HashSet<>());
 
     Truth.assertThat(signatures).hasSize(38);
@@ -101,27 +108,6 @@ public class StaticLinkageCheckerTest {
     for (FullyQualifiedMethodSignature methodReference : signatures) {
       Truth.assertThat(methodReference.getClassName()).doesNotContain(classNameInJar);
     }
-  }
-
-  @Test
-  public void testListInnerClasses() throws IOException {
-    InputStream classFileInputStream = URLClassLoader.getSystemResourceAsStream(
-        EXAMPLE_CLASS_FILE);
-    ClassParser parser = new ClassParser(classFileInputStream, EXAMPLE_CLASS_FILE);
-    JavaClass javaClass = parser.parse();
-
-    Set<String> innerClassNames = StaticLinkageChecker.listInnerClassNames(javaClass);
-    Truth.assertThat(innerClassNames).containsExactly(
-        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFutureStub",
-        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreMethodDescriptorSupplier",
-        "com.google.firestore.v1beta1.FirestoreGrpc$1",
-        "com.google.firestore.v1beta1.FirestoreGrpc$MethodHandlers",
-        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub",
-        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreBaseDescriptorSupplier",
-        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreBlockingStub",
-        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreImplBase",
-        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFileDescriptorSupplier"
-    );
   }
 
   @Test

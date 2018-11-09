@@ -21,7 +21,9 @@ import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLClassLoader;
-import java.util.List;
+import java.util.Set;
+import org.apache.bcel.classfile.ClassParser;
+import org.apache.bcel.classfile.JavaClass;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -43,75 +45,6 @@ public class ClassDumperTest {
   @After
   public void cleanup() throws IOException {
     classFileInputStream.close();
-  }
-
-  @Test
-  public void testListConstantPool() throws IOException {
-    List<String> constantPool = ClassDumper.listConstantPool(classFileInputStream,
-        EXAMPLE_CLASS_FILE);
-    Truth.assertThat(constantPool).hasSize(491);
-  }
-
-  @Test
-  public void testListMethodReferences() throws IOException {
-    List<FullyQualifiedMethodSignature> methodrefs =
-        ClassDumper.listMethodReferences(classFileInputStream, EXAMPLE_CLASS_FILE);
-
-    Truth.assertThat(methodrefs).hasSize(56);
-    FullyQualifiedMethodSignature methodCallToListenRequest =
-        new FullyQualifiedMethodSignature(
-            "com.google.firestore.v1beta1.ListenRequest",
-            "getDefaultInstance",
-            "()Lcom/google/firestore/v1beta1/ListenRequest;");
-    Truth.assertThat(methodrefs).contains(methodCallToListenRequest);
-  }
-
-  @Test
-  public void testListInternalMethodReferences() throws IOException {
-    List<FullyQualifiedMethodSignature> owningMethodrefs =
-        ClassDumper.listInternalMethodReferences(classFileInputStream, EXAMPLE_CLASS_FILE);
-
-    Truth.assertThat(owningMethodrefs).hasSize(13);
-    for (FullyQualifiedMethodSignature methodref : owningMethodrefs) {
-      Assert.assertEquals(
-          "All of the methods here should be defined in this files",
-          "com.google.firestore.v1beta1.FirestoreGrpc",
-          methodref.getClassName());
-    }
-  }
-
-  @Test
-  public void testListExternalMethodReferences() throws IOException {
-    List<FullyQualifiedMethodSignature> externalMethodrefs =
-        ClassDumper.listExternalMethodReferences(classFileInputStream, EXAMPLE_CLASS_FILE);
-
-    Truth.assertThat(externalMethodrefs).hasSize(43);
-    for (FullyQualifiedMethodSignature methodref : externalMethodrefs) {
-      Assert.assertNotEquals(
-          "All of the methods here should be defined in other files",
-          "com.google.firestore.v1beta1.FirestoreGrpc",
-          methodref.getClassName());
-    }
-    FullyQualifiedMethodSignature methodCallToListenRequest =
-        new FullyQualifiedMethodSignature(
-            "com.google.firestore.v1beta1.ListenRequest",
-            "getDefaultInstance",
-            "()Lcom/google/firestore/v1beta1/ListenRequest;");
-    Truth.assertThat(externalMethodrefs).contains(methodCallToListenRequest);
-  }
-
-  @Test
-  public void testListDeclaredMethods() throws IOException {
-    List<MethodSignature> signatures = ClassDumper.listDeclaredMethods(classFileInputStream,
-        EXAMPLE_CLASS_FILE);
-
-    Truth.assertThat(signatures).hasSize(45);
-
-    // getRunQueryMethod is a method defined in FirestoreGrpc class
-    // Because of type erasure, type parameters don't appear in signature of BCEL Method class
-    MethodSignature oneExpectedMethodInClass = new MethodSignature("getRunQueryMethod",
-        "()Lio/grpc/MethodDescriptor;"); // No type parameter expected
-    Truth.assertThat(signatures).contains(oneExpectedMethodInClass);
   }
 
   @Test
@@ -164,5 +97,26 @@ public class ClassDumperTest {
             "(Ljava/util/Map;)V");
 
     Assert.assertTrue(classDumper.methodDefinitionExists(constructorInAbstract));
+  }
+
+  @Test
+  public void testListInnerClasses() throws IOException {
+    InputStream classFileInputStream = URLClassLoader.getSystemResourceAsStream(
+        EXAMPLE_CLASS_FILE);
+    ClassParser parser = new ClassParser(classFileInputStream, EXAMPLE_CLASS_FILE);
+    JavaClass javaClass = parser.parse();
+
+    Set<String> innerClassNames = ClassDumper.listInnerClassNames(javaClass);
+    Truth.assertThat(innerClassNames).containsExactly(
+        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFutureStub",
+        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreMethodDescriptorSupplier",
+        "com.google.firestore.v1beta1.FirestoreGrpc$1",
+        "com.google.firestore.v1beta1.FirestoreGrpc$MethodHandlers",
+        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub",
+        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreBaseDescriptorSupplier",
+        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreBlockingStub",
+        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreImplBase",
+        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFileDescriptorSupplier"
+    );
   }
 }

@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.SetMultimap;
 import com.google.common.reflect.ClassPath.ClassInfo;
@@ -252,7 +253,7 @@ class StaticLinkageChecker {
         jarFilePaths.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator));
 
     // This map helps to distinguish whether a method reference from a class is external or not
-    SetMultimap<Path, String> jarFileToClasses = jarFilesToDefinedClasses(jarFilePaths);
+    ImmutableSetMultimap<Path, String> jarFileToClasses = classDumper.getJarFileToClasses();
 
     Set<String> classesNotFound = new HashSet<>();
     Set<FullyQualifiedMethodSignature> availableMethodsInJars = new HashSet<>();
@@ -285,8 +286,7 @@ class StaticLinkageChecker {
           // Enqueue references from the class unless it is already visited in class usage graph
           if (classesVisited.add(className)) {
             ImmutableSet<FullyQualifiedMethodSignature> nextExternalMethodReferences =
-                classDumper.listExternalMethodReferences(
-                    className, jarFileToClasses);
+                classDumper.listExternalMethodReferences(className);
             queue.addAll(nextExternalMethodReferences);
           }
         } else {
@@ -301,45 +301,6 @@ class StaticLinkageChecker {
     logger.fine("The number of resolved method references during linkage check: "
         + availableMethodsInJars.size());
     return unresolvedMethods;
-  }
-
-  /**
-   * @param jarFilePaths absolute paths to jar files
-   * @return map of jar file paths to classes defined in them
-   */
-  private static SetMultimap<Path, String> jarFilesToDefinedClasses(
-      ImmutableSet<Path> jarFilePaths) {
-    SetMultimap<Path, String> pathToClasses = HashMultimap.create();
-
-    for (Path jarFilePath : jarFilePaths) {
-      String pathToJar = jarFilePath.toString();
-      SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
-      try {
-        for (JavaClass javaClass: topLevelJavaClassesInJar(jarFilePath, repository)) {
-          pathToClasses.put(jarFilePath, javaClass.getClassName());
-          // This does not take double-nested classes. As long as such classes are accessed
-          // only from the outer class, static linkage checker does not report false positives
-          // TODO: enhance this so that it can work with double-nested classes
-          pathToClasses.putAll(jarFilePath, listInnerClassNames(javaClass));
-        }
-      } catch (IOException | ClassNotFoundException ex) {
-        throw new RuntimeException("There was problem in loading classes in jar file", ex);
-      }
-    }
-    return pathToClasses;
-  }
-
-  private static ImmutableSet<JavaClass> topLevelJavaClassesInJar(Path jarFilePath,
-      SyntheticRepository repository) throws IOException, ClassNotFoundException {
-    ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
-    URL jarFileUrl = jarFilePath.toUri().toURL();
-    Set<ClassInfo> classes = listTopLevelClassesFromJar(jarFileUrl);
-    for (ClassInfo classInfo : classes) {
-      String className = classInfo.getName();
-      JavaClass javaClass = repository.loadClass(className);
-      javaClasses.add(javaClass);
-    }
-    return javaClasses.build();
   }
 
   private static boolean isBuiltInClassName(String className) {
@@ -359,7 +320,7 @@ class StaticLinkageChecker {
    * @throws ClassNotFoundException when a class visible by Guava's reflect was unexpectedly not
    *     found by BCEL API
    */
-  static List<FullyQualifiedMethodSignature> listExternalMethodReferences(
+  List<FullyQualifiedMethodSignature> listExternalMethodReferences(
       Path jarFilePath, Set<String> classesChecked) throws IOException, ClassNotFoundException {
     List<FullyQualifiedMethodSignature> methodReferences = new ArrayList<>();
     Set<String> internalClassNames = new HashSet<>();
@@ -367,11 +328,11 @@ class StaticLinkageChecker {
     String pathToJar = jarFilePath.toString();
     SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
 
-    for (JavaClass javaClass: topLevelJavaClassesInJar(jarFilePath, repository)) {
+    for (JavaClass javaClass: classDumper.topLevelJavaClassesInJar(jarFilePath, repository)) {
       String className = javaClass.getClassName();
       classesChecked.add(className);
       internalClassNames.add(className);
-      internalClassNames.addAll(listInnerClassNames(javaClass));
+      internalClassNames.addAll(classDumper.listInnerClassNames(javaClass));
       List<FullyQualifiedMethodSignature> references = ClassDumper.listMethodReferences(javaClass);
       methodReferences.addAll(references);
     }
@@ -379,54 +340,5 @@ class StaticLinkageChecker {
         .filter(reference -> !internalClassNames.contains(reference.getClassName()))
         .collect(Collectors.toList());
     return externalMethodReferences;
-  }
-
-  @VisibleForTesting
-  static Set<String> listInnerClassNames(JavaClass javaClass) {
-    Set<String> innerClassNames = new HashSet<>();
-    String topLevelClassName = javaClass.getClassName();
-    Attribute[] attributes = javaClass.getAttributes();
-    ConstantPool constantPool = javaClass.getConstantPool();
-    for (Attribute attribute : attributes) {
-      if (attribute.getTag() != Const.ATTR_INNER_CLASSES) {
-        continue;
-      }
-      // This innerClasses variable does not include double-nested inner classes
-      InnerClasses innerClasses = (InnerClasses) attribute;
-      for (InnerClass innerClass : innerClasses.getInnerClasses()) {
-        int classIndex = innerClass.getInnerClassIndex();
-        String innerClassName = constantPool.getConstantString(classIndex, Const.CONSTANT_Class);
-        int outerClassIndex = innerClass.getOuterClassIndex();
-        if (outerClassIndex > 0) {
-          String outerClassName = constantPool.getConstantString(outerClassIndex,
-              Const.CONSTANT_Class);
-          String normalOuterClassName = outerClassName.replace('/', '.');
-          if (!normalOuterClassName.equals(topLevelClassName)) {
-            continue;
-          }
-        }
-
-        // Class names stored in constant pool have '/' as separator. We want '.' (as binary name)
-        String normalInnerClassName = innerClassName.replace('/', '.');
-        innerClassNames.add(normalInnerClassName);
-      }
-    }
-    return innerClassNames;
-  }
-
-  private static ImmutableSet<ClassInfo> listTopLevelClassesFromJar(URL jarFileUrl)
-      throws IOException {
-    URL[] jarFileUrls = new URL[] {jarFileUrl};
-
-    // Setting parent as null because we don't want other classes than this jar file
-    URLClassLoader classLoaderFromJar = new URLClassLoader(jarFileUrls, null);
-
-    // Leveraging Google Guava reflection as BCEL doesn't list classes in a jar file
-    com.google.common.reflect.ClassPath classPath =
-        com.google.common.reflect.ClassPath.from(classLoaderFromJar);
-
-    // Nested (inner) classes reside in one of top-level class files.
-    ImmutableSet<ClassInfo> allClassesInJar = classPath.getTopLevelClasses();
-    return allClassesInJar;
   }
 }

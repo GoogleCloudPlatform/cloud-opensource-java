@@ -19,11 +19,10 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -41,11 +40,13 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.bcel.Const;
-import org.apache.bcel.classfile.ClassParser;
+import org.apache.bcel.classfile.Attribute;
 import org.apache.bcel.classfile.Constant;
 import org.apache.bcel.classfile.ConstantMethodref;
 import org.apache.bcel.classfile.ConstantNameAndType;
 import org.apache.bcel.classfile.ConstantPool;
+import org.apache.bcel.classfile.InnerClass;
+import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.Type;
@@ -53,38 +54,28 @@ import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
 /**
- * This class is responsible to load Java class file and to analyze following attributes:
- *
- * <ol>
- *   <li>source (defined methods) via Method fields in the class, and</li>
- *   <li>targets (what's attempted to be invoked) via the constant pool table of the class.</li>
- * </ol>
+ * Class to read symbolic references in Java class files and to verify the availability
+ * of references in them, through the input class path for a static linkage check.
  */
 class ClassDumper {
 
-  private final ImmutableSet<Path> jarFilePaths;
+  private final ImmutableSet<Path> inputClasspath;
   private final SyntheticRepository syntheticRepository;
   private final ClassLoader classLoader;
+  private final ImmutableSetMultimap<Path, String> jarFileToClasses;
 
-  public ImmutableSet<Path> getJarFilePaths() {
-    return jarFilePaths;
-  }
-
-  public SyntheticRepository getSyntheticRepository() {
-    return syntheticRepository;
-  }
-
-  public ClassLoader getClassLoader() {
-    return classLoader;
+  ImmutableSetMultimap<Path, String> getJarFileToClasses() {
+    return jarFileToClasses;
   }
 
   private ClassDumper(
-      ImmutableSet<Path> jarFilePaths,
+      ImmutableSet<Path> inputClasspath,
       SyntheticRepository syntheticRepository,
       ClassLoader classLoader) {
-    this.jarFilePaths = jarFilePaths;
+    this.inputClasspath = inputClasspath;
     this.syntheticRepository = syntheticRepository;
     this.classLoader = classLoader;
+    this.jarFileToClasses = jarFilesToDefinedClasses(inputClasspath);
   }
 
   JavaClass loadJavaClass(String javaClassName) throws ClassNotFoundException {
@@ -92,23 +83,21 @@ class ClassDumper {
   }
 
   static ClassDumper create(List<Path> jarFilePaths) {
-    // Creates classpath in the same order as jarFilePaths for BCEL API
+    // Creates classpath in the same order as inputClasspath for BCEL API
     String pathAsString =
         jarFilePaths.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator));
     ClassPath classPath = new ClassPath(pathAsString);
     SyntheticRepository syntheticRepository = SyntheticRepository.getInstance(classPath);
 
-    URL[] jarFileUrls = new URL[jarFilePaths.size()];
 
-    for (int i = 0; i < jarFilePaths.size(); i++) {
-      Path jarPath = jarFilePaths.get(i);
+    URL[] jarFileUrls = jarFilePaths.stream().map(jarPath -> {
       try {
-        jarFileUrls[i] = jarPath.toUri().toURL();
+        return jarPath.toUri().toURL();
       } catch (MalformedURLException ex) {
-        System.err.println("Failed to convert jar path to URL" + ex.getMessage());
-        throw new IllegalArgumentException("Jar file " + jarPath + " was not converted to URL", ex);
+        throw new IllegalArgumentException("Jar file " + jarPath + " was not converted to URL",
+            ex);
       }
-    }
+    }).toArray(URL[]::new);
     URLClassLoader classLoaderFromJars =
         new URLClassLoader(jarFileUrls, ClassLoader.getSystemClassLoader());
 
@@ -141,7 +130,8 @@ class ClassDumper {
         // This constant_pool entry must be a CONSTANT_NameAndType_info
         // as specified https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4.2
         throw new RuntimeException(
-            "Failed to lookup nameAndType constant indexed " + nameAndTypeIndex
+            "Failed to lookup nameAndType constant indexed "
+                + nameAndTypeIndex
                 + ". This class file is not compliant with CONSTANT_Methodref_info specification");
       }
       ConstantNameAndType constantNameAndType = (ConstantNameAndType) constantAtNameAndTypeIndex;
@@ -160,15 +150,10 @@ class ClassDumper {
    *
    * @param className class name to list its method references. The class must be available through
    *     the class loader and BCEL repository.
-   * @param jarFileToClasses mapping of jar file paths to classes. This helps to distinguish whether
-   *     the class in a method reference is in the same jar file or not.
    * @return list of external method references from the class
    */
   ImmutableSet<FullyQualifiedMethodSignature> listExternalMethodReferences(
-      String className,
-      SetMultimap<Path, String> jarFileToClasses) {
-    // TODO(suztomo): ClassDumper to have instance methods and make immutable data to instance
-    // Issue #208
+      String className) {
     try {
       Class clazz = classLoader.loadClass(className);
       CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
@@ -241,67 +226,6 @@ class ClassDumper {
     return nextExternalMethodReferences.build();
   }
 
-  /**
-   *  Lists all method references from the class file. The output corresponds to
-   *  CONSTANT_Methodref_info entries in the .class file's constant pool.
-   *
-   * @param classFileStream stream of a class file
-   * @param fileName name of the file that contains class
-   * @return list of the method signatures with their fully-qualified classes
-   * @throws IOException when there is a problem in reading classFileStream
-   */
-  @VisibleForTesting
-  static List<FullyQualifiedMethodSignature> listMethodReferences(InputStream classFileStream,
-      String fileName) throws IOException {
-    ClassParser parser = new ClassParser(classFileStream, fileName);
-    JavaClass javaClass = parser.parse();
-    return listMethodReferences(javaClass);
-  }
-
-  /**
-   *  Lists all internal method references from the class file. The output corresponds to
-   *  CONSTANT_Methodref_info entries in the .class file's constant pool.
-   *
-   * @param classFileStream stream of a class file
-   * @param fileName name of the file that contains class
-   * @return list of the method signatures with their fully-qualified classes
-   * @throws IOException when there is a problem in reading classFileStream
-   */
-  public static List<FullyQualifiedMethodSignature> listInternalMethodReferences(
-      InputStream classFileStream, String fileName) throws IOException {
-    ClassParser parser = new ClassParser(classFileStream, fileName);
-    JavaClass javaClass = parser.parse();
-    List<FullyQualifiedMethodSignature> methodReferences = listMethodReferences(javaClass);
-    Set<String> internalClasses = Sets.newHashSet(javaClass.getClassName());
-    List<FullyQualifiedMethodSignature> internalMethodrefs =  methodReferences
-            .stream()
-            .filter(methodref -> internalClasses.contains(methodref.getClassName()))
-            .collect(Collectors.toList());
-    return internalMethodrefs;
-  }
-
-  /**
-   *  Lists all external method references from the class file. The output corresponds to
-   *  CONSTANT_Methodref_info entries in the .class file's constant pool.
-   *
-   * @param classFileStream stream of a class file
-   * @param fileName name of the file that contains class
-   * @return list of the method signatures with their fully-qualified classes
-   * @throws IOException when there is a problem in reading classFileStream
-   */
-  public static List<FullyQualifiedMethodSignature> listExternalMethodReferences(
-      InputStream classFileStream, String fileName) throws IOException {
-    ClassParser parser = new ClassParser(classFileStream, fileName);
-    JavaClass javaClass = parser.parse();
-    List<FullyQualifiedMethodSignature> methodReferences = listMethodReferences(javaClass);
-    Set<String> internalClasses = Sets.newHashSet(javaClass.getClassName());
-    List<FullyQualifiedMethodSignature> externalMethodrefs = methodReferences
-            .stream()
-            .filter(methodref -> !internalClasses.contains(methodref.getClassName()))
-            .collect(Collectors.toList());
-    return externalMethodrefs;
-  }
-
   static List<FullyQualifiedMethodSignature> listMethodsOnClass(JavaClass javaClass) {
     List<MethodSignature> methods = listDeclaredMethods(javaClass);
     List<FullyQualifiedMethodSignature> fullyQualifiedMethodSignatures = methods.stream()
@@ -309,22 +233,6 @@ class ClassDumper {
             javaClass.getClassName(), method.getMethodName(), method.getDescriptor()))
         .collect(Collectors.toList());
     return fullyQualifiedMethodSignatures;
-  }
-
-  /**
-   * Lists method signatures from the class file. The output corresponds to entries in the
-   * method table in the .class file.
-   *
-   * @param classFileStream stream of a class file
-   * @param fileName name of the file that contains class
-   * @return method and signature entries defined in the class file
-   * @throws IOException when there is a problem in reading classFileStream
-   */
-  static List<MethodSignature> listDeclaredMethods(
-      InputStream classFileStream, String fileName) throws IOException {
-    ClassParser parser = new ClassParser(classFileStream, fileName);
-    JavaClass javaClass = parser.parse();
-    return listDeclaredMethods(javaClass);
   }
 
   /**
@@ -340,33 +248,6 @@ class ClassDumper {
         .map(method -> new MethodSignature(method.getName(), method.getSignature()))
         .collect(Collectors.toList());
     return signatures;
-  }
-
-  /**
-   * Lists the content of the constant pool table in the .class file.
-   *
-   * @param inputStream stream of a class file
-   * @param fileName name of the file that contains class
-   * @return String representation of constant pool entries
-   * @throws IOException when there is a problem in reading classFileStream
-   */
-  @VisibleForTesting
-  static List<String> listConstantPool(InputStream inputStream, String fileName)
-      throws IOException {
-    ClassParser parser = new ClassParser(inputStream, fileName);
-    JavaClass javaClass = parser.parse();
-    ConstantPool constantPool = javaClass.getConstantPool();
-    Constant[] constants = constantPool.getConstantPool();
-
-    // Items in ConstantPool. E.g.,
-    //  [CONSTANT_Methodref[10](class_index = 297, name_and_type_index = 298),
-    //   CONSTANT_Class[7](name_index = 299),
-    //   CONSTANT_Methodref[10](class_index = 297, name_and_type_index = 300), ...
-    List<String> constantStrings = Arrays.stream(constants)
-            .filter(Predicates.notNull())
-            .map(Constant::toString)
-            .collect(Collectors.toList());
-    return constantStrings;
   }
 
   @VisibleForTesting
@@ -409,8 +290,6 @@ class ClassDumper {
     }
   }
 
-
-  @VisibleForTesting
   @SuppressWarnings("unchecked")
   boolean methodDefinitionExists(FullyQualifiedMethodSignature methodReference)
       throws ClassNotFoundException {
@@ -458,5 +337,93 @@ class ClassDumper {
       }
       return false;
     }
+  }
+
+  /**
+   * @param jarFilePaths absolute paths to jar files
+   * @return map of jar file paths to classes defined in them
+   */
+  private static ImmutableSetMultimap<Path, String> jarFilesToDefinedClasses(
+      ImmutableSet<Path> jarFilePaths) {
+    ImmutableSetMultimap.Builder<Path, String> pathToClasses =
+        ImmutableSetMultimap.builder();
+
+    for (Path jarFilePath : jarFilePaths) {
+      String pathToJar = jarFilePath.toString();
+      SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
+      try {
+        for (JavaClass javaClass: topLevelJavaClassesInJar(jarFilePath, repository)) {
+          pathToClasses.put(jarFilePath, javaClass.getClassName());
+          // This does not take double-nested classes. As long as such classes are accessed
+          // only from the outer class, static linkage checker does not report false positives
+          // TODO(suztomo): enhance this so that it can work with double-nested classes
+          pathToClasses.putAll(jarFilePath, listInnerClassNames(javaClass));
+        }
+      } catch (IOException | ClassNotFoundException ex) {
+        throw new RuntimeException("There was problem in loading classes in jar file", ex);
+      }
+    }
+    return pathToClasses.build();
+  }
+
+  private static ImmutableSet<ClassInfo> listTopLevelClassesFromJar(URL jarFileUrl)
+      throws IOException {
+    URL[] jarFileUrls = new URL[] {jarFileUrl};
+
+    // Setting parent as null because we don't want other classes than this jar file
+    URLClassLoader classLoaderFromJar = new URLClassLoader(jarFileUrls, null);
+
+    // Leveraging Google Guava reflection as BCEL doesn't list classes in a jar file
+    com.google.common.reflect.ClassPath classPath =
+        com.google.common.reflect.ClassPath.from(classLoaderFromJar);
+
+    // Nested (inner) classes reside in one of top-level class files.
+    ImmutableSet<ClassInfo> allClassesInJar = classPath.getTopLevelClasses();
+    return allClassesInJar;
+  }
+
+  static ImmutableSet<JavaClass> topLevelJavaClassesInJar(Path jarFilePath,
+      SyntheticRepository repository) throws IOException, ClassNotFoundException {
+    ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
+    URL jarFileUrl = jarFilePath.toUri().toURL();
+    Set<ClassInfo> classes = listTopLevelClassesFromJar(jarFileUrl);
+    for (ClassInfo classInfo : classes) {
+      String className = classInfo.getName();
+      JavaClass javaClass = repository.loadClass(className);
+      javaClasses.add(javaClass);
+    }
+    return javaClasses.build();
+  }
+
+  static Set<String> listInnerClassNames(JavaClass javaClass) {
+    Set<String> innerClassNames = new HashSet<>();
+    String topLevelClassName = javaClass.getClassName();
+    Attribute[] attributes = javaClass.getAttributes();
+    ConstantPool constantPool = javaClass.getConstantPool();
+    for (Attribute attribute : attributes) {
+      if (attribute.getTag() != Const.ATTR_INNER_CLASSES) {
+        continue;
+      }
+      // This innerClasses variable does not include double-nested inner classes
+      InnerClasses innerClasses = (InnerClasses) attribute;
+      for (InnerClass innerClass : innerClasses.getInnerClasses()) {
+        int classIndex = innerClass.getInnerClassIndex();
+        String innerClassName = constantPool.getConstantString(classIndex, Const.CONSTANT_Class);
+        int outerClassIndex = innerClass.getOuterClassIndex();
+        if (outerClassIndex > 0) {
+          String outerClassName = constantPool.getConstantString(outerClassIndex,
+              Const.CONSTANT_Class);
+          String normalOuterClassName = outerClassName.replace('/', '.');
+          if (!normalOuterClassName.equals(topLevelClassName)) {
+            continue;
+          }
+        }
+
+        // Class names stored in constant pool have '/' as separator. We want '.' (as binary name)
+        String normalInnerClassName = innerClassName.replace('/', '.');
+        innerClassNames.add(normalInnerClassName);
+      }
+    }
+    return innerClassNames;
   }
 }
