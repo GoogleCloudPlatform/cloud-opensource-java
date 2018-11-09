@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -63,6 +64,8 @@ import org.eclipse.aether.artifact.DefaultArtifact;
  */
 class StaticLinkageChecker {
   // TODO(suztomo): enhance scope to include fields and classes. Issue #207
+
+  private static final Logger logger = Logger.getLogger(StaticLinkageChecker.class.getName());
 
   /**
    * Flag on the reachability. This flag controls whether the report excludes the linkage errors
@@ -205,6 +208,7 @@ class StaticLinkageChecker {
       throws IOException, ClassNotFoundException {
     // TODO(suztomo): Separate logic between data retrieval and usage graph traversal. Issue #203
     Preconditions.checkArgument(!jarFilePaths.isEmpty(), "no jar files specified");
+    logger.fine("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
 
     Set<String> visitedClasses = new HashSet<>();
     List<FullyQualifiedMethodSignature> methodReferencesFromInputClassPath = new ArrayList<>();
@@ -293,6 +297,9 @@ class StaticLinkageChecker {
         classesNotFound.add(className);
       }
     }
+
+    logger.fine("The number of resolved method references during linkage check: "
+        + availableMethodsInJars.size());
     return unresolvedMethods;
   }
 
