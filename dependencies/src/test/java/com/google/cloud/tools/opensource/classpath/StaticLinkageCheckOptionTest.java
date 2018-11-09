@@ -18,12 +18,13 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
+import org.apache.commons.cli.ParseException;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class StaticLinkageCheckOptionTest {
   @Test
-  public void parseCommandLineOptions_shortOptions() {
+  public void parseCommandLineOptions_shortOptions() throws ParseException {
     String[] arguments = new String[] {
         "-b", "abc.com:dummy:1.2",
         "-c", "abc.com:abc:1.1,abc.com:abc-util:1.2",
@@ -42,7 +43,7 @@ public class StaticLinkageCheckOptionTest {
   }
 
   @Test
-  public void parseCommandLineOptions_longOptions() {
+  public void parseCommandLineOptions_longOptions() throws ParseException {
     String[] arguments = new String[] {
         "--bom", "abc.com:dummy:1.2",
         "--coordinate", "abc.com:abc:1.1,abc.com:abc-util:1.2",
@@ -61,7 +62,7 @@ public class StaticLinkageCheckOptionTest {
   }
 
   @Test
-  public void parseCommandLineOptions_emptyOption() {
+  public void parseCommandLineOptions_emptyOption() throws ParseException {
     StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArgument(new String[0]);
 
     Assert.assertTrue(parsedOption.getJarFileList().isEmpty());
@@ -78,8 +79,8 @@ public class StaticLinkageCheckOptionTest {
     try {
       StaticLinkageCheckOption.parseArgument(arguments);
       Assert.fail();
-    } catch (IllegalArgumentException ex) {
-      Assert.assertEquals("Failed to parse command line arguments", ex.getMessage());
+    } catch (ParseException ex) {
+      Assert.assertEquals("Unrecognized option: -x", ex.getMessage());
     }
   }
 

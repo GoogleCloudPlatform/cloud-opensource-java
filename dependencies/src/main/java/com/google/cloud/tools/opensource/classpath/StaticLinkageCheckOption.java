@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
@@ -53,7 +54,7 @@ abstract class StaticLinkageCheckOption {
     abstract StaticLinkageCheckOption build();
   }
 
-  static StaticLinkageCheckOption parseArgument(String[] arguments) {
+  static StaticLinkageCheckOption parseArgument(String[] arguments) throws ParseException {
     Options options = new Options();
     options.addOption(
         "b", "bom", true, "BOM to generate a classpath");
@@ -71,13 +72,13 @@ abstract class StaticLinkageCheckOption {
 
     ImmutableList.Builder<String> mavenCoordinates = ImmutableList.builder();
     try {
-      CommandLine cmd = parser.parse(options, arguments);
-      if (cmd.hasOption("c")) {
-        String mavenCoordinatesOption = cmd.getOptionValue("c");
+      CommandLine commandLine = parser.parse(options, arguments);
+      if (commandLine.hasOption("c")) {
+        String mavenCoordinatesOption = commandLine.getOptionValue("c");
         mavenCoordinates.addAll(Arrays.asList(mavenCoordinatesOption.split(",")));
       }
-      if (cmd.hasOption("j")) {
-        String jarFiles = cmd.getOptionValue("j");
+      if (commandLine.hasOption("j")) {
+        String jarFiles = commandLine.getOptionValue("j");
         List<Path> jarFilesInArguments =
             Arrays.stream(jarFiles.split(","))
                 .map(name -> (Paths.get(name)).toAbsolutePath())
@@ -85,19 +86,20 @@ abstract class StaticLinkageCheckOption {
         jarFilePaths.addAll(jarFilesInArguments);
       }
 
-      String mavenBomCoordinate = cmd.getOptionValue("b");
+      String mavenBomCoordinate = commandLine.getOptionValue("b");
 
-      boolean reportOnlyReachable = cmd.hasOption("r");
+      boolean reportOnlyReachable = commandLine.hasOption("r");
 
-      return builder()
-          .setBomCoordinate(mavenBomCoordinate)
-          .setMavenCoordinates(mavenCoordinates.build())
-          .setJarFileList(jarFilePaths)
-          .setReportOnlyReachable(reportOnlyReachable)
-          .build();
+        return builder()
+            .setBomCoordinate(mavenBomCoordinate)
+            .setMavenCoordinates(mavenCoordinates.build())
+            .setJarFileList(jarFilePaths)
+            .setReportOnlyReachable(reportOnlyReachable)
+            .build();
     } catch (ParseException ex) {
-      throw new IllegalArgumentException("Failed to parse command line arguments",
-          ex);
+      HelpFormatter helpFormetter = new HelpFormatter();
+      helpFormetter.printHelp("StaticLinkageChecker", options);
+      throw ex;
     }
   }
 }

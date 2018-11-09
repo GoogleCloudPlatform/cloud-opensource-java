@@ -25,19 +25,16 @@ import com.google.common.collect.Sets;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.apache.bcel.classfile.ClassParser;
-import org.apache.bcel.classfile.JavaClass;
+import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -407,7 +404,8 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testGenerateInputClasspathFromArgument_mavenCoordinates() throws RepositoryException {
+  public void testGenerateInputClasspathFromArgument_mavenCoordinates()
+      throws RepositoryException, ParseException {
     String mavenCoordinates =
         "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha,"
             + "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
@@ -427,7 +425,8 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testGenerateInputClasspathFromArgument_jarFileList() throws RepositoryException {
+  public void testGenerateInputClasspathFromArgument_jarFileList()
+      throws RepositoryException, ParseException {
     StaticLinkageCheckOption parsedOption =
         StaticLinkageCheckOption.parseArgument(
             new String[] {

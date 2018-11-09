@@ -125,9 +125,9 @@ public class ClassDumperTest {
   public void testCreationInvalidInput() {
     try {
       ClassDumper.create(ImmutableList.of(Paths.get("")));
-      Assert.fail("Empty path should generate IOException");
+      Assert.fail("Empty path should generate RuntimeException");
     } catch (RuntimeException ex) {
-      // pass
+      Assert.assertEquals("There was problem in loading classes in jar file", ex.getMessage());
     }
   }
 }

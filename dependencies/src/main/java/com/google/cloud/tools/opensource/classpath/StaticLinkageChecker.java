@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
+import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -81,9 +82,10 @@ class StaticLinkageChecker {
    * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
    * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
    *     files
+   * @throws ParseException when the arguments are invalid for the tool
    */
   public static void main(String[] arguments)
-      throws IOException, ClassNotFoundException, RepositoryException {
+      throws IOException, ClassNotFoundException, RepositoryException, ParseException {
     StaticLinkageCheckOption commandLineOption = StaticLinkageCheckOption.parseArgument(arguments);
     ImmutableList<Path> inputClasspath =
         generateInputClasspathFromLinkageCheckOption(commandLineOption);
