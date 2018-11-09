@@ -47,6 +47,11 @@
         <artifactId>guava-gwt</artifactId>
         <version>${guava.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava-testlib</artifactId>
+        <version>${guava.version}</version>
+      </dependency>
 
       <!-- GRPC; specifically https://github.com/grpc/grpc-java -->
       <!-- We should import the officially-provided grpc BOM once it is created:
