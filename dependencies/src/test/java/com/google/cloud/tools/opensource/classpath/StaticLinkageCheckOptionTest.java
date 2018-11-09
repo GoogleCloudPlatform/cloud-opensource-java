@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
-import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,7 +35,7 @@ public class StaticLinkageCheckOptionTest {
     Assert.assertEquals(parsedOption.getJarFileList(),
         ImmutableList.of(Paths.get("foo.jar").toAbsolutePath(),
             Paths.get("dir/bar.jar").toAbsolutePath()));
-    Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBomMavenCoordinate());
+    Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBomCoordinate());
     Assert.assertEquals(ImmutableList.of("abc.com:abc:1.1", "abc.com:abc-util:1.2"),
         parsedOption.getMavenCoordinates());
     Assert.assertTrue(parsedOption.isReportOnlyReachable());
@@ -55,7 +54,7 @@ public class StaticLinkageCheckOptionTest {
     Assert.assertEquals(parsedOption.getJarFileList(),
         ImmutableList.of(Paths.get("foo.jar").toAbsolutePath(),
             Paths.get("dir/bar.jar").toAbsolutePath()));
-    Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBomMavenCoordinate());
+    Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBomCoordinate());
     Assert.assertEquals(ImmutableList.of("abc.com:abc:1.1", "abc.com:abc-util:1.2"),
         parsedOption.getMavenCoordinates());
     Assert.assertTrue(parsedOption.isReportOnlyReachable());
@@ -66,7 +65,7 @@ public class StaticLinkageCheckOptionTest {
     StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArgument(new String[0]);
 
     Assert.assertTrue(parsedOption.getJarFileList().isEmpty());
-    Assert.assertNull(parsedOption.getBomMavenCoordinate());
+    Assert.assertNull(parsedOption.getBomCoordinate());
     Assert.assertTrue(parsedOption.getMavenCoordinates().isEmpty());
     Assert.assertFalse(parsedOption.isReportOnlyReachable());
   }
