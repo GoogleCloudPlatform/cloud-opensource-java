@@ -230,6 +230,37 @@ class ClassDumper {
     return fullyQualifiedMethodSignatures;
   }
 
+  static ImmutableSet<String> listInnerClassNames(JavaClass javaClass) {
+    ImmutableSet.Builder<String> innerClassNames = ImmutableSet.builder();
+    String topLevelClassName = javaClass.getClassName();
+    ConstantPool constantPool = javaClass.getConstantPool();
+    for (Attribute attribute : javaClass.getAttributes()) {
+      if (attribute.getTag() != Const.ATTR_INNER_CLASSES) {
+        continue;
+      }
+      // This innerClasses variable does not include double-nested inner classes
+      InnerClasses innerClasses = (InnerClasses) attribute;
+      for (InnerClass innerClass : innerClasses.getInnerClasses()) {
+        int classIndex = innerClass.getInnerClassIndex();
+        String innerClassName = constantPool.getConstantString(classIndex, Const.CONSTANT_Class);
+        int outerClassIndex = innerClass.getOuterClassIndex();
+        if (outerClassIndex > 0) {
+          String outerClassName = constantPool.getConstantString(outerClassIndex,
+              Const.CONSTANT_Class);
+          String normalOuterClassName = outerClassName.replace('/', '.');
+          if (!normalOuterClassName.equals(topLevelClassName)) {
+            continue;
+          }
+        }
+
+        // Class names stored in constant pool have '/' as separator. We want '.' (as binary name)
+        String normalInnerClassName = innerClassName.replace('/', '.');
+        innerClassNames.add(normalInnerClassName);
+      }
+    }
+    return innerClassNames.build();
+  }
+
   /**
    * Lists method signatures from the class file. The output corresponds to entries in the
    * method table in the .class file.
@@ -387,36 +418,5 @@ class ClassDumper {
       javaClasses.add(javaClass);
     }
     return javaClasses.build();
-  }
-
-  static ImmutableSet<String> listInnerClassNames(JavaClass javaClass) {
-    ImmutableSet.Builder<String> innerClassNames = ImmutableSet.builder();
-    String topLevelClassName = javaClass.getClassName();
-    ConstantPool constantPool = javaClass.getConstantPool();
-    for (Attribute attribute : javaClass.getAttributes()) {
-      if (attribute.getTag() != Const.ATTR_INNER_CLASSES) {
-        continue;
-      }
-      // This innerClasses variable does not include double-nested inner classes
-      InnerClasses innerClasses = (InnerClasses) attribute;
-      for (InnerClass innerClass : innerClasses.getInnerClasses()) {
-        int classIndex = innerClass.getInnerClassIndex();
-        String innerClassName = constantPool.getConstantString(classIndex, Const.CONSTANT_Class);
-        int outerClassIndex = innerClass.getOuterClassIndex();
-        if (outerClassIndex > 0) {
-          String outerClassName = constantPool.getConstantString(outerClassIndex,
-              Const.CONSTANT_Class);
-          String normalOuterClassName = outerClassName.replace('/', '.');
-          if (!normalOuterClassName.equals(topLevelClassName)) {
-            continue;
-          }
-        }
-
-        // Class names stored in constant pool have '/' as separator. We want '.' (as binary name)
-        String normalInnerClassName = innerClassName.replace('/', '.');
-        innerClassNames.add(normalInnerClassName);
-      }
-    }
-    return innerClassNames.build();
   }
 }
