@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -50,6 +51,8 @@ import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
  * Aether initialization.
  */
 public final class RepositoryUtility {
+
+  private static final Logger logger = Logger.getLogger(RepositoryUtility.class.getName());
   
   public static final RemoteRepository CENTRAL =
       new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
@@ -165,7 +168,7 @@ public final class RepositoryUtility {
       if (!managedDependencies.contains(managed)) {
         managedDependencies.add(managed);
       } else {
-        System.err.println("Duplicate dependency " + dependency);
+        logger.severe("Duplicate dependency " + dependency);
       }
     }
     return managedDependencies;
