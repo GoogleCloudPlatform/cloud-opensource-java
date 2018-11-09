@@ -64,7 +64,7 @@ class StaticLinkageChecker {
   private final ImmutableSet<Path> entryPoints;
 
   StaticLinkageChecker(
-      boolean reportOnlyReachable, List<Path> jarFilePaths, Set<Path> entryPoints) {
+      boolean reportOnlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints) {
     Preconditions.checkArgument(
         !jarFilePaths.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
@@ -152,7 +152,7 @@ class StaticLinkageChecker {
    * @throws RepositoryException when there is a problem in retrieving jar files
    */
   @VisibleForTesting
-  static List<Path> coordinateToClasspath(String coordinate) throws RepositoryException {
+  static ImmutableList<Path> coordinateToClasspath(String coordinate) throws RepositoryException {
     DefaultArtifact rootArtifact = new DefaultArtifact(coordinate);
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph dependencyGraph =
@@ -163,15 +163,13 @@ class StaticLinkageChecker {
     // for each artifact key. This set is to filter such duplicates.
     Set<String> artifactKeySet = new HashSet<>();
 
-    List<Path> jarPaths = new ArrayList<>();
+    ImmutableList.Builder<Path> jarPaths = ImmutableList.builder();
     for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();
       String artifactKey = Artifacts.makeKey(artifact);
-      if (artifactKeySet.contains(artifactKey)) {
-        // When "groupId:artifactId" is already found in iteration, then not picking up this jar
+      if (!artifactKeySet.add(artifactKey)) {
         continue;
       }
-      artifactKeySet.add(artifactKey);
 
       File artifactFile = artifact.getFile();
       Path artifactFilePath = artifactFile.toPath();
@@ -179,7 +177,7 @@ class StaticLinkageChecker {
         jarPaths.add(artifactFilePath.toAbsolutePath());
       }
     }
-    return jarPaths;
+    return jarPaths.build();
   }
 
   /**
@@ -190,7 +188,7 @@ class StaticLinkageChecker {
    * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
    */
   @VisibleForTesting
-  List<FullyQualifiedMethodSignature> findUnresolvedMethodReferences()
+  ImmutableList<FullyQualifiedMethodSignature> findUnresolvedMethodReferences()
       throws IOException, ClassNotFoundException {
     // TODO(suztomo): Separate logic between data retrieval and usage graph traversal. Issue #203
     ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
@@ -213,7 +211,7 @@ class StaticLinkageChecker {
           listExternalMethodReferences(absolutePathToJar, visitedClasses));
     }
 
-    List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
+    ImmutableList<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         findUnresolvedReferences(methodReferencesFromInputClassPath, visitedClasses);
     return unresolvedMethodReferences;
   }
@@ -228,10 +226,11 @@ class StaticLinkageChecker {
    * @return list of methods that are not found in the jar files
    */
   @VisibleForTesting
-  List<FullyQualifiedMethodSignature> findUnresolvedReferences(
+  ImmutableList<FullyQualifiedMethodSignature> findUnresolvedReferences(
       List<FullyQualifiedMethodSignature> initialMethodReferences,
       Set<String> classesVisited) {
-    List<FullyQualifiedMethodSignature> unresolvedMethods = new ArrayList<>();
+    ImmutableList.Builder<FullyQualifiedMethodSignature> unresolvedMethods =
+        ImmutableList.builder();
 
     Set<String> classesNotFound = new HashSet<>();
     Set<FullyQualifiedMethodSignature> availableMethodsInJars = new HashSet<>();
@@ -278,7 +277,7 @@ class StaticLinkageChecker {
 
     logger.fine("The number of resolved method references during linkage check: "
         + availableMethodsInJars.size());
-    return unresolvedMethods;
+    return unresolvedMethods.build();
   }
 
   private static boolean isBuiltInClassName(String className) {
@@ -298,7 +297,7 @@ class StaticLinkageChecker {
    * @throws ClassNotFoundException when a class visible by Guava's reflect was unexpectedly not
    *     found by BCEL API
    */
-  List<FullyQualifiedMethodSignature> listExternalMethodReferences(
+  ImmutableList<FullyQualifiedMethodSignature> listExternalMethodReferences(
       Path jarFilePath, Set<String> classesChecked) throws IOException, ClassNotFoundException {
     List<FullyQualifiedMethodSignature> methodReferences = new ArrayList<>();
     Set<String> internalClassNames = new HashSet<>();
@@ -314,9 +313,9 @@ class StaticLinkageChecker {
       List<FullyQualifiedMethodSignature> references = ClassDumper.listMethodReferences(javaClass);
       methodReferences.addAll(references);
     }
-    List<FullyQualifiedMethodSignature> externalMethodReferences = methodReferences.stream()
+    ImmutableList<FullyQualifiedMethodSignature> externalMethodReferences = methodReferences.stream()
         .filter(reference -> !internalClassNames.contains(reference.getClassName()))
-        .collect(Collectors.toList());
+        .collect(ImmutableList.toImmutableList());
     return externalMethodReferences;
   }
 }

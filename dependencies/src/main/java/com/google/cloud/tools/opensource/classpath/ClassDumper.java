@@ -33,7 +33,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.CodeSource;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -90,7 +89,6 @@ class ClassDumper {
     ClassPath classPath = new ClassPath(pathAsString);
     SyntheticRepository syntheticRepository = SyntheticRepository.getInstance(classPath);
 
-
     URL[] jarFileUrls = jarFilePaths.stream().map(jarPath -> {
       try {
         return jarPath.toUri().toURL();
@@ -113,8 +111,8 @@ class ClassDumper {
    * @param javaClass .class file to list its method references
    * @return list of the method signatures with their fully-qualified classes
    */
-  static List<FullyQualifiedMethodSignature> listMethodReferences(JavaClass javaClass) {
-    List<FullyQualifiedMethodSignature> methodReferences = new ArrayList<>();
+  static ImmutableList<FullyQualifiedMethodSignature> listMethodReferences(JavaClass javaClass) {
+    ImmutableList.Builder<FullyQualifiedMethodSignature> methodReferences = ImmutableList.builder();
     ConstantPool constantPool = javaClass.getConstantPool();
     Constant[] constants = constantPool.getConstantPool();
     List<Constant> methodrefConstants = Arrays.stream(constants)
@@ -141,7 +139,7 @@ class ClassDumper {
           new FullyQualifiedMethodSignature(classNameInMethodReference, methodName, descriptor);
       methodReferences.add(methodref);
     }
-    return methodReferences;
+    return methodReferences.build();
   }
 
   /**
@@ -223,12 +221,12 @@ class ClassDumper {
     return nextExternalMethodReferences.build();
   }
 
-  static List<FullyQualifiedMethodSignature> listMethodsOnClass(JavaClass javaClass) {
+  static ImmutableList<FullyQualifiedMethodSignature> listMethodsOnClass(JavaClass javaClass) {
     List<MethodSignature> methods = listDeclaredMethods(javaClass);
-    List<FullyQualifiedMethodSignature> fullyQualifiedMethodSignatures = methods.stream()
+    ImmutableList<FullyQualifiedMethodSignature> fullyQualifiedMethodSignatures = methods.stream()
         .map(method -> new FullyQualifiedMethodSignature(
             javaClass.getClassName(), method.getMethodName(), method.getDescriptor()))
-        .collect(Collectors.toList());
+        .collect(ImmutableList.toImmutableList());
     return fullyQualifiedMethodSignatures;
   }
 
@@ -239,11 +237,11 @@ class ClassDumper {
    * @param javaClass .class file to search methods
    * @return method and signature entries defined in the class file
    */
-  static List<MethodSignature> listDeclaredMethods(JavaClass javaClass) {
+  static ImmutableList<MethodSignature> listDeclaredMethods(JavaClass javaClass) {
     Method[] methods = javaClass.getMethods();
-    List<MethodSignature> signatures = Arrays.stream(methods)
+    ImmutableList<MethodSignature> signatures = Arrays.stream(methods)
         .map(method -> new MethodSignature(method.getName(), method.getSignature()))
-        .collect(Collectors.toList());
+        .collect(ImmutableList.toImmutableList());
     return signatures;
   }
 
@@ -383,8 +381,7 @@ class ClassDumper {
       SyntheticRepository repository) throws IOException, ClassNotFoundException {
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     URL jarFileUrl = jarFilePath.toUri().toURL();
-    Set<ClassInfo> classes = listTopLevelClassesFromJar(jarFileUrl);
-    for (ClassInfo classInfo : classes) {
+    for (ClassInfo classInfo : listTopLevelClassesFromJar(jarFileUrl)) {
       String className = classInfo.getName();
       JavaClass javaClass = repository.loadClass(className);
       javaClasses.add(javaClass);
@@ -392,12 +389,11 @@ class ClassDumper {
     return javaClasses.build();
   }
 
-  static Set<String> listInnerClassNames(JavaClass javaClass) {
-    Set<String> innerClassNames = new HashSet<>();
+  static ImmutableSet<String> listInnerClassNames(JavaClass javaClass) {
+    ImmutableSet.Builder<String> innerClassNames = ImmutableSet.builder();
     String topLevelClassName = javaClass.getClassName();
-    Attribute[] attributes = javaClass.getAttributes();
     ConstantPool constantPool = javaClass.getConstantPool();
-    for (Attribute attribute : attributes) {
+    for (Attribute attribute : javaClass.getAttributes()) {
       if (attribute.getTag() != Const.ATTR_INNER_CLASSES) {
         continue;
       }
@@ -421,6 +417,6 @@ class ClassDumper {
         innerClassNames.add(normalInnerClassName);
       }
     }
-    return innerClassNames;
+    return innerClassNames.build();
   }
 }
