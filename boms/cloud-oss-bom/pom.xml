@@ -53,6 +53,19 @@
         <version>${guava.version}</version>
       </dependency>
 
+      <!-- protobufs from https://github.com/protocolbuffers/protobuf/tree/master/java -->
+      <!-- We should import the officially-provided protobuf BOM once it is created - #64 -->
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>${protobuf.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java-util</artifactId>
+        <version>${protobuf.version}</version>
+      </dependency>
+
       <!-- GRPC; specifically https://github.com/grpc/grpc-java -->
       <!-- We should import the officially-provided grpc BOM once it is created:
            grpc/grpc-java#3954 -->
@@ -125,19 +138,6 @@
         <groupId>io.grpc</groupId>
         <artifactId>grpc-alts</artifactId>
         <version>${io.grpc.version}</version>
-      </dependency>
-
-      <!-- protobufs from https://github.com/protocolbuffers/protobuf/tree/master/java -->
-      <!-- We should import the officially-provided protobuf BOM once it is created - #64 -->
-      <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java</artifactId>
-        <version>${protobuf.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java-util</artifactId>
-        <version>${protobuf.version}</version>
       </dependency>
 
       <!-- google-cloud-java from https://github.com/GoogleCloudPlatform/google-cloud-java -->
