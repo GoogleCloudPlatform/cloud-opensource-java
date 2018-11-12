@@ -47,9 +47,9 @@ abstract class StaticLinkageCheckOption {
 
   @AutoValue.Builder
   abstract static class Builder {
-    abstract Builder setBomCoordinate(@Nullable String value);
-    abstract Builder setMavenCoordinates(List<String> value);
-    abstract Builder setJarFileList(List<Path> value);
+    abstract Builder setBomCoordinate(@Nullable String coordinate);
+    abstract Builder setMavenCoordinates(List<String> coordinates);
+    abstract Builder setJarFileList(List<Path> paths);
     abstract Builder setReportOnlyReachable(boolean value);
     abstract StaticLinkageCheckOption build();
   }

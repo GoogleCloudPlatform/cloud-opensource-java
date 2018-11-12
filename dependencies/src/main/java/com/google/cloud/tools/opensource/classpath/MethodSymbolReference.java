@@ -31,10 +31,10 @@ abstract class MethodSymbolReference {
 
   @AutoValue.Builder
   abstract static class Builder {
-    abstract Builder setTargetClassName(String value);
-    abstract Builder setMethodName(String value);
-    abstract Builder setDescriptor(String value);
-    abstract Builder setSourceClassName(String value);
+    abstract Builder setTargetClassName(String className);
+    abstract Builder setMethodName(String methodName);
+    abstract Builder setDescriptor(String descriptor);
+    abstract Builder setSourceClassName(String className);
     abstract MethodSymbolReference build();
   }
 }

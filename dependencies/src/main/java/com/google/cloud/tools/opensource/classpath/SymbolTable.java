@@ -35,10 +35,10 @@ abstract class SymbolTable {
 
   @AutoValue.Builder
   abstract static class Builder {
-    abstract Builder setClassReferences(Iterable<ClassSymbolReference> value);
-    abstract Builder setFieldReferences(Iterable<FieldSymbolReference> value);
-    abstract Builder setMethodReferences(Iterable<MethodSymbolReference> value);
-    abstract Builder setDefinedClassNames(Iterable<String> value);
+    abstract Builder setClassReferences(Iterable<ClassSymbolReference> classReferences);
+    abstract Builder setFieldReferences(Iterable<FieldSymbolReference> fieldReferences);
+    abstract Builder setMethodReferences(Iterable<MethodSymbolReference> methodReferences);
+    abstract Builder setDefinedClassNames(Iterable<String> classNames);
     abstract ImmutableSet.Builder<ClassSymbolReference> classReferencesBuilder();
     abstract ImmutableSet.Builder<MethodSymbolReference> methodReferencesBuilder();
     abstract ImmutableSet.Builder<FieldSymbolReference> fieldReferencesBuilder();

@@ -29,8 +29,8 @@ abstract class ClassSymbolReference {
 
   @AutoValue.Builder
   abstract static class Builder {
-    abstract Builder setTargetClassName(String value);
-    abstract Builder setSourceClassName(String value);
+    abstract Builder setTargetClassName(String className);
+    abstract Builder setSourceClassName(String className);
     abstract ClassSymbolReference build();
   }
 }
