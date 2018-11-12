@@ -23,6 +23,7 @@ import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
@@ -34,10 +35,10 @@ import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
@@ -86,7 +87,7 @@ class StaticLinkageChecker {
    */
   public static void main(String[] arguments)
       throws IOException, ClassNotFoundException, RepositoryException, ParseException {
-    StaticLinkageCheckOption commandLineOption = StaticLinkageCheckOption.parseArgument(arguments);
+    StaticLinkageCheckOption commandLineOption = StaticLinkageCheckOption.parseArguments(arguments);
     ImmutableList<Path> inputClasspath =
         generateInputClasspathFromLinkageCheckOption(commandLineOption);
     // TODO(suztomo): to take command-line option to choose entry point classes for reachability
@@ -97,6 +98,10 @@ class StaticLinkageChecker {
 
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         staticLinkageChecker.findUnresolvedMethodReferences();
+
+    // TODO(suztomo): print the report
+    StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
+
     printStaticLinkageErrors(unresolvedMethodReferences);
   }
 
@@ -183,6 +188,90 @@ class StaticLinkageChecker {
   }
 
   /**
+   * Finds linkage errors in the input classpath and generates report
+   */
+  StaticLinkageCheckReport findLinkageErrors() {
+    ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
+
+    ImmutableMap.Builder<Path, SymbolTable> jarToSymbols = ImmutableMap.builder();
+    for (Path jarPath : jarFilePaths) {
+      jarToSymbols.put(jarPath, scanExternalSymbolTable(jarPath));
+    }
+
+    // Validate linkage error of each reference
+    ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
+    for (Map.Entry<Path, SymbolTable> entry : jarToSymbols.build().entrySet()) {
+      jarLinkageReports.add(findInvalidReferences(entry.getKey(), entry.getValue()));
+    }
+
+    if (reportOnlyReachable) {
+      // TODO: Optionally, report errors only reachable from entry point classes
+    }
+
+    return StaticLinkageCheckReport.create(jarLinkageReports.build());
+  }
+
+  private JarLinkageReport findInvalidReferences(Path jarPath, SymbolTable jarSymbolTable) {
+    JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder().setJarPath(jarPath);
+
+    // TODO(suztomo): implement validation for field, method and class references in the table
+    return reportBuilder.build();
+  }
+
+  /**
+   * Scans class files in the jar file and creates {@link SymbolTable} populated with class names
+   * defined within the jar and symbolic references to other classes outside the jar.
+   *
+   * @param jarFilePath absolute path to a jar file.
+   * @return Table containing symbol references and classes defined in the jar file.
+   */
+  static SymbolTable scanExternalSymbolTable(Path jarFilePath) {
+    SymbolTable.Builder symbolTableBuilder = SymbolTable.builder();
+    ImmutableSet.Builder<String> symbolTableClassNameBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<ClassSymbolReference> classSymbolReferences = ImmutableSet.builder();
+    ImmutableSet.Builder<MethodSymbolReference> methodSymbolReferences = ImmutableSet.builder();
+    ImmutableSet.Builder<FieldSymbolReference> fieldSymbolReferences = ImmutableSet.builder();
+
+    String pathToJar = jarFilePath.toString();
+    SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
+
+    try {
+      for (JavaClass javaClass : ClassDumper.topLevelJavaClassesInJar(jarFilePath, repository)) {
+        SymbolTable partialSymbolTable = ClassDumper.scanClassSymbolTable(javaClass);
+
+        classSymbolReferences.addAll(partialSymbolTable.getClassReferences());
+        methodSymbolReferences.addAll(partialSymbolTable.getMethodReferences());
+        fieldSymbolReferences.addAll(partialSymbolTable.getFieldReferences());
+        symbolTableClassNameBuilder.addAll(partialSymbolTable.getDefinedClassNames());
+      }
+      ImmutableSet<String> classesDefinedInJar = symbolTableClassNameBuilder.build();
+
+      ImmutableSet<ClassSymbolReference> externalClassReferences = classSymbolReferences.build()
+          .stream()
+          .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
+          .collect(ImmutableSet.toImmutableSet());
+      ImmutableSet<MethodSymbolReference> externalMethodReferences = methodSymbolReferences.build()
+          .stream()
+          .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
+          .collect(ImmutableSet.toImmutableSet());
+      ImmutableSet<FieldSymbolReference> externalFieldReferences = fieldSymbolReferences.build()
+          .stream()
+          .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
+          .collect(ImmutableSet.toImmutableSet());
+
+      return symbolTableBuilder
+          .setClassReferences(externalClassReferences)
+          .setMethodReferences(externalMethodReferences)
+          .setFieldReferences(externalFieldReferences)
+          .setDefinedClassNames(classesDefinedInJar)
+          .build();
+    } catch (ClassNotFoundException | IOException ex) {
+      throw new RuntimeException("Failed to scan jar file", ex);
+    }
+  }
+
+
+  /**
    * Runs the static linkage check and returns unresolved methods for the jar file paths
    *
    * @return list of methods that are not found in the jar files
@@ -193,6 +282,7 @@ class StaticLinkageChecker {
   ImmutableList<FullyQualifiedMethodSignature> findUnresolvedMethodReferences()
       throws IOException, ClassNotFoundException {
     // TODO(suztomo): Separate logic between data retrieval and usage graph traversal. Issue #203
+    // This method, applicable only for method reference, is to be replaced with findLinkageErrors
     ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
     logger.fine("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
 

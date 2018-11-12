@@ -66,6 +66,18 @@ public class StaticLinkageCheckerTest {
         }
       };
 
+  private static final Correspondence<MethodSymbolReference, String> TARGET_CLASS_NAMES =
+      new Correspondence<MethodSymbolReference, String>() {
+        @Override
+        public boolean compare(MethodSymbolReference actual, String expected) {
+          return actual.getTargetClassName().equals(expected);
+        }
+        @Override
+        public String toString() {
+          return "has target class name equal to";
+        }
+      };
+
   private static final Correspondence<Path, String> PATH_FILE_NAMES =
       new Correspondence<Path, String>() {
         @Override
@@ -106,6 +118,53 @@ public class StaticLinkageCheckerTest {
       Truth.assertThat(methodReference.getClassName()).doesNotContain(classNameInJar);
     }
   }
+
+  @Test
+  public void testScanSymbolTableFromJar()
+      throws IOException, ClassNotFoundException, URISyntaxException {
+    URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
+
+    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(
+        true,
+        ImmutableList.of(Paths.get(EXAMPLE_JAR_FILE)),
+        ImmutableSet.of(Paths.get(EXAMPLE_JAR_FILE)));
+
+    SymbolTable symbolTable =
+        StaticLinkageChecker.scanExternalSymbolTable(
+            Paths.get(jarFileUrl.toURI()));
+
+    Set<FieldSymbolReference> actualFieldReferences = symbolTable.getFieldReferences();
+    FieldSymbolReference expectedFieldReference =
+        FieldSymbolReference.builder().setFieldName("BIDI_STREAMING")
+        .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
+        .setTargetClassName("io.grpc.MethodDescriptor$MethodType").build();
+    Truth.assertThat(actualFieldReferences).contains(expectedFieldReference);
+
+    Set<MethodSymbolReference> actualMethodReferences = symbolTable.getMethodReferences();
+    MethodSymbolReference expectedMethodReference =
+        MethodSymbolReference.builder()
+            .setTargetClassName("io.grpc.protobuf.ProtoUtils")
+            .setMethodName("marshaller")
+            .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
+            .setDescriptor("(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;")
+            .build();
+    Truth.assertThat(actualMethodReferences).contains(expectedMethodReference);
+
+    Truth.assertWithMessage(
+        "scanExternalSymbolTable should not give references pointing to classes in the jar")
+        .that(actualMethodReferences)
+        .comparingElementsUsing(TARGET_CLASS_NAMES)
+        .containsNoneOf("com.google.firestore.v1beta1.FirestoreGrpc",
+            "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub");
+
+    Set<String> classesDefinedInJar = symbolTable.getDefinedClassNames();
+    Truth.assertThat(classesDefinedInJar).contains("com.google.firestore.v1beta1.FirestoreGrpc");
+    Truth.assertThat(classesDefinedInJar)
+        .contains("com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub");
+
+
+  }
+
 
   @Test
   public void testResolvedMethodReferences() {
@@ -410,7 +469,7 @@ public class StaticLinkageCheckerTest {
         "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha,"
             + "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
     StaticLinkageCheckOption parsedOption =
-        StaticLinkageCheckOption.parseArgument(
+        StaticLinkageCheckOption.parseArguments(
             new String[] {
               "--coordinate", mavenCoordinates
             });
@@ -428,7 +487,7 @@ public class StaticLinkageCheckerTest {
   public void testGenerateInputClasspathFromArgument_jarFileList()
       throws RepositoryException, ParseException {
     StaticLinkageCheckOption parsedOption =
-        StaticLinkageCheckOption.parseArgument(
+        StaticLinkageCheckOption.parseArguments(
             new String[] {
                 "--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar"
             });

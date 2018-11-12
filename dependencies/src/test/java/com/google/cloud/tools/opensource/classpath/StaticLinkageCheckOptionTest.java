@@ -31,7 +31,7 @@ public class StaticLinkageCheckOptionTest {
         "-j", "foo.jar,dir/bar.jar",
         "-r"
     };
-    StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArgument(arguments);
+    StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(arguments);
 
     Assert.assertEquals(parsedOption.getJarFileList(),
         ImmutableList.of(Paths.get("foo.jar").toAbsolutePath(),
@@ -50,7 +50,7 @@ public class StaticLinkageCheckOptionTest {
         "--jars", "foo.jar,dir/bar.jar",
         "--report-only-reachable"
     };
-    StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArgument(arguments);
+    StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(arguments);
 
     Assert.assertEquals(parsedOption.getJarFileList(),
         ImmutableList.of(Paths.get("foo.jar").toAbsolutePath(),
@@ -63,7 +63,7 @@ public class StaticLinkageCheckOptionTest {
 
   @Test
   public void parseCommandLineOptions_emptyOption() throws ParseException {
-    StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArgument(new String[0]);
+    StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(new String[0]);
 
     Assert.assertTrue(parsedOption.getJarFileList().isEmpty());
     Assert.assertNull(parsedOption.getBomCoordinate());
@@ -77,7 +77,7 @@ public class StaticLinkageCheckOptionTest {
         "-x" // No such option
     };
     try {
-      StaticLinkageCheckOption.parseArgument(arguments);
+      StaticLinkageCheckOption.parseArguments(arguments);
       Assert.fail();
     } catch (ParseException ex) {
       Assert.assertEquals("Unrecognized option: -x", ex.getMessage());

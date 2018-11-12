@@ -54,7 +54,7 @@ abstract class StaticLinkageCheckOption {
     abstract StaticLinkageCheckOption build();
   }
 
-  static StaticLinkageCheckOption parseArgument(String[] arguments) throws ParseException {
+  static StaticLinkageCheckOption parseArguments(String[] arguments) throws ParseException {
     Options options = new Options();
     options.addOption(
         "b", "bom", true, "BOM to generate a classpath");

@@ -25,6 +25,8 @@ import java.util.Objects;
  * class name.
  */
 class FullyQualifiedMethodSignature implements Comparable<FullyQualifiedMethodSignature> {
+  // TODO(suztomo): remove FullyQualifiedMethodSignature in favor of MethodSymbolReference
+
   private static final Comparator<FullyQualifiedMethodSignature> COMPARATOR =
       Comparator.comparing(FullyQualifiedMethodSignature::getClassName)
           .thenComparing(
