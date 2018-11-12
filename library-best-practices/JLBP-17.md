@@ -13,7 +13,7 @@ Perform the rollout in this manner:
 1. Decide whether to break the feature as an atomic change or to perform the
    change in two passes (deprecate then delete).
    - If the feature is used by stable code in other libraries, you must use two
-     passes (as per [JLBP-7](JLBP-7.md).
+     passes (as per [JLBP-7](JLBP-7.md)).
    - If there does not appear to be usage of the code in other libraries, an
      in-place breakage may be ok.
    - If the feature is used by unstable code or stable code having little usage
