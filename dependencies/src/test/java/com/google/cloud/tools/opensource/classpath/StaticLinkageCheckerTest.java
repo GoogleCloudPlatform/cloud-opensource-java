@@ -124,11 +124,6 @@ public class StaticLinkageCheckerTest {
       throws IOException, ClassNotFoundException, URISyntaxException {
     URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
 
-    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(
-        true,
-        ImmutableList.of(Paths.get(EXAMPLE_JAR_FILE)),
-        ImmutableSet.of(Paths.get(EXAMPLE_JAR_FILE)));
-
     SymbolTable symbolTable =
         StaticLinkageChecker.scanExternalSymbolTable(
             Paths.get(jarFileUrl.toURI()));
@@ -161,8 +156,6 @@ public class StaticLinkageCheckerTest {
     Truth.assertThat(classesDefinedInJar).contains("com.google.firestore.v1beta1.FirestoreGrpc");
     Truth.assertThat(classesDefinedInJar)
         .contains("com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub");
-
-
   }
 
 
