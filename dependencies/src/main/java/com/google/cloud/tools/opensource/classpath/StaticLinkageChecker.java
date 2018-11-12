@@ -188,7 +188,7 @@ class StaticLinkageChecker {
   }
 
   /**
-   * Finds linkage errors in the input classpath and generates report
+   * Finds linkage errors in the input classpath and generates a static linkage check report.
    */
   StaticLinkageCheckReport findLinkageErrors() {
     ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
