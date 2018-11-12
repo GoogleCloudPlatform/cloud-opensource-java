@@ -20,7 +20,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * A table of list symbolic references in a jar file.
+ * A table of list of symbolic references and defined classes in a jar file or class file.
  */
 @AutoValue
 abstract class SymbolTable {
