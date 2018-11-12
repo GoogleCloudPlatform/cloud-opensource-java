@@ -4,9 +4,9 @@
 It is clearly undesirable for any particular library dependency tree to contain
 conflicts. Unfortunately, for any consumer of such a dependency tree that tries
 to use the highest versions available of all libraries contained in it, there
-will be conflicts as soon as a breaking change is introduced.  Thus, breaking
-changes need to be propagated as quickly as possible so that such consumers can
-continue using the highest versions.
+are conflicts as soon as a breaking change is introduced. Thus, breaking changes
+need to be propagated as quickly as possible so that such consumers can continue
+using the highest versions.
 
 Perform the rollout in this manner:
 
