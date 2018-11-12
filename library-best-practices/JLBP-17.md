@@ -1,61 +1,29 @@
 [JLBP-17] Coordinate Major Version Adoption
 -------------------------------------------
 
-For any particular library dependency chain, the libraries involved need to
-coordinate the adoption of new major versions of shared dependencies that has
-breaking changes. This is necessary so that consumers can easily use the latest
-version of all the functionality together. This best practice doesn't apply
-to new major versions where the package was renamed, because the old and new
-packages can co-exist.
+It is clearly undesirable for any particular library dependency tree to contain
+conflicts. Unfortunately, for any consumer of such a dependency tree that tries
+to use the highest versions available of all libraries contained in it, there
+will be conflicts as soon as a breaking change is introduced.  Thus, breaking
+changes need to be propagated as quickly as possible so that such consumers can
+continue using the highest versions.
 
-Below is an example of what happens when a new major version of a leaf library
-is partially adopted. Suppose gax-java and grpc-java depend on guava 20.0:
+Perform the rollout in this manner:
 
-```
-gax-java 1.29.0 ->
-  grpc-java 1.13.1 ->
-    guava 20.0
-  guava 20.0
-```
-
-Suppose Guava version 26.0 deletes a public method and it is now the latest
-version. If gax-java 1.29.0 and grpc-java 1.13.1 invoke that method, it is
-impossible for a user to depend on the latest version of all three artifacts
-without static linkage conflicts. The following dependency chain demonstrates
-this. This assumes that the consumer selects the latest version of guava at
-that point in time, 26.0, which overrides the version that gax-java and
-grpc-java select:
-
-```
-gax-java 1.29.0 ->
-  grpc-java 1.13.1 ->
-    (ERROR) guava 26.0
-  (ERROR) guava 26.0
-```
-
-After grpc-java releases a new version (1.16.0) which depends on the new version
-of guava, gax-java still experiences conflicts:
-
-```
-gax-java 1.29.0 ->
-  grpc-java 1.16.0 ->
-    guava 26.0
-  (ERROR) guava 26.0
-```
-
-Only when gax-java and grpc-java both upgrade their dependency on Guava are
-there no longer any conflicts:
-
-```
-gax-java 1.35.0 ->
-  grpc-java 1.16.0 ->
-    guava 26.0
-  guava 26.0
-```
-
-This state is impossible to avoid completely (particularly during the process of
-rolling out such a breaking change), but the amount of time that the dependency
-chain is in this state should be minimized. Each library in the chain should be
-prepared for such an upgrade before it starts. The upgrade should be propagated
-up the tree in as little time as possible, so that consumers can continue to
-safely depend on the latest version of every package.
+1. Decide whether to break the feature as an atomic change or to perform the
+   change in two passes (deprecate then delete).
+   - If the feature is used by stable code in other libraries, you must use two
+     passes.
+   - If there does not appear to be usage of the code in other libraries, an
+     in-place breakage may be ok.
+   - If the feature is used by unstable code or stable code having little usage
+     itself, prefer to use two passes if possible, with in-place breakage only
+     if two passes is judged to be too costly.
+2. Make sure that consuming libraries are prepared for the breakage.
+   - In the case of in-place breakage, have a PR prepared and approved in the
+     consuming libraries that switches from the old surface to the new surface.
+   - In the case of a two-pass breakage, mark the undesired surface as
+     `@Deprecated` and perform a release. Make sure that all consuming libraries
+     have removed their references to the deprecated functionality.
+3. Release the breakage and make sure that the version propagates up the
+   dependency tree as quickly as possible.
