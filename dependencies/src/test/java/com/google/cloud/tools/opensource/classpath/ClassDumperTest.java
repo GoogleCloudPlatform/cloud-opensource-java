@@ -136,7 +136,8 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testScanSymbolTableFromJar() throws URISyntaxException {
+  public void testScanSymbolTableFromJar()
+      throws URISyntaxException, IOException, ClassNotFoundException {
     URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
 
     SymbolReferenceSet symbolReferenceSet =
