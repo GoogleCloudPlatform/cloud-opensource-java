@@ -18,8 +18,11 @@ package com.google.cloud.tools.opensource.classpath;
 
 /**
  * A reference to a symbol of {@code targetClass} from {@code sourceClass}. The values of the class
- * names are fully-qualified with '.' as separator and '$' for inner class. For example {@code
+ * names are fully-qualified form known as binary names. For example {@code
  * io.grpc.MethodDescriptor$MethodType}.
+ *
+ * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-13.html#jls-13.1">Java
+ *     Language Specification: 13.1. The Form of a Binary</a>
  */
 interface SymbolReference {
 
