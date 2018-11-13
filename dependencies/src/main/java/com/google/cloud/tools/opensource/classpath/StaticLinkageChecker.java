@@ -97,7 +97,6 @@ class StaticLinkageChecker {
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         staticLinkageChecker.findUnresolvedMethodReferences();
 
-    // TODO(suztomo): print the report
     StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
 
     printStaticLinkageReport(report);
