@@ -248,12 +248,12 @@ class StaticLinkageChecker {
 
     try {
       for (JavaClass javaClass : ClassDumper.topLevelJavaClassesInJar(jarFilePath, repository)) {
-        SymbolsInFile partialSymbolsInFile = ClassDumper.scanClassSymbolTable(javaClass);
+        SymbolsInFile symbolsInClassFile = ClassDumper.scanClassSymbolTable(javaClass);
 
-        classSymbolReferences.addAll(partialSymbolsInFile.getClassReferences());
-        methodSymbolReferences.addAll(partialSymbolsInFile.getMethodReferences());
-        fieldSymbolReferences.addAll(partialSymbolsInFile.getFieldReferences());
-        symbolTableClassNameBuilder.addAll(partialSymbolsInFile.getDefinedClassNames());
+        classSymbolReferences.addAll(symbolsInClassFile.getClassReferences());
+        methodSymbolReferences.addAll(symbolsInClassFile.getMethodReferences());
+        fieldSymbolReferences.addAll(symbolsInClassFile.getFieldReferences());
+        symbolTableClassNameBuilder.addAll(symbolsInClassFile.getDefinedClassNames());
       }
       ImmutableSet<String> classesDefinedInJar = symbolTableClassNameBuilder.build();
 
