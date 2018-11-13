@@ -225,8 +225,8 @@ class ClassDumper {
     return (ConstantNameAndType) constantAtNameAndTypeIndex;
   }
 
-  private static MethodSymbolReference constantToMethodReference(ConstantMethodref constantMethodref,
-      ConstantPool constantPool, String sourceClassName) {
+  private static MethodSymbolReference constantToMethodReference(
+      ConstantMethodref constantMethodref, ConstantPool constantPool, String sourceClassName) {
     String classNameInMethodReference = constantMethodref.getClass(constantPool);
     ConstantNameAndType constantNameAndType =
         constantNameAndTypeFromConstantCP(constantMethodref, constantPool);

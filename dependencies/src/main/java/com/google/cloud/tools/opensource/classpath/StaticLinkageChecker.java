@@ -212,7 +212,8 @@ class StaticLinkageChecker {
     return StaticLinkageCheckReport.create(jarLinkageReports.build());
   }
 
-  private JarLinkageReport findInvalidReferences(Path jarPath, SymbolReferenceSet symbolReferenceSet) {
+  private JarLinkageReport findInvalidReferences(
+      Path jarPath, SymbolReferenceSet symbolReferenceSet) {
     JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder().setJarPath(jarPath);
 
     // TODO(suztomo): implement validation for field, method and class references in the table
