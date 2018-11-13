@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableSet;
 /**
  * Symbolic references and defined classes in a file (jar file or class file). The
  * symbolic references are from constant pool of class file(s). The defined class names are
- * from the class defined as top-level in a class file and inner classes in it.
+ * from the class defined as top-level in a class file and its inner classes.
  *
  * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4">Java
  *     Virtual Machine Specification: The Constant Pool</a>
