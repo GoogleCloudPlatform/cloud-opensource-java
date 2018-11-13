@@ -19,7 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.auto.value.AutoValue;
 
 /**
- * A symbolic reference to {@code targetClass} referenced from {@code sourceClass}.
+ * A symbolic reference to {@code targetClass} itself referenced from {@code sourceClass}.
  */
 @AutoValue
 abstract class ClassSymbolReference implements SymbolReference {

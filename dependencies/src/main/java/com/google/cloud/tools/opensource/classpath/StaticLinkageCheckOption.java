@@ -32,13 +32,43 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+/**
+ * Option for {@link StaticLinkageChecker}. To construct an input class path, the checker requires
+ * either one of the following types of input:
+ *
+ * <ul>
+ *   <li>{@code bomCoordinate}: a Maven coordinate for a BOM
+ *   <li>{@code mavenCoordinates}: list of Maven artifact coordinates
+ *   <li>{@code jarFileList}: list of jar files in the filesystem
+ * </ul>
+ *
+ * @see <a
+ *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/dependencies#input">Static
+ *     Linkage Checker: Input</a>
+ */
 @AutoValue
 abstract class StaticLinkageCheckOption {
   // TODO(suztomo): Add option to specify entry point classes
 
+  /**
+   * Returns a Maven coordinate for a BOM if specified; otherwise null.
+   */
   @Nullable abstract String getBomCoordinate();
+
+  /**
+   * Returns Maven coordinates if specified; otherwise an empty list.
+   */
   abstract ImmutableList<String> getMavenCoordinates();
+
+  /**
+   * Returns list of absolute paths for jar files in the filesystem if specified; otherwise an empty
+   * list.
+   */
   abstract ImmutableList<Path> getJarFileList();
+
+  /**
+   * Returns flag to report only reachable linkage errors.
+   */
   abstract boolean isReportOnlyReachable();
 
   static Builder builder() {

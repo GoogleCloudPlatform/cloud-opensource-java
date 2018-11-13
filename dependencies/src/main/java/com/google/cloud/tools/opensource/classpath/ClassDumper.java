@@ -23,6 +23,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Sets;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
 import java.io.IOException;
@@ -176,15 +177,18 @@ class ClassDumper {
           fieldReferences.add(constantToFieldReference(constantFieldref, constantPool,
               sourceClassName));
           break;
+        case Const.CONSTANT_Class:
+          // TODO(suztomo): handle class reference
+          break;
         default:
           break;
       }
     }
-    ImmutableSet.Builder<String> definedClassNameBuilder =
-        symbolTableBuilder.definedClassNamesBuilder();
-    definedClassNameBuilder.add(sourceClassName).addAll(listInnerClassNames(javaClass));
 
-    return symbolTableBuilder.build();
+    Set<String> definedClassNames = Sets.newHashSet(listInnerClassNames(javaClass));
+    definedClassNames.add(sourceClassName);
+
+    return symbolTableBuilder.setDefinedClassNames(definedClassNames).build();
   }
 
   static ConstantNameAndType constantNameAndTypeFromConstantCP(
@@ -202,7 +206,7 @@ class ClassDumper {
     return (ConstantNameAndType) constantAtNameAndTypeIndex;
   }
 
-  static MethodSymbolReference constantToMethodReference(ConstantMethodref constantMethodref,
+  private static MethodSymbolReference constantToMethodReference(ConstantMethodref constantMethodref,
       ConstantPool constantPool, String sourceClassName) {
     String classNameInMethodReference = constantMethodref.getClass(constantPool);
     ConstantNameAndType constantNameAndType =
@@ -218,7 +222,7 @@ class ClassDumper {
     return methodReference;
   }
 
-  static FieldSymbolReference constantToFieldReference(ConstantFieldref constantFieldref,
+  private static FieldSymbolReference constantToFieldReference(ConstantFieldref constantFieldref,
       ConstantPool constantPool, String sourceClassName) {
     // Either a class type or an interface type
     String classNameInFieldReference = constantFieldref.getClass(constantPool);
