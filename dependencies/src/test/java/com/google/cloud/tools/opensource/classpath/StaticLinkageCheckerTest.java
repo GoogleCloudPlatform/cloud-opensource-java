@@ -120,12 +120,11 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testScanSymbolTableFromJar()
-      throws IOException, ClassNotFoundException, URISyntaxException {
+  public void testScanSymbolTableFromJar() throws URISyntaxException {
     URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
 
     SymbolsInFile symbolsInFile =
-        StaticLinkageChecker.scanExternalSymbolTable(
+        StaticLinkageChecker.scanSymbolReferences(
             Paths.get(jarFileUrl.toURI()));
 
     Set<FieldSymbolReference> actualFieldReferences = symbolsInFile.getFieldReferences();
@@ -144,18 +143,6 @@ public class StaticLinkageCheckerTest {
             .setDescriptor("(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;")
             .build();
     Truth.assertThat(actualMethodReferences).contains(expectedMethodReference);
-
-    Truth.assertWithMessage(
-        "scanExternalSymbolTable should not give references pointing to classes in the jar")
-        .that(actualMethodReferences)
-        .comparingElementsUsing(TARGET_CLASS_NAMES)
-        .containsNoneOf("com.google.firestore.v1beta1.FirestoreGrpc",
-            "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub");
-
-    Set<String> classesDefinedInJar = symbolsInFile.getDefinedClassNames();
-    Truth.assertThat(classesDefinedInJar).contains("com.google.firestore.v1beta1.FirestoreGrpc");
-    Truth.assertThat(classesDefinedInJar)
-        .contains("com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub");
   }
 
 

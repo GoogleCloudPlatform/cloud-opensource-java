@@ -46,7 +46,6 @@ public class SymbolsInFileTest {
         ImmutableSet.of(classSymbolReference))
         .setFieldReferences(ImmutableSet.of(fieldSymbolReference))
         .setMethodReferences(ImmutableSet.of(methodSymbolReference))
-        .setDefinedClassNames(ImmutableSet.of(SymbolsInFileTest.class.getName()))
         .build();
 
     Assert.assertEquals(classSymbolReference, symbolsInFile.getClassReferences().iterator().next());

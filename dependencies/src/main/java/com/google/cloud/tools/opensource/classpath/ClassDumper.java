@@ -23,7 +23,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Sets;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
 import java.io.IOException;
@@ -185,10 +184,7 @@ class ClassDumper {
       }
     }
 
-    Set<String> definedClassNames = Sets.newHashSet(listInnerClassNames(javaClass));
-    definedClassNames.add(sourceClassName);
-
-    return symbolTableBuilder.setDefinedClassNames(definedClassNames).build();
+    return symbolTableBuilder.build();
   }
 
   static ConstantNameAndType constantNameAndTypeFromConstantCP(
@@ -471,10 +467,8 @@ class ClassDumper {
         ImmutableSetMultimap.builder();
 
     for (Path jarFilePath : jarFilePaths) {
-      String pathToJar = jarFilePath.toString();
-      SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
       try {
-        for (JavaClass javaClass: topLevelJavaClassesInJar(jarFilePath, repository)) {
+        for (JavaClass javaClass: topLevelJavaClassesInJar(jarFilePath)) {
           pathToClasses.put(jarFilePath, javaClass.getClassName());
           // This does not take double-nested classes. As long as such classes are accessed
           // only from the outer class, static linkage checker does not report false positives
@@ -504,8 +498,10 @@ class ClassDumper {
     return allClassesInJar;
   }
 
-  static ImmutableSet<JavaClass> topLevelJavaClassesInJar(Path jarFilePath,
-      SyntheticRepository repository) throws IOException, ClassNotFoundException {
+  static ImmutableSet<JavaClass> topLevelJavaClassesInJar(Path jarFilePath)
+      throws IOException, ClassNotFoundException {
+    String pathToJar = jarFilePath.toString();
+    SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     URL jarFileUrl = jarFilePath.toUri().toURL();
     for (ClassInfo classInfo : listTopLevelClassesFromJar(jarFileUrl)) {
