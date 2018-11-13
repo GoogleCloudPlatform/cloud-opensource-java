@@ -38,7 +38,7 @@ import org.apache.commons.cli.ParseException;
  *
  * <ul>
  *   <li>{@code bomCoordinate}: a Maven coordinate for a BOM
- *   <li>{@code mavenCoordinates}: list of Maven artifact coordinates
+ *   <li>{@code mavenCoordinates}: list of the coordinates of Maven artifacts
  *   <li>{@code jarFileList}: list of jar files in the filesystem
  * </ul>
  *
@@ -51,12 +51,15 @@ abstract class StaticLinkageCheckOption {
   // TODO(suztomo): Add option to specify entry point classes
 
   /**
-   * Returns a Maven coordinate for a BOM if specified; otherwise null.
+   * Returns a Maven coordinate for a BOM if specified; otherwise null. Example value: {@code
+   * com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT}
    */
-  @Nullable abstract String getBomCoordinate();
+  @Nullable
+  abstract String getBomCoordinate();
 
   /**
-   * Returns Maven coordinates if specified; otherwise an empty list.
+   * Returns the coordinates of Maven artifacts if specified; otherwise an empty list. Example
+   * element: {@code com.google.cloud:google-cloud-bigtable:0.66.0-alpha}
    */
   abstract ImmutableList<String> getMavenCoordinates();
 
