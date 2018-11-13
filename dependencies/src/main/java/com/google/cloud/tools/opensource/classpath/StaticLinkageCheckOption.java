@@ -34,7 +34,7 @@ import org.apache.commons.cli.ParseException;
 
 /**
  * Option for {@link StaticLinkageChecker}. To construct an input class path, the checker requires
- * either one of the following types of input:
+ * exactly one of the following types of input:
  *
  * <ul>
  *   <li>{@code bomCoordinate}: a Maven coordinate for a BOM
@@ -51,7 +51,7 @@ abstract class StaticLinkageCheckOption {
   // TODO(suztomo): Add option to specify entry point classes
 
   /**
-   * Returns a Maven coordinate for a BOM if specified; otherwise null. Example value: {@code
+   * Returns Maven coordinates for a BOM if specified; otherwise null. Example value: {@code
    * com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT}
    */
   @Nullable
@@ -92,7 +92,7 @@ abstract class StaticLinkageCheckOption {
     options.addOption(
         "b", "bom", true, "BOM to generate a classpath");
     options.addOption(
-        "c", "coordinate", true, "Maven coordinates (separated by ',') to generate a classpath");
+        "c", "coordinates", true, "Maven coordinates (separated by ',') to generate a classpath");
     options.addOption("j", "jars", true, "Jar files (separated by ',') to generate a classpath");
     options.addOption(
         "r",
@@ -106,6 +106,12 @@ abstract class StaticLinkageCheckOption {
     ImmutableList.Builder<String> mavenCoordinates = ImmutableList.builder();
     try {
       CommandLine commandLine = parser.parse(options, arguments);
+      if ((commandLine.hasOption("b") && commandLine.hasOption("c"))
+          || (commandLine.hasOption("c") && commandLine.hasOption("j"))
+          || (commandLine.hasOption("j") && commandLine.hasOption("b"))) {
+        throw new IllegalArgumentException(
+            "One of BOM, Maven coordinates, or jar files can be specified");
+      }
       if (commandLine.hasOption("c")) {
         String mavenCoordinatesOption = commandLine.getOptionValue("c");
         mavenCoordinates.addAll(Arrays.asList(mavenCoordinatesOption.split(",")));
@@ -123,12 +129,12 @@ abstract class StaticLinkageCheckOption {
 
       boolean reportOnlyReachable = commandLine.hasOption("r");
 
-        return builder()
-            .setBomCoordinate(mavenBomCoordinate)
-            .setMavenCoordinates(mavenCoordinates.build())
-            .setJarFileList(jarFilePaths)
-            .setReportOnlyReachable(reportOnlyReachable)
-            .build();
+      return builder()
+          .setBomCoordinate(mavenBomCoordinate)
+          .setMavenCoordinates(mavenCoordinates.build())
+          .setJarFileList(jarFilePaths)
+          .setReportOnlyReachable(reportOnlyReachable)
+          .build();
     } catch (ParseException ex) {
       HelpFormatter helpFormetter = new HelpFormatter();
       helpFormetter.printHelp("StaticLinkageChecker", options);
