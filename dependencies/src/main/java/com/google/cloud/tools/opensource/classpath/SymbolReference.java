@@ -16,26 +16,11 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.auto.value.AutoValue;
-
 /**
- * A symbolic reference to {@code targetClass} referenced from {@code sourceClass}.
+ * A reference to a symbol of {@code targetClass} from {@code sourceClass}.
  */
-@AutoValue
-abstract class ClassSymbolReference implements SymbolReference {
-  @Override
-  public abstract String getTargetClassName();
-  @Override
-  public abstract String getSourceClassName();
+interface SymbolReference {
+  String getSourceClassName();
 
-  static Builder builder() {
-    return new AutoValue_ClassSymbolReference.Builder();
-  }
-
-  @AutoValue.Builder
-  abstract static class Builder {
-    abstract Builder setTargetClassName(String className);
-    abstract Builder setSourceClassName(String className);
-    abstract ClassSymbolReference build();
-  }
+  String getTargetClassName();
 }

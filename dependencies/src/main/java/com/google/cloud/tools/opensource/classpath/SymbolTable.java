@@ -20,7 +20,11 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * A table of list of symbolic references and defined classes in a jar file or class file.
+ * A table of symbolic references and defined classes in a jar file or class file. The
+ * symbolic references are from constant pool of class files.
+ *
+ * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4">Java
+ *     Virtual Machine Specification: The Constant Pool</a>
  */
 @AutoValue
 abstract class SymbolTable {

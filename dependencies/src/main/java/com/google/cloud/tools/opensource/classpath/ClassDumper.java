@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -42,6 +44,7 @@ import java.util.stream.Collectors;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
 import org.apache.bcel.classfile.Constant;
+import org.apache.bcel.classfile.ConstantCP;
 import org.apache.bcel.classfile.ConstantFieldref;
 import org.apache.bcel.classfile.ConstantMethodref;
 import org.apache.bcel.classfile.ConstantNameAndType;
@@ -157,10 +160,10 @@ class ClassDumper {
     String sourceClassName = javaClass.getClassName();
     ConstantPool constantPool = javaClass.getConstantPool();
     Constant[] constants = constantPool.getConstantPool();
-    List<Constant> methodrefConstants = Arrays.stream(constants)
-        .filter(Predicates.notNull())
-        .collect(Collectors.toList());
-    for (Constant constant : methodrefConstants) {
+    for (Constant constant : constants) {
+      if (constant == null) {
+        continue;
+      }
       byte constantTag = constant.getTag();
       switch (constantTag) {
         case Const.CONSTANT_Methodref:
@@ -184,10 +187,9 @@ class ClassDumper {
     return symbolTableBuilder.build();
   }
 
-  static MethodSymbolReference constantToMethodReference(ConstantMethodref constantMethodref,
-      ConstantPool constantPool, String sourceClassName) {
-    String classNameInMethodReference = constantMethodref.getClass(constantPool);
-    int nameAndTypeIndex = constantMethodref.getNameAndTypeIndex();
+  static ConstantNameAndType constantNameAndTypeFromConstantCP(
+      ConstantCP constantCP, ConstantPool constantPool) {
+    int nameAndTypeIndex = constantCP.getNameAndTypeIndex();
     Constant constantAtNameAndTypeIndex = constantPool.getConstant(nameAndTypeIndex);
     if (!(constantAtNameAndTypeIndex instanceof ConstantNameAndType)) {
       // This constant_pool entry must be a CONSTANT_NameAndType_info
@@ -197,7 +199,14 @@ class ClassDumper {
               + nameAndTypeIndex
               + ". This class file is not compliant with CONSTANT_Methodref_info specification");
     }
-    ConstantNameAndType constantNameAndType = (ConstantNameAndType) constantAtNameAndTypeIndex;
+    return (ConstantNameAndType) constantAtNameAndTypeIndex;
+  }
+
+  static MethodSymbolReference constantToMethodReference(ConstantMethodref constantMethodref,
+      ConstantPool constantPool, String sourceClassName) {
+    String classNameInMethodReference = constantMethodref.getClass(constantPool);
+    ConstantNameAndType constantNameAndType =
+        constantNameAndTypeFromConstantCP(constantMethodref, constantPool);
     String methodName = constantNameAndType.getName(constantPool);
     String descriptor = constantNameAndType.getSignature(constantPool);
     MethodSymbolReference methodReference = MethodSymbolReference.builder()
@@ -213,17 +222,8 @@ class ClassDumper {
       ConstantPool constantPool, String sourceClassName) {
     // Either a class type or an interface type
     String classNameInFieldReference = constantFieldref.getClass(constantPool);
-    int nameAndTypeIndex = constantFieldref.getNameAndTypeIndex();
-    Constant constantAtNameAndTypeIndex = constantPool.getConstant(nameAndTypeIndex);
-    if (!(constantAtNameAndTypeIndex instanceof ConstantNameAndType)) {
-      // This constant_pool entry must be a CONSTANT_NameAndType_info
-      // as specified https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3.2
-      throw new RuntimeException(
-          "Failed to lookup nameAndType constant indexed "
-              + nameAndTypeIndex
-              + ". This class file is not compliant with field descriptor specification");
-    }
-    ConstantNameAndType constantNameAndType = (ConstantNameAndType) constantAtNameAndTypeIndex;
+    ConstantNameAndType constantNameAndType =
+        constantNameAndTypeFromConstantCP(constantFieldref, constantPool);
     String fieldName = constantNameAndType.getName(constantPool);
 
     FieldSymbolReference fieldSymbolReference = FieldSymbolReference.builder()
@@ -318,7 +318,7 @@ class ClassDumper {
     ImmutableList<FullyQualifiedMethodSignature> fullyQualifiedMethodSignatures = methods.stream()
         .map(method -> new FullyQualifiedMethodSignature(
             javaClass.getClassName(), method.getMethodName(), method.getDescriptor()))
-        .collect(ImmutableList.toImmutableList());
+        .collect(toImmutableList());
     return fullyQualifiedMethodSignatures;
   }
 
@@ -364,7 +364,7 @@ class ClassDumper {
     Method[] methods = javaClass.getMethods();
     ImmutableList<MethodSignature> signatures = Arrays.stream(methods)
         .map(method -> new MethodSignature(method.getName(), method.getSignature()))
-        .collect(ImmutableList.toImmutableList());
+        .collect(toImmutableList());
     return signatures;
   }
 

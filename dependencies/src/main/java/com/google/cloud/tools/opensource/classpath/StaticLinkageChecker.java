@@ -16,6 +16,9 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
@@ -26,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -35,7 +39,6 @@ import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -189,26 +192,28 @@ class StaticLinkageChecker {
 
   /**
    * Finds linkage errors in the input classpath and generates a static linkage check report.
+   *
+   * @return a static linkage check report for the input class path
    */
   StaticLinkageCheckReport findLinkageErrors() {
     ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
 
-    ImmutableMap.Builder<Path, SymbolTable> jarToSymbols = ImmutableMap.builder();
-    for (Path jarPath : jarFilePaths) {
-      jarToSymbols.put(jarPath, scanExternalSymbolTable(jarPath));
-    }
+    ImmutableMap<Path, SymbolTable> jarToSymbols =
+        jarFilePaths.stream().collect(toImmutableMap(
+            jarPath -> jarPath, jarPath -> scanExternalSymbolTable(jarPath)));
 
     // Validate linkage error of each reference
-    ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
-    for (Map.Entry<Path, SymbolTable> entry : jarToSymbols.build().entrySet()) {
-      jarLinkageReports.add(findInvalidReferences(entry.getKey(), entry.getValue()));
-    }
+    ImmutableList<JarLinkageReport> jarLinkageReports =
+        jarToSymbols.entrySet().stream()
+            .map(entry -> findInvalidReferences(entry.getKey(), entry.getValue()))
+            .collect(toImmutableList());
 
     if (reportOnlyReachable) {
       // TODO: Optionally, report errors only reachable from entry point classes
+      logger.warning("reportOnlyReachable is not yet implemented");
     }
 
-    return StaticLinkageCheckReport.create(jarLinkageReports.build());
+    return StaticLinkageCheckReport.create(jarLinkageReports);
   }
 
   private JarLinkageReport findInvalidReferences(Path jarPath, SymbolTable jarSymbolTable) {
@@ -219,15 +224,21 @@ class StaticLinkageChecker {
   }
 
   /**
-   * Scans class files in the jar file and creates {@link SymbolTable} populated with class names
+   * Scans class files in the jar file and returns a {@link SymbolTable} populated with class names
    * defined within the jar and symbolic references to other classes outside the jar.
    *
-   * @param jarFilePath absolute path to a jar file.
-   * @return Table containing symbol references and classes defined in the jar file.
+   * @param jarFilePath absolute path to a jar file
+   * @return symbol references and classes defined in the jar file
    */
   static SymbolTable scanExternalSymbolTable(Path jarFilePath) {
+    Preconditions.checkState(
+        jarFilePath.isAbsolute(), "The input jar file path is not an absolute path");
+    Preconditions.checkState(
+        Files.isReadable(jarFilePath), "The input jar file path is not readable");
+
     SymbolTable.Builder symbolTableBuilder = SymbolTable.builder();
-    ImmutableSet.Builder<String> symbolTableClassNameBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<String> symbolTableClassNameBuilder =
+        symbolTableBuilder.definedClassNamesBuilder();
     ImmutableSet.Builder<ClassSymbolReference> classSymbolReferences = ImmutableSet.builder();
     ImmutableSet.Builder<MethodSymbolReference> methodSymbolReferences = ImmutableSet.builder();
     ImmutableSet.Builder<FieldSymbolReference> fieldSymbolReferences = ImmutableSet.builder();
@@ -246,30 +257,29 @@ class StaticLinkageChecker {
       }
       ImmutableSet<String> classesDefinedInJar = symbolTableClassNameBuilder.build();
 
-      ImmutableSet<ClassSymbolReference> externalClassReferences = classSymbolReferences.build()
-          .stream()
-          .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
-          .collect(ImmutableSet.toImmutableSet());
-      ImmutableSet<MethodSymbolReference> externalMethodReferences = methodSymbolReferences.build()
-          .stream()
-          .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
-          .collect(ImmutableSet.toImmutableSet());
-      ImmutableSet<FieldSymbolReference> externalFieldReferences = fieldSymbolReferences.build()
-          .stream()
-          .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
-          .collect(ImmutableSet.toImmutableSet());
+      ImmutableSet<ClassSymbolReference> externalClassReferences =
+          filterOnlyExternalReference(classSymbolReferences.build(), classesDefinedInJar);
+      ImmutableSet<MethodSymbolReference> externalMethodReferences =
+          filterOnlyExternalReference(methodSymbolReferences.build(), classesDefinedInJar);
+      ImmutableSet<FieldSymbolReference> externalFieldReferences =
+          filterOnlyExternalReference(fieldSymbolReferences.build(), classesDefinedInJar);
 
       return symbolTableBuilder
           .setClassReferences(externalClassReferences)
           .setMethodReferences(externalMethodReferences)
           .setFieldReferences(externalFieldReferences)
-          .setDefinedClassNames(classesDefinedInJar)
           .build();
     } catch (ClassNotFoundException | IOException ex) {
       throw new RuntimeException("Failed to scan jar file", ex);
     }
   }
 
+  private static <T extends SymbolReference> ImmutableSet<T> filterOnlyExternalReference(
+      Set<T> references, Set<String> internalClasses) {
+    return ImmutableSet.copyOf(
+        Sets.filter(
+            references, reference -> !internalClasses.contains(reference.getTargetClassName())));
+  }
 
   /**
    * Runs the static linkage check and returns unresolved methods for the jar file paths
@@ -282,7 +292,7 @@ class StaticLinkageChecker {
   ImmutableList<FullyQualifiedMethodSignature> findUnresolvedMethodReferences()
       throws IOException, ClassNotFoundException {
     // TODO(suztomo): Separate logic between data retrieval and usage graph traversal. Issue #203
-    // This method, applicable only for method reference, is to be replaced with findLinkageErrors
+    // TODO(suztomo): This method is to be replaced with findLinkageErrors
     ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
     logger.fine("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
 
@@ -407,7 +417,7 @@ class StaticLinkageChecker {
     }
     ImmutableList<FullyQualifiedMethodSignature> externalMethodReferences = methodReferences.stream()
         .filter(reference -> !internalClassNames.contains(reference.getClassName()))
-        .collect(ImmutableList.toImmutableList());
+        .collect(toImmutableList());
     return externalMethodReferences;
   }
 }
