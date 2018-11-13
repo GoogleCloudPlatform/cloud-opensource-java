@@ -155,21 +155,18 @@ class ClassDumper {
    * @param jarFilePath absolute path to a jar file
    * @return symbol references and classes defined in the jar file
    */
-  static SymbolReferenceSet scanSymbolReferencesInJar(Path jarFilePath) {
+  static SymbolReferenceSet scanSymbolReferencesInJar(Path jarFilePath)
+      throws ClassNotFoundException, IOException {
     Preconditions.checkArgument(
         jarFilePath.isAbsolute(), "The input jar file path is not an absolute path");
     Preconditions.checkArgument(
         Files.isReadable(jarFilePath), "The input jar file path is not readable");
 
     SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
-    try {
-      for (JavaClass javaClass : topLevelJavaClassesInJar(jarFilePath)) {
-        symbolTableBuilder.merge(scanSymbolReferencesInClass(javaClass));
-      }
-      return symbolTableBuilder.build();
-    } catch (ClassNotFoundException | IOException ex) {
-      throw new RuntimeException("Failed to scan jar file", ex);
+    for (JavaClass javaClass : topLevelJavaClassesInJar(jarFilePath)) {
+      symbolTableBuilder.merge(scanSymbolReferencesInClass(javaClass));
     }
+    return symbolTableBuilder.build();
   }
 
   private static SymbolReferenceSet scanSymbolReferencesInClass(JavaClass javaClass) {

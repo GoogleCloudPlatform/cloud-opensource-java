@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
@@ -28,16 +27,15 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Formatter;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -191,18 +189,19 @@ class StaticLinkageChecker {
    *
    * @return a static linkage check report for the input class path
    */
-  StaticLinkageCheckReport findLinkageErrors() {
+  StaticLinkageCheckReport findLinkageErrors() throws ClassNotFoundException, IOException {
     ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
 
-    ImmutableMap<Path, SymbolReferenceSet> jarToSymbols =
-        jarFilePaths.stream().collect(toImmutableMap(
-            jarPath -> jarPath, ClassDumper::scanSymbolReferencesInJar));
+    ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbols = ImmutableMap.builder();
+    for (Path jarPath : jarFilePaths) {
+      jarToSymbols.put(jarPath, ClassDumper.scanSymbolReferencesInJar(jarPath));
+    }
 
     // Validate linkage error of each reference
-    ImmutableList<JarLinkageReport> jarLinkageReports =
-        jarToSymbols.entrySet().stream()
-            .map(entry -> findInvalidReferences(entry.getKey(), entry.getValue()))
-            .collect(toImmutableList());
+    ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
+    for (Map.Entry<Path, SymbolReferenceSet> entry : jarToSymbols.build().entrySet()) {
+      jarLinkageReports.add(findInvalidReferences(entry.getKey(), entry.getValue()));
+    }
 
     if (reportOnlyReachable) {
       // TODO: Optionally, report errors only reachable from entry point classes
@@ -210,7 +209,7 @@ class StaticLinkageChecker {
       throw new UnsupportedOperationException("reportOnlyReachable is not yet implemented");
     }
 
-    return StaticLinkageCheckReport.create(jarLinkageReports);
+    return StaticLinkageCheckReport.create(jarLinkageReports.build());
   }
 
   private JarLinkageReport findInvalidReferences(Path jarPath, SymbolReferenceSet symbolReferenceSet) {
