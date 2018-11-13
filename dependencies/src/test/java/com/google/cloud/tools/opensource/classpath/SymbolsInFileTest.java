@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableSet;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class SymbolTableTest {
+public class SymbolsInFileTest {
   @Test
   public void testCreation() {
     ClassSymbolReference classSymbolReference =
@@ -42,16 +42,16 @@ public class SymbolTableTest {
             .setSourceClassName("ClassD")
             .build();
 
-    SymbolTable symbolTable = SymbolTable.builder().setClassReferences(
+    SymbolsInFile symbolsInFile = SymbolsInFile.builder().setClassReferences(
         ImmutableSet.of(classSymbolReference))
         .setFieldReferences(ImmutableSet.of(fieldSymbolReference))
         .setMethodReferences(ImmutableSet.of(methodSymbolReference))
-        .setDefinedClassNames(ImmutableSet.of(SymbolTableTest.class.getName()))
+        .setDefinedClassNames(ImmutableSet.of(SymbolsInFileTest.class.getName()))
         .build();
 
-    Assert.assertEquals(classSymbolReference, symbolTable.getClassReferences().iterator().next());
-    Assert.assertEquals(methodSymbolReference, symbolTable.getMethodReferences().iterator().next());
-    Assert.assertEquals(fieldSymbolReference, symbolTable.getFieldReferences().iterator().next());
+    Assert.assertEquals(classSymbolReference, symbolsInFile.getClassReferences().iterator().next());
+    Assert.assertEquals(methodSymbolReference, symbolsInFile.getMethodReferences().iterator().next());
+    Assert.assertEquals(fieldSymbolReference, symbolsInFile.getFieldReferences().iterator().next());
   }
 
 }

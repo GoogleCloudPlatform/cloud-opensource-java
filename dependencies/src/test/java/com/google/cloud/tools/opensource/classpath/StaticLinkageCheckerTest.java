@@ -124,18 +124,18 @@ public class StaticLinkageCheckerTest {
       throws IOException, ClassNotFoundException, URISyntaxException {
     URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
 
-    SymbolTable symbolTable =
+    SymbolsInFile symbolsInFile =
         StaticLinkageChecker.scanExternalSymbolTable(
             Paths.get(jarFileUrl.toURI()));
 
-    Set<FieldSymbolReference> actualFieldReferences = symbolTable.getFieldReferences();
+    Set<FieldSymbolReference> actualFieldReferences = symbolsInFile.getFieldReferences();
     FieldSymbolReference expectedFieldReference =
         FieldSymbolReference.builder().setFieldName("BIDI_STREAMING")
         .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
         .setTargetClassName("io.grpc.MethodDescriptor$MethodType").build();
     Truth.assertThat(actualFieldReferences).contains(expectedFieldReference);
 
-    Set<MethodSymbolReference> actualMethodReferences = symbolTable.getMethodReferences();
+    Set<MethodSymbolReference> actualMethodReferences = symbolsInFile.getMethodReferences();
     MethodSymbolReference expectedMethodReference =
         MethodSymbolReference.builder()
             .setTargetClassName("io.grpc.protobuf.ProtoUtils")
@@ -152,7 +152,7 @@ public class StaticLinkageCheckerTest {
         .containsNoneOf("com.google.firestore.v1beta1.FirestoreGrpc",
             "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub");
 
-    Set<String> classesDefinedInJar = symbolTable.getDefinedClassNames();
+    Set<String> classesDefinedInJar = symbolsInFile.getDefinedClassNames();
     Truth.assertThat(classesDefinedInJar).contains("com.google.firestore.v1beta1.FirestoreGrpc");
     Truth.assertThat(classesDefinedInJar)
         .contains("com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub");

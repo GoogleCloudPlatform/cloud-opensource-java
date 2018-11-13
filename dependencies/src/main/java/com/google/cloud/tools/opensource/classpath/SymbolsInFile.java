@@ -20,21 +20,34 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * A table of symbolic references and defined classes in a jar file or class file. The
- * symbolic references are from constant pool of class files.
+ * Symbolic references and defined classes in a file (jar file or class file). The
+ * symbolic references are from constant pool of class file(s). The defined class names are
+ * from the class defined as top-level in a class file and inner classes in it.
  *
  * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4">Java
  *     Virtual Machine Specification: The Constant Pool</a>
  */
 @AutoValue
-abstract class SymbolTable {
+abstract class SymbolsInFile {
+  /**
+   * Returns class references from the file.
+   */
   abstract ImmutableSet<ClassSymbolReference> getClassReferences();
-  abstract ImmutableSet<FieldSymbolReference> getFieldReferences();
+  /**
+   * Returns method references from the file.
+   */
   abstract ImmutableSet<MethodSymbolReference> getMethodReferences();
+  /**
+   * Returns field references from the file.
+   */
+  abstract ImmutableSet<FieldSymbolReference> getFieldReferences();
+  /**
+   * Returns class names defined in the file.
+   */
   abstract ImmutableSet<String> getDefinedClassNames();
 
   static Builder builder() {
-    return new AutoValue_SymbolTable.Builder();
+    return new AutoValue_SymbolsInFile.Builder();
   }
 
   @AutoValue.Builder
@@ -47,6 +60,6 @@ abstract class SymbolTable {
     abstract ImmutableSet.Builder<MethodSymbolReference> methodReferencesBuilder();
     abstract ImmutableSet.Builder<FieldSymbolReference> fieldReferencesBuilder();
     abstract ImmutableSet.Builder<String> definedClassNamesBuilder();
-    abstract SymbolTable build();
+    abstract SymbolsInFile build();
   }
 }

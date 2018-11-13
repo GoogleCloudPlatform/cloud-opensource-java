@@ -198,7 +198,7 @@ class StaticLinkageChecker {
   StaticLinkageCheckReport findLinkageErrors() {
     ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
 
-    ImmutableMap<Path, SymbolTable> jarToSymbols =
+    ImmutableMap<Path, SymbolsInFile> jarToSymbols =
         jarFilePaths.stream().collect(toImmutableMap(
             jarPath -> jarPath, jarPath -> scanExternalSymbolTable(jarPath)));
 
@@ -216,7 +216,7 @@ class StaticLinkageChecker {
     return StaticLinkageCheckReport.create(jarLinkageReports);
   }
 
-  private JarLinkageReport findInvalidReferences(Path jarPath, SymbolTable jarSymbolTable) {
+  private JarLinkageReport findInvalidReferences(Path jarPath, SymbolsInFile jarSymbolsInFile) {
     JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder().setJarPath(jarPath);
 
     // TODO(suztomo): implement validation for field, method and class references in the table
@@ -224,19 +224,19 @@ class StaticLinkageChecker {
   }
 
   /**
-   * Scans class files in the jar file and returns a {@link SymbolTable} populated with class names
+   * Scans class files in the jar file and returns a {@link SymbolsInFile} populated with class names
    * defined within the jar and symbolic references to other classes outside the jar.
    *
    * @param jarFilePath absolute path to a jar file
    * @return symbol references and classes defined in the jar file
    */
-  static SymbolTable scanExternalSymbolTable(Path jarFilePath) {
+  static SymbolsInFile scanExternalSymbolTable(Path jarFilePath) {
     Preconditions.checkState(
         jarFilePath.isAbsolute(), "The input jar file path is not an absolute path");
     Preconditions.checkState(
         Files.isReadable(jarFilePath), "The input jar file path is not readable");
 
-    SymbolTable.Builder symbolTableBuilder = SymbolTable.builder();
+    SymbolsInFile.Builder symbolTableBuilder = SymbolsInFile.builder();
     ImmutableSet.Builder<String> symbolTableClassNameBuilder =
         symbolTableBuilder.definedClassNamesBuilder();
     ImmutableSet.Builder<ClassSymbolReference> classSymbolReferences = ImmutableSet.builder();
@@ -248,12 +248,12 @@ class StaticLinkageChecker {
 
     try {
       for (JavaClass javaClass : ClassDumper.topLevelJavaClassesInJar(jarFilePath, repository)) {
-        SymbolTable partialSymbolTable = ClassDumper.scanClassSymbolTable(javaClass);
+        SymbolsInFile partialSymbolsInFile = ClassDumper.scanClassSymbolTable(javaClass);
 
-        classSymbolReferences.addAll(partialSymbolTable.getClassReferences());
-        methodSymbolReferences.addAll(partialSymbolTable.getMethodReferences());
-        fieldSymbolReferences.addAll(partialSymbolTable.getFieldReferences());
-        symbolTableClassNameBuilder.addAll(partialSymbolTable.getDefinedClassNames());
+        classSymbolReferences.addAll(partialSymbolsInFile.getClassReferences());
+        methodSymbolReferences.addAll(partialSymbolsInFile.getMethodReferences());
+        fieldSymbolReferences.addAll(partialSymbolsInFile.getFieldReferences());
+        symbolTableClassNameBuilder.addAll(partialSymbolsInFile.getDefinedClassNames());
       }
       ImmutableSet<String> classesDefinedInJar = symbolTableClassNameBuilder.build();
 
