@@ -17,10 +17,19 @@
 package com.google.cloud.tools.opensource.classpath;
 
 /**
- * A reference to a symbol of {@code targetClass} from {@code sourceClass}.
+ * A reference to a symbol of {@code targetClass} from {@code sourceClass}. The values of the class
+ * names are fully-qualified with '.' as separator and '$' for inner class. For example {@code
+ * io.grpc.MethodDescriptor$MethodType}.
  */
 interface SymbolReference {
+
+  /**
+   * Fully-qualified class name of source of the reference
+   */
   String getSourceClassName();
 
+  /**
+   * Fully-qualified class name of target of the reference
+   */
   String getTargetClassName();
 }
