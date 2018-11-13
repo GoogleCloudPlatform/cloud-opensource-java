@@ -23,11 +23,6 @@ import com.google.auto.value.AutoValue;
  * */
 @AutoValue
 abstract class FieldSymbolReference implements SymbolReference {
-  @Override
-  public abstract String getTargetClassName();
-  @Override
-  public abstract String getSourceClassName();
-
   /**
    * Returns field name of the reference.
    */

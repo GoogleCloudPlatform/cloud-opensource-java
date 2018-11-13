@@ -32,10 +32,12 @@ abstract class SymbolReferenceSet {
    * Returns class references from the file.
    */
   abstract ImmutableSet<ClassSymbolReference> getClassReferences();
+
   /**
    * Returns method references from the file.
    */
   abstract ImmutableSet<MethodSymbolReference> getMethodReferences();
+
   /**
    * Returns field references from the file.
    */

@@ -51,7 +51,6 @@ public class DependencyTreeFormatter {
    * Prints dependencies for the coordinate of an artifact
    *
    * @param coordinate Maven coordinate of an artifact to print its dependencies
-   * @throws RepositoryException when dependencies cannot be collected or resolved
    */
   private static void printDependencyTree(String coordinate)
       throws DependencyCollectionException, DependencyResolutionException {

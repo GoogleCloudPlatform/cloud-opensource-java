@@ -23,11 +23,6 @@ import com.google.auto.value.AutoValue;
  */
 @AutoValue
 abstract class ClassSymbolReference implements SymbolReference {
-  @Override
-  public abstract String getTargetClassName();
-  @Override
-  public abstract String getSourceClassName();
-
   static Builder builder() {
     return new AutoValue_ClassSymbolReference.Builder();
   }

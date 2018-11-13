@@ -23,11 +23,6 @@ import com.google.auto.value.AutoValue;
  */
 @AutoValue
 abstract class MethodSymbolReference implements SymbolReference  {
-  @Override
-  public abstract String getTargetClassName();
-  @Override
-  public abstract String getSourceClassName();
-
   /**
    * Returns method name of the reference. Example: {@code marshaller}
    */
@@ -36,7 +31,8 @@ abstract class MethodSymbolReference implements SymbolReference  {
   /**
    * Returns the descriptor of the method. A descriptor holds type information for its parameters
    * and return value. Example: {@code
-   * (Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;}
+   * '(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;}', where {@code Message}
+   * class is the parameter and {@code MethodDescriptor$Marshaller} class is the return type.
    *
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3.3">Java
    *     Virtual Machine Specification: Method Descriptors</a>
