@@ -20,6 +20,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Paths;
 import java.util.Set;
@@ -31,6 +33,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ClassDumperTest {
+  private static final String EXAMPLE_JAR_FILE =
+      "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar";
 
   // We're sure that FirestoreGrpc class comes from this class file because
   // this project (cloud-opensource-java) doesn't have dependency for Cloud Firestore
@@ -129,5 +133,31 @@ public class ClassDumperTest {
     } catch (RuntimeException ex) {
       Assert.assertEquals("There was problem in loading classes in jar file", ex.getMessage());
     }
+  }
+
+  @Test
+  public void testScanSymbolTableFromJar() throws URISyntaxException {
+    URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
+
+    SymbolReferenceSet symbolReferenceSet =
+        ClassDumper.scanSymbolReferencesInJar(
+            Paths.get(jarFileUrl.toURI()));
+
+    Set<FieldSymbolReference> actualFieldReferences = symbolReferenceSet.getFieldReferences();
+    FieldSymbolReference expectedFieldReference =
+        FieldSymbolReference.builder().setFieldName("BIDI_STREAMING")
+            .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
+            .setTargetClassName("io.grpc.MethodDescriptor$MethodType").build();
+    Truth.assertThat(actualFieldReferences).contains(expectedFieldReference);
+
+    Set<MethodSymbolReference> actualMethodReferences = symbolReferenceSet.getMethodReferences();
+    MethodSymbolReference expectedMethodReference =
+        MethodSymbolReference.builder()
+            .setTargetClassName("io.grpc.protobuf.ProtoUtils")
+            .setMethodName("marshaller")
+            .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
+            .setDescriptor("(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;")
+            .build();
+    Truth.assertThat(actualMethodReferences).contains(expectedMethodReference);
   }
 }

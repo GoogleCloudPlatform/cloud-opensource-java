@@ -197,7 +197,7 @@ class StaticLinkageChecker {
 
     ImmutableMap<Path, SymbolReferenceSet> jarToSymbols =
         jarFilePaths.stream().collect(toImmutableMap(
-            jarPath -> jarPath, jarPath -> scanSymbolReferencesInJar(jarPath)));
+            jarPath -> jarPath, ClassDumper::scanSymbolReferencesInJar));
 
     // Validate linkage error of each reference
     ImmutableList<JarLinkageReport> jarLinkageReports =
@@ -218,30 +218,6 @@ class StaticLinkageChecker {
 
     // TODO(suztomo): implement validation for field, method and class references in the table
     return reportBuilder.build();
-  }
-
-  /**
-   * Scans class files in the jar file and returns a {@link SymbolReferenceSet} populated with
-   * symbolic references.
-   *
-   * @param jarFilePath absolute path to a jar file
-   * @return symbol references and classes defined in the jar file
-   */
-  static SymbolReferenceSet scanSymbolReferencesInJar(Path jarFilePath) {
-    Preconditions.checkArgument(
-        jarFilePath.isAbsolute(), "The input jar file path is not an absolute path");
-    Preconditions.checkArgument(
-        Files.isReadable(jarFilePath), "The input jar file path is not readable");
-
-    SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
-    try {
-      for (JavaClass javaClass : ClassDumper.topLevelJavaClassesInJar(jarFilePath)) {
-        symbolTableBuilder.merge(ClassDumper.scanSymbolReferencesInClass(javaClass));
-      }
-      return symbolTableBuilder.build();
-    } catch (ClassNotFoundException | IOException ex) {
-      throw new RuntimeException("Failed to scan jar file", ex);
-    }
   }
 
   /**
