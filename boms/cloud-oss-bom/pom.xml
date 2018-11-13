@@ -79,6 +79,11 @@
            grpc/grpc-java#3954 -->
       <dependency>
         <groupId>io.grpc</groupId>
+        <artifactId>grpc-alts</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
         <artifactId>grpc-auth</artifactId>
         <version>${io.grpc.version}</version>
       </dependency>
@@ -119,6 +124,11 @@
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
+        <artifactId>grpc-protobuf-lite</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
         <artifactId>grpc-protobuf-nano</artifactId>
         <version>${io.grpc.version}</version>
       </dependency>
@@ -130,16 +140,6 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-testing</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-protobuf-lite</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-alts</artifactId>
         <version>${io.grpc.version}</version>
       </dependency>
 
