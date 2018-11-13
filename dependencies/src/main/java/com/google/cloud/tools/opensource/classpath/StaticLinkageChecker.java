@@ -195,9 +195,9 @@ class StaticLinkageChecker {
   StaticLinkageCheckReport findLinkageErrors() {
     ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
 
-    ImmutableMap<Path, SymbolsInFile> jarToSymbols =
+    ImmutableMap<Path, SymbolReferenceSet> jarToSymbols =
         jarFilePaths.stream().collect(toImmutableMap(
-            jarPath -> jarPath, jarPath -> scanSymbolReferences(jarPath)));
+            jarPath -> jarPath, jarPath -> scanSymbolReferencesInJar(jarPath)));
 
     // Validate linkage error of each reference
     ImmutableList<JarLinkageReport> jarLinkageReports =
@@ -213,7 +213,7 @@ class StaticLinkageChecker {
     return StaticLinkageCheckReport.create(jarLinkageReports);
   }
 
-  private JarLinkageReport findInvalidReferences(Path jarPath, SymbolsInFile symbolsInFile) {
+  private JarLinkageReport findInvalidReferences(Path jarPath, SymbolReferenceSet symbolReferenceSet) {
     JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder().setJarPath(jarPath);
 
     // TODO(suztomo): implement validation for field, method and class references in the table
@@ -221,35 +221,23 @@ class StaticLinkageChecker {
   }
 
   /**
-   * Scans class files in the jar file and returns a {@link SymbolsInFile} populated with symbolic
-   * references.
+   * Scans class files in the jar file and returns a {@link SymbolReferenceSet} populated with
+   * symbolic references.
    *
    * @param jarFilePath absolute path to a jar file
    * @return symbol references and classes defined in the jar file
    */
-  static SymbolsInFile scanSymbolReferences(Path jarFilePath) {
-    Preconditions.checkState(
+  static SymbolReferenceSet scanSymbolReferencesInJar(Path jarFilePath) {
+    Preconditions.checkArgument(
         jarFilePath.isAbsolute(), "The input jar file path is not an absolute path");
-    Preconditions.checkState(
+    Preconditions.checkArgument(
         Files.isReadable(jarFilePath), "The input jar file path is not readable");
 
-    SymbolsInFile.Builder symbolTableBuilder = SymbolsInFile.builder();
-    ImmutableSet.Builder<ClassSymbolReference> classSymbolReferences =
-        symbolTableBuilder.classReferencesBuilder();
-    ImmutableSet.Builder<MethodSymbolReference> methodSymbolReferences =
-        symbolTableBuilder.methodReferencesBuilder();
-    ImmutableSet.Builder<FieldSymbolReference> fieldSymbolReferences =
-        symbolTableBuilder.fieldReferencesBuilder();
-
+    SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
     try {
       for (JavaClass javaClass : ClassDumper.topLevelJavaClassesInJar(jarFilePath)) {
-        SymbolsInFile symbolsInClassFile = ClassDumper.scanClassSymbolTable(javaClass);
-
-        classSymbolReferences.addAll(symbolsInClassFile.getClassReferences());
-        methodSymbolReferences.addAll(symbolsInClassFile.getMethodReferences());
-        fieldSymbolReferences.addAll(symbolsInClassFile.getFieldReferences());
+        symbolTableBuilder.merge(ClassDumper.scanSymbolReferencesInClass(javaClass));
       }
-
       return symbolTableBuilder.build();
     } catch (ClassNotFoundException | IOException ex) {
       throw new RuntimeException("Failed to scan jar file", ex);
@@ -387,9 +375,11 @@ class StaticLinkageChecker {
       List<FullyQualifiedMethodSignature> references = ClassDumper.listMethodReferences(javaClass);
       methodReferences.addAll(references);
     }
-    ImmutableList<FullyQualifiedMethodSignature> externalMethodReferences = methodReferences.stream()
-        .filter(reference -> !internalClassNames.contains(reference.getClassName()))
-        .collect(toImmutableList());
+    ImmutableList<FullyQualifiedMethodSignature> externalMethodReferences =
+        methodReferences
+            .stream()
+            .filter(reference -> !internalClassNames.contains(reference.getClassName()))
+            .collect(toImmutableList());
     return externalMethodReferences;
   }
 }

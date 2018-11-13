@@ -20,14 +20,14 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * Symbolic references in a file (jar file or class file). The references are from constant pool of
- * class file(s).
+ * A set of symbolic references in a file (jar file or class file). The references are from constant
+ * pool of class file(s).
  *
  * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4">Java
  *     Virtual Machine Specification: The Constant Pool</a>
  */
 @AutoValue
-abstract class SymbolsInFile {
+abstract class SymbolReferenceSet {
   /**
    * Returns class references from the file.
    */
@@ -40,8 +40,9 @@ abstract class SymbolsInFile {
    * Returns field references from the file.
    */
   abstract ImmutableSet<FieldSymbolReference> getFieldReferences();
+
   static Builder builder() {
-    return new AutoValue_SymbolsInFile.Builder();
+    return new AutoValue_SymbolReferenceSet.Builder();
   }
 
   @AutoValue.Builder
@@ -52,6 +53,14 @@ abstract class SymbolsInFile {
     abstract ImmutableSet.Builder<ClassSymbolReference> classReferencesBuilder();
     abstract ImmutableSet.Builder<MethodSymbolReference> methodReferencesBuilder();
     abstract ImmutableSet.Builder<FieldSymbolReference> fieldReferencesBuilder();
-    abstract SymbolsInFile build();
+
+    abstract SymbolReferenceSet build();
+
+    Builder merge(SymbolReferenceSet other) {
+      classReferencesBuilder().addAll(other.getClassReferences());
+      methodReferencesBuilder().addAll(other.getMethodReferences());
+      fieldReferencesBuilder().addAll(other.getFieldReferences());
+      return this;
+    }
   }
 }

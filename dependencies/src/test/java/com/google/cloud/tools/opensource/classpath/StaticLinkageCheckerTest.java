@@ -123,18 +123,18 @@ public class StaticLinkageCheckerTest {
   public void testScanSymbolTableFromJar() throws URISyntaxException {
     URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
 
-    SymbolsInFile symbolsInFile =
-        StaticLinkageChecker.scanSymbolReferences(
+    SymbolReferenceSet symbolReferenceSet =
+        StaticLinkageChecker.scanSymbolReferencesInJar(
             Paths.get(jarFileUrl.toURI()));
 
-    Set<FieldSymbolReference> actualFieldReferences = symbolsInFile.getFieldReferences();
+    Set<FieldSymbolReference> actualFieldReferences = symbolReferenceSet.getFieldReferences();
     FieldSymbolReference expectedFieldReference =
         FieldSymbolReference.builder().setFieldName("BIDI_STREAMING")
         .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
         .setTargetClassName("io.grpc.MethodDescriptor$MethodType").build();
     Truth.assertThat(actualFieldReferences).contains(expectedFieldReference);
 
-    Set<MethodSymbolReference> actualMethodReferences = symbolsInFile.getMethodReferences();
+    Set<MethodSymbolReference> actualMethodReferences = symbolReferenceSet.getMethodReferences();
     MethodSymbolReference expectedMethodReference =
         MethodSymbolReference.builder()
             .setTargetClassName("io.grpc.protobuf.ProtoUtils")

@@ -146,8 +146,8 @@ class ClassDumper {
     return methodReferences.build();
   }
 
-  static SymbolsInFile scanClassSymbolTable(JavaClass javaClass) {
-    SymbolsInFile.Builder symbolTableBuilder = SymbolsInFile.builder();
+  static SymbolReferenceSet scanSymbolReferencesInClass(JavaClass javaClass) {
+    SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
     ImmutableSet.Builder<MethodSymbolReference> methodReferences =
         symbolTableBuilder.methodReferencesBuilder();
     ImmutableSet.Builder<FieldSymbolReference> fieldReferences =
