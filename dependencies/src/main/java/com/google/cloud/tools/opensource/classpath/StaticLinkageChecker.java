@@ -102,29 +102,28 @@ class StaticLinkageChecker {
     // TODO(suztomo): print the report
     StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
 
-    printStaticLinkageErrors(unresolvedMethodReferences);
+    printStaticLinkageReport(report);
   }
 
-  private static void printStaticLinkageErrors(
-      List<FullyQualifiedMethodSignature> unresolvedMethodReferences) {
-    if (unresolvedMethodReferences.isEmpty()) {
-      System.out.println("There were no unresolved method references");
-      return;
+  private static void printStaticLinkageReport(StaticLinkageCheckReport report) {
+    for (JarLinkageReport jarLinkageReport : report.getJarLinkageReports()) {
+      int totalErrors =
+          jarLinkageReport.getMissingClassErrors().size()
+              + jarLinkageReport.getMissingMethodErrors().size()
+              + jarLinkageReport.getMissingFieldErrors().size();
+      System.out.println(
+          jarLinkageReport.getJarPath().getFileName() + "(" + totalErrors + " errors):");
+      String indent = "  ";
+      for (LinkageErrorMissingClass missingClass : jarLinkageReport.getMissingClassErrors()) {
+        System.out.println(indent + missingClass.getReference());
+      }
+      for (LinkageErrorMissingMethod missingMethod : jarLinkageReport.getMissingMethodErrors()) {
+        System.out.println(indent + missingMethod.getReference());
+      }
+      for (LinkageErrorMissingField missingField : jarLinkageReport.getMissingFieldErrors()) {
+        System.out.println(indent + missingField.getReference());
+      }
     }
-    ImmutableSortedSet<FullyQualifiedMethodSignature> sortedUnresolvedMethodReferences =
-        ImmutableSortedSet.copyOf(unresolvedMethodReferences);
-    int count = sortedUnresolvedMethodReferences.size();
-    Formatter formatter = new Formatter();
-    formatter.format(
-        "There were %,d unresolved method references from the jar file(s):\n", count);
-    for (FullyQualifiedMethodSignature methodReference : sortedUnresolvedMethodReferences) {
-      formatter.format(
-          "Class: '%s', method: '%s' with descriptor %s\n",
-          methodReference.getClassName(),
-          methodReference.getMethodSignature().getMethodName(),
-          methodReference.getMethodSignature().getDescriptor());
-    }
-    System.out.println(formatter);
   }
 
   /**
@@ -208,6 +207,7 @@ class StaticLinkageChecker {
     if (reportOnlyReachable) {
       // TODO: Optionally, report errors only reachable from entry point classes
       logger.warning("reportOnlyReachable is not yet implemented");
+      throw new UnsupportedOperationException("reportOnlyReachable is not yet implemented");
     }
 
     return StaticLinkageCheckReport.create(jarLinkageReports);
@@ -217,7 +217,7 @@ class StaticLinkageChecker {
     JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder().setJarPath(jarPath);
 
     // TODO(suztomo): implement validation for field, method and class references in the table
-    return reportBuilder.build();
+    throw new UnsupportedOperationException("The report generation is not yet implemented");
   }
 
   /**
