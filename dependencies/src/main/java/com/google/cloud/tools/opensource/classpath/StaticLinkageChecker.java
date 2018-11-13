@@ -64,7 +64,8 @@ class StaticLinkageChecker {
   private final ImmutableSet<Path> entryPoints;
 
   StaticLinkageChecker(
-      boolean reportOnlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints) {
+      boolean reportOnlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
+      throws IOException, ClassNotFoundException {
     Preconditions.checkArgument(
         !jarFilePaths.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");

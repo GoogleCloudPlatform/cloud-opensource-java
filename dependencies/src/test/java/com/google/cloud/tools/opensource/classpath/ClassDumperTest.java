@@ -53,7 +53,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testMethodDescriptorToClass_byteArray() {
+  public void testMethodDescriptorToClass_byteArray() throws IOException, ClassNotFoundException {
     ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
     Class[] byteArrayClass =
         classDumper.methodDescriptorToClass("([B)Ljava/lang/String;");
@@ -61,7 +61,8 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testMethodDescriptorToClass_primitiveTypes() {
+  public void testMethodDescriptorToClass_primitiveTypes()
+      throws IOException, ClassNotFoundException {
     ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
     // List of primitive types that appear in descriptor:
     // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3
@@ -82,7 +83,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testMethodDefinitionExists_arrayType() throws ClassNotFoundException {
+  public void testMethodDefinitionExists_arrayType() throws ClassNotFoundException, IOException {
     FullyQualifiedMethodSignature checkArgumentMethod =
         new FullyQualifiedMethodSignature(
             "com.google.common.base.Preconditions", "checkArgument", "(ZLjava/lang/Object;)V");
@@ -93,7 +94,7 @@ public class ClassDumperTest {
 
   @Test
   public void testMethodDefinitionExists_constructorInAbstractClass()
-      throws ClassNotFoundException {
+      throws ClassNotFoundException, IOException {
     ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
     FullyQualifiedMethodSignature constructorInAbstract =
         new FullyQualifiedMethodSignature(
@@ -126,12 +127,12 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testCreationInvalidInput() {
+  public void testCreationInvalidInput() throws IOException {
     try {
       ClassDumper.create(ImmutableList.of(Paths.get("")));
-      Assert.fail("Empty path should generate RuntimeException");
-    } catch (RuntimeException ex) {
-      Assert.assertEquals("There was problem in loading classes in jar file", ex.getMessage());
+      Assert.fail("Empty path should generate ClassNotFoundException");
+    } catch (ClassNotFoundException ex) {
+      // pass
     }
   }
 

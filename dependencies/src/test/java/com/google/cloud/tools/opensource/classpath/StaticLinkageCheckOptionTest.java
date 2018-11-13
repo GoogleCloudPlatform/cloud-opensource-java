@@ -49,6 +49,21 @@ public class StaticLinkageCheckOptionTest {
   }
 
   @Test
+  public void parseCommandLineOptions_duplicates() throws ParseException {
+    String[] arguments = new String[] {
+        "--coordinate", "abc.com:abc:1.1,abc.com:abc-util:1.2",
+        "-b", "abc.com:dummy:1.2",
+        "--report-only-reachable"
+    };
+    try {
+      StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(arguments);
+      Assert.fail();
+    } catch (IllegalArgumentException ex) {
+      // pass
+    }
+  }
+
+  @Test
   public void parseCommandLineOptions_emptyOption() throws ParseException {
     StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(new String[0]);
 

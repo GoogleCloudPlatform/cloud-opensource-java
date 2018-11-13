@@ -45,6 +45,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
+import org.apache.bcel.classfile.ClassFormatException;
 import org.apache.bcel.classfile.Constant;
 import org.apache.bcel.classfile.ConstantCP;
 import org.apache.bcel.classfile.ConstantFieldref;
@@ -77,7 +78,7 @@ class ClassDumper {
   private ClassDumper(
       List<Path> inputClasspath,
       SyntheticRepository syntheticRepository,
-      ClassLoader classLoader) {
+      ClassLoader classLoader) throws ClassNotFoundException, IOException {
     this.inputClasspath = ImmutableList.copyOf(inputClasspath);
     this.syntheticRepository = syntheticRepository;
     this.classLoader = classLoader;
@@ -88,7 +89,7 @@ class ClassDumper {
     return syntheticRepository.loadClass(javaClassName);
   }
 
-  static ClassDumper create(List<Path> jarFilePaths) {
+  static ClassDumper create(List<Path> jarFilePaths) throws IOException, ClassNotFoundException {
     // Creates classpath in the same order as inputClasspath for BCEL API
     String pathAsString =
         jarFilePaths.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator));
@@ -133,7 +134,7 @@ class ClassDumper {
       if (!(constantAtNameAndTypeIndex instanceof ConstantNameAndType)) {
         // This constant_pool entry must be a CONSTANT_NameAndType_info
         // as specified https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4.2
-        throw new RuntimeException(
+        throw new ClassFormatException(
             "Failed to lookup nameAndType constant indexed "
                 + nameAndTypeIndex
                 + ". This class file is not compliant with CONSTANT_Methodref_info specification");
@@ -217,7 +218,7 @@ class ClassDumper {
     if (!(constantAtNameAndTypeIndex instanceof ConstantNameAndType)) {
       // This constant_pool entry must be a CONSTANT_NameAndType_info
       // as specified https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4.2
-      throw new RuntimeException(
+      throw new ClassFormatException(
           "Failed to lookup nameAndType constant indexed "
               + nameAndTypeIndex
               + ". This class file is not compliant with CONSTANT_Methodref_info specification");
@@ -485,21 +486,17 @@ class ClassDumper {
    * @return map of jar file paths to classes defined in them
    */
   private static ImmutableSetMultimap<Path, String> jarFilesToDefinedClasses(
-      List<Path> jarFilePaths) {
+      List<Path> jarFilePaths) throws IOException, ClassNotFoundException {
     ImmutableSetMultimap.Builder<Path, String> pathToClasses =
         ImmutableSetMultimap.builder();
 
     for (Path jarFilePath : jarFilePaths) {
-      try {
-        for (JavaClass javaClass: topLevelJavaClassesInJar(jarFilePath)) {
-          pathToClasses.put(jarFilePath, javaClass.getClassName());
-          // This does not take double-nested classes. As long as such classes are accessed
-          // only from the outer class, static linkage checker does not report false positives
-          // TODO(suztomo): enhance this so that it can work with double-nested classes
-          pathToClasses.putAll(jarFilePath, listInnerClassNames(javaClass));
-        }
-      } catch (IOException | ClassNotFoundException ex) {
-        throw new RuntimeException("There was problem in loading classes in jar file", ex);
+      for (JavaClass javaClass: topLevelJavaClassesInJar(jarFilePath)) {
+        pathToClasses.put(jarFilePath, javaClass.getClassName());
+        // This does not take double-nested classes. As long as such classes are accessed
+        // only from the outer class, static linkage checker does not report false positives
+        // TODO(suztomo): enhance this so that it can work with double-nested classes
+        pathToClasses.putAll(jarFilePath, listInnerClassNames(javaClass));
       }
     }
     return pathToClasses.build();

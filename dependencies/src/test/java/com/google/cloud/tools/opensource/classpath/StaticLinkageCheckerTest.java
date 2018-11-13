@@ -120,7 +120,7 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testResolvedMethodReferences() {
+  public void testResolvedMethodReferences() throws IOException, ClassNotFoundException {
     List<Path> pathsForJar = Lists.newArrayList(
         absolutePathOfResource(EXAMPLE_JAR_FILE),
         absolutePathOfResource(EXAMPLE_PROTO_JAR_FILE));
@@ -186,7 +186,7 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testJarPathOrderInResolvingReferences() {
+  public void testJarPathOrderInResolvingReferences() throws IOException, ClassNotFoundException  {
     // listDocuments method on CollectionReference class is added at version 0.66.0-beta
     // https://github.com/googleapis/google-cloud-java/releases/tag/v0.66.0
     List<Path> firestoreDependencies = Lists.newArrayList(
@@ -236,7 +236,7 @@ public class StaticLinkageCheckerTest {
 
   @Test
   public void testFindUnresolvedReferences_packagePrivateInnerClass()
-      throws RepositoryException {
+      throws RepositoryException, IOException, ClassNotFoundException {
     List<Path> paths = StaticLinkageChecker.coordinateToClasspath("io.grpc:grpc-auth:1.15.1");
     StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(
         true,
@@ -316,7 +316,8 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testInheritanceWithGuavaCollectionInheritance() throws URISyntaxException {
+  public void testInheritanceWithGuavaCollectionInheritance()
+      throws URISyntaxException, IOException, ClassNotFoundException {
     FullyQualifiedMethodSignature guavaCollectionPut =
         new FullyQualifiedMethodSignature(
             "com.google.common.collect.ArrayListMultimapGwtSerializationDependencies",
@@ -397,7 +398,7 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testArrayCloneMethod() throws URISyntaxException {
+  public void testArrayCloneMethod() throws URISyntaxException, IOException, ClassNotFoundException {
     FullyQualifiedMethodSignature arrayCloneMethod =
         new FullyQualifiedMethodSignature(
             "[Lio.grpc.InternalKnownTransport;", "clone", "()Ljava/lang/Object");
