@@ -25,7 +25,6 @@ package com.google.cloud.tools.opensource.classpath;
  *     Language Specification: 13.1. The Form of a Binary</a>
  */
 interface SymbolReference {
-
   /**
    * Returns fully-qualified class name of the source class of the reference.
    */
