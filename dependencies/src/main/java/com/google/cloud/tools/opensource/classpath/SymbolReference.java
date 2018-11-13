@@ -27,12 +27,12 @@ package com.google.cloud.tools.opensource.classpath;
 interface SymbolReference {
 
   /**
-   * Fully-qualified class name of source of the reference
+   * Returns fully-qualified class name of the source class of the reference.
    */
   String getSourceClassName();
 
   /**
-   * Fully-qualified class name of target of the reference
+   * Returns fully-qualified class name of the target class of the reference.
    */
   String getTargetClassName();
 }
