@@ -24,38 +24,25 @@ import org.junit.Test;
 
 public class StaticLinkageCheckOptionTest {
   @Test
-  public void parseCommandLineOptions_shortOptions() throws ParseException {
+  public void parseCommandLineOptions_shortOptions_bom() throws ParseException {
     String[] arguments = new String[] {
         "-b", "abc.com:dummy:1.2",
-        "-c", "abc.com:abc:1.1,abc.com:abc-util:1.2",
-        "-j", "foo.jar,dir/bar.jar",
         "-r"
     };
     StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(arguments);
 
-    Assert.assertEquals(parsedOption.getJarFileList(),
-        ImmutableList.of(Paths.get("foo.jar").toAbsolutePath(),
-            Paths.get("dir/bar.jar").toAbsolutePath()));
     Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBomCoordinate());
-    Assert.assertEquals(ImmutableList.of("abc.com:abc:1.1", "abc.com:abc-util:1.2"),
-        parsedOption.getMavenCoordinates());
     Assert.assertTrue(parsedOption.isReportOnlyReachable());
   }
 
   @Test
   public void parseCommandLineOptions_longOptions() throws ParseException {
     String[] arguments = new String[] {
-        "--bom", "abc.com:dummy:1.2",
         "--coordinate", "abc.com:abc:1.1,abc.com:abc-util:1.2",
-        "--jars", "foo.jar,dir/bar.jar",
         "--report-only-reachable"
     };
     StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(arguments);
 
-    Assert.assertEquals(parsedOption.getJarFileList(),
-        ImmutableList.of(Paths.get("foo.jar").toAbsolutePath(),
-            Paths.get("dir/bar.jar").toAbsolutePath()));
-    Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBomCoordinate());
     Assert.assertEquals(ImmutableList.of("abc.com:abc:1.1", "abc.com:abc-util:1.2"),
         parsedOption.getMavenCoordinates());
     Assert.assertTrue(parsedOption.isReportOnlyReachable());
