@@ -38,7 +38,7 @@ import org.apache.commons.cli.ParseException;
  *
  * <ul>
  *   <li>{@code bomCoordinate}: a Maven coordinate for a BOM
- *   <li>{@code mavenCoordinates}: list of the coordinates of Maven artifacts
+ *   <li>{@code mavenCoordinates}: list of the coordinates of Maven artifacts to check
  *   <li>{@code jarFileList}: list of jar files in the filesystem
  * </ul>
  *
