@@ -22,8 +22,8 @@ Perform the rollout in this manner:
      itself, prefer two phases if possible, with in-place breakage only if a
      two-phase rollout is judged to be too costly.
    - Some types of changes cannot be done using a two-phase approach, for
-     example, making classes or methods `final` or adding non-defaulted methods
-     into interfaces. Minimize these types of changes.
+     example, making classes or methods `final` or adding methods to interfaces
+     without a default implementation. Minimize these types of changes.
 2. Make sure that consuming libraries are prepared for the breakage.
    - In the case of in-place breakage, submit pull requests to the
      consuming libraries that switch from the old surface to the new surface,
