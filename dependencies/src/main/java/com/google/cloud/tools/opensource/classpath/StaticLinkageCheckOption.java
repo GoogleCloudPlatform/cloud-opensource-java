@@ -37,7 +37,7 @@ import org.apache.commons.cli.ParseException;
  * exactly one of the following types of input:
  *
  * <ul>
- *   <li>{@code bomCoordinate}: a Maven coordinate for a BOM
+ *   <li>{@code bomCoordinates}: Maven coordinates for a BOM
  *   <li>{@code mavenCoordinates}: list of the coordinates of Maven artifacts to check
  *   <li>{@code jarFileList}: list of jar files in the filesystem
  * </ul>
@@ -55,10 +55,10 @@ abstract class StaticLinkageCheckOption {
    * com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT}
    */
   @Nullable
-  abstract String getBomCoordinate();
+  abstract String getBomCoordinates();
 
   /**
-   * Returns the coordinates of Maven artifacts if specified; otherwise an empty list. Example
+   * Returns list of coordinates of Maven artifacts if specified; otherwise an empty list. Example
    * element: {@code com.google.cloud:google-cloud-bigtable:0.66.0-alpha}
    */
   abstract ImmutableList<String> getMavenCoordinates();
@@ -80,7 +80,7 @@ abstract class StaticLinkageCheckOption {
 
   @AutoValue.Builder
   abstract static class Builder {
-    abstract Builder setBomCoordinate(@Nullable String coordinate);
+    abstract Builder setBomCoordinates(@Nullable String coordinates);
     abstract Builder setMavenCoordinates(List<String> coordinates);
     abstract Builder setJarFileList(List<Path> paths);
     abstract Builder setReportOnlyReachable(boolean value);
@@ -125,19 +125,19 @@ abstract class StaticLinkageCheckOption {
         jarFilePaths.addAll(jarFilesInArguments);
       }
 
-      String mavenBomCoordinate = commandLine.getOptionValue("b");
+      String mavenBomCoordinates = commandLine.getOptionValue("b");
 
       boolean reportOnlyReachable = commandLine.hasOption("r");
 
       return builder()
-          .setBomCoordinate(mavenBomCoordinate)
+          .setBomCoordinates(mavenBomCoordinates)
           .setMavenCoordinates(mavenCoordinates.build())
           .setJarFileList(jarFilePaths)
           .setReportOnlyReachable(reportOnlyReachable)
           .build();
     } catch (ParseException ex) {
-      HelpFormatter helpFormetter = new HelpFormatter();
-      helpFormetter.printHelp("StaticLinkageChecker", options);
+      HelpFormatter helpFormatter = new HelpFormatter();
+      helpFormatter.printHelp("StaticLinkageChecker", options);
       throw ex;
     }
   }

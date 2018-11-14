@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Paths;
 import org.apache.commons.cli.ParseException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -31,7 +30,7 @@ public class StaticLinkageCheckOptionTest {
     };
     StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(arguments);
 
-    Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBomCoordinate());
+    Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBomCoordinates());
     Assert.assertTrue(parsedOption.isReportOnlyReachable());
   }
 
@@ -68,7 +67,7 @@ public class StaticLinkageCheckOptionTest {
     StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(new String[0]);
 
     Assert.assertTrue(parsedOption.getJarFileList().isEmpty());
-    Assert.assertNull(parsedOption.getBomCoordinate());
+    Assert.assertNull(parsedOption.getBomCoordinates());
     Assert.assertTrue(parsedOption.getMavenCoordinates().isEmpty());
     Assert.assertFalse(parsedOption.isReportOnlyReachable());
   }

@@ -237,7 +237,7 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testFindUnresolvedReferences_packagePrivateInnerClass()
       throws RepositoryException, IOException, ClassNotFoundException {
-    List<Path> paths = StaticLinkageChecker.coordinateToClasspath("io.grpc:grpc-auth:1.15.1");
+    List<Path> paths = StaticLinkageChecker.coordinatesToClasspath("io.grpc:grpc-auth:1.15.1");
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(true, paths, ImmutableSet.copyOf(paths));
 
@@ -269,7 +269,7 @@ public class StaticLinkageCheckerTest {
 
   @Test
   public void testCoordinateToClasspath_validCoordinate() throws RepositoryException {
-    List<Path> paths = StaticLinkageChecker.coordinateToClasspath("io.grpc:grpc-auth:1.15.1");
+    List<Path> paths = StaticLinkageChecker.coordinatesToClasspath("io.grpc:grpc-auth:1.15.1");
     Truth.assertThat(paths).hasSize(12);
 
     String pathsString = paths.toString();
@@ -289,7 +289,7 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testCoordinateToClasspath_optionalDependency() throws RepositoryException {
     List<Path> paths =
-        StaticLinkageChecker.coordinateToClasspath(
+        StaticLinkageChecker.coordinatesToClasspath(
             "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
 
     // The tree from google-cloud-bigtable to log4j:
@@ -306,7 +306,7 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testCoordinateToClasspath_invalidCoordinate() {
     try {
-      StaticLinkageChecker.coordinateToClasspath("io.grpc:nosuchartifact:1.2.3");
+      StaticLinkageChecker.coordinatesToClasspath("io.grpc:nosuchartifact:1.2.3");
       Assert.fail("Invalid Maven coodinate should raise RepositoryException");
     } catch (RepositoryException ex) {
       Truth.assertThat(ex.getMessage())
@@ -337,8 +337,8 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testFindUnresolvedReferences_unusedLzmaClassByGrpc()
       throws RepositoryException, IOException, ClassNotFoundException {
-    String bigTableCoordinate = "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
-    List<Path> paths = StaticLinkageChecker.coordinateToClasspath(bigTableCoordinate);
+    String bigTableCoordinates = "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
+    List<Path> paths = StaticLinkageChecker.coordinatesToClasspath(bigTableCoordinates);
     Truth.assertThat(paths).isNotEmpty();
 
     // Prior to class usage graph traversal, there was linkage error for lzma-java classes.
@@ -357,8 +357,8 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testFindUnresolvedReferences_checkAllOption()
       throws RepositoryException, IOException, ClassNotFoundException {
-    String bigTableCoordinate = "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
-    List<Path> paths = StaticLinkageChecker.coordinateToClasspath(bigTableCoordinate);
+    String bigTableCoordinates = "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
+    List<Path> paths = StaticLinkageChecker.coordinatesToClasspath(bigTableCoordinates);
 
     // grpc-netty-shaded pom.xml does not have dependency to lzma-java even though netty-codec
     // refers lzma.sdk.lzma.Encoder. StaticLinkageChecker should be able to detect it.
@@ -378,8 +378,8 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testFindUnresolvedReferences_appengineSdkWithProvidedScope()
       throws RepositoryException, IOException, ClassNotFoundException {
-    String bigTableCoordinate = "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha";
-    List<Path> paths = StaticLinkageChecker.coordinateToClasspath(bigTableCoordinate);
+    String bigTableCoordinates = "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha";
+    List<Path> paths = StaticLinkageChecker.coordinatesToClasspath(bigTableCoordinates);
 
     // Prior to 'provided' scope inclusion, there was linkage error for classes in
     // com.google.appengine.api.urlfetch package.

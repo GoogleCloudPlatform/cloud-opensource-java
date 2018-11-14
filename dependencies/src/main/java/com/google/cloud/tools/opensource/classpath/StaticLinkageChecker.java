@@ -86,7 +86,7 @@ class StaticLinkageChecker {
    *
    * @throws IOException when there is a problem in reading a jar file
    * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
-   * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
+   * @throws RepositoryException when there is a problem in resolving the Maven coordinates to jar
    *     files
    * @throws ParseException when the arguments are invalid for the tool
    */
@@ -136,7 +136,7 @@ class StaticLinkageChecker {
    *
    * @param linkageCheckOption option through command-line arguments
    * @return input class path resolved as a list of absolute paths to jar files
-   * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
+   * @throws RepositoryException when there is a problem in resolving the Maven coordinates to jar
    */
   @VisibleForTesting
   static ImmutableList<Path> generateInputClasspathFromLinkageCheckOption(
@@ -148,7 +148,7 @@ class StaticLinkageChecker {
       jarFileBuilder.addAll(linkageCheckOption.getJarFileList());
     } else if (!linkageCheckOption.getMavenCoordinates().isEmpty()) {
       for (String mavenCoordinates : linkageCheckOption.getMavenCoordinates()) {
-        jarFileBuilder.addAll(coordinateToClasspath(mavenCoordinates));
+        jarFileBuilder.addAll(coordinatesToClasspath(mavenCoordinates));
       }
     }
     return jarFileBuilder.build();
@@ -157,13 +157,13 @@ class StaticLinkageChecker {
   /**
    * Finds jar file paths for the dependencies of the Maven coordinate.
    *
-   * @param coordinate Maven coordinate of an artifact to check its dependencies
+   * @param coordinates Maven coordinates of an artifact to check its dependencies
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem in retrieving jar files
    */
   @VisibleForTesting
-  static ImmutableList<Path> coordinateToClasspath(String coordinate) throws RepositoryException {
-    DefaultArtifact rootArtifact = new DefaultArtifact(coordinate);
+  static ImmutableList<Path> coordinatesToClasspath(String coordinates) throws RepositoryException {
+    DefaultArtifact rootArtifact = new DefaultArtifact(coordinates);
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph dependencyGraph =
         DependencyGraphBuilder.getStaticLinkageCheckDependencies(rootArtifact);
