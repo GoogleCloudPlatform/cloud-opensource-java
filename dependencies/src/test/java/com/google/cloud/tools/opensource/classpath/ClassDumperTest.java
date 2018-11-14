@@ -16,11 +16,15 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLClassLoader;
-import java.util.List;
+import java.nio.file.Paths;
+import java.util.Set;
+import org.apache.bcel.classfile.ClassParser;
+import org.apache.bcel.classfile.JavaClass;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -45,89 +49,20 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testListConstantPool() throws IOException {
-    List<String> constantPool = ClassDumper.listConstantPool(classFileInputStream,
-        EXAMPLE_CLASS_FILE);
-    Truth.assertThat(constantPool).hasSize(491);
-  }
-
-  @Test
-  public void testListMethodReferences() throws IOException {
-    List<FullyQualifiedMethodSignature> methodrefs =
-        ClassDumper.listMethodReferences(classFileInputStream, EXAMPLE_CLASS_FILE);
-
-    Truth.assertThat(methodrefs).hasSize(56);
-    FullyQualifiedMethodSignature methodCallToListenRequest =
-        new FullyQualifiedMethodSignature(
-            "com.google.firestore.v1beta1.ListenRequest",
-            "getDefaultInstance",
-            "()Lcom/google/firestore/v1beta1/ListenRequest;");
-    Truth.assertThat(methodrefs).contains(methodCallToListenRequest);
-  }
-
-  @Test
-  public void testListInternalMethodReferences() throws IOException {
-    List<FullyQualifiedMethodSignature> owningMethodrefs =
-        ClassDumper.listInternalMethodReferences(classFileInputStream, EXAMPLE_CLASS_FILE);
-
-    Truth.assertThat(owningMethodrefs).hasSize(13);
-    for (FullyQualifiedMethodSignature methodref : owningMethodrefs) {
-      Assert.assertEquals(
-          "All of the methods here should be defined in this files",
-          "com.google.firestore.v1beta1.FirestoreGrpc",
-          methodref.getClassName());
-    }
-  }
-
-  @Test
-  public void testListExternalMethodReferences() throws IOException {
-    List<FullyQualifiedMethodSignature> externalMethodrefs =
-        ClassDumper.listExternalMethodReferences(classFileInputStream, EXAMPLE_CLASS_FILE);
-
-    Truth.assertThat(externalMethodrefs).hasSize(43);
-    for (FullyQualifiedMethodSignature methodref : externalMethodrefs) {
-      Assert.assertNotEquals(
-          "All of the methods here should be defined in other files",
-          "com.google.firestore.v1beta1.FirestoreGrpc",
-          methodref.getClassName());
-    }
-    FullyQualifiedMethodSignature methodCallToListenRequest =
-        new FullyQualifiedMethodSignature(
-            "com.google.firestore.v1beta1.ListenRequest",
-            "getDefaultInstance",
-            "()Lcom/google/firestore/v1beta1/ListenRequest;");
-    Truth.assertThat(externalMethodrefs).contains(methodCallToListenRequest);
-  }
-
-  @Test
-  public void testListDeclaredMethods() throws IOException {
-    List<MethodSignature> signatures = ClassDumper.listDeclaredMethods(classFileInputStream,
-        EXAMPLE_CLASS_FILE);
-
-    Truth.assertThat(signatures).hasSize(45);
-
-    // getRunQueryMethod is a method defined in FirestoreGrpc class
-    // Because of type erasure, type parameters don't appear in signature of BCEL Method class
-    MethodSignature oneExpectedMethodInClass = new MethodSignature("getRunQueryMethod",
-        "()Lio/grpc/MethodDescriptor;"); // No type parameter expected
-    Truth.assertThat(signatures).contains(oneExpectedMethodInClass);
-  }
-
-  @Test
   public void testMethodDescriptorToClass_byteArray() {
-    ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+    ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
     Class[] byteArrayClass =
-        ClassDumper.methodDescriptorToClass("([B)Ljava/lang/String;", classLoader);
+        classDumper.methodDescriptorToClass("([B)Ljava/lang/String;");
     Assert.assertTrue(byteArrayClass[0].isArray());
   }
 
   @Test
   public void testMethodDescriptorToClass_primitiveTypes() {
-    ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+    ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
     // List of primitive types that appear in descriptor:
     // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3
     Class[] types =
-        ClassDumper.methodDescriptorToClass("(BCDFIJSZ)Ljava/lang/String;", classLoader);
+        classDumper.methodDescriptorToClass("(BCDFIJSZ)Ljava/lang/String;");
     Truth.assertThat(types)
         .asList()
         .containsExactly(
@@ -142,4 +77,57 @@ public class ClassDumperTest {
         .inOrder();
   }
 
+  @Test
+  public void testMethodDefinitionExists_arrayType() throws ClassNotFoundException {
+    FullyQualifiedMethodSignature checkArgumentMethod =
+        new FullyQualifiedMethodSignature(
+            "com.google.common.base.Preconditions", "checkArgument", "(ZLjava/lang/Object;)V");
+    ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
+
+    Assert.assertTrue(classDumper.methodDefinitionExists(checkArgumentMethod));
+  }
+
+  @Test
+  public void testMethodDefinitionExists_constructorInAbstractClass()
+      throws ClassNotFoundException {
+    ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
+    FullyQualifiedMethodSignature constructorInAbstract =
+        new FullyQualifiedMethodSignature(
+            "com.google.common.collect.LinkedHashMultimapGwtSerializationDependencies",
+            "<init>",
+            "(Ljava/util/Map;)V");
+
+    Assert.assertTrue(classDumper.methodDefinitionExists(constructorInAbstract));
+  }
+
+  @Test
+  public void testListInnerClasses() throws IOException {
+    InputStream classFileInputStream = URLClassLoader.getSystemResourceAsStream(
+        EXAMPLE_CLASS_FILE);
+    ClassParser parser = new ClassParser(classFileInputStream, EXAMPLE_CLASS_FILE);
+    JavaClass javaClass = parser.parse();
+
+    Set<String> innerClassNames = ClassDumper.listInnerClassNames(javaClass);
+    Truth.assertThat(innerClassNames).containsExactly(
+        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFutureStub",
+        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreMethodDescriptorSupplier",
+        "com.google.firestore.v1beta1.FirestoreGrpc$1",
+        "com.google.firestore.v1beta1.FirestoreGrpc$MethodHandlers",
+        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub",
+        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreBaseDescriptorSupplier",
+        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreBlockingStub",
+        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreImplBase",
+        "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFileDescriptorSupplier"
+    );
+  }
+
+  @Test
+  public void testCreationInvalidInput() {
+    try {
+      ClassDumper.create(ImmutableList.of(Paths.get("")));
+      Assert.fail("Empty path should generate RuntimeException");
+    } catch (RuntimeException ex) {
+      Assert.assertEquals("There was problem in loading classes in jar file", ex.getMessage());
+    }
+  }
 }
