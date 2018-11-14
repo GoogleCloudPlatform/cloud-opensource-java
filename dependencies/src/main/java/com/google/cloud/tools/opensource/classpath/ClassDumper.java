@@ -217,7 +217,7 @@ class ClassDumper {
     return symbolTableBuilder.build();
   }
 
-  static ConstantNameAndType constantNameAndTypeFromConstantCP(
+  private static ConstantNameAndType constantNameAndTypeFromConstantCP(
       ConstantCP constantCP, ConstantPool constantPool) {
     int nameAndTypeIndex = constantCP.getNameAndTypeIndex();
     Constant constantAtNameAndTypeIndex = constantPool.getConstant(nameAndTypeIndex);
@@ -225,9 +225,10 @@ class ClassDumper {
       // This constant_pool entry must be a CONSTANT_NameAndType_info
       // as specified https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4.2
       throw new ClassFormatException(
-          "Failed to lookup nameAndType constant indexed "
+          "Failed to lookup nameAndType constant indexed at "
               + nameAndTypeIndex
-              + ". This class file is not compliant with CONSTANT_Methodref_info specification");
+              + ". However, the content is not ConstantNameAndType. It is "
+              + constantAtNameAndTypeIndex);
     }
     return (ConstantNameAndType) constantAtNameAndTypeIndex;
   }
