@@ -96,10 +96,11 @@ public class StaticLinkageCheckerTest {
       throws IOException, ClassNotFoundException, URISyntaxException {
     URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
 
-    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(
-        true,
-        ImmutableList.of(Paths.get(EXAMPLE_JAR_FILE)),
-        ImmutableSet.of(Paths.get(EXAMPLE_JAR_FILE)));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(
+            true,
+            ImmutableList.of(Paths.get(EXAMPLE_JAR_FILE)),
+            ImmutableSet.of(Paths.get(EXAMPLE_JAR_FILE)));
 
     List<FullyQualifiedMethodSignature> signatures =
         staticLinkageChecker.listExternalMethodReferences(
@@ -126,10 +127,8 @@ public class StaticLinkageCheckerTest {
         absolutePathOfResource(EXAMPLE_PROTO_JAR_FILE));
     pathsForJar.addAll(FIRESTORE_DEPENDENCIES);
 
-    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(
-        true,
-        pathsForJar,
-        ImmutableSet.copyOf(pathsForJar));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(true, pathsForJar, ImmutableSet.copyOf(pathsForJar));
 
     FullyQualifiedMethodSignature internalMethodReference =
         new FullyQualifiedMethodSignature(
@@ -172,8 +171,8 @@ public class StaticLinkageCheckerTest {
     );
     pathsForJar.addAll(FIRESTORE_DEPENDENCIES);
 
-    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(true, pathsForJar,
-        ImmutableSet.of(pathsForJar.get(0)));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(true, pathsForJar, ImmutableSet.of(pathsForJar.get(0)));
     List<FullyQualifiedMethodSignature> report =
         staticLinkageChecker.findUnresolvedMethodReferences();
     Truth.assertThat(report.toString()).doesNotContain("com.google.api.pathtemplate.PathTemplate");
@@ -200,7 +199,7 @@ public class StaticLinkageCheckerTest {
             absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"),
             absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"));
     pathsForJarWithVersion65First.addAll(firestoreDependencies);
-    StaticLinkageChecker staticLinkageChecker65First = new StaticLinkageChecker(
+    StaticLinkageChecker staticLinkageChecker65First = StaticLinkageChecker.create(
         true,
         pathsForJarWithVersion65First,
         ImmutableSet.copyOf(pathsForJarWithVersion65First));
@@ -210,10 +209,11 @@ public class StaticLinkageCheckerTest {
             absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"),
             absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"));
     pathsForJarWithVersion66First.addAll(firestoreDependencies);
-    StaticLinkageChecker staticLinkageChecker66First = new StaticLinkageChecker(
-        true,
-        pathsForJarWithVersion66First,
-        ImmutableSet.copyOf(pathsForJarWithVersion66First));
+    StaticLinkageChecker staticLinkageChecker66First =
+        StaticLinkageChecker.create(
+            true,
+            pathsForJarWithVersion66First,
+            ImmutableSet.copyOf(pathsForJarWithVersion66First));
 
     FullyQualifiedMethodSignature methodAddedInVersion66 =
         new FullyQualifiedMethodSignature(
@@ -238,9 +238,8 @@ public class StaticLinkageCheckerTest {
   public void testFindUnresolvedReferences_packagePrivateInnerClass()
       throws RepositoryException, IOException, ClassNotFoundException {
     List<Path> paths = StaticLinkageChecker.coordinateToClasspath("io.grpc:grpc-auth:1.15.1");
-    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(
-        true,
-        paths, ImmutableSet.copyOf(paths));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(true, paths, ImmutableSet.copyOf(paths));
 
     FullyQualifiedMethodSignature constructorOfPrivateInnerClass =
         new FullyQualifiedMethodSignature(
@@ -258,9 +257,9 @@ public class StaticLinkageCheckerTest {
   public void testNonExistentJarFileInput() throws ClassNotFoundException {
     try {
       Path nonExistentJar = Paths.get("nosuchfile.jar");
-      StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(true,
-          ImmutableList.of(nonExistentJar),
-          ImmutableSet.of(nonExistentJar));
+      StaticLinkageChecker staticLinkageChecker =
+          StaticLinkageChecker.create(
+              true, ImmutableList.of(nonExistentJar), ImmutableSet.of(nonExistentJar));
       staticLinkageChecker.findUnresolvedMethodReferences();
       Assert.fail("findUnresolvedMethodReferences should raise IOException");
     } catch (IOException ex) {
@@ -326,10 +325,8 @@ public class StaticLinkageCheckerTest {
     List<Path> pathsForJar =
         Arrays.asList(
             Paths.get(URLClassLoader.getSystemResource("testdata/guava-26.0-jre.jar").toURI()));
-    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(
-        true,
-        pathsForJar,
-        ImmutableSet.copyOf(pathsForJar));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(true, pathsForJar, ImmutableSet.copyOf(pathsForJar));
 
     List<FullyQualifiedMethodSignature> methodsNotFound =
         staticLinkageChecker.findUnresolvedReferences(
@@ -345,8 +342,8 @@ public class StaticLinkageCheckerTest {
     Truth.assertThat(paths).isNotEmpty();
 
     // Prior to class usage graph traversal, there was linkage error for lzma-java classes.
-    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(true, paths,
-        ImmutableSet.of(paths.get(0)));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(true, paths, ImmutableSet.of(paths.get(0)));
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         staticLinkageChecker.findUnresolvedMethodReferences();
 
@@ -366,8 +363,8 @@ public class StaticLinkageCheckerTest {
     // grpc-netty-shaded pom.xml does not have dependency to lzma-java even though netty-codec
     // refers lzma.sdk.lzma.Encoder. StaticLinkageChecker should be able to detect it.
     boolean reportOnlyReachable = false;
-    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(reportOnlyReachable,
-        paths, ImmutableSet.copyOf(paths));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(reportOnlyReachable, paths, ImmutableSet.copyOf(paths));
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         staticLinkageChecker.findUnresolvedMethodReferences();
 
@@ -386,8 +383,8 @@ public class StaticLinkageCheckerTest {
 
     // Prior to 'provided' scope inclusion, there was linkage error for classes in
     // com.google.appengine.api.urlfetch package.
-    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(true,
-        paths, ImmutableSet.of(paths.get(0)));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(true, paths, ImmutableSet.of(paths.get(0)));
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         staticLinkageChecker.findUnresolvedMethodReferences();
 
@@ -405,10 +402,8 @@ public class StaticLinkageCheckerTest {
     List<Path> pathsForJar =
         Arrays.asList(
             Paths.get(URLClassLoader.getSystemResource("testdata/guava-26.0-jre.jar").toURI()));
-    StaticLinkageChecker staticLinkageChecker = new StaticLinkageChecker(
-        true,
-        pathsForJar,
-        ImmutableSet.copyOf(pathsForJar));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(true, pathsForJar, ImmutableSet.copyOf(pathsForJar));
 
     List<FullyQualifiedMethodSignature> methodsNotFound =
         staticLinkageChecker.findUnresolvedReferences(

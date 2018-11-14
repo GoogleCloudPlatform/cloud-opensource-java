@@ -53,6 +53,16 @@ class StaticLinkageChecker {
 
   private static final Logger logger = Logger.getLogger(StaticLinkageChecker.class.getName());
 
+  static StaticLinkageChecker create(
+      boolean reportOnlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
+      throws IOException, ClassNotFoundException {
+    Preconditions.checkArgument(
+        !jarFilePaths.isEmpty(),
+        "The linkage classpath is empty. Specify input to supply one or more jar files");
+    return new StaticLinkageChecker(
+        reportOnlyReachable, ClassDumper.create(jarFilePaths), entryPoints);
+  }
+
   /**
    * Flag on the reachability. This flag controls whether the report excludes the linkage errors
    * on classes that are not reachable from the entry points of the class usage graph.
@@ -64,13 +74,9 @@ class StaticLinkageChecker {
   private final ImmutableSet<Path> entryPoints;
 
   StaticLinkageChecker(
-      boolean reportOnlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
-      throws IOException, ClassNotFoundException {
-    Preconditions.checkArgument(
-        !jarFilePaths.isEmpty(),
-        "The linkage classpath is empty. Specify input to supply one or more jar files");
+      boolean reportOnlyReachable, ClassDumper classDumper, Iterable<Path> entryPoints) {
     this.reportOnlyReachable = reportOnlyReachable;
-    this.classDumper = ClassDumper.create(jarFilePaths);
+    this.classDumper = classDumper;
     this.entryPoints = ImmutableSet.copyOf(entryPoints);
   }
 
@@ -92,7 +98,7 @@ class StaticLinkageChecker {
     // TODO(suztomo): to take command-line option to choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(inputClasspath.get(0));
     StaticLinkageChecker staticLinkageChecker =
-        new StaticLinkageChecker(commandLineOption.isReportOnlyReachable(), inputClasspath,
+        create(commandLineOption.isReportOnlyReachable(), inputClasspath,
             entryPoints);
 
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =

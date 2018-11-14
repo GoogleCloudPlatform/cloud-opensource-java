@@ -24,6 +24,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.SetMultimap;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
 import java.io.IOException;
@@ -75,20 +76,6 @@ class ClassDumper {
     return inputClasspath;
   }
 
-  private ClassDumper(
-      List<Path> inputClasspath,
-      SyntheticRepository syntheticRepository,
-      ClassLoader classLoader) throws ClassNotFoundException, IOException {
-    this.inputClasspath = ImmutableList.copyOf(inputClasspath);
-    this.syntheticRepository = syntheticRepository;
-    this.classLoader = classLoader;
-    this.jarFileToClasses = jarFilesToDefinedClasses(inputClasspath);
-  }
-
-  JavaClass loadJavaClass(String javaClassName) throws ClassNotFoundException {
-    return syntheticRepository.loadClass(javaClassName);
-  }
-
   static ClassDumper create(List<Path> jarFilePaths) throws IOException, ClassNotFoundException {
     // Creates classpath in the same order as inputClasspath for BCEL API
     String pathAsString =
@@ -107,7 +94,26 @@ class ClassDumper {
     URLClassLoader classLoaderFromJars =
         new URLClassLoader(jarFileUrls, ClassLoader.getSystemClassLoader());
 
-    return new ClassDumper(jarFilePaths, syntheticRepository, classLoaderFromJars);
+    return new ClassDumper(
+        jarFilePaths,
+        syntheticRepository,
+        classLoaderFromJars,
+        jarFilesToDefinedClasses(jarFilePaths));
+  }
+
+  private ClassDumper(
+      List<Path> inputClasspath,
+      SyntheticRepository syntheticRepository,
+      ClassLoader classLoader,
+      SetMultimap<Path, String> jarFileToClasses) {
+    this.inputClasspath = ImmutableList.copyOf(inputClasspath);
+    this.syntheticRepository = syntheticRepository;
+    this.classLoader = classLoader;
+    this.jarFileToClasses = ImmutableSetMultimap.copyOf(jarFileToClasses);
+  }
+
+  JavaClass loadJavaClass(String javaClassName) throws ClassNotFoundException {
+    return syntheticRepository.loadClass(javaClassName);
   }
 
   /**
