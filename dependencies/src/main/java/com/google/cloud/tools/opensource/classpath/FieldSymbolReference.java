@@ -19,12 +19,12 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.auto.value.AutoValue;
 
 /**
- * A symbolic reference to a field of {@code targetClass} referenced from {@code sourceClass}.
- * */
+ * A symbol reference to a field of {@code targetClass} referenced from {@code sourceClass}.
+ */
 @AutoValue
 abstract class FieldSymbolReference implements SymbolReference {
   /**
-   * Returns field name of the reference.
+   * Returns the field name of the reference.
    */
   abstract String getFieldName();
 

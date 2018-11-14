@@ -64,13 +64,12 @@ abstract class StaticLinkageCheckOption {
   abstract ImmutableList<String> getMavenCoordinates();
 
   /**
-   * Returns list of absolute paths for jar files in the filesystem if specified; otherwise an empty
-   * list.
+   * Returns absolute paths for jar files in the filesystem if specified; otherwise an empty list.
    */
   abstract ImmutableList<Path> getJarFileList();
 
   /**
-   * Returns flag to report only reachable linkage errors.
+   * Returns {@code true} if only reachable linkage errors should be reported.
    */
   abstract boolean isReportOnlyReachable();
 

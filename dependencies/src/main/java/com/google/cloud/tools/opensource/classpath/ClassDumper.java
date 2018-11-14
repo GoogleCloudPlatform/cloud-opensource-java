@@ -16,10 +16,10 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -62,7 +62,7 @@ import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
 /**
- * Class to read symbolic references in Java class files and to verify the availability
+ * Class to read symbol references in Java class files and to verify the availability
  * of references in them, through the input class path for a static linkage check.
  */
 class ClassDumper {
@@ -157,16 +157,15 @@ class ClassDumper {
 
   /**
    * Scans class files in the jar file and returns a {@link SymbolReferenceSet} populated with
-   * symbolic references.
+   * symbol references.
    *
    * @param jarFilePath absolute path to a jar file
-   * @return symbol references and classes defined in the jar file
    */
   static SymbolReferenceSet scanSymbolReferencesInJar(Path jarFilePath)
       throws ClassNotFoundException, IOException {
-    Preconditions.checkArgument(
+    checkArgument(
         jarFilePath.isAbsolute(), "The input jar file path is not an absolute path");
-    Preconditions.checkArgument(
+    checkArgument(
         Files.isReadable(jarFilePath), "The input jar file path is not readable");
 
     SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
@@ -217,7 +216,7 @@ class ClassDumper {
     return symbolTableBuilder.build();
   }
 
-  private static ConstantNameAndType constantNameAndTypeFromConstantCP(
+  private static ConstantNameAndType constantNameAndType(
       ConstantCP constantCP, ConstantPool constantPool) {
     int nameAndTypeIndex = constantCP.getNameAndTypeIndex();
     Constant constantAtNameAndTypeIndex = constantPool.getConstant(nameAndTypeIndex);
@@ -237,7 +236,7 @@ class ClassDumper {
       ConstantMethodref constantMethodref, ConstantPool constantPool, String sourceClassName) {
     String classNameInMethodReference = constantMethodref.getClass(constantPool);
     ConstantNameAndType constantNameAndType =
-        constantNameAndTypeFromConstantCP(constantMethodref, constantPool);
+        constantNameAndType(constantMethodref, constantPool);
     String methodName = constantNameAndType.getName(constantPool);
     String descriptor = constantNameAndType.getSignature(constantPool);
     MethodSymbolReference methodReference = MethodSymbolReference.builder()
@@ -254,7 +253,7 @@ class ClassDumper {
     // Either a class type or an interface type
     String classNameInFieldReference = constantFieldref.getClass(constantPool);
     ConstantNameAndType constantNameAndType =
-        constantNameAndTypeFromConstantCP(constantFieldref, constantPool);
+        constantNameAndType(constantFieldref, constantPool);
     String fieldName = constantNameAndType.getName(constantPool);
 
     FieldSymbolReference fieldSymbolReference = FieldSymbolReference.builder()

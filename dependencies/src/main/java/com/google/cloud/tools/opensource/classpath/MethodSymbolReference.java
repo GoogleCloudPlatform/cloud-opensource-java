@@ -19,12 +19,12 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.auto.value.AutoValue;
 
 /**
- * A symbolic reference to a method of {@code targetClass} referenced from {@code sourceClass}.
+ * A symbol reference to a method of {@code targetClass} referenced from {@code sourceClass}.
  */
 @AutoValue
 abstract class MethodSymbolReference implements SymbolReference  {
   /**
-   * Returns method name of the reference. Example: {@code marshaller}
+   * Returns the method name of the reference. Example: {@code marshaller}
    */
   abstract String getMethodName();
 

@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -23,7 +24,6 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -56,7 +56,7 @@ class StaticLinkageChecker {
   static StaticLinkageChecker create(
       boolean reportOnlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
       throws IOException, ClassNotFoundException {
-    Preconditions.checkArgument(
+    checkArgument(
         !jarFilePaths.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
     return new StaticLinkageChecker(
@@ -192,8 +192,6 @@ class StaticLinkageChecker {
 
   /**
    * Finds linkage errors in the input classpath and generates a static linkage check report.
-   *
-   * @return a static linkage check report for the input class path
    */
   StaticLinkageCheckReport findLinkageErrors() throws ClassNotFoundException, IOException {
     ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();

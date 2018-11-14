@@ -20,7 +20,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * A set of symbolic references in a file (jar file or class file). The references are from constant
+ * A set of symbol references in a file (jar file or class file). The references are from constant
  * pool of class file(s).
  *
  * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4">Java
