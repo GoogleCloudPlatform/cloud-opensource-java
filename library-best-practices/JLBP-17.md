@@ -40,4 +40,5 @@ Perform the rollout in this manner:
 3. Release the incompatible version and make sure that the version propagates up
    the dependency tree as quickly as possible. In the case of in-place breakage,
    update the provisionally-approved PRs with published dependency versions,
-   verify that CI passes, and finally get a formal approval to merge.
+   verify that CI passes, remove the "[DO NOT SUBMIT]" text from the title of
+   the pull request, and finally get a formal approval to merge.
