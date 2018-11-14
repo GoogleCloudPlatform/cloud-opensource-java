@@ -1,26 +1,31 @@
-[JLBP-17] Coordinate Major Version Adoption
--------------------------------------------
+[JLBP-17] Coordinate Rollout of Breaking Changes
+------------------------------------------------
 
-It is clearly undesirable for a dependency tree to contain conflicts.
-Unfortunately, as soon as any library in a dependency tree introduces a breaking
-change, consumers can't use the latest versions of those libraries in the
-dependency tree together. To enable clients to depend on the latest versions of
-their dependencies, breaking changes should be propagated as quickly as
- possible.
+When a library in a dependency tree introduces a breaking change, consumers
+can't update to that version until all their other dependencies which also use
+the library update to that version first. To enable clients to depend on the
+latest versions of all their dependencies, breaking changes should be propagated
+as quickly as possible.
 
 Perform the rollout in this manner:
 
-1. Decide whether to break the feature as an atomic change or to perform the
-   change in two passes, deprecate then delete.
-   - If the feature is used by stable code in other libraries, you must use two
-     passes (as per [JLBP-7](JLBP-7.md)).
+1. Decide whether to introduce the incompatibility in a single release or
+   perform the change over two releases.
+   - The two-phase approach is described in [JLBP-7: Make breaking transitions
+     easy](JLBP-7.md).
+   - If the feature is used by stable code in other libraries, you must use the
+     two-phase approach, except for the types of changes where this is
+     impossible (see below).
    - If the code does not appear to be used in other libraries, an in-place
      breakage may be ok.
    - If the feature is used by unstable code or stable code having little usage
-     itself, prefer two passes if possible, with in-place breakage only if two
-     passes are judged to be too costly.
+     itself, prefer two phases if possible, with in-place breakage only if a
+     two-phase rollout is judged to be too costly.
+   - Some types of changes cannot be done using a two-phase approach, for
+     example, making classes or methods `final` or adding non-defaulted methods
+     into interfaces.
 2. Make sure that consuming libraries are prepared for the breakage.
-   - In the case of in-place breakage, have pull requests (PRs) submitted to the
+   - In the case of in-place breakage, submit pull requests (PRs) to the
      consuming libraries that switch from the old surface to the new surface
      (marked as DO NOT SUBMIT).
      These PRs of course will not pass CI, but the author should at
