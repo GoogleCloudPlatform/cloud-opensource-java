@@ -38,7 +38,7 @@ import org.apache.commons.cli.ParseException;
  *
  * <ul>
  *   <li>{@code bomCoordinates}: Maven coordinates for a BOM
- *   <li>{@code mavenCoordinates}: list of the coordinates of Maven artifacts to check
+ *   <li>{@code mavenCoordinatesList}: list of the coordinates of Maven artifacts to check
  *   <li>{@code jarFileList}: list of jar files in the filesystem
  * </ul>
  *
@@ -61,7 +61,7 @@ abstract class StaticLinkageCheckOption {
    * Returns list of coordinates of Maven artifacts if specified; otherwise an empty list. Example
    * element: {@code com.google.cloud:google-cloud-bigtable:0.66.0-alpha}
    */
-  abstract ImmutableList<String> getMavenCoordinates();
+  abstract ImmutableList<String> getMavenCoordinatesList();
 
   /**
    * Returns absolute paths for jar files in the filesystem if specified; otherwise an empty list.
@@ -80,7 +80,7 @@ abstract class StaticLinkageCheckOption {
   @AutoValue.Builder
   abstract static class Builder {
     abstract Builder setBomCoordinates(@Nullable String coordinates);
-    abstract Builder setMavenCoordinates(List<String> coordinates);
+    abstract Builder setMavenCoordinatesList(List<String> coordinates);
     abstract Builder setJarFileList(List<Path> paths);
     abstract Builder setReportOnlyReachable(boolean value);
     abstract StaticLinkageCheckOption build();
@@ -130,7 +130,7 @@ abstract class StaticLinkageCheckOption {
 
       return builder()
           .setBomCoordinates(mavenBomCoordinates)
-          .setMavenCoordinates(mavenCoordinates.build())
+          .setMavenCoordinatesList(mavenCoordinates.build())
           .setJarFileList(jarFilePaths)
           .setReportOnlyReachable(reportOnlyReachable)
           .build();
