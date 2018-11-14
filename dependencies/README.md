@@ -1,7 +1,7 @@
 # Static Linkage Checker
 
 Static Linkage Checker is a tool that finds [static linkage errors](
-../library-best-practices/glossary.md#types-of-conflicts-and-compatibility)
+../library-best-practices/glossary.md#static-linkage-error)
 on a class path and reports the errors to the console.
 It scans the class files in the class path for references to other classes and
 reports any reference that cannot be satisfied in the class path.
@@ -65,8 +65,11 @@ _missing class_, _missing method_, or _missing field_.
      
 ### Class Reference Graph and Reachability
 
-In order to provide a diagnosis in the output report, the tool builds a _class reference graph_,
-and annotates linkage errors with _reachability_ from _entry point classes_.
+In order to provide a diagnosis in the output report, the tool builds a [class reference graph](
+../library-best-practices/glossary.md#class-reference-graph),
+and annotates linkage errors with [reachability](
+../library-best-practices/glossary.md#reachability) from [entry point classes](
+../library-best-practices/glossary.md#entry-point-class).
 Optionally the tool outputs a report including only _reachable_ static linkage errors.
 The tool allows users to choose the scope of entry point classes:
 
