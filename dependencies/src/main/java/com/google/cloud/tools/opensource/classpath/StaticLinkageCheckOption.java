@@ -17,13 +17,15 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -81,7 +83,7 @@ abstract class StaticLinkageCheckOption {
 
   @AutoValue.Builder
   abstract static class Builder {
-    abstract Builder setBom(@Nullable String coordinates);
+    abstract Builder setBom(String coordinates);
     abstract Builder setArtifacts(List<String> coordinates);
     abstract Builder setJarFiles(List<Path> paths);
     abstract Builder setReportOnlyReachable(boolean value);
@@ -110,20 +112,19 @@ abstract class StaticLinkageCheckOption {
     ImmutableList.Builder<String> mavenCoordinates = ImmutableList.builder();
     try {
       CommandLine commandLine = parser.parse(options, arguments);
-      if ((commandLine.hasOption("b") && commandLine.hasOption("a"))
-          || (commandLine.hasOption("a") && commandLine.hasOption("j"))
-          || (commandLine.hasOption("j") && commandLine.hasOption("b"))) {
+      if (Stream.of('b', 'a', 'j').filter(commandLine::hasOption).count() > 1) {
         throw new IllegalArgumentException(
             "One of BOM, Maven coordinates, or jar files can be specified");
       }
+      Splitter commaSplitter = Splitter.on(",");
       if (commandLine.hasOption("a")) {
         String mavenCoordinatesOption = commandLine.getOptionValue("a");
-        mavenCoordinates.addAll(Arrays.asList(mavenCoordinatesOption.split(",")));
+        mavenCoordinates.addAll(commaSplitter.split(mavenCoordinatesOption));
       }
       if (commandLine.hasOption("j")) {
         String jarFiles = commandLine.getOptionValue("j");
         List<Path> jarFilesInArguments =
-            Arrays.stream(jarFiles.split(","))
+            Streams.stream(commaSplitter.split(jarFiles))
                 .map(name -> (Paths.get(name)).toAbsolutePath())
                 .collect(Collectors.toList());
         jarFilePaths.addAll(jarFilesInArguments);

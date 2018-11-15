@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Truth;
 import org.apache.commons.cli.ParseException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -31,8 +32,8 @@ public class StaticLinkageCheckOptionTest {
     StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(arguments);
 
     Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBom());
-    Assert.assertTrue(parsedOption.getArtifacts().isEmpty());
-    Assert.assertTrue(parsedOption.getJarFiles().isEmpty());
+    Truth.assertThat(parsedOption.getArtifacts()).isEmpty();
+    Truth.assertThat(parsedOption.getJarFiles()).isEmpty();
     Assert.assertTrue(parsedOption.isReportOnlyReachable());
   }
 
@@ -57,7 +58,7 @@ public class StaticLinkageCheckOptionTest {
         "--report-only-reachable"
     };
     try {
-      StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(arguments);
+      StaticLinkageCheckOption.parseArguments(arguments);
       Assert.fail();
     } catch (IllegalArgumentException ex) {
       // pass
