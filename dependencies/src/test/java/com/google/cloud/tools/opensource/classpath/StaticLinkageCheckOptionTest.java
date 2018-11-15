@@ -30,27 +30,27 @@ public class StaticLinkageCheckOptionTest {
     };
     StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(arguments);
 
-    Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBomCoordinates());
+    Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBom());
     Assert.assertTrue(parsedOption.isReportOnlyReachable());
   }
 
   @Test
   public void parseCommandLineOptions_longOptions() throws ParseException {
     String[] arguments = new String[] {
-        "--coordinate", "abc.com:abc:1.1,abc.com:abc-util:1.2",
+        "--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2",
         "--report-only-reachable"
     };
     StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(arguments);
 
     Assert.assertEquals(ImmutableList.of("abc.com:abc:1.1", "abc.com:abc-util:1.2"),
-        parsedOption.getMavenCoordinatesList());
+        parsedOption.getArtifacts());
     Assert.assertTrue(parsedOption.isReportOnlyReachable());
   }
 
   @Test
   public void parseCommandLineOptions_duplicates() throws ParseException {
     String[] arguments = new String[] {
-        "--coordinate", "abc.com:abc:1.1,abc.com:abc-util:1.2",
+        "--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2",
         "-b", "abc.com:dummy:1.2",
         "--report-only-reachable"
     };
@@ -66,9 +66,9 @@ public class StaticLinkageCheckOptionTest {
   public void parseCommandLineOptions_emptyOption() throws ParseException {
     StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(new String[0]);
 
-    Assert.assertTrue(parsedOption.getJarFileList().isEmpty());
-    Assert.assertNull(parsedOption.getBomCoordinates());
-    Assert.assertTrue(parsedOption.getMavenCoordinatesList().isEmpty());
+    Assert.assertTrue(parsedOption.getJarFiles().isEmpty());
+    Assert.assertNull(parsedOption.getBom());
+    Assert.assertTrue(parsedOption.getArtifacts().isEmpty());
     Assert.assertFalse(parsedOption.isReportOnlyReachable());
   }
 

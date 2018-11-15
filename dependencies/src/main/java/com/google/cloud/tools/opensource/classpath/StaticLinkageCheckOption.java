@@ -37,9 +37,9 @@ import org.apache.commons.cli.ParseException;
  * exactly one of the following types of input:
  *
  * <ul>
- *   <li>{@code bomCoordinates}: Maven coordinates for a BOM
- *   <li>{@code mavenCoordinatesList}: list of the coordinates of Maven artifacts to check
- *   <li>{@code jarFileList}: list of jar files in the filesystem
+ *   <li>{@code bom}: a Maven BOM specified by its Maven coordinates
+ *   <li>{@code artifacts}: list of Maven artifacts specified by their Maven coordinates
+ *   <li>{@code jarFiles}: list of jar files in the filesystem
  * </ul>
  *
  * @see <a
@@ -51,22 +51,22 @@ abstract class StaticLinkageCheckOption {
   // TODO(suztomo): Add option to specify entry point classes
 
   /**
-   * Returns Maven coordinates for a BOM if specified; otherwise null. Example value: {@code
+   * Returns the Maven coordinates for a BOM if specified; otherwise null. Example value: {@code
    * com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT}
    */
   @Nullable
-  abstract String getBomCoordinates();
+  abstract String getBom();
 
   /**
-   * Returns list of coordinates of Maven artifacts if specified; otherwise an empty list. Example
-   * element: {@code com.google.cloud:google-cloud-bigtable:0.66.0-alpha}
+   * Returns list of the coordinates of (non-BOM) Maven artifacts if specified; otherwise an empty
+   * list. Example element: {@code com.google.cloud:google-cloud-bigtable:0.66.0-alpha}
    */
-  abstract ImmutableList<String> getMavenCoordinatesList();
+  abstract ImmutableList<String> getArtifacts();
 
   /**
    * Returns absolute paths for jar files in the filesystem if specified; otherwise an empty list.
    */
-  abstract ImmutableList<Path> getJarFileList();
+  abstract ImmutableList<Path> getJarFiles();
 
   /**
    * Returns {@code true} if only reachable linkage errors should be reported.
@@ -79,9 +79,9 @@ abstract class StaticLinkageCheckOption {
 
   @AutoValue.Builder
   abstract static class Builder {
-    abstract Builder setBomCoordinates(@Nullable String coordinates);
-    abstract Builder setMavenCoordinatesList(List<String> coordinates);
-    abstract Builder setJarFileList(List<Path> paths);
+    abstract Builder setBom(@Nullable String coordinates);
+    abstract Builder setArtifacts(List<String> coordinates);
+    abstract Builder setJarFiles(List<Path> paths);
     abstract Builder setReportOnlyReachable(boolean value);
     abstract StaticLinkageCheckOption build();
   }
@@ -89,10 +89,13 @@ abstract class StaticLinkageCheckOption {
   static StaticLinkageCheckOption parseArguments(String[] arguments) throws ParseException {
     Options options = new Options();
     options.addOption(
-        "b", "bom", true, "BOM to generate a classpath");
+        "b", "bom", true, "BOM to generate a class path, specified by its Maven coordinates");
     options.addOption(
-        "c", "coordinates", true, "Maven coordinates (separated by ',') to generate a classpath");
-    options.addOption("j", "jars", true, "Jar files (separated by ',') to generate a classpath");
+        "a",
+        "artifacts",
+        true,
+        "Maven coordinates for Maven artifacts (separated by ',') to generate a class path");
+    options.addOption("j", "jars", true, "Jar files (separated by ',') to generate a class path");
     options.addOption(
         "r",
         "report-only-reachable",
@@ -105,14 +108,14 @@ abstract class StaticLinkageCheckOption {
     ImmutableList.Builder<String> mavenCoordinates = ImmutableList.builder();
     try {
       CommandLine commandLine = parser.parse(options, arguments);
-      if ((commandLine.hasOption("b") && commandLine.hasOption("c"))
-          || (commandLine.hasOption("c") && commandLine.hasOption("j"))
+      if ((commandLine.hasOption("b") && commandLine.hasOption("a"))
+          || (commandLine.hasOption("a") && commandLine.hasOption("j"))
           || (commandLine.hasOption("j") && commandLine.hasOption("b"))) {
         throw new IllegalArgumentException(
             "One of BOM, Maven coordinates, or jar files can be specified");
       }
-      if (commandLine.hasOption("c")) {
-        String mavenCoordinatesOption = commandLine.getOptionValue("c");
+      if (commandLine.hasOption("a")) {
+        String mavenCoordinatesOption = commandLine.getOptionValue("a");
         mavenCoordinates.addAll(Arrays.asList(mavenCoordinatesOption.split(",")));
       }
       if (commandLine.hasOption("j")) {
@@ -129,9 +132,9 @@ abstract class StaticLinkageCheckOption {
       boolean reportOnlyReachable = commandLine.hasOption("r");
 
       return builder()
-          .setBomCoordinates(mavenBomCoordinates)
-          .setMavenCoordinatesList(mavenCoordinates.build())
-          .setJarFileList(jarFilePaths)
+          .setBom(mavenBomCoordinates)
+          .setArtifacts(mavenCoordinates.build())
+          .setJarFiles(jarFilePaths)
           .setReportOnlyReachable(reportOnlyReachable)
           .build();
     } catch (ParseException ex) {

@@ -144,10 +144,10 @@ class StaticLinkageChecker {
     ImmutableList.Builder<Path> jarFileBuilder = ImmutableList.builder();
 
     // TODO(suztomo): add logic to convert Maven BOM to list of Maven coordinates as per README.md
-    if (!linkageCheckOption.getJarFileList().isEmpty()) {
-      jarFileBuilder.addAll(linkageCheckOption.getJarFileList());
-    } else if (!linkageCheckOption.getMavenCoordinatesList().isEmpty()) {
-      for (String mavenCoordinates : linkageCheckOption.getMavenCoordinatesList()) {
+    if (!linkageCheckOption.getJarFiles().isEmpty()) {
+      jarFileBuilder.addAll(linkageCheckOption.getJarFiles());
+    } else if (!linkageCheckOption.getArtifacts().isEmpty()) {
+      for (String mavenCoordinates : linkageCheckOption.getArtifacts()) {
         jarFileBuilder.addAll(coordinatesToClasspath(mavenCoordinates));
       }
     }

@@ -420,7 +420,7 @@ public class StaticLinkageCheckerTest {
     StaticLinkageCheckOption parsedOption =
         StaticLinkageCheckOption.parseArguments(
             new String[] {
-              "--coordinate", mavenCoordinates
+              "--artifacts", mavenCoordinates
             });
 
     List<Path> inputClasspath =
