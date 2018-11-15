@@ -16,11 +16,15 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.SetMultimap;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +33,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.CodeSource;
@@ -41,7 +46,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
+import org.apache.bcel.classfile.ClassFormatException;
 import org.apache.bcel.classfile.Constant;
+import org.apache.bcel.classfile.ConstantCP;
+import org.apache.bcel.classfile.ConstantFieldref;
 import org.apache.bcel.classfile.ConstantMethodref;
 import org.apache.bcel.classfile.ConstantNameAndType;
 import org.apache.bcel.classfile.ConstantPool;
@@ -54,7 +62,7 @@ import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
 /**
- * Class to read symbolic references in Java class files and to verify the availability
+ * Class to read symbol references in Java class files and to verify the availability
  * of references in them, through the input class path for a static linkage check.
  */
 class ClassDumper {
@@ -68,21 +76,7 @@ class ClassDumper {
     return inputClasspath;
   }
 
-  private ClassDumper(
-      List<Path> inputClasspath,
-      SyntheticRepository syntheticRepository,
-      ClassLoader classLoader) {
-    this.inputClasspath = ImmutableList.copyOf(inputClasspath);
-    this.syntheticRepository = syntheticRepository;
-    this.classLoader = classLoader;
-    this.jarFileToClasses = jarFilesToDefinedClasses(inputClasspath);
-  }
-
-  JavaClass loadJavaClass(String javaClassName) throws ClassNotFoundException {
-    return syntheticRepository.loadClass(javaClassName);
-  }
-
-  static ClassDumper create(List<Path> jarFilePaths) {
+  static ClassDumper create(List<Path> jarFilePaths) throws IOException, ClassNotFoundException {
     // Creates classpath in the same order as inputClasspath for BCEL API
     String pathAsString =
         jarFilePaths.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator));
@@ -100,7 +94,26 @@ class ClassDumper {
     URLClassLoader classLoaderFromJars =
         new URLClassLoader(jarFileUrls, ClassLoader.getSystemClassLoader());
 
-    return new ClassDumper(jarFilePaths, syntheticRepository, classLoaderFromJars);
+    return new ClassDumper(
+        jarFilePaths,
+        syntheticRepository,
+        classLoaderFromJars,
+        jarFilesToDefinedClasses(jarFilePaths));
+  }
+
+  private ClassDumper(
+      List<Path> inputClasspath,
+      SyntheticRepository syntheticRepository,
+      ClassLoader classLoader,
+      SetMultimap<Path, String> jarFileToClasses) {
+    this.inputClasspath = ImmutableList.copyOf(inputClasspath);
+    this.syntheticRepository = syntheticRepository;
+    this.classLoader = classLoader;
+    this.jarFileToClasses = ImmutableSetMultimap.copyOf(jarFileToClasses);
+  }
+
+  JavaClass loadJavaClass(String javaClassName) throws ClassNotFoundException {
+    return syntheticRepository.loadClass(javaClassName);
   }
 
   /**
@@ -127,7 +140,7 @@ class ClassDumper {
       if (!(constantAtNameAndTypeIndex instanceof ConstantNameAndType)) {
         // This constant_pool entry must be a CONSTANT_NameAndType_info
         // as specified https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4.2
-        throw new RuntimeException(
+        throw new ClassFormatException(
             "Failed to lookup nameAndType constant indexed "
                 + nameAndTypeIndex
                 + ". This class file is not compliant with CONSTANT_Methodref_info specification");
@@ -140,6 +153,115 @@ class ClassDumper {
       methodReferences.add(methodref);
     }
     return methodReferences.build();
+  }
+
+  /**
+   * Scans class files in the jar file and returns a {@link SymbolReferenceSet} populated with
+   * symbol references.
+   *
+   * @param jarFilePath absolute path to a jar file
+   */
+  static SymbolReferenceSet scanSymbolReferencesInJar(Path jarFilePath)
+      throws ClassNotFoundException, IOException {
+    checkArgument(
+        jarFilePath.isAbsolute(), "The input jar file path is not an absolute path");
+    checkArgument(
+        Files.isReadable(jarFilePath), "The input jar file path is not readable");
+
+    SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
+    for (JavaClass javaClass : topLevelJavaClassesInJar(jarFilePath)) {
+      symbolTableBuilder.addAll(scanSymbolReferencesInClass(javaClass));
+    }
+    return symbolTableBuilder.build();
+  }
+
+  private static SymbolReferenceSet scanSymbolReferencesInClass(JavaClass javaClass) {
+    SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
+    ImmutableSet.Builder<MethodSymbolReference> methodReferences =
+        symbolTableBuilder.methodReferencesBuilder();
+    ImmutableSet.Builder<FieldSymbolReference> fieldReferences =
+        symbolTableBuilder.fieldReferencesBuilder();
+
+    // TODO(suztomo): Read class references (inheritance) from javaClass file
+    ImmutableSet.Builder<ClassSymbolReference> classReferences =
+        symbolTableBuilder.classReferencesBuilder();
+
+    String sourceClassName = javaClass.getClassName();
+    ConstantPool constantPool = javaClass.getConstantPool();
+    Constant[] constants = constantPool.getConstantPool();
+    for (Constant constant : constants) {
+      if (constant == null) {
+        continue;
+      }
+      byte constantTag = constant.getTag();
+      switch (constantTag) {
+        case Const.CONSTANT_Methodref:
+          ConstantMethodref constantMethodref = (ConstantMethodref) constant;
+          methodReferences.add(constantToMethodReference(constantMethodref, constantPool,
+              sourceClassName));
+          break;
+        case Const.CONSTANT_Fieldref:
+          ConstantFieldref constantFieldref = (ConstantFieldref) constant;
+          fieldReferences.add(constantToFieldReference(constantFieldref, constantPool,
+              sourceClassName));
+          break;
+        case Const.CONSTANT_Class:
+          // TODO(suztomo): handle class reference
+          break;
+        default:
+          break;
+      }
+    }
+
+    return symbolTableBuilder.build();
+  }
+
+  private static ConstantNameAndType constantNameAndType(
+      ConstantCP constantCP, ConstantPool constantPool) {
+    int nameAndTypeIndex = constantCP.getNameAndTypeIndex();
+    Constant constantAtNameAndTypeIndex = constantPool.getConstant(nameAndTypeIndex);
+    if (!(constantAtNameAndTypeIndex instanceof ConstantNameAndType)) {
+      // This constant_pool entry must be a CONSTANT_NameAndType_info
+      // as specified https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4.2
+      throw new ClassFormatException(
+          "Failed to lookup nameAndType constant indexed at "
+              + nameAndTypeIndex
+              + ". However, the content is not ConstantNameAndType. It is "
+              + constantAtNameAndTypeIndex);
+    }
+    return (ConstantNameAndType) constantAtNameAndTypeIndex;
+  }
+
+  private static MethodSymbolReference constantToMethodReference(
+      ConstantMethodref constantMethodref, ConstantPool constantPool, String sourceClassName) {
+    String classNameInMethodReference = constantMethodref.getClass(constantPool);
+    ConstantNameAndType constantNameAndType =
+        constantNameAndType(constantMethodref, constantPool);
+    String methodName = constantNameAndType.getName(constantPool);
+    String descriptor = constantNameAndType.getSignature(constantPool);
+    MethodSymbolReference methodReference = MethodSymbolReference.builder()
+        .setSourceClassName(sourceClassName)
+        .setMethodName(methodName)
+        .setTargetClassName(classNameInMethodReference)
+        .setDescriptor(descriptor)
+        .build();
+    return methodReference;
+  }
+
+  private static FieldSymbolReference constantToFieldReference(ConstantFieldref constantFieldref,
+      ConstantPool constantPool, String sourceClassName) {
+    // Either a class type or an interface type
+    String classNameInFieldReference = constantFieldref.getClass(constantPool);
+    ConstantNameAndType constantNameAndType =
+        constantNameAndType(constantFieldref, constantPool);
+    String fieldName = constantNameAndType.getName(constantPool);
+
+    FieldSymbolReference fieldSymbolReference = FieldSymbolReference.builder()
+        .setSourceClassName(sourceClassName)
+        .setFieldName(fieldName)
+        .setTargetClassName(classNameInFieldReference)
+        .build();
+    return fieldSymbolReference;
   }
 
   /**
@@ -226,7 +348,7 @@ class ClassDumper {
     ImmutableList<FullyQualifiedMethodSignature> fullyQualifiedMethodSignatures = methods.stream()
         .map(method -> new FullyQualifiedMethodSignature(
             javaClass.getClassName(), method.getMethodName(), method.getDescriptor()))
-        .collect(ImmutableList.toImmutableList());
+        .collect(toImmutableList());
     return fullyQualifiedMethodSignatures;
   }
 
@@ -272,7 +394,7 @@ class ClassDumper {
     Method[] methods = javaClass.getMethods();
     ImmutableList<MethodSignature> signatures = Arrays.stream(methods)
         .map(method -> new MethodSignature(method.getName(), method.getSignature()))
-        .collect(ImmutableList.toImmutableList());
+        .collect(toImmutableList());
     return signatures;
   }
 
@@ -370,23 +492,17 @@ class ClassDumper {
    * @return map of jar file paths to classes defined in them
    */
   private static ImmutableSetMultimap<Path, String> jarFilesToDefinedClasses(
-      List<Path> jarFilePaths) {
+      List<Path> jarFilePaths) throws IOException, ClassNotFoundException {
     ImmutableSetMultimap.Builder<Path, String> pathToClasses =
         ImmutableSetMultimap.builder();
 
     for (Path jarFilePath : jarFilePaths) {
-      String pathToJar = jarFilePath.toString();
-      SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
-      try {
-        for (JavaClass javaClass: topLevelJavaClassesInJar(jarFilePath, repository)) {
-          pathToClasses.put(jarFilePath, javaClass.getClassName());
-          // This does not take double-nested classes. As long as such classes are accessed
-          // only from the outer class, static linkage checker does not report false positives
-          // TODO(suztomo): enhance this so that it can work with double-nested classes
-          pathToClasses.putAll(jarFilePath, listInnerClassNames(javaClass));
-        }
-      } catch (IOException | ClassNotFoundException ex) {
-        throw new RuntimeException("There was problem in loading classes in jar file", ex);
+      for (JavaClass javaClass: topLevelJavaClassesInJar(jarFilePath)) {
+        pathToClasses.put(jarFilePath, javaClass.getClassName());
+        // This does not take double-nested classes. As long as such classes are accessed
+        // only from the outer class, static linkage checker does not report false positives
+        // TODO(suztomo): enhance this so that it can work with double-nested classes
+        pathToClasses.putAll(jarFilePath, listInnerClassNames(javaClass));
       }
     }
     return pathToClasses.build();
@@ -408,8 +524,10 @@ class ClassDumper {
     return allClassesInJar;
   }
 
-  static ImmutableSet<JavaClass> topLevelJavaClassesInJar(Path jarFilePath,
-      SyntheticRepository repository) throws IOException, ClassNotFoundException {
+  static ImmutableSet<JavaClass> topLevelJavaClassesInJar(Path jarFilePath)
+      throws IOException, ClassNotFoundException {
+    String pathToJar = jarFilePath.toString();
+    SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     URL jarFileUrl = jarFilePath.toUri().toURL();
     for (ClassInfo classInfo : listTopLevelClassesFromJar(jarFileUrl)) {

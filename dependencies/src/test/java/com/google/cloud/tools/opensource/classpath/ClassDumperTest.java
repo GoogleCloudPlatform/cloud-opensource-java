@@ -20,6 +20,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Paths;
 import java.util.Set;
@@ -31,6 +33,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ClassDumperTest {
+  private static final String EXAMPLE_JAR_FILE =
+      "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar";
 
   // We're sure that FirestoreGrpc class comes from this class file because
   // this project (cloud-opensource-java) doesn't have dependency for Cloud Firestore
@@ -49,7 +53,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testMethodDescriptorToClass_byteArray() {
+  public void testMethodDescriptorToClass_byteArray() throws IOException, ClassNotFoundException {
     ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
     Class[] byteArrayClass =
         classDumper.methodDescriptorToClass("([B)Ljava/lang/String;");
@@ -57,7 +61,8 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testMethodDescriptorToClass_primitiveTypes() {
+  public void testMethodDescriptorToClass_primitiveTypes()
+      throws IOException, ClassNotFoundException {
     ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
     // List of primitive types that appear in descriptor:
     // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3
@@ -78,7 +83,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testMethodDefinitionExists_arrayType() throws ClassNotFoundException {
+  public void testMethodDefinitionExists_arrayType() throws ClassNotFoundException, IOException {
     FullyQualifiedMethodSignature checkArgumentMethod =
         new FullyQualifiedMethodSignature(
             "com.google.common.base.Preconditions", "checkArgument", "(ZLjava/lang/Object;)V");
@@ -89,7 +94,7 @@ public class ClassDumperTest {
 
   @Test
   public void testMethodDefinitionExists_constructorInAbstractClass()
-      throws ClassNotFoundException {
+      throws ClassNotFoundException, IOException {
     ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
     FullyQualifiedMethodSignature constructorInAbstract =
         new FullyQualifiedMethodSignature(
@@ -122,12 +127,39 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testCreationInvalidInput() {
+  public void testCreationInvalidInput() throws IOException {
     try {
       ClassDumper.create(ImmutableList.of(Paths.get("")));
-      Assert.fail("Empty path should generate RuntimeException");
-    } catch (RuntimeException ex) {
-      Assert.assertEquals("There was problem in loading classes in jar file", ex.getMessage());
+      Assert.fail("Empty path should generate ClassNotFoundException");
+    } catch (ClassNotFoundException ex) {
+      // pass
     }
+  }
+
+  @Test
+  public void testScanSymbolTableFromJar()
+      throws URISyntaxException, IOException, ClassNotFoundException {
+    URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
+
+    SymbolReferenceSet symbolReferenceSet =
+        ClassDumper.scanSymbolReferencesInJar(
+            Paths.get(jarFileUrl.toURI()));
+
+    Set<FieldSymbolReference> actualFieldReferences = symbolReferenceSet.getFieldReferences();
+    FieldSymbolReference expectedFieldReference =
+        FieldSymbolReference.builder().setFieldName("BIDI_STREAMING")
+            .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
+            .setTargetClassName("io.grpc.MethodDescriptor$MethodType").build();
+    Truth.assertThat(actualFieldReferences).contains(expectedFieldReference);
+
+    Set<MethodSymbolReference> actualMethodReferences = symbolReferenceSet.getMethodReferences();
+    MethodSymbolReference expectedMethodReference =
+        MethodSymbolReference.builder()
+            .setTargetClassName("io.grpc.protobuf.ProtoUtils")
+            .setMethodName("marshaller")
+            .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
+            .setDescriptor("(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;")
+            .build();
+    Truth.assertThat(actualMethodReferences).contains(expectedMethodReference);
   }
 }

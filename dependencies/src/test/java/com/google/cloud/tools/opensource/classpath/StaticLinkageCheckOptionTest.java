@@ -17,57 +17,61 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Paths;
+import com.google.common.truth.Truth;
 import org.apache.commons.cli.ParseException;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class StaticLinkageCheckOptionTest {
   @Test
-  public void parseCommandLineOptions_shortOptions() throws ParseException {
+  public void parseCommandLineOptions_shortOptions_bom() throws ParseException {
     String[] arguments = new String[] {
         "-b", "abc.com:dummy:1.2",
-        "-c", "abc.com:abc:1.1,abc.com:abc-util:1.2",
-        "-j", "foo.jar,dir/bar.jar",
         "-r"
     };
-    StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArgument(arguments);
+    StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(arguments);
 
-    Assert.assertEquals(parsedOption.getJarFileList(),
-        ImmutableList.of(Paths.get("foo.jar").toAbsolutePath(),
-            Paths.get("dir/bar.jar").toAbsolutePath()));
-    Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBomCoordinate());
-    Assert.assertEquals(ImmutableList.of("abc.com:abc:1.1", "abc.com:abc-util:1.2"),
-        parsedOption.getMavenCoordinates());
+    Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBom());
+    Truth.assertThat(parsedOption.getArtifacts()).isEmpty();
+    Truth.assertThat(parsedOption.getJarFiles()).isEmpty();
     Assert.assertTrue(parsedOption.isReportOnlyReachable());
   }
 
   @Test
   public void parseCommandLineOptions_longOptions() throws ParseException {
     String[] arguments = new String[] {
-        "--bom", "abc.com:dummy:1.2",
-        "--coordinate", "abc.com:abc:1.1,abc.com:abc-util:1.2",
-        "--jars", "foo.jar,dir/bar.jar",
+        "--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2",
         "--report-only-reachable"
     };
-    StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArgument(arguments);
+    StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(arguments);
 
-    Assert.assertEquals(parsedOption.getJarFileList(),
-        ImmutableList.of(Paths.get("foo.jar").toAbsolutePath(),
-            Paths.get("dir/bar.jar").toAbsolutePath()));
-    Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBomCoordinate());
     Assert.assertEquals(ImmutableList.of("abc.com:abc:1.1", "abc.com:abc-util:1.2"),
-        parsedOption.getMavenCoordinates());
+        parsedOption.getArtifacts());
     Assert.assertTrue(parsedOption.isReportOnlyReachable());
   }
 
   @Test
-  public void parseCommandLineOptions_emptyOption() throws ParseException {
-    StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArgument(new String[0]);
+  public void parseCommandLineOptions_duplicates() throws ParseException {
+    String[] arguments = new String[] {
+        "--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2",
+        "-b", "abc.com:dummy:1.2",
+        "--report-only-reachable"
+    };
+    try {
+      StaticLinkageCheckOption.parseArguments(arguments);
+      Assert.fail();
+    } catch (IllegalArgumentException ex) {
+      // pass
+    }
+  }
 
-    Assert.assertTrue(parsedOption.getJarFileList().isEmpty());
-    Assert.assertNull(parsedOption.getBomCoordinate());
-    Assert.assertTrue(parsedOption.getMavenCoordinates().isEmpty());
+  @Test
+  public void parseCommandLineOptions_emptyOption() throws ParseException {
+    StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(new String[0]);
+
+    Assert.assertTrue(parsedOption.getJarFiles().isEmpty());
+    Assert.assertNull(parsedOption.getBom());
+    Assert.assertTrue(parsedOption.getArtifacts().isEmpty());
     Assert.assertFalse(parsedOption.isReportOnlyReachable());
   }
 
@@ -77,7 +81,7 @@ public class StaticLinkageCheckOptionTest {
         "-x" // No such option
     };
     try {
-      StaticLinkageCheckOption.parseArgument(arguments);
+      StaticLinkageCheckOption.parseArguments(arguments);
       Assert.fail();
     } catch (ParseException ex) {
       Assert.assertEquals("Unrecognized option: -x", ex.getMessage());

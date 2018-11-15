@@ -22,13 +22,14 @@ import org.junit.Test;
 public class LinkageErrorMissingClassTest {
   @Test
   public void testCreation() {
-    LinkageErrorMissingClass linkageErrorMissingClass =
-        LinkageErrorMissingClass.builder()
+    ClassSymbolReference classSymbolReference =
+        ClassSymbolReference.builder()
             .setTargetClassName("ClassA")
             .setSourceClassName("ClassB")
             .build();
+    LinkageErrorMissingClass linkageErrorMissingClass =
+        LinkageErrorMissingClass.builder().setReference(classSymbolReference).build();
 
-    Assert.assertEquals("ClassA", linkageErrorMissingClass.getTargetClassName());
-    Assert.assertEquals("ClassB", linkageErrorMissingClass.getSourceClassName());
+    Assert.assertEquals(classSymbolReference, linkageErrorMissingClass.getReference());
   }
 }

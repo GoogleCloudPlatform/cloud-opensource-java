@@ -16,22 +16,20 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.auto.value.AutoValue;
+import org.junit.Assert;
 
-/**
- * A missing method linkage error.
- */
-@AutoValue
-abstract class LinkageErrorMissingMethod {
-  abstract MethodSymbolReference getReference();
+import org.junit.Test;
 
-  static Builder builder() {
-    return new AutoValue_LinkageErrorMissingMethod.Builder();
-  }
+public class ClassSymbolReferenceTest {
+  @Test
+  public void testCreation() {
+    ClassSymbolReference classSymbolReference =
+        ClassSymbolReference.builder()
+            .setTargetClassName("ClassA")
+            .setSourceClassName("ClassB")
+            .build();
 
-  @AutoValue.Builder
-  abstract static class Builder {
-    abstract Builder setReference(MethodSymbolReference value);
-    abstract LinkageErrorMissingMethod build();
+    Assert.assertEquals("ClassA", classSymbolReference.getTargetClassName());
+    Assert.assertEquals("ClassB", classSymbolReference.getSourceClassName());
   }
 }

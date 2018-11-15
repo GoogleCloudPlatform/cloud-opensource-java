@@ -23,9 +23,7 @@ import com.google.auto.value.AutoValue;
  */
 @AutoValue
 abstract class LinkageErrorMissingField {
-  abstract String getTargetClassName();
-  abstract String getFieldName();
-  abstract String getSourceClassName();
+  abstract FieldSymbolReference getReference();
 
   static Builder builder() {
     return new AutoValue_LinkageErrorMissingField.Builder();
@@ -33,9 +31,7 @@ abstract class LinkageErrorMissingField {
 
   @AutoValue.Builder
   abstract static class Builder {
-    abstract Builder setTargetClassName(String value);
-    abstract Builder setFieldName(String value);
-    abstract Builder setSourceClassName(String value);
+    abstract Builder setReference(FieldSymbolReference value);
     abstract LinkageErrorMissingField build();
   }
 }

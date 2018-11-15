@@ -16,31 +16,30 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Formatter;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.util.ClassPath;
-import org.apache.bcel.util.SyntheticRepository;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -54,6 +53,16 @@ class StaticLinkageChecker {
 
   private static final Logger logger = Logger.getLogger(StaticLinkageChecker.class.getName());
 
+  static StaticLinkageChecker create(
+      boolean reportOnlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
+      throws IOException, ClassNotFoundException {
+    checkArgument(
+        !jarFilePaths.isEmpty(),
+        "The linkage classpath is empty. Specify input to supply one or more jar files");
+    return new StaticLinkageChecker(
+        reportOnlyReachable, ClassDumper.create(jarFilePaths), entryPoints);
+  }
+
   /**
    * Flag on the reachability. This flag controls whether the report excludes the linkage errors
    * on classes that are not reachable from the entry points of the class usage graph.
@@ -65,12 +74,9 @@ class StaticLinkageChecker {
   private final ImmutableSet<Path> entryPoints;
 
   StaticLinkageChecker(
-      boolean reportOnlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints) {
-    Preconditions.checkArgument(
-        !jarFilePaths.isEmpty(),
-        "The linkage classpath is empty. Specify input to supply one or more jar files");
+      boolean reportOnlyReachable, ClassDumper classDumper, Iterable<Path> entryPoints) {
     this.reportOnlyReachable = reportOnlyReachable;
-    this.classDumper = ClassDumper.create(jarFilePaths);
+    this.classDumper = classDumper;
     this.entryPoints = ImmutableSet.copyOf(entryPoints);
   }
 
@@ -80,46 +86,48 @@ class StaticLinkageChecker {
    *
    * @throws IOException when there is a problem in reading a jar file
    * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
-   * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
+   * @throws RepositoryException when there is a problem in resolving the Maven coordinates to jar
    *     files
    * @throws ParseException when the arguments are invalid for the tool
    */
   public static void main(String[] arguments)
       throws IOException, ClassNotFoundException, RepositoryException, ParseException {
-    StaticLinkageCheckOption commandLineOption = StaticLinkageCheckOption.parseArgument(arguments);
+    StaticLinkageCheckOption commandLineOption = StaticLinkageCheckOption.parseArguments(arguments);
     ImmutableList<Path> inputClasspath =
         generateInputClasspathFromLinkageCheckOption(commandLineOption);
     // TODO(suztomo): to take command-line option to choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(inputClasspath.get(0));
     StaticLinkageChecker staticLinkageChecker =
-        new StaticLinkageChecker(commandLineOption.isReportOnlyReachable(), inputClasspath,
+        create(commandLineOption.isReportOnlyReachable(), inputClasspath,
             entryPoints);
 
     List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
         staticLinkageChecker.findUnresolvedMethodReferences();
-    printStaticLinkageErrors(unresolvedMethodReferences);
+
+    StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
+
+    printStaticLinkageReport(report);
   }
 
-  private static void printStaticLinkageErrors(
-      List<FullyQualifiedMethodSignature> unresolvedMethodReferences) {
-    if (unresolvedMethodReferences.isEmpty()) {
-      System.out.println("There were no unresolved method references");
-      return;
+  private static void printStaticLinkageReport(StaticLinkageCheckReport report) {
+    for (JarLinkageReport jarLinkageReport : report.getJarLinkageReports()) {
+      int totalErrors =
+          jarLinkageReport.getMissingClassErrors().size()
+              + jarLinkageReport.getMissingMethodErrors().size()
+              + jarLinkageReport.getMissingFieldErrors().size();
+      System.out.println(
+          jarLinkageReport.getJarPath().getFileName() + "(" + totalErrors + " errors):");
+      String indent = "  ";
+      for (LinkageErrorMissingClass missingClass : jarLinkageReport.getMissingClassErrors()) {
+        System.out.println(indent + missingClass.getReference());
+      }
+      for (LinkageErrorMissingMethod missingMethod : jarLinkageReport.getMissingMethodErrors()) {
+        System.out.println(indent + missingMethod.getReference());
+      }
+      for (LinkageErrorMissingField missingField : jarLinkageReport.getMissingFieldErrors()) {
+        System.out.println(indent + missingField.getReference());
+      }
     }
-    ImmutableSortedSet<FullyQualifiedMethodSignature> sortedUnresolvedMethodReferences =
-        ImmutableSortedSet.copyOf(unresolvedMethodReferences);
-    int count = sortedUnresolvedMethodReferences.size();
-    Formatter formatter = new Formatter();
-    formatter.format(
-        "There were %,d unresolved method references from the jar file(s):\n", count);
-    for (FullyQualifiedMethodSignature methodReference : sortedUnresolvedMethodReferences) {
-      formatter.format(
-          "Class: '%s', method: '%s' with descriptor %s\n",
-          methodReference.getClassName(),
-          methodReference.getMethodSignature().getMethodName(),
-          methodReference.getMethodSignature().getDescriptor());
-    }
-    System.out.println(formatter);
   }
 
   /**
@@ -128,7 +136,7 @@ class StaticLinkageChecker {
    *
    * @param linkageCheckOption option through command-line arguments
    * @return input class path resolved as a list of absolute paths to jar files
-   * @throws RepositoryException when there is a problem in resolving the Maven coordinate to jar
+   * @throws RepositoryException when there is a problem in resolving the Maven coordinates to jar
    */
   @VisibleForTesting
   static ImmutableList<Path> generateInputClasspathFromLinkageCheckOption(
@@ -136,12 +144,9 @@ class StaticLinkageChecker {
     ImmutableList.Builder<Path> jarFileBuilder = ImmutableList.builder();
 
     // TODO(suztomo): add logic to convert Maven BOM to list of Maven coordinates as per README.md
-    if (!linkageCheckOption.getJarFileList().isEmpty()) {
-      jarFileBuilder.addAll(linkageCheckOption.getJarFileList());
-    } else if (!linkageCheckOption.getMavenCoordinates().isEmpty()) {
-      for (String mavenCoordinates : linkageCheckOption.getMavenCoordinates()) {
-        jarFileBuilder.addAll(coordinateToClasspath(mavenCoordinates));
-      }
+    jarFileBuilder.addAll(linkageCheckOption.getJarFiles());
+    for (String mavenCoordinates : linkageCheckOption.getArtifacts()) {
+      jarFileBuilder.addAll(coordinatesToClasspath(mavenCoordinates));
     }
     return jarFileBuilder.build();
   }
@@ -149,13 +154,13 @@ class StaticLinkageChecker {
   /**
    * Finds jar file paths for the dependencies of the Maven coordinate.
    *
-   * @param coordinate Maven coordinate of an artifact to check its dependencies
+   * @param coordinates Maven coordinates of an artifact to check its dependencies
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem in retrieving jar files
    */
   @VisibleForTesting
-  static ImmutableList<Path> coordinateToClasspath(String coordinate) throws RepositoryException {
-    DefaultArtifact rootArtifact = new DefaultArtifact(coordinate);
+  static ImmutableList<Path> coordinatesToClasspath(String coordinates) throws RepositoryException {
+    DefaultArtifact rootArtifact = new DefaultArtifact(coordinates);
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph dependencyGraph =
         DependencyGraphBuilder.getStaticLinkageCheckDependencies(rootArtifact);
@@ -183,6 +188,40 @@ class StaticLinkageChecker {
   }
 
   /**
+   * Finds linkage errors in the input classpath and generates a static linkage check report.
+   */
+  StaticLinkageCheckReport findLinkageErrors() throws ClassNotFoundException, IOException {
+    ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
+
+    ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbols = ImmutableMap.builder();
+    for (Path jarPath : jarFilePaths) {
+      jarToSymbols.put(jarPath, ClassDumper.scanSymbolReferencesInJar(jarPath));
+    }
+
+    // Validate linkage error of each reference
+    ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
+    for (Map.Entry<Path, SymbolReferenceSet> entry : jarToSymbols.build().entrySet()) {
+      jarLinkageReports.add(findInvalidReferences(entry.getKey(), entry.getValue()));
+    }
+
+    if (reportOnlyReachable) {
+      // TODO: Optionally, report errors only reachable from entry point classes
+      logger.warning("reportOnlyReachable is not yet implemented");
+      throw new UnsupportedOperationException("reportOnlyReachable is not yet implemented");
+    }
+
+    return StaticLinkageCheckReport.create(jarLinkageReports.build());
+  }
+
+  private JarLinkageReport findInvalidReferences(
+      Path jarPath, SymbolReferenceSet symbolReferenceSet) {
+    JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder().setJarPath(jarPath);
+
+    // TODO(suztomo): implement validation for field, method and class references in the table
+    throw new UnsupportedOperationException("The report generation is not yet implemented");
+  }
+
+  /**
    * Runs the static linkage check and returns unresolved methods for the jar file paths
    *
    * @return list of methods that are not found in the jar files
@@ -193,6 +232,7 @@ class StaticLinkageChecker {
   ImmutableList<FullyQualifiedMethodSignature> findUnresolvedMethodReferences()
       throws IOException, ClassNotFoundException {
     // TODO(suztomo): Separate logic between data retrieval and usage graph traversal. Issue #203
+    // TODO(suztomo): This method is to be replaced with findLinkageErrors
     ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
     logger.fine("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
 
@@ -304,10 +344,7 @@ class StaticLinkageChecker {
     List<FullyQualifiedMethodSignature> methodReferences = new ArrayList<>();
     Set<String> internalClassNames = new HashSet<>();
 
-    String pathToJar = jarFilePath.toString();
-    SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
-
-    for (JavaClass javaClass: ClassDumper.topLevelJavaClassesInJar(jarFilePath, repository)) {
+    for (JavaClass javaClass: ClassDumper.topLevelJavaClassesInJar(jarFilePath)) {
       String className = javaClass.getClassName();
       classesChecked.add(className);
       internalClassNames.add(className);
@@ -315,9 +352,11 @@ class StaticLinkageChecker {
       List<FullyQualifiedMethodSignature> references = ClassDumper.listMethodReferences(javaClass);
       methodReferences.addAll(references);
     }
-    ImmutableList<FullyQualifiedMethodSignature> externalMethodReferences = methodReferences.stream()
-        .filter(reference -> !internalClassNames.contains(reference.getClassName()))
-        .collect(ImmutableList.toImmutableList());
+    ImmutableList<FullyQualifiedMethodSignature> externalMethodReferences =
+        methodReferences
+            .stream()
+            .filter(reference -> !internalClassNames.contains(reference.getClassName()))
+            .collect(toImmutableList());
     return externalMethodReferences;
   }
 }

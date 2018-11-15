@@ -19,19 +19,24 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.auto.value.AutoValue;
 
 /**
- * A missing method linkage error.
+ * A symbol reference to a field of {@code targetClass} referenced from {@code sourceClass}.
  */
 @AutoValue
-abstract class LinkageErrorMissingMethod {
-  abstract MethodSymbolReference getReference();
+abstract class FieldSymbolReference implements SymbolReference {
+  /**
+   * Returns the field name of the reference.
+   */
+  abstract String getFieldName();
 
   static Builder builder() {
-    return new AutoValue_LinkageErrorMissingMethod.Builder();
+    return new AutoValue_FieldSymbolReference.Builder();
   }
 
   @AutoValue.Builder
   abstract static class Builder {
-    abstract Builder setReference(MethodSymbolReference value);
-    abstract LinkageErrorMissingMethod build();
+    abstract Builder setTargetClassName(String className);
+    abstract Builder setFieldName(String fieldName);
+    abstract Builder setSourceClassName(String className);
+    abstract FieldSymbolReference build();
   }
 }

@@ -19,7 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class LinkageErrorMissingMethodTest {
+public class MethodSymbolReferenceTest {
   @Test
   public void testCreation() {
     MethodSymbolReference methodSymbolReference =
@@ -29,11 +29,10 @@ public class LinkageErrorMissingMethodTest {
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassB")
             .build();
-    LinkageErrorMissingMethod linkageErrorMissingMethod =
-        LinkageErrorMissingMethod.builder()
-            .setReference(methodSymbolReference)
-            .build();
 
-    Assert.assertEquals(methodSymbolReference, linkageErrorMissingMethod.getReference());
+    Assert.assertEquals("ClassA", methodSymbolReference.getTargetClassName());
+    Assert.assertEquals("methodX", methodSymbolReference.getMethodName());
+    Assert.assertEquals("java.lang.String", methodSymbolReference.getDescriptor());
+    Assert.assertEquals("ClassB", methodSymbolReference.getSourceClassName());
   }
 }

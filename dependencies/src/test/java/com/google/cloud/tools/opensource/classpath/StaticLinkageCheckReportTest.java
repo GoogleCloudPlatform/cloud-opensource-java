@@ -22,36 +22,59 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class StaticLinkageCheckReportTest {
+  private static JarLinkageReport createDummyJarLinkageReport() {
+    ClassSymbolReference classSymbolReference =
+        ClassSymbolReference.builder()
+            .setTargetClassName("ClassA")
+            .setSourceClassName("ClassB")
+            .build();
+    LinkageErrorMissingClass linkageErrorMissingClass =
+        LinkageErrorMissingClass.builder().setReference(classSymbolReference).build();
 
-  @Test
-  public void testCreation() {
+    ImmutableList<LinkageErrorMissingClass> linkageErrorMissingClasses =
+        ImmutableList.of(linkageErrorMissingClass);
+
+    MethodSymbolReference methodSymbolReference =
+        MethodSymbolReference.builder()
+            .setTargetClassName("ClassA")
+            .setMethodName("methodX")
+            .setDescriptor("java.lang.String")
+            .setSourceClassName("ClassB")
+            .build();
+    LinkageErrorMissingMethod linkageErrorMissingMethod =
+        LinkageErrorMissingMethod.builder()
+            .setReference(methodSymbolReference)
+            .build();
+    ImmutableList<LinkageErrorMissingMethod> missingMethodErrors =
+        ImmutableList.of(linkageErrorMissingMethod);
+
+    FieldSymbolReference fieldSymbolReference =
+        FieldSymbolReference.builder()
+            .setTargetClassName("ClassC")
+            .setFieldName("fieldX")
+            .setSourceClassName("ClassD")
+            .build();
+    LinkageErrorMissingField linkageErrorMissingField =
+        LinkageErrorMissingField.builder()
+            .setReference(fieldSymbolReference)
+            .build();
+    ImmutableList<LinkageErrorMissingField> missingFieldErrors =
+        ImmutableList.of(linkageErrorMissingField);
     JarLinkageReport jarLinkageReport =
         JarLinkageReport.builder()
             .setJarPath(Paths.get("a", "b", "c"))
-            .setMissingClassErrors(
-                ImmutableList.of(
-                    LinkageErrorMissingClass.builder()
-                        .setTargetClassName("ClassA")
-                        .setSourceClassName("ClassB")
-                        .build()))
-            .setMissingMethodErrors(
-                ImmutableList.of(
-                    LinkageErrorMissingMethod.builder()
-                        .setTargetClassName("ClassA")
-                        .setMethodName("methodX")
-                        .setDescriptor("java.lang.String")
-                        .setSourceClassName("ClassB")
-                        .build()))
-            .setMissingFieldErrors(
-                ImmutableList.of(
-                    LinkageErrorMissingField.builder()
-                        .setTargetClassName("ClassC")
-                        .setFieldName("fieldX")
-                        .setSourceClassName("ClassD")
-                        .build()))
+            .setMissingClassErrors(linkageErrorMissingClasses)
+            .setMissingMethodErrors(missingMethodErrors)
+            .setMissingFieldErrors(missingFieldErrors)
             .build();
+    return jarLinkageReport;
+  }
+
+  @Test
+  public void testCreation() {
+    JarLinkageReport jarLinkageReport = createDummyJarLinkageReport();
     StaticLinkageCheckReport staticLinkageCheckReport =
-        StaticLinkageCheckReport.create(ImmutableList.of(jarLinkageReport));
+        StaticLinkageCheckReport.create(ImmutableList.of(createDummyJarLinkageReport()));
 
     Assert.assertEquals(1, staticLinkageCheckReport.getJarLinkageReports().size());
     Assert.assertEquals(jarLinkageReport, staticLinkageCheckReport.getJarLinkageReports().get(0));
@@ -62,6 +85,7 @@ public class StaticLinkageCheckReportTest {
             .get(0)
             .getMissingClassErrors()
             .get(0)
+            .getReference()
             .getTargetClassName());
   }
 }

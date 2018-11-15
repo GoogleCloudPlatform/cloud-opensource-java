@@ -17,14 +17,12 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
-
 /**
  * A missing class linkage error.
  */
 @AutoValue
 abstract class LinkageErrorMissingClass {
-  abstract String getTargetClassName();
-  abstract String getSourceClassName();
+  abstract ClassSymbolReference getReference();
 
   static Builder builder() {
     return new AutoValue_LinkageErrorMissingClass.Builder();
@@ -32,8 +30,7 @@ abstract class LinkageErrorMissingClass {
 
   @AutoValue.Builder
   abstract static class Builder {
-    abstract Builder setTargetClassName(String value);
-    abstract Builder setSourceClassName(String value);
+    abstract Builder setReference(ClassSymbolReference value);
     abstract LinkageErrorMissingClass build();
   }
 }

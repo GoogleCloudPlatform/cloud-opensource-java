@@ -22,15 +22,17 @@ import org.junit.Test;
 public class LinkageErrorMissingFieldTest {
   @Test
   public void testCreation() {
-    LinkageErrorMissingField linkageErrorMissingField =
-        LinkageErrorMissingField.builder()
+    FieldSymbolReference fieldSymbolReference =
+        FieldSymbolReference.builder()
             .setTargetClassName("ClassC")
             .setFieldName("fieldX")
             .setSourceClassName("ClassD")
             .build();
+    LinkageErrorMissingField linkageErrorMissingField =
+        LinkageErrorMissingField.builder()
+            .setReference(fieldSymbolReference)
+            .build();
 
-    Assert.assertEquals("ClassC", linkageErrorMissingField.getTargetClassName());
-    Assert.assertEquals("fieldX", linkageErrorMissingField.getFieldName());
-    Assert.assertEquals("ClassD", linkageErrorMissingField.getSourceClassName());
+    Assert.assertEquals(fieldSymbolReference, linkageErrorMissingField.getReference());
   }
 }
