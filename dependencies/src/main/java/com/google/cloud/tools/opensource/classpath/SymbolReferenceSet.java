@@ -58,7 +58,7 @@ abstract class SymbolReferenceSet {
 
     abstract SymbolReferenceSet build();
 
-    Builder merge(SymbolReferenceSet other) {
+    Builder addAll(SymbolReferenceSet other) {
       classReferencesBuilder().addAll(other.getClassReferences());
       methodReferencesBuilder().addAll(other.getMethodReferences());
       fieldReferencesBuilder().addAll(other.getFieldReferences());

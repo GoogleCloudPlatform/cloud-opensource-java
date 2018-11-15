@@ -74,7 +74,9 @@ abstract class StaticLinkageCheckOption {
   abstract boolean isReportOnlyReachable();
 
   static Builder builder() {
-    return new AutoValue_StaticLinkageCheckOption.Builder();
+    return new AutoValue_StaticLinkageCheckOption.Builder()
+        .setArtifacts(ImmutableList.of())
+        .setJarFiles(ImmutableList.of());
   }
 
   @AutoValue.Builder

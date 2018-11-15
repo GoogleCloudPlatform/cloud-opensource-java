@@ -31,6 +31,8 @@ public class StaticLinkageCheckOptionTest {
     StaticLinkageCheckOption parsedOption = StaticLinkageCheckOption.parseArguments(arguments);
 
     Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getBom());
+    Assert.assertTrue(parsedOption.getArtifacts().isEmpty());
+    Assert.assertTrue(parsedOption.getJarFiles().isEmpty());
     Assert.assertTrue(parsedOption.isReportOnlyReachable());
   }
 

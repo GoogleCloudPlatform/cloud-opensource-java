@@ -170,7 +170,7 @@ class ClassDumper {
 
     SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
     for (JavaClass javaClass : topLevelJavaClassesInJar(jarFilePath)) {
-      symbolTableBuilder.merge(scanSymbolReferencesInClass(javaClass));
+      symbolTableBuilder.addAll(scanSymbolReferencesInClass(javaClass));
     }
     return symbolTableBuilder.build();
   }
