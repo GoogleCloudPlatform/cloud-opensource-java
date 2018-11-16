@@ -33,7 +33,7 @@ public class ManagedDependencyLister {
 
   public static void main(String[] args) throws ArtifactDescriptorException {
     DefaultArtifact artifact =
-        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:0.0.1-SNAPSHOT");
+        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
 
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 
