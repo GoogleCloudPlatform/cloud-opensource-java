@@ -123,8 +123,7 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testFindInvalidReferences_arrayCloneMethod()
       throws RepositoryException, IOException, ClassNotFoundException {
-    String bigTableCoordinates = "io.grpc:grpc-auth:1.15.1";
-    List<Path> paths = StaticLinkageChecker.coordinatesToClasspath(bigTableCoordinates);
+    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-26.0-jre.jar"));
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
@@ -157,9 +156,8 @@ public class StaticLinkageCheckerTest {
 
   @Test
   public void testFindInvalidReferences_constructorInAbstractClass()
-      throws RepositoryException, IOException, ClassNotFoundException {
-    String bigTableCoordinates = "io.grpc:grpc-auth:1.15.1";
-    List<Path> paths = StaticLinkageChecker.coordinatesToClasspath(bigTableCoordinates);
+      throws IOException, ClassNotFoundException {
+    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-26.0-jre.jar"));
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
