@@ -29,9 +29,7 @@ public class LinkageErrorMissingFieldTest {
             .setSourceClassName("ClassD")
             .build();
     LinkageErrorMissingField linkageErrorMissingField =
-        LinkageErrorMissingField.builder()
-            .setReference(fieldSymbolReference)
-            .build();
+        LinkageErrorMissingField.errorAt(fieldSymbolReference);
 
     Assert.assertEquals(fieldSymbolReference, linkageErrorMissingField.getReference());
   }

@@ -83,29 +83,6 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testMethodDefinitionExists_arrayType() throws ClassNotFoundException, IOException {
-    FullyQualifiedMethodSignature checkArgumentMethod =
-        new FullyQualifiedMethodSignature(
-            "com.google.common.base.Preconditions", "checkArgument", "(ZLjava/lang/Object;)V");
-    ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
-
-    Assert.assertTrue(classDumper.methodDefinitionExists(checkArgumentMethod));
-  }
-
-  @Test
-  public void testMethodDefinitionExists_constructorInAbstractClass()
-      throws ClassNotFoundException, IOException {
-    ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
-    FullyQualifiedMethodSignature constructorInAbstract =
-        new FullyQualifiedMethodSignature(
-            "com.google.common.collect.LinkedHashMultimapGwtSerializationDependencies",
-            "<init>",
-            "(Ljava/util/Map;)V");
-
-    Assert.assertTrue(classDumper.methodDefinitionExists(constructorInAbstract));
-  }
-
-  @Test
   public void testListInnerClasses() throws IOException {
     InputStream classFileInputStream = URLClassLoader.getSystemResourceAsStream(
         EXAMPLE_CLASS_FILE);

@@ -30,9 +30,7 @@ public class LinkageErrorMissingMethodTest {
             .setSourceClassName("ClassB")
             .build();
     LinkageErrorMissingMethod linkageErrorMissingMethod =
-        LinkageErrorMissingMethod.builder()
-            .setReference(methodSymbolReference)
-            .build();
+        LinkageErrorMissingMethod.errorAt(methodSymbolReference);
 
     Assert.assertEquals(methodSymbolReference, linkageErrorMissingMethod.getReference());
   }
