@@ -255,6 +255,10 @@ class StaticLinkageChecker {
     return Optional.of(LinkageErrorMissingMethod.errorAt(reference));
   }
 
+  /**
+   * Returns true if the method reference has a valid referent in the classpath via Java class
+   * loader.
+   */
   private boolean validateMethodReferenceByClassLoader(MethodSymbolReference methodReference) {
     String className = methodReference.getTargetClassName();
     String methodName = methodReference.getMethodName();
@@ -276,6 +280,9 @@ class StaticLinkageChecker {
     }
   }
 
+  /**
+   * Returns true if the method reference has a valid referent in the classpath via BCEL API.
+   */
   private boolean validateMethodReferenceByBcelRepository(MethodSymbolReference methodReference) {
     String className = methodReference.getTargetClassName();
     String methodName = methodReference.getMethodName();
@@ -310,12 +317,10 @@ class StaticLinkageChecker {
     // Attempt 1: Find the class and method in via the BCEL synthetic repository in ClassDumper.
     // BCEL API helps to search availability of (package) private class, constructors and
     // methods that are inaccessible to Java's reflection API or the class loader.
-    boolean referentFoundInBcel = validateMethodReferenceByBcelRepository(methodReference);
-    if (referentFoundInBcel) {
-      return true;
-    }
+
     // Attempt 2: Find the class and method via the class loader of the input class path
     // in ClassDumper. Class loaders help to resolve methods defined in Java built-in classes.
-    return validateMethodReferenceByClassLoader(methodReference);
+    return validateMethodReferenceByBcelRepository(methodReference)
+        || validateMethodReferenceByClassLoader(methodReference);
   }
 }
