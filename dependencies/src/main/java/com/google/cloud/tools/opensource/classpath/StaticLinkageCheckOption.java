@@ -50,6 +50,9 @@ import org.apache.commons.cli.ParseException;
  */
 @AutoValue
 abstract class StaticLinkageCheckOption {
+  
+  private static final Options options = configureOptions();
+  
   // TODO(suztomo): Add option to specify entry point classes
 
   /**
@@ -89,23 +92,26 @@ abstract class StaticLinkageCheckOption {
     abstract Builder setReportOnlyReachable(boolean value);
     abstract StaticLinkageCheckOption build();
   }
+  
+  static CommandLine readCommandLine(String[] arguments) throws ParseException {
+    // TODO is this reentrant? Can we reuse it? 
+    // https://issues.apache.org/jira/browse/CLI-291
+    CommandLineParser parser = new DefaultParser();
+
+    try {
+      CommandLine commandLine = parser.parse(options, arguments);
+      return commandLine;
+    } catch (ParseException ex) {
+      HelpFormatter helpFormatter = new HelpFormatter();
+      helpFormatter.printHelp("StaticLinkageChecker", options);
+      throw ex;
+    }
+  }
 
   static StaticLinkageCheckOption parseArguments(String[] arguments) throws ParseException {
-    Options options = new Options();
-    options.addOption(
-        "b", "bom", true, "BOM to generate a class path, specified by its Maven coordinates");
-    options.addOption(
-        "a",
-        "artifacts",
-        true,
-        "Maven coordinates for Maven artifacts (separated by ',') to generate a class path");
-    options.addOption("j", "jars", true, "Jar files (separated by ',') to generate a class path");
-    options.addOption(
-        "r",
-        "report-only-reachable",
-        false,
-        "To report only linkage errors reachable from entry point");
 
+    // TODO is this reentrant? Can we reuse it? 
+    // https://issues.apache.org/jira/browse/CLI-291
     CommandLineParser parser = new DefaultParser();
     List<Path> jarFilePaths = new ArrayList<>();
 
@@ -145,5 +151,23 @@ abstract class StaticLinkageCheckOption {
       helpFormatter.printHelp("StaticLinkageChecker", options);
       throw ex;
     }
+  }
+
+  private static Options configureOptions() {
+    Options options = new Options();
+    options.addOption(
+        "b", "bom", true, "BOM to generate a class path, specified by its Maven coordinates");
+    options.addOption(
+        "a",
+        "artifacts",
+        true,
+        "Maven coordinates for Maven artifacts (separated by ',') to generate a class path");
+    options.addOption("j", "jars", true, "Jar files (separated by ',') to generate a class path");
+    options.addOption(
+        "r",
+        "report-only-reachable",
+        false,
+        "To report only linkage errors reachable from entry point");
+    return options;
   }
 }
