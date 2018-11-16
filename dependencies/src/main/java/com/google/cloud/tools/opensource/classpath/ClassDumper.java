@@ -129,45 +129,6 @@ class ClassDumper {
   }
 
   /**
-   *  Lists all method references from the Java class file. The output corresponds to
-   *  CONSTANT_Methodref_info entries in the .class file's constant pool. The output list includes
-   *  both (internal) methods defined in the file and (external) methods called by the class.
-   *
-   * @param javaClass .class file to list its method references
-   * @return list of the method signatures with their fully-qualified classes
-   */
-  static ImmutableList<FullyQualifiedMethodSignature> listMethodReferences(JavaClass javaClass) {
-    ImmutableList.Builder<FullyQualifiedMethodSignature> methodReferences = ImmutableList.builder();
-    ConstantPool constantPool = javaClass.getConstantPool();
-    Constant[] constants = constantPool.getConstantPool();
-    List<Constant> methodrefConstants = Arrays.stream(constants)
-            .filter(Predicates.notNull())
-            .filter(constant -> constant.getTag() == Const.CONSTANT_Methodref)
-            .collect(Collectors.toList());
-    for (Constant constant : methodrefConstants) {
-      ConstantMethodref constantMethodref = (ConstantMethodref) constant;
-      String classNameInMethodReference = constantMethodref.getClass(constantPool);
-      int nameAndTypeIndex = constantMethodref.getNameAndTypeIndex();
-      Constant constantAtNameAndTypeIndex = constantPool.getConstant(nameAndTypeIndex);
-      if (!(constantAtNameAndTypeIndex instanceof ConstantNameAndType)) {
-        // This constant_pool entry must be a CONSTANT_NameAndType_info
-        // as specified https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4.2
-        throw new ClassFormatException(
-            "Failed to lookup nameAndType constant indexed "
-                + nameAndTypeIndex
-                + ". This class file is not compliant with CONSTANT_Methodref_info specification");
-      }
-      ConstantNameAndType constantNameAndType = (ConstantNameAndType) constantAtNameAndTypeIndex;
-      String methodName = constantNameAndType.getName(constantPool);
-      String descriptor = constantNameAndType.getSignature(constantPool);
-      FullyQualifiedMethodSignature methodref =
-          new FullyQualifiedMethodSignature(classNameInMethodReference, methodName, descriptor);
-      methodReferences.add(methodref);
-    }
-    return methodReferences.build();
-  }
-
-  /**
    * Scans class files in the jar file and returns a {@link SymbolReferenceSet} populated with
    * symbol references.
    *
@@ -276,94 +237,6 @@ class ClassDumper {
     return fieldSymbolReference;
   }
 
-  /**
-   * Lists external method references for a class. The returned list does not include method
-   * references that point to other classes defined in the same jar file as the class.
-   *
-   * @param className class name to list its method references. The class must be available through
-   *     the class loader and BCEL repository.
-   * @return list of external method references from the class
-   */
-  ImmutableSet<FullyQualifiedMethodSignature> listExternalMethodReferences(String className) {
-    try {
-      Class clazz = classLoader.loadClass(className);
-      CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
-      if (codeSource == null) {
-        // Code in bootstrap class loader (e.g., javax) does not have source
-        return ImmutableSet.of();
-      }
-      Path jarPathForTheClass = Paths.get(codeSource.getLocation().toURI());
-      Set<String> classesDefinedInSameJar = jarFileToClasses.get(jarPathForTheClass);
-
-      // Follows usage graph from the internal classes to external references
-      return findExternalMethodReferencesByUsageGraph(
-          ImmutableSet.of(className), classesDefinedInSameJar);
-    } catch (ClassNotFoundException | URISyntaxException ex) {
-      // TODO: Investigate why 'mvn exec:java' causes ClassNotFoundException for Guava
-      // Running withinStaticLinkageChecker via IntelliJ does not cause the problem
-      throw new RuntimeException(
-          "There was an error in reading method references from the class: " + className, ex);
-    }
-  }
-
-  /**
-   * Finds external method references by following usage graph from {@code initialClassNames}
-   * through other internal classes. For example, given following usage graph of 4 classes in 2 jar
-   * files:
-   *
-   * <pre>
-   *   'Class A' → 'Class B' → 'Class C' → 'Class D'
-   *   |←         in X.jar              →|← in Y.jar →
-   * </pre>
-   *
-   * and {@code initialClassNames: ['Class A']}, this function returns list of method references to
-   * 'Class D', not including references to 'Class B' or 'Class C'.
-   *
-   * @param initialClassNames list of classes to follow usage graph. They must be within same jar
-   *     file.
-   * @param classesDefinedInSameJar set of classes defined in the same jar file as {@code
-   *     initialClassNames}
-   * @return set of method references external to the jar file of {@code initialClassNames}
-   * @throws ClassNotFoundException when there is a problem in accessing a class via BCEL repository
-   */
-  private ImmutableSet<FullyQualifiedMethodSignature>
-      findExternalMethodReferencesByUsageGraph(
-          Set<String> initialClassNames,
-          Set<String> classesDefinedInSameJar)
-          throws ClassNotFoundException {
-    Set<String> visitedClasses = new HashSet<>(initialClassNames);
-    Queue<String> classQueue = new ArrayDeque<>(initialClassNames);
-    ImmutableSet.Builder<FullyQualifiedMethodSignature> nextExternalMethodReferences =
-        ImmutableSet.builder();
-    while (!classQueue.isEmpty()) {
-      String internalClassName = classQueue.remove();
-      JavaClass internalJavaClass = syntheticRepository.loadClass(internalClassName);
-      List<FullyQualifiedMethodSignature> nextMethodReferencesFromInternalClass =
-          listMethodReferences(internalJavaClass);
-      for (FullyQualifiedMethodSignature methodReference : nextMethodReferencesFromInternalClass) {
-        String nextClassName = methodReference.getClassName();
-        if (classesDefinedInSameJar.contains(nextClassName)) {
-          if (visitedClasses.add(nextClassName)) {
-            classQueue.add(nextClassName);
-          }
-        } else {
-          // While iterating the graph, record method references external to the jar file
-          nextExternalMethodReferences.add(methodReference);
-        }
-      }
-    }
-    return nextExternalMethodReferences.build();
-  }
-
-  static ImmutableList<FullyQualifiedMethodSignature> listMethodsOnClass(JavaClass javaClass) {
-    List<MethodSignature> methods = listDeclaredMethods(javaClass);
-    ImmutableList<FullyQualifiedMethodSignature> fullyQualifiedMethodSignatures = methods.stream()
-        .map(method -> new FullyQualifiedMethodSignature(
-            javaClass.getClassName(), method.getMethodName(), method.getDescriptor()))
-        .collect(toImmutableList());
-    return fullyQualifiedMethodSignatures;
-  }
-
   static ImmutableSet<String> listInnerClassNames(JavaClass javaClass) {
     ImmutableSet.Builder<String> innerClassNames = ImmutableSet.builder();
     String topLevelClassName = javaClass.getClassName();
@@ -393,21 +266,6 @@ class ClassDumper {
       }
     }
     return innerClassNames.build();
-  }
-
-  /**
-   * Lists method signatures from the class file. The output corresponds to entries in the
-   * method table in the .class file.
-   *
-   * @param javaClass .class file to search methods
-   * @return method and signature entries defined in the class file
-   */
-  static ImmutableList<MethodSignature> listDeclaredMethods(JavaClass javaClass) {
-    Method[] methods = javaClass.getMethods();
-    ImmutableList<MethodSignature> signatures = Arrays.stream(methods)
-        .map(method -> new MethodSignature(method.getName(), method.getSignature()))
-        .collect(toImmutableList());
-    return signatures;
   }
 
   @VisibleForTesting
@@ -447,55 +305,6 @@ class ClassDumper {
         } catch (ClassNotFoundException ex) {
           return null;
         }
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  boolean methodDefinitionExists(FullyQualifiedMethodSignature methodReference)
-      throws ClassNotFoundException {
-    String className = methodReference.getClassName();
-    MethodSignature methodSignature = methodReference.getMethodSignature();
-    String methodName = methodSignature.getMethodName();
-    Class[] parameterTypes = methodDescriptorToClass(methodSignature.getDescriptor());
-    try {
-      // Attempt 1: Find the class and method in the class loader
-      // Class loader helps to resolve class hierarchy, such as methods defined in parent class
-      Class clazz =
-          className.startsWith("[")
-              ? Array.class
-              : classLoader.loadClass(className);
-      if ("<init>".equals(methodName)) {
-        clazz.getConstructor(parameterTypes);
-      } else if ("clone".equals(methodName) && clazz == Array.class) {
-        // Array's clone method is not returned by getMethod
-        // https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html#getMethod-java.lang.String-java.lang.Class...-
-        return true;
-      } else {
-        clazz.getMethod(methodSignature.getMethodName(),
-            parameterTypes);
-      }
-      return true;
-    } catch (NoSuchMethodException | ClassNotFoundException ex) {
-      // Attempt 2: Find the class and method in BCEL API
-      // BCEL helps to search availability of (package) private class, constructors and methods
-      // that are inaccessible to Java's reflection API or the class loader.
-      JavaClass javaClass = loadJavaClass(className);
-      while (javaClass != null) {
-        // Inherited methods need checking with the parent class name
-        FullyQualifiedMethodSignature methodReferenceForClass = new FullyQualifiedMethodSignature(
-            javaClass.getClassName(),
-            methodName,
-            methodSignature.getDescriptor()
-        );
-        List<FullyQualifiedMethodSignature> availableMethodsOnClass =
-            ClassDumper.listMethodsOnClass(javaClass);
-        if (availableMethodsOnClass.contains(methodReferenceForClass)) {
-          return true;
-        }
-        // null if java.lang.Object
-        javaClass = javaClass.getSuperClass();
-      }
-      return false;
     }
   }
 

@@ -30,15 +30,11 @@ import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
 import org.apache.bcel.classfile.JavaClass;
@@ -103,9 +99,6 @@ class StaticLinkageChecker {
     StaticLinkageChecker staticLinkageChecker =
         create(commandLineOption.isReportOnlyReachable(), inputClasspath,
             entryPoints);
-
-    List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        staticLinkageChecker.findUnresolvedMethodReferences();
 
     StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
 
@@ -324,144 +317,5 @@ class StaticLinkageChecker {
     // Attempt 2: Find the class and method via the class loader of the input class path
     // in ClassDumper. Class loaders help to resolve methods defined in Java built-in classes.
     return validateMethodReferenceByClassLoader(methodReference);
-  }
-
-  /**
-   * Runs the static linkage check and returns unresolved methods for the jar file paths
-   *
-   * @return list of methods that are not found in the jar files
-   * @throws IOException when there is a problem in reading a jar file
-   * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
-   */
-  @VisibleForTesting
-  ImmutableList<FullyQualifiedMethodSignature> findUnresolvedMethodReferences()
-      throws IOException, ClassNotFoundException {
-    // TODO(suztomo): Separate logic between data retrieval and usage graph traversal. Issue #203
-    // TODO(suztomo): This method is to be replaced with findLinkageErrors
-    ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
-    logger.fine("Starting to read " + jarFilePaths.size() + " files: \n" + jarFilePaths);
-
-    Set<String> visitedClasses = new HashSet<>();
-    List<FullyQualifiedMethodSignature> methodReferencesFromInputClassPath = new ArrayList<>();
-
-    // When reportOnlyReachable is true, to avoid false positives from unused classes in 3rd-party
-    // libraries (e.g., grpc-netty-shaded), we traverse the class usage graph starting with the
-    // method references from the input class path and report only errors reachable from there.
-    // If the flag is false, it checks all references in the classpath.
-    ImmutableList<Path> jarPathsInInputClasspath =
-        reportOnlyReachable ? ImmutableList.copyOf(entryPoints) : jarFilePaths;
-    for (Path absolutePathToJar : jarPathsInInputClasspath) {
-      if (!Files.isReadable(absolutePathToJar)) {
-        throw new IOException("The file is not readable: " + absolutePathToJar);
-      }
-      methodReferencesFromInputClassPath.addAll(
-          listExternalMethodReferences(absolutePathToJar, visitedClasses));
-    }
-
-    ImmutableList<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        findUnresolvedReferences(methodReferencesFromInputClassPath, visitedClasses);
-    return unresolvedMethodReferences;
-  }
-
-  /**
-   * Checks the availability of the methods through the jar files and lists the unavailable methods.
-   * Starting with the initialMethodReferences, this method recursively searches (breadth-first
-   * search) for the references in the class usage graph.
-   *
-   * @param initialMethodReferences methods to search for within the jar files
-   * @param classesVisited class names already checked for their method references
-   * @return list of methods that are not found in the jar files
-   */
-  @VisibleForTesting
-  ImmutableList<FullyQualifiedMethodSignature> findUnresolvedReferences(
-      List<FullyQualifiedMethodSignature> initialMethodReferences,
-      Set<String> classesVisited) {
-    ImmutableList.Builder<FullyQualifiedMethodSignature> unresolvedMethods =
-        ImmutableList.builder();
-
-    Set<String> classesNotFound = new HashSet<>();
-    Set<FullyQualifiedMethodSignature> availableMethodsInJars = new HashSet<>();
-
-    // Breadth-first search
-    Queue<FullyQualifiedMethodSignature> queue = new ArrayDeque<>(initialMethodReferences);
-    while (!queue.isEmpty()) {
-      FullyQualifiedMethodSignature methodReference = queue.remove();
-      String className = methodReference.getClassName();
-      if (isBuiltInClassName(className)) {
-        // Ignore references to JDK package
-        continue;
-      }
-
-      // Case 1: we know that the class doesn't exist in the jar files
-      if (classesNotFound.contains(className)) {
-        unresolvedMethods.add(methodReference);
-        continue;
-      }
-      // Case 2: we know that the class and method exist in the jar files
-      if (availableMethodsInJars.contains(methodReference)) {
-        continue;
-      }
-
-      // Case 3: we need to check the availability of the method through the class loader
-      try {
-        if (classDumper.methodDefinitionExists(methodReference)) {
-          availableMethodsInJars.add(methodReference);
-
-          // Enqueue references from the class unless it is already visited in class usage graph
-          if (classesVisited.add(className)) {
-            ImmutableSet<FullyQualifiedMethodSignature> nextExternalMethodReferences =
-                classDumper.listExternalMethodReferences(className);
-            queue.addAll(nextExternalMethodReferences);
-          }
-        } else {
-          unresolvedMethods.add(methodReference);
-        }
-      } catch (ClassNotFoundException | NoClassDefFoundError ex) {
-        unresolvedMethods.add(methodReference);
-        classesNotFound.add(className);
-      }
-    }
-
-    logger.fine("The number of resolved method references during linkage check: "
-        + availableMethodsInJars.size());
-    return unresolvedMethods.build();
-  }
-
-  private static boolean isBuiltInClassName(String className) {
-    return className.startsWith("java.")
-        || className.startsWith("sun.")
-        || className.startsWith("[");
-  }
-
-  /**
-   * Lists all external methods called from the classes in the jar file. The output list does not
-   * include the methods defined in the file.
-   *
-   * @param jarFilePath the absolute path to jar file to analyze
-   * @param classesChecked to populate classes that are checked for method references
-   * @return list of the method signatures with their fully-qualified classes
-   * @throws IOException when there is a problem in reading the jar file
-   * @throws ClassNotFoundException when a class visible by Guava's reflect was unexpectedly not
-   *     found by BCEL API
-   */
-  ImmutableList<FullyQualifiedMethodSignature> listExternalMethodReferences(
-      Path jarFilePath, Set<String> classesChecked) throws IOException, ClassNotFoundException {
-    List<FullyQualifiedMethodSignature> methodReferences = new ArrayList<>();
-    Set<String> internalClassNames = new HashSet<>();
-
-    for (JavaClass javaClass: ClassDumper.topLevelJavaClassesInJar(jarFilePath)) {
-      String className = javaClass.getClassName();
-      classesChecked.add(className);
-      internalClassNames.add(className);
-      internalClassNames.addAll(ClassDumper.listInnerClassNames(javaClass));
-      List<FullyQualifiedMethodSignature> references = ClassDumper.listMethodReferences(javaClass);
-      methodReferences.addAll(references);
-    }
-    ImmutableList<FullyQualifiedMethodSignature> externalMethodReferences =
-        methodReferences
-            .stream()
-            .filter(reference -> !internalClassNames.contains(reference.getClassName()))
-            .collect(toImmutableList());
-    return externalMethodReferences;
   }
 }
