@@ -51,8 +51,8 @@ import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
 /**
- * Class to read symbol references in Java class files and to verify the availability
- * of references in them, through the input class path for a static linkage check.
+ * Class to read symbol references in Java class files and to verify the availability of references
+ * in them, through the input class path for a static linkage check.
  */
 class ClassDumper {
 
@@ -120,6 +120,7 @@ class ClassDumper {
 
   /**
    * Returns class names defined in the jar file.
+   *
    * @param jarPath absolute path to the jar file
    */
   ImmutableSet<String> classesDefinedInJar(Path jarPath) {
@@ -134,10 +135,8 @@ class ClassDumper {
    */
   static SymbolReferenceSet scanSymbolReferencesInJar(Path jarFilePath)
       throws ClassNotFoundException, IOException {
-    checkArgument(
-        jarFilePath.isAbsolute(), "The input jar file path is not an absolute path");
-    checkArgument(
-        Files.isReadable(jarFilePath), "The input jar file path is not readable");
+    checkArgument(jarFilePath.isAbsolute(), "The input jar file path is not an absolute path");
+    checkArgument(Files.isReadable(jarFilePath), "The input jar file path is not readable");
 
     SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
     for (JavaClass javaClass : topLevelJavaClassesInJar(jarFilePath)) {
@@ -168,13 +167,13 @@ class ClassDumper {
       switch (constantTag) {
         case Const.CONSTANT_Methodref:
           ConstantMethodref constantMethodref = (ConstantMethodref) constant;
-          methodReferences.add(constantToMethodReference(constantMethodref, constantPool,
-              sourceClassName));
+          methodReferences.add(
+              constantToMethodReference(constantMethodref, constantPool, sourceClassName));
           break;
         case Const.CONSTANT_Fieldref:
           ConstantFieldref constantFieldref = (ConstantFieldref) constant;
-          fieldReferences.add(constantToFieldReference(constantFieldref, constantPool,
-              sourceClassName));
+          fieldReferences.add(
+              constantToFieldReference(constantFieldref, constantPool, sourceClassName));
           break;
         case Const.CONSTANT_Class:
           // TODO(suztomo): handle class reference
@@ -206,32 +205,32 @@ class ClassDumper {
   private static MethodSymbolReference constantToMethodReference(
       ConstantMethodref constantMethodref, ConstantPool constantPool, String sourceClassName) {
     String classNameInMethodReference = constantMethodref.getClass(constantPool);
-    ConstantNameAndType constantNameAndType =
-        constantNameAndType(constantMethodref, constantPool);
+    ConstantNameAndType constantNameAndType = constantNameAndType(constantMethodref, constantPool);
     String methodName = constantNameAndType.getName(constantPool);
     String descriptor = constantNameAndType.getSignature(constantPool);
-    MethodSymbolReference methodReference = MethodSymbolReference.builder()
-        .setSourceClassName(sourceClassName)
-        .setMethodName(methodName)
-        .setTargetClassName(classNameInMethodReference)
-        .setDescriptor(descriptor)
-        .build();
+    MethodSymbolReference methodReference =
+        MethodSymbolReference.builder()
+            .setSourceClassName(sourceClassName)
+            .setMethodName(methodName)
+            .setTargetClassName(classNameInMethodReference)
+            .setDescriptor(descriptor)
+            .build();
     return methodReference;
   }
 
-  private static FieldSymbolReference constantToFieldReference(ConstantFieldref constantFieldref,
-      ConstantPool constantPool, String sourceClassName) {
+  private static FieldSymbolReference constantToFieldReference(
+      ConstantFieldref constantFieldref, ConstantPool constantPool, String sourceClassName) {
     // Either a class type or an interface type
     String classNameInFieldReference = constantFieldref.getClass(constantPool);
-    ConstantNameAndType constantNameAndType =
-        constantNameAndType(constantFieldref, constantPool);
+    ConstantNameAndType constantNameAndType = constantNameAndType(constantFieldref, constantPool);
     String fieldName = constantNameAndType.getName(constantPool);
 
-    FieldSymbolReference fieldSymbolReference = FieldSymbolReference.builder()
-        .setSourceClassName(sourceClassName)
-        .setFieldName(fieldName)
-        .setTargetClassName(classNameInFieldReference)
-        .build();
+    FieldSymbolReference fieldSymbolReference =
+        FieldSymbolReference.builder()
+            .setSourceClassName(sourceClassName)
+            .setFieldName(fieldName)
+            .setTargetClassName(classNameInFieldReference)
+            .build();
     return fieldSymbolReference;
   }
 
@@ -250,8 +249,8 @@ class ClassDumper {
         String innerClassName = constantPool.getConstantString(classIndex, Const.CONSTANT_Class);
         int outerClassIndex = innerClass.getOuterClassIndex();
         if (outerClassIndex > 0) {
-          String outerClassName = constantPool.getConstantString(outerClassIndex,
-              Const.CONSTANT_Class);
+          String outerClassName =
+              constantPool.getConstantString(outerClassIndex, Const.CONSTANT_Class);
           String normalOuterClassName = outerClassName.replace('/', '.');
           if (!normalOuterClassName.equals(topLevelClassName)) {
             continue;
@@ -312,11 +311,10 @@ class ClassDumper {
    */
   private static ImmutableSetMultimap<Path, String> jarFilesToDefinedClasses(
       List<Path> jarFilePaths) throws IOException, ClassNotFoundException {
-    ImmutableSetMultimap.Builder<Path, String> pathToClasses =
-        ImmutableSetMultimap.builder();
+    ImmutableSetMultimap.Builder<Path, String> pathToClasses = ImmutableSetMultimap.builder();
 
     for (Path jarFilePath : jarFilePaths) {
-      for (JavaClass javaClass: topLevelJavaClassesInJar(jarFilePath)) {
+      for (JavaClass javaClass : topLevelJavaClassesInJar(jarFilePath)) {
         pathToClasses.put(jarFilePath, javaClass.getClassName());
         // This does not take double-nested classes. As long as such classes are accessed
         // only from the outer class, static linkage checker does not report false positives

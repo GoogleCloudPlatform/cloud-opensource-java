@@ -97,8 +97,7 @@ class StaticLinkageChecker {
     // TODO(suztomo): to take command-line option to choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(inputClasspath.get(0));
     StaticLinkageChecker staticLinkageChecker =
-        create(commandLineOption.isReportOnlyReachable(), inputClasspath,
-            entryPoints);
+        create(commandLineOption.isReportOnlyReachable(), inputClasspath, entryPoints);
 
     StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
 
@@ -210,7 +209,7 @@ class StaticLinkageChecker {
   }
 
   /**
-   * Generates a linkage report for the jar file, by checking linkage errors in the symbol
+   * Generates a linkage report for a jar file, by checking linkage errors in the symbol
    * references against the input class path.
    *
    * @param jarPath absolute path to the jar file
@@ -290,7 +289,6 @@ class StaticLinkageChecker {
       JavaClass javaClass = classDumper.loadJavaClass(className);
       while (javaClass != null) {
         Method[] methods = javaClass.getMethods();
-        // TODO: Efficient method lookup than iterating arrays for every method reference
         for (Method methodInJavaClass : methods) {
           String methodNameInJavaClass = methodInJavaClass.getName();
           String descriptorInJavaClass = methodInJavaClass.getSignature();
@@ -312,13 +310,13 @@ class StaticLinkageChecker {
    * Returns true if the method reference has a valid referent in the classpath.
    */
   private boolean validateMethodReference(MethodSymbolReference methodReference) {
-    // Attempt 1: Find the class and method in via the BCEL synthetic repository in ClassDumper.
+    // Attempt 1: Find the class and method via the BCEL synthetic repository in ClassDumper.
     // BCEL API helps to search availability of (package) private class, constructors and
     // methods that are inaccessible to Java's reflection API or the class loader.
 
     // Attempt 2: Find the class and method via the class loader of the input class path
     // in ClassDumper. Class loaders help to resolve methods defined in Java built-in classes.
-    // TODO(suztomo): check accessor to verify source class has valid access to the symbol
+    // TODO(#253): check accessor to verify source class has valid access to the symbol
     return validateMethodReferenceByBcelRepository(methodReference)
         || validateMethodReferenceByClassLoader(methodReference);
   }
