@@ -18,10 +18,14 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
@@ -41,6 +45,14 @@ public class StaticLinkageCheckerTest {
           return "has file name equal to";
         }
       };
+
+  private static Path absolutePathOfResource(String resourceName) {
+    try {
+      return Paths.get(URLClassLoader.getSystemResource(resourceName).toURI()).toAbsolutePath();
+    } catch (URISyntaxException ex) {
+      throw new RuntimeException("Could not create URI for the files in resources directory");
+    }
+  }
 
   @Test
   public void testCoordinateToClasspath_validCoordinate() throws RepositoryException {
@@ -201,5 +213,63 @@ public class StaticLinkageCheckerTest {
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
         .containsExactly("foo.jar", "bar.jar", "baz.jar");
+  }
+
+  @Test
+  public void testJarPathOrderInResolvingReferences() throws IOException, ClassNotFoundException {
+    // listDocuments method on CollectionReference class is added at version 0.66.0-beta
+    // https://github.com/googleapis/google-cloud-java/releases/tag/v0.66.0
+    List<Path> firestoreDependencies =
+        Lists.newArrayList(
+            absolutePathOfResource("testdata/gax-1.32.0.jar"),
+            absolutePathOfResource("testdata/api-common-1.7.0.jar"),
+            absolutePathOfResource("testdata/google-cloud-core-1.48.0.jar"),
+            absolutePathOfResource("testdata/google-cloud-core-grpc-1.48.0.jar"));
+    List<Path> pathsForJarWithVersion65First =
+        Lists.newArrayList(
+            absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"),
+            absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"));
+    pathsForJarWithVersion65First.addAll(firestoreDependencies);
+
+    StaticLinkageChecker staticLinkageChecker65First =
+        StaticLinkageChecker.create(
+            true,
+            pathsForJarWithVersion65First,
+            ImmutableSet.copyOf(pathsForJarWithVersion65First));
+
+    List<Path> pathsForJarWithVersion66First =
+        Lists.newArrayList(
+            absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"),
+            absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"));
+    pathsForJarWithVersion66First.addAll(firestoreDependencies);
+    StaticLinkageChecker staticLinkageChecker66First =
+        StaticLinkageChecker.create(
+            true,
+            pathsForJarWithVersion66First,
+            ImmutableSet.copyOf(pathsForJarWithVersion66First));
+
+    MethodSymbolReference listDocument =
+        MethodSymbolReference.builder()
+            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setTargetClassName("com.google.cloud.firestore.CollectionReference")
+            .setMethodName("listDocuments")
+            .setDescriptor("()Ljava/lang/Iterable;")
+            .build();
+    SymbolReferenceSet symbolReferenceSet =
+        SymbolReferenceSet.builder().setMethodReferences(ImmutableList.of(listDocument)).build();
+
+    JarLinkageReport reportWith65First =
+        staticLinkageChecker65First.generateLinkageReport(
+            firestoreDependencies.get(0), symbolReferenceSet);
+    Truth.assertWithMessage("Firestore version 65 does not have CollectionReference.listDocuments")
+        .that(reportWith65First.getMissingMethodErrors())
+        .hasSize(1);
+
+    JarLinkageReport reportWith66First =
+        staticLinkageChecker66First.generateLinkageReport(
+            firestoreDependencies.get(0), symbolReferenceSet);
+    Truth.assertWithMessage("Firestore version 66 has CollectionReference.listDocuments")
+        .that(reportWith66First.getMissingMethodErrors())
+        .isEmpty();
   }
 }

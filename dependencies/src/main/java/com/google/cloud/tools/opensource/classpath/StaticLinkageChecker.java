@@ -221,8 +221,8 @@ class StaticLinkageChecker {
   JarLinkageReport generateLinkageReport(Path jarPath, SymbolReferenceSet symbolReferenceSet) {
     JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder().setJarPath(jarPath);
 
-    // No static linkage errors between classes defined in the same jar file (unless
-    // somebody intentionally manipulate the jar file)
+    // As the Java compiler ensures that there is no static linkage errors between classes defined
+    // in the same jar file, this validation excludes reference within the same jar file.
     ImmutableSet<String> classesDefinedInJar = classDumper.classesDefinedInJar(jarPath);
 
     reportBuilder.setMissingMethodErrors(
