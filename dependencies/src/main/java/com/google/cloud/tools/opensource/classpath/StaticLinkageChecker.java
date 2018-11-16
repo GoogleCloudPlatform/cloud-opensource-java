@@ -312,14 +312,13 @@ class StaticLinkageChecker {
    * Returns true if the method reference has a valid referent in the classpath.
    */
   private boolean validateMethodReference(MethodSymbolReference methodReference) {
-    // TODO(suztomo): check accessor to verify source class has valid access to the symbol
-
     // Attempt 1: Find the class and method in via the BCEL synthetic repository in ClassDumper.
     // BCEL API helps to search availability of (package) private class, constructors and
     // methods that are inaccessible to Java's reflection API or the class loader.
 
     // Attempt 2: Find the class and method via the class loader of the input class path
     // in ClassDumper. Class loaders help to resolve methods defined in Java built-in classes.
+    // TODO(suztomo): check accessor to verify source class has valid access to the symbol
     return validateMethodReferenceByBcelRepository(methodReference)
         || validateMethodReferenceByClassLoader(methodReference);
   }
