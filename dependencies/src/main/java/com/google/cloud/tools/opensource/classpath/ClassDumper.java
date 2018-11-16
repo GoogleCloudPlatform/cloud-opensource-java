@@ -17,10 +17,8 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -28,21 +26,13 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.CodeSource;
-import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Queue;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -56,7 +46,6 @@ import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.classfile.InnerClass;
 import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.Type;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
@@ -112,10 +101,19 @@ class ClassDumper {
     this.jarFileToClasses = ImmutableSetMultimap.copyOf(jarFileToClasses);
   }
 
-  JavaClass loadJavaClass(String javaClassName) throws ClassNotFoundException {
-    return syntheticRepository.loadClass(javaClassName);
+  /**
+   * Returns {@link JavaClass} for {@code className} in the input class path using the BCEL API.
+   *
+   * @see <a href="https://commons.apache.org/proper/commons-bcel/manual/bcel-api.html">The BCEL
+   *     API</a>
+   */
+  JavaClass loadJavaClass(String className) throws ClassNotFoundException {
+    return syntheticRepository.loadClass(className);
   }
 
+  /**
+   * Returns {@link Class} for {@code className} in the input class path using a Java class loader.
+   */
   Class<?> loadClass(String className) throws ClassNotFoundException {
     return classLoader.loadClass(className);
   }
