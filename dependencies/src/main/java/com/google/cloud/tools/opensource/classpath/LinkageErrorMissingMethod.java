@@ -34,4 +34,8 @@ abstract class LinkageErrorMissingMethod {
     abstract Builder setReference(MethodSymbolReference value);
     abstract LinkageErrorMissingMethod build();
   }
+
+  static LinkageErrorMissingMethod errorAt(MethodSymbolReference reference) {
+    return builder().setReference(reference).build();
+  }
 }

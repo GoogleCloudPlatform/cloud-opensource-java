@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
@@ -36,10 +37,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
 import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.Method;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -201,7 +204,7 @@ class StaticLinkageChecker {
     // Validate linkage error of each reference
     ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
     for (Map.Entry<Path, SymbolReferenceSet> entry : jarToSymbols.build().entrySet()) {
-      jarLinkageReports.add(findInvalidReferences(entry.getKey(), entry.getValue()));
+      jarLinkageReports.add(generateLinkageReport(entry.getKey(), entry.getValue()));
     }
 
     if (reportOnlyReachable) {
@@ -213,12 +216,114 @@ class StaticLinkageChecker {
     return StaticLinkageCheckReport.create(jarLinkageReports.build());
   }
 
-  private JarLinkageReport findInvalidReferences(
-      Path jarPath, SymbolReferenceSet symbolReferenceSet) {
+  /**
+   * Generates a linkage report for the jar file, by checking linkage errors in the symbol
+   * references against the input class path.
+   *
+   * @param jarPath absolute path to the jar file
+   * @param symbolReferenceSet symbol references from {@code jarPath} to check its linkage errors
+   * @return linkage report for the jar file, which includes linkage errors if any
+   */
+  @VisibleForTesting
+  JarLinkageReport generateLinkageReport(Path jarPath, SymbolReferenceSet symbolReferenceSet) {
     JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder().setJarPath(jarPath);
 
-    // TODO(suztomo): implement validation for field, method and class references in the table
-    throw new UnsupportedOperationException("The report generation is not yet implemented");
+    // No static linkage errors between classes defined in the same jar file (unless
+    // somebody intentionally manipulate the jar file)
+    ImmutableSet<String> classesDefinedInJar = classDumper.classesDefinedInJar(jarPath);
+
+    reportBuilder.setMissingMethodErrors(
+        symbolReferenceSet
+            .getMethodReferences()
+            .stream()
+            .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
+            .map(this::checkLinkageErrorAt)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(toImmutableList()));
+
+    // TODO(#243 and #242): implement validation for class and field references in the table
+    reportBuilder
+        .setMissingClassErrors(ImmutableList.of())
+        .setMissingFieldErrors(ImmutableList.of());
+
+    return reportBuilder.build();
+  }
+
+  /**
+   * Returns an {@code Optional} describing the linkage error for the method reference if the
+   * reference does not have a valid referent in the input class path; otherwise an empty {@code
+   * Optional}.
+   */
+  private Optional<LinkageErrorMissingMethod> checkLinkageErrorAt(MethodSymbolReference reference) {
+    if (validateMethodReference(reference)) {
+      return Optional.empty();
+    }
+    return Optional.of(LinkageErrorMissingMethod.errorAt(reference));
+  }
+
+  private boolean validateMethodReferenceByClassLoader(MethodSymbolReference methodReference) {
+    String className = methodReference.getTargetClassName();
+    String methodName = methodReference.getMethodName();
+    try {
+      Class[] parameterTypes = classDumper.methodDescriptorToClass(methodReference.getDescriptor());
+      Class clazz = className.startsWith("[") ? Array.class : classDumper.loadClass(className);
+      if ("<init>".equals(methodName)) {
+        clazz.getConstructor(parameterTypes);
+      } else if ("clone".equals(methodName) && clazz == Array.class) {
+        // Array's clone method is not returned by getMethod
+        // https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html#getMethod-java.lang.String-java.lang.Class...-
+        return true;
+      } else {
+        clazz.getMethod(methodName, parameterTypes);
+      }
+      return true;
+    } catch (NoSuchMethodException | ClassNotFoundException ex) {
+      return false;
+    }
+  }
+
+  private boolean validateMethodReferenceByBcelRepository(MethodSymbolReference methodReference) {
+    String className = methodReference.getTargetClassName();
+    String methodName = methodReference.getMethodName();
+    try {
+      JavaClass javaClass = classDumper.loadJavaClass(className);
+      while (javaClass != null) {
+        Method[] methods = javaClass.getMethods();
+        // TODO: Efficient method lookup than iterating arrays for every method reference
+        for (Method methodInJavaClass : methods) {
+          String methodNameInJavaClass = methodInJavaClass.getName();
+          String descriptorInJavaClass = methodInJavaClass.getSignature();
+          if (methodNameInJavaClass.equals(methodName)
+              && descriptorInJavaClass.equals(methodReference.getDescriptor())) {
+            return true;
+          }
+        }
+        // null if java.lang.Object
+        javaClass = javaClass.getSuperClass();
+      }
+      return false;
+    } catch (ClassNotFoundException ex) {
+      return false;
+    }
+  }
+
+  /**
+   * Returns true if the method reference has a valid referent in the classpath.
+   */
+  private boolean validateMethodReference(MethodSymbolReference methodReference) {
+    // TODO(suztomo): check accessor to verify source class has valid access to the symbol
+
+    // Attempt 1: Find the class and method in via the BCEL synthetic repository in ClassDumper.
+    // BCEL API helps to search availability of (package) private class, constructors and
+    // methods that are inaccessible to Java's reflection API or the class loader.
+    boolean referentFoundInBcel = validateMethodReferenceByBcelRepository(methodReference);
+    if (referentFoundInBcel) {
+      return true;
+    }
+    // Attempt 2: Find the class and method via the class loader of the input class path
+    // in ClassDumper. Class loaders help to resolve methods defined in Java built-in classes.
+    return validateMethodReferenceByClassLoader(methodReference);
   }
 
   /**

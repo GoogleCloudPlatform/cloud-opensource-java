@@ -376,6 +376,34 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
+  public void testFindInvalidReferences_selfReferenceFromAbstractClassToInterface()
+      throws RepositoryException, IOException, ClassNotFoundException {
+    String bigTableCoordinates = "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
+    List<Path> paths = StaticLinkageChecker.coordinatesToClasspath(bigTableCoordinates);
+    Path httpClientJar =
+        paths
+            .stream()
+            .filter(path -> "httpclient-4.5.3.jar".equals(path.getFileName().toString()))
+            .findFirst()
+            .get();
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    // httpclient-4.5.3 AbstractVerifier has a method reference of
+    // 'void verify(String host, String[] cns, String[] subjectAlts)' to itself and its interface
+    // X509HostnameVerifier has the method.
+    // https://github.com/apache/httpcomponents-client/blob/e2cf733c60f910d17dc5cfc0a77797054a2e322e/httpclient/src/main/java/org/apache/http/conn/ssl/AbstractVerifier.java#L153
+    SymbolReferenceSet symbolReferenceSet = ClassDumper.scanSymbolReferencesInJar(httpClientJar);
+
+    JarLinkageReport jarLinkageReport =
+        staticLinkageChecker.generateLinkageReport(httpClientJar, symbolReferenceSet);
+
+    Truth.assertWithMessage("Method references within the same jar file should not be reported")
+        .that(jarLinkageReport.getMissingMethodErrors())
+        .isEmpty();
+  }
+
+  @Test
   public void testFindUnresolvedReferences_appengineSdkWithProvidedScope()
       throws RepositoryException, IOException, ClassNotFoundException {
     String bigTableCoordinates = "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha";

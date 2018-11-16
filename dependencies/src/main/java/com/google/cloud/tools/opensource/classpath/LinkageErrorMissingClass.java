@@ -33,4 +33,8 @@ abstract class LinkageErrorMissingClass {
     abstract Builder setReference(ClassSymbolReference value);
     abstract LinkageErrorMissingClass build();
   }
+
+  static LinkageErrorMissingClass errorAt(ClassSymbolReference reference) {
+    return builder().setReference(reference).build();
+  }
 }

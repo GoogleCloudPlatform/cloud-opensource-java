@@ -116,6 +116,18 @@ class ClassDumper {
     return syntheticRepository.loadClass(javaClassName);
   }
 
+  Class<?> loadClass(String className) throws ClassNotFoundException {
+    return classLoader.loadClass(className);
+  }
+
+  /**
+   * Returns class names defined in the jar file.
+   * @param jarPath absolute path to the jar file
+   */
+  ImmutableSet<String> classesDefinedInJar(Path jarPath) {
+    return jarFileToClasses.get(jarPath);
+  }
+
   /**
    *  Lists all method references from the Java class file. The output corresponds to
    *  CONSTANT_Methodref_info entries in the .class file's constant pool. The output list includes

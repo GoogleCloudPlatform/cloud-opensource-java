@@ -34,4 +34,8 @@ abstract class LinkageErrorMissingField {
     abstract Builder setReference(FieldSymbolReference value);
     abstract LinkageErrorMissingField build();
   }
+
+  static LinkageErrorMissingField errorAt(FieldSymbolReference reference) {
+    return builder().setReference(reference).build();
+  }
 }
