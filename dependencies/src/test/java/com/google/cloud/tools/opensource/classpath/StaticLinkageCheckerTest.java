@@ -34,7 +34,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -409,45 +408,6 @@ public class StaticLinkageCheckerTest {
         staticLinkageChecker.findUnresolvedReferences(
             Arrays.asList(arrayCloneMethod), new HashSet<>());
     Truth.assertThat(methodsNotFound).hasSize(0);
-  }
-
-  @Test
-  public void testGenerateInputClasspathFromArgument_mavenCoordinates()
-      throws RepositoryException, ParseException {
-    String mavenCoordinates =
-        "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha,"
-            + "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
-    StaticLinkageCheckOption parsedOption =
-        StaticLinkageCheckOption.parseArguments(
-            new String[] {
-              "--artifacts", mavenCoordinates
-            });
-
-    List<Path> inputClasspath =
-        StaticLinkageChecker.generateInputClasspathFromLinkageCheckOption(parsedOption);
-
-    Truth.assertThat(inputClasspath)
-        .comparingElementsUsing(PATH_FILE_NAMES)
-        .containsAllOf(
-            "google-cloud-compute-0.67.0-alpha.jar", "google-cloud-bigtable-0.66.0-alpha.jar");
-  }
-
-  @Test
-  public void testGenerateInputClasspathFromArgument_jarFileList()
-      throws RepositoryException, ParseException {
-    StaticLinkageCheckOption parsedOption =
-        StaticLinkageCheckOption.parseArguments(
-            new String[] {
-                "--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar"
-            });
-
-    List<Path> inputClasspath =
-        StaticLinkageChecker.generateInputClasspathFromLinkageCheckOption(parsedOption);
-
-    Truth.assertThat(inputClasspath)
-        .comparingElementsUsing(PATH_FILE_NAMES)
-        .containsExactly(
-            "foo.jar", "bar.jar", "baz.jar");
   }
 
 }
