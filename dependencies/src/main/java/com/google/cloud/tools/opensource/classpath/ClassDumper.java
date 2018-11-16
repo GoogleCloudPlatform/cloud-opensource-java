@@ -274,7 +274,7 @@ class ClassDumper {
    */
   ImmutableSet<FullyQualifiedMethodSignature> listExternalMethodReferences(String className) {
     try {
-      Class clazz = classLoader.loadClass(className);
+      Class<?> clazz = classLoader.loadClass(className);
       CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
       if (codeSource == null) {
         // Code in bootstrap class loader (e.g., javax) does not have source
@@ -399,16 +399,16 @@ class ClassDumper {
   }
 
   @VisibleForTesting
-  Class[] methodDescriptorToClass(String methodDescriptor) {
+  Class<?>[] methodDescriptorToClass(String methodDescriptor) {
     Type[] argumentTypes = Type.getArgumentTypes(methodDescriptor);
-    Class[] parameterTypes =
+    Class<?>[] parameterTypes =
         Arrays.stream(argumentTypes)
             .map(type -> bcelTypeToJavaClass(type, classLoader))
             .toArray(Class[]::new);
     return parameterTypes;
   }
 
-  private static Class bcelTypeToJavaClass(Type type, ClassLoader classLoader) {
+  private static Class<?> bcelTypeToJavaClass(Type type, ClassLoader classLoader) {
     switch (type.getType()) {
       case Const.T_BOOLEAN:
         return boolean.class;
@@ -438,17 +438,16 @@ class ClassDumper {
     }
   }
 
-  @SuppressWarnings("unchecked")
   boolean methodDefinitionExists(FullyQualifiedMethodSignature methodReference)
       throws ClassNotFoundException {
     String className = methodReference.getClassName();
     MethodSignature methodSignature = methodReference.getMethodSignature();
     String methodName = methodSignature.getMethodName();
-    Class[] parameterTypes = methodDescriptorToClass(methodSignature.getDescriptor());
+    Class<?>[] parameterTypes = methodDescriptorToClass(methodSignature.getDescriptor());
     try {
       // Attempt 1: Find the class and method in the class loader
       // Class loader helps to resolve class hierarchy, such as methods defined in parent class
-      Class clazz =
+      Class<?> clazz =
           className.startsWith("[")
               ? Array.class
               : classLoader.loadClass(className);

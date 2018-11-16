@@ -44,8 +44,6 @@ public class StaticLinkageCheckerTest {
       "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar";
   private static final String EXAMPLE_PROTO_JAR_FILE =
       "testdata/proto-google-cloud-firestore-v1beta1-0.28.0.jar";
-  private static final String EXAMPLE_CLASS_FILE =
-      "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0_FirestoreGrpc.class";
   private  static final ImmutableList<Path> FIRESTORE_DEPENDENCIES = ImmutableList.of(
       absolutePathOfResource("testdata/protobuf-java-3.6.1.jar"),
       absolutePathOfResource("testdata/grpc-core-1.13.1.jar"),
@@ -63,18 +61,6 @@ public class StaticLinkageCheckerTest {
         @Override
         public String toString() {
           return "has class name equal to";
-        }
-      };
-
-  private static final Correspondence<MethodSymbolReference, String> TARGET_CLASS_NAMES =
-      new Correspondence<MethodSymbolReference, String>() {
-        @Override
-        public boolean compare(MethodSymbolReference actual, String expected) {
-          return actual.getTargetClassName().equals(expected);
-        }
-        @Override
-        public String toString() {
-          return "has target class name equal to";
         }
       };
 

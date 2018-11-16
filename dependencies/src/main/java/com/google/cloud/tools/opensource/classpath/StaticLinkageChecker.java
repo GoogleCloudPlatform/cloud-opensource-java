@@ -101,9 +101,6 @@ class StaticLinkageChecker {
         create(commandLineOption.isReportOnlyReachable(), inputClasspath,
             entryPoints);
 
-    List<FullyQualifiedMethodSignature> unresolvedMethodReferences =
-        staticLinkageChecker.findUnresolvedMethodReferences();
-
     StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
 
     printStaticLinkageReport(report);

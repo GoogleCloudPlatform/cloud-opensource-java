@@ -215,7 +215,7 @@ public class DependencyGraphBuilder {
       levelOrder(node, graph, GraphTraversalOption.NONE);
     } catch (RepositoryException ex) {
       throw new RuntimeException(
-          "There was problem in resolving dependencies even when it is not supposed to resolve dependency",
+          "Problem resolving dependencies even though it is not supposed to resolve dependency",
           ex);
     }
   }
@@ -248,6 +248,7 @@ public class DependencyGraphBuilder {
    * @throws DependencyResolutionException when there is a problem in resolving dependency. This
    *     happens only when graphTraversalOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
    */
+  @SuppressWarnings("unchecked")
   private static void levelOrder(
       DependencyNode firstNode, DependencyGraph graph, GraphTraversalOption graphTraversalOption)
       throws DependencyCollectionException, DependencyResolutionException {
