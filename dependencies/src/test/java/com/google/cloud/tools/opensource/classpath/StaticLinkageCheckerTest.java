@@ -184,7 +184,7 @@ public class StaticLinkageCheckerTest {
   }
   
   @Test
-  public void testGenerateInputClasspathFromArgument_mavenCoordinates()
+  public void testGenerateInputClasspath_mavenCoordinates()
       throws RepositoryException, ParseException {
 
     String mavenCoordinates = "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha,"
@@ -199,6 +199,20 @@ public class StaticLinkageCheckerTest {
         .containsAllOf(
             "google-cloud-compute-0.67.0-alpha.jar", "google-cloud-bigtable-0.66.0-alpha.jar");
   }
+  
+  @Test
+  public void testGenerateInputClasspath_jarFileList()
+      throws RepositoryException, ParseException {
+
+    String[] arguments = {"--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar"};
+    CommandLine parsedOption = StaticLinkageCheckOption.readCommandLine(arguments);
+    List<Path> inputClasspath = StaticLinkageCheckOption.generateInputClasspath(parsedOption);
+
+    Truth.assertThat(inputClasspath)
+        .comparingElementsUsing(PATH_FILE_NAMES)
+        .containsExactly("foo.jar", "bar.jar", "baz.jar");
+  }
+
 
   @Test
   public void testJarPathOrderInResolvingReferences() throws IOException, ClassNotFoundException {
