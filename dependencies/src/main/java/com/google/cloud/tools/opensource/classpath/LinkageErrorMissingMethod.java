@@ -25,13 +25,7 @@ import com.google.auto.value.AutoValue;
 abstract class LinkageErrorMissingMethod {
   abstract MethodSymbolReference getReference();
 
-  static Builder builder() {
-    return new AutoValue_LinkageErrorMissingMethod.Builder();
-  }
-
-  @AutoValue.Builder
-  abstract static class Builder {
-    abstract Builder setReference(MethodSymbolReference value);
-    abstract LinkageErrorMissingMethod build();
+  static LinkageErrorMissingMethod errorAt(MethodSymbolReference reference) {
+    return new AutoValue_LinkageErrorMissingMethod(reference);
   }
 }
