@@ -27,6 +27,9 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -178,6 +181,23 @@ public class StaticLinkageCheckerTest {
         staticLinkageChecker.generateLinkageReport(paths.get(0), symbolReferenceSet);
 
     Truth.assertThat(jarLinkageReport.getMissingMethodErrors()).isEmpty();
+  }
+  
+  @Test
+  public void testGenerateInputClasspathFromArgument_mavenCoordinates()
+      throws RepositoryException, ParseException {
+
+    String mavenCoordinates = "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha,"
+        + "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
+    String[] arguments = {"--artifacts", mavenCoordinates};
+    
+    CommandLine parsedOption = StaticLinkageCheckOption.readCommandLine(arguments);
+    List<Path> inputClasspath = StaticLinkageCheckOption.generateInputClasspath(parsedOption);
+
+    Truth.assertThat(inputClasspath)
+        .comparingElementsUsing(PATH_FILE_NAMES)
+        .containsAllOf(
+            "google-cloud-compute-0.67.0-alpha.jar", "google-cloud-bigtable-0.66.0-alpha.jar");
   }
 
   @Test
