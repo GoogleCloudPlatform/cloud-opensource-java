@@ -29,7 +29,7 @@ public class StaticLinkageCheckReportTest {
             .setSourceClassName("ClassB")
             .build();
     LinkageErrorMissingClass linkageErrorMissingClass =
-        LinkageErrorMissingClass.builder().setReference(classSymbolReference).build();
+        LinkageErrorMissingClass.errorAt(classSymbolReference);
 
     ImmutableList<LinkageErrorMissingClass> linkageErrorMissingClasses =
         ImmutableList.of(linkageErrorMissingClass);
@@ -42,9 +42,7 @@ public class StaticLinkageCheckReportTest {
             .setSourceClassName("ClassB")
             .build();
     LinkageErrorMissingMethod linkageErrorMissingMethod =
-        LinkageErrorMissingMethod.builder()
-            .setReference(methodSymbolReference)
-            .build();
+        LinkageErrorMissingMethod.errorAt(methodSymbolReference);
     ImmutableList<LinkageErrorMissingMethod> missingMethodErrors =
         ImmutableList.of(linkageErrorMissingMethod);
 
@@ -55,9 +53,7 @@ public class StaticLinkageCheckReportTest {
             .setSourceClassName("ClassD")
             .build();
     LinkageErrorMissingField linkageErrorMissingField =
-        LinkageErrorMissingField.builder()
-            .setReference(fieldSymbolReference)
-            .build();
+        LinkageErrorMissingField.errorAt(fieldSymbolReference);
     ImmutableList<LinkageErrorMissingField> missingFieldErrors =
         ImmutableList.of(linkageErrorMissingField);
     JarLinkageReport jarLinkageReport =
