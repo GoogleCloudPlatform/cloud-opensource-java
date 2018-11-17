@@ -164,18 +164,17 @@ public class StaticLinkageCheckerTest {
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
+    MethodSymbolReference methodSymbolReference = MethodSymbolReference.builder()
+        .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+        .setTargetClassName(
+            "com.google.common.collect.LinkedHashMultimapGwtSerializationDependencies")
+        .setMethodName("<init>")
+        .setDescriptor("(Ljava/util/Map;)V")
+        .build();
+    ImmutableList<MethodSymbolReference> methodReferences = ImmutableList.of(
+        methodSymbolReference);
     SymbolReferenceSet symbolReferenceSet =
-        SymbolReferenceSet.builder()
-            .setMethodReferences(
-                ImmutableList.of(
-                    MethodSymbolReference.builder()
-                        .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
-                        .setTargetClassName(
-                            "com.google.common.collect.LinkedHashMultimapGwtSerializationDependencies")
-                        .setMethodName("<init>")
-                        .setDescriptor("(Ljava/util/Map;)V")
-                        .build()))
-            .build();
+        SymbolReferenceSet.builder().setMethodReferences(methodReferences).build();
 
     JarLinkageReport jarLinkageReport =
         staticLinkageChecker.generateLinkageReport(paths.get(0), symbolReferenceSet);
