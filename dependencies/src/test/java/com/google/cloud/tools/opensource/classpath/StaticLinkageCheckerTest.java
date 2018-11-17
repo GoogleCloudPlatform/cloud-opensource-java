@@ -33,33 +33,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class StaticLinkageCheckerTest {
-<<<<<<< HEAD
-  private static final String EXAMPLE_JAR_FILE =
-      "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar";
-  private static final String EXAMPLE_PROTO_JAR_FILE =
-      "testdata/proto-google-cloud-firestore-v1beta1-0.28.0.jar";
-  private  static final ImmutableList<Path> FIRESTORE_DEPENDENCIES = ImmutableList.of(
-      absolutePathOfResource("testdata/protobuf-java-3.6.1.jar"),
-      absolutePathOfResource("testdata/grpc-core-1.13.1.jar"),
-      absolutePathOfResource("testdata/grpc-stub-1.13.1.jar"),
-      absolutePathOfResource("testdata/grpc-protobuf-1.13.1.jar"),
-      absolutePathOfResource("testdata/grpc-protobuf-lite-1.13.1.jar")
-  );
 
-  private static final Correspondence<FullyQualifiedMethodSignature, String> CLASS_NAMES =
-      new Correspondence<FullyQualifiedMethodSignature, String>() {
-        @Override
-        public boolean compare(FullyQualifiedMethodSignature actual, String expected) {
-          return actual.getClassName().equals(expected);
-        }
-        @Override
-        public String toString() {
-          return "has class name equal to";
-        }
-      };
-
-=======
->>>>>>> master
   private static final Correspondence<Path, String> PATH_FILE_NAMES =
       new Correspondence<Path, String>() {
         @Override

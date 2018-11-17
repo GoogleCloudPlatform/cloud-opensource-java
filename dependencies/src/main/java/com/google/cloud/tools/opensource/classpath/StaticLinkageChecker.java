@@ -97,12 +97,7 @@ class StaticLinkageChecker {
     // TODO(suztomo): to take command-line option to choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(inputClasspath.get(0));
     StaticLinkageChecker staticLinkageChecker =
-<<<<<<< HEAD
-        create(commandLineOption.isReportOnlyReachable(), inputClasspath,
-            entryPoints);
-=======
         create(commandLineOption.isReportOnlyReachable(), inputClasspath, entryPoints);
->>>>>>> master
 
     StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
 
@@ -267,8 +262,8 @@ class StaticLinkageChecker {
     String className = methodReference.getTargetClassName();
     String methodName = methodReference.getMethodName();
     try {
-      Class[] parameterTypes = classDumper.methodDescriptorToClass(methodReference.getDescriptor());
-      Class clazz = className.startsWith("[") ? Array.class : classDumper.loadClass(className);
+      Class<?>[] parameterTypes = classDumper.methodDescriptorToClass(methodReference.getDescriptor());
+      Class<?> clazz = className.startsWith("[") ? Array.class : classDumper.loadClass(className);
       if ("<init>".equals(methodName)) {
         clazz.getConstructor(parameterTypes);
       } else if ("clone".equals(methodName) && clazz == Array.class) {
