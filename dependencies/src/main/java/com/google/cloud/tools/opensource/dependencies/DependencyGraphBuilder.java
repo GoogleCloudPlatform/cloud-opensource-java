@@ -190,15 +190,6 @@ public class DependencyGraphBuilder {
     return graph;
   }
 
-  static DependencyGraph getTransitiveDependencies(List<Artifact> artifacts)
-      throws DependencyCollectionException, DependencyResolutionException {
-    // root node artifact is null and the node has dependencies as children
-    DependencyNode node = resolveCompileTimeDependencies(artifacts, false);
-    DependencyGraph graph = new DependencyGraph();
-    levelOrder(node, graph);
-    return graph;
-  }
-
   private static final class LevelOrderQueueItem {
     final DependencyNode dependencyNode;
     final Stack<DependencyNode> parentNodes;
