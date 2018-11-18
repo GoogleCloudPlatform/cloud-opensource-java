@@ -29,6 +29,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -56,35 +57,38 @@ public class StaticLinkageCheckerTest {
 
   @Test
   public void testCoordinateToClasspath_validCoordinate() throws RepositoryException {
-    List<Path> paths = StaticLinkageChecker.coordinatesToClasspath("io.grpc:grpc-auth:1.15.1");
-    Truth.assertThat(paths).hasSize(12);
+    List<Path> paths =
+        StaticLinkageChecker.artifactsToClasspath(
+            ImmutableList.of(new DefaultArtifact("io.grpc:grpc-auth:1.15.1")));
 
-    String pathsString = paths.toString();
-
-    Truth.assertThat(pathsString).contains("io/grpc/grpc-auth/1.15.1/grpc-auth-1.15.1.jar");
-    Truth.assertThat(pathsString)
-        .contains(
-            "com/google/auth/google-auth-library-credentials/0.9.0/google-auth-library-credentials-0.9.0.jar");
+    Truth.assertThat(paths).isNotEmpty();
+    Truth.assertThat(paths)
+        .comparingElementsUsing(PATH_FILE_NAMES)
+        .contains("grpc-auth-1.15.1.jar");
+    Truth.assertThat(paths)
+        .comparingElementsUsing(PATH_FILE_NAMES)
+        .contains("google-auth-library-credentials-0.9.0.jar");
     paths.forEach(
-        path -> {
-          Truth.assertWithMessage("Every returned path should be an absolute path")
-              .that(path.toString())
-              .startsWith("/");
-        });
+        path ->
+            Truth.assertWithMessage("Every returned path should be an absolute path")
+                .that(path.toString())
+                .startsWith("/"));
   }
 
   @Test
   public void testCoordinateToClasspath_optionalDependency() throws RepositoryException {
     List<Path> paths =
-        StaticLinkageChecker.coordinatesToClasspath(
-            "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
+        StaticLinkageChecker.artifactsToClasspath(
+            ImmutableList.of(
+                new DefaultArtifact("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha")));
     Truth.assertThat(paths).comparingElementsUsing(PATH_FILE_NAMES).contains("log4j-1.2.12.jar");
   }
 
   @Test
   public void testCoordinateToClasspath_invalidCoordinate() {
     try {
-      StaticLinkageChecker.coordinatesToClasspath("io.grpc:nosuchartifact:1.2.3");
+      StaticLinkageChecker.artifactsToClasspath(
+          ImmutableList.of(new DefaultArtifact("io.grpc:nosuchartifact:1.2.3")));
       Assert.fail("Invalid Maven coodinate should raise RepositoryException");
     } catch (RepositoryException ex) {
       Truth.assertThat(ex.getMessage())
@@ -96,7 +100,9 @@ public class StaticLinkageCheckerTest {
   public void testFindInvalidReferences_selfReferenceFromAbstractClassToInterface()
       throws RepositoryException, IOException, ClassNotFoundException {
     String bigTableCoordinates = "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
-    List<Path> paths = StaticLinkageChecker.coordinatesToClasspath(bigTableCoordinates);
+    List<Path> paths =
+        StaticLinkageChecker.artifactsToClasspath(
+            ImmutableList.of(new DefaultArtifact(bigTableCoordinates)));
     Path httpClientJar =
         paths
             .stream()
@@ -181,7 +187,28 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testGenerateInputClasspathFromArgument_mavenCoordinates()
+  public void testGenerateInputClasspathFromLinkageCheckOption_mavenBom()
+      throws RepositoryException, ParseException {
+    // This bom is installed locally by cloud-tools-opensource-boms module
+    String bomCoordinates = "com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT";
+    StaticLinkageCheckOption parsedOption =
+        StaticLinkageCheckOption.parseArguments(new String[] {"-b", bomCoordinates});
+    ImmutableList<Path> inputClasspath =
+        StaticLinkageChecker.generateInputClasspathFromLinkageCheckOption(parsedOption);
+    Truth.assertThat(inputClasspath).isNotEmpty();
+    Truth.assertWithMessage("The files should match the elements in the BOM")
+        .that(inputClasspath.subList(0, 3))
+        .comparingElementsUsing(PATH_FILE_NAMES)
+        .containsExactly("guava-20.0.jar", "guava-gwt-20.0.jar", "guava-testlib-20.0.jar");
+
+    Truth.assertWithMessage("Import dependency in BOM should be resolved")
+        .that(inputClasspath)
+        .comparingElementsUsing(PATH_FILE_NAMES)
+        .contains("google-cloud-firestore-0.69.0-beta.jar");
+  }
+
+  @Test
+  public void testGenerateInputClasspathFromLinkageCheckOption_mavenCoordinates()
       throws RepositoryException, ParseException {
     String mavenCoordinates =
         "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha,"
@@ -189,17 +216,65 @@ public class StaticLinkageCheckerTest {
     StaticLinkageCheckOption parsedOption =
         StaticLinkageCheckOption.parseArguments(new String[] {"--artifacts", mavenCoordinates});
 
-    List<Path> inputClasspath =
+    ImmutableList<Path> inputClasspath =
+        StaticLinkageChecker.generateInputClasspathFromLinkageCheckOption(parsedOption);
+
+    Truth.assertWithMessage(
+            "The first 2 items in the classpath should be the 2 artifacts in the input")
+        .that(inputClasspath.subList(0, 2))
+        .comparingElementsUsing(PATH_FILE_NAMES)
+        .containsExactly(
+            "google-cloud-compute-0.67.0-alpha.jar", "google-cloud-bigtable-0.66.0-alpha.jar")
+        .inOrder();
+    Truth.assertWithMessage("The dependencies of the 2 artifacts should also be included")
+        .that(inputClasspath.subList(2, inputClasspath.size()))
+        .isNotEmpty();
+  }
+
+  @Test
+  public void testGenerateInputClasspathFromLinkageCheckOption_mavenCoordinates_missingDependency()
+      throws RepositoryException, ParseException {
+    // apache-jsp has missing transitive optional dependency:
+    //   org.mortbay.jasper:apache-jsp:jar:8.0.9.M3
+    //     org.apache.tomcat:tomcat-jasper:jar:8.0.9 (compile, optional:true)
+    //       org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not found in Maven central)
+
+    // Because such case is possible, StaticLinkageChecker should not abort execution when such
+    // dependency is under `optional:true`.
+    StaticLinkageCheckOption parsedOption =
+        StaticLinkageCheckOption.parseArguments(
+            new String[] {"--artifacts", "org.mortbay.jasper:apache-jsp:jar:8.0.9.M3"});
+
+    ImmutableList<Path> inputClasspath =
         StaticLinkageChecker.generateInputClasspathFromLinkageCheckOption(parsedOption);
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
-        .containsAllOf(
-            "google-cloud-compute-0.67.0-alpha.jar", "google-cloud-bigtable-0.66.0-alpha.jar");
+        .contains("apache-jsp-8.0.9.M3.jar");
   }
 
   @Test
-  public void testGenerateInputClasspathFromArgument_jarFileList()
+  public void testGenerateInputClasspathFromLinkageCheckOption_failOnMissingDependency()
+      throws ParseException {
+    // tomcat-jasper has missing dependency (not optional):
+    //   org.apache.tomcat:tomcat-jasper:jar:8.0.9
+    //     org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not found in Maven central)
+    StaticLinkageCheckOption parsedOption =
+        StaticLinkageCheckOption.parseArguments(
+            new String[] {"--artifacts", "org.apache.tomcat:tomcat-jasper:8.0.9"});
+
+    try {
+      StaticLinkageChecker.generateInputClasspathFromLinkageCheckOption(parsedOption);
+      Assert.fail();
+    } catch (RepositoryException ex) {
+      Truth.assertThat(ex.getMessage())
+          .startsWith(
+              "Could not find artifact org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 in central");
+    }
+  }
+
+  @Test
+  public void testGenerateInputClasspathFromLinkageCheckOption_jarFileList()
       throws RepositoryException, ParseException {
     StaticLinkageCheckOption parsedOption =
         StaticLinkageCheckOption.parseArguments(

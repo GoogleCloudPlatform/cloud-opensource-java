@@ -23,6 +23,7 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -37,6 +38,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.commons.cli.ParseException;
@@ -136,50 +138,52 @@ class StaticLinkageChecker {
   @VisibleForTesting
   static ImmutableList<Path> generateInputClasspathFromLinkageCheckOption(
       StaticLinkageCheckOption linkageCheckOption) throws RepositoryException {
-    ImmutableList.Builder<Path> jarFileBuilder = ImmutableList.builder();
+    List<Artifact> artifacts =
+        linkageCheckOption
+            .getArtifacts()
+            .stream()
+            .map(DefaultArtifact::new)
+            .collect(Collectors.toList());
 
-    // TODO(suztomo): add logic to convert Maven BOM to list of Maven coordinates as per README.md
-    jarFileBuilder.addAll(linkageCheckOption.getJarFiles());
-    for (String mavenCoordinates : linkageCheckOption.getArtifacts()) {
-      jarFileBuilder.addAll(coordinatesToClasspath(mavenCoordinates));
+    String bomCoordinates = linkageCheckOption.getBom();
+    if (bomCoordinates != null) {
+      DefaultArtifact bom = new DefaultArtifact(bomCoordinates);
+      artifacts.addAll(RepositoryUtility.readBom(bom));
     }
+
+    ImmutableList.Builder<Path> jarFileBuilder = ImmutableList.builder();
+    jarFileBuilder.addAll(linkageCheckOption.getJarFiles());
+    jarFileBuilder.addAll(artifactsToClasspath(artifacts));
     return jarFileBuilder.build();
   }
 
   /**
-   * Finds jar file paths for the dependencies of the Maven coordinate.
+   * Finds jar file paths for the dependencies of the Maven artifacts.
    *
-   * @param coordinates Maven coordinates of an artifact to check its dependencies
+   * @param artifacts Maven artifacts to check its dependencies
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem in retrieving jar files
    */
   @VisibleForTesting
-  static ImmutableList<Path> coordinatesToClasspath(String coordinates) throws RepositoryException {
-    DefaultArtifact rootArtifact = new DefaultArtifact(coordinates);
+  static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
+      throws RepositoryException {
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencies(rootArtifact);
+        DependencyGraphBuilder.getStaticLinkageCheckDependencies(artifacts);
     List<DependencyPath> dependencyPaths = dependencyGraph.list();
 
-    // When building a class path, we only need the first version found in breadth-first search
-    // for each artifact key. This set is to filter such duplicates.
-    Set<String> artifactKeySet = new HashSet<>();
+    // Removes duplicates on (groupId:artifactId)
+    Set<String> artifactInPaths = new HashSet<>();
 
-    ImmutableList.Builder<Path> jarPaths = ImmutableList.builder();
-    for (DependencyPath dependencyPath : dependencyPaths) {
-      Artifact artifact = dependencyPath.getLeaf();
-      String artifactKey = Artifacts.makeKey(artifact);
-      if (!artifactKeySet.add(artifactKey)) {
-        continue;
-      }
-
-      File artifactFile = artifact.getFile();
-      Path artifactFilePath = artifactFile.toPath();
-      if (artifactFilePath.toString().endsWith(".jar")) {
-        jarPaths.add(artifactFilePath.toAbsolutePath());
-      }
-    }
-    return jarPaths.build();
+    return dependencyPaths
+        .stream()
+        .map(DependencyPath::getLeaf)
+        .filter(artifact -> artifactInPaths.add(Artifacts.makeKey(artifact)))
+        .map(Artifact::getFile)
+        .map(File::toPath)
+        .map(Path::toAbsolutePath)
+        .filter(path -> path.toString().endsWith(".jar"))
+        .collect(toImmutableList());
   }
 
   /**
