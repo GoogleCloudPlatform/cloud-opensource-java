@@ -245,8 +245,8 @@ public class StaticLinkageCheckerTest {
     //     org.apache.tomcat:tomcat-jasper:jar:8.0.9 (compile, optional:true)
     //       org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not found in Maven central)
 
-    // Because such case is possible, StaticLinkageChecker should not abort execution when such
-    // dependency is under `optional:true`.
+    // Because such case is possible, StaticLinkageChecker should not abort execution when
+    // the unavailable dependency is under `optional:true`
     StaticLinkageCheckOption parsedOption =
         StaticLinkageCheckOption.parseArguments(
             new String[] {"--artifacts", "org.mortbay.jasper:apache-jsp:jar:8.0.9.M3"});
@@ -271,7 +271,8 @@ public class StaticLinkageCheckerTest {
 
     try {
       StaticLinkageChecker.generateInputClasspathFromLinkageCheckOption(parsedOption);
-      Assert.fail();
+      Assert.fail(
+          "Because the unavailable dependency is not optional, it should throw an exception");
     } catch (RepositoryException ex) {
       Truth.assertThat(ex.getMessage())
           .startsWith(
