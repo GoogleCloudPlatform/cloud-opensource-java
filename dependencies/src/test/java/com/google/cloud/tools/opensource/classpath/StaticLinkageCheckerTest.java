@@ -240,16 +240,18 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testGenerateInputClasspathFromLinkageCheckOption_mavenCoordinates_missingDependency()
       throws RepositoryException, ParseException {
-    // apache-jsp has missing transitive optional dependency:
-    //   org.mortbay.jasper:apache-jsp:jar:8.0.9.M3
-    //     org.apache.tomcat:tomcat-jasper:jar:8.0.9 (compile, optional:true)
-    //       org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not found in Maven central)
-
+    // guava-gwt has missing transitive dependency:
+    //   com.google.guava:guava-gwt:jar:20.0
+    //     com.google.gwt:gwt-dev:jar:2.8.0 (provided)
+    //       org.eclipse.jetty:apache-jsp:jar:9.2.14.v20151106 (compile)
+    //         org.mortbay.jasper:apache-jsp:jar:8.0.9.M3 (compile)
+    //           org.apache.tomcat:tomcat-jasper:jar:8.0.9 (compile, optional:true)
+    //             org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not found in Maven central)
     // Because such case is possible, StaticLinkageChecker should not abort execution when
-    // the unavailable dependency is under `optional:true`
+    // the unavailable dependency is under certain condition
     StaticLinkageCheckOption parsedOption =
         StaticLinkageCheckOption.parseArguments(
-            new String[] {"--artifacts", "org.mortbay.jasper:apache-jsp:jar:8.0.9.M3"});
+            new String[] {"--artifacts", "com.google.guava:guava-gwt:20.0"});
 
     ImmutableList<Path> inputClasspath =
         StaticLinkageChecker.generateInputClasspathFromLinkageCheckOption(parsedOption);
