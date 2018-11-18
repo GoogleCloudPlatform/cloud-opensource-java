@@ -28,11 +28,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -158,27 +158,30 @@ class StaticLinkageChecker {
   }
 
   /**
-   * Finds jar file paths for the dependencies of the Maven artifacts.
+   * Finds jar file paths for Maven artifacts and their the dependencies.
    *
-   * @param artifacts Maven artifacts to check its dependencies
+   * @param artifacts Maven artifacts to check
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem in retrieving jar files
    */
   @VisibleForTesting
   static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
       throws RepositoryException {
+    if (artifacts.isEmpty()) {
+      return ImmutableList.of();
+    }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph dependencyGraph =
         DependencyGraphBuilder.getStaticLinkageCheckDependencies(artifacts);
     List<DependencyPath> dependencyPaths = dependencyGraph.list();
 
     // Removes duplicates on (groupId:artifactId)
-    Set<String> artifactInPaths = new HashSet<>();
+    Set<String> artifactsInPaths = Sets.newHashSet();
 
     return dependencyPaths
         .stream()
         .map(DependencyPath::getLeaf)
-        .filter(artifact -> artifactInPaths.add(Artifacts.makeKey(artifact)))
+        .filter(artifact -> artifactsInPaths.add(Artifacts.makeKey(artifact)))
         .map(Artifact::getFile)
         .map(File::toPath)
         .map(Path::toAbsolutePath)

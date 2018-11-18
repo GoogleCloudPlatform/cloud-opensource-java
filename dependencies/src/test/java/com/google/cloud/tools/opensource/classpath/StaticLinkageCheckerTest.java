@@ -97,6 +97,12 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
+  public void testCoordinateToClasspath_emptyInput() throws RepositoryException {
+      List<Path> jars = StaticLinkageChecker.artifactsToClasspath(ImmutableList.of());
+      Truth.assertThat(jars).isEmpty();
+  }
+
+  @Test
   public void testFindInvalidReferences_selfReferenceFromAbstractClassToInterface()
       throws RepositoryException, IOException, ClassNotFoundException {
     String bigTableCoordinates = "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
