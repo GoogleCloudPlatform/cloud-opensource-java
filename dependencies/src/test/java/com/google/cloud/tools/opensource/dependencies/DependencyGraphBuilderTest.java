@@ -104,7 +104,7 @@ public class DependencyGraphBuilderTest {
         firstElement.getLeaf().getArtifactId());
     DependencyPath secondElement = list.get(1);
     Assert.assertEquals(
-        "BFS should pick up guava before dependencies from datastore",
+        "Level-order should pick up guava before the dependencies of the two",
         "guava",
         secondElement.getLeaf().getArtifactId());
   }
