@@ -274,19 +274,19 @@ public class DependencyGraphBuilder {
                 resolveCompileTimeDependencies(dependencyNode.getArtifact(), includeProvidedScope);
           } catch (DependencyResolutionException ex) {
             // A dependency may be unavailable any more. For example:
-            // com.google.guava:guava-gwt:jar:20.0 (compile) has transitive dependency to
+            // com.google.guava:guava-gwt:jar:20.0 (compile) has a transitive dependency to
             // org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not found in Maven central)
             logger.warning(
                 "Could not resolve "
                     + dependencyNode
                     + " under "
-                    + parentNodes
+                    + parentNodes // This shows "(compile?)" if optional:true
                     + " Exception: "
                     + ex.getMessage());
             boolean optionalParentCount =
                 parentNodes.stream().filter(node -> node.getDependency().isOptional()).count() > 0;
             if (!optionalParentCount) {
-              // When such unavailable dependency is not under `optional:true`, throw the exception
+              // When unavailable dependency is not under `optional:true`, rethrow the exception
               throw ex;
             }
           }
