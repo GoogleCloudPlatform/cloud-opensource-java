@@ -107,7 +107,7 @@ public class DependencyGraphBuilder {
 
     CollectRequest collectRequest = new CollectRequest();
     if (dependencyArtifacts.size() == 1) {
-      // With setRoot, Dependencies with `optional:true` or `provided` are fetched
+      // With setRoot, the result includes dependencies with `optional:true` or `provided`
       collectRequest.setRoot(dependencyList.get(0));
     } else {
       collectRequest.setDependencies(dependencyList);
