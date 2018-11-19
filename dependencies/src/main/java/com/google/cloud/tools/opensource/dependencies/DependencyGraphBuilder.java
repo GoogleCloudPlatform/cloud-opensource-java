@@ -215,7 +215,7 @@ public class DependencyGraphBuilder {
       levelOrder(node, graph, GraphTraversalOption.NONE);
     } catch (RepositoryException ex) {
       throw new RuntimeException(
-          "There was problem in resolving dependencies even when it is not supposed to resolve dependency",
+          "Problem resolving dependencies even though it is not supposed to resolve dependency",
           ex);
     }
   }
@@ -251,9 +251,11 @@ public class DependencyGraphBuilder {
   private static void levelOrder(
       DependencyNode firstNode, DependencyGraph graph, GraphTraversalOption graphTraversalOption)
       throws DependencyCollectionException, DependencyResolutionException {
+
     boolean resolveFullDependency = graphTraversalOption.resolveFullDependencies();
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
+
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
       DependencyNode dependencyNode = item.dependencyNode;
@@ -289,7 +291,9 @@ public class DependencyGraphBuilder {
         }
       }
       for (DependencyNode child : dependencyNode.getChildren()) {
-        queue.add(new LevelOrderQueueItem(child, (Stack<DependencyNode>) parentNodes.clone()));
+        @SuppressWarnings("unchecked")
+        Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
+        queue.add(new LevelOrderQueueItem(child, clone));
       }
     }
   }

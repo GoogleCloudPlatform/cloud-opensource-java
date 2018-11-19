@@ -262,8 +262,8 @@ class StaticLinkageChecker {
     String className = methodReference.getTargetClassName();
     String methodName = methodReference.getMethodName();
     try {
-      Class[] parameterTypes = classDumper.methodDescriptorToClass(methodReference.getDescriptor());
-      Class clazz = className.startsWith("[") ? Array.class : classDumper.loadClass(className);
+      Class<?>[] parameterTypes = classDumper.methodDescriptorToClass(methodReference.getDescriptor());
+      Class<?> clazz = className.startsWith("[") ? Array.class : classDumper.loadClass(className);
       if ("<init>".equals(methodName)) {
         clazz.getConstructor(parameterTypes);
       } else if ("clone".equals(methodName) && clazz == Array.class) {

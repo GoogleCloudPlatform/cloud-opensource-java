@@ -33,6 +33,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class StaticLinkageCheckerTest {
+
   private static final Correspondence<Path, String> PATH_FILE_NAMES =
       new Correspondence<Path, String>() {
         @Override
