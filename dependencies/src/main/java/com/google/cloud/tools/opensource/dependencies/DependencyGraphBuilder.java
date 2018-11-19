@@ -44,7 +44,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
  * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact
  * Resolver</a> (formerly known as Eclipse Aether).
  */
-public class  DependencyGraphBuilder {
+public class DependencyGraphBuilder {
 
   private static final Logger logger = Logger.getLogger(DependencyGraphBuilder.class.getName());
   
@@ -107,7 +107,7 @@ public class  DependencyGraphBuilder {
 
     CollectRequest collectRequest = new CollectRequest();
     if (dependencyArtifacts.size() == 1) {
-      // Dependencies with `optional:true` or `provided` are fetched when requested from root
+      // With setRoot, Dependencies with `optional:true` or `provided` are fetched
       collectRequest.setRoot(dependencyList.get(0));
     } else {
       collectRequest.setDependencies(dependencyList);
