@@ -44,7 +44,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
  * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact
  * Resolver</a> (formerly known as Eclipse Aether).
  */
-public class DependencyGraphBuilder {
+public class  DependencyGraphBuilder {
 
   private static final Logger logger = Logger.getLogger(DependencyGraphBuilder.class.getName());
   
@@ -85,11 +85,12 @@ public class DependencyGraphBuilder {
   private static DependencyNode resolveCompileTimeDependencies(
       List<Artifact> dependencyArtifacts, boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
-    // This cache is only used when dependencyArtifacts has 1 element
+
+    boolean useCache = dependencyArtifacts.size() == 1;
+    String cacheKey = Artifacts.toCoordinates(dependencyArtifacts.get(0));
     Map<String, DependencyNode> cache =
         includeProvidedScope ? cacheWithProvidedScope : cacheWithoutProvidedScope;
-    String cacheKey = Artifacts.toCoordinates(dependencyArtifacts.get(0));
-    if (dependencyArtifacts.size() == 1 && cache.containsKey(cacheKey)) {
+    if (useCache && cache.containsKey(cacheKey)) {
       return cache.get(cacheKey);
     }
 
@@ -122,7 +123,7 @@ public class DependencyGraphBuilder {
     // This might be able to speed up by using collectDependencies here instead
     system.resolveDependencies(session, dependencyRequest);
 
-    if (dependencyArtifacts.size() == 0) {
+    if (useCache) {
       cache.put(cacheKey, node);
     }
     return node;
@@ -207,7 +208,7 @@ public class DependencyGraphBuilder {
       levelOrder(node, graph, GraphTraversalOption.NONE);
     } catch (RepositoryException ex) {
       throw new RuntimeException(
-          "There was problem in resolving dependencies even when it is not supposed to resolve dependency",
+          "Problem resolving dependencies even though it is not supposed to resolve dependency",
           ex);
     }
   }
@@ -300,7 +301,9 @@ public class DependencyGraphBuilder {
         }
       }
       for (DependencyNode child : dependencyNode.getChildren()) {
-        queue.add(new LevelOrderQueueItem(child, (Stack<DependencyNode>) parentNodes.clone()));
+        @SuppressWarnings("unchecked")
+        Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
+        queue.add(new LevelOrderQueueItem(child, clone));
       }
     }
   }

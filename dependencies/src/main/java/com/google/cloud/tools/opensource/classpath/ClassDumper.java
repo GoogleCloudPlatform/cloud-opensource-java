@@ -266,16 +266,16 @@ class ClassDumper {
   }
 
   @VisibleForTesting
-  Class[] methodDescriptorToClass(String methodDescriptor) {
+  Class<?>[] methodDescriptorToClass(String methodDescriptor) {
     Type[] argumentTypes = Type.getArgumentTypes(methodDescriptor);
-    Class[] parameterTypes =
+    Class<?>[] parameterTypes =
         Arrays.stream(argumentTypes)
             .map(type -> bcelTypeToJavaClass(type, classLoader))
             .toArray(Class[]::new);
     return parameterTypes;
   }
 
-  private static Class bcelTypeToJavaClass(Type type, ClassLoader classLoader) {
+  private static Class<?> bcelTypeToJavaClass(Type type, ClassLoader classLoader) {
     switch (type.getType()) {
       case Const.T_BOOLEAN:
         return boolean.class;

@@ -23,7 +23,6 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -38,13 +37,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
  * A tool to find static linkage errors for a class path.
@@ -65,8 +63,8 @@ class StaticLinkageChecker {
   }
 
   /**
-   * Flag on the reachability. This flag controls whether the report excludes the linkage errors
-   * on classes that are not reachable from the entry points of the class usage graph.
+   * If true, the report excludes linkage errors on classes that are not reachable
+   * from the entry points of the class usage graph.
    */
   private final boolean reportOnlyReachable;
 
@@ -93,19 +91,19 @@ class StaticLinkageChecker {
    */
   public static void main(String[] arguments)
       throws IOException, ClassNotFoundException, RepositoryException, ParseException {
-    StaticLinkageCheckOption commandLineOption = StaticLinkageCheckOption.parseArguments(arguments);
-    ImmutableList<Path> inputClasspath =
-        generateInputClasspathFromLinkageCheckOption(commandLineOption);
+    
+    CommandLine commandLine = StaticLinkageCheckOption.readCommandLine(arguments);
+    ImmutableList<Path> inputClasspath = StaticLinkageCheckOption.generateInputClasspath(commandLine);
     // TODO(suztomo): to take command-line option to choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(inputClasspath.get(0));
-    StaticLinkageChecker staticLinkageChecker =
-        create(commandLineOption.isReportOnlyReachable(), inputClasspath, entryPoints);
 
+    boolean onlyReachable = commandLine.hasOption("r");
+    StaticLinkageChecker staticLinkageChecker = create(onlyReachable, inputClasspath, entryPoints);
     StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
 
     printStaticLinkageReport(report);
   }
-
+  
   private static void printStaticLinkageReport(StaticLinkageCheckReport report) {
     for (JarLinkageReport jarLinkageReport : report.getJarLinkageReports()) {
       int totalErrors =
@@ -125,36 +123,6 @@ class StaticLinkageChecker {
         System.out.println(indent + missingField.getReference());
       }
     }
-  }
-
-  /**
-   * Resolves command line option to list of jar files as input class path for static linkage
-   * checker.
-   *
-   * @param linkageCheckOption option through command-line arguments
-   * @return input class path resolved as a list of absolute paths to jar files
-   * @throws RepositoryException when there is a problem in resolving the Maven coordinates to jar
-   */
-  @VisibleForTesting
-  static ImmutableList<Path> generateInputClasspathFromLinkageCheckOption(
-      StaticLinkageCheckOption linkageCheckOption) throws RepositoryException {
-    List<Artifact> artifacts =
-        linkageCheckOption
-            .getArtifacts()
-            .stream()
-            .map(DefaultArtifact::new)
-            .collect(Collectors.toList());
-
-    String bomCoordinates = linkageCheckOption.getBom();
-    if (bomCoordinates != null) {
-      DefaultArtifact bom = new DefaultArtifact(bomCoordinates);
-      artifacts.addAll(RepositoryUtility.readBom(bom));
-    }
-
-    ImmutableList.Builder<Path> jarFileBuilder = ImmutableList.builder();
-    jarFileBuilder.addAll(linkageCheckOption.getJarFiles());
-    jarFileBuilder.addAll(artifactsToClasspath(artifacts));
-    return jarFileBuilder.build();
   }
 
   /**
@@ -269,8 +237,8 @@ class StaticLinkageChecker {
     String className = methodReference.getTargetClassName();
     String methodName = methodReference.getMethodName();
     try {
-      Class[] parameterTypes = classDumper.methodDescriptorToClass(methodReference.getDescriptor());
-      Class clazz = className.startsWith("[") ? Array.class : classDumper.loadClass(className);
+      Class<?>[] parameterTypes = classDumper.methodDescriptorToClass(methodReference.getDescriptor());
+      Class<?> clazz = className.startsWith("[") ? Array.class : classDumper.loadClass(className);
       if ("<init>".equals(methodName)) {
         clazz.getConstructor(parameterTypes);
       } else if ("clone".equals(methodName) && clazz == Array.class) {
