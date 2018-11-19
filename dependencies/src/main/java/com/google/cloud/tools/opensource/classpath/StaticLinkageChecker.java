@@ -64,7 +64,7 @@ class StaticLinkageChecker {
   }
 
   /**
-   * Flag that controls whether the report excludes linkage errors on classes that are not reachable
+   * If true, the report excludes linkage errors on classes that are not reachable
    * from the entry points of the class usage graph.
    */
   private final boolean reportOnlyReachable;

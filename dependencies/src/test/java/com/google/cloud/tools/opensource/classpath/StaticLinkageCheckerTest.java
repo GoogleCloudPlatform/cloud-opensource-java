@@ -212,7 +212,6 @@ public class StaticLinkageCheckerTest {
         .containsExactly("foo.jar", "bar.jar", "baz.jar");
   }
 
-
   @Test
   public void testJarPathOrderInResolvingReferences() throws IOException, ClassNotFoundException {
     // listDocuments method on CollectionReference class is added at version 0.66.0-beta

@@ -93,11 +93,10 @@ class StaticLinkageCheckOption {
 
   static ImmutableList<Path> generateInputClasspath(CommandLine commandLine)
       throws RepositoryException, ParseException {
-    
-    ImmutableList.Builder<Path> jarFileBuilder = ImmutableList.builder();
-    
+        
     Splitter commaSplitter = Splitter.on(",");
     if (commandLine.hasOption("a")) {
+      ImmutableList.Builder<Path> jarFileBuilder = ImmutableList.builder();
       String mavenCoordinatesOption = commandLine.getOptionValue("a");
       for (String coord : commaSplitter.split(mavenCoordinatesOption)) {
         jarFileBuilder.addAll(StaticLinkageChecker.coordinatesToClasspath(coord));
@@ -105,13 +104,14 @@ class StaticLinkageCheckOption {
       return jarFileBuilder.build();
     } else if (commandLine.hasOption("j")) {
       String jarFiles = commandLine.getOptionValue("j");
-      List<Path> jarFilesInArguments =
+      ImmutableList<Path> jarFilesInArguments =
           Streams.stream(commaSplitter.split(jarFiles))
-              .map(name -> (Paths.get(name)).toAbsolutePath())
-              .collect(Collectors.toList());
-      return ImmutableList.copyOf(jarFilesInArguments);
+              .map(name -> Paths.get(name).toAbsolutePath())
+              .collect(ImmutableList.toImmutableList());
+      return jarFilesInArguments;
     } else if (commandLine.hasOption("b")) {
       String mavenBomCoordinates = commandLine.getOptionValue("b");
+      ImmutableList.Builder<Path> jarFileBuilder = ImmutableList.builder();
       // TODO(suztomo): add logic to convert Maven BOM to list of Maven coordinates as per README.md
       
       return jarFileBuilder.build();
