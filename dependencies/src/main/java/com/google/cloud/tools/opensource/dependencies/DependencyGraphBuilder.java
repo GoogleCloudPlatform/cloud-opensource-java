@@ -86,11 +86,11 @@ public class DependencyGraphBuilder {
   private static DependencyNode resolveCompileTimeDependencies(
       List<Artifact> dependencyArtifacts, boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
+    // This cache is only used when dependencyArtifacts has 1 element
     Map<String, DependencyNode> cache =
         includeProvidedScope ? cacheWithProvidedScope : cacheWithoutProvidedScope;
-    String cacheKey =
-        dependencyArtifacts.stream().map(Artifacts::toCoordinates).collect(Collectors.joining(","));
-    if (cache.containsKey(cacheKey)) {
+    String cacheKey = Artifacts.toCoordinates(dependencyArtifacts.get(0));
+    if (dependencyArtifacts.size() == 1 && cache.containsKey(cacheKey)) {
       return cache.get(cacheKey);
     }
 
@@ -123,7 +123,9 @@ public class DependencyGraphBuilder {
     // This might be able to speed up by using collectDependencies here instead
     system.resolveDependencies(session, dependencyRequest);
 
-    cache.put(cacheKey, node);
+    if (dependencyArtifacts.size() == 0) {
+      cache.put(cacheKey, node);
+    }
     return node;
   }
 
