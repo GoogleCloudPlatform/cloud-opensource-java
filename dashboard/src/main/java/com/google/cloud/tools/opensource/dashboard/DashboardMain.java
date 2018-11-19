@@ -212,7 +212,7 @@ public class DashboardMain {
       templateData.put("globalUpperBoundFailures", globalUpperBoundFailures);
       templateData.put("lastUpdated", LocalDateTime.now());
       // Explicit casting avoids Freemarker's error on `AbstractListMultimap.get` in CircleCI
-      templateData.put("dependencyTree", (LinkedListMultimap) dependencyTree);
+      templateData.put("dependencyTree", (LinkedListMultimap<?, ?>) dependencyTree);
       templateData.put("dependencyRootNode", Iterables.getFirst(dependencyTree.values(), null));
       report.process(templateData, out);
 
