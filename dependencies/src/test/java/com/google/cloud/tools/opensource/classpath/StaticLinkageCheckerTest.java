@@ -71,8 +71,8 @@ public class StaticLinkageCheckerTest {
     paths.forEach(
         path ->
             Truth.assertWithMessage("Every returned path should be an absolute path")
-                .that(path.toString())
-                .startsWith("/"));
+                .that(path.isAbsolute())
+                .isTrue());
   }
 
   @Test
@@ -194,7 +194,6 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testGenerateInputClasspathFromLinkageCheckOption_mavenBom()
       throws RepositoryException, ParseException {
-    // This bom is installed locally by cloud-tools-opensource-boms module
     String bomCoordinates = "com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT";
     CommandLine parsedOption =
         StaticLinkageCheckOption.readCommandLine(new String[] {"-b", bomCoordinates});

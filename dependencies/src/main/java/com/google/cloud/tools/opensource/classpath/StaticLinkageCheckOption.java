@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.stream.Stream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -32,6 +33,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
@@ -98,9 +100,10 @@ class StaticLinkageCheckOption {
     Splitter commaSplitter = Splitter.on(",");
 
     if (commandLine.hasOption("b")) {
-      String bomCoordinatesOption = commandLine.getOptionValue("b");
-      DefaultArtifact bomArtifact = new DefaultArtifact(bomCoordinatesOption);
-      return StaticLinkageChecker.artifactsToClasspath(RepositoryUtility.readBom(bomArtifact));
+      String bomCoordinates = commandLine.getOptionValue("b");
+      DefaultArtifact bomArtifact = new DefaultArtifact(bomCoordinates);
+      List<Artifact> artifactsInBom = RepositoryUtility.readBom(bomArtifact);
+      return StaticLinkageChecker.artifactsToClasspath(artifactsInBom);
     } else if (commandLine.hasOption("a")) {
       String mavenCoordinatesOption = commandLine.getOptionValue("a");
       return StaticLinkageChecker.artifactsToClasspath(

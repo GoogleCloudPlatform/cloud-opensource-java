@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.file.Path;
@@ -126,7 +125,7 @@ class StaticLinkageChecker {
   }
 
   /**
-   * Finds jar file paths for Maven artifacts and their the dependencies.
+   * Finds jar file paths for Maven artifacts and their dependencies.
    *
    * @param artifacts Maven artifacts to check
    * @return list of absolute paths to jar files
@@ -146,15 +145,19 @@ class StaticLinkageChecker {
     // Removes duplicates on (groupId:artifactId)
     Set<String> artifactsInPaths = Sets.newHashSet();
 
-    return dependencyPaths
-        .stream()
-        .map(DependencyPath::getLeaf)
-        .filter(artifact -> artifactsInPaths.add(Artifacts.makeKey(artifact)))
-        .map(Artifact::getFile)
-        .map(File::toPath)
-        .map(Path::toAbsolutePath)
-        .filter(path -> path.toString().endsWith(".jar"))
-        .collect(toImmutableList());
+    ImmutableList.Builder<Path> classpathBuilder = ImmutableList.builder();
+    for (DependencyPath dependencyPath : dependencyPaths) {
+      Artifact artifact = dependencyPath.getLeaf();
+      if (!artifactsInPaths.add(Artifacts.makeKey(artifact))) {
+        continue;
+      }
+      Path jarAbsolutePath = artifact.getFile().toPath().toAbsolutePath();
+      if (!jarAbsolutePath.toString().endsWith(".jar")) {
+        continue;
+      }
+      classpathBuilder.add(jarAbsolutePath);
+    }
+    return classpathBuilder.build();
   }
 
   /**

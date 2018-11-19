@@ -86,6 +86,8 @@ public class DependencyGraphBuilder {
       List<Artifact> dependencyArtifacts, boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
 
+    // Because this function is called only once with dependencyArtifacts.size() >= 2 (when running
+    // StaticLinkageChecker), no need to cache the result for such input
     boolean useCache = dependencyArtifacts.size() == 1;
     String cacheKey = Artifacts.toCoordinates(dependencyArtifacts.get(0));
     Map<String, DependencyNode> cache =
@@ -244,6 +246,7 @@ public class DependencyGraphBuilder {
   private static void levelOrder(
       DependencyNode firstNode, DependencyGraph graph, GraphTraversalOption graphTraversalOption)
       throws DependencyCollectionException, DependencyResolutionException {
+
     boolean resolveFullDependency = graphTraversalOption.resolveFullDependencies();
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));

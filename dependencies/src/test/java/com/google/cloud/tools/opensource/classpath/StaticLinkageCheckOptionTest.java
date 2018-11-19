@@ -22,6 +22,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class StaticLinkageCheckOptionTest {
+
   @Test
   public void parseCommandLineOptions_shortOptions_bom() throws ParseException {
     String[] arguments = {"-b", "abc.com:dummy:1.2", "-r"};
