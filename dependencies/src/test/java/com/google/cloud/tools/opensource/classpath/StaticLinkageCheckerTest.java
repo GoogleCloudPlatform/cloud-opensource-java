@@ -62,7 +62,6 @@ public class StaticLinkageCheckerTest {
         StaticLinkageChecker.artifactsToClasspath(
             ImmutableList.of(new DefaultArtifact("io.grpc:grpc-auth:1.15.1")));
 
-    Truth.assertThat(paths).isNotEmpty();
     Truth.assertThat(paths)
         .comparingElementsUsing(PATH_FILE_NAMES)
         .contains("grpc-auth-1.15.1.jar");
@@ -202,11 +201,13 @@ public class StaticLinkageCheckerTest {
     ImmutableList<Path> inputClasspath =
         StaticLinkageCheckOption.generateInputClasspath(parsedOption);
     Truth.assertThat(inputClasspath).isNotEmpty();
+    // These 3 files are the first 3 artifacts in the BOM
     Truth.assertWithMessage("The files should match the elements in the BOM")
         .that(inputClasspath.subList(0, 3))
         .comparingElementsUsing(PATH_FILE_NAMES)
         .containsExactly("guava-20.0.jar", "guava-gwt-20.0.jar", "guava-testlib-20.0.jar");
 
+    // google-cloud-bom, containing google-cloud-firestore, is in the BOM with scope:import
     Truth.assertWithMessage("Import dependency in BOM should be resolved")
         .that(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
