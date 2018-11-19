@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
