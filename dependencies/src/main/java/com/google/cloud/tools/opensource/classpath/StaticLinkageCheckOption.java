@@ -16,23 +16,21 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import javax.annotation.Nullable;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.eclipse.aether.RepositoryException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Option for {@link StaticLinkageChecker}. To construct an input class path, the checker requires
@@ -44,53 +42,38 @@ import org.apache.commons.cli.ParseException;
  *   <li>{@code jarFiles}: list of jar files in the filesystem
  * </ul>
  *
- * @see <a
- *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/dependencies#input">Static
+ * @see <a href=
+ *    "https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/dependencies#input">Static
  *     Linkage Checker: Input</a>
  */
-@AutoValue
-abstract class StaticLinkageCheckOption {
-  // TODO(suztomo): Add option to specify entry point classes
+class StaticLinkageCheckOption {
+  
+  private static final Options options = configureOptions();
+  
+  static CommandLine readCommandLine(String[] arguments) throws ParseException {
+    // TODO is this reentrant? Can we reuse it? 
+    // https://issues.apache.org/jira/browse/CLI-291
+    CommandLineParser parser = new DefaultParser();
 
-  /**
-   * Returns the Maven coordinates for a BOM if specified; otherwise null. Example value: {@code
-   * com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT}
-   */
-  @Nullable
-  abstract String getBom();
-
-  /**
-   * Returns list of the coordinates of (non-BOM) Maven artifacts if specified; otherwise an empty
-   * list. Example element: {@code com.google.cloud:google-cloud-bigtable:0.66.0-alpha}
-   */
-  abstract ImmutableList<String> getArtifacts();
-
-  /**
-   * Returns absolute paths for jar files in the filesystem if specified; otherwise an empty list.
-   */
-  abstract ImmutableList<Path> getJarFiles();
-
-  /**
-   * Returns {@code true} if only reachable linkage errors should be reported.
-   */
-  abstract boolean isReportOnlyReachable();
-
-  static Builder builder() {
-    return new AutoValue_StaticLinkageCheckOption.Builder()
-        .setArtifacts(ImmutableList.of())
-        .setJarFiles(ImmutableList.of());
+    try {
+      CommandLine commandLine = parser.parse(options, arguments);
+      checkInput(commandLine);
+      return commandLine;
+    } catch (ParseException ex) {
+      HelpFormatter helpFormatter = new HelpFormatter();
+      helpFormatter.printHelp("StaticLinkageChecker", options);
+      throw ex;
+    }
   }
 
-  @AutoValue.Builder
-  abstract static class Builder {
-    abstract Builder setBom(String coordinates);
-    abstract Builder setArtifacts(List<String> coordinates);
-    abstract Builder setJarFiles(List<Path> paths);
-    abstract Builder setReportOnlyReachable(boolean value);
-    abstract StaticLinkageCheckOption build();
+  private static void checkInput(CommandLine commandLine) throws ParseException {
+    if (Stream.of('b', 'a', 'j').filter(commandLine::hasOption).count() > 1) {
+      throw new ParseException(
+          "Exactly one of BOM, Maven coordinates, or jar files must be specified");
+    }
   }
 
-  static StaticLinkageCheckOption parseArguments(String[] arguments) throws ParseException {
+  private static Options configureOptions() {
     Options options = new Options();
     options.addOption(
         "b", "bom", true, "BOM to generate a class path, specified by its Maven coordinates");
@@ -105,45 +88,35 @@ abstract class StaticLinkageCheckOption {
         "report-only-reachable",
         false,
         "To report only linkage errors reachable from entry point");
+    return options;
+  }
 
-    CommandLineParser parser = new DefaultParser();
-    List<Path> jarFilePaths = new ArrayList<>();
-
-    ImmutableList.Builder<String> mavenCoordinates = ImmutableList.builder();
-    try {
-      CommandLine commandLine = parser.parse(options, arguments);
-      if (Stream.of('b', 'a', 'j').filter(commandLine::hasOption).count() > 1) {
-        throw new IllegalArgumentException(
-            "One of BOM, Maven coordinates, or jar files can be specified");
+  static ImmutableList<Path> generateInputClasspath(CommandLine commandLine)
+      throws RepositoryException, ParseException {
+        
+    Splitter commaSplitter = Splitter.on(",");
+    if (commandLine.hasOption("a")) {
+      ImmutableList.Builder<Path> jarFileBuilder = ImmutableList.builder();
+      String mavenCoordinatesOption = commandLine.getOptionValue("a");
+      for (String coord : commaSplitter.split(mavenCoordinatesOption)) {
+        jarFileBuilder.addAll(StaticLinkageChecker.coordinatesToClasspath(coord));
       }
-      Splitter commaSplitter = Splitter.on(",");
-      if (commandLine.hasOption("a")) {
-        String mavenCoordinatesOption = commandLine.getOptionValue("a");
-        mavenCoordinates.addAll(commaSplitter.split(mavenCoordinatesOption));
-      }
-      if (commandLine.hasOption("j")) {
-        String jarFiles = commandLine.getOptionValue("j");
-        List<Path> jarFilesInArguments =
-            Streams.stream(commaSplitter.split(jarFiles))
-                .map(name -> (Paths.get(name)).toAbsolutePath())
-                .collect(Collectors.toList());
-        jarFilePaths.addAll(jarFilesInArguments);
-      }
-
+      return jarFileBuilder.build();
+    } else if (commandLine.hasOption("j")) {
+      String jarFiles = commandLine.getOptionValue("j");
+      ImmutableList<Path> jarFilesInArguments =
+          Streams.stream(commaSplitter.split(jarFiles))
+              .map(name -> Paths.get(name).toAbsolutePath())
+              .collect(ImmutableList.toImmutableList());
+      return jarFilesInArguments;
+    } else if (commandLine.hasOption("b")) {
       String mavenBomCoordinates = commandLine.getOptionValue("b");
-
-      boolean reportOnlyReachable = commandLine.hasOption("r");
-
-      return builder()
-          .setBom(mavenBomCoordinates)
-          .setArtifacts(mavenCoordinates.build())
-          .setJarFiles(jarFilePaths)
-          .setReportOnlyReachable(reportOnlyReachable)
-          .build();
-    } catch (ParseException ex) {
-      HelpFormatter helpFormatter = new HelpFormatter();
-      helpFormatter.printHelp("StaticLinkageChecker", options);
-      throw ex;
+      ImmutableList.Builder<Path> jarFileBuilder = ImmutableList.builder();
+      // TODO(suztomo): add logic to convert Maven BOM to list of Maven coordinates as per README.md
+      
+      return jarFileBuilder.build();
+    } else {
+      throw new ParseException("Missing argument");
     }
   }
 }

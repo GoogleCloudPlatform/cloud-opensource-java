@@ -27,6 +27,8 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.junit.Assert;
@@ -162,52 +164,48 @@ public class StaticLinkageCheckerTest {
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
+    MethodSymbolReference methodSymbolReference = MethodSymbolReference.builder()
+        .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+        .setTargetClassName(
+            "com.google.common.collect.LinkedHashMultimapGwtSerializationDependencies")
+        .setMethodName("<init>")
+        .setDescriptor("(Ljava/util/Map;)V")
+        .build();
+    ImmutableList<MethodSymbolReference> methodReferences = ImmutableList.of(
+        methodSymbolReference);
     SymbolReferenceSet symbolReferenceSet =
-        SymbolReferenceSet.builder()
-            .setMethodReferences(
-                ImmutableList.of(
-                    MethodSymbolReference.builder()
-                        .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
-                        .setTargetClassName(
-                            "com.google.common.collect.LinkedHashMultimapGwtSerializationDependencies")
-                        .setMethodName("<init>")
-                        .setDescriptor("(Ljava/util/Map;)V")
-                        .build()))
-            .build();
+        SymbolReferenceSet.builder().setMethodReferences(methodReferences).build();
 
     JarLinkageReport jarLinkageReport =
         staticLinkageChecker.generateLinkageReport(paths.get(0), symbolReferenceSet);
 
     Truth.assertThat(jarLinkageReport.getMissingMethodErrors()).isEmpty();
   }
-
+  
   @Test
-  public void testGenerateInputClasspathFromArgument_mavenCoordinates()
+  public void testGenerateInputClasspath_mavenCoordinates()
       throws RepositoryException, ParseException {
-    String mavenCoordinates =
-        "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha,"
-            + "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
-    StaticLinkageCheckOption parsedOption =
-        StaticLinkageCheckOption.parseArguments(new String[] {"--artifacts", mavenCoordinates});
 
-    List<Path> inputClasspath =
-        StaticLinkageChecker.generateInputClasspathFromLinkageCheckOption(parsedOption);
+    String mavenCoordinates = "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha,"
+        + "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
+    String[] arguments = {"--artifacts", mavenCoordinates};
+    
+    CommandLine parsedOption = StaticLinkageCheckOption.readCommandLine(arguments);
+    List<Path> inputClasspath = StaticLinkageCheckOption.generateInputClasspath(parsedOption);
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
         .containsAllOf(
             "google-cloud-compute-0.67.0-alpha.jar", "google-cloud-bigtable-0.66.0-alpha.jar");
   }
-
+  
   @Test
-  public void testGenerateInputClasspathFromArgument_jarFileList()
+  public void testGenerateInputClasspath_jarFileList()
       throws RepositoryException, ParseException {
-    StaticLinkageCheckOption parsedOption =
-        StaticLinkageCheckOption.parseArguments(
-            new String[] {"--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar"});
 
-    List<Path> inputClasspath =
-        StaticLinkageChecker.generateInputClasspathFromLinkageCheckOption(parsedOption);
+    String[] arguments = {"--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar"};
+    CommandLine parsedOption = StaticLinkageCheckOption.readCommandLine(arguments);
+    List<Path> inputClasspath = StaticLinkageCheckOption.generateInputClasspath(parsedOption);
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
@@ -271,4 +269,5 @@ public class StaticLinkageCheckerTest {
         .that(reportWith66First.getMissingMethodErrors())
         .isEmpty();
   }
+
 }

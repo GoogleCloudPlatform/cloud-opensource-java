@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -63,8 +64,8 @@ class StaticLinkageChecker {
   }
 
   /**
-   * Flag on the reachability. This flag controls whether the report excludes the linkage errors
-   * on classes that are not reachable from the entry points of the class usage graph.
+   * If true, the report excludes linkage errors on classes that are not reachable
+   * from the entry points of the class usage graph.
    */
   private final boolean reportOnlyReachable;
 
@@ -91,19 +92,19 @@ class StaticLinkageChecker {
    */
   public static void main(String[] arguments)
       throws IOException, ClassNotFoundException, RepositoryException, ParseException {
-    StaticLinkageCheckOption commandLineOption = StaticLinkageCheckOption.parseArguments(arguments);
-    ImmutableList<Path> inputClasspath =
-        generateInputClasspathFromLinkageCheckOption(commandLineOption);
+    
+    CommandLine commandLine = StaticLinkageCheckOption.readCommandLine(arguments);
+    ImmutableList<Path> inputClasspath = StaticLinkageCheckOption.generateInputClasspath(commandLine);
     // TODO(suztomo): to take command-line option to choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(inputClasspath.get(0));
-    StaticLinkageChecker staticLinkageChecker =
-        create(commandLineOption.isReportOnlyReachable(), inputClasspath, entryPoints);
 
+    boolean onlyReachable = commandLine.hasOption("r");
+    StaticLinkageChecker staticLinkageChecker = create(onlyReachable, inputClasspath, entryPoints);
     StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
 
     printStaticLinkageReport(report);
   }
-
+  
   private static void printStaticLinkageReport(StaticLinkageCheckReport report) {
     for (JarLinkageReport jarLinkageReport : report.getJarLinkageReports()) {
       int totalErrors =
@@ -123,27 +124,6 @@ class StaticLinkageChecker {
         System.out.println(indent + missingField.getReference());
       }
     }
-  }
-
-  /**
-   * Resolves command line option to list of jar files as input class path for static linkage
-   * checker.
-   *
-   * @param linkageCheckOption option through command-line arguments
-   * @return input class path resolved as a list of absolute paths to jar files
-   * @throws RepositoryException when there is a problem in resolving the Maven coordinates to jar
-   */
-  @VisibleForTesting
-  static ImmutableList<Path> generateInputClasspathFromLinkageCheckOption(
-      StaticLinkageCheckOption linkageCheckOption) throws RepositoryException {
-    ImmutableList.Builder<Path> jarFileBuilder = ImmutableList.builder();
-
-    // TODO(suztomo): add logic to convert Maven BOM to list of Maven coordinates as per README.md
-    jarFileBuilder.addAll(linkageCheckOption.getJarFiles());
-    for (String mavenCoordinates : linkageCheckOption.getArtifacts()) {
-      jarFileBuilder.addAll(coordinatesToClasspath(mavenCoordinates));
-    }
-    return jarFileBuilder.build();
   }
 
   /**
