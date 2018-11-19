@@ -32,7 +32,7 @@ public class StaticLinkageCheckOptionTest {
   }
 
   @Test
-  public void parseCommandLineOptions_duplicates() throws ParseException {
+  public void parseCommandLineOptions_duplicates() {
     String[] arguments = {
         "--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2",
         "-b", "abc.com:dummy:1.2",
@@ -42,7 +42,9 @@ public class StaticLinkageCheckOptionTest {
       StaticLinkageCheckOption.readCommandLine(arguments);
       Assert.fail();
     } catch (ParseException ex) {
-      // pass
+      Assert.assertEquals(
+          "Exactly one of BOM, Maven coordinates, or jar files must be specified",
+          ex.getMessage());
     }
   }
 

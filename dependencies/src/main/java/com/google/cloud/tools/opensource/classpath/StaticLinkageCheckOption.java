@@ -16,11 +16,9 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -28,10 +26,11 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
-
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Streams;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Option for {@link StaticLinkageChecker}. To construct an input class path, the checker requires
@@ -43,8 +42,8 @@ import com.google.common.collect.Streams;
  *   <li>{@code jarFiles}: list of jar files in the filesystem
  * </ul>
  *
- * @see <a
- *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/dependencies#input">Static
+ * @see <a href=
+ *    "https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/dependencies#input">Static
  *     Linkage Checker: Input</a>
  */
 class StaticLinkageCheckOption {
@@ -70,7 +69,7 @@ class StaticLinkageCheckOption {
   private static void checkInput(CommandLine commandLine) throws ParseException {
     if (Stream.of('b', 'a', 'j').filter(commandLine::hasOption).count() > 1) {
       throw new ParseException(
-          "One of BOM, Maven coordinates, or jar files can be specified");
+          "Exactly one of BOM, Maven coordinates, or jar files must be specified");
     }
   }
 
