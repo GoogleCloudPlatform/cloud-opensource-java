@@ -195,6 +195,7 @@ public class StaticLinkageCheckerTest {
   public void testGenerateInputClasspathFromLinkageCheckOption_mavenBom()
       throws RepositoryException, ParseException {
     String bomCoordinates = "com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT";
+
     CommandLine parsedOption =
         StaticLinkageCheckOption.readCommandLine(new String[] {"-b", bomCoordinates});
     ImmutableList<Path> inputClasspath =
@@ -220,6 +221,7 @@ public class StaticLinkageCheckerTest {
         "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha,"
             + "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
     String[] arguments = {"--artifacts", mavenCoordinates};
+
     CommandLine parsedOption = StaticLinkageCheckOption.readCommandLine(arguments);
     List<Path> inputClasspath = StaticLinkageCheckOption.generateInputClasspath(parsedOption);
 

@@ -106,12 +106,13 @@ class StaticLinkageCheckOption {
       return StaticLinkageChecker.artifactsToClasspath(artifactsInBom);
     } else if (commandLine.hasOption("a")) {
       String mavenCoordinatesOption = commandLine.getOptionValue("a");
-      return StaticLinkageChecker.artifactsToClasspath(
+      ImmutableList<Artifact> artifacts =
           commaSplitter
               .splitToList(mavenCoordinatesOption)
               .stream()
               .map(DefaultArtifact::new)
-              .collect(toImmutableList()));
+              .collect(toImmutableList());
+      return StaticLinkageChecker.artifactsToClasspath(artifacts);
     } else if (commandLine.hasOption("j")) {
       String jarFiles = commandLine.getOptionValue("j");
       ImmutableList<Path> jarFilesInArguments =
