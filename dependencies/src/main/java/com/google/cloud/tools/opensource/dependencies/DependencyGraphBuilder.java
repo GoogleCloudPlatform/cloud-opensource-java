@@ -243,7 +243,8 @@ public class DependencyGraphBuilder {
         // set to null
         forPath.add(dependencyNode.getArtifact());
 
-        // Because DefaultDependencyNode does not override equals(), using Artifact::equals instead
+        // Because DependencyNode (or DefaultDependencyNode) does not override equals(),
+        // using Artifact::equals instead to check recursive dependency
         boolean artifactPresentInParent =
             parentNodes
                 .stream()
