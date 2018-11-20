@@ -21,11 +21,14 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -64,6 +67,9 @@ public class DependencyGraphBuilder {
     }
   }
 
+  private static final Map<String, DependencyNode> cacheWithProvidedScope = new HashMap<>();
+  private static final Map<String, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
+
   private static DependencyNode resolveCompileTimeDependencies(Artifact rootDependencyArtifact)
       throws DependencyCollectionException, DependencyResolutionException {
     return resolveCompileTimeDependencies(rootDependencyArtifact, false);
@@ -80,11 +86,13 @@ public class DependencyGraphBuilder {
       List<Artifact> dependencyArtifacts, boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
 
-    ImmutableList<Dependency> dependencyList =
-        dependencyArtifacts
-            .stream()
-            .map(artifact -> new Dependency(artifact, "compile"))
-            .collect(toImmutableList());
+    Map<String, DependencyNode> cache =
+        includeProvidedScope ? cacheWithProvidedScope : cacheWithoutProvidedScope;
+    String cacheKey =
+        dependencyArtifacts.stream().map(Artifacts::toCoordinates).collect(Collectors.joining(","));
+    if (cache.containsKey(cacheKey)) {
+      return cache.get(cacheKey);
+    }
 
     RepositorySystemSession session =
         includeProvidedScope
@@ -92,7 +100,13 @@ public class DependencyGraphBuilder {
             : RepositoryUtility.newSession(system);
 
     CollectRequest collectRequest = new CollectRequest();
-    if (dependencyArtifacts.size() == 1) {
+
+    ImmutableList<Dependency> dependencyList =
+        dependencyArtifacts
+            .stream()
+            .map(artifact -> new Dependency(artifact, "compile"))
+            .collect(toImmutableList());
+    if (dependencyList.size() == 1) {
       // With setRoot, the result includes dependencies with `optional:true` or `provided`
       collectRequest.setRoot(dependencyList.get(0));
     } else {
@@ -108,6 +122,8 @@ public class DependencyGraphBuilder {
 
     // This might be able to speed up by using collectDependencies here instead
     system.resolveDependencies(session, dependencyRequest);
+
+    cache.put(cacheKey, node);
 
     return node;
   }
@@ -242,15 +258,7 @@ public class DependencyGraphBuilder {
         // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
         // set to null
         forPath.add(dependencyNode.getArtifact());
-
-        // Because DependencyNode (or DefaultDependencyNode) does not override equals(),
-        // using Artifact::equals instead to check recursive dependency
-        boolean artifactPresentInParent =
-            parentNodes
-                .stream()
-                .map(DependencyNode::getArtifact)
-                .anyMatch(dependencyNode.getArtifact()::equals);
-        if (resolveFullDependency && artifactPresentInParent) {
+        if (resolveFullDependency && parentNodes.contains(dependencyNode)) {
           logger.severe(
               "Infinite recursion resolving "
                   + dependencyNode
