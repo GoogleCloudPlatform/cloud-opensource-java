@@ -104,7 +104,7 @@ public class DependencyGraphIntegrationTest {
     Truth.assertThat(updates).hasSize(5);
     
     List<DependencyPath> conflicts = graph.findConflicts();
-    Truth.assertThat(conflicts).hasSize(34);
+    Truth.assertThat(conflicts).hasSize(33);
     
     Map<String, String> versions = graph.getHighestVersionMap();
     Assert.assertEquals("2.6.2", versions.get("xerces:xercesImpl"));

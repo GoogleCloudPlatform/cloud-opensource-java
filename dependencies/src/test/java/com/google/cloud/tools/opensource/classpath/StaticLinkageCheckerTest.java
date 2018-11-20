@@ -30,6 +30,7 @@ import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
 import org.junit.Test;
@@ -58,9 +59,8 @@ public class StaticLinkageCheckerTest {
 
   @Test
   public void testCoordinateToClasspath_validCoordinate() throws RepositoryException {
-    List<Path> paths =
-        StaticLinkageChecker.artifactsToClasspath(
-            ImmutableList.of(new DefaultArtifact("io.grpc:grpc-auth:1.15.1")));
+    Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
+    List<Path> paths = StaticLinkageChecker.artifactsToClasspath(ImmutableList.of(grpcArtifact));
 
     Truth.assertThat(paths)
         .comparingElementsUsing(PATH_FILE_NAMES)
@@ -77,18 +77,18 @@ public class StaticLinkageCheckerTest {
 
   @Test
   public void testCoordinateToClasspath_optionalDependency() throws RepositoryException {
+    Artifact bigTableArtifact =
+        new DefaultArtifact("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
     List<Path> paths =
-        StaticLinkageChecker.artifactsToClasspath(
-            ImmutableList.of(
-                new DefaultArtifact("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha")));
+        StaticLinkageChecker.artifactsToClasspath(ImmutableList.of(bigTableArtifact));
     Truth.assertThat(paths).comparingElementsUsing(PATH_FILE_NAMES).contains("log4j-1.2.12.jar");
   }
 
   @Test
   public void testCoordinateToClasspath_invalidCoordinate() {
+    Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nosuchartifact:1.2.3");
     try {
-      StaticLinkageChecker.artifactsToClasspath(
-          ImmutableList.of(new DefaultArtifact("io.grpc:nosuchartifact:1.2.3")));
+      StaticLinkageChecker.artifactsToClasspath(ImmutableList.of(nonExistentArtifact));
       Assert.fail("Invalid Maven coodinate should raise RepositoryException");
     } catch (RepositoryException ex) {
       Truth.assertThat(ex.getMessage())
@@ -105,10 +105,10 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testFindInvalidReferences_selfReferenceFromAbstractClassToInterface()
       throws RepositoryException, IOException, ClassNotFoundException {
-    String bigTableCoordinates = "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
+    Artifact bigTableArtifact =
+        new DefaultArtifact("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
     List<Path> paths =
-        StaticLinkageChecker.artifactsToClasspath(
-            ImmutableList.of(new DefaultArtifact(bigTableCoordinates)));
+        StaticLinkageChecker.artifactsToClasspath(ImmutableList.of(bigTableArtifact));
     Path httpClientJar =
         paths
             .stream()
