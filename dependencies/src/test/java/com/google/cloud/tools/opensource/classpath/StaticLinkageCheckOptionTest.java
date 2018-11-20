@@ -58,5 +58,4 @@ public class StaticLinkageCheckOptionTest {
       Assert.assertEquals("Unrecognized option: -x", ex.getMessage());
     }
   }
-
 }

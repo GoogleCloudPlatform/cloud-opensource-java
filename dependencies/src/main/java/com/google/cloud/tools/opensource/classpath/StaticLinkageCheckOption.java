@@ -16,9 +16,16 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Stream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -26,11 +33,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
  * Option for {@link StaticLinkageChecker}. To construct an input class path, the checker requires
@@ -93,28 +97,29 @@ class StaticLinkageCheckOption {
 
   static ImmutableList<Path> generateInputClasspath(CommandLine commandLine)
       throws RepositoryException, ParseException {
-        
     Splitter commaSplitter = Splitter.on(",");
-    if (commandLine.hasOption("a")) {
-      ImmutableList.Builder<Path> jarFileBuilder = ImmutableList.builder();
+
+    if (commandLine.hasOption("b")) {
+      String bomCoordinates = commandLine.getOptionValue("b");
+      DefaultArtifact bomArtifact = new DefaultArtifact(bomCoordinates);
+      List<Artifact> artifactsInBom = RepositoryUtility.readBom(bomArtifact);
+      return StaticLinkageChecker.artifactsToClasspath(artifactsInBom);
+    } else if (commandLine.hasOption("a")) {
       String mavenCoordinatesOption = commandLine.getOptionValue("a");
-      for (String coord : commaSplitter.split(mavenCoordinatesOption)) {
-        jarFileBuilder.addAll(StaticLinkageChecker.coordinatesToClasspath(coord));
-      }
-      return jarFileBuilder.build();
+      ImmutableList<Artifact> artifacts =
+          commaSplitter
+              .splitToList(mavenCoordinatesOption)
+              .stream()
+              .map(DefaultArtifact::new)
+              .collect(toImmutableList());
+      return StaticLinkageChecker.artifactsToClasspath(artifacts);
     } else if (commandLine.hasOption("j")) {
       String jarFiles = commandLine.getOptionValue("j");
       ImmutableList<Path> jarFilesInArguments =
           Streams.stream(commaSplitter.split(jarFiles))
               .map(name -> Paths.get(name).toAbsolutePath())
-              .collect(ImmutableList.toImmutableList());
+              .collect(toImmutableList());
       return jarFilesInArguments;
-    } else if (commandLine.hasOption("b")) {
-      String mavenBomCoordinates = commandLine.getOptionValue("b");
-      ImmutableList.Builder<Path> jarFileBuilder = ImmutableList.builder();
-      // TODO(suztomo): add logic to convert Maven BOM to list of Maven coordinates as per README.md
-      
-      return jarFileBuilder.build();
     } else {
       throw new ParseException("Missing argument");
     }

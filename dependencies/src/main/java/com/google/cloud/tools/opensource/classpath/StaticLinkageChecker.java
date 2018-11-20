@@ -27,11 +27,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.io.File;
+import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -43,7 +42,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
  * A tool to find static linkage errors for a class path.
@@ -127,39 +125,39 @@ class StaticLinkageChecker {
   }
 
   /**
-   * Finds jar file paths for the dependencies of the Maven coordinate.
+   * Finds jar file paths for Maven artifacts and their dependencies.
    *
-   * @param coordinates Maven coordinates of an artifact to check its dependencies
+   * @param artifacts Maven artifacts to check
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem in retrieving jar files
    */
   @VisibleForTesting
-  static ImmutableList<Path> coordinatesToClasspath(String coordinates) throws RepositoryException {
-    DefaultArtifact rootArtifact = new DefaultArtifact(coordinates);
+  static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
+      throws RepositoryException {
+    if (artifacts.isEmpty()) {
+      return ImmutableList.of();
+    }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencies(rootArtifact);
+        DependencyGraphBuilder.getStaticLinkageCheckDependencies(artifacts);
     List<DependencyPath> dependencyPaths = dependencyGraph.list();
 
-    // When building a class path, we only need the first version found in breadth-first search
-    // for each artifact key. This set is to filter such duplicates.
-    Set<String> artifactKeySet = new HashSet<>();
+    // Removes duplicates on (groupId:artifactId)
+    Set<String> artifactsInPaths = Sets.newHashSet();
 
-    ImmutableList.Builder<Path> jarPaths = ImmutableList.builder();
+    ImmutableList.Builder<Path> classpathBuilder = ImmutableList.builder();
     for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();
-      String artifactKey = Artifacts.makeKey(artifact);
-      if (!artifactKeySet.add(artifactKey)) {
+      if (!artifactsInPaths.add(Artifacts.makeKey(artifact))) {
         continue;
       }
-
-      File artifactFile = artifact.getFile();
-      Path artifactFilePath = artifactFile.toPath();
-      if (artifactFilePath.toString().endsWith(".jar")) {
-        jarPaths.add(artifactFilePath.toAbsolutePath());
+      Path jarAbsolutePath = artifact.getFile().toPath().toAbsolutePath();
+      if (!jarAbsolutePath.toString().endsWith(".jar")) {
+        continue;
       }
+      classpathBuilder.add(jarAbsolutePath);
     }
-    return jarPaths.build();
+    return classpathBuilder.build();
   }
 
   /**

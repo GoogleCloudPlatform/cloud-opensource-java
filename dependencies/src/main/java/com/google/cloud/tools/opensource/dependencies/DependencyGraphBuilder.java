@@ -16,6 +16,9 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,16 +76,23 @@ public class DependencyGraphBuilder {
     return resolveCompileTimeDependencies(rootDependencyArtifact, false);
   }
 
-  private static DependencyNode resolveCompileTimeDependencies(Artifact rootDependencyArtifact,
-      boolean includeProvidedScope)
+  private static DependencyNode resolveCompileTimeDependencies(
+      Artifact rootDependencyArtifact, boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
-    
-    String key = Artifacts.toCoordinates(rootDependencyArtifact);
+    return resolveCompileTimeDependencies(
+        ImmutableList.of(rootDependencyArtifact), includeProvidedScope);
+  }
+
+  private static DependencyNode resolveCompileTimeDependencies(
+      List<Artifact> dependencyArtifacts, boolean includeProvidedScope)
+      throws DependencyCollectionException, DependencyResolutionException {
 
     Map<String, DependencyNode> cache =
         includeProvidedScope ? cacheWithProvidedScope : cacheWithoutProvidedScope;
-    if (cache.containsKey(key)) {
-      return cache.get(key);
+    String cacheKey =
+        dependencyArtifacts.stream().map(Artifacts::toCoordinates).collect(Collectors.joining(","));
+    if (cache.containsKey(cacheKey)) {
+      return cache.get(cacheKey);
     }
 
     RepositorySystemSession session =
@@ -91,39 +101,31 @@ public class DependencyGraphBuilder {
             : RepositoryUtility.newSession(system);
 
     CollectRequest collectRequest = new CollectRequest();
-    Dependency dependency = new Dependency(rootDependencyArtifact, "compile");
-    collectRequest.setRoot(dependency);
-    collectRequest.addRepository(RepositoryUtility.CENTRAL);
-    DependencyNode node = system.collectDependencies(session, collectRequest).getRoot();
 
-    DependencyRequest dependencyRequest = new DependencyRequest();
-    dependencyRequest.setRoot(node);
-    // TODO might be able to speed up by using collectDependencies here instead
-    system.resolveDependencies(session, dependencyRequest);
-    cache.put(key, node);
-    
-    return node;
-  }
-
-  private static DependencyNode resolveCompileTimeDependencies(List<Artifact> dependencyArtifacts)
-      throws DependencyCollectionException, DependencyResolutionException {
-    CollectRequest collectRequest = new CollectRequest();
-    List<Dependency> dependencyList =
+    ImmutableList<Dependency> dependencyList =
         dependencyArtifacts
             .stream()
             .map(artifact -> new Dependency(artifact, "compile"))
-            .collect(Collectors.toList());
-    collectRequest.setDependencies(dependencyList);
+            .collect(toImmutableList());
+    if (dependencyList.size() == 1) {
+      // With setRoot, the result includes dependencies with `optional:true` or `provided`
+      collectRequest.setRoot(dependencyList.get(0));
+    } else {
+      collectRequest.setDependencies(dependencyList);
+    }
     collectRequest.addRepository(RepositoryUtility.CENTRAL);
-
-    RepositorySystemSession session = RepositoryUtility.newSession(system);
     CollectResult collectResult = system.collectDependencies(session, collectRequest);
-    // This root DependencyNode's artifact is set to null, as root dependency was null in request
     DependencyNode node = collectResult.getRoot();
+
     DependencyRequest dependencyRequest = new DependencyRequest();
+    dependencyRequest.setRoot(node);
     dependencyRequest.setCollectRequest(collectRequest);
 
+    // This might be able to speed up by using collectDependencies here instead
     system.resolveDependencies(session, dependencyRequest);
+
+    cache.put(cacheKey, node);
+
     return node;
   }
 
@@ -146,14 +148,14 @@ public class DependencyGraphBuilder {
    * Finds the full compile time, transitive dependency graph including duplicates,
    * conflicting versions, and dependencies with 'provided' scope.
    *
-   * @param artifact Maven artifact to retrieve its dependencies
+   * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
    * @throws DependencyCollectionException when there is a problem in collecting dependency
    * @throws DependencyResolutionException when there is a problem in resolving dependency
    */
-  public static DependencyGraph getStaticLinkageCheckDependencies(Artifact artifact)
+  public static DependencyGraph getStaticLinkageCheckDependencies(List<Artifact> artifacts)
       throws DependencyCollectionException, DependencyResolutionException {
-    DependencyNode node = resolveCompileTimeDependencies(artifact, true);
+    DependencyNode node = resolveCompileTimeDependencies(artifacts, true);
     DependencyGraph graph = new DependencyGraph();
     levelOrder(node, graph, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
 
@@ -185,15 +187,6 @@ public class DependencyGraphBuilder {
       throws DependencyCollectionException, DependencyResolutionException {
     // root node
     DependencyNode node = resolveCompileTimeDependencies(artifact);
-    DependencyGraph graph = new DependencyGraph();
-    levelOrder(node, graph);
-    return graph;
-  }
-
-  static DependencyGraph getTransitiveDependencies(List<Artifact> artifacts)
-      throws DependencyCollectionException, DependencyResolutionException {
-    // root node artifact is null and the node has dependencies as children
-    DependencyNode node = resolveCompileTimeDependencies(artifacts);
     DependencyGraph graph = new DependencyGraph();
     levelOrder(node, graph);
     return graph;
@@ -284,9 +277,28 @@ public class DependencyGraphBuilder {
             dependencyNode =
                 resolveCompileTimeDependencies(dependencyNode.getArtifact(), includeProvidedScope);
           } catch (DependencyResolutionException ex) {
-            logger.severe("Error resolving " + dependencyNode + " under " + parentNodes
-                + " Exception: " + ex.getMessage());
-            throw ex;
+            // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0
+            // has a transitive dependency to org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not
+            // found in Maven central)
+            logger.warning(
+                "Could not resolve "
+                    + dependencyNode
+                    + " under "
+                    + parentNodes // This shows "(compile?)" if optional:true
+                    + " Exception: "
+                    + ex.getMessage());
+            boolean hasOptionalParent =
+                parentNodes.stream().anyMatch(node -> node.getDependency().isOptional());
+            boolean hasProvidedParent =
+                parentNodes
+                    .stream()
+                    .anyMatch(node -> "provided".equals(node.getDependency().getScope()));
+            if (hasOptionalParent && hasProvidedParent) {
+              logger.warning(
+                  "Skipping this dependency as it has both optional:true and scope:provided");
+            } else {
+              throw ex;
+            }
           }
         }
       }
