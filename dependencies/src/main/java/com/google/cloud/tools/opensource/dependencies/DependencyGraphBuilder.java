@@ -67,6 +67,7 @@ public class DependencyGraphBuilder {
     }
   }
 
+  // caching cuts time by about a factor of 4.
   private static final Map<String, DependencyNode> cacheWithProvidedScope = new HashMap<>();
   private static final Map<String, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
 
