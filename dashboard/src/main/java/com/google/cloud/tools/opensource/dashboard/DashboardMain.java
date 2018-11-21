@@ -100,8 +100,7 @@ public class DashboardMain {
     StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
 
     List<ArtifactResults> table = generateReports(configuration, output, cache);
-    generateDashboard(configuration, output, table, cache.getGlobalDependencies(),
-        report.toString());
+    generateDashboard(configuration, output, table, cache.getGlobalDependencies(), report);
 
     return output;
   }
@@ -269,8 +268,8 @@ public class DashboardMain {
 
   @VisibleForTesting
   static void generateDashboard(Configuration configuration, Path output,
-      List<ArtifactResults> table, List<DependencyGraph> globalDependencies, String staticLinkageErrors)
-      throws IOException, TemplateException {
+      List<ArtifactResults> table, List<DependencyGraph> globalDependencies,
+      StaticLinkageCheckReport report) throws IOException, TemplateException {
     File dashboardFile = output.resolve("dashboard.html").toFile();
     
     Map<String, String> latestArtifacts = collectLatestVersions(globalDependencies);
@@ -282,7 +281,7 @@ public class DashboardMain {
       templateData.put("table", table);
       templateData.put("lastUpdated", LocalDateTime.now());
       templateData.put("latestArtifacts", latestArtifacts);
-      String escapedStaticLinkageErrors = HtmlEscapers.htmlEscaper().escape(staticLinkageErrors);
+      String escapedStaticLinkageErrors = HtmlEscapers.htmlEscaper().escape(report.toString());
       templateData.put("staticLinkageErrors", escapedStaticLinkageErrors);
 
       dashboard.process(templateData, out);

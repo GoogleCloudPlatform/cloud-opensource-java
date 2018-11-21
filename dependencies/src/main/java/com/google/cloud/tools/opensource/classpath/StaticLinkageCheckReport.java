@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -27,7 +28,8 @@ public abstract class StaticLinkageCheckReport {
 
   abstract ImmutableList<JarLinkageReport> getJarLinkageReports();
 
-  static StaticLinkageCheckReport create(Iterable<JarLinkageReport> jarLinkageReports) {
+  @VisibleForTesting
+  public static StaticLinkageCheckReport create(Iterable<JarLinkageReport> jarLinkageReports) {
     return new AutoValue_StaticLinkageCheckReport(ImmutableList.copyOf(jarLinkageReports));
   }
   
