@@ -69,14 +69,14 @@ public class DashboardTest {
     MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
   }
 
-  @Test
+  //@Test
   public void testMain()
       throws IOException, TemplateException, RepositoryException, ClassNotFoundException {
     // Ensuring normal execution doesn't cause any exception
     DashboardMain.main(null);
   }
   
-  @Test
+  //@Test
   public void testCss()
       throws IOException, TemplateException, ParsingException, ArtifactDescriptorException {
     Path dashboardCss = outputDirectory.resolve("dashboard.css");
@@ -84,7 +84,7 @@ public class DashboardTest {
     Assert.assertTrue(Files.isRegularFile(dashboardCss));
   }
 
-  @Test
+  //@Test
   public void testDashboard()
       throws IOException, TemplateException, ParsingException, ArtifactDescriptorException {
     Assert.assertTrue(Files.exists(outputDirectory));
@@ -178,7 +178,7 @@ public class DashboardTest {
     }
   }
 
-  @Test
+  //@Test
   public void testComponent_success() throws IOException, ValidityException, ParsingException {
     Path successHtml = outputDirectory.resolve(
         "com.google.api.grpc_proto-google-common-protos_1.12.0.html");
