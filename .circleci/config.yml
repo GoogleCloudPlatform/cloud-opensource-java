@@ -42,3 +42,5 @@ jobs:
           cd ../..
           mvn integration-test -Dmaven.home=/opt/apache-maven
 
+      - store_test_results:
+          path: /tmp/test-results
