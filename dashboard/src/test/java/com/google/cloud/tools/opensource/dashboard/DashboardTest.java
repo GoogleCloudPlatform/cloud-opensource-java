@@ -57,23 +57,22 @@ public class DashboardTest {
   private static Path outputDirectory;
   private Builder builder = new Builder();
 
-  // @BeforeClass
+  @BeforeClass
   public static void setUp()
       throws IOException, TemplateException, RepositoryException, ClassNotFoundException {
     // Creates "dashboard.html" in outputDirectory
     outputDirectory = DashboardMain.generate();
   }
 
-  // @AfterClass
+  @AfterClass
   public static void cleanUp() throws IOException {
     MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
   }
-
-  //@Test
-  public void testMain()
-      throws IOException, TemplateException, RepositoryException, ClassNotFoundException {
-    // Ensuring normal execution doesn't cause any exception
-    DashboardMain.main(null);
+  
+  @Test
+  public void testPass() {
+    
+    
   }
   
   //@Test
