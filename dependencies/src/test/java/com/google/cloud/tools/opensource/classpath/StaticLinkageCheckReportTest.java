@@ -17,6 +17,8 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Truth;
+
 import java.nio.file.Paths;
 import org.junit.Assert;
 import org.junit.Before;
@@ -78,12 +80,12 @@ public class StaticLinkageCheckReportTest {
 
   @Test
   public void testJarLinkageReportToString() {
-    Assert.assertTrue(jarLinkageReport.toString().startsWith("c (3 errors)"));
+    Truth.assertThat(staticLinkageCheckReport.toString()).startsWith("c (3 errors)");
   }
   
   @Test
   public void testToString() {
-    Assert.assertTrue(staticLinkageCheckReport.toString().contains(jarLinkageReport.toString()));
+    Truth.assertThat(staticLinkageCheckReport.toString()).contains(jarLinkageReport.toString());
   }
   
   @Test
