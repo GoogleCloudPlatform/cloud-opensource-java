@@ -97,8 +97,8 @@ public class DashboardMain {
     boolean onlyReachable = false;
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(onlyReachable, classpath, entryPoints);
-    StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
-
+    // StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
+    StaticLinkageCheckReport report = null;
     List<ArtifactResults> table = generateReports(configuration, output, cache);
     generateDashboard(configuration, output, table, cache.getGlobalDependencies(), report);
 
@@ -281,7 +281,7 @@ public class DashboardMain {
       templateData.put("table", table);
       templateData.put("lastUpdated", LocalDateTime.now());
       templateData.put("latestArtifacts", latestArtifacts);
-      String escapedStaticLinkageErrors = HtmlEscapers.htmlEscaper().escape(report.toString());
+      String escapedStaticLinkageErrors = "foo"; //HtmlEscapers.htmlEscaper().escape(report.toString());
       templateData.put("staticLinkageErrors", escapedStaticLinkageErrors);
 
       dashboard.process(templateData, out);
