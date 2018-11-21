@@ -141,7 +141,7 @@ public class StaticLinkageChecker {
   /**
    * Finds linkage errors in the input classpath and generates a static linkage check report.
    */
-  // TODO why does this throw classnotfoundexception? Shouldn;t that just be part of the report?
+  // TODO why does this throw ClassNotFoundException? Shouldn't that just be part of the report?
   public StaticLinkageCheckReport findLinkageErrors() throws ClassNotFoundException, IOException {
     ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
 
