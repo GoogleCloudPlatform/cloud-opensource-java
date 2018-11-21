@@ -12,13 +12,15 @@ Some specific notes about minimizing dependencies:
 - Use the smallest scope possible. For example, auto-value doesn't
   need to use `compile` scope, and can instead use `compile-only`,
   since it doesn't need to appear on the classpath of consumers.
-  - All libraries used only for testing should have `test` scope
+  - Libraries used only for testing should have `test` scope
     (for example junit, mockito, and truth).
 
 - Scrutinize all dependency additions. Whenever you add a new
   dependency, check the full tree of transitive dependencies that
-  are pulled in as a result. If a large amount of transitive
+  are pulled in as a result. If a large number of transitive
   dependencies are pulled in, consider a different direct dependency.
+  Alternatively, if the functionality you need is small, re-implement
+  it in your own library.
   - Maven: Run `mvn dependency:tree` (after running
     `mvn install -DskipTests` to build the library).
   - Gradle: Run `./gradlew dependencies`
