@@ -61,7 +61,11 @@ public class DashboardTest {
   public static void setUp()
       throws IOException, TemplateException, RepositoryException, ClassNotFoundException {
     // Creates "dashboard.html" in outputDirectory
-    outputDirectory = DashboardMain.generate();
+    try {
+      outputDirectory = DashboardMain.generate();
+    } catch (Throwable t) {
+      t.printStackTrace();
+    }
   }
 
   @AfterClass
