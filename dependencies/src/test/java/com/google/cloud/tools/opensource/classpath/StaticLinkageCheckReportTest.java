@@ -19,10 +19,17 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class StaticLinkageCheckReportTest {
-  private static JarLinkageReport createDummyJarLinkageReport() {
+  
+  private JarLinkageReport jarLinkageReport;
+  private StaticLinkageCheckReport staticLinkageCheckReport;
+
+  @Before
+  public void createDummyJarLinkageReport() {
+
     ClassSymbolReference classSymbolReference =
         ClassSymbolReference.builder()
             .setTargetClassName("ClassA")
@@ -56,22 +63,31 @@ public class StaticLinkageCheckReportTest {
         LinkageErrorMissingField.errorAt(fieldSymbolReference);
     ImmutableList<LinkageErrorMissingField> missingFieldErrors =
         ImmutableList.of(linkageErrorMissingField);
-    JarLinkageReport jarLinkageReport =
+
+    jarLinkageReport =
         JarLinkageReport.builder()
             .setJarPath(Paths.get("a", "b", "c"))
             .setMissingClassErrors(linkageErrorMissingClasses)
             .setMissingMethodErrors(missingMethodErrors)
             .setMissingFieldErrors(missingFieldErrors)
             .build();
-    return jarLinkageReport;
+
+    staticLinkageCheckReport =
+        StaticLinkageCheckReport.create(ImmutableList.of(jarLinkageReport));
   }
 
   @Test
+  public void testJarLinkageReportToString() {
+    Assert.assertTrue(jarLinkageReport.toString().startsWith("c (3 errors)"));
+  }
+  
+  @Test
+  public void testToString() {
+    Assert.assertTrue(staticLinkageCheckReport.toString().contains(jarLinkageReport.toString()));
+  }
+  
+  @Test
   public void testCreation() {
-    JarLinkageReport jarLinkageReport = createDummyJarLinkageReport();
-    StaticLinkageCheckReport staticLinkageCheckReport =
-        StaticLinkageCheckReport.create(ImmutableList.of(createDummyJarLinkageReport()));
-
     Assert.assertEquals(1, staticLinkageCheckReport.getJarLinkageReports().size());
     Assert.assertEquals(jarLinkageReport, staticLinkageCheckReport.getJarLinkageReports().get(0));
     Assert.assertEquals(

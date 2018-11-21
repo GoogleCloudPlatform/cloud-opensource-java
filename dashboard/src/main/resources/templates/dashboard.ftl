@@ -51,6 +51,12 @@
     </table>
     
     <hr />
+
+    <h2>Static Linkage Errors</h2>
+
+    <pre id="static_linkage_errors">${staticLinkageErrors}</pre>
+
+    <hr />      
       
     <h2>Recommended Versions</h2>
       

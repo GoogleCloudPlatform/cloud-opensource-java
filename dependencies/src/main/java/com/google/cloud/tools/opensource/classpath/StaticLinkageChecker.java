@@ -46,12 +46,12 @@ import org.eclipse.aether.artifact.Artifact;
 /**
  * A tool to find static linkage errors for a class path.
  */
-class StaticLinkageChecker {
+public class StaticLinkageChecker {
   // TODO(suztomo): enhance scope to include fields and classes. Issue #207
 
   private static final Logger logger = Logger.getLogger(StaticLinkageChecker.class.getName());
 
-  static StaticLinkageChecker create(
+  public static StaticLinkageChecker create(
       boolean reportOnlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
       throws IOException, ClassNotFoundException {
     checkArgument(
@@ -100,28 +100,7 @@ class StaticLinkageChecker {
     StaticLinkageChecker staticLinkageChecker = create(onlyReachable, inputClasspath, entryPoints);
     StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
 
-    printStaticLinkageReport(report);
-  }
-  
-  private static void printStaticLinkageReport(StaticLinkageCheckReport report) {
-    for (JarLinkageReport jarLinkageReport : report.getJarLinkageReports()) {
-      int totalErrors =
-          jarLinkageReport.getMissingClassErrors().size()
-              + jarLinkageReport.getMissingMethodErrors().size()
-              + jarLinkageReport.getMissingFieldErrors().size();
-      System.out.println(
-          jarLinkageReport.getJarPath().getFileName() + "(" + totalErrors + " errors):");
-      String indent = "  ";
-      for (LinkageErrorMissingClass missingClass : jarLinkageReport.getMissingClassErrors()) {
-        System.out.println(indent + missingClass.getReference());
-      }
-      for (LinkageErrorMissingMethod missingMethod : jarLinkageReport.getMissingMethodErrors()) {
-        System.out.println(indent + missingMethod.getReference());
-      }
-      for (LinkageErrorMissingField missingField : jarLinkageReport.getMissingFieldErrors()) {
-        System.out.println(indent + missingField.getReference());
-      }
-    }
+    System.out.println(report);
   }
 
   /**
@@ -131,8 +110,7 @@ class StaticLinkageChecker {
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem in retrieving jar files
    */
-  @VisibleForTesting
-  static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
+  public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
       throws RepositoryException {
     if (artifacts.isEmpty()) {
       return ImmutableList.of();
@@ -163,7 +141,8 @@ class StaticLinkageChecker {
   /**
    * Finds linkage errors in the input classpath and generates a static linkage check report.
    */
-  StaticLinkageCheckReport findLinkageErrors() throws ClassNotFoundException, IOException {
+  // TODO why does this throw classnotfoundexception? Shouldn;t that just be part of the report?
+  public StaticLinkageCheckReport findLinkageErrors() throws ClassNotFoundException, IOException {
     ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
 
     ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbols = ImmutableMap.builder();

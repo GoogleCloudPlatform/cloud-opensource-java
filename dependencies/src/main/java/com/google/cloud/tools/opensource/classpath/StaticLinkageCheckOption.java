@@ -50,7 +50,7 @@ import org.eclipse.aether.artifact.DefaultArtifact;
  *    "https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/dependencies#input">Static
  *     Linkage Checker: Input</a>
  */
-class StaticLinkageCheckOption {
+public class StaticLinkageCheckOption {
   
   private static final Options options = configureOptions();
   

@@ -23,10 +23,21 @@ import com.google.common.collect.ImmutableList;
  * The result of a static linkage check.
  */
 @AutoValue
-abstract class StaticLinkageCheckReport {
+public abstract class StaticLinkageCheckReport {
+
   abstract ImmutableList<JarLinkageReport> getJarLinkageReports();
 
   static StaticLinkageCheckReport create(Iterable<JarLinkageReport> jarLinkageReports) {
     return new AutoValue_StaticLinkageCheckReport(ImmutableList.copyOf(jarLinkageReports));
+  }
+  
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    for (JarLinkageReport jarLinkageReport : getJarLinkageReports()) {
+      builder.append(jarLinkageReport.toString());
+      builder.append('\n');
+    }
+    return builder.toString();
   }
 }

@@ -42,9 +42,10 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
-import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 
+import com.google.cloud.tools.opensource.classpath.StaticLinkageCheckReport;
+import com.google.cloud.tools.opensource.classpath.StaticLinkageChecker;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
@@ -54,9 +55,12 @@ import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.Update;
 import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.html.HtmlEscapers;
 
 public class DashboardMain {
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
@@ -64,14 +68,14 @@ public class DashboardMain {
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
 
   public static void main(String[] args)
-      throws IOException, TemplateException, ArtifactDescriptorException {
+      throws IOException, TemplateException, RepositoryException, ClassNotFoundException {
 
     Path output = generate();
     System.out.println("Wrote dashboard into " + output.toAbsolutePath());
   }
 
   public static Path generate()
-      throws IOException, TemplateException, ArtifactDescriptorException {
+      throws IOException, TemplateException, RepositoryException, ClassNotFoundException {
     Configuration configuration = configureFreemarker();
 
     Path relativePath = Paths.get("target", "dashboard");
@@ -86,8 +90,18 @@ public class DashboardMain {
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
     
+    ImmutableList<Path> classpath = StaticLinkageChecker.artifactsToClasspath(managedDependencies);
+    // TODO(suztomo): to take command-line option to choose entry point classes for reachability
+    ImmutableSet<Path> entryPoints = ImmutableSet.of(classpath.get(0));
+
+    boolean onlyReachable = false;
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(onlyReachable, classpath, entryPoints);
+    StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
+
     List<ArtifactResults> table = generateReports(configuration, output, cache);
-    generateDashboard(configuration, output, table, cache.getGlobalDependencies());
+    generateDashboard(configuration, output, table, cache.getGlobalDependencies(),
+        report.toString());
 
     return output;
   }
@@ -255,7 +269,7 @@ public class DashboardMain {
 
   @VisibleForTesting
   static void generateDashboard(Configuration configuration, Path output,
-      List<ArtifactResults> table, List<DependencyGraph> globalDependencies)
+      List<ArtifactResults> table, List<DependencyGraph> globalDependencies, String staticLinkageErrors)
       throws IOException, TemplateException {
     File dashboardFile = output.resolve("dashboard.html").toFile();
     
@@ -268,6 +282,8 @@ public class DashboardMain {
       templateData.put("table", table);
       templateData.put("lastUpdated", LocalDateTime.now());
       templateData.put("latestArtifacts", latestArtifacts);
+      String escapedStaticLinkageErrors = HtmlEscapers.htmlEscaper().escape(staticLinkageErrors);
+      templateData.put("staticLinkageErrors", escapedStaticLinkageErrors);
 
       dashboard.process(templateData, out);
     }

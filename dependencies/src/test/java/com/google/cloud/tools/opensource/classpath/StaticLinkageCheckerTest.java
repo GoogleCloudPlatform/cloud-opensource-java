@@ -36,6 +36,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class StaticLinkageCheckerTest {
+
   private static final Correspondence<Path, String> PATH_FILE_NAMES =
       new Correspondence<Path, String>() {
         @Override
@@ -49,12 +50,8 @@ public class StaticLinkageCheckerTest {
         }
       };
 
-  private static Path absolutePathOfResource(String resourceName) {
-    try {
-      return Paths.get(URLClassLoader.getSystemResource(resourceName).toURI()).toAbsolutePath();
-    } catch (URISyntaxException ex) {
-      throw new RuntimeException("Could not create URI for the files in resources directory");
-    }
+  private static Path absolutePathOfResource(String resourceName) throws URISyntaxException {
+    return Paths.get(URLClassLoader.getSystemResource(resourceName).toURI()).toAbsolutePath();
   }
 
   @Test
@@ -134,7 +131,7 @@ public class StaticLinkageCheckerTest {
 
   @Test
   public void testFindInvalidReferences_arrayCloneMethod()
-      throws IOException, ClassNotFoundException {
+      throws IOException, ClassNotFoundException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-26.0-jre.jar"));
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
@@ -168,7 +165,7 @@ public class StaticLinkageCheckerTest {
 
   @Test
   public void testFindInvalidReferences_constructorInAbstractClass()
-      throws IOException, ClassNotFoundException {
+      throws IOException, ClassNotFoundException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-26.0-jre.jar"));
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
@@ -296,7 +293,9 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testJarPathOrderInResolvingReferences() throws IOException, ClassNotFoundException {
+  public void testJarPathOrderInResolvingReferences()
+      throws IOException, ClassNotFoundException, URISyntaxException {
+
     // listDocuments method on CollectionReference class is added at version 0.66.0-beta
     // https://github.com/googleapis/google-cloud-java/releases/tag/v0.66.0
     List<Path> firestoreDependencies =
