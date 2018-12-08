@@ -22,10 +22,10 @@ import com.google.auto.value.AutoValue;
  * A missing class linkage error.
  */
 @AutoValue
-abstract class LinkageErrorMissingClass {
-  abstract ClassSymbolReference getReference();
+public abstract class LinkageErrorMissingClass {
+  public abstract ClassSymbolReference getReference();
 
-  static LinkageErrorMissingClass errorAt(ClassSymbolReference reference) {
+  public static LinkageErrorMissingClass errorAt(ClassSymbolReference reference) {
     return new AutoValue_LinkageErrorMissingClass(reference);
   }
 }

@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
+import com.google.cloud.tools.opensource.classpath.StaticLinkageCheckReport;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.common.io.MoreFiles;
@@ -117,7 +120,9 @@ public class DashboardUnavailableArtifactTest {
     table.add(validArtifactResult);
     table.add(errorArtifactResult);
 
-    DashboardMain.generateDashboard(configuration, outputDirectory, table, null);
+    Iterable<JarLinkageReport> list = new ArrayList<>();
+    StaticLinkageCheckReport report = StaticLinkageCheckReport.create(list);
+    DashboardMain.generateDashboard(configuration, outputDirectory, table, null, report);
 
     Path generatedDashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(generatedDashboardHtml));

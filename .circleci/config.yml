@@ -17,7 +17,8 @@ jobs:
 
     environment:
       # Customize the JVM maximum heap limit
-      MAVEN_OPTS: -Xmx3200m
+      MAVEN_OPTS: -Xmx1024m -XX:MaxPermSize=128m
+
     
     steps:
       - checkout:
@@ -40,5 +41,15 @@ jobs:
           cd boms/cloud-oss-bom
           mvn install
           cd ../..
-          mvn integration-test -Dmaven.home=/opt/apache-maven
+          mvn -e integration-test -Dmaven.home=/opt/apache-maven
 
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit   
