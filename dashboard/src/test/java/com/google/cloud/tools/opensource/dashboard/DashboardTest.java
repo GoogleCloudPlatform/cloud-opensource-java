@@ -72,14 +72,8 @@ public class DashboardTest {
   public static void cleanUp() throws IOException {
     MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
   }
-  
+
   @Test
-  public void testPass() {
-    
-    
-  }
-  
-  //@Test
   public void testCss()
       throws IOException, TemplateException, ParsingException, ArtifactDescriptorException {
     Path dashboardCss = outputDirectory.resolve("dashboard.css");
@@ -87,7 +81,7 @@ public class DashboardTest {
     Assert.assertTrue(Files.isRegularFile(dashboardCss));
   }
 
-  //@Test
+  @Test
   public void testDashboard()
       throws IOException, TemplateException, ParsingException, ArtifactDescriptorException {
     Assert.assertTrue(Files.exists(outputDirectory));
@@ -181,7 +175,7 @@ public class DashboardTest {
     }
   }
 
-  //@Test
+  @Test
   public void testComponent_success() throws IOException, ValidityException, ParsingException {
     Path successHtml = outputDirectory.resolve(
         "com.google.api.grpc_proto-google-common-protos_1.12.0.html");
@@ -202,7 +196,7 @@ public class DashboardTest {
     }
   }
 
-  // @Test
+  @Test
   public void testComponent_failure() throws IOException, ValidityException, ParsingException {
     Path failureHtml = outputDirectory.resolve(
         "com.google.api.grpc_grpc-google-common-protos_1.12.0.html");
