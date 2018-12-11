@@ -97,8 +97,7 @@ public class DashboardMain {
     boolean onlyReachable = false;
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(onlyReachable, classpath, entryPoints);
-    // StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
-    StaticLinkageCheckReport report = null;
+    StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
     List<ArtifactResults> table = generateReports(configuration, output, cache);
     generateDashboard(configuration, output, table, cache.getGlobalDependencies(), report);
 
@@ -257,7 +256,6 @@ public class DashboardMain {
       // In both cases, no action is needed.
       if (actualVersion != null && comparator.compare(actualVersion, expectedVersion) < 0) {
         // Maven did not choose highest version
-        // upperBoundFailures.add("Upgrade " + id + ":" + actualVersion + " to " + expectedVersion);
         DefaultArtifact lower = new DefaultArtifact(id + ":" + actualVersion);
         DefaultArtifact upper = new DefaultArtifact(id + ":" + expectedVersion);
         upperBoundFailures.put(lower, upper);
@@ -281,7 +279,7 @@ public class DashboardMain {
       templateData.put("table", table);
       templateData.put("lastUpdated", LocalDateTime.now());
       templateData.put("latestArtifacts", latestArtifacts);
-      String escapedStaticLinkageErrors = "foo"; //HtmlEscapers.htmlEscaper().escape(report.toString());
+      String escapedStaticLinkageErrors = HtmlEscapers.htmlEscaper().escape(report.toString());
       templateData.put("staticLinkageErrors", escapedStaticLinkageErrors);
 
       dashboard.process(templateData, out);
