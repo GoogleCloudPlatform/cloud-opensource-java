@@ -105,15 +105,18 @@ public class DashboardTest {
         Nodes td = tr.get(i).query("td");
         Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i - 1)), td.get(0).getValue());
         Element firstResult = (Element) (td.get(1));
-        Truth.assertThat(firstResult.getValue().replaceAll("\\s","")).containsMatch("PASS|\\d+FAILURES?");
+        Truth.assertThat(firstResult.getValue().replaceAll("\\s", ""))
+            .containsMatch("PASS|\\d+FAILURES?");
         Truth.assertThat(firstResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
 
         Element secondResult = (Element) (td.get(2));
-        Truth.assertThat(secondResult.getValue().replaceAll("\\s","")).containsMatch("PASS|\\d+FAILURES?");
+        Truth.assertThat(secondResult.getValue().replaceAll("\\s", ""))
+            .containsMatch("PASS|\\d+FAILURES?");
         Truth.assertThat(secondResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
-        
+
         Element thirdResult = (Element) (td.get(3));
-        Truth.assertThat(thirdResult.getValue().replaceAll("\\s","")).containsMatch("PASS|\\d+FAILURES?");
+        Truth.assertThat(thirdResult.getValue().replaceAll("\\s", ""))
+            .containsMatch("PASS|\\d+FAILURES?");
         Truth.assertThat(thirdResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
       }
       Nodes href = document.query("//tr/td/a/@href");
@@ -138,7 +141,7 @@ public class DashboardTest {
 
       // TODO these should all be separate tests for the different components
       Node linkage = document.query("//pre[@id='static_linkage_errors']").get(0);
-      Assert.assertTrue(linkage.getValue().startsWith("guava-20.0.jar (0 errors)"));
+      Assert.assertFalse(linkage.getValue().contains("(0 errors)"));
 
       Nodes li = document.query("//ul[@id='recommended']/li");
       Assert.assertTrue(li.size() > 100);
@@ -208,7 +211,8 @@ public class DashboardTest {
       Assert.assertEquals(0, greens.size());
       Nodes reds = document.query("//h3[@style='color: red']");
       Assert.assertEquals(3, reds.size());
-      Nodes presDependencyMediation = document.query("//pre[@class='suggested-dependency-mediation']");
+      Nodes presDependencyMediation =
+          document.query("//pre[@class='suggested-dependency-mediation']");
       Assert.assertTrue("For failed component, suggested dependency should be shown",
           presDependencyMediation.size() >= 1);
       Nodes dependencyTree = document.query("//p[@class='DEPENDENCY_TREE_NODE']");

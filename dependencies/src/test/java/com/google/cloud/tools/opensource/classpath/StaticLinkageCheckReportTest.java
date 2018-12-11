@@ -20,6 +20,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 
 import java.nio.file.Paths;
+import java.util.Collections;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -86,6 +88,12 @@ public class StaticLinkageCheckReportTest {
   @Test
   public void testToString() {
     Truth.assertThat(staticLinkageCheckReport.toString()).contains(jarLinkageReport.toString());
+  }
+  
+  @Test
+  public void testToStringNoErrors() {
+    staticLinkageCheckReport = StaticLinkageCheckReport.create(Collections.emptyList());
+    Assert.assertEquals("No static linkage errors\n", staticLinkageCheckReport.toString());
   }
   
   @Test

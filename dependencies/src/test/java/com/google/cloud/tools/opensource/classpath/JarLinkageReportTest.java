@@ -19,22 +19,28 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class JarLinkageReportTest {
 
-  @Test
-  public void testCreation() {
+  private JarLinkageReport jarLinkageReport;
+  private ImmutableList<LinkageErrorMissingField> missingFieldErrors;
+  private ImmutableList<LinkageErrorMissingMethod> missingMethodErrors;
+  private ImmutableList<LinkageErrorMissingClass> missingClassErrors;
+  
+  @Before
+  public void setUp() {
+    
     ClassSymbolReference classSymbolReference =
         ClassSymbolReference.builder()
             .setTargetClassName("ClassA")
             .setSourceClassName("ClassB")
             .build();
+    
     LinkageErrorMissingClass linkageErrorMissingClass =
         LinkageErrorMissingClass.errorAt(classSymbolReference);
-
-    ImmutableList<LinkageErrorMissingClass> linkageErrorMissingClasses =
-        ImmutableList.of(linkageErrorMissingClass);
+    missingClassErrors = ImmutableList.of(linkageErrorMissingClass);
 
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
@@ -45,8 +51,7 @@ public class JarLinkageReportTest {
             .build();
     LinkageErrorMissingMethod linkageErrorMissingMethod =
         LinkageErrorMissingMethod.errorAt(methodSymbolReference);
-    ImmutableList<LinkageErrorMissingMethod> missingMethodErrors =
-        ImmutableList.of(linkageErrorMissingMethod);
+    missingMethodErrors = ImmutableList.of(linkageErrorMissingMethod);
 
     FieldSymbolReference fieldSymbolReference =
         FieldSymbolReference.builder()
@@ -56,19 +61,39 @@ public class JarLinkageReportTest {
             .build();
     LinkageErrorMissingField linkageErrorMissingField =
         LinkageErrorMissingField.errorAt(fieldSymbolReference);
-    ImmutableList<LinkageErrorMissingField> missingFieldErrors =
-        ImmutableList.of(linkageErrorMissingField);
-    JarLinkageReport jarLinkageReport =
+    missingFieldErrors = ImmutableList.of(linkageErrorMissingField);
+    jarLinkageReport =
         JarLinkageReport.builder()
             .setJarPath(Paths.get("a", "b", "c"))
-            .setMissingClassErrors(linkageErrorMissingClasses)
+            .setMissingClassErrors(missingClassErrors)
             .setMissingMethodErrors(missingMethodErrors)
             .setMissingFieldErrors(missingFieldErrors)
             .build();
-
-    Assert.assertEquals(Paths.get("a", "b", "c"), jarLinkageReport.getJarPath());
-    Assert.assertEquals(missingMethodErrors, jarLinkageReport.getMissingMethodErrors());
-    Assert.assertEquals(missingFieldErrors, jarLinkageReport.getMissingFieldErrors());
-    Assert.assertEquals(linkageErrorMissingClasses, jarLinkageReport.getMissingClassErrors());
   }
+    
+  @Test
+  public void testGetJarPath() {
+    Assert.assertEquals(Paths.get("a", "b", "c"), jarLinkageReport.getJarPath());
+  }
+  
+  @Test
+  public void testGetMissingMethodErrors() {
+    Assert.assertEquals(missingMethodErrors, jarLinkageReport.getMissingMethodErrors());
+  }
+  
+  @Test
+  public void testGetMissingFieldErrors() {
+    Assert.assertEquals(missingFieldErrors, jarLinkageReport.getMissingFieldErrors());
+  }
+  
+  @Test
+  public void testGetMissingClassErrors() {
+    Assert.assertEquals(missingClassErrors, jarLinkageReport.getMissingClassErrors());
+  }
+  
+  @Test
+  public void testGetTotalErrorCount() {
+    Assert.assertEquals(3, jarLinkageReport.getTotalErrorCount());
+  }
+
 }

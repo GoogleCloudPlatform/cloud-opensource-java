@@ -37,9 +37,16 @@ public abstract class StaticLinkageCheckReport {
   public String toString() {
     StringBuilder builder = new StringBuilder();
     for (JarLinkageReport jarLinkageReport : getJarLinkageReports()) {
-      builder.append(jarLinkageReport.toString());
-      builder.append('\n');
+      if (jarLinkageReport.getTotalErrorCount() > 0) {
+        builder.append(jarLinkageReport.toString());
+        builder.append('\n');
+      }
     }
-    return builder.toString();
+    
+    String result = builder.toString();
+    if (result.isEmpty()) {
+      return "No static linkage errors\n";
+    }
+    return result;
   }
 }
