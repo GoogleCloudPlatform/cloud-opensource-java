@@ -50,8 +50,7 @@ public abstract class JarLinkageReport {
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    int totalErrors = getMissingClassErrors().size() + getMissingMethodErrors().size()
-        + getMissingFieldErrors().size();
+    int totalErrors = getTotalErrorCount();
     builder.append(getJarPath().getFileName() + " (" + totalErrors + " errors):\n");
     String indent = "  ";
     for (LinkageErrorMissingClass missingClass : getMissingClassErrors()) {
@@ -67,5 +66,10 @@ public abstract class JarLinkageReport {
       builder.append("\n");
     }
     return builder.toString();
+  }
+
+  int getTotalErrorCount() {
+    return getMissingClassErrors().size() + getMissingMethodErrors().size()
+        + getMissingFieldErrors().size();
   }
 }
