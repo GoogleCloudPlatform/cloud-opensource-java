@@ -341,16 +341,21 @@ class ClassDumper {
     return allClassesInJar;
   }
 
-  static ImmutableSet<JavaClass> topLevelJavaClassesInJar(Path jarFilePath)
-      throws IOException, ClassNotFoundException {
+  private static ImmutableSet<JavaClass> topLevelJavaClassesInJar(Path jarFilePath)
+      throws IOException {
     String pathToJar = jarFilePath.toString();
     SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     URL jarFileUrl = jarFilePath.toUri().toURL();
     for (ClassInfo classInfo : listTopLevelClassesFromJar(jarFileUrl)) {
       String className = classInfo.getName();
-      JavaClass javaClass = repository.loadClass(className);
-      javaClasses.add(javaClass);
+      try {
+        JavaClass javaClass = repository.loadClass(className);
+        javaClasses.add(javaClass);
+      } catch (ClassNotFoundException ex) {
+        // We couldn't load the class from the jar file where we found it.
+        throw new IOException("Corrupt jar file " + jarFilePath + "; could not load " + className);
+      }
     }
     return javaClasses.build();
   }
