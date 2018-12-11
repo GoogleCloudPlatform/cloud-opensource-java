@@ -65,7 +65,7 @@ class ClassDumper {
     return inputClasspath;
   }
 
-  static ClassDumper create(List<Path> jarFilePaths) throws IOException, ClassNotFoundException {
+  static ClassDumper create(List<Path> jarFilePaths) throws IOException {
     // Creates classpath in the same order as inputClasspath for BCEL API
     String pathAsString =
         jarFilePaths.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator));
@@ -134,7 +134,7 @@ class ClassDumper {
    * @param jarFilePath absolute path to a jar file
    */
   static SymbolReferenceSet scanSymbolReferencesInJar(Path jarFilePath)
-      throws ClassNotFoundException, IOException {
+      throws IOException {
     checkArgument(jarFilePath.isAbsolute(), "The input jar file path is not an absolute path");
     checkArgument(Files.isReadable(jarFilePath), "The input jar file path is not readable");
 
@@ -310,7 +310,7 @@ class ClassDumper {
    * @return map of jar file paths to classes defined in them
    */
   private static ImmutableSetMultimap<Path, String> jarFilesToDefinedClasses(
-      List<Path> jarFilePaths) throws IOException, ClassNotFoundException {
+      List<Path> jarFilePaths) throws IOException {
     ImmutableSetMultimap.Builder<Path, String> pathToClasses = ImmutableSetMultimap.builder();
 
     for (Path jarFilePath : jarFilePaths) {

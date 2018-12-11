@@ -53,7 +53,7 @@ public class StaticLinkageChecker {
 
   public static StaticLinkageChecker create(
       boolean reportOnlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
-      throws IOException, ClassNotFoundException {
+      throws IOException {
     checkArgument(
         !jarFilePaths.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
