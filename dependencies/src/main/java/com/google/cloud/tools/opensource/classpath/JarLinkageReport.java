@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
@@ -28,19 +29,25 @@ public abstract class JarLinkageReport {
   /**
    * Returns the absolute path of the jar file containing source classes of linkage errors
    */
-  public abstract Path getJarPath();
+  abstract Path getJarPath();
+  
+  /**
+   * @return the paths to this artifact
+   */
+  abstract ImmutableList<DependencyPath> getDependencyPaths();
 
-  public abstract ImmutableList<LinkageErrorMissingClass> getMissingClassErrors();
-  public abstract ImmutableList<LinkageErrorMissingMethod> getMissingMethodErrors();
-  public abstract ImmutableList<LinkageErrorMissingField> getMissingFieldErrors();
+  abstract ImmutableList<LinkageErrorMissingClass> getMissingClassErrors();
+  abstract ImmutableList<LinkageErrorMissingMethod> getMissingMethodErrors();
+  abstract ImmutableList<LinkageErrorMissingField> getMissingFieldErrors();
 
   static Builder builder() {
-    return new AutoValue_JarLinkageReport.Builder();
+    return new AutoValue_JarLinkageReport.Builder().setDependencyPaths(ImmutableList.of());
   }
 
   @AutoValue.Builder
   abstract static class Builder {
     abstract Builder setJarPath(Path value);
+    abstract Builder setDependencyPaths(Iterable<DependencyPath> paths);
     abstract Builder setMissingClassErrors(Iterable<LinkageErrorMissingClass> value);
     abstract Builder setMissingMethodErrors(Iterable<LinkageErrorMissingMethod> value);
     abstract Builder setMissingFieldErrors(Iterable<LinkageErrorMissingField> value);
@@ -49,10 +56,15 @@ public abstract class JarLinkageReport {
   
   @Override
   public String toString() {
+    String indent = "  ";
     StringBuilder builder = new StringBuilder();
     int totalErrors = getTotalErrorCount();
+
     builder.append(getJarPath().getFileName() + " (" + totalErrors + " errors):\n");
-    String indent = "  ";
+    for (DependencyPath path : getDependencyPaths()) {
+      builder.append(indent + "Linked from: " + path);
+      builder.append("\n");
+    }    
     for (LinkageErrorMissingClass missingClass : getMissingClassErrors()) {
       builder.append(indent + missingClass.getReference());
       builder.append("\n");

@@ -19,7 +19,23 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.nio.file.Path;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.logging.Logger;
+
+import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.Method;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.ParseException;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
+
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -27,21 +43,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-import java.io.IOException;
-import java.lang.reflect.Array;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.logging.Logger;
-import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.classfile.Method;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.ParseException;
-import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.artifact.Artifact;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ListMultimap;
 
 /**
  * A tool to find static linkage errors for a class path.
@@ -112,30 +115,46 @@ public class StaticLinkageChecker {
    */
   public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
       throws RepositoryException {
+    
+    ListMultimap<Path, DependencyPath> multimap = artifactsToPaths(artifacts);
+    LinkedHashSet<Path> set = new LinkedHashSet<>(); // to remove duplicate keys
+    for (Entry<Path, DependencyPath> entry : multimap.entries()) {
+      set.add(entry.getKey());
+    }
+    
+    return ImmutableList.<Path>builder().addAll(set).build();
+  }
+  
+  
+  // Multimap is a pain, maybe just use LinkedHashMap<Path, List<DependencyPath>>
+  /**
+   * Finds jar file paths for Maven artifacts and their dependencies.
+   *
+   * @param artifacts Maven artifacts to check
+   * @return map absolute paths of jar files to Maven dependency paths
+   * @throws RepositoryException when there is a problem in retrieving jar files
+   */
+  public static ListMultimap<Path, DependencyPath> artifactsToPaths(List<Artifact> artifacts)
+      throws RepositoryException {
+    
+    ListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
     if (artifacts.isEmpty()) {
-      return ImmutableList.of();
+      return multimap;
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph dependencyGraph =
         DependencyGraphBuilder.getStaticLinkageCheckDependencies(artifacts);
     List<DependencyPath> dependencyPaths = dependencyGraph.list();
 
-    // Removes duplicates on (groupId:artifactId)
-    Set<String> artifactsInPaths = Sets.newHashSet();
-
-    ImmutableList.Builder<Path> classpathBuilder = ImmutableList.builder();
     for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();
-      if (!artifactsInPaths.add(Artifacts.makeKey(artifact))) {
-        continue;
-      }
       Path jarAbsolutePath = artifact.getFile().toPath().toAbsolutePath();
       if (!jarAbsolutePath.toString().endsWith(".jar")) {
         continue;
       }
-      classpathBuilder.add(jarAbsolutePath);
+      multimap.put(jarAbsolutePath, dependencyPath);
     }
-    return classpathBuilder.build();
+    return multimap;
   }
 
   /**

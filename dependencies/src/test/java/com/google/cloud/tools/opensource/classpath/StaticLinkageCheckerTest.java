@@ -16,8 +16,10 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
@@ -27,6 +29,8 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Set;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
@@ -52,6 +56,28 @@ public class StaticLinkageCheckerTest {
 
   private static Path absolutePathOfResource(String resourceName) throws URISyntaxException {
     return Paths.get(URLClassLoader.getSystemResource(resourceName).toURI()).toAbsolutePath();
+  }
+  
+  @Test
+  public void testArtifactsToPaths() throws RepositoryException {
+    
+    Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
+    ListMultimap<Path, DependencyPath> multimap =
+        StaticLinkageChecker.artifactsToPaths(ImmutableList.of(grpcArtifact));
+
+    Set<Path> paths = multimap.keySet();
+    
+    Truth.assertThat(paths)
+        .comparingElementsUsing(PATH_FILE_NAMES)
+        .contains("grpc-auth-1.15.1.jar");
+    Truth.assertThat(paths)
+        .comparingElementsUsing(PATH_FILE_NAMES)
+        .contains("google-auth-library-credentials-0.9.0.jar");
+    paths.forEach(
+        path ->
+            Truth.assertWithMessage("Every returned path should be an absolute path")
+                .that(path.isAbsolute())
+                .isTrue());
   }
 
   @Test
