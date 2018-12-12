@@ -148,7 +148,7 @@ public class StaticLinkageCheckerTest {
     SymbolReferenceSet symbolReferenceSet = ClassDumper.scanSymbolReferencesInJar(httpClientJar);
 
     JarLinkageReport jarLinkageReport =
-        staticLinkageChecker.generateLinkageReport(httpClientJar, symbolReferenceSet);
+        staticLinkageChecker.generateLinkageReport(httpClientJar, symbolReferenceSet, null);
 
     Truth.assertWithMessage("Method references within the same jar file should not be reported")
         .that(jarLinkageReport.getMissingMethodErrors())
@@ -182,7 +182,7 @@ public class StaticLinkageCheckerTest {
             .build();
 
     JarLinkageReport jarLinkageReport =
-        staticLinkageChecker.generateLinkageReport(paths.get(0), symbolReferenceSet);
+        staticLinkageChecker.generateLinkageReport(paths.get(0), symbolReferenceSet, null);
 
     Truth.assertThat(jarLinkageReport.getMissingMethodErrors()).hasSize(1);
     Assert.assertEquals(
@@ -209,7 +209,7 @@ public class StaticLinkageCheckerTest {
         SymbolReferenceSet.builder().setMethodReferences(methodReferences).build();
 
     JarLinkageReport jarLinkageReport =
-        staticLinkageChecker.generateLinkageReport(paths.get(0), symbolReferenceSet);
+        staticLinkageChecker.generateLinkageReport(paths.get(0), symbolReferenceSet, null);
 
     Truth.assertThat(jarLinkageReport.getMissingMethodErrors()).isEmpty();
   }
@@ -365,14 +365,14 @@ public class StaticLinkageCheckerTest {
 
     JarLinkageReport reportWith65First =
         staticLinkageChecker65First.generateLinkageReport(
-            firestoreDependencies.get(0), symbolReferenceSet);
+            firestoreDependencies.get(0), symbolReferenceSet, null);
     Truth.assertWithMessage("Firestore version 65 does not have CollectionReference.listDocuments")
         .that(reportWith65First.getMissingMethodErrors())
         .hasSize(1);
 
     JarLinkageReport reportWith66First =
         staticLinkageChecker66First.generateLinkageReport(
-            firestoreDependencies.get(0), symbolReferenceSet);
+            firestoreDependencies.get(0), symbolReferenceSet, null);
     Truth.assertWithMessage("Firestore version 66 has CollectionReference.listDocuments")
         .that(reportWith66First.getMissingMethodErrors())
         .isEmpty();

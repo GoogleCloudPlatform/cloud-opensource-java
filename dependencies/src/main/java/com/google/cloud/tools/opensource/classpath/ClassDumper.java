@@ -19,12 +19,10 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
 import java.io.IOException;
@@ -69,9 +67,7 @@ class ClassDumper {
 
   static ClassDumper create(List<Path> jarFilePaths) throws IOException, ClassNotFoundException {
     // Creates classpath in the same order as inputClasspath for BCEL API
-    
-    Preconditions.checkArgument(jarFilePaths.size() == Sets.newHashSet(jarFilePaths).size());
-    
+        
     String pathAsString =
         jarFilePaths.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator));
     ClassPath classPath = new ClassPath(pathAsString);

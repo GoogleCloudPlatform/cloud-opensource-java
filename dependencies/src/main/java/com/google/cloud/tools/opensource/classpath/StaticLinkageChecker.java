@@ -22,6 +22,8 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -54,14 +56,22 @@ public class StaticLinkageChecker {
 
   private static final Logger logger = Logger.getLogger(StaticLinkageChecker.class.getName());
 
-  public static StaticLinkageChecker create(
-      boolean reportOnlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
+  @Deprecated
+  static StaticLinkageChecker create(
+      boolean onlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
       throws IOException, ClassNotFoundException {
-    checkArgument(
-        !jarFilePaths.isEmpty(),
-        "The linkage classpath is empty. Specify input to supply one or more jar files");
-    return new StaticLinkageChecker(
-        reportOnlyReachable, ClassDumper.create(jarFilePaths), entryPoints);
+    
+    ClassDumper dumper = ClassDumper.create(jarFilePaths);
+    return new StaticLinkageChecker(onlyReachable, dumper, entryPoints);
+  }
+  
+  public static StaticLinkageChecker create(boolean onlyReachable,
+      ListMultimap<Path, DependencyPath> paths, ImmutableSet<Path> entryPoints) 
+          throws ClassNotFoundException, IOException {
+    List<Path> jarFilePaths = new ArrayList<Path>();
+    jarFilePaths.addAll(paths.keySet());
+    ClassDumper dumper = ClassDumper.create(jarFilePaths);
+    return new StaticLinkageChecker(onlyReachable, dumper, entryPoints, paths);
   }
 
   /**
@@ -73,12 +83,23 @@ public class StaticLinkageChecker {
   private final ClassDumper classDumper;
 
   private final ImmutableSet<Path> entryPoints;
+  
+  private final ListMultimap<Path, DependencyPath> paths;
 
   StaticLinkageChecker(
       boolean reportOnlyReachable, ClassDumper classDumper, Iterable<Path> entryPoints) {
     this.reportOnlyReachable = reportOnlyReachable;
     this.classDumper = classDumper;
     this.entryPoints = ImmutableSet.copyOf(entryPoints);
+    this.paths = null;
+  }
+  
+  StaticLinkageChecker(boolean reportOnlyReachable, ClassDumper classDumper,
+      Iterable<Path> entryPoints, ListMultimap<Path, DependencyPath> paths) {
+    this.reportOnlyReachable = reportOnlyReachable;
+    this.classDumper = classDumper;
+    this.entryPoints = ImmutableSet.copyOf(entryPoints);
+    this.paths = paths;
   }
 
   /**
@@ -172,7 +193,9 @@ public class StaticLinkageChecker {
     // Validate linkage error of each reference
     ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
     for (Map.Entry<Path, SymbolReferenceSet> entry : jarToSymbols.build().entrySet()) {
-      jarLinkageReports.add(generateLinkageReport(entry.getKey(), entry.getValue()));
+      Path jarPath = entry.getKey();
+      Iterable<DependencyPath> dependencyPaths = this.paths.get(jarPath);
+      jarLinkageReports.add(generateLinkageReport(jarPath, entry.getValue(), dependencyPaths));
     }
 
     if (reportOnlyReachable) {
@@ -193,8 +216,16 @@ public class StaticLinkageChecker {
    * @return linkage report for the jar file, which includes linkage errors if any
    */
   @VisibleForTesting
-  JarLinkageReport generateLinkageReport(Path jarPath, SymbolReferenceSet symbolReferenceSet) {
-    JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder().setJarPath(jarPath);
+  JarLinkageReport generateLinkageReport(Path jarPath, SymbolReferenceSet symbolReferenceSet,
+      Iterable<DependencyPath> dependencyPaths) {
+
+    if (dependencyPaths == null) {
+      dependencyPaths = Collections.emptyList();
+    }
+    
+    JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder()
+        .setJarPath(jarPath)
+        .setDependencyPaths(dependencyPaths);
 
     // Because the Java compiler ensures that there are no static linkage errors between classes
     // defined in the same jar file, this validation excludes reference within the same jar file.
@@ -296,4 +327,5 @@ public class StaticLinkageChecker {
     return validateMethodReferenceByBcelRepository(methodReference)
         || validateMethodReferenceByClassLoader(methodReference);
   }
+
 }
