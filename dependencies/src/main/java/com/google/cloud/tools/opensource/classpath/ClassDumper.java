@@ -66,8 +66,7 @@ class ClassDumper {
   }
 
   static ClassDumper create(List<Path> jarFilePaths) throws IOException, ClassNotFoundException {
-    // Creates classpath in the same order as inputClasspath for BCEL API
-        
+    // Creates classpath in the same order as inputClasspath for BCEL API        
     String pathAsString =
         jarFilePaths.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator));
     ClassPath classPath = new ClassPath(pathAsString);

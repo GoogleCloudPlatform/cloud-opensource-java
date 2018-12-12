@@ -32,7 +32,7 @@ public abstract class JarLinkageReport {
   abstract Path getJarPath();
   
   /**
-   * @return the paths to this artifact
+   * Returns the dependency path(s) to this artifact.
    */
   abstract ImmutableList<DependencyPath> getDependencyPaths();
 
