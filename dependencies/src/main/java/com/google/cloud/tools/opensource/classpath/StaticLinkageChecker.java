@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import java.io.IOException;
@@ -42,6 +41,7 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -56,7 +56,6 @@ public class StaticLinkageChecker {
 
   private static final Logger logger = Logger.getLogger(StaticLinkageChecker.class.getName());
 
-  @Deprecated
   static StaticLinkageChecker create(
       boolean onlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
       throws IOException, ClassNotFoundException {
@@ -91,7 +90,7 @@ public class StaticLinkageChecker {
     this.reportOnlyReachable = reportOnlyReachable;
     this.classDumper = classDumper;
     this.entryPoints = ImmutableSet.copyOf(entryPoints);
-    this.paths = null;
+    this.paths = ArrayListMultimap.create();
   }
   
   StaticLinkageChecker(boolean reportOnlyReachable, ClassDumper classDumper,
@@ -117,7 +116,7 @@ public class StaticLinkageChecker {
     
     CommandLine commandLine = StaticLinkageCheckOption.readCommandLine(arguments);
     ImmutableList<Path> inputClasspath = StaticLinkageCheckOption.generateInputClasspath(commandLine);
-    // TODO(suztomo): to take command-line option to choose entry point classes for reachability
+    // TODO(suztomo): take command-line option to choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(inputClasspath.get(0));
 
     boolean onlyReachable = commandLine.hasOption("r");
