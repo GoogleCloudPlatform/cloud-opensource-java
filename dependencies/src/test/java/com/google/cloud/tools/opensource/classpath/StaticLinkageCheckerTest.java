@@ -28,6 +28,7 @@ import java.net.URISyntaxException;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -69,10 +70,7 @@ public class StaticLinkageCheckerTest {
     
     Truth.assertThat(paths)
         .comparingElementsUsing(PATH_FILE_NAMES)
-        .contains("grpc-auth-1.15.1.jar");
-    Truth.assertThat(paths)
-        .comparingElementsUsing(PATH_FILE_NAMES)
-        .contains("google-auth-library-credentials-0.9.0.jar");
+        .containsAllOf("grpc-auth-1.15.1.jar", "google-auth-library-credentials-0.9.0.jar");
     paths.forEach(
         path ->
             Truth.assertWithMessage("Every returned path should be an absolute path")
@@ -147,8 +145,8 @@ public class StaticLinkageCheckerTest {
     // https://github.com/apache/httpcomponents-client/blob/e2cf733c60f910d17dc5cfc0a77797054a2e322e/httpclient/src/main/java/org/apache/http/conn/ssl/AbstractVerifier.java#L153
     SymbolReferenceSet symbolReferenceSet = ClassDumper.scanSymbolReferencesInJar(httpClientJar);
 
-    JarLinkageReport jarLinkageReport =
-        staticLinkageChecker.generateLinkageReport(httpClientJar, symbolReferenceSet, null);
+    JarLinkageReport jarLinkageReport = staticLinkageChecker.generateLinkageReport(httpClientJar,
+        symbolReferenceSet, Collections.emptyList());
 
     Truth.assertWithMessage("Method references within the same jar file should not be reported")
         .that(jarLinkageReport.getMissingMethodErrors())
@@ -182,7 +180,8 @@ public class StaticLinkageCheckerTest {
             .build();
 
     JarLinkageReport jarLinkageReport =
-        staticLinkageChecker.generateLinkageReport(paths.get(0), symbolReferenceSet, null);
+        staticLinkageChecker.generateLinkageReport(paths.get(0), symbolReferenceSet, 
+            Collections.emptyList());
 
     Truth.assertThat(jarLinkageReport.getMissingMethodErrors()).hasSize(1);
     Assert.assertEquals(
@@ -208,8 +207,8 @@ public class StaticLinkageCheckerTest {
     SymbolReferenceSet symbolReferenceSet =
         SymbolReferenceSet.builder().setMethodReferences(methodReferences).build();
 
-    JarLinkageReport jarLinkageReport =
-        staticLinkageChecker.generateLinkageReport(paths.get(0), symbolReferenceSet, null);
+    JarLinkageReport jarLinkageReport = staticLinkageChecker.generateLinkageReport(paths.get(0),
+        symbolReferenceSet, Collections.emptyList());
 
     Truth.assertThat(jarLinkageReport.getMissingMethodErrors()).isEmpty();
   }
@@ -365,14 +364,14 @@ public class StaticLinkageCheckerTest {
 
     JarLinkageReport reportWith65First =
         staticLinkageChecker65First.generateLinkageReport(
-            firestoreDependencies.get(0), symbolReferenceSet, null);
+            firestoreDependencies.get(0), symbolReferenceSet, Collections.emptyList());
     Truth.assertWithMessage("Firestore version 65 does not have CollectionReference.listDocuments")
         .that(reportWith65First.getMissingMethodErrors())
         .hasSize(1);
 
     JarLinkageReport reportWith66First =
         staticLinkageChecker66First.generateLinkageReport(
-            firestoreDependencies.get(0), symbolReferenceSet, null);
+            firestoreDependencies.get(0), symbolReferenceSet, Collections.emptyList());
     Truth.assertWithMessage("Firestore version 66 has CollectionReference.listDocuments")
         .that(reportWith66First.getMissingMethodErrors())
         .isEmpty();

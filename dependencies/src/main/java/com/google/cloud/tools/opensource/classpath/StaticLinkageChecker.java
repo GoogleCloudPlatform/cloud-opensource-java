@@ -41,8 +41,10 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedListMultimap;
@@ -65,9 +67,9 @@ public class StaticLinkageChecker {
   }
   
   public static StaticLinkageChecker create(boolean onlyReachable,
-      ListMultimap<Path, DependencyPath> paths, ImmutableSet<Path> entryPoints) 
+      LinkedListMultimap<Path, DependencyPath> paths, ImmutableSet<Path> entryPoints) 
           throws ClassNotFoundException, IOException {
-    List<Path> jarFilePaths = new ArrayList<Path>();
+    List<Path> jarFilePaths = new ArrayList<>();
     jarFilePaths.addAll(paths.keySet());
     ClassDumper dumper = ClassDumper.create(jarFilePaths);
     return new StaticLinkageChecker(onlyReachable, dumper, entryPoints, paths);
@@ -87,18 +89,15 @@ public class StaticLinkageChecker {
 
   StaticLinkageChecker(
       boolean reportOnlyReachable, ClassDumper classDumper, Iterable<Path> entryPoints) {
-    this.reportOnlyReachable = reportOnlyReachable;
-    this.classDumper = classDumper;
-    this.entryPoints = ImmutableSet.copyOf(entryPoints);
-    this.paths = ArrayListMultimap.create();
+    this(reportOnlyReachable, classDumper, entryPoints, ArrayListMultimap.create());
   }
   
   StaticLinkageChecker(boolean reportOnlyReachable, ClassDumper classDumper,
       Iterable<Path> entryPoints, ListMultimap<Path, DependencyPath> paths) {
     this.reportOnlyReachable = reportOnlyReachable;
-    this.classDumper = classDumper;
-    this.entryPoints = ImmutableSet.copyOf(entryPoints);
-    this.paths = paths;
+    this.classDumper = Preconditions.checkNotNull(classDumper);
+    this.entryPoints = ImmutableSet.copyOf(Preconditions.checkNotNull(entryPoints));
+    this.paths = Preconditions.checkNotNull(paths);
   }
 
   /**
@@ -136,13 +135,8 @@ public class StaticLinkageChecker {
   public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
       throws RepositoryException {
     
-    ListMultimap<Path, DependencyPath> multimap = artifactsToPaths(artifacts);
-    LinkedHashSet<Path> set = new LinkedHashSet<>(); // to remove duplicate keys
-    for (Entry<Path, DependencyPath> entry : multimap.entries()) {
-      set.add(entry.getKey());
-    }
-    
-    return ImmutableList.<Path>builder().addAll(set).build();
+    LinkedListMultimap<Path, DependencyPath> multimap = artifactsToPaths(artifacts);
+    return ImmutableList.copyOf(multimap.keySet());
   }
   
   
@@ -154,10 +148,10 @@ public class StaticLinkageChecker {
    * @return map absolute paths of jar files to Maven dependency paths
    * @throws RepositoryException when there is a problem in retrieving jar files
    */
-  public static ListMultimap<Path, DependencyPath> artifactsToPaths(List<Artifact> artifacts)
+  public static LinkedListMultimap<Path, DependencyPath> artifactsToPaths(List<Artifact> artifacts)
       throws RepositoryException {
     
-    ListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
+    LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
     if (artifacts.isEmpty()) {
       return multimap;
     }
@@ -217,10 +211,6 @@ public class StaticLinkageChecker {
   @VisibleForTesting
   JarLinkageReport generateLinkageReport(Path jarPath, SymbolReferenceSet symbolReferenceSet,
       Iterable<DependencyPath> dependencyPaths) {
-
-    if (dependencyPaths == null) {
-      dependencyPaths = Collections.emptyList();
-    }
     
     JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder()
         .setJarPath(jarPath)

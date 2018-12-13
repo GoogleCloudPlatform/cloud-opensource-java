@@ -91,11 +91,14 @@ public class DashboardMain {
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
     
     ImmutableList<Path> classpath = StaticLinkageChecker.artifactsToClasspath(managedDependencies);
-    ListMultimap<Path, DependencyPath> paths = StaticLinkageChecker.artifactsToPaths(managedDependencies);
+    LinkedListMultimap<Path, DependencyPath> paths =
+        StaticLinkageChecker.artifactsToPaths(managedDependencies);
     
     // TODO(suztomo): choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(classpath.get(0));
 
+    
+    
     boolean onlyReachable = false;
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(onlyReachable, paths, entryPoints);
