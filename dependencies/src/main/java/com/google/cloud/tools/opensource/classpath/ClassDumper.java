@@ -65,7 +65,7 @@ class ClassDumper {
     return inputClasspath;
   }
 
-  static ClassDumper create(List<Path> jarFilePaths) throws IOException, ClassNotFoundException {
+  static ClassDumper create(List<Path> jarFilePaths) throws IOException {
     // Creates classpath in the same order as inputClasspath for BCEL API
     String pathAsString =
         jarFilePaths.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator));
@@ -134,7 +134,7 @@ class ClassDumper {
    * @param jarFilePath absolute path to a jar file
    */
   static SymbolReferenceSet scanSymbolReferencesInJar(Path jarFilePath)
-      throws ClassNotFoundException, IOException {
+      throws IOException {
     checkArgument(jarFilePath.isAbsolute(), "The input jar file path is not an absolute path");
     checkArgument(Files.isReadable(jarFilePath), "The input jar file path is not readable");
 
@@ -310,7 +310,7 @@ class ClassDumper {
    * @return map of jar file paths to classes defined in them
    */
   private static ImmutableSetMultimap<Path, String> jarFilesToDefinedClasses(
-      List<Path> jarFilePaths) throws IOException, ClassNotFoundException {
+      List<Path> jarFilePaths) throws IOException {
     ImmutableSetMultimap.Builder<Path, String> pathToClasses = ImmutableSetMultimap.builder();
 
     for (Path jarFilePath : jarFilePaths) {
@@ -341,16 +341,21 @@ class ClassDumper {
     return allClassesInJar;
   }
 
-  static ImmutableSet<JavaClass> topLevelJavaClassesInJar(Path jarFilePath)
-      throws IOException, ClassNotFoundException {
+  private static ImmutableSet<JavaClass> topLevelJavaClassesInJar(Path jarFilePath)
+      throws IOException {
     String pathToJar = jarFilePath.toString();
     SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     URL jarFileUrl = jarFilePath.toUri().toURL();
     for (ClassInfo classInfo : listTopLevelClassesFromJar(jarFileUrl)) {
       String className = classInfo.getName();
-      JavaClass javaClass = repository.loadClass(className);
-      javaClasses.add(javaClass);
+      try {
+        JavaClass javaClass = repository.loadClass(className);
+        javaClasses.add(javaClass);
+      } catch (ClassNotFoundException ex) {
+        // We couldn't load the class from the jar file where we found it.
+        throw new IOException("Corrupt jar file " + jarFilePath + "; could not load " + className);
+      }
     }
     return javaClasses.build();
   }

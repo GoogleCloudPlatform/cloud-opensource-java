@@ -107,8 +107,8 @@ public class ClassDumperTest {
   public void testCreationInvalidInput() throws IOException {
     try {
       ClassDumper.create(ImmutableList.of(Paths.get("")));
-      Assert.fail("Empty path should generate ClassNotFoundException");
-    } catch (ClassNotFoundException ex) {
+      Assert.fail("Empty path should generate IOException");
+    } catch (IOException ex) {
       // pass
     }
   }

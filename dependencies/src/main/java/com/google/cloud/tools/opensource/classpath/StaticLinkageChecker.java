@@ -22,11 +22,8 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -44,7 +41,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedListMultimap;
@@ -58,10 +54,12 @@ public class StaticLinkageChecker {
 
   private static final Logger logger = Logger.getLogger(StaticLinkageChecker.class.getName());
 
-  static StaticLinkageChecker create(
+  public static StaticLinkageChecker create(
       boolean onlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
-      throws IOException, ClassNotFoundException {
-    
+      throws IOException {
+    Preconditions.checkArgument(
+        !jarFilePaths.isEmpty(),
+        "The linkage classpath is empty. Specify input to supply one or more jar files");
     ClassDumper dumper = ClassDumper.create(jarFilePaths);
     return new StaticLinkageChecker(onlyReachable, dumper, entryPoints);
   }
@@ -104,13 +102,12 @@ public class StaticLinkageChecker {
    * report of static linkage check.
    *
    * @throws IOException when there is a problem in reading a jar file
-   * @throws ClassNotFoundException when there is a problem in reading a class from a jar file
    * @throws RepositoryException when there is a problem in resolving the Maven coordinates to jar
    *     files
    * @throws ParseException when the arguments are invalid for the tool
    */
   public static void main(String[] arguments)
-      throws IOException, ClassNotFoundException, RepositoryException, ParseException {
+      throws IOException, RepositoryException, ParseException {
     
     CommandLine commandLine = StaticLinkageCheckOption.readCommandLine(arguments);
     ImmutableList<Path> inputClasspath = StaticLinkageCheckOption.generateInputClasspath(commandLine);
@@ -173,8 +170,7 @@ public class StaticLinkageChecker {
   /**
    * Finds linkage errors in the input classpath and generates a static linkage check report.
    */
-  // TODO why does this throw ClassNotFoundException? Shouldn't that just be part of the report?
-  public StaticLinkageCheckReport findLinkageErrors() throws ClassNotFoundException, IOException {
+  public StaticLinkageCheckReport findLinkageErrors() throws IOException {
     ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
 
     ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbols = ImmutableMap.builder();
