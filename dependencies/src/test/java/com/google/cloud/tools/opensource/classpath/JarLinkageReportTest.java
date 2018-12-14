@@ -95,5 +95,14 @@ public class JarLinkageReportTest {
   public void testGetTotalErrorCount() {
     Assert.assertEquals(3, jarLinkageReport.getTotalErrorCount());
   }
+  
+  @Test
+  public void testToString() {
+    Assert.assertEquals("c (3 errors):\n" + 
+        "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA}\n" + 
+        "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, methodName=methodX, descriptor=java.lang.String}\n" + 
+        "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, fieldName=fieldX}\n" + 
+        "", jarLinkageReport.toString());
+  }
 
 }
