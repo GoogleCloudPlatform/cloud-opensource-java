@@ -16,32 +16,35 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.logging.Logger;
+
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
+
+import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ListMultimap;
 
 /**
  * A tool to find static linkage errors for a class path.
@@ -52,13 +55,21 @@ public class StaticLinkageChecker {
   private static final Logger logger = Logger.getLogger(StaticLinkageChecker.class.getName());
 
   public static StaticLinkageChecker create(
-      boolean reportOnlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
+      boolean onlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
       throws IOException {
-    checkArgument(
+    Preconditions.checkArgument(
         !jarFilePaths.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
-    return new StaticLinkageChecker(
-        reportOnlyReachable, ClassDumper.create(jarFilePaths), entryPoints);
+    ClassDumper dumper = ClassDumper.create(jarFilePaths);
+    return new StaticLinkageChecker(onlyReachable, dumper, entryPoints);
+  }
+  
+  public static StaticLinkageChecker create(boolean onlyReachable,
+      LinkedListMultimap<Path, DependencyPath> paths, ImmutableSet<Path> entryPoints) 
+          throws ClassNotFoundException, IOException {
+    List<Path> jarFilePaths = new ArrayList<>(paths.keySet());
+    ClassDumper dumper = ClassDumper.create(jarFilePaths);
+    return new StaticLinkageChecker(onlyReachable, dumper, entryPoints, paths);
   }
 
   /**
@@ -70,12 +81,20 @@ public class StaticLinkageChecker {
   private final ClassDumper classDumper;
 
   private final ImmutableSet<Path> entryPoints;
+  
+  private final ListMultimap<Path, DependencyPath> paths;
 
   StaticLinkageChecker(
       boolean reportOnlyReachable, ClassDumper classDumper, Iterable<Path> entryPoints) {
+    this(reportOnlyReachable, classDumper, entryPoints, ArrayListMultimap.create());
+  }
+  
+  StaticLinkageChecker(boolean reportOnlyReachable, ClassDumper classDumper,
+      Iterable<Path> entryPoints, ListMultimap<Path, DependencyPath> paths) {
     this.reportOnlyReachable = reportOnlyReachable;
-    this.classDumper = classDumper;
+    this.classDumper = Preconditions.checkNotNull(classDumper);
     this.entryPoints = ImmutableSet.copyOf(entryPoints);
+    this.paths = Preconditions.checkNotNull(paths);
   }
 
   /**
@@ -92,7 +111,7 @@ public class StaticLinkageChecker {
     
     CommandLine commandLine = StaticLinkageCheckOption.readCommandLine(arguments);
     ImmutableList<Path> inputClasspath = StaticLinkageCheckOption.generateInputClasspath(commandLine);
-    // TODO(suztomo): to take command-line option to choose entry point classes for reachability
+    // TODO(suztomo): take command-line option to choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(inputClasspath.get(0));
 
     boolean onlyReachable = commandLine.hasOption("r");
@@ -111,30 +130,41 @@ public class StaticLinkageChecker {
    */
   public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
       throws RepositoryException {
+    
+    LinkedListMultimap<Path, DependencyPath> multimap = artifactsToPaths(artifacts);
+    return ImmutableList.copyOf(multimap.keySet());
+  }
+  
+  
+  // Multimap is a pain, maybe just use LinkedHashMap<Path, List<DependencyPath>>
+  /**
+   * Finds jar file paths for Maven artifacts and their dependencies.
+   *
+   * @param artifacts Maven artifacts to check
+   * @return map absolute paths of jar files to Maven dependency paths
+   * @throws RepositoryException when there is a problem in retrieving jar files
+   */
+  public static LinkedListMultimap<Path, DependencyPath> artifactsToPaths(List<Artifact> artifacts)
+      throws RepositoryException {
+    
+    LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
     if (artifacts.isEmpty()) {
-      return ImmutableList.of();
+      return multimap;
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph dependencyGraph =
         DependencyGraphBuilder.getStaticLinkageCheckDependencies(artifacts);
     List<DependencyPath> dependencyPaths = dependencyGraph.list();
 
-    // Removes duplicates on (groupId:artifactId)
-    Set<String> artifactsInPaths = Sets.newHashSet();
-
-    ImmutableList.Builder<Path> classpathBuilder = ImmutableList.builder();
     for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();
-      if (!artifactsInPaths.add(Artifacts.makeKey(artifact))) {
-        continue;
-      }
       Path jarAbsolutePath = artifact.getFile().toPath().toAbsolutePath();
       if (!jarAbsolutePath.toString().endsWith(".jar")) {
         continue;
       }
-      classpathBuilder.add(jarAbsolutePath);
+      multimap.put(jarAbsolutePath, dependencyPath);
     }
-    return classpathBuilder.build();
+    return multimap;
   }
 
   /**
@@ -151,7 +181,9 @@ public class StaticLinkageChecker {
     // Validate linkage error of each reference
     ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
     for (Map.Entry<Path, SymbolReferenceSet> entry : jarToSymbols.build().entrySet()) {
-      jarLinkageReports.add(generateLinkageReport(entry.getKey(), entry.getValue()));
+      Path jarPath = entry.getKey();
+      Iterable<DependencyPath> dependencyPaths = this.paths.get(jarPath);
+      jarLinkageReports.add(generateLinkageReport(jarPath, entry.getValue(), dependencyPaths));
     }
 
     if (reportOnlyReachable) {
@@ -172,8 +204,12 @@ public class StaticLinkageChecker {
    * @return linkage report for the jar file, which includes linkage errors if any
    */
   @VisibleForTesting
-  JarLinkageReport generateLinkageReport(Path jarPath, SymbolReferenceSet symbolReferenceSet) {
-    JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder().setJarPath(jarPath);
+  JarLinkageReport generateLinkageReport(Path jarPath, SymbolReferenceSet symbolReferenceSet,
+      Iterable<DependencyPath> dependencyPaths) {
+    
+    JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder()
+        .setJarPath(jarPath)
+        .setDependencyPaths(dependencyPaths);
 
     // Because the Java compiler ensures that there are no static linkage errors between classes
     // defined in the same jar file, this validation excludes reference within the same jar file.
@@ -275,4 +311,5 @@ public class StaticLinkageChecker {
     return validateMethodReferenceByBcelRepository(methodReference)
         || validateMethodReferenceByClassLoader(methodReference);
   }
+
 }
