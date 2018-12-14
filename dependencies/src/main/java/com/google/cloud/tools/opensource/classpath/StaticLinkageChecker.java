@@ -69,8 +69,7 @@ public class StaticLinkageChecker {
   public static StaticLinkageChecker create(boolean onlyReachable,
       LinkedListMultimap<Path, DependencyPath> paths, ImmutableSet<Path> entryPoints) 
           throws ClassNotFoundException, IOException {
-    List<Path> jarFilePaths = new ArrayList<>();
-    jarFilePaths.addAll(paths.keySet());
+    List<Path> jarFilePaths = new ArrayList<>(paths.keySet());
     ClassDumper dumper = ClassDumper.create(jarFilePaths);
     return new StaticLinkageChecker(onlyReachable, dumper, entryPoints, paths);
   }
@@ -96,7 +95,7 @@ public class StaticLinkageChecker {
       Iterable<Path> entryPoints, ListMultimap<Path, DependencyPath> paths) {
     this.reportOnlyReachable = reportOnlyReachable;
     this.classDumper = Preconditions.checkNotNull(classDumper);
-    this.entryPoints = ImmutableSet.copyOf(Preconditions.checkNotNull(entryPoints));
+    this.entryPoints = ImmutableSet.copyOf(entryPoints);
     this.paths = Preconditions.checkNotNull(paths);
   }
 
