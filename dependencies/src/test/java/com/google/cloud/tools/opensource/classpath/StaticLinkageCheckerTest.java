@@ -31,7 +31,6 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
@@ -211,6 +210,62 @@ public class StaticLinkageCheckerTest {
         symbolReferenceSet, Collections.emptyList());
 
     Truth.assertThat(jarLinkageReport.getMissingMethodErrors()).isEmpty();
+  }
+
+  @Test
+  public void testFindInvaildReferences_validField() throws IOException, URISyntaxException {
+    List<Path> paths =
+        ImmutableList.of(
+            absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    FieldSymbolReference validFieldReference =
+        FieldSymbolReference.builder()
+            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc")
+            .setFieldName("SERVICE_NAME") // valid
+            .build();
+    ImmutableList<FieldSymbolReference> fieldReferences = ImmutableList.of(validFieldReference);
+    SymbolReferenceSet symbolReferenceSet =
+        SymbolReferenceSet.builder().setFieldReferences(fieldReferences).build();
+
+    JarLinkageReport jarLinkageReport =
+        staticLinkageChecker.generateLinkageReport(
+            absolutePathOfResource("testdata/gax-1.32.0.jar"),
+            symbolReferenceSet,
+            Collections.emptyList());
+
+    Truth.assertThat(jarLinkageReport.getMissingFieldErrors()).isEmpty();
+  }
+
+  @Test
+  public void testFindInvaildReferences_nonExistentField() throws IOException, URISyntaxException {
+    List<Path> paths =
+        ImmutableList.of(
+            absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    FieldSymbolReference invalidFieldReference =
+        FieldSymbolReference.builder()
+            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc")
+            .setFieldName("DUMMY_FIELD") // non-existent
+            .build();
+    ImmutableList<FieldSymbolReference> fieldReferences = ImmutableList.of(invalidFieldReference);
+    SymbolReferenceSet symbolReferenceSet =
+        SymbolReferenceSet.builder().setFieldReferences(fieldReferences).build();
+
+    JarLinkageReport jarLinkageReport =
+        staticLinkageChecker.generateLinkageReport(
+            absolutePathOfResource("testdata/gax-1.32.0.jar"),
+            symbolReferenceSet,
+            Collections.emptyList());
+
+    Truth.assertThat(jarLinkageReport.getMissingFieldErrors()).hasSize(1);
+    Truth.assertThat(jarLinkageReport.getMissingFieldErrors().get(0).getReference().getFieldName())
+        .isEqualTo("DUMMY_FIELD");
   }
 
   @Test

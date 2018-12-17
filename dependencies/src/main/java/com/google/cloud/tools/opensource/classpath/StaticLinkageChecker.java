@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.commons.cli.CommandLine;
@@ -225,10 +226,17 @@ public class StaticLinkageChecker {
             .map(Optional::get)
             .collect(toImmutableList()));
 
-    // TODO(#243 and #242): implement validation for class and field references in the table
-    reportBuilder
-        .setMissingClassErrors(ImmutableList.of())
-        .setMissingFieldErrors(ImmutableList.of());
+    reportBuilder.setMissingFieldErrors(
+        symbolReferenceSet.getFieldReferences()
+        .stream()
+        .filter(reference-> !classesDefinedInJar.contains(reference.getTargetClassName()))
+        .map(this::checkLinkageErrorAt)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .collect(toImmutableList()));
+
+    // TODO(#243): implement validation for class
+    reportBuilder.setMissingClassErrors(ImmutableList.of());
 
     return reportBuilder.build();
   }
@@ -243,6 +251,18 @@ public class StaticLinkageChecker {
       return Optional.empty();
     }
     return Optional.of(LinkageErrorMissingMethod.errorAt(reference));
+  }
+
+  /**
+   * Returns an {@code Optional} describing the linkage error for the field reference if the
+   * reference does not have a valid referent in the input class path; otherwise an empty {@code
+   * Optional}.
+   */
+  private Optional<LinkageErrorMissingField> checkLinkageErrorAt(FieldSymbolReference reference) {
+    if (validateFieldReference(reference)) {
+      return Optional.empty();
+    }
+    return Optional.of(LinkageErrorMissingField.errorAt(reference));
   }
 
   /**
@@ -298,6 +318,31 @@ public class StaticLinkageChecker {
   }
 
   /**
+   * Returns true if the field reference has a valid referent in the classpath via BCEL API.
+   */
+  private boolean validateFieldReferenceByBcelRepository(FieldSymbolReference fieldReference) {
+    String className = fieldReference.getTargetClassName();
+    String fieldName = fieldReference.getFieldName();
+    try {
+      JavaClass javaClass = classDumper.loadJavaClass(className);
+      while (javaClass != null) {
+        Field[] fields = javaClass.getFields();
+        for (Field fieldInJavaClass : fields) {
+          String methodNameInJavaClass = fieldInJavaClass.getName();
+          if (methodNameInJavaClass.equals(fieldName)) {
+            return true;
+          }
+        }
+        // null if java.lang.Object
+        javaClass = javaClass.getSuperClass();
+      }
+      return false;
+    } catch (ClassNotFoundException ex) {
+      return false;
+    }
+  }
+
+  /**
    * Returns true if the method reference has a valid referent in the classpath.
    */
   private boolean validateMethodReference(MethodSymbolReference methodReference) {
@@ -312,4 +357,10 @@ public class StaticLinkageChecker {
         || validateMethodReferenceByClassLoader(methodReference);
   }
 
+  /**
+   * Returns true if the field reference has a valid referent in the classpath.
+   */
+  private boolean validateFieldReference(FieldSymbolReference fieldReference) {
+    return validateFieldReferenceByBcelRepository(fieldReference);
+  }
 }
