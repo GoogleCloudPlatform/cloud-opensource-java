@@ -20,6 +20,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.commons.cli.CommandLine;
@@ -225,10 +227,17 @@ public class StaticLinkageChecker {
             .map(Optional::get)
             .collect(toImmutableList()));
 
-    // TODO(#243 and #242): implement validation for class and field references in the table
-    reportBuilder
-        .setMissingClassErrors(ImmutableList.of())
-        .setMissingFieldErrors(ImmutableList.of());
+    reportBuilder.setMissingFieldErrors(
+        symbolReferenceSet.getFieldReferences()
+        .stream()
+        .filter(reference-> !classesDefinedInJar.contains(reference.getTargetClassName()))
+        .map(this::checkLinkageErrorAt)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .collect(toImmutableList()));
+
+    // TODO(#243): implement validation for class
+    reportBuilder.setMissingClassErrors(ImmutableList.of());
 
     return reportBuilder.build();
   }
@@ -243,6 +252,38 @@ public class StaticLinkageChecker {
       return Optional.empty();
     }
     return Optional.of(LinkageErrorMissingMethod.errorAt(reference));
+  }
+
+  /**
+   * Returns an {@code Optional} describing the linkage error for the field reference if the
+   * reference does not have a valid referent in the input class path; otherwise an empty {@code
+   * Optional}.
+   */
+  private Optional<LinkageErrorMissingField> checkLinkageErrorAt(FieldSymbolReference reference) {
+    String targetClassName = reference.getTargetClassName();
+    String fieldName = reference.getFieldName();
+    try {
+      JavaClass javaClass = classDumper.loadJavaClass(targetClassName);
+      while (javaClass != null) {
+        Field[] fields = javaClass.getFields();
+        for (Field fieldInJavaClass : fields) {
+          String fieldNameInJavaClass = fieldInJavaClass.getName();
+          if (fieldNameInJavaClass.equals(fieldName)) {
+            // The field is found. Returning no error.
+            return Optional.empty();
+          }
+        }
+        // java.lang.Object's super class is null
+        javaClass = javaClass.getSuperClass();
+      }
+
+      // The field was not found in the class from the classpath. The location of the target class
+      // will be the first thing to check for investigating the reason.
+      URL classFileUrl = classDumper.findClassLocation(targetClassName);
+      return Optional.of(LinkageErrorMissingField.errorAt(reference, classFileUrl));
+    } catch (ClassNotFoundException ex) {
+      return Optional.of(LinkageErrorMissingField.errorAt(reference, null));
+    }
   }
 
   /**

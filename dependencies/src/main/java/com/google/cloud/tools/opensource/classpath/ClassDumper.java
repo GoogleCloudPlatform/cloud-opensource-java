@@ -275,6 +275,12 @@ class ClassDumper {
     return parameterTypes;
   }
 
+  /** Returns the jar file URL of a class in the class path. */
+  URL findClassLocation(String className) throws ClassNotFoundException {
+    Class<?> clazz = loadClass(className);
+    return clazz.getProtectionDomain().getCodeSource().getLocation();
+  }
+
   private static Class<?> bcelTypeToJavaClass(Type type, ClassLoader classLoader) {
     switch (type.getType()) {
       case Const.T_BOOLEAN:

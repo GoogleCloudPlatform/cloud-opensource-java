@@ -74,7 +74,7 @@ public abstract class JarLinkageReport {
       builder.append("\n");
     }
     for (LinkageErrorMissingField missingField : getMissingFieldErrors()) {
-      builder.append(indent + missingField.getReference());
+      builder.append(indent + missingField);
       builder.append("\n");
     }
     return builder.toString();

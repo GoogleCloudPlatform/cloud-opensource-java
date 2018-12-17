@@ -17,6 +17,8 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
+import java.net.URL;
+import javax.annotation.Nullable;
 
 /**
  * A missing field linkage error.
@@ -25,7 +27,27 @@ import com.google.auto.value.AutoValue;
 abstract class LinkageErrorMissingField {
   abstract FieldSymbolReference getReference();
 
-  static LinkageErrorMissingField errorAt(FieldSymbolReference reference) {
-    return new AutoValue_LinkageErrorMissingField(reference);
+  /**
+   * Returns the location of the target class in the field reference; null if the target class is
+   * not found in the class path.
+   */
+  @Nullable
+  abstract URL getTargetClassLocation();
+
+  static LinkageErrorMissingField errorAt(
+      FieldSymbolReference reference, @Nullable URL targetClassLocation) {
+    return new AutoValue_LinkageErrorMissingField(reference, targetClassLocation);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(getReference());
+    if (getTargetClassLocation() != null) {
+      builder.append(", target class from " + getTargetClassLocation());
+    } else {
+      builder.append(", target class location not found");
+    }
+    return builder.toString();
   }
 }

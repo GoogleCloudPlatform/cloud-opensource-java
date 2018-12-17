@@ -16,21 +16,25 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class LinkageErrorMissingFieldTest {
+public class LinkageErrorMissingFieldTest{
   @Test
-  public void testCreation() {
+  public void testCreation() throws MalformedURLException {
     FieldSymbolReference fieldSymbolReference =
         FieldSymbolReference.builder()
             .setTargetClassName("ClassC")
             .setFieldName("fieldX")
             .setSourceClassName("ClassD")
             .build();
+    URL targetClassLocation = new URL("file://foo/bar");
     LinkageErrorMissingField linkageErrorMissingField =
-        LinkageErrorMissingField.errorAt(fieldSymbolReference);
+        LinkageErrorMissingField.errorAt(fieldSymbolReference, targetClassLocation);
 
     Assert.assertEquals(fieldSymbolReference, linkageErrorMissingField.getReference());
+    Assert.assertEquals(targetClassLocation, linkageErrorMissingField.getTargetClassLocation());
   }
 }

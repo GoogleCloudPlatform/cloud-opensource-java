@@ -64,7 +64,7 @@ public class StaticLinkageCheckReportTest {
             .setSourceClassName("ClassD")
             .build();
     LinkageErrorMissingField linkageErrorMissingField =
-        LinkageErrorMissingField.errorAt(fieldSymbolReference);
+        LinkageErrorMissingField.errorAt(fieldSymbolReference, null);
     ImmutableList<LinkageErrorMissingField> missingFieldErrors =
         ImmutableList.of(linkageErrorMissingField);
 
