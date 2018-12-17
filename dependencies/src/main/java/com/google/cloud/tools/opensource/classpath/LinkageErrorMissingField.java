@@ -38,4 +38,16 @@ abstract class LinkageErrorMissingField {
       FieldSymbolReference reference, @Nullable URL targetClassLocation) {
     return new AutoValue_LinkageErrorMissingField(reference, targetClassLocation);
   }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(getReference());
+    if (getTargetClassLocation() != null) {
+      builder.append(", target class from " + getTargetClassLocation());
+    } else {
+      builder.append(", target class location not found");
+    }
+    return builder.toString();
+  }
 }

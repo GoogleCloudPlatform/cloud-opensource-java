@@ -277,7 +277,7 @@ class ClassDumper {
 
   /** Returns the jar file URL of a class in the class path. */
   URL findClassLocation(String className) throws ClassNotFoundException {
-    Class<?> clazz = this.loadClass(className);
+    Class<?> clazz = loadClass(className);
     return clazz.getProtectionDomain().getCodeSource().getLocation();
   }
 
