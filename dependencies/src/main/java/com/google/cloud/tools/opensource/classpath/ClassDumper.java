@@ -275,7 +275,7 @@ class ClassDumper {
     return parameterTypes;
   }
 
-  /** Returns the location of the implementation of a class as a URL in the class path. */
+  /** Returns the location of a class as a URL in the class path. */
   URL findClassLocation(String className) throws ClassNotFoundException {
     Class<?> clazz = this.loadClass(className);
     return clazz.getProtectionDomain().getCodeSource().getLocation();
