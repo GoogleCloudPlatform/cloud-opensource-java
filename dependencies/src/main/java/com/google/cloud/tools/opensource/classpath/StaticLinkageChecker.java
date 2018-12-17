@@ -18,24 +18,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import java.io.IOException;
-import java.lang.reflect.Array;
-import java.net.URL;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.logging.Logger;
-
-import org.apache.bcel.classfile.Field;
-import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.classfile.Method;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.ParseException;
-import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.artifact.Artifact;
-
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -47,6 +29,22 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.net.URL;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.logging.Logger;
+import org.apache.bcel.classfile.JavaClass;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.ParseException;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 
 /**
  * A tool to find static linkage errors for a class path.
@@ -67,8 +65,8 @@ public class StaticLinkageChecker {
   }
   
   public static StaticLinkageChecker create(boolean onlyReachable,
-      LinkedListMultimap<Path, DependencyPath> paths, ImmutableSet<Path> entryPoints) 
-          throws ClassNotFoundException, IOException {
+      LinkedListMultimap<Path, DependencyPath> paths, ImmutableSet<Path> entryPoints)
+      throws IOException {
     List<Path> jarFilePaths = new ArrayList<>(paths.keySet());
     ClassDumper dumper = ClassDumper.create(jarFilePaths);
     return new StaticLinkageChecker(onlyReachable, dumper, entryPoints, paths);
@@ -262,21 +260,11 @@ public class StaticLinkageChecker {
   private Optional<LinkageErrorMissingField> checkLinkageErrorAt(FieldSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     String fieldName = reference.getFieldName();
+    if (findLink(targetClassName, JavaClass::getFields,
+        field -> field.getName().equals(fieldName))) {
+      return Optional.empty();
+    }
     try {
-      JavaClass javaClass = classDumper.loadJavaClass(targetClassName);
-      while (javaClass != null) {
-        Field[] fields = javaClass.getFields();
-        for (Field fieldInJavaClass : fields) {
-          String fieldNameInJavaClass = fieldInJavaClass.getName();
-          if (fieldNameInJavaClass.equals(fieldName)) {
-            // The field is found. Returning no error.
-            return Optional.empty();
-          }
-        }
-        // java.lang.Object's super class is null
-        javaClass = javaClass.getSuperClass();
-      }
-
       // The field was not found in the class from the classpath. The location of the target class
       // will be the first thing to check for investigating the reason.
       URL classFileUrl = classDumper.findClassLocation(targetClassName);
@@ -317,25 +305,33 @@ public class StaticLinkageChecker {
   private boolean validateMethodReferenceByBcelRepository(MethodSymbolReference methodReference) {
     String className = methodReference.getTargetClassName();
     String methodName = methodReference.getMethodName();
+    return findLink(className, JavaClass::getMethods,
+        method -> method.getName().equals(methodName) && method.getSignature()
+            .equals(methodReference.getDescriptor()));
+  }
+
+  /**
+   * Returns {@code true} if the target class or a superclass contains a candidate member that
+   * matches a predicate.
+   */
+  private <T> boolean findLink(String targetClassName, Function<JavaClass, T[]> candidatesFunction,
+      Predicate<T> predicate) {
     try {
-      JavaClass javaClass = classDumper.loadJavaClass(className);
+      JavaClass javaClass = classDumper.loadJavaClass(targetClassName);
       while (javaClass != null) {
-        Method[] methods = javaClass.getMethods();
-        for (Method methodInJavaClass : methods) {
-          String methodNameInJavaClass = methodInJavaClass.getName();
-          String descriptorInJavaClass = methodInJavaClass.getSignature();
-          if (methodNameInJavaClass.equals(methodName)
-              && descriptorInJavaClass.equals(methodReference.getDescriptor())) {
+        T[] values = candidatesFunction.apply(javaClass);
+        for (T value : values) {
+          if (predicate.test(value)) {
             return true;
           }
         }
-        // null if java.lang.Object
+        // java.lang.Object's super class is null
         javaClass = javaClass.getSuperClass();
       }
-      return false;
     } catch (ClassNotFoundException ex) {
-      return false;
+      // fall through
     }
+    return false;
   }
 
   /**
