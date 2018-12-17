@@ -75,6 +75,11 @@ public abstract class JarLinkageReport {
     }
     for (LinkageErrorMissingField missingField : getMissingFieldErrors()) {
       builder.append(indent + missingField.getReference());
+      if (missingField.getTargetClassLocation() != null) {
+        builder.append(", target class from " + missingField.getTargetClassLocation());
+      } else {
+        builder.append(", target class location not found");
+      }
       builder.append("\n");
     }
     return builder.toString();

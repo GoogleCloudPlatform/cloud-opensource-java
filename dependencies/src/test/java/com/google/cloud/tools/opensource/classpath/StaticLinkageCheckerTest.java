@@ -31,6 +31,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
@@ -224,7 +225,7 @@ public class StaticLinkageCheckerTest {
         FieldSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc")
-            .setFieldName("SERVICE_NAME") // valid
+            .setFieldName("SERVICE_NAME") // valid in grpc-google-cloud-firestore-v1beta1-0.28.0
             .build();
     ImmutableList<FieldSymbolReference> fieldReferences = ImmutableList.of(validFieldReference);
     SymbolReferenceSet symbolReferenceSet =
@@ -251,7 +252,7 @@ public class StaticLinkageCheckerTest {
         FieldSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc")
-            .setFieldName("DUMMY_FIELD") // non-existent
+            .setFieldName("DUMMY_FIELD") // non-existent as of version 0.28.0
             .build();
     ImmutableList<FieldSymbolReference> fieldReferences = ImmutableList.of(invalidFieldReference);
     SymbolReferenceSet symbolReferenceSet =
@@ -266,6 +267,9 @@ public class StaticLinkageCheckerTest {
     Truth.assertThat(jarLinkageReport.getMissingFieldErrors()).hasSize(1);
     Truth.assertThat(jarLinkageReport.getMissingFieldErrors().get(0).getReference().getFieldName())
         .isEqualTo("DUMMY_FIELD");
+    Truth.assertWithMessage("Missing field error should carry the target class location")
+        .that(jarLinkageReport.getMissingFieldErrors().get(0).getTargetClassLocation().getFile())
+        .endsWith("grpc-google-cloud-firestore-v1beta1-0.28.0.jar");
   }
 
   @Test

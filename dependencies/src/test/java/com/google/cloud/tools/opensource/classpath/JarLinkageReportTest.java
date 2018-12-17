@@ -60,7 +60,7 @@ public class JarLinkageReportTest {
             .setSourceClassName("ClassD")
             .build();
     LinkageErrorMissingField linkageErrorMissingField =
-        LinkageErrorMissingField.errorAt(fieldSymbolReference);
+        LinkageErrorMissingField.errorAt(fieldSymbolReference, null);
     missingFieldErrors = ImmutableList.of(linkageErrorMissingField);
     jarLinkageReport =
         JarLinkageReport.builder()

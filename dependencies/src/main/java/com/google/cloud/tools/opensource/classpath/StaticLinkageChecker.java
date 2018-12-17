@@ -20,6 +20,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -259,10 +260,30 @@ public class StaticLinkageChecker {
    * Optional}.
    */
   private Optional<LinkageErrorMissingField> checkLinkageErrorAt(FieldSymbolReference reference) {
-    if (validateFieldReference(reference)) {
-      return Optional.empty();
+    String targetClassName = reference.getTargetClassName();
+    String fieldName = reference.getFieldName();
+    try {
+      JavaClass javaClass = classDumper.loadJavaClass(targetClassName);
+      while (javaClass != null) {
+        Field[] fields = javaClass.getFields();
+        for (Field fieldInJavaClass : fields) {
+          String fieldNameInJavaClass = fieldInJavaClass.getName();
+          if (fieldNameInJavaClass.equals(fieldName)) {
+            // The field is found. Returning no error.
+            return Optional.empty();
+          }
+        }
+        // java.lang.Object's super class is null
+        javaClass = javaClass.getSuperClass();
+      }
+
+      // The field was not found in the class from the classpath. The location of the target class
+      // will be the first thing to check for investigating the reason.
+      URL classFileUrl = classDumper.findClassLocation(targetClassName);
+      return Optional.of(LinkageErrorMissingField.errorAt(reference, classFileUrl));
+    } catch (ClassNotFoundException ex) {
+      return Optional.of(LinkageErrorMissingField.errorAt(reference, null));
     }
-    return Optional.of(LinkageErrorMissingField.errorAt(reference));
   }
 
   /**
@@ -318,31 +339,6 @@ public class StaticLinkageChecker {
   }
 
   /**
-   * Returns true if the field reference has a valid referent in the classpath via BCEL API.
-   */
-  private boolean validateFieldReferenceByBcelRepository(FieldSymbolReference fieldReference) {
-    String className = fieldReference.getTargetClassName();
-    String fieldName = fieldReference.getFieldName();
-    try {
-      JavaClass javaClass = classDumper.loadJavaClass(className);
-      while (javaClass != null) {
-        Field[] fields = javaClass.getFields();
-        for (Field fieldInJavaClass : fields) {
-          String methodNameInJavaClass = fieldInJavaClass.getName();
-          if (methodNameInJavaClass.equals(fieldName)) {
-            return true;
-          }
-        }
-        // null if java.lang.Object
-        javaClass = javaClass.getSuperClass();
-      }
-      return false;
-    } catch (ClassNotFoundException ex) {
-      return false;
-    }
-  }
-
-  /**
    * Returns true if the method reference has a valid referent in the classpath.
    */
   private boolean validateMethodReference(MethodSymbolReference methodReference) {
@@ -357,10 +353,4 @@ public class StaticLinkageChecker {
         || validateMethodReferenceByClassLoader(methodReference);
   }
 
-  /**
-   * Returns true if the field reference has a valid referent in the classpath.
-   */
-  private boolean validateFieldReference(FieldSymbolReference fieldReference) {
-    return validateFieldReferenceByBcelRepository(fieldReference);
-  }
 }
