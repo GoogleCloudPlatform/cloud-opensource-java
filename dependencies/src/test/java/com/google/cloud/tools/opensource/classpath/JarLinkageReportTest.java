@@ -101,7 +101,7 @@ public class JarLinkageReportTest {
     Assert.assertEquals("c (3 errors):\n" + 
         "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA}\n" + 
         "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, methodName=methodX, descriptor=java.lang.String}\n" + 
-        "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, fieldName=fieldX}\n" + 
+        "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, fieldName=fieldX}, target class location not found\n" +
         "", jarLinkageReport.toString());
   }
 
