@@ -42,7 +42,7 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>dependency-lister</artifactId>
+      <artifactId>dependency-tools</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

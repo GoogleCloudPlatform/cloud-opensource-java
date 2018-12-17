@@ -29,7 +29,7 @@
 
   <modules>
     <module>boms</module>
-    <module>dependencies</module>
+    <module>dependency-tools</module>
     <module>dashboard</module>
   </modules>
 
