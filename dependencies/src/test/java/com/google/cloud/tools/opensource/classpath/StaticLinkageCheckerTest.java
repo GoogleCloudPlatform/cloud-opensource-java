@@ -214,7 +214,7 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testFindInvaildReferences_validField() throws IOException, URISyntaxException {
+  public void testFindInvalidReferences_validField() throws IOException, URISyntaxException {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
@@ -241,7 +241,7 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testFindInvaildReferences_nonExistentField() throws IOException, URISyntaxException {
+  public void testFindInvalidReferences_nonExistentField() throws IOException, URISyntaxException {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));

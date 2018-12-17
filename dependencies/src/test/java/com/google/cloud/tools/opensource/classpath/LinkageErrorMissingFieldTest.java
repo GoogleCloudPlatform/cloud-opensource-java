@@ -16,13 +16,14 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class LinkageErrorMissingFieldTest{
   @Test
-  public void testCreation() throws Exception {
+  public void testCreation() throws MalformedURLException {
     FieldSymbolReference fieldSymbolReference =
         FieldSymbolReference.builder()
             .setTargetClassName("ClassC")
