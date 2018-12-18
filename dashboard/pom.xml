@@ -88,7 +88,7 @@
           <configuration>
             <!-- To avoid ForkedBooter loading issue -->
             <useSystemClassLoader>false</useSystemClassLoader>
-            <argLine>-Xms128m -Xmx1024m</argLine>
+            <argLine>-Xms128m -Xmx2048m</argLine>
           </configuration>
         </plugin>
     </plugins>
