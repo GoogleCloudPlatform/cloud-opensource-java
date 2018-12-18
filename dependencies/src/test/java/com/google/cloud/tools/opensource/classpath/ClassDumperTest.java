@@ -115,7 +115,7 @@ public class ClassDumperTest {
 
   @Test
   public void testScanSymbolTableFromJar()
-      throws URISyntaxException, IOException, ClassNotFoundException {
+      throws URISyntaxException, IOException {
     URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
 
     SymbolReferenceSet symbolReferenceSet =
@@ -138,5 +138,16 @@ public class ClassDumperTest {
             .setDescriptor("(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;")
             .build();
     Truth.assertThat(actualMethodReferences).contains(expectedMethodReference);
+
+    Set<ClassSymbolReference> actualClassReferences = symbolReferenceSet.getClassReferences();
+    Truth.assertThat(actualClassReferences).isNotEmpty();
+    Truth.assertWithMessage("Class reference should have binary names defined in JLS 13.1")
+        .that(actualClassReferences)
+        .contains(
+            ClassSymbolReference.builder()
+                .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
+                .setTargetClassName(
+                    "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreMethodDescriptorSupplier")
+                .build());
   }
 }

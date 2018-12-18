@@ -228,15 +228,21 @@ public class StaticLinkageChecker {
 
     reportBuilder.setMissingFieldErrors(
         symbolReferenceSet.getFieldReferences()
-        .stream()
-        .filter(reference-> !classesDefinedInJar.contains(reference.getTargetClassName()))
-        .map(this::checkLinkageErrorAt)
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .collect(toImmutableList()));
+            .stream()
+            .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
+            .map(this::checkLinkageErrorAt)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(toImmutableList()));
 
-    // TODO(#243): implement validation for class
-    reportBuilder.setMissingClassErrors(ImmutableList.of());
+    reportBuilder.setMissingClassErrors(
+        symbolReferenceSet.getClassReferences()
+            .stream()
+            .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
+            .map(this::checkLinkageErrorAt)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(toImmutableList()));
 
     return reportBuilder.build();
   }
@@ -276,6 +282,21 @@ public class StaticLinkageChecker {
       return Optional.of(LinkageErrorMissingField.errorAt(reference, classFileUrl));
     } catch (ClassNotFoundException ex) {
       return Optional.of(LinkageErrorMissingField.errorAt(reference, null));
+    }
+  }
+
+  /**
+   * Returns an {@code Optional} describing the linkage error for the class reference if the
+   * reference does not have a valid referent in the input class path; otherwise an empty {@code
+   * Optional}.
+   */
+  private Optional<LinkageErrorMissingClass> checkLinkageErrorAt(ClassSymbolReference reference) {
+    String targetClassName = reference.getTargetClassName();
+    try {
+      classDumper.loadJavaClass(targetClassName);
+      return Optional.empty();
+    } catch (ClassNotFoundException ex) {
+      return Optional.of(LinkageErrorMissingClass.errorAt(reference));
     }
   }
 
