@@ -38,6 +38,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.JavaClass;
@@ -217,34 +219,39 @@ public class StaticLinkageChecker {
     ImmutableSet<String> classesDefinedInJar = classDumper.classesDefinedInJar(jarPath);
 
     reportBuilder.setMissingMethodErrors(
-        symbolReferenceSet
-            .getMethodReferences()
-            .stream()
-            .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
-            .map(this::checkLinkageErrorAt)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .collect(toImmutableList()));
+        errorsFromSymbolReferences(
+            symbolReferenceSet.getMethodReferences(),
+            classesDefinedInJar,
+            this::checkLinkageErrorMissingMethodAt));
 
     reportBuilder.setMissingFieldErrors(
-        symbolReferenceSet.getFieldReferences()
-            .stream()
-            .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
-            .map(this::checkLinkageErrorAt)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .collect(toImmutableList()));
+        errorsFromSymbolReferences(
+            symbolReferenceSet.getFieldReferences(),
+            classesDefinedInJar,
+            this::checkLinkageErrorMissingFieldAt));
 
     reportBuilder.setMissingClassErrors(
-        symbolReferenceSet.getClassReferences()
-            .stream()
-            .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
-            .map(this::checkLinkageErrorAt)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .collect(toImmutableList()));
+        errorsFromSymbolReferences(
+            symbolReferenceSet.getClassReferences(),
+            classesDefinedInJar,
+            this::checkLinkageErrorMissingClassAt));
 
     return reportBuilder.build();
+  }
+
+  private static <R extends SymbolReference, C> ImmutableList<C> errorsFromSymbolReferences(
+      Set<R> symbolReferences,
+      Set<String> classesDefinedInJar,
+      Function<R, Optional<C>> checkFunction) {
+    ImmutableList<C> linkageErrors =
+        symbolReferences
+            .stream()
+            .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
+            .map(checkFunction)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(toImmutableList());
+    return linkageErrors;
   }
 
   /**
@@ -252,7 +259,8 @@ public class StaticLinkageChecker {
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
    */
-  private Optional<LinkageErrorMissingMethod> checkLinkageErrorAt(MethodSymbolReference reference) {
+  private Optional<LinkageErrorMissingMethod> checkLinkageErrorMissingMethodAt(
+      MethodSymbolReference reference) {
     if (validateMethodReference(reference)) {
       return Optional.empty();
     }
@@ -264,7 +272,8 @@ public class StaticLinkageChecker {
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
    */
-  private Optional<LinkageErrorMissingField> checkLinkageErrorAt(FieldSymbolReference reference) {
+  private Optional<LinkageErrorMissingField> checkLinkageErrorMissingFieldAt(
+      FieldSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     String fieldName = reference.getFieldName();
     for (JavaClass javaClass : getClassAndSuperClasses(targetClassName)) {
@@ -290,7 +299,8 @@ public class StaticLinkageChecker {
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
    */
-  private Optional<LinkageErrorMissingClass> checkLinkageErrorAt(ClassSymbolReference reference) {
+  private Optional<LinkageErrorMissingClass> checkLinkageErrorMissingClassAt(
+      ClassSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     try {
       classDumper.loadJavaClass(targetClassName);

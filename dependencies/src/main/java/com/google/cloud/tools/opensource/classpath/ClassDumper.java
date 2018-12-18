@@ -179,9 +179,12 @@ class ClassDumper {
           break;
         case Const.CONSTANT_Class:
           ConstantClass constantClass = (ConstantClass) constant;
-          classReferences.add(
-              constantToClassReference(constantClass, constantPool, sourceClassName)
-          );
+          ClassSymbolReference classSymbolReference =
+              constantToClassReference(constantClass, constantPool, sourceClassName);
+          // skip array class because it is provided by runtime
+          if (!classSymbolReference.getTargetClassName().startsWith("[")) {
+            classReferences.add(classSymbolReference);
+          }
           break;
         default:
           break;
