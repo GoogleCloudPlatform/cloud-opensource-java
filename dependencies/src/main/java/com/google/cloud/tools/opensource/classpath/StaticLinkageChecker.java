@@ -352,7 +352,8 @@ public class StaticLinkageChecker {
       Traverser.forTree(
           javaClass -> {
             try {
-              return ImmutableSet.of(javaClass.getSuperClass());
+              JavaClass superClass = javaClass.getSuperClass();
+              return superClass == null ? ImmutableSet.of() : ImmutableSet.of(superClass);
             } catch (ClassNotFoundException e) {
               return ImmutableSet.of();
             }
