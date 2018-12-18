@@ -18,24 +18,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import java.io.IOException;
-import java.lang.reflect.Array;
-import java.net.URL;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.logging.Logger;
-
-import org.apache.bcel.classfile.Field;
-import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.classfile.Method;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.ParseException;
-import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.artifact.Artifact;
-
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -47,6 +29,23 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.graph.Traverser;
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.net.URL;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.logging.Logger;
+import org.apache.bcel.classfile.Field;
+import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.Method;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.ParseException;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 
 /**
  * A tool to find static linkage errors for a class path.
@@ -67,8 +66,8 @@ public class StaticLinkageChecker {
   }
   
   public static StaticLinkageChecker create(boolean onlyReachable,
-      LinkedListMultimap<Path, DependencyPath> paths, ImmutableSet<Path> entryPoints) 
-          throws ClassNotFoundException, IOException {
+      LinkedListMultimap<Path, DependencyPath> paths, ImmutableSet<Path> entryPoints)
+      throws IOException {
     List<Path> jarFilePaths = new ArrayList<>(paths.keySet());
     ClassDumper dumper = ClassDumper.create(jarFilePaths);
     return new StaticLinkageChecker(onlyReachable, dumper, entryPoints, paths);
@@ -262,21 +261,15 @@ public class StaticLinkageChecker {
   private Optional<LinkageErrorMissingField> checkLinkageErrorAt(FieldSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     String fieldName = reference.getFieldName();
-    try {
-      JavaClass javaClass = classDumper.loadJavaClass(targetClassName);
-      while (javaClass != null) {
-        Field[] fields = javaClass.getFields();
-        for (Field fieldInJavaClass : fields) {
-          String fieldNameInJavaClass = fieldInJavaClass.getName();
-          if (fieldNameInJavaClass.equals(fieldName)) {
-            // The field is found. Returning no error.
-            return Optional.empty();
-          }
+    for (JavaClass javaClass : getClassAndSuperClasses(targetClassName)) {
+      for (Field field : javaClass.getFields()) {
+        if (field.getName().equals(fieldName)) {
+          // The field is found. Returning no error.
+          return Optional.empty();
         }
-        // java.lang.Object's super class is null
-        javaClass = javaClass.getSuperClass();
       }
-
+    }
+    try {
       // The field was not found in the class from the classpath. The location of the target class
       // will be the first thing to check for investigating the reason.
       URL classFileUrl = classDumper.findClassLocation(targetClassName);
@@ -317,25 +310,15 @@ public class StaticLinkageChecker {
   private boolean validateMethodReferenceByBcelRepository(MethodSymbolReference methodReference) {
     String className = methodReference.getTargetClassName();
     String methodName = methodReference.getMethodName();
-    try {
-      JavaClass javaClass = classDumper.loadJavaClass(className);
-      while (javaClass != null) {
-        Method[] methods = javaClass.getMethods();
-        for (Method methodInJavaClass : methods) {
-          String methodNameInJavaClass = methodInJavaClass.getName();
-          String descriptorInJavaClass = methodInJavaClass.getSignature();
-          if (methodNameInJavaClass.equals(methodName)
-              && descriptorInJavaClass.equals(methodReference.getDescriptor())) {
-            return true;
-          }
+    for (JavaClass javaClass : getClassAndSuperClasses(className)) {
+      for (Method method : javaClass.getMethods()) {
+        if (method.getName().equals(methodName)
+            && method.getSignature().equals(methodReference.getDescriptor())) {
+          return true;
         }
-        // null if java.lang.Object
-        javaClass = javaClass.getSuperClass();
       }
-      return false;
-    } catch (ClassNotFoundException ex) {
-      return false;
     }
+    return false;
   }
 
   /**
@@ -353,4 +336,26 @@ public class StaticLinkageChecker {
         || validateMethodReferenceByClassLoader(methodReference);
   }
 
+  /**
+   * Returns the target class and its superclasses in order (with {@link Object} last). If any can't
+   * be found, the list stops with the previous one.
+   */
+  private Iterable<JavaClass> getClassAndSuperClasses(String targetClassName) {
+    try {
+      return SUPERCLASSES.breadthFirst(classDumper.loadJavaClass(targetClassName));
+    } catch (ClassNotFoundException ex) {
+      return ImmutableList.of();
+    }
+  }
+
+  private static final Traverser<JavaClass> SUPERCLASSES =
+      Traverser.forTree(
+          javaClass -> {
+            try {
+              JavaClass superClass = javaClass.getSuperClass();
+              return superClass == null ? ImmutableSet.of() : ImmutableSet.of(superClass);
+            } catch (ClassNotFoundException e) {
+              return ImmutableSet.of();
+            }
+          });
 }
