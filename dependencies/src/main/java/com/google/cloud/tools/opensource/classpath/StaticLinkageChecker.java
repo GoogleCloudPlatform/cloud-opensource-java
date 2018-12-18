@@ -264,6 +264,7 @@ public class StaticLinkageChecker {
     for (JavaClass javaClass : getClassAndSuperClasses(targetClassName)) {
       for (Field field : javaClass.getFields()) {
         if (field.getName().equals(fieldName)) {
+          // The field is found. Returning no error.
           return Optional.empty();
         }
       }
