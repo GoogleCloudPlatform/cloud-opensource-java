@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.graph.Traverser;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.URL;
@@ -37,10 +38,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.logging.Logger;
+import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.Method;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
@@ -53,6 +54,16 @@ public class StaticLinkageChecker {
   // TODO(suztomo): enhance scope to include fields and classes. Issue #207
 
   private static final Logger logger = Logger.getLogger(StaticLinkageChecker.class.getName());
+
+  private static final Traverser<JavaClass> SUPERCLASSES =
+      Traverser.forTree(
+          jc -> {
+            try {
+              return ImmutableSet.of(jc.getSuperClass());
+            } catch (ClassNotFoundException e) {
+              return ImmutableSet.of();
+            }
+          });
 
   public static StaticLinkageChecker create(
       boolean onlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
@@ -260,9 +271,12 @@ public class StaticLinkageChecker {
   private Optional<LinkageErrorMissingField> checkLinkageErrorAt(FieldSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     String fieldName = reference.getFieldName();
-    if (findLink(targetClassName, JavaClass::getFields,
-        field -> field.getName().equals(fieldName))) {
-      return Optional.empty();
+    for (JavaClass javaClass : getClassAndSuperClasses(targetClassName)) {
+      for (Field field : javaClass.getFields()) {
+        if (field.getName().equals(fieldName)) {
+          return Optional.empty();
+        }
+      }
     }
     try {
       // The field was not found in the class from the classpath. The location of the target class
@@ -305,33 +319,23 @@ public class StaticLinkageChecker {
   private boolean validateMethodReferenceByBcelRepository(MethodSymbolReference methodReference) {
     String className = methodReference.getTargetClassName();
     String methodName = methodReference.getMethodName();
-    return findLink(className, JavaClass::getMethods,
-        method -> method.getName().equals(methodName) && method.getSignature()
-            .equals(methodReference.getDescriptor()));
-  }
-
-  /**
-   * Returns {@code true} if the target class or a superclass contains a candidate member that
-   * matches a predicate.
-   */
-  private <T> boolean findLink(String targetClassName, Function<JavaClass, T[]> candidatesFunction,
-      Predicate<T> predicate) {
-    try {
-      JavaClass javaClass = classDumper.loadJavaClass(targetClassName);
-      while (javaClass != null) {
-        T[] values = candidatesFunction.apply(javaClass);
-        for (T value : values) {
-          if (predicate.test(value)) {
-            return true;
-          }
+    for (JavaClass javaClass : getClassAndSuperClasses(className)) {
+      for (Method method : javaClass.getMethods()) {
+        if (method.getName().equals(methodName)
+            && method.getSignature().equals(methodReference.getDescriptor())) {
+          return true;
         }
-        // java.lang.Object's super class is null
-        javaClass = javaClass.getSuperClass();
       }
-    } catch (ClassNotFoundException ex) {
-      // fall through
     }
     return false;
+  }
+
+  private Iterable<JavaClass> getClassAndSuperClasses(String targetClassName) {
+    try {
+      return SUPERCLASSES.breadthFirst(classDumper.loadJavaClass(targetClassName));
+    } catch (ClassNotFoundException ex) {
+      return ImmutableList.of();
+    }
   }
 
   /**
