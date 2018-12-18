@@ -55,16 +55,6 @@ public class StaticLinkageChecker {
 
   private static final Logger logger = Logger.getLogger(StaticLinkageChecker.class.getName());
 
-  private static final Traverser<JavaClass> SUPERCLASSES =
-      Traverser.forTree(
-          jc -> {
-            try {
-              return ImmutableSet.of(jc.getSuperClass());
-            } catch (ClassNotFoundException e) {
-              return ImmutableSet.of();
-            }
-          });
-
   public static StaticLinkageChecker create(
       boolean onlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
       throws IOException {
@@ -330,14 +320,6 @@ public class StaticLinkageChecker {
     return false;
   }
 
-  private Iterable<JavaClass> getClassAndSuperClasses(String targetClassName) {
-    try {
-      return SUPERCLASSES.breadthFirst(classDumper.loadJavaClass(targetClassName));
-    } catch (ClassNotFoundException ex) {
-      return ImmutableList.of();
-    }
-  }
-
   /**
    * Returns true if the method reference has a valid referent in the classpath.
    */
@@ -353,4 +335,25 @@ public class StaticLinkageChecker {
         || validateMethodReferenceByClassLoader(methodReference);
   }
 
+  /**
+   * Returns the target class and its superclasses in order (with {@link Object} last). If any can't
+   * be found, the list stops with the previous one.
+   */
+  private Iterable<JavaClass> getClassAndSuperClasses(String targetClassName) {
+    try {
+      return SUPERCLASSES.breadthFirst(classDumper.loadJavaClass(targetClassName));
+    } catch (ClassNotFoundException ex) {
+      return ImmutableList.of();
+    }
+  }
+
+  private static final Traverser<JavaClass> SUPERCLASSES =
+      Traverser.forTree(
+          javaClass -> {
+            try {
+              return ImmutableSet.of(javaClass.getSuperClass());
+            } catch (ClassNotFoundException e) {
+              return ImmutableSet.of();
+            }
+          });
 }
