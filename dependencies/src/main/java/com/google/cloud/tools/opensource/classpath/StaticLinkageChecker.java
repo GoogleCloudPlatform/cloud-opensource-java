@@ -218,6 +218,12 @@ public class StaticLinkageChecker {
     // defined in the same jar file, this validation excludes reference within the same jar file.
     ImmutableSet<String> classesDefinedInJar = classDumper.classesDefinedInJar(jarPath);
 
+    reportBuilder.setMissingClassErrors(
+        errorsFromSymbolReferences(
+            symbolReferenceSet.getClassReferences(),
+            classesDefinedInJar,
+            this::checkLinkageErrorMissingClassAt));
+
     reportBuilder.setMissingMethodErrors(
         errorsFromSymbolReferences(
             symbolReferenceSet.getMethodReferences(),
@@ -229,12 +235,6 @@ public class StaticLinkageChecker {
             symbolReferenceSet.getFieldReferences(),
             classesDefinedInJar,
             this::checkLinkageErrorMissingFieldAt));
-
-    reportBuilder.setMissingClassErrors(
-        errorsFromSymbolReferences(
-            symbolReferenceSet.getClassReferences(),
-            classesDefinedInJar,
-            this::checkLinkageErrorMissingClassAt));
 
     return reportBuilder.build();
   }
