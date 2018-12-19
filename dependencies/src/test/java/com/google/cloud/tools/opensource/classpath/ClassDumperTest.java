@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +41,20 @@ public class ClassDumperTest {
   // this project (cloud-opensource-java) doesn't have dependency for Cloud Firestore
   private static final String EXAMPLE_CLASS_FILE =
       "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0_FirestoreGrpc.class";
+
+  private static final Correspondence<SymbolReference, String> SYMBOL_REFERENCE_TARGET_CLASS_NAME =
+      new Correspondence<SymbolReference, String>() {
+        @Override
+        public boolean compare(SymbolReference actual, String expected) {
+          return actual.getTargetClassName().equals(expected);
+        }
+
+        @Override
+        public String toString() {
+          return "has target class name equal to";
+        }
+      };
+
   private InputStream classFileInputStream;
 
   @Before
@@ -115,7 +130,7 @@ public class ClassDumperTest {
 
   @Test
   public void testScanSymbolTableFromJar()
-      throws URISyntaxException, IOException, ClassNotFoundException {
+      throws URISyntaxException, IOException {
     URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
 
     SymbolReferenceSet symbolReferenceSet =
@@ -138,5 +153,32 @@ public class ClassDumperTest {
             .setDescriptor("(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;")
             .build();
     Truth.assertThat(actualMethodReferences).contains(expectedMethodReference);
+
+    Set<ClassSymbolReference> actualClassReferences = symbolReferenceSet.getClassReferences();
+    Truth.assertThat(actualClassReferences).isNotEmpty();
+    Truth.assertWithMessage("Class reference should have binary names defined in JLS 13.1")
+        .that(actualClassReferences)
+        .contains(
+            ClassSymbolReference.builder()
+                .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
+                .setTargetClassName(
+                    "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreMethodDescriptorSupplier")
+                .build());
+  }
+
+  @Test
+  public void testScanSymbolTableFromJar_shouldNotPickArrayClass()
+      throws URISyntaxException, IOException {
+    URL jarFileUrl = URLClassLoader.getSystemResource("testdata/gax-1.32.0.jar");
+
+    SymbolReferenceSet symbolReferenceSet =
+        ClassDumper.scanSymbolReferencesInJar(Paths.get(jarFileUrl.toURI()));
+
+    Set<ClassSymbolReference> actualClassReferences = symbolReferenceSet.getClassReferences();
+    Truth.assertThat(actualClassReferences).isNotEmpty();
+    Truth.assertWithMessage("Class references should not include array class")
+        .that(actualClassReferences)
+        .comparingElementsUsing(SYMBOL_REFERENCE_TARGET_CLASS_NAME)
+        .doesNotContain("[Ljava.lang.Object;");
   }
 }

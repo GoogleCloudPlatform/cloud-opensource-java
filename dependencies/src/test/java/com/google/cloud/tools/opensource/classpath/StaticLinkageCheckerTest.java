@@ -273,6 +273,64 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
+  public void testFindInvalidClassReferences_nonExistentClass() throws IOException, URISyntaxException {
+    List<Path> paths =
+        ImmutableList.of(
+            absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    String nonExistentClassName = "com.google.firestore.v1beta1.FooBar";
+    ClassSymbolReference invalidClassReference =
+        ClassSymbolReference.builder()
+            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setTargetClassName(nonExistentClassName)
+            .build();
+    ImmutableList<ClassSymbolReference> fieldReferences = ImmutableList.of(invalidClassReference);
+    SymbolReferenceSet symbolReferenceSet =
+        SymbolReferenceSet.builder().setClassReferences(fieldReferences).build();
+
+    JarLinkageReport jarLinkageReport =
+        staticLinkageChecker.generateLinkageReport(
+            absolutePathOfResource("testdata/gax-1.32.0.jar"),
+            symbolReferenceSet,
+            Collections.emptyList());
+
+    Truth.assertThat(jarLinkageReport.getMissingClassErrors()).hasSize(1);
+    Truth.assertThat(
+            jarLinkageReport.getMissingClassErrors().get(0).getReference().getTargetClassName())
+        .isEqualTo(nonExistentClassName);
+  }
+
+  @Test
+  public void testFindClassReferences_innerClass() throws IOException, URISyntaxException {
+    List<Path> paths =
+        ImmutableList.of(
+            absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    ClassSymbolReference invalidClassReference =
+        ClassSymbolReference.builder()
+            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            // This inner class is defined in firestore-v1beta1-0.28.0.jar
+            .setTargetClassName(
+                "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreMethodDescriptorSupplier")
+            .build();
+    ImmutableList<ClassSymbolReference> fieldReferences = ImmutableList.of(invalidClassReference);
+    SymbolReferenceSet symbolReferenceSet =
+        SymbolReferenceSet.builder().setClassReferences(fieldReferences).build();
+
+    JarLinkageReport jarLinkageReport =
+        staticLinkageChecker.generateLinkageReport(
+            absolutePathOfResource("testdata/gax-1.32.0.jar"),
+            symbolReferenceSet,
+            Collections.emptyList());
+
+    Truth.assertThat(jarLinkageReport.getMissingClassErrors()).isEmpty();
+  }
+
+  @Test
   public void testGenerateInputClasspathFromLinkageCheckOption_mavenBom()
       throws RepositoryException, ParseException {
     String bomCoordinates = "com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT";

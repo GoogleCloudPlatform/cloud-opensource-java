@@ -39,10 +39,12 @@ import org.apache.bcel.classfile.Attribute;
 import org.apache.bcel.classfile.ClassFormatException;
 import org.apache.bcel.classfile.Constant;
 import org.apache.bcel.classfile.ConstantCP;
+import org.apache.bcel.classfile.ConstantClass;
 import org.apache.bcel.classfile.ConstantFieldref;
 import org.apache.bcel.classfile.ConstantMethodref;
 import org.apache.bcel.classfile.ConstantNameAndType;
 import org.apache.bcel.classfile.ConstantPool;
+import org.apache.bcel.classfile.ConstantUtf8;
 import org.apache.bcel.classfile.InnerClass;
 import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
@@ -147,14 +149,12 @@ class ClassDumper {
 
   private static SymbolReferenceSet scanSymbolReferencesInClass(JavaClass javaClass) {
     SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
+    ImmutableSet.Builder<ClassSymbolReference> classReferences =
+        symbolTableBuilder.classReferencesBuilder();
     ImmutableSet.Builder<MethodSymbolReference> methodReferences =
         symbolTableBuilder.methodReferencesBuilder();
     ImmutableSet.Builder<FieldSymbolReference> fieldReferences =
         symbolTableBuilder.fieldReferencesBuilder();
-
-    // TODO(suztomo): Read class references (inheritance) from javaClass file
-    ImmutableSet.Builder<ClassSymbolReference> classReferences =
-        symbolTableBuilder.classReferencesBuilder();
 
     String sourceClassName = javaClass.getClassName();
     ConstantPool constantPool = javaClass.getConstantPool();
@@ -165,6 +165,15 @@ class ClassDumper {
       }
       byte constantTag = constant.getTag();
       switch (constantTag) {
+        case Const.CONSTANT_Class:
+          ConstantClass constantClass = (ConstantClass) constant;
+          ClassSymbolReference classSymbolReference =
+              constantToClassReference(constantClass, constantPool, sourceClassName);
+          // skip array class because it is provided by runtime
+          if (!classSymbolReference.getTargetClassName().startsWith("[")) {
+            classReferences.add(classSymbolReference);
+          }
+          break;
         case Const.CONSTANT_Methodref:
           ConstantMethodref constantMethodref = (ConstantMethodref) constant;
           methodReferences.add(
@@ -174,9 +183,6 @@ class ClassDumper {
           ConstantFieldref constantFieldref = (ConstantFieldref) constant;
           fieldReferences.add(
               constantToFieldReference(constantFieldref, constantPool, sourceClassName));
-          break;
-        case Const.CONSTANT_Class:
-          // TODO(suztomo): handle class reference
           break;
         default:
           break;
@@ -200,6 +206,30 @@ class ClassDumper {
               + constantAtNameAndTypeIndex);
     }
     return (ConstantNameAndType) constantAtNameAndTypeIndex;
+  }
+
+  private static ClassSymbolReference constantToClassReference(
+      ConstantClass constantClass, ConstantPool constantPool, String sourceClassName) {
+    int nameIndex = constantClass.getNameIndex();
+    Constant classNameConstant = constantPool.getConstant(nameIndex);
+    if (!(classNameConstant instanceof ConstantUtf8)) {
+      // This constant_pool entry must be a CONSTANT_Utf8_info
+      // as specified https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4.1
+      throw new ClassFormatException(
+          "Failed to lookup ConstantUtf8 constant indexed at "
+              + nameIndex
+              + ". However, the content is not ConstantUtf8. It is "
+              + classNameConstant);
+    }
+    ConstantUtf8 classNameConstantUtf8 = (ConstantUtf8)classNameConstant;
+    // classNameConstantUtf8 has internal form of class names that uses '.' to separate identifiers
+    String targetClassNameInternalForm = classNameConstantUtf8.getBytes();
+    // Adjust the internal form to comply with binary names defined in JLS 13.1
+    String targetClassName = targetClassNameInternalForm.replace('/', '.');
+    ClassSymbolReference classReference = ClassSymbolReference.builder()
+        .setSourceClassName(sourceClassName)
+        .setTargetClassName(targetClassName).build();
+    return classReference;
   }
 
   private static MethodSymbolReference constantToMethodReference(
