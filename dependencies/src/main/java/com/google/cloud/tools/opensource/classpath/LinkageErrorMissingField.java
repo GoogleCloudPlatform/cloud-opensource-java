@@ -24,25 +24,26 @@ import javax.annotation.Nullable;
  * A missing field linkage error.
  */
 @AutoValue
-abstract class LinkageErrorMissingField {
+abstract class LinkageErrorMissingField implements LinkageErrorWithReason {
   abstract FieldSymbolReference getReference();
 
-  /**
-   * Returns the location of the target class in the field reference; null if the target class is
-   * not found in the class path.
-   */
-  @Nullable
-  abstract URL getTargetClassLocation();
+  static LinkageErrorMissingField errorMissingTargetClass(
+      FieldSymbolReference reference) {
+    return new AutoValue_LinkageErrorMissingField(null,
+        Reason.TARGET_CLASS_NOT_FOUND, reference);
+  }
 
-  static LinkageErrorMissingField errorAt(
-      FieldSymbolReference reference, @Nullable URL targetClassLocation) {
-    return new AutoValue_LinkageErrorMissingField(reference, targetClassLocation);
+  static LinkageErrorMissingField errorMissingField(
+      FieldSymbolReference reference, URL targetClassLocation) {
+    return new AutoValue_LinkageErrorMissingField(targetClassLocation, Reason.MISSING_MEMBER,
+        reference);
   }
 
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
     builder.append(getReference());
+    builder.append(", reason: " + getReason());
     if (getTargetClassLocation() != null) {
       builder.append(", target class from " + getTargetClassLocation());
     } else {

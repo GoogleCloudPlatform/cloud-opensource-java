@@ -60,7 +60,7 @@ public class JarLinkageReportTest {
             .setSourceClassName("ClassD")
             .build();
     LinkageErrorMissingField linkageErrorMissingField =
-        LinkageErrorMissingField.errorAt(fieldSymbolReference, null);
+        LinkageErrorMissingField.errorMissingTargetClass(fieldSymbolReference);
     missingFieldErrors = ImmutableList.of(linkageErrorMissingField);
     jarLinkageReport =
         JarLinkageReport.builder()
@@ -99,9 +99,9 @@ public class JarLinkageReportTest {
   @Test
   public void testToString() {
     Assert.assertEquals("c (3 errors):\n" + 
-        "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA}\n" + 
+        "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA} reason:TARGET_CLASS_NOT_FOUND\n" +
         "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, methodName=methodX, descriptor=java.lang.String}\n" + 
-        "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, fieldName=fieldX}, target class location not found\n" +
+        "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, fieldName=fieldX}, reason: TARGET_CLASS_NOT_FOUND, target class location not found\n" +
         "", jarLinkageReport.toString());
   }
 

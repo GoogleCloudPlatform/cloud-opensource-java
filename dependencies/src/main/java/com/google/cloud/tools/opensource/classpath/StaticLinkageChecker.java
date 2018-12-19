@@ -288,9 +288,9 @@ public class StaticLinkageChecker {
       // The field was not found in the class from the classpath. The location of the target class
       // will be the first thing to check for investigating the reason.
       URL classFileUrl = classDumper.findClassLocation(targetClassName);
-      return Optional.of(LinkageErrorMissingField.errorAt(reference, classFileUrl));
+      return Optional.of(LinkageErrorMissingField.errorMissingField(reference, classFileUrl));
     } catch (ClassNotFoundException ex) {
-      return Optional.of(LinkageErrorMissingField.errorAt(reference, null));
+      return Optional.of(LinkageErrorMissingField.errorMissingTargetClass(reference));
     }
   }
 
@@ -303,11 +303,42 @@ public class StaticLinkageChecker {
       ClassSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     try {
-      classDumper.loadJavaClass(targetClassName);
+      JavaClass targetClass = classDumper.loadJavaClass(targetClassName);
+      if (!isClassAccessibleFrom(targetClass, reference.getSourceClassName())) {
+        return Optional.of(LinkageErrorMissingClass.errorWithModifierAt(
+            classDumper.findClassLocation(targetClassName), reference));
+      }
       return Optional.empty();
     } catch (ClassNotFoundException ex) {
       return Optional.of(LinkageErrorMissingClass.errorAt(reference));
     }
+  }
+
+  /**
+   * Returns true if the [@code javaClass} is accessible {@code from sourceClassName} in terms of
+   * the access modifiers in the [@code javaClass}.
+   */
+  private static boolean isClassAccessibleFrom(JavaClass javaClass, String sourceClassName) {
+    if (javaClass.isPublic()) {
+      // If a class is public, then it is accessible from anywhere
+      return true;
+    }
+    // Top-level class can only be declared as public or package private while nested-class can be
+    // declared as private or protected as well.
+    // https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-ClassModifier
+    if (javaClass.isPrivate()) {
+      // Class reference within same file is filtered at errorsFromSymbolReferences
+      return false;
+    }
+    if (javaClass.isProtected()) {
+      // If an inner class is protected, it's accessible from within the package
+      // There are other cases where JVM bypass protected access (JLS 6.6.2), but not implementing
+      // due to missing information to follow the specification
+      return ClassDumper.classesInSamePackage(javaClass.getClassName(), sourceClassName);
+    }
+
+    // If a class is without access modifier, then it implicitly has package access (JLS 6.6.1)
+    return ClassDumper.classesInSamePackage(javaClass.getClassName(), sourceClassName);
   }
 
   /**

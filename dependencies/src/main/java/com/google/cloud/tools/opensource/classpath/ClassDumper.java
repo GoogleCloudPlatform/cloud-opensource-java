@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -305,9 +306,15 @@ class ClassDumper {
     return parameterTypes;
   }
 
-  /** Returns the jar file URL of a class in the class path. */
+  /**
+   * Returns the jar file URL of a class in the class path. Null if the information is unavailable.
+   */
   URL findClassLocation(String className) throws ClassNotFoundException {
     Class<?> clazz = loadClass(className);
+    if (clazz.getProtectionDomain().getCodeSource() == null) {
+      // javax.activation.SecuritySupport is known to return null here
+      return null;
+    }
     return clazz.getProtectionDomain().getCodeSource().getLocation();
   }
 
@@ -394,5 +401,15 @@ class ClassDumper {
       }
     }
     return javaClasses.build();
+  }
+
+  static boolean classesInSamePackage(String classNameA, String classNameB) {
+    Preconditions.checkArgument(classNameA.contains("."),
+        "Class name A does not have package");
+    Preconditions.checkArgument(classNameB.contains("."),
+        "Class name B does not have package");
+    String packageNameA = classNameA.substring(0, classNameA.lastIndexOf('.'));
+    String packageNameB = classNameB.substring(0, classNameB.lastIndexOf('.'));
+    return packageNameA.equals(packageNameB);
   }
 }

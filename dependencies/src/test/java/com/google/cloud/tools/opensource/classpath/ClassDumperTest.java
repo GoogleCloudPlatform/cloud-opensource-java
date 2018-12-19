@@ -181,4 +181,11 @@ public class ClassDumperTest {
         .comparingElementsUsing(SYMBOL_REFERENCE_TARGET_CLASS_NAME)
         .doesNotContain("[Ljava.lang.Object;");
   }
+
+  @Test
+  public void testClassesInSamePackage() {
+    Truth.assertThat(ClassDumper.classesInSamePackage("foo.Abc", "bar.Abc")).isFalse();
+    Truth.assertThat(ClassDumper.classesInSamePackage("foo.bar.Abc", "foo.bar.Cde")).isTrue();
+    Truth.assertThat(ClassDumper.classesInSamePackage("foo.bar.Abc$XYZ", "foo.bar.Cde")).isTrue();
+  }
 }
