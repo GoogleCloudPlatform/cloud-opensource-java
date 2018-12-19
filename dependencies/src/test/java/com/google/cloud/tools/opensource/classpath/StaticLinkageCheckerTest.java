@@ -304,7 +304,6 @@ public class StaticLinkageCheckerTest {
     Truth.assertThat(
         jarLinkageReport.getMissingClassErrors().get(0).getReason())
         .isEqualTo(Reason.TARGET_CLASS_NOT_FOUND);
-
   }
 
   @Test

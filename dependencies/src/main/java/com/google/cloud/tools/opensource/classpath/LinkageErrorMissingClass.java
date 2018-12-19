@@ -27,13 +27,29 @@ public abstract class LinkageErrorMissingClass implements LinkageErrorWithReason
 
   public abstract ClassSymbolReference getReference();
 
-  public static LinkageErrorMissingClass errorAt(ClassSymbolReference reference) {
-    return new AutoValue_LinkageErrorMissingClass(null, Reason.TARGET_CLASS_NOT_FOUND, reference);
+  public static LinkageErrorMissingClass errorMissingTargetClass(ClassSymbolReference reference) {
+    return builder().setReference(reference).setReason(Reason.TARGET_CLASS_NOT_FOUND).build();
   }
 
-  public static LinkageErrorMissingClass errorWithModifierAt(URL targetClassLocation,
+  public static LinkageErrorMissingClass errorInvalidModifier(URL targetClassLocation,
       ClassSymbolReference reference) {
-    return new AutoValue_LinkageErrorMissingClass(targetClassLocation,
-        Reason.INVALID_ACCESS_MODIFIER, reference);
+    return builder().setReference(reference).setReason(Reason.INVALID_ACCESS_MODIFIER)
+        .setTargetClassLocation(targetClassLocation).build();
+  }
+
+  private static Builder builder() {
+    return new AutoValue_LinkageErrorMissingClass.Builder();
+  }
+
+  @AutoValue.Builder
+  abstract static class Builder {
+
+    abstract LinkageErrorMissingClass.Builder setTargetClassLocation(URL targetClassLocation);
+
+    abstract LinkageErrorMissingClass.Builder setReason(Reason reason);
+
+    abstract LinkageErrorMissingClass.Builder setReference(ClassSymbolReference reference);
+
+    abstract LinkageErrorMissingClass build();
   }
 }

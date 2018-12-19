@@ -40,7 +40,7 @@ public class StaticLinkageCheckReportTest {
             .setSourceClassName("ClassB")
             .build();
     LinkageErrorMissingClass linkageErrorMissingClass =
-        LinkageErrorMissingClass.errorAt(classSymbolReference);
+        LinkageErrorMissingClass.errorMissingTargetClass(classSymbolReference);
 
     ImmutableList<LinkageErrorMissingClass> linkageErrorMissingClasses =
         ImmutableList.of(linkageErrorMissingClass);

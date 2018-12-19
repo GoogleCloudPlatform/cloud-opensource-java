@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
 import java.net.URL;
-import javax.annotation.Nullable;
 
 /**
  * A missing field linkage error.
@@ -29,14 +28,29 @@ abstract class LinkageErrorMissingField implements LinkageErrorWithReason {
 
   static LinkageErrorMissingField errorMissingTargetClass(
       FieldSymbolReference reference) {
-    return new AutoValue_LinkageErrorMissingField(null,
-        Reason.TARGET_CLASS_NOT_FOUND, reference);
+    return builder().setReference(reference).setReason(Reason.TARGET_CLASS_NOT_FOUND).build();
   }
 
   static LinkageErrorMissingField errorMissingField(
       FieldSymbolReference reference, URL targetClassLocation) {
-    return new AutoValue_LinkageErrorMissingField(targetClassLocation, Reason.MISSING_MEMBER,
-        reference);
+    return builder().setReference(reference).setReason(Reason.MISSING_MEMBER)
+        .setTargetClassLocation(targetClassLocation).build();
+  }
+
+  private static LinkageErrorMissingField.Builder builder() {
+    return new AutoValue_LinkageErrorMissingField.Builder();
+  }
+
+  @AutoValue.Builder
+  abstract static class Builder {
+
+    abstract LinkageErrorMissingField.Builder setTargetClassLocation(URL targetClassLocation);
+
+    abstract LinkageErrorMissingField.Builder setReason(Reason reason);
+
+    abstract LinkageErrorMissingField.Builder setReference(FieldSymbolReference reference);
+
+    abstract LinkageErrorMissingField build();
   }
 
   @Override

@@ -39,7 +39,7 @@ public class JarLinkageReportTest {
             .build();
     
     LinkageErrorMissingClass linkageErrorMissingClass =
-        LinkageErrorMissingClass.errorAt(classSymbolReference);
+        LinkageErrorMissingClass.errorMissingTargetClass(classSymbolReference);
     missingClassErrors = ImmutableList.of(linkageErrorMissingClass);
 
     MethodSymbolReference methodSymbolReference =

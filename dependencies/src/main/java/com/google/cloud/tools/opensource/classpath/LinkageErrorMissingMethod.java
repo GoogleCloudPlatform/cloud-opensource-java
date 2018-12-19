@@ -28,4 +28,6 @@ abstract class LinkageErrorMissingMethod {
   static LinkageErrorMissingMethod errorAt(MethodSymbolReference reference) {
     return new AutoValue_LinkageErrorMissingMethod(reference);
   }
+
+  // TODO(#293): Add reason and target class location
 }

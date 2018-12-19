@@ -187,5 +187,6 @@ public class ClassDumperTest {
     Truth.assertThat(ClassDumper.classesInSamePackage("foo.Abc", "bar.Abc")).isFalse();
     Truth.assertThat(ClassDumper.classesInSamePackage("foo.bar.Abc", "foo.bar.Cde")).isTrue();
     Truth.assertThat(ClassDumper.classesInSamePackage("foo.bar.Abc$XYZ", "foo.bar.Cde")).isTrue();
+    Truth.assertThat(ClassDumper.classesInSamePackage("Abc", "Cde")).isTrue();
   }
 }

@@ -403,11 +403,17 @@ class ClassDumper {
     return javaClasses.build();
   }
 
+  /**
+   * Returns true if two class names (binary name JLS 13.1) have the same package.
+   */
   static boolean classesInSamePackage(String classNameA, String classNameB) {
-    Preconditions.checkArgument(classNameA.contains("."),
-        "Class name A does not have package");
-    Preconditions.checkArgument(classNameB.contains("."),
-        "Class name B does not have package");
+    if (classNameA.contains(".") != classNameB.contains(".")) {
+      return false;
+    }
+    if (classNameA.lastIndexOf('.') < 0 && classNameB.lastIndexOf('.') < 0) {
+      return true;
+    }
+    // The conditions above ensure that lastIndexOf returns non-negative number
     String packageNameA = classNameA.substring(0, classNameA.lastIndexOf('.'));
     String packageNameB = classNameB.substring(0, classNameB.lastIndexOf('.'));
     return packageNameA.equals(packageNameB);
