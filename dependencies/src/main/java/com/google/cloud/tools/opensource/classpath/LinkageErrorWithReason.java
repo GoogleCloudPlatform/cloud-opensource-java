@@ -9,8 +9,8 @@ import javax.annotation.Nullable;
 interface LinkageErrorWithReason {
 
   /**
-   * Returns the location of the target class in a symbol reference; null if the target class is
-   * not found in the class path or the source location is unavailable.
+   * Returns the location of the target class in a symbol reference; null if the target class is not
+   * found in the class path or the source location is unavailable.
    */
   @Nullable
   URL getTargetClassLocation();
