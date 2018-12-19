@@ -314,7 +314,8 @@ public class StaticLinkageCheckerTest {
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             // This inner class is defined in firestore-v1beta1-0.28.0.jar
-            .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc$FirestoreMethodDescriptorSupplier")
+            .setTargetClassName(
+                "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreMethodDescriptorSupplier")
             .build();
     ImmutableList<ClassSymbolReference> fieldReferences = ImmutableList.of(invalidClassReference);
     SymbolReferenceSet symbolReferenceSet =
