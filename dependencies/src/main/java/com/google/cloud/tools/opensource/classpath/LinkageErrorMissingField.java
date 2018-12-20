@@ -28,13 +28,16 @@ abstract class LinkageErrorMissingField implements LinkageErrorWithReason {
 
   static LinkageErrorMissingField errorMissingTargetClass(
       FieldSymbolReference reference) {
-    return builder().setReference(reference).setReason(Reason.TARGET_CLASS_NOT_FOUND).build();
+    return builder().setReference(reference).setReason(Reason.CLASS_NOT_FOUND).build();
   }
 
   static LinkageErrorMissingField errorMissingField(
       FieldSymbolReference reference, URL targetClassLocation) {
-    return builder().setReference(reference).setReason(Reason.MISSING_MEMBER)
-        .setTargetClassLocation(targetClassLocation).build();
+    return builder()
+        .setReference(reference)
+        .setReason(Reason.SYMBOL_NOT_FOUND)
+        .setTargetClassLocation(targetClassLocation)
+        .build();
   }
 
   private static LinkageErrorMissingField.Builder builder() {

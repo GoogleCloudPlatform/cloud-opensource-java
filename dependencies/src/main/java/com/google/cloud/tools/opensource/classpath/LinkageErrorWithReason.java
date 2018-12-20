@@ -19,9 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import java.net.URL;
 import javax.annotation.Nullable;
 
-/**
- * Interface to provide common fields for different types of static linkage errors.
- */
+/** Interface to provide common fields for different types of static linkage errors. */
 interface LinkageErrorWithReason {
 
   /**
@@ -31,30 +29,24 @@ interface LinkageErrorWithReason {
   @Nullable
   URL getTargetClassLocation();
 
-  /**
-   * Returns the reason why a symbol reference is marked as a linkage error.
-   */
+  /** Returns the reason why a symbol reference is marked as a linkage error. */
   Reason getReason();
 
-  /**
-   * Reason to distinguish the cause of a static linkage error against a symbol reference.
-   */
+  /** Reason to distinguish the cause of a static linkage error against a symbol reference. */
   enum Reason {
-    /**
-     * The target class of the symbol reference is not found in the class path.
-     */
-    TARGET_CLASS_NOT_FOUND,
+    /** The target class of the symbol reference is not found in the class path. */
+    CLASS_NOT_FOUND,
 
     /**
-     * The access modifier (e.g., public or protected) does not allow the source of the symbol
-     * reference to use the target symbol.
+     * The access modifier (e.g., public or protected) to the target symbol or its enclosing
+     * class does not allow the source of the symbol reference to use the target symbol.
      */
-    INVALID_ACCESS_MODIFIER,
+    INACCESSIBLE,
 
     /**
-     * For a method or field reference, the member is not found in the target class in the class
+     * For a method or field reference, the symbol is not found in the target class in the class
      * path.
      */
-    MISSING_MEMBER
+    SYMBOL_NOT_FOUND
   }
 }

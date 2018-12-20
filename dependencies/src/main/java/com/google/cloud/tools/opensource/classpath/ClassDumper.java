@@ -32,6 +32,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.CodeSource;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -311,11 +312,12 @@ class ClassDumper {
    */
   URL findClassLocation(String className) throws ClassNotFoundException {
     Class<?> clazz = loadClass(className);
-    if (clazz.getProtectionDomain().getCodeSource() == null) {
+    CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
+    if (codeSource == null) {
       // javax.activation.SecuritySupport is known to return null here
       return null;
     }
-    return clazz.getProtectionDomain().getCodeSource().getLocation();
+    return codeSource.getLocation();
   }
 
   private static Class<?> bcelTypeToJavaClass(Type type, ClassLoader classLoader) {
@@ -403,19 +405,31 @@ class ClassDumper {
     return javaClasses.build();
   }
 
-  /**
-   * Returns true if two class names (binary name JLS 13.1) have the same package.
-   */
+  /** Returns true if two class names (binary name JLS 13.1) have the same package. */
   static boolean classesInSamePackage(String classNameA, String classNameB) {
-    if (classNameA.contains(".") != classNameB.contains(".")) {
+    int dotIndexA = classNameA.lastIndexOf('.');
+    int dotIndexB = classNameB.lastIndexOf('.');
+    if (dotIndexA != dotIndexB) {
       return false;
     }
-    if (classNameA.lastIndexOf('.') < 0 && classNameB.lastIndexOf('.') < 0) {
+    if (dotIndexA < 0) {
       return true;
     }
     // The conditions above ensure that lastIndexOf returns non-negative number
-    String packageNameA = classNameA.substring(0, classNameA.lastIndexOf('.'));
-    String packageNameB = classNameB.substring(0, classNameB.lastIndexOf('.'));
+    String packageNameA = classNameA.substring(0, dotIndexA);
+    String packageNameB = classNameB.substring(0, dotIndexB);
     return packageNameA.equals(packageNameB);
+  }
+
+  /**
+   * Returns the name of enclosing class for the class name. If the class is not nested, then it
+   * returns its name.
+   */
+  static String enclosingClassName(String className) {
+    int dollarIndex = className.lastIndexOf('$');
+    if (dollarIndex < 0) {
+      return className;
+    }
+    return className.substring(0, dollarIndex);
   }
 }

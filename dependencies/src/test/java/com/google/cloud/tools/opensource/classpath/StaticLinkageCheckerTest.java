@@ -274,7 +274,8 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testFindInvalidClassReferences_nonExistentClass() throws IOException, URISyntaxException {
+  public void testFindInvalidClassReferences_nonExistentClass()
+      throws IOException, URISyntaxException {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
@@ -303,7 +304,7 @@ public class StaticLinkageCheckerTest {
         .isEqualTo(nonExistentClassName);
     Truth.assertThat(
         jarLinkageReport.getMissingClassErrors().get(0).getReason())
-        .isEqualTo(Reason.TARGET_CLASS_NOT_FOUND);
+        .isEqualTo(Reason.CLASS_NOT_FOUND);
   }
 
   @Test
@@ -361,7 +362,7 @@ public class StaticLinkageCheckerTest {
 
     Truth.assertThat(jarLinkageReport.getMissingClassErrors()).hasSize(1);
     Truth.assertThat(jarLinkageReport.getMissingClassErrors().get(0).getReason()).isEqualTo(
-        Reason.INVALID_ACCESS_MODIFIER);
+        Reason.INACCESSIBLE);
   }
 
   @Test

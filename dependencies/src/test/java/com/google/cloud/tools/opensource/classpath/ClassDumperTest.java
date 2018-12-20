@@ -189,4 +189,12 @@ public class ClassDumperTest {
     Truth.assertThat(ClassDumper.classesInSamePackage("foo.bar.Abc$XYZ", "foo.bar.Cde")).isTrue();
     Truth.assertThat(ClassDumper.classesInSamePackage("Abc", "Cde")).isTrue();
   }
+
+  @Test
+  public void testEnclosingClassNames() {
+    String actualName = ClassDumper.enclosingClassName("com.google.Foo$Bar$Baz");
+    Truth.assertThat(actualName).isEqualTo("com.google.Foo$Bar");
+    String topLevelClass = ClassDumper.enclosingClassName("com.google.Foo");
+    Truth.assertThat(topLevelClass).isEqualTo("com.google.Foo");
+  }
 }
