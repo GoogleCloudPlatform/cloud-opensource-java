@@ -319,8 +319,7 @@ public class StaticLinkageCheckerTest {
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             // This inner class is defined as public in firestore-v1beta1-0.28.0.jar
-            .setTargetClassName(
-                "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub")
+            .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub")
             .build();
     ImmutableList<ClassSymbolReference> classReferences = ImmutableList.of(publicClassReference);
     SymbolReferenceSet symbolReferenceSet =
@@ -337,9 +336,7 @@ public class StaticLinkageCheckerTest {
 
   @Test
   public void testFindClassReferences_privateClass() throws IOException, URISyntaxException {
-    List<Path> paths =
-        ImmutableList.of(
-            absolutePathOfResource("testdata/api-common-1.7.0.jar"));
+    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
@@ -347,8 +344,7 @@ public class StaticLinkageCheckerTest {
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             // This inner class is defined in firestore-v1beta1-0.28.0.jar
-            .setTargetClassName(
-                "com.google.api.core.AbstractApiService$InnerService")
+            .setTargetClassName("com.google.api.core.AbstractApiService$InnerService")
             .build();
     ImmutableList<ClassSymbolReference> fieldReferences = ImmutableList.of(referenceToPrivateClass);
     SymbolReferenceSet symbolReferenceSet =
@@ -361,8 +357,8 @@ public class StaticLinkageCheckerTest {
             Collections.emptyList());
 
     Truth.assertThat(jarLinkageReport.getMissingClassErrors()).hasSize(1);
-    Truth.assertThat(jarLinkageReport.getMissingClassErrors().get(0).getReason()).isEqualTo(
-        Reason.INACCESSIBLE);
+    Truth.assertThat(jarLinkageReport.getMissingClassErrors().get(0).getReason())
+        .isEqualTo(Reason.INACCESSIBLE);
   }
 
   @Test
