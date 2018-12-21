@@ -59,5 +59,4 @@ public class LinkageErrorOnReferenceTest {
         LinkageErrorOnReference.errorInvalidModifier(classSymbolReference, targetClassLocation);
     Truth.assertThat(classError.getReason()).isEqualTo(Reason.INACCESSIBLE);
   }
-
 }

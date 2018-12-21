@@ -115,6 +115,7 @@ abstract class LinkageErrorOnReference<T extends SymbolReference> {
      * public. If the source is in the same package, the symbol or one of its enclosing types is
      * private.
      */
+    // TODO(#293): enrich javadoc for linkage error on inaccessible method and field
     INACCESSIBLE,
 
     /**
