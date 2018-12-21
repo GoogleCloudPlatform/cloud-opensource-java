@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
  * types: {@link ClassSymbolReference}, {@link MethodSymbolReference}, and {@link
  * FieldSymbolReference}.
  *
- * @param <T> type of symbol reference that causes the linkage error
+ * @param <T> type of symbol reference that caused the linkage error
  * @see <a
  *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#static-linkage-error">
  *     Java Dependency Glossary: Static linkage error</a>
@@ -33,12 +33,12 @@ import javax.annotation.Nullable;
 @AutoValue
 abstract class LinkageErrorOnReference<T extends SymbolReference> {
 
-  /** Returns a symbol reference that caused this linkage error. */
+  /** Returns the symbol reference on which this linkage error occurred. */
   abstract T getReference();
 
   /**
-   * Returns the location of the target class in a symbol reference; null if the target class is not
-   * found in the class path or the source location is unavailable.
+   * Returns the location of the target class in the symbol reference; null if the target class is
+   * not found in the class path or the source location is unavailable.
    */
   @Nullable
   abstract URL getTargetClassLocation();
@@ -70,8 +70,9 @@ abstract class LinkageErrorOnReference<T extends SymbolReference> {
         .build();
   }
 
-  /** Returns {@code Builder} for a linkage error caused by the symbol reference. */
+  /** Returns {@code Builder} for a linkage error that occurred at the symbol reference. */
   private static <U extends SymbolReference> Builder<U> builderFor(U reference) {
+    // This method gives type-safety compared with normal builder() method.
     Builder<U> builder = new AutoValue_LinkageErrorOnReference.Builder<>();
     builder.setReference(reference);
     return builder;

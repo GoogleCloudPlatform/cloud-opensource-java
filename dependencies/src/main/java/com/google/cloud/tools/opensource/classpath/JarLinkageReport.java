@@ -20,6 +20,9 @@ import com.google.auto.value.AutoValue;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+import jdk.nashorn.internal.ir.annotations.Immutable;
 
 /**
  * The result of checking linkages in one jar file.
@@ -75,12 +78,11 @@ public abstract class JarLinkageReport {
       builder.append("\n");
     }
     for (LinkageErrorOnReference<ClassSymbolReference> missingClass : getMissingClassErrors()) {
-      builder.append(indent + missingClass.getReference());
-      builder.append(" reason:" + missingClass.getReason());
+      builder.append(indent + missingClass);
       builder.append("\n");
     }
     for (LinkageErrorOnReference<MethodSymbolReference> missingMethod : getMissingMethodErrors()) {
-      builder.append(indent + missingMethod.getReference());
+      builder.append(indent + missingMethod);
       builder.append("\n");
     }
     for (LinkageErrorOnReference<FieldSymbolReference> missingField : getMissingFieldErrors()) {

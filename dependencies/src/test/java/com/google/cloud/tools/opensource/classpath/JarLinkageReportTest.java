@@ -17,6 +17,8 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Paths;
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,7 +32,7 @@ public class JarLinkageReportTest {
   private ImmutableList<LinkageErrorOnReference<ClassSymbolReference>> missingClassErrors;
 
   @Before
-  public void setUp() {
+  public void setUp() throws MalformedURLException {
     
     ClassSymbolReference classSymbolReference =
         ClassSymbolReference.builder()
@@ -49,8 +51,9 @@ public class JarLinkageReportTest {
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassB")
             .build();
+    URL targetClassLocation = new URL("file:///dummy.jar");
     LinkageErrorOnReference<MethodSymbolReference> linkageErrorMissingMethod =
-        LinkageErrorOnReference.errorMissingMember(methodSymbolReference, null);
+        LinkageErrorOnReference.errorMissingMember(methodSymbolReference, targetClassLocation);
     missingMethodErrors = ImmutableList.of(linkageErrorMissingMethod);
 
     FieldSymbolReference fieldSymbolReference =
@@ -100,10 +103,11 @@ public class JarLinkageReportTest {
   public void testToString() {
     Assert.assertEquals(
         "c (3 errors):\n"
-            + "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA} "
-            + "reason:CLASS_NOT_FOUND\n"
+            + "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA}, "
+            + "reason: CLASS_NOT_FOUND, target class location not found\n"
             + "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, "
-            + "methodName=methodX, descriptor=java.lang.String}\n"
+            + "methodName=methodX, descriptor=java.lang.String}"
+            + ", reason: SYMBOL_NOT_FOUND, target class from file:/dummy.jar\n"
             + "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, "
             + "fieldName=fieldX}, reason: CLASS_NOT_FOUND, target class location not found\n",
         jarLinkageReport.toString());
