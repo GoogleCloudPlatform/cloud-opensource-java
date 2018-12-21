@@ -67,6 +67,7 @@ public abstract class JarLinkageReport {
     }    
     for (LinkageErrorMissingClass missingClass : getMissingClassErrors()) {
       builder.append(indent + missingClass.getReference());
+      builder.append(" reason:" + missingClass.getReason());
       builder.append("\n");
     }
     for (LinkageErrorMissingMethod missingMethod : getMissingMethodErrors()) {

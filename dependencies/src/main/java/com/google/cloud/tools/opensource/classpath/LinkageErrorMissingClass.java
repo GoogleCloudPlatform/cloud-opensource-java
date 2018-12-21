@@ -17,15 +17,43 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
+import java.net.URL;
 
 /**
  * A missing class linkage error.
  */
 @AutoValue
-public abstract class LinkageErrorMissingClass {
+public abstract class LinkageErrorMissingClass implements LinkageErrorWithReason {
+  // TODO(#295): Consolidate LinkageErrorMissingXXX classes into generic one
+
   public abstract ClassSymbolReference getReference();
 
-  public static LinkageErrorMissingClass errorAt(ClassSymbolReference reference) {
-    return new AutoValue_LinkageErrorMissingClass(reference);
+  public static LinkageErrorMissingClass errorMissingTargetClass(ClassSymbolReference reference) {
+    return builder().setReference(reference).setReason(Reason.CLASS_NOT_FOUND).build();
+  }
+
+  public static LinkageErrorMissingClass errorInaccessibleSymbol(URL targetClassLocation,
+      ClassSymbolReference reference) {
+    return builder()
+        .setReference(reference)
+        .setReason(Reason.INACCESSIBLE)
+        .setTargetClassLocation(targetClassLocation)
+        .build();
+  }
+
+  private static Builder builder() {
+    return new AutoValue_LinkageErrorMissingClass.Builder();
+  }
+
+  @AutoValue.Builder
+  abstract static class Builder {
+
+    abstract LinkageErrorMissingClass.Builder setTargetClassLocation(URL targetClassLocation);
+
+    abstract LinkageErrorMissingClass.Builder setReason(Reason reason);
+
+    abstract LinkageErrorMissingClass.Builder setReference(ClassSymbolReference reference);
+
+    abstract LinkageErrorMissingClass build();
   }
 }

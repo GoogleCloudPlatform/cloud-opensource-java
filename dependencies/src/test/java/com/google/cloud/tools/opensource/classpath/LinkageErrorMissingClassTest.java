@@ -28,7 +28,7 @@ public class LinkageErrorMissingClassTest {
             .setSourceClassName("ClassB")
             .build();
     LinkageErrorMissingClass linkageErrorMissingClass =
-        LinkageErrorMissingClass.errorAt(classSymbolReference);
+        LinkageErrorMissingClass.errorMissingTargetClass(classSymbolReference);
 
     Assert.assertEquals(classSymbolReference, linkageErrorMissingClass.getReference());
   }

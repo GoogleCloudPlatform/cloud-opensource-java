@@ -18,31 +18,51 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
 import java.net.URL;
-import javax.annotation.Nullable;
 
 /**
  * A missing field linkage error.
  */
 @AutoValue
-abstract class LinkageErrorMissingField {
+abstract class LinkageErrorMissingField implements LinkageErrorWithReason {
+  // TODO(#295): Consolidate LinkageErrorMissingXXX classes into generic one
+
   abstract FieldSymbolReference getReference();
 
-  /**
-   * Returns the location of the target class in the field reference; null if the target class is
-   * not found in the class path.
-   */
-  @Nullable
-  abstract URL getTargetClassLocation();
+  static LinkageErrorMissingField errorMissingTargetClass(
+      FieldSymbolReference reference) {
+    return builder().setReference(reference).setReason(Reason.CLASS_NOT_FOUND).build();
+  }
 
-  static LinkageErrorMissingField errorAt(
-      FieldSymbolReference reference, @Nullable URL targetClassLocation) {
-    return new AutoValue_LinkageErrorMissingField(reference, targetClassLocation);
+  static LinkageErrorMissingField errorSymbolNotFound(
+      FieldSymbolReference reference, URL targetClassLocation) {
+    return builder()
+        .setReference(reference)
+        .setReason(Reason.SYMBOL_NOT_FOUND)
+        .setTargetClassLocation(targetClassLocation)
+        .build();
+  }
+
+  private static LinkageErrorMissingField.Builder builder() {
+    return new AutoValue_LinkageErrorMissingField.Builder();
+  }
+
+  @AutoValue.Builder
+  abstract static class Builder {
+
+    abstract LinkageErrorMissingField.Builder setTargetClassLocation(URL targetClassLocation);
+
+    abstract LinkageErrorMissingField.Builder setReason(Reason reason);
+
+    abstract LinkageErrorMissingField.Builder setReference(FieldSymbolReference reference);
+
+    abstract LinkageErrorMissingField build();
   }
 
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
     builder.append(getReference());
+    builder.append(", reason: " + getReason());
     if (getTargetClassLocation() != null) {
       builder.append(", target class from " + getTargetClassLocation());
     } else {
