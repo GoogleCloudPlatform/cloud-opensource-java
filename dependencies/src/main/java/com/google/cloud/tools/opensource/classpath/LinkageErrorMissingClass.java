@@ -24,6 +24,7 @@ import java.net.URL;
  */
 @AutoValue
 public abstract class LinkageErrorMissingClass implements LinkageErrorWithReason {
+  // TODO(#295): Consolidate LinkageErrorMissingXXX classes into generic one
 
   public abstract ClassSymbolReference getReference();
 
@@ -31,7 +32,7 @@ public abstract class LinkageErrorMissingClass implements LinkageErrorWithReason
     return builder().setReference(reference).setReason(Reason.CLASS_NOT_FOUND).build();
   }
 
-  public static LinkageErrorMissingClass errorInvalidModifier(URL targetClassLocation,
+  public static LinkageErrorMissingClass errorInaccessibleSymbol(URL targetClassLocation,
       ClassSymbolReference reference) {
     return builder()
         .setReference(reference)

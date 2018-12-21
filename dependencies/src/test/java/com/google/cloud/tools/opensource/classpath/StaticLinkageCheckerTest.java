@@ -343,7 +343,7 @@ public class StaticLinkageCheckerTest {
     ClassSymbolReference referenceToPrivateClass =
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
-            // This inner class is defined in firestore-v1beta1-0.28.0.jar
+            // This private inner class is defined in firestore-v1beta1-0.28.0.jar
             .setTargetClassName("com.google.api.core.AbstractApiService$InnerService")
             .build();
     ImmutableList<ClassSymbolReference> fieldReferences = ImmutableList.of(referenceToPrivateClass);

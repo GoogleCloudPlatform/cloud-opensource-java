@@ -288,7 +288,7 @@ public class StaticLinkageChecker {
       // The field was not found in the class from the classpath. The location of the target class
       // will be the first thing to check for investigating the reason.
       URL classFileUrl = classDumper.findClassLocation(targetClassName);
-      return Optional.of(LinkageErrorMissingField.errorMissingField(reference, classFileUrl));
+      return Optional.of(LinkageErrorMissingField.errorSymbolNotFound(reference, classFileUrl));
     } catch (ClassNotFoundException ex) {
       return Optional.of(LinkageErrorMissingField.errorMissingTargetClass(reference));
     }
@@ -306,7 +306,7 @@ public class StaticLinkageChecker {
       JavaClass targetClass = classDumper.loadJavaClass(targetClassName);
       if (!isClassAccessibleFrom(targetClass, reference.getSourceClassName())) {
         return Optional.of(
-            LinkageErrorMissingClass.errorInvalidModifier(
+            LinkageErrorMissingClass.errorInaccessibleSymbol(
                 classDumper.findClassLocation(targetClassName), reference));
       }
       return Optional.empty();
@@ -324,30 +324,29 @@ public class StaticLinkageChecker {
    */
   private boolean isClassAccessibleFrom(JavaClass javaClass, String sourceClassName)
       throws ClassNotFoundException {
+    boolean publicOrSamePackage =
+        javaClass.isPublic()
+            || ClassDumper.classesInSamePackage(javaClass.getClassName(), sourceClassName);
     if (javaClass.isNested()) {
       // In addition to public and package private, nested classes can be declared as private or
-      // protected as well.
+      // protected.
       // https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-ClassModifier
       if (javaClass.isPrivate()) {
         // Class reference within same file is allowed to access private class. However, such case
-        // is already filtered at errorsFromSymbolReferences.
+        // is already filtered at errorsFromSymbolReferences method.
         return false;
       }
 
-      // Nested classes need to check the enclosing class(es) too.
+      // In addition to the accessibility of the class itself, nested classes need to check the
+      // enclosing class(es).
       // https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.1
       String enclosingClassName = ClassDumper.enclosingClassName(javaClass.getClassName());
       JavaClass enclosingJavaClass = classDumper.loadJavaClass(enclosingClassName);
-      boolean accessibleAtThisClass =
-          javaClass.isPublic()
-              || ClassDumper.classesInSamePackage(javaClass.getClassName(), sourceClassName);
-
-      return accessibleAtThisClass && isClassAccessibleFrom(enclosingJavaClass, sourceClassName);
+      return publicOrSamePackage && isClassAccessibleFrom(enclosingJavaClass, sourceClassName);
+    } else {
+      // Top-level class can be declared as public or package private.
+      return publicOrSamePackage;
     }
-
-    // Top-level class can be declared as public or package private.
-    return javaClass.isPublic()
-        || ClassDumper.classesInSamePackage(javaClass.getClassName(), sourceClassName);
   }
 
   /**
