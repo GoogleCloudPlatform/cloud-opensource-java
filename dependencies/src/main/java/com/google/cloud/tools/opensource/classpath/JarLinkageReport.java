@@ -36,9 +36,11 @@ public abstract class JarLinkageReport {
    */
   abstract ImmutableList<DependencyPath> getDependencyPaths();
 
-  abstract ImmutableList<LinkageErrorMissingClass> getMissingClassErrors();
-  abstract ImmutableList<LinkageErrorMissingMethod> getMissingMethodErrors();
-  abstract ImmutableList<LinkageErrorMissingField> getMissingFieldErrors();
+  abstract ImmutableList<StaticLinkageError<ClassSymbolReference>> getMissingClassErrors();
+
+  abstract ImmutableList<StaticLinkageError<MethodSymbolReference>> getMissingMethodErrors();
+
+  abstract ImmutableList<StaticLinkageError<FieldSymbolReference>> getMissingFieldErrors();
 
   static Builder builder() {
     return new AutoValue_JarLinkageReport.Builder().setDependencyPaths(ImmutableList.of());
@@ -48,9 +50,16 @@ public abstract class JarLinkageReport {
   abstract static class Builder {
     abstract Builder setJarPath(Path value);
     abstract Builder setDependencyPaths(Iterable<DependencyPath> paths);
-    abstract Builder setMissingClassErrors(Iterable<LinkageErrorMissingClass> value);
-    abstract Builder setMissingMethodErrors(Iterable<LinkageErrorMissingMethod> value);
-    abstract Builder setMissingFieldErrors(Iterable<LinkageErrorMissingField> value);
+
+    abstract Builder setMissingClassErrors(
+        Iterable<StaticLinkageError<ClassSymbolReference>> errors);
+
+    abstract Builder setMissingMethodErrors(
+        Iterable<StaticLinkageError<MethodSymbolReference>> errors);
+
+    abstract Builder setMissingFieldErrors(
+        Iterable<StaticLinkageError<FieldSymbolReference>> errors);
+
     abstract JarLinkageReport build();
   }
   
@@ -64,17 +73,16 @@ public abstract class JarLinkageReport {
     for (DependencyPath path : getDependencyPaths()) {
       builder.append(indent + "Linked from: " + path);
       builder.append("\n");
-    }    
-    for (LinkageErrorMissingClass missingClass : getMissingClassErrors()) {
-      builder.append(indent + missingClass.getReference());
-      builder.append(" reason:" + missingClass.getReason());
+    }
+    for (StaticLinkageError<ClassSymbolReference> missingClass : getMissingClassErrors()) {
+      builder.append(indent + missingClass);
       builder.append("\n");
     }
-    for (LinkageErrorMissingMethod missingMethod : getMissingMethodErrors()) {
-      builder.append(indent + missingMethod.getReference());
+    for (StaticLinkageError<MethodSymbolReference> missingMethod : getMissingMethodErrors()) {
+      builder.append(indent + missingMethod);
       builder.append("\n");
     }
-    for (LinkageErrorMissingField missingField : getMissingFieldErrors()) {
+    for (StaticLinkageError<FieldSymbolReference> missingField : getMissingFieldErrors()) {
       builder.append(indent + missingField);
       builder.append("\n");
     }

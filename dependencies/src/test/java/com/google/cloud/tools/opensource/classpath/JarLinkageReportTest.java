@@ -17,6 +17,8 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Paths;
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,21 +27,21 @@ import org.junit.Test;
 public class JarLinkageReportTest {
 
   private JarLinkageReport jarLinkageReport;
-  private ImmutableList<LinkageErrorMissingField> missingFieldErrors;
-  private ImmutableList<LinkageErrorMissingMethod> missingMethodErrors;
-  private ImmutableList<LinkageErrorMissingClass> missingClassErrors;
-  
+  private ImmutableList<StaticLinkageError<FieldSymbolReference>> missingFieldErrors;
+  private ImmutableList<StaticLinkageError<MethodSymbolReference>> missingMethodErrors;
+  private ImmutableList<StaticLinkageError<ClassSymbolReference>> missingClassErrors;
+
   @Before
-  public void setUp() {
+  public void setUp() throws MalformedURLException {
     
     ClassSymbolReference classSymbolReference =
         ClassSymbolReference.builder()
             .setTargetClassName("ClassA")
             .setSourceClassName("ClassB")
             .build();
-    
-    LinkageErrorMissingClass linkageErrorMissingClass =
-        LinkageErrorMissingClass.errorMissingTargetClass(classSymbolReference);
+
+    StaticLinkageError<ClassSymbolReference> linkageErrorMissingClass =
+        StaticLinkageError.errorMissingTargetClass(classSymbolReference);
     missingClassErrors = ImmutableList.of(linkageErrorMissingClass);
 
     MethodSymbolReference methodSymbolReference =
@@ -49,8 +51,9 @@ public class JarLinkageReportTest {
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassB")
             .build();
-    LinkageErrorMissingMethod linkageErrorMissingMethod =
-        LinkageErrorMissingMethod.errorAt(methodSymbolReference);
+    URL targetClassLocation = new URL("file:///dummy.jar");
+    StaticLinkageError<MethodSymbolReference> linkageErrorMissingMethod =
+        StaticLinkageError.errorMissingMember(methodSymbolReference, targetClassLocation);
     missingMethodErrors = ImmutableList.of(linkageErrorMissingMethod);
 
     FieldSymbolReference fieldSymbolReference =
@@ -59,8 +62,8 @@ public class JarLinkageReportTest {
             .setFieldName("fieldX")
             .setSourceClassName("ClassD")
             .build();
-    LinkageErrorMissingField linkageErrorMissingField =
-        LinkageErrorMissingField.errorMissingTargetClass(fieldSymbolReference);
+    StaticLinkageError<FieldSymbolReference> linkageErrorMissingField =
+        StaticLinkageError.errorMissingTargetClass(fieldSymbolReference);
     missingFieldErrors = ImmutableList.of(linkageErrorMissingField);
     jarLinkageReport =
         JarLinkageReport.builder()
@@ -95,15 +98,16 @@ public class JarLinkageReportTest {
   public void testGetTotalErrorCount() {
     Assert.assertEquals(3, jarLinkageReport.getTotalErrorCount());
   }
-  
+
   @Test
   public void testToString() {
     Assert.assertEquals(
         "c (3 errors):\n"
-            + "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA} "
-            + "reason:CLASS_NOT_FOUND\n"
+            + "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA}, "
+            + "reason: CLASS_NOT_FOUND, target class location not found\n"
             + "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, "
-            + "methodName=methodX, descriptor=java.lang.String}\n"
+            + "methodName=methodX, descriptor=java.lang.String}"
+            + ", reason: SYMBOL_NOT_FOUND, target class from file:/dummy.jar\n"
             + "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, "
             + "fieldName=fieldX}, reason: CLASS_NOT_FOUND, target class location not found\n",
         jarLinkageReport.toString());
