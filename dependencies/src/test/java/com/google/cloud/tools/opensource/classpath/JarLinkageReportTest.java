@@ -95,14 +95,18 @@ public class JarLinkageReportTest {
   public void testGetTotalErrorCount() {
     Assert.assertEquals(3, jarLinkageReport.getTotalErrorCount());
   }
-  
+
   @Test
   public void testToString() {
-    Assert.assertEquals("c (3 errors):\n" + 
-        "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA} reason:TARGET_CLASS_NOT_FOUND\n" +
-        "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, methodName=methodX, descriptor=java.lang.String}\n" + 
-        "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, fieldName=fieldX}, reason: TARGET_CLASS_NOT_FOUND, target class location not found\n" +
-        "", jarLinkageReport.toString());
+    Assert.assertEquals(
+        "c (3 errors):\n"
+            + "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA} "
+            + "reason:CLASS_NOT_FOUND\n"
+            + "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, "
+            + "methodName=methodX, descriptor=java.lang.String}\n"
+            + "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, "
+            + "fieldName=fieldX}, reason: CLASS_NOT_FOUND, target class location not found\n",
+        jarLinkageReport.toString());
   }
 
 }

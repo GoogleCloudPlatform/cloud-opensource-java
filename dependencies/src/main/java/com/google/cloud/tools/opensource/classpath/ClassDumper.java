@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -32,6 +31,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.CodeSource;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -311,11 +311,12 @@ class ClassDumper {
    */
   URL findClassLocation(String className) throws ClassNotFoundException {
     Class<?> clazz = loadClass(className);
-    if (clazz.getProtectionDomain().getCodeSource() == null) {
+    CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
+    if (codeSource == null) {
       // javax.activation.SecuritySupport is known to return null here
       return null;
     }
-    return clazz.getProtectionDomain().getCodeSource().getLocation();
+    return codeSource.getLocation();
   }
 
   private static Class<?> bcelTypeToJavaClass(Type type, ClassLoader classLoader) {
@@ -403,19 +404,27 @@ class ClassDumper {
     return javaClasses.build();
   }
 
-  /**
-   * Returns true if two class names (binary name JLS 13.1) have the same package.
-   */
+  /** Returns true if two class names (binary name JLS 13.1) have the same package. */
   static boolean classesInSamePackage(String classNameA, String classNameB) {
-    if (classNameA.contains(".") != classNameB.contains(".")) {
-      return false;
-    }
-    if (classNameA.lastIndexOf('.') < 0 && classNameB.lastIndexOf('.') < 0) {
-      return true;
-    }
-    // The conditions above ensure that lastIndexOf returns non-negative number
-    String packageNameA = classNameA.substring(0, classNameA.lastIndexOf('.'));
-    String packageNameB = classNameB.substring(0, classNameB.lastIndexOf('.'));
+    // Because package name cannot have '.' at the beginning, we can use lastDotIndex=0 (that will
+    // return empty string via substring below) for unnamed package.
+    // https://docs.oracle.com/javase/specs/jls/se8/html/jls-7.html#jls-7.4.1
+    int lastDotIndexA = Math.max(classNameA.lastIndexOf('.'), 0);
+    int lastDotIndexB = Math.max(classNameB.lastIndexOf('.'), 0);
+    String packageNameA = classNameA.substring(0, lastDotIndexA);
+    String packageNameB = classNameB.substring(0, lastDotIndexB);
     return packageNameA.equals(packageNameB);
+  }
+
+  /**
+   * Returns the name of enclosing class for the class name (binary name JLS 13.1). Null if the
+   * class is not nested.
+   */
+  static String enclosingClassName(String className) {
+    int lastDollarIndex = className.lastIndexOf('$');
+    if (lastDollarIndex < 0) {
+      return null;
+    }
+    return className.substring(0, lastDollarIndex);
   }
 }

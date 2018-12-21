@@ -24,17 +24,22 @@ import java.net.URL;
  */
 @AutoValue
 abstract class LinkageErrorMissingField implements LinkageErrorWithReason {
+  // TODO(#295): Consolidate LinkageErrorMissingXXX classes into generic one
+
   abstract FieldSymbolReference getReference();
 
   static LinkageErrorMissingField errorMissingTargetClass(
       FieldSymbolReference reference) {
-    return builder().setReference(reference).setReason(Reason.TARGET_CLASS_NOT_FOUND).build();
+    return builder().setReference(reference).setReason(Reason.CLASS_NOT_FOUND).build();
   }
 
-  static LinkageErrorMissingField errorMissingField(
+  static LinkageErrorMissingField errorSymbolNotFound(
       FieldSymbolReference reference, URL targetClassLocation) {
-    return builder().setReference(reference).setReason(Reason.MISSING_MEMBER)
-        .setTargetClassLocation(targetClassLocation).build();
+    return builder()
+        .setReference(reference)
+        .setReason(Reason.SYMBOL_NOT_FOUND)
+        .setTargetClassLocation(targetClassLocation)
+        .build();
   }
 
   private static LinkageErrorMissingField.Builder builder() {

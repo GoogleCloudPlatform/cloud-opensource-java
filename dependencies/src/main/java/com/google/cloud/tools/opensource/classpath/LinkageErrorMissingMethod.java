@@ -23,6 +23,8 @@ import com.google.auto.value.AutoValue;
  */
 @AutoValue
 abstract class LinkageErrorMissingMethod {
+  // TODO(#295): Consolidate LinkageErrorMissingXXX classes into generic one
+
   abstract MethodSymbolReference getReference();
 
   static LinkageErrorMissingMethod errorAt(MethodSymbolReference reference) {

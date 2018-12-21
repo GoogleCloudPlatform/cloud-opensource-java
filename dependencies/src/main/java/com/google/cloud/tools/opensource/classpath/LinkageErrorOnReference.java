@@ -26,15 +26,14 @@ import javax.annotation.Nullable;
  * FieldSymbolReference}.
  *
  * @param <T> type of symbol reference that causes the linkage error
- * @see <a href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#static-linkage-error">
- * Java Dependency Glossary: Static linkage error</a>
+ * @see <a
+ *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#static-linkage-error">
+ *     Java Dependency Glossary: Static linkage error</a>
  */
 @AutoValue
 abstract class LinkageErrorOnReference<T extends SymbolReference> {
 
-  /**
-   * Returns a symbol reference that caused this linkage error.
-   */
+  /** Returns a symbol reference that caused this linkage error. */
   abstract T getReference();
 
   /**
@@ -44,40 +43,34 @@ abstract class LinkageErrorOnReference<T extends SymbolReference> {
   @Nullable
   abstract URL getTargetClassLocation();
 
-  /**
-   * Returns the reason why the symbol reference is marked as a linkage error.
-   */
+  /** Returns the reason why the symbol reference is marked as a linkage error. */
   abstract Reason getReason();
 
-  /**
-   * Returns a linkage error caused by {@link Reason#TARGET_CLASS_NOT_FOUND}.
-   */
+  /** Returns a linkage error caused by {@link Reason#CLASS_NOT_FOUND}. */
   static <U extends SymbolReference> LinkageErrorOnReference<U> errorMissingTargetClass(
       U reference) {
-    return builderFor(reference).setReason(Reason.TARGET_CLASS_NOT_FOUND).build();
+    return builderFor(reference).setReason(Reason.CLASS_NOT_FOUND).build();
   }
 
-  /**
-   * Returns a linkage error caused by {@link Reason#MISSING_MEMBER}.
-   */
+  /** Returns a linkage error caused by {@link Reason#SYMBOL_NOT_FOUND}. */
   static <U extends SymbolReference> LinkageErrorOnReference<U> errorMissingMember(
       U reference, URL targetClassLocation) {
-    return builderFor(reference).setReason(Reason.MISSING_MEMBER)
-        .setTargetClassLocation(targetClassLocation).build();
+    return builderFor(reference)
+        .setReason(Reason.SYMBOL_NOT_FOUND)
+        .setTargetClassLocation(targetClassLocation)
+        .build();
   }
 
-  /**
-   * Returns a linkage error caused by {@link Reason#INVALID_ACCESS_MODIFIER}.
-   */
+  /** Returns a linkage error caused by {@link Reason#INACCESSIBLE}. */
   static <U extends SymbolReference> LinkageErrorOnReference<U> errorInvalidModifier(
       U reference, URL targetClassLocation) {
-    return builderFor(reference).setReason(Reason.INVALID_ACCESS_MODIFIER)
-        .setTargetClassLocation(targetClassLocation).build();
+    return builderFor(reference)
+        .setReason(Reason.INACCESSIBLE)
+        .setTargetClassLocation(targetClassLocation)
+        .build();
   }
 
-  /**
-   * Returns {@code Builder} for a linkage error caused by the symbol reference.
-   */
+  /** Returns {@code Builder} for a linkage error caused by the symbol reference. */
   private static <U extends SymbolReference> Builder<U> builderFor(U reference) {
     Builder<U> builder = new AutoValue_LinkageErrorOnReference.Builder<>();
     builder.setReference(reference);
@@ -96,25 +89,24 @@ abstract class LinkageErrorOnReference<T extends SymbolReference> {
     abstract LinkageErrorOnReference<T> build();
   }
 
-  /**
-   * Reason to distinguish the cause of a static linkage error against a symbol reference.
-   */
+  /** Reason to distinguish the cause of a static linkage error against a symbol reference. */
   enum Reason {
-    /**
-     * The target class of the symbol reference is not found in the class path.
-     */
-    TARGET_CLASS_NOT_FOUND,
+    /** The target class of the symbol reference is not found in the class path. */
+    CLASS_NOT_FOUND,
 
     /**
-     * The access modifier (e.g., public or protected) does not allow the source of the symbol
-     * reference to use the target symbol.
+     * The symbol is inaccessible to the source.
+     *
+     * <p>If the source is in a different package, the symbol or one of its enclosing types is not
+     * public. If the source is in the same package, the symbol or one of its enclosing types is
+     * private.
      */
-    INVALID_ACCESS_MODIFIER,
+    INACCESSIBLE,
 
     /**
-     * For a method or field reference, the member is not found in the target class in the class
+     * For a method or field reference, the symbol is not found in the target class in the class
      * path.
      */
-    MISSING_MEMBER
+    SYMBOL_NOT_FOUND
   }
 }
