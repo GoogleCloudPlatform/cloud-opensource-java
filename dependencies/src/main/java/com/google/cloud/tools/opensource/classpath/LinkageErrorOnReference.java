@@ -109,4 +109,17 @@ abstract class LinkageErrorOnReference<T extends SymbolReference> {
      */
     SYMBOL_NOT_FOUND
   }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(getReference());
+    builder.append(", reason: " + getReason());
+    if (getTargetClassLocation() != null) {
+      builder.append(", target class from " + getTargetClassLocation());
+    } else {
+      builder.append(", target class location not found");
+    }
+    return builder.toString();
+  }
 }

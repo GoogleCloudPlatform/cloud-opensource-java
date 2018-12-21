@@ -39,10 +39,9 @@ public class StaticLinkageCheckReportTest {
             .setTargetClassName("ClassA")
             .setSourceClassName("ClassB")
             .build();
-    LinkageErrorMissingClass linkageErrorMissingClass =
-        LinkageErrorMissingClass.errorMissingTargetClass(classSymbolReference);
-
-    ImmutableList<LinkageErrorMissingClass> linkageErrorMissingClasses =
+    LinkageErrorOnReference<ClassSymbolReference> linkageErrorMissingClass =
+        LinkageErrorOnReference.errorMissingTargetClass(classSymbolReference);
+    ImmutableList<LinkageErrorOnReference<ClassSymbolReference>> missingClassErrors =
         ImmutableList.of(linkageErrorMissingClass);
 
     MethodSymbolReference methodSymbolReference =
@@ -52,9 +51,9 @@ public class StaticLinkageCheckReportTest {
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassB")
             .build();
-    LinkageErrorMissingMethod linkageErrorMissingMethod =
-        LinkageErrorMissingMethod.errorAt(methodSymbolReference);
-    ImmutableList<LinkageErrorMissingMethod> missingMethodErrors =
+    LinkageErrorOnReference<MethodSymbolReference> linkageErrorMissingMethod =
+        LinkageErrorOnReference.errorMissingMember(methodSymbolReference, null);
+    ImmutableList<LinkageErrorOnReference<MethodSymbolReference>> missingMethodErrors =
         ImmutableList.of(linkageErrorMissingMethod);
 
     FieldSymbolReference fieldSymbolReference =
@@ -63,15 +62,15 @@ public class StaticLinkageCheckReportTest {
             .setFieldName("fieldX")
             .setSourceClassName("ClassD")
             .build();
-    LinkageErrorMissingField linkageErrorMissingField =
-        LinkageErrorMissingField.errorMissingTargetClass(fieldSymbolReference);
-    ImmutableList<LinkageErrorMissingField> missingFieldErrors =
+    LinkageErrorOnReference<FieldSymbolReference> linkageErrorMissingField =
+        LinkageErrorOnReference.errorMissingMember(fieldSymbolReference, null);
+    ImmutableList<LinkageErrorOnReference<FieldSymbolReference>> missingFieldErrors =
         ImmutableList.of(linkageErrorMissingField);
 
     jarLinkageReport =
         JarLinkageReport.builder()
             .setJarPath(Paths.get("a", "b", "c"))
-            .setMissingClassErrors(linkageErrorMissingClasses)
+            .setMissingClassErrors(missingClassErrors)
             .setMissingMethodErrors(missingMethodErrors)
             .setMissingFieldErrors(missingFieldErrors)
             .build();

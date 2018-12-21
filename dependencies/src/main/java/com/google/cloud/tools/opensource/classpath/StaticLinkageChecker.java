@@ -260,12 +260,13 @@ public class StaticLinkageChecker {
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
    */
-  private Optional<LinkageErrorMissingMethod> checkLinkageErrorMissingMethodAt(
+  private Optional<LinkageErrorOnReference<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
       MethodSymbolReference reference) {
     if (validateMethodReference(reference)) {
       return Optional.empty();
     }
-    return Optional.of(LinkageErrorMissingMethod.errorAt(reference));
+    // # TODO(#293): Add reason and target class location for linkage errors on method references
+    return Optional.of(LinkageErrorOnReference.errorMissingMember(reference, null));
   }
 
   /**
@@ -273,7 +274,7 @@ public class StaticLinkageChecker {
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
    */
-  private Optional<LinkageErrorMissingField> checkLinkageErrorMissingFieldAt(
+  private Optional<LinkageErrorOnReference<FieldSymbolReference>> checkLinkageErrorMissingFieldAt(
       FieldSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     String fieldName = reference.getFieldName();
@@ -289,13 +290,9 @@ public class StaticLinkageChecker {
       // The field was not found in the class from the classpath. The location of the target class
       // will be the first thing to check for investigating the reason.
       URL classFileUrl = classDumper.findClassLocation(targetClassName);
-<<<<<<< HEAD
-      return Optional.of(LinkageErrorMissingField.errorMissingField(reference, classFileUrl));
-=======
-      return Optional.of(LinkageErrorMissingField.errorSymbolNotFound(reference, classFileUrl));
->>>>>>> origin/master
+      return Optional.of(LinkageErrorOnReference.errorMissingMember(reference, classFileUrl));
     } catch (ClassNotFoundException ex) {
-      return Optional.of(LinkageErrorMissingField.errorMissingTargetClass(reference));
+      return Optional.of(LinkageErrorOnReference.errorMissingTargetClass(reference));
     }
   }
 
@@ -304,19 +301,19 @@ public class StaticLinkageChecker {
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
    */
-  private Optional<LinkageErrorMissingClass> checkLinkageErrorMissingClassAt(
+  private Optional<LinkageErrorOnReference<ClassSymbolReference>> checkLinkageErrorMissingClassAt(
       ClassSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     try {
       JavaClass targetClass = classDumper.loadJavaClass(targetClassName);
       if (!isClassAccessibleFrom(targetClass, reference.getSourceClassName())) {
         return Optional.of(
-            LinkageErrorMissingClass.errorInaccessibleSymbol(
-                classDumper.findClassLocation(targetClassName), reference));
+            LinkageErrorOnReference.errorInvalidModifier(
+                reference, classDumper.findClassLocation(targetClassName)));
       }
       return Optional.empty();
     } catch (ClassNotFoundException ex) {
-      return Optional.of(LinkageErrorMissingClass.errorMissingTargetClass(reference));
+      return Optional.of(LinkageErrorOnReference.errorMissingTargetClass(reference));
     }
   }
 

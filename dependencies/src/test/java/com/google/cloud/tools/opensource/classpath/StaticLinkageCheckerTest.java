@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.cloud.tools.opensource.classpath.LinkageErrorWithReason.Reason;
+import com.google.cloud.tools.opensource.classpath.LinkageErrorOnReference.Reason;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -331,9 +331,7 @@ public class StaticLinkageCheckerTest {
             symbolReferenceSet,
             Collections.emptyList());
 
-    Truth.assertThat(jarLinkageReport.getMissingClassErrors()).hasSize(1);
-    Truth.assertThat(jarLinkageReport.getMissingClassErrors().get(0).getReason()).isEqualTo(
-        Reason.INVALID_ACCESS_MODIFIER);
+    Truth.assertThat(jarLinkageReport.getMissingClassErrors()).isEmpty();
   }
 
   @Test
