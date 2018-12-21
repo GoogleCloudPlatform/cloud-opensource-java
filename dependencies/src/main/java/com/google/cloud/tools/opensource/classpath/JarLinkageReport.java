@@ -20,9 +20,6 @@ import com.google.auto.value.AutoValue;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
-import jdk.nashorn.internal.ir.annotations.Immutable;
 
 /**
  * The result of checking linkages in one jar file.

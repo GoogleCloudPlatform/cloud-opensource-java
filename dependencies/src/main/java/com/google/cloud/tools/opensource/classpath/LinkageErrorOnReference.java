@@ -46,6 +46,19 @@ abstract class LinkageErrorOnReference<T extends SymbolReference> {
   /** Returns the reason why the symbol reference is marked as a linkage error. */
   abstract Reason getReason();
 
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(getReference());
+    builder.append(", reason: " + getReason());
+    if (getTargetClassLocation() != null) {
+      builder.append(", target class from " + getTargetClassLocation());
+    } else {
+      builder.append(", target class location not found");
+    }
+    return builder.toString();
+  }
+
   /** Returns a linkage error caused by {@link Reason#CLASS_NOT_FOUND}. */
   static <U extends SymbolReference> LinkageErrorOnReference<U> errorMissingTargetClass(
       U reference) {
@@ -109,18 +122,5 @@ abstract class LinkageErrorOnReference<T extends SymbolReference> {
      * path.
      */
     SYMBOL_NOT_FOUND
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder builder = new StringBuilder();
-    builder.append(getReference());
-    builder.append(", reason: " + getReason());
-    if (getTargetClassLocation() != null) {
-      builder.append(", target class from " + getTargetClassLocation());
-    } else {
-      builder.append(", target class location not found");
-    }
-    return builder.toString();
   }
 }
