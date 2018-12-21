@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -407,29 +406,25 @@ class ClassDumper {
 
   /** Returns true if two class names (binary name JLS 13.1) have the same package. */
   static boolean classesInSamePackage(String classNameA, String classNameB) {
-    int dotIndexA = classNameA.lastIndexOf('.');
-    int dotIndexB = classNameB.lastIndexOf('.');
-    if (dotIndexA != dotIndexB) {
-      return false;
-    }
-    if (dotIndexA < 0) {
-      return true;
-    }
-    // The conditions above ensure that lastIndexOf returns non-negative number
-    String packageNameA = classNameA.substring(0, dotIndexA);
-    String packageNameB = classNameB.substring(0, dotIndexB);
+    // Because package name cannot have '.' at the beginning, we can use lastDotIndex=0 (that will
+    // return empty string via substring below) for unnamed package.
+    // https://docs.oracle.com/javase/specs/jls/se8/html/jls-7.html#jls-7.4.1
+    int lastDotIndexA = Math.max(classNameA.lastIndexOf('.'), 0);
+    int lastDotIndexB = Math.max(classNameB.lastIndexOf('.'), 0);
+    String packageNameA = classNameA.substring(0, lastDotIndexA);
+    String packageNameB = classNameB.substring(0, lastDotIndexB);
     return packageNameA.equals(packageNameB);
   }
 
   /**
-   * Returns the name of enclosing class for the class name. If the class is not nested, then it
-   * returns its name.
+   * Returns the name of enclosing class for the class name (binary name JLS 13.1). If the class is
+   * not nested, then it returns the class name.
    */
   static String enclosingClassName(String className) {
-    int dollarIndex = className.lastIndexOf('$');
-    if (dollarIndex < 0) {
+    int lastDollarIndex = className.lastIndexOf('$');
+    if (lastDollarIndex < 0) {
       return className;
     }
-    return className.substring(0, dollarIndex);
+    return className.substring(0, lastDollarIndex);
   }
 }
