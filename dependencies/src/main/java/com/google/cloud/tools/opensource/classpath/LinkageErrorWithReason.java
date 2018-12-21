@@ -38,8 +38,11 @@ interface LinkageErrorWithReason {
     CLASS_NOT_FOUND,
 
     /**
-     * The access modifier (e.g., public or protected) to the target symbol or its enclosing
-     * class does not allow the source of the symbol reference to use the target symbol.
+     * The symbol is inaccessible to the source.
+     *
+     * <p>If the source is in a different package, the symbol or one of its enclosing types is not
+     * public. If the source is in the same package, the symbol or one of its enclosing types is
+     * private.
      */
     INACCESSIBLE,
 

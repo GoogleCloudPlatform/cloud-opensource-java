@@ -332,22 +332,27 @@ public class StaticLinkageChecker {
       // Nested class can be declared as private or protected, in addition to public and package
       // private. Protected is treated same as package private.
       // https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-ClassModifier
-      if (javaClass.isPrivate() || !publicOrSamePackage) {
+      if (javaClass.isPrivate()) {
         // Class reference within same file is allowed to access private class. However, such case
         // is already filtered at errorsFromSymbolReferences method.
         return false;
       }
 
-      // In addition to the accessibility of the class itself, nested classes need to check the
-      // enclosing class(es).
-      // https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.1
-      String enclosingClassName = ClassDumper.enclosingClassName(targetClassName);
-      if (enclosingClassName == null) {
-        throw new ClassFormatException(
-            "Could not retrieve enclosing class name for the nested class " + targetClassName);
+      if (publicOrSamePackage) {
+        // In addition to the accessibility of the class itself, nested classes need to check the
+        // enclosing class(es).
+        // https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.1
+        String enclosingClassName = ClassDumper.enclosingClassName(targetClassName);
+        if (enclosingClassName == null) {
+          throw new ClassFormatException(
+              "Could not retrieve enclosing class name for the nested class " + targetClassName);
+        }
+        JavaClass enclosingJavaClass = classDumper.loadJavaClass(enclosingClassName);
+        return isClassAccessibleFrom(enclosingJavaClass, sourceClassName);
+      } else {
+        // The class is not public and not in the same package as the source.
+        return false;
       }
-      JavaClass enclosingJavaClass = classDumper.loadJavaClass(enclosingClassName);
-      return isClassAccessibleFrom(enclosingJavaClass, sourceClassName);
     } else {
       // Top-level class can be declared as public or package private.
       return publicOrSamePackage;
