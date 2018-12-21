@@ -41,6 +41,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Logger;
+import org.apache.bcel.classfile.ClassFormatException;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
@@ -288,7 +289,11 @@ public class StaticLinkageChecker {
       // The field was not found in the class from the classpath. The location of the target class
       // will be the first thing to check for investigating the reason.
       URL classFileUrl = classDumper.findClassLocation(targetClassName);
+<<<<<<< HEAD
       return Optional.of(LinkageErrorMissingField.errorMissingField(reference, classFileUrl));
+=======
+      return Optional.of(LinkageErrorMissingField.errorSymbolNotFound(reference, classFileUrl));
+>>>>>>> origin/master
     } catch (ClassNotFoundException ex) {
       return Optional.of(LinkageErrorMissingField.errorMissingTargetClass(reference));
     }
@@ -305,8 +310,9 @@ public class StaticLinkageChecker {
     try {
       JavaClass targetClass = classDumper.loadJavaClass(targetClassName);
       if (!isClassAccessibleFrom(targetClass, reference.getSourceClassName())) {
-        return Optional.of(LinkageErrorMissingClass.errorInvalidModifier(
-            classDumper.findClassLocation(targetClassName), reference));
+        return Optional.of(
+            LinkageErrorMissingClass.errorInaccessibleSymbol(
+                classDumper.findClassLocation(targetClassName), reference));
       }
       return Optional.empty();
     } catch (ClassNotFoundException ex) {

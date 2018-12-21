@@ -274,7 +274,8 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testFindInvalidClassReferences_nonExistentClass() throws IOException, URISyntaxException {
+  public void testFindInvalidClassReferences_nonExistentClass()
+      throws IOException, URISyntaxException {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
@@ -303,7 +304,7 @@ public class StaticLinkageCheckerTest {
         .isEqualTo(nonExistentClassName);
     Truth.assertThat(
         jarLinkageReport.getMissingClassErrors().get(0).getReason())
-        .isEqualTo(Reason.TARGET_CLASS_NOT_FOUND);
+        .isEqualTo(Reason.CLASS_NOT_FOUND);
   }
 
   @Test
@@ -318,8 +319,7 @@ public class StaticLinkageCheckerTest {
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             // This inner class is defined as public in firestore-v1beta1-0.28.0.jar
-            .setTargetClassName(
-                "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub")
+            .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub")
             .build();
     ImmutableList<ClassSymbolReference> classReferences = ImmutableList.of(publicClassReference);
     SymbolReferenceSet symbolReferenceSet =
@@ -331,23 +331,22 @@ public class StaticLinkageCheckerTest {
             symbolReferenceSet,
             Collections.emptyList());
 
-    Truth.assertThat(jarLinkageReport.getMissingClassErrors()).isEmpty();
+    Truth.assertThat(jarLinkageReport.getMissingClassErrors()).hasSize(1);
+    Truth.assertThat(jarLinkageReport.getMissingClassErrors().get(0).getReason()).isEqualTo(
+        Reason.INVALID_ACCESS_MODIFIER);
   }
 
   @Test
   public void testFindClassReferences_privateClass() throws IOException, URISyntaxException {
-    List<Path> paths =
-        ImmutableList.of(
-            absolutePathOfResource("testdata/api-common-1.7.0.jar"));
+    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     ClassSymbolReference referenceToPrivateClass =
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
-            // This inner class is defined in firestore-v1beta1-0.28.0.jar
-            .setTargetClassName(
-                "com.google.api.core.AbstractApiService$InnerService")
+            // This private inner class is defined in firestore-v1beta1-0.28.0.jar
+            .setTargetClassName("com.google.api.core.AbstractApiService$InnerService")
             .build();
     ImmutableList<ClassSymbolReference> fieldReferences = ImmutableList.of(referenceToPrivateClass);
     SymbolReferenceSet symbolReferenceSet =
@@ -360,8 +359,8 @@ public class StaticLinkageCheckerTest {
             Collections.emptyList());
 
     Truth.assertThat(jarLinkageReport.getMissingClassErrors()).hasSize(1);
-    Truth.assertThat(jarLinkageReport.getMissingClassErrors().get(0).getReason()).isEqualTo(
-        Reason.INVALID_ACCESS_MODIFIER);
+    Truth.assertThat(jarLinkageReport.getMissingClassErrors().get(0).getReason())
+        .isEqualTo(Reason.INACCESSIBLE);
   }
 
   @Test
@@ -384,7 +383,7 @@ public class StaticLinkageCheckerTest {
     Truth.assertWithMessage("Import dependency in BOM should be resolved")
         .that(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
-        .contains("google-cloud-firestore-0.70.0-beta.jar");
+        .contains("google-cloud-firestore-0.74.0-beta.jar");
   }
 
   @Test

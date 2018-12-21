@@ -32,8 +32,7 @@ public class LinkageErrorMissingFieldTest{
             .build();
     URL targetClassLocation = new URL("file://foo/bar");
     LinkageErrorMissingField linkageErrorMissingField =
-        LinkageErrorMissingField.errorMissingField(fieldSymbolReference, targetClassLocation);
-
+        LinkageErrorMissingField.errorSymbolNotFound(fieldSymbolReference, targetClassLocation);
     Assert.assertEquals(fieldSymbolReference, linkageErrorMissingField.getReference());
     Assert.assertEquals(targetClassLocation, linkageErrorMissingField.getTargetClassLocation());
   }
