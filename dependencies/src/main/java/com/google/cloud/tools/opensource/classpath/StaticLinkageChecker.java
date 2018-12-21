@@ -325,37 +325,29 @@ public class StaticLinkageChecker {
    */
   private boolean isClassAccessibleFrom(JavaClass javaClass, String sourceClassName)
       throws ClassNotFoundException {
-    String targetClassName = javaClass.getClassName();
-    boolean publicOrSamePackage =
-        javaClass.isPublic() || ClassDumper.classesInSamePackage(targetClassName, sourceClassName);
-    if (javaClass.isNested()) {
-      // Nested class can be declared as private or protected, in addition to public and package
-      // private. Protected is treated same as package private.
-      // https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-ClassModifier
-      if (javaClass.isPrivate()) {
-        // Class reference within same file is allowed to access private class. However, such case
-        // is already filtered at errorsFromSymbolReferences method.
-        return false;
-      }
+    if (javaClass.isPrivate()) {
+      // Nested class can be declared as private. Class reference within same file is allowed to
+      // access private class. However, such case is already filtered at errorsFromSymbolReferences.
+      return false;
+    }
 
-      if (publicOrSamePackage) {
-        // In addition to the accessibility of the class itself, nested classes need to check the
-        // enclosing class(es).
-        // https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.1
-        String enclosingClassName = ClassDumper.enclosingClassName(targetClassName);
-        if (enclosingClassName == null) {
-          throw new ClassFormatException(
-              "Could not retrieve enclosing class name for the nested class " + targetClassName);
-        }
+    String targetClassName = javaClass.getClassName();
+    if (javaClass.isPublic()
+        || ClassDumper.classesInSamePackage(targetClassName, sourceClassName)) {
+      String enclosingClassName = ClassDumper.enclosingClassName(targetClassName);
+      if (enclosingClassName != null) {
+        // Nested class can be declared as private or protected, in addition to
+        // public and package private. Protected is treated same as package private.
+        // https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-ClassModifier
         JavaClass enclosingJavaClass = classDumper.loadJavaClass(enclosingClassName);
         return isClassAccessibleFrom(enclosingJavaClass, sourceClassName);
       } else {
-        // The class is not public and not in the same package as the source.
-        return false;
+        // Top-level class
+        return true;
       }
     } else {
-      // Top-level class can be declared as public or package private.
-      return publicOrSamePackage;
+      // The class is not public and not in the same package as the source class.
+      return false;
     }
   }
 
