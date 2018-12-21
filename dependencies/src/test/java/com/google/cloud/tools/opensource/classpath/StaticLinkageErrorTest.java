@@ -16,13 +16,13 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.cloud.tools.opensource.classpath.LinkageErrorOnReference.Reason;
+import com.google.cloud.tools.opensource.classpath.StaticLinkageError.Reason;
 import com.google.common.truth.Truth;
 import java.net.MalformedURLException;
 import java.net.URL;
 import org.junit.Test;
 
-public class LinkageErrorOnReferenceTest {
+public class StaticLinkageErrorTest {
 
   @Test
   public void testLinkageErrorCreation() throws MalformedURLException {
@@ -33,7 +33,7 @@ public class LinkageErrorOnReferenceTest {
             .setSourceClassName("ClassD")
             .build();
 
-    LinkageErrorOnReference<FieldSymbolReference> fieldError = LinkageErrorOnReference
+    StaticLinkageError<FieldSymbolReference> fieldError = StaticLinkageError
         .errorMissingTargetClass(fieldSymbolReference);
     Truth.assertThat(fieldError.getReference()).isEqualTo(fieldSymbolReference);
 
@@ -46,7 +46,7 @@ public class LinkageErrorOnReferenceTest {
             .build();
 
     URL targetClassLocation = new URL("file://foo/bar");
-    LinkageErrorOnReference<MethodSymbolReference> methodError = LinkageErrorOnReference
+    StaticLinkageError<MethodSymbolReference> methodError = StaticLinkageError
         .errorMissingMember(methodSymbolReference, targetClassLocation);
     Truth.assertThat(methodError.getTargetClassLocation()).isEqualTo(targetClassLocation);
 
@@ -55,8 +55,8 @@ public class LinkageErrorOnReferenceTest {
             .setTargetClassName("ClassA")
             .setSourceClassName("ClassB")
             .build();
-    LinkageErrorOnReference<ClassSymbolReference> classError =
-        LinkageErrorOnReference.errorInvalidModifier(classSymbolReference, targetClassLocation);
+    StaticLinkageError<ClassSymbolReference> classError =
+        StaticLinkageError.errorInvalidModifier(classSymbolReference, targetClassLocation);
     Truth.assertThat(classError.getReason()).isEqualTo(Reason.INACCESSIBLE);
   }
 }

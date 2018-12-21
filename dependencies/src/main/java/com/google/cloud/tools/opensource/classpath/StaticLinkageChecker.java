@@ -41,7 +41,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Logger;
-import org.apache.bcel.classfile.ClassFormatException;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
@@ -114,7 +113,8 @@ public class StaticLinkageChecker {
       throws IOException, RepositoryException, ParseException {
     
     CommandLine commandLine = StaticLinkageCheckOption.readCommandLine(arguments);
-    ImmutableList<Path> inputClasspath = StaticLinkageCheckOption.generateInputClasspath(commandLine);
+    ImmutableList<Path> inputClasspath =
+        StaticLinkageCheckOption.generateInputClasspath(commandLine);
     // TODO(suztomo): take command-line option to choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(inputClasspath.get(0));
 
@@ -260,13 +260,13 @@ public class StaticLinkageChecker {
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
    */
-  private Optional<LinkageErrorOnReference<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
+  private Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
       MethodSymbolReference reference) {
     if (validateMethodReference(reference)) {
       return Optional.empty();
     }
     // # TODO(#293): Add reason and target class location for linkage errors on method references
-    return Optional.of(LinkageErrorOnReference.errorMissingMember(reference, null));
+    return Optional.of(StaticLinkageError.errorMissingMember(reference, null));
   }
 
   /**
@@ -274,7 +274,7 @@ public class StaticLinkageChecker {
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
    */
-  private Optional<LinkageErrorOnReference<FieldSymbolReference>> checkLinkageErrorMissingFieldAt(
+  private Optional<StaticLinkageError<FieldSymbolReference>> checkLinkageErrorMissingFieldAt(
       FieldSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     String fieldName = reference.getFieldName();
@@ -290,9 +290,9 @@ public class StaticLinkageChecker {
       // The field was not found in the class from the classpath. The location of the target class
       // will be the first thing to check for investigating the reason.
       URL classFileUrl = classDumper.findClassLocation(targetClassName);
-      return Optional.of(LinkageErrorOnReference.errorMissingMember(reference, classFileUrl));
+      return Optional.of(StaticLinkageError.errorMissingMember(reference, classFileUrl));
     } catch (ClassNotFoundException ex) {
-      return Optional.of(LinkageErrorOnReference.errorMissingTargetClass(reference));
+      return Optional.of(StaticLinkageError.errorMissingTargetClass(reference));
     }
   }
 
@@ -301,19 +301,19 @@ public class StaticLinkageChecker {
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
    */
-  private Optional<LinkageErrorOnReference<ClassSymbolReference>> checkLinkageErrorMissingClassAt(
+  private Optional<StaticLinkageError<ClassSymbolReference>> checkLinkageErrorMissingClassAt(
       ClassSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     try {
       JavaClass targetClass = classDumper.loadJavaClass(targetClassName);
       if (!isClassAccessibleFrom(targetClass, reference.getSourceClassName())) {
         return Optional.of(
-            LinkageErrorOnReference.errorInvalidModifier(
+            StaticLinkageError.errorInvalidModifier(
                 reference, classDumper.findClassLocation(targetClassName)));
       }
       return Optional.empty();
     } catch (ClassNotFoundException ex) {
-      return Optional.of(LinkageErrorOnReference.errorMissingTargetClass(reference));
+      return Optional.of(StaticLinkageError.errorMissingTargetClass(reference));
     }
   }
 
@@ -360,7 +360,8 @@ public class StaticLinkageChecker {
     String className = methodReference.getTargetClassName();
     String methodName = methodReference.getMethodName();
     try {
-      Class<?>[] parameterTypes = classDumper.methodDescriptorToClass(methodReference.getDescriptor());
+      Class<?>[] parameterTypes =
+          classDumper.methodDescriptorToClass(methodReference.getDescriptor());
       Class<?> clazz = className.startsWith("[") ? Array.class : classDumper.loadClass(className);
       if ("<init>".equals(methodName)) {
         clazz.getConstructor(parameterTypes);

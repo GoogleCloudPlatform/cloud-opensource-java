@@ -21,9 +21,7 @@ import java.net.URL;
 import javax.annotation.Nullable;
 
 /**
- * Static linkage error caused by a symbol reference. The symbol reference is one of the three
- * types: {@link ClassSymbolReference}, {@link MethodSymbolReference}, and {@link
- * FieldSymbolReference}.
+ * Static linkage error caused by a symbol reference.
  *
  * @param <T> type of symbol reference that caused the linkage error
  * @see <a
@@ -31,7 +29,7 @@ import javax.annotation.Nullable;
  *     Java Dependency Glossary: Static linkage error</a>
  */
 @AutoValue
-abstract class LinkageErrorOnReference<T extends SymbolReference> {
+abstract class StaticLinkageError<T extends SymbolReference> {
 
   /** Returns the symbol reference on which this linkage error occurred. */
   abstract T getReference();
@@ -60,13 +58,12 @@ abstract class LinkageErrorOnReference<T extends SymbolReference> {
   }
 
   /** Returns a linkage error caused by {@link Reason#CLASS_NOT_FOUND}. */
-  static <U extends SymbolReference> LinkageErrorOnReference<U> errorMissingTargetClass(
-      U reference) {
+  static <U extends SymbolReference> StaticLinkageError<U> errorMissingTargetClass(U reference) {
     return builderFor(reference).setReason(Reason.CLASS_NOT_FOUND).build();
   }
 
   /** Returns a linkage error caused by {@link Reason#SYMBOL_NOT_FOUND}. */
-  static <U extends SymbolReference> LinkageErrorOnReference<U> errorMissingMember(
+  static <U extends SymbolReference> StaticLinkageError<U> errorMissingMember(
       U reference, URL targetClassLocation) {
     return builderFor(reference)
         .setReason(Reason.SYMBOL_NOT_FOUND)
@@ -75,7 +72,7 @@ abstract class LinkageErrorOnReference<T extends SymbolReference> {
   }
 
   /** Returns a linkage error caused by {@link Reason#INACCESSIBLE}. */
-  static <U extends SymbolReference> LinkageErrorOnReference<U> errorInvalidModifier(
+  static <U extends SymbolReference> StaticLinkageError<U> errorInvalidModifier(
       U reference, URL targetClassLocation) {
     return builderFor(reference)
         .setReason(Reason.INACCESSIBLE)
@@ -86,7 +83,7 @@ abstract class LinkageErrorOnReference<T extends SymbolReference> {
   /** Returns {@code Builder} for a linkage error that occurred at the symbol reference. */
   private static <U extends SymbolReference> Builder<U> builderFor(U reference) {
     // This method gives type-safety compared with normal builder() method.
-    Builder<U> builder = new AutoValue_LinkageErrorOnReference.Builder<>();
+    Builder<U> builder = new AutoValue_StaticLinkageError.Builder<>();
     builder.setReference(reference);
     return builder;
   }
@@ -94,13 +91,13 @@ abstract class LinkageErrorOnReference<T extends SymbolReference> {
   @AutoValue.Builder
   abstract static class Builder<T extends SymbolReference> {
 
-    abstract LinkageErrorOnReference.Builder<T> setTargetClassLocation(URL targetClassLocation);
+    abstract StaticLinkageError.Builder<T> setTargetClassLocation(URL targetClassLocation);
 
-    abstract LinkageErrorOnReference.Builder<T> setReason(Reason reason);
+    abstract StaticLinkageError.Builder<T> setReason(Reason reason);
 
-    abstract LinkageErrorOnReference.Builder<T> setReference(T reference);
+    abstract StaticLinkageError.Builder<T> setReference(T reference);
 
-    abstract LinkageErrorOnReference<T> build();
+    abstract StaticLinkageError<T> build();
   }
 
   /** Reason to distinguish the cause of a static linkage error against a symbol reference. */

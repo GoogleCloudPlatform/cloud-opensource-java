@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.cloud.tools.opensource.classpath.LinkageErrorOnReference.Reason;
+import com.google.cloud.tools.opensource.classpath.StaticLinkageError.Reason;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

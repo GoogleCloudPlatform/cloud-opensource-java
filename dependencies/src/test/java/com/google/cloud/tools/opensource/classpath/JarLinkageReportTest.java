@@ -27,9 +27,9 @@ import org.junit.Test;
 public class JarLinkageReportTest {
 
   private JarLinkageReport jarLinkageReport;
-  private ImmutableList<LinkageErrorOnReference<FieldSymbolReference>> missingFieldErrors;
-  private ImmutableList<LinkageErrorOnReference<MethodSymbolReference>> missingMethodErrors;
-  private ImmutableList<LinkageErrorOnReference<ClassSymbolReference>> missingClassErrors;
+  private ImmutableList<StaticLinkageError<FieldSymbolReference>> missingFieldErrors;
+  private ImmutableList<StaticLinkageError<MethodSymbolReference>> missingMethodErrors;
+  private ImmutableList<StaticLinkageError<ClassSymbolReference>> missingClassErrors;
 
   @Before
   public void setUp() throws MalformedURLException {
@@ -40,8 +40,8 @@ public class JarLinkageReportTest {
             .setSourceClassName("ClassB")
             .build();
 
-    LinkageErrorOnReference<ClassSymbolReference> linkageErrorMissingClass =
-        LinkageErrorOnReference.errorMissingTargetClass(classSymbolReference);
+    StaticLinkageError<ClassSymbolReference> linkageErrorMissingClass =
+        StaticLinkageError.errorMissingTargetClass(classSymbolReference);
     missingClassErrors = ImmutableList.of(linkageErrorMissingClass);
 
     MethodSymbolReference methodSymbolReference =
@@ -52,8 +52,8 @@ public class JarLinkageReportTest {
             .setSourceClassName("ClassB")
             .build();
     URL targetClassLocation = new URL("file:///dummy.jar");
-    LinkageErrorOnReference<MethodSymbolReference> linkageErrorMissingMethod =
-        LinkageErrorOnReference.errorMissingMember(methodSymbolReference, targetClassLocation);
+    StaticLinkageError<MethodSymbolReference> linkageErrorMissingMethod =
+        StaticLinkageError.errorMissingMember(methodSymbolReference, targetClassLocation);
     missingMethodErrors = ImmutableList.of(linkageErrorMissingMethod);
 
     FieldSymbolReference fieldSymbolReference =
@@ -62,8 +62,8 @@ public class JarLinkageReportTest {
             .setFieldName("fieldX")
             .setSourceClassName("ClassD")
             .build();
-    LinkageErrorOnReference<FieldSymbolReference> linkageErrorMissingField =
-        LinkageErrorOnReference.errorMissingTargetClass(fieldSymbolReference);
+    StaticLinkageError<FieldSymbolReference> linkageErrorMissingField =
+        StaticLinkageError.errorMissingTargetClass(fieldSymbolReference);
     missingFieldErrors = ImmutableList.of(linkageErrorMissingField);
     jarLinkageReport =
         JarLinkageReport.builder()
