@@ -142,7 +142,7 @@ class ClassDumper {
     checkArgument(Files.isReadable(jarFilePath), "The input jar file path is not readable");
 
     SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
-    for (JavaClass javaClass : topLevelJavaClassesInJar(jarFilePath)) {
+    for (JavaClass javaClass : javaAllClassesInJar(jarFilePath)) {
       symbolTableBuilder.addAll(scanSymbolReferencesInClass(javaClass));
     }
     return symbolTableBuilder.build();
@@ -358,18 +358,18 @@ class ClassDumper {
     ImmutableSetMultimap.Builder<Path, String> pathToClasses = ImmutableSetMultimap.builder();
 
     for (Path jarFilePath : jarFilePaths) {
-      for (JavaClass javaClass : topLevelJavaClassesInJar(jarFilePath)) {
+      for (JavaClass javaClass : javaAllClassesInJar(jarFilePath)) {
         pathToClasses.put(jarFilePath, javaClass.getClassName());
         // This does not take double-nested classes. As long as such classes are accessed
         // only from the outer class, static linkage checker does not report false positives
         // TODO(suztomo): enhance this so that it can work with double-nested classes
-        pathToClasses.putAll(jarFilePath, listInnerClassNames(javaClass));
+        // pathToClasses.putAll(jarFilePath, listInnerClassNames(javaClass));
       }
     }
     return pathToClasses.build();
   }
 
-  private static ImmutableSet<ClassInfo> listTopLevelClassesFromJar(URL jarFileUrl)
+  private static ImmutableSet<ClassInfo> listAllClassInfoFromJar(URL jarFileUrl)
       throws IOException {
     URL[] jarFileUrls = new URL[] {jarFileUrl};
 
@@ -380,18 +380,17 @@ class ClassDumper {
     com.google.common.reflect.ClassPath classPath =
         com.google.common.reflect.ClassPath.from(classLoaderFromJar);
 
-    // Nested (inner) classes reside in one of top-level class files.
-    ImmutableSet<ClassInfo> allClassesInJar = classPath.getTopLevelClasses();
+    ImmutableSet<ClassInfo> allClassesInJar = classPath.getAllClasses();
     return allClassesInJar;
   }
 
-  private static ImmutableSet<JavaClass> topLevelJavaClassesInJar(Path jarFilePath)
+  private static ImmutableSet<JavaClass> javaAllClassesInJar(Path jarFilePath)
       throws IOException {
     String pathToJar = jarFilePath.toString();
     SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     URL jarFileUrl = jarFilePath.toUri().toURL();
-    for (ClassInfo classInfo : listTopLevelClassesFromJar(jarFileUrl)) {
+    for (ClassInfo classInfo : listAllClassInfoFromJar(jarFileUrl)) {
       String className = classInfo.getName();
       try {
         JavaClass javaClass = repository.loadClass(className);

@@ -155,6 +155,30 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
+  public void testFindClassReferences_dollarAfterDot()
+      throws RepositoryException, IOException, ClassNotFoundException {
+    Artifact bigTableArtifact =
+        new DefaultArtifact("com.google.cloud:google-cloud-bigquery:1.56.0");
+    List<Path> paths =
+        StaticLinkageChecker.artifactsToClasspath(ImmutableList.of(bigTableArtifact));
+    Path bigQueryJar = paths.get(0);
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    // Bigquery jar contains className with ".$":
+    //   ClassSymbolReference{sourceClassName=com.google.cloud.bigquery.AutoValue_Labels,
+    //     targetClassName=com.google.cloud.bigquery.$AutoValue_Labels} reason:CLASS_NOT_FOUND
+    SymbolReferenceSet symbolReferenceSet = ClassDumper.scanSymbolReferencesInJar(bigQueryJar);
+
+    JarLinkageReport jarLinkageReport = staticLinkageChecker.generateLinkageReport(bigQueryJar,
+        symbolReferenceSet, Collections.emptyList());
+
+    Truth.assertWithMessage("Class should be found in bigquery jar")
+        .that(jarLinkageReport.getMissingClassErrors())
+        .isEmpty();
+  }
+
+  @Test
   public void testFindInvalidReferences_arrayCloneMethod()
       throws IOException, ClassNotFoundException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-26.0-jre.jar"));
