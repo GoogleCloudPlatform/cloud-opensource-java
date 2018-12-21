@@ -381,7 +381,7 @@ public class StaticLinkageCheckerTest {
     Truth.assertWithMessage("Import dependency in BOM should be resolved")
         .that(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
-        .contains("google-cloud-firestore-0.70.0-beta.jar");
+        .contains("google-cloud-firestore-0.74.0-beta.jar");
   }
 
   @Test
