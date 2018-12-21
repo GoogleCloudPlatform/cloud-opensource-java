@@ -196,6 +196,6 @@ public class ClassDumperTest {
     String actualName = ClassDumper.enclosingClassName("com.google.Foo$Bar$Baz");
     Truth.assertThat(actualName).isEqualTo("com.google.Foo$Bar");
     String topLevelClass = ClassDumper.enclosingClassName("com.google.Foo");
-    Truth.assertThat(topLevelClass).isEqualTo("com.google.Foo");
+    Truth.assertThat(topLevelClass).isNull();
   }
 }

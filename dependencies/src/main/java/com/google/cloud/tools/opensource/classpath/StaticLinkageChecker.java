@@ -41,6 +41,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Logger;
+import org.apache.bcel.classfile.ClassFormatException;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
@@ -324,14 +325,14 @@ public class StaticLinkageChecker {
    */
   private boolean isClassAccessibleFrom(JavaClass javaClass, String sourceClassName)
       throws ClassNotFoundException {
+    String targetClassName = javaClass.getClassName();
     boolean publicOrSamePackage =
-        javaClass.isPublic()
-            || ClassDumper.classesInSamePackage(javaClass.getClassName(), sourceClassName);
+        javaClass.isPublic() || ClassDumper.classesInSamePackage(targetClassName, sourceClassName);
     if (javaClass.isNested()) {
-      // In addition to public and package private, nested classes can be declared as private or
-      // protected.
+      // Nested class can be declared as private or protected, in addition to public and package
+      // private. Protected is treated same as package private.
       // https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-ClassModifier
-      if (javaClass.isPrivate()) {
+      if (javaClass.isPrivate() || !publicOrSamePackage) {
         // Class reference within same file is allowed to access private class. However, such case
         // is already filtered at errorsFromSymbolReferences method.
         return false;
@@ -340,9 +341,13 @@ public class StaticLinkageChecker {
       // In addition to the accessibility of the class itself, nested classes need to check the
       // enclosing class(es).
       // https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.1
-      String enclosingClassName = ClassDumper.enclosingClassName(javaClass.getClassName());
+      String enclosingClassName = ClassDumper.enclosingClassName(targetClassName);
+      if (enclosingClassName == null) {
+        throw new ClassFormatException(
+            "Could not retrieve enclosing class name for the nested class " + targetClassName);
+      }
       JavaClass enclosingJavaClass = classDumper.loadJavaClass(enclosingClassName);
-      return publicOrSamePackage && isClassAccessibleFrom(enclosingJavaClass, sourceClassName);
+      return isClassAccessibleFrom(enclosingJavaClass, sourceClassName);
     } else {
       // Top-level class can be declared as public or package private.
       return publicOrSamePackage;

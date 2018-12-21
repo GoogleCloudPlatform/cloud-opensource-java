@@ -417,13 +417,13 @@ class ClassDumper {
   }
 
   /**
-   * Returns the name of enclosing class for the class name (binary name JLS 13.1). If the class is
-   * not nested, then it returns the class name.
+   * Returns the name of enclosing class for the class name (binary name JLS 13.1). Null if the
+   * class is not nested.
    */
   static String enclosingClassName(String className) {
     int lastDollarIndex = className.lastIndexOf('$');
     if (lastDollarIndex < 0) {
-      return className;
+      return null;
     }
     return className.substring(0, lastDollarIndex);
   }
