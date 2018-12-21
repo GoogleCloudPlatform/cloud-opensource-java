@@ -342,7 +342,7 @@ public class StaticLinkageChecker {
         JavaClass enclosingJavaClass = classDumper.loadJavaClass(enclosingClassName);
         return isClassAccessibleFrom(enclosingJavaClass, sourceClassName);
       } else {
-        // Top-level class
+        // Top-level class can be declared as public or package private.
         return true;
       }
     } else {
