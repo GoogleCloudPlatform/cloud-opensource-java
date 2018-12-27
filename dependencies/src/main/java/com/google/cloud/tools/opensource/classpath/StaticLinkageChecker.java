@@ -265,6 +265,7 @@ public class StaticLinkageChecker {
   @VisibleForTesting
   Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
       MethodSymbolReference methodReference) {
+    // TODO(#253): check accessor to verify source class has valid access to the symbol
     String targetClassName = methodReference.getTargetClassName();
     String methodName = methodReference.getMethodName();
 
@@ -388,38 +389,8 @@ public class StaticLinkageChecker {
   }
 
   /**
-   * Returns true if the method reference has a valid referent in the classpath via Java class
-   * loader.
-   */
-  private boolean validateMethodReferenceByClassLoader(MethodSymbolReference methodReference) {
-    String className = methodReference.getTargetClassName();
-    String methodName = methodReference.getMethodName();
-    try {
-      Class<?>[] parameterTypes =
-          classDumper.methodDescriptorToClass(methodReference.getDescriptor());
-      Class<?> clazz = className.startsWith("[") ? Array.class : classDumper.loadClass(className);
-      if ("<init>".equals(methodName)) {
-        clazz.getConstructor(parameterTypes);
-      } else if ("clone".equals(methodName) && clazz == Array.class) {
-        // Array's clone method is not returned by getMethod
-        // https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html#getMethod-java.lang.String-java.lang.Class...-
-        return true;
-      } else {
-        clazz.getMethod(methodName, parameterTypes);
-      }
-      return true;
-    } catch (NoSuchMethodException | ClassNotFoundException ex) {
-      if (classDumper.isJavaRuntimeClass(className)) {
-        // filter JVM classes
-        return true;
-      }
-      return false;
-    }
-  }
-
-  /**
-   * Returns true if the method reference has a valid referent in Java runtime classes in the
-   * extension class loader.
+   * Returns true if the method reference has a valid referent in classes available in the extension
+   * class loader.
    */
   private boolean validateMethodReferenceInJavaRuntime(MethodSymbolReference methodReference) {
     String className = methodReference.getTargetClassName();
@@ -444,56 +415,6 @@ public class StaticLinkageChecker {
     } catch (NoSuchMethodException | ClassNotFoundException ex) {
       return false;
     }
-  }
-
-  /** Returns true if the method reference has a valid referent in the classpath via BCEL API. */
-  private boolean validateMethodReferenceByBcelRepository(MethodSymbolReference methodReference)
-      throws ClassNotFoundException {
-    String className = methodReference.getTargetClassName();
-    String methodName = methodReference.getMethodName();
-    for (JavaClass javaClass : getClassAndSuperClasses(classDumper.loadJavaClass(className))) {
-      for (Method method : javaClass.getMethods()) {
-        if (method.getName().equals(methodName)
-            && method.getSignature().equals(methodReference.getDescriptor())) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  /** Returns true if the method reference has a valid referent in the classpath. */
-  private boolean validateMethodReference(MethodSymbolReference methodReference)
-      throws ClassNotFoundException {
-    String className = methodReference.getTargetClassName();
-    String methodName = methodReference.getMethodName();
-    for (JavaClass javaClass : getClassAndSuperClasses(classDumper.loadJavaClass(className))) {
-      for (Method method : javaClass.getMethods()) {
-        if (method.getName().equals(methodName)
-            && method.getSignature().equals(methodReference.getDescriptor())) {
-          return true;
-        }
-      }
-      MethodSymbolReference methodSymbolReferenceAsSuperClass =
-          methodReference.toBuilder().setTargetClassName(javaClass.getClassName()).build();
-      if (validateMethodReferenceInJavaRuntime(methodSymbolReferenceAsSuperClass)) {
-        return true;
-      }
-    }
-    if (classDumper.isJavaRuntimeClass(className)) {
-      return true;
-    }
-    return false;
-
-    // Attempt 1: Find the class and method via the BCEL synthetic repository in ClassDumper.
-    // BCEL API helps to search availability of (package) private class, constructors and
-    // methods that are inaccessible to Java's reflection API or the class loader.
-
-    // Attempt 2: Find the class and method via the class loader of the input class path
-    // in ClassDumper. Class loaders help to resolve methods defined in Java built-in classes.
-    // TODO(#253): check accessor to verify source class has valid access to the symbol
-    // return validateMethodReferenceByBcelRepository(methodReference)
-    //    || validateMethodReferenceByClassLoader(methodReference);
   }
 
   /**
