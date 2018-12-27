@@ -26,6 +26,7 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -62,34 +63,33 @@ class ClassDumper {
   private final ImmutableList<Path> inputClasspath;
   private final SyntheticRepository syntheticRepository;
   private final ClassLoader classLoader;
+  private final ClassLoader extensionClassLoader;
   private final ImmutableSetMultimap<Path, String> jarFileToClasses;
 
   ImmutableList<Path> getInputClasspath() {
     return inputClasspath;
   }
 
-  static ClassDumper create(List<Path> jarFilePaths) throws IOException {
-    // Creates classpath in the same order as inputClasspath for BCEL API
-    String pathAsString =
-        jarFilePaths.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator));
-    ClassPath classPath = new ClassPath(pathAsString);
-    SyntheticRepository syntheticRepository = SyntheticRepository.getInstance(classPath);
+  static SyntheticRepository createSyntheticRepository(List<Path> paths) {
+    ClassPath classPath = new LinkageCheckClassPath(paths);
+    return SyntheticRepository.getInstance(classPath);
+  }
 
-    URL[] jarFileUrls = jarFilePaths.stream().map(jarPath -> {
-      try {
-        return jarPath.toUri().toURL();
-      } catch (MalformedURLException ex) {
-        throw new IllegalArgumentException("Jar file " + jarPath + " was not converted to URL",
-            ex);
-      }
-    }).toArray(URL[]::new);
-    URLClassLoader classLoaderFromJars =
-        new URLClassLoader(jarFileUrls, ClassLoader.getSystemClassLoader());
+  static ClassDumper create(List<Path> jarFilePaths) throws IOException {
+    URL[] jarFileUrls = new URL[jarFilePaths.size()];
+    for (int i = 0; i < jarFilePaths.size(); ++i) {
+      jarFileUrls[i] = jarFilePaths.get(i).toUri().toURL();
+    }
+    ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+    ClassLoader extensionClassLoader = systemClassLoader.getParent();
+
+    URLClassLoader classLoaderFromJars = new URLClassLoader(jarFileUrls, systemClassLoader);
 
     return new ClassDumper(
         jarFilePaths,
-        syntheticRepository,
+        createSyntheticRepository(jarFilePaths),
         classLoaderFromJars,
+        extensionClassLoader,
         jarFilesToDefinedClasses(jarFilePaths));
   }
 
@@ -97,10 +97,12 @@ class ClassDumper {
       List<Path> inputClasspath,
       SyntheticRepository syntheticRepository,
       ClassLoader classLoader,
+      ClassLoader extensionClassLoader,
       SetMultimap<Path, String> jarFileToClasses) {
     this.inputClasspath = ImmutableList.copyOf(inputClasspath);
     this.syntheticRepository = syntheticRepository;
     this.classLoader = classLoader;
+    this.extensionClassLoader = extensionClassLoader;
     this.jarFileToClasses = ImmutableSetMultimap.copyOf(jarFileToClasses);
   }
 
@@ -119,6 +121,23 @@ class ClassDumper {
    */
   Class<?> loadClass(String className) throws ClassNotFoundException {
     return classLoader.loadClass(className);
+  }
+
+  Class<?> loadClassFromExtensionClassLoader(String className) throws ClassNotFoundException {
+    return extensionClassLoader.loadClass(className);
+  }
+
+  boolean isJavaRuntimeClass(String className) {
+    try {
+      if (className.startsWith("[")) {
+        // Array class
+        return true;
+      }
+      loadClassFromExtensionClassLoader(className);
+      return true;
+    } catch (ClassNotFoundException ex) {
+      return false;
+    }
   }
 
   /**
@@ -306,6 +325,16 @@ class ClassDumper {
     return parameterTypes;
   }
 
+  @VisibleForTesting
+  Class<?>[] methodDescriptorToRuntimeClass(String methodDescriptor) {
+    Type[] argumentTypes = Type.getArgumentTypes(methodDescriptor);
+    Class<?>[] parameterTypes =
+        Arrays.stream(argumentTypes)
+            .map(type -> bcelTypeToJavaClass(type, extensionClassLoader))
+            .toArray(Class[]::new);
+    return parameterTypes;
+  }
+
   /**
    * Returns the jar file URL of a class in the class path. Null if the information is unavailable.
    */
@@ -353,7 +382,8 @@ class ClassDumper {
    * @param jarFilePaths absolute paths to jar files
    * @return map of jar file paths to classes defined in them
    */
-  private static ImmutableSetMultimap<Path, String> jarFilesToDefinedClasses(
+  @VisibleForTesting
+  static ImmutableSetMultimap<Path, String> jarFilesToDefinedClasses(
       List<Path> jarFilePaths) throws IOException {
     ImmutableSetMultimap.Builder<Path, String> pathToClasses = ImmutableSetMultimap.builder();
 
@@ -387,8 +417,7 @@ class ClassDumper {
 
   private static ImmutableSet<JavaClass> topLevelJavaClassesInJar(Path jarFilePath)
       throws IOException {
-    String pathToJar = jarFilePath.toString();
-    SyntheticRepository repository = SyntheticRepository.getInstance(new ClassPath(pathToJar));
+    SyntheticRepository repository = createSyntheticRepository(ImmutableList.of(jarFilePath));
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     URL jarFileUrl = jarFilePath.toUri().toURL();
     for (ClassInfo classInfo : listTopLevelClassesFromJar(jarFileUrl)) {

@@ -82,6 +82,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>com.google.truth.extensions</groupId>
+      <artifactId>truth-java8-extension</artifactId>
+      <version>0.42</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava-testlib</artifactId>
       <scope>test</scope>

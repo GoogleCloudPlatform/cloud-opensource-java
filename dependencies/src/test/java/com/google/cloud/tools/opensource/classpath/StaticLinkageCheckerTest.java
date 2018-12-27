@@ -24,6 +24,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
+import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URLClassLoader;
@@ -31,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
@@ -126,7 +128,7 @@ public class StaticLinkageCheckerTest {
 
   @Test
   public void testFindInvalidReferences_selfReferenceFromAbstractClassToInterface()
-      throws RepositoryException, IOException, ClassNotFoundException {
+      throws RepositoryException, IOException {
     Artifact bigTableArtifact =
         new DefaultArtifact("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
     List<Path> paths =
@@ -145,6 +147,15 @@ public class StaticLinkageCheckerTest {
     // X509HostnameVerifier has the method.
     // https://github.com/apache/httpcomponents-client/blob/e2cf733c60f910d17dc5cfc0a77797054a2e322e/httpclient/src/main/java/org/apache/http/conn/ssl/AbstractVerifier.java#L153
     SymbolReferenceSet symbolReferenceSet = ClassDumper.scanSymbolReferencesInJar(httpClientJar);
+    ClassSymbolReference referenceToGZipInputStreamFactory =
+        ClassSymbolReference.builder()
+            .setSourceClassName("org.apache.http.client.protocol.ResponseContentEncoding")
+            .setTargetClassName("org.apache.http.client.entity.GZIPInputStreamFactory")
+            .build();
+    if (symbolReferenceSet.getClassReferences().contains(referenceToGZipInputStreamFactory)) {
+      System.out.println(
+          "Somehow httpclient-4.5.3 contains GZipInputStreamFactory reference, which is added 4.5.4");
+    }
 
     JarLinkageReport jarLinkageReport = staticLinkageChecker.generateLinkageReport(httpClientJar,
         symbolReferenceSet, Collections.emptyList());
@@ -155,12 +166,12 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testFindInvalidReferences_arrayCloneMethod()
-      throws IOException, ClassNotFoundException, URISyntaxException {
-    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-26.0-jre.jar"));
+  public void testFindInvalidReferences_arrayCloneMethod() throws IOException, URISyntaxException {
+    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
+    // Array's clone is available in Java runtime and thus should not be reported as linkage error
     MethodSymbolReference arrayClone =
         MethodSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
@@ -168,31 +179,35 @@ public class StaticLinkageCheckerTest {
             .setMethodName("clone")
             .setDescriptor("()Ljava/lang/Object")
             .build();
-    MethodSymbolReference arrayInvalidMethod =
+
+    // ImmutableList does not have clone method
+    MethodSymbolReference invalidCloneOnNonArray =
         MethodSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
-            .setTargetClassName("[Lio.grpc.InternalKnownTransport;")
-            .setMethodName("foobar")
+            .setTargetClassName("com.google.common.collect.ImmutableList")
+            .setMethodName("clone")
             .setDescriptor("()Ljava/lang/Object")
             .build();
     SymbolReferenceSet symbolReferenceSet =
         SymbolReferenceSet.builder()
-            .setMethodReferences(ImmutableList.of(arrayClone, arrayInvalidMethod))
+            .setMethodReferences(ImmutableList.of(invalidCloneOnNonArray, arrayClone))
             .build();
 
+    Path jarNotContainingImmutableList =
+        absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar");
     JarLinkageReport jarLinkageReport =
-        staticLinkageChecker.generateLinkageReport(paths.get(0), symbolReferenceSet, 
-            Collections.emptyList());
+        staticLinkageChecker.generateLinkageReport(
+            jarNotContainingImmutableList, symbolReferenceSet, Collections.emptyList());
 
     Truth.assertThat(jarLinkageReport.getMissingMethodErrors()).hasSize(1);
     Assert.assertEquals(
-        arrayInvalidMethod, jarLinkageReport.getMissingMethodErrors().get(0).getReference());
+        invalidCloneOnNonArray, jarLinkageReport.getMissingMethodErrors().get(0).getReference());
   }
 
   @Test
   public void testFindInvalidReferences_constructorInAbstractClass()
-      throws IOException, ClassNotFoundException, URISyntaxException {
-    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-26.0-jre.jar"));
+      throws IOException, URISyntaxException {
+    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
@@ -212,6 +227,26 @@ public class StaticLinkageCheckerTest {
         symbolReferenceSet, Collections.emptyList());
 
     Truth.assertThat(jarLinkageReport.getMissingMethodErrors()).isEmpty();
+  }
+
+  @Test
+  public void testFindInvalidReferences_interfaceNotImplementedAtAbstractClass()
+      throws IOException, URISyntaxException {
+    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    // ImmutableList is an abstract class that implements List, but does not implement get() method
+    MethodSymbolReference methodSymbolReference =
+        MethodSymbolReference.builder()
+            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setTargetClassName("com.google.common.collect.ImmutableList")
+            .setMethodName("get")
+            .setDescriptor("(I)Ljava/lang/Object;")
+            .build();
+    Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
+        staticLinkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
+    Truth8.assertThat(errorFound).isEmpty();
   }
 
   @Test
@@ -271,6 +306,51 @@ public class StaticLinkageCheckerTest {
     Truth.assertWithMessage("Missing field error should carry the target class location")
         .that(jarLinkageReport.getMissingFieldErrors().get(0).getTargetClassLocation().getFile())
         .endsWith("grpc-google-cloud-firestore-v1beta1-0.28.0.jar");
+  }
+
+  @Test
+  public void testFindClass_guavaClassShouldNotBeAddedAutomatically()
+      throws IOException, URISyntaxException {
+    // The class path does not include Guava.
+    List<Path> paths =
+        ImmutableList.of(
+            absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    // Guava class should not be found in the class path
+    ClassSymbolReference invalidClassReference =
+        ClassSymbolReference.builder()
+            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setTargetClassName("com.google.common.base.CharMatcher")
+            .build();
+
+    // There should be an error reported for the reference
+    Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
+        staticLinkageChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
+    Truth8.assertThat(classSymbolError).isPresent();
+  }
+
+  @Test
+  public void testFindClass_classInJar() throws IOException, URISyntaxException {
+    // The class path does not include Guava.
+    List<Path> paths =
+        ImmutableList.of(
+            absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    // Guava class should not be found in the class path
+    ClassSymbolReference invalidClassReference =
+        ClassSymbolReference.builder()
+            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc")
+            .build();
+
+    // There should be an error reported for the reference
+    Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
+        staticLinkageChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
+    Truth8.assertThat(classSymbolError).isEmpty();
   }
 
   @Test

@@ -17,6 +17,8 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.io.IOException;
@@ -24,10 +26,15 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Set;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -198,4 +205,18 @@ public class ClassDumperTest {
     String topLevelClass = ClassDumper.enclosingClassName("com.google.Foo");
     Truth.assertThat(topLevelClass).isNull();
   }
+
+  /*
+  @Test
+  public void testJarFilesToDefinedClasses_classWithDollars()
+      throws IOException, RepositoryException {
+    Artifact grpcArtifact = new DefaultArtifact("com.google.code.gson:gson:2.6.2");
+    List<Path> paths = StaticLinkageChecker.artifactsToClasspath(ImmutableList.of(grpcArtifact));
+    Path gsonJar = paths.get(0);
+
+    ImmutableSetMultimap<Path, String> pathToClasses = ClassDumper
+        .jarFilesToDefinedClasses(paths.subList(0, 1));
+    ImmutableSet<String> classesInGsonJar = pathToClasses.get(gsonJar);
+    Truth.assertThat(classesInGsonJar).contains("com.google.gson.internal.$Gson$Preconditions");
+  } */
 }

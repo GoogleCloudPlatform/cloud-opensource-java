@@ -27,6 +27,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.graph.Traverser;
@@ -35,6 +36,7 @@ import java.lang.reflect.Array;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -260,13 +262,44 @@ public class StaticLinkageChecker {
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
    */
-  private Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
-      MethodSymbolReference reference) {
-    if (validateMethodReference(reference)) {
+  @VisibleForTesting
+  Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
+      MethodSymbolReference methodReference) {
+    String targetClassName = methodReference.getTargetClassName();
+    String methodName = methodReference.getMethodName();
+
+    // Code with an invalid reference to Java runtime class would not be compiled
+    if (classDumper.isJavaRuntimeClass(targetClassName)) {
       return Optional.empty();
     }
-    // # TODO(#293): Add reason and target class location for linkage errors on method references
-    return Optional.of(StaticLinkageError.errorMissingMember(reference, null));
+
+    try {
+      JavaClass targetJavaClass = classDumper.loadJavaClass(targetClassName);
+      // The target class, its parent classes and its interfaces
+      Iterable<JavaClass> classesToCheck =
+          Iterables.concat(
+              getClassAndSuperClasses(targetJavaClass),
+              Arrays.asList(targetJavaClass.getAllInterfaces()));
+      for (JavaClass javaClass : classesToCheck) {
+        for (Method method : javaClass.getMethods()) {
+          if (method.getName().equals(methodName)
+              && method.getSignature().equals(methodReference.getDescriptor())) {
+            return Optional.empty();
+          }
+        }
+        MethodSymbolReference methodSymbolReferenceAsSuperClass =
+            methodReference.toBuilder().setTargetClassName(javaClass.getClassName()).build();
+        if (validateMethodReferenceInJavaRuntime(methodSymbolReferenceAsSuperClass)) {
+          return Optional.empty();
+        }
+      }
+
+      // The class is in class path but the symbol is not found
+      URL classFileUrl = classDumper.findClassLocation(targetClassName);
+      return Optional.of(StaticLinkageError.errorMissingMember(methodReference, classFileUrl));
+    } catch (ClassNotFoundException ex) {
+      return Optional.of(StaticLinkageError.errorMissingTargetClass(methodReference));
+    }
   }
 
   /**
@@ -278,15 +311,16 @@ public class StaticLinkageChecker {
       FieldSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     String fieldName = reference.getFieldName();
-    for (JavaClass javaClass : getClassAndSuperClasses(targetClassName)) {
-      for (Field field : javaClass.getFields()) {
-        if (field.getName().equals(fieldName)) {
-          // The field is found. Returning no error.
-          return Optional.empty();
+    try {
+      JavaClass targetJavaClass = classDumper.loadJavaClass(targetClassName);
+      for (JavaClass javaClass : getClassAndSuperClasses(targetJavaClass)) {
+        for (Field field : javaClass.getFields()) {
+          if (field.getName().equals(fieldName)) {
+            // The field is found. Returning no error.
+            return Optional.empty();
+          }
         }
       }
-    }
-    try {
       // The field was not found in the class from the classpath. The location of the target class
       // will be the first thing to check for investigating the reason.
       URL classFileUrl = classDumper.findClassLocation(targetClassName);
@@ -301,7 +335,8 @@ public class StaticLinkageChecker {
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
    */
-  private Optional<StaticLinkageError<ClassSymbolReference>> checkLinkageErrorMissingClassAt(
+  @VisibleForTesting
+  Optional<StaticLinkageError<ClassSymbolReference>> checkLinkageErrorMissingClassAt(
       ClassSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     try {
@@ -374,17 +409,49 @@ public class StaticLinkageChecker {
       }
       return true;
     } catch (NoSuchMethodException | ClassNotFoundException ex) {
+      if (classDumper.isJavaRuntimeClass(className)) {
+        // filter JVM classes
+        return true;
+      }
       return false;
     }
   }
 
   /**
-   * Returns true if the method reference has a valid referent in the classpath via BCEL API.
+   * Returns true if the method reference has a valid referent in Java runtime classes in the
+   * extension class loader.
    */
-  private boolean validateMethodReferenceByBcelRepository(MethodSymbolReference methodReference) {
+  private boolean validateMethodReferenceInJavaRuntime(MethodSymbolReference methodReference) {
     String className = methodReference.getTargetClassName();
     String methodName = methodReference.getMethodName();
-    for (JavaClass javaClass : getClassAndSuperClasses(className)) {
+    try {
+      Class<?>[] parameterTypes =
+          classDumper.methodDescriptorToRuntimeClass(methodReference.getDescriptor());
+      Class<?> clazz =
+          className.startsWith("[")
+              ? Array.class
+              : classDumper.loadClassFromExtensionClassLoader(className);
+      if ("<init>".equals(methodName)) {
+        clazz.getConstructor(parameterTypes);
+      } else if ("clone".equals(methodName) && clazz == Array.class) {
+        // Array's clone method is not returned by getMethod
+        // https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html#getMethod-java.lang.String-java.lang.Class...-
+        return true;
+      } else {
+        clazz.getMethod(methodName, parameterTypes);
+      }
+      return true;
+    } catch (NoSuchMethodException | ClassNotFoundException ex) {
+      return false;
+    }
+  }
+
+  /** Returns true if the method reference has a valid referent in the classpath via BCEL API. */
+  private boolean validateMethodReferenceByBcelRepository(MethodSymbolReference methodReference)
+      throws ClassNotFoundException {
+    String className = methodReference.getTargetClassName();
+    String methodName = methodReference.getMethodName();
+    for (JavaClass javaClass : getClassAndSuperClasses(classDumper.loadJavaClass(className))) {
       for (Method method : javaClass.getMethods()) {
         if (method.getName().equals(methodName)
             && method.getSignature().equals(methodReference.getDescriptor())) {
@@ -395,10 +462,29 @@ public class StaticLinkageChecker {
     return false;
   }
 
-  /**
-   * Returns true if the method reference has a valid referent in the classpath.
-   */
-  private boolean validateMethodReference(MethodSymbolReference methodReference) {
+  /** Returns true if the method reference has a valid referent in the classpath. */
+  private boolean validateMethodReference(MethodSymbolReference methodReference)
+      throws ClassNotFoundException {
+    String className = methodReference.getTargetClassName();
+    String methodName = methodReference.getMethodName();
+    for (JavaClass javaClass : getClassAndSuperClasses(classDumper.loadJavaClass(className))) {
+      for (Method method : javaClass.getMethods()) {
+        if (method.getName().equals(methodName)
+            && method.getSignature().equals(methodReference.getDescriptor())) {
+          return true;
+        }
+      }
+      MethodSymbolReference methodSymbolReferenceAsSuperClass =
+          methodReference.toBuilder().setTargetClassName(javaClass.getClassName()).build();
+      if (validateMethodReferenceInJavaRuntime(methodSymbolReferenceAsSuperClass)) {
+        return true;
+      }
+    }
+    if (classDumper.isJavaRuntimeClass(className)) {
+      return true;
+    }
+    return false;
+
     // Attempt 1: Find the class and method via the BCEL synthetic repository in ClassDumper.
     // BCEL API helps to search availability of (package) private class, constructors and
     // methods that are inaccessible to Java's reflection API or the class loader.
@@ -406,20 +492,16 @@ public class StaticLinkageChecker {
     // Attempt 2: Find the class and method via the class loader of the input class path
     // in ClassDumper. Class loaders help to resolve methods defined in Java built-in classes.
     // TODO(#253): check accessor to verify source class has valid access to the symbol
-    return validateMethodReferenceByBcelRepository(methodReference)
-        || validateMethodReferenceByClassLoader(methodReference);
+    // return validateMethodReferenceByBcelRepository(methodReference)
+    //    || validateMethodReferenceByClassLoader(methodReference);
   }
 
   /**
    * Returns the target class and its superclasses in order (with {@link Object} last). If any can't
    * be found, the list stops with the previous one.
    */
-  private Iterable<JavaClass> getClassAndSuperClasses(String targetClassName) {
-    try {
-      return SUPERCLASSES.breadthFirst(classDumper.loadJavaClass(targetClassName));
-    } catch (ClassNotFoundException ex) {
-      return ImmutableList.of();
-    }
+  private Iterable<JavaClass> getClassAndSuperClasses(JavaClass targetClass) {
+    return SUPERCLASSES.breadthFirst(targetClass);
   }
 
   private static final Traverser<JavaClass> SUPERCLASSES =
