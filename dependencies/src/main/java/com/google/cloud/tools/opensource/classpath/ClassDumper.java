@@ -24,10 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.reflect.ClassPath.ClassInfo;
-import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -35,7 +32,6 @@ import java.nio.file.Path;
 import java.security.CodeSource;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
 import org.apache.bcel.classfile.ClassFormatException;
@@ -161,7 +157,7 @@ class ClassDumper {
     checkArgument(Files.isReadable(jarFilePath), "The input jar file path is not readable");
 
     SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
-    for (JavaClass javaClass : topLevelJavaClassesInJar(jarFilePath)) {
+    for (JavaClass javaClass : allJavaClassesInJar(jarFilePath)) {
       symbolTableBuilder.addAll(scanSymbolReferencesInClass(javaClass));
     }
     return symbolTableBuilder.build();
@@ -386,20 +382,15 @@ class ClassDumper {
   static ImmutableSetMultimap<Path, String> jarFilesToDefinedClasses(
       List<Path> jarFilePaths) throws IOException {
     ImmutableSetMultimap.Builder<Path, String> pathToClasses = ImmutableSetMultimap.builder();
-
     for (Path jarFilePath : jarFilePaths) {
-      for (JavaClass javaClass : topLevelJavaClassesInJar(jarFilePath)) {
+      for (JavaClass javaClass : allJavaClassesInJar(jarFilePath)) {
         pathToClasses.put(jarFilePath, javaClass.getClassName());
-        // This does not take double-nested classes. As long as such classes are accessed
-        // only from the outer class, static linkage checker does not report false positives
-        // TODO(suztomo): enhance this so that it can work with double-nested classes
-        pathToClasses.putAll(jarFilePath, listInnerClassNames(javaClass));
       }
     }
     return pathToClasses.build();
   }
 
-  private static ImmutableSet<ClassInfo> listTopLevelClassesFromJar(URL jarFileUrl)
+  private static ImmutableSet<ClassInfo> listAllClassInfoFromJar(URL jarFileUrl)
       throws IOException {
     URL[] jarFileUrls = new URL[] {jarFileUrl};
 
@@ -410,17 +401,14 @@ class ClassDumper {
     com.google.common.reflect.ClassPath classPath =
         com.google.common.reflect.ClassPath.from(classLoaderFromJar);
 
-    // Nested (inner) classes reside in one of top-level class files.
-    ImmutableSet<ClassInfo> allClassesInJar = classPath.getTopLevelClasses();
-    return allClassesInJar;
+    return classPath.getAllClasses();
   }
 
-  private static ImmutableSet<JavaClass> topLevelJavaClassesInJar(Path jarFilePath)
-      throws IOException {
+  private static ImmutableSet<JavaClass> allJavaClassesInJar(Path jarFilePath) throws IOException {
     SyntheticRepository repository = createSyntheticRepository(ImmutableList.of(jarFilePath));
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     URL jarFileUrl = jarFilePath.toUri().toURL();
-    for (ClassInfo classInfo : listTopLevelClassesFromJar(jarFileUrl)) {
+    for (ClassInfo classInfo : listAllClassInfoFromJar(jarFileUrl)) {
       String className = classInfo.getName();
       try {
         JavaClass javaClass = repository.loadClass(className);
