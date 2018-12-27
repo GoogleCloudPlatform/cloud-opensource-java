@@ -75,7 +75,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testMethodDescriptorToClass_byteArray() throws IOException, ClassNotFoundException {
+  public void testMethodDescriptorToClass_byteArray() throws IOException {
     ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
     Class<?>[] byteArrayClass =
         classDumper.methodDescriptorToClass("([B)Ljava/lang/String;");
@@ -84,7 +84,7 @@ public class ClassDumperTest {
 
   @Test
   public void testMethodDescriptorToClass_primitiveTypes()
-      throws IOException, ClassNotFoundException {
+      throws IOException {
     ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
     // List of primitive types that appear in descriptor:
     // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3
@@ -126,7 +126,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testCreationInvalidInput() throws IOException {
+  public void testCreationInvalidInput() {
     try {
       ClassDumper.create(ImmutableList.of(Paths.get("")));
       Assert.fail("Empty path should generate IOException");

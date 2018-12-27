@@ -66,7 +66,7 @@ class ClassDumper {
     return inputClasspath;
   }
 
-  static SyntheticRepository createSyntheticRepository(List<Path> paths) {
+  private static SyntheticRepository createSyntheticRepository(List<Path> paths) {
     ClassPath classPath = new LinkageCheckClassPath(paths);
     return SyntheticRepository.getInstance(classPath);
   }

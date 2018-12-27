@@ -32,7 +32,6 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.graph.Traverser;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -288,11 +287,6 @@ public class StaticLinkageChecker {
             return Optional.empty();
           }
         }
-        MethodSymbolReference methodSymbolReferenceAsSuperClass =
-            methodReference.toBuilder().setTargetClassName(javaClass.getClassName()).build();
-        if (validateMethodReferenceInJavaRuntime(methodSymbolReferenceAsSuperClass)) {
-          return Optional.empty();
-        }
       }
 
       // The class is in class path but the symbol is not found
@@ -384,35 +378,6 @@ public class StaticLinkageChecker {
       }
     } else {
       // The class is not public and not in the same package as the source class.
-      return false;
-    }
-  }
-
-  /**
-   * Returns true if the method reference has a valid referent in classes available in the extension
-   * class loader.
-   */
-  private boolean validateMethodReferenceInJavaRuntime(MethodSymbolReference methodReference) {
-    String className = methodReference.getTargetClassName();
-    String methodName = methodReference.getMethodName();
-    try {
-      Class<?>[] parameterTypes =
-          classDumper.methodDescriptorToRuntimeClass(methodReference.getDescriptor());
-      Class<?> clazz =
-          className.startsWith("[")
-              ? Array.class
-              : classDumper.loadClassFromExtensionClassLoader(className);
-      if ("<init>".equals(methodName)) {
-        clazz.getConstructor(parameterTypes);
-      } else if ("clone".equals(methodName) && clazz == Array.class) {
-        // Array's clone method is not returned by getMethod
-        // https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html#getMethod-java.lang.String-java.lang.Class...-
-        return true;
-      } else {
-        clazz.getMethod(methodName, parameterTypes);
-      }
-      return true;
-    } catch (NoSuchMethodException | ClassNotFoundException ex) {
       return false;
     }
   }
