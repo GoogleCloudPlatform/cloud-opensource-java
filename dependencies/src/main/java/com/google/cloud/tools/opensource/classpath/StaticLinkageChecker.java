@@ -264,7 +264,6 @@ public class StaticLinkageChecker {
   @VisibleForTesting
   Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
       MethodSymbolReference methodReference) {
-    // TODO(#253): check accessor to verify source class has valid access to the symbol
     String targetClassName = methodReference.getTargetClassName();
     String methodName = methodReference.getMethodName();
 
@@ -275,7 +274,7 @@ public class StaticLinkageChecker {
 
     try {
       JavaClass targetJavaClass = classDumper.loadJavaClass(targetClassName);
-      // The target class, its parent classes and its interfaces
+      // The target class, its parent classes, and its interfaces
       Iterable<JavaClass> classesToCheck =
           Iterables.concat(
               getClassAndSuperClasses(targetJavaClass),
@@ -284,6 +283,7 @@ public class StaticLinkageChecker {
         for (Method method : javaClass.getMethods()) {
           if (method.getName().equals(methodName)
               && method.getSignature().equals(methodReference.getDescriptor())) {
+            // TODO(#253): check accessor to verify source class has valid access to the symbol
             return Optional.empty();
           }
         }
@@ -312,6 +312,7 @@ public class StaticLinkageChecker {
         for (Field field : javaClass.getFields()) {
           if (field.getName().equals(fieldName)) {
             // The field is found. Returning no error.
+            // TODO(#305): to confirm modifiers of fields and target class
             return Optional.empty();
           }
         }
