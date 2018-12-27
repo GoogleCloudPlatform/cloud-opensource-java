@@ -206,7 +206,6 @@ public class ClassDumperTest {
     Truth.assertThat(topLevelClass).isNull();
   }
 
-  /*
   @Test
   public void testJarFilesToDefinedClasses_classWithDollars()
       throws IOException, RepositoryException {
@@ -218,5 +217,5 @@ public class ClassDumperTest {
         .jarFilesToDefinedClasses(paths.subList(0, 1));
     ImmutableSet<String> classesInGsonJar = pathToClasses.get(gsonJar);
     Truth.assertThat(classesInGsonJar).contains("com.google.gson.internal.$Gson$Preconditions");
-  } */
+  }
 }
