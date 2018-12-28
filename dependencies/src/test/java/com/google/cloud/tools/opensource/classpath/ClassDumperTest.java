@@ -226,22 +226,19 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testClassToDefiningJarFile_firstElementWins() throws URISyntaxException, IOException {
+  public void testClassToDefiningJarFile_firstJarFileWins() throws URISyntaxException, IOException {
     Path firestore65 = absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar");
     Path firestore66 = absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar");
 
+    // This class exists in both jar files
+    String grpcClass = "com.google.cloud.firestore.spi.v1beta1.GrpcFirestoreRpc";
+
     ImmutableMap<String, Path> classToJar65First =
         ClassDumper.classToDefiningJarFile(ImmutableList.of(firestore65, firestore66));
-    Truth.assertThat(
-            (Object)
-                classToJar65First.get("com.google.cloud.firestore.spi.v1beta1.GrpcFirestoreRpc"))
-        .isEqualTo(firestore65);
+    Truth.assertThat((Object) classToJar65First.get(grpcClass)).isEqualTo(firestore65);
 
     ImmutableMap<String, Path> classToJar66First =
         ClassDumper.classToDefiningJarFile(ImmutableList.of(firestore66, firestore65));
-    Truth.assertThat(
-            (Object)
-                classToJar66First.get("com.google.cloud.firestore.spi.v1beta1.GrpcFirestoreRpc"))
-        .isEqualTo(firestore66);
+    Truth.assertThat((Object) classToJar66First.get(grpcClass)).isEqualTo(firestore66);
   }
 }

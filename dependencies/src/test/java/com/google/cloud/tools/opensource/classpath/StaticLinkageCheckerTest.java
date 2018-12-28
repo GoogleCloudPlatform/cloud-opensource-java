@@ -305,7 +305,7 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testFindClass_guavaClassShouldNotBeAddedAutomatically()
+  public void testCheckLinkageErrorMissingClassAt_guavaClassShouldNotBeAddedAutomatically()
       throws IOException, URISyntaxException {
     // The class path does not include Guava.
     List<Path> paths =
@@ -325,25 +325,26 @@ public class StaticLinkageCheckerTest {
     Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
         staticLinkageChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
     Truth8.assertThat(classSymbolError).isPresent();
+    Truth.assertThat(classSymbolError.get().getReference()).isEqualTo(invalidClassReference);
   }
 
   @Test
-  public void testFindClass_classInJar() throws IOException, URISyntaxException {
-    // The class path does not include Guava.
+  public void testCheckLinkageErrorMissingClassAt_validClassInJar()
+      throws IOException, URISyntaxException {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
-    // Guava class should not be found in the class path
+    // FirestoreGrpc class exists in the jar file
     ClassSymbolReference invalidClassReference =
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc")
             .build();
 
-    // There should be an error reported for the reference
+    // There should not be an error reported for the reference
     Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
         staticLinkageChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
     Truth8.assertThat(classSymbolError).isEmpty();

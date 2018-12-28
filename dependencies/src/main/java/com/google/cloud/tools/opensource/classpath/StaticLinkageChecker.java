@@ -53,7 +53,6 @@ import org.eclipse.aether.artifact.Artifact;
  * A tool to find static linkage errors for a class path.
  */
 public class StaticLinkageChecker {
-  // TODO(suztomo): enhance scope to include fields and classes. Issue #207
 
   private static final Logger logger = Logger.getLogger(StaticLinkageChecker.class.getName());
 
@@ -87,13 +86,16 @@ public class StaticLinkageChecker {
   
   private final ListMultimap<Path, DependencyPath> paths;
 
-  StaticLinkageChecker(
+  private StaticLinkageChecker(
       boolean reportOnlyReachable, ClassDumper classDumper, Iterable<Path> entryPoints) {
     this(reportOnlyReachable, classDumper, entryPoints, ArrayListMultimap.create());
   }
-  
-  StaticLinkageChecker(boolean reportOnlyReachable, ClassDumper classDumper,
-      Iterable<Path> entryPoints, ListMultimap<Path, DependencyPath> paths) {
+
+  private StaticLinkageChecker(
+      boolean reportOnlyReachable,
+      ClassDumper classDumper,
+      Iterable<Path> entryPoints,
+      ListMultimap<Path, DependencyPath> paths) {
     this.reportOnlyReachable = reportOnlyReachable;
     this.classDumper = Preconditions.checkNotNull(classDumper);
     this.entryPoints = ImmutableSet.copyOf(entryPoints);
