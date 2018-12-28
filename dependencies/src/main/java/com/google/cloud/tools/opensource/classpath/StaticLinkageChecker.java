@@ -269,7 +269,7 @@ public class StaticLinkageChecker {
     String targetClassName = reference.getTargetClassName();
     String methodName = reference.getMethodName();
 
-    // Code with an invalid reference to Java runtime class would not be compiled
+    // Skip references to Java runtime class. For example, java.lang.String.
     if (classDumper.isJavaRuntimeClass(targetClassName)) {
       return Optional.empty();
     }
@@ -281,12 +281,16 @@ public class StaticLinkageChecker {
         return Optional.of(StaticLinkageError.errorInvalidModifier(reference, classFileLocation));
       }
 
-      // The target class, its parent classes, and its interfaces
-      Iterable<JavaClass> classesToCheck =
+      // Checks the target class, its parent classes, and its interfaces.
+      // Interface check is needed to avoid false positive for a method reference to an abstract
+      // class that implements an interface. For example, Guava's ImmutableList is an abstract class
+      // that implements List interface, but the class does not have get() method. A method
+      // reference to ImmutableList.get() should not be reported as a linkage error.
+      Iterable<JavaClass> typesToCheck =
           Iterables.concat(
               getClassAndSuperClasses(targetJavaClass),
               Arrays.asList(targetJavaClass.getAllInterfaces()));
-      for (JavaClass javaClass : classesToCheck) {
+      for (JavaClass javaClass : typesToCheck) {
         for (Method method : javaClass.getMethods()) {
           if (method.getName().equals(methodName)
               && method.getSignature().equals(reference.getDescriptor())) {

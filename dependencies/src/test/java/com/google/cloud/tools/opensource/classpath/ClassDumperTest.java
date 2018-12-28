@@ -241,4 +241,29 @@ public class ClassDumperTest {
         ClassDumper.classToDefiningJarFile(ImmutableList.of(firestore66, firestore65));
     Truth.assertThat((Object) classToJar66First.get(grpcClass)).isEqualTo(firestore66);
   }
+
+  @Test
+  public void testIsJavaRuntimeClass() throws URISyntaxException, IOException {
+    ClassDumper classDumper =
+        ClassDumper.create(ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar")));
+
+    List<String> javaRuntimeClasses =
+        ImmutableList.of(
+            "java.lang.String",
+            "java.lang.Object",
+            "[Ljava.lang.String;",
+            "java.util.ArrayList",
+            "javax.net.SocketFactory"); // from rt.jar
+    for (String javaRuntimeClassName : javaRuntimeClasses) {
+      Truth.assertThat(classDumper.isJavaRuntimeClass(javaRuntimeClassName)).isTrue();
+    }
+
+    // Even though Guava is passed to the constructor, it should not report ImmutableList as
+    // Java runtime class.
+    List<String> nonJavaRuntimeClasses =
+        ImmutableList.of("com.google.common.collect.ImmutableList", "foo.bar.Baz");
+    for (String nonJavaRuntimeClassName : nonJavaRuntimeClasses) {
+      Truth.assertThat(classDumper.isJavaRuntimeClass(nonJavaRuntimeClassName)).isFalse();
+    }
+  }
 }
