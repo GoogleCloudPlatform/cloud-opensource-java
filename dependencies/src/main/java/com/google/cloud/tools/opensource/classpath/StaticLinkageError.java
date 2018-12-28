@@ -117,14 +117,18 @@ abstract class StaticLinkageError<T extends SymbolReference> {
     /**
      * The target class of the symbol reference is inaccessible to the source.
      *
-     * <p>If the source is in a different package, the symbol or one of its enclosing types is not
-     * public. If the source is in the same package, the symbol or one of its enclosing types is
+     * <p>If the source is in a different package, the class or one of its enclosing types is not
+     * public. If the source is in the same package, the class or one of its enclosing types is
      * private.
      */
     INACCESSIBLE_CLASS,
 
     /**
-     * The symbol is inaccessible to the source.
+     * The member (method or field) is inaccessible to the source.
+     *
+     * <p>If the source is in a different package, the member is not public. If the source is in the
+     * same package, the class is private. If the source is a subclass of the target class, the
+     * member is not protected.
      */
     INACCESSIBLE_MEMBER,
 
