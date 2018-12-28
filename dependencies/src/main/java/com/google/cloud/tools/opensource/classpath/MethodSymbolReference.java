@@ -39,8 +39,6 @@ abstract class MethodSymbolReference implements SymbolReference  {
    */
   abstract String getDescriptor();
 
-  public abstract Builder toBuilder();
-
   static Builder builder() {
     return new AutoValue_MethodSymbolReference.Builder();
   }

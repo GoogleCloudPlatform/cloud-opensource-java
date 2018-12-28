@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.cloud.tools.opensource.classpath.ClassDumperTest.absolutePathOfResource;
+
 import com.google.cloud.tools.opensource.classpath.StaticLinkageError.Reason;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
@@ -27,9 +29,7 @@ import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -58,10 +58,6 @@ public class StaticLinkageCheckerTest {
         }
       };
 
-  private static Path absolutePathOfResource(String resourceName) throws URISyntaxException {
-    return Paths.get(URLClassLoader.getSystemResource(resourceName).toURI()).toAbsolutePath();
-  }
-  
   @Test
   public void testArtifactsToPaths() throws RepositoryException {
     
@@ -304,7 +300,7 @@ public class StaticLinkageCheckerTest {
     Truth.assertThat(jarLinkageReport.getMissingFieldErrors().get(0).getReference().getFieldName())
         .isEqualTo("DUMMY_FIELD");
     Truth.assertWithMessage("Missing field error should carry the target class location")
-        .that(jarLinkageReport.getMissingFieldErrors().get(0).getTargetClassLocation().getFile())
+        .that(jarLinkageReport.getMissingFieldErrors().get(0).getTargetClassLocation().toString())
         .endsWith("grpc-google-cloud-firestore-v1beta1-0.28.0.jar");
   }
 

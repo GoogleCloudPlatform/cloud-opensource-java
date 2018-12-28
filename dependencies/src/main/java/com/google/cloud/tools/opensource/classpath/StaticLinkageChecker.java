@@ -32,7 +32,6 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.graph.Traverser;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -290,7 +289,7 @@ public class StaticLinkageChecker {
       }
 
       // The class is in class path but the symbol is not found
-      URL classFileUrl = classDumper.findClassLocation(targetClassName);
+      Path classFileUrl = classDumper.findClassLocation(targetClassName);
       return Optional.of(StaticLinkageError.errorMissingMember(methodReference, classFileUrl));
     } catch (ClassNotFoundException ex) {
       return Optional.of(StaticLinkageError.errorMissingTargetClass(methodReference));
@@ -319,7 +318,7 @@ public class StaticLinkageChecker {
       }
       // The field was not found in the class from the classpath. The location of the target class
       // will be the first thing to check for investigating the reason.
-      URL classFileUrl = classDumper.findClassLocation(targetClassName);
+      Path classFileUrl = classDumper.findClassLocation(targetClassName);
       return Optional.of(StaticLinkageError.errorMissingMember(reference, classFileUrl));
     } catch (ClassNotFoundException ex) {
       return Optional.of(StaticLinkageError.errorMissingTargetClass(reference));

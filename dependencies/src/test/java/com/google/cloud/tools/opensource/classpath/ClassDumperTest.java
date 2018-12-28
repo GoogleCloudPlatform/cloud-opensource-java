@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Correspondence;
@@ -61,6 +62,10 @@ public class ClassDumperTest {
           return "has target class name equal to";
         }
       };
+
+  static Path absolutePathOfResource(String resourceName) throws URISyntaxException {
+    return Paths.get(URLClassLoader.getSystemResource(resourceName).toURI()).toAbsolutePath();
+  }
 
   private InputStream classFileInputStream;
 
@@ -218,5 +223,25 @@ public class ClassDumperTest {
     ImmutableSet<String> classesInGsonJar = pathToClasses.get(gsonJar);
     // Dollar character ($) is a valid character for a class name, not just for nested ones.
     Truth.assertThat(classesInGsonJar).contains("com.google.gson.internal.$Gson$Preconditions");
+  }
+
+  @Test
+  public void testClassToDefiningJarFile_firstElementWins() throws URISyntaxException, IOException {
+    Path firestore65 = absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar");
+    Path firestore66 = absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar");
+
+    ImmutableMap<String, Path> classToJar65First =
+        ClassDumper.classToDefiningJarFile(ImmutableList.of(firestore65, firestore66));
+    Truth.assertThat(
+            (Object)
+                classToJar65First.get("com.google.cloud.firestore.spi.v1beta1.GrpcFirestoreRpc"))
+        .isEqualTo(firestore65);
+
+    ImmutableMap<String, Path> classToJar66First =
+        ClassDumper.classToDefiningJarFile(ImmutableList.of(firestore66, firestore65));
+    Truth.assertThat(
+            (Object)
+                classToJar66First.get("com.google.cloud.firestore.spi.v1beta1.GrpcFirestoreRpc"))
+        .isEqualTo(firestore66);
   }
 }

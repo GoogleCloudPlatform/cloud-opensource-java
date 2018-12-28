@@ -17,7 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
-import java.net.URL;
+import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 /**
@@ -39,7 +39,7 @@ abstract class StaticLinkageError<T extends SymbolReference> {
    * not found in the class path or the source location is unavailable.
    */
   @Nullable
-  abstract URL getTargetClassLocation();
+  abstract Path getTargetClassLocation();
 
   /** Returns the reason why the symbol reference is marked as a linkage error. */
   abstract Reason getReason();
@@ -64,7 +64,7 @@ abstract class StaticLinkageError<T extends SymbolReference> {
 
   /** Returns a linkage error caused by {@link Reason#SYMBOL_NOT_FOUND}. */
   static <U extends SymbolReference> StaticLinkageError<U> errorMissingMember(
-      U reference, URL targetClassLocation) {
+      U reference, Path targetClassLocation) {
     return builderFor(reference)
         .setReason(Reason.SYMBOL_NOT_FOUND)
         .setTargetClassLocation(targetClassLocation)
@@ -73,7 +73,7 @@ abstract class StaticLinkageError<T extends SymbolReference> {
 
   /** Returns a linkage error caused by {@link Reason#INACCESSIBLE}. */
   static <U extends SymbolReference> StaticLinkageError<U> errorInvalidModifier(
-      U reference, URL targetClassLocation) {
+      U reference, Path targetClassLocation) {
     return builderFor(reference)
         .setReason(Reason.INACCESSIBLE)
         .setTargetClassLocation(targetClassLocation)
@@ -91,7 +91,7 @@ abstract class StaticLinkageError<T extends SymbolReference> {
   @AutoValue.Builder
   abstract static class Builder<T extends SymbolReference> {
 
-    abstract StaticLinkageError.Builder<T> setTargetClassLocation(URL targetClassLocation);
+    abstract StaticLinkageError.Builder<T> setTargetClassLocation(Path targetClassLocation);
 
     abstract StaticLinkageError.Builder<T> setReason(Reason reason);
 
