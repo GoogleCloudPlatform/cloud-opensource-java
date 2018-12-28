@@ -278,7 +278,7 @@ public class StaticLinkageChecker {
       JavaClass targetJavaClass = classDumper.loadJavaClass(targetClassName);
       Path classFileLocation = classDumper.findClassLocation(targetClassName);
       if (!isClassAccessibleFrom(targetJavaClass, reference.getSourceClassName())) {
-        return Optional.of(StaticLinkageError.errorInvalidModifier(reference, classFileLocation));
+        return Optional.of(StaticLinkageError.errorInaccessibleClass(reference, classFileLocation));
       }
 
       // Checks the target class, its parent classes, and its interfaces.
@@ -296,7 +296,7 @@ public class StaticLinkageChecker {
               && method.getSignature().equals(reference.getDescriptor())) {
             if (!isMemberAccessibleFrom(javaClass, method, reference.getSourceClassName())) {
               return Optional.of(
-                  StaticLinkageError.errorInvalidModifier(reference, classFileLocation));
+                  StaticLinkageError.errorInaccessibleMember(reference, classFileLocation));
             }
             return Optional.empty();
           }
@@ -324,7 +324,7 @@ public class StaticLinkageChecker {
       JavaClass targetJavaClass = classDumper.loadJavaClass(targetClassName);
       Path classFileLocation = classDumper.findClassLocation(targetClassName);
       if (!isClassAccessibleFrom(targetJavaClass, reference.getSourceClassName())) {
-        return Optional.of(StaticLinkageError.errorInvalidModifier(reference, classFileLocation));
+        return Optional.of(StaticLinkageError.errorInaccessibleClass(reference, classFileLocation));
       }
 
       for (JavaClass javaClass : getClassAndSuperClasses(targetJavaClass)) {
@@ -333,7 +333,7 @@ public class StaticLinkageChecker {
             // The field is found. Returning no error.
             if (!isMemberAccessibleFrom(javaClass, field, reference.getSourceClassName())) {
               return Optional.of(
-                  StaticLinkageError.errorInvalidModifier(reference, classFileLocation));
+                  StaticLinkageError.errorInaccessibleMember(reference, classFileLocation));
             }
             return Optional.empty();
           }
@@ -402,7 +402,7 @@ public class StaticLinkageChecker {
       JavaClass targetClass = classDumper.loadJavaClass(targetClassName);
       if (!isClassAccessibleFrom(targetClass, reference.getSourceClassName())) {
         return Optional.of(
-            StaticLinkageError.errorInvalidModifier(
+            StaticLinkageError.errorInaccessibleClass(
                 reference, classDumper.findClassLocation(targetClassName)));
       }
       return Optional.empty();

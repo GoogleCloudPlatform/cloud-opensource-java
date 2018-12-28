@@ -57,7 +57,7 @@ public class StaticLinkageErrorTest {
             .setSourceClassName("ClassB")
             .build();
     StaticLinkageError<ClassSymbolReference> classError =
-        StaticLinkageError.errorInvalidModifier(classSymbolReference, targetClassLocation);
-    Truth.assertThat(classError.getReason()).isEqualTo(Reason.INACCESSIBLE);
+        StaticLinkageError.errorInaccessibleClass(classSymbolReference, targetClassLocation);
+    Truth.assertThat(classError.getReason()).isEqualTo(Reason.INACCESSIBLE_CLASS);
   }
 }

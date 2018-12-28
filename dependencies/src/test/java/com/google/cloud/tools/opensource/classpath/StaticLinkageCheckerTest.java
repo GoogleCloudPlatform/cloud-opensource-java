@@ -267,7 +267,7 @@ public class StaticLinkageCheckerTest {
         staticLinkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
-    Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.INACCESSIBLE);
+    Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.INACCESSIBLE_CLASS);
   }
 
   @Test
@@ -320,7 +320,7 @@ public class StaticLinkageCheckerTest {
         staticLinkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
-    Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.INACCESSIBLE);
+    Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.INACCESSIBLE_CLASS);
   }
 
   @Test
@@ -344,7 +344,7 @@ public class StaticLinkageCheckerTest {
         staticLinkageChecker.checkLinkageErrorMissingMethodAt(privateStaticReference);
 
     Truth8.assertThat(errorFound).isPresent();
-    Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.INACCESSIBLE);
+    Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.INACCESSIBLE_MEMBER);
   }
 
   @Test
@@ -471,7 +471,7 @@ public class StaticLinkageCheckerTest {
     Truth8.assertThat(errorFound).isPresent();
     Truth.assertWithMessage("PathTemplate.SLASH_SPLITTER is private field and not accessible.")
         .that(errorFound.get().getReason())
-        .isEqualTo(Reason.INACCESSIBLE);
+        .isEqualTo(Reason.INACCESSIBLE_MEMBER);
   }
 
   @Test
@@ -508,7 +508,7 @@ public class StaticLinkageCheckerTest {
     Truth.assertWithMessage(
             "CharSequenceCharSource.seq is protected field and is not accessible from outside package")
         .that(errorOnDifferentPackage.get().getReason())
-        .isEqualTo(Reason.INACCESSIBLE);
+        .isEqualTo(Reason.INACCESSIBLE_CLASS);
   }
 
   @Test
@@ -621,7 +621,7 @@ public class StaticLinkageCheckerTest {
     Truth.assertThat(jarLinkageReport.getMissingClassErrors()).hasSize(1);
     StaticLinkageError<ClassSymbolReference> classReferenceError =
         jarLinkageReport.getMissingClassErrors().get(0);
-    Truth.assertThat(classReferenceError.getReason()).isEqualTo(Reason.INACCESSIBLE);
+    Truth.assertThat(classReferenceError.getReason()).isEqualTo(Reason.INACCESSIBLE_CLASS);
     Truth.assertWithMessage(
             "Even when the superclass is unavailable, it should report the location of InnerService")
         .that(classReferenceError.getTargetClassLocation().toString())

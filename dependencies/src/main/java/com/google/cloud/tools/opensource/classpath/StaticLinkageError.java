@@ -71,11 +71,20 @@ abstract class StaticLinkageError<T extends SymbolReference> {
         .build();
   }
 
-  /** Returns a linkage error caused by {@link Reason#INACCESSIBLE}. */
-  static <U extends SymbolReference> StaticLinkageError<U> errorInvalidModifier(
+  /** Returns a linkage error caused by {@link Reason#INACCESSIBLE_CLASS}. */
+  static <U extends SymbolReference> StaticLinkageError<U> errorInaccessibleClass(
       U reference, Path targetClassLocation) {
     return builderFor(reference)
-        .setReason(Reason.INACCESSIBLE)
+        .setReason(Reason.INACCESSIBLE_CLASS)
+        .setTargetClassLocation(targetClassLocation)
+        .build();
+  }
+
+  /** Returns a linkage error caused by {@link Reason#INACCESSIBLE_MEMBER}. */
+  static <U extends SymbolReference> StaticLinkageError<U> errorInaccessibleMember(
+      U reference, Path targetClassLocation) {
+    return builderFor(reference)
+        .setReason(Reason.INACCESSIBLE_MEMBER)
         .setTargetClassLocation(targetClassLocation)
         .build();
   }
@@ -106,14 +115,18 @@ abstract class StaticLinkageError<T extends SymbolReference> {
     CLASS_NOT_FOUND,
 
     /**
-     * The symbol is inaccessible to the source.
+     * The target class of the symbol reference is inaccessible to the source.
      *
      * <p>If the source is in a different package, the symbol or one of its enclosing types is not
      * public. If the source is in the same package, the symbol or one of its enclosing types is
      * private.
      */
-    // TODO(#293): enrich javadoc for linkage error on inaccessible method and field
-    INACCESSIBLE,
+    INACCESSIBLE_CLASS,
+
+    /**
+     * The symbol is inaccessible to the source.
+     */
+    INACCESSIBLE_MEMBER,
 
     /**
      * For a method or field reference, the symbol is not found in the target class in the class
