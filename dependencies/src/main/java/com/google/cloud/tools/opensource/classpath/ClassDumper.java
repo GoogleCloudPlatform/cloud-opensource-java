@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.SetMultimap;
+import com.google.common.graph.Traverser;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.IOException;
 import java.net.URL;
@@ -442,6 +443,16 @@ class ClassDumper {
     return packageNameA.equals(packageNameB);
   }
 
+  /** Returns true if {@code childClass} is a subclass of {@code parentClass}. */
+  static boolean isClassSubClassOf(JavaClass childClass, JavaClass parentClass) {
+    for (JavaClass superClass : getClassAndSuperClasses(childClass)) {
+      if (superClass.equals(parentClass)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /**
    * Returns the name of enclosing class for the class name (binary name JLS 13.1). Null if the
    * class is not nested.
@@ -453,4 +464,23 @@ class ClassDumper {
     }
     return className.substring(0, lastDollarIndex);
   }
+
+  /**
+   * Returns the target class and its superclasses in order (with {@link Object} last). If any can't
+   * be found, the list stops with the previous one.
+   */
+  static Iterable<JavaClass> getClassAndSuperClasses(JavaClass targetClass) {
+    return SUPERCLASSES.breadthFirst(targetClass);
+  }
+
+  private static final Traverser<JavaClass> SUPERCLASSES =
+      Traverser.forTree(
+          javaClass -> {
+            try {
+              JavaClass superClass = javaClass.getSuperClass();
+              return superClass == null ? ImmutableSet.of() : ImmutableSet.of(superClass);
+            } catch (ClassNotFoundException e) {
+              return ImmutableSet.of();
+            }
+          });
 }

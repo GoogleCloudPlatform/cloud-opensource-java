@@ -242,7 +242,109 @@ public class StaticLinkageCheckerTest {
             .build();
     Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
         staticLinkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
+
     Truth8.assertThat(errorFound).isEmpty();
+  }
+
+  @Test
+  public void testCheckLinkageErrorMissingMethodAt_privateConstructor()
+      throws IOException, URISyntaxException {
+    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    // ImmutableList is an abstract class that implements List, but does not implement get() method
+    MethodSymbolReference methodSymbolReference =
+        MethodSymbolReference.builder()
+            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setTargetClassName("com.google.common.base.Absent")
+            // The constructor with zero arguments is marked as private
+            .setMethodName("<init>")
+            .setDescriptor("()V")
+            .build();
+
+    Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
+        staticLinkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
+
+    Truth8.assertThat(errorFound).isPresent();
+    Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.INACCESSIBLE);
+  }
+
+  @Test
+  public void testCheckLinkageErrorMissingMethodAt_protectedConstructorFromAnonymousClass()
+      throws IOException, RepositoryException {
+    List<Path> paths =
+        StaticLinkageChecker.artifactsToClasspath(
+            ImmutableList.of(new DefaultArtifact("junit:junit:4.12")));
+    // junit has dependency on hamcrest-core
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    // ImmutableList is an abstract class that implements List, but does not implement get() method
+    MethodSymbolReference methodSymbolReference =
+        MethodSymbolReference.builder()
+            .setSourceClassName("org.junit.experimental.results.ResultMatchers$1")
+            .setTargetClassName("org.hamcrest.TypeSafeMatcher")
+            // The constructor with zero arguments is marked as private
+            .setMethodName("<init>")
+            .setDescriptor("()V")
+            .build();
+
+    Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
+        staticLinkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
+
+    // JLS 6.6.2.2 says
+    // If the access is by an anonymous class instance creation expression of the form
+    // new C(...){...} or ..., then the access is permitted.
+    Truth8.assertThat(errorFound).isEmpty();
+  }
+
+  @Test
+  public void testCheckLinkageErrorMissingMethodAt_privateMethod()
+      throws IOException, URISyntaxException {
+    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    // ImmutableList is an abstract class that implements List, but does not implement get() method
+    MethodSymbolReference methodSymbolReference =
+        MethodSymbolReference.builder()
+            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setTargetClassName("com.google.common.base.Absent")
+            // This method is marked as private
+            .setMethodName("readResolve")
+            .setDescriptor("()Ljava/lang/Object;")
+            .build();
+
+    Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
+        staticLinkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
+
+    Truth8.assertThat(errorFound).isPresent();
+    Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.INACCESSIBLE);
+  }
+
+  @Test
+  public void testCheckLinkageErrorMissingMethodAt_privateStaticMethod()
+      throws IOException, URISyntaxException {
+    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    // ImmutableList is an abstract class that implements List, but does not implement get() method
+    MethodSymbolReference privateStaticReference =
+        MethodSymbolReference.builder()
+            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setTargetClassName("com.google.common.base.Ascii")
+            // This method is marked as private
+            .setMethodName("getAlphaIndex")
+            .setDescriptor("(C)I") // private static int getAlphaIndex(char);
+            .build();
+
+    Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
+        staticLinkageChecker.checkLinkageErrorMissingMethodAt(privateStaticReference);
+
+    Truth8.assertThat(errorFound).isPresent();
+    Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.INACCESSIBLE);
   }
 
   @Test
@@ -351,6 +453,88 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
+  public void testCheckLinkageErrorMissingFieldAt_privateField()
+      throws IOException, URISyntaxException {
+    FieldSymbolReference privateFieldReference =
+        FieldSymbolReference.builder()
+            .setSourceClassName(StaticLinkageCheckerTest.class.getName())
+            .setTargetClassName("com.google.api.pathtemplate.PathTemplate")
+            .setFieldName("SLASH_SPLITTER")
+            .build();
+    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    Optional<StaticLinkageError<FieldSymbolReference>> errorFound =
+        staticLinkageChecker.checkLinkageErrorMissingFieldAt(privateFieldReference);
+
+    Truth8.assertThat(errorFound).isPresent();
+    Truth.assertWithMessage("PathTemplate.SLASH_SPLITTER is private field and not accessible.")
+        .that(errorFound.get().getReason())
+        .isEqualTo(Reason.INACCESSIBLE);
+  }
+
+  @Test
+  public void testCheckLinkageErrorMissingFieldAt_protectedFieldFromSamePackage()
+      throws IOException, URISyntaxException {
+    String targetClassName = "com.google.common.io.CharSource$CharSequenceCharSource";
+    FieldSymbolReference accessFromDifferentPackage =
+        FieldSymbolReference.builder()
+            .setSourceClassName("foo.bar.Baz") // access from different package
+            .setTargetClassName(targetClassName)
+            // seq field has protected modifier
+            .setFieldName("seq")
+            .build();
+    FieldSymbolReference accessFromSamePackage =
+        FieldSymbolReference.builder()
+            .setSourceClassName("com.google.common.io.Foo") // access from same package
+            .setTargetClassName(targetClassName)
+            // seq field has protected modifier
+            .setFieldName("seq")
+            .build();
+
+    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    Optional<StaticLinkageError<FieldSymbolReference>> errorOnSamePackage =
+        staticLinkageChecker.checkLinkageErrorMissingFieldAt(accessFromSamePackage);
+    Truth8.assertThat(errorOnSamePackage).isEmpty();
+
+    Optional<StaticLinkageError<FieldSymbolReference>> errorOnDifferentPackage =
+        staticLinkageChecker.checkLinkageErrorMissingFieldAt(accessFromDifferentPackage);
+    Truth8.assertThat(errorOnDifferentPackage).isPresent();
+
+    Truth.assertWithMessage(
+            "CharSequenceCharSource.seq is protected field and is not accessible from outside package")
+        .that(errorOnDifferentPackage.get().getReason())
+        .isEqualTo(Reason.INACCESSIBLE);
+  }
+
+  @Test
+  public void testCheckLinkageErrorMissingFieldAt_protectedFieldFromSubclass()
+      throws IOException, URISyntaxException {
+    FieldSymbolReference referenceFromSubclass =
+        FieldSymbolReference.builder()
+            // StringCharSource extends CharSequenceCharSource
+            .setSourceClassName("com.google.common.io.StringCharSource")
+            .setTargetClassName("com.google.common.io.CharSource$CharSequenceCharSource")
+            // seq field has protected modifier
+            .setFieldName("seq")
+            .build();
+
+    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    // Because StringCharSource is in the same package, the source class is not suitable
+    // for this class.
+    Optional<StaticLinkageError<FieldSymbolReference>> errorFound =
+        staticLinkageChecker.checkLinkageErrorMissingFieldAt(referenceFromSubclass);
+    Truth8.assertThat(errorFound).isEmpty();
+  }
+
+  @Test
   public void testFindInvalidClassReferences_nonExistentClass()
       throws IOException, URISyntaxException {
     List<Path> paths =
@@ -413,6 +597,7 @@ public class StaticLinkageCheckerTest {
 
   @Test
   public void testFindClassReferences_privateClass() throws IOException, URISyntaxException {
+    // The superclass of AbstractApiService$InnerService (Guava's ApiService) is not in the paths
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
@@ -434,8 +619,13 @@ public class StaticLinkageCheckerTest {
             Collections.emptyList());
 
     Truth.assertThat(jarLinkageReport.getMissingClassErrors()).hasSize(1);
-    Truth.assertThat(jarLinkageReport.getMissingClassErrors().get(0).getReason())
-        .isEqualTo(Reason.INACCESSIBLE);
+    StaticLinkageError<ClassSymbolReference> classReferenceError =
+        jarLinkageReport.getMissingClassErrors().get(0);
+    Truth.assertThat(classReferenceError.getReason()).isEqualTo(Reason.INACCESSIBLE);
+    Truth.assertWithMessage(
+            "Even when the superclass is unavailable, it should report the location of InnerService")
+        .that(classReferenceError.getTargetClassLocation().toString())
+        .endsWith("testdata/api-common-1.7.0.jar");
   }
 
   @Test
