@@ -270,7 +270,7 @@ public class StaticLinkageChecker {
     String methodName = reference.getMethodName();
 
     // Skip references to Java runtime class. For example, java.lang.String.
-    if (classDumper.isJavaRuntimeClass(targetClassName)) {
+    if (classDumper.isSystemClass(targetClassName)) {
       return Optional.empty();
     }
 

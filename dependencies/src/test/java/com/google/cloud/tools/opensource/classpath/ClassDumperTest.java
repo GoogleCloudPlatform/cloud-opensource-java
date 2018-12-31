@@ -219,7 +219,7 @@ public class ClassDumperTest {
     Path gsonJar = paths.get(0);
 
     ImmutableSetMultimap<Path, String> pathToClasses = ClassDumper
-        .scanJarFilesToDefinedClasses(paths.subList(0, 1));
+        .mapJarToClasses(paths.subList(0, 1));
     ImmutableSet<String> classesInGsonJar = pathToClasses.get(gsonJar);
     // Dollar character ($) is a valid character for a class name, not just for nested ones.
     Truth.assertThat(classesInGsonJar).contains("com.google.gson.internal.$Gson$Preconditions");
@@ -234,16 +234,16 @@ public class ClassDumperTest {
     String grpcClass = "com.google.cloud.firestore.spi.v1beta1.GrpcFirestoreRpc";
 
     ImmutableMap<String, Path> classToJar65First =
-        ClassDumper.scanClassToDefiningJarFile(ImmutableList.of(firestore65, firestore66));
+        ClassDumper.mapClassToJar(ImmutableList.of(firestore65, firestore66));
     Truth.assertThat((Object) classToJar65First.get(grpcClass)).isEqualTo(firestore65);
 
     ImmutableMap<String, Path> classToJar66First =
-        ClassDumper.scanClassToDefiningJarFile(ImmutableList.of(firestore66, firestore65));
+        ClassDumper.mapClassToJar(ImmutableList.of(firestore66, firestore65));
     Truth.assertThat((Object) classToJar66First.get(grpcClass)).isEqualTo(firestore66);
   }
 
   @Test
-  public void testIsJavaRuntimeClass() throws URISyntaxException, IOException {
+  public void testIsSystemClass() throws URISyntaxException, IOException {
     ClassDumper classDumper =
         ClassDumper.create(ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar")));
 
@@ -255,7 +255,7 @@ public class ClassDumperTest {
             "java.util.ArrayList",
             "javax.net.SocketFactory"); // from rt.jar
     for (String javaRuntimeClassName : javaRuntimeClasses) {
-      Truth.assertThat(classDumper.isJavaRuntimeClass(javaRuntimeClassName)).isTrue();
+      Truth.assertThat(classDumper.isSystemClass(javaRuntimeClassName)).isTrue();
     }
 
     // Even though Guava is passed to the constructor, it should not report ImmutableList as
@@ -263,7 +263,7 @@ public class ClassDumperTest {
     List<String> nonJavaRuntimeClasses =
         ImmutableList.of("com.google.common.collect.ImmutableList", "foo.bar.Baz");
     for (String nonJavaRuntimeClassName : nonJavaRuntimeClasses) {
-      Truth.assertThat(classDumper.isJavaRuntimeClass(nonJavaRuntimeClassName)).isFalse();
+      Truth.assertThat(classDumper.isSystemClass(nonJavaRuntimeClassName)).isFalse();
     }
   }
 }

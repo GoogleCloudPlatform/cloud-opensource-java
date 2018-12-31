@@ -86,7 +86,7 @@ class ClassDumper {
     }
     // This class loader does not load classes in this project (for example, Guava 26)
     URLClassLoader classLoaderFromJars = new URLClassLoader(jarUrls, extensionClassLoader);
-    ImmutableSetMultimap<Path, String> jarToClasses = scanJarFilesToDefinedClasses(jarPaths);
+    ImmutableSetMultimap<Path, String> jarToClasses = mapJarToClasses(jarPaths);
 
     return new ClassDumper(
         jarPaths,
@@ -94,7 +94,7 @@ class ClassDumper {
         classLoaderFromJars,
         extensionClassLoader,
         jarToClasses,
-        scanClassToDefiningJarFile(jarPaths));
+        mapClassToJar(jarPaths));
   }
 
   private ClassDumper(
@@ -122,14 +122,12 @@ class ClassDumper {
     return syntheticRepository.loadClass(className);
   }
 
-  /**
-   * Loads a system class available in JVM runtime.
-   */
+  /** Loads a system class available in JVM runtime. */
   Class<?> loadSystemClass(String className) throws ClassNotFoundException {
     return extensionClassLoader.loadClass(className);
   }
 
-  boolean isJavaRuntimeClass(String className) {
+  boolean isSystemClass(String className) {
     try {
       if (className.startsWith("[")) {
         // Array class
@@ -163,7 +161,7 @@ class ClassDumper {
     checkArgument(Files.isReadable(jarFilePath), "The input jar file path is not readable");
 
     SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
-    for (JavaClass javaClass : listAllJavaClassesInJar(jarFilePath)) {
+    for (JavaClass javaClass : listClassesInJar(jarFilePath)) {
       symbolTableBuilder.addAll(scanSymbolReferencesInClass(javaClass));
     }
     return symbolTableBuilder.build();
@@ -370,16 +368,16 @@ class ClassDumper {
   }
 
   /**
-   * Returns mapping from jar files to the names of their defining classes.
+   * Returns mapping from jar files to the names of the classes they define.
    *
    * @param jarPaths absolute paths to jar files
    */
   @VisibleForTesting
-  static ImmutableSetMultimap<Path, String> scanJarFilesToDefinedClasses(
+  static ImmutableSetMultimap<Path, String> mapJarToClasses(
       List<Path> jarPaths) throws IOException {
     ImmutableSetMultimap.Builder<Path, String> pathToClasses = ImmutableSetMultimap.builder();
     for (Path jarPath : jarPaths) {
-      for (JavaClass javaClass : listAllJavaClassesInJar(jarPath)) {
+      for (JavaClass javaClass : listClassesInJar(jarPath)) {
         pathToClasses.put(jarPath, javaClass.getClassName());
       }
     }
@@ -393,11 +391,11 @@ class ClassDumper {
    * @param jarFilePaths absolute paths to jar files
    */
   @VisibleForTesting
-  static ImmutableMap<String, Path> scanClassToDefiningJarFile(List<Path> jarFilePaths)
+  static ImmutableMap<String, Path> mapClassToJar(List<Path> jarFilePaths)
       throws IOException {
     Map<String, Path> classToJar = new HashMap<>();
     for (Path jarFilePath : jarFilePaths) {
-      for (JavaClass javaClass : listAllJavaClassesInJar(jarFilePath)) {
+      for (JavaClass javaClass : listClassesInJar(jarFilePath)) {
         // The first entry wins in the same manner as JVM's class loading.
         classToJar.putIfAbsent(javaClass.getClassName(), jarFilePath);
       }
@@ -405,7 +403,7 @@ class ClassDumper {
     return ImmutableMap.copyOf(classToJar);
   }
 
-  private static ImmutableSet<ClassInfo> listAllClassInfoFromJar(URL jarUrl)
+  private static ImmutableSet<ClassInfo> listClassInfo(URL jarUrl)
       throws IOException {
     // Setting parent as null because we don't want other classes than this jar file
     URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[]{jarUrl}, null);
@@ -417,11 +415,11 @@ class ClassDumper {
     return classPath.getAllClasses();
   }
 
-  private static ImmutableSet<JavaClass> listAllJavaClassesInJar(Path jarPath) throws IOException {
+  private static ImmutableSet<JavaClass> listClassesInJar(Path jarPath) throws IOException {
     SyntheticRepository repository = createSyntheticRepository(ImmutableList.of(jarPath));
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     URL jarUrl = jarPath.toUri().toURL();
-    for (ClassInfo classInfo : listAllClassInfoFromJar(jarUrl)) {
+    for (ClassInfo classInfo : listClassInfo(jarUrl)) {
       String className = classInfo.getName();
       try {
         JavaClass javaClass = repository.loadClass(className);
