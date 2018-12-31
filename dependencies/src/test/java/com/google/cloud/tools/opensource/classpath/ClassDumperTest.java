@@ -80,36 +80,6 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testMethodDescriptorToClass_byteArray() throws IOException {
-    ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
-    Class<?>[] byteArrayClass =
-        classDumper.methodDescriptorToClass("([B)Ljava/lang/String;");
-    Assert.assertTrue(byteArrayClass[0].isArray());
-  }
-
-  @Test
-  public void testMethodDescriptorToClass_primitiveTypes()
-      throws IOException {
-    ClassDumper classDumper = ClassDumper.create(ImmutableList.of());
-    // List of primitive types that appear in descriptor:
-    // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3
-    Class<?>[] types =
-        classDumper.methodDescriptorToClass("(BCDFIJSZ)Ljava/lang/String;");
-    Truth.assertThat(types)
-        .asList()
-        .containsExactly(
-            byte.class,
-            char.class,
-            double.class,
-            float.class,
-            int.class,
-            long.class,
-            short.class,
-            boolean.class)
-        .inOrder();
-  }
-
-  @Test
   public void testListInnerClasses() throws IOException {
     InputStream classFileInputStream = URLClassLoader.getSystemResourceAsStream(
         EXAMPLE_CLASS_FILE);

@@ -62,7 +62,6 @@ class ClassDumper {
 
   private final ImmutableList<Path> inputClasspath;
   private final SyntheticRepository syntheticRepository;
-  private final ClassLoader classLoader;
   private final ClassLoader extensionClassLoader;
   private final ImmutableSetMultimap<Path, String> jarFileToClasses;
   private final ImmutableMap<String, Path> classToFirstJarFile;
@@ -80,33 +79,22 @@ class ClassDumper {
     ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
     ClassLoader extensionClassLoader = systemClassLoader.getParent();
 
-    URL[] jarUrls = new URL[jarPaths.size()];
-    for (int i = 0; i < jarPaths.size(); i++) {
-      jarUrls[i] = jarPaths.get(i).toUri().toURL();
-    }
-    // This class loader does not load classes in this project (for example, Guava 26)
-    URLClassLoader classLoaderFromJars = new URLClassLoader(jarUrls, extensionClassLoader);
-    ImmutableSetMultimap<Path, String> jarToClasses = mapJarToClasses(jarPaths);
-
     return new ClassDumper(
         jarPaths,
         createSyntheticRepository(jarPaths),
-        classLoaderFromJars,
         extensionClassLoader,
-        jarToClasses,
+        mapJarToClasses(jarPaths),
         mapClassToJar(jarPaths));
   }
 
   private ClassDumper(
       List<Path> inputClasspath,
       SyntheticRepository syntheticRepository,
-      URLClassLoader classLoader,
       ClassLoader extensionClassLoader,
       SetMultimap<Path, String> jarToClasses,
       ImmutableMap<String, Path> classToFirstJar) {
     this.inputClasspath = ImmutableList.copyOf(inputClasspath);
     this.syntheticRepository = syntheticRepository;
-    this.classLoader = classLoader;
     this.extensionClassLoader = extensionClassLoader;
     this.jarFileToClasses = ImmutableSetMultimap.copyOf(jarToClasses);
     this.classToFirstJarFile = classToFirstJar;
@@ -315,16 +303,6 @@ class ClassDumper {
     return innerClassNames.build();
   }
 
-  @VisibleForTesting
-  Class<?>[] methodDescriptorToClass(String methodDescriptor) {
-    Type[] argumentTypes = Type.getArgumentTypes(methodDescriptor);
-    Class<?>[] parameterTypes =
-        Arrays.stream(argumentTypes)
-            .map(type -> bcelTypeToJavaClass(type, classLoader))
-            .toArray(Class[]::new);
-    return parameterTypes;
-  }
-
   /**
    * Returns the first jar file {@link Path} defining the class. Null if the location is unknown.
    */
@@ -335,36 +313,6 @@ class ClassDumper {
     // ClassNotFoundException was raised. It was inconvenient because we only wanted to know the
     // location of the target class, and sometimes the superclass is unavailable.
     return classToFirstJarFile.get(className);
-  }
-
-  private static Class<?> bcelTypeToJavaClass(Type type, ClassLoader classLoader) {
-    switch (type.getType()) {
-      case Const.T_BOOLEAN:
-        return boolean.class;
-      case Const.T_INT:
-        return int.class;
-      case Const.T_SHORT:
-        return short.class;
-      case Const.T_BYTE:
-        return byte.class;
-      case Const.T_LONG:
-        return long.class;
-      case Const.T_DOUBLE:
-        return double.class;
-      case Const.T_FLOAT:
-        return float.class;
-      case Const.T_CHAR:
-        return char.class;
-      case Const.T_ARRAY:
-        return Object[].class;
-      default:
-        String typeName = type.toString();
-        try {
-          return classLoader.loadClass(typeName);
-        } catch (ClassNotFoundException ex) {
-          return null;
-        }
-    }
   }
 
   /**
