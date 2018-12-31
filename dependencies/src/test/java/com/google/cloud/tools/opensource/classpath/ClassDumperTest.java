@@ -212,7 +212,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testJarFilesToDefinedClasses_classWithDollars()
+  public void testMapJarToClasses_classWithDollars()
       throws IOException, RepositoryException {
     Artifact grpcArtifact = new DefaultArtifact("com.google.code.gson:gson:2.6.2");
     List<Path> paths = StaticLinkageChecker.artifactsToClasspath(ImmutableList.of(grpcArtifact));
@@ -226,7 +226,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testClassToDefiningJarFile_firstJarFileWins() throws URISyntaxException, IOException {
+  public void testMapClassToJar_firstJarFileWins() throws URISyntaxException, IOException {
     Path firestore65 = absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar");
     Path firestore66 = absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar");
 
