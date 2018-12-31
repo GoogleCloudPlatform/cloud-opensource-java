@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassAndSuperClasses;
+import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHierarchy;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
@@ -288,7 +288,7 @@ public class StaticLinkageChecker {
       // reference to ImmutableList.get() should not be reported as a linkage error.
       Iterable<JavaClass> typesToCheck =
           Iterables.concat(
-              getClassAndSuperClasses(targetJavaClass),
+              getClassHierarchy(targetJavaClass),
               Arrays.asList(targetJavaClass.getAllInterfaces()));
       for (JavaClass javaClass : typesToCheck) {
         for (Method method : javaClass.getMethods()) {
@@ -298,6 +298,7 @@ public class StaticLinkageChecker {
               return Optional.of(
                   StaticLinkageError.errorInaccessibleMember(reference, classFileLocation));
             }
+            // The method is found and accessible. Returning no error.
             return Optional.empty();
           }
         }
@@ -327,14 +328,14 @@ public class StaticLinkageChecker {
         return Optional.of(StaticLinkageError.errorInaccessibleClass(reference, classFileLocation));
       }
 
-      for (JavaClass javaClass : getClassAndSuperClasses(targetJavaClass)) {
+      for (JavaClass javaClass : getClassHierarchy(targetJavaClass)) {
         for (Field field : javaClass.getFields()) {
           if (field.getName().equals(fieldName)) {
-            // The field is found. Returning no error.
             if (!isMemberAccessibleFrom(javaClass, field, reference.getSourceClassName())) {
               return Optional.of(
                   StaticLinkageError.errorInaccessibleMember(reference, classFileLocation));
             }
+            // The field is found and accessible. Returning no error.
             return Optional.empty();
           }
         }

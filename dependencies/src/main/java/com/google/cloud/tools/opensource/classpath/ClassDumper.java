@@ -81,7 +81,7 @@ class ClassDumper {
     ClassLoader extensionClassLoader = systemClassLoader.getParent();
 
     URL[] jarFileUrls = new URL[jarFilePaths.size()];
-    for (int i = 0; i < jarFilePaths.size(); ++i) {
+    for (int i = 0; i < jarFilePaths.size(); i++) {
       jarFileUrls[i] = jarFilePaths.get(i).toUri().toURL();
     }
     // This class loader does not load classes in this project (for example, Guava 26)
@@ -445,7 +445,7 @@ class ClassDumper {
 
   /** Returns true if {@code childClass} is a subclass of {@code parentClass}. */
   static boolean isClassSubClassOf(JavaClass childClass, JavaClass parentClass) {
-    for (JavaClass superClass : getClassAndSuperClasses(childClass)) {
+    for (JavaClass superClass : getClassHierarchy(childClass)) {
       if (superClass.equals(parentClass)) {
         return true;
       }
@@ -469,7 +469,7 @@ class ClassDumper {
    * Returns the target class and its superclasses in order (with {@link Object} last). If any can't
    * be found, the list stops with the previous one.
    */
-  static Iterable<JavaClass> getClassAndSuperClasses(JavaClass targetClass) {
+  static Iterable<JavaClass> getClassHierarchy(JavaClass targetClass) {
     return SUPERCLASSES.breadthFirst(targetClass);
   }
 
