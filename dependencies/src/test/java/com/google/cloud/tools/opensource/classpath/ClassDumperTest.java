@@ -143,11 +143,11 @@ public class ClassDumperTest {
   @Test
   public void testScanSymbolTableFromJar()
       throws URISyntaxException, IOException {
-    URL jarFileUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
+    URL jarUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
 
     SymbolReferenceSet symbolReferenceSet =
         ClassDumper.scanSymbolReferencesInJar(
-            Paths.get(jarFileUrl.toURI()));
+            Paths.get(jarUrl.toURI()));
 
     Set<FieldSymbolReference> actualFieldReferences = symbolReferenceSet.getFieldReferences();
     FieldSymbolReference expectedFieldReference =
@@ -181,10 +181,10 @@ public class ClassDumperTest {
   @Test
   public void testScanSymbolTableFromJar_shouldNotPickArrayClass()
       throws URISyntaxException, IOException {
-    URL jarFileUrl = URLClassLoader.getSystemResource("testdata/gax-1.32.0.jar");
+    URL jarUrl = URLClassLoader.getSystemResource("testdata/gax-1.32.0.jar");
 
     SymbolReferenceSet symbolReferenceSet =
-        ClassDumper.scanSymbolReferencesInJar(Paths.get(jarFileUrl.toURI()));
+        ClassDumper.scanSymbolReferencesInJar(Paths.get(jarUrl.toURI()));
 
     Set<ClassSymbolReference> actualClassReferences = symbolReferenceSet.getClassReferences();
     Truth.assertThat(actualClassReferences).isNotEmpty();
@@ -219,7 +219,7 @@ public class ClassDumperTest {
     Path gsonJar = paths.get(0);
 
     ImmutableSetMultimap<Path, String> pathToClasses = ClassDumper
-        .jarFilesToDefinedClasses(paths.subList(0, 1));
+        .scanJarFilesToDefinedClasses(paths.subList(0, 1));
     ImmutableSet<String> classesInGsonJar = pathToClasses.get(gsonJar);
     // Dollar character ($) is a valid character for a class name, not just for nested ones.
     Truth.assertThat(classesInGsonJar).contains("com.google.gson.internal.$Gson$Preconditions");
@@ -234,11 +234,11 @@ public class ClassDumperTest {
     String grpcClass = "com.google.cloud.firestore.spi.v1beta1.GrpcFirestoreRpc";
 
     ImmutableMap<String, Path> classToJar65First =
-        ClassDumper.classToDefiningJarFile(ImmutableList.of(firestore65, firestore66));
+        ClassDumper.scanClassToDefiningJarFile(ImmutableList.of(firestore65, firestore66));
     Truth.assertThat((Object) classToJar65First.get(grpcClass)).isEqualTo(firestore65);
 
     ImmutableMap<String, Path> classToJar66First =
-        ClassDumper.classToDefiningJarFile(ImmutableList.of(firestore66, firestore65));
+        ClassDumper.scanClassToDefiningJarFile(ImmutableList.of(firestore66, firestore65));
     Truth.assertThat((Object) classToJar66First.get(grpcClass)).isEqualTo(firestore66);
   }
 

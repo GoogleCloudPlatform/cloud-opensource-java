@@ -58,20 +58,20 @@ public class StaticLinkageChecker {
   private static final Logger logger = Logger.getLogger(StaticLinkageChecker.class.getName());
 
   public static StaticLinkageChecker create(
-      boolean onlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
+      boolean onlyReachable, List<Path> jarPaths, Iterable<Path> entryPoints)
       throws IOException {
     Preconditions.checkArgument(
-        !jarFilePaths.isEmpty(),
+        !jarPaths.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
-    ClassDumper dumper = ClassDumper.create(jarFilePaths);
+    ClassDumper dumper = ClassDumper.create(jarPaths);
     return new StaticLinkageChecker(onlyReachable, dumper, entryPoints);
   }
   
   public static StaticLinkageChecker create(boolean onlyReachable,
       LinkedListMultimap<Path, DependencyPath> paths, ImmutableSet<Path> entryPoints)
       throws IOException {
-    List<Path> jarFilePaths = new ArrayList<>(paths.keySet());
-    ClassDumper dumper = ClassDumper.create(jarFilePaths);
+    List<Path> jarPaths = new ArrayList<>(paths.keySet());
+    ClassDumper dumper = ClassDumper.create(jarPaths);
     return new StaticLinkageChecker(onlyReachable, dumper, entryPoints, paths);
   }
 
@@ -178,10 +178,10 @@ public class StaticLinkageChecker {
    * Finds linkage errors in the input classpath and generates a static linkage check report.
    */
   public StaticLinkageCheckReport findLinkageErrors() throws IOException {
-    ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
+    ImmutableList<Path> jarPaths = classDumper.getInputClasspath();
 
     ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbols = ImmutableMap.builder();
-    for (Path jarPath : jarFilePaths) {
+    for (Path jarPath : jarPaths) {
       jarToSymbols.put(jarPath, ClassDumper.scanSymbolReferencesInJar(jarPath));
     }
 
@@ -284,7 +284,7 @@ public class StaticLinkageChecker {
       // Checks the target class, its parent classes, and its interfaces.
       // Interface check is needed to avoid false positive for a method reference to an abstract
       // class that implements an interface. For example, Guava's ImmutableList is an abstract class
-      // that implements List interface, but the class does not have get() method. A method
+      // that implements the List interface, but the class does not have a get() method. A method
       // reference to ImmutableList.get() should not be reported as a linkage error.
       Iterable<JavaClass> typesToCheck =
           Iterables.concat(
@@ -380,7 +380,7 @@ public class StaticLinkageChecker {
     }
     if (member.isPrivate()) {
       // Access from within same top-level class is allowed to read private class. However, such
-      // case is already filtered at errorsFromSymbolReferences.
+      // cases are already filtered at errorsFromSymbolReferences.
       return false;
     }
     // Default: package private
@@ -423,7 +423,8 @@ public class StaticLinkageChecker {
       throws ClassNotFoundException {
     if (javaClass.isPrivate()) {
       // Nested class can be declared as private. Class reference within same file is allowed to
-      // access private class. However, such case is already filtered at errorsFromSymbolReferences.
+      // access private class. However, such cases are already filtered at
+      // errorsFromSymbolReferences.
       return false;
     }
 

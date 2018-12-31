@@ -33,8 +33,9 @@ import org.apache.bcel.util.ClassPath;
  * loader to read class files when {@link
  * org.apache.bcel.util.SyntheticRepository#loadClass(String)} is called, meaning that it loads
  * other classes outside the class path specified at its constructor argument. In other words,
- * classes used in this cloud-opensource-java project (including Guava 26) would be unexpectedly loaded by the system
- * class loader when running static linkage check, if BCEL's {@link ClassPath} is naively used.
+ * classes used in this cloud-opensource-java project (including Guava 26) would be unexpectedly
+ * loaded by the system class loader when running static linkage check, if BCEL's {@link ClassPath}
+ * is naively used.
  *
  * <p>This class is introduced to avoid the mix-up of the class paths. It loads resources only from
  * the extension class loader, which does not include the class path of this project, or the class
@@ -50,7 +51,7 @@ public class LinkageCheckClassPath extends ClassPath {
   /**
    * Constructs a class path for static linkage check.
    *
-   * @param paths List of absolute paths for the elements in the class path
+   * @param paths list of absolute paths for the elements in the class path
    */
   LinkageCheckClassPath(List<Path> paths) {
     super(paths.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator)));
@@ -63,7 +64,7 @@ public class LinkageCheckClassPath extends ClassPath {
    * the resource is not loaded from the class path of this tool itself.
    */
   @Override
-  public InputStream getInputStream(final String name, final String suffix) throws IOException {
+  public InputStream getInputStream(String name, String suffix) throws IOException {
     InputStream inputStream = extensionClassLoader.getResourceAsStream(name + suffix);
     if (inputStream != null) {
       return inputStream;
