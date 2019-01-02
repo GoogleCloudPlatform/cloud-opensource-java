@@ -31,7 +31,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +49,6 @@ import org.apache.bcel.classfile.ConstantUtf8;
 import org.apache.bcel.classfile.InnerClass;
 import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.generic.Type;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
@@ -60,14 +58,14 @@ import org.apache.bcel.util.SyntheticRepository;
  */
 class ClassDumper {
 
-  private final ImmutableList<Path> inputClasspath;
+  private final ImmutableList<Path> inputClassPath;
   private final SyntheticRepository syntheticRepository;
   private final ClassLoader extensionClassLoader;
   private final ImmutableSetMultimap<Path, String> jarFileToClasses;
   private final ImmutableMap<String, Path> classToFirstJarFile;
 
-  ImmutableList<Path> getInputClasspath() {
-    return inputClasspath;
+  ImmutableList<Path> getInputClassPath() {
+    return inputClassPath;
   }
 
   private static SyntheticRepository createSyntheticRepository(List<Path> paths) {
@@ -88,12 +86,12 @@ class ClassDumper {
   }
 
   private ClassDumper(
-      List<Path> inputClasspath,
+      List<Path> inputClassPath,
       SyntheticRepository syntheticRepository,
       ClassLoader extensionClassLoader,
       SetMultimap<Path, String> jarToClasses,
       ImmutableMap<String, Path> classToFirstJar) {
-    this.inputClasspath = ImmutableList.copyOf(inputClasspath);
+    this.inputClassPath = ImmutableList.copyOf(inputClassPath);
     this.syntheticRepository = syntheticRepository;
     this.extensionClassLoader = extensionClassLoader;
     this.jarFileToClasses = ImmutableSetMultimap.copyOf(jarToClasses);

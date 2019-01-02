@@ -178,7 +178,7 @@ public class StaticLinkageChecker {
    * Finds linkage errors in the input classpath and generates a static linkage check report.
    */
   public StaticLinkageCheckReport findLinkageErrors() throws IOException {
-    ImmutableList<Path> jarPaths = classDumper.getInputClasspath();
+    ImmutableList<Path> jarPaths = classDumper.getInputClassPath();
 
     ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbols = ImmutableMap.builder();
     for (Path jarPath : jarPaths) {
