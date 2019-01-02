@@ -78,6 +78,19 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
+  public void testArtifactsToPaths_removingDuplicates() throws RepositoryException {
+    Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
+    ListMultimap<Path, DependencyPath> multimap =
+        StaticLinkageChecker.artifactsToPaths(ImmutableList.of(grpcArtifact));
+
+    Set<Path> paths = multimap.keySet();
+    long jsr305Count = paths.stream().filter(path -> path.toString().contains("jsr305-")).count();
+    Truth.assertWithMessage("There should not be duplicated versions for jsr305")
+        .that(jsr305Count)
+        .isEqualTo(1);
+  }
+
+  @Test
   public void testCoordinateToClasspath_validCoordinate() throws RepositoryException {
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
     List<Path> paths = StaticLinkageChecker.artifactsToClasspath(ImmutableList.of(grpcArtifact));

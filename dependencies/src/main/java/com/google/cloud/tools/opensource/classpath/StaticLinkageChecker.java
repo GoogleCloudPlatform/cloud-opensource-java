@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHierarchy;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -31,6 +32,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -129,7 +131,7 @@ public class StaticLinkageChecker {
   }
 
   /**
-   * Finds jar file paths for Maven artifacts and their dependencies.
+   * Finds jar file paths for Maven artifacts and their transitive dependencies.
    *
    * @param artifacts Maven artifacts to check
    * @return list of absolute paths to jar files
@@ -137,23 +139,27 @@ public class StaticLinkageChecker {
    */
   public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
       throws RepositoryException {
-    
+
     LinkedListMultimap<Path, DependencyPath> multimap = artifactsToPaths(artifacts);
     return ImmutableList.copyOf(multimap.keySet());
   }
-  
-  
+
   // Multimap is a pain, maybe just use LinkedHashMap<Path, List<DependencyPath>>
   /**
-   * Finds jar file paths for Maven artifacts and their dependencies.
+   * Finds jar file paths and dependency paths for Maven artifacts and their transitive
+   * dependencies. When there are multiple versions of an artifact, the closest to the root
+   * (`artifacts` argument) is picked up in the same manner as Maven's dependency mediation.
    *
    * @param artifacts Maven artifacts to check
    * @return map absolute paths of jar files to Maven dependency paths
    * @throws RepositoryException when there is a problem in retrieving jar files
+   * @see <a
+   *     href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies">Maven:
+   *     Introduction to the Dependency Mechanism</a>
    */
   public static LinkedListMultimap<Path, DependencyPath> artifactsToPaths(List<Artifact> artifacts)
       throws RepositoryException {
-    
+
     LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
     if (artifacts.isEmpty()) {
       return multimap;
@@ -163,8 +169,20 @@ public class StaticLinkageChecker {
         DependencyGraphBuilder.getStaticLinkageCheckDependencies(artifacts);
     List<DependencyPath> dependencyPaths = dependencyGraph.list();
 
+    // To remove duplicates on (groupId:artifactId) for dependency mediation
+    Set<String> artifactsInPaths = Sets.newHashSet();
+
     for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();
+      // groupId:artifactId
+      String dependencyMediationKey = Artifacts.makeKey(artifact);
+      if (!artifactsInPaths.add(dependencyMediationKey)) {
+        // Not adding this artifact if (<groupId>:<artifactId>) is already in `multimap`.
+        // As `dependencyPaths` elements are in level order (breadth-first), this first-wins
+        // strategy follows Maven's dependency mediation.
+        // TODO(#309): add Gradle's dependency mediation
+        continue;
+      }
       Path jarAbsolutePath = artifact.getFile().toPath().toAbsolutePath();
       if (!jarAbsolutePath.toString().endsWith(".jar")) {
         continue;
