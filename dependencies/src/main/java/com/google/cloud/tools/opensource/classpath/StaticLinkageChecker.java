@@ -171,16 +171,16 @@ public class StaticLinkageChecker {
     List<DependencyPath> dependencyPaths = dependencyGraph.list();
 
     // To remove duplicates on (groupId:artifactId) for dependency mediation
-    Map<String, Artifact> keyToFirstArtifact = Maps.newHashMap();
+    Map<String, String> keyToFirstArtifactVersion = Maps.newHashMap();
 
     for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();
       String artifactVersion = artifact.getVersion();
       // groupId:artifactId
       String dependencyMediationKey = Artifacts.makeKey(artifact);
-      Artifact firstArtifactForKey = keyToFirstArtifact.get(dependencyMediationKey);
-      if (firstArtifactForKey != null
-          && !artifactVersion.equals(firstArtifactForKey.getVersion())) {
+      String firstArtifactVersionForKey = keyToFirstArtifactVersion.get(dependencyMediationKey);
+      if (firstArtifactVersionForKey != null
+          && !artifactVersion.equals(firstArtifactVersionForKey)) {
         // Not adding this artifact if different version of the artifact (<groupId>:<artifactId> as
         // key) is already in `multimap`.
         // As `dependencyPaths` elements are in level order (breadth-first), this first-wins
@@ -188,9 +188,9 @@ public class StaticLinkageChecker {
         // TODO(#309): add Gradle's dependency mediation
         continue;
       }
-      keyToFirstArtifact.put(dependencyMediationKey, artifact);
+      keyToFirstArtifactVersion.put(dependencyMediationKey, artifact.getVersion());
       // When finding key first time, or additional dependency path to the artifact with same
-      // version is encountered, add the dependency path to `multimap`
+      // version is encountered, adds the dependency path to `multimap`,
 
       Path jarAbsolutePath = artifact.getFile().toPath().toAbsolutePath();
       if (!jarAbsolutePath.toString().endsWith(".jar")) {
