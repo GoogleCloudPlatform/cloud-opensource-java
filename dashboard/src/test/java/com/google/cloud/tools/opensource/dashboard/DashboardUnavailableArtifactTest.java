@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -79,8 +81,11 @@ public class DashboardUnavailableArtifactTest {
     
     ArtifactCache cache = new ArtifactCache();
     cache.setInfoMap(map);
+    StaticLinkageCheckReport staticLinkageCheckReport =
+        StaticLinkageCheckReport.create(ImmutableList.of());
     List<ArtifactResults> artifactResults =
-        DashboardMain.generateReports(configuration, outputDirectory, cache);
+        DashboardMain.generateReports(
+            configuration, outputDirectory, cache, staticLinkageCheckReport);
 
     Assert.assertEquals(
         "The length of the ArtifactResults should match the length of artifacts",

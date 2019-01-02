@@ -16,6 +16,10 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+
+import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -66,6 +70,7 @@ public class DashboardMain {
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
   public static final String TEST_NAME_GLOBAL_UPPER_BOUND = "Global Upper Bounds";
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
+  public static final String TEST_NAME_STATIC_LINKAGE_CHECK = "Static Linkage Errors";
 
   public static void main(String[] args)
       throws IOException, TemplateException, RepositoryException, ClassNotFoundException {
@@ -104,7 +109,7 @@ public class DashboardMain {
         StaticLinkageChecker.create(onlyReachable, paths, entryPoints);
     
     StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
-    List<ArtifactResults> table = generateReports(configuration, output, cache);
+    List<ArtifactResults> table = generateReports(configuration, output, cache, report);
     generateDashboard(configuration, output, table, cache.getGlobalDependencies(), report);
 
     return output;
@@ -128,8 +133,15 @@ public class DashboardMain {
   }
 
   @VisibleForTesting
-  static List<ArtifactResults> generateReports(Configuration configuration, Path output,
-      ArtifactCache cache) {
+  static List<ArtifactResults> generateReports(
+      Configuration configuration,
+      Path output,
+      ArtifactCache cache,
+      StaticLinkageCheckReport staticLinkageCheckReport) {
+    ImmutableMap<Path, JarLinkageReport> pathToLinkageReport =
+        staticLinkageCheckReport.getJarLinkageReports().stream()
+            .collect(
+                toImmutableMap(JarLinkageReport::getJarPath, jarLinkageReport -> jarLinkageReport));
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();
@@ -142,11 +154,16 @@ public class DashboardMain {
           table.add(unavailable);
         } else {
           ArtifactResults results =
-              generateArtifactReport(configuration, output, entry.getKey(), entry.getValue(),
-                  cache.getGlobalDependencies());
+              generateArtifactReport(
+                  configuration,
+                  output,
+                  entry.getKey(),
+                  entry.getValue(),
+                  cache.getGlobalDependencies(),
+                  pathToLinkageReport);
           table.add(results);
         }
-      } catch (RepositoryException | IOException ex) {
+      } catch (IOException ex) {
         System.err.println(ex.getMessage());
         ArtifactResults unavailableTestResult = new ArtifactResults(entry.getKey());
         unavailableTestResult.setExceptionMessage(ex.getMessage());
@@ -193,10 +210,14 @@ public class DashboardMain {
     return cache;
   }
 
-  private static ArtifactResults generateArtifactReport(Configuration configuration, Path output,
-      Artifact artifact, ArtifactInfo artifactInfo, List<DependencyGraph> globalDependencies)
-      throws IOException, TemplateException, DependencyCollectionException,
-      DependencyResolutionException {
+  private static ArtifactResults generateArtifactReport(
+      Configuration configuration,
+      Path output,
+      Artifact artifact,
+      ArtifactInfo artifactInfo,
+      List<DependencyGraph> globalDependencies,
+      ImmutableMap<Path, JarLinkageReport> pathToLinkageReport)
+      throws IOException, TemplateException {
 
     String coordinates = Artifacts.toCoordinates(artifact);
     File outputFile = output.resolve(coordinates.replace(':', '_') + ".html").toFile();
@@ -216,6 +237,17 @@ public class DashboardMain {
 
       Map<Artifact, Artifact> globalUpperBoundFailures = findUpperBoundsFailures(
           collectLatestVersions(globalDependencies), transitiveDependencies);
+
+      File artifactFile = artifact.getFile();
+      int totalLinkageErrors = 0;
+      if (artifactFile != null) {
+        Path artifactJar = artifact.getFile().toPath();
+        JarLinkageReport linkageCheckReport = pathToLinkageReport.get(artifactJar);
+        totalLinkageErrors =
+            linkageCheckReport.getMissingClassErrors().size()
+                + linkageCheckReport.getMissingMethodErrors().size()
+                + linkageCheckReport.getMissingFieldErrors().size();
+      }
 
       ListMultimap<DependencyPath, DependencyPath> dependencyTree =
           DependencyTreeFormatter.buildDependencyPathTree(completeDependencies.list());
@@ -238,6 +270,7 @@ public class DashboardMain {
       results.addResult(TEST_NAME_UPPER_BOUND, upperBoundFailures.size());
       results.addResult(TEST_NAME_GLOBAL_UPPER_BOUND, globalUpperBoundFailures.size());
       results.addResult(TEST_NAME_DEPENDENCY_CONVERGENCE, convergenceIssues.size());
+      results.addResult(TEST_NAME_STATIC_LINKAGE_CHECK, totalLinkageErrors);
 
       return results;
     }
