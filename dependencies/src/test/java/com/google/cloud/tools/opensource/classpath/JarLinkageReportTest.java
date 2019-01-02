@@ -17,8 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,8 +31,8 @@ public class JarLinkageReportTest {
   private ImmutableList<StaticLinkageError<ClassSymbolReference>> missingClassErrors;
 
   @Before
-  public void setUp() throws MalformedURLException {
-    
+  public void setUp() {
+
     ClassSymbolReference classSymbolReference =
         ClassSymbolReference.builder()
             .setTargetClassName("ClassA")
@@ -51,7 +50,7 @@ public class JarLinkageReportTest {
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassB")
             .build();
-    URL targetClassLocation = new URL("file:///dummy.jar");
+    Path targetClassLocation = Paths.get("dummy.jar");
     StaticLinkageError<MethodSymbolReference> linkageErrorMissingMethod =
         StaticLinkageError.errorMissingMember(methodSymbolReference, targetClassLocation);
     missingMethodErrors = ImmutableList.of(linkageErrorMissingMethod);
@@ -107,7 +106,7 @@ public class JarLinkageReportTest {
             + "reason: CLASS_NOT_FOUND, target class location not found\n"
             + "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, "
             + "methodName=methodX, descriptor=java.lang.String}"
-            + ", reason: SYMBOL_NOT_FOUND, target class from file:/dummy.jar\n"
+            + ", reason: SYMBOL_NOT_FOUND, target class from dummy.jar\n"
             + "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, "
             + "fieldName=fieldX}, reason: CLASS_NOT_FOUND, target class location not found\n",
         jarLinkageReport.toString());

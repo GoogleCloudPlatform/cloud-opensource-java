@@ -17,7 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
-import java.net.URL;
+import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 /**
@@ -39,7 +39,7 @@ abstract class StaticLinkageError<T extends SymbolReference> {
    * not found in the class path or the source location is unavailable.
    */
   @Nullable
-  abstract URL getTargetClassLocation();
+  abstract Path getTargetClassLocation();
 
   /** Returns the reason why the symbol reference is marked as a linkage error. */
   abstract Reason getReason();
@@ -64,18 +64,27 @@ abstract class StaticLinkageError<T extends SymbolReference> {
 
   /** Returns a linkage error caused by {@link Reason#SYMBOL_NOT_FOUND}. */
   static <U extends SymbolReference> StaticLinkageError<U> errorMissingMember(
-      U reference, URL targetClassLocation) {
+      U reference, Path targetClassLocation) {
     return builderFor(reference)
         .setReason(Reason.SYMBOL_NOT_FOUND)
         .setTargetClassLocation(targetClassLocation)
         .build();
   }
 
-  /** Returns a linkage error caused by {@link Reason#INACCESSIBLE}. */
-  static <U extends SymbolReference> StaticLinkageError<U> errorInvalidModifier(
-      U reference, URL targetClassLocation) {
+  /** Returns a linkage error caused by {@link Reason#INACCESSIBLE_CLASS}. */
+  static <U extends SymbolReference> StaticLinkageError<U> errorInaccessibleClass(
+      U reference, Path targetClassLocation) {
     return builderFor(reference)
-        .setReason(Reason.INACCESSIBLE)
+        .setReason(Reason.INACCESSIBLE_CLASS)
+        .setTargetClassLocation(targetClassLocation)
+        .build();
+  }
+
+  /** Returns a linkage error caused by {@link Reason#INACCESSIBLE_MEMBER}. */
+  static <U extends SymbolReference> StaticLinkageError<U> errorInaccessibleMember(
+      U reference, Path targetClassLocation) {
+    return builderFor(reference)
+        .setReason(Reason.INACCESSIBLE_MEMBER)
         .setTargetClassLocation(targetClassLocation)
         .build();
   }
@@ -91,7 +100,7 @@ abstract class StaticLinkageError<T extends SymbolReference> {
   @AutoValue.Builder
   abstract static class Builder<T extends SymbolReference> {
 
-    abstract StaticLinkageError.Builder<T> setTargetClassLocation(URL targetClassLocation);
+    abstract StaticLinkageError.Builder<T> setTargetClassLocation(Path targetClassLocation);
 
     abstract StaticLinkageError.Builder<T> setReason(Reason reason);
 
@@ -106,14 +115,22 @@ abstract class StaticLinkageError<T extends SymbolReference> {
     CLASS_NOT_FOUND,
 
     /**
-     * The symbol is inaccessible to the source.
+     * The target class of the symbol reference is inaccessible to the source.
      *
-     * <p>If the source is in a different package, the symbol or one of its enclosing types is not
-     * public. If the source is in the same package, the symbol or one of its enclosing types is
+     * <p>If the source is in a different package, the class or one of its enclosing types is not
+     * public. If the source is in the same package, the class or one of its enclosing types is
      * private.
      */
-    // TODO(#293): enrich javadoc for linkage error on inaccessible method and field
-    INACCESSIBLE,
+    INACCESSIBLE_CLASS,
+
+    /**
+     * The member (method or field) is inaccessible to the source.
+     *
+     * <p>If the source is in a different package, the member is not public. If the source is in the
+     * same package, the class is private. If the source is a subclass of the target class, the
+     * member is not protected.
+     */
+    INACCESSIBLE_MEMBER,
 
     /**
      * For a method or field reference, the symbol is not found in the target class in the class

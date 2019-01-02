@@ -19,7 +19,8 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.cloud.tools.opensource.classpath.StaticLinkageError.Reason;
 import com.google.common.truth.Truth;
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.Test;
 
 public class StaticLinkageErrorTest {
@@ -45,10 +46,10 @@ public class StaticLinkageErrorTest {
             .setSourceClassName("ClassB")
             .build();
 
-    URL targetClassLocation = new URL("file://foo/bar");
+    Path targetClassLocation = Paths.get("foo", "bar");
     StaticLinkageError<MethodSymbolReference> methodError = StaticLinkageError
         .errorMissingMember(methodSymbolReference, targetClassLocation);
-    Truth.assertThat(methodError.getTargetClassLocation()).isEqualTo(targetClassLocation);
+    Truth.assertThat((Object) methodError.getTargetClassLocation()).isEqualTo(targetClassLocation);
 
     ClassSymbolReference classSymbolReference =
         ClassSymbolReference.builder()
@@ -56,7 +57,7 @@ public class StaticLinkageErrorTest {
             .setSourceClassName("ClassB")
             .build();
     StaticLinkageError<ClassSymbolReference> classError =
-        StaticLinkageError.errorInvalidModifier(classSymbolReference, targetClassLocation);
-    Truth.assertThat(classError.getReason()).isEqualTo(Reason.INACCESSIBLE);
+        StaticLinkageError.errorInaccessibleClass(classSymbolReference, targetClassLocation);
+    Truth.assertThat(classError.getReason()).isEqualTo(Reason.INACCESSIBLE_CLASS);
   }
 }

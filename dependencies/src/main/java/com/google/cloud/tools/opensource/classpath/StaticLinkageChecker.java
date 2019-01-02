@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHierarchy;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
@@ -27,14 +28,13 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.graph.Traverser;
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import org.apache.bcel.classfile.Field;
+import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.commons.cli.CommandLine;
@@ -53,25 +54,24 @@ import org.eclipse.aether.artifact.Artifact;
  * A tool to find static linkage errors for a class path.
  */
 public class StaticLinkageChecker {
-  // TODO(suztomo): enhance scope to include fields and classes. Issue #207
 
   private static final Logger logger = Logger.getLogger(StaticLinkageChecker.class.getName());
 
   public static StaticLinkageChecker create(
-      boolean onlyReachable, List<Path> jarFilePaths, Iterable<Path> entryPoints)
+      boolean onlyReachable, List<Path> jarPaths, Iterable<Path> entryPoints)
       throws IOException {
     Preconditions.checkArgument(
-        !jarFilePaths.isEmpty(),
+        !jarPaths.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
-    ClassDumper dumper = ClassDumper.create(jarFilePaths);
+    ClassDumper dumper = ClassDumper.create(jarPaths);
     return new StaticLinkageChecker(onlyReachable, dumper, entryPoints);
   }
   
   public static StaticLinkageChecker create(boolean onlyReachable,
       LinkedListMultimap<Path, DependencyPath> paths, ImmutableSet<Path> entryPoints)
       throws IOException {
-    List<Path> jarFilePaths = new ArrayList<>(paths.keySet());
-    ClassDumper dumper = ClassDumper.create(jarFilePaths);
+    List<Path> jarPaths = new ArrayList<>(paths.keySet());
+    ClassDumper dumper = ClassDumper.create(jarPaths);
     return new StaticLinkageChecker(onlyReachable, dumper, entryPoints, paths);
   }
 
@@ -87,13 +87,16 @@ public class StaticLinkageChecker {
   
   private final ListMultimap<Path, DependencyPath> paths;
 
-  StaticLinkageChecker(
+  private StaticLinkageChecker(
       boolean reportOnlyReachable, ClassDumper classDumper, Iterable<Path> entryPoints) {
     this(reportOnlyReachable, classDumper, entryPoints, ArrayListMultimap.create());
   }
-  
-  StaticLinkageChecker(boolean reportOnlyReachable, ClassDumper classDumper,
-      Iterable<Path> entryPoints, ListMultimap<Path, DependencyPath> paths) {
+
+  private StaticLinkageChecker(
+      boolean reportOnlyReachable,
+      ClassDumper classDumper,
+      Iterable<Path> entryPoints,
+      ListMultimap<Path, DependencyPath> paths) {
     this.reportOnlyReachable = reportOnlyReachable;
     this.classDumper = Preconditions.checkNotNull(classDumper);
     this.entryPoints = ImmutableSet.copyOf(entryPoints);
@@ -175,10 +178,10 @@ public class StaticLinkageChecker {
    * Finds linkage errors in the input classpath and generates a static linkage check report.
    */
   public StaticLinkageCheckReport findLinkageErrors() throws IOException {
-    ImmutableList<Path> jarFilePaths = classDumper.getInputClasspath();
+    ImmutableList<Path> jarPaths = classDumper.getInputClassPath();
 
     ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbols = ImmutableMap.builder();
-    for (Path jarPath : jarFilePaths) {
+    for (Path jarPath : jarPaths) {
       jarToSymbols.put(jarPath, ClassDumper.scanSymbolReferencesInJar(jarPath));
     }
 
@@ -260,13 +263,52 @@ public class StaticLinkageChecker {
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
    */
-  private Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
+  @VisibleForTesting
+  Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
       MethodSymbolReference reference) {
-    if (validateMethodReference(reference)) {
+    String targetClassName = reference.getTargetClassName();
+    String methodName = reference.getMethodName();
+
+    // Skip references to Java runtime class. For example, java.lang.String.
+    if (classDumper.isSystemClass(targetClassName)) {
       return Optional.empty();
     }
-    // # TODO(#293): Add reason and target class location for linkage errors on method references
-    return Optional.of(StaticLinkageError.errorMissingMember(reference, null));
+
+    try {
+      JavaClass targetJavaClass = classDumper.loadJavaClass(targetClassName);
+      Path classFileLocation = classDumper.findClassLocation(targetClassName);
+      if (!isClassAccessibleFrom(targetJavaClass, reference.getSourceClassName())) {
+        return Optional.of(StaticLinkageError.errorInaccessibleClass(reference, classFileLocation));
+      }
+
+      // Checks the target class, its parent classes, and its interfaces.
+      // Interface check is needed to avoid false positive for a method reference to an abstract
+      // class that implements an interface. For example, Guava's ImmutableList is an abstract class
+      // that implements the List interface, but the class does not have a get() method. A method
+      // reference to ImmutableList.get() should not be reported as a linkage error.
+      Iterable<JavaClass> typesToCheck =
+          Iterables.concat(
+              getClassHierarchy(targetJavaClass),
+              Arrays.asList(targetJavaClass.getAllInterfaces()));
+      for (JavaClass javaClass : typesToCheck) {
+        for (Method method : javaClass.getMethods()) {
+          if (method.getName().equals(methodName)
+              && method.getSignature().equals(reference.getDescriptor())) {
+            if (!isMemberAccessibleFrom(javaClass, method, reference.getSourceClassName())) {
+              return Optional.of(
+                  StaticLinkageError.errorInaccessibleMember(reference, classFileLocation));
+            }
+            // The method is found and accessible. Returning no error.
+            return Optional.empty();
+          }
+        }
+      }
+
+      // The class is in class path but the symbol is not found
+      return Optional.of(StaticLinkageError.errorMissingMember(reference, classFileLocation));
+    } catch (ClassNotFoundException ex) {
+      return Optional.of(StaticLinkageError.errorMissingTargetClass(reference));
+    }
   }
 
   /**
@@ -274,26 +316,78 @@ public class StaticLinkageChecker {
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
    */
-  private Optional<StaticLinkageError<FieldSymbolReference>> checkLinkageErrorMissingFieldAt(
+  @VisibleForTesting
+  Optional<StaticLinkageError<FieldSymbolReference>> checkLinkageErrorMissingFieldAt(
       FieldSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     String fieldName = reference.getFieldName();
-    for (JavaClass javaClass : getClassAndSuperClasses(targetClassName)) {
-      for (Field field : javaClass.getFields()) {
-        if (field.getName().equals(fieldName)) {
-          // The field is found. Returning no error.
-          return Optional.empty();
+    try {
+      JavaClass targetJavaClass = classDumper.loadJavaClass(targetClassName);
+      Path classFileLocation = classDumper.findClassLocation(targetClassName);
+      if (!isClassAccessibleFrom(targetJavaClass, reference.getSourceClassName())) {
+        return Optional.of(StaticLinkageError.errorInaccessibleClass(reference, classFileLocation));
+      }
+
+      for (JavaClass javaClass : getClassHierarchy(targetJavaClass)) {
+        for (Field field : javaClass.getFields()) {
+          if (field.getName().equals(fieldName)) {
+            if (!isMemberAccessibleFrom(javaClass, field, reference.getSourceClassName())) {
+              return Optional.of(
+                  StaticLinkageError.errorInaccessibleMember(reference, classFileLocation));
+            }
+            // The field is found and accessible. Returning no error.
+            return Optional.empty();
+          }
         }
       }
-    }
-    try {
-      // The field was not found in the class from the classpath. The location of the target class
-      // will be the first thing to check for investigating the reason.
-      URL classFileUrl = classDumper.findClassLocation(targetClassName);
-      return Optional.of(StaticLinkageError.errorMissingMember(reference, classFileUrl));
+      // The field was not found in the class from the classpath
+      return Optional.of(StaticLinkageError.errorMissingMember(reference, classFileLocation));
     } catch (ClassNotFoundException ex) {
       return Optional.of(StaticLinkageError.errorMissingTargetClass(reference));
     }
+  }
+
+  /**
+   * Returns true if the field or method of a class is accessible from {@code sourceClassName}.
+   *
+   * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.1">JLS 6.6.1
+   *     Determining Accessibility</a>
+   */
+  private boolean isMemberAccessibleFrom(
+      JavaClass targetClass, FieldOrMethod member, String sourceClassName) {
+    // The order of these if statements for public, protected, and private are in the same order
+    // they
+    // appear in JLS 6.6.1
+    if (member.isPublic()) {
+      return true;
+    }
+    if (member.isProtected()) {
+      if (ClassDumper.classesInSamePackage(targetClass.getClassName(), sourceClassName)) {
+        return true;
+      }
+      try {
+        JavaClass sourceClass = classDumper.loadJavaClass(sourceClassName);
+        if (ClassDumper.isClassSubClassOf(sourceClass, targetClass)) {
+          return true;
+        }
+      } catch (ClassNotFoundException ex) {
+        logger.warning(
+            "The source class "
+                + sourceClassName
+                + " of a reference was not found in the class path when checking accessibility");
+        return false;
+      }
+    }
+    if (member.isPrivate()) {
+      // Access from within same top-level class is allowed to read private class. However, such
+      // cases are already filtered at errorsFromSymbolReferences.
+      return false;
+    }
+    // Default: package private
+    if (ClassDumper.classesInSamePackage(targetClass.getClassName(), sourceClassName)) {
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -301,14 +395,15 @@ public class StaticLinkageChecker {
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
    */
-  private Optional<StaticLinkageError<ClassSymbolReference>> checkLinkageErrorMissingClassAt(
+  @VisibleForTesting
+  Optional<StaticLinkageError<ClassSymbolReference>> checkLinkageErrorMissingClassAt(
       ClassSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     try {
       JavaClass targetClass = classDumper.loadJavaClass(targetClassName);
       if (!isClassAccessibleFrom(targetClass, reference.getSourceClassName())) {
         return Optional.of(
-            StaticLinkageError.errorInvalidModifier(
+            StaticLinkageError.errorInaccessibleClass(
                 reference, classDumper.findClassLocation(targetClassName)));
       }
       return Optional.empty();
@@ -328,7 +423,8 @@ public class StaticLinkageChecker {
       throws ClassNotFoundException {
     if (javaClass.isPrivate()) {
       // Nested class can be declared as private. Class reference within same file is allowed to
-      // access private class. However, such case is already filtered at errorsFromSymbolReferences.
+      // access private class. However, such cases are already filtered at
+      // errorsFromSymbolReferences.
       return false;
     }
 
@@ -351,85 +447,4 @@ public class StaticLinkageChecker {
       return false;
     }
   }
-
-  /**
-   * Returns true if the method reference has a valid referent in the classpath via Java class
-   * loader.
-   */
-  private boolean validateMethodReferenceByClassLoader(MethodSymbolReference methodReference) {
-    String className = methodReference.getTargetClassName();
-    String methodName = methodReference.getMethodName();
-    try {
-      Class<?>[] parameterTypes =
-          classDumper.methodDescriptorToClass(methodReference.getDescriptor());
-      Class<?> clazz = className.startsWith("[") ? Array.class : classDumper.loadClass(className);
-      if ("<init>".equals(methodName)) {
-        clazz.getConstructor(parameterTypes);
-      } else if ("clone".equals(methodName) && clazz == Array.class) {
-        // Array's clone method is not returned by getMethod
-        // https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html#getMethod-java.lang.String-java.lang.Class...-
-        return true;
-      } else {
-        clazz.getMethod(methodName, parameterTypes);
-      }
-      return true;
-    } catch (NoSuchMethodException | ClassNotFoundException ex) {
-      return false;
-    }
-  }
-
-  /**
-   * Returns true if the method reference has a valid referent in the classpath via BCEL API.
-   */
-  private boolean validateMethodReferenceByBcelRepository(MethodSymbolReference methodReference) {
-    String className = methodReference.getTargetClassName();
-    String methodName = methodReference.getMethodName();
-    for (JavaClass javaClass : getClassAndSuperClasses(className)) {
-      for (Method method : javaClass.getMethods()) {
-        if (method.getName().equals(methodName)
-            && method.getSignature().equals(methodReference.getDescriptor())) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Returns true if the method reference has a valid referent in the classpath.
-   */
-  private boolean validateMethodReference(MethodSymbolReference methodReference) {
-    // Attempt 1: Find the class and method via the BCEL synthetic repository in ClassDumper.
-    // BCEL API helps to search availability of (package) private class, constructors and
-    // methods that are inaccessible to Java's reflection API or the class loader.
-
-    // Attempt 2: Find the class and method via the class loader of the input class path
-    // in ClassDumper. Class loaders help to resolve methods defined in Java built-in classes.
-    // TODO(#253): check accessor to verify source class has valid access to the symbol
-    return validateMethodReferenceByBcelRepository(methodReference)
-        || validateMethodReferenceByClassLoader(methodReference);
-  }
-
-  /**
-   * Returns the target class and its superclasses in order (with {@link Object} last). If any can't
-   * be found, the list stops with the previous one.
-   */
-  private Iterable<JavaClass> getClassAndSuperClasses(String targetClassName) {
-    try {
-      return SUPERCLASSES.breadthFirst(classDumper.loadJavaClass(targetClassName));
-    } catch (ClassNotFoundException ex) {
-      return ImmutableList.of();
-    }
-  }
-
-  private static final Traverser<JavaClass> SUPERCLASSES =
-      Traverser.forTree(
-          javaClass -> {
-            try {
-              JavaClass superClass = javaClass.getSuperClass();
-              return superClass == null ? ImmutableSet.of() : ImmutableSet.of(superClass);
-            } catch (ClassNotFoundException e) {
-              return ImmutableSet.of();
-            }
-          });
 }
