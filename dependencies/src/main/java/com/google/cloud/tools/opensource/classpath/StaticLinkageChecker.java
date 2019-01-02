@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -170,19 +171,27 @@ public class StaticLinkageChecker {
     List<DependencyPath> dependencyPaths = dependencyGraph.list();
 
     // To remove duplicates on (groupId:artifactId) for dependency mediation
-    Set<String> artifactsInPaths = Sets.newHashSet();
+    Map<String, Artifact> keyToFirstArtifact = Maps.newHashMap();
 
     for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();
+      String artifactVersion = artifact.getVersion();
       // groupId:artifactId
       String dependencyMediationKey = Artifacts.makeKey(artifact);
-      if (!artifactsInPaths.add(dependencyMediationKey)) {
-        // Not adding this artifact if (<groupId>:<artifactId>) is already in `multimap`.
+      Artifact firstArtifactForKey = keyToFirstArtifact.get(dependencyMediationKey);
+      if (firstArtifactForKey != null
+          && !artifactVersion.equals(firstArtifactForKey.getVersion())) {
+        // Not adding this artifact if different version of the artifact (<groupId>:<artifactId> as
+        // key) is already in `multimap`.
         // As `dependencyPaths` elements are in level order (breadth-first), this first-wins
         // strategy follows Maven's dependency mediation.
         // TODO(#309): add Gradle's dependency mediation
         continue;
       }
+      keyToFirstArtifact.put(dependencyMediationKey, artifact);
+      // When finding key first time, or additional dependency path to the artifact with same
+      // version is encountered, add the dependency path to `multimap`
+
       Path jarAbsolutePath = artifact.getFile().toPath().toAbsolutePath();
       if (!jarAbsolutePath.toString().endsWith(".jar")) {
         continue;

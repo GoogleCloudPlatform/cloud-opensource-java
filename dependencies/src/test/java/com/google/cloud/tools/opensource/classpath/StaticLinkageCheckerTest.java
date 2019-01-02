@@ -88,6 +88,14 @@ public class StaticLinkageCheckerTest {
     Truth.assertWithMessage("There should not be duplicated versions for jsr305")
         .that(jsr305Count)
         .isEqualTo(1);
+
+    Optional<Path> opencensusApiPathFound =
+        paths.stream().filter(path -> path.toString().contains("opencensus-api-")).findFirst();
+    Truth8.assertThat(opencensusApiPathFound).isPresent();
+    Path opencensusApiPath = opencensusApiPathFound.get();
+    Truth.assertWithMessage("Opencensus API should have multiple dependency paths")
+        .that(multimap.get(opencensusApiPath).size())
+        .isGreaterThan(1);
   }
 
   @Test
