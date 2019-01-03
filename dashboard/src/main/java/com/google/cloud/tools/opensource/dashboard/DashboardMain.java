@@ -16,6 +16,9 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,6 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import freemarker.template.Configuration;
@@ -41,9 +45,8 @@ import freemarker.template.Version;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.collection.DependencyCollectionException;
-import org.eclipse.aether.resolution.DependencyResolutionException;
 
+import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.classpath.StaticLinkageCheckReport;
 import com.google.cloud.tools.opensource.classpath.StaticLinkageChecker;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -56,6 +59,7 @@ import com.google.cloud.tools.opensource.dependencies.Update;
 import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
@@ -66,6 +70,7 @@ public class DashboardMain {
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
   public static final String TEST_NAME_GLOBAL_UPPER_BOUND = "Global Upper Bounds";
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
+  public static final String TEST_NAME_STATIC_LINKAGE_CHECK = "Static Linkage Errors";
 
   public static void main(String[] args)
       throws IOException, TemplateException, RepositoryException, ClassNotFoundException {
@@ -102,10 +107,10 @@ public class DashboardMain {
     boolean onlyReachable = false;
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(onlyReachable, paths, entryPoints);
-    
-    StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
-    List<ArtifactResults> table = generateReports(configuration, output, cache);
-    generateDashboard(configuration, output, table, cache.getGlobalDependencies(), report);
+
+    StaticLinkageCheckReport linkageReport = staticLinkageChecker.findLinkageErrors();
+    List<ArtifactResults> table = generateReports(configuration, output, cache, linkageReport);
+    generateDashboard(configuration, output, table, cache.getGlobalDependencies(), linkageReport);
 
     return output;
   }
@@ -128,8 +133,15 @@ public class DashboardMain {
   }
 
   @VisibleForTesting
-  static List<ArtifactResults> generateReports(Configuration configuration, Path output,
-      ArtifactCache cache) {
+  static List<ArtifactResults> generateReports(
+      Configuration configuration,
+      Path output,
+      ArtifactCache cache,
+      StaticLinkageCheckReport staticLinkageCheckReport) {
+    ImmutableMap<Path, JarLinkageReport> pathToLinkageReport =
+        staticLinkageCheckReport.getJarLinkageReports().stream()
+            .collect(
+                toImmutableMap(JarLinkageReport::getJarPath, jarLinkageReport -> jarLinkageReport));
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();
@@ -142,11 +154,16 @@ public class DashboardMain {
           table.add(unavailable);
         } else {
           ArtifactResults results =
-              generateArtifactReport(configuration, output, entry.getKey(), entry.getValue(),
-                  cache.getGlobalDependencies());
+              generateArtifactReport(
+                  configuration,
+                  output,
+                  entry.getKey(),
+                  entry.getValue(),
+                  cache.getGlobalDependencies(),
+                  pathToLinkageReport);
           table.add(results);
         }
-      } catch (RepositoryException | IOException ex) {
+      } catch (IOException ex) {
         System.err.println(ex.getMessage());
         ArtifactResults unavailableTestResult = new ArtifactResults(entry.getKey());
         unavailableTestResult.setExceptionMessage(ex.getMessage());
@@ -193,10 +210,14 @@ public class DashboardMain {
     return cache;
   }
 
-  private static ArtifactResults generateArtifactReport(Configuration configuration, Path output,
-      Artifact artifact, ArtifactInfo artifactInfo, List<DependencyGraph> globalDependencies)
-      throws IOException, TemplateException, DependencyCollectionException,
-      DependencyResolutionException {
+  private static ArtifactResults generateArtifactReport(
+      Configuration configuration,
+      Path output,
+      Artifact artifact,
+      ArtifactInfo artifactInfo,
+      List<DependencyGraph> globalDependencies,
+      ImmutableMap<Path, JarLinkageReport> pathToLinkageReport)
+      throws IOException, TemplateException {
 
     String coordinates = Artifacts.toCoordinates(artifact);
     File outputFile = output.resolve(coordinates.replace(':', '_') + ".html").toFile();
@@ -217,8 +238,19 @@ public class DashboardMain {
       Map<Artifact, Artifact> globalUpperBoundFailures = findUpperBoundsFailures(
           collectLatestVersions(globalDependencies), transitiveDependencies);
 
+      List<DependencyPath> dependencyPaths = completeDependencies.list();
+
+      ImmutableSet<JarLinkageReport> staticLinkageCheckReports =
+          dependencyPaths.stream()
+              .map(dependencyPath -> dependencyPath.getLeaf().getFile().toPath())
+              .map(pathToLinkageReport::get)
+              .filter(Objects::nonNull)
+              .collect(toImmutableSet());
+      int totalLinkageErrorCount =
+          staticLinkageCheckReports.stream().mapToInt(JarLinkageReport::getTotalErrorCount).sum();
+
       ListMultimap<DependencyPath, DependencyPath> dependencyTree =
-          DependencyTreeFormatter.buildDependencyPathTree(completeDependencies.list());
+          DependencyTreeFormatter.buildDependencyPathTree(dependencyPaths);
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
@@ -232,12 +264,15 @@ public class DashboardMain {
       // Explicit casting avoids Freemarker's error on `AbstractListMultimap.get` in CircleCI
       templateData.put("dependencyTree", (LinkedListMultimap<?, ?>) dependencyTree);
       templateData.put("dependencyRootNode", Iterables.getFirst(dependencyTree.values(), null));
+      templateData.put("jarLinkageReports", staticLinkageCheckReports);
+      templateData.put("totalLinkageErrorCount", totalLinkageErrorCount);
       report.process(templateData, out);
 
       ArtifactResults results = new ArtifactResults(artifact);
       results.addResult(TEST_NAME_UPPER_BOUND, upperBoundFailures.size());
       results.addResult(TEST_NAME_GLOBAL_UPPER_BOUND, globalUpperBoundFailures.size());
       results.addResult(TEST_NAME_DEPENDENCY_CONVERGENCE, convergenceIssues.size());
+      results.addResult(TEST_NAME_STATIC_LINKAGE_CHECK, totalLinkageErrorCount);
 
       return results;
     }

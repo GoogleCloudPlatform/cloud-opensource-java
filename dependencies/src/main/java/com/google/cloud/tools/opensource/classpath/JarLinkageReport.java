@@ -29,18 +29,18 @@ public abstract class JarLinkageReport {
   /**
    * Returns the absolute path of the jar file containing source classes of linkage errors
    */
-  abstract Path getJarPath();
+  public abstract Path getJarPath();
   
   /**
    * Returns the dependency path(s) to this artifact.
    */
   abstract ImmutableList<DependencyPath> getDependencyPaths();
 
-  abstract ImmutableList<StaticLinkageError<ClassSymbolReference>> getMissingClassErrors();
+  public abstract ImmutableList<StaticLinkageError<ClassSymbolReference>> getMissingClassErrors();
 
-  abstract ImmutableList<StaticLinkageError<MethodSymbolReference>> getMissingMethodErrors();
+  public abstract ImmutableList<StaticLinkageError<MethodSymbolReference>> getMissingMethodErrors();
 
-  abstract ImmutableList<StaticLinkageError<FieldSymbolReference>> getMissingFieldErrors();
+  public abstract ImmutableList<StaticLinkageError<FieldSymbolReference>> getMissingFieldErrors();
 
   static Builder builder() {
     return new AutoValue_JarLinkageReport.Builder().setDependencyPaths(ImmutableList.of());
@@ -89,7 +89,7 @@ public abstract class JarLinkageReport {
     return builder.toString();
   }
 
-  int getTotalErrorCount() {
+  public int getTotalErrorCount() {
     return getMissingClassErrors().size() + getMissingMethodErrors().size()
         + getMissingFieldErrors().size();
   }

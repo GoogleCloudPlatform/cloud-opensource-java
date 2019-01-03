@@ -109,6 +109,16 @@
       <h3 style="color: green">${groupId}:${artifactId}:${version} Converges</h3>
     </#if>
 
+
+    <h2>Static Linkage Check</h2>
+
+    <p id="static-linkage-check">${totalLinkageErrorCount} static linkage error(s)</p>
+    <#list jarLinkageReports as jarLinkageReport>
+      <#if jarLinkageReport.getTotalErrorCount() gt 0>
+        <pre class="jar-linkage-report">${jarLinkageReport?html}</pre>
+      </#if>
+    </#list>
+
     <h2>Dependencies</h2>
 
     <#if dependencyRootNode?? >
