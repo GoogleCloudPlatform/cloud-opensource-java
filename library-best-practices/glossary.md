@@ -7,8 +7,8 @@ Java Dependency Glossary
 <a name="static-linkage-error"></a>
 <a name="dynamic-linkage-error"></a>
 - **Linkage error**: an error when a Java class references
-  another class whether through a class literal, a field access, or a method invocation;
-  and the reference cannot be satisfied with the available classes in the class path.
+  another class and the reference cannot be satisfied with the available classes in the class path.
+  The reference can be through a class literal, a field access, or a method invocation.
   Linkage errors detected at runtime manifest as `ReflectiveOperationException`,
   `NoClassDefFoundError`, `NoSuchFieldException`, `MethodNotFoundException`,
   `LinkageError`, or other related exceptions.
