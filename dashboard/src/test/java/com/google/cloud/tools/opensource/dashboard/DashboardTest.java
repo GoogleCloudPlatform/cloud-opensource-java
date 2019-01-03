@@ -118,6 +118,11 @@ public class DashboardTest {
         Truth.assertThat(thirdResult.getValue().replaceAll("\\s", ""))
             .containsMatch("PASS|\\d+FAILURES?");
         Truth.assertThat(thirdResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
+
+        Element fourthResult = (Element) (td.get(4));
+        Truth.assertThat(fourthResult.getValue().replaceAll("\\s", ""))
+            .containsMatch("PASS|\\d+FAILURES?");
+        Truth.assertThat(fourthResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
       }
       Nodes href = document.query("//tr/td/a/@href");
       for (int i = 0; i < href.size(); i++) {
@@ -179,6 +184,32 @@ public class DashboardTest {
   }
 
   @Test
+  public void testComponent_staticLinkageCheckResult() throws IOException, ParsingException {
+    Path grpcAltsHtml = outputDirectory.resolve("io.grpc_grpc-alts_1.17.1.html");
+    Assert.assertTrue(Files.isRegularFile(grpcAltsHtml));
+
+    try (InputStream source = Files.newInputStream(grpcAltsHtml)) {
+      Document document = builder.build(source);
+
+      Nodes staticLinkageCheckMessage = document.query("//p[@id='static-linkage-check']");
+      Assert.assertEquals(1, staticLinkageCheckMessage.size());
+      Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
+          .contains("static linkage error(s)");
+
+      Nodes jarLinkageReportNode = document.query("//pre[@class='jar-linkage-report']");
+      boolean foundGrpcCoreError = false;
+      for (int i = 0; i < jarLinkageReportNode.size(); i++) {
+        if (jarLinkageReportNode.get(i).getValue().contains("grpc-core-1.17.1.jar")) {
+          foundGrpcCoreError = true;
+        }
+      }
+      Assert.assertTrue(
+          "grpc-alts 1.17.1 should have static linkage error on grpc-core-1.17.1",
+          foundGrpcCoreError);
+    }
+  }
+
+  @Test
   public void testComponent_success() throws IOException, ValidityException, ParsingException {
     Path successHtml = outputDirectory.resolve(
         "com.google.api.grpc_proto-google-common-protos_1.12.0.html");
@@ -196,11 +227,6 @@ public class DashboardTest {
       Nodes presDependencyTree = document.query("//p[@class='DEPENDENCY_TREE_NODE']");
       Assert.assertTrue("Dependency Tree should be shown in dashboard",
           presDependencyTree.size() > 0);
-
-      Nodes staticLinkageCheckMessage = document.query("//p[@id='static-linkage-check]");
-      Assert.assertEquals(1, staticLinkageCheckMessage.size());
-      Assert.assertEquals("0 static linkage error(s)",
-          staticLinkageCheckMessage.get(0).getValue());
     }
   }
 
