@@ -144,7 +144,6 @@ public class StaticLinkageChecker {
     return ImmutableList.copyOf(multimap.keySet());
   }
 
-  // Multimap is a pain, maybe just use LinkedHashMap<Path, List<DependencyPath>>
   /**
    * Finds jar file paths and dependency paths for Maven artifacts and their transitive
    * dependencies. When there are multiple versions of an artifact, the closest to the root ({@code
@@ -161,6 +160,8 @@ public class StaticLinkageChecker {
    */
   public static LinkedListMultimap<Path, DependencyPath> artifactsToPaths(List<Artifact> artifacts)
       throws RepositoryException {
+    // TODO(#315): Consider using LinkedHashMap<Path, List<DependencyPath>> over Multimap
+    // Multimap has many variation with different behaviors.
 
     LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
     if (artifacts.isEmpty()) {
