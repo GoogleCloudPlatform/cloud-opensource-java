@@ -33,7 +33,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -148,11 +147,13 @@ public class StaticLinkageChecker {
   // Multimap is a pain, maybe just use LinkedHashMap<Path, List<DependencyPath>>
   /**
    * Finds jar file paths and dependency paths for Maven artifacts and their transitive
-   * dependencies. When there are multiple versions of an artifact, the closest to the root
-   * (`artifacts` argument) is picked up in the same manner as Maven's dependency mediation.
+   * dependencies. When there are multiple versions of an artifact, the closest to the root ({@code
+   * artifacts}) is picked up into the key of the return value. This 'pick closest' strategy follows
+   * Maven's dependency mediation.
    *
    * @param artifacts Maven artifacts to check
-   * @return map absolute paths of jar files to Maven dependency paths
+   * @return map absolute paths of jar files to one or more Maven dependency path(s) from ({@code
+   *     artifacts}) to the Maven artifacts of the jar files
    * @throws RepositoryException when there is a problem in retrieving jar files
    * @see <a
    *     href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies">Maven:
@@ -167,7 +168,7 @@ public class StaticLinkageChecker {
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencies(artifacts);
+        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(artifacts);
     List<DependencyPath> dependencyPaths = dependencyGraph.list();
 
     // To remove duplicates on (groupId:artifactId) for dependency mediation
@@ -175,6 +176,11 @@ public class StaticLinkageChecker {
 
     for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();
+      Path jarAbsolutePath = artifact.getFile().toPath().toAbsolutePath();
+      if (!jarAbsolutePath.toString().endsWith(".jar")) {
+        continue;
+      }
+
       String artifactVersion = artifact.getVersion();
       // groupId:artifactId
       String dependencyMediationKey = Artifacts.makeKey(artifact);
@@ -189,13 +195,9 @@ public class StaticLinkageChecker {
         continue;
       }
       keyToFirstArtifactVersion.put(dependencyMediationKey, artifact.getVersion());
+
       // When finding the key (groupId:artifactId) first time, or additional dependency path to
       // the artifact of the same version is encountered, adds the dependency path to `multimap`.
-
-      Path jarAbsolutePath = artifact.getFile().toPath().toAbsolutePath();
-      if (!jarAbsolutePath.toString().endsWith(".jar")) {
-        continue;
-      }
       multimap.put(jarAbsolutePath, dependencyPath);
     }
     return multimap;
