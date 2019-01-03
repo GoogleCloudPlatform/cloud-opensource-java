@@ -189,8 +189,8 @@ public class StaticLinkageChecker {
         continue;
       }
       keyToFirstArtifactVersion.put(dependencyMediationKey, artifact.getVersion());
-      // When finding key first time, or additional dependency path to the artifact with same
-      // version is encountered, adds the dependency path to `multimap`,
+      // When finding the key (groupId:artifactId) first time, or additional dependency path to
+      // the artifact of the same version is encountered, adds the dependency path to `multimap`.
 
       Path jarAbsolutePath = artifact.getFile().toPath().toAbsolutePath();
       if (!jarAbsolutePath.toString().endsWith(".jar")) {
