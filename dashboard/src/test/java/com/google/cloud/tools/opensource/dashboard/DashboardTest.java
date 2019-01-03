@@ -196,6 +196,11 @@ public class DashboardTest {
       Nodes presDependencyTree = document.query("//p[@class='DEPENDENCY_TREE_NODE']");
       Assert.assertTrue("Dependency Tree should be shown in dashboard",
           presDependencyTree.size() > 0);
+
+      Nodes staticLinkageCheckMessage = document.query("//p[@id='static-linkage-check]");
+      Assert.assertEquals(1, staticLinkageCheckMessage.size());
+      Assert.assertEquals("0 static linkage error(s)",
+          staticLinkageCheckMessage.get(0).getValue());
     }
   }
 

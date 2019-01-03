@@ -112,10 +112,10 @@
 
     <h2>Static Linkage Check</h2>
 
-    <p>${totalLinkageErrorCount} static linkage error(s)</p>
+    <p id="static-linkage-check">${totalLinkageErrorCount} static linkage error(s)</p>
     <#list jarLinkageReports as jarLinkageReport>
       <#if jarLinkageReport.getTotalErrorCount() gt 0>
-        <pre>${jarLinkageReport}</pre>
+        <pre>${jarLinkageReport?html}</pre>
       </#if>
     </#list>
 
