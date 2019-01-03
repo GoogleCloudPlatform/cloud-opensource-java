@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableList;
 @AutoValue
 public abstract class StaticLinkageCheckReport {
 
-  abstract ImmutableList<JarLinkageReport> getJarLinkageReports();
+  public abstract ImmutableList<JarLinkageReport> getJarLinkageReports();
 
   @VisibleForTesting
   public static StaticLinkageCheckReport create(Iterable<JarLinkageReport> jarLinkageReports) {

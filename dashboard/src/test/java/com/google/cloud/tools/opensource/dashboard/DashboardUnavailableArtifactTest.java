@@ -45,6 +45,7 @@ import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.classpath.StaticLinkageCheckReport;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Truth;
@@ -79,8 +80,11 @@ public class DashboardUnavailableArtifactTest {
     
     ArtifactCache cache = new ArtifactCache();
     cache.setInfoMap(map);
+    StaticLinkageCheckReport staticLinkageCheckReport =
+        StaticLinkageCheckReport.create(ImmutableList.of());
     List<ArtifactResults> artifactResults =
-        DashboardMain.generateReports(configuration, outputDirectory, cache);
+        DashboardMain.generateReports(
+            configuration, outputDirectory, cache, staticLinkageCheckReport);
 
     Assert.assertEquals(
         "The length of the ArtifactResults should match the length of artifacts",
