@@ -148,12 +148,12 @@ public class StaticLinkageChecker {
   /**
    * Finds jar file paths and dependency paths for Maven artifacts and their transitive
    * dependencies. When there are multiple versions of an artifact, the closest to the root ({@code
-   * artifacts}) is picked up into the key of the return value. This 'pick closest' strategy follows
-   * Maven's dependency mediation.
+   * artifacts}) is picked up. This 'pick closest' strategy follows Maven's dependency mediation.
+   * The values of the returned map for a key (jar file) represent the different Maven dependency
+   * paths from {@code artifacts} to the Maven artifact of the jar file.
    *
    * @param artifacts Maven artifacts to check
-   * @return map absolute paths of jar files to one or more Maven dependency path(s) from ({@code
-   *     artifacts}) to the Maven artifacts of the jar files
+   * @return map absolute paths of jar files to one or more Maven dependency paths
    * @throws RepositoryException when there is a problem in retrieving jar files
    * @see <a
    *     href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies">Maven:
