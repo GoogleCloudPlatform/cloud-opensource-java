@@ -46,7 +46,7 @@ Java Dependency Glossary
 <a name="static"></a>
 - **Static**: Said of a linkage error when the linkage error is caused by a
   direct code reference (for example, _static linkage error_ and _static linkage conflict_).
-  The references from a class is written in the class file when the class is compiled.
+  The references from a class are written in the class file when the class is compiled.
 
 <a name="behavior-conflict"></a>
 - **Behavior conflict**: The class's implementation has changed in a way that
