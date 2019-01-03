@@ -89,7 +89,7 @@ public abstract class JarLinkageReport {
     return builder.toString();
   }
 
-  int getTotalErrorCount() {
+  public int getTotalErrorCount() {
     return getMissingClassErrors().size() + getMissingMethodErrors().size()
         + getMissingFieldErrors().size();
   }
