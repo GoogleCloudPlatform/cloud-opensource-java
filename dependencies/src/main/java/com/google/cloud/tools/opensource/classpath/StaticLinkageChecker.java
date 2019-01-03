@@ -136,6 +136,9 @@ public class StaticLinkageChecker {
    * @param artifacts Maven artifacts to check
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem in retrieving jar files
+   * @see <a
+   *     href="https://docs.oracle.com/javase/8/docs/technotes/tools/unix/classpath.html#sthref15">Setting
+   *     the Class Path: Specification Order</a>
    */
   public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
       throws RepositoryException {
