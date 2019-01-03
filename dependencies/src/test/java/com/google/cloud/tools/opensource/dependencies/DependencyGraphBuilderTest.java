@@ -90,7 +90,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testGetStaticLinkageCheckDependencies_multipleArtifacts()
+  public void testGetStaticLinkageCheckDependencyGraph_multipleArtifacts()
       throws DependencyCollectionException, DependencyResolutionException {
     DependencyGraph graph =
         DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
