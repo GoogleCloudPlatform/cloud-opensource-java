@@ -16,13 +16,16 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 
@@ -33,11 +36,14 @@ import org.eclipse.aether.artifact.Artifact;
 public class ClassPathBuilder {
 
   /**
-   * Finds jar file paths for Maven artifacts and their dependencies.
+   * Finds jar file paths for Maven artifacts and their transitive dependencies.
    *
    * @param artifacts Maven artifacts to check
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem in retrieving jar files
+   * @see <a
+   *     href="https://docs.oracle.com/javase/8/docs/technotes/tools/unix/classpath.html#sthref15">Setting
+   *     the Class Path: Specification Order</a>
    */
   public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
       throws RepositoryException {
@@ -46,17 +52,24 @@ public class ClassPathBuilder {
     return ImmutableList.copyOf(multimap.keySet());
   }
 
-
-  // Multimap is a pain, maybe just use LinkedHashMap<Path, List<DependencyPath>>
   /**
-   * Finds jar file paths for Maven artifacts and their dependencies.
+   * Finds jar file paths and dependency paths for Maven artifacts and their transitive
+   * dependencies. When there are multiple versions of an artifact, the closest to the root ({@code
+   * artifacts}) is picked up. This 'pick closest' strategy follows Maven's dependency mediation.
+   * The values of the returned map for a key (jar file) represent the different Maven dependency
+   * paths from {@code artifacts} to the Maven artifact of the jar file.
    *
    * @param artifacts Maven artifacts to check
-   * @return map absolute paths of jar files to Maven dependency paths
+   * @return map absolute paths of jar files to one or more Maven dependency paths
    * @throws RepositoryException when there is a problem in retrieving jar files
+   * @see <a
+   *     href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies">Maven:
+   *     Introduction to the Dependency Mechanism</a>
    */
   public static LinkedListMultimap<Path, DependencyPath> artifactsToPaths(List<Artifact> artifacts)
       throws RepositoryException {
+    // TODO(#315): Consider using LinkedHashMap<Path, List<DependencyPath>> over Multimap
+    // Multimap has many variation with different behaviors.
 
     LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
     if (artifacts.isEmpty()) {
@@ -64,8 +77,11 @@ public class ClassPathBuilder {
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencies(artifacts);
+        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(artifacts);
     List<DependencyPath> dependencyPaths = dependencyGraph.list();
+
+    // To remove duplicates on (groupId:artifactId) for dependency mediation
+    Map<String, String> keyToFirstArtifactVersion = Maps.newHashMap();
 
     for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();
@@ -73,8 +89,27 @@ public class ClassPathBuilder {
       if (!jarAbsolutePath.toString().endsWith(".jar")) {
         continue;
       }
+
+      String artifactVersion = artifact.getVersion();
+      // groupId:artifactId
+      String dependencyMediationKey = Artifacts.makeKey(artifact);
+      String firstArtifactVersionForKey = keyToFirstArtifactVersion.get(dependencyMediationKey);
+      if (firstArtifactVersionForKey != null
+          && !artifactVersion.equals(firstArtifactVersionForKey)) {
+        // Not adding this artifact if different version of the artifact (<groupId>:<artifactId> as
+        // key) is already in `multimap`.
+        // As `dependencyPaths` elements are in level order (breadth-first), this first-wins
+        // strategy follows Maven's dependency mediation.
+        // TODO(#309): add Gradle's dependency mediation
+        continue;
+      }
+      keyToFirstArtifactVersion.put(dependencyMediationKey, artifact.getVersion());
+
+      // When finding the key (groupId:artifactId) first time, or additional dependency path to
+      // the artifact of the same version is encountered, adds the dependency path to `multimap`.
       multimap.put(jarAbsolutePath, dependencyPath);
     }
     return multimap;
   }
+
 }

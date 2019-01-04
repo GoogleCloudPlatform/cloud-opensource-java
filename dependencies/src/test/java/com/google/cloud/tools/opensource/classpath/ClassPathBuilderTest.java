@@ -22,10 +22,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
+import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -47,6 +49,27 @@ public class ClassPathBuilderTest {
           return "has file name equal to";
         }
       };
+
+  @Test
+  public void testArtifactsToPaths_removingDuplicates() throws RepositoryException {
+    Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
+    ListMultimap<Path, DependencyPath> multimap =
+        ClassPathBuilder.artifactsToPaths(ImmutableList.of(grpcArtifact));
+
+    Set<Path> paths = multimap.keySet();
+    long jsr305Count = paths.stream().filter(path -> path.toString().contains("jsr305-")).count();
+    Truth.assertWithMessage("There should not be duplicated versions for jsr305")
+        .that(jsr305Count)
+        .isEqualTo(1);
+
+    Optional<Path> opencensusApiPathFound =
+        paths.stream().filter(path -> path.toString().contains("opencensus-api-")).findFirst();
+    Truth8.assertThat(opencensusApiPathFound).isPresent();
+    Path opencensusApiPath = opencensusApiPathFound.get();
+    Truth.assertWithMessage("Opencensus API should have multiple dependency paths")
+        .that(multimap.get(opencensusApiPath).size())
+        .isGreaterThan(1);
+  }
 
   @Test
   public void testArtifactsToPaths() throws RepositoryException {

@@ -19,8 +19,6 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHierarchy;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -48,7 +46,6 @@ import org.apache.bcel.classfile.Method;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.artifact.Artifact;
 
 /**
  * A tool to find static linkage errors for a class path.
@@ -127,7 +124,6 @@ public class StaticLinkageChecker {
 
     System.out.println(report);
   }
-
 
   /**
    * Finds linkage errors in the input classpath and generates a static linkage check report.
