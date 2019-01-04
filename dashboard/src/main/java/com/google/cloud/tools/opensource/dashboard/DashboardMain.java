@@ -252,7 +252,7 @@ public class DashboardMain {
 
       List<DependencyPath> dependencyPaths = completeDependencies.list();
 
-      // Filter relevant static linkage report
+      // Filter only relevant static linkage report to this artifact and its dependencies
       ImmutableSet<JarLinkageReport> staticLinkageCheckReports =
           dependencyPaths.stream()
               .map(dependencyPath -> dependencyPath.getLeaf().getFile().toPath())
