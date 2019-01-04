@@ -38,7 +38,7 @@ Recommendations:
     surface for a method that is not used in any consumers, there would be no
     diamond dependency conflicts due to the breakage, so a package rename is
     a high-cost transition with no real benefit. Conversely, if a library breaks the
-    surface for a method that is used at in many places at
+    surface for a method that is used in many places at
     multiple levels of the dependency graph, there would be a huge amount of
     diamond dependency conflicts if the package isn't renamed, so a package
     rename is preferrable. Generally, the wider the usage of the features
