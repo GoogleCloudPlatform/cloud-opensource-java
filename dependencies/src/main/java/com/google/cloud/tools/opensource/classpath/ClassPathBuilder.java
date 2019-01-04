@@ -30,20 +30,20 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
- * Utility to build a class path (a list of jar files) to be used as input for {@link
- * StaticLinkageChecker}. The order of the list affects the result of static linkage check as the
- * linkage checker picks a class file first found in the class path in the same manner as Java
- * virtual machine.
+ * Utility to build a class path (a list of jar files) through a dependency tree of Maven artifacts.
  *
  * @see <a
- *     href="https://docs.oracle.com/javase/8/docs/technotes/tools/unix/classpath.html#sthref15">Setting
- *     the Class Path: Specification Order</a>
+ *     href="https://docs.oracle.com/javase/8/docs/technotes/tools/unix/classpath.html#sthref15">
+ *     Setting the Class Path: Specification Order</a>
+ * @see <a
+ *     href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies">
+ *     Maven: Introduction to the Dependency Mechanism</a>
  */
 public class ClassPathBuilder {
 
   /**
-   * Finds jar file paths for Maven artifacts and their transitive dependencies. The returned list
-   * can be used as input class path for {@link StaticLinkageChecker}.
+   * Finds jar file paths for Maven artifacts and their transitive dependencies, using Maven's
+   * dependency mediation strategy.
    *
    * @param artifacts Maven artifacts to check
    * @return list of absolute paths to jar files
@@ -60,11 +60,12 @@ public class ClassPathBuilder {
   /**
    * Finds jar file paths and dependency paths for Maven artifacts and their transitive
    * dependencies. When there are multiple versions of an artifact, the closest to the root ({@code
-   * artifacts}) is picked up. This 'pick closest' strategy follows Maven's dependency mediation.
+   * artifacts}) in breadth-first order is picked up. This 'pick closest' strategy follows Maven's
+   * dependency mediation.
    *
    * <p>The keys of the returned map represent jar files of {@code artifacts} and their transitive
-   * dependencies. The return value of {@link LinkedListMultimap#keySet()}, which preserves key
-   * iteration order, can be used as input class path for {@link StaticLinkageChecker}.
+   * dependencies. The return value of {@link LinkedListMultimap#keySet()} preserves key iteration
+   * order.
    *
    * <p>The values of the returned map for a key (jar file) represent the different Maven dependency
    * paths from {@code artifacts} to the Maven artifact of the jar file.
@@ -72,9 +73,6 @@ public class ClassPathBuilder {
    * @param artifacts Maven artifacts to check
    * @return an ordered map of absolute paths of jar files to one or more Maven dependency paths
    * @throws RepositoryException when there is a problem in retrieving jar files
-   * @see <a
-   *     href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies">Maven:
-   *     Introduction to the Dependency Mechanism</a>
    */
   public static LinkedListMultimap<Path, DependencyPath> artifactsToDependencyPaths(
       List<Artifact> artifacts) throws RepositoryException {
