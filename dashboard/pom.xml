@@ -78,7 +78,7 @@
         <artifactId>exec-maven-plugin</artifactId>
         <configuration>
           <skip>false</skip>
-          <exec>java</exec>
+          <executable>java</executable>
           <mainClass>com.google.cloud.tools.opensource.dashboard.DashboardMain</mainClass>
         </configuration>
       </plugin>
