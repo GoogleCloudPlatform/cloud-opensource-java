@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
@@ -30,11 +29,6 @@ public abstract class JarLinkageReport {
    * Returns the absolute path of the jar file containing source classes of linkage errors
    */
   public abstract Path getJarPath();
-  
-  /**
-   * Returns the dependency path(s) to this artifact.
-   */
-//  abstract ImmutableList<DependencyPath> getDependencyPaths();
 
   public abstract ImmutableList<StaticLinkageError<ClassSymbolReference>> getMissingClassErrors();
 
@@ -69,11 +63,6 @@ public abstract class JarLinkageReport {
     int totalErrors = getTotalErrorCount();
 
     builder.append(getJarPath().getFileName() + " (" + totalErrors + " errors):\n");
-    /*
-    for (DependencyPath path : getDependencyPaths()) {
-      builder.append(indent + "Linked from: " + path);
-      builder.append("\n");
-    } */
     for (StaticLinkageError<ClassSymbolReference> missingClass : getMissingClassErrors()) {
       builder.append(indent + missingClass);
       builder.append("\n");

@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.dashboard;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
-import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -66,7 +65,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.html.HtmlEscapers;
+import com.google.common.collect.Multimap;
 
 public class DashboardMain {
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
@@ -96,11 +95,11 @@ public class DashboardMain {
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
-    
-    LinkedListMultimap<Path, DependencyPath> jarToDependencyPath =
+
+    LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
         ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
     // LinkedListMultimap preserves the key order
-    ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPath.keySet());
+    ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
 
     // TODO(suztomo): choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(classpath.get(0));
@@ -112,9 +111,15 @@ public class DashboardMain {
         StaticLinkageChecker.create(onlyReachable, classpath, entryPoints);
 
     StaticLinkageCheckReport linkageReport = staticLinkageChecker.findLinkageErrors();
-    List<ArtifactResults> table = generateReports(configuration, output, cache, linkageReport,
-        jarToDependencyPath);
-    generateDashboard(configuration, output, table, cache.getGlobalDependencies(), linkageReport);
+    List<ArtifactResults> table =
+        generateReports(configuration, output, cache, linkageReport, jarToDependencyPaths);
+    generateDashboard(
+        configuration,
+        output,
+        table,
+        cache.getGlobalDependencies(),
+        linkageReport,
+        jarToDependencyPaths);
 
     return output;
   }
@@ -247,6 +252,7 @@ public class DashboardMain {
 
       List<DependencyPath> dependencyPaths = completeDependencies.list();
 
+      // Filter relevant static linkage report
       ImmutableSet<JarLinkageReport> staticLinkageCheckReports =
           dependencyPaths.stream()
               .map(dependencyPath -> dependencyPath.getLeaf().getFile().toPath())
@@ -314,9 +320,14 @@ public class DashboardMain {
   }
 
   @VisibleForTesting
-  static void generateDashboard(Configuration configuration, Path output,
-      List<ArtifactResults> table, List<DependencyGraph> globalDependencies,
-      StaticLinkageCheckReport report) throws IOException, TemplateException {
+  static void generateDashboard(
+      Configuration configuration,
+      Path output,
+      List<ArtifactResults> table,
+      List<DependencyGraph> globalDependencies,
+      StaticLinkageCheckReport staticLinkageCheckReport,
+      Multimap<Path, DependencyPath> jarToDependencyPaths)
+      throws IOException, TemplateException {
     File dashboardFile = output.resolve("dashboard.html").toFile();
     
     Map<String, String> latestArtifacts = collectLatestVersions(globalDependencies);
@@ -328,8 +339,8 @@ public class DashboardMain {
       templateData.put("table", table);
       templateData.put("lastUpdated", LocalDateTime.now());
       templateData.put("latestArtifacts", latestArtifacts);
-      String escapedStaticLinkageErrors = HtmlEscapers.htmlEscaper().escape(report.toString());
-      templateData.put("staticLinkageErrors", escapedStaticLinkageErrors);
+      templateData.put("jarLinkageReports", staticLinkageCheckReport.getJarLinkageReports());
+      templateData.put("jarToDependencyPaths", jarToDependencyPaths);
 
       dashboard.process(templateData, out);
     }

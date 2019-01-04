@@ -58,7 +58,21 @@
 
     <h2>Static Linkage Errors</h2>
 
-    <pre id="static_linkage_errors">${staticLinkageErrors}</pre>
+    <#list jarLinkageReports as jarLinkageReport>
+      <#if jarLinkageReport.getTotalErrorCount() gt 0>
+        <pre id="static_linkage_errors">${jarLinkageReport?html}</pre>
+
+        <p class="static-linkage-check-dependency-paths">
+          Following paths to the jar file from BOM are found in the dependency tree.
+        </p>
+        <ul class="static-linkage-check-dependency-paths">
+          <#list jarToDependencyPaths.get(jarLinkageReport.getJarPath()) as dependencyPath >
+            <li>${dependencyPath}</li>
+          </#list>
+        </ul>
+
+      </#if>
+    </#list>
 
     <hr />      
       
