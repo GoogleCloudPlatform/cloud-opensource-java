@@ -128,51 +128,6 @@ public class StaticLinkageChecker {
     System.out.println(report);
   }
 
-  /**
-   * Finds jar file paths for Maven artifacts and their dependencies.
-   *
-   * @param artifacts Maven artifacts to check
-   * @return list of absolute paths to jar files
-   * @throws RepositoryException when there is a problem in retrieving jar files
-   */
-  public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
-      throws RepositoryException {
-    
-    LinkedListMultimap<Path, DependencyPath> multimap = artifactsToPaths(artifacts);
-    return ImmutableList.copyOf(multimap.keySet());
-  }
-  
-  
-  // Multimap is a pain, maybe just use LinkedHashMap<Path, List<DependencyPath>>
-  /**
-   * Finds jar file paths for Maven artifacts and their dependencies.
-   *
-   * @param artifacts Maven artifacts to check
-   * @return map absolute paths of jar files to Maven dependency paths
-   * @throws RepositoryException when there is a problem in retrieving jar files
-   */
-  public static LinkedListMultimap<Path, DependencyPath> artifactsToPaths(List<Artifact> artifacts)
-      throws RepositoryException {
-    
-    LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
-    if (artifacts.isEmpty()) {
-      return multimap;
-    }
-    // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
-    DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencies(artifacts);
-    List<DependencyPath> dependencyPaths = dependencyGraph.list();
-
-    for (DependencyPath dependencyPath : dependencyPaths) {
-      Artifact artifact = dependencyPath.getLeaf();
-      Path jarAbsolutePath = artifact.getFile().toPath().toAbsolutePath();
-      if (!jarAbsolutePath.toString().endsWith(".jar")) {
-        continue;
-      }
-      multimap.put(jarAbsolutePath, dependencyPath);
-    }
-    return multimap;
-  }
 
   /**
    * Finds linkage errors in the input classpath and generates a static linkage check report.

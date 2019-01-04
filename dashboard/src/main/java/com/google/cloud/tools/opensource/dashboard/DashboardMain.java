@@ -46,6 +46,7 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
+import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.classpath.StaticLinkageCheckReport;
 import com.google.cloud.tools.opensource.classpath.StaticLinkageChecker;
@@ -95,9 +96,9 @@ public class DashboardMain {
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
     
-    ImmutableList<Path> classpath = StaticLinkageChecker.artifactsToClasspath(managedDependencies);
+    ImmutableList<Path> classpath = ClassPathBuilder.artifactsToClasspath(managedDependencies);
     LinkedListMultimap<Path, DependencyPath> paths =
-        StaticLinkageChecker.artifactsToPaths(managedDependencies);
+        ClassPathBuilder.artifactsToPaths(managedDependencies);
     
     // TODO(suztomo): choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(classpath.get(0));
