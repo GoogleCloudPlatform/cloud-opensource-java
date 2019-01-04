@@ -10,16 +10,16 @@ access classes in library A:
    `com.google.guava:guava:26.0-jre`. The Maven coordinates are used to pull the
    library's jar from Maven Central. For each pair of group ID and artifact ID
    (hereafter referenced as "Maven ID"), the user's build system (for example
-   Maven or Gradle) will make a final selection of only one version to put on
-   the classpath. The different build systems use different rules for which
-   version to select.
+   Maven or Gradle) selects exactly one version to put on
+   the classpath. Different build systems use different rules for selecting
+   from multiple versions.
 2. The fully-qualified class names of the classes in library A. These classes
-   will generally share a Java package (the package as defined in `package`
+   generally share a Java package (the package as defined in `package`
    statements, for example `package com.google.common.collect`). The classpath,
-   which is formed from Maven artifacts and possibly non-Maven sources, will be
+   which is formed from Maven artifacts and possibly non-Maven sources, is
    searched for each fully-qualified class name at runtime. In order to simplify
-   the discussion, we will only talk about the Java package, assuming that the
-   classes of the library will be located in that package or subpackages.
+   the discussion, we only talk about the Java package, assuming that the
+   classes of the library are located in that package or subpackages.
 
 When breaking changes are introduced to library A between major version 1 and
 major version 2, a choice needs to be made: to rename or not rename? This
@@ -36,18 +36,18 @@ Recommendations:
     same, use the same Maven ID (same group ID and same artifact ID).
   - There is a tradeoff between the two options above: if a library breaks the
     surface for a method that is not used in any consumers, there would be no
-    diamond dependency conflicts due to the breakage, so a package rename would
-    be a high-cost transition with no real benefit. Conversely, if a breaks the
-    surface for a method that is used at every call site across libraries at
+    diamond dependency conflicts due to the breakage, so a package rename is
+    a high-cost transition with no real benefit. Conversely, if a library breaks the
+    surface for a method that is used in many places at
     multiple levels of the dependency graph, there would be a huge amount of
     diamond dependency conflicts if the package isn't renamed, so a package
-    rename would be preferrable. Generally, the wider the usage of the features
-    that need to break, the higher the value is from renaming the Java package.
-- Whether making breaking changes or making no breaking changes, don't publish
+    rename is preferrable. Generally, the wider the usage of the features
+    that need to break, the higher the value from renaming the Java package.
+- Whether or not you make breaking changes, don't publish
   the same classes under multiple Maven IDs; this creates a situation where
   artifacts have "overlapping classes." Another best practice,
   [JLBP-5](JLBP-5.md), covers how consumers need to handle such problematic
-  scenarios - don't create new cases!
+  scenarios — don't create new cases!
   - Corollary 1: Once you have published under a particular Maven ID, you are
     stuck with it until you rename your Java package.
   - Corollary 2: Don't fork an artifact owned by someone else and publish
