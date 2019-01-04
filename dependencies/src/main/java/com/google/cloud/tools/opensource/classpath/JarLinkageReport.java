@@ -34,7 +34,7 @@ public abstract class JarLinkageReport {
   /**
    * Returns the dependency path(s) to this artifact.
    */
-  abstract ImmutableList<DependencyPath> getDependencyPaths();
+//  abstract ImmutableList<DependencyPath> getDependencyPaths();
 
   public abstract ImmutableList<StaticLinkageError<ClassSymbolReference>> getMissingClassErrors();
 
@@ -43,13 +43,12 @@ public abstract class JarLinkageReport {
   public abstract ImmutableList<StaticLinkageError<FieldSymbolReference>> getMissingFieldErrors();
 
   static Builder builder() {
-    return new AutoValue_JarLinkageReport.Builder().setDependencyPaths(ImmutableList.of());
+    return new AutoValue_JarLinkageReport.Builder();
   }
 
   @AutoValue.Builder
   abstract static class Builder {
     abstract Builder setJarPath(Path value);
-    abstract Builder setDependencyPaths(Iterable<DependencyPath> paths);
 
     abstract Builder setMissingClassErrors(
         Iterable<StaticLinkageError<ClassSymbolReference>> errors);
@@ -70,10 +69,11 @@ public abstract class JarLinkageReport {
     int totalErrors = getTotalErrorCount();
 
     builder.append(getJarPath().getFileName() + " (" + totalErrors + " errors):\n");
+    /*
     for (DependencyPath path : getDependencyPaths()) {
       builder.append(indent + "Linked from: " + path);
       builder.append("\n");
-    }
+    } */
     for (StaticLinkageError<ClassSymbolReference> missingClass : getMissingClassErrors()) {
       builder.append(indent + missingClass);
       builder.append("\n");

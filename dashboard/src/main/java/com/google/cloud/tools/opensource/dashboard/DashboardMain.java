@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.dashboard;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
+import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -96,10 +97,11 @@ public class DashboardMain {
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
     
-    ImmutableList<Path> classpath = ClassPathBuilder.artifactsToClasspath(managedDependencies);
-    LinkedListMultimap<Path, DependencyPath> paths =
-        ClassPathBuilder.artifactsToPaths(managedDependencies);
-    
+    LinkedListMultimap<Path, DependencyPath> jarToDependencyPath =
+        ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
+    // LinkedListMultimap preserves the key order
+    ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPath.keySet());
+
     // TODO(suztomo): choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(classpath.get(0));
 
@@ -107,10 +109,11 @@ public class DashboardMain {
     
     boolean onlyReachable = false;
     StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(onlyReachable, paths, entryPoints);
+        StaticLinkageChecker.create(onlyReachable, classpath, entryPoints);
 
     StaticLinkageCheckReport linkageReport = staticLinkageChecker.findLinkageErrors();
-    List<ArtifactResults> table = generateReports(configuration, output, cache, linkageReport);
+    List<ArtifactResults> table = generateReports(configuration, output, cache, linkageReport,
+        jarToDependencyPath);
     generateDashboard(configuration, output, table, cache.getGlobalDependencies(), linkageReport);
 
     return output;
@@ -138,8 +141,9 @@ public class DashboardMain {
       Configuration configuration,
       Path output,
       ArtifactCache cache,
-      StaticLinkageCheckReport staticLinkageCheckReport) {
-    ImmutableMap<Path, JarLinkageReport> pathToLinkageReport =
+      StaticLinkageCheckReport staticLinkageCheckReport,
+      Multimap<Path, DependencyPath> jarToDependencyPaths) {
+    ImmutableMap<Path, JarLinkageReport> jarToLinkageReport =
         staticLinkageCheckReport.getJarLinkageReports().stream()
             .collect(
                 toImmutableMap(JarLinkageReport::getJarPath, jarLinkageReport -> jarLinkageReport));
@@ -161,7 +165,8 @@ public class DashboardMain {
                   entry.getKey(),
                   entry.getValue(),
                   cache.getGlobalDependencies(),
-                  pathToLinkageReport);
+                  jarToLinkageReport,
+                  jarToDependencyPaths);
           table.add(results);
         }
       } catch (IOException ex) {
@@ -217,7 +222,8 @@ public class DashboardMain {
       Artifact artifact,
       ArtifactInfo artifactInfo,
       List<DependencyGraph> globalDependencies,
-      ImmutableMap<Path, JarLinkageReport> pathToLinkageReport)
+      ImmutableMap<Path, JarLinkageReport> jarToLinkageReport,
+      Multimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
 
     String coordinates = Artifacts.toCoordinates(artifact);
@@ -244,7 +250,7 @@ public class DashboardMain {
       ImmutableSet<JarLinkageReport> staticLinkageCheckReports =
           dependencyPaths.stream()
               .map(dependencyPath -> dependencyPath.getLeaf().getFile().toPath())
-              .map(pathToLinkageReport::get)
+              .map(jarToLinkageReport::get)
               .filter(Objects::nonNull)
               .collect(toImmutableSet());
       int totalLinkageErrorCount =
@@ -266,6 +272,7 @@ public class DashboardMain {
       templateData.put("dependencyTree", (LinkedListMultimap<?, ?>) dependencyTree);
       templateData.put("dependencyRootNode", Iterables.getFirst(dependencyTree.values(), null));
       templateData.put("jarLinkageReports", staticLinkageCheckReports);
+      templateData.put("jarToDependencyPaths", jarToDependencyPaths);
       templateData.put("totalLinkageErrorCount", totalLinkageErrorCount);
       report.process(templateData, out);
 

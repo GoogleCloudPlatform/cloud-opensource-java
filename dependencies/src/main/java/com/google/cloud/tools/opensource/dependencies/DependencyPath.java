@@ -93,7 +93,7 @@ public final class DependencyPath {
   }
 
   // TODO think about index out of bounds
-  Artifact get(int i) {
+  public Artifact get(int i) {
     return path.get(i);
   }
 

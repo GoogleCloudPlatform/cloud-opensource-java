@@ -31,7 +31,12 @@ import org.eclipse.aether.artifact.Artifact;
 
 /**
  * Utility to build a class path (a list of jar files) to be used as input for {@link
- * StaticLinkageChecker}.
+ * StaticLinkageChecker}. The linkage checker picks a class file first found in the class path in
+ * the same manner as Java virtual machine.
+ *
+ * @see <a
+ *     href="https://docs.oracle.com/javase/8/docs/technotes/tools/unix/classpath.html#sthref15">Setting
+ *     the Class Path: Specification Order</a>
  */
 public class ClassPathBuilder {
 
@@ -41,14 +46,12 @@ public class ClassPathBuilder {
    * @param artifacts Maven artifacts to check
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem in retrieving jar files
-   * @see <a
-   *     href="https://docs.oracle.com/javase/8/docs/technotes/tools/unix/classpath.html#sthref15">Setting
-   *     the Class Path: Specification Order</a>
    */
   public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
       throws RepositoryException {
 
-    LinkedListMultimap<Path, DependencyPath> multimap = artifactsToPaths(artifacts);
+    // LinkedListMultimap keeps the order they were first added to the multimap
+    LinkedListMultimap<Path, DependencyPath> multimap = artifactsToDependencyPaths(artifacts);
     return ImmutableList.copyOf(multimap.keySet());
   }
 
@@ -66,8 +69,8 @@ public class ClassPathBuilder {
    *     href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies">Maven:
    *     Introduction to the Dependency Mechanism</a>
    */
-  public static LinkedListMultimap<Path, DependencyPath> artifactsToPaths(List<Artifact> artifacts)
-      throws RepositoryException {
+  public static LinkedListMultimap<Path, DependencyPath> artifactsToDependencyPaths(
+      List<Artifact> artifacts) throws RepositoryException {
     // TODO(#315): Consider using LinkedHashMap<Path, List<DependencyPath>> over Multimap
     // Multimap has many variation with different behaviors.
 

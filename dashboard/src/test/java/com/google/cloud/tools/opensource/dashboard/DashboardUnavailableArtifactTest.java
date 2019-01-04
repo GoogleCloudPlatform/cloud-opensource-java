@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.common.collect.LinkedListMultimap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -84,7 +85,8 @@ public class DashboardUnavailableArtifactTest {
         StaticLinkageCheckReport.create(ImmutableList.of());
     List<ArtifactResults> artifactResults =
         DashboardMain.generateReports(
-            configuration, outputDirectory, cache, staticLinkageCheckReport);
+            configuration, outputDirectory, cache, staticLinkageCheckReport,
+            LinkedListMultimap.create());
 
     Assert.assertEquals(
         "The length of the ArtifactResults should match the length of artifacts",

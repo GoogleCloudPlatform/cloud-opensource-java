@@ -73,7 +73,7 @@ public class StaticLinkageCheckerTest {
         absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar");
     JarLinkageReport jarLinkageReport =
         staticLinkageChecker.generateLinkageReport(
-            jarNotContainingImmutableList, symbolReferenceSet, Collections.emptyList());
+            jarNotContainingImmutableList, symbolReferenceSet);
 
     Truth.assertThat(jarLinkageReport.getMissingMethodErrors()).hasSize(1);
     Assert.assertEquals(
@@ -100,7 +100,7 @@ public class StaticLinkageCheckerTest {
         SymbolReferenceSet.builder().setMethodReferences(methodReferences).build();
 
     JarLinkageReport jarLinkageReport = staticLinkageChecker.generateLinkageReport(paths.get(0),
-        symbolReferenceSet, Collections.emptyList());
+        symbolReferenceSet);
 
     Truth.assertThat(jarLinkageReport.getMissingMethodErrors()).isEmpty();
   }
@@ -248,8 +248,7 @@ public class StaticLinkageCheckerTest {
     JarLinkageReport jarLinkageReport =
         staticLinkageChecker.generateLinkageReport(
             absolutePathOfResource("testdata/gax-1.32.0.jar"),
-            symbolReferenceSet,
-            Collections.emptyList());
+            symbolReferenceSet);
 
     Truth.assertThat(jarLinkageReport.getMissingFieldErrors()).isEmpty();
   }
@@ -275,8 +274,7 @@ public class StaticLinkageCheckerTest {
     JarLinkageReport jarLinkageReport =
         staticLinkageChecker.generateLinkageReport(
             absolutePathOfResource("testdata/gax-1.32.0.jar"),
-            symbolReferenceSet,
-            Collections.emptyList());
+            symbolReferenceSet);
 
     Truth.assertThat(jarLinkageReport.getMissingFieldErrors()).hasSize(1);
     Truth.assertThat(jarLinkageReport.getMissingFieldErrors().get(0).getReference().getFieldName())
@@ -436,8 +434,7 @@ public class StaticLinkageCheckerTest {
     JarLinkageReport jarLinkageReport =
         staticLinkageChecker.generateLinkageReport(
             absolutePathOfResource("testdata/gax-1.32.0.jar"),
-            symbolReferenceSet,
-            Collections.emptyList());
+            symbolReferenceSet);
 
     Truth.assertThat(jarLinkageReport.getMissingClassErrors()).hasSize(1);
     Truth.assertThat(
@@ -469,8 +466,7 @@ public class StaticLinkageCheckerTest {
     JarLinkageReport jarLinkageReport =
         staticLinkageChecker.generateLinkageReport(
             absolutePathOfResource("testdata/gax-1.32.0.jar"),
-            symbolReferenceSet,
-            Collections.emptyList());
+            symbolReferenceSet);
 
     Truth.assertThat(jarLinkageReport.getMissingClassErrors()).isEmpty();
   }
@@ -495,8 +491,7 @@ public class StaticLinkageCheckerTest {
     JarLinkageReport jarLinkageReport =
         staticLinkageChecker.generateLinkageReport(
             absolutePathOfResource("testdata/gax-1.32.0.jar"),
-            symbolReferenceSet,
-            Collections.emptyList());
+            symbolReferenceSet);
 
     Truth.assertThat(jarLinkageReport.getMissingClassErrors()).hasSize(1);
     StaticLinkageError<ClassSymbolReference> classReferenceError =
@@ -659,14 +654,14 @@ public class StaticLinkageCheckerTest {
 
     JarLinkageReport reportWith65First =
         staticLinkageChecker65First.generateLinkageReport(
-            firestoreDependencies.get(0), symbolReferenceSet, Collections.emptyList());
+            firestoreDependencies.get(0), symbolReferenceSet);
     Truth.assertWithMessage("Firestore version 65 does not have CollectionReference.listDocuments")
         .that(reportWith65First.getMissingMethodErrors())
         .hasSize(1);
 
     JarLinkageReport reportWith66First =
         staticLinkageChecker66First.generateLinkageReport(
-            firestoreDependencies.get(0), symbolReferenceSet, Collections.emptyList());
+            firestoreDependencies.get(0), symbolReferenceSet);
     Truth.assertWithMessage("Firestore version 66 has CollectionReference.listDocuments")
         .that(reportWith66First.getMissingMethodErrors())
         .isEmpty();

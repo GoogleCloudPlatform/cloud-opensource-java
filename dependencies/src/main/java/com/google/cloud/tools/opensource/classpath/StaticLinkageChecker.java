@@ -63,7 +63,7 @@ public class StaticLinkageChecker {
     ClassDumper dumper = ClassDumper.create(jarPaths);
     return new StaticLinkageChecker(onlyReachable, dumper, entryPoints);
   }
-  
+/*
   public static StaticLinkageChecker create(boolean onlyReachable,
       LinkedListMultimap<Path, DependencyPath> paths, ImmutableSet<Path> entryPoints)
       throws IOException {
@@ -71,7 +71,7 @@ public class StaticLinkageChecker {
     ClassDumper dumper = ClassDumper.create(jarPaths);
     return new StaticLinkageChecker(onlyReachable, dumper, entryPoints, paths);
   }
-
+*/
   /**
    * If true, the report excludes linkage errors on classes that are not reachable
    * from the entry points of the class usage graph.
@@ -82,22 +82,20 @@ public class StaticLinkageChecker {
 
   private final ImmutableSet<Path> entryPoints;
   
-  private final ListMultimap<Path, DependencyPath> paths;
-
+  // private final ListMultimap<Path, DependencyPath> paths;
+/*
   private StaticLinkageChecker(
       boolean reportOnlyReachable, ClassDumper classDumper, Iterable<Path> entryPoints) {
     this(reportOnlyReachable, classDumper, entryPoints, ArrayListMultimap.create());
   }
-
+*/
   private StaticLinkageChecker(
       boolean reportOnlyReachable,
       ClassDumper classDumper,
-      Iterable<Path> entryPoints,
-      ListMultimap<Path, DependencyPath> paths) {
+      Iterable<Path> entryPoints) {
     this.reportOnlyReachable = reportOnlyReachable;
     this.classDumper = Preconditions.checkNotNull(classDumper);
     this.entryPoints = ImmutableSet.copyOf(entryPoints);
-    this.paths = Preconditions.checkNotNull(paths);
   }
 
   /**
@@ -140,8 +138,8 @@ public class StaticLinkageChecker {
     ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
     for (Map.Entry<Path, SymbolReferenceSet> entry : jarToSymbols.build().entrySet()) {
       Path jarPath = entry.getKey();
-      Iterable<DependencyPath> dependencyPaths = this.paths.get(jarPath);
-      jarLinkageReports.add(generateLinkageReport(jarPath, entry.getValue(), dependencyPaths));
+      // Iterable<DependencyPath> dependencyPaths = this.paths.get(jarPath);
+      jarLinkageReports.add(generateLinkageReport(jarPath, entry.getValue()));
     }
 
     if (reportOnlyReachable) {
@@ -162,12 +160,10 @@ public class StaticLinkageChecker {
    * @return linkage report for the jar file, which includes linkage errors if any
    */
   @VisibleForTesting
-  JarLinkageReport generateLinkageReport(Path jarPath, SymbolReferenceSet symbolReferenceSet,
-      Iterable<DependencyPath> dependencyPaths) {
+  JarLinkageReport generateLinkageReport(Path jarPath, SymbolReferenceSet symbolReferenceSet) {
     
     JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder()
-        .setJarPath(jarPath)
-        .setDependencyPaths(dependencyPaths);
+        .setJarPath(jarPath);
 
     // Because the Java compiler ensures that there are no static linkage errors between classes
     // defined in the same jar file, this validation excludes reference within the same jar file.

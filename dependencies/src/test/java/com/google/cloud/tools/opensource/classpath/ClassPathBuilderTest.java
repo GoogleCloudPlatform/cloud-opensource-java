@@ -54,7 +54,7 @@ public class ClassPathBuilderTest {
   public void testArtifactsToPaths_removingDuplicates() throws RepositoryException {
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
     ListMultimap<Path, DependencyPath> multimap =
-        ClassPathBuilder.artifactsToPaths(ImmutableList.of(grpcArtifact));
+        ClassPathBuilder.artifactsToDependencyPaths(ImmutableList.of(grpcArtifact));
 
     Set<Path> paths = multimap.keySet();
     long jsr305Count = paths.stream().filter(path -> path.toString().contains("jsr305-")).count();
@@ -76,7 +76,7 @@ public class ClassPathBuilderTest {
 
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
     ListMultimap<Path, DependencyPath> multimap =
-        ClassPathBuilder.artifactsToPaths(ImmutableList.of(grpcArtifact));
+        ClassPathBuilder.artifactsToDependencyPaths(ImmutableList.of(grpcArtifact));
 
     Set<Path> paths = multimap.keySet();
 
@@ -167,7 +167,7 @@ public class ClassPathBuilderTest {
     }
 
     JarLinkageReport jarLinkageReport = staticLinkageChecker.generateLinkageReport(httpClientJar,
-        symbolReferenceSet, Collections.emptyList());
+        symbolReferenceSet);
 
     Truth.assertWithMessage("Method references within the same jar file should not be reported")
         .that(jarLinkageReport.getMissingMethodErrors())
