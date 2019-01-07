@@ -123,7 +123,9 @@ abstract class StaticLinkageError<T extends SymbolReference> {
     /** The target class of the symbol reference is not found in the class path. */
     CLASS_NOT_FOUND,
 
-    /** The referenced class has changed to an interface or vice versa. */
+    /**
+     * The referenced class or interface found in the class path is not compatible with the source.
+     */
     INCOMPATIBLE_CLASS_CHANGE,
 
     /**
