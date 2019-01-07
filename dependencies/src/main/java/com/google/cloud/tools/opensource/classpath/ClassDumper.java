@@ -42,6 +42,7 @@ import org.apache.bcel.classfile.Constant;
 import org.apache.bcel.classfile.ConstantCP;
 import org.apache.bcel.classfile.ConstantClass;
 import org.apache.bcel.classfile.ConstantFieldref;
+import org.apache.bcel.classfile.ConstantInterfaceMethodref;
 import org.apache.bcel.classfile.ConstantMethodref;
 import org.apache.bcel.classfile.ConstantNameAndType;
 import org.apache.bcel.classfile.ConstantPool;
@@ -159,6 +160,8 @@ class ClassDumper {
         symbolTableBuilder.classReferencesBuilder();
     ImmutableSet.Builder<MethodSymbolReference> methodReferences =
         symbolTableBuilder.methodReferencesBuilder();
+    ImmutableSet.Builder<MethodSymbolReference> interfaceMethodReferences =
+        symbolTableBuilder.interfaceMethodReferencesBuilder();
     ImmutableSet.Builder<FieldSymbolReference> fieldReferences =
         symbolTableBuilder.fieldReferencesBuilder();
 
@@ -184,6 +187,12 @@ class ClassDumper {
           ConstantMethodref constantMethodref = (ConstantMethodref) constant;
           methodReferences.add(
               constantToMethodReference(constantMethodref, constantPool, sourceClassName));
+          break;
+        case Const.CONSTANT_InterfaceMethodref:
+          ConstantInterfaceMethodref constantInterfaceMethodref =
+              (ConstantInterfaceMethodref) constant;
+          interfaceMethodReferences.add(
+              constantToMethodReference(constantInterfaceMethodref, constantPool, sourceClassName));
           break;
         case Const.CONSTANT_Fieldref:
           ConstantFieldref constantFieldref = (ConstantFieldref) constant;
@@ -239,7 +248,7 @@ class ClassDumper {
   }
 
   private static MethodSymbolReference constantToMethodReference(
-      ConstantMethodref constantMethodref, ConstantPool constantPool, String sourceClassName) {
+      ConstantCP constantMethodref, ConstantPool constantPool, String sourceClassName) {
     String classNameInMethodReference = constantMethodref.getClass(constantPool);
     ConstantNameAndType constantNameAndType = constantNameAndType(constantMethodref, constantPool);
     String methodName = constantNameAndType.getName(constantPool);

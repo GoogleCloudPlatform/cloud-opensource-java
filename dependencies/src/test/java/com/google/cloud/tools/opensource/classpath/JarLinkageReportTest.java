@@ -28,6 +28,7 @@ public class JarLinkageReportTest {
   private JarLinkageReport jarLinkageReport;
   private ImmutableList<StaticLinkageError<FieldSymbolReference>> missingFieldErrors;
   private ImmutableList<StaticLinkageError<MethodSymbolReference>> missingMethodErrors;
+  private ImmutableList<StaticLinkageError<MethodSymbolReference>> missingInterfaceMethodErrors;
   private ImmutableList<StaticLinkageError<ClassSymbolReference>> missingClassErrors;
 
   @Before
@@ -55,6 +56,17 @@ public class JarLinkageReportTest {
         StaticLinkageError.errorMissingMember(methodSymbolReference, targetClassLocation);
     missingMethodErrors = ImmutableList.of(linkageErrorMissingMethod);
 
+    MethodSymbolReference interfaceMethodSymbolReference =
+        MethodSymbolReference.builder()
+            .setTargetClassName("InterfaceA")
+            .setMethodName("methodY")
+            .setDescriptor("java.lang.String")
+            .setSourceClassName("ClassB")
+            .build();
+    StaticLinkageError<MethodSymbolReference> linkageErrorMissingInterfaceMethod =
+        StaticLinkageError.errorMissingMember(interfaceMethodSymbolReference, targetClassLocation);
+    missingInterfaceMethodErrors = ImmutableList.of(linkageErrorMissingInterfaceMethod);
+
     FieldSymbolReference fieldSymbolReference =
         FieldSymbolReference.builder()
             .setTargetClassName("ClassC")
@@ -69,6 +81,7 @@ public class JarLinkageReportTest {
             .setJarPath(Paths.get("a", "b", "c"))
             .setMissingClassErrors(missingClassErrors)
             .setMissingMethodErrors(missingMethodErrors)
+            .setMissingInterfaceMethodErrors(missingInterfaceMethodErrors)
             .setMissingFieldErrors(missingFieldErrors)
             .build();
   }
@@ -106,6 +119,9 @@ public class JarLinkageReportTest {
             + "reason: CLASS_NOT_FOUND, target class location not found\n"
             + "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, "
             + "methodName=methodX, descriptor=java.lang.String}"
+            + ", reason: SYMBOL_NOT_FOUND, target class from dummy.jar\n"
+            + "  InterfaceMethodSymbolReference{sourceClassName=ClassB, targetClassName=InterfaceA,"
+            + " methodName=methodY, descriptor=java.lang.String}"
             + ", reason: SYMBOL_NOT_FOUND, target class from dummy.jar\n"
             + "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, "
             + "fieldName=fieldX}, reason: CLASS_NOT_FOUND, target class location not found\n",

@@ -165,6 +165,27 @@ public class ClassDumperTest {
   }
 
   @Test
+  public void testScanSymbolReferencesInClass_shouldPickInterfaceReference()
+      throws URISyntaxException, IOException {
+    URL jarUrl = URLClassLoader.getSystemResource("testdata/api-common-1.7.0.jar");
+
+    SymbolReferenceSet symbolReferenceSet =
+        ClassDumper.scanSymbolReferencesInJar(Paths.get(jarUrl.toURI()));
+
+    Set<MethodSymbolReference> interfaceMethodSymbolReferences =
+        symbolReferenceSet.getInterfaceMethodReferences();
+    Truth.assertThat(interfaceMethodSymbolReferences).isNotEmpty();
+    Truth.assertThat(interfaceMethodSymbolReferences)
+        .contains(
+            MethodSymbolReference.builder()
+                .setMethodName("get")
+                .setDescriptor("(Ljava/lang/Object;)Ljava/lang/Object;")
+                .setSourceClassName("com.google.api.resourcenames.UntypedResourceName")
+                .setTargetClassName("java.util.Map")
+                .build());
+  }
+
+  @Test
   public void testClassesInSamePackage() {
     Truth.assertThat(ClassDumper.classesInSamePackage("foo.Abc", "bar.Abc")).isFalse();
     Truth.assertThat(ClassDumper.classesInSamePackage("foo.bar.Abc", "foo.bar.Cde")).isTrue();

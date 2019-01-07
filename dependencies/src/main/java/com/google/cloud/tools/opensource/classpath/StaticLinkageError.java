@@ -62,6 +62,15 @@ abstract class StaticLinkageError<T extends SymbolReference> {
     return builderFor(reference).setReason(Reason.CLASS_NOT_FOUND).build();
   }
 
+  /** Returns a linkage error caused by {@link Reason#INCOMPATIBLE_CLASS_CHANGE}. */
+  static <U extends SymbolReference> StaticLinkageError<U> errorIncompatibleClassChange(
+      U reference, Path targetClassLocation) {
+    return builderFor(reference)
+        .setReason(Reason.INCOMPATIBLE_CLASS_CHANGE)
+        .setTargetClassLocation(targetClassLocation)
+        .build();
+  }
+
   /** Returns a linkage error caused by {@link Reason#SYMBOL_NOT_FOUND}. */
   static <U extends SymbolReference> StaticLinkageError<U> errorMissingMember(
       U reference, Path targetClassLocation) {
@@ -113,6 +122,9 @@ abstract class StaticLinkageError<T extends SymbolReference> {
   enum Reason {
     /** The target class of the symbol reference is not found in the class path. */
     CLASS_NOT_FOUND,
+
+    /** The referenced class has changed to an interface or vice versa. */
+    INCOMPATIBLE_CLASS_CHANGE,
 
     /**
      * The target class of the symbol reference is inaccessible to the source.

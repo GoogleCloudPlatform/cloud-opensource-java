@@ -159,6 +159,12 @@ public class StaticLinkageChecker {
             classesDefinedInJar,
             this::checkLinkageErrorMissingMethodAt));
 
+    reportBuilder.setMissingInterfaceMethodErrors(
+        errorsFromSymbolReferences(
+            symbolReferenceSet.getInterfaceMethodReferences(),
+            classesDefinedInJar,
+            this::checkLinkageErrorMissingInterfaceMethodAt));
+
     reportBuilder.setMissingFieldErrors(
         errorsFromSymbolReferences(
             symbolReferenceSet.getFieldReferences(),
@@ -183,14 +189,30 @@ public class StaticLinkageChecker {
     return linkageErrors;
   }
 
+  @VisibleForTesting
+  Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
+      MethodSymbolReference reference) {
+    return checkLinkageErrorMethodAt(reference, false);
+  }
+
+  @VisibleForTesting
+  Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMissingInterfaceMethodAt(
+      MethodSymbolReference reference) {
+    return checkLinkageErrorMethodAt(reference, true);
+  }
+
   /**
    * Returns an {@code Optional} describing the linkage error for the method reference if the
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
+   *
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.4.3.3">Java
+   *     Virtual Machine Specification: 5.4.3.3. Method Resolution</a>
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.4.3.4">Java
+   *     Virtual Machine Specification: 5.4.3.4. Interface Method Resolution</a>
    */
-  @VisibleForTesting
-  Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
-      MethodSymbolReference reference) {
+  private Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMethodAt(
+      MethodSymbolReference reference, boolean isCheckingInterface) {
     String targetClassName = reference.getTargetClassName();
     String methodName = reference.getMethodName();
 
@@ -204,6 +226,11 @@ public class StaticLinkageChecker {
       Path classFileLocation = classDumper.findClassLocation(targetClassName);
       if (!isClassAccessibleFrom(targetJavaClass, reference.getSourceClassName())) {
         return Optional.of(StaticLinkageError.errorInaccessibleClass(reference, classFileLocation));
+      }
+
+      if (targetJavaClass.isInterface() ^ isCheckingInterface) {
+        return Optional.of(
+            StaticLinkageError.errorIncompatibleClassChange(reference, classFileLocation));
       }
 
       // Checks the target class, its parent classes, and its interfaces.

@@ -31,7 +31,8 @@ interface SymbolReference {
   String getSourceClassName();
 
   /**
-   * Returns the fully-qualified class name (binary name) of the target class of the reference.
+   * Returns the fully-qualified class or interface name (binary name) of the target class of the
+   * reference.
    */
   String getTargetClassName();
 }

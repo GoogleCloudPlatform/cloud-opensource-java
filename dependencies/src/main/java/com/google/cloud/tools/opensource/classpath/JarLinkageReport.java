@@ -34,6 +34,9 @@ public abstract class JarLinkageReport {
 
   public abstract ImmutableList<StaticLinkageError<MethodSymbolReference>> getMissingMethodErrors();
 
+  public abstract ImmutableList<StaticLinkageError<MethodSymbolReference>>
+      getMissingInterfaceMethodErrors();
+
   public abstract ImmutableList<StaticLinkageError<FieldSymbolReference>> getMissingFieldErrors();
 
   static Builder builder() {
@@ -48,6 +51,9 @@ public abstract class JarLinkageReport {
         Iterable<StaticLinkageError<ClassSymbolReference>> errors);
 
     abstract Builder setMissingMethodErrors(
+        Iterable<StaticLinkageError<MethodSymbolReference>> errors);
+
+    abstract Builder setMissingInterfaceMethodErrors(
         Iterable<StaticLinkageError<MethodSymbolReference>> errors);
 
     abstract Builder setMissingFieldErrors(
@@ -69,6 +75,11 @@ public abstract class JarLinkageReport {
     }
     for (StaticLinkageError<MethodSymbolReference> missingMethod : getMissingMethodErrors()) {
       builder.append(indent + missingMethod);
+      builder.append("\n");
+    }
+    for (StaticLinkageError<MethodSymbolReference> missingInterfaceMethod :
+        getMissingInterfaceMethodErrors()) {
+      builder.append(indent + "Interface" + missingInterfaceMethod);
       builder.append("\n");
     }
     for (StaticLinkageError<FieldSymbolReference> missingField : getMissingFieldErrors()) {
