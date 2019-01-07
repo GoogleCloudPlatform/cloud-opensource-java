@@ -111,7 +111,7 @@ public class StaticLinkageCheckerTest {
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
-    // ImmutableList is an abstract class.
+    // ImmutableList is an abstract class
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
@@ -134,7 +134,7 @@ public class StaticLinkageCheckerTest {
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
-    // ClassToInstanceMap is an interface.
+    // ClassToInstanceMap is an interface
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
@@ -148,6 +148,29 @@ public class StaticLinkageCheckerTest {
 
     Truth8.assertThat(errorFound).isPresent();
     Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.INCOMPATIBLE_CLASS_CHANGE);
+  }
+
+  @Test
+  public void testCheckLinkageErrorMissingInterfaceMethodAt_missingInterfaceMethod()
+      throws IOException, URISyntaxException {
+    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    // ClassToInstanceMap is an interface
+    MethodSymbolReference methodSymbolReference =
+        MethodSymbolReference.builder()
+            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setTargetClassName("com.google.common.collect.ClassToInstanceMap")
+            .setMethodName("noSuchMethod")
+            .setDescriptor("(Ljava/lang/Class;)Ljava/lang/Object;")
+            .build();
+    // There is no such method on ClassToInstanceMap
+    Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
+        staticLinkageChecker.checkLinkageErrorMissingInterfaceMethodAt(methodSymbolReference);
+
+    Truth8.assertThat(errorFound).isPresent();
+    Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.SYMBOL_NOT_FOUND);
   }
 
   @Test
