@@ -103,7 +103,7 @@ public class StaticLinkageCheckOption {
       String bomCoordinates = commandLine.getOptionValue("b");
       DefaultArtifact bomArtifact = new DefaultArtifact(bomCoordinates);
       List<Artifact> artifactsInBom = RepositoryUtility.readBom(bomArtifact);
-      return StaticLinkageChecker.artifactsToClasspath(artifactsInBom);
+      return ClassPathBuilder.artifactsToClasspath(artifactsInBom);
     } else if (commandLine.hasOption("a")) {
       String mavenCoordinatesOption = commandLine.getOptionValue("a");
       ImmutableList<Artifact> artifacts =
@@ -112,7 +112,7 @@ public class StaticLinkageCheckOption {
               .stream()
               .map(DefaultArtifact::new)
               .collect(toImmutableList());
-      return StaticLinkageChecker.artifactsToClasspath(artifacts);
+      return ClassPathBuilder.artifactsToClasspath(artifacts);
     } else if (commandLine.hasOption("j")) {
       String jarFiles = commandLine.getOptionValue("j");
       ImmutableList<Path> jarFilesInArguments =

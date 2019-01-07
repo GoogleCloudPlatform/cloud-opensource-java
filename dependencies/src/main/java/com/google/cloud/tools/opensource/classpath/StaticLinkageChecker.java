@@ -19,23 +19,14 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHierarchy;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +41,6 @@ import org.apache.bcel.classfile.Method;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.artifact.Artifact;
 
 /**
  * A tool to find static linkage errors for a class path.
@@ -68,14 +58,6 @@ public class StaticLinkageChecker {
     ClassDumper dumper = ClassDumper.create(jarPaths);
     return new StaticLinkageChecker(onlyReachable, dumper, entryPoints);
   }
-  
-  public static StaticLinkageChecker create(boolean onlyReachable,
-      LinkedListMultimap<Path, DependencyPath> paths, ImmutableSet<Path> entryPoints)
-      throws IOException {
-    List<Path> jarPaths = new ArrayList<>(paths.keySet());
-    ClassDumper dumper = ClassDumper.create(jarPaths);
-    return new StaticLinkageChecker(onlyReachable, dumper, entryPoints, paths);
-  }
 
   /**
    * If true, the report excludes linkage errors on classes that are not reachable
@@ -87,22 +69,13 @@ public class StaticLinkageChecker {
 
   private final ImmutableSet<Path> entryPoints;
   
-  private final ListMultimap<Path, DependencyPath> paths;
-
-  private StaticLinkageChecker(
-      boolean reportOnlyReachable, ClassDumper classDumper, Iterable<Path> entryPoints) {
-    this(reportOnlyReachable, classDumper, entryPoints, ArrayListMultimap.create());
-  }
-
   private StaticLinkageChecker(
       boolean reportOnlyReachable,
       ClassDumper classDumper,
-      Iterable<Path> entryPoints,
-      ListMultimap<Path, DependencyPath> paths) {
+      Iterable<Path> entryPoints) {
     this.reportOnlyReachable = reportOnlyReachable;
     this.classDumper = Preconditions.checkNotNull(classDumper);
     this.entryPoints = ImmutableSet.copyOf(entryPoints);
-    this.paths = Preconditions.checkNotNull(paths);
   }
 
   /**
@@ -131,83 +104,6 @@ public class StaticLinkageChecker {
   }
 
   /**
-   * Finds jar file paths for Maven artifacts and their transitive dependencies.
-   *
-   * @param artifacts Maven artifacts to check
-   * @return list of absolute paths to jar files
-   * @throws RepositoryException when there is a problem in retrieving jar files
-   * @see <a
-   *     href="https://docs.oracle.com/javase/8/docs/technotes/tools/unix/classpath.html#sthref15">Setting
-   *     the Class Path: Specification Order</a>
-   */
-  public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
-      throws RepositoryException {
-
-    LinkedListMultimap<Path, DependencyPath> multimap = artifactsToPaths(artifacts);
-    return ImmutableList.copyOf(multimap.keySet());
-  }
-
-  /**
-   * Finds jar file paths and dependency paths for Maven artifacts and their transitive
-   * dependencies. When there are multiple versions of an artifact, the closest to the root ({@code
-   * artifacts}) is picked up. This 'pick closest' strategy follows Maven's dependency mediation.
-   * The values of the returned map for a key (jar file) represent the different Maven dependency
-   * paths from {@code artifacts} to the Maven artifact of the jar file.
-   *
-   * @param artifacts Maven artifacts to check
-   * @return map absolute paths of jar files to one or more Maven dependency paths
-   * @throws RepositoryException when there is a problem in retrieving jar files
-   * @see <a
-   *     href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies">Maven:
-   *     Introduction to the Dependency Mechanism</a>
-   */
-  public static LinkedListMultimap<Path, DependencyPath> artifactsToPaths(List<Artifact> artifacts)
-      throws RepositoryException {
-    // TODO(#315): Consider using LinkedHashMap<Path, List<DependencyPath>> over Multimap
-    // Multimap has many variation with different behaviors.
-
-    LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
-    if (artifacts.isEmpty()) {
-      return multimap;
-    }
-    // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
-    DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(artifacts);
-    List<DependencyPath> dependencyPaths = dependencyGraph.list();
-
-    // To remove duplicates on (groupId:artifactId) for dependency mediation
-    Map<String, String> keyToFirstArtifactVersion = Maps.newHashMap();
-
-    for (DependencyPath dependencyPath : dependencyPaths) {
-      Artifact artifact = dependencyPath.getLeaf();
-      Path jarAbsolutePath = artifact.getFile().toPath().toAbsolutePath();
-      if (!jarAbsolutePath.toString().endsWith(".jar")) {
-        continue;
-      }
-
-      String artifactVersion = artifact.getVersion();
-      // groupId:artifactId
-      String dependencyMediationKey = Artifacts.makeKey(artifact);
-      String firstArtifactVersionForKey = keyToFirstArtifactVersion.get(dependencyMediationKey);
-      if (firstArtifactVersionForKey != null
-          && !artifactVersion.equals(firstArtifactVersionForKey)) {
-        // Not adding this artifact if different version of the artifact (<groupId>:<artifactId> as
-        // key) is already in `multimap`.
-        // As `dependencyPaths` elements are in level order (breadth-first), this first-wins
-        // strategy follows Maven's dependency mediation.
-        // TODO(#309): add Gradle's dependency mediation
-        continue;
-      }
-      keyToFirstArtifactVersion.put(dependencyMediationKey, artifact.getVersion());
-
-      // When finding the key (groupId:artifactId) first time, or additional dependency path to
-      // the artifact of the same version is encountered, adds the dependency path to `multimap`.
-      multimap.put(jarAbsolutePath, dependencyPath);
-    }
-    return multimap;
-  }
-
-  /**
    * Finds linkage errors in the input classpath and generates a static linkage check report.
    */
   public StaticLinkageCheckReport findLinkageErrors() throws IOException {
@@ -222,8 +118,7 @@ public class StaticLinkageChecker {
     ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
     for (Map.Entry<Path, SymbolReferenceSet> entry : jarToSymbols.build().entrySet()) {
       Path jarPath = entry.getKey();
-      Iterable<DependencyPath> dependencyPaths = this.paths.get(jarPath);
-      jarLinkageReports.add(generateLinkageReport(jarPath, entry.getValue(), dependencyPaths));
+      jarLinkageReports.add(generateLinkageReport(jarPath, entry.getValue()));
     }
 
     if (reportOnlyReachable) {
@@ -244,12 +139,9 @@ public class StaticLinkageChecker {
    * @return linkage report for the jar file, which includes linkage errors if any
    */
   @VisibleForTesting
-  JarLinkageReport generateLinkageReport(Path jarPath, SymbolReferenceSet symbolReferenceSet,
-      Iterable<DependencyPath> dependencyPaths) {
+  JarLinkageReport generateLinkageReport(Path jarPath, SymbolReferenceSet symbolReferenceSet) {
     
-    JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder()
-        .setJarPath(jarPath)
-        .setDependencyPaths(dependencyPaths);
+    JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder().setJarPath(jarPath);
 
     // Because the Java compiler ensures that there are no static linkage errors between classes
     // defined in the same jar file, this validation excludes reference within the same jar file.

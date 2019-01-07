@@ -46,6 +46,7 @@ import com.google.cloud.tools.opensource.classpath.StaticLinkageCheckReport;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.LinkedListMultimap;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Truth;
@@ -84,7 +85,8 @@ public class DashboardUnavailableArtifactTest {
         StaticLinkageCheckReport.create(ImmutableList.of());
     List<ArtifactResults> artifactResults =
         DashboardMain.generateReports(
-            configuration, outputDirectory, cache, staticLinkageCheckReport);
+            configuration, outputDirectory, cache, staticLinkageCheckReport,
+            LinkedListMultimap.create());
 
     Assert.assertEquals(
         "The length of the ArtifactResults should match the length of artifacts",
@@ -125,7 +127,8 @@ public class DashboardUnavailableArtifactTest {
 
     Iterable<JarLinkageReport> list = new ArrayList<>();
     StaticLinkageCheckReport report = StaticLinkageCheckReport.create(list);
-    DashboardMain.generateDashboard(configuration, outputDirectory, table, null, report);
+    DashboardMain.generateDashboard(
+        configuration, outputDirectory, table, null, report, LinkedListMultimap.create());
 
     Path generatedDashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(generatedDashboardHtml));
