@@ -59,9 +59,9 @@ public class ClassPathBuilder {
 
   /**
    * Finds jar file paths and dependency paths for Maven artifacts and their transitive
-   * dependencies. When there are multiple versions of an artifact, the closest to the root ({@code
-   * artifacts}) in breadth-first order is picked up. This 'pick closest' strategy follows Maven's
-   * dependency mediation.
+   * dependencies. When there are multiple versions of an artifact in the dependency tree, the
+   * closest to the root in breadth-first order is picked up. This 'pick closest' strategy follows
+   * Maven's dependency mediation.
    *
    * <p>The keys of the returned map represent jar files of {@code artifacts} and their transitive
    * dependencies. The return value of {@link LinkedListMultimap#keySet()} preserves key iteration
@@ -70,7 +70,7 @@ public class ClassPathBuilder {
    * <p>The values of the returned map for a key (jar file) represent the different Maven dependency
    * paths from {@code artifacts} to the Maven artifact of the jar file.
    *
-   * @param artifacts Maven artifacts to check
+   * @param artifacts Maven artifacts to check. They are treated as the root of the dependency tree.
    * @return an ordered map of absolute paths of jar files to one or more Maven dependency paths
    * @throws RepositoryException when there is a problem in retrieving jar files
    */
