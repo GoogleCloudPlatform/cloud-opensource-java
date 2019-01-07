@@ -47,6 +47,7 @@ public class StaticLinkageCheckReportTest {
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
             .setTargetClassName("ClassA")
+            .setInterfaceMethod(false)
             .setMethodName("methodX")
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassB")
@@ -55,18 +56,6 @@ public class StaticLinkageCheckReportTest {
         StaticLinkageError.errorMissingMember(methodSymbolReference, null);
     ImmutableList<StaticLinkageError<MethodSymbolReference>> missingMethodErrors =
         ImmutableList.of(linkageErrorMissingMethod);
-
-    MethodSymbolReference interfaceMethodSymbolReference =
-        MethodSymbolReference.builder()
-            .setTargetClassName("InterfaceA")
-            .setMethodName("methodY")
-            .setDescriptor("java.lang.String")
-            .setSourceClassName("ClassB")
-            .build();
-    StaticLinkageError<MethodSymbolReference> linkageErrorMissingInterfaceMethod =
-        StaticLinkageError.errorMissingMember(interfaceMethodSymbolReference, null);
-    ImmutableList<StaticLinkageError<MethodSymbolReference>> missingInterfaceMethodErrors =
-        ImmutableList.of(linkageErrorMissingInterfaceMethod);
 
     FieldSymbolReference fieldSymbolReference =
         FieldSymbolReference.builder()
@@ -84,7 +73,6 @@ public class StaticLinkageCheckReportTest {
             .setJarPath(Paths.get("a", "b", "c"))
             .setMissingClassErrors(missingClassErrors)
             .setMissingMethodErrors(missingMethodErrors)
-            .setMissingInterfaceMethodErrors(missingInterfaceMethodErrors)
             .setMissingFieldErrors(missingFieldErrors)
             .build();
 

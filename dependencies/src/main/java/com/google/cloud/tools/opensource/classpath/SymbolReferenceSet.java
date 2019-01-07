@@ -33,11 +33,10 @@ abstract class SymbolReferenceSet {
    */
   abstract ImmutableSet<ClassSymbolReference> getClassReferences();
 
-  /** Returns method references to classes from the file. */
+  /**
+   * Returns method references from the file.
+   */
   abstract ImmutableSet<MethodSymbolReference> getMethodReferences();
-
-  /** Returns method references to interfaces from the file. */
-  abstract ImmutableSet<MethodSymbolReference> getInterfaceMethodReferences();
 
   /**
    * Returns field references from the file.
@@ -53,11 +52,8 @@ abstract class SymbolReferenceSet {
     abstract Builder setClassReferences(Iterable<ClassSymbolReference> classReferences);
     abstract Builder setFieldReferences(Iterable<FieldSymbolReference> fieldReferences);
     abstract Builder setMethodReferences(Iterable<MethodSymbolReference> methodReferences);
-    abstract Builder setInterfaceMethodReferences(Iterable<MethodSymbolReference> methodReferences);
-
     abstract ImmutableSet.Builder<ClassSymbolReference> classReferencesBuilder();
     abstract ImmutableSet.Builder<MethodSymbolReference> methodReferencesBuilder();
-    abstract ImmutableSet.Builder<MethodSymbolReference> interfaceMethodReferencesBuilder();
     abstract ImmutableSet.Builder<FieldSymbolReference> fieldReferencesBuilder();
 
     abstract SymbolReferenceSet build();
@@ -65,7 +61,6 @@ abstract class SymbolReferenceSet {
     Builder addAll(SymbolReferenceSet other) {
       classReferencesBuilder().addAll(other.getClassReferences());
       methodReferencesBuilder().addAll(other.getMethodReferences());
-      interfaceMethodReferencesBuilder().addAll(other.getInterfaceMethodReferences());
       fieldReferencesBuilder().addAll(other.getFieldReferences());
       return this;
     }

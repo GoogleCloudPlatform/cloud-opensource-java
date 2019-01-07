@@ -51,6 +51,7 @@ public class StaticLinkageCheckerTest {
         MethodSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             .setTargetClassName("[Lio.grpc.InternalKnownTransport;")
+            .setInterfaceMethod(false)
             .setMethodName("clone")
             .setDescriptor("()Ljava/lang/Object")
             .build();
@@ -60,6 +61,7 @@ public class StaticLinkageCheckerTest {
         MethodSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             .setTargetClassName("com.google.common.collect.ImmutableList")
+            .setInterfaceMethod(false)
             .setMethodName("clone")
             .setDescriptor("()Ljava/lang/Object")
             .build();
@@ -91,6 +93,7 @@ public class StaticLinkageCheckerTest {
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             .setTargetClassName(
                 "com.google.common.collect.LinkedHashMultimapGwtSerializationDependencies")
+            .setInterfaceMethod(false)
             .setMethodName("<init>")
             .setDescriptor("(Ljava/util/Map;)V")
             .build();
@@ -111,17 +114,18 @@ public class StaticLinkageCheckerTest {
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
-    // ImmutableList is an abstract class
+    // ImmutableList is an abstract class, but setting isInterfaceMethod = true
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             .setTargetClassName("com.google.common.collect.ImmutableList")
+            .setInterfaceMethod(true) // This is invalid
             .setMethodName("get")
             .setDescriptor("(I)Ljava/lang/Object;")
             .build();
     // When it's verified against interfaces, it should generate an error
     Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
-        staticLinkageChecker.checkLinkageErrorMissingInterfaceMethodAt(methodSymbolReference);
+        staticLinkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
     Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.INCOMPATIBLE_CLASS_CHANGE);
@@ -134,11 +138,12 @@ public class StaticLinkageCheckerTest {
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
-    // ClassToInstanceMap is an interface
+    // ClassToInstanceMap is an interface, but setting isInterfaceMethod = false
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             .setTargetClassName("com.google.common.collect.ClassToInstanceMap")
+            .setInterfaceMethod(false) // This is invalid
             .setMethodName("getInstance")
             .setDescriptor("(Ljava/lang/Class;)Ljava/lang/Object;")
             .build();
@@ -162,12 +167,13 @@ public class StaticLinkageCheckerTest {
         MethodSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             .setTargetClassName("com.google.common.collect.ClassToInstanceMap")
+            .setInterfaceMethod(true)
             .setMethodName("noSuchMethod")
             .setDescriptor("(Ljava/lang/Class;)Ljava/lang/Object;")
             .build();
     // There is no such method on ClassToInstanceMap
     Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
-        staticLinkageChecker.checkLinkageErrorMissingInterfaceMethodAt(methodSymbolReference);
+        staticLinkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
     Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.SYMBOL_NOT_FOUND);
@@ -185,6 +191,7 @@ public class StaticLinkageCheckerTest {
         MethodSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             .setTargetClassName("com.google.common.collect.ImmutableList")
+            .setInterfaceMethod(false)
             .setMethodName("get")
             .setDescriptor("(I)Ljava/lang/Object;")
             .build();
@@ -206,6 +213,7 @@ public class StaticLinkageCheckerTest {
         MethodSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             .setTargetClassName("com.google.common.base.Absent")
+            .setInterfaceMethod(false)
             // The constructor with zero arguments is marked as private
             .setMethodName("<init>")
             .setDescriptor("()V")
@@ -233,6 +241,7 @@ public class StaticLinkageCheckerTest {
         MethodSymbolReference.builder()
             .setSourceClassName("org.junit.experimental.results.ResultMatchers$1")
             .setTargetClassName("org.hamcrest.TypeSafeMatcher")
+            .setInterfaceMethod(false)
             // The constructor with zero arguments is marked as private
             .setMethodName("<init>")
             .setDescriptor("()V")
@@ -259,6 +268,7 @@ public class StaticLinkageCheckerTest {
         MethodSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             .setTargetClassName("com.google.common.base.Absent")
+            .setInterfaceMethod(false)
             // This method is marked as private
             .setMethodName("readResolve")
             .setDescriptor("()Ljava/lang/Object;")
@@ -283,6 +293,7 @@ public class StaticLinkageCheckerTest {
         MethodSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             .setTargetClassName("com.google.common.base.Ascii")
+            .setInterfaceMethod(false)
             // This method is marked as private
             .setMethodName("getAlphaIndex")
             .setDescriptor("(C)I") // private static int getAlphaIndex(char);
@@ -714,6 +725,7 @@ public class StaticLinkageCheckerTest {
         MethodSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
             .setTargetClassName("com.google.cloud.firestore.CollectionReference")
+            .setInterfaceMethod(false)
             .setMethodName("listDocuments")
             .setDescriptor("()Ljava/lang/Iterable;")
             .build();

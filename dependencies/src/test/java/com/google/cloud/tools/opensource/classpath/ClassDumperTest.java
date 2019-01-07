@@ -132,6 +132,7 @@ public class ClassDumperTest {
             .setTargetClassName("io.grpc.protobuf.ProtoUtils")
             .setMethodName("marshaller")
             .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
+            .setInterfaceMethod(false)
             .setDescriptor("(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;")
             .build();
     Truth.assertThat(actualMethodReferences).contains(expectedMethodReference);
@@ -173,7 +174,7 @@ public class ClassDumperTest {
         ClassDumper.scanSymbolReferencesInJar(Paths.get(jarUrl.toURI()));
 
     Set<MethodSymbolReference> interfaceMethodSymbolReferences =
-        symbolReferenceSet.getInterfaceMethodReferences();
+        symbolReferenceSet.getMethodReferences();
     Truth.assertThat(interfaceMethodSymbolReferences).isNotEmpty();
     Truth.assertThat(interfaceMethodSymbolReferences)
         .contains(
@@ -182,6 +183,7 @@ public class ClassDumperTest {
                 .setDescriptor("(Ljava/lang/Object;)Ljava/lang/Object;")
                 .setSourceClassName("com.google.api.resourcenames.UntypedResourceName")
                 .setTargetClassName("java.util.Map")
+                .setInterfaceMethod(true)
                 .build());
   }
 

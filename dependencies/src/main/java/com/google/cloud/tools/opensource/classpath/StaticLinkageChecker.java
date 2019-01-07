@@ -159,12 +159,6 @@ public class StaticLinkageChecker {
             classesDefinedInJar,
             this::checkLinkageErrorMissingMethodAt));
 
-    reportBuilder.setMissingInterfaceMethodErrors(
-        errorsFromSymbolReferences(
-            symbolReferenceSet.getInterfaceMethodReferences(),
-            classesDefinedInJar,
-            this::checkLinkageErrorMissingInterfaceMethodAt));
-
     reportBuilder.setMissingFieldErrors(
         errorsFromSymbolReferences(
             symbolReferenceSet.getFieldReferences(),
@@ -189,18 +183,6 @@ public class StaticLinkageChecker {
     return linkageErrors;
   }
 
-  @VisibleForTesting
-  Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
-      MethodSymbolReference reference) {
-    return checkLinkageErrorMethodAt(reference, false);
-  }
-
-  @VisibleForTesting
-  Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMissingInterfaceMethodAt(
-      MethodSymbolReference reference) {
-    return checkLinkageErrorMethodAt(reference, true);
-  }
-
   /**
    * Returns an {@code Optional} describing the linkage error for the method reference if the
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
@@ -211,8 +193,9 @@ public class StaticLinkageChecker {
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.4.3.4">Java
    *     Virtual Machine Specification: 5.4.3.4. Interface Method Resolution</a>
    */
-  private Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMethodAt(
-      MethodSymbolReference reference, boolean isCheckingInterface) {
+  @VisibleForTesting
+  Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
+      MethodSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     String methodName = reference.getMethodName();
 
@@ -228,7 +211,7 @@ public class StaticLinkageChecker {
         return Optional.of(StaticLinkageError.errorInaccessibleClass(reference, classFileLocation));
       }
 
-      if (targetJavaClass.isInterface() ^ isCheckingInterface) {
+      if (targetJavaClass.isInterface() != reference.isInterfaceMethod()) {
         return Optional.of(
             StaticLinkageError.errorIncompatibleClassChange(reference, classFileLocation));
       }

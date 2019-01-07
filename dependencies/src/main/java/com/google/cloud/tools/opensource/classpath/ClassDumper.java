@@ -160,8 +160,6 @@ class ClassDumper {
         symbolTableBuilder.classReferencesBuilder();
     ImmutableSet.Builder<MethodSymbolReference> methodReferences =
         symbolTableBuilder.methodReferencesBuilder();
-    ImmutableSet.Builder<MethodSymbolReference> interfaceMethodReferences =
-        symbolTableBuilder.interfaceMethodReferencesBuilder();
     ImmutableSet.Builder<FieldSymbolReference> fieldReferences =
         symbolTableBuilder.fieldReferencesBuilder();
 
@@ -186,13 +184,14 @@ class ClassDumper {
         case Const.CONSTANT_Methodref:
           ConstantMethodref constantMethodref = (ConstantMethodref) constant;
           methodReferences.add(
-              constantToMethodReference(constantMethodref, constantPool, sourceClassName));
+              constantToMethodReference(constantMethodref, constantPool, sourceClassName, false));
           break;
         case Const.CONSTANT_InterfaceMethodref:
           ConstantInterfaceMethodref constantInterfaceMethodref =
               (ConstantInterfaceMethodref) constant;
-          interfaceMethodReferences.add(
-              constantToMethodReference(constantInterfaceMethodref, constantPool, sourceClassName));
+          methodReferences.add(
+              constantToMethodReference(
+                  constantInterfaceMethodref, constantPool, sourceClassName, true));
           break;
         case Const.CONSTANT_Fieldref:
           ConstantFieldref constantFieldref = (ConstantFieldref) constant;
@@ -248,7 +247,10 @@ class ClassDumper {
   }
 
   private static MethodSymbolReference constantToMethodReference(
-      ConstantCP constantMethodref, ConstantPool constantPool, String sourceClassName) {
+      ConstantCP constantMethodref,
+      ConstantPool constantPool,
+      String sourceClassName,
+      boolean isInterfaceMethod) {
     String classNameInMethodReference = constantMethodref.getClass(constantPool);
     ConstantNameAndType constantNameAndType = constantNameAndType(constantMethodref, constantPool);
     String methodName = constantNameAndType.getName(constantPool);
@@ -257,6 +259,7 @@ class ClassDumper {
         MethodSymbolReference.builder()
             .setSourceClassName(sourceClassName)
             .setMethodName(methodName)
+            .setInterfaceMethod(isInterfaceMethod)
             .setTargetClassName(classNameInMethodReference)
             .setDescriptor(descriptor)
             .build();
