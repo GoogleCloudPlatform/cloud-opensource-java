@@ -34,6 +34,7 @@ import java.util.Optional;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
 import org.junit.Test;
@@ -425,6 +426,34 @@ public class StaticLinkageCheckerTest {
             .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc") // dummy value
             .setSubclass(true) // invalid because FirestoreGrpc is a final class
             .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc")
+            .build();
+
+    Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
+        staticLinkageChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
+    Truth8.assertThat(classSymbolError).isPresent();
+    Truth.assertThat(classSymbolError.get().getReason())
+        .isEqualTo(Reason.INCOMPATIBLE_CLASS_CHANGE);
+  }
+
+  @Test
+  public void testCheckLinkageErrorMissingClassAt_invalidMethodOverriding()
+      throws RepositoryException, IOException {
+    // cglib 2.2 does not work with asm 4
+    // https://stackoverflow.com/questions/21059019/cglib-is-causing-a-java-lang-verifyerror-during-query-generation-in-intuit-partn
+    List<Path> paths =
+        ClassPathBuilder.artifactsToClasspath(
+            ImmutableList.of(
+                new DefaultArtifact("cglib:cglib:2.2_beta1"),
+                new DefaultArtifact("org.ow2.asm:asm:4.2")));
+
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    ClassSymbolReference invalidClassReference =
+        ClassSymbolReference.builder()
+            .setSourceClassName("net.sf.cglib.core.DebuggingClassWriter")
+            .setSubclass(true) // ClassWriter.verify is final in asm 4
+            .setTargetClassName("org.objectweb.asm.ClassWriter")
             .build();
 
     Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
