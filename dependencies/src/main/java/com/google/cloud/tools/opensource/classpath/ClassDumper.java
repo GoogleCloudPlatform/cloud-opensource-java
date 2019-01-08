@@ -182,7 +182,6 @@ class ClassDumper {
           }
           break;
         case Const.CONSTANT_Methodref:
-          // fall through
         case Const.CONSTANT_InterfaceMethodref:
           // Both ConstantMethodref and ConstantInterfaceMethodref are subclass of ConstantCP
           ConstantCP constantMethodref = (ConstantCP) constant;
