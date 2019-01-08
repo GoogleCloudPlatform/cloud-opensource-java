@@ -182,16 +182,12 @@ class ClassDumper {
           }
           break;
         case Const.CONSTANT_Methodref:
-          ConstantMethodref constantMethodref = (ConstantMethodref) constant;
-          methodReferences.add(
-              constantToMethodReference(constantMethodref, constantPool, sourceClassName, false));
-          break;
+          // fall through
         case Const.CONSTANT_InterfaceMethodref:
-          ConstantInterfaceMethodref constantInterfaceMethodref =
-              (ConstantInterfaceMethodref) constant;
+          // Both ConstantMethodref and ConstantInterfaceMethodref are subclass of ConstantCP
+          ConstantCP constantMethodref = (ConstantCP) constant;
           methodReferences.add(
-              constantToMethodReference(
-                  constantInterfaceMethodref, constantPool, sourceClassName, true));
+              constantToMethodReference(constantMethodref, constantPool, sourceClassName));
           break;
         case Const.CONSTANT_Fieldref:
           ConstantFieldref constantFieldref = (ConstantFieldref) constant;
@@ -247,14 +243,13 @@ class ClassDumper {
   }
 
   private static MethodSymbolReference constantToMethodReference(
-      ConstantCP constantMethodref,
-      ConstantPool constantPool,
-      String sourceClassName,
-      boolean isInterfaceMethod) {
+      ConstantCP constantMethodref, ConstantPool constantPool, String sourceClassName) {
     String classNameInMethodReference = constantMethodref.getClass(constantPool);
     ConstantNameAndType constantNameAndType = constantNameAndType(constantMethodref, constantPool);
     String methodName = constantNameAndType.getName(constantPool);
     String descriptor = constantNameAndType.getSignature(constantPool);
+    // constantMethodref is either ConstantMethodref or ConstantInterfaceMethodref
+    boolean isInterfaceMethod = constantMethodref instanceof ConstantInterfaceMethodref;
     MethodSymbolReference methodReference =
         MethodSymbolReference.builder()
             .setSourceClassName(sourceClassName)
