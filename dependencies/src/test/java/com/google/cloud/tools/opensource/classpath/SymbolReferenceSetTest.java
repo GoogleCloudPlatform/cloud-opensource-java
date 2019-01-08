@@ -26,6 +26,7 @@ public class SymbolReferenceSetTest {
     ClassSymbolReference classSymbolReference =
         ClassSymbolReference.builder()
             .setTargetClassName("ClassA")
+            .setSubclass(false)
             .setSourceClassName("ClassB")
             .build();
     MethodSymbolReference methodSymbolReference =

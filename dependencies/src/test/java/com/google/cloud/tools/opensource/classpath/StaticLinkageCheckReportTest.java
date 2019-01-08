@@ -37,6 +37,7 @@ public class StaticLinkageCheckReportTest {
     ClassSymbolReference classSymbolReference =
         ClassSymbolReference.builder()
             .setTargetClassName("ClassA")
+            .setSubclass(false)
             .setSourceClassName("ClassB")
             .build();
     StaticLinkageError<ClassSymbolReference> linkageErrorMissingClass =

@@ -175,7 +175,7 @@ class ClassDumper {
         case Const.CONSTANT_Class:
           ConstantClass constantClass = (ConstantClass) constant;
           ClassSymbolReference classSymbolReference =
-              constantToClassReference(constantClass, constantPool, sourceClassName);
+              constantToClassReference(constantClass, constantPool, javaClass);
           // skip array class because it is provided by runtime
           if (!classSymbolReference.getTargetClassName().startsWith("[")) {
             classReferences.add(classSymbolReference);
@@ -219,7 +219,7 @@ class ClassDumper {
   }
 
   private static ClassSymbolReference constantToClassReference(
-      ConstantClass constantClass, ConstantPool constantPool, String sourceClassName) {
+      ConstantClass constantClass, ConstantPool constantPool, JavaClass sourceClass) {
     int nameIndex = constantClass.getNameIndex();
     Constant classNameConstant = constantPool.getConstant(nameIndex);
     if (!(classNameConstant instanceof ConstantUtf8)) {
@@ -236,9 +236,16 @@ class ClassDumper {
     String targetClassNameInternalForm = classNameConstantUtf8.getBytes();
     // Adjust the internal form to comply with binary names defined in JLS 13.1
     String targetClassName = targetClassNameInternalForm.replace('/', '.');
-    ClassSymbolReference classReference = ClassSymbolReference.builder()
-        .setSourceClassName(sourceClassName)
-        .setTargetClassName(targetClassName).build();
+
+    String superClassName = sourceClass.getSuperclassName();
+    boolean isSubclass = superClassName.equals(targetClassName);
+
+    ClassSymbolReference classReference =
+        ClassSymbolReference.builder()
+            .setSourceClassName(sourceClass.getClassName())
+            .setSubclass(isSubclass)
+            .setTargetClassName(targetClassName)
+            .build();
     return classReference;
   }
 

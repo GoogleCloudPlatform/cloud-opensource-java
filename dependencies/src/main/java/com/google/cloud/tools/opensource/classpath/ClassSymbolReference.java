@@ -23,12 +23,17 @@ import com.google.auto.value.AutoValue;
  */
 @AutoValue
 abstract class ClassSymbolReference implements SymbolReference {
+
+  /** Returns true if the symbol reference is from a class to its superclass. */
+  abstract boolean isSubclass();
+
   static Builder builder() {
     return new AutoValue_ClassSymbolReference.Builder();
   }
 
   @AutoValue.Builder
   abstract static class Builder {
+    abstract Builder setSubclass(boolean isSubclass);
     abstract Builder setTargetClassName(String className);
     abstract Builder setSourceClassName(String className);
     abstract ClassSymbolReference build();

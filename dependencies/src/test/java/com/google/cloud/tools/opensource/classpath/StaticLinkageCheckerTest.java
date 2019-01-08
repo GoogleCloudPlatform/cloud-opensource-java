@@ -377,6 +377,7 @@ public class StaticLinkageCheckerTest {
     ClassSymbolReference invalidClassReference =
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSubclass(false)
             .setTargetClassName("com.google.common.base.CharMatcher")
             .build();
 
@@ -400,6 +401,7 @@ public class StaticLinkageCheckerTest {
     ClassSymbolReference invalidClassReference =
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSubclass(false)
             .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc")
             .build();
 
@@ -504,6 +506,7 @@ public class StaticLinkageCheckerTest {
     ClassSymbolReference invalidClassReference =
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSubclass(false)
             .setTargetClassName(nonExistentClassName)
             .build();
     ImmutableList<ClassSymbolReference> fieldReferences = ImmutableList.of(invalidClassReference);
@@ -535,6 +538,7 @@ public class StaticLinkageCheckerTest {
     ClassSymbolReference publicClassReference =
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSubclass(false)
             // This inner class is defined as public in firestore-v1beta1-0.28.0.jar
             .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub")
             .build();
@@ -560,6 +564,7 @@ public class StaticLinkageCheckerTest {
     ClassSymbolReference referenceToPrivateClass =
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSubclass(false)
             // This private inner class is defined in firestore-v1beta1-0.28.0.jar
             .setTargetClassName("com.google.api.core.AbstractApiService$InnerService")
             .build();
