@@ -427,7 +427,6 @@ public class StaticLinkageCheckerTest {
             .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc")
             .build();
 
-    // There should not be an error reported for the reference
     Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
         staticLinkageChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
     Truth8.assertThat(classSymbolError).isPresent();
