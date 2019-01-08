@@ -438,7 +438,7 @@ public class StaticLinkageCheckerTest {
   @Test
   public void testCheckLinkageErrorMissingClassAt_invalidMethodOverriding()
       throws RepositoryException, IOException {
-    // cglib 2.2 does not work with asm 4
+    // cglib 2.2 does not work with asm 4. Stackoverflow post explaining VerifyError:
     // https://stackoverflow.com/questions/21059019/cglib-is-causing-a-java-lang-verifyerror-during-query-generation-in-intuit-partn
     List<Path> paths =
         ClassPathBuilder.artifactsToClasspath(
@@ -452,14 +452,16 @@ public class StaticLinkageCheckerTest {
     ClassSymbolReference invalidClassReference =
         ClassSymbolReference.builder()
             .setSourceClassName("net.sf.cglib.core.DebuggingClassWriter")
-            .setSubclass(true) // ClassWriter.verify is final in asm 4
+            .setSubclass(true)
             .setTargetClassName("org.objectweb.asm.ClassWriter")
             .build();
 
     Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
         staticLinkageChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
     Truth8.assertThat(classSymbolError).isPresent();
-    Truth.assertThat(classSymbolError.get().getReason())
+    Truth.assertWithMessage(
+            "ClassWriter.verify, which DebuggingClassWriter overrides, is final in asm 4")
+        .that(classSymbolError.get().getReason())
         .isEqualTo(Reason.INCOMPATIBLE_CLASS_CHANGE);
   }
 
