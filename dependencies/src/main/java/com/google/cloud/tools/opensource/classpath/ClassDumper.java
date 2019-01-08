@@ -50,6 +50,7 @@ import org.apache.bcel.classfile.ConstantUtf8;
 import org.apache.bcel.classfile.InnerClass;
 import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.Method;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
@@ -424,6 +425,33 @@ class ClassDumper {
       return null;
     }
     return className.substring(0, lastDollarIndex);
+  }
+
+  /**
+   * Returns true if {@code parentJavaClass} is not {@code final} and {@code childJavaClass} is not
+   * overriding any {@code final} method of {@code parentJavaClass}.
+   *
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.10>Java
+   *     Virtual Machine Specification: 4.10. Verification of class Files</a>
+   */
+  boolean hasValidSuperclass(JavaClass childJavaClass, JavaClass parentJavaClass) {
+    if (parentJavaClass.isFinal()) {
+      return false;
+    }
+
+    for (Method method : childJavaClass.getMethods()) {
+      for (JavaClass parentClass : getClassHierarchy(parentJavaClass)) {
+        for (final Method methodInParent : parentClass.getMethods()) {
+          if (methodInParent.getName().equals(method.getName())
+              && methodInParent.getSignature().equals(method.getSignature())
+              && methodInParent.isFinal()) {
+            return false;
+          }
+        }
+      }
+    }
+
+    return true;
   }
 
   /**

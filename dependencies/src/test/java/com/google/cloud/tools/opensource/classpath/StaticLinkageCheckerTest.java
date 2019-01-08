@@ -412,6 +412,30 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
+  public void testCheckLinkageErrorMissingClassAt_invalidSuperclass()
+      throws IOException, URISyntaxException {
+    List<Path> paths =
+        ImmutableList.of(
+            absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    ClassSymbolReference invalidClassReference =
+        ClassSymbolReference.builder()
+            .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc") // dummy value
+            .setSubclass(true) // invalid because FirestoreGrpc is a final class
+            .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc")
+            .build();
+
+    // There should not be an error reported for the reference
+    Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
+        staticLinkageChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
+    Truth8.assertThat(classSymbolError).isPresent();
+    Truth.assertThat(classSymbolError.get().getReason())
+        .isEqualTo(Reason.INCOMPATIBLE_CLASS_CHANGE);
+  }
+
+  @Test
   public void testCheckLinkageErrorMissingFieldAt_privateField()
       throws IOException, URISyntaxException {
     FieldSymbolReference privateFieldReference =
