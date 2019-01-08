@@ -42,6 +42,7 @@ import org.apache.bcel.classfile.Constant;
 import org.apache.bcel.classfile.ConstantCP;
 import org.apache.bcel.classfile.ConstantClass;
 import org.apache.bcel.classfile.ConstantFieldref;
+import org.apache.bcel.classfile.ConstantInterfaceMethodref;
 import org.apache.bcel.classfile.ConstantMethodref;
 import org.apache.bcel.classfile.ConstantNameAndType;
 import org.apache.bcel.classfile.ConstantPool;
@@ -181,7 +182,10 @@ class ClassDumper {
           }
           break;
         case Const.CONSTANT_Methodref:
-          ConstantMethodref constantMethodref = (ConstantMethodref) constant;
+          // fall through
+        case Const.CONSTANT_InterfaceMethodref:
+          // Both ConstantMethodref and ConstantInterfaceMethodref are subclass of ConstantCP
+          ConstantCP constantMethodref = (ConstantCP) constant;
           methodReferences.add(
               constantToMethodReference(constantMethodref, constantPool, sourceClassName));
           break;
@@ -239,15 +243,18 @@ class ClassDumper {
   }
 
   private static MethodSymbolReference constantToMethodReference(
-      ConstantMethodref constantMethodref, ConstantPool constantPool, String sourceClassName) {
+      ConstantCP constantMethodref, ConstantPool constantPool, String sourceClassName) {
     String classNameInMethodReference = constantMethodref.getClass(constantPool);
     ConstantNameAndType constantNameAndType = constantNameAndType(constantMethodref, constantPool);
     String methodName = constantNameAndType.getName(constantPool);
     String descriptor = constantNameAndType.getSignature(constantPool);
+    // constantMethodref is either ConstantMethodref or ConstantInterfaceMethodref
+    boolean isInterfaceMethod = constantMethodref instanceof ConstantInterfaceMethodref;
     MethodSymbolReference methodReference =
         MethodSymbolReference.builder()
             .setSourceClassName(sourceClassName)
             .setMethodName(methodName)
+            .setInterfaceMethod(isInterfaceMethod)
             .setTargetClassName(classNameInMethodReference)
             .setDescriptor(descriptor)
             .build();

@@ -47,6 +47,7 @@ public class StaticLinkageCheckReportTest {
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
             .setTargetClassName("ClassA")
+            .setInterfaceMethod(false)
             .setMethodName("methodX")
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassB")

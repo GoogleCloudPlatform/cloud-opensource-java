@@ -187,6 +187,11 @@ public class StaticLinkageChecker {
    * Returns an {@code Optional} describing the linkage error for the method reference if the
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
+   *
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.4.3.3">Java
+   *     Virtual Machine Specification: 5.4.3.3. Method Resolution</a>
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.4.3.4">Java
+   *     Virtual Machine Specification: 5.4.3.4. Interface Method Resolution</a>
    */
   @VisibleForTesting
   Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
@@ -204,6 +209,11 @@ public class StaticLinkageChecker {
       Path classFileLocation = classDumper.findClassLocation(targetClassName);
       if (!isClassAccessibleFrom(targetJavaClass, reference.getSourceClassName())) {
         return Optional.of(StaticLinkageError.errorInaccessibleClass(reference, classFileLocation));
+      }
+
+      if (targetJavaClass.isInterface() != reference.isInterfaceMethod()) {
+        return Optional.of(
+            StaticLinkageError.errorIncompatibleClassChange(reference, classFileLocation));
       }
 
       // Checks the target class, its parent classes, and its interfaces.

@@ -46,6 +46,7 @@ public class JarLinkageReportTest {
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
             .setTargetClassName("ClassA")
+            .setInterfaceMethod(false)
             .setMethodName("methodX")
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassB")
@@ -105,7 +106,7 @@ public class JarLinkageReportTest {
             + "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA}, "
             + "reason: CLASS_NOT_FOUND, target class location not found\n"
             + "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, "
-            + "methodName=methodX, descriptor=java.lang.String}"
+            + "methodName=methodX, interfaceMethod=false, descriptor=java.lang.String}"
             + ", reason: SYMBOL_NOT_FOUND, target class from dummy.jar\n"
             + "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, "
             + "fieldName=fieldX}, reason: CLASS_NOT_FOUND, target class location not found\n",

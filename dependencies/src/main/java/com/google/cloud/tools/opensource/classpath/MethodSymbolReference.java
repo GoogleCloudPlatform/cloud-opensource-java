@@ -28,6 +28,9 @@ abstract class MethodSymbolReference implements SymbolReference  {
    */
   abstract String getMethodName();
 
+  /** Returns true if {@code targetClassName} is an interface. */
+  abstract boolean isInterfaceMethod();
+
   /**
    * Returns the descriptor of the method. A descriptor holds type information for its parameters
    * and return value. Example: {@code
@@ -47,6 +50,7 @@ abstract class MethodSymbolReference implements SymbolReference  {
   abstract static class Builder {
     abstract Builder setTargetClassName(String className);
     abstract Builder setMethodName(String methodName);
+    abstract Builder setInterfaceMethod(boolean isInterfaceMethod);
     abstract Builder setDescriptor(String descriptor);
     abstract Builder setSourceClassName(String className);
     abstract MethodSymbolReference build();
