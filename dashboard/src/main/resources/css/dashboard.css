@@ -1,5 +1,5 @@
  .PASS {
-   background-color: green;
+   background-color: lightgreen;
    font-weight: bold;
  }
  .FAIL {
@@ -22,12 +22,6 @@
 
  li.linked-from-artifact-true {
    font-weight: bold;
- }
-
- table.dependency-dashboard a,
- table.dependency-dashboard a:link,
- table.dependency-dashboard a:visited {
-   color: black;
  }
 
  body {
