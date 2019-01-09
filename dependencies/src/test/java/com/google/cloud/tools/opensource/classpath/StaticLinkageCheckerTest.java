@@ -34,6 +34,7 @@ import java.util.Optional;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
 import org.junit.Test;
@@ -377,6 +378,7 @@ public class StaticLinkageCheckerTest {
     ClassSymbolReference invalidClassReference =
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSubclass(false)
             .setTargetClassName("com.google.common.base.CharMatcher")
             .build();
 
@@ -400,6 +402,7 @@ public class StaticLinkageCheckerTest {
     ClassSymbolReference invalidClassReference =
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSubclass(false)
             .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc")
             .build();
 
@@ -407,6 +410,59 @@ public class StaticLinkageCheckerTest {
     Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
         staticLinkageChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
     Truth8.assertThat(classSymbolError).isEmpty();
+  }
+
+  @Test
+  public void testCheckLinkageErrorMissingClassAt_invalidSuperclass()
+      throws IOException, URISyntaxException {
+    List<Path> paths =
+        ImmutableList.of(
+            absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    ClassSymbolReference invalidClassReference =
+        ClassSymbolReference.builder()
+            .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc") // dummy value
+            .setSubclass(true) // invalid because FirestoreGrpc is a final class
+            .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc")
+            .build();
+
+    Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
+        staticLinkageChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
+    Truth8.assertThat(classSymbolError).isPresent();
+    Truth.assertThat(classSymbolError.get().getReason())
+        .isEqualTo(Reason.INCOMPATIBLE_CLASS_CHANGE);
+  }
+
+  @Test
+  public void testCheckLinkageErrorMissingClassAt_invalidMethodOverriding()
+      throws RepositoryException, IOException {
+    // cglib 2.2 does not work with asm 4. Stackoverflow post explaining VerifyError:
+    // https://stackoverflow.com/questions/21059019/cglib-is-causing-a-java-lang-verifyerror-during-query-generation-in-intuit-partn
+    List<Path> paths =
+        ClassPathBuilder.artifactsToClasspath(
+            ImmutableList.of(
+                new DefaultArtifact("cglib:cglib:2.2_beta1"),
+                new DefaultArtifact("org.ow2.asm:asm:4.2")));
+
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    ClassSymbolReference invalidClassReference =
+        ClassSymbolReference.builder()
+            .setSourceClassName("net.sf.cglib.core.DebuggingClassWriter")
+            .setSubclass(true)
+            .setTargetClassName("org.objectweb.asm.ClassWriter")
+            .build();
+
+    Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
+        staticLinkageChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
+    Truth8.assertThat(classSymbolError).isPresent();
+    Truth.assertWithMessage(
+            "ClassWriter.verify, which DebuggingClassWriter overrides, is final in asm 4")
+        .that(classSymbolError.get().getReason())
+        .isEqualTo(Reason.INCOMPATIBLE_CLASS_CHANGE);
   }
 
   @Test
@@ -504,6 +560,7 @@ public class StaticLinkageCheckerTest {
     ClassSymbolReference invalidClassReference =
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSubclass(false)
             .setTargetClassName(nonExistentClassName)
             .build();
     ImmutableList<ClassSymbolReference> fieldReferences = ImmutableList.of(invalidClassReference);
@@ -535,6 +592,7 @@ public class StaticLinkageCheckerTest {
     ClassSymbolReference publicClassReference =
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSubclass(false)
             // This inner class is defined as public in firestore-v1beta1-0.28.0.jar
             .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub")
             .build();
@@ -560,6 +618,7 @@ public class StaticLinkageCheckerTest {
     ClassSymbolReference referenceToPrivateClass =
         ClassSymbolReference.builder()
             .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSubclass(false)
             // This private inner class is defined in firestore-v1beta1-0.28.0.jar
             .setTargetClassName("com.google.api.core.AbstractApiService$InnerService")
             .build();

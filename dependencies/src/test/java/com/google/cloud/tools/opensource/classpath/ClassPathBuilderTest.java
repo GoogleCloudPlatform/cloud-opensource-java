@@ -158,6 +158,7 @@ public class ClassPathBuilderTest {
     ClassSymbolReference referenceToGZipInputStreamFactory =
         ClassSymbolReference.builder()
             .setSourceClassName("org.apache.http.client.protocol.ResponseContentEncoding")
+            .setSubclass(false)
             .setTargetClassName("org.apache.http.client.entity.GZIPInputStreamFactory")
             .build();
     if (symbolReferenceSet.getClassReferences().contains(referenceToGZipInputStreamFactory)) {

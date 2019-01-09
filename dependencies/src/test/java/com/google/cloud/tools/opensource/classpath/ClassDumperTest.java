@@ -144,8 +144,18 @@ public class ClassDumperTest {
         .contains(
             ClassSymbolReference.builder()
                 .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
+                .setSubclass(false)
                 .setTargetClassName(
                     "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreMethodDescriptorSupplier")
+                .build());
+    Truth.assertWithMessage("Reference to superclass should have isSubclass=true")
+        .that(actualClassReferences)
+        .contains(
+            ClassSymbolReference.builder()
+                .setSourceClassName(
+                    "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFutureStub")
+                .setSubclass(true) // FirestoreFutureStub extends AbstractStub
+                .setTargetClassName("io.grpc.stub.AbstractStub")
                 .build());
   }
 

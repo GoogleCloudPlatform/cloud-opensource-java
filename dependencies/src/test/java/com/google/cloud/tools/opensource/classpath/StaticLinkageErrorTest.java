@@ -55,6 +55,7 @@ public class StaticLinkageErrorTest {
     ClassSymbolReference classSymbolReference =
         ClassSymbolReference.builder()
             .setTargetClassName("ClassA")
+            .setSubclass(false)
             .setSourceClassName("ClassB")
             .build();
     StaticLinkageError<ClassSymbolReference> classError =

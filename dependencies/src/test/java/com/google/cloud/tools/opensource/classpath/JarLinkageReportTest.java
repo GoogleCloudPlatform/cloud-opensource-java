@@ -36,6 +36,7 @@ public class JarLinkageReportTest {
     ClassSymbolReference classSymbolReference =
         ClassSymbolReference.builder()
             .setTargetClassName("ClassA")
+            .setSubclass(false)
             .setSourceClassName("ClassB")
             .build();
 
@@ -103,8 +104,8 @@ public class JarLinkageReportTest {
   public void testToString() {
     Assert.assertEquals(
         "c (3 errors):\n"
-            + "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA}, "
-            + "reason: CLASS_NOT_FOUND, target class location not found\n"
+            + "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA"
+            + ", subclass=false}, reason: CLASS_NOT_FOUND, target class location not found\n"
             + "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, "
             + "methodName=methodX, interfaceMethod=false, descriptor=java.lang.String}"
             + ", reason: SYMBOL_NOT_FOUND, target class from dummy.jar\n"

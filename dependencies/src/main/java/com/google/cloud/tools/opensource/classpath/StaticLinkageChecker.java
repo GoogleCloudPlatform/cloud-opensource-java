@@ -333,13 +333,21 @@ public class StaticLinkageChecker {
   @VisibleForTesting
   Optional<StaticLinkageError<ClassSymbolReference>> checkLinkageErrorMissingClassAt(
       ClassSymbolReference reference) {
+    String sourceClassName = reference.getSourceClassName();
     String targetClassName = reference.getTargetClassName();
     try {
       JavaClass targetClass = classDumper.loadJavaClass(targetClassName);
-      if (!isClassAccessibleFrom(targetClass, reference.getSourceClassName())) {
+      Path classFileLocation = classDumper.findClassLocation(targetClassName);
+
+      if (reference.isSubclass()
+          && !classDumper.hasValidSuperclass(
+              classDumper.loadJavaClass(sourceClassName), targetClass)) {
         return Optional.of(
-            StaticLinkageError.errorInaccessibleClass(
-                reference, classDumper.findClassLocation(targetClassName)));
+            StaticLinkageError.errorIncompatibleClassChange(reference, classFileLocation));
+      }
+
+      if (!isClassAccessibleFrom(targetClass, sourceClassName)) {
+        return Optional.of(StaticLinkageError.errorInaccessibleClass(reference, classFileLocation));
       }
       return Optional.empty();
     } catch (ClassNotFoundException ex) {

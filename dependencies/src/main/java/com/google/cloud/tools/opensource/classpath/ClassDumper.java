@@ -43,13 +43,13 @@ import org.apache.bcel.classfile.ConstantCP;
 import org.apache.bcel.classfile.ConstantClass;
 import org.apache.bcel.classfile.ConstantFieldref;
 import org.apache.bcel.classfile.ConstantInterfaceMethodref;
-import org.apache.bcel.classfile.ConstantMethodref;
 import org.apache.bcel.classfile.ConstantNameAndType;
 import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.classfile.ConstantUtf8;
 import org.apache.bcel.classfile.InnerClass;
 import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.Method;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
@@ -175,7 +175,7 @@ class ClassDumper {
         case Const.CONSTANT_Class:
           ConstantClass constantClass = (ConstantClass) constant;
           ClassSymbolReference classSymbolReference =
-              constantToClassReference(constantClass, constantPool, sourceClassName);
+              constantToClassReference(constantClass, constantPool, javaClass);
           // skip array class because it is provided by runtime
           if (!classSymbolReference.getTargetClassName().startsWith("[")) {
             classReferences.add(classSymbolReference);
@@ -218,7 +218,7 @@ class ClassDumper {
   }
 
   private static ClassSymbolReference constantToClassReference(
-      ConstantClass constantClass, ConstantPool constantPool, String sourceClassName) {
+      ConstantClass constantClass, ConstantPool constantPool, JavaClass sourceClass) {
     int nameIndex = constantClass.getNameIndex();
     Constant classNameConstant = constantPool.getConstant(nameIndex);
     if (!(classNameConstant instanceof ConstantUtf8)) {
@@ -235,9 +235,16 @@ class ClassDumper {
     String targetClassNameInternalForm = classNameConstantUtf8.getBytes();
     // Adjust the internal form to comply with binary names defined in JLS 13.1
     String targetClassName = targetClassNameInternalForm.replace('/', '.');
-    ClassSymbolReference classReference = ClassSymbolReference.builder()
-        .setSourceClassName(sourceClassName)
-        .setTargetClassName(targetClassName).build();
+
+    String superClassName = sourceClass.getSuperclassName();
+    boolean isSubclass = superClassName.equals(targetClassName);
+
+    ClassSymbolReference classReference =
+        ClassSymbolReference.builder()
+            .setSourceClassName(sourceClass.getClassName())
+            .setSubclass(isSubclass)
+            .setTargetClassName(targetClassName)
+            .build();
     return classReference;
   }
 
@@ -416,6 +423,33 @@ class ClassDumper {
       return null;
     }
     return className.substring(0, lastDollarIndex);
+  }
+
+  /**
+   * Returns true if {@code parentJavaClass} is not {@code final} and {@code childJavaClass} is not
+   * overriding any {@code final} method of {@code parentJavaClass}.
+   *
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.10>Java
+   *     Virtual Machine Specification: 4.10. Verification of class Files</a>
+   */
+  boolean hasValidSuperclass(JavaClass childJavaClass, JavaClass parentJavaClass) {
+    if (parentJavaClass.isFinal()) {
+      return false;
+    }
+
+    for (Method method : childJavaClass.getMethods()) {
+      for (JavaClass parentClass : getClassHierarchy(parentJavaClass)) {
+        for (final Method methodInParent : parentClass.getMethods()) {
+          if (methodInParent.getName().equals(method.getName())
+              && methodInParent.getSignature().equals(method.getSignature())
+              && methodInParent.isFinal()) {
+            return false;
+          }
+        }
+      }
+    }
+
+    return true;
   }
 
   /**
