@@ -24,6 +24,12 @@
    font-weight: bold;
  }
 
+ table.dependency-dashboard a,
+ table.dependency-dashboard a:link,
+ table.dependency-dashboard a:visited {
+   color: black;
+ }
+
  body {
    font-family: "Poppins", sans-serif;
    font-weight: 400;

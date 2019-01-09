@@ -124,7 +124,7 @@ public class DashboardTest {
             .containsMatch("PASS|\\d+FAILURES?");
         Truth.assertThat(fourthResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
       }
-      Nodes href = document.query("//tr/td/a/@href");
+      Nodes href = document.query("//tr/td[@class='artifact-name']/a/@href");
       for (int i = 0; i < href.size(); i++) {
         String fileName = href.get(i).getValue();
         Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i)).replace(':', '_') + ".html", 

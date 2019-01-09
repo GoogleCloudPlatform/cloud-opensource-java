@@ -68,10 +68,10 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
 public class DashboardMain {
+  public static final String TEST_NAME_STATIC_LINKAGE_CHECK = "Static Linkage Errors";
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
   public static final String TEST_NAME_GLOBAL_UPPER_BOUND = "Global Upper Bounds";
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
-  public static final String TEST_NAME_STATIC_LINKAGE_CHECK = "Static Linkage Errors";
 
   public static void main(String[] args)
       throws IOException, TemplateException, RepositoryException, ClassNotFoundException {

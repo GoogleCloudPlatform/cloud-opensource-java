@@ -143,14 +143,14 @@ public class DashboardUnavailableArtifactTest {
     Nodes tdForValidArtifact = tr.get(1).query("td");
     Assert.assertEquals(
         Artifacts.toCoordinates(validArtifact), tdForValidArtifact.get(0).getValue());
-    Element firstResult = (Element) (tdForValidArtifact.get(1));
+    Element firstResult = (Element) (tdForValidArtifact.get(2));
     Truth.assertThat(firstResult.getValue().trim()).isEqualTo("PASS");
     Truth.assertThat(firstResult.getAttributeValue("class")).isEqualTo("PASS");
 
     Nodes tdForErrorArtifact = tr.get(2).query("td");
     Assert.assertEquals(
         Artifacts.toCoordinates(invalidArtifact), tdForErrorArtifact.get(0).getValue());
-    Element secondResult = (Element) (tdForErrorArtifact.get(1));
+    Element secondResult = (Element) (tdForErrorArtifact.get(2));
     Truth.assertThat(secondResult.getValue().trim()).isEqualTo("UNAVAILABLE");
     Truth.assertThat(secondResult.getAttributeValue("class")).isEqualTo("UNAVAILABLE");
   }
