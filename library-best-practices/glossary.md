@@ -3,7 +3,7 @@ Java Dependency Glossary
 
 - **Class path**: an ordered list of jar files, zip files, or directories, each of which
   contains Java class files.
-  A class loader searches a class file by its name through path entries in a class path.
+  A class loader searches a class file by its name through the path entries in a class path.
   When there are two or more path entries (for example, jar files) that contains class files with
   the same name in a class path, the class file in the first path entry in the class path
   is available for use, and the other class files in the rest of the path entries are unavailable
