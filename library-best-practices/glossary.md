@@ -6,7 +6,7 @@ Java Dependency Glossary
   A class loader searches a class file by its name through path entries in a class path.
   When there are two or more path entries (for example, jar files) that contains class files with
   the same name in a class path, the class file in the first path entry in the class path
-  is picked up, and the other class files in the rest of path entries are unavailable
+  is available for use, and the other class files in the rest of the path entries are unavailable
   through the class path.
 
 ### Types of conflicts and compatibility
@@ -33,8 +33,8 @@ Java Dependency Glossary
 - **Linkage conflict**: a linkage error when the signature, return type,
   modifiers, or throws declaration of a non-private method, field, or class
   in a dependency has changed (or removed) in an incompatible way between
-  the version supplied at compile time and the version available in the class path
-  at runtime.
+  the version of a class file supplied at compile time and the version available in
+  the runtime class path.
   For example, a public method may be removed from a class or an extended
   class may be made final.
   - Or, another perspective: In cases where binary compatibility and source
