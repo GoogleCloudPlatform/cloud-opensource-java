@@ -47,6 +47,9 @@ This artifact has dependency to `com.google.guava:guava:20.0`.
 This version of Guava does not have `Verify.verify` method with the signature below
 ([Javadoc](https://google.github.io/guava/releases/20.0/api/docs/com/google/common/base/Verify.html)).
 
+When google-api-client appears first in pom.xml, Maven picks up Guava version 20.0
+into the class path.
+
 ## grpc-core 1.17.1 
 
 This artifact has dependency to `com.google.guava:guava:26.0-android`.
