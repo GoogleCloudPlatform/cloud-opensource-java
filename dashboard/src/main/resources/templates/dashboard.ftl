@@ -47,10 +47,9 @@
           Dependency Convergence</th>
       </tr>
       <#list table as row>
+        <#assign report_url = row.getCoordinates()?replace(":", "_") + '.html' />
         <tr>
-          <td class="artifact-name">
-            <a href='${row.getCoordinates()?replace(":", "_")}.html'>${row.getCoordinates()}</a>
-          </td>
+          <td class="artifact-name"><a href='${report_url}'>${row.getCoordinates()}</a></td>
           <#-- The name key should match TEST_NAME_XXXX variables -->
           <@testResult row=row name="Static Linkage Errors"/>
           <@testResult row=row name="Upper Bounds"/>
