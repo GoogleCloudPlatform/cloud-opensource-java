@@ -55,6 +55,5 @@ This artifact has dependency to `com.google.guava:guava:26.0-android`.
 `Verify.verify` method with following method signature:
 `void verify(boolean expression, String errorMessageTemplate, Object p1)`
 ([Javadoc](https://google.github.io/guava/releases/26.0-android/api/docs/com/google/common/base/Verify.html#verify-boolean-java.lang.String-java.lang.Object-)).
-
-This method has been added since version 23.1.
+This method with the signature has been added since Guava version 23.1.
 
