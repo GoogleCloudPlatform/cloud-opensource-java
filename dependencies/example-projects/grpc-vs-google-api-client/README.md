@@ -1,7 +1,7 @@
-# grpc 1.17.1 v.s. google-api-client 1.27.0
+# grpc 1.17.1 vs google-api-client 1.27.0
 
-This project is to demonstrate `NoSuchMethodError` generated from the class path
-for google-api-client and grpc-core.
+This project demonstrates that a Maven project using google-api-client 1.17.1
+and grpc-core 1.27.1 can generate a `NoSuchMethodError`.
 
 The package name `io.grpc.internal` is used for convenience, because DnsNameResolver
 is package private.
@@ -38,25 +38,23 @@ java.lang.NoSuchMethodError: com.google.common.base.Verify.verify(ZLjava/lang/St
 [INFO] ------------------------------------------------------------------------
 ```
 
-
 # Diagnosis
 
 ## google-api-client 1.27.0
 
-This artifact has dependency to `com.google.guava:guava:20.0`.
-This version of Guava does not have `Verify.verify` method with the signature below
-([Javadoc](https://google.github.io/guava/releases/20.0/api/docs/com/google/common/base/Verify.html)).
+This artifact depends on `com.google.guava:guava:20.0`.
+[Guava's `Verify` class in this version][1] does not have
+a [`void verify(boolean, String, Object)`][2] method.
 
-When google-api-client appears first in pom.xml, Maven picks up Guava version 20.0
-into the class path.
+When google-api-client appears first in a breadth-first traversal of the dependencies,
+Maven puts Guava version 20.0 into the class path.
 
 ## grpc-core 1.17.1 
 
-This artifact has dependency to `com.google.guava:guava:26.0-android`.
+This artifact depends on `com.google.guava:guava:26.0-android`.
 
-`io.grpc.internal.DnsNameResolver.maybeChooseServiceConfig` uses Guava's
-`Verify.verify` method with following method signature:
-`void verify(boolean expression, String errorMessageTemplate, Object p1)`
-([Javadoc](https://google.github.io/guava/releases/26.0-android/api/docs/com/google/common/base/Verify.html#verify-boolean-java.lang.String-java.lang.Object-)).
-This method with the signature has been added since Guava version 23.1.
+`DnsNameResolver.maybeChooseServiceConfig` calls [`void Verify.verify(boolean, String, Object)`][2].
+This method was added to Guava in version 23.1.
 
+[1]: https://google.github.io/guava/releases/20.0/api/docs/com/google/common/base/Verify.html
+[2]: https://google.github.io/guava/releases/26.0-android/api/docs/com/google/common/base/Verify.html#verify-boolean-java.lang.String-java.lang.Object-
