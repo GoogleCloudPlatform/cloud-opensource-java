@@ -1,9 +1,9 @@
  .PASS {
-   background-color: green;
+   background-color: lightgreen;
    font-weight: bold;
  }
  .FAIL {
-   background-color: red;
+   background-color: pink;
    font-weight: bold;
  }
  .UNAVAILABLE {
