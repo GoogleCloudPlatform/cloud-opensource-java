@@ -3,8 +3,10 @@
 This project demonstrates that a Maven project using google-api-client 1.17.1
 and grpc-core 1.27.1 can generate a `NoSuchMethodError`.
 
-The package name `io.grpc.internal` is used for convenience, because DnsNameResolver
-is package private.
+The package name `io.grpc.internal` is used for convenience to access
+package-private `DnsNameResolver` class; otherwise calling
+`DnsNameResolver.maybeChooseServiceConfig` method requires setting up a [gRPC Service
+Config included in a DNS record][1].
 
 ## How to run
 
@@ -43,8 +45,8 @@ java.lang.NoSuchMethodError: com.google.common.base.Verify.verify(ZLjava/lang/St
 ## google-api-client 1.27.0
 
 This artifact depends on `com.google.guava:guava:20.0`.
-[Guava's `Verify` class in this version][1] does not have
-a [`void verify(boolean, String, Object)`][2] method.
+[Guava's `Verify` class in this version][2] does not have
+a [`void verify(boolean, String, Object)`][3] method.
 
 When google-api-client appears first in a breadth-first traversal of the dependencies,
 Maven puts Guava version 20.0 into the class path.
@@ -53,8 +55,9 @@ Maven puts Guava version 20.0 into the class path.
 
 This artifact depends on `com.google.guava:guava:26.0-android`.
 
-`DnsNameResolver.maybeChooseServiceConfig` calls [`void Verify.verify(boolean, String, Object)`][2].
+`DnsNameResolver.maybeChooseServiceConfig` calls [`void Verify.verify(boolean, String, Object)`][3].
 This method was added to Guava in version 23.1.
 
-[1]: https://google.github.io/guava/releases/20.0/api/docs/com/google/common/base/Verify.html
-[2]: https://google.github.io/guava/releases/26.0-android/api/docs/com/google/common/base/Verify.html#verify-boolean-java.lang.String-java.lang.Object-
+[1]: https://github.com/grpc/proposal/blob/master/A2-service-configs-in-dns.md
+[2]: https://google.github.io/guava/releases/20.0/api/docs/com/google/common/base/Verify.html
+[3]: https://google.github.io/guava/releases/26.0-android/api/docs/com/google/common/base/Verify.html#verify-boolean-java.lang.String-java.lang.Object-
