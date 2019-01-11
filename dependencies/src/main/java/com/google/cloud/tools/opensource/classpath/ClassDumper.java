@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -47,14 +48,31 @@ import org.apache.bcel.classfile.ConstantInterfaceMethodref;
 import org.apache.bcel.classfile.ConstantNameAndType;
 import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.classfile.ConstantUtf8;
+import org.apache.bcel.classfile.ExceptionTable;
 import org.apache.bcel.classfile.InnerClass;
 import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
+import org.apache.bcel.generic.ANEWARRAY;
+import org.apache.bcel.generic.CHECKCAST;
+import org.apache.bcel.generic.CPInstruction;
 import org.apache.bcel.generic.ClassGen;
+import org.apache.bcel.generic.CodeExceptionGen;
+import org.apache.bcel.generic.GETFIELD;
+import org.apache.bcel.generic.GETSTATIC;
+import org.apache.bcel.generic.INSTANCEOF;
+import org.apache.bcel.generic.INVOKESTATIC;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
+import org.apache.bcel.generic.InstructionList;
+import org.apache.bcel.generic.LDC;
+import org.apache.bcel.generic.LDC_W;
+import org.apache.bcel.generic.MULTIANEWARRAY;
 import org.apache.bcel.generic.MethodGen;
+import org.apache.bcel.generic.NEW;
+import org.apache.bcel.generic.ObjectType;
+import org.apache.bcel.generic.PUTFIELD;
+import org.apache.bcel.generic.PUTSTATIC;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
@@ -457,6 +475,10 @@ class ClassDumper {
     return true;
   }
 
+  /**
+   * Returns the index of the class symbol reference to {@code targetClassName} in the constant pool
+   * of {@code sourceJavaClass}.
+   */
   int constantPoolIndexForClass(JavaClass sourceJavaClass, String targetClassName) {
     ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();
     Constant[] constantPoolEntries = sourceConstantPool.getConstantPool();
@@ -476,12 +498,35 @@ class ClassDumper {
       }
     }
 
-    // Did not find constant pool for the target class
-    return -1;
+    throw new ClassFormatException(
+        "Could not find constant pool entry for "
+            + targetClassName
+            + " in "
+            + sourceJavaClass.getClassName());
   }
 
+  /**
+   * Returns true if the class symbol reference is unused in the source class file. Places to check
+   * are:
+   *
+   * <ul>
+   *   <li>Superclass and interfaces
+   *   <li>Constant pool entries that refer to a CONSTANT_Class_info structure
+   *   <li>Java Virtual Machine instructions that takes a symbolic reference to a class
+   *   <li>The exception table and exception handlers of a method
+   * </ul>
+   *
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4.2">Java
+   *     Virtual Machine Specification: The CONSTANT_Fieldref_info, CONSTANT_Methodref_info, and
+   *     CONSTANT_InterfaceMethodref_info Structures</a>
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5">Java
+   *     Virtual Machine Specification: Instructions</a>
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.10">Java
+   *     Virtual Machine Specification: Exceptions</a>
+   */
   boolean isUnusedClassSymbolReference(ClassSymbolReference reference) {
     if (reference.isSubclass()) {
+      // The target class is used in class inheritance
       return false;
     }
 
@@ -489,28 +534,92 @@ class ClassDumper {
     String targetClassName = reference.getTargetClassName();
 
     try {
-
       JavaClass sourceJavaClass = loadJavaClass(sourceClassName);
+
+      for (String interfaceName: sourceJavaClass.getInterfaceNames()) {
+        if (interfaceName.equals(targetClassName)) {
+          // The target class is used in interfaces
+          return false;
+        }
+      }
+
       int targetConstantPoolIndex = constantPoolIndexForClass(sourceJavaClass, targetClassName);
+
+      ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();
+      Constant[] constantPoolEntries = sourceConstantPool.getConstantPool();
+      for (Constant constant : constantPoolEntries) {
+        if (constant == null) {
+          continue;
+        }
+        switch (constant.getTag()) {
+          case Const.CONSTANT_Methodref:
+          case Const.CONSTANT_InterfaceMethodref:
+          case Const.CONSTANT_Fieldref:
+            ConstantCP constantCp = (ConstantCP) constant;
+            int classIndex = constantCp.getClassIndex();
+            if (classIndex == targetConstantPoolIndex) {
+              // The class reference is used in another constant pool
+              return false;
+            }
+            break;
+        }
+      }
 
       ClassGen classGen = new ClassGen(sourceJavaClass);
       for (Method method : sourceJavaClass.getMethods()) {
-        Code code = method.getCode();
         MethodGen methodGen = new MethodGen(method, sourceClassName, classGen.getConstantPool());
-        for (InstructionHandle instructionHandle : methodGen.getInstructionList()) {
-          Instruction instruction = instructionHandle.getInstruction();
-          // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.11.2
-          System.out.println(instruction);
+        InstructionList instructionList = methodGen.getInstructionList();
+        if (instructionList != null) {
+          for (InstructionHandle instructionHandle : instructionList) {
+            Instruction instruction = instructionHandle.getInstruction();
+            if (instruction instanceof CPInstruction) {
+              // Checking JVM instructions that take a symbolic reference to a class in
+              // JVM Instruction Set
+              // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5
+              int classIndex = ((CPInstruction) instruction).getIndex();
+              if (classIndex == targetConstantPoolIndex) {
+                // The target class is used in a JVM instruction (including `new`).
+                return false;
+              }
+            }
+          }
         }
 
-        for (Attribute codeAttribute : code.getAttributes()) {
-          System.out.println(codeAttribute);
+        // Exception table
+        ExceptionTable exceptionTable = method.getExceptionTable();
+        if (exceptionTable != null) {
+          int[] exceptionIndexTable = exceptionTable.getExceptionIndexTable();
+          for (int exceptionIndexTableEntry : exceptionIndexTable) {
+            if (exceptionIndexTableEntry == targetConstantPoolIndex) {
+              // The target class is used in throws clause
+              return false;
+            }
+          }
+        }
+
+        // Exception handlers
+        CodeExceptionGen[] exceptionHandlers = methodGen.getExceptionHandlers();
+        for (CodeExceptionGen codeExceptionGen : exceptionHandlers) {
+          ObjectType catchType = codeExceptionGen.getCatchType();
+          if (catchType == null) {
+            continue;
+          }
+          String caughtClassName = catchType.getClassName();
+          if (caughtClassName != null && caughtClassName.equals(targetClassName)) {
+            // The target class is used in catch clause
+            return false;
+          }
         }
       }
     } catch (ClassNotFoundException ex) {
-      return false;
+      // Because the reference in the argument was extracted from the source class file,
+      // the source class should be found.
+      throw new ClassFormatException(
+          "The source class in the reference is no longer found in the class path", ex);
     }
-    return false;
+
+    // The target class is unused
+    return true;
   }
 
   /**

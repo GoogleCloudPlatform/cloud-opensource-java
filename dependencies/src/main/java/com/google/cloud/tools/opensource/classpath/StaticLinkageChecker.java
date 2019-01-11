@@ -351,6 +351,10 @@ public class StaticLinkageChecker {
       }
       return Optional.empty();
     } catch (ClassNotFoundException ex) {
+      if (classDumper.isUnusedClassSymbolReference(reference)) {
+        // The class reference is unused in the source
+        return Optional.empty();
+      }
       return Optional.of(StaticLinkageError.errorMissingTargetClass(reference));
     }
   }
