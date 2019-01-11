@@ -5,10 +5,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.google.cloud.tools.opensource</groupId>
-  <artifactId>grpc-vs-google-api-client</artifactId>
+  <artifactId>no-such-method-error-example</artifactId>
   <version>1.0-SNAPSHOT</version>
 
-  <name>grpc-vs-google-api-client</name>
+  <name>no-such-method-error-example</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
