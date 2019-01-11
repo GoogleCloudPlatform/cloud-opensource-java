@@ -269,4 +269,24 @@ public class ClassDumperTest {
       Truth.assertThat(classDumper.isSystemClass(nonJavaRuntimeClassName)).isFalse();
     }
   }
+
+  @Test
+  public void testIsUnusedClassSymbolReference_unusedClassReference()
+      throws IOException, URISyntaxException {
+    // The superclass of AbstractApiService$InnerService (Guava's ApiService) is not in the paths
+    ClassDumper classDumper =
+        ClassDumper.create(ImmutableList.of(absolutePathOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
+
+    ClassSymbolReference referenceToUnusedClass =
+        ClassSymbolReference.builder()
+            .setSourceClassName("org.conscrypt.Conscrypt")
+            .setSubclass(false)
+            .setTargetClassName("org.conscrypt.NativeConstants")
+            .build();
+
+    boolean result = classDumper.isUnusedClassSymbolReference(referenceToUnusedClass);
+    Truth.assertWithMessage(
+        "As the values in NativeConstants are all inlined. "
+            + "There should not be any usage in Conscrypt").that(result).isTrue();
+  }
 }

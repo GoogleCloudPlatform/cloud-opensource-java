@@ -38,6 +38,7 @@ import javax.annotation.Nullable;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
 import org.apache.bcel.classfile.ClassFormatException;
+import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.Constant;
 import org.apache.bcel.classfile.ConstantCP;
 import org.apache.bcel.classfile.ConstantClass;
@@ -50,6 +51,10 @@ import org.apache.bcel.classfile.InnerClass;
 import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
+import org.apache.bcel.generic.ClassGen;
+import org.apache.bcel.generic.Instruction;
+import org.apache.bcel.generic.InstructionHandle;
+import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
@@ -450,6 +455,62 @@ class ClassDumper {
     }
 
     return true;
+  }
+
+  int constantPoolIndexForClass(JavaClass sourceJavaClass, String targetClassName) {
+    ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();
+    Constant[] constantPoolEntries = sourceConstantPool.getConstantPool();
+    for (int poolIndex = 0; poolIndex < constantPoolEntries.length; poolIndex++) {
+      Constant constant = constantPoolEntries[poolIndex];
+      if (constant == null) {
+        continue; // constantPool uses index starting from 1. 0th entry is null.
+      }
+      byte constantTag = constant.getTag();
+      if (constantTag == Const.CONSTANT_Class) {
+        ConstantClass constantClass = (ConstantClass) constant;
+        ClassSymbolReference classSymbolReference =
+            constantToClassReference(constantClass, sourceConstantPool, sourceJavaClass);
+        if (targetClassName.equals(classSymbolReference.getTargetClassName())) {
+          return poolIndex;
+        }
+      }
+    }
+
+    // Did not find constant pool for the target class
+    return -1;
+  }
+
+  boolean isUnusedClassSymbolReference(ClassSymbolReference reference) {
+    if (reference.isSubclass()) {
+      return false;
+    }
+
+    String sourceClassName = reference.getSourceClassName();
+    String targetClassName = reference.getTargetClassName();
+
+    try {
+
+      JavaClass sourceJavaClass = loadJavaClass(sourceClassName);
+      int targetConstantPoolIndex = constantPoolIndexForClass(sourceJavaClass, targetClassName);
+
+      ClassGen classGen = new ClassGen(sourceJavaClass);
+      for (Method method : sourceJavaClass.getMethods()) {
+        Code code = method.getCode();
+        MethodGen methodGen = new MethodGen(method, sourceClassName, classGen.getConstantPool());
+        for (InstructionHandle instructionHandle : methodGen.getInstructionList()) {
+          Instruction instruction = instructionHandle.getInstruction();
+          // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.11.2
+          System.out.println(instruction);
+        }
+
+        for (Attribute codeAttribute : code.getAttributes()) {
+          System.out.println(codeAttribute);
+        }
+      }
+    } catch (ClassNotFoundException ex) {
+      return false;
+    }
+    return false;
   }
 
   /**
