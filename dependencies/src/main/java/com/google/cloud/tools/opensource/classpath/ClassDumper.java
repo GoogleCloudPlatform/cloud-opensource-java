@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -46,10 +47,21 @@ import org.apache.bcel.classfile.ConstantInterfaceMethodref;
 import org.apache.bcel.classfile.ConstantNameAndType;
 import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.classfile.ConstantUtf8;
+import org.apache.bcel.classfile.ExceptionTable;
+import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.InnerClass;
 import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
+import org.apache.bcel.generic.CPInstruction;
+import org.apache.bcel.generic.ClassGen;
+import org.apache.bcel.generic.CodeExceptionGen;
+import org.apache.bcel.generic.Instruction;
+import org.apache.bcel.generic.InstructionHandle;
+import org.apache.bcel.generic.InstructionList;
+import org.apache.bcel.generic.MethodGen;
+import org.apache.bcel.generic.ObjectType;
+import org.apache.bcel.generic.Type;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
@@ -449,6 +461,177 @@ class ClassDumper {
       }
     }
 
+    return true;
+  }
+
+  /**
+   * Returns the indices of all class symbol references to {@code targetClassName} in the constant
+   * pool of {@code sourceJavaClass}.
+   */
+  ImmutableSet<Integer> constantPoolIndexForClass(
+      JavaClass sourceJavaClass, String targetClassName) {
+    ImmutableSet.Builder<Integer> constantPoolIndicesForTarget = ImmutableSet.builder();
+
+    ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();
+    Constant[] constantPoolEntries = sourceConstantPool.getConstantPool();
+    for (int poolIndex = 0; poolIndex < constantPoolEntries.length; poolIndex++) {
+      Constant constant = constantPoolEntries[poolIndex];
+      if (constant == null) {
+        continue; // constantPool uses index starting from 1. 0th entry is null.
+      }
+      byte constantTag = constant.getTag();
+      if (constantTag == Const.CONSTANT_Class) {
+        ConstantClass constantClass = (ConstantClass) constant;
+        ClassSymbolReference classSymbolReference =
+            constantToClassReference(constantClass, sourceConstantPool, sourceJavaClass);
+        if (targetClassName.equals(classSymbolReference.getTargetClassName())) {
+          constantPoolIndicesForTarget.add(poolIndex);
+        }
+      }
+    }
+
+    return constantPoolIndicesForTarget.build();
+  }
+
+  /**
+   * Returns true if the class symbol reference is unused in the source class file. It checks
+   * following places for the usage in the source class:
+   *
+   * <ul>
+   *   <li>Superclass and interfaces
+   *   <li>Type signatures of fields and methods
+   *   <li>Constant pool entries that refer to a CONSTANT_Class_info structure
+   *   <li>Java Virtual Machine instructions that takes a symbolic reference to a class
+   *   <li>The exception table and exception handlers of methods
+   * </ul>
+   *
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4.2">Java
+   *     Virtual Machine Specification: The CONSTANT_Fieldref_info, CONSTANT_Methodref_info, and
+   *     CONSTANT_InterfaceMethodref_info Structures</a>
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5">Java
+   *     Virtual Machine Specification: Instructions</a>
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.10">Java
+   *     Virtual Machine Specification: Exceptions</a>
+   */
+  boolean isUnusedClassSymbolReference(ClassSymbolReference reference) {
+    if (reference.isSubclass()) {
+      // The target class is used in class inheritance
+      return false;
+    }
+
+    String sourceClassName = reference.getSourceClassName();
+    String targetClassName = reference.getTargetClassName();
+
+    try {
+      JavaClass sourceJavaClass = loadJavaClass(sourceClassName);
+
+      for (String interfaceName: sourceJavaClass.getInterfaceNames()) {
+        if (interfaceName.equals(targetClassName)) {
+          // The target class is used in interfaces
+          return false;
+        }
+      }
+
+      ImmutableSet<Integer> targetConstantPoolIndices =
+          constantPoolIndexForClass(sourceJavaClass, targetClassName);
+      Verify.verify(
+          !targetConstantPoolIndices.isEmpty(),
+          "The target class symbol reference is not found in source class");
+
+      ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();
+      Constant[] constantPoolEntries = sourceConstantPool.getConstantPool();
+      for (Constant constant : constantPoolEntries) {
+        if (constant == null) {
+          continue;
+        }
+        switch (constant.getTag()) {
+          case Const.CONSTANT_Methodref:
+          case Const.CONSTANT_InterfaceMethodref:
+          case Const.CONSTANT_Fieldref:
+            ConstantCP constantCp = (ConstantCP) constant;
+            int classIndex = constantCp.getClassIndex();
+            if (targetConstantPoolIndices.contains(classIndex)) {
+              // The class reference is used in another constant pool
+              return false;
+            }
+            break;
+        }
+      }
+
+      for (Field field : sourceJavaClass.getFields()) {
+        // Type.toString returns binary name (for example, io.grpc.MethodDescriptor)
+        String fieldTypeSignature = field.getType().toString();
+        if (targetClassName.equals(fieldTypeSignature)) {
+          return false;
+        }
+      }
+
+      ClassGen classGen = new ClassGen(sourceJavaClass);
+      for (Method method : sourceJavaClass.getMethods()) {
+
+        if (targetClassName.equals(method.getReturnType().toString())) {
+          return false;
+        }
+        for (Type argumentType : method.getArgumentTypes()) {
+          String argumentTypeSignature = argumentType.toString();
+          if (targetClassName.equals(argumentTypeSignature)) {
+            return false;
+          }
+        }
+
+        MethodGen methodGen = new MethodGen(method, sourceClassName, classGen.getConstantPool());
+        InstructionList instructionList = methodGen.getInstructionList();
+        if (instructionList != null) {
+          for (InstructionHandle instructionHandle : instructionList) {
+            Instruction instruction = instructionHandle.getInstruction();
+            if (instruction instanceof CPInstruction) {
+              // Checking JVM instructions that take a symbolic reference to a class in
+              // JVM Instruction Set
+              // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5
+              int classIndex = ((CPInstruction) instruction).getIndex();
+              if (targetConstantPoolIndices.contains(classIndex)) {
+                // The target class is used in a JVM instruction (including `new`).
+                return false;
+              }
+            }
+          }
+        }
+
+        // Exception table
+        ExceptionTable exceptionTable = method.getExceptionTable();
+        if (exceptionTable != null) {
+          int[] exceptionIndexTable = exceptionTable.getExceptionIndexTable();
+          for (int exceptionIndexTableEntry : exceptionIndexTable) {
+            if (targetConstantPoolIndices.contains(exceptionIndexTableEntry)) {
+              // The target class is used in throws clause
+              return false;
+            }
+          }
+        }
+
+        // Exception handlers
+        CodeExceptionGen[] exceptionHandlers = methodGen.getExceptionHandlers();
+        for (CodeExceptionGen codeExceptionGen : exceptionHandlers) {
+          ObjectType catchType = codeExceptionGen.getCatchType();
+          if (catchType == null) {
+            continue;
+          }
+          String caughtClassName = catchType.getClassName();
+          if (caughtClassName != null && caughtClassName.equals(targetClassName)) {
+            // The target class is used in catch clause
+            return false;
+          }
+        }
+      }
+
+    } catch (ClassNotFoundException ex) {
+      // Because the reference in the argument was extracted from the source class file,
+      // the source class should be found.
+      throw new ClassFormatException(
+          "The source class in the reference is no longer available in the class path", ex);
+    }
+
+    // The target class is unused
     return true;
   }
 

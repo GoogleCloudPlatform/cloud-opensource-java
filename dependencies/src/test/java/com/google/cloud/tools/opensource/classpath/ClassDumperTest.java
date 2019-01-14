@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -31,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
+import org.apache.bcel.classfile.ClassFormatException;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 import org.eclipse.aether.RepositoryException;
@@ -267,6 +269,86 @@ public class ClassDumperTest {
         ImmutableList.of("com.google.common.collect.ImmutableList", "foo.bar.Baz");
     for (String nonJavaRuntimeClassName : nonJavaRuntimeClasses) {
       Truth.assertThat(classDumper.isSystemClass(nonJavaRuntimeClassName)).isFalse();
+    }
+  }
+
+  @Test
+  public void testIsUnusedClassSymbolReference_unusedClassReference()
+      throws IOException, URISyntaxException {
+    ClassDumper classDumper =
+        ClassDumper.create(
+            ImmutableList.of(absolutePathOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
+
+    ClassSymbolReference referenceToUnusedClass =
+        ClassSymbolReference.builder()
+            .setSourceClassName("org.conscrypt.Conscrypt")
+            .setSubclass(false)
+            .setTargetClassName("org.conscrypt.NativeConstants")
+            .build();
+
+    // See the issue below for the analysis of inlined fields in Conscrypt:
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/301
+    boolean result = classDumper.isUnusedClassSymbolReference(referenceToUnusedClass);
+    Truth.assertWithMessage(
+        "As the values in NativeConstants are all inlined. "
+            + "There should not be any usage in Conscrypt").that(result).isTrue();
+  }
+
+  @Test
+  public void testIsUnusedClassSymbolReference_usedClassReference()
+      throws IOException, URISyntaxException {
+    ClassDumper classDumper =
+        ClassDumper.create(
+            ImmutableList.of(absolutePathOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
+
+    List<String> usedClassesInConscrypt =
+        ImmutableList.of(
+            "org.conscrypt.OpenSSLProvider", // Used in instanceof and new
+            "org.conscrypt.Conscrypt$ProviderBuilder", // Used in new and inner class
+            "java.lang.IllegalArgumentException", // Used in new
+            "org.conscrypt.ServerSessionContext", // Used in instanceof
+            "java.util.Properties", // Used in a new
+            "org.conscrypt.NativeCrypto", // Used in a static method call
+            "org.conscrypt.SSLParametersImpl", // Used in a static method call
+            "java.io.IOException", // Used in a catch clause
+            "java.security.KeyManagementException", // Used in throws clause
+            "java.lang.Throwable" // Used in catch clause
+            );
+
+    for (String usedClass : usedClassesInConscrypt) {
+      ClassSymbolReference referenceToUsedClass =
+          ClassSymbolReference.builder()
+              .setSourceClassName("org.conscrypt.Conscrypt")
+              .setSubclass(false)
+              .setTargetClassName(usedClass)
+              .build();
+      Truth.assertWithMessage(usedClass + " should be used in the class file")
+          .that(classDumper.isUnusedClassSymbolReference(referenceToUsedClass))
+          .isFalse();
+    }
+  }
+
+  @Test
+  public void testIsUnusedClassSymbolReference_classSymbolReferenceNotFound()
+      throws IOException, URISyntaxException {
+    ClassDumper classDumper =
+        ClassDumper.create(
+            ImmutableList.of(absolutePathOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
+
+    try {
+      ClassSymbolReference referenceToUnusedClass =
+          ClassSymbolReference.builder()
+              .setSourceClassName("org.conscrypt.Conscrypt")
+              .setSubclass(false)
+              .setTargetClassName("dummy.NoSuchClass")
+              .build();
+      classDumper.isUnusedClassSymbolReference(referenceToUnusedClass);
+
+      Assert.fail("It should throw VerifyException when it cannot find a class symbol reference");
+    } catch (VerifyException ex) {
+      // pass
+      Truth.assertThat(ex.getMessage())
+          .isEqualTo("The target class symbol reference is not found in source class");
     }
   }
 }
