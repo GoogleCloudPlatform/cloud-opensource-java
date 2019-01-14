@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -39,7 +38,6 @@ import javax.annotation.Nullable;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
 import org.apache.bcel.classfile.ClassFormatException;
-import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.Constant;
 import org.apache.bcel.classfile.ConstantCP;
 import org.apache.bcel.classfile.ConstantClass;
@@ -54,27 +52,14 @@ import org.apache.bcel.classfile.InnerClass;
 import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
-import org.apache.bcel.classfile.Utility;
-import org.apache.bcel.generic.ANEWARRAY;
-import org.apache.bcel.generic.CHECKCAST;
 import org.apache.bcel.generic.CPInstruction;
 import org.apache.bcel.generic.ClassGen;
 import org.apache.bcel.generic.CodeExceptionGen;
-import org.apache.bcel.generic.GETFIELD;
-import org.apache.bcel.generic.GETSTATIC;
-import org.apache.bcel.generic.INSTANCEOF;
-import org.apache.bcel.generic.INVOKESTATIC;
 import org.apache.bcel.generic.Instruction;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionList;
-import org.apache.bcel.generic.LDC;
-import org.apache.bcel.generic.LDC_W;
-import org.apache.bcel.generic.MULTIANEWARRAY;
 import org.apache.bcel.generic.MethodGen;
-import org.apache.bcel.generic.NEW;
 import org.apache.bcel.generic.ObjectType;
-import org.apache.bcel.generic.PUTFIELD;
-import org.apache.bcel.generic.PUTSTATIC;
 import org.apache.bcel.generic.Type;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
@@ -479,10 +464,13 @@ class ClassDumper {
   }
 
   /**
-   * Returns the index of the class symbol reference to {@code targetClassName} in the constant pool
-   * of {@code sourceJavaClass}.
+   * Returns the indices of all class symbol references to {@code targetClassName} in the constant
+   * pool of {@code sourceJavaClass}.
    */
-  int constantPoolIndexForClass(JavaClass sourceJavaClass, String targetClassName) {
+  ImmutableSet<Integer> constantPoolIndexForClass(
+      JavaClass sourceJavaClass, String targetClassName) {
+    ImmutableSet.Builder<Integer> constantPoolIndicesForTarget = ImmutableSet.builder();
+
     ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();
     Constant[] constantPoolEntries = sourceConstantPool.getConstantPool();
     for (int poolIndex = 0; poolIndex < constantPoolEntries.length; poolIndex++) {
@@ -496,30 +484,24 @@ class ClassDumper {
         ClassSymbolReference classSymbolReference =
             constantToClassReference(constantClass, sourceConstantPool, sourceJavaClass);
         if (targetClassName.equals(classSymbolReference.getTargetClassName())) {
-          return poolIndex;
+          constantPoolIndicesForTarget.add(poolIndex);
         }
       }
     }
 
-    // Because the reference has been found in the source class, the constant pool entry
-    // should be available in the class file.
-    throw new ClassFormatException(
-        "Could not find constant pool entry for "
-            + targetClassName
-            + " in "
-            + sourceJavaClass.getClassName());
+    return constantPoolIndicesForTarget.build();
   }
 
   /**
-   * Returns true if the class symbol reference is unused in the source class file. Places to check
-   * are:
+   * Returns true if the class symbol reference is unused in the source class file. It checks
+   * following places for the usage in the source class:
    *
    * <ul>
    *   <li>Superclass and interfaces
    *   <li>Type signatures of fields and methods
    *   <li>Constant pool entries that refer to a CONSTANT_Class_info structure
    *   <li>Java Virtual Machine instructions that takes a symbolic reference to a class
-   *   <li>The exception table and exception handlers of a method
+   *   <li>The exception table and exception handlers of methods
    * </ul>
    *
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.4.2">Java
@@ -549,7 +531,8 @@ class ClassDumper {
         }
       }
 
-      int targetConstantPoolIndex = constantPoolIndexForClass(sourceJavaClass, targetClassName);
+      ImmutableSet<Integer> targetConstantPoolIndices =
+          constantPoolIndexForClass(sourceJavaClass, targetClassName);
 
       ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();
       Constant[] constantPoolEntries = sourceConstantPool.getConstantPool();
@@ -563,7 +546,7 @@ class ClassDumper {
           case Const.CONSTANT_Fieldref:
             ConstantCP constantCp = (ConstantCP) constant;
             int classIndex = constantCp.getClassIndex();
-            if (classIndex == targetConstantPoolIndex) {
+            if (targetConstantPoolIndices.contains(classIndex)) {
               // The class reference is used in another constant pool
               return false;
             }
@@ -602,7 +585,7 @@ class ClassDumper {
               // JVM Instruction Set
               // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5
               int classIndex = ((CPInstruction) instruction).getIndex();
-              if (classIndex == targetConstantPoolIndex) {
+              if (targetConstantPoolIndices.contains(classIndex)) {
                 // The target class is used in a JVM instruction (including `new`).
                 return false;
               }
@@ -615,7 +598,7 @@ class ClassDumper {
         if (exceptionTable != null) {
           int[] exceptionIndexTable = exceptionTable.getExceptionIndexTable();
           for (int exceptionIndexTableEntry : exceptionIndexTable) {
-            if (exceptionIndexTableEntry == targetConstantPoolIndex) {
+            if (targetConstantPoolIndices.contains(exceptionIndexTableEntry)) {
               // The target class is used in throws clause
               return false;
             }
