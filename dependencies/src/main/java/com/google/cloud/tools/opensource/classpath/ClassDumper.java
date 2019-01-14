@@ -49,10 +49,12 @@ import org.apache.bcel.classfile.ConstantNameAndType;
 import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.classfile.ConstantUtf8;
 import org.apache.bcel.classfile.ExceptionTable;
+import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.InnerClass;
 import org.apache.bcel.classfile.InnerClasses;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
+import org.apache.bcel.classfile.Utility;
 import org.apache.bcel.generic.ANEWARRAY;
 import org.apache.bcel.generic.CHECKCAST;
 import org.apache.bcel.generic.CPInstruction;
@@ -73,6 +75,7 @@ import org.apache.bcel.generic.NEW;
 import org.apache.bcel.generic.ObjectType;
 import org.apache.bcel.generic.PUTFIELD;
 import org.apache.bcel.generic.PUTSTATIC;
+import org.apache.bcel.generic.Type;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
 
@@ -498,6 +501,8 @@ class ClassDumper {
       }
     }
 
+    // Because the reference has been found in the source class, the constant pool entry
+    // should be available in the class file.
     throw new ClassFormatException(
         "Could not find constant pool entry for "
             + targetClassName
@@ -511,6 +516,7 @@ class ClassDumper {
    *
    * <ul>
    *   <li>Superclass and interfaces
+   *   <li>Type signatures of fields and methods
    *   <li>Constant pool entries that refer to a CONSTANT_Class_info structure
    *   <li>Java Virtual Machine instructions that takes a symbolic reference to a class
    *   <li>The exception table and exception handlers of a method
@@ -565,8 +571,27 @@ class ClassDumper {
         }
       }
 
+      for (Field field : sourceJavaClass.getFields()) {
+        // Type.toString returns binary name (for example, io.grpc.MethodDescriptor)
+        String fieldTypeSignature = field.getType().toString();
+        if (targetClassName.equals(fieldTypeSignature)) {
+          return false;
+        }
+      }
+
       ClassGen classGen = new ClassGen(sourceJavaClass);
       for (Method method : sourceJavaClass.getMethods()) {
+
+        if (targetClassName.equals(method.getReturnType().toString())) {
+          return false;
+        }
+        for (Type argumentType : method.getArgumentTypes()) {
+          String argumentTypeSignature = argumentType.toString();
+          if (targetClassName.equals(argumentTypeSignature)) {
+            return false;
+          }
+        }
+
         MethodGen methodGen = new MethodGen(method, sourceClassName, classGen.getConstantPool());
         InstructionList instructionList = methodGen.getInstructionList();
         if (instructionList != null) {
@@ -611,11 +636,12 @@ class ClassDumper {
           }
         }
       }
+
     } catch (ClassNotFoundException ex) {
       // Because the reference in the argument was extracted from the source class file,
       // the source class should be found.
       throw new ClassFormatException(
-          "The source class in the reference is no longer found in the class path", ex);
+          "The source class in the reference is no longer available in the class path", ex);
     }
 
     // The target class is unused

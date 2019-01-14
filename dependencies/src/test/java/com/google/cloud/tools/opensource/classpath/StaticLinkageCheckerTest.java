@@ -368,18 +368,19 @@ public class StaticLinkageCheckerTest {
   public void testCheckLinkageErrorMissingClassAt_guavaClassShouldNotBeAddedAutomatically()
       throws IOException, URISyntaxException {
     // The class path does not include Guava.
-    List<Path> paths =
-        ImmutableList.of(
-            absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
+    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     // Guava class should not be found in the class path
+    String guavaClass =
+        "com.google.common.util.concurrent.ForwardingListenableFuture$SimpleForwardingListenableFuture";
     ClassSymbolReference invalidClassReference =
         ClassSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            // This source class file is in the firestore jar
+            .setSourceClassName("com.google.api.core.ListenableFutureToApiFuture")
             .setSubclass(false)
-            .setTargetClassName("com.google.common.base.CharMatcher")
+            .setTargetClassName(guavaClass)
             .build();
 
     // There should be an error reported for the reference
@@ -556,16 +557,17 @@ public class StaticLinkageCheckerTest {
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
-    String nonExistentClassName = "com.google.firestore.v1beta1.FooBar";
+    String nonExistentClassName = "io.grpc.MethodDescriptor";
     ClassSymbolReference invalidClassReference =
         ClassSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
             .setSubclass(false)
             .setTargetClassName(nonExistentClassName)
             .build();
-    ImmutableList<ClassSymbolReference> fieldReferences = ImmutableList.of(invalidClassReference);
+    ImmutableList<ClassSymbolReference> classSymbolReferences =
+        ImmutableList.of(invalidClassReference);
     SymbolReferenceSet symbolReferenceSet =
-        SymbolReferenceSet.builder().setClassReferences(fieldReferences).build();
+        SymbolReferenceSet.builder().setClassReferences(classSymbolReferences).build();
 
     JarLinkageReport jarLinkageReport =
         staticLinkageChecker.generateLinkageReport(
