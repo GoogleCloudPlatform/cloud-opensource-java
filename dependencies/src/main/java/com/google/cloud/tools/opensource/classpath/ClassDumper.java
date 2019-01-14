@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -533,6 +534,9 @@ class ClassDumper {
 
       ImmutableSet<Integer> targetConstantPoolIndices =
           constantPoolIndexForClass(sourceJavaClass, targetClassName);
+      Verify.verify(
+          !targetConstantPoolIndices.isEmpty(),
+          "The target class symbol reference is not found in source class");
 
       ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();
       Constant[] constantPoolEntries = sourceConstantPool.getConstantPool();

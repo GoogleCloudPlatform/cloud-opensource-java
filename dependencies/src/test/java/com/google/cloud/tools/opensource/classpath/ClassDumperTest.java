@@ -343,13 +343,11 @@ public class ClassDumperTest {
               .build();
       classDumper.isUnusedClassSymbolReference(referenceToUnusedClass);
 
-      Assert.fail("It should throw VerifyError when it cannot find a class symbol reference");
-    } catch (ClassFormatException ex) {
+      Assert.fail("It should throw VerifyException when it cannot find a class symbol reference");
+    } catch (VerifyException ex) {
       // pass
       Truth.assertThat(ex.getMessage())
-          .isEqualTo(
-              "Could not find constant pool entry for dummy.NoSuchClass"
-                  + " in org.conscrypt.Conscrypt");
+          .isEqualTo("The target class symbol reference is not found in source class");
     }
   }
 }
