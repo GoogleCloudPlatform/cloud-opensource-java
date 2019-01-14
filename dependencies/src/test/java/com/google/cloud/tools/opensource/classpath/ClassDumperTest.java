@@ -286,6 +286,8 @@ public class ClassDumperTest {
             .setTargetClassName("org.conscrypt.NativeConstants")
             .build();
 
+    // See the issue below for the analysis of inlined fields in Conscrypt:
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/301
     boolean result = classDumper.isUnusedClassSymbolReference(referenceToUnusedClass);
     Truth.assertWithMessage(
         "As the values in NativeConstants are all inlined. "
@@ -295,7 +297,6 @@ public class ClassDumperTest {
   @Test
   public void testIsUnusedClassSymbolReference_usedClassReference()
       throws IOException, URISyntaxException {
-    // The superclass of AbstractApiService$InnerService (Guava's ApiService) is not in the paths
     ClassDumper classDumper =
         ClassDumper.create(
             ImmutableList.of(absolutePathOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
