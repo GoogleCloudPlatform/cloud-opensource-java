@@ -340,17 +340,17 @@ public class StaticLinkageCheckerTest {
     ImmutableList<Path> inputClasspath =
         StaticLinkageCheckOption.generateInputClasspath(parsedOption);
     Truth.assertThat(inputClasspath).isNotEmpty();
-    // These 3 files are the first 3 artifacts in the BOM
+    // These 2 files are the first 2 artifacts in the BOM
     Truth.assertWithMessage("The files should match the elements in the BOM")
-        .that(inputClasspath.subList(0, 3))
+        .that(inputClasspath.subList(0, 2))
         .comparingElementsUsing(PATH_FILE_NAMES)
-        .containsExactly("guava-20.0.jar", "guava-gwt-20.0.jar", "guava-testlib-20.0.jar");
+        .containsExactly("guava-26.0-android.jar", "guava-testlib-26.0-android.jar");
 
     // google-cloud-bom, containing google-cloud-firestore, is in the BOM with scope:import
     Truth.assertWithMessage("Import dependency in BOM should be resolved")
         .that(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
-        .contains("google-cloud-firestore-0.74.0-beta.jar");
+        .contains("google-cloud-firestore-0.77.0-beta.jar");
   }
 
   @Test
