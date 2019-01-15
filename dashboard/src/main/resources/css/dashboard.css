@@ -1,9 +1,9 @@
  .PASS {
-   background-color: green;
+   background-color: lightgreen;
    font-weight: bold;
  }
  .FAIL {
-   background-color: red;
+   background-color: pink;
    font-weight: bold;
  }
  .UNAVAILABLE {
@@ -15,7 +15,15 @@
    margin-top: 0;
    margin-bottom: 0;
  }
- 
+
+ .static-linkage-check-dependency-paths {
+   margin-left: 15pt;
+ }
+
+ li.linked-from-artifact-true {
+   font-weight: bold;
+ }
+
  body {
    font-family: "Poppins", sans-serif;
    font-weight: 400;
@@ -50,5 +58,5 @@
  }
  
  pre {
-  line-height: normal;
+   line-height: normal;
  }

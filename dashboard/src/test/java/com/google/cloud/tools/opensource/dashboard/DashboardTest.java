@@ -118,8 +118,13 @@ public class DashboardTest {
         Truth.assertThat(thirdResult.getValue().replaceAll("\\s", ""))
             .containsMatch("PASS|\\d+FAILURES?");
         Truth.assertThat(thirdResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
+
+        Element fourthResult = (Element) (td.get(4));
+        Truth.assertThat(fourthResult.getValue().replaceAll("\\s", ""))
+            .containsMatch("PASS|\\d+FAILURES?");
+        Truth.assertThat(fourthResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
       }
-      Nodes href = document.query("//tr/td/a/@href");
+      Nodes href = document.query("//tr/td[@class='artifact-name']/a/@href");
       for (int i = 0; i < href.size(); i++) {
         String fileName = href.get(i).getValue();
         Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i)).replace(':', '_') + ".html", 
@@ -175,6 +180,32 @@ public class DashboardTest {
       
       Nodes stable = document.query("//p[@id='stable_notice']");
       Assert.assertEquals(0, stable.size());
+    }
+  }
+
+  @Test
+  public void testComponent_staticLinkageCheckResult() throws IOException, ParsingException {
+    Path grpcAltsHtml = outputDirectory.resolve("io.grpc_grpc-alts_1.17.1.html");
+    Assert.assertTrue(Files.isRegularFile(grpcAltsHtml));
+
+    try (InputStream source = Files.newInputStream(grpcAltsHtml)) {
+      Document document = builder.build(source);
+
+      Nodes staticLinkageCheckMessage = document.query("//p[@id='static-linkage-check']");
+      Assert.assertEquals(1, staticLinkageCheckMessage.size());
+      Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
+          .contains("static linkage error(s)");
+
+      Nodes jarLinkageReportNode = document.query("//pre[@class='jar-linkage-report']");
+      boolean foundGrpcCoreError = false;
+      for (int i = 0; i < jarLinkageReportNode.size(); i++) {
+        if (jarLinkageReportNode.get(i).getValue().contains("grpc-core-1.17.1.jar")) {
+          foundGrpcCoreError = true;
+        }
+      }
+      Assert.assertTrue(
+          "grpc-alts 1.17.1 should show static linkage errors on grpc-core-1.17.1",
+          foundGrpcCoreError);
     }
   }
 

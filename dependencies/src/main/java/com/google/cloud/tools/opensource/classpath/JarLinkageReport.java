@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
@@ -29,28 +28,31 @@ public abstract class JarLinkageReport {
   /**
    * Returns the absolute path of the jar file containing source classes of linkage errors
    */
-  abstract Path getJarPath();
-  
-  /**
-   * Returns the dependency path(s) to this artifact.
-   */
-  abstract ImmutableList<DependencyPath> getDependencyPaths();
+  public abstract Path getJarPath();
 
-  abstract ImmutableList<LinkageErrorMissingClass> getMissingClassErrors();
-  abstract ImmutableList<LinkageErrorMissingMethod> getMissingMethodErrors();
-  abstract ImmutableList<LinkageErrorMissingField> getMissingFieldErrors();
+  public abstract ImmutableList<StaticLinkageError<ClassSymbolReference>> getMissingClassErrors();
+
+  public abstract ImmutableList<StaticLinkageError<MethodSymbolReference>> getMissingMethodErrors();
+
+  public abstract ImmutableList<StaticLinkageError<FieldSymbolReference>> getMissingFieldErrors();
 
   static Builder builder() {
-    return new AutoValue_JarLinkageReport.Builder().setDependencyPaths(ImmutableList.of());
+    return new AutoValue_JarLinkageReport.Builder();
   }
 
   @AutoValue.Builder
   abstract static class Builder {
     abstract Builder setJarPath(Path value);
-    abstract Builder setDependencyPaths(Iterable<DependencyPath> paths);
-    abstract Builder setMissingClassErrors(Iterable<LinkageErrorMissingClass> value);
-    abstract Builder setMissingMethodErrors(Iterable<LinkageErrorMissingMethod> value);
-    abstract Builder setMissingFieldErrors(Iterable<LinkageErrorMissingField> value);
+
+    abstract Builder setMissingClassErrors(
+        Iterable<StaticLinkageError<ClassSymbolReference>> errors);
+
+    abstract Builder setMissingMethodErrors(
+        Iterable<StaticLinkageError<MethodSymbolReference>> errors);
+
+    abstract Builder setMissingFieldErrors(
+        Iterable<StaticLinkageError<FieldSymbolReference>> errors);
+
     abstract JarLinkageReport build();
   }
   
@@ -61,26 +63,22 @@ public abstract class JarLinkageReport {
     int totalErrors = getTotalErrorCount();
 
     builder.append(getJarPath().getFileName() + " (" + totalErrors + " errors):\n");
-    for (DependencyPath path : getDependencyPaths()) {
-      builder.append(indent + "Linked from: " + path);
-      builder.append("\n");
-    }    
-    for (LinkageErrorMissingClass missingClass : getMissingClassErrors()) {
-      builder.append(indent + missingClass.getReference());
+    for (StaticLinkageError<ClassSymbolReference> missingClass : getMissingClassErrors()) {
+      builder.append(indent + missingClass);
       builder.append("\n");
     }
-    for (LinkageErrorMissingMethod missingMethod : getMissingMethodErrors()) {
-      builder.append(indent + missingMethod.getReference());
+    for (StaticLinkageError<MethodSymbolReference> missingMethod : getMissingMethodErrors()) {
+      builder.append(indent + missingMethod);
       builder.append("\n");
     }
-    for (LinkageErrorMissingField missingField : getMissingFieldErrors()) {
+    for (StaticLinkageError<FieldSymbolReference> missingField : getMissingFieldErrors()) {
       builder.append(indent + missingField);
       builder.append("\n");
     }
     return builder.toString();
   }
 
-  int getTotalErrorCount() {
+  public int getTotalErrorCount() {
     return getMissingClassErrors().size() + getMissingMethodErrors().size()
         + getMissingFieldErrors().size();
   }

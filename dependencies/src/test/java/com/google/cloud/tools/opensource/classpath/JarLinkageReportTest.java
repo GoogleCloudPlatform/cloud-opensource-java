@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,32 +26,35 @@ import org.junit.Test;
 public class JarLinkageReportTest {
 
   private JarLinkageReport jarLinkageReport;
-  private ImmutableList<LinkageErrorMissingField> missingFieldErrors;
-  private ImmutableList<LinkageErrorMissingMethod> missingMethodErrors;
-  private ImmutableList<LinkageErrorMissingClass> missingClassErrors;
-  
+  private ImmutableList<StaticLinkageError<FieldSymbolReference>> missingFieldErrors;
+  private ImmutableList<StaticLinkageError<MethodSymbolReference>> missingMethodErrors;
+  private ImmutableList<StaticLinkageError<ClassSymbolReference>> missingClassErrors;
+
   @Before
   public void setUp() {
-    
+
     ClassSymbolReference classSymbolReference =
         ClassSymbolReference.builder()
             .setTargetClassName("ClassA")
+            .setSubclass(false)
             .setSourceClassName("ClassB")
             .build();
-    
-    LinkageErrorMissingClass linkageErrorMissingClass =
-        LinkageErrorMissingClass.errorAt(classSymbolReference);
+
+    StaticLinkageError<ClassSymbolReference> linkageErrorMissingClass =
+        StaticLinkageError.errorMissingTargetClass(classSymbolReference);
     missingClassErrors = ImmutableList.of(linkageErrorMissingClass);
 
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
             .setTargetClassName("ClassA")
+            .setInterfaceMethod(false)
             .setMethodName("methodX")
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassB")
             .build();
-    LinkageErrorMissingMethod linkageErrorMissingMethod =
-        LinkageErrorMissingMethod.errorAt(methodSymbolReference);
+    Path targetClassLocation = Paths.get("dummy.jar");
+    StaticLinkageError<MethodSymbolReference> linkageErrorMissingMethod =
+        StaticLinkageError.errorMissingMember(methodSymbolReference, targetClassLocation);
     missingMethodErrors = ImmutableList.of(linkageErrorMissingMethod);
 
     FieldSymbolReference fieldSymbolReference =
@@ -59,8 +63,8 @@ public class JarLinkageReportTest {
             .setFieldName("fieldX")
             .setSourceClassName("ClassD")
             .build();
-    LinkageErrorMissingField linkageErrorMissingField =
-        LinkageErrorMissingField.errorAt(fieldSymbolReference, null);
+    StaticLinkageError<FieldSymbolReference> linkageErrorMissingField =
+        StaticLinkageError.errorMissingTargetClass(fieldSymbolReference);
     missingFieldErrors = ImmutableList.of(linkageErrorMissingField);
     jarLinkageReport =
         JarLinkageReport.builder()
@@ -95,14 +99,19 @@ public class JarLinkageReportTest {
   public void testGetTotalErrorCount() {
     Assert.assertEquals(3, jarLinkageReport.getTotalErrorCount());
   }
-  
+
   @Test
   public void testToString() {
-    Assert.assertEquals("c (3 errors):\n" + 
-        "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA}\n" + 
-        "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, methodName=methodX, descriptor=java.lang.String}\n" + 
-        "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, fieldName=fieldX}, target class location not found\n" +
-        "", jarLinkageReport.toString());
+    Assert.assertEquals(
+        "c (3 errors):\n"
+            + "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA"
+            + ", subclass=false}, reason: CLASS_NOT_FOUND, target class location not found\n"
+            + "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, "
+            + "methodName=methodX, interfaceMethod=false, descriptor=java.lang.String}"
+            + ", reason: SYMBOL_NOT_FOUND, target class from dummy.jar\n"
+            + "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, "
+            + "fieldName=fieldX}, reason: CLASS_NOT_FOUND, target class location not found\n",
+        jarLinkageReport.toString());
   }
 
 }

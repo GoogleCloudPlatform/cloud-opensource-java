@@ -26,11 +26,13 @@ public class SymbolReferenceSetTest {
     ClassSymbolReference classSymbolReference =
         ClassSymbolReference.builder()
             .setTargetClassName("ClassA")
+            .setSubclass(false)
             .setSourceClassName("ClassB")
             .build();
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
             .setTargetClassName("ClassA")
+            .setInterfaceMethod(false)
             .setMethodName("methodX")
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassB")

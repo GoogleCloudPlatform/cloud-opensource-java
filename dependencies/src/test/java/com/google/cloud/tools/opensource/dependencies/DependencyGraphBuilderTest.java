@@ -90,10 +90,11 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testGetStaticLinkageCheckDependencies_multipleArtifacts()
+  public void testGetStaticLinkageCheckDependencyGraph_multipleArtifacts()
       throws DependencyCollectionException, DependencyResolutionException {
     DependencyGraph graph =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencies(Arrays.asList(datastore, guava));
+        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
+            Arrays.asList(datastore, guava));
 
     List<DependencyPath> list = graph.list();
     Assert.assertTrue(list.size() > 10);

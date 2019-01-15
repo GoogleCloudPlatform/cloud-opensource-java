@@ -7,7 +7,7 @@
     <h1>Dependency Analysis of ${groupId}:${artifactId}:${version}</h1>
     
     
-    <h2>Global Upper Bounds Check</h2>
+    <h2 id="global-upper-bounds">Global Upper Bounds Check</h2>
     
     <p>For each transitive dependency the library pulls in, the highest version 
        found anywhere in the union of the BOM's dependency trees is picked.</p>
@@ -45,7 +45,7 @@
     </#if>   
     
     
-    <h2>Local Upper Bounds Check</h2>
+    <h2 id="upper-bounds">Local Upper Bounds Check</h2>
     
     
     <p>For each transitive dependency the library pulls in, the highest version 
@@ -83,7 +83,7 @@
       </h3>
     </#if>
         
-    <h2>Dependency Convergence</h2>
+    <h2 id="dependency-convergence">Dependency Convergence</h2>
     
     <p>There is exactly one version of each dependency in the library's transitive dependency tree.
        That is, two artifacts with the same group ID and artifact ID but different versions
@@ -108,6 +108,30 @@
     <#else>
       <h3 style="color: green">${groupId}:${artifactId}:${version} Converges</h3>
     </#if>
+
+
+    <h2 id="static-linkage-errors">Static Linkage Check</h2>
+
+    <p id="static-linkage-check">${totalLinkageErrorCount} static linkage error(s)</p>
+    <#list jarLinkageReports as jarLinkageReport>
+      <#if jarLinkageReport.getTotalErrorCount() gt 0>
+        <pre class="jar-linkage-report">${jarLinkageReport?html}</pre>
+
+        <p class="static-linkage-check-dependency-paths">
+          Following paths to the jar file from BOM are found in the dependency tree.
+        </p>
+        <ul class="static-linkage-check-dependency-paths">
+          <#list jarToDependencyPaths.get(jarLinkageReport.getJarPath()) as dependencyPath >
+            <#assign dependencyPathRoot = dependencyPath.get(0) />
+            <#assign linkedFromArtifact = dependencyPathRoot.getGroupId() == groupId
+                && dependencyPathRoot.getArtifactId() == artifactId>
+            <li class="linked-from-artifact-${linkedFromArtifact?c}">${dependencyPath}
+            </li>
+          </#list>
+        </ul>
+
+      </#if>
+    </#list>
 
     <h2>Dependencies</h2>
 

@@ -153,7 +153,7 @@ public class DependencyGraphBuilder {
    * @throws DependencyCollectionException when there is a problem in collecting dependency
    * @throws DependencyResolutionException when there is a problem in resolving dependency
    */
-  public static DependencyGraph getStaticLinkageCheckDependencies(List<Artifact> artifacts)
+  public static DependencyGraph getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
       throws DependencyCollectionException, DependencyResolutionException {
     DependencyNode node = resolveCompileTimeDependencies(artifacts, true);
     DependencyGraph graph = new DependencyGraph();
