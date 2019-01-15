@@ -203,9 +203,7 @@ public class DashboardTest {
           foundGrpcCoreError = true;
         }
       }
-      Assert.assertTrue(
-          "grpc-alts 1.17.1 should show static linkage errors on grpc-core-1.17.1",
-          foundGrpcCoreError);
+      Assert.assertFalse(foundGrpcCoreError);
     }
   }
 
