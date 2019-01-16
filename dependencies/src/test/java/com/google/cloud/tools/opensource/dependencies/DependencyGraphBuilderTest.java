@@ -28,6 +28,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 
 public class DependencyGraphBuilderTest {
@@ -87,6 +88,18 @@ public class DependencyGraphBuilderTest {
     }
     
     Truth.assertThat(coordinates).contains("com.google.code.findbugs:jsr305:jar:3.0.2");
+  }
+
+  @Test
+  public void testGetDirectDependencies_nonExistentZipDependency()
+      throws DependencyCollectionException, DependencyResolutionException {
+    // This artifact depends on log4j-api-java9 (type:zip), which does not exist in Maven central.
+    DefaultArtifact log4j2 = new DefaultArtifact("org.apache.logging.log4j:log4j-api:2.11.1");
+
+    // This should not raise DependencyResolutionException
+    DependencyGraph completeDependencies =
+        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(ImmutableList.of(log4j2));
+    Truth.assertThat(completeDependencies.list()).isNotEmpty();
   }
 
   @Test

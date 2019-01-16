@@ -161,9 +161,25 @@ class ClassDumper {
 
     SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
     for (JavaClass javaClass : listClassesInJar(jarFilePath)) {
+      if (!isCompatibleClassFileVersion(javaClass)) {
+        continue;
+      }
       symbolTableBuilder.addAll(scanSymbolReferencesInClass(javaClass));
     }
     return symbolTableBuilder.build();
+  }
+
+  /**
+   * Returns true if {@code javaClass} file format is compatible with this tool. As of January 2019,
+   * Java 8 is supported.
+   *
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.1">Java
+   *     Virtual Machine Specification: The ClassFile Structure: minor_version, major_version</a>
+   */
+  private static boolean isCompatibleClassFileVersion(JavaClass javaClass) {
+    int classFileMajorVersion = javaClass.getMajor();
+    // TODO(#343): Java 11 support
+    return 45 <= classFileMajorVersion && classFileMajorVersion <= 52;
   }
 
   private static SymbolReferenceSet scanSymbolReferencesInClass(JavaClass javaClass) {

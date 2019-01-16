@@ -53,7 +53,9 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 public class StaticLinkageCheckOption {
   
   private static final Options options = configureOptions();
-  
+
+  private static final HelpFormatter helpFormatter = new HelpFormatter();
+
   static CommandLine readCommandLine(String[] arguments) throws ParseException {
     // TODO is this reentrant? Can we reuse it? 
     // https://issues.apache.org/jira/browse/CLI-291
@@ -64,7 +66,6 @@ public class StaticLinkageCheckOption {
       checkInput(commandLine);
       return commandLine;
     } catch (ParseException ex) {
-      HelpFormatter helpFormatter = new HelpFormatter();
       helpFormatter.printHelp("StaticLinkageChecker", options);
       throw ex;
     }
@@ -121,6 +122,7 @@ public class StaticLinkageCheckOption {
               .collect(toImmutableList());
       return jarFilesInArguments;
     } else {
+      helpFormatter.printHelp("StaticLinkageChecker", options);
       throw new ParseException("Missing argument");
     }
   }
