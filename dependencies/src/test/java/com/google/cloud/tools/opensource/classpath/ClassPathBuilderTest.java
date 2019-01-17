@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -172,5 +173,13 @@ public class ClassPathBuilderTest {
     Truth.assertWithMessage("Method references within the same jar file should not be reported")
         .that(jarLinkageReport.getMissingMethodErrors())
         .isEmpty();
+  }
+
+  @Test
+  public void testArtifactsToClasspath_netty4Dependency() throws RepositoryException {
+    Artifact nettyArtifact = new DefaultArtifact("io.netty:netty-all:4.1.31.Final");
+
+    List<Artifact> artifacts = DependencyGraphBuilder.getDirectDependencies(nettyArtifact);
+    Truth.assertThat(artifacts).isNotEmpty();
   }
 }

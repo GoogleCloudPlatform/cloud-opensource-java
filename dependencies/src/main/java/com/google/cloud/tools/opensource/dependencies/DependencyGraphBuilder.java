@@ -52,24 +52,49 @@ public class DependencyGraphBuilder {
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
   
   static {
-    // os.detected.classifier system property used to select Netty deps
-    String OS = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH);
-    if ((OS.indexOf("mac") >= 0) || (OS.indexOf("darwin") >= 0)) {
-      System.setProperty("os.detected.classifier", "osx-x86_64");
-    } else if (OS.indexOf("win") >= 0) {
-      System.setProperty("os.detected.classifier", "windows-x86_64");
-    } else if (OS.indexOf("nux") >= 0) {
-      System.setProperty("os.detected.classifier", "linux-x86_64");
-    } else {
-      // Since we only load the dependency graph, not actually use the 
-      // dependency, it doesn't matter a great deal which one we pick.
-      System.setProperty("os.detected.classifier", "linux-x86_64");      
-    }
+    setDetectedOsSystemProperties();
   }
 
   // caching cuts time by about a factor of 4.
   private static final Map<String, DependencyNode> cacheWithProvidedScope = new HashMap<>();
   private static final Map<String, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
+
+  private static void setDetectedOsSystemProperties() {
+    // System properties to select Netty dependencies through os-maven-plugin
+    // Definition of the properties: https://github.com/trustin/os-maven-plugin
+    String nonAlphaNumericPattern = "[^a-z0-9]+";
+    String osNameNormalized =
+        System.getProperty("os.name", "generic")
+            .toLowerCase(Locale.ENGLISH)
+            .replaceAll(nonAlphaNumericPattern, "");
+
+    String osDetectedNameKey = "os.detected.name";
+    String osDetectedNameValue;
+    if (osNameNormalized.startsWith("macosx") || osNameNormalized.startsWith("osx")) {
+      osDetectedNameValue = "osx";
+    } else if (osNameNormalized.startsWith("windows")) {
+      osDetectedNameValue = "windows";
+    } else {
+      // Since we only load the dependency graph, not actually use the
+      // dependency, it doesn't matter a great deal which one we pick.
+      osDetectedNameValue = "linux";
+    }
+    System.setProperty(osDetectedNameKey, osDetectedNameValue);
+
+    String osDetectedArchKey = "os.detected.arch";
+    String osDetectedArchValue;
+    String osArchNormalized = System.getProperty("os.arch").replaceAll(nonAlphaNumericPattern, "");
+    if (ImmutableList.of("x8664", "amd64", "ia32e", "em64t", "x64").contains(osArchNormalized)) {
+      osDetectedArchValue = "x86_64";
+    } else {
+      osDetectedArchValue = "x86_32";
+    }
+    System.setProperty(osDetectedArchKey, osDetectedArchValue);
+
+    String osDetectedClassifierKey = "os.detected.classifier";
+    System.setProperty(
+        osDetectedClassifierKey, String.format("%s-%s", osDetectedNameValue, osDetectedArchValue));
+  }
 
   private static DependencyNode resolveCompileTimeDependencies(Artifact rootDependencyArtifact)
       throws DependencyCollectionException, DependencyResolutionException {
