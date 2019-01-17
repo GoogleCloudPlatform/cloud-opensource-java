@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
@@ -50,7 +51,9 @@ public class DependencyGraphBuilder {
   private static final Logger logger = Logger.getLogger(DependencyGraphBuilder.class.getName());
   
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
-  
+
+  private static final Pattern NON_ALPHA_NUMERIC_PATTERN = Pattern.compile("[^a-z0-9]+");
+
   static {
     setDetectedOsSystemProperties();
   }
@@ -62,34 +65,45 @@ public class DependencyGraphBuilder {
   private static void setDetectedOsSystemProperties() {
     // System properties to select Netty dependencies through os-maven-plugin
     // Definition of the properties: https://github.com/trustin/os-maven-plugin
-    String nonAlphaNumericPattern = "[^a-z0-9]+";
+
+    System.setProperty("os.detected.name", osDetectedName());
+
+    System.setProperty("os.detected.arch", osDetectedArch());
+
+    System.setProperty("os.detected.classifier", osDetectedName() + "-" + osDetectedArch());
+  }
+
+  private static String osDetectedName() {
     String osNameNormalized =
-        System.getProperty("os.name", "generic")
-            .toLowerCase(Locale.ENGLISH)
-            .replaceAll(nonAlphaNumericPattern, "");
+        NON_ALPHA_NUMERIC_PATTERN
+            .matcher(System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH))
+            .replaceAll("");
 
-    String osDetectedNameValue;
     if (osNameNormalized.startsWith("macosx") || osNameNormalized.startsWith("osx")) {
-      osDetectedNameValue = "osx";
+      return "osx";
     } else if (osNameNormalized.startsWith("windows")) {
-      osDetectedNameValue = "windows";
-    } else {
-      // Since we only load the dependency graph, not actually use the
-      // dependency, it doesn't matter a great deal which one we pick.
-      osDetectedNameValue = "linux";
+      return "windows";
     }
-    System.setProperty("os.detected.name", osDetectedNameValue);
+    // Since we only load the dependency graph, not actually use the
+    // dependency, it doesn't matter a great deal which one we pick.
+    return "linux";
+  }
 
-    String osDetectedArchValue;
-    String osArchNormalized = System.getProperty("os.arch").replaceAll(nonAlphaNumericPattern, "");
-    if (ImmutableList.of("x8664", "amd64", "ia32e", "em64t", "x64").contains(osArchNormalized)) {
-      osDetectedArchValue = "x86_64";
-    } else {
-      osDetectedArchValue = "x86_32";
+  private static String osDetectedArch() {
+    String osArchNormalized =
+        NON_ALPHA_NUMERIC_PATTERN
+            .matcher(System.getProperty("os.arch").toLowerCase(Locale.ENGLISH))
+            .replaceAll("");
+    switch (osArchNormalized) {
+      case "x8664":
+      case "amd64":
+      case "ia32e":
+      case "em64t":
+      case "x64":
+        return "x86_64";
+      default:
+        return "x86_32";
     }
-    System.setProperty("os.detected.arch", osDetectedArchValue);
-
-    System.setProperty("os.detected.classifier", osDetectedNameValue + "-" + osDetectedArchValue);
   }
 
   private static DependencyNode resolveCompileTimeDependencies(Artifact rootDependencyArtifact)
