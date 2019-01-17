@@ -50,7 +50,7 @@ public class DependencyGraphBuilder {
   private static final Logger logger = Logger.getLogger(DependencyGraphBuilder.class.getName());
   
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
-  
+
   static {
     // os.detected.classifier system property used to select Netty deps
     String OS = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH);
@@ -61,9 +61,9 @@ public class DependencyGraphBuilder {
     } else if (OS.indexOf("nux") >= 0) {
       System.setProperty("os.detected.classifier", "linux-x86_64");
     } else {
-      // Since we only load the dependency graph, not actually use the 
+      // Since we only load the dependency graph, not actually use the
       // dependency, it doesn't matter a great deal which one we pick.
-      System.setProperty("os.detected.classifier", "linux-x86_64");      
+      System.setProperty("os.detected.classifier", "linux-x86_64");
     }
   }
 
@@ -113,7 +113,7 @@ public class DependencyGraphBuilder {
     } else {
       collectRequest.setDependencies(dependencyList);
     }
-    collectRequest.addRepository(RepositoryUtility.CENTRAL);
+    RepositoryUtility.addRepositoriesToRequest(collectRequest);
     CollectResult collectResult = system.collectDependencies(session, collectRequest);
     DependencyNode node = collectResult.getRoot();
 

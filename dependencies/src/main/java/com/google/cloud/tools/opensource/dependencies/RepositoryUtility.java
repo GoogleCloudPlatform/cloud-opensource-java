@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,6 +31,7 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
+import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
@@ -58,6 +60,8 @@ public final class RepositoryUtility {
   
   public static final RemoteRepository CENTRAL =
       new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
+
+  private static final List<RemoteRepository> mavenRepositories = Lists.newArrayList(CENTRAL);
 
   private RepositoryUtility() {}
 
@@ -161,7 +165,10 @@ public final class RepositoryUtility {
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 
     ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
-    request.addRepository(RepositoryUtility.CENTRAL);
+
+    for (RemoteRepository repository : mavenRepositories) {
+      request.addRepository(repository);
+    }
     request.setArtifact(artifact);
 
     ArtifactDescriptorResult resolved = system.readArtifactDescriptor(session, request);
@@ -198,4 +205,14 @@ public final class RepositoryUtility {
     return managedDependencies;
   }
 
+  public static void registerMavenRepository(String mavenRepositoryUrl) {
+    mavenRepositories.add(
+        new RemoteRepository.Builder(mavenRepositoryUrl, "default", mavenRepositoryUrl).build());
+  }
+
+  static void addRepositoriesToRequest(CollectRequest collectRequest) {
+    for (RemoteRepository repository : mavenRepositories) {
+      collectRequest.addRepository(repository);
+    }
+  }
 }

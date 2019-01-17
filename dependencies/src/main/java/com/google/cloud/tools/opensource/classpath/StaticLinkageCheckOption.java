@@ -93,11 +93,18 @@ public class StaticLinkageCheckOption {
         "report-only-reachable",
         false,
         "To report only linkage errors reachable from entry point");
+    options.addOption(
+        "m",
+        "maven-repositories",
+        true,
+        "Maven repositories (separated by ',') to search dependencies");
     return options;
   }
 
   static ImmutableList<Path> generateInputClasspath(CommandLine commandLine)
       throws RepositoryException, ParseException {
+    configureMavenRepositories(commandLine);
+
     Splitter commaSplitter = Splitter.on(",");
 
     if (commandLine.hasOption("b")) {
@@ -124,6 +131,16 @@ public class StaticLinkageCheckOption {
     } else {
       helpFormatter.printHelp("StaticLinkageChecker", options);
       throw new ParseException("Missing argument");
+    }
+  }
+
+  static void configureMavenRepositories(CommandLine commandLine) {
+    if (!commandLine.hasOption("m")) {
+      return;
+    }
+    Splitter commaSplitter = Splitter.on(",");
+    for (String mavenRepositoryUrl : commaSplitter.splitToList(commandLine.getOptionValue("m"))) {
+      RepositoryUtility.registerMavenRepository(mavenRepositoryUrl);
     }
   }
 }

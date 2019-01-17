@@ -16,8 +16,15 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Truth;
+import java.nio.file.Path;
+import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -57,5 +64,21 @@ public class StaticLinkageCheckOptionTest {
     } catch (ParseException ex) {
       Assert.assertEquals("Unrecognized option: -x", ex.getMessage());
     }
+  }
+
+  @Test
+  public void testConfigureAdditionalMavenRepositories_addingSpringRepository()
+      throws ParseException, RepositoryException {
+    CommandLine commandLine =
+        StaticLinkageCheckOption.readCommandLine(
+            new String[] {"-m", "https://repo.spring.io/milestone"});
+    StaticLinkageCheckOption.configureMavenRepositories(commandLine);
+
+    // This artifact does not exist in Maven central, but it is in Spring's repository
+    // Spring-asm is used here because it does not have complex dependencies
+    Artifact artifact = new DefaultArtifact("org.springframework:spring-asm:3.1.0.RC2");
+
+    List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(artifact));
+    Truth.assertThat(paths).isNotEmpty();
   }
 }
