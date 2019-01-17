@@ -160,12 +160,10 @@ public class StaticLinkageCheckOption {
             "Invalid URL specified for maven repository: " + mavenRepositoryUrl);
       }
       try {
-        URI uri = new URI(mavenRepositoryUrl);
-        if (!uri.isAbsolute()) {
-          throw new ParseException("Repository URL must have an absolute path for file");
-        }
+        // Because the protocol is not an empty string, this URI is absolute.
+        new URI(mavenRepositoryUrl);
       } catch (URISyntaxException ex) {
-        throw new ParseException("Invalid URL for repository: " + mavenRepositoryUrl);
+        throw new ParseException("Invalid URL syntax for repository: " + mavenRepositoryUrl);
       }
 
       repositoryListBulder.add(repository);
