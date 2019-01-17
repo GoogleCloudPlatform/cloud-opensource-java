@@ -68,7 +68,6 @@ public class DependencyGraphBuilder {
             .toLowerCase(Locale.ENGLISH)
             .replaceAll(nonAlphaNumericPattern, "");
 
-    String osDetectedNameKey = "os.detected.name";
     String osDetectedNameValue;
     if (osNameNormalized.startsWith("macosx") || osNameNormalized.startsWith("osx")) {
       osDetectedNameValue = "osx";
@@ -79,9 +78,8 @@ public class DependencyGraphBuilder {
       // dependency, it doesn't matter a great deal which one we pick.
       osDetectedNameValue = "linux";
     }
-    System.setProperty(osDetectedNameKey, osDetectedNameValue);
+    System.setProperty("os.detected.name", osDetectedNameValue);
 
-    String osDetectedArchKey = "os.detected.arch";
     String osDetectedArchValue;
     String osArchNormalized = System.getProperty("os.arch").replaceAll(nonAlphaNumericPattern, "");
     if (ImmutableList.of("x8664", "amd64", "ia32e", "em64t", "x64").contains(osArchNormalized)) {
@@ -89,7 +87,7 @@ public class DependencyGraphBuilder {
     } else {
       osDetectedArchValue = "x86_32";
     }
-    System.setProperty(osDetectedArchKey, osDetectedArchValue);
+    System.setProperty("os.detected.arch", osDetectedArchValue);
 
     System.setProperty("os.detected.classifier", osDetectedNameValue + "-" + osDetectedArchValue);
   }
