@@ -93,17 +93,19 @@ public class StaticLinkageCheckOptionTest {
   @Test
   public void testConfigureAdditionalMavenRepositories_invalidRepositoryUrl()
       throws ParseException {
-    CommandLine commandLine =
-        StaticLinkageCheckOption.readCommandLine(
-            new String[] {"-m", "https://repo.spring.io/milestone", "-m", "foobar"});
 
-    try {
-      StaticLinkageCheckOption.configureMavenRepositories(commandLine);
-      Assert.fail();
-    } catch (ParseException ex) {
-      // pass
-      Truth.assertThat(ex.getMessage())
-          .isEqualTo("Invalid URL specified for maven repository: foobar");
+    List<String> invalidUrls =
+        ImmutableList.of("foobar", "_http_file__https", "localhost/abc", "http://foo^bar");
+
+    for (String invalidUrl : invalidUrls) {
+      CommandLine commandLine =
+          StaticLinkageCheckOption.readCommandLine(new String[] {"-m", invalidUrl});
+      try {
+        StaticLinkageCheckOption.configureMavenRepositories(commandLine);
+        Assert.fail("URL " + invalidUrl + " should be invalidated");
+      } catch (ParseException ex) {
+        // pass
+      }
     }
   }
 
@@ -112,7 +114,7 @@ public class StaticLinkageCheckOptionTest {
     CommandLine commandLine =
         StaticLinkageCheckOption.readCommandLine(new String[] {"-m", "file:///var/tmp"});
 
-    // This method should not raise exception
+    // This method should not raise an exception
     StaticLinkageCheckOption.configureMavenRepositories(commandLine);
   }
 }

@@ -63,7 +63,7 @@ public class DependencyGraphBuilder {
     } else {
       // Since we only load the dependency graph, not actually use the
       // dependency, it doesn't matter a great deal which one we pick.
-      System.setProperty("os.detected.classifier", "linux-x86_64");      
+      System.setProperty("os.detected.classifier", "linux-x86_64");
     }
   }
 

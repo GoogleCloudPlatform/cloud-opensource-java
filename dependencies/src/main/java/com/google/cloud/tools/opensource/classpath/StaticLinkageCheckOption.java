@@ -23,6 +23,9 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -155,6 +158,14 @@ public class StaticLinkageCheckOption {
         helpFormatter.printHelp("StaticLinkageChecker", options);
         throw new ParseException(
             "Invalid URL specified for maven repository: " + mavenRepositoryUrl);
+      }
+      try {
+        URI uri = new URI(mavenRepositoryUrl);
+        if (!uri.isAbsolute()) {
+          throw new ParseException("Repository URL must have an absolute path for file");
+        }
+      } catch (URISyntaxException ex) {
+        throw new ParseException("Invalid URL for repository: " + mavenRepositoryUrl);
       }
 
       repositoryListBulder.add(repository);
