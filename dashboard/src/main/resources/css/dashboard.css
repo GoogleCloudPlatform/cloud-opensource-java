@@ -163,6 +163,12 @@
     color: #fff;
 }
 
+.global h2 {
+    color: #fff;
+    font-size: 36px;
+    font-weight: 300;
+}
+
 .statistic2 .statistic__item .desc {
     color: rgba(255, 255, 255, 0.6);
 }
