@@ -128,7 +128,7 @@ public class DependencyGraphBuilderTest {
   public void testSetDetectedOsSystemProperties_netty4Dependency() throws RepositoryException {
     Artifact nettyArtifact = new DefaultArtifact("io.netty:netty-all:4.1.31.Final");
 
-    // Without system properties "os.detected.arch" and "os.detected.name", it would fail.
+    // Without system properties "os.detected.arch" and "os.detected.name", this would fail.
     List<Artifact> artifacts = DependencyGraphBuilder.getDirectDependencies(nettyArtifact);
     Truth.assertThat(artifacts).isNotEmpty();
   }
