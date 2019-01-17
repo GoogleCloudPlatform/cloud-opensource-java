@@ -21,6 +21,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,6 +36,7 @@ import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * Option for {@link StaticLinkageChecker}. To construct an input class path, the checker requires
@@ -51,13 +53,17 @@ import org.eclipse.aether.artifact.DefaultArtifact;
  *     Linkage Checker: Input</a>
  */
 public class StaticLinkageCheckOption {
-  
+
+  // DefaultTransporterProvider.newTransporter checks the transporters for repository URLs
+  private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_PROTOCOL =
+      ImmutableSet.of("file", "http", "https");
+
   private static final Options options = configureOptions();
 
   private static final HelpFormatter helpFormatter = new HelpFormatter();
 
   static CommandLine readCommandLine(String[] arguments) throws ParseException {
-    // TODO is this reentrant? Can we reuse it? 
+    // TODO is this reentrant? Can we reuse it?
     // https://issues.apache.org/jira/browse/CLI-291
     CommandLineParser parser = new DefaultParser();
 
@@ -95,9 +101,11 @@ public class StaticLinkageCheckOption {
         "To report only linkage errors reachable from entry point");
     options.addOption(
         "m",
-        "maven-repositories",
+        "maven-repository",
         true,
-        "Maven repositories (separated by ',') to search dependencies");
+        "Maven repository URL to search for dependencies. "
+            + "If this option is used one or more times, the repositories are added "
+            + "in order before the default Maven Central (http://repo1.maven.org/maven2/).");
     return options;
   }
 
@@ -134,13 +142,24 @@ public class StaticLinkageCheckOption {
     }
   }
 
-  static void configureMavenRepositories(CommandLine commandLine) {
+  static void configureMavenRepositories(CommandLine commandLine) throws ParseException {
     if (!commandLine.hasOption("m")) {
       return;
     }
-    Splitter commaSplitter = Splitter.on(",");
-    for (String mavenRepositoryUrl : commaSplitter.splitToList(commandLine.getOptionValue("m"))) {
-      RepositoryUtility.registerMavenRepository(mavenRepositoryUrl);
+
+    ImmutableList.Builder<RemoteRepository> repositoryListBulder = ImmutableList.builder();
+    for (String mavenRepositoryUrl : commandLine.getOptionValues("m")) {
+      RemoteRepository repository =
+          new RemoteRepository.Builder(mavenRepositoryUrl, "default", mavenRepositoryUrl).build();
+      if (!ALLOWED_REPOSITORY_URL_PROTOCOL.contains(repository.getProtocol())) {
+        helpFormatter.printHelp("StaticLinkageChecker", options);
+        throw new ParseException(
+            "Invalid URL specified for maven repository: " + mavenRepositoryUrl);
+      }
+
+      repositoryListBulder.add(repository);
     }
+    repositoryListBulder.add(RepositoryUtility.CENTRAL);
+    RepositoryUtility.mavenRepositories = repositoryListBulder.build();
   }
 }

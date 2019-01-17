@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.nio.file.Path;
@@ -25,10 +26,17 @@ import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class StaticLinkageCheckOptionTest {
+
+  @After
+  public void cleanup() {
+    // Resets the effect of configureMavenRepositories
+    RepositoryUtility.mavenRepositories = ImmutableList.of(RepositoryUtility.CENTRAL);
+  }
 
   @Test
   public void parseCommandLineOptions_shortOptions_bom() throws ParseException {
@@ -57,7 +65,7 @@ public class StaticLinkageCheckOptionTest {
 
   @Test
   public void parseCommandLineOptions_invalidOption() {
-    String[] arguments = {"-x"}; // No such option 
+    String[] arguments = {"-x"}; // No such option
     try {
       StaticLinkageCheckOption.readCommandLine(arguments);
       Assert.fail();
@@ -80,5 +88,31 @@ public class StaticLinkageCheckOptionTest {
 
     List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(artifact));
     Truth.assertThat(paths).isNotEmpty();
+  }
+
+  @Test
+  public void testConfigureAdditionalMavenRepositories_invalidRepositoryUrl()
+      throws ParseException {
+    CommandLine commandLine =
+        StaticLinkageCheckOption.readCommandLine(
+            new String[] {"-m", "https://repo.spring.io/milestone", "-m", "foobar"});
+
+    try {
+      StaticLinkageCheckOption.configureMavenRepositories(commandLine);
+      Assert.fail();
+    } catch (ParseException ex) {
+      // pass
+      Truth.assertThat(ex.getMessage())
+          .isEqualTo("Invalid URL specified for maven repository: foobar");
+    }
+  }
+
+  @Test
+  public void testConfigureAdditionalMavenRepositories_fileRepositoryUrl() throws ParseException {
+    CommandLine commandLine =
+        StaticLinkageCheckOption.readCommandLine(new String[] {"-m", "file:///var/tmp"});
+
+    // This method should not raise exception
+    StaticLinkageCheckOption.configureMavenRepositories(commandLine);
   }
 }

@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -61,7 +61,7 @@ public final class RepositoryUtility {
   public static final RemoteRepository CENTRAL =
       new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
 
-  private static final List<RemoteRepository> mavenRepositories = Lists.newArrayList(CENTRAL);
+  public static ImmutableList<RemoteRepository> mavenRepositories = ImmutableList.of(CENTRAL);
 
   private RepositoryUtility() {}
 
@@ -203,11 +203,6 @@ public final class RepositoryUtility {
       }
     }
     return managedDependencies;
-  }
-
-  public static void registerMavenRepository(String mavenRepositoryUrl) {
-    mavenRepositories.add(
-        new RemoteRepository.Builder(mavenRepositoryUrl, "default", mavenRepositoryUrl).build());
   }
 
   static void addRepositoriesToRequest(CollectRequest collectRequest) {
