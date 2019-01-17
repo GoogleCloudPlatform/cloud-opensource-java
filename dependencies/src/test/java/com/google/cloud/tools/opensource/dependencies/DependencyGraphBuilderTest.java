@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
@@ -121,5 +122,14 @@ public class DependencyGraphBuilderTest {
         "Level-order should pick up guava before the dependencies of the two",
         "guava",
         secondElement.getLeaf().getArtifactId());
+  }
+
+  @Test
+  public void testArtifactsToClasspath_netty4Dependency() throws RepositoryException {
+    Artifact nettyArtifact = new DefaultArtifact("io.netty:netty-all:4.1.31.Final");
+
+    // Without system properties "os.detected.arch" and "os.detected.name", it would fail.
+    List<Artifact> artifacts = DependencyGraphBuilder.getDirectDependencies(nettyArtifact);
+    Truth.assertThat(artifacts).isNotEmpty();
   }
 }
