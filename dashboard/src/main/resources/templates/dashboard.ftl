@@ -1,10 +1,33 @@
 <html lang="en-US">
   <head>
     <title>Google Cloud Platform Code Health Open Source Dashboard</title>
+    
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animsition/4.0.2/css/animsition.min.css" rel="stylesheet" />    
     <link rel="stylesheet" type="text/css" href="dashboard.css" />
   </head>
   <body>
     <h1>Google Cloud Platform Dependency Dashboard</h1>
+    <hr />
+    
+    <!-- todo CSS can be simplified a lot + fewer nested containers -->
+    <section class="statistic statistic2">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-6 col-lg-3">
+            <div class="statistic__item statistic__item--green">
+              <h2 class="number">${table?size}</h2>
+              <span class="desc">Total Artifacts Checked</span>
+              <div class="icon">
+                <i class="zmdi zmdi-calendar-note"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    
     <h2>Artifact Details</h2>
     
     <#macro testResult row name>
