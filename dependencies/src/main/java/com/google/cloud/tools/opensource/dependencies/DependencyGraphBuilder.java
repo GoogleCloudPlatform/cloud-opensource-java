@@ -91,9 +91,7 @@ public class DependencyGraphBuilder {
     }
     System.setProperty(osDetectedArchKey, osDetectedArchValue);
 
-    String osDetectedClassifierKey = "os.detected.classifier";
-    System.setProperty(
-        osDetectedClassifierKey, String.format("%s-%s", osDetectedNameValue, osDetectedArchValue));
+    System.setProperty("os.detected.classifier", osDetectedNameValue + "-" + osDetectedArchValue);
   }
 
   private static DependencyNode resolveCompileTimeDependencies(Artifact rootDependencyArtifact)
