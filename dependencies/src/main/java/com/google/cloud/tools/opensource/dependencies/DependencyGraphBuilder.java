@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
@@ -53,8 +52,7 @@ public class DependencyGraphBuilder {
   
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
-  private static final Pattern NON_ALPHA_NUMERIC = Pattern.compile("[^a-z0-9]+");
-  private static final CharMatcher ALPHA_NUMERIC = CharMatcher.inRange('a', 'z')
+  private static final CharMatcher LOWER_ALPHA_NUMERIC = CharMatcher.inRange('a', 'z')
       .or(CharMatcher.inRange('0', '9'));
 
   static {
@@ -78,8 +76,8 @@ public class DependencyGraphBuilder {
 
   private static String osDetectedName() {
     String osNameNormalized =
-        ALPHA_NUMERIC
-            .retainFrom(System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH));
+        LOWER_ALPHA_NUMERIC
+            .retainFrom(System.getProperty("os.name").toLowerCase(Locale.ENGLISH));
 
     if (osNameNormalized.startsWith("macosx") || osNameNormalized.startsWith("osx")) {
       return "osx";
@@ -93,7 +91,7 @@ public class DependencyGraphBuilder {
 
   private static String osDetectedArch() {
     String osArchNormalized =
-        ALPHA_NUMERIC
+        LOWER_ALPHA_NUMERIC
             .retainFrom(System.getProperty("os.arch").toLowerCase(Locale.ENGLISH));
     switch (osArchNormalized) {
       case "x8664":
