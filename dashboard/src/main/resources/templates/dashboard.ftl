@@ -2,23 +2,17 @@
   <head>
     <title>Google Cloud Platform Code Health Open Source Dashboard</title>
     
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" type="text/css" href="dashboard.css" />
   </head>
   <body>
     <h1>Google Cloud Platform Dependency Dashboard</h1>
     <hr />
     
-    <!-- todo CSS can be simplified a lot + fewer nested containers -->
-    <section class="statistic statistic2">
+    <section class="statistics">
       <div class="container">
-        <div class="row">
-          <div class="col-md-6 col-lg-3">
-            <div class="statistic__item statistic__item--green">
-              <h2 class="number">${table?size}</h2>
-              <span class="desc">Total Artifacts Checked</span>
-            </div>
-          </div>
+        <div class="statistic_item statistic_item_green">
+          <h2 class="artifactcount">${table?size}</h2>
+          <span class="desc">Total Artifacts Checked</span>
         </div>
       </div>
     </section>

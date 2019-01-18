@@ -62,94 +62,34 @@
    line-height: normal;
  }
  
+
  /* ----- Statistic ----- */
-.statistic {
-    padding-top: 57px;
+.statistics {
+    padding-top: 50px;
 }
 
+.container {
+  min-height: 20ex;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
 
-.statistic__item {
-    border: 1px solid #e5e5e5;
-    background: #fff;
+.statistic_item {
+    flex: 0 0 16em;
+    margin: 1em;
     padding: 20px 30px;
+}
+
+.statistic_item {
+    border: 1px solid #e5e5e5;
     position: relative;
     min-height: 180px;
     overflow: hidden;
     margin-bottom: 40px;
 }
 
-@media (min-width: 992px) and (max-width: 1199px) {
-    .statistic__item {
-        padding: 20px 10px;
-    }
-}
-
-.statistic__item h2 {
-    font-size: 36px;
-    font-weight: 300;
-    color: #4272d7;
-}
-
-@media (min-width: 992px) and (max-width: 1199px) {
-    .statistic__item h2 {
-        font-size: 22px;
-    }
-}
-
-.statistic__item .desc {
-    font-size: 18px;
-    text-transform: uppercase;
-    font-weight: 300;
-    color: rgba(128, 128, 128, 0.6);
-}
-
-@media (min-width: 992px) and (max-width: 1199px) {
-    .statistic__item .desc {
-        font-size: 13px;
-    }
-}
-
-.statistic__item .icon {
-    display: inline-block;
-    position: absolute;
-    bottom: -50px;
-    right: -7px;
-}
-
-.statistic__item .icon i {
-    font-size: 180px;
-    color: #808080;
-    opacity: .2;
-    line-height: 1;
-    vertical-align: baseline;
-}
-
-.statistic__item--green {
-    background: #00b26f;
-}
-
-.statistic__item--orange {
-    background: #ff8300;
-}
-
-.statistic__item--blue {
-    background: #00b5e9;
-}
-
-.statistic__item--red {
-    background: #fa4251;
-}
-
-.statistic__item--yellow {
-    background: #f1c40f;
-}
- 
- /* ----- Statistic 2 ----- */
-.statistic2 {
-    padding-top: 50px;
-}
-
-.statistic2 .statistic__item {
+.statistic__item {
     border: none;
     -webkit-border-radius: 3px;
     -moz-border-radius: 3px;
@@ -159,17 +99,29 @@
     box-shadow: 0px 10px 20px 0px rgba(0, 0, 0, 0.03);
 }
 
-.statistic2 .statistic__item h2 {
-    color: #fff;
-}
-
-.global h2 {
-    color: #fff;
-    font-size: 36px;
+.statistic__item .desc {
+    font-size: 18px;
+    text-transform: uppercase;
     font-weight: 300;
+    color: rgba(128, 128, 128, 0.6);
 }
 
-.statistic2 .statistic__item .desc {
-    color: rgba(255, 255, 255, 0.6);
+.statistic_item_green {
+    background: #00b26f;
 }
- 
+
+.statistic_item_orange {
+    background: #ff8300;
+}
+
+.statistic_item_blue {
+    background: #00b5e9;
+}
+
+.statistic_item_red {
+    background: #fa4251;
+}
+
+.statistic_item_yellow {
+    background: #f1c40f;
+}
