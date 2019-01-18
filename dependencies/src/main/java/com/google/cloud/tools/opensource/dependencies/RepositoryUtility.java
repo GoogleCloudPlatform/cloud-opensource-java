@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -216,7 +218,7 @@ public final class RepositoryUtility {
    * Sets {@link #mavenRepositories} to search for dependencies.
    *
    * @param addMavenCentral if true, add Maven Central to the end of the repository list
-   * @throws IllegalArgumentException if a URL is malformed or not having an allowed schema
+   * @throws IllegalArgumentException if a URL is malformed or not having an allowed scheme
    */
   public static void setRepositories(
       Iterable<String> mavenRepositoryUrls, boolean addMavenCentral) {
@@ -231,13 +233,13 @@ public final class RepositoryUtility {
 
       RemoteRepository repository =
           new RemoteRepository.Builder(null, "default", mavenRepositoryUrl).build();
-      if (!ALLOWED_REPOSITORY_URL_SCHEMES.contains(repository.getProtocol())) {
-        throw new IllegalArgumentException(
-            "Schema: '"
-                + repository.getProtocol()
-                + "' is not in "
-                + ALLOWED_REPOSITORY_URL_SCHEMES);
-      }
+
+      checkArgument(
+          ALLOWED_REPOSITORY_URL_SCHEMES.contains(repository.getProtocol()),
+          "Scheme: '%s' is not in %s",
+          repository.getProtocol(),
+          ALLOWED_REPOSITORY_URL_SCHEMES);
+
       repositoryListBuilder.add(repository);
     }
 

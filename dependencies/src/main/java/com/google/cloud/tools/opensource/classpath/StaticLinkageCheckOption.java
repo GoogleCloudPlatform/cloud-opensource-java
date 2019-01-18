@@ -56,7 +56,7 @@ public class StaticLinkageCheckOption {
 
   private static final HelpFormatter helpFormatter = new HelpFormatter();
 
-  static CommandLine readCommandLine(String[] arguments) throws ParseException {
+  static CommandLine readCommandLine(String... arguments) throws ParseException {
     // TODO is this reentrant? Can we reuse it?
     // https://issues.apache.org/jira/browse/CLI-291
     CommandLineParser parser = new DefaultParser();
@@ -110,11 +110,14 @@ public class StaticLinkageCheckOption {
         .build();
     options.addOption(repositoryOption);
 
-    Option noMavenCentralOption = Option.builder("nm").longOpt("no-maven-central")
-        .hasArg(false)
-        .desc("Used with '-m'. Not to add Maven Central to the repository list. "
-            + "Useful when the tool is used where Maven central is inaccessible")
-        .build();
+    Option noMavenCentralOption =
+        Option.builder("nm")
+            .longOpt("no-maven-central")
+            .hasArg(false)
+            .desc(
+                "Do not search Maven Central in addition to the repositories specified by -m. "
+                    + "Useful when Maven Central is inaccessible.")
+            .build();
     options.addOption(noMavenCentralOption);
 
     return options;

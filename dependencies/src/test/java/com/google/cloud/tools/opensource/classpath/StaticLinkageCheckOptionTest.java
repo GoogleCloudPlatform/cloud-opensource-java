@@ -101,7 +101,7 @@ public class StaticLinkageCheckOptionTest {
       throws ParseException, RepositoryException {
     CommandLine commandLine =
         StaticLinkageCheckOption.readCommandLine(
-            new String[] {"-m", "https://repo.spring.io/milestone"});
+            "-m", "https://repo.spring.io/milestone");
     StaticLinkageCheckOption.setRepositories(commandLine);
 
     // This artifact does not exist in Maven central, but it is in Spring's repository
@@ -117,7 +117,7 @@ public class StaticLinkageCheckOptionTest {
       throws ParseException {
     CommandLine commandLine =
         StaticLinkageCheckOption.readCommandLine(
-            new String[] {"-m", "https://repo.spring.io/milestone", "--no-maven-central"});
+            "-m", "https://repo.spring.io/milestone", "--no-maven-central");
     StaticLinkageCheckOption.setRepositories(commandLine);
 
     CollectRequest collectRequest = new CollectRequest();
@@ -140,7 +140,7 @@ public class StaticLinkageCheckOptionTest {
   private static void assertMavenRepositoryIsInvalid(String repositoryUrl)
       throws ParseException {
     CommandLine commandLine =
-        StaticLinkageCheckOption.readCommandLine(new String[]{"-m", repositoryUrl});
+        StaticLinkageCheckOption.readCommandLine("-m", repositoryUrl);
     try {
       StaticLinkageCheckOption.setRepositories(commandLine);
       Assert.fail("URL " + repositoryUrl + " should be invalidated");
@@ -152,7 +152,7 @@ public class StaticLinkageCheckOptionTest {
   @Test
   public void testConfigureAdditionalMavenRepositories_fileRepositoryUrl() throws ParseException {
     CommandLine commandLine =
-        StaticLinkageCheckOption.readCommandLine(new String[] {"-m", "file:///var/tmp"});
+        StaticLinkageCheckOption.readCommandLine("-m", "file:///var/tmp");
 
     // This method should not raise an exception
     StaticLinkageCheckOption.setRepositories(commandLine);
@@ -162,7 +162,7 @@ public class StaticLinkageCheckOptionTest {
   public void testReadCommandLine_multipleRepositoriesSeparatedByComma() throws ParseException {
     CommandLine commandLine =
         StaticLinkageCheckOption.readCommandLine(
-            new String[]{"-m", "file:///var/tmp,https://repo.spring.io/milestone"});
+            "-m", "file:///var/tmp,https://repo.spring.io/milestone");
     Truth.assertThat(commandLine.getOptionValues("m")).hasLength(2);
   }
 }

@@ -648,7 +648,7 @@ public class StaticLinkageCheckerTest {
     String bomCoordinates = "com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT";
 
     CommandLine parsedOption =
-        StaticLinkageCheckOption.readCommandLine(new String[] {"-b", bomCoordinates});
+        StaticLinkageCheckOption.readCommandLine("-b", bomCoordinates);
     ImmutableList<Path> inputClasspath =
         StaticLinkageCheckOption.generateInputClasspath(parsedOption);
     Truth.assertThat(inputClasspath).isNotEmpty();
@@ -702,7 +702,7 @@ public class StaticLinkageCheckerTest {
     // the unavailable dependency is under certain condition
     CommandLine parsedOption =
         StaticLinkageCheckOption.readCommandLine(
-            new String[] {"--artifacts", "com.google.guava:guava-gwt:20.0"});
+            "--artifacts", "com.google.guava:guava-gwt:20.0");
 
     ImmutableList<Path> inputClasspath =
         StaticLinkageCheckOption.generateInputClasspath(parsedOption);
@@ -720,7 +720,7 @@ public class StaticLinkageCheckerTest {
     //     org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not found in Maven central)
     CommandLine parsedOption =
         StaticLinkageCheckOption.readCommandLine(
-            new String[] {"--artifacts", "org.apache.tomcat:tomcat-jasper:8.0.9"});
+            "--artifacts", "org.apache.tomcat:tomcat-jasper:8.0.9");
 
     try {
       StaticLinkageCheckOption.generateInputClasspath(parsedOption);
