@@ -147,7 +147,7 @@ public class DependencyGraphBuilder {
     } else {
       collectRequest.setDependencies(dependencyList);
     }
-    collectRequest.addRepository(RepositoryUtility.CENTRAL);
+    RepositoryUtility.addRepositoriesToRequest(collectRequest);
     CollectResult collectResult = system.collectDependencies(session, collectRequest);
     DependencyNode node = collectResult.getRoot();
 

@@ -16,30 +16,47 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Truth;
+import java.nio.file.Path;
+import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class StaticLinkageCheckOptionTest {
 
+  @After
+  public void cleanup() {
+    // Resets the effect of setRepositories
+    RepositoryUtility.setRepositories(ImmutableList.of(), true);
+  }
+
   @Test
   public void parseCommandLineOptions_shortOptions_bom() throws ParseException {
-    String[] arguments = {"-b", "abc.com:dummy:1.2", "-r"};
-    CommandLine parsedOption = StaticLinkageCheckOption.readCommandLine(arguments);
+    CommandLine parsedOption =
+        StaticLinkageCheckOption.readCommandLine("-b", "abc.com:dummy:1.2", "-r");
 
     Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getOptionObject('b'));
   }
 
   @Test
   public void parseCommandLineOptions_duplicates() {
-    String[] arguments = {
-        "--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2",
-        "-b", "abc.com:dummy:1.2",
-        "--report-only-reachable"
-    };
     try {
-      StaticLinkageCheckOption.readCommandLine(arguments);
+      StaticLinkageCheckOption.readCommandLine(
+          "--artifacts",
+          "abc.com:abc:1.1,abc.com:abc-util:1.2",
+          "-b",
+          "abc.com:dummy:1.2",
+          "--report-only-reachable");
       Assert.fail();
     } catch (ParseException ex) {
       Assert.assertEquals(
@@ -49,13 +66,99 @@ public class StaticLinkageCheckOptionTest {
   }
 
   @Test
+  public void testReadCommandLine_multipleArtifacts() throws ParseException {
+    CommandLine commandLine =
+        StaticLinkageCheckOption.readCommandLine(
+            "--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2", "--report-only-reachable");
+    Truth.assertThat(commandLine.getOptionValues("a")).hasLength(2);
+  }
+
+  @Test
+  public void testReadCommandLine_multipleJars() throws ParseException {
+    CommandLine commandLine =
+        StaticLinkageCheckOption.readCommandLine(
+            "-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar");
+    Truth.assertThat(commandLine.getOptionValues("j")).hasLength(3);
+  }
+
+
+  @Test
   public void parseCommandLineOptions_invalidOption() {
-    String[] arguments = {"-x"}; // No such option 
     try {
-      StaticLinkageCheckOption.readCommandLine(arguments);
+      StaticLinkageCheckOption.readCommandLine("-x"); // No such option
       Assert.fail();
     } catch (ParseException ex) {
       Assert.assertEquals("Unrecognized option: -x", ex.getMessage());
     }
+  }
+
+  @Test
+  public void testConfigureAdditionalMavenRepositories_addingSpringRepository()
+      throws ParseException, RepositoryException {
+    CommandLine commandLine =
+        StaticLinkageCheckOption.readCommandLine(
+            "-m", "https://repo.spring.io/milestone");
+    StaticLinkageCheckOption.setRepositories(commandLine);
+
+    // This artifact does not exist in Maven central, but it is in Spring's repository
+    // Spring-asm is used here because it does not have complex dependencies
+    Artifact artifact = new DefaultArtifact("org.springframework:spring-asm:3.1.0.RC2");
+
+    List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(artifact));
+    Truth.assertThat(paths).isNotEmpty();
+  }
+
+  @Test
+  public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral()
+      throws ParseException {
+    CommandLine commandLine =
+        StaticLinkageCheckOption.readCommandLine(
+            "-m", "https://repo.spring.io/milestone", "--no-maven-central");
+    StaticLinkageCheckOption.setRepositories(commandLine);
+
+    CollectRequest collectRequest = new CollectRequest();
+    RepositoryUtility.addRepositoriesToRequest(collectRequest);
+
+    List<RemoteRepository> actualRepositories = collectRequest.getRepositories();
+    Truth.assertThat(actualRepositories).hasSize(1);
+    Truth.assertThat(actualRepositories.get(0).getHost()).isEqualTo("repo.spring.io");
+  }
+
+  @Test
+  public void testConfigureAdditionalMavenRepositories_invalidRepositoryUrl()
+      throws ParseException {
+    assertMavenRepositoryIsInvalid("foobar");
+    assertMavenRepositoryIsInvalid("_http_file__https");
+    assertMavenRepositoryIsInvalid("localhost/abc");
+    assertMavenRepositoryIsInvalid("http://foo^bar");
+  }
+
+  private static void assertMavenRepositoryIsInvalid(String repositoryUrl)
+      throws ParseException {
+    CommandLine commandLine =
+        StaticLinkageCheckOption.readCommandLine("-m", repositoryUrl);
+    try {
+      StaticLinkageCheckOption.setRepositories(commandLine);
+      Assert.fail("URL " + repositoryUrl + " should be invalidated");
+    } catch (ParseException ex) {
+      // pass
+    }
+  }
+
+  @Test
+  public void testConfigureAdditionalMavenRepositories_fileRepositoryUrl() throws ParseException {
+    CommandLine commandLine =
+        StaticLinkageCheckOption.readCommandLine("-m", "file:///var/tmp");
+
+    // This method should not raise an exception
+    StaticLinkageCheckOption.setRepositories(commandLine);
+  }
+
+  @Test
+  public void testReadCommandLine_multipleRepositoriesSeparatedByComma() throws ParseException {
+    CommandLine commandLine =
+        StaticLinkageCheckOption.readCommandLine(
+            "-m", "file:///var/tmp,https://repo.spring.io/milestone");
+    Truth.assertThat(commandLine.getOptionValues("m")).hasLength(2);
   }
 }

@@ -16,7 +16,13 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,6 +36,7 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
+import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
@@ -58,6 +65,12 @@ public final class RepositoryUtility {
   
   public static final RemoteRepository CENTRAL =
       new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
+
+  private static ImmutableList<RemoteRepository> mavenRepositories = ImmutableList.of(CENTRAL);
+
+  // DefaultTransporterProvider.newTransporter checks these transporters
+  private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
+      ImmutableSet.of("file", "http", "https");
 
   private RepositoryUtility() {}
 
@@ -161,7 +174,10 @@ public final class RepositoryUtility {
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 
     ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
-    request.addRepository(RepositoryUtility.CENTRAL);
+
+    for (RemoteRepository repository : mavenRepositories) {
+      request.addRepository(repository);
+    }
     request.setArtifact(artifact);
 
     ArtifactDescriptorResult resolved = system.readArtifactDescriptor(session, request);
@@ -198,4 +214,46 @@ public final class RepositoryUtility {
     return managedDependencies;
   }
 
+  /**
+   * Sets {@link #mavenRepositories} to search for dependencies.
+   *
+   * @param addMavenCentral if true, add Maven Central to the end of the repository list
+   * @throws IllegalArgumentException if a URL is malformed or not having an allowed scheme
+   */
+  public static void setRepositories(
+      Iterable<String> mavenRepositoryUrls, boolean addMavenCentral) {
+    ImmutableList.Builder<RemoteRepository> repositoryListBuilder = ImmutableList.builder();
+    for (String mavenRepositoryUrl : mavenRepositoryUrls) {
+      try {
+        // Because the protocol is not an empty string, this URI is absolute.
+        new URI(mavenRepositoryUrl);
+      } catch (URISyntaxException ex) {
+        throw new IllegalArgumentException("Invalid URL syntax: " + mavenRepositoryUrl);
+      }
+
+      RemoteRepository repository =
+          new RemoteRepository.Builder(null, "default", mavenRepositoryUrl).build();
+
+      checkArgument(
+          ALLOWED_REPOSITORY_URL_SCHEMES.contains(repository.getProtocol()),
+          "Scheme: '%s' is not in %s",
+          repository.getProtocol(),
+          ALLOWED_REPOSITORY_URL_SCHEMES);
+
+      repositoryListBuilder.add(repository);
+    }
+
+    if (addMavenCentral) {
+      repositoryListBuilder.add(CENTRAL);
+    }
+
+    mavenRepositories = repositoryListBuilder.build();
+  }
+
+  /** Adds {@link #mavenRepositories} to {@code collectRequest}. */
+  public static void addRepositoriesToRequest(CollectRequest collectRequest) {
+    for (RemoteRepository repository : mavenRepositories) {
+      collectRequest.addRepository(repository);
+    }
+  }
 }
