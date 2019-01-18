@@ -17,7 +17,6 @@
       </div>
     </section>
     
-    
     <h2>Artifact Details</h2>
     
     <#macro testResult row name>

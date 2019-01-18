@@ -180,6 +180,13 @@ public class DashboardTest {
       
       Nodes stable = document.query("//p[@id='stable_notice']");
       Assert.assertEquals(0, stable.size());
+      
+      Nodes artifactCount = document.query("//h2[@class='artifactcount']");
+      Assert.assertTrue(artifactCount.size() > 0);
+      for (int i = 0; i < artifactCount.size(); i++) {
+        String value = artifactCount.get(i).getValue();
+        Assert.assertTrue(value, Integer.parseInt(value) > 0);
+      }            
     }
   }
 
