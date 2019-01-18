@@ -10,8 +10,8 @@
     
     <section class="statistics">
       <div class="container">
-        <div class="statistic_item statistic_item_green">
-          <h2 class="artifactcount">${table?size}</h2>
+        <div class="statistic-item statistic-item-green">
+          <h2 class="artifact-count">${table?size}</h2>
           <span class="desc">Total Artifacts Checked</span>
         </div>
       </div>
@@ -22,18 +22,18 @@
     <#macro testResult row name>
       <#if row.getResult(name)?? ><#-- checking isNotNull() -->
         <#-- When it's not null, the test ran. It's either PASS or FAIL -->
-        <#assign test_label = row.getResult(name)?then('PASS', 'FAIL')>
-        <#assign failure_count = row.getFailureCount(name)>
+        <#assign test-label = row.getResult(name)?then('PASS', 'FAIL')>
+        <#assign failure-count = row.getFailureCount(name)>
       <#else>
         <#-- Null means there's an exception and test couldn't run -->
-        <#assign test_label = "UNAVAILABLE">
+        <#assign test-label = "UNAVAILABLE">
       </#if>
-      <td class='${test_label}' title="${row.getExceptionMessage()!""}">
+      <td class='${test-label}' title="${row.getExceptionMessage()!""}">
         <#if row.getResult(name)?? >
-          <#assign page_anchor =  name?replace(" ", "-")?lower_case />
-          <a href="${row.getCoordinates()?replace(":", "_")}.html#${page_anchor}">
-            <#if failure_count == 1>1 FAILURE
-            <#elseif failure_count gt 1>${failure_count} FAILURES
+          <#assign page-anchor =  name?replace(" ", "-")?lower-case />
+          <a href="${row.getCoordinates()?replace(":", "-")}.html#${page-anchor}">
+            <#if failure-count == 1>1 FAILURE
+            <#elseif failure-count gt 1>${failure-count} FAILURES
             <#else>PASS
             </#if>
           </a>
@@ -59,10 +59,10 @@
           Dependency Convergence</th>
       </tr>
       <#list table as row>
-        <#assign report_url = row.getCoordinates()?replace(":", "_") + '.html' />
+        <#assign report-url = row.getCoordinates()?replace(":", "-") + '.html' />
         <tr>
-          <td class="artifact-name"><a href='${report_url}'>${row.getCoordinates()}</a></td>
-          <#-- The name key should match TEST_NAME_XXXX variables -->
+          <td class="artifact-name"><a href='${report-url}'>${row.getCoordinates()}</a></td>
+          <#-- The name key should match TEST-NAME-XXXX variables -->
           <@testResult row=row name="Static Linkage Errors"/>
           <@testResult row=row name="Upper Bounds"/>
           <@testResult row=row name="Global Upper Bounds"/>
@@ -77,7 +77,7 @@
 
     <#list jarLinkageReports as jarLinkageReport>
       <#if jarLinkageReport.getTotalErrorCount() gt 0>
-        <pre id="static_linkage_errors">${jarLinkageReport?html}</pre>
+        <pre id="static-linkage-errors">${jarLinkageReport?html}</pre>
 
         <p class="static-linkage-check-dependency-paths">
           Following paths to the jar file from BOM are found in the dependency tree.
@@ -125,7 +125,7 @@
     </ul>
      
     <#if unstableCount == 0>
-      <p id="stable_notice">All versions are 1.0 or later.</p> 
+      <p id="stable-notice">All versions are 1.0 or later.</p> 
     </#if>
     
      

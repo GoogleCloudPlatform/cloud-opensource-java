@@ -178,10 +178,10 @@ public class DashboardTest {
       Nodes updated = document.query("//p[@id='updated']");
       Assert.assertEquals("didn't find updated" + document.toXML(), 1, updated.size());
       
-      Nodes stable = document.query("//p[@id='stable_notice']");
+      Nodes stable = document.query("//p[@id='stable-notice']");
       Assert.assertEquals(0, stable.size());
       
-      Nodes artifactCount = document.query("//h2[@class='artifactcount']");
+      Nodes artifactCount = document.query("//h2[@class='artifact-count']");
       Assert.assertTrue(artifactCount.size() > 0);
       for (int i = 0; i < artifactCount.size(); i++) {
         String value = artifactCount.get(i).getValue();
