@@ -125,7 +125,7 @@ public class StaticLinkageCheckOptionTest {
 
     List<RemoteRepository> actualRepositories = collectRequest.getRepositories();
     Truth.assertThat(actualRepositories).hasSize(1);
-    Truth.assertThat(actualRepositories).isEqualTo("repo.spring.io");
+    Truth.assertThat(actualRepositories.get(0).getHost()).isEqualTo("repo.spring.io");
   }
 
   @Test
