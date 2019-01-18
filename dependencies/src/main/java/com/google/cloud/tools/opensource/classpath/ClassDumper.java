@@ -63,6 +63,8 @@ import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.ObjectType;
 import org.apache.bcel.generic.Type;
 import org.apache.bcel.util.ClassPath;
+import org.apache.bcel.util.ClassPathRepository;
+import org.apache.bcel.util.Repository;
 import org.apache.bcel.util.SyntheticRepository;
 
 /**
@@ -72,7 +74,7 @@ import org.apache.bcel.util.SyntheticRepository;
 class ClassDumper {
 
   private final ImmutableList<Path> inputClassPath;
-  private final SyntheticRepository syntheticRepository;
+  private final Repository classRepository;
   private final ClassLoader extensionClassLoader;
   private final ImmutableSetMultimap<Path, String> jarFileToClasses;
   private final ImmutableMap<String, Path> classToFirstJarFile;
@@ -81,9 +83,9 @@ class ClassDumper {
     return inputClassPath;
   }
 
-  private static SyntheticRepository createSyntheticRepository(List<Path> paths) {
+  private static Repository createClassRepository(List<Path> paths) {
     ClassPath classPath = new LinkageCheckClassPath(paths);
-    return SyntheticRepository.getInstance(classPath);
+    return new ClassPathRepository(classPath);
   }
 
   static ClassDumper create(List<Path> jarPaths) throws IOException {
@@ -92,7 +94,7 @@ class ClassDumper {
 
     return new ClassDumper(
         jarPaths,
-        createSyntheticRepository(jarPaths),
+        createClassRepository(jarPaths),
         extensionClassLoader,
         mapJarToClasses(jarPaths),
         mapClassToJar(jarPaths));
@@ -100,12 +102,12 @@ class ClassDumper {
 
   private ClassDumper(
       List<Path> inputClassPath,
-      SyntheticRepository syntheticRepository,
+      Repository classRepository,
       ClassLoader extensionClassLoader,
       SetMultimap<Path, String> jarToClasses,
       ImmutableMap<String, Path> classToFirstJar) {
     this.inputClassPath = ImmutableList.copyOf(inputClassPath);
-    this.syntheticRepository = syntheticRepository;
+    this.classRepository = classRepository;
     this.extensionClassLoader = extensionClassLoader;
     this.jarFileToClasses = ImmutableSetMultimap.copyOf(jarToClasses);
     this.classToFirstJarFile = classToFirstJar;
@@ -118,7 +120,7 @@ class ClassDumper {
    *     API</a>
    */
   JavaClass loadJavaClass(String className) throws ClassNotFoundException {
-    return syntheticRepository.loadClass(className);
+    return classRepository.loadClass(className);
   }
 
   /** Loads a system class available in JVM runtime. */
@@ -403,7 +405,7 @@ class ClassDumper {
   }
 
   private static ImmutableSet<JavaClass> listClassesInJar(Path jarPath) throws IOException {
-    SyntheticRepository repository = createSyntheticRepository(ImmutableList.of(jarPath));
+    Repository repository = createClassRepository(ImmutableList.of(jarPath));
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     URL jarUrl = jarPath.toUri().toURL();
     for (ClassInfo classInfo : listClassInfo(jarUrl)) {
