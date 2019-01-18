@@ -22,18 +22,18 @@
     <#macro testResult row name>
       <#if row.getResult(name)?? ><#-- checking isNotNull() -->
         <#-- When it's not null, the test ran. It's either PASS or FAIL -->
-        <#assign test-label = row.getResult(name)?then('PASS', 'FAIL')>
-        <#assign failure-count = row.getFailureCount(name)>
+        <#assign test_label = row.getResult(name)?then('PASS', 'FAIL')>
+        <#assign failure_count = row.getFailureCount(name)>
       <#else>
         <#-- Null means there's an exception and test couldn't run -->
-        <#assign test-label = "UNAVAILABLE">
+        <#assign test_label = "UNAVAILABLE">
       </#if>
-      <td class='${test-label}' title="${row.getExceptionMessage()!""}">
+      <td class='${test_label}' title="${row.getExceptionMessage()!""}">
         <#if row.getResult(name)?? >
-          <#assign page-anchor =  name?replace(" ", "-")?lower-case />
+          <#assign page_anchor =  name?replace(" ", "-")?lower-case />
           <a href="${row.getCoordinates()?replace(":", "-")}.html#${page-anchor}">
-            <#if failure-count == 1>1 FAILURE
-            <#elseif failure-count gt 1>${failure-count} FAILURES
+            <#if failure_count == 1>1 FAILURE
+            <#elseif failure_count gt 1>${failure_count} FAILURES
             <#else>PASS
             </#if>
           </a>
@@ -59,9 +59,9 @@
           Dependency Convergence</th>
       </tr>
       <#list table as row>
-        <#assign report-url = row.getCoordinates()?replace(":", "-") + '.html' />
+        <#assign report_url = row.getCoordinates()?replace(":", "-") + '.html' />
         <tr>
-          <td class="artifact-name"><a href='${report-url}'>${row.getCoordinates()}</a></td>
+          <td class="artifact-name"><a href='${report_url}'>${row.getCoordinates()}</a></td>
           <#-- The name key should match TEST-NAME-XXXX variables -->
           <@testResult row=row name="Static Linkage Errors"/>
           <@testResult row=row name="Upper Bounds"/>

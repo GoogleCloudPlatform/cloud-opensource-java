@@ -65,12 +65,17 @@ public class DashboardTest {
       outputDirectory = DashboardMain.generate();
     } catch (Throwable t) {
       t.printStackTrace();
+      Assert.fail("Could not generate dashboard");
     }
   }
 
   @AfterClass
-  public static void cleanUp() throws IOException {
-    MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
+  public static void cleanUp() {
+    try {
+      MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
+    } catch (IOException ex) {
+      // no big deal
+    }
   }
 
   @Test
