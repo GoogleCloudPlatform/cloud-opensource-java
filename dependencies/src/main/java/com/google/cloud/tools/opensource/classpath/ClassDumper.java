@@ -65,7 +65,6 @@ import org.apache.bcel.generic.Type;
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.ClassPathRepository;
 import org.apache.bcel.util.Repository;
-import org.apache.bcel.util.SyntheticRepository;
 
 /**
  * Class to read symbol references in Java class files and to verify the availability of references
