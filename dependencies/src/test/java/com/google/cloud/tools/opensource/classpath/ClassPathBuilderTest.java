@@ -173,4 +173,13 @@ public class ClassPathBuilderTest {
         .that(jarLinkageReport.getMissingMethodErrors())
         .isEmpty();
   }
+
+  @Test
+  public void testArtifactsToClasspath_reportAllErrors() throws RepositoryException {
+
+    Artifact grpcSpringBootStarterArtifact =
+        new DefaultArtifact("io.github.lognet:grpc-spring-boot-starter:3.0.0");
+    List<Path> paths =
+        ClassPathBuilder.artifactsToClasspath(ImmutableList.of(grpcSpringBootStarterArtifact));
+  }
 }

@@ -17,9 +17,12 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,6 +42,7 @@ import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 
@@ -283,6 +287,8 @@ public class DependencyGraphBuilder {
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
+    List<DependencyResolutionException> resolutionExceptions = Lists.newArrayList();
+
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
       DependencyNode dependencyNode = item.dependencyNode;
@@ -310,7 +316,7 @@ public class DependencyGraphBuilder {
                 graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
             dependencyNode =
                 resolveCompileTimeDependencies(dependencyNode.getArtifact(), includeProvidedScope);
-          } catch (DependencyResolutionException ex) {
+          } catch (DependencyResolutionException resolutionException) {
             // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0
             // has a transitive dependency to org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not
             // found in Maven central)
@@ -320,18 +326,14 @@ public class DependencyGraphBuilder {
                     + " under "
                     + parentNodes // This shows "(compile?)" if optional:true
                     + " Exception: "
-                    + ex.getMessage());
-            boolean hasOptionalParent =
-                parentNodes.stream().anyMatch(node -> node.getDependency().isOptional());
-            boolean hasProvidedParent =
-                parentNodes
-                    .stream()
-                    .anyMatch(node -> "provided".equals(node.getDependency().getScope()));
-            if (hasOptionalParent && hasProvidedParent) {
+                    + resolutionException.getMessage());
+            if (hasOptionalAndProvidedDependency(parentNodes)
+                || isCausedByOptionalAndProvidedDependency(resolutionException)) {
               logger.warning(
                   "Skipping this dependency as it has both optional:true and scope:provided");
             } else {
-              throw ex;
+              // These exceptions are logged and thrown at the end
+              resolutionExceptions.add(resolutionException);
             }
           }
         }
@@ -342,5 +344,55 @@ public class DependencyGraphBuilder {
         queue.add(new LevelOrderQueueItem(child, clone));
       }
     }
+
+    if (!resolutionExceptions.isEmpty()) {
+      ImmutableSet<String> missingDependencies =
+          resolutionExceptions.stream()
+              .map(DependencyResolutionException::getMessage)
+              .collect(toImmutableSet());
+      logger.severe(
+          missingDependencies.size()
+              + " unique exceptions are encountered in resolving dependencies");
+      for (String exceptionMessage : missingDependencies) {
+        logger.severe("Exception: " + exceptionMessage);
+      }
+      throw resolutionExceptions.get(0);
+    }
+  }
+
+  /**
+   * Returns true if {@code parentNodes} contains {@code optional} and {@code scope:provided}
+   * dependency.
+   */
+  private static boolean hasOptionalAndProvidedDependency(Stack<DependencyNode> dependencyNodes) {
+    boolean hasOptionalParent =
+        dependencyNodes.stream().anyMatch(node -> node.getDependency().isOptional());
+    boolean hasProvidedParent =
+        dependencyNodes.stream()
+            .anyMatch(node -> "provided".equals(node.getDependency().getScope()));
+    return hasOptionalParent && hasProvidedParent;
+  }
+
+  /**
+   * Returns true if the {@code resolutionException} is caused by a dependency of {@code optional}
+   * and {@code scope:provided}.
+   */
+  private static boolean isCausedByOptionalAndProvidedDependency(
+      DependencyResolutionException resolutionException) {
+    for (ArtifactResult artifactResult : resolutionException.getResult().getArtifactResults()) {
+      if (artifactResult.getExceptions().isEmpty()) {
+        continue;
+      }
+      DependencyNode dependencyNode = artifactResult.getRequest().getDependencyNode();
+      Dependency dependency = dependencyNode.getDependency();
+      if (dependency.isOptional() && "provided".equals(dependency.getScope())) {
+        continue;
+      }
+
+      // The failed dependency cannot be ignored
+      return false;
+    }
+
+    return true;
   }
 }
