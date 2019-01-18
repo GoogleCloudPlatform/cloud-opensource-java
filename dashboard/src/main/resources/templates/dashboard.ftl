@@ -30,8 +30,8 @@
       </#if>
       <td class='${test_label}' title="${row.getExceptionMessage()!""}">
         <#if row.getResult(name)?? >
-          <#assign page_anchor =  name?replace(" ", "-")?lower-case />
-          <a href="${row.getCoordinates()?replace(":", "-")}.html#${page-anchor}">
+          <#assign page_anchor =  name?replace(" ", "-")?lower_case />
+          <a href="${row.getCoordinates()?replace(":", "_")}.html#${page_anchor}">
             <#if failure_count == 1>1 FAILURE
             <#elseif failure_count gt 1>${failure_count} FAILURES
             <#else>PASS
@@ -59,10 +59,10 @@
           Dependency Convergence</th>
       </tr>
       <#list table as row>
-        <#assign report_url = row.getCoordinates()?replace(":", "-") + '.html' />
+        <#assign report_url = row.getCoordinates()?replace(":", "_") + '.html' />
         <tr>
           <td class="artifact-name"><a href='${report_url}'>${row.getCoordinates()}</a></td>
-          <#-- The name key should match TEST-NAME-XXXX variables -->
+          <#-- The name key should match TEST_NAME_XXXX variables -->
           <@testResult row=row name="Static Linkage Errors"/>
           <@testResult row=row name="Upper Bounds"/>
           <@testResult row=row name="Global Upper Bounds"/>
