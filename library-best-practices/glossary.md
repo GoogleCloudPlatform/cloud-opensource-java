@@ -12,8 +12,8 @@ Java Dependency Glossary
   Other class files with the same name are unavailable.
   
   If a class loader fails to find any instance of a class, it will ask its parent class loader
-  to find the class. While in a running VM there generally are multiple class loaders,
-  each with its own class path, for our purposes we can treat this as 
+  to find the class. In a running VM there are usually multiple class loaders,
+  each with its own class path, but for our purposes we can treat this as 
   a single class path formed by appending parent class paths to child class paths.
 
 ### Types of conflicts and compatibility
