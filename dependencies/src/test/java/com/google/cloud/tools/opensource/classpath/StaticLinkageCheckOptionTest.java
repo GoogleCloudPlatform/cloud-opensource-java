@@ -35,7 +35,7 @@ public class StaticLinkageCheckOptionTest {
   @After
   public void cleanup() {
     // Resets the effect of configureMavenRepositories
-    RepositoryUtility.mavenRepositories = ImmutableList.of(RepositoryUtility.CENTRAL);
+    RepositoryUtility.configureMavenRepositories(ImmutableList.of(), true);
   }
 
   @Test
@@ -62,6 +62,26 @@ public class StaticLinkageCheckOptionTest {
           ex.getMessage());
     }
   }
+
+  @Test
+  public void testReadCommandLine_multipleArtifacts() throws ParseException {
+    String[] arguments = {
+        "--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2",
+        "--report-only-reachable"
+    };
+    CommandLine commandLine = StaticLinkageCheckOption.readCommandLine(arguments);
+    Truth.assertThat(commandLine.getOptionValues("a")).hasLength(2);
+  }
+
+  @Test
+  public void testReadCommandLine_multipleJars() throws ParseException {
+    String[] arguments = {
+        "-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar",
+    };
+    CommandLine commandLine = StaticLinkageCheckOption.readCommandLine(arguments);
+    Truth.assertThat(commandLine.getOptionValues("j")).hasLength(3);
+  }
+
 
   @Test
   public void parseCommandLineOptions_invalidOption() {
@@ -91,21 +111,41 @@ public class StaticLinkageCheckOptionTest {
   }
 
   @Test
+  public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral()
+      throws ParseException {
+    CommandLine commandLine =
+        StaticLinkageCheckOption.readCommandLine(
+            new String[] {"-m", "https://repo.spring.io/milestone", "--no-maven-central"});
+    StaticLinkageCheckOption.configureMavenRepositories(commandLine);
+
+    Artifact artifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
+
+    try {
+      ClassPathBuilder.artifactsToClasspath(ImmutableList.of(artifact));
+      Assert.fail("gRPC artifact should not have been resolved without Maven Central");
+    } catch (RepositoryException ex) {
+      // pass
+    }
+  }
+
+  @Test
   public void testConfigureAdditionalMavenRepositories_invalidRepositoryUrl()
       throws ParseException {
+    assertMavenRepositoryIsInvalid("foobar");
+    assertMavenRepositoryIsInvalid("_http_file__https");
+    assertMavenRepositoryIsInvalid("localhost/abc");
+    assertMavenRepositoryIsInvalid("http://foo^bar");
+  }
 
-    List<String> invalidUrls =
-        ImmutableList.of("foobar", "_http_file__https", "localhost/abc", "http://foo^bar");
-
-    for (String invalidUrl : invalidUrls) {
-      CommandLine commandLine =
-          StaticLinkageCheckOption.readCommandLine(new String[] {"-m", invalidUrl});
-      try {
-        StaticLinkageCheckOption.configureMavenRepositories(commandLine);
-        Assert.fail("URL " + invalidUrl + " should be invalidated");
-      } catch (ParseException ex) {
-        // pass
-      }
+  private static void assertMavenRepositoryIsInvalid(String repositoryUrl)
+      throws ParseException {
+    CommandLine commandLine =
+        StaticLinkageCheckOption.readCommandLine(new String[]{"-m", repositoryUrl});
+    try {
+      StaticLinkageCheckOption.configureMavenRepositories(commandLine);
+      Assert.fail("URL " + repositoryUrl + " should be invalidated");
+    } catch (ParseException ex) {
+      // pass
     }
   }
 
@@ -116,5 +156,13 @@ public class StaticLinkageCheckOptionTest {
 
     // This method should not raise an exception
     StaticLinkageCheckOption.configureMavenRepositories(commandLine);
+  }
+
+  @Test
+  public void testReadCommandLine_multipleRepositoriesSeparatedByComma() throws ParseException {
+    CommandLine commandLine =
+        StaticLinkageCheckOption.readCommandLine(
+            new String[]{"-m", "file:///var/tmp,https://repo.spring.io/milestone"});
+    Truth.assertThat(commandLine.getOptionValues("m")).hasLength(2);
   }
 }

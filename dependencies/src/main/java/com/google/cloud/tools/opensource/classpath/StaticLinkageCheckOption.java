@@ -19,27 +19,23 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Streams;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
+import com.google.common.collect.Lists;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.repository.RemoteRepository;
 
 /**
  * Option for {@link StaticLinkageChecker}. To construct an input class path, the checker requires
@@ -56,10 +52,6 @@ import org.eclipse.aether.repository.RemoteRepository;
  *     Linkage Checker: Input</a>
  */
 public class StaticLinkageCheckOption {
-
-  // DefaultTransporterProvider.newTransporter checks the transporters for repository URLs
-  private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_PROTOCOL =
-      ImmutableSet.of("file", "http", "https");
 
   private static final Options options = configureOptions();
 
@@ -89,26 +81,43 @@ public class StaticLinkageCheckOption {
 
   private static Options configureOptions() {
     Options options = new Options();
+
     options.addOption(
         "b", "bom", true, "BOM to generate a class path, specified by its Maven coordinates");
-    options.addOption(
-        "a",
-        "artifacts",
-        true,
-        "Maven coordinates for Maven artifacts (separated by ',') to generate a class path");
-    options.addOption("j", "jars", true, "Jar files (separated by ',') to generate a class path");
+
+    Option artifactOption = Option.builder("a").longOpt("artifacts").hasArgs()
+        .valueSeparator(',')
+        .desc("Maven coordinates for Maven artifacts (separated by ',') to generate a class path")
+        .build();
+    options.addOption(artifactOption);
+
+    Option jarOption = Option.builder("j").longOpt("jars").hasArgs()
+        .valueSeparator(',')
+        .desc("Jar files (separated by ',') to generate a class path")
+        .build();
+    options.addOption(jarOption);
+
     options.addOption(
         "r",
         "report-only-reachable",
         false,
         "To report only linkage errors reachable from entry point");
-    options.addOption(
-        "m",
-        "maven-repository",
-        true,
-        "Maven repository URL to search for dependencies. "
-            + "If this option is used one or more times, the repositories are added "
-            + "in order before the default Maven Central (http://repo1.maven.org/maven2/).");
+
+    Option repositoryOption = Option.builder("m").longOpt("maven-repositories").hasArgs()
+        .valueSeparator(',')
+        .desc("Maven repository URLs to search for dependencies. "
+            + "The repositories are added to a repository list in order before "
+            + "the default Maven Central (http://repo1.maven.org/maven2/).")
+        .build();
+    options.addOption(repositoryOption);
+
+    Option noMavenCentralOption = Option.builder("nm").longOpt("no-maven-central")
+        .hasArg(false)
+        .desc("Used with '-m'. Not to add Maven Central to the repository list. "
+            + "Useful when the tool is used where Maven central is inaccessible")
+        .build();
+    options.addOption(noMavenCentralOption);
+
     return options;
   }
 
@@ -116,26 +125,22 @@ public class StaticLinkageCheckOption {
       throws RepositoryException, ParseException {
     configureMavenRepositories(commandLine);
 
-    Splitter commaSplitter = Splitter.on(",");
-
     if (commandLine.hasOption("b")) {
       String bomCoordinates = commandLine.getOptionValue("b");
       DefaultArtifact bomArtifact = new DefaultArtifact(bomCoordinates);
       List<Artifact> artifactsInBom = RepositoryUtility.readBom(bomArtifact);
       return ClassPathBuilder.artifactsToClasspath(artifactsInBom);
     } else if (commandLine.hasOption("a")) {
-      String mavenCoordinatesOption = commandLine.getOptionValue("a");
+      String[] mavenCoordinatesOption = commandLine.getOptionValues("a");
       ImmutableList<Artifact> artifacts =
-          commaSplitter
-              .splitToList(mavenCoordinatesOption)
-              .stream()
+          Arrays.stream(mavenCoordinatesOption)
               .map(DefaultArtifact::new)
               .collect(toImmutableList());
       return ClassPathBuilder.artifactsToClasspath(artifacts);
     } else if (commandLine.hasOption("j")) {
-      String jarFiles = commandLine.getOptionValue("j");
+      String[] jarFiles = commandLine.getOptionValues("j");
       ImmutableList<Path> jarFilesInArguments =
-          Streams.stream(commaSplitter.split(jarFiles))
+          Arrays.stream(jarFiles)
               .map(name -> Paths.get(name).toAbsolutePath())
               .collect(toImmutableList());
       return jarFilesInArguments;
@@ -149,26 +154,13 @@ public class StaticLinkageCheckOption {
     if (!commandLine.hasOption("m")) {
       return;
     }
-
-    ImmutableList.Builder<RemoteRepository> repositoryListBulder = ImmutableList.builder();
-    for (String mavenRepositoryUrl : commandLine.getOptionValues("m")) {
-      RemoteRepository repository =
-          new RemoteRepository.Builder(mavenRepositoryUrl, "default", mavenRepositoryUrl).build();
-      if (!ALLOWED_REPOSITORY_URL_PROTOCOL.contains(repository.getProtocol())) {
-        helpFormatter.printHelp("StaticLinkageChecker", options);
-        throw new ParseException(
-            "Invalid URL specified for maven repository: " + mavenRepositoryUrl);
-      }
-      try {
-        // Because the protocol is not an empty string, this URI is absolute.
-        new URI(mavenRepositoryUrl);
-      } catch (URISyntaxException ex) {
-        throw new ParseException("Invalid URL syntax for repository: " + mavenRepositoryUrl);
-      }
-
-      repositoryListBulder.add(repository);
+    try {
+      boolean addMavenCentral = !commandLine.hasOption("nm");
+      RepositoryUtility.configureMavenRepositories(Arrays.asList(commandLine.getOptionValues("m")),
+          addMavenCentral);
+    } catch (IllegalArgumentException ex) {
+      throw new ParseException("Invalid URL specified for Maven repositories: "
+          + ex.getMessage());
     }
-    repositoryListBulder.add(RepositoryUtility.CENTRAL);
-    RepositoryUtility.mavenRepositories = repositoryListBulder.build();
   }
 }

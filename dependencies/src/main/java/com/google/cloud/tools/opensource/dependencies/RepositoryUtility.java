@@ -17,7 +17,10 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import org.apache.commons.cli.ParseException;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -61,7 +65,11 @@ public final class RepositoryUtility {
   public static final RemoteRepository CENTRAL =
       new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
 
-  public static ImmutableList<RemoteRepository> mavenRepositories = ImmutableList.of(CENTRAL);
+  private static ImmutableList<RemoteRepository> mavenRepositories = ImmutableList.of(CENTRAL);
+
+  // DefaultTransporterProvider.newTransporter checks these transporters
+  private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
+      ImmutableSet.of("file", "http", "https");
 
   private RepositoryUtility() {}
 
@@ -203,6 +211,39 @@ public final class RepositoryUtility {
       }
     }
     return managedDependencies;
+  }
+
+  /**
+   * Configures Maven repositories to search for dependencies.
+   *
+   * @param addMavenCentral if true, add Maven Central to the end of the repository list
+   */
+  public static void configureMavenRepositories(Iterable<String> mavenRepositoryUrls,
+      boolean addMavenCentral) {
+    ImmutableList.Builder<RemoteRepository> repositoryListBuilder = ImmutableList.builder();
+    for (String mavenRepositoryUrl : mavenRepositoryUrls) {
+      RemoteRepository repository =
+          new RemoteRepository.Builder(null, "default", mavenRepositoryUrl).build();
+      if (!ALLOWED_REPOSITORY_URL_SCHEMES.contains(repository.getProtocol())) {
+        throw new IllegalArgumentException(
+            "Protocol: " + repository.getProtocol() + " is not in "
+                + ALLOWED_REPOSITORY_URL_SCHEMES);
+      }
+      try {
+        // Because the protocol is not an empty string, this URI is absolute.
+        new URI(mavenRepositoryUrl);
+      } catch (URISyntaxException ex) {
+        throw new IllegalArgumentException(
+            "Invalid URL syntax: " + mavenRepositoryUrl);
+      }
+      repositoryListBuilder.add(repository);
+    }
+
+    if (addMavenCentral) {
+      repositoryListBuilder.add(CENTRAL);
+    }
+
+    mavenRepositories = repositoryListBuilder.build();
   }
 
   static void addRepositoriesToRequest(CollectRequest collectRequest) {
