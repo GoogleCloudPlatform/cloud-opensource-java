@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -52,7 +53,9 @@ public class DependencyGraphBuilder {
   
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
-  private static final Pattern NON_ALPHA_NUMERIC_PATTERN = Pattern.compile("[^a-z0-9]+");
+  private static final Pattern NON_ALPHA_NUMERIC = Pattern.compile("[^a-z0-9]+");
+  private static final CharMatcher ALPHA_NUMERIC = CharMatcher.inRange('a', 'z')
+      .or(CharMatcher.inRange('0', '9'));
 
   static {
     setDetectedOsSystemProperties();
@@ -66,18 +69,17 @@ public class DependencyGraphBuilder {
     // System properties to select Netty dependencies through os-maven-plugin
     // Definition of the properties: https://github.com/trustin/os-maven-plugin
 
-    System.setProperty("os.detected.name", osDetectedName());
-
-    System.setProperty("os.detected.arch", osDetectedArch());
-
-    System.setProperty("os.detected.classifier", osDetectedName() + "-" + osDetectedArch());
+    String osDetectedName = osDetectedName();
+    System.setProperty("os.detected.name", osDetectedName);
+    String osDetectedArch = osDetectedArch();
+    System.setProperty("os.detected.arch", osDetectedArch);
+    System.setProperty("os.detected.classifier", osDetectedName + "-" + osDetectedArch);
   }
 
   private static String osDetectedName() {
     String osNameNormalized =
-        NON_ALPHA_NUMERIC_PATTERN
-            .matcher(System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH))
-            .replaceAll("");
+        ALPHA_NUMERIC
+            .retainFrom(System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH));
 
     if (osNameNormalized.startsWith("macosx") || osNameNormalized.startsWith("osx")) {
       return "osx";
@@ -91,9 +93,8 @@ public class DependencyGraphBuilder {
 
   private static String osDetectedArch() {
     String osArchNormalized =
-        NON_ALPHA_NUMERIC_PATTERN
-            .matcher(System.getProperty("os.arch").toLowerCase(Locale.ENGLISH))
-            .replaceAll("");
+        ALPHA_NUMERIC
+            .retainFrom(System.getProperty("os.arch").toLowerCase(Locale.ENGLISH));
     switch (osArchNormalized) {
       case "x8664":
       case "amd64":
