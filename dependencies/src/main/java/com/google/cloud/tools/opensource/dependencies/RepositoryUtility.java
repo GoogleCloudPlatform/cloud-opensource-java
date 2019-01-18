@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import org.apache.commons.cli.ParseException;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -214,7 +213,7 @@ public final class RepositoryUtility {
   }
 
   /**
-   * Configures Maven repositories to search for dependencies.
+   * Sets {@link #mavenRepositories} to search for dependencies.
    *
    * @param addMavenCentral if true, add Maven Central to the end of the repository list
    * @throws IllegalArgumentException if a URL is malformed or not having an allowed schema
@@ -234,7 +233,9 @@ public final class RepositoryUtility {
           new RemoteRepository.Builder(null, "default", mavenRepositoryUrl).build();
       if (!ALLOWED_REPOSITORY_URL_SCHEMES.contains(repository.getProtocol())) {
         throw new IllegalArgumentException(
-            "Protocol: " + repository.getProtocol() + " is not in "
+            "Schema: '"
+                + repository.getProtocol()
+                + "' is not in "
                 + ALLOWED_REPOSITORY_URL_SCHEMES);
       }
       repositoryListBuilder.add(repository);
@@ -247,7 +248,7 @@ public final class RepositoryUtility {
     mavenRepositories = repositoryListBuilder.build();
   }
 
-  /** Adds Maven repositories to {@code collectRequest}. */
+  /** Adds {@link #mavenRepositories} to {@code collectRequest}. */
   public static void addRepositoriesToRequest(CollectRequest collectRequest) {
     for (RemoteRepository repository : mavenRepositories) {
       collectRequest.addRepository(repository);

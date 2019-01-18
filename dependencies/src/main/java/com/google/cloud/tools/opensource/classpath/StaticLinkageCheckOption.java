@@ -122,7 +122,7 @@ public class StaticLinkageCheckOption {
 
   static ImmutableList<Path> generateInputClasspath(CommandLine commandLine)
       throws RepositoryException, ParseException {
-    configureMavenRepositories(commandLine);
+    setRepositories(commandLine);
 
     if (commandLine.hasOption("b")) {
       String bomCoordinates = commandLine.getOptionValue("b");
@@ -149,7 +149,7 @@ public class StaticLinkageCheckOption {
     }
   }
 
-  static void configureMavenRepositories(CommandLine commandLine) throws ParseException {
+  static void setRepositories(CommandLine commandLine) throws ParseException {
     if (!commandLine.hasOption("m")) {
       return;
     }

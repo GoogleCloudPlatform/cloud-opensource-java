@@ -102,7 +102,7 @@ public class StaticLinkageCheckOptionTest {
     CommandLine commandLine =
         StaticLinkageCheckOption.readCommandLine(
             new String[] {"-m", "https://repo.spring.io/milestone"});
-    StaticLinkageCheckOption.configureMavenRepositories(commandLine);
+    StaticLinkageCheckOption.setRepositories(commandLine);
 
     // This artifact does not exist in Maven central, but it is in Spring's repository
     // Spring-asm is used here because it does not have complex dependencies
@@ -118,7 +118,7 @@ public class StaticLinkageCheckOptionTest {
     CommandLine commandLine =
         StaticLinkageCheckOption.readCommandLine(
             new String[] {"-m", "https://repo.spring.io/milestone", "--no-maven-central"});
-    StaticLinkageCheckOption.configureMavenRepositories(commandLine);
+    StaticLinkageCheckOption.setRepositories(commandLine);
 
     CollectRequest collectRequest = new CollectRequest();
     RepositoryUtility.addRepositoriesToRequest(collectRequest);
@@ -142,7 +142,7 @@ public class StaticLinkageCheckOptionTest {
     CommandLine commandLine =
         StaticLinkageCheckOption.readCommandLine(new String[]{"-m", repositoryUrl});
     try {
-      StaticLinkageCheckOption.configureMavenRepositories(commandLine);
+      StaticLinkageCheckOption.setRepositories(commandLine);
       Assert.fail("URL " + repositoryUrl + " should be invalidated");
     } catch (ParseException ex) {
       // pass
@@ -155,7 +155,7 @@ public class StaticLinkageCheckOptionTest {
         StaticLinkageCheckOption.readCommandLine(new String[] {"-m", "file:///var/tmp"});
 
     // This method should not raise an exception
-    StaticLinkageCheckOption.configureMavenRepositories(commandLine);
+    StaticLinkageCheckOption.setRepositories(commandLine);
   }
 
   @Test
