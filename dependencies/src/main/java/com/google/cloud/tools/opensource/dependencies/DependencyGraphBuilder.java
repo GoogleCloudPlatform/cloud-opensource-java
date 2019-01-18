@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -51,25 +52,58 @@ public class DependencyGraphBuilder {
   
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
+  private static final CharMatcher LOWER_ALPHA_NUMERIC = CharMatcher.inRange('a', 'z')
+      .or(CharMatcher.inRange('0', '9'));
+
   static {
-    // os.detected.classifier system property used to select Netty deps
-    String OS = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH);
-    if ((OS.indexOf("mac") >= 0) || (OS.indexOf("darwin") >= 0)) {
-      System.setProperty("os.detected.classifier", "osx-x86_64");
-    } else if (OS.indexOf("win") >= 0) {
-      System.setProperty("os.detected.classifier", "windows-x86_64");
-    } else if (OS.indexOf("nux") >= 0) {
-      System.setProperty("os.detected.classifier", "linux-x86_64");
-    } else {
-      // Since we only load the dependency graph, not actually use the
-      // dependency, it doesn't matter a great deal which one we pick.
-      System.setProperty("os.detected.classifier", "linux-x86_64");
-    }
+    setDetectedOsSystemProperties();
   }
 
   // caching cuts time by about a factor of 4.
   private static final Map<String, DependencyNode> cacheWithProvidedScope = new HashMap<>();
   private static final Map<String, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
+
+  private static void setDetectedOsSystemProperties() {
+    // System properties to select Netty dependencies through os-maven-plugin
+    // Definition of the properties: https://github.com/trustin/os-maven-plugin
+
+    String osDetectedName = osDetectedName();
+    System.setProperty("os.detected.name", osDetectedName);
+    String osDetectedArch = osDetectedArch();
+    System.setProperty("os.detected.arch", osDetectedArch);
+    System.setProperty("os.detected.classifier", osDetectedName + "-" + osDetectedArch);
+  }
+
+  private static String osDetectedName() {
+    String osNameNormalized =
+        LOWER_ALPHA_NUMERIC
+            .retainFrom(System.getProperty("os.name").toLowerCase(Locale.ENGLISH));
+
+    if (osNameNormalized.startsWith("macosx") || osNameNormalized.startsWith("osx")) {
+      return "osx";
+    } else if (osNameNormalized.startsWith("windows")) {
+      return "windows";
+    }
+    // Since we only load the dependency graph, not actually use the
+    // dependency, it doesn't matter a great deal which one we pick.
+    return "linux";
+  }
+
+  private static String osDetectedArch() {
+    String osArchNormalized =
+        LOWER_ALPHA_NUMERIC
+            .retainFrom(System.getProperty("os.arch").toLowerCase(Locale.ENGLISH));
+    switch (osArchNormalized) {
+      case "x8664":
+      case "amd64":
+      case "ia32e":
+      case "em64t":
+      case "x64":
+        return "x86_64";
+      default:
+        return "x86_32";
+    }
+  }
 
   private static DependencyNode resolveCompileTimeDependencies(Artifact rootDependencyArtifact)
       throws DependencyCollectionException, DependencyResolutionException {
