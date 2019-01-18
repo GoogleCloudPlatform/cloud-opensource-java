@@ -737,8 +737,8 @@ public class StaticLinkageCheckerTest {
   public void testGenerateInputClasspath_jarFileList()
       throws RepositoryException, ParseException {
 
-    String[] arguments = {"--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar"};
-    CommandLine parsedOption = StaticLinkageCheckOption.readCommandLine(arguments);
+    CommandLine parsedOption =
+        StaticLinkageCheckOption.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
     List<Path> inputClasspath = StaticLinkageCheckOption.generateInputClasspath(parsedOption);
 
     Truth.assertThat(inputClasspath)

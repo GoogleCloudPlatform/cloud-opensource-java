@@ -42,21 +42,21 @@ public class StaticLinkageCheckOptionTest {
 
   @Test
   public void parseCommandLineOptions_shortOptions_bom() throws ParseException {
-    String[] arguments = {"-b", "abc.com:dummy:1.2", "-r"};
-    CommandLine parsedOption = StaticLinkageCheckOption.readCommandLine(arguments);
+    CommandLine parsedOption =
+        StaticLinkageCheckOption.readCommandLine("-b", "abc.com:dummy:1.2", "-r");
 
     Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getOptionObject('b'));
   }
 
   @Test
   public void parseCommandLineOptions_duplicates() {
-    String[] arguments = {
-        "--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2",
-        "-b", "abc.com:dummy:1.2",
-        "--report-only-reachable"
-    };
     try {
-      StaticLinkageCheckOption.readCommandLine(arguments);
+      StaticLinkageCheckOption.readCommandLine(
+          "--artifacts",
+          "abc.com:abc:1.1,abc.com:abc-util:1.2",
+          "-b",
+          "abc.com:dummy:1.2",
+          "--report-only-reachable");
       Assert.fail();
     } catch (ParseException ex) {
       Assert.assertEquals(
@@ -67,29 +67,25 @@ public class StaticLinkageCheckOptionTest {
 
   @Test
   public void testReadCommandLine_multipleArtifacts() throws ParseException {
-    String[] arguments = {
-        "--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2",
-        "--report-only-reachable"
-    };
-    CommandLine commandLine = StaticLinkageCheckOption.readCommandLine(arguments);
+    CommandLine commandLine =
+        StaticLinkageCheckOption.readCommandLine(
+            "--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2", "--report-only-reachable");
     Truth.assertThat(commandLine.getOptionValues("a")).hasLength(2);
   }
 
   @Test
   public void testReadCommandLine_multipleJars() throws ParseException {
-    String[] arguments = {
-        "-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar",
-    };
-    CommandLine commandLine = StaticLinkageCheckOption.readCommandLine(arguments);
+    CommandLine commandLine =
+        StaticLinkageCheckOption.readCommandLine(
+            "-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar");
     Truth.assertThat(commandLine.getOptionValues("j")).hasLength(3);
   }
 
 
   @Test
   public void parseCommandLineOptions_invalidOption() {
-    String[] arguments = {"-x"}; // No such option
     try {
-      StaticLinkageCheckOption.readCommandLine(arguments);
+      StaticLinkageCheckOption.readCommandLine("-x"); // No such option
       Assert.fail();
     } catch (ParseException ex) {
       Assert.assertEquals("Unrecognized option: -x", ex.getMessage());
