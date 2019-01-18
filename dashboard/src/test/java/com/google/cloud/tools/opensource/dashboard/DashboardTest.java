@@ -150,7 +150,7 @@ public class DashboardTest {
       }
 
       // TODO these should all be separate tests for the different components
-      Node linkage = document.query("//pre[@id='static_linkage_errors']").get(0);
+      Node linkage = document.query("//pre[@id='static-linkage-errors']").get(0);
       Assert.assertFalse(linkage.getValue().contains("(0 errors)"));
 
       Nodes li = document.query("//ul[@id='recommended']/li");
