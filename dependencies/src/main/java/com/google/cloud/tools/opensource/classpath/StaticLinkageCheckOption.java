@@ -20,7 +20,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -156,7 +155,7 @@ public class StaticLinkageCheckOption {
     }
     try {
       boolean addMavenCentral = !commandLine.hasOption("nm");
-      RepositoryUtility.configureMavenRepositories(Arrays.asList(commandLine.getOptionValues("m")),
+      RepositoryUtility.setRepositories(Arrays.asList(commandLine.getOptionValues("m")),
           addMavenCentral);
     } catch (IllegalArgumentException ex) {
       throw new ParseException("Invalid URL specified for Maven repositories: "

@@ -26,6 +26,8 @@ import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,8 +36,8 @@ public class StaticLinkageCheckOptionTest {
 
   @After
   public void cleanup() {
-    // Resets the effect of configureMavenRepositories
-    RepositoryUtility.configureMavenRepositories(ImmutableList.of(), true);
+    // Resets the effect of setRepositories
+    RepositoryUtility.setRepositories(ImmutableList.of(), true);
   }
 
   @Test
@@ -118,14 +120,12 @@ public class StaticLinkageCheckOptionTest {
             new String[] {"-m", "https://repo.spring.io/milestone", "--no-maven-central"});
     StaticLinkageCheckOption.configureMavenRepositories(commandLine);
 
-    Artifact artifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
+    CollectRequest collectRequest = new CollectRequest();
+    RepositoryUtility.addRepositoriesToRequest(collectRequest);
 
-    try {
-      ClassPathBuilder.artifactsToClasspath(ImmutableList.of(artifact));
-      Assert.fail("gRPC artifact should not have been resolved without Maven Central");
-    } catch (RepositoryException ex) {
-      // pass
-    }
+    List<RemoteRepository> actualRepositories = collectRequest.getRepositories();
+    Truth.assertThat(actualRepositories).hasSize(1);
+    Truth.assertThat(actualRepositories).isEqualTo("repo.spring.io");
   }
 
   @Test

@@ -217,24 +217,25 @@ public final class RepositoryUtility {
    * Configures Maven repositories to search for dependencies.
    *
    * @param addMavenCentral if true, add Maven Central to the end of the repository list
+   * @throws IllegalArgumentException if a URL is malformed or not having an allowed schema
    */
-  public static void configureMavenRepositories(Iterable<String> mavenRepositoryUrls,
-      boolean addMavenCentral) {
+  public static void setRepositories(
+      Iterable<String> mavenRepositoryUrls, boolean addMavenCentral) {
     ImmutableList.Builder<RemoteRepository> repositoryListBuilder = ImmutableList.builder();
     for (String mavenRepositoryUrl : mavenRepositoryUrls) {
+      try {
+        // Because the protocol is not an empty string, this URI is absolute.
+        new URI(mavenRepositoryUrl);
+      } catch (URISyntaxException ex) {
+        throw new IllegalArgumentException("Invalid URL syntax: " + mavenRepositoryUrl);
+      }
+
       RemoteRepository repository =
           new RemoteRepository.Builder(null, "default", mavenRepositoryUrl).build();
       if (!ALLOWED_REPOSITORY_URL_SCHEMES.contains(repository.getProtocol())) {
         throw new IllegalArgumentException(
             "Protocol: " + repository.getProtocol() + " is not in "
                 + ALLOWED_REPOSITORY_URL_SCHEMES);
-      }
-      try {
-        // Because the protocol is not an empty string, this URI is absolute.
-        new URI(mavenRepositoryUrl);
-      } catch (URISyntaxException ex) {
-        throw new IllegalArgumentException(
-            "Invalid URL syntax: " + mavenRepositoryUrl);
       }
       repositoryListBuilder.add(repository);
     }
@@ -246,7 +247,8 @@ public final class RepositoryUtility {
     mavenRepositories = repositoryListBuilder.build();
   }
 
-  static void addRepositoriesToRequest(CollectRequest collectRequest) {
+  /** Adds Maven repositories to {@code collectRequest}. */
+  public static void addRepositoriesToRequest(CollectRequest collectRequest) {
     for (RemoteRepository repository : mavenRepositories) {
       collectRequest.addRepository(repository);
     }
