@@ -189,7 +189,7 @@ public class DashboardTest {
       Nodes artifactCount = document.query("//h2[@class='artifact-count']");
       Assert.assertTrue(artifactCount.size() > 0);
       for (int i = 0; i < artifactCount.size(); i++) {
-        String value = artifactCount.get(i).getValue();
+        String value = artifactCount.get(i).getValue().trim();
         Assert.assertTrue(value, Integer.parseInt(value) > 0);
       }            
     }
