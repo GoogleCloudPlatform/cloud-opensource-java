@@ -72,11 +72,15 @@ public class FreemarkerTest {
     StaticLinkageCheckReport staticLinkageCheckReport =
         StaticLinkageCheckReport.create(ImmutableList.of());
     
-    Artifact artifact = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
-    ArtifactResults results = new ArtifactResults(artifact);
-    results.addResult("Static Linkage Errors", 56);
+    Artifact artifact1 = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
+    ArtifactResults results1 = new ArtifactResults(artifact1);
+    results1.addResult("Static Linkage Errors", 56);
     
-    List<ArtifactResults> table = ImmutableList.of();
+    Artifact artifact2 = new DefaultArtifact("grpc:grpc:1.15.0");
+    ArtifactResults results2 = new ArtifactResults(artifact2);
+    results2.addResult("Static Linkage Errors", 0);
+    
+    List<ArtifactResults> table = ImmutableList.of(results1, results2);
     List<DependencyGraph> globalDependencies = ImmutableList.of();
     Multimap<Path, DependencyPath> jarToDependencyPaths = LinkedListMultimap.create();
     DashboardMain.generateDashboard(configuration, outputDirectory, table, globalDependencies,
@@ -92,7 +96,7 @@ public class FreemarkerTest {
       Integer.parseInt(counts.get(i).getValue().trim());
     }
     
-    Assert.assertEquals(56, Integer.parseInt(counts.get(1).getValue().trim()));
+    Assert.assertEquals(1, Integer.parseInt(counts.get(1).getValue().trim()));
   }
 
 }
