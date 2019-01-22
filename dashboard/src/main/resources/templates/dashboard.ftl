@@ -21,8 +21,6 @@
       </div>
     </section>
     
-    <h2>Artifact Details</h2>
-    
     <#macro countFailures name>
       <#assign total = 0>
       <#list table as row>    
@@ -38,6 +36,8 @@
       </#list>
       ${total}
     </#macro>
+    
+    <h2>Artifact Details</h2>
     
     <#macro testResult row name>
       <#if row.getResult(name)?? ><#-- checking isNotNull() -->
