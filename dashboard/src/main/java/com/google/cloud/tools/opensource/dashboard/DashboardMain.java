@@ -82,12 +82,6 @@ public class DashboardMain {
 
   public static Path generate()
       throws IOException, TemplateException, RepositoryException, ClassNotFoundException {
-    Configuration configuration = configureFreemarker();
-
-    Path relativePath = Paths.get("target", "dashboard");
-    Path output = Files.createDirectories(relativePath);
-    
-    copyCss(output);
 
     // TODO should pass in maven coordinates as argument
     DefaultArtifact bom =
@@ -104,15 +98,30 @@ public class DashboardMain {
     // TODO(suztomo): choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(classpath.get(0));
 
-    
-    
     boolean onlyReachable = false;
     StaticLinkageChecker staticLinkageChecker =
         StaticLinkageChecker.create(onlyReachable, classpath, entryPoints);
 
     StaticLinkageCheckReport linkageReport = staticLinkageChecker.findLinkageErrors();
+    
+    Path output = generateHtml(cache, jarToDependencyPaths, linkageReport);
+
+    return output;
+  }
+
+  private static Path generateHtml(ArtifactCache cache,
+      LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths,
+      StaticLinkageCheckReport linkageReport) throws IOException, TemplateException {
+    
+    Path relativePath = Paths.get("target", "dashboard");
+    Path output = Files.createDirectories(relativePath);
+    
+    copyCss(output);
+    Configuration configuration = configureFreemarker();
+
     List<ArtifactResults> table =
         generateReports(configuration, output, cache, linkageReport, jarToDependencyPaths);
+    
     generateDashboard(
         configuration,
         output,
@@ -120,7 +129,7 @@ public class DashboardMain {
         cache.getGlobalDependencies(),
         linkageReport,
         jarToDependencyPaths);
-
+    
     return output;
   }
 
@@ -175,10 +184,9 @@ public class DashboardMain {
           table.add(results);
         }
       } catch (IOException ex) {
-        System.err.println(ex.getMessage());
         ArtifactResults unavailableTestResult = new ArtifactResults(entry.getKey());
         unavailableTestResult.setExceptionMessage(ex.getMessage());
-        // Even when there's problem generating test result, show the error in the dashboard
+        // Even when there's a problem generating test result, show the error in the dashboard
         table.add(unavailableTestResult);
       } catch (TemplateException ex) {
         // This failure is ours. No need to report it in dashboard for an artifact

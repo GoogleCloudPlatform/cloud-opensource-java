@@ -14,8 +14,28 @@
           <h2 class="artifact-count">${table?size}</h2>
           <span class="desc">Total Artifacts Checked</span>
         </div>
+        <div class="statistic-item statistic-item-red">
+          <h2 class="artifact-count"><@countFailures name="Static Linkage Errors"/></h2>
+          <span class="desc">Have Static Linkage Errors</span>
+        </div>
       </div>
     </section>
+    
+    <#macro countFailures name>
+      <#assign total = 0>
+      <#list table as row>    
+        <#if row.getResult(name)?? >
+          <#assign failure_count = row.getFailureCount(name)>
+          <#if failure_count gt 0 >
+            <#assign total = total + 1>
+          </#if>
+        <#else>
+          <#-- Null means there's an exception and test couldn't run -->
+          <#assign total = total + 1>
+        </#if>
+      </#list>
+      ${total}
+    </#macro>
     
     <h2>Artifact Details</h2>
     
