@@ -1,11 +1,11 @@
 <html lang="en-US">
   <head>
-    <title>Google Cloud Platform Code Health Open Source Dashboard</title>
+    <title>Google Cloud Platform Java Open Source Dependency Dashboard</title>
     
     <link rel="stylesheet" type="text/css" href="dashboard.css" />
   </head>
   <body>
-    <h1>Google Cloud Platform Dependency Dashboard</h1>
+    <h1>Google Cloud Platform Java Dependency Dashboard</h1>
     <hr />
     
     <section class="statistics">
