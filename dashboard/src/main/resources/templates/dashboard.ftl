@@ -18,6 +18,14 @@
           <h2 class="artifact-count"><@countFailures name="Static Linkage Errors"/></h2>
           <span class="desc">Have Static Linkage Errors</span>
         </div>
+        <div class="statistic-item statistic-item-yellow">
+          <h2 class="artifact-count"><@countFailures name="Upper Bounds"/></h2>
+          <span class="desc">Have Upper Bounds Errors</span>
+        </div>
+        <div class="statistic-item statistic-item-orange">
+          <h2 class="artifact-count"><@countFailures name="Global Upper Bounds"/></h2>
+          <span class="desc">Have Global Upper Bounds Errors</span>
+        </div>
       </div>
     </section>
     
