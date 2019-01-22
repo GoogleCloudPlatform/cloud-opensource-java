@@ -1,10 +1,42 @@
 <html lang="en-US">
   <head>
     <title>Google Cloud Platform Code Health Open Source Dashboard</title>
+    
     <link rel="stylesheet" type="text/css" href="dashboard.css" />
   </head>
   <body>
     <h1>Google Cloud Platform Dependency Dashboard</h1>
+    <hr />
+    
+    <section class="statistics">
+      <div class="container">
+        <div class="statistic-item statistic-item-green">
+          <h2 class="artifact-count">${table?size}</h2>
+          <span class="desc">Total Artifacts Checked</span>
+        </div>
+        <div class="statistic-item statistic-item-red">
+          <h2 class="artifact-count"><@countFailures name="Static Linkage Errors"/></h2>
+          <span class="desc">Have Static Linkage Errors</span>
+        </div>
+      </div>
+    </section>
+    
+    <#macro countFailures name>
+      <#assign total = 0>
+      <#list table as row>    
+        <#if row.getResult(name)?? >
+          <#assign failure_count = row.getFailureCount(name)>
+          <#if failure_count gt 0 >
+            <#assign total = total + 1>
+          </#if>
+        <#else>
+          <#-- Null means there's an exception and test couldn't run -->
+          <#assign total = total + 1>
+        </#if>
+      </#list>
+      ${total}
+    </#macro>
+    
     <h2>Artifact Details</h2>
     
     <#macro testResult row name>
@@ -65,7 +97,7 @@
 
     <#list jarLinkageReports as jarLinkageReport>
       <#if jarLinkageReport.getTotalErrorCount() gt 0>
-        <pre id="static_linkage_errors">${jarLinkageReport?html}</pre>
+        <pre id="static-linkage-errors">${jarLinkageReport?html}</pre>
 
         <p class="static-linkage-check-dependency-paths">
           Following paths to the jar file from BOM are found in the dependency tree.
@@ -113,7 +145,7 @@
     </ul>
      
     <#if unstableCount == 0>
-      <p id="stable_notice">All versions are 1.0 or later.</p> 
+      <p id="stable-notice">All versions are 1.0 or later.</p> 
     </#if>
     
      
