@@ -18,15 +18,13 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import java.util.List;
 
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.collection.DependencyCollectionException;
-import org.eclipse.aether.resolution.DependencyResolutionException;
 
 public class DependencyLister {
 
-  public static void main(String[] args)
-      throws DependencyCollectionException, DependencyResolutionException {
-    
+  public static void main(String[] args) throws RepositoryException {
+
     if (args.length != 1 || !args[0].contains(":")) {
       System.err.println("Usage: java " + DependencyLister.class.getCanonicalName()
           + " groupdId:artifactId:version");

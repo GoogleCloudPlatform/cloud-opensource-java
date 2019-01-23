@@ -16,7 +16,9 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.AggregatedRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.cloud.tools.opensource.dependencies.ExceptionAndPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
@@ -31,6 +33,7 @@ import java.util.Set;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.DependencyNode;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -172,5 +175,35 @@ public class ClassPathBuilderTest {
     Truth.assertWithMessage("Method references within the same jar file should not be reported")
         .that(jarLinkageReport.getMissingMethodErrors())
         .isEmpty();
+  }
+
+  @Test
+  public void testArtifactToClasspath_notToGenerateRepositoryException()
+      throws RepositoryException {
+    Artifact jamonApiArtifact = new DefaultArtifact("com.google.guava:guava-gwt:jar:20.0");
+    List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(jamonApiArtifact));
+    Truth.assertThat(paths).isNotEmpty();
+  }
+
+  @Test
+  public void testArtifactToClasspath_reportAggregatedRepositoryException()
+      throws RepositoryException {
+    // jamon has transitive dependency to jmxtools, which does not exist in Maven central
+    Artifact jamonApiArtifact = new DefaultArtifact("com.jamonapi:jamon:2.81");
+    try {
+      ClassPathBuilder.artifactsToClasspath(ImmutableList.of(jamonApiArtifact));
+      Assert.fail();
+    } catch (AggregatedRepositoryException ex) {
+      ImmutableList<ExceptionAndPath> failures = ex.getUnderlyingFailures();
+      Truth.assertThat(failures).isNotEmpty();
+      long jmxToolFailureCount = failures.stream().filter(
+          failure -> {
+            List<DependencyNode> path = failure.getPath();
+            return "jmxtools".equals(path.get(path.size()-1).getArtifact().getArtifactId());
+          }
+      ).count();
+
+      Truth.assertThat(jmxToolFailureCount).isEqualTo(1);
+    }
   }
 }
