@@ -1,11 +1,11 @@
 <html lang="en-US">
   <head>
-    <title>Google Cloud Platform Code Health Open Source Dashboard</title>
+    <title>Google Cloud Platform Java Open Source Dependency Dashboard</title>
     
     <link rel="stylesheet" type="text/css" href="dashboard.css" />
   </head>
   <body>
-    <h1>Google Cloud Platform Dependency Dashboard</h1>
+    <h1>Google Cloud Platform Java Dependency Dashboard</h1>
     <hr />
     
     <section class="statistics">
@@ -17,6 +17,14 @@
         <div class="statistic-item statistic-item-red">
           <h2 class="artifact-count"><@countFailures name="Static Linkage Errors"/></h2>
           <span class="desc">Have Static Linkage Errors</span>
+        </div>
+        <div class="statistic-item statistic-item-yellow">
+          <h2 class="artifact-count"><@countFailures name="Upper Bounds"/></h2>
+          <span class="desc">Have Upper Bounds Errors</span>
+        </div>
+        <div class="statistic-item statistic-item-orange">
+          <h2 class="artifact-count"><@countFailures name="Global Upper Bounds"/></h2>
+          <span class="desc">Have Global Upper Bounds Errors</span>
         </div>
       </div>
     </section>
