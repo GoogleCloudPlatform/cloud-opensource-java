@@ -122,7 +122,7 @@ public final class RepositoryUtility {
           public boolean selectDependency(Dependency dependency) {
             Artifact artifact = dependency.getArtifact();
             Map<String, String> properties = artifact.getProperties();
-            // Because StaticLinkageChecker only checks jar file, zip files are not neede
+            // Because StaticLinkageChecker only checks jar file, zip files are not needed
             logger.fine("Skipping an artifact with type:zip: " + artifact);
             return !"zip".equals(properties.get("type"));
           }

@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.eclipse.aether.RepositoryException;
 
-/** Exception aggregating one or more {@link RepositoryException}. */
+/** Exception aggregating one or more underlying {@link RepositoryException}. */
 public class AggregatedRepositoryException extends RepositoryException {
 
   private final ImmutableList<PathAndException> underlyingFailures;

@@ -20,8 +20,6 @@ import java.util.List;
 
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.collection.DependencyCollectionException;
-import org.eclipse.aether.resolution.DependencyResolutionException;
 
 public class DependencyLister {
 

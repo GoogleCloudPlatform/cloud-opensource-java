@@ -163,7 +163,9 @@ public class DependencyGraphBuilder {
     return node;
   }
 
-  /** Returns the non-transitive compile time dependencies of an artifact. */
+  /**
+   * Returns the non-transitive compile time dependencies of an artifact.
+   */
   public static List<Artifact> getDirectDependencies(Artifact artifact) throws RepositoryException {
 
     List<Artifact> result = new ArrayList<>();
@@ -176,12 +178,12 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Finds the full compile time, transitive dependency graph including duplicates, conflicting
-   * versions, and dependencies with 'provided' scope.
+   * Finds the full compile time, transitive dependency graph including duplicates,
+   * conflicting versions, and dependencies with 'provided' scope.
    *
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
-   * @throws RepositoryException when there is a problem in resolving and collecting dependency
+   * @throws RepositoryException when there is a problem in resolving or collecting dependency
    */
   public static DependencyGraph getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
       throws RepositoryException {
@@ -199,8 +201,8 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Finds the full compile time, transitive dependency graph including duplicates and conflicting
-   * versions.
+   * Finds the full compile time, transitive dependency graph including duplicates
+   * and conflicting versions.
    */
   public static DependencyGraph getCompleteDependencies(Artifact artifact)
       throws RepositoryException {
@@ -214,9 +216,10 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Finds the complete transitive dependency graph as seen by Maven. It does not include duplicates
-   * and conflicting versions. That is, this resolves conflicting versions by picking the first
-   * version seen. This is how Maven normally operates.
+   * Finds the complete transitive dependency graph as seen by Maven.
+   * It does not include duplicates and conflicting versions. That is,
+   * this resolves conflicting versions by picking the first version
+   * seen. This is how Maven normally operates.
    */
   public static DependencyGraph getTransitiveDependencies(Artifact artifact)
       throws RepositoryException {
@@ -256,22 +259,23 @@ public class DependencyGraphBuilder {
 
   /**
    * Traverses dependency tree in level-order (breadth-first search) and stores {@link
-   * DependencyPath} instances corresponding to tree nodes to {@link DependencyGraph}. When {@code
-   * graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED, then it resolves the
-   * dependency of the artifact of the each node in the dependency tree; otherwise it just follows
-   * the given dependency tree starting with firstNode.
+   * DependencyPath} instances corresponding to tree nodes to {@link DependencyGraph}. When
+   * {@code graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED,
+   * then it resolves the dependency of the artifact of the each
+   * node in the dependency tree; otherwise it just follows the given dependency tree starting with
+   * firstNode.
    *
    * @param firstNode node to start traversal
    * @param graph graph to store {@link DependencyPath} instances
    * @param graphTraversalOption option to recursively resolve the dependency to build complete
    *     dependency tree, with or without dependencies of provided scope
-   * @throws RepositoryException when there are one ore more problems due to {@link
+   * @throws AggregatedRepositoryException when there are one ore more problems due to {@link
    *     DependencyCollectionException} or {@link DependencyResolutionException}. This happens only
    *     when graphTraversalOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
    */
   private static void levelOrder(
       DependencyNode firstNode, DependencyGraph graph, GraphTraversalOption graphTraversalOption)
-      throws RepositoryException {
+      throws AggregatedRepositoryException {
 
     boolean resolveFullDependency = graphTraversalOption.resolveFullDependencies();
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
@@ -333,6 +337,10 @@ public class DependencyGraphBuilder {
                     .collect(toImmutableList());
 
             resolutionFailuresBuilder.addAll(appendedPathAndExceptions);
+          } catch (RepositoryException repositoryException) {
+            PathAndException failure =
+                PathAndException.create(parentNodes, dependencyNode, repositoryException);
+            resolutionFailuresBuilder.add(failure);
           }
         }
       }

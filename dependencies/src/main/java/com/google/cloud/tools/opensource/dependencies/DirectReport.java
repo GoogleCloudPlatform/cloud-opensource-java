@@ -21,8 +21,6 @@ import java.util.List;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.collection.DependencyCollectionException;
-import org.eclipse.aether.resolution.DependencyResolutionException;
 
 public class DirectReport {
 
@@ -32,8 +30,7 @@ public class DirectReport {
    * made at head but not published to Maven central, or dependencies
    * that have been updated but not yet incorporated in the tree.
    */
-  public static void main(String[] args)
-      throws RepositoryException {
+  public static void main(String[] args) throws RepositoryException {
     
     if (args.length != 1 || !args[0].contains(":")) {
       System.err.println("Usage: java " + DirectReport.class.getCanonicalName()
