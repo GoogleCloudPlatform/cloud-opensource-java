@@ -362,8 +362,8 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Returns true if {@code exceptionAndPath.getPath} does not contain {@code optional} and the path
-   * does not contain {@code scope:provided} dependency.
+   * Returns true if {@code exceptionAndPath.getPath} does not contain {@code optional} dependency
+   * and the path does not contain {@code scope:provided} dependency.
    */
   private static boolean isUnacceptableResolutionException(ExceptionAndPath exceptionAndPath) {
     ImmutableList<DependencyNode> dependencyNodes = exceptionAndPath.getPath();
