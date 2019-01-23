@@ -53,7 +53,7 @@ public abstract class ExceptionAndPath {
   }
 
   @AutoValue.Builder
-  public abstract static class Builder {
+  abstract static class Builder {
     public abstract Builder setPath(Iterable<DependencyNode> path);
 
     public abstract Builder setException(RepositoryException exception);
