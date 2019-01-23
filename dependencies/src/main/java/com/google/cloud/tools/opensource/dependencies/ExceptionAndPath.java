@@ -31,7 +31,7 @@ public abstract class ExceptionAndPath {
   /** Returns a path from the root of dependency graph to a dependency node. */
   public abstract ImmutableList<DependencyNode> getPath();
 
-  /** Returns the exception raised at the {@link DependencyNode} specified at the path */
+  /** Returns the exception raised at the {@link DependencyNode} specified at the path. */
   public abstract RepositoryException getException();
 
   static ExceptionAndPath create(
