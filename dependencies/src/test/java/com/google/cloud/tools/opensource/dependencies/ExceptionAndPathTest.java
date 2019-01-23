@@ -25,28 +25,28 @@ import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.DependencyNode;
 import org.junit.Test;
 
-public class PathAndExceptionTest {
+public class ExceptionAndPathTest {
 
-  static PathAndException createDummyInstance() {
+  static ExceptionAndPath createDummyInstance() {
     Artifact jamonApiArtifact = new DefaultArtifact("com.jamonapi:jamon:2.81");
     Artifact springContextArtifact =
         new DefaultArtifact("org.springframework:spring-context:4.0.2.RELEASE");
     DependencyNode jamonDependencyNode = new DefaultDependencyNode(jamonApiArtifact);
     DependencyNode springContextDependencyNode = new DefaultDependencyNode(springContextArtifact);
 
-    PathAndException pathAndException =
-        PathAndException.create(
+    ExceptionAndPath exceptionAndPath =
+        ExceptionAndPath.create(
             ImmutableList.of(jamonDependencyNode),
             springContextDependencyNode,
             new RepositoryException("Dummy Exception"));
-    return pathAndException;
+    return exceptionAndPath;
   }
 
   @Test
   public void testCreation() {
-    PathAndException pathAndException = createDummyInstance();
+    ExceptionAndPath exceptionAndPath = createDummyInstance();
 
-    Truth.assertThat(pathAndException.getPath()).hasSize(2);
-    Truth.assertThat(pathAndException.getException().getMessage()).isEqualTo("Dummy Exception");
+    Truth.assertThat(exceptionAndPath.getPath()).hasSize(2);
+    Truth.assertThat(exceptionAndPath.getException().getMessage()).isEqualTo("Dummy Exception");
   }
 }

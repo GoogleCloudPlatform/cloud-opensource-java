@@ -24,14 +24,14 @@ import org.eclipse.aether.RepositoryException;
 /** Exception aggregating one or more underlying {@link RepositoryException}. */
 public class AggregatedRepositoryException extends RepositoryException {
 
-  private final ImmutableList<PathAndException> underlyingFailures;
+  private final ImmutableList<ExceptionAndPath> underlyingFailures;
 
   /** Returns a list of underlying {@link RepositoryException}s and paths in a dependency graph. */
-  public ImmutableList<PathAndException> getUnderlyingFailures() {
+  public ImmutableList<ExceptionAndPath> getUnderlyingFailures() {
     return underlyingFailures;
   }
 
-  AggregatedRepositoryException(List<PathAndException> failures) {
+  AggregatedRepositoryException(List<ExceptionAndPath> failures) {
     super("There were failure(s) in dependency resolution");
     this.underlyingFailures = ImmutableList.copyOf(failures);
   }
@@ -41,10 +41,10 @@ public class AggregatedRepositoryException extends RepositoryException {
     StringBuilder builder = new StringBuilder(getMessage());
     builder.append("\n");
 
-    for (PathAndException pathAndException : getUnderlyingFailures()) {
-      builder.append(Joiner.on(" / ").join(pathAndException.getPath()));
+    for (ExceptionAndPath exceptionAndPath : getUnderlyingFailures()) {
+      builder.append(Joiner.on(" / ").join(exceptionAndPath.getPath()));
       builder.append(": ");
-      builder.append(pathAndException.getException());
+      builder.append(exceptionAndPath.getException());
       builder.append("\n");
     }
 

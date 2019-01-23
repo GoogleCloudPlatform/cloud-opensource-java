@@ -27,7 +27,7 @@ import org.eclipse.aether.graph.DependencyNode;
  * the {@link DependencyNode} specified at the path raises the exception.
  */
 @AutoValue
-public abstract class PathAndException {
+public abstract class ExceptionAndPath {
 
   /** Returns a path from the root of dependency graph to a dependency node. */
   public abstract ImmutableList<DependencyNode> getPath();
@@ -35,7 +35,7 @@ public abstract class PathAndException {
   /** Returns the exception raised at the {@link DependencyNode} specified at the path */
   public abstract RepositoryException getException();
 
-  static PathAndException create(
+  static ExceptionAndPath create(
       Iterable<DependencyNode> parentDependencyNodes,
       DependencyNode dependencyNode,
       RepositoryException repositoryException) {
@@ -50,7 +50,7 @@ public abstract class PathAndException {
   }
 
   public static Builder builder() {
-    return new AutoValue_PathAndException.Builder();
+    return new AutoValue_ExceptionAndPath.Builder();
   }
 
   @AutoValue.Builder
@@ -59,12 +59,12 @@ public abstract class PathAndException {
 
     public abstract Builder setException(RepositoryException exception);
 
-    public abstract PathAndException build();
+    public abstract ExceptionAndPath build();
   }
 
   abstract Builder toBuilder();
 
-  PathAndException withAppendedPath(List<DependencyNode> parentDependencyNodes) {
+  ExceptionAndPath withAppendedPath(List<DependencyNode> parentDependencyNodes) {
     ImmutableList<DependencyNode> newPath =
         ImmutableList.<DependencyNode>builder()
             .addAll(parentDependencyNodes)

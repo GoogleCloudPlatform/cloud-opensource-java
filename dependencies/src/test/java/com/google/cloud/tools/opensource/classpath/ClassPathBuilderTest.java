@@ -18,7 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.AggregatedRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.cloud.tools.opensource.dependencies.PathAndException;
+import com.google.cloud.tools.opensource.dependencies.ExceptionAndPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
@@ -194,12 +194,16 @@ public class ClassPathBuilderTest {
       ClassPathBuilder.artifactsToClasspath(ImmutableList.of(jamonApiArtifact));
       Assert.fail();
     } catch (AggregatedRepositoryException ex) {
-      ImmutableList<PathAndException> failures = ex.getUnderlyingFailures();
-      Truth.assertThat(failures).hasSize(2);
-      List<DependencyNode> pathInFirstFailure = failures.get(0).getPath();
-      String artifactIdInFirstFailure =
-          pathInFirstFailure.get(pathInFirstFailure.size() - 1).getArtifact().getArtifactId();
-      Truth.assertThat(artifactIdInFirstFailure).isEqualTo("jmxtools");
+      ImmutableList<ExceptionAndPath> failures = ex.getUnderlyingFailures();
+      Truth.assertThat(failures).isNotEmpty();
+      long jmxToolFailureCount = failures.stream().filter(
+          failure -> {
+            List<DependencyNode> path = failure.getPath();
+            return "jmxtools".equals(path.get(path.size()-1).getArtifact().getArtifactId());
+          }
+      ).count();
+
+      Truth.assertThat(jmxToolFailureCount).isEqualTo(1);
     }
   }
 }

@@ -24,10 +24,10 @@ public class AggregatedRepositoryExceptionTest {
 
   @Test
   public void testCreation() {
-    PathAndException pathAndException = PathAndExceptionTest.createDummyInstance();
+    ExceptionAndPath exceptionAndPath = ExceptionAndPathTest.createDummyInstance();
 
     AggregatedRepositoryException exception =
-        new AggregatedRepositoryException(ImmutableList.of(pathAndException));
+        new AggregatedRepositoryException(ImmutableList.of(exceptionAndPath));
 
     Truth.assertThat(exception.toString())
         .isEqualTo(

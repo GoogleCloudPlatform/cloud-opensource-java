@@ -282,7 +282,7 @@ public class DependencyGraphBuilder {
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
     // Records failures rather than existing immediately.
-    ImmutableList.Builder<PathAndException> resolutionFailuresBuilder = ImmutableList.builder();
+    ImmutableList.Builder<ExceptionAndPath> resolutionFailuresBuilder = ImmutableList.builder();
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
@@ -321,25 +321,25 @@ public class DependencyGraphBuilder {
                 continue;
               }
               DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
-              PathAndException failure =
-                  PathAndException.create(parentNodes, failedDependencyNode, resolutionException);
+              ExceptionAndPath failure =
+                  ExceptionAndPath.create(parentNodes, failedDependencyNode, resolutionException);
               resolutionFailuresBuilder.add(failure);
             }
           } catch (DependencyCollectionException collectionException) {
             DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
-            PathAndException failure =
-                PathAndException.create(parentNodes, failedDependencyNode, collectionException);
+            ExceptionAndPath failure =
+                ExceptionAndPath.create(parentNodes, failedDependencyNode, collectionException);
             resolutionFailuresBuilder.add(failure);
           } catch (AggregatedRepositoryException aggregatedRepositoryException) {
-            ImmutableList<PathAndException> appendedPathAndExceptions =
+            ImmutableList<ExceptionAndPath> appendedExceptionAndPaths =
                 aggregatedRepositoryException.getUnderlyingFailures().stream()
                     .map(pathAndException -> pathAndException.withAppendedPath(parentNodes))
                     .collect(toImmutableList());
 
-            resolutionFailuresBuilder.addAll(appendedPathAndExceptions);
+            resolutionFailuresBuilder.addAll(appendedExceptionAndPaths);
           } catch (RepositoryException repositoryException) {
-            PathAndException failure =
-                PathAndException.create(parentNodes, dependencyNode, repositoryException);
+            ExceptionAndPath failure =
+                ExceptionAndPath.create(parentNodes, dependencyNode, repositoryException);
             resolutionFailuresBuilder.add(failure);
           }
         }
@@ -351,8 +351,8 @@ public class DependencyGraphBuilder {
       }
     }
 
-    ImmutableList<PathAndException> allResolutionFailures = resolutionFailuresBuilder.build();
-    ImmutableList<PathAndException> unacceptableResolutionException =
+    ImmutableList<ExceptionAndPath> allResolutionFailures = resolutionFailuresBuilder.build();
+    ImmutableList<ExceptionAndPath> unacceptableResolutionException =
         allResolutionFailures.stream()
             .filter(DependencyGraphBuilder::isUnacceptableResolutionException)
             .collect(toImmutableList());
@@ -362,11 +362,11 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Returns true if {@code pathAndException.getPath} does not contain {@code optional} and the path
+   * Returns true if {@code exceptionAndPath.getPath} does not contain {@code optional} and the path
    * does not contain {@code scope:provided} dependency.
    */
-  private static boolean isUnacceptableResolutionException(PathAndException pathAndException) {
-    ImmutableList<DependencyNode> dependencyNodes = pathAndException.getPath();
+  private static boolean isUnacceptableResolutionException(ExceptionAndPath exceptionAndPath) {
+    ImmutableList<DependencyNode> dependencyNodes = exceptionAndPath.getPath();
     boolean hasOptionalParent =
         dependencyNodes.stream().anyMatch(node -> node.getDependency().isOptional());
     if (!hasOptionalParent) {
