@@ -17,12 +17,9 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -110,13 +107,12 @@ public class DependencyGraphBuilder {
   }
 
   private static DependencyNode resolveCompileTimeDependencies(Artifact rootDependencyArtifact)
-      throws DependencyCollectionException, DependencyResolutionException {
+      throws RepositoryException {
     return resolveCompileTimeDependencies(rootDependencyArtifact, false);
   }
 
   private static DependencyNode resolveCompileTimeDependencies(
-      Artifact rootDependencyArtifact, boolean includeProvidedScope)
-      throws DependencyCollectionException, DependencyResolutionException {
+      Artifact rootDependencyArtifact, boolean includeProvidedScope) throws RepositoryException {
     return resolveCompileTimeDependencies(
         ImmutableList.of(rootDependencyArtifact), includeProvidedScope);
   }
@@ -167,14 +163,11 @@ public class DependencyGraphBuilder {
     return node;
   }
 
-  /**
-   * Returns the non-transitive compile time dependencies of an artifact.
-   */
-  public static List<Artifact> getDirectDependencies(Artifact artifact)
-      throws DependencyCollectionException, DependencyResolutionException {
-    
+  /** Returns the non-transitive compile time dependencies of an artifact. */
+  public static List<Artifact> getDirectDependencies(Artifact artifact) throws RepositoryException {
+
     List<Artifact> result = new ArrayList<>();
-    
+
     DependencyNode node = resolveCompileTimeDependencies(artifact);
     for (DependencyNode child : node.getChildren()) {
       result.add(child.getArtifact());
@@ -183,46 +176,50 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Finds the full compile time, transitive dependency graph including duplicates,
-   * conflicting versions, and dependencies with 'provided' scope.
+   * Finds the full compile time, transitive dependency graph including duplicates, conflicting
+   * versions, and dependencies with 'provided' scope.
    *
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
-   * @throws DependencyCollectionException when there is a problem in collecting dependency
-   * @throws DependencyResolutionException when there is a problem in resolving dependency
+   * @throws RepositoryException when there is a problem in resolving and collecting dependency
    */
   public static DependencyGraph getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
-      throws DependencyCollectionException, DependencyResolutionException {
+      throws RepositoryException {
     DependencyNode node = resolveCompileTimeDependencies(artifacts, true);
     DependencyGraph graph = new DependencyGraph();
-    levelOrder(node, graph, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
+
+    try {
+      levelOrder(node, graph, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
+    } catch (AggregatedRepositoryException aggregatedRepositoryException) {
+      logger.severe(aggregatedRepositoryException.toString());
+      throw aggregatedRepositoryException;
+    }
 
     return graph;
   }
 
   /**
-   * Finds the full compile time, transitive dependency graph including duplicates
-   * and conflicting versions.
+   * Finds the full compile time, transitive dependency graph including duplicates and conflicting
+   * versions.
    */
   public static DependencyGraph getCompleteDependencies(Artifact artifact)
-      throws DependencyCollectionException, DependencyResolutionException {
-    
+      throws RepositoryException {
+
     // root node
     DependencyNode node = resolveCompileTimeDependencies(artifact);
     DependencyGraph graph = new DependencyGraph();
     levelOrder(node, graph, GraphTraversalOption.FULL_DEPENDENCY);
-    
+
     return graph;
   }
-  
+
   /**
-   * Finds the complete transitive dependency graph as seen by Maven.
-   * It does not include duplicates and conflicting versions. That is,
-   * this resolves conflicting versions by picking the first version
-   * seen. This is how Maven normally operates.
+   * Finds the complete transitive dependency graph as seen by Maven. It does not include duplicates
+   * and conflicting versions. That is, this resolves conflicting versions by picking the first
+   * version seen. This is how Maven normally operates.
    */
   public static DependencyGraph getTransitiveDependencies(Artifact artifact)
-      throws DependencyCollectionException, DependencyResolutionException {
+      throws RepositoryException {
     // root node
     DependencyNode node = resolveCompileTimeDependencies(artifact);
     DependencyGraph graph = new DependencyGraph();
@@ -241,14 +238,9 @@ public class DependencyGraphBuilder {
     }
   }
 
-  private static void levelOrder(DependencyNode node, DependencyGraph graph) {
-    try {
-      levelOrder(node, graph, GraphTraversalOption.NONE);
-    } catch (RepositoryException ex) {
-      throw new RuntimeException(
-          "Problem resolving dependencies even though it is not supposed to resolve dependency",
-          ex);
-    }
+  private static void levelOrder(DependencyNode node, DependencyGraph graph)
+      throws RepositoryException {
+    levelOrder(node, graph, GraphTraversalOption.NONE);
   }
 
   private enum GraphTraversalOption {
@@ -264,30 +256,29 @@ public class DependencyGraphBuilder {
 
   /**
    * Traverses dependency tree in level-order (breadth-first search) and stores {@link
-   * DependencyPath} instances corresponding to tree nodes to {@link DependencyGraph}. When
-   * {@code graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED,
-   * then it resolves the dependency of the artifact of the each
-   * node in the dependency tree; otherwise it just follows the given dependency tree starting with
-   * firstNode.
+   * DependencyPath} instances corresponding to tree nodes to {@link DependencyGraph}. When {@code
+   * graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED, then it resolves the
+   * dependency of the artifact of the each node in the dependency tree; otherwise it just follows
+   * the given dependency tree starting with firstNode.
    *
    * @param firstNode node to start traversal
    * @param graph graph to store {@link DependencyPath} instances
    * @param graphTraversalOption option to recursively resolve the dependency to build complete
    *     dependency tree, with or without dependencies of provided scope
-   * @throws DependencyCollectionException when there is a problem in collecting dependency. This
-   *     happens only when graphTraversalOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
-   * @throws DependencyResolutionException when there is a problem in resolving dependency. This
-   *     happens only when graphTraversalOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
+   * @throws RepositoryException when there are one ore more problems due to {@link
+   *     DependencyCollectionException} or {@link DependencyResolutionException}. This happens only
+   *     when graphTraversalOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
    */
   private static void levelOrder(
       DependencyNode firstNode, DependencyGraph graph, GraphTraversalOption graphTraversalOption)
-      throws DependencyCollectionException, DependencyResolutionException {
+      throws RepositoryException {
 
     boolean resolveFullDependency = graphTraversalOption.resolveFullDependencies();
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
-    List<DependencyResolutionException> resolutionExceptions = Lists.newArrayList();
+    // Records failures rather than existing immediately.
+    ImmutableList.Builder<PathAndException> resolutionFailuresBuilder = ImmutableList.builder();
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
@@ -320,21 +311,28 @@ public class DependencyGraphBuilder {
             // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0
             // has a transitive dependency to org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not
             // found in Maven central)
-            logger.warning(
-                "Could not resolve "
-                    + dependencyNode
-                    + " under "
-                    + parentNodes // This shows "(compile?)" if optional:true
-                    + " Exception: "
-                    + resolutionException.getMessage());
-            if (hasOptionalAndProvidedDependency(parentNodes)
-                || isCausedByOptionalAndProvidedDependency(resolutionException)) {
-              logger.warning(
-                  "Skipping this dependency as it has both optional:true and scope:provided");
-            } else {
-              // These exceptions are logged and thrown at the end
-              resolutionExceptions.add(resolutionException);
+            for (ArtifactResult artifactResult :
+                resolutionException.getResult().getArtifactResults()) {
+              if (artifactResult.getExceptions().isEmpty()) {
+                continue;
+              }
+              DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
+              PathAndException failure =
+                  PathAndException.create(parentNodes, failedDependencyNode, resolutionException);
+              resolutionFailuresBuilder.add(failure);
             }
+          } catch (DependencyCollectionException collectionException) {
+            DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
+            PathAndException failure =
+                PathAndException.create(parentNodes, failedDependencyNode, collectionException);
+            resolutionFailuresBuilder.add(failure);
+          } catch (AggregatedRepositoryException aggregatedRepositoryException) {
+            ImmutableList<PathAndException> appendedPathAndExceptions =
+                aggregatedRepositoryException.getUnderlyingFailures().stream()
+                    .map(pathAndException -> pathAndException.withAppendedPath(parentNodes))
+                    .collect(toImmutableList());
+
+            resolutionFailuresBuilder.addAll(appendedPathAndExceptions);
           }
         }
       }
@@ -345,54 +343,30 @@ public class DependencyGraphBuilder {
       }
     }
 
-    if (!resolutionExceptions.isEmpty()) {
-      ImmutableSet<String> missingDependencies =
-          resolutionExceptions.stream()
-              .map(DependencyResolutionException::getMessage)
-              .collect(toImmutableSet());
-      logger.severe(
-          missingDependencies.size()
-              + " unique exceptions are encountered in resolving dependencies");
-      for (String exceptionMessage : missingDependencies) {
-        logger.severe("Exception: " + exceptionMessage);
-      }
-      throw resolutionExceptions.get(0);
+    ImmutableList<PathAndException> allResolutionFailures = resolutionFailuresBuilder.build();
+    ImmutableList<PathAndException> unacceptableResolutionException =
+        allResolutionFailures.stream()
+            .filter(DependencyGraphBuilder::isUnacceptableResolutionException)
+            .collect(toImmutableList());
+    if (!unacceptableResolutionException.isEmpty()) {
+      throw new AggregatedRepositoryException(unacceptableResolutionException);
     }
   }
 
   /**
-   * Returns true if {@code parentNodes} contains {@code optional} and {@code scope:provided}
-   * dependency.
+   * Returns true if {@code pathAndException.getPath} does not contain {@code optional} and the path
+   * does not contain {@code scope:provided} dependency.
    */
-  private static boolean hasOptionalAndProvidedDependency(Stack<DependencyNode> dependencyNodes) {
+  private static boolean isUnacceptableResolutionException(PathAndException pathAndException) {
+    ImmutableList<DependencyNode> dependencyNodes = pathAndException.getPath();
     boolean hasOptionalParent =
         dependencyNodes.stream().anyMatch(node -> node.getDependency().isOptional());
+    if (!hasOptionalParent) {
+      return true;
+    }
     boolean hasProvidedParent =
         dependencyNodes.stream()
             .anyMatch(node -> "provided".equals(node.getDependency().getScope()));
-    return hasOptionalParent && hasProvidedParent;
-  }
-
-  /**
-   * Returns true if the {@code resolutionException} is caused by a dependency of {@code optional}
-   * and {@code scope:provided}.
-   */
-  private static boolean isCausedByOptionalAndProvidedDependency(
-      DependencyResolutionException resolutionException) {
-    for (ArtifactResult artifactResult : resolutionException.getResult().getArtifactResults()) {
-      if (artifactResult.getExceptions().isEmpty()) {
-        continue;
-      }
-      DependencyNode dependencyNode = artifactResult.getRequest().getDependencyNode();
-      Dependency dependency = dependencyNode.getDependency();
-      if (dependency.isOptional() && "provided".equals(dependency.getScope())) {
-        continue;
-      }
-
-      // The failed dependency cannot be ignored
-      return false;
-    }
-
-    return true;
+    return !hasProvidedParent;
   }
 }

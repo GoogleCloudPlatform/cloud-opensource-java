@@ -122,16 +122,8 @@ public final class RepositoryUtility {
           public boolean selectDependency(Dependency dependency) {
             Artifact artifact = dependency.getArtifact();
             Map<String, String> properties = artifact.getProperties();
-            // Because StaticLinkageChecker only checks jar file, zip files are not needed
+            // Because StaticLinkageChecker only checks jar file, zip files are not neede
             logger.fine("Skipping an artifact with type:zip: " + artifact);
-
-            if (ImmutableList.of("annotation-indexer",
-                "grpc-spring-boot-starter", "morphia", "uow", "jms", "jboss-ejb3-api", "jaas",
-                "maven-cobertura-plugin",
-                "ejb").contains(artifact.getArtifactId())) {
-              return false;
-            }
-
             return !"zip".equals(properties.get("type"));
           }
 

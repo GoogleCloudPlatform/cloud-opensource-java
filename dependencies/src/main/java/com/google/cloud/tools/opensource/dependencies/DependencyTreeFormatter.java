@@ -52,8 +52,7 @@ public class DependencyTreeFormatter {
    *
    * @param coordinate Maven coordinate of an artifact to print its dependencies
    */
-  private static void printDependencyTree(String coordinate)
-      throws DependencyCollectionException, DependencyResolutionException {
+  private static void printDependencyTree(String coordinate) throws RepositoryException {
     DefaultArtifact rootArtifact = new DefaultArtifact(coordinate);
     DependencyGraph dependencyGraph =
         DependencyGraphBuilder.getCompleteDependencies(rootArtifact);

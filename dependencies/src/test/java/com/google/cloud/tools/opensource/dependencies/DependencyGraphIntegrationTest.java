@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.resolution.DependencyResolutionException;
@@ -37,7 +38,7 @@ public class DependencyGraphIntegrationTest {
 
   @Test
   public void testFindUpdates()
-      throws DependencyCollectionException, DependencyResolutionException {
+      throws RepositoryException {
     
     DefaultArtifact core =
         new DefaultArtifact("com.google.cloud:google-cloud-core:1.37.1");
@@ -81,7 +82,7 @@ public class DependencyGraphIntegrationTest {
   // system property. Take that out and this test will fail while others still pass. 
   @Test
   public void testFindUpdates_beam()
-      throws DependencyCollectionException, DependencyResolutionException {    
+      throws RepositoryException {    
 
     DefaultArtifact beam =
         new DefaultArtifact("org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.5.0");
@@ -94,7 +95,7 @@ public class DependencyGraphIntegrationTest {
   @Test
   // a non-Google dependency graph that's well understood and thus useful for debugging
   public void testJaxen()
-      throws DependencyCollectionException, DependencyResolutionException {    
+      throws RepositoryException {    
 
     DefaultArtifact jaxen =
         new DefaultArtifact("jaxen:jaxen:1.1.6");
@@ -112,7 +113,7 @@ public class DependencyGraphIntegrationTest {
   
   @Test
   public void testGrpcAuth()
-      throws DependencyCollectionException, DependencyResolutionException {    
+      throws RepositoryException {    
 
     DefaultArtifact grpc = new DefaultArtifact("io.grpc:grpc-auth:1.15.0");
     DependencyGraph completeDependencies = DependencyGraphBuilder.getCompleteDependencies(grpc);
@@ -132,7 +133,7 @@ public class DependencyGraphIntegrationTest {
   
   @Test
   public void testFindConflicts_cloudLanguage()
-      throws DependencyCollectionException, DependencyResolutionException {
+      throws RepositoryException {
     DefaultArtifact artifact = new DefaultArtifact("com.google.cloud:google-cloud-language:1.37.1");
     DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(artifact);
     List<DependencyPath> conflicts = graph.findConflicts();
