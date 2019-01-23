@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
-import java.util.List;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.graph.DependencyNode;
 
@@ -60,16 +59,5 @@ public abstract class ExceptionAndPath {
     public abstract Builder setException(RepositoryException exception);
 
     public abstract ExceptionAndPath build();
-  }
-
-  abstract Builder toBuilder();
-
-  ExceptionAndPath withAppendedPath(List<DependencyNode> parentDependencyNodes) {
-    ImmutableList<DependencyNode> newPath =
-        ImmutableList.<DependencyNode>builder()
-            .addAll(parentDependencyNodes)
-            .addAll(getPath())
-            .build();
-    return toBuilder().setPath(newPath).build();
   }
 }

@@ -107,12 +107,13 @@ public class DependencyGraphBuilder {
   }
 
   private static DependencyNode resolveCompileTimeDependencies(Artifact rootDependencyArtifact)
-      throws RepositoryException {
+      throws DependencyCollectionException, DependencyResolutionException {
     return resolveCompileTimeDependencies(rootDependencyArtifact, false);
   }
 
   private static DependencyNode resolveCompileTimeDependencies(
-      Artifact rootDependencyArtifact, boolean includeProvidedScope) throws RepositoryException {
+      Artifact rootDependencyArtifact, boolean includeProvidedScope)
+      throws DependencyCollectionException, DependencyResolutionException {
     return resolveCompileTimeDependencies(
         ImmutableList.of(rootDependencyArtifact), includeProvidedScope);
   }
@@ -242,7 +243,7 @@ public class DependencyGraphBuilder {
   }
 
   private static void levelOrder(DependencyNode node, DependencyGraph graph)
-      throws RepositoryException {
+      throws AggregatedRepositoryException {
     levelOrder(node, graph, GraphTraversalOption.NONE);
   }
 
@@ -329,17 +330,6 @@ public class DependencyGraphBuilder {
             DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
             ExceptionAndPath failure =
                 ExceptionAndPath.create(parentNodes, failedDependencyNode, collectionException);
-            resolutionFailuresBuilder.add(failure);
-          } catch (AggregatedRepositoryException aggregatedRepositoryException) {
-            ImmutableList<ExceptionAndPath> appendedExceptionAndPaths =
-                aggregatedRepositoryException.getUnderlyingFailures().stream()
-                    .map(pathAndException -> pathAndException.withAppendedPath(parentNodes))
-                    .collect(toImmutableList());
-
-            resolutionFailuresBuilder.addAll(appendedExceptionAndPaths);
-          } catch (RepositoryException repositoryException) {
-            ExceptionAndPath failure =
-                ExceptionAndPath.create(parentNodes, dependencyNode, repositoryException);
             resolutionFailuresBuilder.add(failure);
           }
         }
