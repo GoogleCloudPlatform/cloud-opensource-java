@@ -35,16 +35,15 @@ import com.google.common.truth.Truth;
 public class DependencyGraphIntegrationTest {
 
   @Test
-  public void testFindUpdates()
-      throws RepositoryException {
-    
+  public void testFindUpdates() throws RepositoryException {
+
     DefaultArtifact core =
         new DefaultArtifact("com.google.cloud:google-cloud-core:1.37.1");
-    
+
     DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(core);
     List<Update> updates = graph.findUpdates();
     List<String> strings = updates.stream().map(e -> e.toString()).collect(Collectors.toList());
-    
+
     // ordering not working yet
     // TODO get order working
     Truth.assertThat(strings).containsExactly("com.google.guava:guava:20.0 needs to "
@@ -72,66 +71,62 @@ public class DependencyGraphIntegrationTest {
         "com.google.http-client:google-http-client-jackson2:1.19.0 needs to "
         + "upgrade com.google.http-client:google-http-client:1.19.0 to 1.23.0");
   }
-  
+
   // Beam has a more complex dependency graph that hits some corner cases.
-  // In particular it pulls in Netty, which pulls in native code, the 
+  // In particular it pulls in Netty, which pulls in native code, the
   // exact artifact depending on which operating system you're running on.
   // This tests verifies that DependencyGraphBuilder sets the os.detected.classifier
-  // system property. Take that out and this test will fail while others still pass. 
+  // system property. Take that out and this test will fail while others still pass.
   @Test
-  public void testFindUpdates_beam()
-      throws RepositoryException {    
+  public void testFindUpdates_beam() throws RepositoryException {
 
     DefaultArtifact beam =
         new DefaultArtifact("org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.5.0");
     DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(beam);
-    
+
     // should not throw
     graph.findUpdates();
   }
-  
+
   @Test
   // a non-Google dependency graph that's well understood and thus useful for debugging
-  public void testJaxen()
-      throws RepositoryException {    
+  public void testJaxen() throws RepositoryException {
 
     DefaultArtifact jaxen =
         new DefaultArtifact("jaxen:jaxen:1.1.6");
     DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(jaxen);
-    
+
     List<Update> updates = graph.findUpdates();
     Truth.assertThat(updates).hasSize(5);
-    
+
     List<DependencyPath> conflicts = graph.findConflicts();
     Truth.assertThat(conflicts).hasSize(34);
-    
+
     Map<String, String> versions = graph.getHighestVersionMap();
     Assert.assertEquals("2.6.2", versions.get("xerces:xercesImpl"));
   }
-  
+
   @Test
-  public void testGrpcAuth()
-      throws RepositoryException {    
+  public void testGrpcAuth() throws RepositoryException {
 
     DefaultArtifact grpc = new DefaultArtifact("io.grpc:grpc-auth:1.15.0");
     DependencyGraph completeDependencies = DependencyGraphBuilder.getCompleteDependencies(grpc);
     DependencyGraph transitiveDependencies = DependencyGraphBuilder.getTransitiveDependencies(grpc);
-    
-    Map<String, String> complete = completeDependencies.getHighestVersionMap();    
+
+    Map<String, String> complete = completeDependencies.getHighestVersionMap();
     Map<String, String> transitive =
         transitiveDependencies.getHighestVersionMap();
     Set<String> completeKeyset = complete.keySet();
     Set<String> transitiveKeySet = transitive.keySet();
-    
+
     // The complete dependencies sees a path to com.google.j2objc:j2objc-annotations that's
     // been removed in newer versions so this is not bidirectional set equality.
     Assert.assertTrue(complete.containsKey("com.google.j2objc:j2objc-annotations"));
     Truth.assertThat(completeKeyset).containsAllIn(transitiveKeySet);
   }
-  
+
   @Test
-  public void testFindConflicts_cloudLanguage()
-      throws RepositoryException {
+  public void testFindConflicts_cloudLanguage() throws RepositoryException {
     DefaultArtifact artifact = new DefaultArtifact("com.google.cloud:google-cloud-language:1.37.1");
     DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(artifact);
     List<DependencyPath> conflicts = graph.findConflicts();
