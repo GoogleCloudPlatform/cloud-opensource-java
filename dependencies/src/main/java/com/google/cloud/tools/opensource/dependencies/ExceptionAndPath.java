@@ -22,7 +22,7 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
- * Tuple of a path in a Maven dependency graph, and a {@link RepositoryException}, indicating that
+ * Tuple of a path in a Maven dependency graph and a {@link RepositoryException}, indicating that
  * the {@link DependencyNode} specified at the path raises the exception.
  */
 @AutoValue
@@ -48,7 +48,7 @@ public abstract class ExceptionAndPath {
         .build();
   }
 
-  public static Builder builder() {
+  private static Builder builder() {
     return new AutoValue_ExceptionAndPath.Builder();
   }
 
