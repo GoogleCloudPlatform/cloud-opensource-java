@@ -53,7 +53,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 public class DependencyGraphBuilder {
 
   private static final Logger logger = Logger.getLogger(DependencyGraphBuilder.class.getName());
-  
+
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
   private static final CharMatcher LOWER_ALPHA_NUMERIC = CharMatcher.inRange('a', 'z')
@@ -167,9 +167,7 @@ public class DependencyGraphBuilder {
     return node;
   }
 
-  /**
-   * Returns the non-transitive compile time dependencies of an artifact.
-   */
+  /** Returns the non-transitive compile time dependencies of an artifact. */
   public static List<Artifact> getDirectDependencies(Artifact artifact) throws RepositoryException {
 
     List<Artifact> result = new ArrayList<>();
@@ -182,8 +180,8 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Finds the full compile time, transitive dependency graph including duplicates,
-   * conflicting versions, and dependencies with 'provided' scope.
+   * Finds the full compile time, transitive dependency graph including duplicates, conflicting
+   * versions, and dependencies with 'provided' scope.
    *
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
@@ -199,8 +197,8 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Finds the full compile time, transitive dependency graph including duplicates
-   * and conflicting versions.
+   * Finds the full compile time, transitive dependency graph including duplicates and conflicting
+   * versions.
    */
   public static DependencyGraph getCompleteDependencies(Artifact artifact)
       throws RepositoryException {
@@ -214,10 +212,9 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Finds the complete transitive dependency graph as seen by Maven.
-   * It does not include duplicates and conflicting versions. That is,
-   * this resolves conflicting versions by picking the first version
-   * seen. This is how Maven normally operates.
+   * Finds the complete transitive dependency graph as seen by Maven. It does not include duplicates
+   * and conflicting versions. That is, this resolves conflicting versions by picking the first
+   * version seen. This is how Maven normally operates.
    */
   public static DependencyGraph getTransitiveDependencies(Artifact artifact)
       throws RepositoryException {
@@ -257,11 +254,10 @@ public class DependencyGraphBuilder {
 
   /**
    * Traverses dependency tree in level-order (breadth-first search) and stores {@link
-   * DependencyPath} instances corresponding to tree nodes to {@link DependencyGraph}. When
-   * {@code graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED,
-   * then it resolves the dependency of the artifact of the each
-   * node in the dependency tree; otherwise it just follows the given dependency tree starting with
-   * firstNode.
+   * DependencyPath} instances corresponding to tree nodes to {@link DependencyGraph}. When {@code
+   * graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED, then it resolves the
+   * dependency of the artifact of the each node in the dependency tree; otherwise it just follows
+   * the given dependency tree starting with firstNode.
    *
    * @param firstNode node to start traversal
    * @param graph graph to store {@link DependencyPath} instances
