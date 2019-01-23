@@ -20,6 +20,8 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,6 +29,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.Stack;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -190,13 +193,7 @@ public class DependencyGraphBuilder {
       throws RepositoryException {
     DependencyNode node = resolveCompileTimeDependencies(artifacts, true);
     DependencyGraph graph = new DependencyGraph();
-
-    try {
-      levelOrder(node, graph, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
-    } catch (AggregatedRepositoryException aggregatedRepositoryException) {
-      logger.severe(aggregatedRepositoryException.toString());
-      throw aggregatedRepositoryException;
-    }
+    levelOrder(node, graph, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
 
     return graph;
   }
@@ -283,7 +280,7 @@ public class DependencyGraphBuilder {
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
     // Records failures rather than existing immediately.
-    ImmutableList.Builder<ExceptionAndPath> resolutionFailuresBuilder = ImmutableList.builder();
+    List<ExceptionAndPath> resolutionFailures = Lists.newArrayList();
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
@@ -307,11 +304,12 @@ public class DependencyGraphBuilder {
         graph.addPath(forPath);
 
         if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
+          Artifact dependencyNodeArtifact = dependencyNode.getArtifact();
           try {
             boolean includeProvidedScope =
                 graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
             dependencyNode =
-                resolveCompileTimeDependencies(dependencyNode.getArtifact(), includeProvidedScope);
+                resolveCompileTimeDependencies(dependencyNodeArtifact, includeProvidedScope);
           } catch (DependencyResolutionException resolutionException) {
             // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0
             // has a transitive dependency to org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not
@@ -324,13 +322,17 @@ public class DependencyGraphBuilder {
               DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
               ExceptionAndPath failure =
                   ExceptionAndPath.create(parentNodes, failedDependencyNode, resolutionException);
-              resolutionFailuresBuilder.add(failure);
+              if (isUnacceptableResolutionException(failure)) {
+                resolutionFailures.add(failure);
+              }
             }
           } catch (DependencyCollectionException collectionException) {
             DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
             ExceptionAndPath failure =
                 ExceptionAndPath.create(parentNodes, failedDependencyNode, collectionException);
-            resolutionFailuresBuilder.add(failure);
+            if (isUnacceptableResolutionException(failure)) {
+              resolutionFailures.add(failure);
+            }
           }
         }
       }
@@ -341,13 +343,8 @@ public class DependencyGraphBuilder {
       }
     }
 
-    ImmutableList<ExceptionAndPath> allResolutionFailures = resolutionFailuresBuilder.build();
-    ImmutableList<ExceptionAndPath> unacceptableResolutionException =
-        allResolutionFailures.stream()
-            .filter(DependencyGraphBuilder::isUnacceptableResolutionException)
-            .collect(toImmutableList());
-    if (!unacceptableResolutionException.isEmpty()) {
-      throw new AggregatedRepositoryException(unacceptableResolutionException);
+    if (!resolutionFailures.isEmpty()) {
+      throw new AggregatedRepositoryException(resolutionFailures);
     }
   }
 
