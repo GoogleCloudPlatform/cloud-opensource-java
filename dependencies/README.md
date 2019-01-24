@@ -51,8 +51,10 @@ added to the list of Maven coordinates. This list of Maven coordinates is handle
 in the same way as a directly-provided list of coordinates (see below).
 
 When the input is a list of Maven coordinates, they are resolved to a list of jar files
-that consists of the artifacts and their dependencies. This list of jar files is
-handled in the same way as a directly-provided list of jar files (see below).
+that consists of the artifacts and their dependencies, through a
+[Maven dependency graph](#maven_dependency_graph).
+This list of jar files is handled in the same way as a directly-provided list of jar files
+(see below).
 
 When the input is a list of class and jar files, they are used directly as the _input class path_.
 
@@ -87,3 +89,67 @@ The tool allows users to choose the scope of entry point classes:
   - **All classes in the input class path**: when reachability check is off, then
     all static linkage errors from all classes in the classpath, regardless of the reachability,
     are reported.
+
+<a name="maven_dependency_graph"></a>
+## Maven Dependency Graph
+
+A Maven dependency graph is a graph data structure where
+- Node: a node is a Maven artifact identified as `groupId:artifactId[:classifier]:version`, where
+  `classifier` is optional. The tuple to identify a Maven artifact is called _Maven coordinates_.
+- Edge: an (directed) edge is dependency between Maven artifacts. A dependency from a Maven
+  artifact (source of the dependency) to another artifact (target of the dependency) is defined
+  in `dependencies` tags in pom.xml of a Maven artifact. A dependency has a boolean attribute
+  `optional` and a string attribute `scope`, among other properties listed
+  https://maven.apache.org pom.html#Dependencies
+
+### Graph Construction
+
+Given a list of Maven artifacts, a Maven dependency graph is defined in the following manner:
+
+- Create a graph with nodes of the Maven artifacts. They are called initial nodes.
+- Edges from a node in the graph are added to the graph as well as their target nodes if not
+  present, until all dependencies from all nodes are added to the graph.
+
+A Maven dependency graph is _undefined_ for a list of Maven artifacts, when there is a problem
+in constructing one (see below)
+
+### Edge Cases
+
+#### Cyclic Dependency
+
+Cyclic dependency may exist in a Maven dependency graph. It does not become a cause of an undefined
+graph.
+
+#### Unavailable Artifact
+
+A Maven artifact may be unavailable through Maven repositories, making it impossible to complete
+a graph construction. Such unavailability is said of _safe_ when the path from the initial nodes to
+the missing artifact contains both optional and “scope: provided” dependency. An edge whose source
+artifact is missing but acceptable is skipped in a graph construction.
+
+When there is an unavailable Maven artifact and it is not safe, the Maven dependency graph is
+undefined.
+
+#### Unsatisfied Version Constraints
+
+A dependency tag in pom.xml may have version range specification.
+https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification 
+Each of them creates a version constraint. When there is a version constraint that cannot be
+satisfied during graph construction, the Maven dependency graph is undefined.
+
+### Class Path Generation through Maven Dependency Graph
+
+A class path (list of jar files of Maven artifacts) can be generated from a Maven dependency graph.
+A class path is built by picking up Maven artifacts in breadth-first manner,
+starting from the first node of the initial nodes of a Maven dependency graph.
+
+During the pick-up, duplicated artifacts identified by
+`groupId:artifactId[:classifier]:version` are discarded.
+
+When there are multiple versions of a Maven artifact
+identified by `groupId:artifactId[:classifier]` (without version), a version is picked up
+using one of following strategies:
+
+- **Maven remediation strategy**: the version of the Maven artifact closest to the initial nodes
+  is selected.
+- **Gradle remediation strategy**: the highest version among a Maven dependency graph is selected.
