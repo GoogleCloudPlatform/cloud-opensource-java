@@ -154,5 +154,6 @@ using one of following strategies:
   is selected.
 - **Gradle remediation strategy**: the highest version among a Maven dependency graph is selected.
 
-[1]: https://maven.apache.org pom.html#Dependencies
+
+[1]: https://maven.apache.org/pom.html#Dependencies
 [2]: https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification
