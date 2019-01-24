@@ -31,7 +31,7 @@ import org.apache.bcel.util.ClassPath;
  *
  * <p>Background: BCEL's {@link ClassPath#getInputStream(String, String)} uses the system class
  * loader to read class files when {@link
- * org.apache.bcel.util.SyntheticRepository#loadClass(String)} is called, meaning that it loads
+ * org.apache.bcel.util.ClassPathRepository#loadClass(String)} is called, meaning that it loads
  * other classes outside the class path specified at its constructor argument. In other words,
  * classes used in this cloud-opensource-java project (including Guava 26) would be unexpectedly
  * loaded by the system class loader when running static linkage check, if BCEL's {@link ClassPath}

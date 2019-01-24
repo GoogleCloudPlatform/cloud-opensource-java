@@ -65,12 +65,17 @@ public class DashboardTest {
       outputDirectory = DashboardMain.generate();
     } catch (Throwable t) {
       t.printStackTrace();
+      Assert.fail("Could not generate dashboard");
     }
   }
 
   @AfterClass
-  public static void cleanUp() throws IOException {
-    MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
+  public static void cleanUp() {
+    try {
+      MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
+    } catch (IOException ex) {
+      // no big deal
+    }
   }
 
   @Test
@@ -145,7 +150,7 @@ public class DashboardTest {
       }
 
       // TODO these should all be separate tests for the different components
-      Node linkage = document.query("//pre[@id='static_linkage_errors']").get(0);
+      Node linkage = document.query("//pre[@id='static-linkage-errors']").get(0);
       Assert.assertFalse(linkage.getValue().contains("(0 errors)"));
 
       Nodes li = document.query("//ul[@id='recommended']/li");
@@ -178,8 +183,15 @@ public class DashboardTest {
       Nodes updated = document.query("//p[@id='updated']");
       Assert.assertEquals("didn't find updated" + document.toXML(), 1, updated.size());
       
-      Nodes stable = document.query("//p[@id='stable_notice']");
+      Nodes stable = document.query("//p[@id='stable-notice']");
       Assert.assertEquals(0, stable.size());
+      
+      Nodes artifactCount = document.query("//h2[@class='artifact-count']");
+      Assert.assertTrue(artifactCount.size() > 0);
+      for (int i = 0; i < artifactCount.size(); i++) {
+        String value = artifactCount.get(i).getValue().trim();
+        Assert.assertTrue(value, Integer.parseInt(value) > 0);
+      }            
     }
   }
 

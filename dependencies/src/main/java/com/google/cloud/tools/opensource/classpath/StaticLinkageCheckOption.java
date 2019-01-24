@@ -19,17 +19,17 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Streams;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
@@ -51,13 +51,13 @@ import org.eclipse.aether.artifact.DefaultArtifact;
  *     Linkage Checker: Input</a>
  */
 public class StaticLinkageCheckOption {
-  
+
   private static final Options options = configureOptions();
 
   private static final HelpFormatter helpFormatter = new HelpFormatter();
 
-  static CommandLine readCommandLine(String[] arguments) throws ParseException {
-    // TODO is this reentrant? Can we reuse it? 
+  static CommandLine readCommandLine(String... arguments) throws ParseException {
+    // TODO is this reentrant? Can we reuse it?
     // https://issues.apache.org/jira/browse/CLI-291
     CommandLineParser parser = new DefaultParser();
 
@@ -80,25 +80,52 @@ public class StaticLinkageCheckOption {
 
   private static Options configureOptions() {
     Options options = new Options();
+
     options.addOption(
         "b", "bom", true, "BOM to generate a class path, specified by its Maven coordinates");
-    options.addOption(
-        "a",
-        "artifacts",
-        true,
-        "Maven coordinates for Maven artifacts (separated by ',') to generate a class path");
-    options.addOption("j", "jars", true, "Jar files (separated by ',') to generate a class path");
+
+    Option artifactOption = Option.builder("a").longOpt("artifacts").hasArgs()
+        .valueSeparator(',')
+        .desc("Maven coordinates for Maven artifacts (separated by ',') to generate a class path")
+        .build();
+    options.addOption(artifactOption);
+
+    Option jarOption = Option.builder("j").longOpt("jars").hasArgs()
+        .valueSeparator(',')
+        .desc("Jar files (separated by ',') to generate a class path")
+        .build();
+    options.addOption(jarOption);
+
     options.addOption(
         "r",
         "report-only-reachable",
         false,
         "To report only linkage errors reachable from entry point");
+
+    Option repositoryOption = Option.builder("m").longOpt("maven-repositories").hasArgs()
+        .valueSeparator(',')
+        .desc("Maven repository URLs to search for dependencies. "
+            + "The repositories are added to a repository list in order before "
+            + "the default Maven Central (http://repo1.maven.org/maven2/).")
+        .build();
+    options.addOption(repositoryOption);
+
+    Option noMavenCentralOption =
+        Option.builder("nm")
+            .longOpt("no-maven-central")
+            .hasArg(false)
+            .desc(
+                "Do not search Maven Central in addition to the repositories specified by -m. "
+                    + "Useful when Maven Central is inaccessible.")
+            .build();
+    options.addOption(noMavenCentralOption);
+
     return options;
   }
 
   static ImmutableList<Path> generateInputClasspath(CommandLine commandLine)
       throws RepositoryException, ParseException {
-    Splitter commaSplitter = Splitter.on(",");
+    setRepositories(commandLine);
 
     if (commandLine.hasOption("b")) {
       String bomCoordinates = commandLine.getOptionValue("b");
@@ -106,24 +133,36 @@ public class StaticLinkageCheckOption {
       List<Artifact> artifactsInBom = RepositoryUtility.readBom(bomArtifact);
       return ClassPathBuilder.artifactsToClasspath(artifactsInBom);
     } else if (commandLine.hasOption("a")) {
-      String mavenCoordinatesOption = commandLine.getOptionValue("a");
+      String[] mavenCoordinatesOption = commandLine.getOptionValues("a");
       ImmutableList<Artifact> artifacts =
-          commaSplitter
-              .splitToList(mavenCoordinatesOption)
-              .stream()
+          Arrays.stream(mavenCoordinatesOption)
               .map(DefaultArtifact::new)
               .collect(toImmutableList());
       return ClassPathBuilder.artifactsToClasspath(artifacts);
     } else if (commandLine.hasOption("j")) {
-      String jarFiles = commandLine.getOptionValue("j");
+      String[] jarFiles = commandLine.getOptionValues("j");
       ImmutableList<Path> jarFilesInArguments =
-          Streams.stream(commaSplitter.split(jarFiles))
+          Arrays.stream(jarFiles)
               .map(name -> Paths.get(name).toAbsolutePath())
               .collect(toImmutableList());
       return jarFilesInArguments;
     } else {
       helpFormatter.printHelp("StaticLinkageChecker", options);
       throw new ParseException("Missing argument");
+    }
+  }
+
+  static void setRepositories(CommandLine commandLine) throws ParseException {
+    if (!commandLine.hasOption("m")) {
+      return;
+    }
+    try {
+      boolean addMavenCentral = !commandLine.hasOption("nm");
+      RepositoryUtility.setRepositories(Arrays.asList(commandLine.getOptionValues("m")),
+          addMavenCentral);
+    } catch (IllegalArgumentException ex) {
+      throw new ParseException("Invalid URL specified for Maven repositories: "
+          + ex.getMessage());
     }
   }
 }

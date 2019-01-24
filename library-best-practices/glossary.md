@@ -1,12 +1,20 @@
 Java Dependency Glossary
 ------------------------
 
-- **Class path**: an ordered list of jar files, zip files, or directories, each of which
+- **Class path**: an ordered list of jar files, zip files, and directories, each of which
   contains Java class files.
-  A class loader searches for a class file by its name through the path entries in a class path.
-  When there are two or more path entries (for example, jar files) that contain class files with
-  the same name in a class path, the class file in the first path entry in the class path
-  is available for use, and the other class files with the same name are unavailable.
+  A [class loader](https://docs.oracle.com/javase/7/docs/api/java/lang/ClassLoader.html)
+  typically transforms the fully package qualified name of a Java class
+  into a file name and then searches for a class file with that name in a class path.
+  
+  When more than one entry in a class path contains a class file with the same name,
+  the class loader returns the file in the first path entry.
+  Other class files with the same name are unavailable.
+  
+  If a class loader fails to find any instance of a class, it will ask its parent class loader
+  to find the class. In a running VM there are usually multiple class loaders,
+  each with its own class path, but for our purposes we can treat this as 
+  a single class path formed by appending parent class paths to child class paths.
 
 ### Types of conflicts and compatibility
 

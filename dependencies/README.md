@@ -23,8 +23,9 @@ There are two use cases for Static Linkage Checker:
 ### Approach
 
 1. The tool takes a class path as required input.
-  This class path is called the _input class path_. The tool operates on this class path
-  to find linkage errors and it is separated from the runtime class path of the tool itself.
+  This class path is called the _input class path_ and is separate from
+  the runtime class path of the tool itself. The tool operates on the input class path
+  to find linkage errors.
 
 2. The tool extracts all symbolic references from the all class files in the class path.
 

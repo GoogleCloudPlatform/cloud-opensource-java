@@ -42,8 +42,8 @@ public final class ArtifactResults {
     this.exceptionMessage = exceptionMessage;
   }
 
-  void addResult(String testName, int result) {
-    results.put(testName, result);
+  void addResult(String testName, int failures) {
+    results.put(testName, failures);
   }
 
   /**
