@@ -94,16 +94,14 @@ The tool allows users to choose the scope of entry point classes:
 ## Maven Dependency Graph
 
 A Maven dependency graph is a graph data structure where
-- Node: a node is a Maven artifact identified as `groupId:artifactId[:classifier]:version`, where
-  `classifier` is optional.
-- Edge: an (directed) edge is a dependency between Maven artifacts. A dependency from a Maven
-  artifact (_source_ of the dependency) to another artifact (_target_ of the dependency) is defined
-  in the `dependencies` element in pom.xml of a Maven artifact.
-  
+- Node: a node is a Maven artifact identified by Maven coordinates such as
+  `com.example:artifact:1.5.4`.
+- Edge: a directed edge is a dependency from one Maven artifact to another.
+
   A dependency has a boolean attribute `optional` and a string attribute `scope`,
   among other properties listed in [POM Reference: Dependencies][1].
 
-  Self-loops or parallel edges are not possible.
+  Self-loops are not possible. A parallel edge is allowed but is dropped in the model.
 
 ### Graph Construction
 
@@ -114,7 +112,7 @@ following manner:
    The nodes are called _initial nodes_.
 2. Pick up an unvisited node in a graph in breadth-first manner.
 3. By reading dependencies of the node, add new nodes corresponding to the target Maven artifacts,
-   identified by `groupId:artifactId[:classifier]:version`, if not present.
+   identified by Maven coordinates, if not present.
 4. Add edges from the source node to the target nodes of the Maven artifacts.
 3. Repeat the step 2-4, until all nodes are visited in the breadth-first traversal.
 
@@ -152,12 +150,10 @@ A class path (list of jar files of Maven artifacts) can be generated from a Mave
 A class path is built by picking up Maven artifacts by a breadth-first traversal,
 starting from the initial nodes of a Maven dependency graph.
 
-During the pick-up, duplicate artifacts identified by `groupId:artifactId[:classifier]:version`
-are discarded.
+During the pick-up, duplicate artifacts identified by Maven coordinates are discarded.
 
-When there are multiple versions of a Maven artifact identified by
-`groupId:artifactId[:classifier]` (without version), a version is picked up using one of following
-strategies:
+When there are multiple versions of a Maven artifact identified by Maven coordinates without
+the version part, a version is picked up using one of following strategies:
 
 - **Maven dependency mediation strategy**: the version of the Maven artifact closest to the initial
   nodes is selected.
