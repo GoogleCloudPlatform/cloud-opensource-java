@@ -94,12 +94,12 @@ The tool allows users to choose the scope of entry point classes:
 ## Maven Dependency Graph
 
 A Maven dependency graph is a graph data structure where
-- Node: a node is a Maven artifact identified by Maven coordinates such as
-  `com.example:artifact:1.5.4`.
+- Node: a node is a Maven artifact identified by [Maven coordinates][1] such as
+  `com.example.foo:bar:1.5.4`.
 - Edge: a directed edge is a dependency from one Maven artifact to another.
 
   A dependency has a boolean attribute `optional` and a string attribute `scope`,
-  among other properties listed in [POM Reference: Dependencies][1].
+  among other properties listed in [POM Reference: Dependencies][2].
 
   Self-loops are not possible. A parallel edge is allowed but is dropped in the model.
 
@@ -138,7 +138,7 @@ When there is an unavailable Maven artifact and it is not safe, the graph constr
 
 #### Unsatisfied Version Constraints
 
-A dependency element in pom.xml may have a [version range specification][2].
+A dependency element in pom.xml may have a [version range specification][3].
 Each of the specifications creates a version constraint.
 
 When there is a version constraint that cannot be satisfied during graph construction,
@@ -160,5 +160,6 @@ the version part, a version is picked up using one of following strategies:
 - **Gradle dependency mediation strategy**: the highest version among a Maven dependency graph is
   selected.
 
-[1]: https://maven.apache.org/pom.html#Dependencies
-[2]: https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification
+[1]: https://maven.apache.org/pom.html#Maven_Coordinates
+[2]: https://maven.apache.org/pom.html#Dependencies
+[3]: https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification
