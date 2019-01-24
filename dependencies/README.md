@@ -99,8 +99,8 @@ A Maven dependency graph is a graph data structure where
 - Edge: an (directed) edge is dependency between Maven artifacts. A dependency from a Maven
   artifact (source of the dependency) to another artifact (target of the dependency) is defined
   in `dependencies` tags in pom.xml of a Maven artifact. A dependency has a boolean attribute
-  `optional` and a string attribute `scope`, among other properties listed
-  https://maven.apache.org pom.html#Dependencies
+  `optional` and a string attribute `scope`, among other properties listed in
+  [POM Reference: Dependencies][1]
 
 ### Graph Construction
 
@@ -110,8 +110,8 @@ Given a list of Maven artifacts, a Maven dependency graph is defined in the foll
 - Edges from a node in the graph are added to the graph as well as their target nodes if not
   present, until all dependencies from all nodes are added to the graph.
 
-A Maven dependency graph is _undefined_ for a list of Maven artifacts, when there is a problem
-in constructing one (see below)
+A Maven dependency graph is called _undefined_ when there is a problem in constructing one
+(see below).
 
 ### Edge Cases
 
@@ -132,10 +132,10 @@ undefined.
 
 #### Unsatisfied Version Constraints
 
-A dependency tag in pom.xml may have version range specification.
-https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification 
-Each of them creates a version constraint. When there is a version constraint that cannot be
-satisfied during graph construction, the Maven dependency graph is undefined.
+A dependency tag in pom.xml may have a [version range specification][2].
+Each of the specifications creates a version constraint.
+When there is a version constraint that cannot be satisfied during graph construction,
+the Maven dependency graph is undefined.
 
 ### Class Path Generation through Maven Dependency Graph
 
@@ -153,3 +153,6 @@ using one of following strategies:
 - **Maven remediation strategy**: the version of the Maven artifact closest to the initial nodes
   is selected.
 - **Gradle remediation strategy**: the highest version among a Maven dependency graph is selected.
+
+[1]: https://maven.apache.org pom.html#Dependencies
+[2]: https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification
