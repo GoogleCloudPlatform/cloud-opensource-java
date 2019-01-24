@@ -110,13 +110,13 @@ A Maven dependency graph is a graph data structure where
 Given a ordered list of Maven artifacts, a Maven dependency graph is constructed in the
 following manner:
 
-- 1. Start with a graph with nodes of the Maven artifacts in the list.
-     The nodes are called _initial nodes_.
-- 2. Pick up a node in a graph in breadth-first manner.
-- 3. By reading dependencies of the node, add new nodes corresponding to the target Maven artifacts,
-     identified by `groupId:artifactId[:classifier]:version`, if not present.
-- 4. Add edges from the source node to the target nodes of the Maven artifacts.
-- 3. Repeat step 2-4, until all nodes are visited in this breadth-first traversal.
+1. Start with a graph with nodes of the Maven artifacts in the list.
+   The nodes are called _initial nodes_.
+2. Pick up a node in a graph in breadth-first manner.
+3. By reading dependencies of the node, add new nodes corresponding to the target Maven artifacts,
+   identified by `groupId:artifactId[:classifier]:version`, if not present.
+4. Add edges from the source node to the target nodes of the Maven artifacts.
+3. Repeat step 2-4, until all nodes are visited in this breadth-first traversal.
 
 A graph construction may _fail_ when there is a problem in constructing a graph (see below).
 
