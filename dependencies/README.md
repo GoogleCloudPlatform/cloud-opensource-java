@@ -159,9 +159,10 @@ When there are multiple versions of a Maven artifact
 identified by `groupId:artifactId[:classifier]` (without version), a version is picked up
 using one of following strategies:
 
-- **Maven dependency mediation strategy**: the version of the Maven artifact closest to the initial nodes
-  is selected.
-- **Gradle dependency mediation strategy**: the highest version among a Maven dependency graph is selected.
+- **Maven dependency mediation strategy**: the version of the Maven artifact closest to the initial
+  nodes is selected.
+- **Gradle dependency mediation strategy**: the highest version among a Maven dependency graph is
+  selected.
 
 
 [1]: https://maven.apache.org/pom.html#Dependencies
