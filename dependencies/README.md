@@ -97,8 +97,8 @@ A Maven dependency graph is a graph data structure where
 - Node: a node is a Maven artifact identified as `groupId:artifactId[:classifier]:version`, where
   `classifier` is optional.
 - Edge: an (directed) edge is a dependency between Maven artifacts. A dependency from a Maven
-  artifact (source of the dependency) to another artifact (target of the dependency) is defined
-  in `dependencies` tags in pom.xml of a Maven artifact.
+  artifact (_source_ of the dependency) to another artifact (_target_ of the dependency) is defined
+  in the `dependencies` element in pom.xml of a Maven artifact.
   
   A dependency has a boolean attribute `optional` and a string attribute `scope`,
   among other properties listed in [POM Reference: Dependencies][1].
@@ -107,38 +107,44 @@ A Maven dependency graph is a graph data structure where
 
 ### Graph Construction
 
-Given a list of Maven artifacts, a Maven dependency graph is defined in the following manner:
+Given a ordered list of Maven artifacts, a Maven dependency graph is constructed in the
+following manner:
 
-- Create a graph with nodes of the Maven artifacts. They are called initial nodes.
-- Edges from a node in the graph are added to the graph as well as their target nodes if not
-  present, until all dependencies from all nodes are added to the graph.
+- 1. Start with a graph with nodes of the Maven artifacts in the list.
+     The nodes are called _initial nodes_.
+- 2. Pick up a node in a graph in breadth-first manner.
+- 3. By reading dependencies of the node, add new nodes corresponding to the target Maven artifacts,
+     identified by `groupId:artifactId[:classifier]:version`, if not present.
+- 4. Add edges from the source node to the target nodes of the Maven artifacts.
+- 3. Repeat step 2-4, until all nodes are visited in this breadth-first traversal.
 
-A Maven dependency graph is called _undefined_ when there is a problem in constructing one
-(see below).
+A graph construction may _fail_ when there is a problem in constructing a graph (see below).
 
 ### Edge Cases
 
 #### Cyclic Dependency
 
-Cyclic dependency may exist in a Maven dependency graph. It does not become a cause of an undefined
-graph.
+Cyclic dependency may exist in a Maven dependency graph. It does not become a cause of a graph
+construction failure.
 
 #### Unavailable Artifact
 
 A Maven artifact may be unavailable through Maven repositories, making it impossible to complete
-a graph construction. Such unavailability is called _safe_ when the path from the initial nodes to
-the missing artifact contains both optional and `scope: provided` dependency. An edge whose source
-artifact is missing but acceptable is skipped in a graph construction.
+a graph construction.
 
-When there is an unavailable Maven artifact and it is not safe, the Maven dependency graph is
-undefined.
+An unavailability of Maven artifact is called _safe_ when the path from the initial nodes to
+the missing artifact contains `optional` or `scope: provided` dependency. An edge whose source
+artifact is missing but is safe, is skipped in a graph construction (step 4).
+
+When there is an unavailable Maven artifact and it is not safe, the graph construction fails.
 
 #### Unsatisfied Version Constraints
 
 A dependency element in pom.xml may have a [version range specification][2].
 Each of the specifications creates a version constraint.
+
 When there is a version constraint that cannot be satisfied during graph construction,
-the Maven dependency graph is undefined.
+the graph construction fails.
 
 ### Class Path Generation through Maven Dependency Graph
 
