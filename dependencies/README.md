@@ -104,6 +104,18 @@ A Maven dependency graph is a graph data structure where
 
   Self-loops are not possible. A parallel edge is allowed but is dropped in the model.
 
+### Comparison with Maven Dependency Trees by pom.xml
+
+Compared to a _Maven dependency tree_ retrieved by a pom.xml through
+`RepositorySystem.resolveDependencies`, a Maven Dependency Graph has the following differences:
+
+- A Maven dependency tree cannot have multiple versions of a Maven artifact, whereas a Maven
+  dependency graph can have them.
+- A Maven dependency tree does not have transitive `scope: provided` dependencies under
+  a `scope: provided` dependency, whereas a Maven dependency graph can have them.
+- A Maven dependency tree does not contain a cycle,
+  whereas a Maven dependency graph can contain cycles.
+
 ### Graph Construction
 
 Given an ordered list of Maven artifacts, `DependencyGraphBuilder` constructs a Maven dependency
@@ -122,11 +134,6 @@ A graph construction may _fail_ when there is a problem in constructing a graph 
 
 ### Edge Cases
 
-#### Cyclic Dependency
-
-Cyclic dependency may exist in a Maven dependency graph. It does not become a cause of a graph
-construction failure.
-
 #### Unavailable Artifact
 
 A Maven artifact may be unavailable through Maven repositories.
@@ -140,7 +147,7 @@ When there is an unavailable Maven artifact and it is not safe, the graph constr
 
 #### Unsatisfied Version Constraints
 
-A dependency element in pom.xml may have a [version range specification][3].
+A dependency element in pom.xml may have a [version range specification][4].
 Each of the specifications creates a version constraint.
 
 When there is a version constraint that cannot be satisfied during graph construction,
@@ -157,11 +164,12 @@ During the pick-up, duplicate artifacts identified by Maven coordinates are disc
 When there are multiple versions of a Maven artifact identified by Maven coordinates without
 the version part, a version is picked up using one of the following strategies:
 
-- **Maven dependency mediation strategy**: the version of the Maven artifact closest to the initial
-  nodes is selected.
+- **Maven dependency mediation strategy**: the first version encountered during the breadth-first
+  traversal is selected.
 - **Gradle dependency mediation strategy**: the highest version among a Maven dependency graph is
   selected.
 
 [1]: https://maven.apache.org/pom.html#Maven_Coordinates
 [2]: https://maven.apache.org/pom.html#Dependencies
-[3]: https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification
+[3]: https://maven.apache.org/plugins/maven-dependency-plugin/tree-mojo.html
+[4]: https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification
