@@ -126,7 +126,7 @@ graph.
 #### Unavailable Artifact
 
 A Maven artifact may be unavailable through Maven repositories, making it impossible to complete
-a graph construction. Such unavailability is said of _safe_ when the path from the initial nodes to
+a graph construction. Such unavailability is called _safe_ when the path from the initial nodes to
 the missing artifact contains both optional and `scope: provided` dependency. An edge whose source
 artifact is missing but acceptable is skipped in a graph construction.
 
@@ -135,7 +135,7 @@ undefined.
 
 #### Unsatisfied Version Constraints
 
-A dependency tag in pom.xml may have a [version range specification][2].
+A dependency element in pom.xml may have a [version range specification][2].
 Each of the specifications creates a version constraint.
 When there is a version constraint that cannot be satisfied during graph construction,
 the Maven dependency graph is undefined.
@@ -146,16 +146,16 @@ A class path (list of jar files of Maven artifacts) can be generated from a Mave
 A class path is built by picking up Maven artifacts in breadth-first manner,
 starting from the first node of the initial nodes of a Maven dependency graph.
 
-During the pick-up, duplicated artifacts identified by
+During the pick-up, duplicate artifacts identified by
 `groupId:artifactId[:classifier]:version` are discarded.
 
 When there are multiple versions of a Maven artifact
 identified by `groupId:artifactId[:classifier]` (without version), a version is picked up
 using one of following strategies:
 
-- **Maven remediation strategy**: the version of the Maven artifact closest to the initial nodes
+- **Maven dependency mediation strategy**: the version of the Maven artifact closest to the initial nodes
   is selected.
-- **Gradle remediation strategy**: the highest version among a Maven dependency graph is selected.
+- **Gradle dependency mediation strategy**: the highest version among a Maven dependency graph is selected.
 
 
 [1]: https://maven.apache.org/pom.html#Dependencies
