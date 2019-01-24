@@ -39,7 +39,7 @@ There are two use cases for Static Linkage Checker:
 
 ### Input
 
-The input of the tool is either the Maven coordinate of a BOM, 
+The input of the tool is either the Maven coordinates of a BOM, 
 a list of Maven coordinates, or a list of class and jar files in the filesystem.
 All of these inputs are converted to a class path for the static linkage check,
 which is the _input class path_.
@@ -95,7 +95,7 @@ The tool allows users to choose the scope of entry point classes:
 
 A Maven dependency graph is a graph data structure where
 - Node: a node is a Maven artifact identified as `groupId:artifactId[:classifier]:version`, where
-  `classifier` is optional. The tuple to identify a Maven artifact is called _Maven coordinates_.
+  `classifier` is optional.
 - Edge: an (directed) edge is a dependency between Maven artifacts. A dependency from a Maven
   artifact (source of the dependency) to another artifact (target of the dependency) is defined
   in `dependencies` tags in pom.xml of a Maven artifact.
