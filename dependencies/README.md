@@ -92,11 +92,12 @@ The tool allows users to choose the scope of entry point classes:
     are reported.
 
 <a name="maven_dependency_graph"></a>
-## Maven Dependency Graph
+# Maven Dependency Graph
 
 A Maven dependency graph is a graph data structure where
 - Node: a node is a Maven artifact identified by [Maven coordinates][1] such as
-  `com.example.foo:bar:1.5.4`.
+  `com.example.foo:bar:1.5.4`. A node may be marked _unavailable_ when the artifact is not available
+  in Maven repositories.
 - Edge: a directed edge is a dependency from one Maven artifact (_source_ of the edge)
   to another Maven artifact (_target_ of the edge).
 
@@ -105,7 +106,7 @@ A Maven dependency graph is a graph data structure where
 
   Self-loops are not possible. A parallel edge is allowed but is dropped in the model.
 
-### Comparison with Maven Dependency Trees by pom.xml
+## Comparison with Maven Dependency Trees by pom.xml
 
 Compared to a _Maven dependency tree_ retrieved by a pom.xml through
 `RepositorySystem.resolveDependencies`, a Maven Dependency Graph has the following differences:
@@ -117,50 +118,51 @@ Compared to a _Maven dependency tree_ retrieved by a pom.xml through
 - A Maven dependency tree does not contain a cycle,
   whereas a Maven dependency graph can contain cycles.
 
-### Graph Construction
+## Graph Construction
 
 Given an ordered list of Maven artifacts, `DependencyGraphBuilder` constructs a Maven dependency
-graph in the following manner:
+graph in the following steps:
 
 1. Start with a graph with nodes of the Maven artifacts in the list.
    The nodes are called _initial nodes_.
-2. Pick up an unvisited node in a graph in breadth-first manner.
+2. Pick up an unvisited node which is not marked _unavailable_ in a graph in breadth-first manner.
 3. By reading dependencies of the node,
    - add new nodes corresponding to the target Maven artifacts, identified by Maven coordinates,
      if not present.
    - add edges from the source node to the target nodes of the Maven artifacts.
-4. Repeat step 2-3, until all nodes are visited in the breadth-first traversal.
+4. Repeat Step 2-3, until all nodes are visited in the breadth-first traversal.
 
-A graph construction may _fail_ when there is a problem in constructing a graph (see below).
+## Graph Construction Failure
 
-### Edge Cases
+A graph construction may _fail_ when there is a problem.
 
-#### Unavailable Artifact
+### Unavailable Artifact
 
-A Maven artifact may be unavailable through Maven repositories.
+A Maven artifact may be unavailable through Maven repositories. Such nodes are marked unavailable
+at Step 3 of a graph construction.
 
 An unavailability of Maven artifact is called _safe_ when the path from the initial nodes to
-the missing artifact contains `optional` or `scope: provided` dependency. An edge whose source
-artifact is missing but is safe, is skipped in a graph construction (step 4). The resulting graph
-has the unavailable Maven artifact node, which is not connected to other nodes.
+the missing artifact contains `optional` or `scope: provided` dependency. The resulting graph
+has the unavailable Maven artifact node connected to another node.
 
 When there is an unavailable Maven artifact and it is not safe, the graph construction fails.
 
-#### Unsatisfied Version Constraints
+### Unsatisfied Version Constraints
 
 A dependency element in pom.xml may have a [version range specification][4].
 Each of the specifications creates a version constraint.
 
-When there is a version constraint that cannot be satisfied during graph construction,
-the graph construction fails.
+When there is a version constraint that cannot be satisfied, the graph construction fails.
 
-### Class Path Generation through Maven Dependency Graph
+## Class Path Generation through Maven Dependency Graph
 
 A class path (list of jar files of Maven artifacts) can be generated from a Maven dependency graph.
-A class path is built by picking up Maven artifacts by a breadth-first traversal,
-starting from the initial nodes of a Maven dependency graph.
+A class path is built by picking up Maven artifacts by a breadth-first
+traversal. The traversal starts from the initial nodes of a Maven dependency graph.
 
-During the pick-up, duplicate artifacts identified by Maven coordinates are discarded.
+During the pick-up,
+- duplicate artifacts identified by Maven coordinates are discarded.
+- nodes marked as unavailable are skipped.
 
 When there are multiple versions of a Maven artifact identified by Maven coordinates without
 the version part, a version is picked up using one of the following strategies:
