@@ -96,25 +96,27 @@ The tool allows users to choose the scope of entry point classes:
 A Maven dependency graph is a graph data structure where
 - Node: a node is a Maven artifact identified by [Maven coordinates][1] such as
   `com.example.foo:bar:1.5.4`.
-- Edge: a directed edge is a dependency from one Maven artifact to another.
+- Edge: a directed edge is a dependency from one Maven artifact (_source_ of the edge)
+  to another Maven artifact (_target_ of the edge).
 
-  A dependency has a boolean attribute `optional` and a string attribute `scope`,
+  A dependency has a boolean attribute `optional` and an enum attribute `scope`,
   among other properties listed in [POM Reference: Dependencies][2].
 
   Self-loops are not possible. A parallel edge is allowed but is dropped in the model.
 
 ### Graph Construction
 
-Given a ordered list of Maven artifacts, a Maven dependency graph is constructed in the
-following manner:
+Given an ordered list of Maven artifacts, `DependencyGraphBuilder` constructs a Maven dependency
+graph in the following manner:
 
 1. Start with a graph with nodes of the Maven artifacts in the list.
    The nodes are called _initial nodes_.
 2. Pick up an unvisited node in a graph in breadth-first manner.
-3. By reading dependencies of the node, add new nodes corresponding to the target Maven artifacts,
-   identified by Maven coordinates, if not present.
-4. Add edges from the source node to the target nodes of the Maven artifacts.
-3. Repeat the step 2-4, until all nodes are visited in the breadth-first traversal.
+3. By reading dependencies of the node,
+   - add new nodes corresponding to the target Maven artifacts, identified by Maven coordinates,
+     if not present.
+   - add edges from the source node to the target nodes of the Maven artifacts.
+4. Repeat step 2-3, until all nodes are visited in the breadth-first traversal.
 
 A graph construction may _fail_ when there is a problem in constructing a graph (see below).
 
@@ -127,12 +129,12 @@ construction failure.
 
 #### Unavailable Artifact
 
-A Maven artifact may be unavailable through Maven repositories, making it impossible to complete
-a graph construction.
+A Maven artifact may be unavailable through Maven repositories.
 
 An unavailability of Maven artifact is called _safe_ when the path from the initial nodes to
 the missing artifact contains `optional` or `scope: provided` dependency. An edge whose source
-artifact is missing but is safe, is skipped in a graph construction (step 4).
+artifact is missing but is safe, is skipped in a graph construction (step 4). The resulting graph
+has the unavailable Maven artifact node, which is not connected to other nodes.
 
 When there is an unavailable Maven artifact and it is not safe, the graph construction fails.
 
@@ -153,7 +155,7 @@ starting from the initial nodes of a Maven dependency graph.
 During the pick-up, duplicate artifacts identified by Maven coordinates are discarded.
 
 When there are multiple versions of a Maven artifact identified by Maven coordinates without
-the version part, a version is picked up using one of following strategies:
+the version part, a version is picked up using one of the following strategies:
 
 - **Maven dependency mediation strategy**: the version of the Maven artifact closest to the initial
   nodes is selected.
