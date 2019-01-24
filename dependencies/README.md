@@ -112,11 +112,11 @@ following manner:
 
 1. Start with a graph with nodes of the Maven artifacts in the list.
    The nodes are called _initial nodes_.
-2. Pick up a node in a graph in breadth-first manner.
+2. Pick up an unvisited node in a graph in breadth-first manner.
 3. By reading dependencies of the node, add new nodes corresponding to the target Maven artifacts,
    identified by `groupId:artifactId[:classifier]:version`, if not present.
 4. Add edges from the source node to the target nodes of the Maven artifacts.
-3. Repeat step 2-4, until all nodes are visited in this breadth-first traversal.
+3. Repeat the step 2-4, until all nodes are visited in the breadth-first traversal.
 
 A graph construction may _fail_ when there is a problem in constructing a graph (see below).
 
@@ -149,21 +149,20 @@ the graph construction fails.
 ### Class Path Generation through Maven Dependency Graph
 
 A class path (list of jar files of Maven artifacts) can be generated from a Maven dependency graph.
-A class path is built by picking up Maven artifacts in breadth-first manner,
-starting from the first node of the initial nodes of a Maven dependency graph.
+A class path is built by picking up Maven artifacts by a breadth-first traversal,
+starting from the initial nodes of a Maven dependency graph.
 
-During the pick-up, duplicate artifacts identified by
-`groupId:artifactId[:classifier]:version` are discarded.
+During the pick-up, duplicate artifacts identified by `groupId:artifactId[:classifier]:version`
+are discarded.
 
-When there are multiple versions of a Maven artifact
-identified by `groupId:artifactId[:classifier]` (without version), a version is picked up
-using one of following strategies:
+When there are multiple versions of a Maven artifact identified by
+`groupId:artifactId[:classifier]` (without version), a version is picked up using one of following
+strategies:
 
 - **Maven dependency mediation strategy**: the version of the Maven artifact closest to the initial
   nodes is selected.
 - **Gradle dependency mediation strategy**: the highest version among a Maven dependency graph is
   selected.
-
 
 [1]: https://maven.apache.org/pom.html#Dependencies
 [2]: https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification
