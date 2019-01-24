@@ -96,11 +96,14 @@ The tool allows users to choose the scope of entry point classes:
 A Maven dependency graph is a graph data structure where
 - Node: a node is a Maven artifact identified as `groupId:artifactId[:classifier]:version`, where
   `classifier` is optional. The tuple to identify a Maven artifact is called _Maven coordinates_.
-- Edge: an (directed) edge is dependency between Maven artifacts. A dependency from a Maven
+- Edge: an (directed) edge is a dependency between Maven artifacts. A dependency from a Maven
   artifact (source of the dependency) to another artifact (target of the dependency) is defined
-  in `dependencies` tags in pom.xml of a Maven artifact. A dependency has a boolean attribute
-  `optional` and a string attribute `scope`, among other properties listed in
-  [POM Reference: Dependencies][1]
+  in `dependencies` tags in pom.xml of a Maven artifact.
+  
+  A dependency has a boolean attribute `optional` and a string attribute `scope`,
+  among other properties listed in [POM Reference: Dependencies][1].
+
+  Self-loops or parallel edges are not possible.
 
 ### Graph Construction
 
@@ -124,7 +127,7 @@ graph.
 
 A Maven artifact may be unavailable through Maven repositories, making it impossible to complete
 a graph construction. Such unavailability is said of _safe_ when the path from the initial nodes to
-the missing artifact contains both optional and “scope: provided” dependency. An edge whose source
+the missing artifact contains both optional and `scope: provided` dependency. An edge whose source
 artifact is missing but acceptable is skipped in a graph construction.
 
 When there is an unavailable Maven artifact and it is not safe, the Maven dependency graph is
