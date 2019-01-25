@@ -17,4 +17,4 @@
   unnecessarily publicizing internal details,
   since any dependency across package boundaries need to be
   public. (We may revisit this when we can rely on
-  the new module system in Java 9 or later.) 
+  the new module system in Java 11 or later.) 

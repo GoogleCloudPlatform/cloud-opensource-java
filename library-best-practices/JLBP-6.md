@@ -29,11 +29,11 @@ package (2).
 Recommendations:
 
 - When making a breaking change, take one of the following approaches:
-  - **Approach 1.** If the new library surface is delivered under a new Java package, either
-    use a different Maven ID (different group ID or artifact ID) or bundle the
-    old and new packages together under the original Maven ID.
-  - **Approach 2.** If the breaking change is made in-place and the Java package is kept the
-    same, use the same Maven ID (same group ID and same artifact ID).
+  1. If the new library surface is delivered under a new Java package, either
+     use a different Maven ID (different group ID or artifact ID) or bundle the
+     old and new packages together under the original Maven ID.
+  2. If the breaking change is made in-place and the Java package is kept the
+     same, use the same Maven ID (same group ID and same artifact ID).
 
   There is a tradeoff between the two options above: if a library breaks the
   surface for a method that is not used in any consumers, there would be no
@@ -90,9 +90,9 @@ Given this scenario, here are the possible combinations of renamings:
 - **Rename Java package**:
   - **Case 3: Don't rename Maven ID**. The classes from `g1:a1:1.0.0` and
     `g1:a1:2.0.0` could technically be used together, but since they share the
-    Maven group ID and artifact ID, only one jar can be pulled in. Users are
-    forced to change their code if they want to add any references to the new
-    version. It is strictly better to either also rename the Maven ID (case 4)
+    Maven group ID and artifact ID, only one jar can be pulled in.
+    Users must change their code to add references to the new version.
+    It is strictly better to either also rename the Maven ID (case 4)
     or to keep the Maven ID and also bundle the old package (case 5), so that
     the major versions can be used side by side.
   - **Case 4: Rename Maven ID**. The two major versions can be used side by
@@ -108,17 +108,17 @@ Given this scenario, here are the possible combinations of renamings:
   - **Case 5: Bundle old and new in the existing Maven ID**. Like case 4, the
     two versions can be used side by side. The impact is the same as case 4,
     except with the slight drawback that the user's class space is polluted with
-    both versions, whether both are used or not, but with the benefit that users
-    don't have to think about which Maven artifact to use and can just keep
-    advancing the version.
+    both versions, whether both versions are used or not.
+    The benefit of this approach is that users don't have to think about which
+    Maven artifact to use and can just keep advancing the version.
 
 Given the consequences, it seems clear that the two worst options are case 2
 (renaming the Maven ID while keeping the Java package the same) and case 3
 (renaming the Java package while keeping the Maven ID the same), and both should
 be avoided. The remaining three cases need to be weighed carefully. Among the
 remaining three cases, the impact of the Maven ID change is minuscule compared
-to the impact of a Java package rename, so the remaining discussion will focus
-just on the Java package rename.
+to the impact of a Java package rename, so the remaining discussion focuses
+only on the Java package rename.
 
 Basically, the cost of diamond dependency conflicts (due to not renaming) has to
 be weighed against the cost of updating import statements everywhere the library

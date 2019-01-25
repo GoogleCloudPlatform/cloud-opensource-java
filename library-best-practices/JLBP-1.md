@@ -9,8 +9,7 @@ that library and that library's consumers.
 
 Some specific notes about minimizing dependencies:
 
-- Use the smallest scope possible. For example, [`auto-value`]
-  (https://github.com/google/auto/blob/master/value) doesn't
+- Use the smallest scope possible. For example, `auto-value` doesn't
   need to use `compile` scope, and can instead use `compile-only`,
   since it doesn't need to appear on the classpath of consumers.
   - Libraries used only for testing should have `test` scope

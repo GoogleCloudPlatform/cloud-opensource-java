@@ -22,7 +22,7 @@ Example 1: Guava's main artifact ID is `guava`, but from versions 13.0 to 17.0,
   with `guava`. Build systems such as Maven and Gradle cannot deduplicate
   `guava-jdk5` with `guava` because the artifact names are different.
   When Guava classes overlapped in the two jars, users suffered from 
-  runtime errors resulted from classes and methods not being found.
+  runtime errors resulting from classes and methods not being found.
   The only known Google library propagating
   this dependency was google-api-client <= 1.23.0, and it has removed the
   `guava-jdk5` dependency (and switched to the `guava` artifact) since 1.24.1.
@@ -34,7 +34,7 @@ Example 2: There are multiple artifacts that provide classes under
   - The only type of library that should depend on `servlet-api` is one
     functioning as a utility library for use in web applications. Even in this case,
     the `servlet-api` dependency should use `provided` scope. Other libraries should
-    not use `servlet-api` as a dependency at all, for example, to get HTTP
+    not use `servlet-api` as a dependency at all; for example, to get HTTP
     status code definitions.
     
 Problems caused by overlapping classes can be extremely difficult to resolve.
