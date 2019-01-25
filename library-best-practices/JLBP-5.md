@@ -32,12 +32,12 @@ Example 2: There are multiple artifacts that provide classes under
   `javax.servlet:servlet-api:2.5` at least), and the correct one to choose
   depends on your runtime.
   - The only type of library that should depend on `servlet-api` is one
-    functioning as a utility library for use in web apps. Even in this case, the
-    `servlet-api` dependency should use `provided` scope. Other libraries should
-    not use `servlet-api` as a dependency at all, for example, to get http
+    functioning as a utility library for use in web applications. Even in this case,
+    the `servlet-api` dependency should use `provided` scope. Other libraries should
+    not use `servlet-api` as a dependency at all, for example, to get HTTP
     status code definitions.
     
-This can be extremely difficult to resolve. If at all possible, eliminate all but one of the 
+This can be extremely difficult to resolve. If at all possible, eliminate all but one of the
 overlapping dependencies. Otherwise pay very close attention to which version of 
 each overlapping class is chosen. Make sure the project does not depend on any
 behavior or API of the class that is not selected.
