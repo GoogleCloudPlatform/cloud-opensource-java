@@ -20,12 +20,10 @@ Definition of semantic versioning (SemVer): https://semver.org
     surface breakages.
 - Tools are available to help identify accidental incompatibilities within a
   major version. Examples:
-  - Java API Compliance Checker:
-    https://lvc.github.io/japi-compliance-checker/ 
-  - Clirr Maven Plugin:
-    http://www.mojohaus.org/clirr-maven-plugin/
-  - Compatibility report for grpc-core:
-    https://abi-laboratory.pro/index.php?view=timeline&lang=java&l=grpc-core 
+  - [Java API Compliance Checker](https://lvc.github.io/japi-compliance-checker/)
+  - [Clirr Maven Plugin](http://www.mojohaus.org/clirr-maven-plugin/)
+  - [Java API Tracker: Compatibility report for grpc-core](
+    https://abi-laboratory.pro/index.php?view=timeline&lang=java&l=grpc-core)
 - Examples of breaking changes to a public API that require a new major
   version:
   - Upgrading to an incompatible dependency that is exposed through a
