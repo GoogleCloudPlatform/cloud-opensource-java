@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -555,13 +554,9 @@ class ClassDumper {
       ImmutableSet<Integer> targetConstantPoolIndices =
           constantPoolIndexForClass(sourceJavaClass, targetClassName);
       if (targetConstantPoolIndices.isEmpty()) {
-        logger.warning(
-            "The target class "
-                + targetClassName
-                + " symbol reference is not found in source class "
-                + sourceClassName);
-        // Cannot say the target unused
-        return false;
+        // This reference is not found in sourceJavaClass any more. This means that there exist
+        // overlapping classes in the class path and that the first one does not use target class.
+        return true;
       }
 
       ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();

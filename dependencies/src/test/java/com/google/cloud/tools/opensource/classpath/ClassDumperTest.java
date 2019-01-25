@@ -335,20 +335,12 @@ public class ClassDumperTest {
         ClassDumper.create(
             ImmutableList.of(absolutePathOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
 
-    try {
-      ClassSymbolReference referenceToUnusedClass =
-          ClassSymbolReference.builder()
-              .setSourceClassName("org.conscrypt.Conscrypt")
-              .setSubclass(false)
-              .setTargetClassName("dummy.NoSuchClass")
-              .build();
-      classDumper.isUnusedClassSymbolReference(referenceToUnusedClass);
-
-      Assert.fail("It should throw VerifyException when it cannot find a class symbol reference");
-    } catch (VerifyException ex) {
-      // pass
-      Truth.assertThat(ex.getMessage())
-          .isEqualTo("The target class symbol reference is not found in source class");
-    }
+    ClassSymbolReference referenceToUnusedClass =
+        ClassSymbolReference.builder()
+            .setSourceClassName("org.conscrypt.Conscrypt")
+            .setSubclass(false)
+            .setTargetClassName("dummy.NoSuchClass")
+            .build();
+    Truth.assertThat(classDumper.isUnusedClassSymbolReference(referenceToUnusedClass)).isTrue();
   }
 }

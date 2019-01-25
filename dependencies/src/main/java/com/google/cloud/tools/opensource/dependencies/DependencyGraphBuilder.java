@@ -272,6 +272,9 @@ public class DependencyGraphBuilder {
       throws AggregatedRepositoryException {
 
     boolean resolveFullDependency = graphTraversalOption.resolveFullDependencies();
+    boolean includeProvidedScope =
+        graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
+
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
@@ -306,8 +309,6 @@ public class DependencyGraphBuilder {
         if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
           Artifact dependencyNodeArtifact = dependencyNode.getArtifact();
           try {
-            boolean includeProvidedScope =
-                graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
             dependencyNode =
                 resolveCompileTimeDependencies(dependencyNodeArtifact, includeProvidedScope);
           } catch (DependencyResolutionException resolutionException) {
@@ -338,11 +339,15 @@ public class DependencyGraphBuilder {
       }
 
       for (DependencyNode child : dependencyNode.getChildren()) {
-        if (visitedArtifacts.add(child.getArtifact())) {
-          @SuppressWarnings("unchecked")
-          Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
-          queue.add(new LevelOrderQueueItem(child, clone));
+        // A graph including provided scope may become big (more than 20,000).
+        // Optimizing by not visiting a node twice
+        // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/367
+        if (includeProvidedScope && !visitedArtifacts.add(child.getArtifact())) {
+          continue;
         }
+        @SuppressWarnings("unchecked")
+        Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
+        queue.add(new LevelOrderQueueItem(child, clone));
       }
     }
 

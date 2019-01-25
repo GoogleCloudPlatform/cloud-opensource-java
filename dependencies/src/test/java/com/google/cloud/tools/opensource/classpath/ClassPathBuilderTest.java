@@ -70,7 +70,7 @@ public class ClassPathBuilderTest {
     Path opencensusApiPath = opencensusApiPathFound.get();
     Truth.assertWithMessage("Opencensus API should have multiple dependency paths")
         .that(multimap.get(opencensusApiPath).size())
-        .isGreaterThan(1);
+        .isEqualTo(1);
   }
 
   @Test
@@ -183,27 +183,5 @@ public class ClassPathBuilderTest {
     Artifact jamonApiArtifact = new DefaultArtifact("com.google.guava:guava-gwt:jar:20.0");
     List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(jamonApiArtifact));
     Truth.assertThat(paths).isNotEmpty();
-  }
-
-  @Test
-  public void testArtifactToClasspath_reportAggregatedRepositoryException()
-      throws RepositoryException {
-    // jamon has transitive dependency to jmxtools, which does not exist in Maven central
-    Artifact jamonApiArtifact = new DefaultArtifact("com.jamonapi:jamon:2.81");
-    try {
-      ClassPathBuilder.artifactsToClasspath(ImmutableList.of(jamonApiArtifact));
-      Assert.fail();
-    } catch (AggregatedRepositoryException ex) {
-      ImmutableList<ExceptionAndPath> failures = ex.getUnderlyingFailures();
-      Truth.assertThat(failures).isNotEmpty();
-      long jmxToolFailureCount = failures.stream().filter(
-          failure -> {
-            List<DependencyNode> path = failure.getPath();
-            return "jmxtools".equals(path.get(path.size()-1).getArtifact().getArtifactId());
-          }
-      ).count();
-
-      Truth.assertThat(jmxToolFailureCount).isEqualTo(1);
-    }
   }
 }
