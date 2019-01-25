@@ -2,14 +2,14 @@
 --------------------------------------------------------------
 
 - Unstable libraries are libraries that allow breaking changes to their
-  public API within the same major version. For libraries following semantic
+  public APIs within the same major version. For libraries following semantic
   versioning, this means libraries with a 0.x.y version. (See [JLBP-3](JLBP-3.md) 
   for more details on the recommendations for semantic versioning.)
 - Features that are not part of the public API of a
   stable library are called *unstable*. To mark a feature as unstable and 
   not part of the public API, use an annotation such as `@Beta`. (See
   [JLBP-3](JLBP-3.md) for more details on annotating unstable features.)
-- If your library depends on an unstable library or feature, and that feature
+- If your library depends on an unstable library or feature which
   experiences a breaking change between versions, your library will be locked to
   a specific version of that dependency.
   - If you expose the unstable feature on your library's surface, then your
