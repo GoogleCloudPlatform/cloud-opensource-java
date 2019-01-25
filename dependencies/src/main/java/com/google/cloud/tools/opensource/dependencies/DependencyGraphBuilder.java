@@ -277,10 +277,12 @@ public class DependencyGraphBuilder {
 
     // Records failures rather than existing immediately.
     List<ExceptionAndPath> resolutionFailures = Lists.newArrayList();
+    Set<Artifact> visitedArtifacts = Sets.newHashSet(firstNode.getArtifact());
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
       DependencyNode dependencyNode = item.dependencyNode;
+
       DependencyPath forPath = new DependencyPath();
       Stack<DependencyNode> parentNodes = item.parentNodes;
       parentNodes.forEach(parentNode -> forPath.add(parentNode.getArtifact()));
@@ -332,10 +334,23 @@ public class DependencyGraphBuilder {
           }
         }
       }
-      for (DependencyNode child : dependencyNode.getChildren()) {
+      List<DependencyNode> children = dependencyNode.getChildren();
+
+      logger.info(dependencyNode +  " calling " + children.size()
+          + " children. Queue size: "
+          + queue.size());
+      for (DependencyNode child : children) {
+        Artifact childArtifact = child.getArtifact();
+        if (visitedArtifacts.contains(childArtifact)) {
+          continue;
+        }
         @SuppressWarnings("unchecked")
         Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
         queue.add(new LevelOrderQueueItem(child, clone));
+        boolean isUnvisited = visitedArtifacts.add(childArtifact);
+        if (! isUnvisited) {
+          logger.fine("somehow duplicated");
+        }
       }
     }
 
