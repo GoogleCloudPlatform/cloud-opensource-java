@@ -37,7 +37,8 @@ Example 2: There are multiple artifacts that provide classes under
     not use `servlet-api` as a dependency at all, for example, to get HTTP
     status code definitions.
     
-This can be extremely difficult to resolve. If at all possible, eliminate all but one of the
+Problems caused by overlapping classes can be extremely difficult to resolve.
+If at all possible, eliminate all but one of the
 overlapping dependencies. Otherwise pay very close attention to which version of 
 each overlapping class is chosen. Make sure the project does not depend on any
 behavior or API of the class that is not selected.
