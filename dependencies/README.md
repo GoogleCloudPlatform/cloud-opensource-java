@@ -109,7 +109,7 @@ A Maven dependency graph is a graph data structure where
 ## Comparison with Maven Dependency Trees by pom.xml
 
 Compared to a _Maven dependency tree_ retrieved by a pom.xml through
-`RepositorySystem.resolveDependencies`, a Maven Dependency Graph has the following differences:
+`RepositorySystem.resolveDependencies`, a Maven dependency graph has the following differences:
 
 - A Maven dependency tree cannot have multiple versions of a Maven artifact, whereas a Maven
   dependency graph can have them.
