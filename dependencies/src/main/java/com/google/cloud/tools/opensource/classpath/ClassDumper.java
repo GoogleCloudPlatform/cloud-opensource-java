@@ -35,6 +35,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -71,6 +72,8 @@ import org.apache.bcel.util.Repository;
  * in them, through the input class path for a static linkage check.
  */
 class ClassDumper {
+
+  private static final Logger logger = Logger.getLogger(ClassDumper.class.getName());
 
   private final ImmutableList<Path> inputClassPath;
   private final Repository classRepository;
@@ -551,9 +554,15 @@ class ClassDumper {
 
       ImmutableSet<Integer> targetConstantPoolIndices =
           constantPoolIndexForClass(sourceJavaClass, targetClassName);
-      Verify.verify(
-          !targetConstantPoolIndices.isEmpty(),
-          "The target class symbol reference is not found in source class");
+      if (targetConstantPoolIndices.isEmpty()) {
+        logger.warning(
+            "The target class "
+                + targetClassName
+                + " symbol reference is not found in source class "
+                + sourceClassName);
+        // Cannot say the target unused
+        return false;
+      }
 
       ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();
       Constant[] constantPoolEntries = sourceConstantPool.getConstantPool();

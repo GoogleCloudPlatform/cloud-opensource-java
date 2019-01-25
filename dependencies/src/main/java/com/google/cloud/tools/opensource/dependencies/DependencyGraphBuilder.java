@@ -277,12 +277,14 @@ public class DependencyGraphBuilder {
 
     // Records failures rather than existing immediately.
     List<ExceptionAndPath> resolutionFailures = Lists.newArrayList();
+    // Not to revisit same artifact
     Set<Artifact> visitedArtifacts = Sets.newHashSet(firstNode.getArtifact());
+    int visitedNodeCount = 0;
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
+      visitedNodeCount++;
       DependencyNode dependencyNode = item.dependencyNode;
-
       DependencyPath forPath = new DependencyPath();
       Stack<DependencyNode> parentNodes = item.parentNodes;
       parentNodes.forEach(parentNode -> forPath.add(parentNode.getArtifact()));
@@ -334,22 +336,12 @@ public class DependencyGraphBuilder {
           }
         }
       }
-      List<DependencyNode> children = dependencyNode.getChildren();
 
-      logger.info(dependencyNode +  " calling " + children.size()
-          + " children. Queue size: "
-          + queue.size());
-      for (DependencyNode child : children) {
-        Artifact childArtifact = child.getArtifact();
-        if (visitedArtifacts.contains(childArtifact)) {
-          continue;
-        }
-        @SuppressWarnings("unchecked")
-        Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
-        queue.add(new LevelOrderQueueItem(child, clone));
-        boolean isUnvisited = visitedArtifacts.add(childArtifact);
-        if (! isUnvisited) {
-          logger.fine("somehow duplicated");
+      for (DependencyNode child : dependencyNode.getChildren()) {
+        if (visitedArtifacts.add(child.getArtifact())) {
+          @SuppressWarnings("unchecked")
+          Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
+          queue.add(new LevelOrderQueueItem(child, clone));
         }
       }
     }
@@ -360,15 +352,15 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Returns true if {@code exceptionAndPath.getPath} does not contain {@code optional} dependency
-   * and the path does not contain {@code scope:provided} dependency.
+   * Returns true if {@code exceptionAndPath.getPath} does not contain an {@code optional}
+   * dependency or a {@code scope:provided} dependency.
    */
   private static boolean isUnacceptableResolutionException(ExceptionAndPath exceptionAndPath) {
     ImmutableList<DependencyNode> dependencyNodes = exceptionAndPath.getPath();
     boolean hasOptionalParent =
         dependencyNodes.stream().anyMatch(node -> node.getDependency().isOptional());
-    if (!hasOptionalParent) {
-      return true;
+    if (hasOptionalParent) {
+      return false;
     }
     boolean hasProvidedParent =
         dependencyNodes.stream()

@@ -488,6 +488,37 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
+  public void testCheckLinkageErrorMissingClassAt_privateStaticField()
+      throws RepositoryException, IOException {
+    // PlexusTypeVisitor.java accesses org.eclipse.sisu.inject.Logs.DEBUG_ENABLED field,
+    // which is 'private static final' as of sisu-inject-bean:2.2.0.
+    List<Path> paths =
+        ClassPathBuilder.artifactsToClasspath(
+            ImmutableList.of(
+                new DefaultArtifact("org.sonatype.sisu.inject:guice-plexus-scanners:2.3.0"),
+                new DefaultArtifact("org.sonatype.sisu:sisu-inject-bean:2.2.0")));
+
+    StaticLinkageChecker staticLinkageChecker =
+        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+
+    StaticLinkageCheckReport linkageErrors = staticLinkageChecker.findLinkageErrors();
+    JarLinkageReport jarLinkageReportOnGuicePlexusScanners =
+        linkageErrors.getJarLinkageReports().get(0);
+    ImmutableList<StaticLinkageError<FieldSymbolReference>> fieldErrors =
+        jarLinkageReportOnGuicePlexusScanners.getMissingFieldErrors();
+    Truth.assertThat(fieldErrors).isNotEmpty();
+
+    Truth.assertThat(fieldErrors.get(0).getReason()).isEqualTo(Reason.INACCESSIBLE_MEMBER);
+    Truth.assertThat(fieldErrors.get(0).getReference())
+        .isEqualTo(
+            FieldSymbolReference.builder()
+                .setSourceClassName("org.sonatype.guice.plexus.scanners.PlexusTypeVisitor")
+                .setTargetClassName("org.sonatype.guice.bean.reflect.Logs")
+                .setFieldName("DEBUG_ENABLED")
+                .build());
+  }
+
+  @Test
   public void testCheckLinkageErrorMissingFieldAt_protectedFieldFromSamePackage()
       throws IOException, URISyntaxException {
     String targetClassName = "com.google.common.io.CharSource$CharSequenceCharSource";
