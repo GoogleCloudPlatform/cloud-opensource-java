@@ -5,7 +5,7 @@ Definition of semantic versioning (SemVer): https://semver.org
 
 - For the purpose of semantic versioning, the stable surface of a library
   serves as its "public API." Annotations can mark features
-  (classes, methods, etc) as unstable, and thus not part of the public API,
+  (classes, methods, etc.) as unstable, and thus not part of the public API,
   such that semantic versioning rules don't have to apply. 
   - Examples of annotations:
     - Guava uses `@Beta`
@@ -20,14 +20,14 @@ Definition of semantic versioning (SemVer): https://semver.org
     surface breakages.
 - Tools are available to help identify accidental incompatibilities within a
   major version. Examples:
-  - https://lvc.github.io/japi-compliance-checker/ 
-  - http://www.mojohaus.org/clirr-maven-plugin/
-  - Example compatibility report for grpc-core:
-    https://abi-laboratory.pro/index.php?view=timeline&lang=java&l=grpc-core 
+  - [Java API Compliance Checker](https://lvc.github.io/japi-compliance-checker/)
+  - [Clirr Maven Plugin](http://www.mojohaus.org/clirr-maven-plugin/)
+  - [Java API Tracker: Compatibility report for grpc-core](
+    https://abi-laboratory.pro/index.php?view=timeline&lang=java&l=grpc-core)
 - Examples of breaking changes to a public API that require a new major
   version:
   - Upgrading to an incompatible dependency that is exposed through a
-    library's Public API. For dependencies that follow semantic versioning, this happens
+    library's public API. For dependencies that follow semantic versioning, this happens
     when a dependency is bumped to a higher major version.
   - Changing a method signature
   - Removing a method (deprecated or not)
