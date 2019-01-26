@@ -279,14 +279,12 @@ public class DependencyGraphBuilder {
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
     // Records failures rather than existing immediately.
-    List<ExceptionAndPath> resolutionFailures = Lists.newArrayList();
-    // Not to revisit same artifact
+    List<ExceptionAndPath> unsafeResolutionFailures = Lists.newArrayList();
+
     Set<Artifact> visitedArtifacts = Sets.newHashSet(firstNode.getArtifact());
-    int visitedNodeCount = 0;
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
-      visitedNodeCount++;
       DependencyNode dependencyNode = item.dependencyNode;
       DependencyPath forPath = new DependencyPath();
       Stack<DependencyNode> parentNodes = item.parentNodes;
@@ -323,26 +321,27 @@ public class DependencyGraphBuilder {
               DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
               ExceptionAndPath failure =
                   ExceptionAndPath.create(parentNodes, failedDependencyNode, resolutionException);
-              if (isUnacceptableResolutionException(failure)) {
-                resolutionFailures.add(failure);
+              if (!isSafeResolutionException(failure)) {
+                unsafeResolutionFailures.add(failure);
               }
             }
           } catch (DependencyCollectionException collectionException) {
             DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
             ExceptionAndPath failure =
                 ExceptionAndPath.create(parentNodes, failedDependencyNode, collectionException);
-            if (isUnacceptableResolutionException(failure)) {
-              resolutionFailures.add(failure);
+            if (!isSafeResolutionException(failure)) {
+              unsafeResolutionFailures.add(failure);
             }
           }
         }
       }
 
       for (DependencyNode child : dependencyNode.getChildren()) {
-        // A graph including provided scope may become big (more than 20,000).
-        // Optimizing by not visiting a node twice
+        // A graph including provided scope may become very big (more than 20,000 nodes).
         // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/367
+        // Optimizing the traversal by not visiting a node twice
         if (includeProvidedScope && !visitedArtifacts.add(child.getArtifact())) {
+          // The optimization is not applicable for graphs used for upper-bound suggestions.
           continue;
         }
         @SuppressWarnings("unchecked")
@@ -351,25 +350,25 @@ public class DependencyGraphBuilder {
       }
     }
 
-    if (!resolutionFailures.isEmpty()) {
-      throw new AggregatedRepositoryException(resolutionFailures);
+    if (!unsafeResolutionFailures.isEmpty()) {
+      throw new AggregatedRepositoryException(unsafeResolutionFailures);
     }
   }
 
   /**
-   * Returns true if {@code exceptionAndPath.getPath} does not contain an {@code optional}
-   * dependency or a {@code scope:provided} dependency.
+   * Returns true if {@code exceptionAndPath.getPath} contains an {@code optional} dependency or a
+   * {@code scope:provided} dependency.
    */
-  private static boolean isUnacceptableResolutionException(ExceptionAndPath exceptionAndPath) {
+  private static boolean isSafeResolutionException(ExceptionAndPath exceptionAndPath) {
     ImmutableList<DependencyNode> dependencyNodes = exceptionAndPath.getPath();
     boolean hasOptionalParent =
         dependencyNodes.stream().anyMatch(node -> node.getDependency().isOptional());
     if (hasOptionalParent) {
-      return false;
+      return true;
     }
     boolean hasProvidedParent =
         dependencyNodes.stream()
             .anyMatch(node -> "provided".equals(node.getDependency().getScope()));
-    return !hasProvidedParent;
+    return hasProvidedParent;
   }
 }
