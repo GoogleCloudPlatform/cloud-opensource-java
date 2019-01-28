@@ -69,8 +69,9 @@ public class ClassPathBuilderTest {
     Truth8.assertThat(opencensusApiPathFound).isPresent();
     Path opencensusApiPath = opencensusApiPathFound.get();
     Truth.assertWithMessage("Opencensus API should have multiple dependency paths")
-        .that(multimap.get(opencensusApiPath).size())
-        .isEqualTo(1);
+        .that(multimap)
+        .valuesForKey(opencensusApiPath)
+        .hasSize(1);
   }
 
   @Test

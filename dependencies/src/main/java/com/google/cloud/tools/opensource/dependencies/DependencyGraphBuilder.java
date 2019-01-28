@@ -42,6 +42,7 @@ import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
@@ -278,7 +279,7 @@ public class DependencyGraphBuilder {
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
-    // Records failures rather than existing immediately.
+    // Records failures rather than exiting immediately.
     List<ExceptionAndPath> unsafeResolutionFailures = Lists.newArrayList();
 
     Set<Artifact> visitedArtifacts = Sets.newHashSet(firstNode.getArtifact());
@@ -318,20 +319,18 @@ public class DependencyGraphBuilder {
               if (artifactResult.getExceptions().isEmpty()) {
                 continue;
               }
-              DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
-              ExceptionAndPath failure =
-                  ExceptionAndPath.create(parentNodes, failedDependencyNode, resolutionException);
-              if (!isSafeResolutionException(failure)) {
-                unsafeResolutionFailures.add(failure);
-              }
+              recordUnsafeFailuresIfNotSafe(
+                  parentNodes,
+                  artifactResult.getRequest().getDependencyNode(),
+                  resolutionException,
+                  unsafeResolutionFailures);
             }
           } catch (DependencyCollectionException collectionException) {
-            DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
-            ExceptionAndPath failure =
-                ExceptionAndPath.create(parentNodes, failedDependencyNode, collectionException);
-            if (!isSafeResolutionException(failure)) {
-              unsafeResolutionFailures.add(failure);
-            }
+            recordUnsafeFailuresIfNotSafe(
+                parentNodes,
+                collectionException.getResult().getRoot(),
+                collectionException,
+                unsafeResolutionFailures);
           }
         }
       }
@@ -358,19 +357,30 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Returns true if {@code exceptionAndPath.getPath} contains an {@code optional} dependency or a
+   * Records the path and {@code repositoryException} to {@code unsafeResolutionFailures} if the the
+   * exception at {@code failedDependencyNode} is not safe.
+   */
+  private static void recordUnsafeFailuresIfNotSafe(
+      Stack<DependencyNode> parentNodes,
+      DependencyNode failedDependencyNode,
+      RepositoryException repositoryException,
+      List<ExceptionAndPath> unsafeResolutionFailures) {
+    ExceptionAndPath failure =
+        ExceptionAndPath.create(parentNodes, failedDependencyNode, repositoryException);
+    if (!isSafeResolutionException(failure)) {
+      unsafeResolutionFailures.add(failure);
+    }
+  }
+
+  /**
+   * Returns true if {@link ExceptionAndPath#getPath()} contains an {@code optional} dependency or a
    * {@code scope:provided} dependency.
    */
   private static boolean isSafeResolutionException(ExceptionAndPath exceptionAndPath) {
     ImmutableList<DependencyNode> dependencyNodes = exceptionAndPath.getPath();
-    boolean hasOptionalParent =
-        dependencyNodes.stream().anyMatch(node -> node.getDependency().isOptional());
-    if (hasOptionalParent) {
-      return true;
-    }
-    boolean hasProvidedParent =
-        dependencyNodes.stream()
-            .anyMatch(node -> "provided".equals(node.getDependency().getScope()));
-    return hasProvidedParent;
+
+    return dependencyNodes.stream()
+        .map(DependencyNode::getDependency)
+        .anyMatch(dep -> dep.isOptional() || "provided".equals(dep.getScope()));
   }
 }
