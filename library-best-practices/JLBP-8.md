@@ -8,7 +8,8 @@ used, they can cause problems when there are surface breakages (which is allowed
 per the rules of unstable functionality, explained in [JLBP-3](JLBP-3.md)).
 If such breakages can cause widespread pain, the unstable features can be recognized
 as general availability (GA) by many users.
-To avoid this problem, promote such widely-used libraries and features to a stable version,
+To avoid widespread pain that would be caused such breakages, treat the unstable features as
+"common-law GA", and then promote them to a stable version,
 even if the functionality is not complete.
 Stability is not about completeness but about guarantees not to break
 users' code frequently.
