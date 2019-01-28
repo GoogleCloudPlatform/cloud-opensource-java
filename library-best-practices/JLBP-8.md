@@ -7,7 +7,7 @@ annotations if they live in a stable library, as outlined in
 used, they can cause problems when there are surface breakages (which is allowed
 per the rules of unstable functionality, explained in [JLBP-3](JLBP-3.md)).
 To avoid widespread pain that would be caused by such breakages, treat the unstable features as
-"common-law GA", and then promote them to a stable version,
+"common-law GA", and then promote such widely-used libraries to stable versions,
 even if the functionality is not complete.
 Stability is not about completeness but about guarantees not to break
 users' code frequently.
