@@ -30,7 +30,7 @@ accepting breaking changes for various reasons:
 
 As soon as you introduce breaking changes, they might decide to stick with the
 last working version indefinitely. As an example of a popular library that took
-a long time to upgrade, Hadoop introduced Guava 11.0.2 into its dependency in May of 2012,
+a long time to upgrade, Hadoop had introduced Guava 11.0.2 into its dependency in May of 2012,
 but didn't upgrade it to a later version until March of 2017 (nearly five years later).
 
 Changes to your API surface that customers don't have to incorporate into their
