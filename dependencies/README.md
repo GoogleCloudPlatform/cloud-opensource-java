@@ -141,11 +141,12 @@ A graph construction may _fail_ when there is a problem.
 A Maven artifact may be unavailable through Maven repositories. Such nodes are marked unavailable
 at Step 3 of a graph construction.
 
-An unavailability of Maven artifact is called _safe_ when the path from the initial nodes to
-the missing artifact contains `optional` or `scope: provided` dependency. The resulting graph
-has the unavailable Maven artifact node connected to another node.
+For a list of initial nodes, a node is called _optional_ when the path from the initial nodes to
+the artifact contains an `optional` node. A node is called _provided_ if the path contains
+a `scope: provided` dependency.
 
-When there is an unavailable Maven artifact and it is not safe, the graph construction fails.
+When there is an unavailable Maven artifact and it is not optional or provided,
+the graph construction fails.
 
 ### Unsatisfied Version Constraints
 
