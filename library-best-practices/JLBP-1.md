@@ -9,7 +9,7 @@ that library and that library's consumers.
 
 Some specific notes about minimizing dependencies:
 
-- Use the smallest scope possible. For example, auto-value doesn't
+- Use the smallest scope possible. For example, AutoValue doesn't
   need to use `compile` scope, and can instead use `compile-only`,
   since it doesn't need to appear on the classpath of consumers.
   - Libraries used only for testing should have `test` scope
@@ -19,7 +19,7 @@ Some specific notes about minimizing dependencies:
   dependency, check the full tree of transitive dependencies that
   are pulled in as a result. If a large number of transitive
   dependencies are pulled in, consider a different direct dependency.
-  Alternatively, if the functionality you need is small, re-implement
+  Alternatively, if the functionality you need is small, reimplement
   it in your own library.
   - Maven: Run `mvn dependency:tree` (after running
     `mvn install -DskipTests` to build the library).
@@ -41,4 +41,4 @@ Some specific notes about minimizing dependencies:
   another dependency, do so. For example, if the only classes you're 
   using from Guava are `Preconditions` and `Strings`, it's not 
   worth adding a dependency on Guava. You can easily reimplement 
-  any methods in those classes you're using.  
+  any method in those classes.  

@@ -93,6 +93,8 @@ public class StaticLinkageChecker {
     CommandLine commandLine = StaticLinkageCheckOption.readCommandLine(arguments);
     ImmutableList<Path> inputClasspath =
         StaticLinkageCheckOption.generateInputClasspath(commandLine);
+    logger.info("Input class path size: " + inputClasspath.size());
+
     // TODO(suztomo): take command-line option to choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(inputClasspath.get(0));
 
