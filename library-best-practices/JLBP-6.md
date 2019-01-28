@@ -57,8 +57,9 @@ Recommendations:
 Extended discussion with example scenario
 -------------------
 
-The recommendations are from our experience around renaming package and/or Maven ID.
-This section discusses the rationale with an example scenario and possible cases of renamings.
+The recommendations are derived from our experience around renaming package and/or Maven ID.
+This section discusses the rationale behind them with an example scenario
+and possible cases of renamings.
 
 Consider the following renaming scenario:
 
