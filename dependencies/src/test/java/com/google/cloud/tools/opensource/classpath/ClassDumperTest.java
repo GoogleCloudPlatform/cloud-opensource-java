@@ -341,6 +341,6 @@ public class ClassDumperTest {
             .setSubclass(false)
             .setTargetClassName("dummy.NoSuchClass")
             .build();
-    Truth.assertThat(classDumper.isUnusedClassSymbolReference(referenceToUnusedClass)).isTrue();
+    Truth.assertThat(classDumper.isUnusedClassSymbolReference(referenceToUnusedClass)).isFalse();
   }
 }
