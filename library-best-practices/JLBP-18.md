@@ -9,7 +9,7 @@ by the consumers of that library. Most implementations of shading do a simple
 search and replace of Java package strings in the byte code of the dependency
 classes and the code using the dependency classes.
 
-There are a number of problems with shading:
+There are, however, a number of problems with shading:
 
 - It can cause considerable size bloat. If it is applied at multiple layers,
   it can have a massive accumulating effect.
@@ -23,7 +23,7 @@ There are a number of problems with shading:
 - Shaders either don't support classes loaded by reflection or they replace all
   strings matching selected packages in the bytecode, leading to the corruption
   of some constants.
-- It is easy to accidentally not relocate classes or other files, resulting in
+- It is easy to accidentally fail to relocate classes or other files, resulting in
   an artifact that overlaps classes and files with the original dependency
   (creating the situation described in [JLBP-5](JLBP-5.md) ).
 
@@ -39,7 +39,7 @@ you need to read the source code. Make sure you do all of the following:
 
 - Add a test to make sure that all classes and other files copied into your jar
   from your dependencies are relocated.
-  - Other files include things like log4j.properties files.
+  - Other files include configuration files (for example `log4j.properties`).
 - Promote transitive dependencies that are not relocated to direct
   dependencies.
 - Make sure no dependencies that appear on your own library surface are

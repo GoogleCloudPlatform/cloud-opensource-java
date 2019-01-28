@@ -57,9 +57,8 @@ Recommendations:
 Extended discussion with example scenario
 -------------------
 
-The recommendations are from our experience around renaming package and/or
-Maven ID. This section discusses the rationale with an example scenario and possible
-cases of renamings.
+The recommendations are from our experience around renaming package and/or Maven ID.
+This section discusses the rationale with an example scenario and possible cases of renamings.
 
 Consider the following renaming scenario:
 
@@ -119,8 +118,8 @@ Given this scenario, here are the possible combinations of renamings:
 Given the consequences, it seems clear that the two worst options are case 2
 (renaming the Maven ID while keeping the Java package the same) and case 3
 (renaming the Java package while keeping the Maven ID the same), and both should
-be avoided. The remaining three cases need to be weighed carefully. Among the
-remaining three cases, the impact of the Maven ID change is minuscule compared
+be avoided.
+Among the remaining three cases, the impact of the Maven ID change is minuscule compared
 to the impact of a Java package rename, so the remaining discussion focuses
 only on the Java package rename.
 
