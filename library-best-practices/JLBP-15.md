@@ -9,7 +9,7 @@
   - Documentation is available at
     https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html
     .
-  - All of the modules of the project should be included; otherwise, a consumer
+  - All of the modules of the project should be included. Otherwise, a consumer
     who depends on an unspecified module must specify and upgrade the version of
     that module, defeating the purpose of the BOM.
 - The purpose of a BOM is to enable consumers of a library to select a

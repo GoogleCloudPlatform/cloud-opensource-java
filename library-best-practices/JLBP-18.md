@@ -9,7 +9,7 @@ by the consumers of that library. Most implementations of shading do a simple
 search and replace of Java package strings in the byte code of the dependency
 classes and the code using the dependency classes.
 
-There are, however, a number of problems with shading:
+There are a number of problems with shading:
 
 - It can cause considerable size bloat. If it is applied at multiple layers,
   it can have a massive accumulating effect.
