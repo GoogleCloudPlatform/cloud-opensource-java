@@ -142,12 +142,12 @@ is used. Let's take examples from two extremes.
    refactoring breaks the surface of 5,000 of those references between major
    version 1 to major version 2.
 
-   In this case, changing consuming code would be a large undertaking, and it's not
-   certain that all consuming code would feel it's worth it to migrate to the new
-   major version. If the library author decided to opt for keeping the same Java
+   In this case, changing consuming code would be a large undertaking.
+   It's likely that not all consuming code will feel it's worth migrating to the new
+   major version. If the library author decides to keep the same Java
    package, the ecosystem would need to bifurcate in order to handle code paths
-   requiring one versus the other major version. Either the ecosystem would
-   generally opt to retain the old major version, or there would be an extended
+   requiring one versus the other major version.
+   Either the ecosystem retains the old major version, or there will be an extended
    period of difficult diamond dependency conflicts before everyone had
    transitioned.
 

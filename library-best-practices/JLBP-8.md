@@ -5,10 +5,10 @@ Libraries at 0.x versions and unstable features (which should be marked with
 annotations if they live in a stable library, as outlined in
 [JLBP-3](JLBP-3.md)) make no promises about stability. If they become widely
 used, they can cause problems when there are surface breakages (which is allowed
-per the rules of unstable functionality, explained in [JLBP-3](JLBP-3.md)).
-To avoid widespread caused by such breakages, you can treat the unstable features as
-"common-law GA", and then promote such widely-used libraries to stable versions,
-even if the functionality is not complete.
+per the rules of unstable functionality, explained in [JLBP-3](JLBP-3.md)). If
+such breakages can cause widespread pain, the unstable features can become
+"common-law GA." The preferable path is to promote such widely-used unstable
+libraries and features to stability, even if the functionality is not complete.
 Stability is not about completeness but about guarantees not to break
 users' code frequently.
 
