@@ -145,8 +145,8 @@ For a list of initial nodes, a node is called _optional_ when the path from the 
 the artifact contains an `optional` node. A node is called _provided_ if the path contains
 a `scope: provided` dependency.
 
-When there is an unavailable Maven artifact and it is not optional or provided,
-the graph construction fails.
+When there is an unavailable Maven artifact and it is not optional or provided for the initial
+nodes, the graph construction fails.
 
 ### Unsatisfied Version Constraints
 
