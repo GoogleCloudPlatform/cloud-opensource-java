@@ -562,7 +562,8 @@ class ClassDumper {
                 + " does not have target "
                 + targetClassName
                 + ", because of overlapping source classes on the class path");
-        return true;
+        // By returning false ("the reference used"), the reference is shown as error
+        return false;
       }
 
       ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();

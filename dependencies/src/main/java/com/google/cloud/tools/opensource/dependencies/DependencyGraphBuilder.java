@@ -42,7 +42,6 @@ import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
@@ -367,7 +366,7 @@ public class DependencyGraphBuilder {
       List<ExceptionAndPath> unsafeResolutionFailures) {
     ExceptionAndPath failure =
         ExceptionAndPath.create(parentNodes, failedDependencyNode, repositoryException);
-    if (!isSafeResolutionException(failure)) {
+    if (!isOptionalOrProvided(failure)) {
       unsafeResolutionFailures.add(failure);
     }
   }
@@ -376,7 +375,7 @@ public class DependencyGraphBuilder {
    * Returns true if {@link ExceptionAndPath#getPath()} contains an {@code optional} dependency or a
    * {@code scope:provided} dependency.
    */
-  private static boolean isSafeResolutionException(ExceptionAndPath exceptionAndPath) {
+  private static boolean isOptionalOrProvided(ExceptionAndPath exceptionAndPath) {
     ImmutableList<DependencyNode> dependencyNodes = exceptionAndPath.getPath();
 
     return dependencyNodes.stream()
