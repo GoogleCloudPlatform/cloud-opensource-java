@@ -34,6 +34,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -70,6 +71,8 @@ import org.apache.bcel.util.Repository;
  * in them, through the input class path for a static linkage check.
  */
 class ClassDumper {
+
+  private static final Logger logger = Logger.getLogger(ClassDumper.class.getName());
 
   private final ImmutableList<Path> inputClassPath;
   private final Repository classRepository;
@@ -553,6 +556,12 @@ class ClassDumper {
       if (targetConstantPoolIndices.isEmpty()) {
         // This reference is not found in sourceJavaClass any more. This means that there exist
         // overlapping classes in the class path and that the first one does not use target class.
+        logger.warning(
+            "The source "
+                + sourceClassName
+                + " does not have target "
+                + targetClassName
+                + ", because of overlapping source classes on the class path");
         return true;
       }
 

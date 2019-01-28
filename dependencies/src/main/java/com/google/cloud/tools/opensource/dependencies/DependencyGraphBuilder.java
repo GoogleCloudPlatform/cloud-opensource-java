@@ -342,6 +342,8 @@ public class DependencyGraphBuilder {
         // Optimizing the traversal by not visiting a node twice
         if (includeProvidedScope && !visitedArtifacts.add(child.getArtifact())) {
           // The optimization is not applicable for graphs used for upper-bound suggestions.
+          // It's because it skips a node visited second time, resulting in missed suggestions
+          // for other Maven artifacts than the first one.
           continue;
         }
         @SuppressWarnings("unchecked")
