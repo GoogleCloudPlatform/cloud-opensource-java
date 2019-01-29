@@ -1,7 +1,7 @@
 [JLBP-18] Only shade dependencies as a last resort
 --------------------------------------------------
 
-Shading is a process where a dependency is relocated to different Java package
+Shading is a process where a dependency is relocated to a different Java package
 and copied into the same jar as the code that relies on that dependency.
 The main purpose of shading is to avoid conflicts
 between the versions of dependencies used by a library and the versions used
