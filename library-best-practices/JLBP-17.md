@@ -1,7 +1,7 @@
 [JLBP-17] Coordinate Rollout of Breaking Changes
 ------------------------------------------------
 
-When a library in a dependency tree introduces a breaking change, consumers
+When a library introduces a breaking change, consumers
 can't update to that version until all their other dependencies which also use
 the library update to that version first. To enable clients to depend on the
 latest versions of all their dependencies, propagate breaking changes as
