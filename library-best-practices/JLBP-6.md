@@ -109,7 +109,7 @@ Given this scenario, here are the possible combinations of renamings:
     The benefit of this approach is that users don't have to think about which
     Maven artifact to use and can just keep advancing the version.
 
-Given the consequences, we should avoid case 2
+Given the consequences, maintainers should avoid case 2
 (renaming the Maven ID while keeping the Java package the same)
 and case 3 (renaming the Java package while keeping the Maven ID the same).
 Among the remaining three cases, the impact of the Maven ID change is minuscule compared
@@ -138,7 +138,7 @@ is used. Let's take examples from two extremes.
    It's likely that not all maintainers will feel it's worth migrating to the new
    major version. If the library author decides to keep the same Java
    package, the ecosystem has to bifurcate to handle code paths
-   requiring one versus the other major version.
+   requiring one major version or the other.
    Either the ecosystem retains the old major version, or there will be an extended
    period of difficult diamond dependency conflicts before everyone transitions.
    In this scenario, it is clearly superior to rename the Java
