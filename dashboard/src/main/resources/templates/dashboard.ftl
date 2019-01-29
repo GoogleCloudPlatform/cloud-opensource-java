@@ -26,6 +26,10 @@
           <h2 class="artifact-count"><@countFailures name="Global Upper Bounds"/></h2>
           <span class="desc">Have Global Upper Bounds Errors</span>
         </div>
+        <div class="statistic-item statistic-item-blue">
+          <h2 class="artifact-count"><@countFailures name="Dependency Convergence"/></h2>
+          <span class="desc">Fail to Converge</span>
+        </div>
       </div>
     </section>
     
