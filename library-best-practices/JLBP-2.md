@@ -1,7 +1,7 @@
 [JLBP-2] Minimize API surface
 -----------------------------
 
-- Try not to expose types from your dependencies.
+- Avoid exposing types from your dependencies.
   - Your dependencies have their own rules about how often
     they do major version bumps and make breaking changes.
     Their frequency of such changes may be more often than yours,
