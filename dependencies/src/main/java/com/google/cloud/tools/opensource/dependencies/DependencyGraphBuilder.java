@@ -279,7 +279,7 @@ public class DependencyGraphBuilder {
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
     // Records failures rather than exiting immediately.
-    List<ExceptionAndPath> unsafeResolutionFailures = Lists.newArrayList();
+    List<ExceptionAndPath> resolutionFailures = Lists.newArrayList();
 
     Set<Artifact> visitedArtifacts = Sets.newHashSet(firstNode.getArtifact());
 
@@ -322,14 +322,14 @@ public class DependencyGraphBuilder {
                   parentNodes,
                   artifactResult.getRequest().getDependencyNode(),
                   resolutionException,
-                  unsafeResolutionFailures);
+                  resolutionFailures);
             }
           } catch (DependencyCollectionException collectionException) {
             recordUnsafeFailuresIfNotSafe(
                 parentNodes,
                 collectionException.getResult().getRoot(),
                 collectionException,
-                unsafeResolutionFailures);
+                resolutionFailures);
           }
         }
       }
@@ -350,14 +350,14 @@ public class DependencyGraphBuilder {
       }
     }
 
-    if (!unsafeResolutionFailures.isEmpty()) {
-      throw new AggregatedRepositoryException(unsafeResolutionFailures);
+    if (!resolutionFailures.isEmpty()) {
+      throw new AggregatedRepositoryException(resolutionFailures);
     }
   }
 
   /**
    * Records the path and {@code repositoryException} to {@code unsafeResolutionFailures} if the the
-   * exception at {@code failedDependencyNode} is not safe.
+   * exception at {@code failedDependencyNode} is not optional or provided.
    */
   private static void recordUnsafeFailuresIfNotSafe(
       Stack<DependencyNode> parentNodes,
