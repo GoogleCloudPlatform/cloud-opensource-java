@@ -29,13 +29,15 @@ Example 1: Guava's main artifact ID is `guava`, but from versions 13.0 to 17.0,
 
 Example 2: There are multiple artifacts that provide classes under
   `javax.servlet` (`javax.servlet:javax.servlet-api:3.1.0` and
-  `javax.servlet:servlet-api:2.5` at least), and the correct one to choose
-  depends on your runtime.
-  - The only type of library that should depend on `servlet-api` is one
-    functioning as a utility library for use in web applications. Even in this case,
-    the `servlet-api` dependency should use `provided` scope. Other libraries should
-    not use `servlet-api` as a dependency at all; for example, to get HTTP
-    status code constants.
+  `javax.servlet:servlet-api:2.5` at least). The correct choice
+  depends on the runtime.
+  - The only type of library that should depend on `servlet-api` is 
+    one used exclusively in servlet applications. In this case,
+    the `servlet-api` dependency should have `provided` scope. Other libraries should
+    not depend on `servlet-api`. For example, do not use constants such as 
+    `javax.servlet.http.HttpServletResponse.SC_FORBIDDEN` if your library
+    might be used anywhere that is not a servlet. Define these status codes 
+    yourself or choose a different library to provide them. 
     
 Problems caused by overlapping classes can be extremely difficult to resolve.
 If at all possible, eliminate all but one of the
