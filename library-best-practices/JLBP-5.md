@@ -29,8 +29,8 @@ Example 1: Guava's main artifact ID is `guava`, but from versions 13.0 to 17.0,
 
 Example 2: There are multiple artifacts that provide classes under
   `javax.servlet` (`javax.servlet:javax.servlet-api:3.1.0` and
-  `javax.servlet:servlet-api:2.5` at least). The correct one to choose
-  depends on your runtime.
+  `javax.servlet:servlet-api:2.5` at least). The correct choice
+  depends on the runtime.
   - The only type of library that should depend on `servlet-api` is 
     one used exclusively in servlet applications. In this case,
     the `servlet-api` dependency should have `provided` scope. Other libraries should
