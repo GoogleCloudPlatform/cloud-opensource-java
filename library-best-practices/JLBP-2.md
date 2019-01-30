@@ -14,7 +14,7 @@
     you either have to break your own API or remain with an older,
     unsupported version of the library that is likely to cause diamond dependency
     problems. Historically this was a big problem for libraries that exposed Guava types
-    such as `com.google.common.io.OutputSupplier` because Guava bumped major versions
+    such as `com.google.common.io.OutputSupplier` because Guava incremented major versions
     every 6 months.
 
 - Use package-protected classes and methods for internal APIs that should not be used by consumers.
@@ -33,7 +33,8 @@
   the new module system in Java 11 or later.) 
 
 
-<b id="item15">1</b> Bloch, Joshua. "Item 15: Minimize the accessibility of classes and members." Effective Java, 3rd Edition. Boston: Addison-Wesley, 2018. p. 73[↩](#a1)
+<b id="item15">1</b> Bloch, Joshua. "Item 15: Minimize the accessibility of classes and members."
+Effective Java, 3rd Edition. Boston: Addison-Wesley, 2018. p. 73[↩](#a1)
 
 <b id="item19">2</b> Bloch, Joshua. "Item 19: Design and document for inheritance or else 
 prohibit it." Effective Java, 3rd Edition. Boston: Addison-Wesley, 2018. p. 93[↩](#a2)
