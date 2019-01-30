@@ -139,8 +139,9 @@ is used. Let's take examples from two extremes.
    major version. If the library author decides to keep the same Java
    package, the ecosystem has to bifurcate to handle code paths
    requiring one major version or the other.
-   Either the ecosystem retains the old major version, or there will be an extended
-   period of difficult diamond dependency conflicts before everyone transitions.
+   Some projects keep using the old version. Other projects will upgrade to the new version of
+   the dependency.
+   Therefore, there will be diamond dependency conflicts.
    In this scenario, it is clearly superior to rename the Java
    package, and essentially treat the new major version as a new library.
 
