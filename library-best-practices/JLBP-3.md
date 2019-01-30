@@ -36,7 +36,6 @@ Definition of semantic versioning (SemVer): https://semver.org
     features) that is exposed through a library's public API
   - Adding a new class
   - Adding a new method
-- Special case: Merely bumping up the minimum required Java version (and not
-  making any breaking surface changes) does not necessarily mean that a
-  library should bump its major version, because new Java versions break
-  very little surface from prior versions.
+- Special case: Maintainers do not have to increment a library's major version when
+  a release is only to drop the support of an end-of-life Java version that is not widely used by
+  the consumers of the library.
