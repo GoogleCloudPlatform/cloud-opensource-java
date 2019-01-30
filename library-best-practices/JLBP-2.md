@@ -10,9 +10,8 @@
   - Your own public types should not be subclasses or implementations of types
     in third party libraries.  
 
-  - Third party libraries can change their own API more frequently than you like
-    or do so at inconvenient times. If a third party type on the surface of
-    your API changes or is removed, you either have to break your own API or remain with an older,
+  - If a third party type on the surface of your API changes or is removed, 
+    you either have to break your own API or remain with an older,
     unsupported version of the library that is likely to cause diamond dependency
     problems. Historically this was a big problem for libraries that exposed Guava types
     such as `com.google.common.io.OutputSupplier` because Guava bumped major versions
