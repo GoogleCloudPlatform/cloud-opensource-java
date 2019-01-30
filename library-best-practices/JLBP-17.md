@@ -33,7 +33,7 @@ Perform the rollout in this manner:
      - The author should make sure that any code-level concerns of the library
        owners have been addressed before proceeding with the rollout (step 3) so
        that the rollout can proceed efficiently.
-   - In the case of using the two-pass approach, mark the undesired surface as
+   - To use the two-phase approach, mark the undesired surface as
      `@Deprecated` and release. Make sure that all consuming libraries
      have removed their references to the deprecated functionality. This invokes
      [JLBP-13](JLBP-13.md) for consuming libraries.

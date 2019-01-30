@@ -54,9 +54,6 @@ Recommendations:
   - Corollary 2: Don't fork an artifact owned by someone else and publish
     classes with the same fully-qualified classnames.
 
-Extended discussion
--------------------
-
 Consider the following renaming scenario:
 
 - The Maven coordinates start as `g1:a1:1.0.0`
@@ -112,11 +109,10 @@ Given this scenario, here are the possible combinations of renamings:
     The benefit of this approach is that users don't have to think about which
     Maven artifact to use and can just keep advancing the version.
 
-Given the consequences, it seems clear that the two worst options are case 2
-(renaming the Maven ID while keeping the Java package the same) and case 3
-(renaming the Java package while keeping the Maven ID the same), and both should
-be avoided. The remaining three cases need to be weighed carefully. Among the
-remaining three cases, the impact of the Maven ID change is minuscule compared
+Given the consequences, maintainers should avoid case 2
+(renaming the Maven ID while keeping the Java package the same)
+and case 3 (renaming the Java package while keeping the Maven ID the same).
+Among the remaining three cases, the impact of the Maven ID change is minuscule compared
 to the impact of a Java package rename, so the remaining discussion focuses
 only on the Java package rename.
 
@@ -128,25 +124,26 @@ is used. Let's take examples from two extremes.
    function with one reference in a leaf of the dependency graph that is deleted
    between major version 1 to major version 2.
 
-In this case, moving 10,000 references to a new package in a large dependency
-tree would be a very expensive endeavor. In contrast, updating the one place
-where the old function is used to use the new function instead would be
-considerably less work and could be rolled out much more quickly. In this
-scenario, it is clearly superior to keep the same Java package.
+   In this case, moving 10,000 references to a new package in a large dependency
+   tree would be a very expensive endeavor. In contrast, updating the one place
+   that references the deleted function to use the new function instead would be
+   considerably less work and can be rolled out much more quickly. In this
+   scenario, it is clearly superior to keep the same Java package.
 
 2. A library with 10,000 references throughout 100 packages, and a large
    refactoring breaks the surface of 5,000 of those references between major
    version 1 to major version 2.
 
-In this case, changing consuming code would be a large undertaking, and it's not
-certain that all consuming code would feel it's worth it to migrate to the new
-major version. If the library author decided to opt for keeping the same Java
-package, the ecosystem would need to bifurcate in order to handle code paths
-requiring one versus the other major version. Either the ecosystem would
-generally opt to retain the old major version, or there would be an extended
-period of difficult diamond dependency conflicts before everyone had
-transitioned. In this scenario, it is clearly superior to rename the Java
-package, and essentially treat the new major version as a new library.
+   In this case, changing consuming code would be a large undertaking.
+   It's likely that not all maintainers will feel it's worth migrating to the new
+   major version. If the library author decides to keep the same Java
+   package, the ecosystem has to bifurcate to handle code paths
+   requiring one major version or the other.
+   Some projects keep using the old version. Other projects will upgrade to the new version of
+   the dependency.
+   Therefore, there will be diamond dependency conflicts.
+   In this scenario, it is clearly superior to rename the Java
+   package, and essentially treat the new major version as a new library.
 
 Note that both of these examples are for a library with a large number of places
 that reference it. The fewer places that a library is referenced, and the closer

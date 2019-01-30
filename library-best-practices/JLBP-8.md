@@ -8,9 +8,9 @@ used, they can cause problems when there are surface breakages (which is allowed
 per the rules of unstable functionality, explained in [JLBP-3](JLBP-3.md)). If
 such breakages can cause widespread pain, the unstable features can become
 "common-law GA." The preferable path is to promote such widely-used unstable
-libraries and features to stability, even if the functionality is not complete,
-because stability is not about completeness, it is about guarantees to not break
-users frequently or without warning.
+libraries and features to stability, even if the functionality is not complete.
+Stability is not about completeness but about guarantees not to break
+users' code frequently.
 
 If the surface needs to change before it stabilized, follow the process in
 [JLBP-7](JLBP-7.md) to minimize disruption to the ecosystem (TL;DR: Mark the old

@@ -29,9 +29,9 @@ accepting breaking changes for various reasons:
   want to force a breaking change on their own users for a long period.
 
 As soon as you introduce breaking changes, they might decide to stick with the
-last working version indefinitely. As an example of a popular library that took
-a long time to upgrade, Hadoop introduced Guava 11.0.2 in May of 2012, and
-didn't upgrade to a later version until March of 2017 (nearly five years later).
+last working version indefinitely.
+For example, Hadoop added a dependency on Guava 11.0.2 in May of 2012,
+and didn't upgrade it until March of 2017 (nearly five years later).
 
 Changes to your API surface that customers don't have to incorporate into their
 own code are a different story. One example is using a different Java package
