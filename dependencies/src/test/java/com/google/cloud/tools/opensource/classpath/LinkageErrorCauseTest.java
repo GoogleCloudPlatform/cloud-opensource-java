@@ -20,7 +20,7 @@ import com.google.cloud.tools.opensource.classpath.StaticLinkageError.Reason;
 import com.google.common.truth.Truth;
 import org.junit.Test;
 
-public class LinkageErrorGroupKeyTest {
+public class LinkageErrorCauseTest {
 
   @Test
   public void testCreation() {
@@ -34,7 +34,7 @@ public class LinkageErrorGroupKeyTest {
     StaticLinkageError<FieldSymbolReference> fieldError =
         StaticLinkageError.errorMissingTargetClass(fieldSymbolReference);
 
-    LinkageErrorGroupKey groupKey = LinkageErrorGroupKey.from(fieldError);
+    LinkageErrorCause groupKey = LinkageErrorCause.from(fieldError);
     Truth.assertThat(groupKey.getReason()).isEqualTo(Reason.CLASS_NOT_FOUND);
     Truth.assertThat(groupKey.getSymbol()).isEqualTo("ClassC");
   }

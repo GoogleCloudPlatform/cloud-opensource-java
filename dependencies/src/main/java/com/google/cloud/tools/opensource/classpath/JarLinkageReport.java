@@ -17,20 +17,16 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
-import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 /**
  * The result of checking linkages in one jar file.
@@ -90,22 +86,25 @@ public abstract class JarLinkageReport {
     return builder.toString();
   }
 
+  /**
+   * Returns human-friendly summary of the report grouping the errors by {@link LinkageErrorCause}.
+   */
   public String formatByGroup() {
     String indent = "  ";
     StringBuilder builder = new StringBuilder();
 
-    ImmutableListMultimap<LinkageErrorGroupKey, StaticLinkageError<ClassSymbolReference>>
-        groupedClassErrors = Multimaps.index(getMissingClassErrors(), LinkageErrorGroupKey::from);
+    ImmutableListMultimap<LinkageErrorCause, StaticLinkageError<ClassSymbolReference>>
+        groupedClassErrors = Multimaps.index(getMissingClassErrors(), LinkageErrorCause::from);
 
-    ImmutableListMultimap<LinkageErrorGroupKey, StaticLinkageError<MethodSymbolReference>>
-        groupedMethodErrors = Multimaps.index(getMissingMethodErrors(), LinkageErrorGroupKey::from);
+    ImmutableListMultimap<LinkageErrorCause, StaticLinkageError<MethodSymbolReference>>
+        groupedMethodErrors = Multimaps.index(getMissingMethodErrors(), LinkageErrorCause::from);
 
-    ImmutableListMultimap<LinkageErrorGroupKey, StaticLinkageError<FieldSymbolReference>>
-        groupedFieldErrors = Multimaps.index(getMissingFieldErrors(), LinkageErrorGroupKey::from);
+    ImmutableListMultimap<LinkageErrorCause, StaticLinkageError<FieldSymbolReference>>
+        groupedFieldErrors = Multimaps.index(getMissingFieldErrors(), LinkageErrorCause::from);
 
     // ImmutableSet ensures deterministic iteration order
-    Set<LinkageErrorGroupKey> combinedKeys =
-        ImmutableSet.<LinkageErrorGroupKey>builder()
+    Set<LinkageErrorCause> combinedKeys =
+        ImmutableSet.<LinkageErrorCause>builder()
             .addAll(groupedClassErrors.keySet())
             .addAll(groupedMethodErrors.keySet())
             .addAll(groupedFieldErrors.keySet())
@@ -113,26 +112,9 @@ public abstract class JarLinkageReport {
 
     builder.append(combinedKeys.size());
     builder.append(" group(s) of " + getTotalErrorCount() + " static linkage error(s)\n");
-    for (LinkageErrorGroupKey key : combinedKeys) {
+    for (LinkageErrorCause key : combinedKeys) {
       builder.append(indent);
-      builder.append(key.getSymbol());
-      switch (key.getReason()) {
-        case CLASS_NOT_FOUND:
-          builder.append(" is not found in class path. ");
-          break;
-        case INACCESSIBLE_CLASS:
-          builder.append(" is not accessible. ");
-          break;
-        case INCOMPATIBLE_CLASS_CHANGE:
-          builder.append(" has changed incompatible. ");
-          break;
-        case SYMBOL_NOT_FOUND:
-          builder.append(" is not found in the class. ");
-          break;
-        case INACCESSIBLE_MEMBER:
-          builder.append(" is not accessible. ");
-          break;
-      }
+      builder.append(key);
       List<StaticLinkageError<? extends SymbolReference>> allErrorsForKey =
           Lists.newArrayList(
               Iterables.concat(

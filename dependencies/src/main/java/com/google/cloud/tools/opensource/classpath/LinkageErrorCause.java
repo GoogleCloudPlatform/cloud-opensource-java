@@ -18,11 +18,9 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
 
-/**
- * Key to group static linkage errors in dashboard.
- */
+/** Key to group static linkage errors by their causes. */
 @AutoValue
-abstract class LinkageErrorGroupKey {
+abstract class LinkageErrorCause {
 
   /** Returns the reason of error */
   abstract StaticLinkageError.Reason getReason();
@@ -30,20 +28,16 @@ abstract class LinkageErrorGroupKey {
   /** Returns the symbol causing the error. It's either class name, field name, or method name. */
   abstract String getSymbol();
 
-  static <T extends SymbolReference> LinkageErrorGroupKey from(
+  static <T extends SymbolReference> LinkageErrorCause from(
       StaticLinkageError<T> staticLinkageError) {
     String symbolName = symbolNameFrom(staticLinkageError);
-    return new AutoValue_LinkageErrorGroupKey(staticLinkageError.getReason(), symbolName);
+    return new AutoValue_LinkageErrorCause(staticLinkageError.getReason(), symbolName);
   }
 
   private static <T extends SymbolReference> String symbolNameFrom(
       StaticLinkageError<T> staticLinkageError) {
     T reference = staticLinkageError.getReference();
     switch (staticLinkageError.getReason()) {
-      case CLASS_NOT_FOUND:
-      case INACCESSIBLE_CLASS:
-      case INCOMPATIBLE_CLASS_CHANGE:
-        return reference.getTargetClassName();
       case INACCESSIBLE_MEMBER:
       case SYMBOL_NOT_FOUND:
         String classNamePrefix = reference.getTargetClassName() + ".";
@@ -53,7 +47,34 @@ abstract class LinkageErrorGroupKey {
           // FieldSymbolReference
           return classNamePrefix + ((FieldSymbolReference) reference).getFieldName();
         }
+      case CLASS_NOT_FOUND:
+      case INACCESSIBLE_CLASS:
+      case INCOMPATIBLE_CLASS_CHANGE:
+      default:
+        return reference.getTargetClassName();
     }
-    return null;
+  }
+
+  @Override
+  public final String toString() {
+    StringBuilder builder = new StringBuilder(getSymbol());
+    switch (getReason()) {
+      case CLASS_NOT_FOUND:
+        builder.append(" is not found. ");
+        break;
+      case INACCESSIBLE_CLASS:
+        builder.append(" is not accessible. ");
+        break;
+      case INCOMPATIBLE_CLASS_CHANGE:
+        builder.append(" has changed incompatible. ");
+        break;
+      case SYMBOL_NOT_FOUND:
+        builder.append(" is not found in the class. ");
+        break;
+      case INACCESSIBLE_MEMBER:
+        builder.append(" is not accessible. ");
+        break;
+    }
+    return builder.toString();
   }
 }
