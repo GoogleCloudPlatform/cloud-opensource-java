@@ -55,7 +55,20 @@ public class JarLinkageReportTest {
     Path targetClassLocation = Paths.get("dummy.jar");
     StaticLinkageError<MethodSymbolReference> linkageErrorMissingMethod =
         StaticLinkageError.errorMissingMember(methodSymbolReference, targetClassLocation);
-    missingMethodErrors = ImmutableList.of(linkageErrorMissingMethod);
+
+    MethodSymbolReference methodSymbolReferenceDueToMissingClass =
+        MethodSymbolReference.builder()
+            .setTargetClassName("ClassA")
+            .setInterfaceMethod(false)
+            .setMethodName("methodX")
+            .setDescriptor("java.lang.String")
+            .setSourceClassName("ClassC")
+            .build();
+    StaticLinkageError<MethodSymbolReference> linkageErrorMissingMethodByClass =
+        StaticLinkageError.errorMissingTargetClass(methodSymbolReferenceDueToMissingClass);
+
+    missingMethodErrors =
+        ImmutableList.of(linkageErrorMissingMethod, linkageErrorMissingMethodByClass);
 
     FieldSymbolReference fieldSymbolReference =
         FieldSymbolReference.builder()
@@ -74,44 +87,56 @@ public class JarLinkageReportTest {
             .setMissingFieldErrors(missingFieldErrors)
             .build();
   }
-    
+
   @Test
   public void testGetJarPath() {
     Assert.assertEquals(Paths.get("a", "b", "c"), jarLinkageReport.getJarPath());
   }
-  
+
   @Test
   public void testGetMissingMethodErrors() {
     Assert.assertEquals(missingMethodErrors, jarLinkageReport.getMissingMethodErrors());
   }
-  
+
   @Test
   public void testGetMissingFieldErrors() {
     Assert.assertEquals(missingFieldErrors, jarLinkageReport.getMissingFieldErrors());
   }
-  
+
   @Test
   public void testGetMissingClassErrors() {
     Assert.assertEquals(missingClassErrors, jarLinkageReport.getMissingClassErrors());
   }
-  
+
   @Test
   public void testGetTotalErrorCount() {
-    Assert.assertEquals(3, jarLinkageReport.getTotalErrorCount());
+    Assert.assertEquals(4, jarLinkageReport.getTotalErrorCount());
   }
 
   @Test
   public void testToString() {
     Assert.assertEquals(
-        "c (3 errors):\n"
+        "c (4 errors):\n"
             + "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA"
             + ", subclass=false}, reason: CLASS_NOT_FOUND, target class location not found\n"
             + "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, "
             + "methodName=methodX, interfaceMethod=false, descriptor=java.lang.String}"
             + ", reason: SYMBOL_NOT_FOUND, target class from dummy.jar\n"
+            + "  MethodSymbolReference{sourceClassName=ClassC, targetClassName=ClassA,"
+            + " methodName=methodX, interfaceMethod=false, descriptor=java.lang.String}, "
+            + "reason: CLASS_NOT_FOUND, target class location not found\n"
             + "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, "
             + "fieldName=fieldX}, reason: CLASS_NOT_FOUND, target class location not found\n",
         jarLinkageReport.toString());
   }
 
+  @Test
+  public void testFormatByGroup() {
+    Assert.assertEquals(
+        "3 group(s) of 4static linkage error(s)\n"
+            + "  ClassA is not found in class path. Referenced by: ClassB, ClassC\n"
+            + "  ClassA.methodX is not found in the class. Referenced by: ClassB\n"
+        + "  ClassC is not found in class path. Referenced by: ClassD\n",
+        jarLinkageReport.formatByGroup());
+  }
 }
