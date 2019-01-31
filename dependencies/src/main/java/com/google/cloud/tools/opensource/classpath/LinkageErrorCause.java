@@ -22,7 +22,7 @@ import com.google.auto.value.AutoValue;
 @AutoValue
 abstract class LinkageErrorCause {
 
-  /** Returns the reason of error */
+  /** Returns the reason for the error */
   abstract StaticLinkageError.Reason getReason();
 
   /** Returns the symbol causing the error. It's either class name, field name, or method name. */
@@ -66,10 +66,10 @@ abstract class LinkageErrorCause {
         builder.append(" is not accessible. ");
         break;
       case INCOMPATIBLE_CLASS_CHANGE:
-        builder.append(" has changed incompatible. ");
+        builder.append(" has changed incompatibly. ");
         break;
       case SYMBOL_NOT_FOUND:
-        builder.append(" is not found in the class. ");
+        builder.append(" is not found. ");
         break;
       case INACCESSIBLE_MEMBER:
         builder.append(" is not accessible. ");
