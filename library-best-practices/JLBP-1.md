@@ -5,9 +5,8 @@ Use the minimum number of dependencies that is reasonable.
 Every dependency of a library is a liability of both
 that library and its consumers.
 
-Adding a dependency for a large amount of functionality or
-for a complex functionality may be OK,
-but avoid pulling in dependencies just to save a few lines of code.
+Adding a dependency for something that is difficult and complicated to do may be OK,
+but avoid adding a dependency just to save a few lines of code.
 
 Some specific notes about minimizing dependencies:
 
