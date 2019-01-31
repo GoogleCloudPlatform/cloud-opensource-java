@@ -123,10 +123,10 @@
         <ul class="static-linkage-check-dependency-paths">
           <#list jarToDependencyPaths.get(jarLinkageReport.getJarPath()) as dependencyPath >
             <#assign dependencyPathRoot = dependencyPath.get(0) />
-            <#assign linkedFromArtifact = dependencyPathRoot.getGroupId() == groupId
-                && dependencyPathRoot.getArtifactId() == artifactId>
-            <li class="linked-from-artifact-${linkedFromArtifact?c}">${dependencyPath}
-            </li>
+            <#if dependencyPathRoot.getGroupId() == groupId
+                 && dependencyPathRoot.getArtifactId() == artifactId >
+              <li>${dependencyPath}</li>
+            </#if>
           </#list>
         </ul>
 
