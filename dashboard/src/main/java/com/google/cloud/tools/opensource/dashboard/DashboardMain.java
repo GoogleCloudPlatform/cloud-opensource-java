@@ -17,11 +17,7 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSetMultimap;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -39,7 +35,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.TreeMap;
 
 import freemarker.template.Configuration;
@@ -65,7 +60,9 @@ import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -166,8 +163,8 @@ public class DashboardMain {
             .collect(
                 toImmutableMap(JarLinkageReport::getJarPath, jarLinkageReport -> jarLinkageReport));
 
-    // Artifact's coordinates to JarLinkageReports. Using string coordinates rather than Artifact
-    // class because the class's equality includes checking file.
+    // Map from Artifact's coordinates to (unique) JarLinkageReports.
+    // Using string coordinates rather than Artifact class because its equality includes file.
     ImmutableSetMultimap.Builder<String, JarLinkageReport> builder = ImmutableSetMultimap.builder();
     for (Path path : jarToDependencyPaths.keySet()) {
       for (DependencyPath dependencyPath : jarToDependencyPaths.get(path)) {
@@ -175,7 +172,6 @@ public class DashboardMain {
         builder.put(artifact.toString(), jarToLinkageReport.get(path));
       }
     }
-    // Artifact coordinates to unique JarLinakgeReports
     ImmutableMultimap<String, JarLinkageReport> artifactToLinkageReports = builder.build();
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
@@ -189,8 +185,6 @@ public class DashboardMain {
           table.add(unavailable);
         } else {
           Artifact artifact = entry.getKey();
-          ImmutableCollection<JarLinkageReport> jarLinkageReports =
-              artifactToLinkageReports.get(artifact.toString());
           ArtifactResults results =
               generateArtifactReport(
                   configuration,
@@ -198,7 +192,7 @@ public class DashboardMain {
                   artifact,
                   entry.getValue(),
                   cache.getGlobalDependencies(),
-                  jarLinkageReports,
+                  artifactToLinkageReports.get(artifact.toString()),
                   jarToDependencyPaths);
           table.add(results);
         }
