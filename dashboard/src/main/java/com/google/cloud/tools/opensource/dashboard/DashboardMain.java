@@ -19,6 +19,9 @@ package com.google.cloud.tools.opensource.dashboard;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSetMultimap;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,6 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -162,6 +166,18 @@ public class DashboardMain {
             .collect(
                 toImmutableMap(JarLinkageReport::getJarPath, jarLinkageReport -> jarLinkageReport));
 
+    // Artifact's coordinates to JarLinkageReports. Using string coordinates rather than Artifact
+    // class because the class's equality includes checking file.
+    ImmutableSetMultimap.Builder<String, JarLinkageReport> builder = ImmutableSetMultimap.builder();
+    for (Path path : jarToDependencyPaths.keySet()) {
+      for (DependencyPath dependencyPath : jarToDependencyPaths.get(path)) {
+        Artifact artifact = dependencyPath.get(0);
+        builder.put(artifact.toString(), jarToLinkageReport.get(path));
+      }
+    }
+    // Artifact coordinates to unique JarLinakgeReports
+    ImmutableMultimap<String, JarLinkageReport> artifactToLinkageReports = builder.build();
+
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();
     for (Entry<Artifact, ArtifactInfo> entry : artifacts.entrySet()) {
@@ -172,14 +188,17 @@ public class DashboardMain {
           unavailable.setExceptionMessage(info.getException().getMessage());
           table.add(unavailable);
         } else {
+          Artifact artifact = entry.getKey();
+          ImmutableCollection<JarLinkageReport> jarLinkageReports =
+              artifactToLinkageReports.get(artifact.toString());
           ArtifactResults results =
               generateArtifactReport(
                   configuration,
                   output,
-                  entry.getKey(),
+                  artifact,
                   entry.getValue(),
                   cache.getGlobalDependencies(),
-                  jarToLinkageReport,
+                  jarLinkageReports,
                   jarToDependencyPaths);
           table.add(results);
         }
@@ -196,24 +215,24 @@ public class DashboardMain {
 
     return table;
   }
-  
+
   /**
    * This is the only method that queries the Maven repository.
    */
   private static ArtifactCache loadArtifactInfo(List<Artifact> artifacts) {
     Map<Artifact, ArtifactInfo> infoMap = new LinkedHashMap<>();
     List<DependencyGraph> globalDependencies = new ArrayList<>();
-    
+
     for (Artifact artifact : artifacts) {
       try {
         DependencyGraph completeDependencies =
             DependencyGraphBuilder.getCompleteDependencies(artifact);
         globalDependencies.add(completeDependencies);
-        
+
         // picks versions according to Maven rules
         DependencyGraph transitiveDependencies =
             DependencyGraphBuilder.getTransitiveDependencies(artifact);
-  
+
         ArtifactInfo info = new ArtifactInfo(completeDependencies, transitiveDependencies);
         infoMap.put(artifact, info);
       } catch (RepositoryException ex) {
@@ -221,11 +240,11 @@ public class DashboardMain {
         infoMap.put(artifact, info);
       }
     }
-    
+
     ArtifactCache cache = new ArtifactCache();
     cache.setInfoMap(infoMap);
     cache.setGlobalDependencies(globalDependencies);
-    
+
     return cache;
   }
 
@@ -235,7 +254,7 @@ public class DashboardMain {
       Artifact artifact,
       ArtifactInfo artifactInfo,
       List<DependencyGraph> globalDependencies,
-      ImmutableMap<Path, JarLinkageReport> jarToLinkageReport,
+      Collection<JarLinkageReport> staticLinkageCheckReports,
       Multimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
 
@@ -260,13 +279,6 @@ public class DashboardMain {
 
       List<DependencyPath> dependencyPaths = completeDependencies.list();
 
-      // Filter only relevant static linkage report to this artifact and its dependencies
-      ImmutableSet<JarLinkageReport> staticLinkageCheckReports =
-          dependencyPaths.stream()
-              .map(dependencyPath -> dependencyPath.getLeaf().getFile().toPath())
-              .map(jarToLinkageReport::get)
-              .filter(Objects::nonNull)
-              .collect(toImmutableSet());
       int totalLinkageErrorCount =
           staticLinkageCheckReports.stream().mapToInt(JarLinkageReport::getTotalErrorCount).sum();
 
