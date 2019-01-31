@@ -114,8 +114,8 @@
 
     <#list jarLinkageReports as jarLinkageReport>
       <#if jarLinkageReport.getTotalErrorCount() gt 0>
-        <p>Summary:</p>
-        <pre class="jar-linkage-report">${jarLinkageReport.formatByGroup()}</pre>
+        <h3>${jarLinkageReport.getJarPath().getFileName()?html}</h3>
+        <pre class="jar-linkage-report">${jarLinkageReport.formatByGroup()?html}</pre>
 
         <p class="static-linkage-check-dependency-paths">
           Following paths to the jar file from BOM are found in the dependency tree.

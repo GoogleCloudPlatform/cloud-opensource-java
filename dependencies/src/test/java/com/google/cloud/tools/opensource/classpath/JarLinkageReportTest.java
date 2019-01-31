@@ -133,7 +133,7 @@ public class JarLinkageReportTest {
   @Test
   public void testFormatByGroup() {
     Assert.assertEquals(
-        "c 3 group(s) of 4static linkage error(s)\n"
+        "3 group(s) of 4 static linkage error(s)\n"
             + "  ClassA is not found in class path. Referenced by: ClassB, ClassC\n"
             + "  ClassA.methodX is not found in the class. Referenced by: ClassB\n"
         + "  ClassC is not found in class path. Referenced by: ClassD\n",
