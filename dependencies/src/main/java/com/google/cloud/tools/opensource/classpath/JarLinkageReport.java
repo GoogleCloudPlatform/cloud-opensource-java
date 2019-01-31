@@ -111,6 +111,7 @@ public abstract class JarLinkageReport {
             .addAll(groupedFieldErrors.keySet())
             .build();
 
+    builder.append(getJarPath().getFileName() + " ");
     builder.append(combinedKeys.size());
     builder.append(" group(s) of " + getTotalErrorCount() + "static linkage error(s)\n");
     for (LinkageErrorGroupKey key : combinedKeys) {

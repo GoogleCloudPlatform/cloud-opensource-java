@@ -18,6 +18,9 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
 
+/**
+ * Key to group static linkage errors in dashboard.
+ */
 @AutoValue
 abstract class LinkageErrorGroupKey {
 
