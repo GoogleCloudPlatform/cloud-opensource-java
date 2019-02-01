@@ -10,7 +10,7 @@ but avoid adding a dependency just to save a few lines of code.
 
 Some specific notes about minimizing dependencies:
 
-- Remember that liability, like dependencies, is transitive.
+- Remember you're also paying the cost of transitive dependencies.
   Before adding a dependency, also consider what that dependency
   depends on.
 
