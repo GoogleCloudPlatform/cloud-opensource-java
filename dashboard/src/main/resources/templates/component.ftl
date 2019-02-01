@@ -112,6 +112,7 @@
 
     <h2 id="static-linkage-errors">Static Linkage Check</h2>
 
+    <p id="static-linkage-errors-total">${totalLinkageErrorCount} static linkage error(s)</p>
     <#list jarLinkageReports as jarLinkageReport>
       <#if jarLinkageReport.getTotalErrorCount() gt 0>
         <h3>${jarLinkageReport.getJarPath().getFileName()?html}</h3>
