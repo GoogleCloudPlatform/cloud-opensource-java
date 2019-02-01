@@ -275,7 +275,7 @@ public class DashboardTest {
       Nodes staticLinkageCheckMessage = document.query("//pre[@class='jar-linkage-report']");
       Truth.assertThat(staticLinkageCheckMessage.size()).isGreaterThan(0);
       Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
-          .contains("appengine-api-1.0-sdk");
+          .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");
     }
   }
 
