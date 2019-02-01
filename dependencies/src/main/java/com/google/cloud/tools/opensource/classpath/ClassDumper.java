@@ -511,8 +511,8 @@ class ClassDumper {
   }
 
   /**
-   * Returns true if the source class has a method that has an exception handler for {@link
-   * NoClassDefFoundError}.
+   * Returns true if {@link SymbolReference#getSourceClassName()} has a method that has an exception
+   * handler for {@link NoClassDefFoundError}.
    */
   boolean isSourceClassCheckingNoClassDefFoundError(SymbolReference reference) {
     String sourceClassName = reference.getSourceClassName();
