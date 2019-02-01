@@ -2,12 +2,17 @@
 ------------------------------
 
 Use the minimum number of dependencies that is reasonable.
-Adding a dependency for a large amount of functionality may be ok,
-but avoid pulling in dependencies just to save a few lines of code,
-because every dependency of a library is a liability of both
-that library and that library's consumers.
+Every dependency of a library is a liability of both
+that library and its consumers.
+
+Adding a dependency for something that is difficult and complicated to do may be OK,
+but avoid adding a dependency just to save a few lines of code.
 
 Some specific notes about minimizing dependencies:
+
+- Remember you're also paying the cost of transitive dependencies.
+  Before adding a dependency, also consider what that dependency
+  depends on.
 
 - Use the smallest scope possible. For example, AutoValue doesn't
   need to use `compile` scope, and can instead use `compile-only`,
