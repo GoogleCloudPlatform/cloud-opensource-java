@@ -168,13 +168,13 @@ public class StaticLinkageChecker {
     return reportBuilder.build();
   }
 
-  private static <R extends SymbolReference, C> ImmutableList<C> errorsFromSymbolReferences(
-      Set<R> symbolReferences,
-      Set<String> classesDefinedInJar,
-      Function<R, Optional<C>> checkFunction) {
-    ImmutableList<C> linkageErrors =
-        symbolReferences
-            .stream()
+  private static <R extends SymbolReference>
+      ImmutableList<StaticLinkageError<R>> errorsFromSymbolReferences(
+          Set<R> symbolReferences,
+          Set<String> classesDefinedInJar,
+          Function<R, Optional<StaticLinkageError<R>>> checkFunction) {
+    ImmutableList<StaticLinkageError<R>> linkageErrors =
+        symbolReferences.stream()
             .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
             .map(checkFunction)
             .filter(Optional::isPresent)
@@ -242,6 +242,9 @@ public class StaticLinkageChecker {
       // The class is in class path but the symbol is not found
       return Optional.of(StaticLinkageError.errorMissingMember(reference, classFileLocation));
     } catch (ClassNotFoundException ex) {
+      if (classDumper.isSourceClassCheckingNoClassDefFoundError(reference)) {
+        return Optional.empty();
+      }
       return Optional.of(StaticLinkageError.errorMissingTargetClass(reference));
     }
   }
@@ -278,6 +281,9 @@ public class StaticLinkageChecker {
       // The field was not found in the class from the classpath
       return Optional.of(StaticLinkageError.errorMissingMember(reference, classFileLocation));
     } catch (ClassNotFoundException ex) {
+      if (classDumper.isSourceClassCheckingNoClassDefFoundError(reference)) {
+        return Optional.empty();
+      }
       return Optional.of(StaticLinkageError.errorMissingTargetClass(reference));
     }
   }
@@ -351,7 +357,8 @@ public class StaticLinkageChecker {
       }
       return Optional.empty();
     } catch (ClassNotFoundException ex) {
-      if (classDumper.isUnusedClassSymbolReference(reference)) {
+      if (classDumper.isUnusedClassSymbolReference(reference)
+          || classDumper.isSourceClassCheckingNoClassDefFoundError(reference)) {
         // The class reference is unused in the source
         return Optional.empty();
       }

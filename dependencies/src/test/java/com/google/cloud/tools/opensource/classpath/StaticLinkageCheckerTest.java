@@ -806,4 +806,23 @@ public class StaticLinkageCheckerTest {
         .that(reportWith66First.getMissingMethodErrors())
         .isEmpty();
   }
+
+  @Test
+  public void testFindLinkageErrors_classesCatchingNoClassDefFoundErrorInSlf4j()
+      throws RepositoryException, IOException {
+    // SLF4J classes catch NoClassDefFoundError to detect the availability of logger backends
+    // the tool should not show errors for such classes.
+    List<Path> paths =
+        ClassPathBuilder.artifactsToClasspath(
+            ImmutableList.of(new DefaultArtifact("org.slf4j:slf4j-api:jar:1.7.21")));
+
+    StaticLinkageChecker staticLinkageChecker = StaticLinkageChecker.create(false, paths, paths);
+
+    StaticLinkageCheckReport linkageErrors = staticLinkageChecker.findLinkageErrors();
+
+    JarLinkageReport slf4jLinkageReport = linkageErrors.getJarLinkageReports().get(0);
+    Truth.assertThat(slf4jLinkageReport.getMissingClassErrors()).isEmpty();
+    Truth.assertThat(slf4jLinkageReport.getMissingFieldErrors()).isEmpty();
+    Truth.assertThat(slf4jLinkageReport.getMissingMethodErrors()).isEmpty();
+  }
 }

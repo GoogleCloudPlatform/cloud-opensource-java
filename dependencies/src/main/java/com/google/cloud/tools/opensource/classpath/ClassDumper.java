@@ -511,6 +511,42 @@ class ClassDumper {
   }
 
   /**
+   * Returns true if the source class has a method that has an exception handler for {@link
+   * NoClassDefFoundError}.
+   */
+  boolean isSourceClassCheckingNoClassDefFoundError(SymbolReference reference) {
+    String sourceClassName = reference.getSourceClassName();
+    try {
+      JavaClass sourceJavaClass = loadJavaClass(sourceClassName);
+      ClassGen classGen = new ClassGen(sourceJavaClass);
+
+      for (Method method : sourceJavaClass.getMethods()) {
+        MethodGen methodGen = new MethodGen(method, sourceClassName, classGen.getConstantPool());
+        CodeExceptionGen[] exceptionHandlers = methodGen.getExceptionHandlers();
+        for (CodeExceptionGen codeExceptionGen : exceptionHandlers) {
+          ObjectType catchType = codeExceptionGen.getCatchType();
+          if (catchType == null) {
+            continue;
+          }
+          String caughtClassName = catchType.getClassName();
+          if (NoClassDefFoundError.class.getName().equals(caughtClassName)) {
+            // NoClassDefFoundError is caught in the source class
+            return true;
+          }
+        }
+      }
+    } catch (ClassNotFoundException ex) {
+      // Because the reference in the argument was extracted from the source class file,
+      // the source class should be found.
+      throw new ClassFormatException(
+          "The source class in the reference is no longer available in the class path", ex);
+    }
+
+    // The source class does not have a method that catches NoClassDefFoundERror
+    return false;
+  }
+
+  /**
    * Returns true if the class symbol reference is unused in the source class file. It checks
    * following places for the usage in the source class:
    *
