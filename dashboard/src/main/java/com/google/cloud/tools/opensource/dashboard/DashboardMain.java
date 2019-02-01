@@ -29,12 +29,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 
 import freemarker.template.Configuration;
@@ -60,7 +60,6 @@ import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
@@ -169,10 +168,10 @@ public class DashboardMain {
     for (Path path : jarToDependencyPaths.keySet()) {
       for (DependencyPath dependencyPath : jarToDependencyPaths.get(path)) {
         Artifact artifact = dependencyPath.get(0);
-        builder.put(artifact.toString(), jarToLinkageReport.get(path));
+        builder.put(Artifacts.toCoordinates(artifact), jarToLinkageReport.get(path));
       }
     }
-    ImmutableMultimap<String, JarLinkageReport> artifactToLinkageReports = builder.build();
+    ImmutableSetMultimap<String, JarLinkageReport> artifactToLinkageReports = builder.build();
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();
@@ -192,7 +191,7 @@ public class DashboardMain {
                   artifact,
                   entry.getValue(),
                   cache.getGlobalDependencies(),
-                  artifactToLinkageReports.get(artifact.toString()),
+                  artifactToLinkageReports.get(Artifacts.toCoordinates(artifact)),
                   jarToDependencyPaths);
           table.add(results);
         }
@@ -248,7 +247,7 @@ public class DashboardMain {
       Artifact artifact,
       ArtifactInfo artifactInfo,
       List<DependencyGraph> globalDependencies,
-      Collection<JarLinkageReport> staticLinkageCheckReports,
+      Set<JarLinkageReport> staticLinkageCheckReports,
       Multimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
 
