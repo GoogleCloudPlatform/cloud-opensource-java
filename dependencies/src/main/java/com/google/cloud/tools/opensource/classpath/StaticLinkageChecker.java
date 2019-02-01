@@ -242,7 +242,7 @@ public class StaticLinkageChecker {
       // The class is in class path but the symbol is not found
       return Optional.of(StaticLinkageError.errorMissingMember(reference, classFileLocation));
     } catch (ClassNotFoundException ex) {
-      if (classDumper.isSourceClassCheckingNoClassDefFoundError(reference)) {
+      if (classDumper.catchesNoClassDefFoundError(reference)) {
         return Optional.empty();
       }
       return Optional.of(StaticLinkageError.errorMissingTargetClass(reference));
@@ -281,7 +281,7 @@ public class StaticLinkageChecker {
       // The field was not found in the class from the classpath
       return Optional.of(StaticLinkageError.errorMissingMember(reference, classFileLocation));
     } catch (ClassNotFoundException ex) {
-      if (classDumper.isSourceClassCheckingNoClassDefFoundError(reference)) {
+      if (classDumper.catchesNoClassDefFoundError(reference)) {
         return Optional.empty();
       }
       return Optional.of(StaticLinkageError.errorMissingTargetClass(reference));
@@ -358,7 +358,7 @@ public class StaticLinkageChecker {
       return Optional.empty();
     } catch (ClassNotFoundException ex) {
       if (classDumper.isUnusedClassSymbolReference(reference)
-          || classDumper.isSourceClassCheckingNoClassDefFoundError(reference)) {
+          || classDumper.catchesNoClassDefFoundError(reference)) {
         // The class reference is unused in the source
         return Optional.empty();
       }

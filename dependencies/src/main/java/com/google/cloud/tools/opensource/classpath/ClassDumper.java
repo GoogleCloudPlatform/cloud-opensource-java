@@ -514,7 +514,7 @@ class ClassDumper {
    * Returns true if {@link SymbolReference#getSourceClassName()} has a method that has an exception
    * handler for {@link NoClassDefFoundError}.
    */
-  boolean isSourceClassCheckingNoClassDefFoundError(SymbolReference reference) {
+  boolean catchesNoClassDefFoundError(SymbolReference reference) {
     String sourceClassName = reference.getSourceClassName();
     try {
       JavaClass sourceJavaClass = loadJavaClass(sourceClassName);
@@ -542,7 +542,7 @@ class ClassDumper {
           "The source class in the reference is no longer available in the class path", ex);
     }
 
-    // The source class does not have a method that catches NoClassDefFoundERror
+    // The source class does not have a method that catches NoClassDefFoundError
     return false;
   }
 

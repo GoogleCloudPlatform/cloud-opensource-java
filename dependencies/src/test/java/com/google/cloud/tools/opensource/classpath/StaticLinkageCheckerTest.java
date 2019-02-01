@@ -825,4 +825,22 @@ public class StaticLinkageCheckerTest {
     Truth.assertThat(slf4jLinkageReport.getMissingFieldErrors()).isEmpty();
     Truth.assertThat(slf4jLinkageReport.getMissingMethodErrors()).isEmpty();
   }
+
+  @Test
+  public void testFindLinkageErrors_classNotfoundWhenClassesNotCatchingNoClassDefFoundError()
+      throws URISyntaxException, IOException {
+    // Checking Firestore jar file without its dependency should have linkage errors
+    // Note that FirestoreGrpc.java does not have catch clause of NoClassDefFoundError
+    List<Path> paths =
+        ImmutableList.of(
+            absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
+    StaticLinkageChecker staticLinkageChecker = StaticLinkageChecker.create(false, paths, paths);
+
+    StaticLinkageCheckReport linkageErrors = staticLinkageChecker.findLinkageErrors();
+
+    JarLinkageReport firestoreLinkageReport = linkageErrors.getJarLinkageReports().get(0);
+    Truth.assertThat(firestoreLinkageReport.getMissingClassErrors()).isNotEmpty();
+    Truth.assertThat(firestoreLinkageReport.getMissingMethodErrors()).isNotEmpty();
+    Truth.assertThat(firestoreLinkageReport.getMissingFieldErrors()).isNotEmpty();
+  }
 }
