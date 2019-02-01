@@ -264,7 +264,7 @@ public class DashboardTest {
 
   @Test
   public void testLinkageErrorsUnderProvidedDependency() throws IOException, ParsingException {
-    // google-cloud-translate has transitive dependency to appengine-api-1.0-sdk
+    // google-cloud-translate has transitive dependency to (problematic) appengine-api-1.0-sdk
     // The path to appengine-api-1.0-sdk includes scope:provided dependency
     Path googleCloudTranslateHtml =
         outputDirectory.resolve("com.google.cloud_google-cloud-translate_1.59.0.html");
