@@ -203,7 +203,7 @@ public class DashboardTest {
     try (InputStream source = Files.newInputStream(grpcAltsHtml)) {
       Document document = builder.build(source);
 
-      Nodes staticLinkageCheckMessage = document.query("//p[@id='static-linkage-check']");
+      Nodes staticLinkageCheckMessage = document.query("//pre[@class='jar-linkage-report']");
       Assert.assertEquals(1, staticLinkageCheckMessage.size());
       Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
           .contains("static linkage error(s)");
