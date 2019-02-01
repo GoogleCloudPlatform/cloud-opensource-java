@@ -26,7 +26,7 @@ import org.junit.Test;
 public class StaticLinkageErrorTest {
 
   @Test
-  public void testLinkageErrorCreation() throws MalformedURLException {
+  public void testLinkageErrorCreation() {
     FieldSymbolReference fieldSymbolReference =
         FieldSymbolReference.builder()
             .setTargetClassName("ClassC")
