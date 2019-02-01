@@ -808,7 +808,7 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageErrors_classesCatchingNoClassDefFoundErrorInSlf4j()
+  public void testFindLinkageErrors_catchesNoClassDefFoundError()
       throws RepositoryException, IOException {
     // SLF4J classes catch NoClassDefFoundError to detect the availability of logger backends
     // the tool should not show errors for such classes.
@@ -827,7 +827,7 @@ public class StaticLinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageErrors_classNotfoundWhenClassesNotCatchingNoClassDefFoundError()
+  public void testFindLinkageErrors_doesNotCatchNoClassDefFoundError()
       throws URISyntaxException, IOException {
     // Checking Firestore jar file without its dependency should have linkage errors
     // Note that FirestoreGrpc.java does not have catch clause of NoClassDefFoundError
