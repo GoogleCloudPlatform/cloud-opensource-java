@@ -279,6 +279,21 @@ public class DashboardTest {
     }
   }
 
+  @Test
+  public void testZeroLinkageErrorShowsZero() throws IOException, ParsingException {
+    // grpc-auth does not have a linkage error, and it should show zero in the section
+    Path zeroLinkageErrorHtml = outputDirectory.resolve("io.grpc_grpc-auth_1.17.1.html");
+    Assert.assertTrue(Files.isRegularFile(zeroLinkageErrorHtml));
+
+    try (InputStream source = Files.newInputStream(zeroLinkageErrorHtml)) {
+      Document document = builder.build(source);
+      Nodes staticLinkageTotalMessage = document.query("//p[@id='static-linkage-errors-total']");
+      Truth.assertThat(staticLinkageTotalMessage.size()).isEqualTo(1);
+      Truth.assertThat(staticLinkageTotalMessage.get(0).getValue())
+          .contains("0 static linkage error(s)");
+    }
+  }
+
   private static class SortWithoutVersion implements Comparator<String> {
 
     @Override
