@@ -89,7 +89,7 @@ public abstract class JarLinkageReport {
   /**
    * Returns human-friendly summary of the report grouping the errors by {@link LinkageErrorCause}.
    */
-  public String formatByGroup() {
+  String formatByGroup() {
     String indent = "  ";
     StringBuilder builder = new StringBuilder();
 
@@ -110,8 +110,10 @@ public abstract class JarLinkageReport {
             .addAll(groupedFieldErrors.keySet())
             .build();
 
-    builder.append(combinedKeys.size());
-    builder.append(" group(s) of " + getTotalErrorCount() + " static linkage error(s)\n");
+    String missingMembers = getTotalErrorCount() == 1 ? "1 missing member in "
+        : getTotalErrorCount() + " missing members in ";
+    String inClasses = combinedKeys.size() == 1 ? "1 class\n" : combinedKeys.size() + " classes\n";
+    builder.append(missingMembers + inClasses);
     for (LinkageErrorCause key : combinedKeys) {
       builder.append(indent);
       builder.append(key);
