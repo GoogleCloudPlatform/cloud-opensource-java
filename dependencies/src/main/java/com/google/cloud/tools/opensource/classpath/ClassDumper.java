@@ -68,7 +68,7 @@ import org.apache.bcel.util.Repository;
 
 /**
  * Class to read symbol references in Java class files and to verify the availability of references
- * in them, through the input class path for a static linkage check.
+ * in them, through the input class path for a classpath check.
  */
 class ClassDumper {
 

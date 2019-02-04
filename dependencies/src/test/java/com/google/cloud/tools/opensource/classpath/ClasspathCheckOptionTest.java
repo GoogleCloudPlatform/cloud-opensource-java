@@ -32,7 +32,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class StaticLinkageCheckOptionTest {
+public class ClasspathCheckOptionTest {
 
   @After
   public void cleanup() {
@@ -43,7 +43,7 @@ public class StaticLinkageCheckOptionTest {
   @Test
   public void parseCommandLineOptions_shortOptions_bom() throws ParseException {
     CommandLine parsedOption =
-        StaticLinkageCheckOption.readCommandLine("-b", "abc.com:dummy:1.2", "-r");
+        ClasspathCheckOption.readCommandLine("-b", "abc.com:dummy:1.2", "-r");
 
     Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getOptionObject('b'));
   }
@@ -51,7 +51,7 @@ public class StaticLinkageCheckOptionTest {
   @Test
   public void parseCommandLineOptions_duplicates() {
     try {
-      StaticLinkageCheckOption.readCommandLine(
+      ClasspathCheckOption.readCommandLine(
           "--artifacts",
           "abc.com:abc:1.1,abc.com:abc-util:1.2",
           "-b",
@@ -68,7 +68,7 @@ public class StaticLinkageCheckOptionTest {
   @Test
   public void testReadCommandLine_multipleArtifacts() throws ParseException {
     CommandLine commandLine =
-        StaticLinkageCheckOption.readCommandLine(
+        ClasspathCheckOption.readCommandLine(
             "--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2", "--report-only-reachable");
     Truth.assertThat(commandLine.getOptionValues("a")).hasLength(2);
   }
@@ -76,8 +76,7 @@ public class StaticLinkageCheckOptionTest {
   @Test
   public void testReadCommandLine_multipleJars() throws ParseException {
     CommandLine commandLine =
-        StaticLinkageCheckOption.readCommandLine(
-            "-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar");
+        ClasspathCheckOption.readCommandLine("-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar");
     Truth.assertThat(commandLine.getOptionValues("j")).hasLength(3);
   }
 
@@ -85,7 +84,7 @@ public class StaticLinkageCheckOptionTest {
   @Test
   public void parseCommandLineOptions_invalidOption() {
     try {
-      StaticLinkageCheckOption.readCommandLine("-x"); // No such option
+      ClasspathCheckOption.readCommandLine("-x"); // No such option
       Assert.fail();
     } catch (ParseException ex) {
       Assert.assertEquals("Unrecognized option: -x", ex.getMessage());
@@ -96,9 +95,8 @@ public class StaticLinkageCheckOptionTest {
   public void testConfigureAdditionalMavenRepositories_addingSpringRepository()
       throws ParseException, RepositoryException {
     CommandLine commandLine =
-        StaticLinkageCheckOption.readCommandLine(
-            "-m", "https://repo.spring.io/milestone");
-    StaticLinkageCheckOption.setRepositories(commandLine);
+        ClasspathCheckOption.readCommandLine("-m", "https://repo.spring.io/milestone");
+    ClasspathCheckOption.setRepositories(commandLine);
 
     // This artifact does not exist in Maven central, but it is in Spring's repository
     // Spring-asm is used here because it does not have complex dependencies
@@ -112,9 +110,9 @@ public class StaticLinkageCheckOptionTest {
   public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral()
       throws ParseException {
     CommandLine commandLine =
-        StaticLinkageCheckOption.readCommandLine(
+        ClasspathCheckOption.readCommandLine(
             "-m", "https://repo.spring.io/milestone", "--no-maven-central");
-    StaticLinkageCheckOption.setRepositories(commandLine);
+    ClasspathCheckOption.setRepositories(commandLine);
 
     CollectRequest collectRequest = new CollectRequest();
     RepositoryUtility.addRepositoriesToRequest(collectRequest);
@@ -135,10 +133,9 @@ public class StaticLinkageCheckOptionTest {
 
   private static void assertMavenRepositoryIsInvalid(String repositoryUrl)
       throws ParseException {
-    CommandLine commandLine =
-        StaticLinkageCheckOption.readCommandLine("-m", repositoryUrl);
+    CommandLine commandLine = ClasspathCheckOption.readCommandLine("-m", repositoryUrl);
     try {
-      StaticLinkageCheckOption.setRepositories(commandLine);
+      ClasspathCheckOption.setRepositories(commandLine);
       Assert.fail("URL " + repositoryUrl + " should be invalidated");
     } catch (ParseException ex) {
       // pass
@@ -147,17 +144,16 @@ public class StaticLinkageCheckOptionTest {
 
   @Test
   public void testConfigureAdditionalMavenRepositories_fileRepositoryUrl() throws ParseException {
-    CommandLine commandLine =
-        StaticLinkageCheckOption.readCommandLine("-m", "file:///var/tmp");
+    CommandLine commandLine = ClasspathCheckOption.readCommandLine("-m", "file:///var/tmp");
 
     // This method should not raise an exception
-    StaticLinkageCheckOption.setRepositories(commandLine);
+    ClasspathCheckOption.setRepositories(commandLine);
   }
 
   @Test
   public void testReadCommandLine_multipleRepositoriesSeparatedByComma() throws ParseException {
     CommandLine commandLine =
-        StaticLinkageCheckOption.readCommandLine(
+        ClasspathCheckOption.readCommandLine(
             "-m", "file:///var/tmp,https://repo.spring.io/milestone");
     Truth.assertThat(commandLine.getOptionValues("m")).hasLength(2);
   }
