@@ -206,7 +206,7 @@ public class DashboardTest {
       Nodes staticLinkageCheckMessage = document.query("//pre[@class='jar-linkage-report']");
       Assert.assertEquals(1, staticLinkageCheckMessage.size());
       Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
-          .contains("static linkage error(s)");
+          .contains("4 missing members in 2 classes");
 
       Nodes jarLinkageReportNode = document.query("//pre[@class='jar-linkage-report']");
       boolean foundGrpcCoreError = false;
