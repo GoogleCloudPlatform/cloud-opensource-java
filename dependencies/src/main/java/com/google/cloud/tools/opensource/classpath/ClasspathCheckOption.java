@@ -47,10 +47,10 @@ import org.eclipse.aether.artifact.DefaultArtifact;
  * </ul>
  *
  * @see <a href=
- *    "https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/dependencies#input">
- *    Classpath Checker: Input</a>
+ *     "https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/dependencies#input">
+ *     Classpath Checker: Input</a>
  */
-public class StaticLinkageCheckOption {
+public class ClasspathCheckOption {
 
   private static final Options options = configureOptions();
 

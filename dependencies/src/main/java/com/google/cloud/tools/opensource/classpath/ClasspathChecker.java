@@ -89,10 +89,9 @@ public class ClasspathChecker {
    */
   public static void main(String[] arguments)
       throws IOException, RepositoryException, ParseException {
-    
-    CommandLine commandLine = StaticLinkageCheckOption.readCommandLine(arguments);
-    ImmutableList<Path> inputClasspath =
-        StaticLinkageCheckOption.generateInputClasspath(commandLine);
+
+    CommandLine commandLine = ClasspathCheckOption.readCommandLine(arguments);
+    ImmutableList<Path> inputClasspath = ClasspathCheckOption.generateInputClasspath(commandLine);
     // TODO(suztomo): take command-line option to choose entry point classes for reachability
     ImmutableSet<Path> entryPoints = ImmutableSet.of(inputClasspath.get(0));
 
