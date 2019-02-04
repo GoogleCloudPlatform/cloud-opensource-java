@@ -47,8 +47,8 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClasspathCheckReport;
-import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.classpath.ClasspathChecker;
+import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
