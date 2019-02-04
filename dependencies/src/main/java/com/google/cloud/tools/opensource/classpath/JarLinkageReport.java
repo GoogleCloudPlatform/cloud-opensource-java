@@ -89,7 +89,7 @@ public abstract class JarLinkageReport {
   /**
    * Returns human-friendly summary of the report grouping the errors by {@link LinkageErrorCause}.
    */
-  String formatByGroup() {
+  public String formatByGroup() {
     String indent = "  ";
     StringBuilder builder = new StringBuilder();
 
