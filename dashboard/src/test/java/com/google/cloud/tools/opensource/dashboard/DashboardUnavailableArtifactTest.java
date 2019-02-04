@@ -42,7 +42,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
-import com.google.cloud.tools.opensource.classpath.StaticLinkageCheckReport;
+import com.google.cloud.tools.opensource.classpath.ClasspathCheckReport;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.common.collect.ImmutableList;
@@ -81,11 +81,11 @@ public class DashboardUnavailableArtifactTest {
     
     ArtifactCache cache = new ArtifactCache();
     cache.setInfoMap(map);
-    StaticLinkageCheckReport staticLinkageCheckReport =
-        StaticLinkageCheckReport.create(ImmutableList.of());
+    ClasspathCheckReport classpathCheckReport =
+        ClasspathCheckReport.create(ImmutableList.of());
     List<ArtifactResults> artifactResults =
         DashboardMain.generateReports(
-            configuration, outputDirectory, cache, staticLinkageCheckReport,
+            configuration, outputDirectory, cache, classpathCheckReport,
             LinkedListMultimap.create());
 
     Assert.assertEquals(
@@ -126,7 +126,7 @@ public class DashboardUnavailableArtifactTest {
     table.add(errorArtifactResult);
 
     Iterable<JarLinkageReport> list = new ArrayList<>();
-    StaticLinkageCheckReport report = StaticLinkageCheckReport.create(list);
+    ClasspathCheckReport report = ClasspathCheckReport.create(list);
     DashboardMain.generateDashboard(
         configuration, outputDirectory, table, null, report, LinkedListMultimap.create());
 

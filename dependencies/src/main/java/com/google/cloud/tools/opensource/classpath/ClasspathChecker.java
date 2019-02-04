@@ -45,18 +45,18 @@ import org.eclipse.aether.RepositoryException;
 /**
  * A tool to find static linkage errors for a class path.
  */
-public class StaticLinkageChecker {
+public class ClasspathChecker {
 
-  private static final Logger logger = Logger.getLogger(StaticLinkageChecker.class.getName());
+  private static final Logger logger = Logger.getLogger(ClasspathChecker.class.getName());
 
-  public static StaticLinkageChecker create(
+  public static ClasspathChecker create(
       boolean onlyReachable, List<Path> jarPaths, Iterable<Path> entryPoints)
       throws IOException {
     Preconditions.checkArgument(
         !jarPaths.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
     ClassDumper dumper = ClassDumper.create(jarPaths);
-    return new StaticLinkageChecker(onlyReachable, dumper, entryPoints);
+    return new ClasspathChecker(onlyReachable, dumper, entryPoints);
   }
 
   /**
@@ -69,7 +69,7 @@ public class StaticLinkageChecker {
 
   private final ImmutableSet<Path> entryPoints;
   
-  private StaticLinkageChecker(
+  private ClasspathChecker(
       boolean reportOnlyReachable,
       ClassDumper classDumper,
       Iterable<Path> entryPoints) {
@@ -80,7 +80,7 @@ public class StaticLinkageChecker {
 
   /**
    * Given Maven coordinates or list of the jar files as file names in filesystem, outputs the
-   * report of static linkage check.
+   * report of classpath check.
    *
    * @throws IOException when there is a problem in reading a jar file
    * @throws RepositoryException when there is a problem in resolving the Maven coordinates to jar
@@ -97,16 +97,16 @@ public class StaticLinkageChecker {
     ImmutableSet<Path> entryPoints = ImmutableSet.of(inputClasspath.get(0));
 
     boolean onlyReachable = commandLine.hasOption("r");
-    StaticLinkageChecker staticLinkageChecker = create(onlyReachable, inputClasspath, entryPoints);
-    StaticLinkageCheckReport report = staticLinkageChecker.findLinkageErrors();
+    ClasspathChecker classpathChecker = create(onlyReachable, inputClasspath, entryPoints);
+    ClasspathCheckReport report = classpathChecker.findLinkageErrors();
 
     System.out.println(report);
   }
 
   /**
-   * Finds linkage errors in the input classpath and generates a static linkage check report.
+   * Finds linkage errors in the input classpath and generates a classpath check report.
    */
-  public StaticLinkageCheckReport findLinkageErrors() throws IOException {
+  public ClasspathCheckReport findLinkageErrors() throws IOException {
     ImmutableList<Path> jarPaths = classDumper.getInputClassPath();
 
     ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbols = ImmutableMap.builder();
@@ -127,7 +127,7 @@ public class StaticLinkageChecker {
       throw new UnsupportedOperationException("reportOnlyReachable is not yet implemented");
     }
 
-    return StaticLinkageCheckReport.create(jarLinkageReports.build());
+    return ClasspathCheckReport.create(jarLinkageReports.build());
   }
 
   /**

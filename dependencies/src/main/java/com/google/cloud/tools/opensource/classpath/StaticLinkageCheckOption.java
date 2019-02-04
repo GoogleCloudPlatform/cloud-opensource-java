@@ -37,7 +37,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
- * Option for {@link StaticLinkageChecker}. To construct an input class path, the checker requires
+ * Option for {@link ClasspathChecker}. To construct an input class path, the checker requires
  * exactly one of the following types of input:
  *
  * <ul>
@@ -66,7 +66,7 @@ public class StaticLinkageCheckOption {
       checkInput(commandLine);
       return commandLine;
     } catch (ParseException ex) {
-      helpFormatter.printHelp("StaticLinkageChecker", options);
+      helpFormatter.printHelp("ClasspathChecker", options);
       throw ex;
     }
   }
@@ -147,7 +147,7 @@ public class StaticLinkageCheckOption {
               .collect(toImmutableList());
       return jarFilesInArguments;
     } else {
-      helpFormatter.printHelp("StaticLinkageChecker", options);
+      helpFormatter.printHelp("ClasspathChecker", options);
       throw new ParseException("Missing argument");
     }
   }
