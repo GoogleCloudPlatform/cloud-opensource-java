@@ -49,7 +49,7 @@ public class LinkageCheckClassPath extends ClassPath {
   private final ClassLoader extensionClassLoader;
 
   /**
-   * Constructs a class path for classpath check.
+   * Constructs a classpath for check.
    *
    * @param paths list of absolute paths for the elements in the class path
    */
