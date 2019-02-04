@@ -1,6 +1,6 @@
-# Static Linkage Checker
+# Classpath Checker
 
-Static Linkage Checker is a tool that finds [static linkage errors](
+Classpath Checker is a tool that finds [static linkage errors](
 ../library-best-practices/glossary.md#static-linkage-error)
 on a class path and reports the errors to the console.
 It scans the class files in the class path for references to other classes and
@@ -10,7 +10,7 @@ a given set of entry point classes.
 
 ### Use Cases
  
-There are two use cases for Static Linkage Checker:
+There are two use cases for Classpath Checker:
 
 - **For library/application developers** the tool finds static linkage
   errors in their projects, and will help to avoid incompatible versions of libraries
@@ -42,7 +42,7 @@ There are two use cases for Static Linkage Checker:
 
 The input of the tool is either the Maven coordinate of a BOM, 
 a list of Maven coordinates, or a list of class and jar files in the filesystem.
-All of these inputs are converted to a class path for the static linkage check,
+All of these inputs are converted to a class path for the classpath check,
 which is the _input class path_.
 
 When the input is a Maven BOM, the elements in the BOM are

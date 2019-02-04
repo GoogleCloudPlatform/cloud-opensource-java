@@ -637,7 +637,7 @@ public class ClasspathCheckerTest {
         jarLinkageReport.getMissingClassErrors().get(0);
     Truth.assertThat(classReferenceError.getReason()).isEqualTo(Reason.INACCESSIBLE_CLASS);
     Truth.assertWithMessage(
-            "Even when the superclass is unavailable, it should report the location of InnerService")
+            "When the superclass is unavailable, it should report the location of InnerService")
         .that(classReferenceError.getTargetClassLocation().toString())
         .endsWith("testdata/api-common-1.7.0.jar");
   }
