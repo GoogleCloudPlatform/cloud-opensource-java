@@ -43,7 +43,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ClassDumperTest {
-  private static final String EXAMPLE_JAR_FILE =
+  static final String EXAMPLE_JAR_FILE =
       "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar";
 
   // We're sure that FirestoreGrpc class comes from this class file because

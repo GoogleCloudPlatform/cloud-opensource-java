@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -123,21 +124,30 @@ public class ClasspathCheckOption {
     return options;
   }
 
+  static ImmutableList<Artifact> generateArtifacts(CommandLine commandLine)
+      throws RepositoryException {
+    Preconditions.checkArgument(
+        commandLine.hasOption("b") || commandLine.hasOption("a"),
+        "The arguments must have option 'a' or 'b' to list Maven artifacts");
+    if (commandLine.hasOption("b")) {
+      String bomCoordinates = commandLine.getOptionValue("b");
+      DefaultArtifact bomArtifact = new DefaultArtifact(bomCoordinates);
+      return ImmutableList.copyOf(RepositoryUtility.readBom(bomArtifact));
+    } else {
+      // option 'a'
+      String[] mavenCoordinatesOption = commandLine.getOptionValues("a");
+      return Arrays.stream(mavenCoordinatesOption)
+          .map(DefaultArtifact::new)
+          .collect(toImmutableList());
+    }
+  }
+
   static ImmutableList<Path> generateInputClasspath(CommandLine commandLine)
       throws RepositoryException, ParseException {
     setRepositories(commandLine);
 
-    if (commandLine.hasOption("b")) {
-      String bomCoordinates = commandLine.getOptionValue("b");
-      DefaultArtifact bomArtifact = new DefaultArtifact(bomCoordinates);
-      List<Artifact> artifactsInBom = RepositoryUtility.readBom(bomArtifact);
-      return ClassPathBuilder.artifactsToClasspath(artifactsInBom);
-    } else if (commandLine.hasOption("a")) {
-      String[] mavenCoordinatesOption = commandLine.getOptionValues("a");
-      ImmutableList<Artifact> artifacts =
-          Arrays.stream(mavenCoordinatesOption)
-              .map(DefaultArtifact::new)
-              .collect(toImmutableList());
+    if (commandLine.hasOption("b") || commandLine.hasOption("a")) {
+      List<Artifact> artifacts = generateArtifacts(commandLine);
       return ClassPathBuilder.artifactsToClasspath(artifacts);
     } else if (commandLine.hasOption("j")) {
       String[] jarFiles = commandLine.getOptionValues("j");

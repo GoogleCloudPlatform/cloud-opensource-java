@@ -20,7 +20,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
 import com.google.common.graph.GraphBuilder;
+import com.google.common.graph.Graphs;
 import com.google.common.graph.ImmutableGraph;
 import com.google.common.graph.MutableGraph;
 import com.google.common.graph.SuccessorsFunction;
@@ -30,16 +32,15 @@ import java.util.Set;
 import org.apache.bcel.classfile.JavaClass;
 
 /**
- * Directed graph among class references.
+ * Directed graph among class references to check a class is reachable from classes in {@code
+ * entryPointJars}.
  *
  * <p>Nodes are class names.
  *
- * <p>Edges are directed symbol reference between two classes.
+ * <p>Edges are directed references between two classes.
  */
 class ClassSymbolGraph {
-
-  final ImmutableGraph<String> graph;
-  final ImmutableSet<String> entryPointClasses;
+  private final ImmutableSet<String> reachableClasses;
 
   static ClassSymbolGraph create(Set<ClassSymbolReference> classSymbolReferences,
       Set<Path> entryPointJars) throws IOException {
@@ -58,25 +59,30 @@ class ClassSymbolGraph {
     MutableGraph<String> graphBuilder = GraphBuilder.directed().allowsSelfLoops(false).build();
 
     for (ClassSymbolReference reference : classSymbolReferences) {
-      graphBuilder.putEdge(reference.getSourceClassName(), reference.getTargetClassName());
+      String sourceClassName = reference.getSourceClassName();
+      String targetClassName = reference.getTargetClassName();
+      if (sourceClassName.equals(targetClassName)) {
+        continue;
+      }
+      graphBuilder.putEdge(sourceClassName, targetClassName);
     }
 
-    this.graph = ImmutableGraph.copyOf(graphBuilder);
+    ImmutableGraph<String> graph = ImmutableGraph.copyOf(graphBuilder);
 
-    this.entryPointClasses = ImmutableSet.copyOf(entryPointClasses);
-  }
-
-
-  /**
-   * Returns true if {@code className} is reachable from one of {@link #entryPointClasses}.
-   */
-  private boolean isReachable(String className) {
+    ImmutableSet.Builder<String> reachableClassBuilder = ImmutableSet.builder();
     for (String entryPointClass : entryPointClasses) {
-      if (graph.successors(entryPointClass).contains(className)) {
-        return true;
+      if (graph.nodes().contains(entryPointClass)) {
+        reachableClassBuilder.addAll(Graphs.reachableNodes(graph, entryPointClass));
       }
     }
-    return false;
+    this.reachableClasses = reachableClassBuilder.build();
+  }
+
+  /**
+   * Returns true if {@code className} is reachable from one of classes in {@code entryPointJars}.
+   */
+  private boolean isReachable(String className) {
+    return reachableClasses.contains(className);
   }
 
   /**

@@ -68,6 +68,8 @@ public class ClasspathChecker {
   private final ClassDumper classDumper;
 
   private final ImmutableSet<Path> entryPoints;
+
+  private ClassSymbolGraph classSymbolGraph;
   
   private ClasspathChecker(
       boolean reportOnlyReachable,
@@ -92,11 +94,19 @@ public class ClasspathChecker {
 
     CommandLine commandLine = ClasspathCheckOption.readCommandLine(arguments);
     ImmutableList<Path> inputClasspath = ClasspathCheckOption.generateInputClasspath(commandLine);
-    // TODO(suztomo): take command-line option to choose entry point classes for reachability
-    ImmutableSet<Path> entryPoints = ImmutableSet.of(inputClasspath.get(0));
+
+    ImmutableSet.Builder<Path> entryPoints = ImmutableSet.builder();
+    if (commandLine.hasOption("a") || commandLine.hasOption('b')) {
+      // For an artifact list (or a BOM), the first elements in inputClasspath are the artifacts
+      // specified the list, followed by their dependencies.
+      int artifactCount = ClasspathCheckOption.generateArtifacts(commandLine).size();
+      entryPoints.addAll(inputClasspath.subList(0, artifactCount));
+    } else {
+      entryPoints.addAll(inputClasspath);
+    }
 
     boolean onlyReachable = commandLine.hasOption("r");
-    ClasspathChecker classpathChecker = create(onlyReachable, inputClasspath, entryPoints);
+    ClasspathChecker classpathChecker = create(onlyReachable, inputClasspath, entryPoints.build());
     ClasspathCheckReport report = classpathChecker.findLinkageErrors();
 
     System.out.println(report);
@@ -118,18 +128,17 @@ public class ClasspathChecker {
     for (SymbolReferenceSet symbolReferenceSet : jarToSymbols.values()) {
       classReferenceBuilder.addAll(symbolReferenceSet.getClassReferences());
     }
-    ClassSymbolGraph classSymbolGraph = ClassSymbolGraph.create(classReferenceBuilder.build()
+    this.classSymbolGraph = ClassSymbolGraph.create(classReferenceBuilder.build()
         , entryPoints);
 
     // Validate linkage error of each reference
     ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
     for (Map.Entry<Path, SymbolReferenceSet> entry : jarToSymbols.entrySet()) {
       Path jarPath = entry.getKey();
-      jarLinkageReports.add(generateLinkageReport(jarPath, entry.getValue(), classSymbolGraph));
+      jarLinkageReports.add(generateLinkageReport(jarPath, entry.getValue()));
     }
 
     if (reportOnlyReachable) {
-
       // TODO: Optionally, report errors only reachable from entry point classes
       logger.warning("reportOnlyReachable is not yet implemented");
       throw new UnsupportedOperationException("reportOnlyReachable is not yet implemented");
@@ -139,17 +148,17 @@ public class ClasspathChecker {
   }
 
   /**
-   * Generates a linkage report for a jar file, by checking linkage errors in the symbol
-   * references against the input class path.
+   * Generates a linkage report for a jar file, by checking linkage errors in the symbol references
+   * against the input class path.
    *
    * @param jarPath absolute path to the jar file
    * @param symbolReferenceSet symbol references from {@code jarPath} to check its linkage errors
    * @return linkage report for the jar file, which includes linkage errors if any
    */
   @VisibleForTesting
-  JarLinkageReport generateLinkageReport(Path jarPath, SymbolReferenceSet symbolReferenceSet,
-      ClassSymbolGraph classSymbolGraph) {
-    
+  JarLinkageReport generateLinkageReport(
+      Path jarPath, SymbolReferenceSet symbolReferenceSet) {
+
     JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder().setJarPath(jarPath);
 
     // Because the Java compiler ensures that there are no static linkage errors between classes

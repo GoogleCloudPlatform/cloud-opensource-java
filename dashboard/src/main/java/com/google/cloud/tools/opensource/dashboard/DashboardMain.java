@@ -95,8 +95,8 @@ public class DashboardMain {
     // LinkedListMultimap preserves the key order
     ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
 
-    // TODO(suztomo): choose entry point classes for reachability
-    ImmutableSet<Path> entryPoints = ImmutableSet.of(classpath.get(0));
+    ImmutableSet<Path> entryPoints =
+        ImmutableSet.copyOf(classpath.subList(0, managedDependencies.size()));
 
     boolean onlyReachable = false;
     ClasspathChecker classpathChecker =
