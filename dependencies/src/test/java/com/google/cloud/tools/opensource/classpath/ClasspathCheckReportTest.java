@@ -26,10 +26,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class StaticLinkageCheckReportTest {
+public class ClasspathCheckReportTest {
   
   private JarLinkageReport jarLinkageReport;
-  private StaticLinkageCheckReport staticLinkageCheckReport;
+  private ClasspathCheckReport classpathCheckReport;
 
   @Before
   public void createDummyJarLinkageReport() {
@@ -77,33 +77,33 @@ public class StaticLinkageCheckReportTest {
             .setMissingFieldErrors(missingFieldErrors)
             .build();
 
-    staticLinkageCheckReport =
-        StaticLinkageCheckReport.create(ImmutableList.of(jarLinkageReport));
+    classpathCheckReport =
+        ClasspathCheckReport.create(ImmutableList.of(jarLinkageReport));
   }
 
   @Test
   public void testJarLinkageReportToString() {
-    Truth.assertThat(staticLinkageCheckReport.toString()).startsWith("c (3 errors)");
+    Truth.assertThat(classpathCheckReport.toString()).startsWith("c (3 errors)");
   }
   
   @Test
   public void testToString() {
-    Truth.assertThat(staticLinkageCheckReport.toString()).contains(jarLinkageReport.toString());
+    Truth.assertThat(classpathCheckReport.toString()).contains(jarLinkageReport.toString());
   }
   
   @Test
   public void testToStringNoErrors() {
-    staticLinkageCheckReport = StaticLinkageCheckReport.create(Collections.emptyList());
-    Assert.assertEquals("No static linkage errors\n", staticLinkageCheckReport.toString());
+    classpathCheckReport = ClasspathCheckReport.create(Collections.emptyList());
+    Assert.assertEquals("No static linkage errors\n", classpathCheckReport.toString());
   }
   
   @Test
   public void testCreation() {
-    Assert.assertEquals(1, staticLinkageCheckReport.getJarLinkageReports().size());
-    Assert.assertEquals(jarLinkageReport, staticLinkageCheckReport.getJarLinkageReports().get(0));
+    Assert.assertEquals(1, classpathCheckReport.getJarLinkageReports().size());
+    Assert.assertEquals(jarLinkageReport, classpathCheckReport.getJarLinkageReports().get(0));
     Assert.assertEquals(
         "ClassA",
-        staticLinkageCheckReport
+        classpathCheckReport
             .getJarLinkageReports()
             .get(0)
             .getMissingClassErrors()

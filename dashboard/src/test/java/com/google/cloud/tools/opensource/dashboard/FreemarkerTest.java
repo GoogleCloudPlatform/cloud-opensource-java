@@ -29,7 +29,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.cloud.tools.opensource.classpath.StaticLinkageCheckReport;
+import com.google.cloud.tools.opensource.classpath.ClasspathCheckReport;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
@@ -69,8 +69,8 @@ public class FreemarkerTest {
   public void testCountFailures() throws IOException, TemplateException, ValidityException, ParsingException {
     Configuration configuration = DashboardMain.configureFreemarker();
 
-    StaticLinkageCheckReport staticLinkageCheckReport =
-        StaticLinkageCheckReport.create(ImmutableList.of());
+    ClasspathCheckReport classpathCheckReport =
+        ClasspathCheckReport.create(ImmutableList.of());
     
     Artifact artifact1 = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
     ArtifactResults results1 = new ArtifactResults(artifact1);
@@ -84,7 +84,7 @@ public class FreemarkerTest {
     List<DependencyGraph> globalDependencies = ImmutableList.of();
     Multimap<Path, DependencyPath> jarToDependencyPaths = LinkedListMultimap.create();
     DashboardMain.generateDashboard(configuration, outputDirectory, table, globalDependencies,
-        staticLinkageCheckReport, jarToDependencyPaths);
+        classpathCheckReport, jarToDependencyPaths);
     
     Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
