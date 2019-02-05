@@ -19,25 +19,17 @@ Java Dependency Glossary
 ### Types of conflicts and compatibility
 
 <a name="linkage-error"></a>
-<a name="static-linkage-error"></a>
-<a name="dynamic-linkage-error"></a>
-- **Linkage error**: an error when a Java class references
-  another class and the reference cannot be satisfied with the available classes in the class path.
+- **Linkage error**: A "class has some dependency on another class; however, the
+  latter class has incompatibly changed after the compilation of the former class."<sup>[1](#myfootnote1)</sup>
   The reference can be through a class literal, a field access, or a method invocation.
-  Linkage errors detected at runtime manifest as `ReflectiveOperationException`,
-  `NoClassDefFoundError`, `NoSuchFieldException`, `MethodNotFoundException`,
-  `LinkageError`, or similar errors and exceptions.
+  Linkage errors detected at runtime manifest as a subclass of `LinkageError` such as
+  `NoSuchMethodError`, `NoClassDefFoundError`, `NoSuchFieldException`,
+  `NoSuchFieldError`, or similar errors.
   
   - Sub-type: **Linkage conflict**
   - Sub-type: **Missing class error**
-  - Sub-type: **Static linkage error**: A linkage error caused by a direct code
-    reference (non-reflective).
-  - Sub-type: **Dynamic linkage error**: A linkage error caused by a reflective
-    reference.
 
 <a name="linkage-conflict"></a>
-<a name="static-linkage-conflict"></a>
-<a name="dynamic-linkage-conflict"></a>
 - **Linkage conflict**: a linkage error when the name, return type,
   modifiers, arguments, or throws clause of a non-private method, field, or class
   in a dependency has changed in an incompatible way between
@@ -45,10 +37,12 @@ Java Dependency Glossary
   the runtime class path.
   For example, a public method may be removed from a class or an extended
   class may be made final.
-  - Or, another perspective: In cases where binary compatibility and source
-    compatibility are the same, a linkage conflict is when compilation would
-    fail if the libraries in the class path were all built together from their
-    originating source code, or when reflection would fail.
+  
+  Or, another perspective: In cases where binary compatibility and source
+  compatibility are the same, a linkage conflict is when compilation would
+  fail if the libraries in the class path were all built together from their
+  originating source code, or when reflection would fail.
+  
   - Opposite: **Linkage-compatible**.
   - Sub-type: **Static linkage conflict**: A linkage conflict caused by a direct
     code reference (non-reflective).
@@ -59,11 +53,6 @@ Java Dependency Glossary
 - **Missing class error**: an error when a class referenced does not exist
   in the class path. This error happens when a class is removed or renamed in a different
   version of a library, or a dependency is omitted when constructing the class path.
-
-<a name="static"></a>
-- **Static**: Said of a linkage error when the linkage error is caused by a
-  direct code reference (for example, _static linkage error_ and _static linkage conflict_).
-  The references from a class are written in the class file when the class is compiled.
 
 <a name="behavior-conflict"></a>
 - **Behavior conflict**: The class's implementation has changed in a way that
@@ -166,4 +155,5 @@ Java Dependency Glossary
   of a linkage error starts with the nodes that correspond to the
   entry point classes.
 
+<a name="myfootnote1">1</a>: [Linkage Error (Java SE Platform 8)](https://docs.oracle.com/javase/8/docs/api/java/lang/LinkageError.html)
 
