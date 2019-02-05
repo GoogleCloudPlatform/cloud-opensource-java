@@ -85,30 +85,35 @@ public class ClasspathCheckOption {
     options.addOption(
         "b", "bom", true, "BOM to generate a class path, specified by its Maven coordinates");
 
-    Option artifactOption = Option.builder("a").longOpt("artifacts").hasArgs()
-        .valueSeparator(',')
-        .desc("Maven coordinates for Maven artifacts (separated by ',') to generate a class path")
-        .build();
+    Option artifactOption =
+        Option.builder("a")
+            .longOpt("artifacts")
+            .hasArgs()
+            .valueSeparator(',')
+            .desc(
+                "Maven coordinates for Maven artifacts (separated by ',') to generate a class path")
+            .build();
     options.addOption(artifactOption);
 
-    Option jarOption = Option.builder("j").longOpt("jars").hasArgs()
-        .valueSeparator(',')
-        .desc("Jar files (separated by ',') to generate a class path")
-        .build();
+    Option jarOption =
+        Option.builder("j")
+            .longOpt("jars")
+            .hasArgs()
+            .valueSeparator(',')
+            .desc("Jar files (separated by ',') to generate a class path")
+            .build();
     options.addOption(jarOption);
 
-    options.addOption(
-        "r",
-        "report-only-reachable",
-        false,
-        "To report only linkage errors reachable from entry point");
-
-    Option repositoryOption = Option.builder("m").longOpt("maven-repositories").hasArgs()
-        .valueSeparator(',')
-        .desc("Maven repository URLs to search for dependencies. "
-            + "The repositories are added to a repository list in order before "
-            + "the default Maven Central (http://repo1.maven.org/maven2/).")
-        .build();
+    Option repositoryOption =
+        Option.builder("m")
+            .longOpt("maven-repositories")
+            .hasArgs()
+            .valueSeparator(',')
+            .desc(
+                "Maven repository URLs to search for dependencies. "
+                    + "The repositories are added to a repository list in order before "
+                    + "the default Maven Central (http://repo1.maven.org/maven2/).")
+            .build();
     options.addOption(repositoryOption);
 
     Option noMavenCentralOption =
@@ -168,11 +173,10 @@ public class ClasspathCheckOption {
     }
     try {
       boolean addMavenCentral = !commandLine.hasOption("nm");
-      RepositoryUtility.setRepositories(Arrays.asList(commandLine.getOptionValues("m")),
-          addMavenCentral);
+      RepositoryUtility.setRepositories(
+          Arrays.asList(commandLine.getOptionValues("m")), addMavenCentral);
     } catch (IllegalArgumentException ex) {
-      throw new ParseException("Invalid URL specified for Maven repositories: "
-          + ex.getMessage());
+      throw new ParseException("Invalid URL specified for Maven repositories: " + ex.getMessage());
     }
   }
 }

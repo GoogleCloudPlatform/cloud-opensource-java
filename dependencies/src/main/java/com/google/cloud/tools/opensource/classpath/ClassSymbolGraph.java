@@ -16,18 +16,16 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
-import com.google.common.graph.Graphs;
 import com.google.common.graph.ImmutableGraph;
 import com.google.common.graph.MutableGraph;
-import com.google.common.graph.SuccessorsFunction;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.Queue;
 import java.util.Set;
 import org.apache.bcel.classfile.JavaClass;
 
@@ -70,26 +68,35 @@ class ClassSymbolGraph {
     ImmutableGraph<String> graph = ImmutableGraph.copyOf(graphBuilder);
 
     ImmutableSet.Builder<String> reachableClassBuilder = ImmutableSet.builder();
-    for (String entryPointClass : entryPointClasses) {
-      if (graph.nodes().contains(entryPointClass)) {
-        reachableClassBuilder.addAll(Graphs.reachableNodes(graph, entryPointClass));
+    reachableClassBuilder.addAll(reachableNodes(graph, entryPointClasses));
+    this.reachableClasses = reachableClassBuilder.build();
+  }
+
+  private static ImmutableSet<String> reachableNodes(Graph<String> graph, Set<String> nodes) {
+    // This function is mostly copy from Graphs.reachableNodes(Graph<N>, N node)
+    Set<String> visitedNodes = Sets.newHashSet();
+    Queue<String> queuedNodes = new ArrayDeque<>();
+    visitedNodes.addAll(nodes);
+    queuedNodes.addAll(nodes);
+    while (!queuedNodes.isEmpty()) {
+      String currentNode = queuedNodes.remove();
+      if (!graph.nodes().contains(currentNode)) {
+        continue;
+      }
+      for (String successor : graph.successors(currentNode)) {
+        if (visitedNodes.add(successor)) {
+          queuedNodes.add(successor);
+        }
       }
     }
-    this.reachableClasses = reachableClassBuilder.build();
+    return ImmutableSet.copyOf(visitedNodes);
   }
 
   /**
    * Returns true if {@code className} is reachable from one of classes in {@code entryPointJars}.
+   * This method does not perform graph traversal as {@link #reachableClasses} is cached.
    */
-  private boolean isReachable(String className) {
+  boolean isReachable(String className) {
     return reachableClasses.contains(className);
-  }
-
-  /**
-   * Returns true if {@code linkageError}'s source class is true for {@link #isReachable(String)}.
-   */
-  <R extends SymbolReference> boolean isReachableError(StaticLinkageError<R> linkageError) {
-    String sourceClassName = linkageError.getReference().getSourceClassName();
-    return isReachable(sourceClassName);
   }
 }

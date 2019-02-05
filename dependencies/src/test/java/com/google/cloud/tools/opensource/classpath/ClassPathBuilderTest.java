@@ -150,8 +150,7 @@ public class ClassPathBuilderTest {
             .filter(path -> "httpclient-4.5.3.jar".equals(path.getFileName().toString()))
             .findFirst()
             .get();
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, ImmutableSet.copyOf(paths));
 
     // httpclient-4.5.3 AbstractVerifier has a method reference of
     // 'void verify(String host, String[] cns, String[] subjectAlts)' to itself and its interface

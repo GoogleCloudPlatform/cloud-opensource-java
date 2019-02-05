@@ -42,8 +42,7 @@ public class ClasspathCheckOptionTest {
 
   @Test
   public void parseCommandLineOptions_shortOptions_bom() throws ParseException {
-    CommandLine parsedOption =
-        ClasspathCheckOption.readCommandLine("-b", "abc.com:dummy:1.2", "-r");
+    CommandLine parsedOption = ClasspathCheckOption.readCommandLine("-b", "abc.com:dummy:1.2");
 
     Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getOptionObject('b'));
   }
@@ -52,11 +51,7 @@ public class ClasspathCheckOptionTest {
   public void parseCommandLineOptions_duplicates() {
     try {
       ClasspathCheckOption.readCommandLine(
-          "--artifacts",
-          "abc.com:abc:1.1,abc.com:abc-util:1.2",
-          "-b",
-          "abc.com:dummy:1.2",
-          "--report-only-reachable");
+          "--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2", "-b", "abc.com:dummy:1.2");
       Assert.fail();
     } catch (ParseException ex) {
       Assert.assertEquals(
@@ -68,8 +63,7 @@ public class ClasspathCheckOptionTest {
   @Test
   public void testReadCommandLine_multipleArtifacts() throws ParseException {
     CommandLine commandLine =
-        ClasspathCheckOption.readCommandLine(
-            "--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2", "--report-only-reachable");
+        ClasspathCheckOption.readCommandLine("--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2");
     Truth.assertThat(commandLine.getOptionValues("a")).hasLength(2);
   }
 

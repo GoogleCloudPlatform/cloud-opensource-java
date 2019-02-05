@@ -34,8 +34,8 @@ public class StaticLinkageErrorTest {
             .setSourceClassName("ClassD")
             .build();
 
-    StaticLinkageError<FieldSymbolReference> fieldError = StaticLinkageError
-        .errorMissingTargetClass(fieldSymbolReference);
+    StaticLinkageError<FieldSymbolReference> fieldError =
+        StaticLinkageError.errorMissingTargetClass(fieldSymbolReference, true);
     Truth.assertThat(fieldError.getReference()).isEqualTo(fieldSymbolReference);
 
     MethodSymbolReference methodSymbolReference =
@@ -48,8 +48,8 @@ public class StaticLinkageErrorTest {
             .build();
 
     Path targetClassLocation = Paths.get("foo", "bar");
-    StaticLinkageError<MethodSymbolReference> methodError = StaticLinkageError
-        .errorMissingMember(methodSymbolReference, targetClassLocation);
+    StaticLinkageError<MethodSymbolReference> methodError =
+        StaticLinkageError.errorMissingMember(methodSymbolReference, targetClassLocation, true);
     Truth.assertThat((Object) methodError.getTargetClassLocation()).isEqualTo(targetClassLocation);
 
     ClassSymbolReference classSymbolReference =
@@ -59,7 +59,7 @@ public class StaticLinkageErrorTest {
             .setSourceClassName("ClassB")
             .build();
     StaticLinkageError<ClassSymbolReference> classError =
-        StaticLinkageError.errorInaccessibleClass(classSymbolReference, targetClassLocation);
+        StaticLinkageError.errorInaccessibleClass(classSymbolReference, targetClassLocation, true);
     Truth.assertThat(classError.getReason()).isEqualTo(Reason.INACCESSIBLE_CLASS);
   }
 }

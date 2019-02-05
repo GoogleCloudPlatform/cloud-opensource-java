@@ -44,6 +44,8 @@ abstract class StaticLinkageError<T extends SymbolReference> {
   /** Returns the reason why the symbol reference is marked as a linkage error. */
   abstract Reason getReason();
 
+  abstract boolean isSourceClassReachable();
+
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
@@ -58,43 +60,51 @@ abstract class StaticLinkageError<T extends SymbolReference> {
   }
 
   /** Returns a linkage error caused by {@link Reason#CLASS_NOT_FOUND}. */
-  static <U extends SymbolReference> StaticLinkageError<U> errorMissingTargetClass(U reference) {
-    return builderFor(reference).setReason(Reason.CLASS_NOT_FOUND).build();
+  static <U extends SymbolReference> StaticLinkageError<U> errorMissingTargetClass(
+      U reference, boolean isReachable) {
+    return builderFor(reference)
+        .setReason(Reason.CLASS_NOT_FOUND)
+        .setSourceClassReachable(isReachable)
+        .build();
   }
 
   /** Returns a linkage error caused by {@link Reason#INCOMPATIBLE_CLASS_CHANGE}. */
   static <U extends SymbolReference> StaticLinkageError<U> errorIncompatibleClassChange(
-      U reference, Path targetClassLocation) {
+      U reference, Path targetClassLocation, boolean isReachable) {
     return builderFor(reference)
         .setReason(Reason.INCOMPATIBLE_CLASS_CHANGE)
         .setTargetClassLocation(targetClassLocation)
+        .setSourceClassReachable(isReachable)
         .build();
   }
 
   /** Returns a linkage error caused by {@link Reason#SYMBOL_NOT_FOUND}. */
   static <U extends SymbolReference> StaticLinkageError<U> errorMissingMember(
-      U reference, Path targetClassLocation) {
+      U reference, Path targetClassLocation, boolean isReachable) {
     return builderFor(reference)
         .setReason(Reason.SYMBOL_NOT_FOUND)
         .setTargetClassLocation(targetClassLocation)
+        .setSourceClassReachable(isReachable)
         .build();
   }
 
   /** Returns a linkage error caused by {@link Reason#INACCESSIBLE_CLASS}. */
   static <U extends SymbolReference> StaticLinkageError<U> errorInaccessibleClass(
-      U reference, Path targetClassLocation) {
+      U reference, Path targetClassLocation, boolean isReachable) {
     return builderFor(reference)
         .setReason(Reason.INACCESSIBLE_CLASS)
         .setTargetClassLocation(targetClassLocation)
+        .setSourceClassReachable(isReachable)
         .build();
   }
 
   /** Returns a linkage error caused by {@link Reason#INACCESSIBLE_MEMBER}. */
   static <U extends SymbolReference> StaticLinkageError<U> errorInaccessibleMember(
-      U reference, Path targetClassLocation) {
+      U reference, Path targetClassLocation, boolean isReachable) {
     return builderFor(reference)
         .setReason(Reason.INACCESSIBLE_MEMBER)
         .setTargetClassLocation(targetClassLocation)
+        .setSourceClassReachable(isReachable)
         .build();
   }
 
@@ -114,6 +124,8 @@ abstract class StaticLinkageError<T extends SymbolReference> {
     abstract StaticLinkageError.Builder<T> setReason(Reason reason);
 
     abstract StaticLinkageError.Builder<T> setReference(T reference);
+
+    abstract StaticLinkageError.Builder<T> setSourceClassReachable(boolean reachable);
 
     abstract StaticLinkageError<T> build();
   }

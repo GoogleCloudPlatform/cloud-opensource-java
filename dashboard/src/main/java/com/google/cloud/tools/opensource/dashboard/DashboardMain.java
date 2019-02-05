@@ -98,9 +98,7 @@ public class DashboardMain {
     ImmutableSet<Path> entryPoints =
         ImmutableSet.copyOf(classpath.subList(0, managedDependencies.size()));
 
-    boolean onlyReachable = false;
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(onlyReachable, classpath, entryPoints);
+    ClasspathChecker classpathChecker = ClasspathChecker.create(classpath, entryPoints);
 
     ClasspathCheckReport linkageReport = classpathChecker.findLinkageErrors();
     

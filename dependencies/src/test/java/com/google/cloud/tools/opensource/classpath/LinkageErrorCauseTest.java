@@ -32,7 +32,7 @@ public class LinkageErrorCauseTest {
             .build();
 
     StaticLinkageError<FieldSymbolReference> fieldError =
-        StaticLinkageError.errorMissingTargetClass(fieldSymbolReference);
+        StaticLinkageError.errorMissingTargetClass(fieldSymbolReference, true);
 
     LinkageErrorCause groupKey = LinkageErrorCause.from(fieldError);
     Truth.assertThat(groupKey.getReason()).isEqualTo(Reason.CLASS_NOT_FOUND);

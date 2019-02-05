@@ -26,9 +26,7 @@ import java.net.URISyntaxException;
 import org.junit.Test;
 
 public class ClassSymbolGraphTest {
-
-  @Test
-  public void testConnection() throws URISyntaxException, IOException {
+  private static ClassSymbolGraph createExampleGraph() throws URISyntaxException, IOException {
     ClassSymbolReference grpcToA =
         ClassSymbolReference.builder()
             .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
@@ -54,31 +52,25 @@ public class ClassSymbolGraphTest {
             .setFieldReferences(ImmutableSet.of())
             .setMethodReferences(ImmutableSet.of())
             .build();
-    ClassSymbolGraph classSymbolGraph =
-        ClassSymbolGraph.create(
-            symbolReferenceSet.getClassReferences(),
-            // This jar file contains com.google.firestore.v1beta1.FirestoreGrpc
-            ImmutableSet.of(absolutePathOfResource(EXAMPLE_JAR_FILE)));
+    return ClassSymbolGraph.create(
+        symbolReferenceSet.getClassReferences(),
+        // This jar file contains com.google.firestore.v1beta1.FirestoreGrpc
+        ImmutableSet.of(absolutePathOfResource(EXAMPLE_JAR_FILE)));
+  }
 
-    boolean isClassBReachable =
-        classSymbolGraph.isReachableError(
-            StaticLinkageError.errorMissingTargetClass(
-                ClassSymbolReference.builder()
-                    .setSourceClassName("ClassB")
-                    .setSubclass(false)
-                    .setTargetClassName("ClassC")
-                    .build()));
-    // Given FirestoreGrpc-to-ClassA and ClassA-to-ClassB, class B is reachable
-    Truth.assertThat(isClassBReachable).isTrue();
+  @Test
+  public void testClassReachableClass() throws URISyntaxException, IOException {
+    ClassSymbolGraph classSymbolGraph = createExampleGraph();
 
-    boolean isClassCReachable =
-        classSymbolGraph.isReachableError(
-            StaticLinkageError.errorMissingTargetClass(
-                ClassSymbolReference.builder()
-                    .setSourceClassName("ClassE")
-                    .setSubclass(false)
-                    .setTargetClassName("ClassC")
-                    .build()));
-    Truth.assertThat(isClassCReachable).isFalse();
+    // Given FirestoreGrpc-to-ClassA and ClassA-to-ClassB, class B is reachable.
+    Truth.assertThat(classSymbolGraph.isReachable("ClassB")).isTrue();
+  }
+
+  @Test
+  public void testUnreachableClass() throws URISyntaxException, IOException {
+    ClassSymbolGraph classSymbolGraph = createExampleGraph();
+
+    // There is no path from Firestore Grpc classes to ClassC.
+    Truth.assertThat(classSymbolGraph.isReachable("ClassC")).isFalse();
   }
 }
