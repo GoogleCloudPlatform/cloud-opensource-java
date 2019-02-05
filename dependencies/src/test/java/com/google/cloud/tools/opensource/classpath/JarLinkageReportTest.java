@@ -65,7 +65,7 @@ public class JarLinkageReportTest {
             .setSourceClassName("ClassC")
             .build();
     StaticLinkageError<MethodSymbolReference> linkageErrorMissingMethodByClass =
-        StaticLinkageError.errorMissingTargetClass(methodSymbolReferenceDueToMissingClass, true);
+        StaticLinkageError.errorMissingTargetClass(methodSymbolReferenceDueToMissingClass, false);
 
     missingMethodErrors =
         ImmutableList.of(linkageErrorMissingMethod, linkageErrorMissingMethodByClass);
@@ -118,15 +118,19 @@ public class JarLinkageReportTest {
     Assert.assertEquals(
         "c (4 errors):\n"
             + "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA"
-            + ", subclass=false}, reason: CLASS_NOT_FOUND, target class location not found\n"
+            + ", subclass=false}, reason: CLASS_NOT_FOUND, target class location not found"
+            + ", isReachable: true\n"
             + "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, "
             + "methodName=methodX, interfaceMethod=false, descriptor=java.lang.String}"
-            + ", reason: SYMBOL_NOT_FOUND, target class from dummy.jar\n"
+            + ", reason: SYMBOL_NOT_FOUND, target class from dummy.jar"
+            + ", isReachable: true\n"
             + "  MethodSymbolReference{sourceClassName=ClassC, targetClassName=ClassA,"
             + " methodName=methodX, interfaceMethod=false, descriptor=java.lang.String}, "
-            + "reason: CLASS_NOT_FOUND, target class location not found\n"
+            + "reason: CLASS_NOT_FOUND, target class location not found"
+            + ", isReachable: false\n"
             + "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, "
-            + "fieldName=fieldX}, reason: CLASS_NOT_FOUND, target class location not found\n",
+            + "fieldName=fieldX}, reason: CLASS_NOT_FOUND, target class location not found"
+            + ", isReachable: true\n",
         jarLinkageReport.toString());
   }
 
@@ -134,9 +138,9 @@ public class JarLinkageReportTest {
   public void testFormatByGroup() {
     Assert.assertEquals(
         "3 group(s) of 4 static linkage error(s)\n"
-            + "  ClassA is not found. Referenced by: ClassB, ClassC\n"
-            + "  ClassA.methodX is not found. Referenced by: ClassB\n"
-        + "  ClassC is not found. Referenced by: ClassD\n",
+            + "  ClassA is not found. Referenced by: (reachable)ClassB, ClassC\n"
+            + "  ClassA.methodX is not found. Referenced by: (reachable)ClassB\n"
+        + "  ClassC is not found. Referenced by: (reachable)ClassD\n",
         jarLinkageReport.formatByGroup());
   }
 }

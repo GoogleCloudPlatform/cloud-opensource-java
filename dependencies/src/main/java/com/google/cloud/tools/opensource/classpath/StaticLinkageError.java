@@ -56,6 +56,8 @@ abstract class StaticLinkageError<T extends SymbolReference> {
     } else {
       builder.append(", target class location not found");
     }
+    builder.append(", isReachable: ");
+    builder.append(isSourceClassReachable());
     return builder.toString();
   }
 
