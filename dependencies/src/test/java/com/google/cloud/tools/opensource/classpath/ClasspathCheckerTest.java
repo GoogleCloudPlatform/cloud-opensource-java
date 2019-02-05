@@ -38,18 +38,18 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class StaticLinkageCheckerTest {
+public class ClasspathCheckerTest {
 
   @Test
   public void testFindInvalidReferences_arrayCloneMethod() throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     // Array's clone is available in Java runtime and thus should not be reported as linkage error
     MethodSymbolReference arrayClone =
         MethodSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName(ClasspathCheckReportTest.class.getName())
             .setTargetClassName("[Lio.grpc.InternalKnownTransport;")
             .setInterfaceMethod(false)
             .setMethodName("clone")
@@ -59,7 +59,7 @@ public class StaticLinkageCheckerTest {
     // ImmutableList does not have clone method
     MethodSymbolReference invalidCloneOnNonArray =
         MethodSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName(ClasspathCheckReportTest.class.getName())
             .setTargetClassName("com.google.common.collect.ImmutableList")
             .setInterfaceMethod(false)
             .setMethodName("clone")
@@ -73,7 +73,7 @@ public class StaticLinkageCheckerTest {
     Path jarNotContainingImmutableList =
         absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar");
     JarLinkageReport jarLinkageReport =
-        staticLinkageChecker.generateLinkageReport(
+        classpathChecker.generateLinkageReport(
             jarNotContainingImmutableList, symbolReferenceSet);
 
     Truth.assertThat(jarLinkageReport.getMissingMethodErrors()).hasSize(1);
@@ -85,12 +85,12 @@ public class StaticLinkageCheckerTest {
   public void testFindInvalidReferences_constructorInAbstractClass()
       throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName(ClasspathCheckReportTest.class.getName())
             .setTargetClassName(
                 "com.google.common.collect.LinkedHashMultimapGwtSerializationDependencies")
             .setInterfaceMethod(false)
@@ -101,7 +101,7 @@ public class StaticLinkageCheckerTest {
     SymbolReferenceSet symbolReferenceSet =
         SymbolReferenceSet.builder().setMethodReferences(methodReferences).build();
 
-    JarLinkageReport jarLinkageReport = staticLinkageChecker.generateLinkageReport(paths.get(0),
+    JarLinkageReport jarLinkageReport = classpathChecker.generateLinkageReport(paths.get(0),
         symbolReferenceSet);
 
     Truth.assertThat(jarLinkageReport.getMissingMethodErrors()).isEmpty();
@@ -111,13 +111,13 @@ public class StaticLinkageCheckerTest {
   public void testCheckLinkageErrorMissingInterfaceMethodAt_interfaceAndClassSeparation()
       throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     // ImmutableList is an abstract class, but setting isInterfaceMethod = true
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName(ClasspathCheckReportTest.class.getName())
             .setTargetClassName("com.google.common.collect.ImmutableList")
             .setInterfaceMethod(true) // This is invalid
             .setMethodName("get")
@@ -125,7 +125,7 @@ public class StaticLinkageCheckerTest {
             .build();
     // When it's verified against interfaces, it should generate an error
     Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
-        staticLinkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
+        classpathChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
     Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.INCOMPATIBLE_CLASS_CHANGE);
@@ -135,13 +135,13 @@ public class StaticLinkageCheckerTest {
   public void testCheckLinkageErrorMissingMethodAt_interfaceAndClassSeparation()
       throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     // ClassToInstanceMap is an interface, but setting isInterfaceMethod = false
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName(ClasspathCheckReportTest.class.getName())
             .setTargetClassName("com.google.common.collect.ClassToInstanceMap")
             .setInterfaceMethod(false) // This is invalid
             .setMethodName("getInstance")
@@ -149,7 +149,7 @@ public class StaticLinkageCheckerTest {
             .build();
     // When it's verified against classes, it should generate an error
     Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
-        staticLinkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
+        classpathChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
     Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.INCOMPATIBLE_CLASS_CHANGE);
@@ -159,13 +159,13 @@ public class StaticLinkageCheckerTest {
   public void testCheckLinkageErrorMissingInterfaceMethodAt_missingInterfaceMethod()
       throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     // ClassToInstanceMap is an interface
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName(ClasspathCheckReportTest.class.getName())
             .setTargetClassName("com.google.common.collect.ClassToInstanceMap")
             .setInterfaceMethod(true)
             .setMethodName("noSuchMethod")
@@ -173,7 +173,7 @@ public class StaticLinkageCheckerTest {
             .build();
     // There is no such method on ClassToInstanceMap
     Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
-        staticLinkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
+        classpathChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
     Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.SYMBOL_NOT_FOUND);
@@ -183,20 +183,20 @@ public class StaticLinkageCheckerTest {
   public void testFindInvalidReferences_interfaceNotImplementedAtAbstractClass()
       throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     // ImmutableList is an abstract class that implements List, but does not implement get() method
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName(ClasspathCheckReportTest.class.getName())
             .setTargetClassName("com.google.common.collect.ImmutableList")
             .setInterfaceMethod(false)
             .setMethodName("get")
             .setDescriptor("(I)Ljava/lang/Object;")
             .build();
     Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
-        staticLinkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
+        classpathChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isEmpty();
   }
@@ -205,13 +205,13 @@ public class StaticLinkageCheckerTest {
   public void testCheckLinkageErrorMissingMethodAt_privateConstructor()
       throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     // ImmutableList is an abstract class that implements List, but does not implement get() method
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName(ClasspathCheckReportTest.class.getName())
             .setTargetClassName("com.google.common.base.Absent")
             .setInterfaceMethod(false)
             // The constructor with zero arguments is marked as private
@@ -220,7 +220,7 @@ public class StaticLinkageCheckerTest {
             .build();
 
     Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
-        staticLinkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
+        classpathChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
     Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.INACCESSIBLE_CLASS);
@@ -233,8 +233,8 @@ public class StaticLinkageCheckerTest {
         ClassPathBuilder.artifactsToClasspath(
             ImmutableList.of(new DefaultArtifact("junit:junit:4.12")));
     // junit has dependency on hamcrest-core
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     // ImmutableList is an abstract class that implements List, but does not implement get() method
     MethodSymbolReference methodSymbolReference =
@@ -248,7 +248,7 @@ public class StaticLinkageCheckerTest {
             .build();
 
     Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
-        staticLinkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
+        classpathChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     // JLS 6.6.2.2 says
     // If the access is by an anonymous class instance creation expression of the form
@@ -260,13 +260,13 @@ public class StaticLinkageCheckerTest {
   public void testCheckLinkageErrorMissingMethodAt_privateMethod()
       throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     // ImmutableList is an abstract class that implements List, but does not implement get() method
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName(ClasspathCheckReportTest.class.getName())
             .setTargetClassName("com.google.common.base.Absent")
             .setInterfaceMethod(false)
             // This method is marked as private
@@ -275,7 +275,7 @@ public class StaticLinkageCheckerTest {
             .build();
 
     Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
-        staticLinkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
+        classpathChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
     Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.INACCESSIBLE_CLASS);
@@ -285,13 +285,13 @@ public class StaticLinkageCheckerTest {
   public void testCheckLinkageErrorMissingMethodAt_privateStaticMethod()
       throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     // ImmutableList is an abstract class that implements List, but does not implement get() method
     MethodSymbolReference privateStaticReference =
         MethodSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName(ClasspathCheckReportTest.class.getName())
             .setTargetClassName("com.google.common.base.Ascii")
             .setInterfaceMethod(false)
             // This method is marked as private
@@ -300,7 +300,7 @@ public class StaticLinkageCheckerTest {
             .build();
 
     Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
-        staticLinkageChecker.checkLinkageErrorMissingMethodAt(privateStaticReference);
+        classpathChecker.checkLinkageErrorMissingMethodAt(privateStaticReference);
 
     Truth8.assertThat(errorFound).isPresent();
     Truth.assertThat(errorFound.get().getReason()).isEqualTo(Reason.INACCESSIBLE_MEMBER);
@@ -311,12 +311,12 @@ public class StaticLinkageCheckerTest {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     FieldSymbolReference validFieldReference =
         FieldSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName(ClasspathCheckReportTest.class.getName())
             .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc")
             .setFieldName("SERVICE_NAME") // valid in grpc-google-cloud-firestore-v1beta1-0.28.0
             .build();
@@ -325,7 +325,7 @@ public class StaticLinkageCheckerTest {
         SymbolReferenceSet.builder().setFieldReferences(fieldReferences).build();
 
     JarLinkageReport jarLinkageReport =
-        staticLinkageChecker.generateLinkageReport(
+        classpathChecker.generateLinkageReport(
             absolutePathOfResource("testdata/gax-1.32.0.jar"),
             symbolReferenceSet);
 
@@ -337,12 +337,12 @@ public class StaticLinkageCheckerTest {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     FieldSymbolReference invalidFieldReference =
         FieldSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName(ClasspathCheckReportTest.class.getName())
             .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc")
             .setFieldName("DUMMY_FIELD") // non-existent as of version 0.28.0
             .build();
@@ -351,7 +351,7 @@ public class StaticLinkageCheckerTest {
         SymbolReferenceSet.builder().setFieldReferences(fieldReferences).build();
 
     JarLinkageReport jarLinkageReport =
-        staticLinkageChecker.generateLinkageReport(
+        classpathChecker.generateLinkageReport(
             absolutePathOfResource("testdata/gax-1.32.0.jar"),
             symbolReferenceSet);
 
@@ -368,8 +368,8 @@ public class StaticLinkageCheckerTest {
       throws IOException, URISyntaxException {
     // The class path does not include Guava.
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     // Guava class should not be found in the class path
     String guavaClass =
@@ -384,7 +384,7 @@ public class StaticLinkageCheckerTest {
 
     // There should be an error reported for the reference
     Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
-        staticLinkageChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
+        classpathChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
     Truth8.assertThat(classSymbolError).isPresent();
     Truth.assertThat(classSymbolError.get().getReference()).isEqualTo(invalidClassReference);
   }
@@ -395,20 +395,20 @@ public class StaticLinkageCheckerTest {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     // FirestoreGrpc class exists in the jar file
     ClassSymbolReference invalidClassReference =
         ClassSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName(ClasspathCheckReportTest.class.getName())
             .setSubclass(false)
             .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc")
             .build();
 
     // There should not be an error reported for the reference
     Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
-        staticLinkageChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
+        classpathChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
     Truth8.assertThat(classSymbolError).isEmpty();
   }
 
@@ -418,8 +418,8 @@ public class StaticLinkageCheckerTest {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     ClassSymbolReference invalidClassReference =
         ClassSymbolReference.builder()
@@ -429,7 +429,7 @@ public class StaticLinkageCheckerTest {
             .build();
 
     Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
-        staticLinkageChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
+        classpathChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
     Truth8.assertThat(classSymbolError).isPresent();
     Truth.assertThat(classSymbolError.get().getReason())
         .isEqualTo(Reason.INCOMPATIBLE_CLASS_CHANGE);
@@ -446,8 +446,8 @@ public class StaticLinkageCheckerTest {
                 new DefaultArtifact("cglib:cglib:2.2_beta1"),
                 new DefaultArtifact("org.ow2.asm:asm:4.2")));
 
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     ClassSymbolReference invalidClassReference =
         ClassSymbolReference.builder()
@@ -457,7 +457,7 @@ public class StaticLinkageCheckerTest {
             .build();
 
     Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
-        staticLinkageChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
+        classpathChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
     Truth8.assertThat(classSymbolError).isPresent();
     Truth.assertWithMessage(
             "ClassWriter.verify, which DebuggingClassWriter overrides, is final in asm 4")
@@ -470,16 +470,16 @@ public class StaticLinkageCheckerTest {
       throws IOException, URISyntaxException {
     FieldSymbolReference privateFieldReference =
         FieldSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckerTest.class.getName())
+            .setSourceClassName(ClasspathCheckerTest.class.getName())
             .setTargetClassName("com.google.api.pathtemplate.PathTemplate")
             .setFieldName("SLASH_SPLITTER")
             .build();
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     Optional<StaticLinkageError<FieldSymbolReference>> errorFound =
-        staticLinkageChecker.checkLinkageErrorMissingFieldAt(privateFieldReference);
+        classpathChecker.checkLinkageErrorMissingFieldAt(privateFieldReference);
 
     Truth8.assertThat(errorFound).isPresent();
     Truth.assertWithMessage("PathTemplate.SLASH_SPLITTER is private field and not accessible.")
@@ -507,15 +507,15 @@ public class StaticLinkageCheckerTest {
             .build();
 
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     Optional<StaticLinkageError<FieldSymbolReference>> errorOnSamePackage =
-        staticLinkageChecker.checkLinkageErrorMissingFieldAt(accessFromSamePackage);
+        classpathChecker.checkLinkageErrorMissingFieldAt(accessFromSamePackage);
     Truth8.assertThat(errorOnSamePackage).isEmpty();
 
     Optional<StaticLinkageError<FieldSymbolReference>> errorOnDifferentPackage =
-        staticLinkageChecker.checkLinkageErrorMissingFieldAt(accessFromDifferentPackage);
+        classpathChecker.checkLinkageErrorMissingFieldAt(accessFromDifferentPackage);
     Truth8.assertThat(errorOnDifferentPackage).isPresent();
 
     Truth.assertWithMessage(
@@ -537,13 +537,13 @@ public class StaticLinkageCheckerTest {
             .build();
 
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     // Because StringCharSource is in the same package, the source class is not suitable
     // for this class.
     Optional<StaticLinkageError<FieldSymbolReference>> errorFound =
-        staticLinkageChecker.checkLinkageErrorMissingFieldAt(referenceFromSubclass);
+        classpathChecker.checkLinkageErrorMissingFieldAt(referenceFromSubclass);
     Truth8.assertThat(errorFound).isEmpty();
   }
 
@@ -553,8 +553,8 @@ public class StaticLinkageCheckerTest {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     String nonExistentClassName = "io.grpc.MethodDescriptor";
     ClassSymbolReference invalidClassReference =
@@ -569,7 +569,7 @@ public class StaticLinkageCheckerTest {
         SymbolReferenceSet.builder().setClassReferences(classSymbolReferences).build();
 
     JarLinkageReport jarLinkageReport =
-        staticLinkageChecker.generateLinkageReport(
+        classpathChecker.generateLinkageReport(
             absolutePathOfResource("testdata/gax-1.32.0.jar"),
             symbolReferenceSet);
 
@@ -587,12 +587,12 @@ public class StaticLinkageCheckerTest {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     ClassSymbolReference publicClassReference =
         ClassSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName(ClasspathCheckReportTest.class.getName())
             .setSubclass(false)
             // This inner class is defined as public in firestore-v1beta1-0.28.0.jar
             .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub")
@@ -602,7 +602,7 @@ public class StaticLinkageCheckerTest {
         SymbolReferenceSet.builder().setClassReferences(classReferences).build();
 
     JarLinkageReport jarLinkageReport =
-        staticLinkageChecker.generateLinkageReport(
+        classpathChecker.generateLinkageReport(
             absolutePathOfResource("testdata/gax-1.32.0.jar"),
             symbolReferenceSet);
 
@@ -613,12 +613,12 @@ public class StaticLinkageCheckerTest {
   public void testFindClassReferences_privateClass() throws IOException, URISyntaxException {
     // The superclass of AbstractApiService$InnerService (Guava's ApiService) is not in the paths
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
-    StaticLinkageChecker staticLinkageChecker =
-        StaticLinkageChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker =
+        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
 
     ClassSymbolReference referenceToPrivateClass =
         ClassSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName(ClasspathCheckReportTest.class.getName())
             .setSubclass(false)
             // This private inner class is defined in firestore-v1beta1-0.28.0.jar
             .setTargetClassName("com.google.api.core.AbstractApiService$InnerService")
@@ -628,7 +628,7 @@ public class StaticLinkageCheckerTest {
         SymbolReferenceSet.builder().setClassReferences(fieldReferences).build();
 
     JarLinkageReport jarLinkageReport =
-        staticLinkageChecker.generateLinkageReport(
+        classpathChecker.generateLinkageReport(
             absolutePathOfResource("testdata/gax-1.32.0.jar"),
             symbolReferenceSet);
 
@@ -637,7 +637,7 @@ public class StaticLinkageCheckerTest {
         jarLinkageReport.getMissingClassErrors().get(0);
     Truth.assertThat(classReferenceError.getReason()).isEqualTo(Reason.INACCESSIBLE_CLASS);
     Truth.assertWithMessage(
-            "Even when the superclass is unavailable, it should report the location of InnerService")
+            "When the superclass is unavailable, it should report the location of InnerService")
         .that(classReferenceError.getTargetClassLocation().toString())
         .endsWith("testdata/api-common-1.7.0.jar");
   }
@@ -648,9 +648,9 @@ public class StaticLinkageCheckerTest {
     String bomCoordinates = "com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT";
 
     CommandLine parsedOption =
-        StaticLinkageCheckOption.readCommandLine("-b", bomCoordinates);
+        ClasspathCheckOption.readCommandLine("-b", bomCoordinates);
     ImmutableList<Path> inputClasspath =
-        StaticLinkageCheckOption.generateInputClasspath(parsedOption);
+        ClasspathCheckOption.generateInputClasspath(parsedOption);
     Truth.assertThat(inputClasspath).isNotEmpty();
     // These 2 files are the first 2 artifacts in the BOM
     Truth.assertWithMessage("The files should match the elements in the BOM")
@@ -673,8 +673,8 @@ public class StaticLinkageCheckerTest {
             + "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
     String[] arguments = {"--artifacts", mavenCoordinates};
 
-    CommandLine parsedOption = StaticLinkageCheckOption.readCommandLine(arguments);
-    List<Path> inputClasspath = StaticLinkageCheckOption.generateInputClasspath(parsedOption);
+    CommandLine parsedOption = ClasspathCheckOption.readCommandLine(arguments);
+    List<Path> inputClasspath = ClasspathCheckOption.generateInputClasspath(parsedOption);
 
     Truth.assertWithMessage(
             "The first 2 items in the classpath should be the 2 artifacts in the input")
@@ -698,14 +698,14 @@ public class StaticLinkageCheckerTest {
     //         org.mortbay.jasper:apache-jsp:jar:8.0.9.M3 (compile)
     //           org.apache.tomcat:tomcat-jasper:jar:8.0.9 (compile, optional:true)
     //             org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not found in Maven central)
-    // Because such case is possible, StaticLinkageChecker should not abort execution when
+    // Because such case is possible, ClasspathChecker should not abort execution when
     // the unavailable dependency is under certain condition
     CommandLine parsedOption =
-        StaticLinkageCheckOption.readCommandLine(
+        ClasspathCheckOption.readCommandLine(
             "--artifacts", "com.google.guava:guava-gwt:20.0");
 
     ImmutableList<Path> inputClasspath =
-        StaticLinkageCheckOption.generateInputClasspath(parsedOption);
+        ClasspathCheckOption.generateInputClasspath(parsedOption);
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
@@ -719,11 +719,11 @@ public class StaticLinkageCheckerTest {
     //   org.apache.tomcat:tomcat-jasper:jar:8.0.9
     //     org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not found in Maven central)
     CommandLine parsedOption =
-        StaticLinkageCheckOption.readCommandLine(
+        ClasspathCheckOption.readCommandLine(
             "--artifacts", "org.apache.tomcat:tomcat-jasper:8.0.9");
 
     try {
-      StaticLinkageCheckOption.generateInputClasspath(parsedOption);
+      ClasspathCheckOption.generateInputClasspath(parsedOption);
       Assert.fail(
           "Because the unavailable dependency is not optional, it should throw an exception");
     } catch (RepositoryException ex) {
@@ -738,8 +738,8 @@ public class StaticLinkageCheckerTest {
       throws RepositoryException, ParseException {
 
     CommandLine parsedOption =
-        StaticLinkageCheckOption.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
-    List<Path> inputClasspath = StaticLinkageCheckOption.generateInputClasspath(parsedOption);
+        ClasspathCheckOption.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
+    List<Path> inputClasspath = ClasspathCheckOption.generateInputClasspath(parsedOption);
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
@@ -764,8 +764,8 @@ public class StaticLinkageCheckerTest {
             absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"));
     pathsForJarWithVersion65First.addAll(firestoreDependencies);
 
-    StaticLinkageChecker staticLinkageChecker65First =
-        StaticLinkageChecker.create(
+    ClasspathChecker classpathChecker65First =
+        ClasspathChecker.create(
             true,
             pathsForJarWithVersion65First,
             ImmutableSet.copyOf(pathsForJarWithVersion65First));
@@ -775,15 +775,15 @@ public class StaticLinkageCheckerTest {
             absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"),
             absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"));
     pathsForJarWithVersion66First.addAll(firestoreDependencies);
-    StaticLinkageChecker staticLinkageChecker66First =
-        StaticLinkageChecker.create(
+    ClasspathChecker classpathChecker66First =
+        ClasspathChecker.create(
             true,
             pathsForJarWithVersion66First,
             ImmutableSet.copyOf(pathsForJarWithVersion66First));
 
     MethodSymbolReference listDocument =
         MethodSymbolReference.builder()
-            .setSourceClassName(StaticLinkageCheckReportTest.class.getName())
+            .setSourceClassName(ClasspathCheckReportTest.class.getName())
             .setTargetClassName("com.google.cloud.firestore.CollectionReference")
             .setInterfaceMethod(false)
             .setMethodName("listDocuments")
@@ -793,14 +793,14 @@ public class StaticLinkageCheckerTest {
         SymbolReferenceSet.builder().setMethodReferences(ImmutableList.of(listDocument)).build();
 
     JarLinkageReport reportWith65First =
-        staticLinkageChecker65First.generateLinkageReport(
+        classpathChecker65First.generateLinkageReport(
             firestoreDependencies.get(0), symbolReferenceSet);
     Truth.assertWithMessage("Firestore version 65 does not have CollectionReference.listDocuments")
         .that(reportWith65First.getMissingMethodErrors())
         .hasSize(1);
 
     JarLinkageReport reportWith66First =
-        staticLinkageChecker66First.generateLinkageReport(
+        classpathChecker66First.generateLinkageReport(
             firestoreDependencies.get(0), symbolReferenceSet);
     Truth.assertWithMessage("Firestore version 66 has CollectionReference.listDocuments")
         .that(reportWith66First.getMissingMethodErrors())
@@ -816,9 +816,9 @@ public class StaticLinkageCheckerTest {
         ClassPathBuilder.artifactsToClasspath(
             ImmutableList.of(new DefaultArtifact("org.slf4j:slf4j-api:jar:1.7.21")));
 
-    StaticLinkageChecker staticLinkageChecker = StaticLinkageChecker.create(false, paths, paths);
+    ClasspathChecker classpathChecker = ClasspathChecker.create(false, paths, paths);
 
-    StaticLinkageCheckReport linkageErrors = staticLinkageChecker.findLinkageErrors();
+    ClasspathCheckReport linkageErrors = classpathChecker.findLinkageErrors();
 
     JarLinkageReport slf4jLinkageReport = linkageErrors.getJarLinkageReports().get(0);
     Truth.assertThat(slf4jLinkageReport.getMissingClassErrors()).isEmpty();
@@ -834,9 +834,9 @@ public class StaticLinkageCheckerTest {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
-    StaticLinkageChecker staticLinkageChecker = StaticLinkageChecker.create(false, paths, paths);
+    ClasspathChecker classpathChecker = ClasspathChecker.create(false, paths, paths);
 
-    StaticLinkageCheckReport linkageErrors = staticLinkageChecker.findLinkageErrors();
+    ClasspathCheckReport linkageErrors = classpathChecker.findLinkageErrors();
 
     JarLinkageReport firestoreLinkageReport = linkageErrors.getJarLinkageReports().get(0);
     Truth.assertThat(firestoreLinkageReport.getMissingClassErrors()).isNotEmpty();
