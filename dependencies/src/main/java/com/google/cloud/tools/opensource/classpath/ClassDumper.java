@@ -403,7 +403,7 @@ class ClassDumper {
     return classPath.getAllClasses();
   }
 
-  private static ImmutableSet<JavaClass> listClassesInJar(Path jarPath) throws IOException {
+  static ImmutableSet<JavaClass> listClassesInJar(Path jarPath) throws IOException {
     Repository repository = createClassRepository(ImmutableList.of(jarPath));
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     URL jarUrl = jarPath.toUri().toURL();

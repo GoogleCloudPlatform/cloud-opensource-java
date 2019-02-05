@@ -108,19 +108,28 @@ public class ClasspathChecker {
   public ClasspathCheckReport findLinkageErrors() throws IOException {
     ImmutableList<Path> jarPaths = classDumper.getInputClassPath();
 
-    ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbols = ImmutableMap.builder();
+    ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbolBuilder = ImmutableMap.builder();
     for (Path jarPath : jarPaths) {
-      jarToSymbols.put(jarPath, ClassDumper.scanSymbolReferencesInJar(jarPath));
+      jarToSymbolBuilder.put(jarPath, ClassDumper.scanSymbolReferencesInJar(jarPath));
     }
+    ImmutableMap<Path, SymbolReferenceSet> jarToSymbols = jarToSymbolBuilder.build();
+
+    ImmutableSet.Builder<ClassSymbolReference> classReferenceBuilder = ImmutableSet.builder();
+    for (SymbolReferenceSet symbolReferenceSet : jarToSymbols.values()) {
+      classReferenceBuilder.addAll(symbolReferenceSet.getClassReferences());
+    }
+    ClassSymbolGraph classSymbolGraph = ClassSymbolGraph.create(classReferenceBuilder.build()
+        , entryPoints);
 
     // Validate linkage error of each reference
     ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
-    for (Map.Entry<Path, SymbolReferenceSet> entry : jarToSymbols.build().entrySet()) {
+    for (Map.Entry<Path, SymbolReferenceSet> entry : jarToSymbols.entrySet()) {
       Path jarPath = entry.getKey();
-      jarLinkageReports.add(generateLinkageReport(jarPath, entry.getValue()));
+      jarLinkageReports.add(generateLinkageReport(jarPath, entry.getValue(), classSymbolGraph));
     }
 
     if (reportOnlyReachable) {
+
       // TODO: Optionally, report errors only reachable from entry point classes
       logger.warning("reportOnlyReachable is not yet implemented");
       throw new UnsupportedOperationException("reportOnlyReachable is not yet implemented");
@@ -138,7 +147,8 @@ public class ClasspathChecker {
    * @return linkage report for the jar file, which includes linkage errors if any
    */
   @VisibleForTesting
-  JarLinkageReport generateLinkageReport(Path jarPath, SymbolReferenceSet symbolReferenceSet) {
+  JarLinkageReport generateLinkageReport(Path jarPath, SymbolReferenceSet symbolReferenceSet,
+      ClassSymbolGraph classSymbolGraph) {
     
     JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder().setJarPath(jarPath);
 
@@ -150,34 +160,40 @@ public class ClasspathChecker {
         errorsFromSymbolReferences(
             symbolReferenceSet.getClassReferences(),
             classesDefinedInJar,
-            this::checkLinkageErrorMissingClassAt));
+            this::checkLinkageErrorMissingClassAt,
+            classSymbolGraph));
 
     reportBuilder.setMissingMethodErrors(
         errorsFromSymbolReferences(
             symbolReferenceSet.getMethodReferences(),
             classesDefinedInJar,
-            this::checkLinkageErrorMissingMethodAt));
+            this::checkLinkageErrorMissingMethodAt,
+            classSymbolGraph));
 
     reportBuilder.setMissingFieldErrors(
         errorsFromSymbolReferences(
             symbolReferenceSet.getFieldReferences(),
             classesDefinedInJar,
-            this::checkLinkageErrorMissingFieldAt));
+            this::checkLinkageErrorMissingFieldAt,
+            classSymbolGraph));
 
     return reportBuilder.build();
   }
 
   private static <R extends SymbolReference>
       ImmutableList<StaticLinkageError<R>> errorsFromSymbolReferences(
-          Set<R> symbolReferences,
-          Set<String> classesDefinedInJar,
-          Function<R, Optional<StaticLinkageError<R>>> checkFunction) {
+      Set<R> symbolReferences,
+      Set<String> classesDefinedInJar,
+      Function<R, Optional<StaticLinkageError<R>>> checkFunction,
+      ClassSymbolGraph classSymbolGraph
+  ) {
     ImmutableList<StaticLinkageError<R>> linkageErrors =
         symbolReferences.stream()
             .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
             .map(checkFunction)
             .filter(Optional::isPresent)
             .map(Optional::get)
+            .filter(classSymbolGraph::isReachableError)
             .collect(toImmutableList());
     return linkageErrors;
   }
