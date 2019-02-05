@@ -23,36 +23,22 @@ Java Dependency Glossary
   latter class has incompatibly changed after the compilation of the former class."<sup>[1](#myfootnote1)</sup>
   The reference can be through a class literal, a field access, or a method invocation.
   Linkage errors detected at runtime manifest as a subclass of `LinkageError` such as
-  `NoSuchMethodError`, `NoClassDefFoundError`, `NoSuchFieldException`,
-  `NoSuchFieldError`, or similar errors.
-  
-  - Sub-type: **Linkage conflict**
-  - Sub-type: **Missing class error**
+  `NoSuchMethodError`, `NoClassDefFoundError`, `NoSuchFieldError`, or similar errors.
 
-<a name="linkage-conflict"></a>
-- **Linkage conflict**: a linkage error when the name, return type,
+  For example, the name, return type,
   modifiers, or arguments of a non-private method, field, or class
   in a dependency has changed in an incompatible way between
   the version of a class file supplied at compile time and the version available in
   the runtime class path.
-  For example, a public method may be removed from a class or an extended
-  class may be made final.
+  For example, a public method may have been removed from a class or an extended
+  class may have been made final.
   
-  Or, another perspective: In cases where binary compatibility and source
-  compatibility are the same, a linkage conflict is when compilation would
+  In cases where binary compatibility and source
+  compatibility are the same, a linkage error is when compilation would
   fail if the libraries in the class path were all built together from their
-  originating source code, or when reflection would fail.
+  originating source code.
   
   - Opposite: **Linkage-compatible**.
-  - Sub-type: **Static linkage conflict**: A linkage conflict caused by a direct
-    code reference (non-reflective).
-  - Sub-type: **Dynamic linkage conflict**: A linkage conflict caused by a
-    reflective reference.
-
-<a name="missing-class-error"></a>
-- **Missing class error**: an error when a class referenced does not exist
-  in the class path. This error happens when a class is removed or renamed in a different
-  version of a library, or a dependency is omitted when constructing the class path.
 
 <a name="behavior-conflict"></a>
 - **Behavior conflict**: The class's implementation has changed in a way that
