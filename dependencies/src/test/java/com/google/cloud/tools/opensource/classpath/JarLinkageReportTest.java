@@ -134,7 +134,7 @@ public class JarLinkageReportTest {
   @Test
   public void testFormatByGroup() {
     Assert.assertEquals(
-        "4 missing members in 3 classes\n"
+        "4 missing names in 3 classes\n"
             + "  ClassA is not found. Referenced by: ClassB, ClassC\n"
             + "  ClassA.methodX is not found. Referenced by: ClassB\n"
         + "  ClassC is not found. Referenced by: ClassD\n",
@@ -143,7 +143,6 @@ public class JarLinkageReportTest {
 
   @Test
   public void testFormatByGroup_singleError() {
-    
     missingClassErrors = ImmutableList.of();
     missingFieldErrors = ImmutableList.of();
     missingMethodErrors = ImmutableList.of(linkageErrorMissingMethod);
@@ -156,6 +155,6 @@ public class JarLinkageReportTest {
             .setMissingFieldErrors(missingFieldErrors)
             .build();
     String report = jarLinkageReport.formatByGroup();
-    Assert.assertTrue(report, report.startsWith("1 missing member in 1 class\n"));
+    Assert.assertTrue(report, report.startsWith("1 missing name in 1 class\n"));
   }
 }
