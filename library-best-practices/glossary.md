@@ -31,7 +31,7 @@ Java Dependency Glossary
 
 <a name="linkage-conflict"></a>
 - **Linkage conflict**: a linkage error when the name, return type,
-  modifiers, arguments, or throws clause of a non-private method, field, or class
+  modifiers, or arguments of a non-private method, field, or class
   in a dependency has changed in an incompatible way between
   the version of a class file supplied at compile time and the version available in
   the runtime class path.
