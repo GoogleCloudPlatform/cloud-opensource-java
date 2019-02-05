@@ -26,7 +26,8 @@ Java Dependency Glossary
   The reference can be through a class literal, a field access, or a method invocation.
   Linkage errors detected at runtime manifest as `ReflectiveOperationException`,
   `NoClassDefFoundError`, `NoSuchFieldException`, `MethodNotFoundException`,
-  `LinkageError`, or other related exceptions.
+  `LinkageError`, or similar errors and exceptions.
+  
   - Sub-type: **Linkage conflict**
   - Sub-type: **Missing class error**
   - Sub-type: **Static linkage error**: A linkage error caused by a direct code
@@ -37,9 +38,9 @@ Java Dependency Glossary
 <a name="linkage-conflict"></a>
 <a name="static-linkage-conflict"></a>
 <a name="dynamic-linkage-conflict"></a>
-- **Linkage conflict**: a linkage error when the signature, return type,
-  modifiers, or throws declaration of a non-private method, field, or class
-  in a dependency has changed (or removed) in an incompatible way between
+- **Linkage conflict**: a linkage error when the name, return type,
+  modifiers, arguments, or throws clause of a non-private method, field, or class
+  in a dependency has changed in an incompatible way between
   the version of a class file supplied at compile time and the version available in
   the runtime class path.
   For example, a public method may be removed from a class or an extended
@@ -56,8 +57,8 @@ Java Dependency Glossary
 
 <a name="missing-class-error"></a>
 - **Missing class error**: an error when a class referenced does not exist
-  in the class path. This error happens when a class is removed in a different
-  version of a library, or there is a dependency missed when constructing the class path.
+  in the class path. This error happens when a class is removed or renamed in a different
+  version of a library, or a dependency is omitted when constructing the class path.
 
 <a name="static"></a>
 - **Static**: Said of a linkage error when the linkage error is caused by a
