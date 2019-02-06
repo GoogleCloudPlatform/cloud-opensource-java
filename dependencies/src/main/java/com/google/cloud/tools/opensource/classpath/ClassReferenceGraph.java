@@ -30,14 +30,14 @@ import org.apache.bcel.classfile.JavaClass;
 
 /**
  * Directed graph of class references. Given classes in {@code entryPointJars}, it provides
- * {@link #isReachable(String)} for a class to check the reachability.
- * The graph's node and edges are defined as following:
+ * {@link #isReachable(String)} for a class to check the reachability. The graph's node and edges
+ * are defined as following:
  *
  * <p>Nodes are class names.
  *
  * <p>Edges are references between two classes. When {@code ClassA} has a reference to {@code
  * ClassB}, a directed edge from {@code ClassA} to {@code ClassB} exists in the graph. Because
- * self-loop is unnecessary for reachability checks, it is not allowed.
+ * self-loops and parallel edges are unnecessary for reachability checks, they are not allowed.
  *
  * @see <a href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#class-reference-graph">
  *   Java Dependency Glossary: Class Reference Graph</a>
@@ -71,9 +71,7 @@ class ClassReferenceGraph {
       graph.putEdge(sourceClassName, targetClassName);
     }
 
-    ImmutableSet.Builder<String> reachableClassBuilder = ImmutableSet.builder();
-    reachableClassBuilder.addAll(reachableNodes(graph, entryPointClasses));
-    this.reachableClasses = reachableClassBuilder.build();
+    this.reachableClasses = reachableNodes(graph, entryPointClasses);
   }
 
   private static ImmutableSet<String> reachableNodes(Graph<String> graph, Set<String> fromNodes) {
@@ -97,8 +95,8 @@ class ClassReferenceGraph {
   }
 
   /**
-   * Returns true if {@code className} is reachable from one of classes in {@code entryPointJars}.
-   * This method does not perform graph traversal as {@link #reachableClasses} is cached.
+   * Returns true if {@code className} is reachable from one of classes in {@code entryPointJars}
+   * in the graph.
    */
   boolean isReachable(String className) {
     return reachableClasses.contains(className);
