@@ -129,6 +129,7 @@ public abstract class JarLinkageReport {
               .collect(Collectors.joining(", "));
 
       builder.append("Referenced by: ");
+
       String reachable =
           allErrorsForKey.stream().anyMatch(StaticLinkageError::isSourceClassReachable)
               ? "" // nothing if it's reachable
