@@ -31,7 +31,7 @@ import org.apache.bcel.classfile.JavaClass;
 /**
  * Directed graph of class references. Given classes in a set of entry points, it provides {@link
  * #isReachable(String)} for a class to check whether the class is reachable from the entry point
- * classes (reachability). The graph's nodes and edges are defined as following:
+ * classes (reachability). The graph's nodes and edges are defined as follows:
  *
  * <p>Nodes are fully-qualified class names, returned from {@link
  * SymbolReference#getSourceClassName()} and {@link SymbolReference#getTargetClassName()} in {@code
