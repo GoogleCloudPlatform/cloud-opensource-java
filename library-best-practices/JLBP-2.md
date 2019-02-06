@@ -17,6 +17,9 @@
     such as `com.google.common.io.OutputSupplier` because Guava incremented major versions
     every 6 months.
 
+  - A type you've exposed on your own API surface cannot be shaded. This removes
+    one of the available techniques for resolving diamond dependency conflicts. 
+
 - Use package-protected classes and methods for internal APIs that should not be used by consumers.
 
 - Do not mark methods and classes public by default. Assume non-public until a need is 

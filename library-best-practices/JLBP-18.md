@@ -16,6 +16,8 @@ There are a number of problems with shading:
 - Users cannot upgrade dependencies shaded by other libraries (which means
   security fixes to a transitive dependency need to wait for the shading library
   to also roll in the security fix).
+- Shading cannot be performed on types used in a library's own public API as return
+  types or method arguments.
 - Service entries under `META-INF/services` can easily be messed up. They need
   special effort to be merged because the entries are located in the same place
   for every jar.
