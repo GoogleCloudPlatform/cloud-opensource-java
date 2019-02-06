@@ -75,7 +75,7 @@ public class ClasspathChecker {
 
   private final ClassDumper classDumper;
 
-  ImmutableMap<Path, SymbolReferenceSet> jarToSymbols;
+  private final ImmutableMap<Path, SymbolReferenceSet> jarToSymbols;
 
   private final ClassSymbolGraph classSymbolGraph;
 
@@ -108,8 +108,10 @@ public class ClasspathChecker {
       // For an artifact list (or a BOM), the first elements in inputClasspath are the artifacts
       // specified the list, followed by their dependencies.
       int artifactCount = ClasspathCheckOption.generateArtifacts(commandLine).size();
+      // For Maven artifact list (or a BOM), entry point classes are ones in the list
       entryPoints.addAll(inputClasspath.subList(0, artifactCount));
     } else {
+      // For list of jar files, entry point classes are all classes in the files
       entryPoints.addAll(inputClasspath);
     }
 

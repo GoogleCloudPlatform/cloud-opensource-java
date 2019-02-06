@@ -95,8 +95,9 @@ public class DashboardMain {
     // LinkedListMultimap preserves the key order
     ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
 
-    ImmutableSet<Path> entryPoints =
-        ImmutableSet.copyOf(classpath.subList(0, managedDependencies.size()));
+    // When checking a BOM, entry point classes are the classes in the artifacts in the BOM,
+    List<Path> jarsInBom = classpath.subList(0, managedDependencies.size());
+    ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(jarsInBom);
 
     ClasspathChecker classpathChecker = ClasspathChecker.create(classpath, entryPoints);
 
