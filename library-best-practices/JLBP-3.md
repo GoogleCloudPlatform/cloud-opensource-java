@@ -4,14 +4,13 @@
 Definition of semantic versioning (SemVer): https://semver.org
 
 - For the purpose of semantic versioning, the stable surface of a library
-  serves as its "public API." Annotations can mark features
-  (classes, methods, etc.) as unstable, and thus not part of the public API,
-  such that semantic versioning rules don't have to apply. 
+  serves as its public API.
+- Annotations can mark features (classes, methods, etc.) as unstable, 
+  and thus not part of the public API, such that semantic versioning rules do not apply. 
   - Examples of annotations:
     - Guava uses `@Beta`
     - grpc-java uses `@ExperimentalApi`
-    - Google-cloud-java uses `@BetaApi`, `@InternalApi`, and
-      `@InternalExtensionOnly`
+    - Google-cloud-java uses `@BetaApi`, `@InternalApi`, and `@InternalExtensionOnly`
   - Library documentation should point users to a tool (or tools) that can
     help them detect when they are using features marked with these
     annotations.
