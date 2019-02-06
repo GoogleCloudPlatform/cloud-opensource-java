@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
-import com.google.common.graph.ImmutableGraph;
 import com.google.common.graph.MutableGraph;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -37,7 +36,8 @@ import org.apache.bcel.classfile.JavaClass;
  * <p>Nodes are class names.
  *
  * <p>Edges are references between two classes. When {@code ClassA} has a reference to {@code
- * ClassB}, a directed edge from {@code ClassA} to {@code ClassB} exists in the graph.
+ * ClassB}, a directed edge from {@code ClassA} to {@code ClassB} exists in the graph. Because
+ * self-loop is unnecessary for reachability checks, it is not allowed.
  *
  * @see <a href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#class-reference-graph">
  *   Java Dependency Glossary: Class Reference Graph</a>
@@ -66,7 +66,7 @@ class ClassReferenceGraph {
       String sourceClassName = reference.getSourceClassName();
       String targetClassName = reference.getTargetClassName();
       if (sourceClassName.equals(targetClassName)) {
-        continue;
+        continue; // no self-loop
       }
       graph.putEdge(sourceClassName, targetClassName);
     }
@@ -78,7 +78,7 @@ class ClassReferenceGraph {
 
   private static ImmutableSet<String> reachableNodes(Graph<String> graph, Set<String> fromNodes) {
     // This function is mostly copy from Graphs.reachableNodes(Graph<N>, N node), except that this
-    // function handles multiple nodes in the arguments
+    // function handles multiple fromNodes in the arguments
     Set<String> visitedNodes = Sets.newHashSet();
     visitedNodes.addAll(fromNodes);
     Queue<String> queuedNodes = new ArrayDeque<>(fromNodes);
