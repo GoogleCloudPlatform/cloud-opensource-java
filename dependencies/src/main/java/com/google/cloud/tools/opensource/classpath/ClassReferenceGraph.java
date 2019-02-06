@@ -32,18 +32,21 @@ import java.util.Set;
 import org.apache.bcel.classfile.JavaClass;
 
 /**
- * Directed graph of class references. Given classes in {@code entryPointJars}, it provides
- * {@link #isReachable(String)} for a class to check the reachability. The graph's node and edges
- * are defined as following:
+ * Directed graph of class references. Given classes in {@code entryPointJars}, it provides {@link
+ * #isReachable(String)} for a class to check the reachability. The graph's node and edges are
+ * defined as following:
  *
- * <p>Nodes are class names.
+ * <p>Nodes are class names, returned from {@link SymbolReference#getSourceClassName()} and {@link
+ * SymbolReference#getTargetClassName()} in {@code symbolReferenceSets}.
  *
  * <p>Edges are references between two classes. When {@code ClassA} has a reference to {@code
- * ClassB}, a directed edge from {@code ClassA} to {@code ClassB} exists in the graph. Because
- * self-loops and parallel edges are unnecessary for reachability checks, they are not allowed.
+ * ClassB}, a directed edge from {@code ClassA} to {@code ClassB} exists in the graph. Edges in the
+ * graph are anonymous with no attribute. Because self-loops and parallel edges are unnecessary for
+ * reachability checks, they are not allowed.
  *
- * @see <a href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#class-reference-graph">
- *   Java Dependency Glossary: Class Reference Graph</a>
+ * @see <a
+ *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#class-reference-graph">
+ *     Java Dependency Glossary: Class Reference Graph</a>
  */
 class ClassReferenceGraph {
 
