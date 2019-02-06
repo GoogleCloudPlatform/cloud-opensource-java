@@ -71,20 +71,11 @@ In order to provide a diagnosis in the output report, the tool builds a [class r
 and annotates linkage errors with [reachability](
 ../library-best-practices/glossary.md#reachability) from [entry point classes](
 ../library-best-practices/glossary.md#entry-point-class).
-Optionally the tool outputs a report including only _reachable_ static linkage errors.
-The tool allows users to choose the scope of entry point classes:
 
-  - **Classes in the target project**: when the scope of the entry point is only the classes in the
-    target project, it ensures that the current functionality used in the dependencies will not
-    cause static linkage errors.
-    The output may fail to report potential static linkage errors, which would be introduced
-    by starting to use a previously unreachable class in one of the dependencies.
+Entry point classes are different for the targets of checks:
 
-  - **With direct dependencies of the target project**: when the scope of the entry point is
-    the classes in the target project and the all classes in the direct dependencies of the project,
-    it ensures that functionality of the dependencies will not cause static linkage errors.
-    The output may contain linkage errors for unreachable classes from user's perspective.
+  - **Check for a BOM**: classes in the Maven artifacts listed in the BOM.
 
-  - **All classes in the input class path**: when reachability check is off, then
-    all static linkage errors from all classes in the classpath, regardless of the reachability,
-    are reported.
+  - **Check for a project**: classes in the direct dependencies of the project.
+
+  - **Check for a list of Maven artifacts**: classes in the Maven artifacts.
