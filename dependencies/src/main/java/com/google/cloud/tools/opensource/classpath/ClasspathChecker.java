@@ -62,13 +62,8 @@ public class ClasspathChecker {
     }
     ImmutableMap<Path, SymbolReferenceSet> jarToSymbols = jarToSymbolBuilder.build();
 
-    ImmutableSet.Builder<ClassSymbolReference> classReferenceBuilder = ImmutableSet.builder();
-    for (SymbolReferenceSet symbolReferenceSet : jarToSymbols.values()) {
-      classReferenceBuilder.addAll(symbolReferenceSet.getClassReferences());
-    }
-
     ClassReferenceGraph classReferenceGraph =
-        ClassReferenceGraph.create(classReferenceBuilder.build(), ImmutableSet.copyOf(entryPoints));
+        ClassReferenceGraph.create(jarToSymbols.values(), ImmutableSet.copyOf(entryPoints));
 
     return new ClasspathChecker(dumper, jarToSymbols, classReferenceGraph);
   }

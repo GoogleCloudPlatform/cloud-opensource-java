@@ -53,7 +53,7 @@ public class ClassReferenceGraphTest {
             .setMethodReferences(ImmutableSet.of())
             .build();
     return ClassReferenceGraph.create(
-        symbolReferenceSet.getClassReferences(),
+        ImmutableSet.of(symbolReferenceSet),
         // This jar file contains com.google.firestore.v1beta1.FirestoreGrpc
         ImmutableSet.of(absolutePathOfResource(EXAMPLE_JAR_FILE)));
   }

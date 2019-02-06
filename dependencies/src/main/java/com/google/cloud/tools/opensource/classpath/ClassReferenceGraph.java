@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.graph.Graph;
@@ -24,6 +26,7 @@ import com.google.common.graph.MutableGraph;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Queue;
 import java.util.Set;
 import org.apache.bcel.classfile.JavaClass;
@@ -46,8 +49,16 @@ class ClassReferenceGraph {
 
   private final ImmutableSet<String> reachableClasses;
 
-  static ClassReferenceGraph create(Set<ClassSymbolReference> classSymbolReferences,
-      Set<Path> entryPointJars) throws IOException {
+  static ClassReferenceGraph create(
+      Collection<SymbolReferenceSet> symbolReferenceSets, Set<Path> entryPointJars)
+      throws IOException {
+
+    // Collects all class symbol reference in symbolReferences
+    ImmutableSet<ClassSymbolReference> classSymbolReferences =
+        symbolReferenceSets.stream()
+            .flatMap(symbolReferenceSet -> symbolReferenceSet.getClassReferences().stream())
+            .collect(toImmutableSet());
+
     ImmutableSet.Builder<String> entryPointClassBuilder = ImmutableSet.builder();
     for (Path jarPath : entryPointJars) {
       for (JavaClass javaClass : ClassDumper.listClassesInJar(jarPath)) {
