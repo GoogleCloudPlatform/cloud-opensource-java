@@ -32,6 +32,9 @@
   public. (We may revisit this when we can rely on
   the new module system in Java 11 or later.) 
 
+- If you absolutely must create public classes that clients should not depend on,
+  one of the superpackages that contains these classes should be named `internal`.
+  For example, `com.foo.utilities.internal.xml`. 
 
 <b id="item15">1</b> Bloch, Joshua. "Item 15: Minimize the accessibility of classes and members."
 Effective Java, 3rd Edition. Boston: Addison-Wesley, 2018. p. 73[↩](#a1)
