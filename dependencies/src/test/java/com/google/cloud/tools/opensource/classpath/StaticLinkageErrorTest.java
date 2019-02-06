@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.classpath.StaticLinkageError.Reason;
 import com.google.common.truth.Truth;
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
