@@ -19,14 +19,12 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -132,7 +130,7 @@ public class ClasspathCheckOption {
     return options;
   }
 
-  static ImmutableList<Artifact> generateArtifacts(CommandLine commandLine)
+  static ImmutableList<Artifact> parseArtifacts(CommandLine commandLine)
       throws RepositoryException {
     if (commandLine.hasOption("b")) {
       String bomCoordinates = commandLine.getOptionValue("b");
@@ -155,7 +153,7 @@ public class ClasspathCheckOption {
     setRepositories(commandLine);
 
     if (commandLine.hasOption("b") || commandLine.hasOption("a")) {
-      List<Artifact> artifacts = generateArtifacts(commandLine);
+      List<Artifact> artifacts = parseArtifacts(commandLine);
       return ClassPathBuilder.artifactsToClasspath(artifacts);
     } else {
       // b, a, or j is specified in OptionGroup
@@ -181,20 +179,18 @@ public class ClasspathCheckOption {
     }
   }
 
-  /** Returns a set of jar files that holds entry point classes. */
+  /** Returns a set of jar files that hold entry point classes. */
   static ImmutableSet<Path> parseEntryPointJars(CommandLine commandLine, List<Path> inputClasspath)
       throws RepositoryException {
-    ImmutableSet.Builder<Path> entryPoints = ImmutableSet.builder();
     if (commandLine.hasOption("a") || commandLine.hasOption('b')) {
       // For an artifact list (or a BOM), the first elements in inputClasspath are the artifacts
       // specified the list, followed by their dependencies.
-      int artifactCount = generateArtifacts(commandLine).size();
+      int artifactCount = parseArtifacts(commandLine).size();
       // For Maven artifact list (or a BOM), entry point classes are ones in the list
-      entryPoints.addAll(inputClasspath.subList(0, artifactCount));
+      return ImmutableSet.copyOf(inputClasspath.subList(0, artifactCount));
     } else {
       // For list of jar files, entry point classes are all classes in the files
-      entryPoints.addAll(inputClasspath);
+      return ImmutableSet.copyOf(inputClasspath);
     }
-    return entryPoints.build();
   }
 }

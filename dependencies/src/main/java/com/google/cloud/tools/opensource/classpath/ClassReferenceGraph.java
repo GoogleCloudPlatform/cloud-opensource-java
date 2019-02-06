@@ -19,22 +19,19 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
+import com.google.common.graph.Traverser;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.Queue;
 import java.util.Set;
 import org.apache.bcel.classfile.JavaClass;
 
 /**
  * Directed graph of class references. Given classes in a set of entry points, it provides {@link
- * #isReachable(String)} for a class to check the reachability. The graph's node and edges are
- * defined as following:
+ * #isReachable(String)} for a class to check whether the class is reachable from the entry point
+ * classes (reachability). The graph's nodes and edges are defined as following:
  *
  * <p>Nodes are fully-qualified class names, returned from {@link
  * SymbolReference#getSourceClassName()} and {@link SymbolReference#getTargetClassName()} in {@code
@@ -86,30 +83,10 @@ class ClassReferenceGraph {
       graph.putEdge(sourceClassName, targetClassName);
     }
 
-    this.reachableClasses = reachableNodes(graph, entryPointClasses);
-  }
+    entryPointClasses.forEach(graph::addNode); // to avoid IllegalArgumentError in breadthFirst
 
-  /**
-   * Returns a set of class names reachable from {@code fromNodes} by following edges in the graph.
-   */
-  private static ImmutableSet<String> reachableNodes(Graph<String> graph, Set<String> fromNodes) {
-    // This function is mostly copy from Graphs.reachableNodes(Graph<N>, N node), except that this
-    // function handles multiple fromNodes in the arguments
-    Set<String> visitedNodes = Sets.newHashSet();
-    visitedNodes.addAll(fromNodes);
-    Queue<String> queuedNodes = new ArrayDeque<>(fromNodes);
-    while (!queuedNodes.isEmpty()) {
-      String currentNode = queuedNodes.remove();
-      if (!graph.nodes().contains(currentNode)) {
-        continue;
-      }
-      for (String successor : graph.successors(currentNode)) {
-        if (visitedNodes.add(successor)) {
-          queuedNodes.add(successor);
-        }
-      }
-    }
-    return ImmutableSet.copyOf(visitedNodes);
+    this.reachableClasses =
+        ImmutableSet.copyOf(Traverser.forGraph(graph).breadthFirst(entryPointClasses));
   }
 
   /**

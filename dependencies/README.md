@@ -75,4 +75,5 @@ and annotates linkage errors with [reachability](
 Entry point classes are different for the input of checks:
   - **Check for a Maven BOM**: classes in the Maven artifacts listed in the BOM
   - **Check for a list of Maven coordinates**: classes in the Maven artifacts
-  - **Check for a list of class and jar files**: classes in the list and the jar files
+  - **Check for a list of class and jar files**: all classes in the input are entry points.
+    This means that every linkage error is considered reachable.

@@ -111,9 +111,8 @@ public class ClasspathChecker {
     ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
 
     jarToSymbols.forEach(
-        (jar, symbolReferenceSet) -> {
-          jarLinkageReports.add(generateLinkageReport(jar, symbolReferenceSet));
-        });
+        (jar, symbolReferenceSet) ->
+            jarLinkageReports.add(generateLinkageReport(jar, symbolReferenceSet)));
 
     return ClasspathCheckReport.create(jarLinkageReports.build());
   }
@@ -132,7 +131,7 @@ public class ClasspathChecker {
 
     JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder().setJarPath(jarPath);
 
-    // Because the Java compiler ensures that there are no static linkage errors between classes
+    // Because the Java compiler ensures that there are no linkage errors between classes
     // defined in the same jar file, this validation excludes reference within the same jar file.
     ImmutableSet<String> classesDefinedInJar = classDumper.classesDefinedInJar(jarPath);
 
