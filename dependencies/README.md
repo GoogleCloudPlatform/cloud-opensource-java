@@ -1,10 +1,10 @@
 # Classpath Checker
 
-Classpath Checker is a tool that finds [static linkage errors](
+Classpath Checker is a tool that finds [linkage errors](
 ../library-best-practices/glossary.md#static-linkage-error)
 on a class path and reports the errors to the console.
 It scans the class files in the class path for references to other classes and
-reports any reference that cannot be satisfied in the class path.
+reports any reference that cannot be satisfied.
 It can report all such unsatisfied references or only those that are reachable from
 a given set of entry point classes.
 
@@ -12,13 +12,13 @@ a given set of entry point classes.
  
 There are two use cases for Classpath Checker:
 
-- **For library/application developers** the tool finds static linkage
+- **For library/application developers** the tool finds linkage
   errors in their projects, and will help to avoid incompatible versions of libraries
   in their dependencies.
 
 - **For organizations** that provide multiple libraries developed by different teams,
   the tool helps to ensure that users depending on the libraries will not see any
-  static linkage errors at runtime.
+  linkage errors at runtime.
 
 ### Approach
 
@@ -27,16 +27,16 @@ There are two use cases for Classpath Checker:
   the runtime class path of the tool itself. The tool operates on the input class path
   to find linkage errors.
 
-2. The tool extracts all symbolic references from the all class files in the class path.
+2. The tool extracts all symbolic references from the class files in the class path.
 
-3. The tool records static linkage errors for symbolic references which cannot be satisfied
+3. The tool records linkage errors for symbolic references which cannot be satisfied
   in the class path.
 
 4. Optionally, the user can specify a subset of elements in the class path as _entry points_.
   In that case, the tool will list only those references that are reachable
   from the classes in the entry points.
 
-5. At the end, the tool outputs a report on the linkage errors.
+5. At the end, the tool outputs a report of the linkage errors.
 
 ### Input
 
@@ -59,9 +59,9 @@ When the input is a list of class and jar files, they are used directly as the _
 
 ### Output
 
-The tool reports static linkage errors for the input class path.
-Each of the static linkage errors contains information on the
-source class and the destination class of the reference, and has one of the three types:
+The tool reports linkage errors for the input class path.
+Each of the linkage errors contains information on the
+source class and the destination class of the reference, and has one of three types:
 _missing class_, _missing method_, or _missing field_.
      
 ### Class Reference Graph and Reachability
@@ -71,20 +71,18 @@ In order to provide a diagnosis in the output report, the tool builds a [class r
 and annotates linkage errors with [reachability](
 ../library-best-practices/glossary.md#reachability) from [entry point classes](
 ../library-best-practices/glossary.md#entry-point-class).
-Optionally the tool outputs a report including only _reachable_ static linkage errors.
+Optionally the tool outputs a report including only _reachable_ linkage errors.
 The tool allows users to choose the scope of entry point classes:
 
   - **Classes in the target project**: when the scope of the entry point is only the classes in the
     target project, it ensures that the current functionality used in the dependencies will not
-    cause static linkage errors.
-    The output may fail to report potential static linkage errors, which would be introduced
-    by starting to use a previously unreachable class in one of the dependencies.
+    cause linkage errors.
 
   - **With direct dependencies of the target project**: when the scope of the entry point is
-    the classes in the target project and the all classes in the direct dependencies of the project,
-    it ensures that functionality of the dependencies will not cause static linkage errors.
+    the classes in the target project and classes in the direct dependencies of the project,
+    it ensures that functionality of the dependencies will not cause linkage errors.
     The output may contain linkage errors for unreachable classes from user's perspective.
 
   - **All classes in the input class path**: when reachability check is off, then
-    all static linkage errors from all classes in the classpath, regardless of the reachability,
+    all static linkage errors from all classes in the classpath, regardless of reachability,
     are reported.
