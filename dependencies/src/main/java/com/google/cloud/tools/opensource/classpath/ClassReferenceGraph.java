@@ -60,7 +60,7 @@ class ClassReferenceGraph {
 
   private ClassReferenceGraph(Set<ClassSymbolReference> classSymbolReferences,
       Set<String> entryPointClasses) {
-    MutableGraph<String> graphBuilder = GraphBuilder.directed().allowsSelfLoops(false).build();
+    MutableGraph<String> graph = GraphBuilder.directed().allowsSelfLoops(false).build();
 
     for (ClassSymbolReference reference : classSymbolReferences) {
       String sourceClassName = reference.getSourceClassName();
@@ -68,10 +68,8 @@ class ClassReferenceGraph {
       if (sourceClassName.equals(targetClassName)) {
         continue;
       }
-      graphBuilder.putEdge(sourceClassName, targetClassName);
+      graph.putEdge(sourceClassName, targetClassName);
     }
-
-    ImmutableGraph<String> graph = ImmutableGraph.copyOf(graphBuilder);
 
     ImmutableSet.Builder<String> reachableClassBuilder = ImmutableSet.builder();
     reachableClassBuilder.addAll(reachableNodes(graph, entryPointClasses));
