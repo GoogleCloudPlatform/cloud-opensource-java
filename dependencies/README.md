@@ -73,9 +73,6 @@ and annotates linkage errors with [reachability](
 ../library-best-practices/glossary.md#entry-point-class).
 
 Entry point classes are different for the targets of checks:
-
-  - **Check for a BOM**: classes in the Maven artifacts listed in the BOM.
-
-  - **Check for a project**: classes in the direct dependencies of the project.
-
-  - **Check for a list of Maven artifacts**: classes in the Maven artifacts.
+  - **Check for a BOM**: classes in the Maven artifacts listed in the BOM
+  - **Check for a project**: classes in the direct dependencies of the project
+  - **Check for a list of Maven artifacts**: classes in the Maven artifacts
