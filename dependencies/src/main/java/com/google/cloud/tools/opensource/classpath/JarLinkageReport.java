@@ -63,7 +63,7 @@ public abstract class JarLinkageReport {
 
     abstract JarLinkageReport build();
   }
-  
+
   @Override
   public String toString() {
     String indent = "  ";

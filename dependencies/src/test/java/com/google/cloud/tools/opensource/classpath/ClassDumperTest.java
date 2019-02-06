@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -43,7 +45,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ClassDumperTest {
-  private static final String EXAMPLE_JAR_FILE =
+  private static final String GRPC_CLOUD_FIRESTORE_JAR =
       "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar";
 
   // We're sure that FirestoreGrpc class comes from this class file because
@@ -63,10 +65,6 @@ public class ClassDumperTest {
           return "has target class name equal to";
         }
       };
-
-  static Path absolutePathOfResource(String resourceName) throws URISyntaxException {
-    return Paths.get(URLClassLoader.getSystemResource(resourceName).toURI()).toAbsolutePath();
-  }
 
   private InputStream classFileInputStream;
 
@@ -114,7 +112,7 @@ public class ClassDumperTest {
   @Test
   public void testScanSymbolTableFromJar()
       throws URISyntaxException, IOException {
-    URL jarUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
+    URL jarUrl = URLClassLoader.getSystemResource(GRPC_CLOUD_FIRESTORE_JAR);
 
     SymbolReferenceSet symbolReferenceSet =
         ClassDumper.scanSymbolReferencesInJar(

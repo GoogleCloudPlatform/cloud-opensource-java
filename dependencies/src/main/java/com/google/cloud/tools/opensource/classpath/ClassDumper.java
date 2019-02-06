@@ -78,10 +78,6 @@ class ClassDumper {
   private final ImmutableSetMultimap<Path, String> jarFileToClasses;
   private final ImmutableMap<String, Path> classToFirstJarFile;
 
-  ImmutableList<Path> getInputClassPath() {
-    return inputClassPath;
-  }
-
   private static Repository createClassRepository(List<Path> paths) {
     ClassPath classPath = new LinkageCheckClassPath(paths);
     return new ClassPathRepository(classPath);
@@ -403,7 +399,7 @@ class ClassDumper {
     return classPath.getAllClasses();
   }
 
-  private static ImmutableSet<JavaClass> listClassesInJar(Path jarPath) throws IOException {
+  static ImmutableSet<JavaClass> listClassesInJar(Path jarPath) throws IOException {
     Repository repository = createClassRepository(ImmutableList.of(jarPath));
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     URL jarUrl = jarPath.toUri().toURL();
@@ -458,7 +454,7 @@ class ClassDumper {
    * Returns true if {@code parentJavaClass} is not {@code final} and {@code childJavaClass} is not
    * overriding any {@code final} method of {@code parentJavaClass}.
    *
-   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.10>Java
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.10">Java
    *     Virtual Machine Specification: 4.10. Verification of class Files</a>
    */
   boolean hasValidSuperclass(JavaClass childJavaClass, JavaClass parentJavaClass) {

@@ -16,8 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.ClassDumperTest.absolutePathOfResource;
 import static com.google.cloud.tools.opensource.classpath.ClassPathBuilderTest.PATH_FILE_NAMES;
+import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
 
 import com.google.cloud.tools.opensource.classpath.StaticLinkageError.Reason;
 import com.google.common.collect.ImmutableList;
@@ -43,8 +43,7 @@ public class ClasspathCheckerTest {
   @Test
   public void testFindInvalidReferences_arrayCloneMethod() throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     // Array's clone is available in Java runtime and thus should not be reported as linkage error
     MethodSymbolReference arrayClone =
@@ -85,8 +84,7 @@ public class ClasspathCheckerTest {
   public void testFindInvalidReferences_constructorInAbstractClass()
       throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     MethodSymbolReference methodSymbolReference =
         MethodSymbolReference.builder()
@@ -111,8 +109,7 @@ public class ClasspathCheckerTest {
   public void testCheckLinkageErrorMissingInterfaceMethodAt_interfaceAndClassSeparation()
       throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     // ImmutableList is an abstract class, but setting isInterfaceMethod = true
     MethodSymbolReference methodSymbolReference =
@@ -135,8 +132,7 @@ public class ClasspathCheckerTest {
   public void testCheckLinkageErrorMissingMethodAt_interfaceAndClassSeparation()
       throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     // ClassToInstanceMap is an interface, but setting isInterfaceMethod = false
     MethodSymbolReference methodSymbolReference =
@@ -159,8 +155,7 @@ public class ClasspathCheckerTest {
   public void testCheckLinkageErrorMissingInterfaceMethodAt_missingInterfaceMethod()
       throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     // ClassToInstanceMap is an interface
     MethodSymbolReference methodSymbolReference =
@@ -183,8 +178,7 @@ public class ClasspathCheckerTest {
   public void testFindInvalidReferences_interfaceNotImplementedAtAbstractClass()
       throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     // ImmutableList is an abstract class that implements List, but does not implement get() method
     MethodSymbolReference methodSymbolReference =
@@ -205,8 +199,7 @@ public class ClasspathCheckerTest {
   public void testCheckLinkageErrorMissingMethodAt_privateConstructor()
       throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     // ImmutableList is an abstract class that implements List, but does not implement get() method
     MethodSymbolReference methodSymbolReference =
@@ -233,8 +226,7 @@ public class ClasspathCheckerTest {
         ClassPathBuilder.artifactsToClasspath(
             ImmutableList.of(new DefaultArtifact("junit:junit:4.12")));
     // junit has dependency on hamcrest-core
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     // ImmutableList is an abstract class that implements List, but does not implement get() method
     MethodSymbolReference methodSymbolReference =
@@ -260,8 +252,7 @@ public class ClasspathCheckerTest {
   public void testCheckLinkageErrorMissingMethodAt_privateMethod()
       throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     // ImmutableList is an abstract class that implements List, but does not implement get() method
     MethodSymbolReference methodSymbolReference =
@@ -285,8 +276,7 @@ public class ClasspathCheckerTest {
   public void testCheckLinkageErrorMissingMethodAt_privateStaticMethod()
       throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     // ImmutableList is an abstract class that implements List, but does not implement get() method
     MethodSymbolReference privateStaticReference =
@@ -311,8 +301,7 @@ public class ClasspathCheckerTest {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     FieldSymbolReference validFieldReference =
         FieldSymbolReference.builder()
@@ -337,8 +326,7 @@ public class ClasspathCheckerTest {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     FieldSymbolReference invalidFieldReference =
         FieldSymbolReference.builder()
@@ -368,8 +356,7 @@ public class ClasspathCheckerTest {
       throws IOException, URISyntaxException {
     // The class path does not include Guava.
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     // Guava class should not be found in the class path
     String guavaClass =
@@ -395,8 +382,7 @@ public class ClasspathCheckerTest {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     // FirestoreGrpc class exists in the jar file
     ClassSymbolReference invalidClassReference =
@@ -418,8 +404,7 @@ public class ClasspathCheckerTest {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     ClassSymbolReference invalidClassReference =
         ClassSymbolReference.builder()
@@ -446,8 +431,7 @@ public class ClasspathCheckerTest {
                 new DefaultArtifact("cglib:cglib:2.2_beta1"),
                 new DefaultArtifact("org.ow2.asm:asm:4.2")));
 
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     ClassSymbolReference invalidClassReference =
         ClassSymbolReference.builder()
@@ -475,8 +459,7 @@ public class ClasspathCheckerTest {
             .setFieldName("SLASH_SPLITTER")
             .build();
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     Optional<StaticLinkageError<FieldSymbolReference>> errorFound =
         classpathChecker.checkLinkageErrorMissingFieldAt(privateFieldReference);
@@ -507,8 +490,7 @@ public class ClasspathCheckerTest {
             .build();
 
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     Optional<StaticLinkageError<FieldSymbolReference>> errorOnSamePackage =
         classpathChecker.checkLinkageErrorMissingFieldAt(accessFromSamePackage);
@@ -537,8 +519,7 @@ public class ClasspathCheckerTest {
             .build();
 
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     // Because StringCharSource is in the same package, the source class is not suitable
     // for this class.
@@ -553,8 +534,7 @@ public class ClasspathCheckerTest {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     String nonExistentClassName = "io.grpc.MethodDescriptor";
     ClassSymbolReference invalidClassReference =
@@ -587,8 +567,7 @@ public class ClasspathCheckerTest {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     ClassSymbolReference publicClassReference =
         ClassSymbolReference.builder()
@@ -613,8 +592,7 @@ public class ClasspathCheckerTest {
   public void testFindClassReferences_privateClass() throws IOException, URISyntaxException {
     // The superclass of AbstractApiService$InnerService (Guava's ApiService) is not in the paths
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     ClassSymbolReference referenceToPrivateClass =
         ClassSymbolReference.builder()
@@ -649,8 +627,7 @@ public class ClasspathCheckerTest {
 
     CommandLine parsedOption =
         ClasspathCheckOption.readCommandLine("-b", bomCoordinates);
-    ImmutableList<Path> inputClasspath =
-        ClasspathCheckOption.generateInputClasspath(parsedOption);
+    ImmutableList<Path> inputClasspath = ClasspathCheckOption.parseInputClasspath(parsedOption);
     Truth.assertThat(inputClasspath).isNotEmpty();
     // These 2 files are the first 2 artifacts in the BOM
     Truth.assertWithMessage("The files should match the elements in the BOM")
@@ -671,10 +648,10 @@ public class ClasspathCheckerTest {
     String mavenCoordinates =
         "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha,"
             + "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
-    String[] arguments = {"--artifacts", mavenCoordinates};
 
-    CommandLine parsedOption = ClasspathCheckOption.readCommandLine(arguments);
-    List<Path> inputClasspath = ClasspathCheckOption.generateInputClasspath(parsedOption);
+    CommandLine parsedOption =
+        ClasspathCheckOption.readCommandLine("--artifacts", mavenCoordinates);
+    List<Path> inputClasspath = ClasspathCheckOption.parseInputClasspath(parsedOption);
 
     Truth.assertWithMessage(
             "The first 2 items in the classpath should be the 2 artifacts in the input")
@@ -704,8 +681,7 @@ public class ClasspathCheckerTest {
         ClasspathCheckOption.readCommandLine(
             "--artifacts", "com.google.guava:guava-gwt:20.0");
 
-    ImmutableList<Path> inputClasspath =
-        ClasspathCheckOption.generateInputClasspath(parsedOption);
+    ImmutableList<Path> inputClasspath = ClasspathCheckOption.parseInputClasspath(parsedOption);
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
@@ -723,7 +699,7 @@ public class ClasspathCheckerTest {
             "--artifacts", "org.apache.tomcat:tomcat-jasper:8.0.9");
 
     try {
-      ClasspathCheckOption.generateInputClasspath(parsedOption);
+      ClasspathCheckOption.parseInputClasspath(parsedOption);
       Assert.fail(
           "Because the unavailable dependency is not optional, it should throw an exception");
     } catch (RepositoryException ex) {
@@ -739,7 +715,7 @@ public class ClasspathCheckerTest {
 
     CommandLine parsedOption =
         ClasspathCheckOption.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
-    List<Path> inputClasspath = ClasspathCheckOption.generateInputClasspath(parsedOption);
+    List<Path> inputClasspath = ClasspathCheckOption.parseInputClasspath(parsedOption);
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
@@ -766,7 +742,6 @@ public class ClasspathCheckerTest {
 
     ClasspathChecker classpathChecker65First =
         ClasspathChecker.create(
-            true,
             pathsForJarWithVersion65First,
             ImmutableSet.copyOf(pathsForJarWithVersion65First));
 
@@ -777,7 +752,6 @@ public class ClasspathCheckerTest {
     pathsForJarWithVersion66First.addAll(firestoreDependencies);
     ClasspathChecker classpathChecker66First =
         ClasspathChecker.create(
-            true,
             pathsForJarWithVersion66First,
             ImmutableSet.copyOf(pathsForJarWithVersion66First));
 
@@ -816,7 +790,7 @@ public class ClasspathCheckerTest {
         ClassPathBuilder.artifactsToClasspath(
             ImmutableList.of(new DefaultArtifact("org.slf4j:slf4j-api:jar:1.7.21")));
 
-    ClasspathChecker classpathChecker = ClasspathChecker.create(false, paths, paths);
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     ClasspathCheckReport linkageErrors = classpathChecker.findLinkageErrors();
 
@@ -834,7 +808,7 @@ public class ClasspathCheckerTest {
     List<Path> paths =
         ImmutableList.of(
             absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar"));
-    ClasspathChecker classpathChecker = ClasspathChecker.create(false, paths, paths);
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
     ClasspathCheckReport linkageErrors = classpathChecker.findLinkageErrors();
 

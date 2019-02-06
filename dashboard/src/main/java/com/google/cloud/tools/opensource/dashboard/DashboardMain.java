@@ -74,14 +74,14 @@ public class DashboardMain {
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
 
   public static void main(String[] args)
-      throws IOException, TemplateException, RepositoryException, ClassNotFoundException {
+      throws IOException, TemplateException, RepositoryException {
 
     Path output = generate();
     System.out.println("Wrote dashboard into " + output.toAbsolutePath());
   }
 
   public static Path generate()
-      throws IOException, TemplateException, RepositoryException, ClassNotFoundException {
+      throws IOException, TemplateException, RepositoryException {
 
     // TODO should pass in maven coordinates as argument
     DefaultArtifact bom =
@@ -95,12 +95,11 @@ public class DashboardMain {
     // LinkedListMultimap preserves the key order
     ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
 
-    // TODO(suztomo): choose entry point classes for reachability
-    ImmutableSet<Path> entryPoints = ImmutableSet.of(classpath.get(0));
+    // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
+    List<Path> artifactJarsInBom = classpath.subList(0, managedDependencies.size());
+    ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInBom);
 
-    boolean onlyReachable = false;
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(onlyReachable, classpath, entryPoints);
+    ClasspathChecker classpathChecker = ClasspathChecker.create(classpath, entryPoints);
 
     ClasspathCheckReport linkageReport = classpathChecker.findLinkageErrors();
     
