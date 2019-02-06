@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.ClassDumperTest.EXAMPLE_JAR_FILE;
+import static com.google.cloud.tools.opensource.classpath.ClassDumperTest.GRPC_CLOUD_FIRESTORE_JAR;
 import static com.google.cloud.tools.opensource.classpath.ClassDumperTest.absolutePathOfResource;
 
 import com.google.common.collect.ImmutableSet;
@@ -55,7 +55,7 @@ public class ClassReferenceGraphTest {
     return ClassReferenceGraph.create(
         ImmutableSet.of(symbolReferenceSet),
         // This jar file contains com.google.firestore.v1beta1.FirestoreGrpc
-        ImmutableSet.of(absolutePathOfResource(EXAMPLE_JAR_FILE)));
+        ImmutableSet.of(absolutePathOfResource(GRPC_CLOUD_FIRESTORE_JAR)));
   }
 
   @Test

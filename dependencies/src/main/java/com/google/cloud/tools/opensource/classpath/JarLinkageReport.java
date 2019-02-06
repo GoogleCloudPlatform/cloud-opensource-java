@@ -132,7 +132,7 @@ public abstract class JarLinkageReport {
 
       builder.append("Referenced by: ");
 
-      // Group is marked unreachable if none of the errors in the group is reachable
+      // A group (LinkageErrorCause) is marked unreachable if none of the errors in it is reachable
       String reachable =
           allErrorsForKey.stream().anyMatch(StaticLinkageError::isSourceClassReachable)
               ? "" // nothing if it's reachable

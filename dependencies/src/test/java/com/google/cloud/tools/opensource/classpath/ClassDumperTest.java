@@ -43,7 +43,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ClassDumperTest {
-  static final String EXAMPLE_JAR_FILE =
+  static final String GRPC_CLOUD_FIRESTORE_JAR =
       "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar";
 
   // We're sure that FirestoreGrpc class comes from this class file because
@@ -114,7 +114,7 @@ public class ClassDumperTest {
   @Test
   public void testScanSymbolTableFromJar()
       throws URISyntaxException, IOException {
-    URL jarUrl = URLClassLoader.getSystemResource(EXAMPLE_JAR_FILE);
+    URL jarUrl = URLClassLoader.getSystemResource(GRPC_CLOUD_FIRESTORE_JAR);
 
     SymbolReferenceSet symbolReferenceSet =
         ClassDumper.scanSymbolReferencesInJar(
