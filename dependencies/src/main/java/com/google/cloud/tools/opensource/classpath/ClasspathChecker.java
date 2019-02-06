@@ -167,7 +167,7 @@ public class ClasspathChecker {
     return reportBuilder.build();
   }
 
-  private <R extends SymbolReference>
+  private static <R extends SymbolReference>
       ImmutableList<StaticLinkageError<R>> errorsFromSymbolReferences(
           Set<R> symbolReferences,
           Set<String> classesDefinedInJar,
