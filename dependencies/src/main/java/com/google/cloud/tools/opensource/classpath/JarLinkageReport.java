@@ -110,8 +110,10 @@ public abstract class JarLinkageReport {
             .addAll(groupedFieldErrors.keySet())
             .build();
 
-    builder.append(combinedKeys.size());
-    builder.append(" group(s) of " + getTotalErrorCount() + " static linkage error(s)\n");
+    String missingMembers = getTotalErrorCount() == 1 ? "1 linkage error in "
+        : getTotalErrorCount() + " linkage errors in ";
+    String inClasses = combinedKeys.size() == 1 ? "1 class\n" : combinedKeys.size() + " classes\n";
+    builder.append(missingMembers + inClasses);
     for (LinkageErrorCause key : combinedKeys) {
       builder.append(indent);
       builder.append(key);
