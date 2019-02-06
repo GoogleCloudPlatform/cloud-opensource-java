@@ -74,14 +74,14 @@ public class DashboardMain {
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
 
   public static void main(String[] args)
-      throws IOException, TemplateException, RepositoryException, ClassNotFoundException {
+      throws IOException, TemplateException, RepositoryException {
 
     Path output = generate();
     System.out.println("Wrote dashboard into " + output.toAbsolutePath());
   }
 
   public static Path generate()
-      throws IOException, TemplateException, RepositoryException, ClassNotFoundException {
+      throws IOException, TemplateException, RepositoryException {
 
     // TODO should pass in maven coordinates as argument
     DefaultArtifact bom =

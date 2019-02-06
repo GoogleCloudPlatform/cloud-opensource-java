@@ -138,9 +138,9 @@ public class JarLinkageReportTest {
   public void testFormatByGroup() {
     Assert.assertEquals(
         "3 group(s) of 4 static linkage error(s)\n"
-            + "  ClassA is not found. Referenced by: (reachable)ClassB, ClassC\n"
-            + "  ClassA.methodX is not found. Referenced by: (reachable)ClassB\n"
-        + "  ClassC is not found. Referenced by: (reachable)ClassD\n",
+            + "  ClassA is not found. Referenced by: ClassB, ClassC\n"
+            + "  ClassA.methodX is not found. Referenced by: ClassB\n"
+        + "  ClassC is not found. Referenced by: ClassD\n",
         jarLinkageReport.formatByGroup());
   }
 }

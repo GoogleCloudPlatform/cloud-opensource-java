@@ -30,8 +30,9 @@ import java.util.Set;
 import org.apache.bcel.classfile.JavaClass;
 
 /**
- * Directed graph among class references to check {@link #isReachable(String)} for a class from
- * classes in {@code entryPointJars}. The graph's node and edges are defined as following:
+ * Directed graph of class references. Given classes in {@code entryPointJars}, it provides
+ * {@link #isReachable(String)} for a class to check the reachability.
+ * The graph's node and edges are defined as following:
  *
  * <p>Nodes are class names.
  *
