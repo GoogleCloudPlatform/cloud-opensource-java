@@ -40,7 +40,7 @@ There are two use cases for Classpath Checker:
 
 ### Input
 
-The input of the tool is either the Maven coordinate of a BOM, 
+The input of the tool is the Maven coordinate of a BOM, 
 a list of Maven coordinates, or a list of class and jar files in the filesystem.
 All of these inputs are converted to a class path for the classpath check,
 which is the _input class path_.
@@ -72,7 +72,7 @@ and annotates linkage errors with [reachability](
 ../library-best-practices/glossary.md#reachability) from [entry point classes](
 ../library-best-practices/glossary.md#entry-point-class).
 
-Entry point classes are different for the targets of checks:
-  - **Check for a BOM**: classes in the Maven artifacts listed in the BOM
-  - **Check for a project**: classes in the direct dependencies of the project
-  - **Check for a list of Maven artifacts**: classes in the Maven artifacts
+Entry point classes are different for the input of checks:
+  - **Check for a Maven BOM**: classes in the Maven artifacts listed in the BOM
+  - **Check for a list of Maven coordinates**: classes in the Maven artifacts
+  - **Check for a list of class and jar files**: classes in the list and the jar files

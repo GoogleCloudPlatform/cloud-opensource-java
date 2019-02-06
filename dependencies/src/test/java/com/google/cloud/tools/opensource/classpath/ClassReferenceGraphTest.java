@@ -16,8 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.ClassDumperTest.GRPC_CLOUD_FIRESTORE_JAR;
-import static com.google.cloud.tools.opensource.classpath.ClassDumperTest.absolutePathOfResource;
+import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Truth;
@@ -26,7 +25,12 @@ import java.net.URISyntaxException;
 import org.junit.Test;
 
 public class ClassReferenceGraphTest {
+
+  private static final String GRPC_CLOUD_FIRESTORE_JAR =
+      "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar";
+
   private static ClassReferenceGraph createExampleGraph() throws URISyntaxException, IOException {
+
     ClassSymbolReference grpcToA =
         ClassSymbolReference.builder()
             .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")

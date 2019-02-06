@@ -55,7 +55,7 @@ public class ClasspathCheckOptionTest {
       Assert.fail();
     } catch (ParseException ex) {
       Assert.assertEquals(
-          "Exactly one of BOM, Maven coordinates, or jar files must be specified",
+          "The option 'b' was specified but an option from this group has already been selected: 'a'",
           ex.getMessage());
     }
   }
@@ -89,7 +89,8 @@ public class ClasspathCheckOptionTest {
   public void testConfigureAdditionalMavenRepositories_addingSpringRepository()
       throws ParseException, RepositoryException {
     CommandLine commandLine =
-        ClasspathCheckOption.readCommandLine("-m", "https://repo.spring.io/milestone");
+        ClasspathCheckOption.readCommandLine(
+            "-j", "dummy.jar", "-m", "https://repo.spring.io/milestone");
     ClasspathCheckOption.setRepositories(commandLine);
 
     // This artifact does not exist in Maven central, but it is in Spring's repository
@@ -105,7 +106,7 @@ public class ClasspathCheckOptionTest {
       throws ParseException {
     CommandLine commandLine =
         ClasspathCheckOption.readCommandLine(
-            "-m", "https://repo.spring.io/milestone", "--no-maven-central");
+            "-j", "dummy.jar", "-m", "https://repo.spring.io/milestone", "--no-maven-central");
     ClasspathCheckOption.setRepositories(commandLine);
 
     CollectRequest collectRequest = new CollectRequest();
@@ -127,7 +128,8 @@ public class ClasspathCheckOptionTest {
 
   private static void assertMavenRepositoryIsInvalid(String repositoryUrl)
       throws ParseException {
-    CommandLine commandLine = ClasspathCheckOption.readCommandLine("-m", repositoryUrl);
+    CommandLine commandLine =
+        ClasspathCheckOption.readCommandLine("-j", "dummy.jar", "-m", repositoryUrl);
     try {
       ClasspathCheckOption.setRepositories(commandLine);
       Assert.fail("URL " + repositoryUrl + " should be invalidated");
@@ -138,7 +140,8 @@ public class ClasspathCheckOptionTest {
 
   @Test
   public void testConfigureAdditionalMavenRepositories_fileRepositoryUrl() throws ParseException {
-    CommandLine commandLine = ClasspathCheckOption.readCommandLine("-m", "file:///var/tmp");
+    CommandLine commandLine =
+        ClasspathCheckOption.readCommandLine("-j", "dummy.jar", "-m", "file:///var/tmp");
 
     // This method should not raise an exception
     ClasspathCheckOption.setRepositories(commandLine);
@@ -148,7 +151,7 @@ public class ClasspathCheckOptionTest {
   public void testReadCommandLine_multipleRepositoriesSeparatedByComma() throws ParseException {
     CommandLine commandLine =
         ClasspathCheckOption.readCommandLine(
-            "-m", "file:///var/tmp,https://repo.spring.io/milestone");
+            "-j", "dummy.jar", "-m", "file:///var/tmp,https://repo.spring.io/milestone");
     Truth.assertThat(commandLine.getOptionValues("m")).hasLength(2);
   }
 }

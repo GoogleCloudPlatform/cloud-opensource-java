@@ -49,6 +49,10 @@ public class ClasspathChecker {
 
   private static final Logger logger = Logger.getLogger(ClasspathChecker.class.getName());
 
+  private final ClassDumper classDumper;
+  private final ImmutableMap<Path, SymbolReferenceSet> jarToSymbols;
+  private final ClassReferenceGraph classReferenceGraph;
+
   public static ClasspathChecker create(List<Path> jarPaths, Iterable<Path> entryPoints)
       throws IOException {
     Preconditions.checkArgument(
@@ -68,19 +72,13 @@ public class ClasspathChecker {
     return new ClasspathChecker(dumper, jarToSymbols, classReferenceGraph);
   }
 
-  private final ClassDumper classDumper;
-
-  private final ImmutableMap<Path, SymbolReferenceSet> jarToSymbols;
-
-  private final ClassReferenceGraph classReferenceGraph;
-
   private ClasspathChecker(
       ClassDumper classDumper,
       Map<Path, SymbolReferenceSet> jarToSymbols,
       ClassReferenceGraph classReferenceGraph) {
     this.classDumper = Preconditions.checkNotNull(classDumper);
     this.jarToSymbols = ImmutableMap.copyOf(jarToSymbols);
-    this.classReferenceGraph = classReferenceGraph;
+    this.classReferenceGraph = Preconditions.checkNotNull(classReferenceGraph);
   }
 
   /**
@@ -96,21 +94,12 @@ public class ClasspathChecker {
       throws IOException, RepositoryException, ParseException {
 
     CommandLine commandLine = ClasspathCheckOption.readCommandLine(arguments);
-    ImmutableList<Path> inputClasspath = ClasspathCheckOption.generateInputClasspath(commandLine);
+    ImmutableList<Path> inputClasspath = ClasspathCheckOption.parseInputClasspath(commandLine);
 
-    ImmutableSet.Builder<Path> entryPoints = ImmutableSet.builder();
-    if (commandLine.hasOption("a") || commandLine.hasOption('b')) {
-      // For an artifact list (or a BOM), the first elements in inputClasspath are the artifacts
-      // specified the list, followed by their dependencies.
-      int artifactCount = ClasspathCheckOption.generateArtifacts(commandLine).size();
-      // For Maven artifact list (or a BOM), entry point classes are ones in the list
-      entryPoints.addAll(inputClasspath.subList(0, artifactCount));
-    } else {
-      // For list of jar files, entry point classes are all classes in the files
-      entryPoints.addAll(inputClasspath);
-    }
+    ImmutableSet<Path> entryPointJars =
+        ClasspathCheckOption.parseEntryPointJars(commandLine, inputClasspath);
 
-    ClasspathChecker classpathChecker = create(inputClasspath, entryPoints.build());
+    ClasspathChecker classpathChecker = create(inputClasspath, entryPointJars);
     ClasspathCheckReport report = classpathChecker.findLinkageErrors();
 
     System.out.println(report);
@@ -120,10 +109,11 @@ public class ClasspathChecker {
   public ClasspathCheckReport findLinkageErrors() {
     // Validate linkage error of each reference
     ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
-    for (Map.Entry<Path, SymbolReferenceSet> entry : jarToSymbols.entrySet()) {
-      Path jarPath = entry.getKey();
-      jarLinkageReports.add(generateLinkageReport(jarPath, entry.getValue()));
-    }
+
+    jarToSymbols.forEach(
+        (jar, symbolReferenceSet) -> {
+          jarLinkageReports.add(generateLinkageReport(jar, symbolReferenceSet));
+        });
 
     return ClasspathCheckReport.create(jarLinkageReports.build());
   }

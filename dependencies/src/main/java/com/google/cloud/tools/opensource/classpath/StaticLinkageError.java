@@ -44,7 +44,14 @@ abstract class StaticLinkageError<T extends SymbolReference> {
   /** Returns the reason why the symbol reference is marked as a linkage error. */
   abstract Reason getReason();
 
-  abstract boolean isSourceClassReachable();
+  /**
+   * Returns true if the source class of the reference is reachable from entry point classes.
+   *
+   * @see <a
+   *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#class-reference-graph">
+   *     Java Dependency Glossary: Class Reference Graph</a>
+   */
+  abstract boolean isReachable();
 
   @Override
   public String toString() {
@@ -57,7 +64,7 @@ abstract class StaticLinkageError<T extends SymbolReference> {
       builder.append(", target class location not found");
     }
     builder.append(", isReachable: ");
-    builder.append(isSourceClassReachable());
+    builder.append(isReachable());
     return builder.toString();
   }
 
@@ -66,7 +73,7 @@ abstract class StaticLinkageError<T extends SymbolReference> {
       U reference, boolean isReachable) {
     return builderFor(reference)
         .setReason(Reason.CLASS_NOT_FOUND)
-        .setSourceClassReachable(isReachable)
+        .setReachable(isReachable)
         .build();
   }
 
@@ -76,7 +83,7 @@ abstract class StaticLinkageError<T extends SymbolReference> {
     return builderFor(reference)
         .setReason(Reason.INCOMPATIBLE_CLASS_CHANGE)
         .setTargetClassLocation(targetClassLocation)
-        .setSourceClassReachable(isReachable)
+        .setReachable(isReachable)
         .build();
   }
 
@@ -86,7 +93,7 @@ abstract class StaticLinkageError<T extends SymbolReference> {
     return builderFor(reference)
         .setReason(Reason.SYMBOL_NOT_FOUND)
         .setTargetClassLocation(targetClassLocation)
-        .setSourceClassReachable(isReachable)
+        .setReachable(isReachable)
         .build();
   }
 
@@ -96,7 +103,7 @@ abstract class StaticLinkageError<T extends SymbolReference> {
     return builderFor(reference)
         .setReason(Reason.INACCESSIBLE_CLASS)
         .setTargetClassLocation(targetClassLocation)
-        .setSourceClassReachable(isReachable)
+        .setReachable(isReachable)
         .build();
   }
 
@@ -106,7 +113,7 @@ abstract class StaticLinkageError<T extends SymbolReference> {
     return builderFor(reference)
         .setReason(Reason.INACCESSIBLE_MEMBER)
         .setTargetClassLocation(targetClassLocation)
-        .setSourceClassReachable(isReachable)
+        .setReachable(isReachable)
         .build();
   }
 
@@ -127,7 +134,7 @@ abstract class StaticLinkageError<T extends SymbolReference> {
 
     abstract StaticLinkageError.Builder<T> setReference(T reference);
 
-    abstract StaticLinkageError.Builder<T> setSourceClassReachable(boolean reachable);
+    abstract StaticLinkageError.Builder<T> setReachable(boolean reachable);
 
     abstract StaticLinkageError<T> build();
   }

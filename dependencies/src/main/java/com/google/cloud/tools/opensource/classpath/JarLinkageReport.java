@@ -63,7 +63,7 @@ public abstract class JarLinkageReport {
 
     abstract JarLinkageReport build();
   }
-  
+
   @Override
   public String toString() {
     String indent = "  ";
@@ -131,13 +131,6 @@ public abstract class JarLinkageReport {
               .collect(Collectors.joining(", "));
 
       builder.append("Referenced by: ");
-
-      // A group (LinkageErrorCause) is marked unreachable if none of the errors in it is reachable
-      String reachable =
-          allErrorsForKey.stream().anyMatch(StaticLinkageError::isSourceClassReachable)
-              ? "" // nothing if it's reachable
-              : "(unreachable)";
-      builder.append(reachable);
       builder.append(sourceClassJoined);
       builder.append("\n");
     }

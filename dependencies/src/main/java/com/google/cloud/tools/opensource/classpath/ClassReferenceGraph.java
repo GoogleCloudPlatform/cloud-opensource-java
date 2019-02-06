@@ -32,7 +32,7 @@ import java.util.Set;
 import org.apache.bcel.classfile.JavaClass;
 
 /**
- * Directed graph of class references. Given classes in {@code entryPointJars}, it provides {@link
+ * Directed graph of class references. Given classes in a set of entry points, it provides {@link
  * #isReachable(String)} for a class to check the reachability. The graph's node and edges are
  * defined as following:
  *
