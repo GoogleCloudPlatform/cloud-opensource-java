@@ -17,6 +17,9 @@
     such as `com.google.common.io.OutputSupplier` because Guava incremented major versions
     every 6 months.
 
+  - A type you've exposed on your own API surface cannot be shaded. This removes
+    one of the available techniques for resolving diamond dependency conflicts. 
+
 - Use package-protected classes and methods for internal APIs that should not be used by consumers.
 
 - Do not mark methods and classes public by default. Assume non-public until a need is 
@@ -32,6 +35,9 @@
   public. (We may revisit this when we can rely on
   the new module system in Java 11 or later.) 
 
+- If you absolutely must create public classes that clients should not depend on,
+  one of the superpackages that contains these classes should be named `internal`.
+  For example, `com.foo.utilities.internal.xml`. 
 
 <b id="item15">1</b> Bloch, Joshua. "Item 15: Minimize the accessibility of classes and members."
 Effective Java, 3rd Edition. Boston: Addison-Wesley, 2018. p. 73[↩](#a1)
