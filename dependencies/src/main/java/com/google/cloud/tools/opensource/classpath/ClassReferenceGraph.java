@@ -74,6 +74,9 @@ class ClassReferenceGraph {
     this.reachableClasses = reachableNodes(graph, entryPointClasses);
   }
 
+  /**
+   * Returns a set of class names reachable from {@code fromNodes} by following edges in the graph.
+   */
   private static ImmutableSet<String> reachableNodes(Graph<String> graph, Set<String> fromNodes) {
     // This function is mostly copy from Graphs.reachableNodes(Graph<N>, N node), except that this
     // function handles multiple fromNodes in the arguments
