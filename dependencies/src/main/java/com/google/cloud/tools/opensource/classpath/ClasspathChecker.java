@@ -67,25 +67,25 @@ public class ClasspathChecker {
       classReferenceBuilder.addAll(symbolReferenceSet.getClassReferences());
     }
 
-    ClassSymbolGraph classSymbolGraph =
-        ClassSymbolGraph.create(classReferenceBuilder.build(), ImmutableSet.copyOf(entryPoints));
+    ClassReferenceGraph classReferenceGraph =
+        ClassReferenceGraph.create(classReferenceBuilder.build(), ImmutableSet.copyOf(entryPoints));
 
-    return new ClasspathChecker(dumper, jarToSymbols, classSymbolGraph);
+    return new ClasspathChecker(dumper, jarToSymbols, classReferenceGraph);
   }
 
   private final ClassDumper classDumper;
 
   private final ImmutableMap<Path, SymbolReferenceSet> jarToSymbols;
 
-  private final ClassSymbolGraph classSymbolGraph;
+  private final ClassReferenceGraph classReferenceGraph;
 
   private ClasspathChecker(
       ClassDumper classDumper,
       Map<Path, SymbolReferenceSet> jarToSymbols,
-      ClassSymbolGraph classSymbolGraph) {
+      ClassReferenceGraph classReferenceGraph) {
     this.classDumper = Preconditions.checkNotNull(classDumper);
     this.jarToSymbols = ImmutableMap.copyOf(jarToSymbols);
-    this.classSymbolGraph = classSymbolGraph;
+    this.classReferenceGraph = classReferenceGraph;
   }
 
   /**
@@ -202,7 +202,7 @@ public class ClasspathChecker {
       MethodSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     String sourceClassName = reference.getSourceClassName();
-    boolean isSourceClassReachable = classSymbolGraph.isReachable(sourceClassName);
+    boolean isSourceClassReachable = classReferenceGraph.isReachable(sourceClassName);
     String methodName = reference.getMethodName();
 
     // Skip references to Java runtime class. For example, java.lang.String.
@@ -272,7 +272,7 @@ public class ClasspathChecker {
       FieldSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     String sourceClassName = reference.getSourceClassName();
-    boolean isSourceClassReachable = classSymbolGraph.isReachable(sourceClassName);
+    boolean isSourceClassReachable = classReferenceGraph.isReachable(sourceClassName);
     String fieldName = reference.getFieldName();
     try {
       JavaClass targetJavaClass = classDumper.loadJavaClass(targetClassName);
@@ -362,7 +362,7 @@ public class ClasspathChecker {
       ClassSymbolReference reference) {
     String sourceClassName = reference.getSourceClassName();
     String targetClassName = reference.getTargetClassName();
-    boolean isSourceClassReachable = classSymbolGraph.isReachable(sourceClassName);
+    boolean isSourceClassReachable = classReferenceGraph.isReachable(sourceClassName);
     try {
       JavaClass targetClass = classDumper.loadJavaClass(targetClassName);
       Path classFileLocation = classDumper.findClassLocation(targetClassName);

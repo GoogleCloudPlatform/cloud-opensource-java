@@ -30,17 +30,22 @@ import java.util.Set;
 import org.apache.bcel.classfile.JavaClass;
 
 /**
- * Directed graph among class references to check a class is reachable from classes in {@code
- * entryPointJars}.
+ * Directed graph among class references to check {@link #isReachable(String)} for a class from
+ * classes in {@code entryPointJars}. The graph's node and edges are defined as following:
  *
  * <p>Nodes are class names.
  *
- * <p>Edges are directed references between two classes.
+ * <p>Edges are references between two classes. When {@code ClassA} has a reference to {@code
+ * ClassB}, a directed edge from {@code ClassA} to {@code ClassB} exists in the graph.
+ *
+ * @see <a href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#class-reference-graph">
+ *   Java Dependency Glossary: Class Reference Graph</a>
  */
-class ClassSymbolGraph {
+class ClassReferenceGraph {
+
   private final ImmutableSet<String> reachableClasses;
 
-  static ClassSymbolGraph create(Set<ClassSymbolReference> classSymbolReferences,
+  static ClassReferenceGraph create(Set<ClassSymbolReference> classSymbolReferences,
       Set<Path> entryPointJars) throws IOException {
     ImmutableSet.Builder<String> entryPointClassBuilder = ImmutableSet.builder();
     for (Path jarPath : entryPointJars) {
@@ -49,10 +54,10 @@ class ClassSymbolGraph {
       }
     }
 
-    return new ClassSymbolGraph(classSymbolReferences, entryPointClassBuilder.build());
+    return new ClassReferenceGraph(classSymbolReferences, entryPointClassBuilder.build());
   }
 
-  private ClassSymbolGraph(Set<ClassSymbolReference> classSymbolReferences,
+  private ClassReferenceGraph(Set<ClassSymbolReference> classSymbolReferences,
       Set<String> entryPointClasses) {
     MutableGraph<String> graphBuilder = GraphBuilder.directed().allowsSelfLoops(false).build();
 
@@ -72,12 +77,12 @@ class ClassSymbolGraph {
     this.reachableClasses = reachableClassBuilder.build();
   }
 
-  private static ImmutableSet<String> reachableNodes(Graph<String> graph, Set<String> nodes) {
-    // This function is mostly copy from Graphs.reachableNodes(Graph<N>, N node)
+  private static ImmutableSet<String> reachableNodes(Graph<String> graph, Set<String> fromNodes) {
+    // This function is mostly copy from Graphs.reachableNodes(Graph<N>, N node), except that this
+    // function handles multiple nodes in the arguments
     Set<String> visitedNodes = Sets.newHashSet();
-    Queue<String> queuedNodes = new ArrayDeque<>();
-    visitedNodes.addAll(nodes);
-    queuedNodes.addAll(nodes);
+    visitedNodes.addAll(fromNodes);
+    Queue<String> queuedNodes = new ArrayDeque<>(fromNodes);
     while (!queuedNodes.isEmpty()) {
       String currentNode = queuedNodes.remove();
       if (!graph.nodes().contains(currentNode)) {
