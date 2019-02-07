@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -249,8 +250,8 @@ public final class RepositoryUtility {
    */
   public static RemoteRepository mavenRepositoryFromUrl(String mavenRepositoryUrl) {
     try {
-      // Because the protocol is not an empty string, this URI is absolute.
-      new URI(mavenRepositoryUrl);
+      // Because the protocol is not an empty string (checked below), this URI is absolute.
+      new URI(checkNotNull(mavenRepositoryUrl));
     } catch (URISyntaxException ex) {
       throw new IllegalArgumentException("Invalid URL syntax: " + mavenRepositoryUrl);
     }
