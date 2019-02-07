@@ -51,7 +51,7 @@ import org.eclipse.aether.artifact.DefaultArtifact;
  *     "https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/dependencies#input">
  *     Classpath Checker: Input</a>
  */
-public class ClasspathCheckOption {
+ class ClasspathCheckOption {
 
   private static final Options options = configureOptions();
 
