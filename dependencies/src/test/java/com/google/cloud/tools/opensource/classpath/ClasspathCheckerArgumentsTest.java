@@ -40,6 +40,7 @@ public class ClasspathCheckerArgumentsTest {
     RepositoryUtility.setRepositories(ImmutableList.of(), true);
   }
 
+  /*
   @Test
   public void parseCommandLineArguments_shortOptions_bom()
       throws ParseException, RepositoryException {
@@ -51,7 +52,7 @@ public class ClasspathCheckerArgumentsTest {
         "Cloud OSS BOM should be resolved to have Guava as first element",
         "guava",
         parsedArguments.getArtifacts().get(0).getArtifactId());
-  }
+  } */
 
   @Test
   public void parseCommandLineArguments_duplicates() {
