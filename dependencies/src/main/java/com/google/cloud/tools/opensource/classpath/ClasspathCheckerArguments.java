@@ -68,6 +68,10 @@ final class ClasspathCheckerArguments {
         commandLine.hasOption("m")
             ? ImmutableList.copyOf(commandLine.getOptionValues("m"))
             : ImmutableList.of();
+
+    // this may throw IllegalArgumentException upon validating the syntax
+    extraMavenRepositoryUrls.forEach(RepositoryUtility::mavenRepositoryFromUrl);
+
     this.addMavenCentral = !commandLine.hasOption("nm");
   }
 
@@ -77,13 +81,7 @@ final class ClasspathCheckerArguments {
     CommandLineParser parser = new DefaultParser();
 
     try {
-      CommandLine commandLine = parser.parse(options, arguments);
-
-      ClasspathCheckerArguments classpathCheckerArguments =
-          new ClasspathCheckerArguments(commandLine);
-      classpathCheckerArguments.extraMavenRepositoryUrls.forEach(
-          RepositoryUtility::mavenRepositoryFromUrl);
-      return classpathCheckerArguments;
+      return new ClasspathCheckerArguments(parser.parse(options, arguments));
     } catch (IllegalArgumentException ex) {
       throw new ParseException("Invalid URL syntax in Maven repository URL");
     } catch (ParseException ex) {
