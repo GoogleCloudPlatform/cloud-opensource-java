@@ -56,7 +56,8 @@ public class ClasspathCheckOptionTest {
       Assert.fail();
     } catch (ParseException ex) {
       Assert.assertEquals(
-          "The option 'b' was specified but an option from this group has already been selected: 'a'",
+          "The option 'b' was specified but an option from this group has already been"
+              + " selected: 'a'",
           ex.getMessage());
     }
   }
