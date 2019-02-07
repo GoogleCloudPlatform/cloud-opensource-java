@@ -19,8 +19,10 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.cloud.tools.opensource.dependencies.AggregatedRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.ExceptionAndPath;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
@@ -71,6 +73,24 @@ public class ClassPathBuilderTest {
     Truth.assertWithMessage("Opencensus API should have multiple dependency paths")
         .that(multimap.get(opencensusApiPath).size())
         .isGreaterThan(1);
+  }
+
+  @Test
+  public void testBomToPaths_firstElementsAreBomMembers() throws RepositoryException {
+    DefaultArtifact bom =
+        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
+    List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
+
+    LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
+        ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
+
+    ImmutableList<Path> paths = ImmutableList.copyOf(jarToDependencyPaths.keySet());
+
+    Truth.assertThat(paths.get(0).getFileName().toString()).isEqualTo(
+        "guava-26.0-android.jar"); // first element in the BOM
+    int bomSize = managedDependencies.size();
+    Truth.assertThat(paths.get(bomSize - 1).getFileName().toString()).isEqualTo(
+        "gax-httpjson-0.52.1.jar"); // last element in the BOM
   }
 
   @Test
@@ -150,8 +170,7 @@ public class ClassPathBuilderTest {
             .filter(path -> "httpclient-4.5.3.jar".equals(path.getFileName().toString()))
             .findFirst()
             .get();
-    ClasspathChecker classpathChecker =
-        ClasspathChecker.create(false, paths, ImmutableSet.copyOf(paths));
+    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, ImmutableSet.copyOf(paths));
 
     // httpclient-4.5.3 AbstractVerifier has a method reference of
     // 'void verify(String host, String[] cns, String[] subjectAlts)' to itself and its interface

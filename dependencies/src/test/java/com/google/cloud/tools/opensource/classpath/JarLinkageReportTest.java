@@ -30,7 +30,7 @@ public class JarLinkageReportTest {
   private ImmutableList<StaticLinkageError<MethodSymbolReference>> missingMethodErrors;
   private ImmutableList<StaticLinkageError<ClassSymbolReference>> missingClassErrors;
   private StaticLinkageError<MethodSymbolReference> linkageErrorMissingMethod;
-  
+
   @Before
   public void setUp() {
 
@@ -42,7 +42,7 @@ public class JarLinkageReportTest {
             .build();
 
     StaticLinkageError<ClassSymbolReference> linkageErrorMissingClass =
-        StaticLinkageError.errorMissingTargetClass(classSymbolReference);
+        StaticLinkageError.errorMissingTargetClass(classSymbolReference, true);
     missingClassErrors = ImmutableList.of(linkageErrorMissingClass);
 
     MethodSymbolReference methodSymbolReference =
@@ -55,7 +55,7 @@ public class JarLinkageReportTest {
             .build();
     Path targetClassLocation = Paths.get("dummy.jar");
     linkageErrorMissingMethod =
-        StaticLinkageError.errorMissingMember(methodSymbolReference, targetClassLocation);
+        StaticLinkageError.errorMissingMember(methodSymbolReference, targetClassLocation, true);
 
     MethodSymbolReference methodSymbolReferenceDueToMissingClass =
         MethodSymbolReference.builder()
@@ -66,7 +66,7 @@ public class JarLinkageReportTest {
             .setSourceClassName("ClassC")
             .build();
     StaticLinkageError<MethodSymbolReference> linkageErrorMissingMethodByClass =
-        StaticLinkageError.errorMissingTargetClass(methodSymbolReferenceDueToMissingClass);
+        StaticLinkageError.errorMissingTargetClass(methodSymbolReferenceDueToMissingClass, false);
 
     missingMethodErrors =
         ImmutableList.of(linkageErrorMissingMethod, linkageErrorMissingMethodByClass);
@@ -78,7 +78,7 @@ public class JarLinkageReportTest {
             .setSourceClassName("ClassD")
             .build();
     StaticLinkageError<FieldSymbolReference> linkageErrorMissingField =
-        StaticLinkageError.errorMissingTargetClass(fieldSymbolReference);
+        StaticLinkageError.errorMissingTargetClass(fieldSymbolReference, true);
     missingFieldErrors = ImmutableList.of(linkageErrorMissingField);
     jarLinkageReport =
         JarLinkageReport.builder()
@@ -119,15 +119,19 @@ public class JarLinkageReportTest {
     Assert.assertEquals(
         "c (4 errors):\n"
             + "  ClassSymbolReference{sourceClassName=ClassB, targetClassName=ClassA"
-            + ", subclass=false}, reason: CLASS_NOT_FOUND, target class location not found\n"
+            + ", subclass=false}, reason: CLASS_NOT_FOUND, target class location not found"
+            + ", isReachable: true\n"
             + "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, "
             + "methodName=methodX, interfaceMethod=false, descriptor=java.lang.String}"
-            + ", reason: SYMBOL_NOT_FOUND, target class from dummy.jar\n"
+            + ", reason: SYMBOL_NOT_FOUND, target class from dummy.jar"
+            + ", isReachable: true\n"
             + "  MethodSymbolReference{sourceClassName=ClassC, targetClassName=ClassA,"
             + " methodName=methodX, interfaceMethod=false, descriptor=java.lang.String}, "
-            + "reason: CLASS_NOT_FOUND, target class location not found\n"
+            + "reason: CLASS_NOT_FOUND, target class location not found"
+            + ", isReachable: false\n"
             + "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, "
-            + "fieldName=fieldX}, reason: CLASS_NOT_FOUND, target class location not found\n",
+            + "fieldName=fieldX}, reason: CLASS_NOT_FOUND, target class location not found"
+            + ", isReachable: true\n",
         jarLinkageReport.toString());
   }
 
@@ -137,7 +141,7 @@ public class JarLinkageReportTest {
         "4 linkage errors in 3 classes\n"
             + "  ClassA is not found. Referenced by: ClassB, ClassC\n"
             + "  ClassA.methodX is not found. Referenced by: ClassB\n"
-        + "  ClassC is not found. Referenced by: ClassD\n",
+            + "  ClassC is not found. Referenced by: ClassD\n",
         jarLinkageReport.formatByGroup());
   }
 

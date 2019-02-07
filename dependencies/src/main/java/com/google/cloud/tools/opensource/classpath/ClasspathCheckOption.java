@@ -20,16 +20,17 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
@@ -63,7 +64,6 @@ public class ClasspathCheckOption {
 
     try {
       CommandLine commandLine = parser.parse(options, arguments);
-      checkInput(commandLine);
       return commandLine;
     } catch (ParseException ex) {
       helpFormatter.printHelp("ClasspathChecker", options);
@@ -71,43 +71,49 @@ public class ClasspathCheckOption {
     }
   }
 
-  private static void checkInput(CommandLine commandLine) throws ParseException {
-    if (Stream.of('b', 'a', 'j').filter(commandLine::hasOption).count() > 1) {
-      throw new ParseException(
-          "Exactly one of BOM, Maven coordinates, or jar files must be specified");
-    }
-  }
-
   private static Options configureOptions() {
     Options options = new Options();
 
-    options.addOption(
-        "b", "bom", true, "BOM to generate a class path, specified by its Maven coordinates");
+    OptionGroup inputGroup = new OptionGroup();
+    inputGroup.setRequired(true);
 
-    Option artifactOption = Option.builder("a").longOpt("artifacts").hasArgs()
-        .valueSeparator(',')
-        .desc("Maven coordinates for Maven artifacts (separated by ',') to generate a class path")
-        .build();
-    options.addOption(artifactOption);
+    Option bomOption =
+        Option.builder("b")
+            .longOpt("bom")
+            .hasArg()
+            .desc("BOM to generate a class path, specified by its Maven coordinates")
+            .build();
+    inputGroup.addOption(bomOption);
 
-    Option jarOption = Option.builder("j").longOpt("jars").hasArgs()
-        .valueSeparator(',')
-        .desc("Jar files (separated by ',') to generate a class path")
-        .build();
-    options.addOption(jarOption);
+    Option artifactOption =
+        Option.builder("a")
+            .longOpt("artifacts")
+            .hasArgs()
+            .valueSeparator(',')
+            .desc(
+                "Maven coordinates for Maven artifacts (separated by ',') to generate a class path")
+            .build();
+    inputGroup.addOption(artifactOption);
 
-    options.addOption(
-        "r",
-        "report-only-reachable",
-        false,
-        "To report only linkage errors reachable from entry point");
+    Option jarOption =
+        Option.builder("j")
+            .longOpt("jars")
+            .hasArgs()
+            .valueSeparator(',')
+            .desc("Jar files (separated by ',') to generate a class path")
+            .build();
+    inputGroup.addOption(jarOption);
 
-    Option repositoryOption = Option.builder("m").longOpt("maven-repositories").hasArgs()
-        .valueSeparator(',')
-        .desc("Maven repository URLs to search for dependencies. "
-            + "The repositories are added to a repository list in order before "
-            + "the default Maven Central (http://repo1.maven.org/maven2/).")
-        .build();
+    Option repositoryOption =
+        Option.builder("m")
+            .longOpt("maven-repositories")
+            .hasArgs()
+            .valueSeparator(',')
+            .desc(
+                "Maven repository URLs to search for dependencies. "
+                    + "The repositories are added to a repository list in order before "
+                    + "the default Maven Central (http://repo1.maven.org/maven2/).")
+            .build();
     options.addOption(repositoryOption);
 
     Option noMavenCentralOption =
@@ -120,35 +126,43 @@ public class ClasspathCheckOption {
             .build();
     options.addOption(noMavenCentralOption);
 
+    options.addOptionGroup(inputGroup);
     return options;
   }
 
-  static ImmutableList<Path> generateInputClasspath(CommandLine commandLine)
-      throws RepositoryException, ParseException {
-    setRepositories(commandLine);
-
+  static ImmutableList<Artifact> parseArtifacts(CommandLine commandLine)
+      throws RepositoryException {
     if (commandLine.hasOption("b")) {
       String bomCoordinates = commandLine.getOptionValue("b");
       DefaultArtifact bomArtifact = new DefaultArtifact(bomCoordinates);
-      List<Artifact> artifactsInBom = RepositoryUtility.readBom(bomArtifact);
-      return ClassPathBuilder.artifactsToClasspath(artifactsInBom);
+      return ImmutableList.copyOf(RepositoryUtility.readBom(bomArtifact));
     } else if (commandLine.hasOption("a")) {
+      // option 'a'
       String[] mavenCoordinatesOption = commandLine.getOptionValues("a");
-      ImmutableList<Artifact> artifacts =
-          Arrays.stream(mavenCoordinatesOption)
-              .map(DefaultArtifact::new)
-              .collect(toImmutableList());
+      return Arrays.stream(mavenCoordinatesOption)
+          .map(DefaultArtifact::new)
+          .collect(toImmutableList());
+    } else {
+      throw new IllegalArgumentException(
+          "The arguments must have option 'a' or 'b' to list Maven artifacts");
+    }
+  }
+
+  static ImmutableList<Path> parseInputClasspath(CommandLine commandLine)
+      throws RepositoryException, ParseException {
+    setRepositories(commandLine);
+
+    if (commandLine.hasOption("b") || commandLine.hasOption("a")) {
+      List<Artifact> artifacts = parseArtifacts(commandLine);
       return ClassPathBuilder.artifactsToClasspath(artifacts);
-    } else if (commandLine.hasOption("j")) {
+    } else {
+      // b, a, or j is specified in OptionGroup
       String[] jarFiles = commandLine.getOptionValues("j");
       ImmutableList<Path> jarFilesInArguments =
           Arrays.stream(jarFiles)
               .map(name -> Paths.get(name).toAbsolutePath())
               .collect(toImmutableList());
       return jarFilesInArguments;
-    } else {
-      helpFormatter.printHelp("ClasspathChecker", options);
-      throw new ParseException("Missing argument");
     }
   }
 
@@ -158,11 +172,25 @@ public class ClasspathCheckOption {
     }
     try {
       boolean addMavenCentral = !commandLine.hasOption("nm");
-      RepositoryUtility.setRepositories(Arrays.asList(commandLine.getOptionValues("m")),
-          addMavenCentral);
+      RepositoryUtility.setRepositories(
+          Arrays.asList(commandLine.getOptionValues("m")), addMavenCentral);
     } catch (IllegalArgumentException ex) {
-      throw new ParseException("Invalid URL specified for Maven repositories: "
-          + ex.getMessage());
+      throw new ParseException("Invalid URL specified for Maven repositories: " + ex.getMessage());
+    }
+  }
+
+  /** Returns a set of jar files that hold entry point classes. */
+  static ImmutableSet<Path> parseEntryPointJars(CommandLine commandLine, List<Path> inputClasspath)
+      throws RepositoryException {
+    if (commandLine.hasOption("a") || commandLine.hasOption('b')) {
+      // For an artifact list (or a BOM), the first elements in inputClasspath are the artifacts
+      // specified the list, followed by their dependencies.
+      int artifactCount = parseArtifacts(commandLine).size();
+      // For Maven artifact list (or a BOM), entry point classes are ones in the list
+      return ImmutableSet.copyOf(inputClasspath.subList(0, artifactCount));
+    } else {
+      // For list of jar files, entry point classes are all classes in the files
+      return ImmutableSet.copyOf(inputClasspath);
     }
   }
 }

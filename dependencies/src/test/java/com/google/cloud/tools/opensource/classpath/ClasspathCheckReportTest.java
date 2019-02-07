@@ -41,7 +41,7 @@ public class ClasspathCheckReportTest {
             .setSourceClassName("ClassB")
             .build();
     StaticLinkageError<ClassSymbolReference> linkageErrorMissingClass =
-        StaticLinkageError.errorMissingTargetClass(classSymbolReference);
+        StaticLinkageError.errorMissingTargetClass(classSymbolReference, true);
     ImmutableList<StaticLinkageError<ClassSymbolReference>> missingClassErrors =
         ImmutableList.of(linkageErrorMissingClass);
 
@@ -54,7 +54,7 @@ public class ClasspathCheckReportTest {
             .setSourceClassName("ClassB")
             .build();
     StaticLinkageError<MethodSymbolReference> linkageErrorMissingMethod =
-        StaticLinkageError.errorMissingMember(methodSymbolReference, null);
+        StaticLinkageError.errorMissingMember(methodSymbolReference, null, true);
     ImmutableList<StaticLinkageError<MethodSymbolReference>> missingMethodErrors =
         ImmutableList.of(linkageErrorMissingMethod);
 
@@ -65,7 +65,7 @@ public class ClasspathCheckReportTest {
             .setSourceClassName("ClassD")
             .build();
     StaticLinkageError<FieldSymbolReference> linkageErrorMissingField =
-        StaticLinkageError.errorMissingMember(fieldSymbolReference, null);
+        StaticLinkageError.errorMissingMember(fieldSymbolReference, null, true);
     ImmutableList<StaticLinkageError<FieldSymbolReference>> missingFieldErrors =
         ImmutableList.of(linkageErrorMissingField);
 
