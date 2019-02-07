@@ -40,19 +40,15 @@ public class ClasspathCheckerArgumentsTest {
     RepositoryUtility.setRepositories(ImmutableList.of(), true);
   }
 
-  /*
   @Test
   public void parseCommandLineArguments_shortOptions_bom()
       throws ParseException, RepositoryException {
+    // This should not raise exception
     ClasspathCheckerArguments parsedArguments =
-        ClasspathCheckerArguments.readCommandLine(
-            "-b", "com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
+        ClasspathCheckerArguments.readCommandLine("-b", "abc.com:dummy:1.2");
 
-    Assert.assertEquals(
-        "Cloud OSS BOM should be resolved to have Guava as first element",
-        "guava",
-        parsedArguments.getArtifacts().get(0).getArtifactId());
-  } */
+    Truth.assertThat(parsedArguments.getArtifacts()).isEmpty();
+  }
 
   @Test
   public void parseCommandLineArguments_duplicates() {
