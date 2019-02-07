@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -51,23 +52,44 @@ import org.eclipse.aether.artifact.DefaultArtifact;
  *     "https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/dependencies#input">
  *     Classpath Checker: Input</a>
  */
-public class ClasspathCheckOption {
+class ClasspathCheckOption {
 
   private static final Options options = configureOptions();
-
   private static final HelpFormatter helpFormatter = new HelpFormatter();
 
-  static CommandLine readCommandLine(String... arguments) throws ParseException {
+  private final CommandLine commandLine;
+  private ImmutableList<Path> cachedInputClasspath;
+
+  private ClasspathCheckOption(CommandLine commandLine) {
+    this.commandLine = commandLine;
+  }
+
+  static ClasspathCheckOption readCommandLine(String... arguments) throws ParseException {
     // TODO is this reentrant? Can we reuse it?
     // https://issues.apache.org/jira/browse/CLI-291
     CommandLineParser parser = new DefaultParser();
 
     try {
       CommandLine commandLine = parser.parse(options, arguments);
-      return commandLine;
+      setRepositories(commandLine);
+      return new ClasspathCheckOption(commandLine);
     } catch (ParseException ex) {
       helpFormatter.printHelp("ClasspathChecker", options);
       throw ex;
+    }
+  }
+
+  @VisibleForTesting
+  static void setRepositories(CommandLine commandLine) throws ParseException {
+    if (!commandLine.hasOption("m")) {
+      return;
+    }
+    try {
+      boolean addMavenCentral = !commandLine.hasOption("nm");
+      RepositoryUtility.setRepositories(
+          Arrays.asList(commandLine.getOptionValues("m")), addMavenCentral);
+    } catch (IllegalArgumentException ex) {
+      throw new ParseException("Invalid URL specified for Maven repositories: " + ex.getMessage());
     }
   }
 
@@ -130,8 +152,8 @@ public class ClasspathCheckOption {
     return options;
   }
 
-  static ImmutableList<Artifact> parseArtifacts(CommandLine commandLine)
-      throws RepositoryException {
+  /** Returns a list of artifacts specified in the option of BOM or coordinates list. */
+  ImmutableList<Artifact> getArtifacts() throws RepositoryException {
     if (commandLine.hasOption("b")) {
       String bomCoordinates = commandLine.getOptionValue("b");
       DefaultArtifact bomArtifact = new DefaultArtifact(bomCoordinates);
@@ -148,13 +170,19 @@ public class ClasspathCheckOption {
     }
   }
 
-  static ImmutableList<Path> parseInputClasspath(CommandLine commandLine)
-      throws RepositoryException, ParseException {
-    setRepositories(commandLine);
+  /**
+   * Returns a list of absolute paths to jar files for the option. The list includes dependencies if
+   * BOM or Maven coordinates are specified in the option.
+   */
+  ImmutableList<Path> getInputClasspath() throws RepositoryException {
+    if (cachedInputClasspath != null) {
+      // Avoid unnecessary dependency resolution, which Cloud OSS BOM takes around 4 seconds
+      return cachedInputClasspath;
+    }
 
     if (commandLine.hasOption("b") || commandLine.hasOption("a")) {
-      List<Artifact> artifacts = parseArtifacts(commandLine);
-      return ClassPathBuilder.artifactsToClasspath(artifacts);
+      List<Artifact> artifacts = getArtifacts();
+      cachedInputClasspath = ClassPathBuilder.artifactsToClasspath(artifacts);
     } else {
       // b, a, or j is specified in OptionGroup
       String[] jarFiles = commandLine.getOptionValues("j");
@@ -162,35 +190,27 @@ public class ClasspathCheckOption {
           Arrays.stream(jarFiles)
               .map(name -> Paths.get(name).toAbsolutePath())
               .collect(toImmutableList());
-      return jarFilesInArguments;
+      cachedInputClasspath = jarFilesInArguments;
     }
-  }
-
-  static void setRepositories(CommandLine commandLine) throws ParseException {
-    if (!commandLine.hasOption("m")) {
-      return;
-    }
-    try {
-      boolean addMavenCentral = !commandLine.hasOption("nm");
-      RepositoryUtility.setRepositories(
-          Arrays.asList(commandLine.getOptionValues("m")), addMavenCentral);
-    } catch (IllegalArgumentException ex) {
-      throw new ParseException("Invalid URL specified for Maven repositories: " + ex.getMessage());
-    }
+    return cachedInputClasspath;
   }
 
   /** Returns a set of jar files that hold entry point classes. */
-  static ImmutableSet<Path> parseEntryPointJars(CommandLine commandLine, List<Path> inputClasspath)
-      throws RepositoryException {
+  ImmutableSet<Path> getEntryPointJars() throws RepositoryException {
     if (commandLine.hasOption("a") || commandLine.hasOption('b')) {
       // For an artifact list (or a BOM), the first elements in inputClasspath are the artifacts
       // specified the list, followed by their dependencies.
-      int artifactCount = parseArtifacts(commandLine).size();
+      int artifactCount = getArtifacts().size();
       // For Maven artifact list (or a BOM), entry point classes are ones in the list
-      return ImmutableSet.copyOf(inputClasspath.subList(0, artifactCount));
+      return ImmutableSet.copyOf(getInputClasspath().subList(0, artifactCount));
     } else {
       // For list of jar files, entry point classes are all classes in the files
-      return ImmutableSet.copyOf(inputClasspath);
+      return ImmutableSet.copyOf(getInputClasspath());
     }
+  }
+
+  @VisibleForTesting
+  CommandLine getCommandLine() {
+    return commandLine;
   }
 }

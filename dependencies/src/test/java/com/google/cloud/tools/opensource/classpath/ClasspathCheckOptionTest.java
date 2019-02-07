@@ -42,7 +42,8 @@ public class ClasspathCheckOptionTest {
 
   @Test
   public void parseCommandLineOptions_shortOptions_bom() throws ParseException {
-    CommandLine parsedOption = ClasspathCheckOption.readCommandLine("-b", "abc.com:dummy:1.2");
+    CommandLine parsedOption =
+        ClasspathCheckOption.readCommandLine("-b", "abc.com:dummy:1.2").getCommandLine();
 
     Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getOptionObject('b'));
   }
@@ -63,14 +64,16 @@ public class ClasspathCheckOptionTest {
   @Test
   public void testReadCommandLine_multipleArtifacts() throws ParseException {
     CommandLine commandLine =
-        ClasspathCheckOption.readCommandLine("--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2");
+        ClasspathCheckOption.readCommandLine("--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2")
+            .getCommandLine();
     Truth.assertThat(commandLine.getOptionValues("a")).hasLength(2);
   }
 
   @Test
   public void testReadCommandLine_multipleJars() throws ParseException {
     CommandLine commandLine =
-        ClasspathCheckOption.readCommandLine("-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar");
+        ClasspathCheckOption.readCommandLine("-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar")
+            .getCommandLine();
     Truth.assertThat(commandLine.getOptionValues("j")).hasLength(3);
   }
 
@@ -90,7 +93,8 @@ public class ClasspathCheckOptionTest {
       throws ParseException, RepositoryException {
     CommandLine commandLine =
         ClasspathCheckOption.readCommandLine(
-            "-j", "dummy.jar", "-m", "https://repo.spring.io/milestone");
+                "-j", "dummy.jar", "-m", "https://repo.spring.io/milestone")
+            .getCommandLine();
     ClasspathCheckOption.setRepositories(commandLine);
 
     // This artifact does not exist in Maven central, but it is in Spring's repository
@@ -106,7 +110,8 @@ public class ClasspathCheckOptionTest {
       throws ParseException {
     CommandLine commandLine =
         ClasspathCheckOption.readCommandLine(
-            "-j", "dummy.jar", "-m", "https://repo.spring.io/milestone", "--no-maven-central");
+                "-j", "dummy.jar", "-m", "https://repo.spring.io/milestone", "--no-maven-central")
+            .getCommandLine();
     ClasspathCheckOption.setRepositories(commandLine);
 
     CollectRequest collectRequest = new CollectRequest();
@@ -126,12 +131,9 @@ public class ClasspathCheckOptionTest {
     assertMavenRepositoryIsInvalid("http://foo^bar");
   }
 
-  private static void assertMavenRepositoryIsInvalid(String repositoryUrl)
-      throws ParseException {
-    CommandLine commandLine =
-        ClasspathCheckOption.readCommandLine("-j", "dummy.jar", "-m", repositoryUrl);
+  private static void assertMavenRepositoryIsInvalid(String repositoryUrl) {
     try {
-      ClasspathCheckOption.setRepositories(commandLine);
+      ClasspathCheckOption.readCommandLine("-j", "dummy.jar", "-m", repositoryUrl).getCommandLine();
       Assert.fail("URL " + repositoryUrl + " should be invalidated");
     } catch (ParseException ex) {
       // pass
@@ -141,7 +143,8 @@ public class ClasspathCheckOptionTest {
   @Test
   public void testConfigureAdditionalMavenRepositories_fileRepositoryUrl() throws ParseException {
     CommandLine commandLine =
-        ClasspathCheckOption.readCommandLine("-j", "dummy.jar", "-m", "file:///var/tmp");
+        ClasspathCheckOption.readCommandLine("-j", "dummy.jar", "-m", "file:///var/tmp")
+            .getCommandLine();
 
     // This method should not raise an exception
     ClasspathCheckOption.setRepositories(commandLine);
@@ -151,7 +154,8 @@ public class ClasspathCheckOptionTest {
   public void testReadCommandLine_multipleRepositoriesSeparatedByComma() throws ParseException {
     CommandLine commandLine =
         ClasspathCheckOption.readCommandLine(
-            "-j", "dummy.jar", "-m", "file:///var/tmp,https://repo.spring.io/milestone");
+                "-j", "dummy.jar", "-m", "file:///var/tmp,https://repo.spring.io/milestone")
+            .getCommandLine();
     Truth.assertThat(commandLine.getOptionValues("m")).hasLength(2);
   }
 }
