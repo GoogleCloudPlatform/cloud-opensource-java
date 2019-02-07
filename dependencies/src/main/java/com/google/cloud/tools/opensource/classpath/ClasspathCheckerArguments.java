@@ -59,6 +59,7 @@ final class ClasspathCheckerArguments {
 
   private final CommandLine commandLine;
   private ImmutableList<Path> cachedInputClasspath;
+  private ImmutableList<Artifact> cachedArtifacts;
   private final ImmutableList<String> extraMavenRepositoryUrls;
   private final boolean addMavenCentral;
 
@@ -151,16 +152,21 @@ final class ClasspathCheckerArguments {
 
   /** Returns a list of artifacts specified in the option of BOM or coordinates list. */
   ImmutableList<Artifact> getArtifacts() throws RepositoryException {
+    if (cachedArtifacts != null) {
+      return cachedArtifacts;
+    }
+
     if (commandLine.hasOption("b")) {
       String bomCoordinates = commandLine.getOptionValue("b");
       DefaultArtifact bomArtifact = new DefaultArtifact(bomCoordinates);
-      return ImmutableList.copyOf(RepositoryUtility.readBom(bomArtifact));
+      return cachedArtifacts = ImmutableList.copyOf(RepositoryUtility.readBom(bomArtifact));
     } else if (commandLine.hasOption("a")) {
       // option 'a'
       String[] mavenCoordinatesOption = commandLine.getOptionValues("a");
-      return Arrays.stream(mavenCoordinatesOption)
-          .map(DefaultArtifact::new)
-          .collect(toImmutableList());
+      return cachedArtifacts =
+          Arrays.stream(mavenCoordinatesOption)
+              .map(DefaultArtifact::new)
+              .collect(toImmutableList());
     } else {
       throw new IllegalArgumentException(
           "The arguments must have option 'a' or 'b' to list Maven artifacts");
