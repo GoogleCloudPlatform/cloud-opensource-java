@@ -32,7 +32,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ClasspathCheckOptionTest {
+public class ClasspathCheckerArgumentsTest {
 
   @After
   public void cleanup() {
@@ -41,17 +41,22 @@ public class ClasspathCheckOptionTest {
   }
 
   @Test
-  public void parseCommandLineOptions_shortOptions_bom() throws ParseException {
-    CommandLine parsedOption =
-        ClasspathCheckOption.readCommandLine("-b", "abc.com:dummy:1.2").getCommandLine();
+  public void parseCommandLineArguments_shortOptions_bom()
+      throws ParseException, RepositoryException {
+    ClasspathCheckerArguments parsedArguments =
+        ClasspathCheckerArguments.readCommandLine(
+            "-b", "com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
 
-    Assert.assertEquals("abc.com:dummy:1.2", parsedOption.getOptionObject('b'));
+    Assert.assertEquals(
+        "Cloud OSS BOM should be resolved to have Guava as first element",
+        "guava",
+        parsedArguments.getArtifacts().get(0).getArtifactId());
   }
 
   @Test
-  public void parseCommandLineOptions_duplicates() {
+  public void parseCommandLineArguments_duplicates() {
     try {
-      ClasspathCheckOption.readCommandLine(
+      ClasspathCheckerArguments.readCommandLine(
           "--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2", "-b", "abc.com:dummy:1.2");
       Assert.fail();
     } catch (ParseException ex) {
@@ -63,26 +68,25 @@ public class ClasspathCheckOptionTest {
   }
 
   @Test
-  public void testReadCommandLine_multipleArtifacts() throws ParseException {
-    CommandLine commandLine =
-        ClasspathCheckOption.readCommandLine("--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2")
-            .getCommandLine();
-    Truth.assertThat(commandLine.getOptionValues("a")).hasLength(2);
+  public void testReadCommandLine_multipleArtifacts() throws ParseException, RepositoryException {
+    ClasspathCheckerArguments parsedArguments =
+        ClasspathCheckerArguments.readCommandLine(
+            "--artifacts", "com.google.guava:guava:26.0,io.grpc:grpc-core:1.17.1");
+    Truth.assertThat(parsedArguments.getArtifacts()).hasSize(2);
   }
 
   @Test
-  public void testReadCommandLine_multipleJars() throws ParseException {
-    CommandLine commandLine =
-        ClasspathCheckOption.readCommandLine("-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar")
-            .getCommandLine();
-    Truth.assertThat(commandLine.getOptionValues("j")).hasLength(3);
+  public void testReadCommandLine_multipleJars() throws ParseException, RepositoryException {
+    ClasspathCheckerArguments parsedArguments =
+        ClasspathCheckerArguments.readCommandLine(
+            "-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar");
+    Truth.assertThat(parsedArguments.getInputClasspath()).hasSize(3);
   }
 
-
   @Test
-  public void parseCommandLineOptions_invalidOption() {
+  public void parseCommandLineArguments_invalidOption() {
     try {
-      ClasspathCheckOption.readCommandLine("-x"); // No such option
+      ClasspathCheckerArguments.readCommandLine("-x"); // No such option
       Assert.fail();
     } catch (ParseException ex) {
       Assert.assertEquals("Unrecognized option: -x", ex.getMessage());
@@ -92,11 +96,11 @@ public class ClasspathCheckOptionTest {
   @Test
   public void testConfigureAdditionalMavenRepositories_addingSpringRepository()
       throws ParseException, RepositoryException {
-    CommandLine commandLine =
-        ClasspathCheckOption.readCommandLine(
-                "-j", "dummy.jar", "-m", "https://repo.spring.io/milestone")
-            .getCommandLine();
-    ClasspathCheckOption.setRepositories(commandLine);
+    ClasspathCheckerArguments parsedArguments =
+        ClasspathCheckerArguments.readCommandLine(
+            "-j", "dummy.jar", "-m", "https://repo.spring.io/milestone");
+    RepositoryUtility.setRepositories(
+        parsedArguments.getExtraMavenRepositoryUrls(), parsedArguments.getAddMavenCentral());
 
     // This artifact does not exist in Maven central, but it is in Spring's repository
     // Spring-asm is used here because it does not have complex dependencies
@@ -109,11 +113,11 @@ public class ClasspathCheckOptionTest {
   @Test
   public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral()
       throws ParseException {
-    CommandLine commandLine =
-        ClasspathCheckOption.readCommandLine(
-                "-j", "dummy.jar", "-m", "https://repo.spring.io/milestone", "--no-maven-central")
-            .getCommandLine();
-    ClasspathCheckOption.setRepositories(commandLine);
+    ClasspathCheckerArguments parsedArguments =
+        ClasspathCheckerArguments.readCommandLine(
+            "-j", "dummy.jar", "-m", "https://repo.spring.io/milestone", "--no-maven-central");
+    RepositoryUtility.setRepositories(
+        parsedArguments.getExtraMavenRepositoryUrls(), parsedArguments.getAddMavenCentral());
 
     CollectRequest collectRequest = new CollectRequest();
     RepositoryUtility.addRepositoriesToRequest(collectRequest);
@@ -124,8 +128,7 @@ public class ClasspathCheckOptionTest {
   }
 
   @Test
-  public void testConfigureAdditionalMavenRepositories_invalidRepositoryUrl()
-      throws ParseException {
+  public void testConfigureAdditionalMavenRepositories_invalidRepositoryUrl() {
     assertMavenRepositoryIsInvalid("foobar");
     assertMavenRepositoryIsInvalid("_http_file__https");
     assertMavenRepositoryIsInvalid("localhost/abc");
@@ -134,7 +137,7 @@ public class ClasspathCheckOptionTest {
 
   private static void assertMavenRepositoryIsInvalid(String repositoryUrl) {
     try {
-      ClasspathCheckOption.readCommandLine("-j", "dummy.jar", "-m", repositoryUrl).getCommandLine();
+      ClasspathCheckerArguments.readCommandLine("-j", "dummy.jar", "-m", repositoryUrl);
       Assert.fail("URL " + repositoryUrl + " should be invalidated");
     } catch (ParseException ex) {
       // pass
@@ -143,20 +146,20 @@ public class ClasspathCheckOptionTest {
 
   @Test
   public void testConfigureAdditionalMavenRepositories_fileRepositoryUrl() throws ParseException {
-    CommandLine commandLine =
-        ClasspathCheckOption.readCommandLine("-j", "dummy.jar", "-m", "file:///var/tmp")
-            .getCommandLine();
+    ClasspathCheckerArguments parsedArguments =
+        ClasspathCheckerArguments.readCommandLine("-j", "dummy.jar", "-m", "file:///var/tmp");
 
     // This method should not raise an exception
-    ClasspathCheckOption.setRepositories(commandLine);
+    RepositoryUtility.setRepositories(
+        parsedArguments.getExtraMavenRepositoryUrls(), parsedArguments.getAddMavenCentral());
   }
 
   @Test
   public void testReadCommandLine_multipleRepositoriesSeparatedByComma() throws ParseException {
-    CommandLine commandLine =
-        ClasspathCheckOption.readCommandLine(
-                "-j", "dummy.jar", "-m", "file:///var/tmp,https://repo.spring.io/milestone")
-            .getCommandLine();
-    Truth.assertThat(commandLine.getOptionValues("m")).hasLength(2);
+    ClasspathCheckerArguments parsedArguments =
+        ClasspathCheckerArguments.readCommandLine(
+            "-j", "dummy.jar", "-m", "file:///var/tmp,https://repo.spring.io/milestone");
+
+    Truth.assertThat(parsedArguments.getExtraMavenRepositoryUrls()).hasSize(2);
   }
 }

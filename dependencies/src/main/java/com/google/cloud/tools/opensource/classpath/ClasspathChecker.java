@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHierarchy;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -92,10 +93,16 @@ public class ClasspathChecker {
   public static void main(String[] arguments)
       throws IOException, RepositoryException, ParseException {
 
-    ClasspathCheckOption linkageCheckOption = ClasspathCheckOption.readCommandLine(arguments);
+    ClasspathCheckerArguments linkageCheckerArguments =
+        ClasspathCheckerArguments.readCommandLine(arguments);
+
+    RepositoryUtility.setRepositories(linkageCheckerArguments.getExtraMavenRepositoryUrls(),
+        linkageCheckerArguments.getAddMavenCentral());
 
     ClasspathChecker classpathChecker =
-        create(linkageCheckOption.getInputClasspath(), linkageCheckOption.getEntryPointJars());
+        create(
+            linkageCheckerArguments.getInputClasspath(),
+            linkageCheckerArguments.getEntryPointJars());
     ClasspathCheckReport report = classpathChecker.findLinkageErrors();
 
     System.out.println(report);

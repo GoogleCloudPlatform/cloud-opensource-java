@@ -223,22 +223,7 @@ public final class RepositoryUtility {
       Iterable<String> mavenRepositoryUrls, boolean addMavenCentral) {
     ImmutableList.Builder<RemoteRepository> repositoryListBuilder = ImmutableList.builder();
     for (String mavenRepositoryUrl : mavenRepositoryUrls) {
-      try {
-        // Because the protocol is not an empty string, this URI is absolute.
-        new URI(mavenRepositoryUrl);
-      } catch (URISyntaxException ex) {
-        throw new IllegalArgumentException("Invalid URL syntax: " + mavenRepositoryUrl);
-      }
-
-      RemoteRepository repository =
-          new RemoteRepository.Builder(null, "default", mavenRepositoryUrl).build();
-
-      checkArgument(
-          ALLOWED_REPOSITORY_URL_SCHEMES.contains(repository.getProtocol()),
-          "Scheme: '%s' is not in %s",
-          repository.getProtocol(),
-          ALLOWED_REPOSITORY_URL_SCHEMES);
-
+      RemoteRepository repository = mavenRepositoryFromUrl(mavenRepositoryUrl);
       repositoryListBuilder.add(repository);
     }
 
@@ -254,5 +239,30 @@ public final class RepositoryUtility {
     for (RemoteRepository repository : mavenRepositories) {
       collectRequest.addRepository(repository);
     }
+  }
+
+  /**
+   * Returns Maven repository specified as {@code mavenRepositoryUrl}, after validating the syntax
+   * of the URL.
+   *
+   * @throws IllegalArgumentException if the URL is malformed for a Maven repository
+   */
+  public static RemoteRepository mavenRepositoryFromUrl(String mavenRepositoryUrl) {
+    try {
+      // Because the protocol is not an empty string, this URI is absolute.
+      new URI(mavenRepositoryUrl);
+    } catch (URISyntaxException ex) {
+      throw new IllegalArgumentException("Invalid URL syntax: " + mavenRepositoryUrl);
+    }
+
+    RemoteRepository repository =
+        new RemoteRepository.Builder(null, "default", mavenRepositoryUrl).build();
+
+    checkArgument(
+        ALLOWED_REPOSITORY_URL_SCHEMES.contains(repository.getProtocol()),
+        "Scheme: '%s' is not in %s",
+        repository.getProtocol(),
+        ALLOWED_REPOSITORY_URL_SCHEMES);
+    return repository;
   }
 }

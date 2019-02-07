@@ -16,10 +16,10 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -52,44 +52,43 @@ import org.eclipse.aether.artifact.DefaultArtifact;
  *     "https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/dependencies#input">
  *     Classpath Checker: Input</a>
  */
-class ClasspathCheckOption {
+final class ClasspathCheckerArguments {
 
   private static final Options options = configureOptions();
   private static final HelpFormatter helpFormatter = new HelpFormatter();
 
   private final CommandLine commandLine;
   private ImmutableList<Path> cachedInputClasspath;
+  private final ImmutableList<String> extraMavenRepositoryUrls;
+  private final boolean addMavenCentral;
 
-  private ClasspathCheckOption(CommandLine commandLine) {
-    this.commandLine = commandLine;
+  private ClasspathCheckerArguments(CommandLine commandLine) {
+    this.commandLine = checkNotNull(commandLine);
+    this.extraMavenRepositoryUrls =
+        commandLine.hasOption("m")
+            ? ImmutableList.copyOf(commandLine.getOptionValues("m"))
+            : ImmutableList.of();
+    this.addMavenCentral = !commandLine.hasOption("nm");
   }
 
-  static ClasspathCheckOption readCommandLine(String... arguments) throws ParseException {
+  static ClasspathCheckerArguments readCommandLine(String... arguments) throws ParseException {
     // TODO is this reentrant? Can we reuse it?
     // https://issues.apache.org/jira/browse/CLI-291
     CommandLineParser parser = new DefaultParser();
 
     try {
       CommandLine commandLine = parser.parse(options, arguments);
-      setRepositories(commandLine);
-      return new ClasspathCheckOption(commandLine);
+
+      ClasspathCheckerArguments classpathCheckerArguments =
+          new ClasspathCheckerArguments(commandLine);
+      classpathCheckerArguments.extraMavenRepositoryUrls.forEach(
+          RepositoryUtility::mavenRepositoryFromUrl);
+      return classpathCheckerArguments;
+    } catch (IllegalArgumentException ex) {
+      throw new ParseException("Invalid URL syntax in Maven repository URL");
     } catch (ParseException ex) {
       helpFormatter.printHelp("ClasspathChecker", options);
       throw ex;
-    }
-  }
-
-  @VisibleForTesting
-  static void setRepositories(CommandLine commandLine) throws ParseException {
-    if (!commandLine.hasOption("m")) {
-      return;
-    }
-    try {
-      boolean addMavenCentral = !commandLine.hasOption("nm");
-      RepositoryUtility.setRepositories(
-          Arrays.asList(commandLine.getOptionValues("m")), addMavenCentral);
-    } catch (IllegalArgumentException ex) {
-      throw new ParseException("Invalid URL specified for Maven repositories: " + ex.getMessage());
     }
   }
 
@@ -186,11 +185,10 @@ class ClasspathCheckOption {
     } else {
       // b, a, or j is specified in OptionGroup
       String[] jarFiles = commandLine.getOptionValues("j");
-      ImmutableList<Path> jarFilesInArguments =
+      cachedInputClasspath =
           Arrays.stream(jarFiles)
               .map(name -> Paths.get(name).toAbsolutePath())
               .collect(toImmutableList());
-      cachedInputClasspath = jarFilesInArguments;
     }
     return cachedInputClasspath;
   }
@@ -209,8 +207,11 @@ class ClasspathCheckOption {
     }
   }
 
-  @VisibleForTesting
-  CommandLine getCommandLine() {
-    return commandLine;
+  ImmutableList<String> getExtraMavenRepositoryUrls() {
+    return extraMavenRepositoryUrls;
+  }
+
+  boolean getAddMavenCentral() {
+    return addMavenCentral;
   }
 }

@@ -624,9 +624,9 @@ public class ClasspathCheckerTest {
       throws RepositoryException, ParseException {
     String bomCoordinates = "com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT";
 
-    ClasspathCheckOption parsedOption =
-        ClasspathCheckOption.readCommandLine("-b", bomCoordinates);
-    ImmutableList<Path> inputClasspath = parsedOption.getInputClasspath();
+    ClasspathCheckerArguments parsedArguments =
+        ClasspathCheckerArguments.readCommandLine("-b", bomCoordinates);
+    ImmutableList<Path> inputClasspath = parsedArguments.getInputClasspath();
     Truth.assertThat(inputClasspath).isNotEmpty();
     // These 2 files are the first 2 artifacts in the BOM
     Truth.assertWithMessage("The files should match the elements in the BOM")
@@ -648,9 +648,9 @@ public class ClasspathCheckerTest {
         "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha,"
             + "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
 
-    ClasspathCheckOption parsedOption =
-        ClasspathCheckOption.readCommandLine("--artifacts", mavenCoordinates);
-    List<Path> inputClasspath = parsedOption.getInputClasspath();
+    ClasspathCheckerArguments parsedArguments =
+        ClasspathCheckerArguments.readCommandLine("--artifacts", mavenCoordinates);
+    List<Path> inputClasspath = parsedArguments.getInputClasspath();
 
     Truth.assertWithMessage(
             "The first 2 items in the classpath should be the 2 artifacts in the input")
@@ -676,11 +676,10 @@ public class ClasspathCheckerTest {
     //             org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not found in Maven central)
     // Because such case is possible, ClasspathChecker should not abort execution when
     // the unavailable dependency is under certain condition
-    ClasspathCheckOption parsedOption =
-        ClasspathCheckOption.readCommandLine(
-            "--artifacts", "com.google.guava:guava-gwt:20.0");
+    ClasspathCheckerArguments parsedArguments =
+        ClasspathCheckerArguments.readCommandLine("--artifacts", "com.google.guava:guava-gwt:20.0");
 
-    ImmutableList<Path> inputClasspath = parsedOption.getInputClasspath();
+    ImmutableList<Path> inputClasspath = parsedArguments.getInputClasspath();
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
@@ -693,12 +692,12 @@ public class ClasspathCheckerTest {
     // tomcat-jasper has missing dependency (not optional):
     //   org.apache.tomcat:tomcat-jasper:jar:8.0.9
     //     org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not found in Maven central)
-    ClasspathCheckOption parsedOption =
-        ClasspathCheckOption.readCommandLine(
+    ClasspathCheckerArguments parsedArguments =
+        ClasspathCheckerArguments.readCommandLine(
             "--artifacts", "org.apache.tomcat:tomcat-jasper:8.0.9");
 
     try {
-      parsedOption.getInputClasspath();
+      parsedArguments.getInputClasspath();
       Assert.fail(
           "Because the unavailable dependency is not optional, it should throw an exception");
     } catch (RepositoryException ex) {
@@ -712,9 +711,9 @@ public class ClasspathCheckerTest {
   public void testGenerateInputClasspath_jarFileList()
       throws RepositoryException, ParseException {
 
-    ClasspathCheckOption parsedOption =
-        ClasspathCheckOption.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
-    List<Path> inputClasspath = parsedOption.getInputClasspath();
+    ClasspathCheckerArguments parsedArguments =
+        ClasspathCheckerArguments.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
+    List<Path> inputClasspath = parsedArguments.getInputClasspath();
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
