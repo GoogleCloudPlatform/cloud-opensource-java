@@ -54,8 +54,18 @@
    margin-bottom: 0;
  }
 
- .static-linkage-check-dependency-paths {
-   margin-left: 15pt;
+ .static-linkage-check-dependency-paths, .jar-linkage-report {
+   margin-left: 1em;
+ }
+
+ p.jar-linkage-report-cause {
+   margin-bottom: 0pt;
+   margin-left: 2em;
+ }
+
+ ul.jar-linkage-report-cause {
+   margin-top: 0em;
+   margin-left: 3em;
  }
 
  /* ----- Statistic ----- */

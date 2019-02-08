@@ -16,7 +16,11 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.truth.Truth;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Assert;
@@ -63,7 +67,7 @@ public class JarLinkageReportTest {
             .setInterfaceMethod(false)
             .setMethodName("methodX")
             .setDescriptor("java.lang.String")
-            .setSourceClassName("ClassC")
+            .setSourceClassName("ClassC$InnerC")
             .build();
     StaticLinkageError<MethodSymbolReference> linkageErrorMissingMethodByClass =
         StaticLinkageError.errorMissingTargetClass(methodSymbolReferenceDueToMissingClass, false);
@@ -125,7 +129,7 @@ public class JarLinkageReportTest {
             + "methodName=methodX, interfaceMethod=false, descriptor=java.lang.String}"
             + ", reason: SYMBOL_NOT_FOUND, target class from dummy.jar"
             + ", isReachable: true\n"
-            + "  MethodSymbolReference{sourceClassName=ClassC, targetClassName=ClassA,"
+            + "  MethodSymbolReference{sourceClassName=ClassC$InnerC, targetClassName=ClassA,"
             + " methodName=methodX, interfaceMethod=false, descriptor=java.lang.String}, "
             + "reason: CLASS_NOT_FOUND, target class location not found"
             + ", isReachable: false\n"
@@ -135,4 +139,16 @@ public class JarLinkageReportTest {
         jarLinkageReport.toString());
   }
 
+  @Test
+  public void testGetCauseToSourceClasses() {
+    ImmutableMultimap<LinkageErrorCause, String> causeToSourceClasses =
+        jarLinkageReport.getCauseToSourceClasses();
+
+    ImmutableSet<LinkageErrorCause> linkageErrorCauses = causeToSourceClasses.keySet();
+    Truth.assertThat(linkageErrorCauses).hasSize(3);
+    ImmutableCollection<String> classesForFirstCause =
+        causeToSourceClasses.get(linkageErrorCauses.iterator().next());
+    // InnerC should not appear here
+    Truth.assertThat(classesForFirstCause).containsExactly("ClassB", "ClassC");
+  }
 }

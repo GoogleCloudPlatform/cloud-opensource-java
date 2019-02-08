@@ -127,7 +127,7 @@
 
         <#list causeToSourceClasses.keySet() as key >
           <p class="jar-linkage-report-cause">${key?html} Referenced from</p>
-          <ul>
+          <ul class="jar-linkage-report-cause">
             <#list causeToSourceClasses.get(key) as sourceClass>
               <li class="jar-linkage-report-source-class"><code>${sourceClass?html}</code></li>
             </#list>

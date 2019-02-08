@@ -121,13 +121,13 @@ public abstract class JarLinkageReport {
           allErrorsForKey.stream()
               .map(StaticLinkageError::getReference)
               .map(SymbolReference::getSourceClassName)
+              .map(className -> className.split("\\$")[0]) // Removing duplicate inner classes
               .collect(toImmutableSet()));
     }
     return builder.build();
   }
 
   public int getTotalErrorCount() {
-    return getMissingClassErrors().size() + getMissingMethodErrors().size()
-        + getMissingFieldErrors().size();
+    return getCauseToSourceClasses().size();
   }
 }
