@@ -89,7 +89,7 @@ public abstract class JarLinkageReport {
     return builder.toString();
   }
 
-  /** Returns map from the cause of linkage errors and class names affected by the errors. */
+  /** Returns map from the cause of linkage errors to class names affected by the errors. */
   public ImmutableMultimap<LinkageErrorCause, String> getCauseToSourceClasses() {
     ImmutableListMultimap<LinkageErrorCause, StaticLinkageError<ClassSymbolReference>>
         groupedClassErrors = Multimaps.index(getMissingClassErrors(), LinkageErrorCause::from);
