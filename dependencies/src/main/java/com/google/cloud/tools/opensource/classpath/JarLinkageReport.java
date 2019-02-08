@@ -16,9 +16,12 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -86,13 +89,8 @@ public abstract class JarLinkageReport {
     return builder.toString();
   }
 
-  /**
-   * Returns human-friendly summary of the report grouping the errors by {@link LinkageErrorCause}.
-   */
-  public String formatByGroup() {
-    String indent = "  ";
-    StringBuilder builder = new StringBuilder();
-
+  /** Returns map from the cause of linkage errors and class names affected by the errors. */
+  public ImmutableMultimap<LinkageErrorCause, String> getCauseToSourceClasses() {
     ImmutableListMultimap<LinkageErrorCause, StaticLinkageError<ClassSymbolReference>>
         groupedClassErrors = Multimaps.index(getMissingClassErrors(), LinkageErrorCause::from);
 
@@ -110,31 +108,22 @@ public abstract class JarLinkageReport {
             .addAll(groupedFieldErrors.keySet())
             .build();
 
-    String missingMembers = getTotalErrorCount() == 1 ? "1 linkage error in "
-        : getTotalErrorCount() + " linkage errors in ";
-    String inClasses = combinedKeys.size() == 1 ? "1 class\n" : combinedKeys.size() + " classes\n";
-    builder.append(missingMembers + inClasses);
+    ImmutableMultimap.Builder<LinkageErrorCause, String> builder = ImmutableMultimap.builder();
     for (LinkageErrorCause key : combinedKeys) {
-      builder.append(indent);
-      builder.append(key);
       List<StaticLinkageError<? extends SymbolReference>> allErrorsForKey =
           Lists.newArrayList(
               Iterables.concat(
                   groupedClassErrors.get(key),
                   groupedMethodErrors.get(key),
                   groupedFieldErrors.get(key)));
-      String sourceClassJoined =
+      builder.putAll(
+          key,
           allErrorsForKey.stream()
               .map(StaticLinkageError::getReference)
               .map(SymbolReference::getSourceClassName)
-              .distinct()
-              .collect(Collectors.joining(", "));
-
-      builder.append("Referenced by: ");
-      builder.append(sourceClassJoined);
-      builder.append("\n");
+              .collect(toImmutableSet()));
     }
-    return builder.toString();
+    return builder.build();
   }
 
   public int getTotalErrorCount() {

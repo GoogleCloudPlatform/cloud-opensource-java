@@ -150,8 +150,9 @@ public class DashboardTest {
       }
 
       // TODO these should all be separate tests for the different components
-      Node linkage = document.query("//pre[@id='static-linkage-errors']").get(0);
-      Assert.assertFalse(linkage.getValue().contains("(0 errors)"));
+      Node linkage = document.query("//p[@class='jar-linkage-report']").get(0);
+      // grpc-testing-1.17.1, shown as first item in linkage errors, has these errors
+      Assert.assertTrue(linkage.getValue().contains("9 linkage errors in 3 classes"));
 
       Nodes li = document.query("//ul[@id='recommended']/li");
       Assert.assertTrue(li.size() > 100);
@@ -203,19 +204,22 @@ public class DashboardTest {
     try (InputStream source = Files.newInputStream(grpcAltsHtml)) {
       Document document = builder.build(source);
 
-      Nodes staticLinkageCheckMessage = document.query("//pre[@class='jar-linkage-report']");
+      Nodes staticLinkageCheckMessage = document.query("//p[@class='jar-linkage-report']");
       Assert.assertEquals(1, staticLinkageCheckMessage.size());
       Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
           .contains("4 linkage errors in 2 classes");
 
-      Nodes jarLinkageReportNode = document.query("//pre[@class='jar-linkage-report']");
-      boolean foundGrpcCoreError = false;
+      Nodes jarLinkageReportNode = document.query("//p[@class='jar-linkage-report-cause']");
+      boolean foundJmdkError = false;
       for (int i = 0; i < jarLinkageReportNode.size(); i++) {
-        if (jarLinkageReportNode.get(i).getValue().contains("grpc-core-1.17.1.jar")) {
-          foundGrpcCoreError = true;
+        if (jarLinkageReportNode
+            .get(i)
+            .getValue()
+            .contains("com.sun.jdmk.comm.CommunicatorServer is not found")) {
+          foundJmdkError = true;
         }
       }
-      Assert.assertFalse(foundGrpcCoreError);
+      Assert.assertTrue(foundJmdkError);
     }
   }
 
@@ -272,7 +276,8 @@ public class DashboardTest {
 
     try (InputStream source = Files.newInputStream(googleCloudTranslateHtml)) {
       Document document = builder.build(source);
-      Nodes staticLinkageCheckMessage = document.query("//pre[@class='jar-linkage-report']");
+      Nodes staticLinkageCheckMessage =
+          document.query("//li[@class='jar-linkage-report-source-class']");
       Truth.assertThat(staticLinkageCheckMessage.size()).isGreaterThan(0);
       Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
           .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");

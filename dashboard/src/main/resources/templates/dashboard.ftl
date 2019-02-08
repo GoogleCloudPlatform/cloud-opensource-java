@@ -110,7 +110,24 @@
     <#list jarLinkageReports as jarLinkageReport>
       <#if jarLinkageReport.getTotalErrorCount() gt 0>
         <h3>${jarLinkageReport.getJarPath().getFileName()?html}</h3>
-        <pre id="static-linkage-errors">${jarLinkageReport.formatByGroup()?html}</pre>
+
+        <#assign causeToSourceClasses = jarLinkageReport.getCauseToSourceClasses() />
+        <#assign errorPlural = jarLinkageReport.getTotalErrorCount() gt 1 />
+        <#assign causePlural = causeToSourceClasses.keySet()?size gt 1 />
+        <#assign linkageErrors = jarLinkageReport.getTotalErrorCount()
+        + " linkage error" + errorPlural?string('s', '') />
+        <#assign classes = causeToSourceClasses.keySet()?size
+        + " class" + causePlural?string('es', '') />
+        <p class="jar-linkage-report">${linkageErrors} in ${classes}</p>
+
+        <#list causeToSourceClasses.keySet() as key >
+          <p class="jar-linkage-report-cause">${key?html} Referenced from</p>
+          <ul>
+            <#list causeToSourceClasses.get(key) as sourceClass>
+              <li class="jar-linkage-report-source-class"><code>${sourceClass?html}</code></li>
+            </#list>
+          </ul>
+        </#list>
 
         <p class="static-linkage-check-dependency-paths">
           Following paths to the jar file from BOM are found in the dependency tree.

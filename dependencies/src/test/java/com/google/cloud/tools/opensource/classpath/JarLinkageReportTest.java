@@ -135,30 +135,4 @@ public class JarLinkageReportTest {
         jarLinkageReport.toString());
   }
 
-  @Test
-  public void testFormatByGroup() {
-    Assert.assertEquals(
-        "4 linkage errors in 3 classes\n"
-            + "  ClassA is not found. Referenced by: ClassB, ClassC\n"
-            + "  ClassA.methodX is not found. Referenced by: ClassB\n"
-            + "  ClassC is not found. Referenced by: ClassD\n",
-        jarLinkageReport.formatByGroup());
-  }
-
-  @Test
-  public void testFormatByGroup_singleError() {
-    missingClassErrors = ImmutableList.of();
-    missingFieldErrors = ImmutableList.of();
-    missingMethodErrors = ImmutableList.of(linkageErrorMissingMethod);
-
-    jarLinkageReport =
-        JarLinkageReport.builder()
-            .setJarPath(Paths.get("a", "b", "c"))
-            .setMissingMethodErrors(missingMethodErrors)
-            .setMissingClassErrors(missingClassErrors)
-            .setMissingFieldErrors(missingFieldErrors)
-            .build();
-    String report = jarLinkageReport.formatByGroup();
-    Assert.assertTrue(report, report.startsWith("1 linkage error in 1 class\n"));
-  }
 }
