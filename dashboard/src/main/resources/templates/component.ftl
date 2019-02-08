@@ -1,4 +1,5 @@
 <html lang="en-US">
+  <#include "macros.ftl">
   <head>
     <title>Google Cloud Platform Dependency Analysis Report for ${groupId}:${artifactId}:${version}</title>
     <link rel="stylesheet" type="text/css" href="dashboard.css" />
@@ -115,38 +116,7 @@
     <p id="static-linkage-errors-total">${totalLinkageErrorCount} static linkage error(s)</p>
     <#list jarLinkageReports as jarLinkageReport>
       <#if jarLinkageReport.getTotalErrorCount() gt 0>
-        <h3>${jarLinkageReport.getJarPath().getFileName()?html}</h3>
-        <#assign causeToSourceClasses = jarLinkageReport.getCauseToSourceClasses() />
-        <#assign errorPlural = jarLinkageReport.getTotalErrorCount() gt 1 />
-        <#assign causePlural = causeToSourceClasses.keySet()?size gt 1 />
-        <#assign linkageErrors = jarLinkageReport.getTotalErrorCount()
-        + " linkage error" + errorPlural?string('s', '') />
-        <#assign classes = causeToSourceClasses.keySet()?size
-        + " class" + causePlural?string('es', '') />
-        <p class="jar-linkage-report">${linkageErrors} in ${classes}</p>
-
-        <#list causeToSourceClasses.keySet() as key >
-          <p class="jar-linkage-report-cause">${key?html} Referenced from</p>
-          <ul class="jar-linkage-report-cause">
-            <#list causeToSourceClasses.get(key) as sourceClass>
-              <li class="jar-linkage-report-source-class"><code>${sourceClass?html}</code></li>
-            </#list>
-          </ul>
-        </#list>
-
-        <p class="static-linkage-check-dependency-paths">
-          Following paths to the jar file from BOM are found in the dependency tree.
-        </p>
-        <ul class="static-linkage-check-dependency-paths">
-          <#list jarToDependencyPaths.get(jarLinkageReport.getJarPath()) as dependencyPath >
-            <#assign dependencyPathRoot = dependencyPath.get(0) />
-            <#if dependencyPathRoot.getGroupId() == groupId
-                 && dependencyPathRoot.getArtifactId() == artifactId >
-              <li>${dependencyPath}</li>
-            </#if>
-          </#list>
-        </ul>
-
+        <@formatJarLinkageReport jarLinkageReport jarToDependencyPaths/>
       </#if>
     </#list>
 
@@ -157,23 +127,6 @@
     <#else>
       <p>Dependency information is unavailable</p>
     </#if>
-
-    <#macro formatDependencyNode currentNode parent>
-      <#if parent == currentNode>
-        <#assign label = 'root' />
-      <#else>
-        <#assign label = 'parent: ' + parent.getLeaf() />
-      </#if>
-      <p class="DEPENDENCY_TREE_NODE" title="${label}">${currentNode.getLeaf()}</p>
-      <ul>
-        <#list dependencyTree.get(currentNode) as childNode>
-          <li class="DEPENDENCY_TREE_NODE">
-            <@formatDependencyNode childNode currentNode />
-          </li>
-        </#list>
-      </ul>
-    </#macro>
-
     <hr />
     <p id='updated'>Last generated at ${lastUpdated}</p>
   </body>

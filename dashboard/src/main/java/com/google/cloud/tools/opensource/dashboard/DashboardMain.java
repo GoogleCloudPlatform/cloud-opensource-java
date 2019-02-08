@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
+import com.google.common.collect.ImmutableMultimap;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -278,6 +279,18 @@ public class DashboardMain {
           DependencyTreeFormatter.buildDependencyPathTree(dependencyPaths);
       Template report = configuration.getTemplate("/templates/component.ftl");
 
+      // Jar to DependencyPaths, which starts with the artifact for this report
+      ImmutableMultimap.Builder<Path, DependencyPath> jarToDependencyPathsForArtifact =
+          ImmutableMultimap.builder();
+      jarToDependencyPaths.forEach(
+          (path, dependencyPath) -> {
+            Artifact dependencyPathRoot = dependencyPath.get(0);
+            if (dependencyPathRoot.getGroupId().equals(artifact.getGroupId())
+                && dependencyPathRoot.getArtifactId().equals(artifact.getArtifactId())) {
+              jarToDependencyPathsForArtifact.put(path, dependencyPath);
+            }
+          });
+
       Map<String, Object> templateData = new HashMap<>();
       templateData.put("groupId", artifact.getGroupId());
       templateData.put("artifactId", artifact.getArtifactId());
@@ -290,7 +303,7 @@ public class DashboardMain {
       templateData.put("dependencyTree", (LinkedListMultimap<?, ?>) dependencyTree);
       templateData.put("dependencyRootNode", Iterables.getFirst(dependencyTree.values(), null));
       templateData.put("jarLinkageReports", staticLinkageCheckReports);
-      templateData.put("jarToDependencyPaths", jarToDependencyPaths);
+      templateData.put("jarToDependencyPaths", jarToDependencyPathsForArtifact.build());
       templateData.put("totalLinkageErrorCount", totalLinkageErrorCount);
       report.process(templateData, out);
 
