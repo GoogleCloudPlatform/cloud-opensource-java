@@ -152,7 +152,7 @@ public class DashboardTest {
       // TODO these should all be separate tests for the different components
       Node linkage = document.query("//p[@class='jar-linkage-report']").get(0);
       // grpc-testing-1.17.1, shown as first item in linkage errors, has these errors
-      Assert.assertTrue(linkage.getValue().contains("9 linkage errors in 3 classes"));
+      Assert.assertTrue(linkage.getValue().contains("3 linkage errors in 3 classes"));
 
       Nodes li = document.query("//ul[@id='recommended']/li");
       Assert.assertTrue(li.size() > 100);
@@ -207,7 +207,7 @@ public class DashboardTest {
       Nodes staticLinkageCheckMessage = document.query("//p[@class='jar-linkage-report']");
       Assert.assertEquals(1, staticLinkageCheckMessage.size());
       Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
-          .contains("4 linkage errors in 2 classes");
+          .contains("2 linkage errors in 2 classes");
 
       Nodes jarLinkageReportNode = document.query("//p[@class='jar-linkage-report-cause']");
       boolean foundJmdkError = false;
