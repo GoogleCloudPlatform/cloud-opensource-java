@@ -62,8 +62,7 @@
     <#if row.getResult(name)?? >
       <#assign page_anchor =  name?replace(" ", "-")?lower_case />
       <a href="${row.getCoordinates()?replace(":", "_")}.html#${page_anchor}">
-        <#if failure_count == 1>1 FAILURE
-        <#elseif failure_count gt 1>${failure_count} FAILURES
+        <#if failure_count gt 0>${pluralize(failure_count, "FAILURE", "FAILURES")}
         <#else>PASS
         </#if>
       </a>
