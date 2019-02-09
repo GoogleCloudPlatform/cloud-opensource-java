@@ -115,7 +115,7 @@ public class JarLinkageReportTest {
 
   @Test
   public void testGetTotalErrorCount() {
-    Assert.assertEquals(4, jarLinkageReport.getTotalErrorCount());
+    Assert.assertEquals(4, jarLinkageReport.getCauseToSourceClassesSize());
   }
 
   @Test

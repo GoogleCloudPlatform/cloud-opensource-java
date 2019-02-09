@@ -112,22 +112,22 @@ public class DashboardTest {
         Element firstResult = (Element) (td.get(1));
         Truth.assertThat(firstResult.getValue().replaceAll("\\s", ""))
             .containsMatch("PASS|\\d+FAILURES?");
-        Truth.assertThat(firstResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
+        Truth.assertThat(firstResult.getAttributeValue("class")).isAnyOf("pass", "fail");
 
         Element secondResult = (Element) (td.get(2));
         Truth.assertThat(secondResult.getValue().replaceAll("\\s", ""))
             .containsMatch("PASS|\\d+FAILURES?");
-        Truth.assertThat(secondResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
+        Truth.assertThat(secondResult.getAttributeValue("class")).isAnyOf("pass", "fail");
 
         Element thirdResult = (Element) (td.get(3));
         Truth.assertThat(thirdResult.getValue().replaceAll("\\s", ""))
             .containsMatch("PASS|\\d+FAILURES?");
-        Truth.assertThat(thirdResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
+        Truth.assertThat(thirdResult.getAttributeValue("class")).isAnyOf("pass", "fail");
 
         Element fourthResult = (Element) (td.get(4));
         Truth.assertThat(fourthResult.getValue().replaceAll("\\s", ""))
             .containsMatch("PASS|\\d+FAILURES?");
-        Truth.assertThat(fourthResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
+        Truth.assertThat(fourthResult.getAttributeValue("class")).isAnyOf("pass", "fail");
       }
       Nodes href = document.query("//tr/td[@class='artifact-name']/a/@href");
       for (int i = 0; i < href.size(); i++) {
@@ -238,7 +238,7 @@ public class DashboardTest {
       // There's a pre tag for dependency
       Assert.assertEquals(1, presDependencyMediation.size());
 
-      Nodes presDependencyTree = document.query("//p[@class='DEPENDENCY_TREE_NODE']");
+      Nodes presDependencyTree = document.query("//p[@class='dependency-tree-node']");
       Assert.assertTrue("Dependency Tree should be shown in dashboard",
           presDependencyTree.size() > 0);
     }
@@ -260,7 +260,7 @@ public class DashboardTest {
           document.query("//pre[@class='suggested-dependency-mediation']");
       Assert.assertTrue("For failed component, suggested dependency should be shown",
           presDependencyMediation.size() >= 1);
-      Nodes dependencyTree = document.query("//p[@class='DEPENDENCY_TREE_NODE']");
+      Nodes dependencyTree = document.query("//p[@class='dependency-tree-node']");
       Assert.assertTrue("Dependency Tree should be shown in dashboard even when FAILED",
           dependencyTree.size() > 0);
     }
@@ -277,7 +277,7 @@ public class DashboardTest {
     try (InputStream source = Files.newInputStream(googleCloudTranslateHtml)) {
       Document document = builder.build(source);
       Nodes staticLinkageCheckMessage =
-          document.query("//li[@class='jar-linkage-report-source-class']");
+          document.query("//ul[@class='jar-linkage-report-cause']/li");
       Truth.assertThat(staticLinkageCheckMessage.size()).isGreaterThan(0);
       Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
           .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");

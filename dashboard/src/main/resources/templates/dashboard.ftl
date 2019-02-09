@@ -16,19 +16,23 @@
           <span class="desc">Total Artifacts Checked</span>
         </div>
         <div class="statistic-item statistic-item-red">
-          <h2 class="artifact-count"><@countFailures name="Static Linkage Errors"/></h2>
+          <h2 class="artifact-count">${dashboardMain.countFailures(table, "Static Linkage Errors")}
+          </h2>
           <span class="desc">Have Static Linkage Errors</span>
         </div>
         <div class="statistic-item statistic-item-yellow">
-          <h2 class="artifact-count"><@countFailures name="Upper Bounds"/></h2>
+          <h2 class="artifact-count">${dashboardMain.countFailures(table, "Upper Bounds")}
+          </h2>
           <span class="desc">Have Upper Bounds Errors</span>
         </div>
         <div class="statistic-item statistic-item-orange">
-          <h2 class="artifact-count"><@countFailures name="Global Upper Bounds"/></h2>
+          <h2 class="artifact-count">${dashboardMain.countFailures(table, "Global Upper Bounds")}
+          </h2>
           <span class="desc">Have Global Upper Bounds Errors</span>
         </div>
         <div class="statistic-item statistic-item-blue">
-          <h2 class="artifact-count"><@countFailures name="Dependency Convergence"/></h2>
+          <h2 class="artifact-count">${dashboardMain.countFailures(table, "Dependency Convergence")}
+          </h2>
           <span class="desc">Fail to Converge</span>
         </div>
       </div>
@@ -70,9 +74,7 @@
     <h2>Static Linkage Errors</h2>
 
     <#list jarLinkageReports as jarLinkageReport>
-      <#if jarLinkageReport.getTotalErrorCount() gt 0>
-        <@formatJarLinkageReport jarLinkageReport jarToDependencyPaths/>
-      </#if>
+      <@formatJarLinkageReport jarLinkageReport jarToDependencyPaths/>
     </#list>
 
     <hr />      
