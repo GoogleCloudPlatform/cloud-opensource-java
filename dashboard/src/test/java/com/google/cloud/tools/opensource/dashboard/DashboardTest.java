@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
@@ -48,11 +50,27 @@ import org.junit.Test;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
+import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 
 public class DashboardTest {
+
+  private static final Correspondence<Node, String> NODE_VALUES =
+      new Correspondence<Node, String>() {
+        @Override
+        public boolean compare(Node node, String expected) {
+          String nodeValue = node.getValue().trim();
+          return nodeValue.equals(expected);
+        }
+
+        @Override
+        public String toString() {
+          return "has value equal to";
+        }
+      };
 
   private static Path outputDirectory;
   private Builder builder = new Builder();
@@ -116,7 +134,9 @@ public class DashboardTest {
       Nodes href = document.query("//tr/td[@class='artifact-name']/a/@href");
       for (int i = 0; i < href.size(); i++) {
         String fileName = href.get(i).getValue();
-        Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i)).replace(':', '_') + ".html", 
+        Artifact artifact = artifacts.get(i);
+        Assert.assertEquals(
+            Artifacts.toCoordinates(artifact).replace(':', '_') + ".html",
             URLDecoder.decode(fileName, "UTF-8"));
         Path componentReport = outputDirectory.resolve(fileName);
         Assert.assertTrue(fileName + " is missing", Files.isRegularFile(componentReport));
@@ -140,15 +160,12 @@ public class DashboardTest {
 
       Nodes li = document.query("//ul[@id='recommended']/li");
       Assert.assertTrue(li.size() > 100);
-      ArrayList<String> coordinateList = new ArrayList<>();
 
-      for (int i = 0; i < li.size(); i++) {
-        String coordinates = li.get(i).getValue();
-        // fails if these are not valid Maven coordinates
-        new DefaultArtifact(coordinates);
-        coordinateList.add(coordinates);
-      }
-      
+      List<String> coordinateList =
+          toList(li).stream().map(Node::getValue).collect(toImmutableList());
+      // fails if these are not valid Maven coordinates
+      coordinateList.forEach(DefaultArtifact::new);
+
       ArrayList<String> sorted = new ArrayList<>(coordinateList);
       Comparator<String> comparator = new SortWithoutVersion();
       Collections.sort(sorted, comparator);
@@ -174,10 +191,10 @@ public class DashboardTest {
       Nodes artifactCount = document
           .query("//div[@class='statistic-item statistic-item-green']/h2");
       Assert.assertTrue(artifactCount.size() > 0);
-      for (int i = 0; i < artifactCount.size(); i++) {
-        String value = artifactCount.get(i).getValue().trim();
+      for (Node artifactCountElement : toList(artifactCount)) {
+        String value = artifactCountElement.getValue().trim();
         Assert.assertTrue(value, Integer.parseInt(value) > 0);
-      }            
+      }
     }
   }
 
@@ -203,16 +220,10 @@ public class DashboardTest {
           .contains("2 linkage errors in 2 classes");
 
       Nodes jarLinkageReportNode = document.query("//p[@class='jar-linkage-report-cause']");
-      boolean foundJmdkError = false;
-      for (int i = 0; i < jarLinkageReportNode.size(); i++) {
-        if (jarLinkageReportNode
-            .get(i)
-            .getValue()
-            .contains("com.sun.jdmk.comm.CommunicatorServer is not found")) {
-          foundJmdkError = true;
-        }
-      }
-      Assert.assertTrue(foundJmdkError);
+      Truth.assertWithMessage("grpc-alts should show linkage errors for CommunicatorServer")
+          .that(toList(jarLinkageReportNode))
+          .comparingElementsUsing(NODE_VALUES)
+          .contains("com.sun.jdmk.comm.CommunicatorServer is not found, referenced from");
     }
   }
 
@@ -303,4 +314,11 @@ public class DashboardTest {
 
   }
 
+  private static ImmutableList<Node> toList(Nodes nodes) {
+    ImmutableList.Builder<Node> builder = ImmutableList.builder();
+    for (int i = 0; i < nodes.size(); i++) {
+      builder.add(nodes.get((i)));
+    }
+    return builder.build();
+  }
 }
