@@ -63,6 +63,7 @@ import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
@@ -284,10 +285,11 @@ public class DashboardMain {
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       // Jar to DependencyPaths which start with the artifact for this report
-      Multimap<Path, DependencyPath> jarToDependencyPathsForArtifact =
-          Multimaps.filterValues(
+      ImmutableMultimap<Path, DependencyPath> jarToDependencyPathsForArtifact =
+          ImmutableMultimap.copyOf(Multimaps.filterValues(
               jarToDependencyPaths,
-              dependencyPath -> coordinates.equals(Artifacts.toCoordinates(dependencyPath.get(0))));
+              dependencyPath -> coordinates
+                  .equals(Artifacts.toCoordinates(dependencyPath.get(0)))));
 
       Map<String, Object> templateData = new HashMap<>();
       templateData.put("groupId", artifact.getGroupId());
