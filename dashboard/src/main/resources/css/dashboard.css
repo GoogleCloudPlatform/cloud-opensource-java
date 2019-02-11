@@ -36,26 +36,40 @@
    line-height: normal;
  }
  
- .PASS {
+ .pass {
    background-color: lightgreen;
    font-weight: bold;
  }
- .FAIL {
+ .fail {
    background-color: pink;
    font-weight: bold;
  }
- .UNAVAILABLE {
+ .unavailable {
    background-color: gray;
    font-weight: bold;
  }
 
- p.DEPENDENCY_TREE_NODE {
+ p.dependency-tree-node {
    margin-top: 0;
    margin-bottom: 0;
  }
 
- .static-linkage-check-dependency-paths {
-   margin-left: 15pt;
+ .static-linkage-check-dependency-paths, .jar-linkage-report {
+   margin-left: 1em;
+ }
+
+ p.jar-linkage-report-cause {
+   margin-bottom: 0;
+   margin-left: 2em;
+ }
+
+ ul.jar-linkage-report-cause {
+   margin-top: 0;
+   margin-left: 3em;
+ }
+
+ ul.jar-linkage-report-cause > li {
+   font: 1em 'Droid Sans Mono', monospace;
  }
 
  /* ----- Statistic ----- */

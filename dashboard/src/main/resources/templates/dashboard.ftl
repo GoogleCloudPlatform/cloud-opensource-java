@@ -1,4 +1,5 @@
 <html lang="en-US">
+  <#include "macros.ftl">
   <head>
     <title>Google Cloud Platform Java Open Source Dependency Dashboard</title>
     
@@ -11,69 +12,30 @@
     <section class="statistics">
       <div class="container">
         <div class="statistic-item statistic-item-green">
-          <h2 class="artifact-count">${table?size}</h2>
+          <h2>${table?size}</h2>
           <span class="desc">Total Artifacts Checked</span>
         </div>
         <div class="statistic-item statistic-item-red">
-          <h2 class="artifact-count"><@countFailures name="Static Linkage Errors"/></h2>
+          <h2>${dashboardMain.countFailures(table, "Static Linkage Errors")}</h2>
           <span class="desc">Have Static Linkage Errors</span>
         </div>
         <div class="statistic-item statistic-item-yellow">
-          <h2 class="artifact-count"><@countFailures name="Upper Bounds"/></h2>
+          <h2>${dashboardMain.countFailures(table, "Upper Bounds")}</h2>
           <span class="desc">Have Upper Bounds Errors</span>
         </div>
         <div class="statistic-item statistic-item-orange">
-          <h2 class="artifact-count"><@countFailures name="Global Upper Bounds"/></h2>
+          <h2>${dashboardMain.countFailures(table, "Global Upper Bounds")}</h2>
           <span class="desc">Have Global Upper Bounds Errors</span>
         </div>
         <div class="statistic-item statistic-item-blue">
-          <h2 class="artifact-count"><@countFailures name="Dependency Convergence"/></h2>
+          <h2>${dashboardMain.countFailures(table, "Dependency Convergence")}</h2>
           <span class="desc">Fail to Converge</span>
         </div>
       </div>
     </section>
-    
-    <#macro countFailures name>
-      <#assign total = 0>
-      <#list table as row>    
-        <#if row.getResult(name)?? >
-          <#assign failure_count = row.getFailureCount(name)>
-          <#if failure_count gt 0 >
-            <#assign total = total + 1>
-          </#if>
-        <#else>
-          <#-- Null means there's an exception and test couldn't run -->
-          <#assign total = total + 1>
-        </#if>
-      </#list>
-      ${total}
-    </#macro>
-    
+
     <h2>Artifact Details</h2>
-    
-    <#macro testResult row name>
-      <#if row.getResult(name)?? ><#-- checking isNotNull() -->
-        <#-- When it's not null, the test ran. It's either PASS or FAIL -->
-        <#assign test_label = row.getResult(name)?then('PASS', 'FAIL')>
-        <#assign failure_count = row.getFailureCount(name)>
-      <#else>
-        <#-- Null means there's an exception and test couldn't run -->
-        <#assign test_label = "UNAVAILABLE">
-      </#if>
-      <td class='${test_label}' title="${row.getExceptionMessage()!""}">
-        <#if row.getResult(name)?? >
-          <#assign page_anchor =  name?replace(" ", "-")?lower_case />
-          <a href="${row.getCoordinates()?replace(":", "_")}.html#${page_anchor}">
-            <#if failure_count == 1>1 FAILURE
-            <#elseif failure_count gt 1>${failure_count} FAILURES
-            <#else>PASS
-            </#if>
-          </a>
-        <#else>UNAVAILABLE
-        </#if>
-      </td>
-    </#macro>
-    
+
     <table class="dependency-dashboard">
       <tr>
         <th>Artifact</th>
@@ -108,20 +70,7 @@
     <h2>Static Linkage Errors</h2>
 
     <#list jarLinkageReports as jarLinkageReport>
-      <#if jarLinkageReport.getTotalErrorCount() gt 0>
-        <h3>${jarLinkageReport.getJarPath().getFileName()?html}</h3>
-        <pre id="static-linkage-errors">${jarLinkageReport.formatByGroup()?html}</pre>
-
-        <p class="static-linkage-check-dependency-paths">
-          Following paths to the jar file from BOM are found in the dependency tree.
-        </p>
-        <ul class="static-linkage-check-dependency-paths">
-          <#list jarToDependencyPaths.get(jarLinkageReport.getJarPath()) as dependencyPath >
-            <li>${dependencyPath}</li>
-          </#list>
-        </ul>
-
-      </#if>
+      <@formatJarLinkageReport jarLinkageReport jarToDependencyPaths/>
     </#list>
 
     <hr />      

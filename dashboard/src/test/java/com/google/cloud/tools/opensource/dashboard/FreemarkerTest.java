@@ -35,8 +35,7 @@ import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.io.MoreFiles;
-import com.google.common.io.RecursiveDeleteOption;
+import com.google.common.truth.Truth;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
@@ -62,7 +61,7 @@ public class FreemarkerTest {
 
   @AfterClass
   public static void cleanUp() throws IOException {
-    MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
+    // MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
   }
 
   @Test
@@ -90,13 +89,13 @@ public class FreemarkerTest {
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
     Document document = builder.build(dashboardHtml.toFile());
 
-    Nodes counts = document.query("//h2[@class='artifact-count']");
+    // xom's query cannot specify partial class field, e.g., 'statistic-item'
+    Nodes counts = document.query("//div[@class='container']/div/h2");
     Assert.assertTrue(counts.size() > 0);
     for (int i = 0; i < counts.size(); i++) {
       Integer.parseInt(counts.get(i).getValue().trim());
     }
-    
-    Assert.assertEquals(1, Integer.parseInt(counts.get(1).getValue().trim()));
+    // Static Linkage Errors
+    Truth.assertThat(counts.get(1).getValue().trim()).isEqualTo("1");
   }
-
 }

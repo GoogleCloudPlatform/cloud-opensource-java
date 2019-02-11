@@ -60,19 +60,19 @@ abstract class LinkageErrorCause {
     StringBuilder builder = new StringBuilder(getSymbol());
     switch (getReason()) {
       case CLASS_NOT_FOUND:
-        builder.append(" is not found. ");
+        builder.append(" is not found");
         break;
       case INACCESSIBLE_CLASS:
-        builder.append(" is not accessible. ");
+        builder.append(" is not accessible");
         break;
       case INCOMPATIBLE_CLASS_CHANGE:
-        builder.append(" has changed incompatibly. ");
+        builder.append(" has changed incompatibly");
         break;
       case SYMBOL_NOT_FOUND:
-        builder.append(" is not found. ");
+        builder.append(" is not found");
         break;
       case INACCESSIBLE_MEMBER:
-        builder.append(" is not accessible. ");
+        builder.append(" is not accessible");
         break;
     }
     return builder.toString();
