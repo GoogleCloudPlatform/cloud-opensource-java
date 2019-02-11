@@ -1,76 +1,78 @@
- body {
-   font-family: "Poppins", sans-serif;
-   font-weight: 400;
-   line-height: 1.625;
-   margin-left: 2em;
- }
+body {
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  line-height: 1.625;
+  margin-left: 2em;
+}
 
- h1,
- h2,
- h3 {
-   color: #333333;
-   font-weight: 700;
-   margin: 0;
-   line-height: 1.2;
-   margin-top: 1ex;
-   margin-bottom: 1ex;
- }
- 
- h1 {
-   font-size: 3em;
- }
- 
- h2 {
-   font-size: 2.5em;
- }
- 
- h3 {
-   font-size: 2em;
- }
- 
- th, td {
-   padding: 5pt;
- }
- 
- pre {
-   line-height: normal;
- }
- 
- .pass {
-   background-color: lightgreen;
-   font-weight: bold;
- }
- .fail {
-   background-color: pink;
-   font-weight: bold;
- }
- .unavailable {
-   background-color: gray;
-   font-weight: bold;
- }
+h1,
+h2,
+h3 {
+  color: #333333;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+  margin-top: 1ex;
+  margin-bottom: 1ex;
+}
 
- p.dependency-tree-node {
-   margin-top: 0;
-   margin-bottom: 0;
- }
+h1 {
+  font-size: 3em;
+}
 
- .static-linkage-check-dependency-paths, .jar-linkage-report {
-   margin-left: 1em;
- }
+h2 {
+  font-size: 2.5em;
+}
 
- p.jar-linkage-report-cause {
-   margin-bottom: 0;
-   margin-left: 2em;
- }
+h3 {
+  font-size: 2em;
+}
 
- ul.jar-linkage-report-cause {
-   margin-top: 0;
-   margin-left: 3em;
- }
+th, td {
+  padding: 5pt;
+}
 
- ul.jar-linkage-report-cause > li {
-   font: 1em 'Droid Sans Mono', monospace;
- }
+pre {
+  line-height: normal;
+}
+
+.pass {
+  background-color: lightgreen;
+  font-weight: bold;
+}
+
+.fail {
+  background-color: pink;
+  font-weight: bold;
+}
+
+.unavailable {
+  background-color: gray;
+  font-weight: bold;
+}
+
+p.dependency-tree-node {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.static-linkage-check-dependency-paths, .jar-linkage-report {
+  margin-left: 1em;
+}
+
+p.jar-linkage-report-cause {
+  margin-bottom: 0;
+  margin-left: 2em;
+}
+
+ul.jar-linkage-report-cause {
+  margin-top: 0;
+  margin-left: 3em;
+}
+
+ul.jar-linkage-report-cause > li {
+  font: 1em 'Droid Sans Mono', monospace;
+}
 
  /* ----- Statistic ----- */
 .statistics {
