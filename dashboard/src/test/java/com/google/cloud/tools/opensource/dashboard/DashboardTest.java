@@ -109,25 +109,9 @@ public class DashboardTest {
       for (int i = 1; i < tr.size(); i++) { // start at 1 to skip header row
         Nodes td = tr.get(i).query("td");
         Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i - 1)), td.get(0).getValue());
-        Element firstResult = (Element) (td.get(1));
-        Truth.assertThat(firstResult.getValue().replaceAll("\\s", ""))
-            .containsMatch("PASS|\\d+FAILURES?");
-        Truth.assertThat(firstResult.getAttributeValue("class")).isAnyOf("pass", "fail");
-
-        Element secondResult = (Element) (td.get(2));
-        Truth.assertThat(secondResult.getValue().replaceAll("\\s", ""))
-            .containsMatch("PASS|\\d+FAILURES?");
-        Truth.assertThat(secondResult.getAttributeValue("class")).isAnyOf("pass", "fail");
-
-        Element thirdResult = (Element) (td.get(3));
-        Truth.assertThat(thirdResult.getValue().replaceAll("\\s", ""))
-            .containsMatch("PASS|\\d+FAILURES?");
-        Truth.assertThat(thirdResult.getAttributeValue("class")).isAnyOf("pass", "fail");
-
-        Element fourthResult = (Element) (td.get(4));
-        Truth.assertThat(fourthResult.getValue().replaceAll("\\s", ""))
-            .containsMatch("PASS|\\d+FAILURES?");
-        Truth.assertThat(fourthResult.getAttributeValue("class")).isAnyOf("pass", "fail");
+        for (int j = 1; j < 5; ++j) {
+          assertValidCellValue((Element) td.get(j));
+        }
       }
       Nodes href = document.query("//tr/td[@class='artifact-name']/a/@href");
       for (int i = 0; i < href.size(); i++) {
@@ -186,14 +170,23 @@ public class DashboardTest {
       
       Nodes stable = document.query("//p[@id='stable-notice']");
       Assert.assertEquals(0, stable.size());
-      
-      Nodes artifactCount = document.query("//h2[@class='artifact-count']");
+
+      Nodes artifactCount = document
+          .query("//div[@class='statistic-item statistic-item-green']/h2");
       Assert.assertTrue(artifactCount.size() > 0);
       for (int i = 0; i < artifactCount.size(); i++) {
         String value = artifactCount.get(i).getValue().trim();
         Assert.assertTrue(value, Integer.parseInt(value) > 0);
       }            
     }
+  }
+
+  private static void assertValidCellValue(Element cellElement) {
+    String cellValue = cellElement.getValue().replaceAll("\\s", "");
+    Truth.assertThat(cellValue).containsMatch("PASS|\\d+FAILURES?");
+    Truth.assertWithMessage("It should not use plural for 1 item").that(cellValue)
+        .doesNotContainMatch("1 FAILURES");
+    Truth.assertThat(cellElement.getAttributeValue("class")).isAnyOf("pass", "fail");
   }
 
   @Test

@@ -12,27 +12,23 @@
     <section class="statistics">
       <div class="container">
         <div class="statistic-item statistic-item-green">
-          <h2 class="artifact-count">${table?size}</h2>
+          <h2>${table?size}</h2>
           <span class="desc">Total Artifacts Checked</span>
         </div>
         <div class="statistic-item statistic-item-red">
-          <h2 class="artifact-count">${dashboardMain.countFailures(table, "Static Linkage Errors")}
-          </h2>
+          <h2>${dashboardMain.countFailures(table, "Static Linkage Errors")}</h2>
           <span class="desc">Have Static Linkage Errors</span>
         </div>
         <div class="statistic-item statistic-item-yellow">
-          <h2 class="artifact-count">${dashboardMain.countFailures(table, "Upper Bounds")}
-          </h2>
+          <h2>${dashboardMain.countFailures(table, "Upper Bounds")}</h2>
           <span class="desc">Have Upper Bounds Errors</span>
         </div>
         <div class="statistic-item statistic-item-orange">
-          <h2 class="artifact-count">${dashboardMain.countFailures(table, "Global Upper Bounds")}
-          </h2>
+          <h2>${dashboardMain.countFailures(table, "Global Upper Bounds")}</h2>
           <span class="desc">Have Global Upper Bounds Errors</span>
         </div>
         <div class="statistic-item statistic-item-blue">
-          <h2 class="artifact-count">${dashboardMain.countFailures(table, "Dependency Convergence")}
-          </h2>
+          <h2>${dashboardMain.countFailures(table, "Dependency Convergence")}</h2>
           <span class="desc">Fail to Converge</span>
         </div>
       </div>

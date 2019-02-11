@@ -1,11 +1,11 @@
 <#function pluralize number singlarNoun pluralNoun>
   <#local plural = number gt 1 />
-  <#return plural?string(number + " " + pluralNoun, number + " " + singlarNoun)>
+  <#return number + " " + plural?string(pluralNoun, singlarNoun)>
 </#function>
 
 <#macro formatJarLinkageReport jarLinkageReport jarToDependencyPaths>
   <#if jarLinkageReport.getCauseToSourceClassesSize() gt 0>
-  <h3>${jarLinkageReport.getJarPath().getFileName()?html}</h3>
+    <h3>${jarLinkageReport.getJarPath().getFileName()?html}</h3>
 
     <#assign causeToSourceClasses = jarLinkageReport.getCauseToSourceClasses() />
     <#assign linkageErrors = pluralize(jarLinkageReport.getCauseToSourceClassesSize(),
@@ -15,21 +15,21 @@
     <p class="jar-linkage-report">${linkageErrors} in ${classes}</p>
 
     <#list causeToSourceClasses.keySet() as errorCause >
-    <p class="jar-linkage-report-cause">${errorCause?html}, referenced from</p>
-    <ul class="jar-linkage-report-cause">
-      <#list causeToSourceClasses.get(errorCause) as sourceClass>
-        <li>${sourceClass?html}</li>
+      <p class="jar-linkage-report-cause">${errorCause?html}, referenced from</p>
+      <ul class="jar-linkage-report-cause">
+        <#list causeToSourceClasses.get(errorCause) as sourceClass>
+          <li>${sourceClass?html}</li>
+        </#list>
+      </ul>
+    </#list>
+    <p class="static-linkage-check-dependency-paths">
+      The following paths to the jar file from BOM are found in the dependency tree.
+    </p>
+    <ul class="static-linkage-check-dependency-paths">
+      <#list jarToDependencyPaths.get(jarLinkageReport.getJarPath()) as dependencyPath >
+        <li>${dependencyPath}</li>
       </#list>
     </ul>
-    </#list>
-  <p class="static-linkage-check-dependency-paths">
-    The following paths to the jar file from BOM are found in the dependency tree.
-  </p>
-  <ul class="static-linkage-check-dependency-paths">
-    <#list jarToDependencyPaths.get(jarLinkageReport.getJarPath()) as dependencyPath >
-      <li>${dependencyPath}</li>
-    </#list>
-  </ul>
   </#if>
 </#macro>
 

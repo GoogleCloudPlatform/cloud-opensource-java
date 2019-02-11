@@ -69,7 +69,7 @@
  }
 
  ul.jar-linkage-report-cause > li {
-   font: 1em 'Droid Sans Mono', monospace
+   font: 1em 'Droid Sans Mono', monospace;
  }
 
  /* ----- Statistic ----- */
