@@ -11,7 +11,7 @@ Java Dependency Glossary
   the class loader returns the file in the first path entry.
   Other class files with the same name are unavailable.
   
-  If a class loader fails to find any instance of a class, it will ask its parent class loader
+  If a class loader fails to find any instance of a class, it asks its parent class loader
   to find the class. In a running VM there are usually multiple class loaders,
   each with its own class path, but for our purposes we can treat this as 
   a single class path formed by appending parent class paths to child class paths.
@@ -29,8 +29,7 @@ Java Dependency Glossary
   modifiers, or arguments of a non-private method, field, or class
   in a dependency has changed in an incompatible way between
   the version of a class file supplied at compile time and the version available in
-  the runtime class path.
-  For example, a public method may have been removed from a class or an extended
+  the runtime class path. A public method may have been removed from a class or an extended
   class may have been made final.
   
   In cases where binary compatibility and source
@@ -41,7 +40,7 @@ Java Dependency Glossary
   - Opposite: **Linkage-compatible**.
 
 <a name="behavior-conflict"></a>
-- **Behavior conflict**: The class's implementation has changed in a way that
+- **Behavior conflict**: A class's implementation has changed in a way that
   can break clients at runtime although all signatures remain compatible. For
   example, if a method that has been returning mutable lists begins returning
   immutable lists without updating its signature, dependents that mutate the
@@ -57,27 +56,22 @@ Java Dependency Glossary
   means that for any dependency of a module in that module's dependency tree,
   all major Java build systems will select the same version of that dependency.
   - Major build systems currently include Maven and Gradle.
-  - Direct (first-order) dependencies will trivially comply with this rule in
+  - Direct (first-order) dependencies comply with this rule in
     all major build systems, so the real concern is transitive (second-order and
     higher) dependencies.
-  - To achieve version alignment when multiple versions of a transitive
-    dependency are present, a direct dependency on the transitive dependency
-    needs to be added, in order to support Maven's dependency resolution logic
-    (which selects the version with the fewest hops on the dependency tree).
-  - Linkage compatibility is the desired result from version alignment, but not
-    an inherent characteristic of the definition.
+  - Version alignment does not guarantee linkage compatibility.
   - Sub-type: **Upper version alignment**: Version alignment where the version
     that is selected is the highest version in the dependency tree.
-    - Using upper version alignment ensures that when packages are upgraded
-      to higher versions which only add functionality and don't make any
-      breaking changes, there will be no new linkage conflicts.
+    - Upper version alignment ensures that when packages are upgraded
+      to higher versions which don't make any breaking changes, there
+      will be no new linkage conflicts.
 
 
 #### Conflict relationships
 
-- A particular conflict cannot be both a linkage conflict and behavior conflict
-  at the same time (they are mutually exclusive).
-- A combination of jars at runtime can have any number of linkage conflicts and
+- A particular conflict cannot be both a linkage error and behavior conflict.
+  They are mutually exclusive.
+- A combination of jars at runtime can have any number of linkage errors and
   behavior conflicts.
 
 ### States of compatibility
@@ -85,9 +79,9 @@ Java Dependency Glossary
 <a name="linkage-compatible"></a>
 - **Linkage-compatible** (said of a particular version of A and a particular
   version of B): When these versions are used together, there are no linkage
-  conflicts between A and B.
+  errors between A and B or their shared dependencies.
 <a name="linkage-matchable-version"></a>
-- **Linkage-matchable version** (said of a particular version of A in relation
+- **Linkage-matchable** (said of a particular version of A in relation
   to all versions of B): There exists some version of B such that the version of
   A and the version of B are linkage-compatible.
 
@@ -103,8 +97,8 @@ Java Dependency Glossary
 
 <a name="class-reference"></a>
 - **Class reference**: a reference indicating that a _source class_ uses a _target
-  class_ without referencing a specific field or method
-  (for example, by inheriting from the class).
+  class_ without referencing a specific field or method;
+  for example, by inheriting from the class.
 
 <a name="class-reference-graph"></a>
 - **Class reference graph**: a possibly cyclic directed graph where each node represents
