@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
 import java.io.File;
@@ -31,12 +32,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
@@ -431,19 +432,20 @@ public class DashboardMain {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
     for (Path jar : jarToDependencyPaths.keySet()) {
-      Set<String> versionlessCoordinates = null; // null for 1st iteration
+      // To keep order of the common artifact
+      LinkedHashSet<String> versionlessCoordinates = null; // null for 1st iteration
       boolean firstIteration = true;
       ImmutableList<DependencyPath> dependencyPaths = ImmutableList
           .copyOf(jarToDependencyPaths.get(jar));
       for (DependencyPath dependencyPath : dependencyPaths) {
         // Set of versionless coordinates ("groupId:artifactId")
-        Set<String> versionlessCoordinatesInPath =
-            dependencyPath.getPath().stream().map(Artifacts::makeKey).collect(Collectors.toSet());
+        ImmutableList<String> versionlessCoordinatesInPath =
+            dependencyPath.getPath().stream().map(Artifacts::makeKey).collect(toImmutableList());
         if (firstIteration) {
-          versionlessCoordinates = Sets.newHashSet(versionlessCoordinatesInPath);
+          versionlessCoordinates = Sets.newLinkedHashSet(versionlessCoordinatesInPath);
           firstIteration = false;
         } else {
-          // intersection of elements in among DependencyPaths
+          // intersection of elements in DependencyPaths
           versionlessCoordinates.retainAll(versionlessCoordinatesInPath);
         }
       }
@@ -453,7 +455,7 @@ public class DashboardMain {
         StringBuilder messageBuilder = new StringBuilder();
         messageBuilder.append("There are " + dependencyPaths.size() + " paths to the artifact. ");
         messageBuilder.append("All of them have the same artifacts: ");
-        messageBuilder.append(Joiner.on(", ").join(versionlessCoordinates));
+        messageBuilder.append(Joiner.on(" > ").join(versionlessCoordinates));
         messageBuilder.append(". Example path: ");
         messageBuilder.append(dependencyPaths.get(0));
         builder.put(jar.toString(), messageBuilder.toString());
