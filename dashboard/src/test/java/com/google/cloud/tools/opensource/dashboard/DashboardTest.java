@@ -158,6 +158,18 @@ public class DashboardTest {
       // grpc-testing-1.17.1, shown as first item in linkage errors, has these errors
       Assert.assertTrue(linkage.getValue().contains("3 linkage errors in 3 classes"));
 
+      ImmutableList<Node> dependencyPaths = toList(
+          document.query("//p[@class='static-linkage-check-dependency-paths']"));
+      Node log4jDependencyPathMessage = dependencyPaths.get(dependencyPaths.size() - 1);
+      // Not to show all 900 dependency paths to log4j in the dashboard
+      Truth.assertThat(log4jDependencyPathMessage.getValue()).contains(
+          "and other 993 dependency paths to the jar file. All of them have the same artifacts:");
+      int dependencyPathListSize =
+          document.query("//ul[@class='static-linkage-check-dependency-paths']/li").size();
+      Truth.assertWithMessage("The dashboard should not show repetitive dependency paths")
+          .that(dependencyPathListSize)
+          .isLessThan(100);
+
       Nodes li = document.query("//ul[@id='recommended']/li");
       Assert.assertTrue(li.size() > 100);
 

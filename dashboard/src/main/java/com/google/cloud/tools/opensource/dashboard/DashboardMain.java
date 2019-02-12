@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,6 +37,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
@@ -61,6 +63,7 @@ import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.Update;
 import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -69,8 +72,11 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
 
 public class DashboardMain {
   public static final String TEST_NAME_STATIC_LINKAGE_CHECK = "Static Linkage Errors";
@@ -303,6 +309,7 @@ public class DashboardMain {
       templateData.put("dependencyRootNode", Iterables.getFirst(dependencyTree.values(), null));
       templateData.put("jarLinkageReports", staticLinkageCheckReports);
       templateData.put("jarToDependencyPaths", jarToDependencyPathsForArtifact);
+      templateData.put("jarToSimplifiedPathMessage", Maps.newHashMap());
       templateData.put("totalLinkageErrorCount", totalLinkageErrorCount);
       report.process(templateData, out);
 
@@ -365,6 +372,8 @@ public class DashboardMain {
       templateData.put("latestArtifacts", latestArtifacts);
       templateData.put("jarLinkageReports", classpathCheckReport.getJarLinkageReports());
       templateData.put("jarToDependencyPaths", jarToDependencyPaths);
+      templateData.put("jarToSimplifiedPathMessage",
+          simplifyDependencyPathMessage(jarToDependencyPaths));
 
       // Accessing Static method 'countFailures' from Freemarker template
       // https://freemarker.apache.org/docs/pgui_misc_beanwrapper.html#autoid_60
@@ -404,5 +413,45 @@ public class DashboardMain {
     return table.stream()
         .filter(row -> row.getResult(columnName) == null || row.getFailureCount(columnName) > 0)
         .count();
+  }
+
+  /**
+   * Returns mapping from jar file to simplified description of its {@link DependencyPath}s. A
+   * simplified description of {@link DependencyPath}s explains a common pattern ({@code
+   * groupId:artifactId}) in the path elements, helping to avoid listing more than 5 repetitive
+   * items in BOM dashboard.
+   */
+  private static ImmutableMap<String, String> simplifyDependencyPathMessage(
+      Multimap<Path, DependencyPath> jarToDependencyPaths) {
+    // Freemarker is not good at handling non-string key
+    // https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+
+    for (Path jar : jarToDependencyPaths.keySet()) {
+      List<Set<String>> commonVersionLessCoordinates = Lists.newArrayList();
+      Collection<DependencyPath> dependencyPaths = jarToDependencyPaths.get(jar);
+      for (DependencyPath dependencyPath : dependencyPaths) {
+        // Set of "groupId:artifactId"
+        Set<String> versionLessCoordinates =
+            dependencyPath.getPath().stream().map(Artifacts::makeKey).collect(Collectors.toSet());
+        commonVersionLessCoordinates.add(versionLessCoordinates);
+      }
+      Set<String> intersection = Sets.newHashSet(Iterables.getFirst(commonVersionLessCoordinates,
+          Sets.newHashSet()));
+      for (Set<String> versionLessCoordinates : commonVersionLessCoordinates) {
+        intersection.retainAll(versionLessCoordinates);
+      }
+
+      if (dependencyPaths.size() > 5 && intersection.size() > 1) {
+        StringBuilder messageBuilder = new StringBuilder();
+        messageBuilder.append(Iterables.getFirst(dependencyPaths, null));
+        messageBuilder.append(", and other " + (dependencyPaths.size() - 1)
+            + " dependency paths to the jar file. ");
+        messageBuilder.append("All of them have the same artifacts: ");
+        messageBuilder.append(Joiner.on(", ").join(intersection));
+        builder.put(jar.toString(), messageBuilder.toString());
+      }
+    }
+    return builder.build();
   }
 }

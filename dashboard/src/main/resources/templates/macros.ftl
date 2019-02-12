@@ -3,9 +3,10 @@
   <#return number + " " + plural?string(pluralNoun, singlarNoun)>
 </#function>
 
-<#macro formatJarLinkageReport jarLinkageReport jarToDependencyPaths>
+<#macro formatJarLinkageReport jarLinkageReport jarToDependencyPaths jarToSimplifiedPathMessage>
   <#if jarLinkageReport.getCauseToSourceClassesSize() gt 0>
-    <h3>${jarLinkageReport.getJarPath().getFileName()?html}</h3>
+    <#assign jarPath = jarLinkageReport.getJarPath() />
+    <h3>${jarPath.getFileName()?html}</h3>
 
     <#assign causeToSourceClasses = jarLinkageReport.getCauseToSourceClasses() />
     <#assign linkageErrors = pluralize(jarLinkageReport.getCauseToSourceClassesSize(),
@@ -25,11 +26,16 @@
     <p class="static-linkage-check-dependency-paths">
       The following paths to the jar file from BOM are found in the dependency tree.
     </p>
-    <ul class="static-linkage-check-dependency-paths">
-      <#list jarToDependencyPaths.get(jarLinkageReport.getJarPath()) as dependencyPath >
-        <li>${dependencyPath}</li>
-      </#list>
-    </ul>
+    <#if jarToSimplifiedPathMessage[jarPath]?? >
+      <p class="static-linkage-check-dependency-paths">${jarToSimplifiedPathMessage[jarPath]?html}
+      </p>
+    <#else>
+      <ul class="static-linkage-check-dependency-paths">
+          <#list jarToDependencyPaths.get(jarPath) as dependencyPath >
+            <li>${dependencyPath}</li>
+          </#list>
+      </ul>
+    </#if>
   </#if>
 </#macro>
 

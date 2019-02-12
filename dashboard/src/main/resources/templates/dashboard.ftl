@@ -70,7 +70,7 @@
     <h2>Static Linkage Errors</h2>
 
     <#list jarLinkageReports as jarLinkageReport>
-      <@formatJarLinkageReport jarLinkageReport jarToDependencyPaths/>
+      <@formatJarLinkageReport jarLinkageReport jarToDependencyPaths jarToSimplifiedPathMessage/>
     </#list>
 
     <hr />      
