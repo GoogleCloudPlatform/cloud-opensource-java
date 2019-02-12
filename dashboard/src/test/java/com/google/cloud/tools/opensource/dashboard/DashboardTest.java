@@ -162,8 +162,8 @@ public class DashboardTest {
           document.query("//p[@class='static-linkage-check-dependency-paths']"));
       Node log4jDependencyPathMessage = dependencyPaths.get(dependencyPaths.size() - 1);
       // Not to show all 900 dependency paths to log4j in the dashboard
-      Truth.assertThat(log4jDependencyPathMessage.getValue()).contains(
-          "and other 993 dependency paths to the jar file. All of them have the same artifacts:");
+      Truth.assertThat(log4jDependencyPathMessage.getValue())
+          .startsWith("There are 994 paths to the artifact.");
       int dependencyPathListSize =
           document.query("//ul[@class='static-linkage-check-dependency-paths']/li").size();
       Truth.assertWithMessage("The dashboard should not show repetitive dependency paths")

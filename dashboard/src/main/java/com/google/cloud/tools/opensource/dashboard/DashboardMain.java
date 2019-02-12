@@ -29,7 +29,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -72,7 +71,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -373,7 +371,7 @@ public class DashboardMain {
       templateData.put("jarLinkageReports", classpathCheckReport.getJarLinkageReports());
       templateData.put("jarToDependencyPaths", jarToDependencyPaths);
       templateData.put("jarToSimplifiedPathMessage",
-          simplifyDependencyPathMessage(jarToDependencyPaths));
+          dependencyPathRootProblemMessage(jarToDependencyPaths));
 
       // Accessing Static method 'countFailures' from Freemarker template
       // https://freemarker.apache.org/docs/pgui_misc_beanwrapper.html#autoid_60
@@ -416,39 +414,48 @@ public class DashboardMain {
   }
 
   /**
-   * Returns mapping from jar file to simplified description of its {@link DependencyPath}s. A
-   * simplified description of {@link DependencyPath}s explains a common pattern ({@code
-   * groupId:artifactId}) in the path elements, helping to avoid listing more than 5 repetitive
-   * items in BOM dashboard.
+   * Returns mapping from jar files to a summary of the root problem in {@link DependencyPath}s of
+   * the jar files. The summary explains common patterns ({@code groupId:artifactId}) in the path
+   * elements. The returned map does not have a key for a jar file when the length of its {@link
+   * DependencyPath} list is small or a common pattern is not found among the items.
+   *
+   * <p>Using this summary in the BOM dashboard avoids repetitive items in the {@link
+   * DependencyPath} list that share the same root problem caused by widely-used libraries, for
+   * example, {@code commons-logging:commons-logging}, {@code
+   * com.google.http-client:google-http-client} and {@code log4j:log4j}.
    */
-  private static ImmutableMap<String, String> simplifyDependencyPathMessage(
+  private static ImmutableMap<String, String> dependencyPathRootProblemMessage(
       Multimap<Path, DependencyPath> jarToDependencyPaths) {
-    // Freemarker is not good at handling non-string key
-    // https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys
+    // Freemarker is not good at handling non-string key. Path object in .ftl is automatically
+    // converted to String. https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
     for (Path jar : jarToDependencyPaths.keySet()) {
-      List<Set<String>> commonVersionLessCoordinates = Lists.newArrayList();
-      Collection<DependencyPath> dependencyPaths = jarToDependencyPaths.get(jar);
+      Set<String> versionlessCoordinates = null; // null for 1st iteration
+      boolean firstIteration = true;
+      ImmutableList<DependencyPath> dependencyPaths = ImmutableList
+          .copyOf(jarToDependencyPaths.get(jar));
       for (DependencyPath dependencyPath : dependencyPaths) {
-        // Set of "groupId:artifactId"
-        Set<String> versionLessCoordinates =
+        // Set of versionless coordinates ("groupId:artifactId")
+        Set<String> versionlessCoordinatesInPath =
             dependencyPath.getPath().stream().map(Artifacts::makeKey).collect(Collectors.toSet());
-        commonVersionLessCoordinates.add(versionLessCoordinates);
-      }
-      Set<String> intersection = Sets.newHashSet(Iterables.getFirst(commonVersionLessCoordinates,
-          Sets.newHashSet()));
-      for (Set<String> versionLessCoordinates : commonVersionLessCoordinates) {
-        intersection.retainAll(versionLessCoordinates);
+        if (firstIteration) {
+          versionlessCoordinates = Sets.newHashSet(versionlessCoordinatesInPath);
+          firstIteration = false;
+        } else {
+          // intersection of elements in among DependencyPaths
+          versionlessCoordinates.retainAll(versionlessCoordinatesInPath);
+        }
       }
 
-      if (dependencyPaths.size() > 5 && intersection.size() > 1) {
+      // When dependencyPaths is not empty, versionlessCoordinates is not null
+      if (dependencyPaths.size() > 5 && versionlessCoordinates.size() > 1) {
         StringBuilder messageBuilder = new StringBuilder();
-        messageBuilder.append(Iterables.getFirst(dependencyPaths, null));
-        messageBuilder.append(", and other " + (dependencyPaths.size() - 1)
-            + " dependency paths to the jar file. ");
+        messageBuilder.append("There are " + dependencyPaths.size() + " paths to the artifact. ");
         messageBuilder.append("All of them have the same artifacts: ");
-        messageBuilder.append(Joiner.on(", ").join(intersection));
+        messageBuilder.append(Joiner.on(", ").join(versionlessCoordinates));
+        messageBuilder.append(". Example path: ");
+        messageBuilder.append(dependencyPaths.get(0));
         builder.put(jar.toString(), messageBuilder.toString());
       }
     }
