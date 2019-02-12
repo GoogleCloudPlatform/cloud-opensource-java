@@ -432,13 +432,13 @@ public class DashboardMain {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
     for (Path jar : jarToDependencyPaths.keySet()) {
-      // To keep order of the common artifact
+      // To keep order of the common artifact when shown in dashboard
       LinkedHashSet<String> versionlessCoordinates = null; // null for 1st iteration
       boolean firstIteration = true;
       ImmutableList<DependencyPath> dependencyPaths = ImmutableList
           .copyOf(jarToDependencyPaths.get(jar));
       for (DependencyPath dependencyPath : dependencyPaths) {
-        // Set of versionless coordinates ("groupId:artifactId")
+        // List of versionless coordinates ("groupId:artifactId")
         ImmutableList<String> versionlessCoordinatesInPath =
             dependencyPath.getPath().stream().map(Artifacts::makeKey).collect(toImmutableList());
         if (firstIteration) {
