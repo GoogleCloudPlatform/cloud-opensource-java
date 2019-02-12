@@ -81,7 +81,7 @@
       
     <ul id="recommended">
       <#list latestArtifacts as artifact, version>
-        <li>${artifact}:${version}</li>
+        <li><code>${artifact}:${version}</code></li>
       </#list>
     </ul>
  
@@ -101,7 +101,7 @@
       <#list latestArtifacts as artifact, version>
         <#if version[0] == '0'>
           <#assign unstableCount++>
-          <li>${artifact}:${version}</li>
+          <li><code>${artifact}:${version}</code></li>
         </#if>
       </#list>
     </ul>
