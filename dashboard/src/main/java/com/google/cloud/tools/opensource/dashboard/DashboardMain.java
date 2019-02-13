@@ -73,7 +73,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 
@@ -165,7 +164,7 @@ public class DashboardMain {
       Path output,
       ArtifactCache cache,
       ClasspathCheckReport classpathCheckReport,
-      Multimap<Path, DependencyPath> jarToDependencyPaths) {
+      ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
     ImmutableMap<Path, JarLinkageReport> jarToLinkageReport =
         classpathCheckReport.getJarLinkageReports().stream()
             .collect(
@@ -257,7 +256,7 @@ public class DashboardMain {
       ArtifactInfo artifactInfo,
       List<DependencyGraph> globalDependencies,
       Set<JarLinkageReport> staticLinkageCheckReports,
-      Multimap<Path, DependencyPath> jarToDependencyPaths)
+      ListMultimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
 
     String coordinates = Artifacts.toCoordinates(artifact);
@@ -356,7 +355,7 @@ public class DashboardMain {
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
       ClasspathCheckReport classpathCheckReport,
-      Multimap<Path, DependencyPath> jarToDependencyPaths)
+      ListMultimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
     File dashboardFile = output.resolve("dashboard.html").toFile();
     
@@ -371,8 +370,8 @@ public class DashboardMain {
       templateData.put("latestArtifacts", latestArtifacts);
       templateData.put("jarLinkageReports", classpathCheckReport.getJarLinkageReports());
       templateData.put("jarToDependencyPaths", jarToDependencyPaths);
-      templateData.put("jarToSimplifiedPathMessage",
-          dependencyPathRootProblemMessage(jarToDependencyPaths));
+      templateData.put(
+          "jarToSimplifiedPathMessage", jarToDependencyPathSummary(jarToDependencyPaths));
 
       // Accessing Static method 'countFailures' from Freemarker template
       // https://freemarker.apache.org/docs/pgui_misc_beanwrapper.html#autoid_60
@@ -414,19 +413,22 @@ public class DashboardMain {
         .count();
   }
 
+  private static final int SUMMARIZING_DEPENDENCY_PATH_SIZE_THRESHOLD = 5;
+
   /**
-   * Returns mapping from jar files to a summary of the root problem in {@link DependencyPath}s of
-   * the jar files. The summary explains common patterns ({@code groupId:artifactId}) in the path
+   * Returns mapping from jar files to summaries of the root problem in their {@link
+   * DependencyPath}s. The summary explains common patterns ({@code groupId:artifactId}) in the path
    * elements. The returned map does not have a key for a jar file when the length of its {@link
-   * DependencyPath} list is small or a common pattern is not found among the items.
+   * DependencyPath} list is smaller than {@link #SUMMARIZING_DEPENDENCY_PATH_SIZE_THRESHOLD} or a
+   * common pattern is not found among the items.
    *
    * <p>Using this summary in the BOM dashboard avoids repetitive items in the {@link
    * DependencyPath} list that share the same root problem caused by widely-used libraries, for
    * example, {@code commons-logging:commons-logging}, {@code
    * com.google.http-client:google-http-client} and {@code log4j:log4j}.
    */
-  private static ImmutableMap<String, String> dependencyPathRootProblemMessage(
-      Multimap<Path, DependencyPath> jarToDependencyPaths) {
+  private static ImmutableMap<String, String> jarToDependencyPathSummary(
+      ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
     // Freemarker is not good at handling non-string key. Path object in .ftl is automatically
     // converted to String. https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
@@ -435,15 +437,14 @@ public class DashboardMain {
       // To keep order of the common artifact when shown in dashboard
       LinkedHashSet<String> versionlessCoordinates = null; // null for 1st iteration
       boolean firstIteration = true;
-      ImmutableList<DependencyPath> dependencyPaths = ImmutableList
-          .copyOf(jarToDependencyPaths.get(jar));
+      List<DependencyPath> dependencyPaths = jarToDependencyPaths.get(jar);
       for (DependencyPath dependencyPath : dependencyPaths) {
         // List of versionless coordinates ("groupId:artifactId")
         ImmutableList<String> versionlessCoordinatesInPath =
             dependencyPath.getPath().stream().map(Artifacts::makeKey).collect(toImmutableList());
         if (firstIteration) {
-          versionlessCoordinates = Sets.newLinkedHashSet(versionlessCoordinatesInPath);
           firstIteration = false;
+          versionlessCoordinates = Sets.newLinkedHashSet(versionlessCoordinatesInPath);
         } else {
           // intersection of elements in DependencyPaths
           versionlessCoordinates.retainAll(versionlessCoordinatesInPath);
@@ -451,7 +452,8 @@ public class DashboardMain {
       }
 
       // When dependencyPaths is not empty, versionlessCoordinates is not null
-      if (dependencyPaths.size() > 5 && versionlessCoordinates.size() > 1) {
+      if (dependencyPaths.size() > SUMMARIZING_DEPENDENCY_PATH_SIZE_THRESHOLD
+          && versionlessCoordinates.size() > 1) { // The last element is always same among paths
         StringBuilder messageBuilder = new StringBuilder();
         messageBuilder.append("There are " + dependencyPaths.size() + " paths to the artifact. ");
         messageBuilder.append("All of them have the same artifacts: ");

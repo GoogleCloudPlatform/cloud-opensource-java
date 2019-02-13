@@ -161,7 +161,7 @@ public class DashboardTest {
       ImmutableList<Node> dependencyPaths = toList(
           document.query("//p[@class='static-linkage-check-dependency-paths']"));
       Node log4jDependencyPathMessage = dependencyPaths.get(dependencyPaths.size() - 1);
-      // Not to show all 900 dependency paths to log4j in the dashboard
+      // log4j dependency paths, which would have 994 lines, should be shown as summarized
       Truth.assertThat(log4jDependencyPathMessage.getValue())
           .startsWith("There are 994 paths to the artifact.");
       int dependencyPathListSize =
