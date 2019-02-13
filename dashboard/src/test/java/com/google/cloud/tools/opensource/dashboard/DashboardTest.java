@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
@@ -48,11 +50,27 @@ import org.junit.Test;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
+import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 
 public class DashboardTest {
+
+  private static final Correspondence<Node, String> NODE_VALUES =
+      new Correspondence<Node, String>() {
+        @Override
+        public boolean compare(Node node, String expected) {
+          String nodeValue = node.getValue().trim();
+          return nodeValue.equals(expected);
+        }
+
+        @Override
+        public String toString() {
+          return "has value equal to";
+        }
+      };
 
   private static Path outputDirectory;
   private Builder builder = new Builder();
@@ -109,30 +127,16 @@ public class DashboardTest {
       for (int i = 1; i < tr.size(); i++) { // start at 1 to skip header row
         Nodes td = tr.get(i).query("td");
         Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i - 1)), td.get(0).getValue());
-        Element firstResult = (Element) (td.get(1));
-        Truth.assertThat(firstResult.getValue().replaceAll("\\s", ""))
-            .containsMatch("PASS|\\d+FAILURES?");
-        Truth.assertThat(firstResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
-
-        Element secondResult = (Element) (td.get(2));
-        Truth.assertThat(secondResult.getValue().replaceAll("\\s", ""))
-            .containsMatch("PASS|\\d+FAILURES?");
-        Truth.assertThat(secondResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
-
-        Element thirdResult = (Element) (td.get(3));
-        Truth.assertThat(thirdResult.getValue().replaceAll("\\s", ""))
-            .containsMatch("PASS|\\d+FAILURES?");
-        Truth.assertThat(thirdResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
-
-        Element fourthResult = (Element) (td.get(4));
-        Truth.assertThat(fourthResult.getValue().replaceAll("\\s", ""))
-            .containsMatch("PASS|\\d+FAILURES?");
-        Truth.assertThat(fourthResult.getAttributeValue("class")).isAnyOf("PASS", "FAIL");
+        for (int j = 1; j < 5; ++j) {
+          assertValidCellValue((Element) td.get(j));
+        }
       }
       Nodes href = document.query("//tr/td[@class='artifact-name']/a/@href");
       for (int i = 0; i < href.size(); i++) {
         String fileName = href.get(i).getValue();
-        Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i)).replace(':', '_') + ".html", 
+        Artifact artifact = artifacts.get(i);
+        Assert.assertEquals(
+            Artifacts.toCoordinates(artifact).replace(':', '_') + ".html",
             URLDecoder.decode(fileName, "UTF-8"));
         Path componentReport = outputDirectory.resolve(fileName);
         Assert.assertTrue(fileName + " is missing", Files.isRegularFile(componentReport));
@@ -150,20 +154,18 @@ public class DashboardTest {
       }
 
       // TODO these should all be separate tests for the different components
-      Node linkage = document.query("//pre[@id='static-linkage-errors']").get(0);
-      Assert.assertFalse(linkage.getValue().contains("(0 errors)"));
+      Node linkage = document.query("//p[@class='jar-linkage-report']").get(0);
+      // grpc-testing-1.17.1, shown as first item in linkage errors, has these errors
+      Assert.assertTrue(linkage.getValue().contains("3 linkage errors in 3 classes"));
 
       Nodes li = document.query("//ul[@id='recommended']/li");
       Assert.assertTrue(li.size() > 100);
-      ArrayList<String> coordinateList = new ArrayList<>();
 
-      for (int i = 0; i < li.size(); i++) {
-        String coordinates = li.get(i).getValue();
-        // fails if these are not valid Maven coordinates
-        new DefaultArtifact(coordinates);
-        coordinateList.add(coordinates);
-      }
-      
+      List<String> coordinateList =
+          toList(li).stream().map(Node::getValue).collect(toImmutableList());
+      // fails if these are not valid Maven coordinates
+      coordinateList.forEach(DefaultArtifact::new);
+
       ArrayList<String> sorted = new ArrayList<>(coordinateList);
       Comparator<String> comparator = new SortWithoutVersion();
       Collections.sort(sorted, comparator);
@@ -185,14 +187,23 @@ public class DashboardTest {
       
       Nodes stable = document.query("//p[@id='stable-notice']");
       Assert.assertEquals(0, stable.size());
-      
-      Nodes artifactCount = document.query("//h2[@class='artifact-count']");
+
+      Nodes artifactCount = document
+          .query("//div[@class='statistic-item statistic-item-green']/h2");
       Assert.assertTrue(artifactCount.size() > 0);
-      for (int i = 0; i < artifactCount.size(); i++) {
-        String value = artifactCount.get(i).getValue().trim();
+      for (Node artifactCountElement : toList(artifactCount)) {
+        String value = artifactCountElement.getValue().trim();
         Assert.assertTrue(value, Integer.parseInt(value) > 0);
-      }            
+      }
     }
+  }
+
+  private static void assertValidCellValue(Element cellElement) {
+    String cellValue = cellElement.getValue().replaceAll("\\s", "");
+    Truth.assertThat(cellValue).containsMatch("PASS|\\d+FAILURES?");
+    Truth.assertWithMessage("It should not use plural for 1 item").that(cellValue)
+        .doesNotContainMatch("1 FAILURES");
+    Truth.assertThat(cellElement.getAttributeValue("class")).isAnyOf("pass", "fail");
   }
 
   @Test
@@ -203,19 +214,16 @@ public class DashboardTest {
     try (InputStream source = Files.newInputStream(grpcAltsHtml)) {
       Document document = builder.build(source);
 
-      Nodes staticLinkageCheckMessage = document.query("//pre[@class='jar-linkage-report']");
+      Nodes staticLinkageCheckMessage = document.query("//p[@class='jar-linkage-report']");
       Assert.assertEquals(1, staticLinkageCheckMessage.size());
       Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
-          .contains("4 linkage errors in 2 classes");
+          .contains("2 linkage errors in 2 classes");
 
-      Nodes jarLinkageReportNode = document.query("//pre[@class='jar-linkage-report']");
-      boolean foundGrpcCoreError = false;
-      for (int i = 0; i < jarLinkageReportNode.size(); i++) {
-        if (jarLinkageReportNode.get(i).getValue().contains("grpc-core-1.17.1.jar")) {
-          foundGrpcCoreError = true;
-        }
-      }
-      Assert.assertFalse(foundGrpcCoreError);
+      Nodes jarLinkageReportNode = document.query("//p[@class='jar-linkage-report-cause']");
+      Truth.assertWithMessage("grpc-alts should show linkage errors for CommunicatorServer")
+          .that(toList(jarLinkageReportNode))
+          .comparingElementsUsing(NODE_VALUES)
+          .contains("com.sun.jdmk.comm.CommunicatorServer is not found, referenced from");
     }
   }
 
@@ -234,7 +242,7 @@ public class DashboardTest {
       // There's a pre tag for dependency
       Assert.assertEquals(1, presDependencyMediation.size());
 
-      Nodes presDependencyTree = document.query("//p[@class='DEPENDENCY_TREE_NODE']");
+      Nodes presDependencyTree = document.query("//p[@class='dependency-tree-node']");
       Assert.assertTrue("Dependency Tree should be shown in dashboard",
           presDependencyTree.size() > 0);
     }
@@ -256,7 +264,7 @@ public class DashboardTest {
           document.query("//pre[@class='suggested-dependency-mediation']");
       Assert.assertTrue("For failed component, suggested dependency should be shown",
           presDependencyMediation.size() >= 1);
-      Nodes dependencyTree = document.query("//p[@class='DEPENDENCY_TREE_NODE']");
+      Nodes dependencyTree = document.query("//p[@class='dependency-tree-node']");
       Assert.assertTrue("Dependency Tree should be shown in dashboard even when FAILED",
           dependencyTree.size() > 0);
     }
@@ -272,7 +280,8 @@ public class DashboardTest {
 
     try (InputStream source = Files.newInputStream(googleCloudTranslateHtml)) {
       Document document = builder.build(source);
-      Nodes staticLinkageCheckMessage = document.query("//pre[@class='jar-linkage-report']");
+      Nodes staticLinkageCheckMessage =
+          document.query("//ul[@class='jar-linkage-report-cause']/li");
       Truth.assertThat(staticLinkageCheckMessage.size()).isGreaterThan(0);
       Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
           .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");
@@ -305,4 +314,11 @@ public class DashboardTest {
 
   }
 
+  private static ImmutableList<Node> toList(Nodes nodes) {
+    ImmutableList.Builder<Node> builder = ImmutableList.builder();
+    for (int i = 0; i < nodes.size(); i++) {
+      builder.add(nodes.get((i)));
+    }
+    return builder.build();
+  }
 }

@@ -38,8 +38,11 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import freemarker.template.Configuration;
+import freemarker.template.DefaultObjectWrapper;
+import freemarker.template.DefaultObjectWrapperBuilder;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import freemarker.template.TemplateHashModel;
 import freemarker.template.Version;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -60,12 +63,14 @@ import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
 public class DashboardMain {
   public static final String TEST_NAME_STATIC_LINKAGE_CHECK = "Static Linkage Errors";
@@ -272,11 +277,19 @@ public class DashboardMain {
       List<DependencyPath> dependencyPaths = completeDependencies.list();
 
       int totalLinkageErrorCount =
-          staticLinkageCheckReports.stream().mapToInt(JarLinkageReport::getTotalErrorCount).sum();
+          staticLinkageCheckReports.stream().mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
+              .sum();
 
       ListMultimap<DependencyPath, DependencyPath> dependencyTree =
           DependencyTreeFormatter.buildDependencyPathTree(dependencyPaths);
       Template report = configuration.getTemplate("/templates/component.ftl");
+
+      // Jar to DependencyPaths which start with the artifact for this report
+      ImmutableMultimap<Path, DependencyPath> jarToDependencyPathsForArtifact =
+          ImmutableMultimap.copyOf(Multimaps.filterValues(
+              jarToDependencyPaths,
+              dependencyPath -> coordinates
+                  .equals(Artifacts.toCoordinates(dependencyPath.get(0)))));
 
       Map<String, Object> templateData = new HashMap<>();
       templateData.put("groupId", artifact.getGroupId());
@@ -286,11 +299,10 @@ public class DashboardMain {
       templateData.put("upperBoundFailures", upperBoundFailures);
       templateData.put("globalUpperBoundFailures", globalUpperBoundFailures);
       templateData.put("lastUpdated", LocalDateTime.now());
-      // Explicit casting avoids Freemarker's error on `AbstractListMultimap.get` in CircleCI
-      templateData.put("dependencyTree", (LinkedListMultimap<?, ?>) dependencyTree);
+      templateData.put("dependencyTree", dependencyTree);
       templateData.put("dependencyRootNode", Iterables.getFirst(dependencyTree.values(), null));
       templateData.put("jarLinkageReports", staticLinkageCheckReports);
-      templateData.put("jarToDependencyPaths", jarToDependencyPaths);
+      templateData.put("jarToDependencyPaths", jarToDependencyPathsForArtifact);
       templateData.put("totalLinkageErrorCount", totalLinkageErrorCount);
       report.process(templateData, out);
 
@@ -354,6 +366,12 @@ public class DashboardMain {
       templateData.put("jarLinkageReports", classpathCheckReport.getJarLinkageReports());
       templateData.put("jarToDependencyPaths", jarToDependencyPaths);
 
+      // Accessing Static method 'countFailures' from Freemarker template
+      // https://freemarker.apache.org/docs/pgui_misc_beanwrapper.html#autoid_60
+      DefaultObjectWrapper wrapper = new DefaultObjectWrapperBuilder(Configuration.VERSION_2_3_28)
+          .build();
+      TemplateHashModel staticModels = wrapper.getStaticModels();
+      templateData.put("dashboardMain", staticModels.get(DashboardMain.class.getName()));
       dashboard.process(templateData, out);
     }
   }
@@ -376,5 +394,15 @@ public class DashboardMain {
       }
     }
     return latestArtifacts;
+  }
+
+  /**
+   * Returns the number of rows in {@code table} that show unavailable ({@code null} result) or some
+   * failures for {@code columnName}.
+   */
+  public static long countFailures(List<ArtifactResults> table, String columnName) {
+    return table.stream()
+        .filter(row -> row.getResult(columnName) == null || row.getFailureCount(columnName) > 0)
+        .count();
   }
 }

@@ -37,7 +37,7 @@ public abstract class ClasspathCheckReport {
   public String toString() {
     StringBuilder builder = new StringBuilder();
     for (JarLinkageReport jarLinkageReport : getJarLinkageReports()) {
-      if (jarLinkageReport.getTotalErrorCount() > 0) {
+      if (jarLinkageReport.getCauseToSourceClassesSize() > 0) {
         builder.append(jarLinkageReport.toString());
         builder.append('\n');
       }

@@ -1,4 +1,5 @@
 <html lang="en-US">
+  <#include "macros.ftl">
   <head>
     <title>Google Cloud Platform Dependency Analysis Report for ${groupId}:${artifactId}:${version}</title>
     <link rel="stylesheet" type="text/css" href="dashboard.css" />
@@ -114,24 +115,7 @@
 
     <p id="static-linkage-errors-total">${totalLinkageErrorCount} static linkage error(s)</p>
     <#list jarLinkageReports as jarLinkageReport>
-      <#if jarLinkageReport.getTotalErrorCount() gt 0>
-        <h3>${jarLinkageReport.getJarPath().getFileName()?html}</h3>
-        <pre class="jar-linkage-report">${jarLinkageReport.formatByGroup()?html}</pre>
-
-        <p class="static-linkage-check-dependency-paths">
-          Following paths to the jar file from BOM are found in the dependency tree.
-        </p>
-        <ul class="static-linkage-check-dependency-paths">
-          <#list jarToDependencyPaths.get(jarLinkageReport.getJarPath()) as dependencyPath >
-            <#assign dependencyPathRoot = dependencyPath.get(0) />
-            <#if dependencyPathRoot.getGroupId() == groupId
-                 && dependencyPathRoot.getArtifactId() == artifactId >
-              <li>${dependencyPath}</li>
-            </#if>
-          </#list>
-        </ul>
-
-      </#if>
+      <@formatJarLinkageReport jarLinkageReport jarToDependencyPaths/>
     </#list>
 
     <h2>Dependencies</h2>
@@ -141,23 +125,6 @@
     <#else>
       <p>Dependency information is unavailable</p>
     </#if>
-
-    <#macro formatDependencyNode currentNode parent>
-      <#if parent == currentNode>
-        <#assign label = 'root' />
-      <#else>
-        <#assign label = 'parent: ' + parent.getLeaf() />
-      </#if>
-      <p class="DEPENDENCY_TREE_NODE" title="${label}">${currentNode.getLeaf()}</p>
-      <ul>
-        <#list dependencyTree.get(currentNode) as childNode>
-          <li class="DEPENDENCY_TREE_NODE">
-            <@formatDependencyNode childNode currentNode />
-          </li>
-        </#list>
-      </ul>
-    </#macro>
-
     <hr />
     <p id='updated'>Last generated at ${lastUpdated}</p>
   </body>

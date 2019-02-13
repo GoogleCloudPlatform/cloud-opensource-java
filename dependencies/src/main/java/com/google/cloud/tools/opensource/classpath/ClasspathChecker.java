@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHierarchy;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -38,7 +39,6 @@ import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 
@@ -93,13 +93,16 @@ public class ClasspathChecker {
   public static void main(String[] arguments)
       throws IOException, RepositoryException, ParseException {
 
-    CommandLine commandLine = ClasspathCheckOption.readCommandLine(arguments);
-    ImmutableList<Path> inputClasspath = ClasspathCheckOption.parseInputClasspath(commandLine);
+    ClasspathCheckerArguments linkageCheckerArguments =
+        ClasspathCheckerArguments.readCommandLine(arguments);
 
-    ImmutableSet<Path> entryPointJars =
-        ClasspathCheckOption.parseEntryPointJars(commandLine, inputClasspath);
+    RepositoryUtility.setRepositories(linkageCheckerArguments.getExtraMavenRepositoryUrls(),
+        linkageCheckerArguments.getAddMavenCentral());
 
-    ClasspathChecker classpathChecker = create(inputClasspath, entryPointJars);
+    ClasspathChecker classpathChecker =
+        create(
+            linkageCheckerArguments.getInputClasspath(),
+            linkageCheckerArguments.getEntryPointJars());
     ClasspathCheckReport report = classpathChecker.findLinkageErrors();
 
     System.out.println(report);
