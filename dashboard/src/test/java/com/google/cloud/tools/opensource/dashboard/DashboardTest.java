@@ -62,7 +62,7 @@ public class DashboardTest {
       new Correspondence<Node, String>() {
         @Override
         public boolean compare(Node node, String expected) {
-          String nodeValue = node.getValue().trim();
+          String nodeValue = node.getValue().trim().replaceAll("\\s+", " ");
           return nodeValue.equals(expected);
         }
 
@@ -153,10 +153,12 @@ public class DashboardTest {
         }
       }
 
-      // TODO these should all be separate tests for the different components
-      Node linkage = document.query("//p[@class='jar-linkage-report']").get(0);
+      // TODO(#439): these should all be separate tests for the different components
+      Nodes linkages = document.query("//p[@class='jar-linkage-report']");
       // grpc-testing-1.17.1, shown as first item in linkage errors, has these errors
-      Assert.assertTrue(linkage.getValue().contains("3 linkage errors in 3 classes"));
+      Truth.assertThat(toList(linkages))
+          .comparingElementsUsing(NODE_VALUES)
+          .contains("3 target classes causing linkage errors referenced from 3 source classes.");
 
       Nodes li = document.query("//ul[@id='recommended']/li");
       Assert.assertTrue(li.size() > 100);
@@ -216,9 +218,9 @@ public class DashboardTest {
 
       Nodes staticLinkageCheckMessage = document.query("//p[@class='jar-linkage-report']");
       Assert.assertEquals(1, staticLinkageCheckMessage.size());
-      Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
-          .contains("2 linkage errors in 2 classes");
-
+      Truth.assertThat(toList(staticLinkageCheckMessage))
+          .comparingElementsUsing(NODE_VALUES)
+          .contains("2 target classes causing linkage errors referenced from 2 source classes.");
       Nodes jarLinkageReportNode = document.query("//p[@class='jar-linkage-report-cause']");
       Truth.assertWithMessage("grpc-alts should show linkage errors for CommunicatorServer")
           .that(toList(jarLinkageReportNode))
