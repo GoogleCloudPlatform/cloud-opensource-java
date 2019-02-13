@@ -3,6 +3,7 @@
   <head>
     <title>Google Cloud Platform Dependency Analysis Report for ${groupId}:${artifactId}:${version}</title>
     <link rel="stylesheet" type="text/css" href="dashboard.css" />
+    <script src="dashboard.js"></script>
   </head>
   <body>
     <h1>Dependency Analysis of ${groupId}:${artifactId}:${version}</h1>

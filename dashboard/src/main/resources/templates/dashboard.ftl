@@ -4,6 +4,7 @@
     <title>Google Cloud Platform Java Open Source Dependency Dashboard</title>
     
     <link rel="stylesheet" type="text/css" href="dashboard.css" />
+    <script src="dashboard.js"></script>
   </head>
   <body>
     <h1>Google Cloud Platform Java Dependency Dashboard</h1>
