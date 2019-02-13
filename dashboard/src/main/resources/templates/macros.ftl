@@ -3,7 +3,7 @@
   <#return number + " " + plural?string(pluralNoun, singlarNoun)>
 </#function>
 
-<#macro formatJarLinkageReport jarLinkageReport jarToDependencyPaths jarToSimplifiedPathMessage>
+<#macro formatJarLinkageReport jarLinkageReport jarToDependencyPaths dependencyPathRootCauses>
   <#if jarLinkageReport.getCauseToSourceClassesSize() gt 0>
     <#assign jarPath = jarLinkageReport.getJarPath() />
     <h3>${jarPath.getFileName()?html}</h3>
@@ -26,8 +26,8 @@
     <p class="static-linkage-check-dependency-paths">
       The following paths to the jar file from BOM are found in the dependency tree.
     </p>
-    <#if jarToSimplifiedPathMessage[jarPath]?? >
-      <p class="static-linkage-check-dependency-paths">${jarToSimplifiedPathMessage[jarPath]?html}
+    <#if dependencyPathRootCauses[jarPath]?? >
+      <p class="static-linkage-check-dependency-paths">${dependencyPathRootCauses[jarPath]?html}
       </p>
     <#else>
       <ul class="static-linkage-check-dependency-paths">

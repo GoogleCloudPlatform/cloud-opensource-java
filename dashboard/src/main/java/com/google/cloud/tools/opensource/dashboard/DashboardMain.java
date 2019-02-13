@@ -307,7 +307,6 @@ public class DashboardMain {
       templateData.put("dependencyRootNode", Iterables.getFirst(dependencyTree.values(), null));
       templateData.put("jarLinkageReports", staticLinkageCheckReports);
       templateData.put("jarToDependencyPaths", jarToDependencyPathsForArtifact);
-      templateData.put("jarToSimplifiedPathMessage", Maps.newHashMap());
       templateData.put("totalLinkageErrorCount", totalLinkageErrorCount);
       report.process(templateData, out);
 
@@ -370,8 +369,7 @@ public class DashboardMain {
       templateData.put("latestArtifacts", latestArtifacts);
       templateData.put("jarLinkageReports", classpathCheckReport.getJarLinkageReports());
       templateData.put("jarToDependencyPaths", jarToDependencyPaths);
-      templateData.put(
-          "jarToSimplifiedPathMessage", jarToDependencyPathSummary(jarToDependencyPaths));
+      templateData.put("dependencyPathRootCauses", findRootCauses(jarToDependencyPaths));
 
       // Accessing Static method 'countFailures' from Freemarker template
       // https://freemarker.apache.org/docs/pgui_misc_beanwrapper.html#autoid_60
@@ -427,7 +425,7 @@ public class DashboardMain {
    * example, {@code commons-logging:commons-logging}, {@code
    * com.google.http-client:google-http-client} and {@code log4j:log4j}.
    */
-  private static ImmutableMap<String, String> jarToDependencyPathSummary(
+  private static ImmutableMap<String, String> findRootCauses(
       ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
     // Freemarker is not good at handling non-string key. Path object in .ftl is automatically
     // converted to String. https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys
@@ -455,10 +453,10 @@ public class DashboardMain {
       if (dependencyPaths.size() > SUMMARIZING_DEPENDENCY_PATH_SIZE_THRESHOLD
           && versionlessCoordinates.size() > 1) { // The last elements are always same among paths
         StringBuilder messageBuilder = new StringBuilder();
-        messageBuilder.append("There are " + dependencyPaths.size() + " paths to the artifact. ");
-        messageBuilder.append("All of them have the same artifacts: ");
+        messageBuilder.append("Artifacts '");
         messageBuilder.append(Joiner.on(" > ").join(versionlessCoordinates));
-        messageBuilder.append(". Example path: ");
+        messageBuilder.append("' exist in all " + dependencyPaths.size() + " dependency paths. ");
+        messageBuilder.append("Example path: ");
         messageBuilder.append(dependencyPaths.get(0));
         builder.put(jar.toString(), messageBuilder.toString());
       }
