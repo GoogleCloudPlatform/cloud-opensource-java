@@ -420,7 +420,7 @@ public class DashboardMain {
    * DependencyPath}s. The summary explains common patterns ({@code groupId:artifactId}) in the path
    * elements. The returned map does not have a key for a jar file when the length of its {@link
    * DependencyPath} list is smaller than {@link #SUMMARIZING_DEPENDENCY_PATH_SIZE_THRESHOLD} or a
-   * common pattern is not found among the items.
+   * common pattern is not found among the elements in the paths.
    *
    * <p>Using this summary in the BOM dashboard avoids repetitive items in the {@link
    * DependencyPath} list that share the same root problem caused by widely-used libraries, for
@@ -453,7 +453,7 @@ public class DashboardMain {
 
       // When dependencyPaths is not empty, versionlessCoordinates is not null
       if (dependencyPaths.size() > SUMMARIZING_DEPENDENCY_PATH_SIZE_THRESHOLD
-          && versionlessCoordinates.size() > 1) { // The last element is always same among paths
+          && versionlessCoordinates.size() > 1) { // The last elements are always same among paths
         StringBuilder messageBuilder = new StringBuilder();
         messageBuilder.append("There are " + dependencyPaths.size() + " paths to the artifact. ");
         messageBuilder.append("All of them have the same artifacts: ");
