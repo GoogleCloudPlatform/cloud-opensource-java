@@ -19,23 +19,26 @@ Java Dependency Glossary
 ### Types of conflicts and compatibility
 
 <a name="linkage-error"></a>
-- **Linkage error**: A "class has some dependency on another class; however, the
-  latter class has incompatibly changed after the compilation of the former class."<sup>[1](#myfootnote1)</sup>
-  The reference can be through a class literal, a field access, or a method invocation.
-  Linkage errors detected at runtime manifest as a subclass of `LinkageError` such as
-  `NoSuchMethodError`, `NoClassDefFoundError`, `NoSuchFieldError`, or similar errors.
+- **Linkage error**: an abnormal condition of a classpath in which a
+  "class has some dependency on another class; however, the
+  latter class has incompatibly changed after the compilation of the
+  former class."<sup>[1](#myfootnote1)</sup> The reference can be
+  through a class literal, a field access, or a method invocation.
+  Linkage errors encountered at runtime manifest as a subclass of
+  `LinkageError` such as `NoSuchMethodError`, `NoClassDefFoundError`,
+  `NoSuchFieldError`, or similar errors.
 
-  For example, the name, return type,
-  modifiers, or arguments of a non-private method, field, or class
-  in a dependency has changed in an incompatible way between
-  the version of a class file supplied at compile time and the version available in
-  the runtime class path. A public method may have been removed from a class or an extended
-  class may have been made final.
+  For example, the name, return type, modifiers, or arguments of a
+  non-private method, field, or class in a dependency has changed in an
+  incompatible way between the version of a class file supplied at
+  compile time and the version available in the runtime class path. A
+  public method may have been removed from a class or an extended class
+  may have been made final.
   
-  In cases where binary compatibility and source
-  compatibility are the same, a linkage error is when compilation would
-  fail if the libraries in the class path were all built together from their
-  originating source code.
+  In cases where binary compatibility and source compatibility are the
+  same, a linkage error is when compilation would fail if the libraries
+  in the class path were all built together from their originating
+  source code.
   
   - Opposite: **Linkage-compatible**.
 
@@ -54,7 +57,7 @@ Java Dependency Glossary
 <a name="upper-version-alignment"></a>
 - **Version alignment**: Said of the dependency tree of a Maven module. This
   means that for any dependency of a module in that module's dependency tree,
-  all major Java build systems will select the same version of that dependency.
+  all major Java build systems select the same version of that dependency.
   - Major build systems currently include Maven and Gradle.
   - Direct (first-order) dependencies comply with this rule in
     all major build systems, so the real concern is transitive (second-order and
