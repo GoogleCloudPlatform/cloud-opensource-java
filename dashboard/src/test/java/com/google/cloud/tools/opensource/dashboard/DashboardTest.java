@@ -163,7 +163,9 @@ public class DashboardTest {
       Node log4jDependencyPathMessage = dependencyPaths.get(dependencyPaths.size() - 1);
       // There are 994 paths to log4j. These should be summarized.
       Truth.assertThat(log4jDependencyPathMessage.getValue())
-          .startsWith("There are 994 paths to the artifact.");
+          .startsWith(
+              "Artifacts 'com.google.http-client:google-http-client >"
+                  + " commons-logging:commons-logging > log4j:log4j' exist in all");
       int dependencyPathListSize =
           document.query("//ul[@class='static-linkage-check-dependency-paths']/li").size();
       Truth.assertWithMessage("The dashboard should not show repetitive dependency paths")
