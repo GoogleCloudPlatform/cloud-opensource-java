@@ -58,12 +58,12 @@ import com.google.common.truth.Truth;
 
 public class DashboardTest {
 
-  private static final Correspondence<Node, String> NODE_VALUES_PREFIX =
+  private static final Correspondence<Node, String> NODE_VALUES =
       new Correspondence<Node, String>() {
         @Override
         public boolean compare(Node node, String expected) {
-          String nodeValue = node.getValue().trim();
-          return nodeValue.startsWith(expected);
+          String nodeValue = node.getValue().trim().replaceAll("\\s+", " ");
+          return nodeValue.equals(expected);
         }
 
         @Override
@@ -222,10 +222,10 @@ public class DashboardTest {
       Nodes jarLinkageReportNode = document.query("//p[@class='jar-linkage-report-cause']");
       Truth.assertWithMessage("grpc-alts should show linkage errors for CommunicatorServer")
           .that(toList(jarLinkageReportNode))
-          .comparingElementsUsing(NODE_VALUES_PREFIX)
+          .comparingElementsUsing(NODE_VALUES)
           .contains(
               "com.sun.jdmk.comm.CommunicatorServer is not found,"
-                  + " referenced from 1 source class");
+                  + " referenced from 1 source class +"); // '+' is in the toggle button
     }
   }
 
