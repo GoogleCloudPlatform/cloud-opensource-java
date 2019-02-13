@@ -1,61 +1,52 @@
 # Classpath Checker
 
 Classpath Checker is a tool that finds [linkage errors](
-../library-best-practices/glossary.md#static-linkage-error)
-on a class path and reports the errors to the console.
-It scans the class files in the class path for references to other classes and
-reports any reference that cannot be satisfied.
-It can report all such unsatisfied references or only those that are reachable from
-a given set of entry point classes.
+../library-best-practices/glossary.md#static-linkage-error) on a class
+path. It scans the class files in the class path for references to other
+classes and reports any reference that cannot be satisfied.
 
 ### Use Cases
  
 There are two use cases for Classpath Checker:
 
 - **For library/application developers** the tool finds linkage
-  errors in their projects, and will help to avoid incompatible versions of libraries
+  errors in their projects and helps to avoid incompatible versions of libraries
   in their dependencies.
 
 - **For organizations** that provide multiple libraries developed by different teams,
-  the tool helps to ensure that users depending on the libraries will not see any
+  the tool helps to ensure that users depending on these libraries will not see any
   linkage errors at runtime.
 
 ### Approach
 
-1. The tool takes a class path as required input.
-  This class path is called the _input class path_ and is separate from
-  the runtime class path of the tool itself. The tool operates on the input class path
-  to find linkage errors.
+1. The tool takes a class path as input. This is called the _input class
+   path_ and is separate from the runtime class path of the tool itself.
 
-2. The tool extracts all symbolic references from the class files in the class path.
+2. The tool extracts symbolic references from the class files in the class path.
 
-3. The tool records linkage errors for symbolic references which cannot be satisfied
-  in the class path.
+3. The tool records linkage errors for symbolic references that cannot be satisfied
+   in the class path.
 
-4. Optionally, the user can specify a subset of elements in the class path as _entry points_.
-  In that case, the tool will list only those references that are reachable
-  from the classes in the entry points.
-
-5. At the end, the tool outputs a report of the linkage errors.
+4. At the end, the tool outputs a report of the linkage errors.
 
 ### Input
 
-The input of the tool is the Maven coordinate of a BOM, 
+The input to the tool is the Maven coordinate of a BOM, 
 a list of Maven coordinates, or a list of class and jar files in the filesystem.
-All of these inputs are converted to a class path for the classpath check,
-which is the _input class path_.
+All of these inputs are converted to a class path called the _input class path_.
 
 When the input is a Maven BOM, the elements in the BOM are
 converted to a list of Maven coordinates.
 If the BOM imports another BOM, the elements of the second BOM are recursively
 added to the list of Maven coordinates. This list of Maven coordinates is handled
-in the same way as a directly-provided list of coordinates (see below).
+in the same way as a directly-provided list of coordinates.
 
 When the input is a list of Maven coordinates, they are resolved to a list of jar files
 that consists of the artifacts and their dependencies. This list of jar files is
-handled in the same way as a directly-provided list of jar files (see below).
+handled in the same way as a directly-provided list of jar files.
 
-When the input is a list of class and jar files, they are used directly as the _input class path_.
+When the input is a list of class directories and jar files,
+they are used directly as the _input class path_.
 
 ### Output
 
