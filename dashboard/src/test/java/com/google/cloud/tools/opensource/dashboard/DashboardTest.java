@@ -69,7 +69,7 @@ public class DashboardTest {
 
         @Override
         public String toString() {
-          return "has value starting with ";
+          return "has value equal to";
         }
       };
 
