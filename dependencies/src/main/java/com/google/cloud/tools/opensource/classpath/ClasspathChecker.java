@@ -170,9 +170,26 @@ public class ClasspathChecker {
             .map(checkFunction)
             .filter(Optional::isPresent)
             .map(Optional::get)
+            .filter(error -> !containsExclusionClass(error.getReference()))
             .collect(toImmutableList());
     return linkageErrors;
   }
+
+  static final ImmutableList<String> excludeWords =
+      ImmutableList.of("Pb", "repackaged", "servlet", "protos");
+
+  private static boolean containsExclusionClass(SymbolReference reference) {
+    for (String excludeWord : excludeWords) {
+      if (reference.getSourceClassName().contains(excludeWord)) {
+        return true;
+      }
+      if (reference.getTargetClassName().contains(excludeWord)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 
   /**
    * Returns an {@code Optional} describing the linkage error for the method reference if the

@@ -71,20 +71,17 @@ public abstract class JarLinkageReport {
   public String toString() {
     String indent = "  ";
     StringBuilder builder = new StringBuilder();
-    int totalErrors = getCauseToSourceClassesSize();
 
-    builder.append(getJarPath().getFileName() + " (" + totalErrors + " errors):\n");
-    for (StaticLinkageError<ClassSymbolReference> missingClass : getMissingClassErrors()) {
-      builder.append(indent + missingClass);
+    ImmutableMultimap<LinkageErrorCause, String> causeToSourceClasses = getCauseToSourceClasses();
+    builder.append(
+        getJarPath().getFileName() + " (" + causeToSourceClasses.keySet().size() + " errors):\n");
+    for (LinkageErrorCause key : causeToSourceClasses.keySet()) {
+      builder.append(key);
       builder.append("\n");
-    }
-    for (StaticLinkageError<MethodSymbolReference> missingMethod : getMissingMethodErrors()) {
-      builder.append(indent + missingMethod);
-      builder.append("\n");
-    }
-    for (StaticLinkageError<FieldSymbolReference> missingField : getMissingFieldErrors()) {
-      builder.append(indent + missingField);
-      builder.append("\n");
+      for (String sourceClass : causeToSourceClasses.get(key)) {
+        builder.append("  source: " + sourceClass);
+        builder.append("\n");
+      }
     }
     return builder.toString();
   }
@@ -119,6 +116,7 @@ public abstract class JarLinkageReport {
       builder.putAll(
           key,
           allErrorsForKey.stream()
+              .filter(error -> error.isReachable())
               .map(StaticLinkageError::getReference)
               .map(SymbolReference::getSourceClassName)
               .map(className -> className.split("\\$")[0]) // Removing duplicate inner classes
