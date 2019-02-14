@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.dashboard;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
-import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -33,6 +32,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -437,7 +437,8 @@ public class DashboardMain {
     for (Path jar : jarToDependencyPaths.keySet()) {
       List<DependencyPath> dependencyPaths = jarToDependencyPaths.get(jar);
 
-      Set<String> commonVersionlessArtifacts = commonVersionlessArtifacts(dependencyPaths);
+      LinkedHashSet<String> commonVersionlessArtifacts =
+          commonVersionlessArtifacts(dependencyPaths);
 
       if (dependencyPaths.size() > MINIMUM_NUMBER_DEPENDENCY_PATHS
           && commonVersionlessArtifacts.size() > 1) { // The last paths elements are always same
@@ -450,34 +451,32 @@ public class DashboardMain {
     return builder.build();
   }
 
-  private static Set<String> commonVersionlessArtifacts(List<DependencyPath> dependencyPaths) {
-    Preconditions.checkArgument(
-        !dependencyPaths.isEmpty(), "Dependency paths for a jar should not be empty");
-    Set<String> versionlessCoordinatesIntersection = null; // null for 1st iteration
+  private static LinkedHashSet<String> commonVersionlessArtifacts(
+      List<DependencyPath> dependencyPaths) {
+    ImmutableList<String> initialVersionlessCoordinates =
+        versionlessCoordinates(dependencyPaths.get(0));
+    // LinkedHashSet remembers insertion order
+    LinkedHashSet<String> versionlessCoordinatesIntersection =
+        Sets.newLinkedHashSet(initialVersionlessCoordinates);
     for (DependencyPath dependencyPath : dependencyPaths) {
       // List of versionless coordinates ("groupId:artifactId")
-      ImmutableList<String> versionlessCoordinatesInPath =
-          dependencyPath.getPath().stream().map(Artifacts::makeKey).collect(toImmutableList());
-      if (versionlessCoordinatesIntersection == null) {
-        // For 1st iteration, initializes the intersection set with LinkedHashSet, which keeps
-        // the order of the common artifacts.
-        versionlessCoordinatesIntersection = Sets.newLinkedHashSet(versionlessCoordinatesInPath);
-      } else {
-        // intersection of elements in DependencyPaths
-        versionlessCoordinatesIntersection.retainAll(versionlessCoordinatesInPath);
-      }
+      ImmutableList<String> versionlessCoordinatesInPath = versionlessCoordinates(dependencyPath);
+      // intersection of elements in DependencyPaths
+      versionlessCoordinatesIntersection.retainAll(versionlessCoordinatesInPath);
     }
     // Because dependencyPaths is not empty, always returns non-null
     return versionlessCoordinatesIntersection;
   }
 
+  private static ImmutableList<String> versionlessCoordinates(DependencyPath dependencyPath) {
+    return dependencyPath.getPath().stream().map(Artifacts::makeKey).collect(toImmutableList());
+  }
+
   private static String summaryMessage(
-      int dependencyPathCount,
-      Set<String> versionlessCoordinatesIntersection,
-      DependencyPath examplePath) {
+      int dependencyPathCount, Set<String> coordinates, DependencyPath examplePath) {
     StringBuilder messageBuilder = new StringBuilder();
     messageBuilder.append("Artifacts '");
-    messageBuilder.append(Joiner.on(" > ").join(versionlessCoordinatesIntersection));
+    messageBuilder.append(Joiner.on(" > ").join(coordinates));
     messageBuilder.append("' exist in all " + dependencyPathCount + " dependency paths. ");
     messageBuilder.append("Example path: ");
     messageBuilder.append(examplePath);
