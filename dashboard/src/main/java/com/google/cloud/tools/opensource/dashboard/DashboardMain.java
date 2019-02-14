@@ -32,7 +32,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -72,7 +71,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 
@@ -411,14 +409,18 @@ public class DashboardMain {
         .count();
   }
 
-  private static final int SUMMARIZING_DEPENDENCY_PATH_SIZE_THRESHOLD = 5;
+  private static final int MINIMUM_NUMBER_DEPENDENCY_PATHS = 5;
 
   /**
    * Returns mapping from jar files to summaries of the root problem in their {@link
    * DependencyPath}s. The summary explains common patterns ({@code groupId:artifactId}) in the path
-   * elements. The returned map does not have a key for a jar file when the length of its {@link
-   * DependencyPath} list is smaller than {@link #SUMMARIZING_DEPENDENCY_PATH_SIZE_THRESHOLD} or a
-   * common pattern is not found among the elements in the paths.
+   * elements. The returned map does not have a key for a jar file when it has fewer than {@link
+   * #MINIMUM_NUMBER_DEPENDENCY_PATHS} dependency paths or a common pattern is not found among the
+   * elements in the paths.
+   *
+   * <p>Example summary: "Artifacts 'com.google.http-client:google-http-client &gt;
+   * commons-logging:commons-logging &gt; log4j:log4j' exist in all 994 dependency paths. Example
+   * path: com.google.cloud:google-cloud-core:1.59.0 ..."
    *
    * <p>Using this summary in the BOM dashboard avoids repetitive items in the {@link
    * DependencyPath} list that share the same root problem caused by widely-used libraries, for
@@ -432,35 +434,50 @@ public class DashboardMain {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
     for (Path jar : jarToDependencyPaths.keySet()) {
-      Set<String> versionlessCoordinatesIntersection = null; // null for 1st iteration
       List<DependencyPath> dependencyPaths = jarToDependencyPaths.get(jar);
 
-      for (DependencyPath dependencyPath : dependencyPaths) {
-        // List of versionless coordinates ("groupId:artifactId")
-        ImmutableList<String> versionlessCoordinatesInPath =
-            dependencyPath.getPath().stream().map(Artifacts::makeKey).collect(toImmutableList());
-        if (versionlessCoordinatesIntersection == null) {
-          // For 1st iteration, initializes the intersection set with LinkedHashSet, which keeps
-          // the order of the common artifacts.
-          versionlessCoordinatesIntersection = Sets.newLinkedHashSet(versionlessCoordinatesInPath);
-        } else {
-          // intersection of elements in DependencyPaths
-          versionlessCoordinatesIntersection.retainAll(versionlessCoordinatesInPath);
-        }
-      }
+      Set<String> commonVersionlessArtifacts = commonVersionlessArtifacts(dependencyPaths);
 
       // When dependencyPaths is not empty, versionlessCoordinates is not null
-      if (dependencyPaths.size() > SUMMARIZING_DEPENDENCY_PATH_SIZE_THRESHOLD
-          && versionlessCoordinatesIntersection.size() > 1) { // The last paths elements are always same
-        StringBuilder messageBuilder = new StringBuilder();
-        messageBuilder.append("Artifacts '");
-        messageBuilder.append(Joiner.on(" > ").join(versionlessCoordinatesIntersection));
-        messageBuilder.append("' exist in all " + dependencyPaths.size() + " dependency paths. ");
-        messageBuilder.append("Example path: ");
-        messageBuilder.append(dependencyPaths.get(0));
-        builder.put(jar.toString(), messageBuilder.toString());
+      if (dependencyPaths.size() > MINIMUM_NUMBER_DEPENDENCY_PATHS
+          && commonVersionlessArtifacts.size() > 1) { // The last paths elements are always same
+        builder.put(
+            jar.toString(),
+            summaryMessage(
+                dependencyPaths.size(), commonVersionlessArtifacts, dependencyPaths.get(0)));
       }
     }
     return builder.build();
+  }
+
+  private static Set<String> commonVersionlessArtifacts(List<DependencyPath> dependencyPaths) {
+    Set<String> versionlessCoordinatesIntersection = null; // null for 1st iteration
+    for (DependencyPath dependencyPath : dependencyPaths) {
+      // List of versionless coordinates ("groupId:artifactId")
+      ImmutableList<String> versionlessCoordinatesInPath =
+          dependencyPath.getPath().stream().map(Artifacts::makeKey).collect(toImmutableList());
+      if (versionlessCoordinatesIntersection == null) {
+        // For 1st iteration, initializes the intersection set with LinkedHashSet, which keeps
+        // the order of the common artifacts.
+        versionlessCoordinatesIntersection = Sets.newLinkedHashSet(versionlessCoordinatesInPath);
+      } else {
+        // intersection of elements in DependencyPaths
+        versionlessCoordinatesIntersection.retainAll(versionlessCoordinatesInPath);
+      }
+    }
+    return versionlessCoordinatesIntersection;
+  }
+
+  private static String summaryMessage(
+      int dependencyPathCount,
+      Set<String> versionlessCoordinatesIntersection,
+      DependencyPath examplePath) {
+    StringBuilder messageBuilder = new StringBuilder();
+    messageBuilder.append("Artifacts '");
+    messageBuilder.append(Joiner.on(" > ").join(versionlessCoordinatesIntersection));
+    messageBuilder.append("' exist in all " + dependencyPathCount + " dependency paths. ");
+    messageBuilder.append("Example path: ");
+    messageBuilder.append(examplePath);
+    return messageBuilder.toString();
   }
 }
