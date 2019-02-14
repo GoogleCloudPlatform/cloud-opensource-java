@@ -23,5 +23,5 @@ function toggleSourceClassListVisibility(button) {
   const currentVisibility = classList.style.display !== "none";
   const nextVisibility = !currentVisibility;
   classList.style.display = nextVisibility ? "" : "none";
-  button.innerText = nextVisibility ? "-" : "+";
+  button.innerText = nextVisibility ? "▼" : "▶";
 }

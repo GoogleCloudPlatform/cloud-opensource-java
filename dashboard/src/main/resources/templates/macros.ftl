@@ -21,7 +21,7 @@
       <p class="jar-linkage-report-cause">${errorCause?html}, referenced from ${
         pluralize(sourceClasses?size, "source class", "source classes")?html}
         <button onclick="toggleSourceClassListVisibility(this)"
-                title="Toggle visibility of source class list">+
+                title="Toggle visibility of source class list">▶
         </button>
       </p>
 

@@ -244,7 +244,7 @@ public class DashboardTest {
           .comparingElementsUsing(NODE_VALUES)
           .contains(
               "com.sun.jdmk.comm.CommunicatorServer is not found,"
-                  + " referenced from 1 source class +"); // '+' is in the toggle button
+                  + " referenced from 1 source class ▶"); // '▶' is in the toggle button
     }
   }
 
