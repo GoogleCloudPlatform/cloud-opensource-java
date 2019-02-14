@@ -161,9 +161,8 @@ public class DashboardTest {
       // TODO(#439): these should all be separate tests for the different components
       Nodes reports = document.query("//p[@class='jar-linkage-report']");
       // grpc-testing-1.17.1, shown as first item in linkage errors, has these errors
-      Truth.assertThat(toList(reports).subList(0, 1)) // first element
-          .comparingElementsUsing(NODE_VALUES)
-          .contains("3 target classes causing linkage errors referenced from 3 source classes.");
+      Truth.assertThat(trimAndCollapseWhiteSpaces(reports.get(0).getValue()))
+          .isEqualTo("3 target classes causing linkage errors referenced from 3 source classes.");
 
       Nodes li = document.query("//ul[@id='recommended']/li");
       Assert.assertTrue(li.size() > 100);
