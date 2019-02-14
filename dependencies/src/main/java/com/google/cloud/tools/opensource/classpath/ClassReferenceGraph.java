@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.google.common.graph.Traverser;
@@ -61,10 +62,19 @@ class ClassReferenceGraph {
             .collect(toImmutableSet());
 
     ImmutableSet.Builder<String> entryPointClassBuilder = ImmutableSet.builder();
+
+    Set<String> packageNames = Sets.newHashSet();
     for (Path jarPath : entryPointJars) {
       for (JavaClass javaClass : ClassDumper.listClassesInJar(jarPath)) {
+        packageNames.add(javaClass.getPackageName());
+        if (!javaClass.getPackageName().startsWith("com.google.appengine")) {
+          continue;
+        }
         entryPointClassBuilder.add(javaClass.getClassName());
       }
+    }
+    for (String s : packageNames) {
+      System.out.println(s);
     }
 
     return new ClassReferenceGraph(classSymbolReferences, entryPointClassBuilder.build());
