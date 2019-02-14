@@ -63,7 +63,7 @@ public class DashboardTest {
       new Correspondence<Node, String>() {
         @Override
         public boolean compare(Node node, String expected) {
-          String trimmedValue = trimAndCollapseWhiteSpaces(node.getValue());
+          String trimmedValue = trimAndCollapseWhiteSpace(node.getValue());
           return trimmedValue.equals(expected);
         }
 
@@ -73,7 +73,7 @@ public class DashboardTest {
         }
       };
 
-  private static String trimAndCollapseWhiteSpaces(String value) {
+  private static String trimAndCollapseWhiteSpace(String value) {
     return CharMatcher.whitespace().trimAndCollapseFrom(value, ' ');
   }
 
@@ -161,7 +161,7 @@ public class DashboardTest {
       // TODO(#439): these should all be separate tests for the different components
       Nodes reports = document.query("//p[@class='jar-linkage-report']");
       // grpc-testing-1.17.1, shown as first item in linkage errors, has these errors
-      Truth.assertThat(trimAndCollapseWhiteSpaces(reports.get(0).getValue()))
+      Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
           .isEqualTo("3 target classes causing linkage errors referenced from 3 source classes.");
 
       Nodes li = document.query("//ul[@id='recommended']/li");
@@ -222,7 +222,7 @@ public class DashboardTest {
 
       Nodes reports = document.query("//p[@class='jar-linkage-report']");
       Assert.assertEquals(1, reports.size());
-      Truth.assertThat(trimAndCollapseWhiteSpaces(reports.get(0).getValue()))
+      Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
           .isEqualTo("2 target classes causing linkage errors referenced from 2 source classes.");
       Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
       Truth.assertWithMessage("grpc-alts should show linkage errors for CommunicatorServer")
