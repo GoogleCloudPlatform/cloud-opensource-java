@@ -3,7 +3,7 @@
   <head>
     <title>Google Cloud Platform Java Open Source Dependency Dashboard</title>
     
-    <link rel="stylesheet" type="text/css" href="dashboard.css" />
+    <link rel="stylesheet" href="dashboard.css" />
     <script src="dashboard.js"></script>
   </head>
   <body>

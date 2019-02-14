@@ -2,7 +2,7 @@
   <#include "macros.ftl">
   <head>
     <title>Google Cloud Platform Dependency Analysis Report for ${groupId}:${artifactId}:${version}</title>
-    <link rel="stylesheet" type="text/css" href="dashboard.css" />
+    <link rel="stylesheet" href="dashboard.css" />
     <script src="dashboard.js"></script>
   </head>
   <body>
