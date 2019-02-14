@@ -50,6 +50,7 @@ import org.junit.Test;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
@@ -62,8 +63,8 @@ public class DashboardTest {
       new Correspondence<Node, String>() {
         @Override
         public boolean compare(Node node, String expected) {
-          String nodeValue = node.getValue().trim().replaceAll("\\s+", " ");
-          return nodeValue.equals(expected);
+          String trimmedValue = trimAndCollapseWhiteSpaces(node.getValue());
+          return trimmedValue.equals(expected);
         }
 
         @Override
@@ -71,6 +72,10 @@ public class DashboardTest {
           return "has value equal to";
         }
       };
+
+  private static String trimAndCollapseWhiteSpaces(String value) {
+    return CharMatcher.whitespace().trimAndCollapseFrom(value, ' ');
+  }
 
   private static Path outputDirectory;
   private Builder builder = new Builder();
@@ -154,9 +159,9 @@ public class DashboardTest {
       }
 
       // TODO(#439): these should all be separate tests for the different components
-      Nodes linkages = document.query("//p[@class='jar-linkage-report']");
+      Nodes reports = document.query("//p[@class='jar-linkage-report']");
       // grpc-testing-1.17.1, shown as first item in linkage errors, has these errors
-      Truth.assertThat(toList(linkages))
+      Truth.assertThat(toList(reports).subList(0, 1)) // first element
           .comparingElementsUsing(NODE_VALUES)
           .contains("3 target classes causing linkage errors referenced from 3 source classes.");
 
@@ -216,16 +221,14 @@ public class DashboardTest {
     try (InputStream source = Files.newInputStream(grpcAltsHtml)) {
       Document document = builder.build(source);
 
-      Nodes staticLinkageCheckMessage = document.query("//p[@class='jar-linkage-report']");
-      Assert.assertEquals(1, staticLinkageCheckMessage.size());
-      Truth.assertThat(toList(staticLinkageCheckMessage))
-          .comparingElementsUsing(NODE_VALUES)
-          .contains("2 target classes causing linkage errors referenced from 2 source classes.");
+      Nodes reports = document.query("//p[@class='jar-linkage-report']");
+      Assert.assertEquals(1, reports.size());
+      Truth.assertThat(trimAndCollapseWhiteSpaces(reports.get(0).getValue()))
+          .isEqualTo("2 target classes causing linkage errors referenced from 2 source classes.");
       Nodes jarLinkageReportNode = document.query("//p[@class='jar-linkage-report-cause']");
       Truth.assertWithMessage("grpc-alts should show linkage errors for CommunicatorServer")
-          .that(toList(jarLinkageReportNode))
-          .comparingElementsUsing(NODE_VALUES)
-          .contains("com.sun.jdmk.comm.CommunicatorServer is not found, referenced from");
+          .that(trimAndCollapseWhiteSpaces(jarLinkageReportNode.get(0).getValue()))
+          .isEqualTo("com.sun.jdmk.comm.CommunicatorServer is not found, referenced from");
     }
   }
 

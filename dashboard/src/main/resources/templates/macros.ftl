@@ -8,12 +8,12 @@
     <h3>${jarLinkageReport.getJarPath().getFileName()?html}</h3>
 
     <#assign causeToSourceClasses = jarLinkageReport.getCauseToSourceClasses() />
-    <#assign targetClassCount = pluralize(causeToSourceClasses.keySet()?size,
-    "target class", "target classes") />
-    <#assign sourceClassCount = pluralize(jarLinkageReport.getCauseToSourceClassesSize(),
-    "source class", "source classes") />
+    <#assign targetClassCount = causeToSourceClasses.keySet()?size />
+    <#assign sourceClassCount = jarLinkageReport.getCauseToSourceClassesSize() />
     <p class="jar-linkage-report">
-      ${targetClassCount} causing linkage errors referenced from ${sourceClassCount}.
+      ${pluralize(targetClassCount, "target class", "target classes")}
+      causing linkage errors referenced from
+      ${pluralize(sourceClassCount, "source class", "source classes")}.
     </p>
     <#list causeToSourceClasses.keySet() as errorCause >
       <p class="jar-linkage-report-cause">${errorCause?html}, referenced from</p>
