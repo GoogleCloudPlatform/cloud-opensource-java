@@ -164,6 +164,20 @@ public class DashboardTest {
       Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
           .isEqualTo("3 target classes causing linkage errors referenced from 3 source classes.");
 
+      ImmutableList<Node> dependencyPaths = toList(
+          document.query("//p[@class='static-linkage-check-dependency-paths']"));
+      Node log4jDependencyPathMessage = dependencyPaths.get(dependencyPaths.size() - 1);
+      // There are 994 paths to log4j. These should be summarized.
+      Truth.assertThat(log4jDependencyPathMessage.getValue())
+          .startsWith(
+              "Artifacts 'com.google.http-client:google-http-client >"
+                  + " commons-logging:commons-logging > log4j:log4j' exist in all");
+      int dependencyPathListSize =
+          document.query("//ul[@class='static-linkage-check-dependency-paths']/li").size();
+      Truth.assertWithMessage("The dashboard should not show repetitive dependency paths")
+          .that(dependencyPathListSize)
+          .isLessThan(100);
+
       Nodes li = document.query("//ul[@id='recommended']/li");
       Assert.assertTrue(li.size() > 100);
 

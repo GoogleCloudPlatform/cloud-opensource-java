@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
 import java.io.File;
@@ -31,6 +32,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -61,6 +63,7 @@ import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.Update;
 import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -69,8 +72,8 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
 
 public class DashboardMain {
   public static final String TEST_NAME_STATIC_LINKAGE_CHECK = "Static Linkage Errors";
@@ -161,7 +164,7 @@ public class DashboardMain {
       Path output,
       ArtifactCache cache,
       ClasspathCheckReport classpathCheckReport,
-      Multimap<Path, DependencyPath> jarToDependencyPaths) {
+      ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
     ImmutableMap<Path, JarLinkageReport> jarToLinkageReport =
         classpathCheckReport.getJarLinkageReports().stream()
             .collect(
@@ -253,7 +256,7 @@ public class DashboardMain {
       ArtifactInfo artifactInfo,
       List<DependencyGraph> globalDependencies,
       Set<JarLinkageReport> staticLinkageCheckReports,
-      Multimap<Path, DependencyPath> jarToDependencyPaths)
+      ListMultimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
 
     String coordinates = Artifacts.toCoordinates(artifact);
@@ -351,7 +354,7 @@ public class DashboardMain {
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
       ClasspathCheckReport classpathCheckReport,
-      Multimap<Path, DependencyPath> jarToDependencyPaths)
+      ListMultimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
     File dashboardFile = output.resolve("dashboard.html").toFile();
     
@@ -366,6 +369,7 @@ public class DashboardMain {
       templateData.put("latestArtifacts", latestArtifacts);
       templateData.put("jarLinkageReports", classpathCheckReport.getJarLinkageReports());
       templateData.put("jarToDependencyPaths", jarToDependencyPaths);
+      templateData.put("dependencyPathRootCauses", findRootCauses(jarToDependencyPaths));
 
       // Accessing Static method 'countFailures' from Freemarker template
       // https://freemarker.apache.org/docs/pgui_misc_beanwrapper.html#autoid_60
@@ -405,5 +409,78 @@ public class DashboardMain {
     return table.stream()
         .filter(row -> row.getResult(columnName) == null || row.getFailureCount(columnName) > 0)
         .count();
+  }
+
+  private static final int MINIMUM_NUMBER_DEPENDENCY_PATHS = 5;
+
+  /**
+   * Returns mapping from jar files to summaries of the root problem in their {@link
+   * DependencyPath}s. The summary explains common patterns ({@code groupId:artifactId}) in the path
+   * elements. The returned map does not have a key for a jar file when it has fewer than {@link
+   * #MINIMUM_NUMBER_DEPENDENCY_PATHS} dependency paths or a common pattern is not found among the
+   * elements in the paths.
+   *
+   * <p>Example summary: "Artifacts 'com.google.http-client:google-http-client &gt;
+   * commons-logging:commons-logging &gt; log4j:log4j' exist in all 994 dependency paths. Example
+   * path: com.google.cloud:google-cloud-core:1.59.0 ..."
+   *
+   * <p>Using this summary in the BOM dashboard avoids repetitive items in the {@link
+   * DependencyPath} list that share the same root problem caused by widely-used libraries, for
+   * example, {@code commons-logging:commons-logging}, {@code
+   * com.google.http-client:google-http-client} and {@code log4j:log4j}.
+   */
+  private static ImmutableMap<String, String> findRootCauses(
+      ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
+    // Freemarker is not good at handling non-string key. Path object in .ftl is automatically
+    // converted to String. https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+
+    for (Path jar : jarToDependencyPaths.keySet()) {
+      List<DependencyPath> dependencyPaths = jarToDependencyPaths.get(jar);
+
+      ImmutableList<String> commonVersionlessArtifacts =
+          commonVersionlessArtifacts(dependencyPaths);
+
+      if (dependencyPaths.size() > MINIMUM_NUMBER_DEPENDENCY_PATHS
+          && commonVersionlessArtifacts.size() > 1) { // The last paths elements are always same
+        builder.put(
+            jar.toString(),
+            summaryMessage(
+                dependencyPaths.size(), commonVersionlessArtifacts, dependencyPaths.get(0)));
+      }
+    }
+    return builder.build();
+  }
+
+  private static ImmutableList<String> commonVersionlessArtifacts(
+      List<DependencyPath> dependencyPaths) {
+    ImmutableList<String> initialVersionlessCoordinates =
+        versionlessCoordinates(dependencyPaths.get(0));
+    // LinkedHashSet remembers insertion order
+    LinkedHashSet<String> versionlessCoordinatesIntersection =
+        Sets.newLinkedHashSet(initialVersionlessCoordinates);
+    for (DependencyPath dependencyPath : dependencyPaths) {
+      // List of versionless coordinates ("groupId:artifactId")
+      ImmutableList<String> versionlessCoordinatesInPath = versionlessCoordinates(dependencyPath);
+      // intersection of elements in DependencyPaths
+      versionlessCoordinatesIntersection.retainAll(versionlessCoordinatesInPath);
+    }
+
+    return ImmutableList.copyOf(versionlessCoordinatesIntersection);
+  }
+
+  private static ImmutableList<String> versionlessCoordinates(DependencyPath dependencyPath) {
+    return dependencyPath.getPath().stream().map(Artifacts::makeKey).collect(toImmutableList());
+  }
+
+  private static String summaryMessage(
+      int dependencyPathCount, List<String> coordinates, DependencyPath examplePath) {
+    StringBuilder messageBuilder = new StringBuilder();
+    messageBuilder.append("Artifacts '");
+    messageBuilder.append(Joiner.on(" > ").join(coordinates));
+    messageBuilder.append("' exist in all " + dependencyPathCount + " dependency paths. ");
+    messageBuilder.append("Example path: ");
+    messageBuilder.append(examplePath);
+    return messageBuilder.toString();
   }
 }

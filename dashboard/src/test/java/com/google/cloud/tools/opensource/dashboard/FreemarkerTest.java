@@ -34,7 +34,7 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.truth.Truth;
 
 import freemarker.template.Configuration;
@@ -81,7 +81,7 @@ public class FreemarkerTest {
     
     List<ArtifactResults> table = ImmutableList.of(results1, results2);
     List<DependencyGraph> globalDependencies = ImmutableList.of();
-    Multimap<Path, DependencyPath> jarToDependencyPaths = LinkedListMultimap.create();
+    ListMultimap<Path, DependencyPath> jarToDependencyPaths = LinkedListMultimap.create();
     DashboardMain.generateDashboard(configuration, outputDirectory, table, globalDependencies,
         classpathCheckReport, jarToDependencyPaths);
     
