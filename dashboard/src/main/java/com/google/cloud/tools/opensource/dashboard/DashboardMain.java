@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.dashboard;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
+import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -438,7 +439,6 @@ public class DashboardMain {
 
       Set<String> commonVersionlessArtifacts = commonVersionlessArtifacts(dependencyPaths);
 
-      // When dependencyPaths is not empty, versionlessCoordinates is not null
       if (dependencyPaths.size() > MINIMUM_NUMBER_DEPENDENCY_PATHS
           && commonVersionlessArtifacts.size() > 1) { // The last paths elements are always same
         builder.put(
@@ -451,6 +451,8 @@ public class DashboardMain {
   }
 
   private static Set<String> commonVersionlessArtifacts(List<DependencyPath> dependencyPaths) {
+    Preconditions.checkArgument(
+        !dependencyPaths.isEmpty(), "Dependency paths for a jar should not be empty");
     Set<String> versionlessCoordinatesIntersection = null; // null for 1st iteration
     for (DependencyPath dependencyPath : dependencyPaths) {
       // List of versionless coordinates ("groupId:artifactId")
@@ -465,6 +467,7 @@ public class DashboardMain {
         versionlessCoordinatesIntersection.retainAll(versionlessCoordinatesInPath);
       }
     }
+    // Because dependencyPaths is not empty, always returns non-null
     return versionlessCoordinatesIntersection;
   }
 
