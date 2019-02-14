@@ -66,8 +66,10 @@ class ClassReferenceGraph {
     Set<String> packageNames = Sets.newHashSet();
     for (Path jarPath : entryPointJars) {
       for (JavaClass javaClass : ClassDumper.listClassesInJar(jarPath)) {
-        packageNames.add(javaClass.getPackageName());
-        if (!javaClass.getPackageName().startsWith("com.google.appengine")) {
+        String packageName = javaClass.getPackageName();
+        packageNames.add(packageName);
+        if (!packageName.startsWith("com.google.appengine")
+            || packageName.startsWith("com.google.appengine.repackaged")) {
           continue;
         }
         entryPointClassBuilder.add(javaClass.getClassName());
