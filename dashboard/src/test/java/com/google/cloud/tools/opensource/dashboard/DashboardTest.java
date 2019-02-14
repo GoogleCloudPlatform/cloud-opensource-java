@@ -228,7 +228,7 @@ public class DashboardTest {
 
   @Test
   public void testComponent_staticLinkageCheckResult() throws IOException, ParsingException {
-    Path grpcAltsHtml = outputDirectory.resolve("io.grpc_grpc-alts_1.17.1.html");
+    Path grpcAltsHtml = outputDirectory.resolve("io.grpc_grpc-alts_1.18.0.html");
     Assert.assertTrue(Files.isRegularFile(grpcAltsHtml));
 
     try (InputStream source = Files.newInputStream(grpcAltsHtml)) {
@@ -294,7 +294,7 @@ public class DashboardTest {
     // google-cloud-translate has transitive dependency to (problematic) appengine-api-1.0-sdk
     // The path to appengine-api-1.0-sdk includes scope:provided dependency
     Path googleCloudTranslateHtml =
-        outputDirectory.resolve("com.google.cloud_google-cloud-translate_1.59.0.html");
+        outputDirectory.resolve("com.google.cloud_google-cloud-translate_1.62.0.html");
     Assert.assertTrue(Files.isRegularFile(googleCloudTranslateHtml));
 
     try (InputStream source = Files.newInputStream(googleCloudTranslateHtml)) {
@@ -310,7 +310,7 @@ public class DashboardTest {
   @Test
   public void testZeroLinkageErrorShowsZero() throws IOException, ParsingException {
     // grpc-auth does not have a linkage error, and it should show zero in the section
-    Path zeroLinkageErrorHtml = outputDirectory.resolve("io.grpc_grpc-auth_1.17.1.html");
+    Path zeroLinkageErrorHtml = outputDirectory.resolve("io.grpc_grpc-auth_1.18.0.html");
     Assert.assertTrue(Files.isRegularFile(zeroLinkageErrorHtml));
 
     try (InputStream source = Files.newInputStream(zeroLinkageErrorHtml)) {
