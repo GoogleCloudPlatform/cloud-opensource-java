@@ -432,7 +432,7 @@ public class DashboardMain {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
     for (Path jar : jarToDependencyPaths.keySet()) {
-      LinkedHashSet<String> versionlessCoordinatesIntersection = null; // null for 1st iteration
+      Set<String> versionlessCoordinatesIntersection = null; // null for 1st iteration
       List<DependencyPath> dependencyPaths = jarToDependencyPaths.get(jar);
 
       for (DependencyPath dependencyPath : dependencyPaths) {
