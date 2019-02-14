@@ -432,29 +432,29 @@ public class DashboardMain {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
     for (Path jar : jarToDependencyPaths.keySet()) {
-      LinkedHashSet<String> commonVersionlessCoordinates = null; // null for 1st iteration
+      LinkedHashSet<String> versionlessCoordinatesIntersection = null; // null for 1st iteration
       List<DependencyPath> dependencyPaths = jarToDependencyPaths.get(jar);
 
       for (DependencyPath dependencyPath : dependencyPaths) {
         // List of versionless coordinates ("groupId:artifactId")
         ImmutableList<String> versionlessCoordinatesInPath =
             dependencyPath.getPath().stream().map(Artifacts::makeKey).collect(toImmutableList());
-        if (commonVersionlessCoordinates == null) {
+        if (versionlessCoordinatesIntersection == null) {
           // For 1st iteration, initializes the intersection set with LinkedHashSet, which keeps
           // the order of the common artifacts.
-          commonVersionlessCoordinates = Sets.newLinkedHashSet(versionlessCoordinatesInPath);
+          versionlessCoordinatesIntersection = Sets.newLinkedHashSet(versionlessCoordinatesInPath);
         } else {
           // intersection of elements in DependencyPaths
-          commonVersionlessCoordinates.retainAll(versionlessCoordinatesInPath);
+          versionlessCoordinatesIntersection.retainAll(versionlessCoordinatesInPath);
         }
       }
 
       // When dependencyPaths is not empty, versionlessCoordinates is not null
       if (dependencyPaths.size() > SUMMARIZING_DEPENDENCY_PATH_SIZE_THRESHOLD
-          && commonVersionlessCoordinates.size() > 1) { // The last paths elements are always same
+          && versionlessCoordinatesIntersection.size() > 1) { // The last paths elements are always same
         StringBuilder messageBuilder = new StringBuilder();
         messageBuilder.append("Artifacts '");
-        messageBuilder.append(Joiner.on(" > ").join(commonVersionlessCoordinates));
+        messageBuilder.append(Joiner.on(" > ").join(versionlessCoordinatesIntersection));
         messageBuilder.append("' exist in all " + dependencyPaths.size() + " dependency paths. ");
         messageBuilder.append("Example path: ");
         messageBuilder.append(dependencyPaths.get(0));
