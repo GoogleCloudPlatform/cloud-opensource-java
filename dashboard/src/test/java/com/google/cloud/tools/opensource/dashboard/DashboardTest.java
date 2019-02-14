@@ -224,10 +224,11 @@ public class DashboardTest {
       Assert.assertEquals(1, reports.size());
       Truth.assertThat(trimAndCollapseWhiteSpaces(reports.get(0).getValue()))
           .isEqualTo("2 target classes causing linkage errors referenced from 2 source classes.");
-      Nodes jarLinkageReportNode = document.query("//p[@class='jar-linkage-report-cause']");
+      Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
       Truth.assertWithMessage("grpc-alts should show linkage errors for CommunicatorServer")
-          .that(trimAndCollapseWhiteSpaces(jarLinkageReportNode.get(0).getValue()))
-          .isEqualTo("com.sun.jdmk.comm.CommunicatorServer is not found, referenced from");
+          .that(toList(causes))
+          .comparingElementsUsing(NODE_VALUES)
+          .contains("com.sun.jdmk.comm.CommunicatorServer is not found, referenced from");
     }
   }
 
