@@ -437,7 +437,7 @@ public class DashboardMain {
     for (Path jar : jarToDependencyPaths.keySet()) {
       List<DependencyPath> dependencyPaths = jarToDependencyPaths.get(jar);
 
-      LinkedHashSet<String> commonVersionlessArtifacts =
+      ImmutableList<String> commonVersionlessArtifacts =
           commonVersionlessArtifacts(dependencyPaths);
 
       if (dependencyPaths.size() > MINIMUM_NUMBER_DEPENDENCY_PATHS
@@ -451,7 +451,7 @@ public class DashboardMain {
     return builder.build();
   }
 
-  private static LinkedHashSet<String> commonVersionlessArtifacts(
+  private static ImmutableList<String> commonVersionlessArtifacts(
       List<DependencyPath> dependencyPaths) {
     ImmutableList<String> initialVersionlessCoordinates =
         versionlessCoordinates(dependencyPaths.get(0));
@@ -464,8 +464,8 @@ public class DashboardMain {
       // intersection of elements in DependencyPaths
       versionlessCoordinatesIntersection.retainAll(versionlessCoordinatesInPath);
     }
-    // Because dependencyPaths is not empty, always returns non-null
-    return versionlessCoordinatesIntersection;
+
+    return ImmutableList.copyOf(versionlessCoordinatesIntersection);
   }
 
   private static ImmutableList<String> versionlessCoordinates(DependencyPath dependencyPath) {
@@ -473,7 +473,7 @@ public class DashboardMain {
   }
 
   private static String summaryMessage(
-      int dependencyPathCount, Set<String> coordinates, DependencyPath examplePath) {
+      int dependencyPathCount, List<String> coordinates, DependencyPath examplePath) {
     StringBuilder messageBuilder = new StringBuilder();
     messageBuilder.append("Artifacts '");
     messageBuilder.append(Joiner.on(" > ").join(coordinates));
