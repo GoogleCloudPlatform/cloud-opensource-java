@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/**
+ * Toggles the visibility of source class list below the button.
+ * @param button clicked button element
+ */
 function toggleSourceClassListVisibility(button) {
   const classList = button.parentElement.nextElementSibling;
   const currentVisibility = classList.style.display !== "none";

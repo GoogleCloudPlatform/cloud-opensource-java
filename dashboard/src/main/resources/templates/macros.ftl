@@ -19,7 +19,7 @@
     <#list causeToSourceClasses.keySet() as errorCause >
       <#assign sourceClasses = causeToSourceClasses.get(errorCause) />
       <p class="jar-linkage-report-cause">${errorCause?html}, referenced from ${
-        pluralize(sourceClasses?size, "source class", "source classes")}
+        pluralize(sourceClasses?size, "source class", "source classes")?html}
         <button onclick="toggleSourceClassListVisibility(this)"
                 title="Toggle visibility of source class list">+
         </button>
