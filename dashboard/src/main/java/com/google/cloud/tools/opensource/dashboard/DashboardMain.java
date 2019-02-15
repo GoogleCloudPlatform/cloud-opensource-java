@@ -122,13 +122,14 @@ public class DashboardMain {
     
     Path relativePath = Paths.get("target", "dashboard");
     Path output = Files.createDirectories(relativePath);
-    
-    copyCss(output);
+
+    copyResource(output, "css/dashboard.css");
+    copyResource(output, "js/dashboard.js");
     Configuration configuration = configureFreemarker();
 
     List<ArtifactResults> table =
         generateReports(configuration, output, cache, linkageReport, jarToDependencyPaths);
-    
+
     generateDashboard(
         configuration,
         output,
@@ -136,13 +137,13 @@ public class DashboardMain {
         cache.getGlobalDependencies(),
         linkageReport,
         jarToDependencyPaths);
-    
+
     return output;
   }
 
-  private static void copyCss(Path output) throws IOException {
+  private static void copyResource(Path output, String resourceName) throws IOException {
     ClassLoader classLoader = DashboardMain.class.getClassLoader();
-    Path input = Paths.get(classLoader.getResource("css/dashboard.css").getPath());
+    Path input = Paths.get(classLoader.getResource(resourceName).getPath());
     Path copy = output.resolve(input.getFileName());
     if (!Files.exists(copy)) {
       Files.copy(input, copy);

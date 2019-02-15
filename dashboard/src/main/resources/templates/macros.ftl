@@ -17,9 +17,17 @@
       ${pluralize(sourceClassCount, "source class", "source classes")}.
     </p>
     <#list causeToSourceClasses.keySet() as errorCause >
-      <p class="jar-linkage-report-cause">${errorCause?html}, referenced from</p>
-      <ul class="jar-linkage-report-cause">
-        <#list causeToSourceClasses.get(errorCause) as sourceClass>
+      <#assign sourceClasses = causeToSourceClasses.get(errorCause) />
+      <p class="jar-linkage-report-cause">${errorCause?html}, referenced from ${
+        pluralize(sourceClasses?size, "source class", "source classes")?html}
+        <button onclick="toggleSourceClassListVisibility(this)"
+                title="Toggle visibility of source class list">▶
+        </button>
+      </p>
+
+      <!-- The visibility of this list is toggled via the button above. Hidden by default -->
+      <ul class="jar-linkage-report-cause" style="display:none">
+        <#list sourceClasses as sourceClass>
           <li>${sourceClass?html}</li>
         </#list>
       </ul>

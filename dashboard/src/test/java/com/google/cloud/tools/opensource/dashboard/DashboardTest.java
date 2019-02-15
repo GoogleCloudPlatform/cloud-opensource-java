@@ -242,7 +242,9 @@ public class DashboardTest {
       Truth.assertWithMessage("grpc-alts should show linkage errors for CommunicatorServer")
           .that(toList(causes))
           .comparingElementsUsing(NODE_VALUES)
-          .contains("com.sun.jdmk.comm.CommunicatorServer is not found, referenced from");
+          .contains(
+              "com.sun.jdmk.comm.CommunicatorServer is not found,"
+                  + " referenced from 1 source class ▶"); // '▶' is in the toggle button
     }
   }
 
