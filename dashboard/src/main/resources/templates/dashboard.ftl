@@ -2,7 +2,7 @@
 <html lang="en-US">
   <#include "macros.ftl">
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>Google Cloud Platform Java Open Source Dependency Dashboard</title>
     <link rel="stylesheet" href="dashboard.css" />
     <script src="dashboard.js"></script>
