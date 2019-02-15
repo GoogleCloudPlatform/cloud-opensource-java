@@ -19,4 +19,4 @@ Notes:
 
 This probably doesn't work on the Mac.
 
-You might be able to sckip the first deploy step; need to test that. 
+You might be able to skip the first deploy step; need to test that. 
