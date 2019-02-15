@@ -220,11 +220,11 @@ public class DashboardTest {
     assertDocument(
         "dashboard.html",
         document -> {
-          Nodes li = document.query("//ul[@id='recommended']/li");
-          Assert.assertTrue(li.size() > 100);
+          Nodes recommendedListItem = document.query("//ul[@id='recommended']/li");
+          Assert.assertTrue(recommendedListItem.size() > 100);
 
           List<String> coordinateList =
-              toList(li).stream().map(Node::getValue).collect(toImmutableList());
+              toList(recommendedListItem).stream().map(Node::getValue).collect(toImmutableList());
           // fails if these are not valid Maven coordinates
           coordinateList.forEach(DefaultArtifact::new);
 
@@ -237,6 +237,15 @@ public class DashboardTest {
                 "Coordinates are not sorted: ", sorted.get(i), coordinateList.get(i));
           }
         });
+  }
+
+  private static class SortWithoutVersion implements Comparator<String> {
+    @Override
+    public int compare(String s1, String s2) {
+      s1 = s1.substring(0, s1.lastIndexOf(':'));
+      s2 = s2.substring(0, s2.lastIndexOf(':'));
+      return s1.compareTo(s2);
+    }
   }
 
   @Test
@@ -355,17 +364,6 @@ public class DashboardTest {
           Truth.assertThat(staticLinkageTotalMessage.get(0).getValue())
               .contains("0 static linkage error(s)");
         });
-  }
-
-  private static class SortWithoutVersion implements Comparator<String> {
-
-    @Override
-    public int compare(String s1, String s2) {  
-      s1 = s1.substring(0, s1.lastIndexOf(':'));
-      s2 = s2.substring(0, s2.lastIndexOf(':'));
-      return s1.compareTo(s2);
-    }
-
   }
 
   private static ImmutableList<Node> toList(Nodes nodes) {
