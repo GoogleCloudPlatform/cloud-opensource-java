@@ -89,8 +89,9 @@ public class ClassPathBuilderTest {
     Truth.assertThat(paths.get(0).getFileName().toString()).isEqualTo(
         "guava-26.0-android.jar"); // first element in the BOM
     int bomSize = managedDependencies.size();
-    Truth.assertThat(paths.get(bomSize - 1).getFileName().toString()).isEqualTo(
-        "gax-httpjson-0.52.1.jar"); // last element in the BOM
+    Assert.assertTrue(
+        paths.get(bomSize - 1).getFileName().toString()
+        .startsWith("gax-httpjson-")); // last element in BOM
   }
 
   @Test
