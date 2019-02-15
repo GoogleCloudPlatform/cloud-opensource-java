@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 
 import nu.xom.Builder;
 import nu.xom.Document;
@@ -35,11 +36,7 @@ import nu.xom.Element;
 import nu.xom.Node;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
-import nu.xom.ValidityException;
 
-import freemarker.template.TemplateException;
-
-import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -81,8 +78,7 @@ public class DashboardTest {
   private Builder builder = new Builder();
 
   @BeforeClass
-  public static void setUp()
-      throws IOException, TemplateException, RepositoryException, ClassNotFoundException {
+  public static void setUp() {
     // Creates "dashboard.html" in outputDirectory
     try {
       outputDirectory = DashboardMain.generate();
@@ -102,16 +98,25 @@ public class DashboardTest {
   }
 
   @Test
-  public void testCss()
-      throws IOException, TemplateException, ParsingException, ArtifactDescriptorException {
+  public void testCss() {
     Path dashboardCss = outputDirectory.resolve("dashboard.css");
     Assert.assertTrue(Files.exists(dashboardCss));
     Assert.assertTrue(Files.isRegularFile(dashboardCss));
   }
 
+  private void assertDocument(String fileName, Consumer<Document> assertion)
+      throws IOException, ParsingException {
+    Path html = outputDirectory.resolve(fileName);
+    Assert.assertTrue(Files.isReadable(html));
+
+    try (InputStream source = Files.newInputStream(html)) {
+      Document document = builder.build(source);
+      assertion.accept(document);
+    }
+  }
+
   @Test
-  public void testDashboard()
-      throws IOException, TemplateException, ParsingException, ArtifactDescriptorException {
+  public void testDashboard() throws IOException, ParsingException, ArtifactDescriptorException {
     Assert.assertTrue(Files.exists(outputDirectory));
     Assert.assertTrue(Files.isDirectory(outputDirectory));
 
@@ -157,64 +162,6 @@ public class DashboardTest {
           Assert.fail(message);
         }
       }
-
-      // TODO(#439): these should all be separate tests for the different components
-      Nodes reports = document.query("//p[@class='jar-linkage-report']");
-      // grpc-testing-1.17.1, shown as first item in linkage errors, has these errors
-      Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-          .isEqualTo("3 target classes causing linkage errors referenced from 3 source classes.");
-
-      ImmutableList<Node> dependencyPaths = toList(
-          document.query("//p[@class='static-linkage-check-dependency-paths']"));
-      Node log4jDependencyPathMessage = dependencyPaths.get(dependencyPaths.size() - 1);
-      // There are 994 paths to log4j. These should be summarized.
-      Truth.assertThat(log4jDependencyPathMessage.getValue())
-          .startsWith(
-              "Artifacts 'com.google.http-client:google-http-client >"
-                  + " commons-logging:commons-logging > log4j:log4j' exist in all");
-      int dependencyPathListSize =
-          document.query("//ul[@class='static-linkage-check-dependency-paths']/li").size();
-      Truth.assertWithMessage("The dashboard should not show repetitive dependency paths")
-          .that(dependencyPathListSize)
-          .isLessThan(100);
-
-      Nodes li = document.query("//ul[@id='recommended']/li");
-      Assert.assertTrue(li.size() > 100);
-
-      List<String> coordinateList =
-          toList(li).stream().map(Node::getValue).collect(toImmutableList());
-      // fails if these are not valid Maven coordinates
-      coordinateList.forEach(DefaultArtifact::new);
-
-      ArrayList<String> sorted = new ArrayList<>(coordinateList);
-      Comparator<String> comparator = new SortWithoutVersion();
-      Collections.sort(sorted, comparator);
-      
-      for (int i = 0; i < sorted.size(); i++) {
-        Assert.assertEquals("Coordinates are not sorted: ", sorted.get(i),
-            coordinateList.get(i));
-      }
-      
-      Nodes unstable = document.query("//ul[@id='unstable']/li");
-      Assert.assertTrue(unstable.size() > 1);
-      for (int i = 0; i < unstable.size(); i++) {
-        String value = unstable.get(i).getValue();
-        Assert.assertTrue(value, value.contains(":0"));
-      }      
-      
-      Nodes updated = document.query("//p[@id='updated']");
-      Assert.assertEquals("didn't find updated" + document.toXML(), 1, updated.size());
-      
-      Nodes stable = document.query("//p[@id='stable-notice']");
-      Assert.assertEquals(0, stable.size());
-
-      Nodes artifactCount = document
-          .query("//div[@class='statistic-item statistic-item-green']/h2");
-      Assert.assertTrue(artifactCount.size() > 0);
-      for (Node artifactCountElement : toList(artifactCount)) {
-        String value = artifactCountElement.getValue().trim();
-        Assert.assertTrue(value, Integer.parseInt(value) > 0);
-      }
     }
   }
 
@@ -227,101 +174,187 @@ public class DashboardTest {
   }
 
   @Test
+  public void testDashboard_statisticBox() throws IOException, ParsingException {
+    assertDocument(
+        "dashboard.html",
+        document -> {
+          Nodes artifactCount =
+              document.query("//div[@class='statistic-item statistic-item-green']/h2");
+          Assert.assertTrue(artifactCount.size() > 0);
+          for (Node artifactCountElement : toList(artifactCount)) {
+            String value = artifactCountElement.getValue().trim();
+            Assert.assertTrue(value, Integer.parseInt(value) > 0);
+          }
+        });
+  }
+
+  @Test
+  public void testDashboard_linkageReports() throws IOException, ParsingException {
+    assertDocument(
+        "dashboard.html",
+        document -> {
+          Nodes reports = document.query("//p[@class='jar-linkage-report']");
+          // grpc-testing-1.17.1, shown as first item in linkage errors, has these errors
+          Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
+              .isEqualTo(
+                  "3 target classes causing linkage errors referenced from 3 source classes.");
+
+          ImmutableList<Node> dependencyPaths =
+              toList(document.query("//p[@class='static-linkage-check-dependency-paths']"));
+          Node log4jDependencyPathMessage = dependencyPaths.get(dependencyPaths.size() - 1);
+          // There are 994 paths to log4j. These should be summarized.
+          Truth.assertThat(log4jDependencyPathMessage.getValue())
+              .startsWith(
+                  "Artifacts 'com.google.http-client:google-http-client >"
+                      + " commons-logging:commons-logging > log4j:log4j' exist in all");
+          int dependencyPathListSize =
+              document.query("//ul[@class='static-linkage-check-dependency-paths']/li").size();
+          Truth.assertWithMessage("The dashboard should not show repetitive dependency paths")
+              .that(dependencyPathListSize)
+              .isLessThan(100);
+        });
+  }
+
+  @Test
+  public void testDashboard_recommendedCoordinates() throws IOException, ParsingException {
+    assertDocument(
+        "dashboard.html",
+        document -> {
+          Nodes li = document.query("//ul[@id='recommended']/li");
+          Assert.assertTrue(li.size() > 100);
+
+          List<String> coordinateList =
+              toList(li).stream().map(Node::getValue).collect(toImmutableList());
+          // fails if these are not valid Maven coordinates
+          coordinateList.forEach(DefaultArtifact::new);
+
+          ArrayList<String> sorted = new ArrayList<>(coordinateList);
+          Comparator<String> comparator = new SortWithoutVersion();
+          Collections.sort(sorted, comparator);
+
+          for (int i = 0; i < sorted.size(); i++) {
+            Assert.assertEquals(
+                "Coordinates are not sorted: ", sorted.get(i), coordinateList.get(i));
+          }
+        });
+  }
+
+  @Test
+  public void testDashboard_unstableDependencies() throws IOException, ParsingException {
+    // Pre 1.0 version section
+    assertDocument(
+        "dashboard.html",
+        document -> {
+          Nodes unstable = document.query("//ul[@id='unstable']/li");
+          Assert.assertTrue(unstable.size() > 1);
+          for (int i = 0; i < unstable.size(); i++) {
+            String value = unstable.get(i).getValue();
+            Assert.assertTrue(value, value.contains(":0"));
+          }
+
+          // This element appears only when every dependency becomes stable
+          Nodes stable = document.query("//p[@id='stable-notice']");
+          Assert.assertEquals(0, stable.size());
+        });
+  }
+
+  @Test
+  public void testDashboard_lastUpdatedField() throws IOException, ParsingException {
+    assertDocument(
+        "dashboard.html",
+        document -> {
+          Nodes updated = document.query("//p[@id='updated']");
+          Assert.assertEquals(
+              "Could not find updated field: " + document.toXML(), 1, updated.size());
+        });
+  }
+
+  @Test
   public void testComponent_staticLinkageCheckResult() throws IOException, ParsingException {
-    Path grpcAltsHtml = outputDirectory.resolve("io.grpc_grpc-alts_1.18.0.html");
-    Assert.assertTrue(Files.isRegularFile(grpcAltsHtml));
-
-    try (InputStream source = Files.newInputStream(grpcAltsHtml)) {
-      Document document = builder.build(source);
-
-      Nodes reports = document.query("//p[@class='jar-linkage-report']");
-      Assert.assertEquals(1, reports.size());
-      Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-          .isEqualTo("2 target classes causing linkage errors referenced from 2 source classes.");
-      Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
-      Truth.assertWithMessage("grpc-alts should show linkage errors for CommunicatorServer")
-          .that(toList(causes))
-          .comparingElementsUsing(NODE_VALUES)
-          .contains(
-              "com.sun.jdmk.comm.CommunicatorServer is not found,"
-                  + " referenced from 1 source class ▶"); // '▶' is in the toggle button
-    }
+    assertDocument(
+        "io.grpc_grpc-alts_1.18.0.html",
+        document -> {
+          Nodes reports = document.query("//p[@class='jar-linkage-report']");
+          Assert.assertEquals(1, reports.size());
+          Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
+              .isEqualTo(
+                  "2 target classes causing linkage errors referenced from 2 source classes.");
+          Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
+          Truth.assertWithMessage("grpc-alts should show linkage errors for CommunicatorServer")
+              .that(toList(causes))
+              .comparingElementsUsing(NODE_VALUES)
+              .contains(
+                  "com.sun.jdmk.comm.CommunicatorServer is not found,"
+                      + " referenced from 1 source class ▶"); // '▶' is in the toggle button
+        });
   }
 
   @Test
-  public void testComponent_success() throws IOException, ValidityException, ParsingException {
-    Path successHtml = outputDirectory.resolve(
-        "com.google.api.grpc_proto-google-common-protos_1.12.0.html");
-    Assert.assertTrue(Files.isRegularFile(successHtml));
+  public void testComponent_success() throws IOException, ParsingException {
+    assertDocument(
+        "com.google.api.grpc_proto-google-common-protos_1.12.0.html",
+        document -> {
+          Nodes greens = document.query("//h3[@style='color: green']");
+          Assert.assertTrue(greens.size() >= 2);
+          Nodes presDependencyMediation =
+              document.query("//pre[@class='suggested-dependency-mediation']");
+          // There's a pre tag for dependency
+          Assert.assertEquals(1, presDependencyMediation.size());
 
-    try (InputStream source = Files.newInputStream(successHtml)) {
-      Document document = builder.build(successHtml.toFile());
-      Nodes greens = document.query("//h3[@style='color: green']");
-      Assert.assertTrue(greens.size() >= 2);
-      Nodes presDependencyMediation =
-          document.query("//pre[@class='suggested-dependency-mediation']");
-      // There's a pre tag for dependency
-      Assert.assertEquals(1, presDependencyMediation.size());
-
-      Nodes presDependencyTree = document.query("//p[@class='dependency-tree-node']");
-      Assert.assertTrue("Dependency Tree should be shown in dashboard",
-          presDependencyTree.size() > 0);
-    }
+          Nodes presDependencyTree = document.query("//p[@class='dependency-tree-node']");
+          Assert.assertTrue(
+              "Dependency Tree should be shown in dashboard", presDependencyTree.size() > 0);
+        });
   }
 
   @Test
-  public void testComponent_failure() throws IOException, ValidityException, ParsingException {
-    Path failureHtml = outputDirectory.resolve(
-        "com.google.api.grpc_grpc-google-common-protos_1.12.0.html");
-    Assert.assertTrue(Files.isRegularFile(failureHtml));
-
-    try (InputStream source = Files.newInputStream(failureHtml)) {
-      Document document = builder.build(failureHtml.toFile());
-      Nodes greens = document.query("//h3[@style='color: green']");
-      Assert.assertEquals(0, greens.size());
-      Nodes reds = document.query("//h3[@style='color: red']");
-      Assert.assertEquals(3, reds.size());
-      Nodes presDependencyMediation =
-          document.query("//pre[@class='suggested-dependency-mediation']");
-      Assert.assertTrue("For failed component, suggested dependency should be shown",
-          presDependencyMediation.size() >= 1);
-      Nodes dependencyTree = document.query("//p[@class='dependency-tree-node']");
-      Assert.assertTrue("Dependency Tree should be shown in dashboard even when FAILED",
-          dependencyTree.size() > 0);
-    }
+  public void testComponent_failure() throws IOException, ParsingException {
+    assertDocument(
+        "com.google.api.grpc_grpc-google-common-protos_1.12.0.html",
+        document -> {
+          Nodes greens = document.query("//h3[@style='color: green']");
+          Assert.assertEquals(0, greens.size());
+          Nodes reds = document.query("//h3[@style='color: red']");
+          Assert.assertEquals(3, reds.size());
+          Nodes presDependencyMediation =
+              document.query("//pre[@class='suggested-dependency-mediation']");
+          Assert.assertTrue(
+              "For failed component, suggested dependency should be shown",
+              presDependencyMediation.size() >= 1);
+          Nodes dependencyTree = document.query("//p[@class='dependency-tree-node']");
+          Assert.assertTrue(
+              "Dependency Tree should be shown in dashboard even when FAILED",
+              dependencyTree.size() > 0);
+        });
   }
 
   @Test
   public void testLinkageErrorsUnderProvidedDependency() throws IOException, ParsingException {
     // google-cloud-translate has transitive dependency to (problematic) appengine-api-1.0-sdk
     // The path to appengine-api-1.0-sdk includes scope:provided dependency
-    Path googleCloudTranslateHtml =
-        outputDirectory.resolve("com.google.cloud_google-cloud-translate_1.62.0.html");
-    Assert.assertTrue(Files.isRegularFile(googleCloudTranslateHtml));
-
-    try (InputStream source = Files.newInputStream(googleCloudTranslateHtml)) {
-      Document document = builder.build(source);
-      Nodes staticLinkageCheckMessage =
-          document.query("//ul[@class='jar-linkage-report-cause']/li");
-      Truth.assertThat(staticLinkageCheckMessage.size()).isGreaterThan(0);
-      Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
-          .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");
-    }
+    assertDocument(
+        "com.google.cloud_google-cloud-translate_1.62.0.html",
+        document -> {
+          Nodes staticLinkageCheckMessage =
+              document.query("//ul[@class='jar-linkage-report-cause']/li");
+          Truth.assertThat(staticLinkageCheckMessage.size()).isGreaterThan(0);
+          Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
+              .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");
+        });
   }
 
   @Test
   public void testZeroLinkageErrorShowsZero() throws IOException, ParsingException {
     // grpc-auth does not have a linkage error, and it should show zero in the section
-    Path zeroLinkageErrorHtml = outputDirectory.resolve("io.grpc_grpc-auth_1.18.0.html");
-    Assert.assertTrue(Files.isRegularFile(zeroLinkageErrorHtml));
-
-    try (InputStream source = Files.newInputStream(zeroLinkageErrorHtml)) {
-      Document document = builder.build(source);
-      Nodes staticLinkageTotalMessage = document.query("//p[@id='static-linkage-errors-total']");
-      Truth.assertThat(staticLinkageTotalMessage.size()).isEqualTo(1);
-      Truth.assertThat(staticLinkageTotalMessage.get(0).getValue())
-          .contains("0 static linkage error(s)");
-    }
+    assertDocument(
+        "io.grpc_grpc-auth_1.18.0.html",
+        document -> {
+          Nodes staticLinkageTotalMessage =
+              document.query("//p[@id='static-linkage-errors-total']");
+          Truth.assertThat(staticLinkageTotalMessage.size()).isEqualTo(1);
+          Truth.assertThat(staticLinkageTotalMessage.get(0).getValue())
+              .contains("0 static linkage error(s)");
+        });
   }
 
   private static class SortWithoutVersion implements Comparator<String> {
