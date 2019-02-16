@@ -1,7 +1,9 @@
 # grpc-testing missing Truth dependency
 
-This project demonstrates that grpc-testing:1.18.0 is missing dependency to
-Truth library. `InProcessTransportTest` is copied from grpc-java/grpc-core module.
+This project demonstrates that grpc-testing:1.18.0 is missing dependency to Truth library.
+`InProcessTransportTest`, copied from grpc-java/grpc-core module,
+extends grpc-testing's `AbstractTransportTest`.
+The test fails because of `NoClassDefFoundError: com/google/common/truth/Truth`.
 
 ## How to run
 
