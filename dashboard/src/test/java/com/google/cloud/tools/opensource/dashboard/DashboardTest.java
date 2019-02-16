@@ -75,16 +75,25 @@ public class DashboardTest {
   }
 
   private static Path outputDirectory;
-  private Builder builder = new Builder();
+  private static Builder builder = new Builder();
+  private static Document dashboard;
 
   @BeforeClass
-  public static void setUp() {
+  public static void setUp() throws IOException, ParsingException {
     // Creates "dashboard.html" in outputDirectory
     try {
       outputDirectory = DashboardMain.generate();
     } catch (Throwable t) {
       t.printStackTrace();
       Assert.fail("Could not generate dashboard");
+    }
+    Path html = outputDirectory.resolve("dashboard.html");
+    Assert.assertTrue("Dashboard.html should be readable", Files.isReadable(html));
+    Assert.assertTrue("Dashboard.html should be a regular file",
+        Files.isRegularFile(html));
+
+    try (InputStream source = Files.newInputStream(html)) {
+      dashboard = builder.build(source);
     }
   }
 
@@ -107,7 +116,9 @@ public class DashboardTest {
   private void assertDocument(String fileName, Consumer<Document> assertion)
       throws IOException, ParsingException {
     Path html = outputDirectory.resolve(fileName);
-    Assert.assertTrue(Files.isReadable(html));
+    Assert.assertTrue("Could not find a regular file for " + fileName,
+        Files.isRegularFile(html));
+    Assert.assertTrue("The file is not readable: " + fileName, Files.isReadable(html));
 
     try (InputStream source = Files.newInputStream(html)) {
       Document document = builder.build(source);
@@ -116,51 +127,45 @@ public class DashboardTest {
   }
 
   @Test
-  public void testDashboard() throws IOException, ParsingException, ArtifactDescriptorException {
+  public void testDashboard() throws IOException, ArtifactDescriptorException {
     Assert.assertTrue(Files.exists(outputDirectory));
     Assert.assertTrue(Files.isDirectory(outputDirectory));
 
-    Path dashboardHtml = outputDirectory.resolve("dashboard.html");
-    Assert.assertTrue(Files.isRegularFile(dashboardHtml));
-    
     DefaultArtifact bom =
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
     List<Artifact> artifacts = RepositoryUtility.readBom(bom);
     Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
 
-    try (InputStream source = Files.newInputStream(dashboardHtml)) {
-      Document document = builder.build(dashboardHtml.toFile());
-      Assert.assertEquals("en-US", document.getRootElement().getAttribute("lang").getValue());
+    Assert.assertEquals("en-US", dashboard.getRootElement().getAttribute("lang").getValue());
 
-      Nodes tr = document.query("//tr");
-      Assert.assertEquals(artifacts.size() + 1, tr.size()); // header row adds 1
-      for (int i = 1; i < tr.size(); i++) { // start at 1 to skip header row
-        Nodes td = tr.get(i).query("td");
-        Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i - 1)), td.get(0).getValue());
-        for (int j = 1; j < 5; ++j) {
-          assertValidCellValue((Element) td.get(j));
-        }
+    Nodes tr = dashboard.query("//tr");
+    Assert.assertEquals(artifacts.size() + 1, tr.size()); // header row adds 1
+    for (int i = 1; i < tr.size(); i++) { // start at 1 to skip header row
+      Nodes td = tr.get(i).query("td");
+      Assert.assertEquals(Artifacts.toCoordinates(artifacts.get(i - 1)), td.get(0).getValue());
+      for (int j = 1; j < 5; ++j) { // start at 1 to skip the leftmost artifact coordinates column
+        assertValidCellValue((Element) td.get(j));
       }
-      Nodes href = document.query("//tr/td[@class='artifact-name']/a/@href");
-      for (int i = 0; i < href.size(); i++) {
-        String fileName = href.get(i).getValue();
-        Artifact artifact = artifacts.get(i);
-        Assert.assertEquals(
-            Artifacts.toCoordinates(artifact).replace(':', '_') + ".html",
-            URLDecoder.decode(fileName, "UTF-8"));
-        Path componentReport = outputDirectory.resolve(fileName);
-        Assert.assertTrue(fileName + " is missing", Files.isRegularFile(componentReport));
-        try {
-          Document report = builder.build(componentReport.toFile());
-          Assert.assertEquals("en-US", report.getRootElement().getAttribute("lang").getValue());
-        } catch (ParsingException ex) {
-          byte[] data = Files.readAllBytes(componentReport);
-          String message = "Could not parse " + componentReport + " at line " +
-            ex.getLineNumber() +", column " + ex.getColumnNumber() + "\r\n";
-          message += ex.getMessage() + "\r\n";
-          message += new String(data, StandardCharsets.UTF_8);
-          Assert.fail(message);
-        }
+    }
+    Nodes href = dashboard.query("//tr/td[@class='artifact-name']/a/@href");
+    for (int i = 0; i < href.size(); i++) {
+      String fileName = href.get(i).getValue();
+      Artifact artifact = artifacts.get(i);
+      Assert.assertEquals(
+          Artifacts.toCoordinates(artifact).replace(':', '_') + ".html",
+          URLDecoder.decode(fileName, "UTF-8"));
+      Path componentReport = outputDirectory.resolve(fileName);
+      Assert.assertTrue(fileName + " is missing", Files.isRegularFile(componentReport));
+      try {
+        Document report = builder.build(componentReport.toFile());
+        Assert.assertEquals("en-US", report.getRootElement().getAttribute("lang").getValue());
+      } catch (ParsingException ex) {
+        byte[] data = Files.readAllBytes(componentReport);
+        String message = "Could not parse " + componentReport + " at line " +
+            ex.getLineNumber() + ", column " + ex.getColumnNumber() + "\r\n";
+        message += ex.getMessage() + "\r\n";
+        message += new String(data, StandardCharsets.UTF_8);
+        Assert.fail(message);
       }
     }
   }
@@ -174,69 +179,57 @@ public class DashboardTest {
   }
 
   @Test
-  public void testDashboard_statisticBox() throws IOException, ParsingException {
-    assertDocument(
-        "dashboard.html",
-        document -> {
-          Nodes artifactCount =
-              document.query("//div[@class='statistic-item statistic-item-green']/h2");
-          Assert.assertTrue(artifactCount.size() > 0);
-          for (Node artifactCountElement : toList(artifactCount)) {
-            String value = artifactCountElement.getValue().trim();
-            Assert.assertTrue(value, Integer.parseInt(value) > 0);
-          }
-        });
+  public void testDashboard_statisticBox() {
+    Nodes artifactCount =
+        dashboard.query("//div[@class='statistic-item statistic-item-green']/h2");
+    Assert.assertTrue(artifactCount.size() > 0);
+    for (Node artifactCountElement : toList(artifactCount)) {
+      String value = artifactCountElement.getValue().trim();
+      Assert.assertTrue(value, Integer.parseInt(value) > 0);
+    }
   }
 
   @Test
-  public void testDashboard_linkageReports() throws IOException, ParsingException {
-    assertDocument(
-        "dashboard.html",
-        document -> {
-          Nodes reports = document.query("//p[@class='jar-linkage-report']");
-          // grpc-testing-1.17.1, shown as first item in linkage errors, has these errors
-          Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-              .isEqualTo(
-                  "3 target classes causing linkage errors referenced from 3 source classes.");
+  public void testDashboard_linkageReports() {
+    Nodes reports = dashboard.query("//p[@class='jar-linkage-report']");
+    // grpc-testing-1.17.1, shown as first item in linkage errors, has these errors
+    Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
+        .isEqualTo(
+            "3 target classes causing linkage errors referenced from 3 source classes.");
 
-          ImmutableList<Node> dependencyPaths =
-              toList(document.query("//p[@class='static-linkage-check-dependency-paths']"));
-          Node log4jDependencyPathMessage = dependencyPaths.get(dependencyPaths.size() - 1);
-          // There are 994 paths to log4j. These should be summarized.
-          Truth.assertThat(log4jDependencyPathMessage.getValue())
-              .startsWith(
-                  "Artifacts 'com.google.http-client:google-http-client >"
-                      + " commons-logging:commons-logging > log4j:log4j' exist in all");
-          int dependencyPathListSize =
-              document.query("//ul[@class='static-linkage-check-dependency-paths']/li").size();
-          Truth.assertWithMessage("The dashboard should not show repetitive dependency paths")
-              .that(dependencyPathListSize)
-              .isLessThan(100);
-        });
+    ImmutableList<Node> dependencyPaths =
+        toList(dashboard.query("//p[@class='static-linkage-check-dependency-paths']"));
+    Node log4jDependencyPathMessage = dependencyPaths.get(dependencyPaths.size() - 1);
+    // There are 994 paths to log4j. These should be summarized.
+    Truth.assertThat(log4jDependencyPathMessage.getValue())
+        .startsWith(
+            "Artifacts 'com.google.http-client:google-http-client >"
+                + " commons-logging:commons-logging > log4j:log4j' exist in all");
+    int dependencyPathListSize =
+        dashboard.query("//ul[@class='static-linkage-check-dependency-paths']/li").size();
+    Truth.assertWithMessage("The dashboard should not show repetitive dependency paths")
+        .that(dependencyPathListSize)
+        .isLessThan(100);
   }
 
   @Test
-  public void testDashboard_recommendedCoordinates() throws IOException, ParsingException {
-    assertDocument(
-        "dashboard.html",
-        document -> {
-          Nodes recommendedListItem = document.query("//ul[@id='recommended']/li");
-          Assert.assertTrue(recommendedListItem.size() > 100);
+  public void testDashboard_recommendedCoordinates() {
+    Nodes recommendedListItem = dashboard.query("//ul[@id='recommended']/li");
+    Assert.assertTrue(recommendedListItem.size() > 100);
 
-          List<String> coordinateList =
-              toList(recommendedListItem).stream().map(Node::getValue).collect(toImmutableList());
-          // fails if these are not valid Maven coordinates
-          coordinateList.forEach(DefaultArtifact::new);
+    List<String> coordinateList =
+        toList(recommendedListItem).stream().map(Node::getValue).collect(toImmutableList());
+    // fails if these are not valid Maven coordinates
+    coordinateList.forEach(DefaultArtifact::new);
 
-          ArrayList<String> sorted = new ArrayList<>(coordinateList);
-          Comparator<String> comparator = new SortWithoutVersion();
-          Collections.sort(sorted, comparator);
+    ArrayList<String> sorted = new ArrayList<>(coordinateList);
+    Comparator<String> comparator = new SortWithoutVersion();
+    Collections.sort(sorted, comparator);
 
-          for (int i = 0; i < sorted.size(); i++) {
-            Assert.assertEquals(
-                "Coordinates are not sorted: ", sorted.get(i), coordinateList.get(i));
-          }
-        });
+    for (int i = 0; i < sorted.size(); i++) {
+      Assert.assertEquals(
+          "Coordinates are not sorted: ", sorted.get(i), coordinateList.get(i));
+    }
   }
 
   private static class SortWithoutVersion implements Comparator<String> {
@@ -249,33 +242,25 @@ public class DashboardTest {
   }
 
   @Test
-  public void testDashboard_unstableDependencies() throws IOException, ParsingException {
+  public void testDashboard_unstableDependencies() {
     // Pre 1.0 version section
-    assertDocument(
-        "dashboard.html",
-        document -> {
-          Nodes unstable = document.query("//ul[@id='unstable']/li");
-          Assert.assertTrue(unstable.size() > 1);
-          for (int i = 0; i < unstable.size(); i++) {
-            String value = unstable.get(i).getValue();
-            Assert.assertTrue(value, value.contains(":0"));
-          }
+    Nodes unstable = dashboard.query("//ul[@id='unstable']/li");
+    Assert.assertTrue(unstable.size() > 1);
+    for (int i = 0; i < unstable.size(); i++) {
+      String value = unstable.get(i).getValue();
+      Assert.assertTrue(value, value.contains(":0"));
+    }
 
-          // This element appears only when every dependency becomes stable
-          Nodes stable = document.query("//p[@id='stable-notice']");
-          Assert.assertEquals(0, stable.size());
-        });
+    // This element appears only when every dependency becomes stable
+    Nodes stable = dashboard.query("//p[@id='stable-notice']");
+    Assert.assertEquals(0, stable.size());
   }
 
   @Test
-  public void testDashboard_lastUpdatedField() throws IOException, ParsingException {
-    assertDocument(
-        "dashboard.html",
-        document -> {
-          Nodes updated = document.query("//p[@id='updated']");
-          Assert.assertEquals(
-              "Could not find updated field: " + document.toXML(), 1, updated.size());
-        });
+  public void testDashboard_lastUpdatedField() {
+    Nodes updated = dashboard.query("//p[@id='updated']");
+    Assert.assertEquals(
+        "Could not find updated field: " + dashboard.toXML(), 1, updated.size());
   }
 
   @Test
