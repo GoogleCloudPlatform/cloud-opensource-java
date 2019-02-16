@@ -80,19 +80,16 @@ public class DashboardTest {
 
   @BeforeClass
   public static void setUp() throws IOException, ParsingException {
-    // Creates "dashboard.html" in outputDirectory
+    // Creates "dashboard.html" and artifact reports in outputDirectory
     try {
       outputDirectory = DashboardMain.generate();
     } catch (Throwable t) {
       t.printStackTrace();
       Assert.fail("Could not generate dashboard");
     }
-    Path html = outputDirectory.resolve("dashboard.html");
-    Assert.assertTrue("Dashboard.html should be readable", Files.isReadable(html));
-    Assert.assertTrue("Dashboard.html should be a regular file",
-        Files.isRegularFile(html));
 
-    try (InputStream source = Files.newInputStream(html)) {
+    Path dashboardHtml = outputDirectory.resolve("dashboard.html");
+    try (InputStream source = Files.newInputStream(dashboardHtml)) {
       dashboard = builder.build(source);
     }
   }
@@ -128,9 +125,6 @@ public class DashboardTest {
 
   @Test
   public void testDashboard() throws IOException, ArtifactDescriptorException {
-    Assert.assertTrue(Files.exists(outputDirectory));
-    Assert.assertTrue(Files.isDirectory(outputDirectory));
-
     DefaultArtifact bom =
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
     List<Artifact> artifacts = RepositoryUtility.readBom(bom);
