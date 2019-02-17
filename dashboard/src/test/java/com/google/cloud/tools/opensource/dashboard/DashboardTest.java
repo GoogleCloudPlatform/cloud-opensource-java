@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Consumer;
 
 import nu.xom.Builder;
 import nu.xom.Document;
@@ -88,10 +87,7 @@ public class DashboardTest {
       Assert.fail("Could not generate dashboard");
     }
 
-    Path dashboardHtml = outputDirectory.resolve("dashboard.html");
-    try (InputStream source = Files.newInputStream(dashboardHtml)) {
-      dashboard = builder.build(source);
-    }
+    dashboard = parseOutputFile("dashboard.html");
   }
 
   @AfterClass
@@ -110,7 +106,7 @@ public class DashboardTest {
     Assert.assertTrue(Files.isRegularFile(dashboardCss));
   }
 
-  private void assertDocument(String fileName, Consumer<Document> assertion)
+  private static Document parseOutputFile(String fileName)
       throws IOException, ParsingException {
     Path html = outputDirectory.resolve(fileName);
     Assert.assertTrue("Could not find a regular file for " + fileName,
@@ -119,7 +115,7 @@ public class DashboardTest {
 
     try (InputStream source = Files.newInputStream(html)) {
       Document document = builder.build(source);
-      assertion.accept(document);
+      return document;
     }
   }
 
@@ -259,96 +255,83 @@ public class DashboardTest {
 
   @Test
   public void testComponent_staticLinkageCheckResult() throws IOException, ParsingException {
-    assertDocument(
-        "io.grpc_grpc-alts_1.18.0.html",
-        document -> {
-          Nodes reports = document.query("//p[@class='jar-linkage-report']");
-          Assert.assertEquals(1, reports.size());
-          Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-              .isEqualTo(
-                  "2 target classes causing linkage errors referenced from 2 source classes.");
-          Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
-          Truth.assertWithMessage("grpc-alts should show linkage errors for CommunicatorServer")
-              .that(toList(causes))
-              .comparingElementsUsing(NODE_VALUES)
-              .contains(
-                  "com.sun.jdmk.comm.CommunicatorServer is not found,"
-                      + " referenced from 1 source class ▶"); // '▶' is in the toggle button
-        });
+    Document document = parseOutputFile("io.grpc_grpc-alts_1.18.0.html");
+    Nodes reports = document.query("//p[@class='jar-linkage-report']");
+    Assert.assertEquals(1, reports.size());
+    Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
+        .isEqualTo(
+            "2 target classes causing linkage errors referenced from 2 source classes.");
+    Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
+    Truth.assertWithMessage("grpc-alts should show linkage errors for CommunicatorServer")
+        .that(toList(causes))
+        .comparingElementsUsing(NODE_VALUES)
+        .contains(
+            "com.sun.jdmk.comm.CommunicatorServer is not found,"
+                + " referenced from 1 source class ▶"); // '▶' is in the toggle button
   }
 
   @Test
   public void testComponent_success() throws IOException, ParsingException {
-    assertDocument(
-        "com.google.api.grpc_proto-google-common-protos_1.12.0.html",
-        document -> {
-          Nodes greens = document.query("//h3[@style='color: green']");
-          Assert.assertTrue(greens.size() >= 2);
-          Nodes presDependencyMediation =
-              document.query("//pre[@class='suggested-dependency-mediation']");
-          // There's a pre tag for dependency
-          Assert.assertEquals(1, presDependencyMediation.size());
+    Document document = parseOutputFile(
+        "com.google.api.grpc_proto-google-common-protos_1.12.0.html");
+    Nodes greens = document.query("//h3[@style='color: green']");
+    Assert.assertTrue(greens.size() >= 2);
+    Nodes presDependencyMediation =
+        document.query("//pre[@class='suggested-dependency-mediation']");
+    // There's a pre tag for dependency
+    Assert.assertEquals(1, presDependencyMediation.size());
 
-          Nodes presDependencyTree = document.query("//p[@class='dependency-tree-node']");
-          Assert.assertTrue(
-              "Dependency Tree should be shown in dashboard", presDependencyTree.size() > 0);
-        });
+    Nodes presDependencyTree = document.query("//p[@class='dependency-tree-node']");
+    Assert.assertTrue(
+        "Dependency Tree should be shown in dashboard", presDependencyTree.size() > 0);
   }
 
   @Test
   public void testComponent_failure() throws IOException, ParsingException {
-    assertDocument(
-        "com.google.api.grpc_grpc-google-common-protos_1.12.0.html",
-        document -> {
-          Nodes greens = document.query("//h3[@style='color: green']");
-          Assert.assertEquals(0, greens.size());
-          Nodes reds = document.query("//h3[@style='color: red']");
-          Assert.assertEquals(3, reds.size());
-          Nodes presDependencyMediation =
-              document.query("//pre[@class='suggested-dependency-mediation']");
-          Assert.assertTrue(
-              "For failed component, suggested dependency should be shown",
-              presDependencyMediation.size() >= 1);
-          Nodes dependencyTree = document.query("//p[@class='dependency-tree-node']");
-          Assert.assertTrue(
-              "Dependency Tree should be shown in dashboard even when FAILED",
-              dependencyTree.size() > 0);
-        });
+    Document document = parseOutputFile(
+        "com.google.api.grpc_grpc-google-common-protos_1.12.0.html");
+    Nodes greens = document.query("//h3[@style='color: green']");
+    Assert.assertEquals(0, greens.size());
+    Nodes reds = document.query("//h3[@style='color: red']");
+    Assert.assertEquals(3, reds.size());
+    Nodes presDependencyMediation =
+        document.query("//pre[@class='suggested-dependency-mediation']");
+    Assert.assertTrue(
+        "For failed component, suggested dependency should be shown",
+        presDependencyMediation.size() >= 1);
+    Nodes dependencyTree = document.query("//p[@class='dependency-tree-node']");
+    Assert.assertTrue(
+        "Dependency Tree should be shown in dashboard even when FAILED",
+        dependencyTree.size() > 0);
   }
 
   @Test
   public void testLinkageErrorsUnderProvidedDependency() throws IOException, ParsingException {
     // google-cloud-translate has transitive dependency to (problematic) appengine-api-1.0-sdk
     // The path to appengine-api-1.0-sdk includes scope:provided dependency
-    assertDocument(
-        "com.google.cloud_google-cloud-translate_1.62.0.html",
-        document -> {
-          Nodes staticLinkageCheckMessage =
-              document.query("//ul[@class='jar-linkage-report-cause']/li");
-          Truth.assertThat(staticLinkageCheckMessage.size()).isGreaterThan(0);
-          Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
-              .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");
-        });
+    Document document = parseOutputFile("com.google.cloud_google-cloud-translate_1.62.0.html");
+    Nodes staticLinkageCheckMessage =
+        document.query("//ul[@class='jar-linkage-report-cause']/li");
+    Truth.assertThat(staticLinkageCheckMessage.size()).isGreaterThan(0);
+    Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
+        .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");
   }
 
   @Test
   public void testZeroLinkageErrorShowsZero() throws IOException, ParsingException {
     // grpc-auth does not have a linkage error, and it should show zero in the section
-    assertDocument(
-        "io.grpc_grpc-auth_1.18.0.html",
-        document -> {
-          Nodes staticLinkageTotalMessage =
-              document.query("//p[@id='static-linkage-errors-total']");
-          Truth.assertThat(staticLinkageTotalMessage.size()).isEqualTo(1);
-          Truth.assertThat(staticLinkageTotalMessage.get(0).getValue())
-              .contains("0 static linkage error(s)");
-        });
+    Document document = parseOutputFile("io.grpc_grpc-auth_1.18.0.html");
+    Nodes staticLinkageTotalMessage =
+        document.query("//p[@id='static-linkage-errors-total']");
+    Truth.assertThat(staticLinkageTotalMessage.size()).isEqualTo(1);
+    Truth.assertThat(staticLinkageTotalMessage.get(0).getValue())
+        .contains("0 static linkage error(s)");
   }
 
   private static ImmutableList<Node> toList(Nodes nodes) {
     ImmutableList.Builder<Node> builder = ImmutableList.builder();
     for (int i = 0; i < nodes.size(); i++) {
-      builder.add(nodes.get((i)));
+      builder.add(nodes.get(i));
     }
     return builder.build();
   }
