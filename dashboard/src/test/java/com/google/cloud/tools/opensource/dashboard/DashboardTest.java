@@ -114,8 +114,7 @@ public class DashboardTest {
     Assert.assertTrue("The file is not readable: " + fileName, Files.isReadable(html));
 
     try (InputStream source = Files.newInputStream(html)) {
-      Document document = builder.build(source);
-      return document;
+      return builder.build(source);
     }
   }
 
