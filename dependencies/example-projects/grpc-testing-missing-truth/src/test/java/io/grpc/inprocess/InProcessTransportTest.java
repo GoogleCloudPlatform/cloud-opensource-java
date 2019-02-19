@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 // This file is copied from grpc-core to demonstrate missing dependency of Truth library.
-// Comments are modified to follow Apache 2 license: Redistribution.
+// Copyright statement and this comment are modified to follow Apache 2 license: Redistribution.
 
 /** Unit tests for {@link InProcessTransport}. */
 @RunWith(JUnit4.class)
