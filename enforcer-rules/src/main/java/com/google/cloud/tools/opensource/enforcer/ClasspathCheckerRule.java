@@ -16,6 +16,13 @@
 
 package com.google.cloud.tools.opensource.enforcer;
 
+import com.google.cloud.tools.opensource.classpath.ClasspathCheckReport;
+import com.google.cloud.tools.opensource.classpath.ClasspathChecker;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -97,6 +104,19 @@ public class ClasspathCheckerRule implements EnforcerRule {
       log.info("Retrieved RuntimeInfo: " + rti);
       log.info("Retrieved Session: " + session);
       log.info("Retrieved Resolver: " + resolver);
+
+      List<Path> artifactsInPom = ImmutableList.of();
+      List<Path> classpath = ImmutableList.of();
+      List<Path> artifactJarsInBom = classpath.subList(0, artifactsInPom.size());
+      ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInBom);
+
+      try {
+        ClasspathChecker classpathChecker = ClasspathChecker.create(classpath, entryPoints);
+        ClasspathCheckReport linkageReport = classpathChecker.findLinkageErrors();
+        log.info("Generated linkage error report: " + linkageReport);
+      } catch (IOException ex) {
+        log.error("Failed to run Classpath Checker", ex);
+      }
 
       if (this.shouldIfail) {
         throw new EnforcerRuleException("Failing because my param said so.");

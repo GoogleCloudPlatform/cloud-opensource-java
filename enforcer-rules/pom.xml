@@ -18,19 +18,30 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>cloud-tools-opensource-parent</artifactId>
     <groupId>com.google.cloud.tools.opensource</groupId>
+    <artifactId>cloud-tools-opensource-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
-  <modelVersion>4.0.0</modelVersion>
 
   <artifactId>classpath-checker</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>Classpath Checker Enforcer Rule</name>
-  <description>Classpath Checker enforcer rules.</description>
+  <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/enforcer-rules</url>
+  <description>Classpath Checker enforcer rules</description>
+  <organization>
+    <name>Google LLC.</name>
+    <url>https://www.google.com</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
 
   <properties>
     <api.version>3.0.0-M2</api.version>
@@ -38,6 +49,11 @@
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dependency-lister</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.maven.enforcer</groupId>
       <artifactId>enforcer-api</artifactId>

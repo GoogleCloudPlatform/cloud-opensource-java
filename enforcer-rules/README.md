@@ -1,10 +1,10 @@
 # Classpath Checker Enforcer Rule
 
-The rule runs Classpath Checker for the Maven project and shows linkage errors.
+The Maven enforcer rule runs Classpath Checker for the Maven project and shows linkage errors.
 
 # Usage
 
-
+Add following plugin configuration to your `pom.xml`.
 
 ```xml
   <build>
@@ -38,3 +38,20 @@ The rule runs Classpath Checker for the Maven project and shows linkage errors.
       </plugin>
    ...
 ```
+
+# Run
+
+```
+$ mvn validate
+```
+
+## Debug
+
+For developers of this plugin, set `MAVEN_OPTS` environment variable to wait for
+debuggers.
+
+```
+$ export MAVEN_OPTS='-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005'
+$ mvn validate
+```
+
