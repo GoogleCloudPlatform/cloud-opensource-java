@@ -1,8 +1,8 @@
 # grpc-testing missing Truth dependency
 
-This project demonstrates that grpc-testing:1.18.0 is missing dependency to Truth library
+This project demonstrates that grpc-testing:1.18.0 is missing the dependency to Truth library
 when running tests.
-`InProcessTransportTest`, copied from grpc-java/grpc-core module,
+The class `InProcessTransportTest`, which is copied from grpc-java/grpc-core module,
 extends grpc-testing's `AbstractTransportTest`.
 The test fails because of `NoClassDefFoundError: com/google/common/truth/Truth`.
 
@@ -67,8 +67,8 @@ Caused by: java.lang.ClassNotFoundException: com.google.common.truth.Truth
 This project has dependency to `io.grpc:grpc-testing:1.18.0` (with `scope:test`).
 `io.grpc:grpc-testing:1.18.0` has `com.google.truth:truth:0.42` (with `scope:test`).
 
-However, the `truth` dependency is omitted for this project when it runs Maven test lifecycle,
-because Maven omits test-scoped dependencies of a test-scope dependency.
-[Maven Dependency Scope][1] explains such treatments of different scopes in transitive dependencies.
+However, the `truth` dependency is omitted for this project when it runs Maven `test` lifecycle,
+because Maven omits test-scoped transitive dependencies of a test-scope dependency.
+[Maven Dependency Scope][1] explains cases of different scopes in transitive dependencies.
 
 [1]: https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Scope
