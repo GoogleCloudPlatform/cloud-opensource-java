@@ -67,8 +67,8 @@ Caused by: java.lang.ClassNotFoundException: com.google.common.truth.Truth
 This project has dependency to `io.grpc:grpc-testing:1.18.0` (with `scope:test`).
 `io.grpc:grpc-testing:1.18.0` has `com.google.truth:truth:0.42` (with `scope:test`).
 
-However, the `truth` dependency is omitted for this project when it runs Maven `test` lifecycle,
-because Maven omits test-scoped transitive dependencies of a test-scope dependency.
+However, Maven omits the `truth` dependency when this project runs Maven's `test` lifecycle.
+This is because Maven omits test-scoped transitive dependencies of a test-scope dependency.
 [Maven Dependency Scope][1] explains cases of different scopes in transitive dependencies.
 
 [1]: https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Scope
