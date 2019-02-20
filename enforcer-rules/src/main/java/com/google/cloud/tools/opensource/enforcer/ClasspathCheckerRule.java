@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -45,15 +44,9 @@ import org.apache.maven.project.ProjectDependenciesResolver;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.collection.CollectResult;
-import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.impl.DependencyCollector;
-import org.eclipse.aether.resolution.DependencyRequest;
 
 /**
  * Classpath Checker Maven Enforcer Rule.
@@ -72,7 +65,7 @@ public class ClasspathCheckerRule implements EnforcerRule {
       int dependencyCount = project.getDependencies().size();
 
       ImmutableList<Path> classpath = dependencyCount == 0 ?
-          findBomClasspath(project, repositorySystemSession, helper) :
+          findBomClasspath(project) :
           findProjectClasspath(project, repositorySystemSession, helper);
 
       List<Path> artifactJarsInProject = classpath.subList(0, dependencyCount);
