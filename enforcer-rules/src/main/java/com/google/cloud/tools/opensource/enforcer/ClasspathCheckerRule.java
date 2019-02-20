@@ -27,6 +27,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
+import org.apache.maven.RepositoryUtils;
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
@@ -40,9 +42,15 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectDependenciesResolver;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.collection.CollectResult;
+import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.impl.DependencyCollector;
+import org.eclipse.aether.resolution.DependencyRequest;
 
 /**
  * Classpath Checker Maven Enforcer Rule.
@@ -58,9 +66,13 @@ public class ClasspathCheckerRule implements EnforcerRule {
       MavenSession session = (MavenSession) helper.evaluate("${session}");
       RepositorySystemSession repositorySystemSession = session.getRepositorySession();
 
-      ImmutableList<Path> classpath = findClasspath(project, repositorySystemSession, helper);
+      int dependencyCount = project.getDependencies().size();
 
-      List<Path> artifactJarsInProject = classpath.subList(0, project.getDependencies().size());
+      ImmutableList<Path> classpath = dependencyCount == 0 ?
+          findBomClasspath(project, repositorySystemSession, helper) :
+          findProjectClasspath(project, repositorySystemSession, helper);
+
+      List<Path> artifactJarsInProject = classpath.subList(0, dependencyCount);
       ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInProject);
 
       try {
@@ -84,9 +96,9 @@ public class ClasspathCheckerRule implements EnforcerRule {
   }
 
   /**
-   * Finds class path for this project.
+   * Finds class path for {@code project}.
    */
-  private ImmutableList<Path> findClasspath(MavenProject project,
+  private ImmutableList<Path> findProjectClasspath(MavenProject project,
       RepositorySystemSession session, EnforcerRuleHelper helper) throws EnforcerRuleException {
     try {
       ProjectDependenciesResolver projectDependenciesResolver =
@@ -95,8 +107,8 @@ public class ClasspathCheckerRule implements EnforcerRule {
           new DefaultDependencyResolutionRequest(project, session);
       DependencyResolutionResult dependencyResolutionResult = projectDependenciesResolver
           .resolve(dependencyResolutionRequest);
-      return dependencyResolutionResult.getDependencies().stream().map(
-          Dependency::getArtifact)
+      return dependencyResolutionResult.getDependencies().stream()
+          .map(Dependency::getArtifact)
           .map(Artifact::getFile)
           .map(File::toPath)
           .collect(toImmutableList());
@@ -104,6 +116,48 @@ public class ClasspathCheckerRule implements EnforcerRule {
       throw new EnforcerRuleException("Unable to lookup a component " + e.getLocalizedMessage(), e);
     } catch (DependencyResolutionException e) {
       throw new EnforcerRuleException("Unable to build a dependency graph", e);
+    }
+  }
+
+  /**
+   *
+   */
+  private ImmutableList<Path> findBomClasspath(MavenProject project,
+      RepositorySystemSession session, EnforcerRuleHelper helper) throws EnforcerRuleException {
+    List<org.apache.maven.model.Dependency> managedDependencies = project.getDependencyManagement()
+        .getDependencies();
+    try {
+      DependencyCollector dependencyCollector = helper.getComponent(DependencyCollector.class);
+      CollectRequest collectRequest = new CollectRequest();
+      for (org.apache.maven.model.Dependency managedDependency : managedDependencies) {
+        collectRequest.addDependency(
+            RepositoryUtils.toDependency(managedDependency, session.getArtifactTypeRegistry()));
+      }
+/*
+      CollectResult collectResult = dependencyCollector
+          .collectDependencies(session, collectRequest);
+          */
+
+      RepositorySystem repositorySystem = helper.getComponent(RepositorySystem.class);
+      CollectResult systemCollectResult = repositorySystem
+          .collectDependencies(session, collectRequest);
+      DependencyRequest dependencyRequest = new DependencyRequest();
+      dependencyRequest.setRoot(systemCollectResult.getRoot());
+      dependencyRequest.setCollectRequest(collectRequest);
+      repositorySystem.resolveDependencies(session, dependencyRequest);
+
+      return collectRequest
+          .getDependencies()
+          .stream()
+          .map(Dependency::getArtifact)
+          .map(Artifact::getFile)
+          .filter(Objects::nonNull)
+          .map(File::toPath)
+          .collect(toImmutableList());
+    } catch (ComponentLookupException ex) {
+      throw new EnforcerRuleException("Failed to lookup " + ex.getMessage(), ex);
+    } catch (DependencyCollectionException | org.eclipse.aether.resolution.DependencyResolutionException ex) {
+      throw new EnforcerRuleException("Failed to collect dependency " + ex.getMessage(), ex);
     }
   }
 
