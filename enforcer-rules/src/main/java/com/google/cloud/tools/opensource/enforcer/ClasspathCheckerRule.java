@@ -98,12 +98,15 @@ public class ClasspathCheckerRule implements EnforcerRule {
       CollectRequest collectRequest = new CollectRequest();
       collectRequest.setRootArtifact(aetherArtifact); */
 
-      dependencyCollector.collectDependencies(session, null);
+      // dependencyCollector.collectDependencies(session, null);
 
       PlexusContainer container = helper.getContainer();
       Context context = container.getContext();
       DependencyNode dependencyNode = dependencyGraphBuilder.buildDependencyGraph(project, null);
-      ArtifactRepository artifactRepository = helper.getComponent(ArtifactRepository.class);
+      org.apache.maven.artifact.repository.ArtifactRepository artifactRepository =
+          helper.getComponent(org.apache.maven.artifact.repository.ArtifactRepository.class);
+
+      ArtifactRepository aetherArtifactRepository = helper.getComponent(ArtifactRepository.class);
 
       return dependencyNode;
 
@@ -125,7 +128,7 @@ public class ClasspathCheckerRule implements EnforcerRule {
             "Unable to lookup an expression " + e.getLocalizedMessage(), e);*/
     } catch (ComponentLookupException e) {
       throw new EnforcerRuleException("Unable to lookup a component " + e.getLocalizedMessage(), e);
-    } catch (DependencyCollectionException | DependencyGraphBuilderException e) {
+    } catch (DependencyGraphBuilderException e) {
       throw new EnforcerRuleException("Unable to build a dependency graph", e);
     }
   }
