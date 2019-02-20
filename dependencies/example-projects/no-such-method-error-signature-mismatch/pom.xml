@@ -58,9 +58,9 @@
             </goals>
             <configuration>
               <rules>
-                <classpathCheckerRule implementation="com.google.cloud.tools.opensource.enforcer.ClasspathCheckerRule">
-                  <shouldIfail>false</shouldIfail><!-- This is from tutorial -->
-                </classpathCheckerRule>
+                <classpathCheckerRule
+                  implementation="com.google.cloud.tools.opensource.enforcer.ClasspathCheckerRule"
+                />
               </rules>
             </configuration>
           </execution>

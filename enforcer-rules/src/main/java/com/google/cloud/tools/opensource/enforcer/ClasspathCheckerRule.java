@@ -20,181 +20,63 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.classpath.ClasspathCheckReport;
 import com.google.cloud.tools.opensource.classpath.ClasspathChecker;
+import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.execution.RuntimeInformation;
-import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.project.DefaultDependencyResolutionRequest;
+import org.apache.maven.project.DependencyResolutionException;
+import org.apache.maven.project.DependencyResolutionRequest;
+import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
-import org.apache.maven.repository.legacy.resolver.DefaultLegacyArtifactCollector;
-import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
-import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
-import org.apache.maven.shared.dependency.graph.DependencyNode;
-import org.apache.maven.shared.dependency.graph.traversal.CollectingDependencyNodeVisitor;
-import org.codehaus.plexus.PlexusContainer;
+import org.apache.maven.project.ProjectDependenciesResolver;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-import org.codehaus.plexus.context.Context;
-import org.eclipse.aether.DefaultRepositorySystemSession;
-import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.collection.DependencyCollectionException;
-import org.eclipse.aether.impl.DependencyCollector;
-import org.eclipse.aether.repository.ArtifactRepository;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.Dependency;
 
 /**
- * Introduction to Maven Enforcer Plugin Custom Rule
- *
- * @see <a href="https://maven.apache.org/enforcer/enforcer-api/writing-a-custom-rule.html">Writing
- * a custom rule</a>
+ * Classpath Checker Maven Enforcer Rule.
  */
 public class ClasspathCheckerRule implements EnforcerRule {
 
-  /** Simple param. This rule will fail if the value is true. */
-  private boolean shouldIfail = false;
-
-  private DependencyNode getRootDependencyNode(MavenProject project, EnforcerRuleHelper helper)
-      throws EnforcerRuleException {
-    try {
-      /* This throws ComponentLookupException
-      RepositorySystemSession repositorySystemSession = helper.getComponent(RepositorySystemSession.class);
-      */
-      /* This only gives me 2 items */
-      List<Dependency> dependencies = project.getDependencies();
-      DependencyGraphBuilder dependencyGraphBuilder =
-          helper.getComponent(DependencyGraphBuilder.class);
-
-      /* With org.eclipse.aether.RepositorySystem, it gets DefaultRepositorySystem */
-      RepositorySystem repositorySystem = helper.getComponent(RepositorySystem.class);
-
-      DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
-
-      /* With org.apache.maven.repository.RepositorySystem, it gets LegacyRepositorySystem
-      RepositorySystem repositorySystem = helper.getComponent(RepositorySystem.class);*/
-      //      List list = helper.getComponentList(null);
-
-      /* No such thing
-      RepositorySystemSession repositorySystemSession =
-          helper.getComponent(RepositorySystemSession.class); */
-      DependencyCollector dependencyCollector = helper.getComponent(DependencyCollector.class);
-
-
-      /* No, this does not have Aether Artifact class
-      org.eclipse.aether.artifact.Artifact aetherArtifact =
-          helper.getComponent(org.eclipse.aether.artifact.Artifact.class);
-      CollectRequest collectRequest = new CollectRequest();
-      collectRequest.setRootArtifact(aetherArtifact); */
-
-      // dependencyCollector.collectDependencies(session, null);
-
-      PlexusContainer container = helper.getContainer();
-      Context context = container.getContext();
-      DependencyNode dependencyNode = dependencyGraphBuilder.buildDependencyGraph(project, null);
-      org.apache.maven.artifact.repository.ArtifactRepository artifactRepository =
-          helper.getComponent(org.apache.maven.artifact.repository.ArtifactRepository.class);
-
-      ArtifactRepository aetherArtifactRepository = helper.getComponent(ArtifactRepository.class);
-
-      return dependencyNode;
-
-      /* The following is from DependencyConvergenceRule
-              DependencyTreeBuilder dependencyTreeBuilder =
-            helper.getComponent(DependencyTreeBuilder.class);
-
-        ArtifactRepository repository = (ArtifactRepository) helper.evaluate("${localRepository}");
-        ArtifactFactory factory = helper.getComponent(ArtifactFactory.class);
-        ArtifactMetadataSource metadataSource = helper.getComponent(ArtifactMetadataSource.class);
-        ArtifactCollector collector = helper.getComponent(ArtifactCollector.class);
-        ArtifactFilter filter = null; // we need to evaluate all scopes
-        DependencyNode node =
-            dependencyTreeBuilder.buildDependencyTree(
-                project, repository, factory, metadataSource, filter, collector);
-        return node;
-      } catch (ExpressionEvaluationException e) {
-        throw new EnforcerRuleException(
-            "Unable to lookup an expression " + e.getLocalizedMessage(), e);*/
-    } catch (ComponentLookupException e) {
-      throw new EnforcerRuleException("Unable to lookup a component " + e.getLocalizedMessage(), e);
-    } catch (DependencyGraphBuilderException e) {
-      throw new EnforcerRuleException("Unable to build a dependency graph", e);
-    }
-  }
-
-  private ImmutableList<Path> fetchClasspath(DependencyNode rootDependencyNode) {
-    CollectingDependencyNodeVisitor visitor = new CollectingDependencyNodeVisitor();
-    rootDependencyNode.accept(visitor);
-    return visitor.getNodes().stream()
-        .map(
-            node -> {
-              Artifact artifact = node.getArtifact();
-              File file = artifact.getFile();
-              if (file == null) {
-                return null;
-              }
-
-              return file.toPath();
-            })
-        .filter(Objects::nonNull)
-        .collect(toImmutableList());
-  }
-
+  @Override
   public void execute(EnforcerRuleHelper helper) throws EnforcerRuleException {
     Log log = helper.getLog();
 
     try {
-      // get the various expressions out of the helper.
       MavenProject project = (MavenProject) helper.evaluate("${project}");
       MavenSession session = (MavenSession) helper.evaluate("${session}");
-      String target = (String) helper.evaluate("${project.build.directory}");
-      String artifactId = (String) helper.evaluate("${project.artifactId}");
+      RepositorySystemSession repositorySystemSession = session.getRepositorySession();
 
-      // retrieve any component out of the session directly
-      ArtifactResolver resolver = helper.getComponent(ArtifactResolver.class);
-      RuntimeInformation rti = helper.getComponent(RuntimeInformation.class);
+      ImmutableList<Path> classpath = findClasspath(project, repositorySystemSession, helper);
 
-      // Does this work with cloud-opensource-java's DependencyNode?
-      DependencyNode projectNode = getRootDependencyNode(project, helper);
-      ImmutableList<Path> classpath = fetchClasspath(projectNode);
-
-      log.info("Retrieved Target Folder: " + target);
-      log.info("Retrieved ArtifactId: " + artifactId);
-      log.info("Retrieved Project: " + project);
-      log.info("Retrieved Project Dependencies: " + project.getDependencies());
-      log.info("Retrieved Dependency Class: " + project.getDependencies().get(0).getClass());
-      log.info("Retrieved Dependency Node: " + projectNode);
-      log.info("Retrieved RuntimeInfo: " + rti);
-      log.info("Retrieved Session: " + session);
-      log.info("Retrieved Resolver: " + resolver);
-
-      List<Path> artifactJarsInBom = classpath.subList(0, project.getDependencies().size());
-      ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInBom);
+      List<Path> artifactJarsInProject = classpath.subList(0, project.getDependencies().size());
+      ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInProject);
 
       try {
         ClasspathChecker classpathChecker = ClasspathChecker.create(classpath, entryPoints);
         ClasspathCheckReport linkageReport = classpathChecker.findLinkageErrors();
-        log.info("Generated linkage error report: " + linkageReport);
+        int totalErrors = linkageReport.getJarLinkageReports().stream()
+            .mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
+            .sum();
+        if (totalErrors > 0) {
+          log.info("Linkage error report:" + linkageReport);
+          throw new EnforcerRuleException(
+              "Failed while checking class path. See above detailed error message.");
+        }
       } catch (IOException ex) {
         log.error("Failed to run Classpath Checker", ex);
       }
-
-      if (this.shouldIfail) {
-        throw new EnforcerRuleException("Failing because my param said so.");
-      }
-    } catch (ComponentLookupException e) {
-      throw new EnforcerRuleException("Unable to lookup a component " + e.getLocalizedMessage(), e);
     } catch (ExpressionEvaluationException e) {
       throw new EnforcerRuleException(
           "Unable to lookup an expression " + e.getLocalizedMessage(), e);
@@ -202,37 +84,41 @@ public class ClasspathCheckerRule implements EnforcerRule {
   }
 
   /**
-   * If your rule is cacheable, you must return a unique id when parameters or conditions change
-   * that would cause the result to be different. Multiple cached results are stored based on their
-   * id.
-   *
-   * <p>The easiest way to do this is to return a hash computed from the values of your parameters.
-   *
-   * <p>If your rule is not cacheable, then the result here is not important, you may return
-   * anything.
+   * Finds class path for this project.
    */
-  public String getCacheId() {
-    // no hash on boolean...only parameter so no hash is needed.
-    return "" + this.shouldIfail;
+  private ImmutableList<Path> findClasspath(MavenProject project,
+      RepositorySystemSession session, EnforcerRuleHelper helper) throws EnforcerRuleException {
+    try {
+      ProjectDependenciesResolver projectDependenciesResolver =
+          helper.getComponent(ProjectDependenciesResolver.class);
+      DependencyResolutionRequest dependencyResolutionRequest =
+          new DefaultDependencyResolutionRequest(project, session);
+      DependencyResolutionResult dependencyResolutionResult = projectDependenciesResolver
+          .resolve(dependencyResolutionRequest);
+      return dependencyResolutionResult.getDependencies().stream().map(
+          Dependency::getArtifact)
+          .map(Artifact::getFile)
+          .map(File::toPath)
+          .collect(toImmutableList());
+    } catch (ComponentLookupException e) {
+      throw new EnforcerRuleException("Unable to lookup a component " + e.getLocalizedMessage(), e);
+    } catch (DependencyResolutionException e) {
+      throw new EnforcerRuleException("Unable to build a dependency graph", e);
+    }
   }
 
-  /**
-   * This tells the system if the results are cacheable at all. Keep in mind that during forked
-   * builds and other things, a given rule may be executed more than once for the same project. This
-   * means that even things that change from project to project may still be cacheable in certain
-   * instances.
-   */
+  @Override
+  public String getCacheId() {
+    return null;
+  }
+
+  @Override
   public boolean isCacheable() {
     return false;
   }
 
-  /**
-   * If the rule is cacheable and the same id is found in the cache, the stored results are passed
-   * to this method to allow double checking of the results. Most of the time this can be done by
-   * generating unique ids, but sometimes the results of objects returned by the helper need to be
-   * queried. You may for example, store certain objects in your rule and then query them later.
-   */
-  public boolean isResultValid(EnforcerRule arg0) {
+  @Override
+  public boolean isResultValid(EnforcerRule enforcerRule) {
     return false;
   }
 }
