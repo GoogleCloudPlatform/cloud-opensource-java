@@ -49,7 +49,7 @@ public class ClassPathBuilder {
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem in retrieving jar files
    */
-  static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
+  public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
       throws RepositoryException {
 
     // LinkedListMultimap keeps the key order as they were first added to the multimap

@@ -18,9 +18,11 @@ package com.google.cloud.tools.opensource.enforcer;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClasspathCheckReport;
 import com.google.cloud.tools.opensource.classpath.ClasspathChecker;
 import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -42,6 +44,7 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectDependenciesResolver;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -101,6 +104,9 @@ public class ClasspathCheckerRule implements EnforcerRule {
   private ImmutableList<Path> findProjectClasspath(MavenProject project,
       RepositorySystemSession session, EnforcerRuleHelper helper) throws EnforcerRuleException {
     try {
+      /*
+      List<Artifact> artifacts = null;
+      ClassPathBuilder.artifactsToDependencyPaths(artifacts);*/
       ProjectDependenciesResolver projectDependenciesResolver =
           helper.getComponent(ProjectDependenciesResolver.class);
       DependencyResolutionRequest dependencyResolutionRequest =
@@ -120,43 +126,14 @@ public class ClasspathCheckerRule implements EnforcerRule {
   }
 
   /**
-   *
+   * Finds class path for BOM.
    */
-  private ImmutableList<Path> findBomClasspath(MavenProject project,
-      RepositorySystemSession session, EnforcerRuleHelper helper) throws EnforcerRuleException {
-    List<org.apache.maven.model.Dependency> managedDependencies = project.getDependencyManagement()
-        .getDependencies();
+  private ImmutableList<Path> findBomClasspath(MavenProject project) throws EnforcerRuleException {
+    Artifact bom = RepositoryUtils.toArtifact(project.getArtifact());
     try {
-      DependencyCollector dependencyCollector = helper.getComponent(DependencyCollector.class);
-      CollectRequest collectRequest = new CollectRequest();
-      for (org.apache.maven.model.Dependency managedDependency : managedDependencies) {
-        collectRequest.addDependency(
-            RepositoryUtils.toDependency(managedDependency, session.getArtifactTypeRegistry()));
-      }
-/*
-      CollectResult collectResult = dependencyCollector
-          .collectDependencies(session, collectRequest);
-          */
-
-      RepositorySystem repositorySystem = helper.getComponent(RepositorySystem.class);
-      CollectResult systemCollectResult = repositorySystem
-          .collectDependencies(session, collectRequest);
-      DependencyRequest dependencyRequest = new DependencyRequest();
-      dependencyRequest.setRoot(systemCollectResult.getRoot());
-      dependencyRequest.setCollectRequest(collectRequest);
-      repositorySystem.resolveDependencies(session, dependencyRequest);
-
-      return collectRequest
-          .getDependencies()
-          .stream()
-          .map(Dependency::getArtifact)
-          .map(Artifact::getFile)
-          .filter(Objects::nonNull)
-          .map(File::toPath)
-          .collect(toImmutableList());
-    } catch (ComponentLookupException ex) {
-      throw new EnforcerRuleException("Failed to lookup " + ex.getMessage(), ex);
-    } catch (DependencyCollectionException | org.eclipse.aether.resolution.DependencyResolutionException ex) {
+      List<Artifact> bomMembers = RepositoryUtility.readBom(bom);
+      return ClassPathBuilder.artifactsToClasspath(bomMembers);
+    } catch (RepositoryException ex) {
       throw new EnforcerRuleException("Failed to collect dependency " + ex.getMessage(), ex);
     }
   }
