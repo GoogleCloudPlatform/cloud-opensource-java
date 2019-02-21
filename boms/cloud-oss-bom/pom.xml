@@ -192,7 +192,7 @@
             <configuration>
               <rules>
                 <classpathCheckerRule
-                  implementation="com.google.cloud.tools.opensource.enforcer.ClasspathCheckerRule"
+                  implementation="com.google.cloud.tools.opensource.enforcer.LinkageCheckerRule"
                 />
               </rules>
             </configuration>

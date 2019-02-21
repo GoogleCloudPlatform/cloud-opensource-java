@@ -1,6 +1,7 @@
-# Classpath Checker Enforcer Rule
+# Linkage Checker Enforcer Rule
 
-The Maven enforcer rule runs Classpath Checker for the Maven project and shows linkage errors.
+The Maven enforcer rule runs Linkage Checker for Maven projects and shows linkage errors if any.
+When there is no linkage error, the rule passes.
 
 # Usage
 
@@ -16,7 +17,7 @@ Add following plugin configuration to your `pom.xml`.
         <dependencies>
           <dependency>
             <groupId>com.google.cloud.tools.opensource</groupId>
-            <artifactId>classpath-checker</artifactId>
+            <artifactId>linkage-checker</artifactId>
             <version>0.0.1-SNAPSHOT</version>
           </dependency>
         </dependencies>
@@ -28,9 +29,8 @@ Add following plugin configuration to your `pom.xml`.
             </goals>
             <configuration>
               <rules>
-                <classpathCheckerRule implementation="com.google.cloud.tools.opensource.enforcer.ClasspathCheckerRule">
-                  <shouldIfail>false</shouldIfail><!-- This is from tutorial -->
-                </classpathCheckerRule>
+                <linkageCheckerRule
+                    implementation="com.google.cloud.tools.opensource.enforcer.LinkageCheckerRule"/>
               </rules>
             </configuration>
           </execution>
@@ -40,6 +40,8 @@ Add following plugin configuration to your `pom.xml`.
 ```
 
 # Run
+
+Enforcer rules are part of `validate` lifecycle in Maven.
 
 ```
 $ mvn validate

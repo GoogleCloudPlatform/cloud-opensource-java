@@ -9,11 +9,11 @@
     <version>1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>classpath-checker</artifactId>
+  <artifactId>linkage-checker</artifactId>
 
-  <name>Classpath Checker Enforcer Rule</name>
+  <name>Linkage Checker Enforcer Rule</name>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/enforcer-rules</url>
-  <description>Classpath Checker enforcer rules</description>
+  <description>Linkage Checker enforcer rules</description>
   <organization>
     <name>Google LLC.</name>
     <url>https://www.google.com</url>

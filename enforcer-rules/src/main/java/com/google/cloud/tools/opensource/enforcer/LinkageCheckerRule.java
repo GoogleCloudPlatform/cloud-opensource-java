@@ -49,8 +49,8 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 
-/** Classpath Checker Maven Enforcer Rule. */
-public class ClasspathCheckerRule implements EnforcerRule {
+/** Linkage Checker Maven Enforcer Rule. */
+public class LinkageCheckerRule implements EnforcerRule {
 
   @Override
   public void execute(@Nonnull EnforcerRuleHelper helper) throws EnforcerRuleException {
@@ -80,33 +80,30 @@ public class ClasspathCheckerRule implements EnforcerRule {
                 .sum();
         if (totalErrors > 0) {
           log.info(
-              "Classpath Checker rule found non-zero errors. Linkage error report:\n"
+              "Linkage Checker rule found non-zero errors. Linkage error report:\n"
                   + linkageReport);
           throw new EnforcerRuleException(
               "Failed while checking class path. See above error report.");
         }
       } catch (IOException ex) {
         // Maven's "-e" flag does not work for EnforcerRuleException. Print stack trace here.
-        log.error("Failed to run Classpath Checker", ex);
-        throw new EnforcerRuleException("Failed to run Classpath Checker: " + ex.getMessage(), ex);
+        log.error("Failed to run Linkage Checker", ex);
+        throw new EnforcerRuleException("Failed to run Linkage Checker: " + ex.getMessage(), ex);
       }
     } catch (ExpressionEvaluationException ex) {
       throw new EnforcerRuleException("Unable to lookup an expression " + ex.getMessage(), ex);
     }
   }
 
-  /** Finds class path for {@code project}. */
+  /** Finds class path for {@code mavenProject}. */
   private ImmutableList<Path> findProjectClasspath(
-      MavenProject project, RepositorySystemSession session, EnforcerRuleHelper helper)
+      MavenProject mavenProject, RepositorySystemSession session, EnforcerRuleHelper helper)
       throws EnforcerRuleException {
     try {
-      /*
-      List<Artifact> artifacts = null;
-      ClassPathBuilder.artifactsToDependencyPaths(artifacts);*/
       ProjectDependenciesResolver projectDependenciesResolver =
           helper.getComponent(ProjectDependenciesResolver.class);
       DependencyResolutionRequest dependencyResolutionRequest =
-          new DefaultDependencyResolutionRequest(project, session);
+          new DefaultDependencyResolutionRequest(mavenProject, session);
       DependencyResolutionResult dependencyResolutionResult =
           projectDependenciesResolver.resolve(dependencyResolutionRequest);
       return dependencyResolutionResult.getDependencies().stream()
@@ -121,9 +118,10 @@ public class ClasspathCheckerRule implements EnforcerRule {
     }
   }
 
-  /** Finds class path for BOM. */
-  private ImmutableList<Path> findBomClasspath(MavenProject project) throws EnforcerRuleException {
-    Artifact bom = RepositoryUtils.toArtifact(project.getArtifact());
+  /** Finds a class path for {@code bomProject}. */
+  private ImmutableList<Path> findBomClasspath(MavenProject bomProject)
+      throws EnforcerRuleException {
+    Artifact bom = RepositoryUtils.toArtifact(bomProject.getArtifact());
     try {
       List<Artifact> bomMembers = RepositoryUtility.readBom(bom);
       return ClassPathBuilder.artifactsToClasspath(bomMembers);
