@@ -5,8 +5,8 @@ The rule verifies that the project does not have linkage errors in its class pat
 
 ## Class path and bom flag
 
-The tool generates a class path (a list of jar files) using `pom.xml`.
-The behavior differs for projects defining a BOM (BOM projects) and other projects.
+The rule generates a class path (a list of jar files) from `pom.xml`.
+The generation logic differs for projects defining a BOM (BOM projects) and other projects.
 The rule takes `bom` flag to control the behavior (by default `false`).
 
 - When `bom=false`, the rule checks a class path consisting of the project's `dependencies` section
