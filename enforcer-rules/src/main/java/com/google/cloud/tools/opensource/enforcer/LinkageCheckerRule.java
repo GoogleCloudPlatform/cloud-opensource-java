@@ -130,10 +130,6 @@ public class LinkageCheckerRule implements EnforcerRule {
     }
   }
 
-  @Override
-  public String getCacheId() {
-    return null;
-  }
 
   @Override
   public boolean isCacheable() {
@@ -141,7 +137,14 @@ public class LinkageCheckerRule implements EnforcerRule {
   }
 
   @Override
+  public String getCacheId() {
+    // Unused because isCacheable() is false
+    return null;
+  }
+
+  @Override
   public boolean isResultValid(@Nonnull EnforcerRule enforcerRule) {
+    // Unused because isCacheable() is false
     return false;
   }
 }
