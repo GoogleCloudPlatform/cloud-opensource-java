@@ -61,14 +61,12 @@ public class LinkageCheckerRule implements EnforcerRule {
       MavenSession session = (MavenSession) helper.evaluate("${session}");
       RepositorySystemSession repositorySystemSession = session.getRepositorySession();
 
-      int dependencyCount = project.getDependencies().size();
-
       ImmutableList<Path> classpath =
-          dependencyCount == 0
+          isBomProject(project)
               ? findBomClasspath(project)
               : findProjectClasspath(project, repositorySystemSession, helper);
 
-      List<Path> artifactJarsInProject = classpath.subList(0, dependencyCount);
+      List<Path> artifactJarsInProject = classpath.subList(0, project.getDependencies().size());
       ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInProject);
 
       try {
@@ -95,7 +93,12 @@ public class LinkageCheckerRule implements EnforcerRule {
     }
   }
 
-  /** Finds class path for {@code mavenProject}. */
+  private static boolean isBomProject(MavenProject project) {
+    return project.getDependencies().size() == 0
+        && project.getDependencyManagement().getDependencies().size() > 0;
+  }
+
+  /** Builds a class path for {@code mavenProject}. */
   private ImmutableList<Path> findProjectClasspath(
       MavenProject mavenProject, RepositorySystemSession session, EnforcerRuleHelper helper)
       throws EnforcerRuleException {
@@ -118,7 +121,7 @@ public class LinkageCheckerRule implements EnforcerRule {
     }
   }
 
-  /** Finds a class path for {@code bomProject}. */
+  /** Builds a class path for {@code bomProject}. */
   private ImmutableList<Path> findBomClasspath(MavenProject bomProject)
       throws EnforcerRuleException {
     Artifact bom = RepositoryUtils.toArtifact(bomProject.getArtifact());
