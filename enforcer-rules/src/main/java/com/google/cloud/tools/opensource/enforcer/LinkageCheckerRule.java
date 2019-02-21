@@ -52,6 +52,9 @@ import org.eclipse.aether.graph.Dependency;
 /** Linkage Checker Maven Enforcer Rule. */
 public class LinkageCheckerRule implements EnforcerRule {
 
+  /** Set to rue if the rule is used for a BOM project. */
+  private boolean bom = false;
+
   @Override
   public void execute(@Nonnull EnforcerRuleHelper helper) throws EnforcerRuleException {
     Log log = helper.getLog();
@@ -93,9 +96,12 @@ public class LinkageCheckerRule implements EnforcerRule {
     }
   }
 
-  private static boolean isBomProject(MavenProject project) {
-    return project.getDependencies().size() == 0
-        && project.getDependencyManagement().getDependencies().size() > 0;
+  private boolean isBomProject(MavenProject project) throws EnforcerRuleException {
+    if (bom && project.getDependencyManagement().getDependencies().isEmpty()) {
+      throw new EnforcerRuleException(
+          "The rule is set for a BOM project but no managed dependency found.");
+    }
+    return bom;
   }
 
   /** Builds a class path for {@code mavenProject}. */
@@ -132,7 +138,6 @@ public class LinkageCheckerRule implements EnforcerRule {
       throw new EnforcerRuleException("Failed to collect dependency " + ex.getMessage(), ex);
     }
   }
-
 
   @Override
   public boolean isCacheable() {

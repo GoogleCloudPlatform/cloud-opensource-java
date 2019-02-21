@@ -12,8 +12,15 @@
   <artifactId>linkage-checker</artifactId>
 
   <name>Linkage Checker Enforcer Rule</name>
-  <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/enforcer-rules</url>
   <description>Linkage Checker enforcer rules</description>
+  <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/enforcer-rules</url>
+  <scm>
+    <connection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git</connection>
+    <developerConnection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git
+    </developerConnection>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java</url>
+    <tag>HEAD</tag>
+  </scm>
   <organization>
     <name>Google LLC.</name>
     <url>https://www.google.com</url>
@@ -45,7 +52,7 @@
       <version>${enforcer.version}</version>
     </dependency>
     <dependency>
-      <!-- This dependency is not required for build but useful for debug with source code -->
+      <!-- This dependency is not required for build but useful for debugging with source code -->
       <groupId>org.apache.maven.plugins</groupId>
       <artifactId>maven-enforcer-plugin</artifactId>
       <version>${enforcer.version}</version>

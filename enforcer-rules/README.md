@@ -1,16 +1,20 @@
 # Linkage Checker Enforcer Rule
 
 This Maven enforcer rule runs [Linkage Checker](../dependencies) for Maven projects.
-The rule enforces that project does not have linkage errors in its class path.
+The rule verifies that the project does not have linkage errors in its class path.
 
-- If the rule runs within a BOM's pom.xml, it checks a class path consisting of the managed
-dependencies and their transitive dependencies.
-- Otherwise, the rule checks a class path consisting of direct dependencies and their transitive
-dependencies.
+## Class path and bom flag
+
+Use `bom` flag to `true` if you use this rule for a BOM project. By default it is `false`.
+
+- When `bom=false`, the rule checks a class path consisting of the project's direct dependencies and
+  their transitive dependencies.
+- When `bom=true`, the rule checks a class path consisting of artifacts in the BOM's managed
+  dependencies section and their transitive dependencies.
 
 # Usage
 
-Add following plugin configuration to your `pom.xml`.
+Add the following plugin configuration to your `pom.xml`.
 
 ```xml
   <build>
@@ -34,7 +38,7 @@ Add following plugin configuration to your `pom.xml`.
             </goals>
             <configuration>
               <rules>
-                <linkageCheckerRule
+                <banLinkageErrors
                     implementation="com.google.cloud.tools.opensource.enforcer.LinkageCheckerRule"/>
               </rules>
             </configuration>
@@ -43,6 +47,16 @@ Add following plugin configuration to your `pom.xml`.
       </plugin>
    ...
 ```
+
+For a BOM project, set `bom` flag to true.
+
+```xml
+  <banLinkageErrors
+      implementation="com.google.cloud.tools.opensource.enforcer.LinkageCheckerRule">
+      <bom>true</bom>
+  </banLinkageErrors>
+```
+
 
 # Run
 

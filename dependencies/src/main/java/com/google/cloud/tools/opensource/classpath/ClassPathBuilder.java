@@ -47,7 +47,7 @@ public class ClassPathBuilder {
    *
    * @param artifacts Maven artifacts to check
    * @return list of absolute paths to jar files
-   * @throws RepositoryException when there is a problem in retrieving jar files
+   * @throws RepositoryException when there is a problem retrieving jar files
    */
   public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
       throws RepositoryException {
@@ -72,7 +72,7 @@ public class ClassPathBuilder {
    *
    * @param artifacts Maven artifacts to check. They are treated as the root of the dependency tree.
    * @return an ordered map of absolute paths of jar files to one or more Maven dependency paths
-   * @throws RepositoryException when there is a problem in retrieving jar files
+   * @throws RepositoryException when there is a problem retrieving jar files
    */
   public static LinkedListMultimap<Path, DependencyPath> artifactsToDependencyPaths(
       List<Artifact> artifacts) throws RepositoryException {
