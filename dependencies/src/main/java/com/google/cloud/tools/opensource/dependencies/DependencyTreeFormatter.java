@@ -26,7 +26,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
- * Formats and prints artifact dependency tree represented by list of {@link DependencyPath}
+ * Formats and prints artifact dependency tree represented by a list of {@link DependencyPath}s.
  */
 public class DependencyTreeFormatter {
 
