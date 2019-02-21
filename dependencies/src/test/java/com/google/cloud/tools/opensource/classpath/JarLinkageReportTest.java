@@ -30,10 +30,10 @@ import org.junit.Test;
 public class JarLinkageReportTest {
 
   private JarLinkageReport jarLinkageReport;
-  private ImmutableList<StaticLinkageError<FieldSymbolReference>> missingFieldErrors;
-  private ImmutableList<StaticLinkageError<MethodSymbolReference>> missingMethodErrors;
-  private ImmutableList<StaticLinkageError<ClassSymbolReference>> missingClassErrors;
-  private StaticLinkageError<MethodSymbolReference> linkageErrorMissingMethod;
+  private ImmutableList<SymbolNotFound<FieldSymbolReference>> missingFieldErrors;
+  private ImmutableList<SymbolNotFound<MethodSymbolReference>> missingMethodErrors;
+  private ImmutableList<SymbolNotFound<ClassSymbolReference>> missingClassErrors;
+  private SymbolNotFound<MethodSymbolReference> linkageErrorMissingMethod;
 
   @Before
   public void setUp() {
@@ -45,8 +45,8 @@ public class JarLinkageReportTest {
             .setSourceClassName("ClassB")
             .build();
 
-    StaticLinkageError<ClassSymbolReference> linkageErrorMissingClass =
-        StaticLinkageError.errorMissingTargetClass(classSymbolReference, true);
+    SymbolNotFound<ClassSymbolReference> linkageErrorMissingClass =
+        SymbolNotFound.errorMissingTargetClass(classSymbolReference, true);
     missingClassErrors = ImmutableList.of(linkageErrorMissingClass);
 
     MethodSymbolReference methodSymbolReference =
@@ -59,7 +59,7 @@ public class JarLinkageReportTest {
             .build();
     Path targetClassLocation = Paths.get("dummy.jar");
     linkageErrorMissingMethod =
-        StaticLinkageError.errorMissingMember(methodSymbolReference, targetClassLocation, true);
+        SymbolNotFound.errorMissingMember(methodSymbolReference, targetClassLocation, true);
 
     MethodSymbolReference methodSymbolReferenceDueToMissingClass =
         MethodSymbolReference.builder()
@@ -69,8 +69,8 @@ public class JarLinkageReportTest {
             .setDescriptor("java.lang.String")
             .setSourceClassName("ClassC$InnerC")
             .build();
-    StaticLinkageError<MethodSymbolReference> linkageErrorMissingMethodByClass =
-        StaticLinkageError.errorMissingTargetClass(methodSymbolReferenceDueToMissingClass, false);
+    SymbolNotFound<MethodSymbolReference> linkageErrorMissingMethodByClass =
+        SymbolNotFound.errorMissingTargetClass(methodSymbolReferenceDueToMissingClass, false);
 
     missingMethodErrors =
         ImmutableList.of(linkageErrorMissingMethod, linkageErrorMissingMethodByClass);
@@ -81,8 +81,8 @@ public class JarLinkageReportTest {
             .setFieldName("fieldX")
             .setSourceClassName("ClassD")
             .build();
-    StaticLinkageError<FieldSymbolReference> linkageErrorMissingField =
-        StaticLinkageError.errorMissingTargetClass(fieldSymbolReference, true);
+    SymbolNotFound<FieldSymbolReference> linkageErrorMissingField =
+        SymbolNotFound.errorMissingTargetClass(fieldSymbolReference, true);
     missingFieldErrors = ImmutableList.of(linkageErrorMissingField);
     jarLinkageReport =
         JarLinkageReport.builder()

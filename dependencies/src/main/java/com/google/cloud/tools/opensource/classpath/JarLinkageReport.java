@@ -41,11 +41,11 @@ public abstract class JarLinkageReport {
    */
   public abstract Path getJarPath();
 
-  public abstract ImmutableList<StaticLinkageError<ClassSymbolReference>> getMissingClassErrors();
+  public abstract ImmutableList<SymbolNotFound<ClassSymbolReference>> getMissingClassErrors();
 
-  public abstract ImmutableList<StaticLinkageError<MethodSymbolReference>> getMissingMethodErrors();
+  public abstract ImmutableList<SymbolNotFound<MethodSymbolReference>> getMissingMethodErrors();
 
-  public abstract ImmutableList<StaticLinkageError<FieldSymbolReference>> getMissingFieldErrors();
+  public abstract ImmutableList<SymbolNotFound<FieldSymbolReference>> getMissingFieldErrors();
 
   static Builder builder() {
     return new AutoValue_JarLinkageReport.Builder();
@@ -56,13 +56,13 @@ public abstract class JarLinkageReport {
     abstract Builder setJarPath(Path value);
 
     abstract Builder setMissingClassErrors(
-        Iterable<StaticLinkageError<ClassSymbolReference>> errors);
+        Iterable<SymbolNotFound<ClassSymbolReference>> errors);
 
     abstract Builder setMissingMethodErrors(
-        Iterable<StaticLinkageError<MethodSymbolReference>> errors);
+        Iterable<SymbolNotFound<MethodSymbolReference>> errors);
 
     abstract Builder setMissingFieldErrors(
-        Iterable<StaticLinkageError<FieldSymbolReference>> errors);
+        Iterable<SymbolNotFound<FieldSymbolReference>> errors);
 
     abstract JarLinkageReport build();
   }
@@ -74,15 +74,15 @@ public abstract class JarLinkageReport {
     int totalErrors = getCauseToSourceClassesSize();
 
     builder.append(getJarPath().getFileName() + " (" + totalErrors + " errors):\n");
-    for (StaticLinkageError<ClassSymbolReference> missingClass : getMissingClassErrors()) {
+    for (SymbolNotFound<ClassSymbolReference> missingClass : getMissingClassErrors()) {
       builder.append(indent + missingClass);
       builder.append("\n");
     }
-    for (StaticLinkageError<MethodSymbolReference> missingMethod : getMissingMethodErrors()) {
+    for (SymbolNotFound<MethodSymbolReference> missingMethod : getMissingMethodErrors()) {
       builder.append(indent + missingMethod);
       builder.append("\n");
     }
-    for (StaticLinkageError<FieldSymbolReference> missingField : getMissingFieldErrors()) {
+    for (SymbolNotFound<FieldSymbolReference> missingField : getMissingFieldErrors()) {
       builder.append(indent + missingField);
       builder.append("\n");
     }
@@ -91,13 +91,13 @@ public abstract class JarLinkageReport {
 
   /** Returns map from the cause of linkage errors to class names affected by the errors. */
   public ImmutableMultimap<LinkageErrorCause, String> getCauseToSourceClasses() {
-    ImmutableListMultimap<LinkageErrorCause, StaticLinkageError<ClassSymbolReference>>
+    ImmutableListMultimap<LinkageErrorCause, SymbolNotFound<ClassSymbolReference>>
         groupedClassErrors = Multimaps.index(getMissingClassErrors(), LinkageErrorCause::from);
 
-    ImmutableListMultimap<LinkageErrorCause, StaticLinkageError<MethodSymbolReference>>
+    ImmutableListMultimap<LinkageErrorCause, SymbolNotFound<MethodSymbolReference>>
         groupedMethodErrors = Multimaps.index(getMissingMethodErrors(), LinkageErrorCause::from);
 
-    ImmutableListMultimap<LinkageErrorCause, StaticLinkageError<FieldSymbolReference>>
+    ImmutableListMultimap<LinkageErrorCause, SymbolNotFound<FieldSymbolReference>>
         groupedFieldErrors = Multimaps.index(getMissingFieldErrors(), LinkageErrorCause::from);
 
     // ImmutableSet ensures deterministic iteration order
@@ -110,7 +110,7 @@ public abstract class JarLinkageReport {
 
     ImmutableMultimap.Builder<LinkageErrorCause, String> builder = ImmutableMultimap.builder();
     for (LinkageErrorCause key : combinedKeys) {
-      List<StaticLinkageError<? extends SymbolReference>> allErrorsForKey =
+      List<SymbolNotFound<? extends SymbolReference>> allErrorsForKey =
           Lists.newArrayList(
               Iterables.concat(
                   groupedClassErrors.get(key),
@@ -119,7 +119,7 @@ public abstract class JarLinkageReport {
       builder.putAll(
           key,
           allErrorsForKey.stream()
-              .map(StaticLinkageError::getReference)
+              .map(SymbolNotFound::getReference)
               .map(SymbolReference::getSourceClassName)
               .map(className -> className.split("\\$")[0]) // Removing duplicate inner classes
               .collect(toImmutableSet()));

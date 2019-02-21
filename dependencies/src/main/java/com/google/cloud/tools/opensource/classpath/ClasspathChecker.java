@@ -160,11 +160,11 @@ public class ClasspathChecker {
   }
 
   private static <R extends SymbolReference>
-      ImmutableList<StaticLinkageError<R>> errorsFromSymbolReferences(
+      ImmutableList<SymbolNotFound<R>> errorsFromSymbolReferences(
           Set<R> symbolReferences,
           Set<String> classesDefinedInJar,
-          Function<R, Optional<StaticLinkageError<R>>> checkFunction) {
-    ImmutableList<StaticLinkageError<R>> linkageErrors =
+          Function<R, Optional<SymbolNotFound<R>>> checkFunction) {
+    ImmutableList<SymbolNotFound<R>> linkageErrors =
         symbolReferences.stream()
             .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
             .map(checkFunction)
@@ -185,7 +185,7 @@ public class ClasspathChecker {
    *     Virtual Machine Specification: 5.4.3.4. Interface Method Resolution</a>
    */
   @VisibleForTesting
-  Optional<StaticLinkageError<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
+  Optional<SymbolNotFound<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
       MethodSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     String sourceClassName = reference.getSourceClassName();
@@ -202,13 +202,13 @@ public class ClasspathChecker {
       Path classFileLocation = classDumper.findClassLocation(targetClassName);
       if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
         return Optional.of(
-            StaticLinkageError.errorInaccessibleClass(
+            SymbolNotFound.errorInaccessibleClass(
                 reference, classFileLocation, isSourceClassReachable));
       }
 
       if (targetJavaClass.isInterface() != reference.isInterfaceMethod()) {
         return Optional.of(
-            StaticLinkageError.errorIncompatibleClassChange(
+            SymbolNotFound.errorIncompatibleClassChange(
                 reference, classFileLocation, isSourceClassReachable));
       }
 
@@ -227,7 +227,7 @@ public class ClasspathChecker {
               && method.getSignature().equals(reference.getDescriptor())) {
             if (!isMemberAccessibleFrom(javaClass, method, sourceClassName)) {
               return Optional.of(
-                  StaticLinkageError.errorInaccessibleMember(
+                  SymbolNotFound.errorInaccessibleMember(
                       reference, classFileLocation, isSourceClassReachable));
             }
             // The method is found and accessible. Returning no error.
@@ -238,14 +238,14 @@ public class ClasspathChecker {
 
       // The class is in class path but the symbol is not found
       return Optional.of(
-          StaticLinkageError.errorMissingMember(
+          SymbolNotFound.errorMissingMember(
               reference, classFileLocation, isSourceClassReachable));
     } catch (ClassNotFoundException ex) {
       if (classDumper.catchesNoClassDefFoundError(reference)) {
         return Optional.empty();
       }
       return Optional.of(
-          StaticLinkageError.errorMissingTargetClass(reference, isSourceClassReachable));
+          SymbolNotFound.errorMissingTargetClass(reference, isSourceClassReachable));
     }
   }
 
@@ -255,7 +255,7 @@ public class ClasspathChecker {
    * Optional}.
    */
   @VisibleForTesting
-  Optional<StaticLinkageError<FieldSymbolReference>> checkLinkageErrorMissingFieldAt(
+  Optional<SymbolNotFound<FieldSymbolReference>> checkLinkageErrorMissingFieldAt(
       FieldSymbolReference reference) {
     String targetClassName = reference.getTargetClassName();
     String sourceClassName = reference.getSourceClassName();
@@ -266,7 +266,7 @@ public class ClasspathChecker {
       Path classFileLocation = classDumper.findClassLocation(targetClassName);
       if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
         return Optional.of(
-            StaticLinkageError.errorInaccessibleClass(
+            SymbolNotFound.errorInaccessibleClass(
                 reference, classFileLocation, isSourceClassReachable));
       }
 
@@ -275,7 +275,7 @@ public class ClasspathChecker {
           if (field.getName().equals(fieldName)) {
             if (!isMemberAccessibleFrom(javaClass, field, sourceClassName)) {
               return Optional.of(
-                  StaticLinkageError.errorInaccessibleMember(
+                  SymbolNotFound.errorInaccessibleMember(
                       reference, classFileLocation, isSourceClassReachable));
             }
             // The field is found and accessible. Returning no error.
@@ -285,14 +285,14 @@ public class ClasspathChecker {
       }
       // The field was not found in the class from the classpath
       return Optional.of(
-          StaticLinkageError.errorMissingMember(
+          SymbolNotFound.errorMissingMember(
               reference, classFileLocation, isSourceClassReachable));
     } catch (ClassNotFoundException ex) {
       if (classDumper.catchesNoClassDefFoundError(reference)) {
         return Optional.empty();
       }
       return Optional.of(
-          StaticLinkageError.errorMissingTargetClass(reference, isSourceClassReachable));
+          SymbolNotFound.errorMissingTargetClass(reference, isSourceClassReachable));
     }
   }
 
@@ -345,7 +345,7 @@ public class ClasspathChecker {
    * Optional}.
    */
   @VisibleForTesting
-  Optional<StaticLinkageError<ClassSymbolReference>> checkLinkageErrorMissingClassAt(
+  Optional<SymbolNotFound<ClassSymbolReference>> checkLinkageErrorMissingClassAt(
       ClassSymbolReference reference) {
     String sourceClassName = reference.getSourceClassName();
     String targetClassName = reference.getTargetClassName();
@@ -358,13 +358,13 @@ public class ClasspathChecker {
           && !classDumper.hasValidSuperclass(
               classDumper.loadJavaClass(sourceClassName), targetClass)) {
         return Optional.of(
-            StaticLinkageError.errorIncompatibleClassChange(
+            SymbolNotFound.errorIncompatibleClassChange(
                 reference, classFileLocation, isSourceClassReachable));
       }
 
       if (!isClassAccessibleFrom(targetClass, sourceClassName)) {
         return Optional.of(
-            StaticLinkageError.errorInaccessibleClass(
+            SymbolNotFound.errorInaccessibleClass(
                 reference, classFileLocation, isSourceClassReachable));
       }
       return Optional.empty();
@@ -375,7 +375,7 @@ public class ClasspathChecker {
         return Optional.empty();
       }
       return Optional.of(
-          StaticLinkageError.errorMissingTargetClass(reference, isSourceClassReachable));
+          SymbolNotFound.errorMissingTargetClass(reference, isSourceClassReachable));
     }
   }
 

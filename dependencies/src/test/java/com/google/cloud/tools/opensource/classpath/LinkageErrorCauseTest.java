@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.cloud.tools.opensource.classpath.StaticLinkageError.Reason;
+import com.google.cloud.tools.opensource.classpath.SymbolNotFound.Reason;
 import com.google.common.truth.Truth;
 import org.junit.Test;
 
@@ -31,8 +31,8 @@ public class LinkageErrorCauseTest {
             .setSourceClassName("ClassD")
             .build();
 
-    StaticLinkageError<FieldSymbolReference> fieldError =
-        StaticLinkageError.errorMissingTargetClass(fieldSymbolReference, true);
+    SymbolNotFound<FieldSymbolReference> fieldError =
+        SymbolNotFound.errorMissingTargetClass(fieldSymbolReference, true);
 
     LinkageErrorCause groupKey = LinkageErrorCause.from(fieldError);
     Truth.assertThat(groupKey.getReason()).isEqualTo(Reason.CLASS_NOT_FOUND);
