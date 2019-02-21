@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -48,13 +49,11 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 
-/**
- * Classpath Checker Maven Enforcer Rule.
- */
+/** Classpath Checker Maven Enforcer Rule. */
 public class ClasspathCheckerRule implements EnforcerRule {
 
   @Override
-  public void execute(EnforcerRuleHelper helper) throws EnforcerRuleException {
+  public void execute(@Nonnull EnforcerRuleHelper helper) throws EnforcerRuleException {
     Log log = helper.getLog();
 
     try {
@@ -64,9 +63,10 @@ public class ClasspathCheckerRule implements EnforcerRule {
 
       int dependencyCount = project.getDependencies().size();
 
-      ImmutableList<Path> classpath = dependencyCount == 0 ?
-          findBomClasspath(project) :
-          findProjectClasspath(project, repositorySystemSession, helper);
+      ImmutableList<Path> classpath =
+          dependencyCount == 0
+              ? findBomClasspath(project)
+              : findProjectClasspath(project, repositorySystemSession, helper);
 
       List<Path> artifactJarsInProject = classpath.subList(0, dependencyCount);
       ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInProject);
@@ -74,30 +74,31 @@ public class ClasspathCheckerRule implements EnforcerRule {
       try {
         ClasspathChecker classpathChecker = ClasspathChecker.create(classpath, entryPoints);
         ClasspathCheckReport linkageReport = classpathChecker.findLinkageErrors();
-        int totalErrors = linkageReport.getJarLinkageReports().stream()
-            .mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
-            .sum();
+        int totalErrors =
+            linkageReport.getJarLinkageReports().stream()
+                .mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
+                .sum();
         if (totalErrors > 0) {
           log.info(
               "Classpath Checker rule found non-zero errors. Linkage error report:\n"
                   + linkageReport);
           throw new EnforcerRuleException(
-              "Failed while checking class path. See above detailed error message.");
+              "Failed while checking class path. See above error report.");
         }
       } catch (IOException ex) {
+        // Maven's "-e" flag does not work for EnforcerRuleException. Print stack trace here.
         log.error("Failed to run Classpath Checker", ex);
+        throw new EnforcerRuleException("Failed to run Classpath Checker: " + ex.getMessage(), ex);
       }
-    } catch (ExpressionEvaluationException e) {
-      throw new EnforcerRuleException(
-          "Unable to lookup an expression " + e.getLocalizedMessage(), e);
+    } catch (ExpressionEvaluationException ex) {
+      throw new EnforcerRuleException("Unable to lookup an expression " + ex.getMessage(), ex);
     }
   }
 
-  /**
-   * Finds class path for {@code project}.
-   */
-  private ImmutableList<Path> findProjectClasspath(MavenProject project,
-      RepositorySystemSession session, EnforcerRuleHelper helper) throws EnforcerRuleException {
+  /** Finds class path for {@code project}. */
+  private ImmutableList<Path> findProjectClasspath(
+      MavenProject project, RepositorySystemSession session, EnforcerRuleHelper helper)
+      throws EnforcerRuleException {
     try {
       /*
       List<Artifact> artifacts = null;
@@ -106,8 +107,8 @@ public class ClasspathCheckerRule implements EnforcerRule {
           helper.getComponent(ProjectDependenciesResolver.class);
       DependencyResolutionRequest dependencyResolutionRequest =
           new DefaultDependencyResolutionRequest(project, session);
-      DependencyResolutionResult dependencyResolutionResult = projectDependenciesResolver
-          .resolve(dependencyResolutionRequest);
+      DependencyResolutionResult dependencyResolutionResult =
+          projectDependenciesResolver.resolve(dependencyResolutionRequest);
       return dependencyResolutionResult.getDependencies().stream()
           .map(Dependency::getArtifact)
           .map(Artifact::getFile)
@@ -120,9 +121,7 @@ public class ClasspathCheckerRule implements EnforcerRule {
     }
   }
 
-  /**
-   * Finds class path for BOM.
-   */
+  /** Finds class path for BOM. */
   private ImmutableList<Path> findBomClasspath(MavenProject project) throws EnforcerRuleException {
     Artifact bom = RepositoryUtils.toArtifact(project.getArtifact());
     try {
@@ -144,7 +143,7 @@ public class ClasspathCheckerRule implements EnforcerRule {
   }
 
   @Override
-  public boolean isResultValid(EnforcerRule enforcerRule) {
+  public boolean isResultValid(@Nonnull EnforcerRule enforcerRule) {
     return false;
   }
 }
