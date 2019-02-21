@@ -2,8 +2,11 @@
 
 This Maven enforcer rule runs [Linkage Checker](../dependencies) for Maven projects.
 The rule enforces that project does not have linkage errors in its class path.
-If the rule runs within a BOM's pom.xml, it enforces that a class path consisting of the managed
-dependencies and their transitive dependencies does not have linkage errors.
+
+- If the rule runs within a BOM's pom.xml, it checks a class path consisting of the managed
+dependencies and their transitive dependencies.
+- Otherwise, the rule checks a class path consisting of direct dependencies and their transitive
+dependencies.
 
 # Usage
 
