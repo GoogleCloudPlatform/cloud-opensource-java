@@ -55,6 +55,9 @@ public class LinkageCheckerRule implements EnforcerRule {
   /** Set to rue if the rule is used for a BOM project. */
   private boolean bom = false;
 
+  /** Set to true if the rule should not fail upon linkage errors */
+  private boolean warningOnly = false;
+
   @Override
   public void execute(@Nonnull EnforcerRuleHelper helper) throws EnforcerRuleException {
     Log log = helper.getLog();
@@ -80,11 +83,17 @@ public class LinkageCheckerRule implements EnforcerRule {
                 .mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
                 .sum();
         if (totalErrors > 0) {
-          log.info(
+          log.warn(
               "Linkage Checker rule found non-zero errors. Linkage error report:\n"
                   + linkageReport);
+          if (warningOnly) {
+            log.info("Not failing the rule as warningOnly=true");
+            return;
+          }
           throw new EnforcerRuleException(
               "Failed while checking class path. See above error report.");
+        } else {
+          log.info("No linkage error found");
         }
       } catch (IOException ex) {
         // Maven's "-e" flag does not work for EnforcerRuleException. Print stack trace here.

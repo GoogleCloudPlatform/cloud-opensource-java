@@ -59,6 +59,15 @@ For a BOM project, set `bom` flag to true.
   </banLinkageErrors>
 ```
 
+When you need to see the report only without failing `validate` lifecycle, set `warningOnly`
+to `true`
+
+```xml
+  <banLinkageErrors
+      implementation="com.google.cloud.tools.opensource.enforcer.LinkageCheckerRule">
+      <warningOnly>true</warningOnly>
+  </banLinkageErrors>
+```
 
 # Run
 
