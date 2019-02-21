@@ -7,10 +7,10 @@ The rule verifies that the project does not have linkage errors in its class pat
 
 Use `bom` flag to `true` if you use this rule for a BOM project. By default it is `false`.
 
-- When `bom=false`, the rule checks a class path consisting of the project's direct dependencies and
-  their transitive dependencies.
-- When `bom=true`, the rule checks a class path consisting of artifacts in the BOM's managed
-  dependencies section and their transitive dependencies.
+- When `bom=false`, the rule checks a class path consisting of the project's `dependencies` section
+  (immediate child element of `project`) and their transitive dependencies.
+- When `bom=true`, the rule checks a class path consisting of artifacts in the BOM's
+  `dependencyManagement` section and their transitive dependencies.
 
 # Usage
 
@@ -27,7 +27,7 @@ Add the following plugin configuration to your `pom.xml`.
           <dependency>
             <groupId>com.google.cloud.tools.opensource</groupId>
             <artifactId>linkage-checker</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0-SNAPSHOT</version>
           </dependency>
         </dependencies>
         <executions>
