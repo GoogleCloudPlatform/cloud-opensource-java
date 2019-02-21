@@ -47,11 +47,13 @@ $ mvn validate
 
 ## Debug
 
-For developers of this plugin, set `MAVEN_OPTS` environment variable to wait for
-debuggers.
+For developers of this enforcer rule, set `MAVEN_OPTS` environment variable to wait for
+debuggers (`suspend=y`).
 
 ```
 $ export MAVEN_OPTS='-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005'
 $ mvn validate
+Listening for transport dt_socket at address: 5005
 ```
 
+Then run remote debug to the port (5005) via your IDE.
