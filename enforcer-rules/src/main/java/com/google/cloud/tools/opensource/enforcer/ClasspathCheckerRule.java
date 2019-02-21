@@ -78,7 +78,9 @@ public class ClasspathCheckerRule implements EnforcerRule {
             .mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
             .sum();
         if (totalErrors > 0) {
-          log.info("Linkage error report:" + linkageReport);
+          log.info(
+              "Classpath Checker rule found non-zero errors. Linkage error report:\n"
+                  + linkageReport);
           throw new EnforcerRuleException(
               "Failed while checking class path. See above detailed error message.");
         }
