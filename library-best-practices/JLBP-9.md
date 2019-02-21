@@ -1,22 +1,20 @@
 [JLBP-9] Support the minimum Java version of your consumers
 -----------------------------------------------------------
 
-Imagine library B depends on library A and both work with Java 8.
+Imagine that library B depends on library A and both work with Java 8.
 If library A releases a new version that requires Java 11, library B cannot upgrade
-unless it also starts requiring Java 11. 
+to the new version of library A unless it also starts requiring Java 11. 
 If library B is not able to do that—for instance because it must work in an environment
 such as App Engine that does not yet support Java 11—it must keep using the older
-version of library B, missing out on security and bug fixes in the newer version.
-This can also lead to diamond dependency conflicts where no version works for
-all consumers. 
+version of library A, missing out on security and bug fixes in the newer version.
 
-Thus, libraries should wait a reasonable period of time
-for actively-maintained consumers to advance their minimum version of Java before
-they advance their own. It is rarely possible to wait for all dependents to upgrade.
+Thus, libraries should not require a new minimum Java version until
+actively-maintained dependents already require that version of Java.
+It is rarely possible to wait for all dependents to upgrade.
 Some projects are abandoned or lightly maintained and may never upgrade.
 
-As an alternative, to support both consumers on the old version of
-Java and consumers wanting features provided by a newer version of Java, 
+As an alternative, to support both dependents on the old version of
+Java and dependents wanting features provided by a newer version of Java, 
 you can continue development in two forks, version N for the older version of
 Java and version N+1 for the newer version of Java. Typically in this case,
 the major version is incremented to distinguish the two versions.
