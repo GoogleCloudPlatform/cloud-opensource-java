@@ -53,7 +53,6 @@ public class LinkageCheckerRuleTest {
   private RepositorySystem repositorySystem;
   private RepositorySystemSession repositorySystemSession;
 
-  // Mock objects
   private MavenProject mockProject;
   private EnforcerRuleHelper mockRuleHelper;
   private MavenSession mockMavenSession;
