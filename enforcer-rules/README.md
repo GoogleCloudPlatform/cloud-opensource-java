@@ -9,7 +9,7 @@ The rule takes `dependencySection` property to control the behavior (by default 
 
 - When `DEPENDENCIES`, the rule checks the class path calculated from the project's `dependencies`
   section and their transitive dependencies.
-- When `DEPENDENCY_MANAGEMENT`, the rule checks a class path consisting of artifacts in the BOM's
+- When `DEPENDENCY_MANAGEMENT`, the rule checks a class path consisting of artifacts in the
   `dependencyManagement` section and their transitive dependencies.
 
 # Usage
