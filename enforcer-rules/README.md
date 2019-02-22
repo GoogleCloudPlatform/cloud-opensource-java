@@ -1,22 +1,20 @@
 # Linkage Checker Enforcer Rule
 
-This Maven enforcer rule runs [Linkage Checker](../dependencies) for Maven projects.
-The rule verifies that the project does not have linkage errors in its class path.
+This Maven enforcer rule verifies that the transitive dependency tree of `pom.xml` does not have
+[linkage error](../library-best-practices/glossary.md#types-of-conflicts-and-compatibility).
 
-## Class path and bom flag
+## Class path and BOM flag
 
-The rule generates a class path (a list of jar files) from `pom.xml`.
-The generation logic differs for projects defining a BOM (BOM projects) and other projects.
 The rule takes `bom` flag to control the behavior (by default `false`).
 
-- When `bom=false`, the rule checks a class path consisting of the project's `dependencies` section
-  (immediate child element of `project`) and their transitive dependencies.
+- When `bom=false`, the rule checks the class path calculated from the project's `dependencies`
+  section and their transitive dependencies.
 - When `bom=true`, the rule checks a class path consisting of artifacts in the BOM's
   `dependencyManagement` section and their transitive dependencies.
 
 # Usage
 
-Add the following plugin configuration to your `pom.xml`.
+Add the following plugin configuration to your `pom.xml`:
 
 ```xml
   <build>
@@ -28,8 +26,8 @@ Add the following plugin configuration to your `pom.xml`.
         <dependencies>
           <dependency>
             <groupId>com.google.cloud.tools.opensource</groupId>
-            <artifactId>linkage-checker</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <artifactId>linkage-checker-enforcer-rules</artifactId>
+            <version>0.1-SNAPSHOT</version>
           </dependency>
         </dependencies>
         <executions>
@@ -71,7 +69,7 @@ to `true`
 
 # Run
 
-Enforcer rules are part of `validate` lifecycle in Maven.
+Enforcer rules are part of the `validate` lifecycle in Maven.
 
 ```
 $ mvn validate
@@ -79,7 +77,7 @@ $ mvn validate
 
 ## Debug
 
-For developers of this enforcer rule, set `MAVEN_OPTS` environment variable to wait for
+For developers of this enforcer rule, set the `MAVEN_OPTS` environment variable to wait for
 debuggers (`suspend=y`).
 
 ```

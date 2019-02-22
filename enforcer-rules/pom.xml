@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>linkage-checker</artifactId>
+  <artifactId>linkage-checker-enforcer-rules</artifactId>
 
   <name>Linkage Checker Enforcer Rule</name>
   <description>Linkage Checker enforcer rules</description>
@@ -18,7 +18,7 @@
     <connection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git</connection>
     <developerConnection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git
     </developerConnection>
-    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java</url>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/enforcer-rules</url>
     <tag>HEAD</tag>
   </scm>
   <organization>
@@ -67,6 +67,11 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>2.24.5</version>
     </dependency>
   </dependencies>
 </project>

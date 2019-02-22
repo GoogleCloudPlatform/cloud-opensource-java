@@ -60,15 +60,19 @@ public class LinkageCheckerRule implements EnforcerRule {
 
   @Override
   public void execute(@Nonnull EnforcerRuleHelper helper) throws EnforcerRuleException {
-    Log log = helper.getLog();
+    Log logger = helper.getLog();
 
     try {
       MavenProject project = (MavenProject) helper.evaluate("${project}");
       MavenSession session = (MavenSession) helper.evaluate("${session}");
       RepositorySystemSession repositorySystemSession = session.getRepositorySession();
 
+      if (bom && project.getDependencyManagement().getDependencies().isEmpty()) {
+        logger.warn("The rule is set for a BOM project but no managed dependency found.");
+      }
+
       ImmutableList<Path> classpath =
-          isBomProject(project)
+          bom
               ? findBomClasspath(project)
               : findProjectClasspath(project, repositorySystemSession, helper);
 
@@ -83,34 +87,30 @@ public class LinkageCheckerRule implements EnforcerRule {
                 .mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
                 .sum();
         if (totalErrors > 0) {
-          log.warn(
-              "Linkage Checker rule found non-zero errors. Linkage error report:\n"
-                  + linkageReport);
           if (warningOnly) {
-            log.info("Not failing the rule as warningOnly=true");
+            logger.warn(
+                "Linkage Checker rule found non-zero errors. Linkage error report:\n"
+                    + linkageReport);
+            logger.info("Not failing the rule as warningOnly=true");
             return;
+          } else {
+            logger.error(
+                "Linkage Checker rule found non-zero errors. Linkage error report:\n"
+                    + linkageReport);
+            throw new EnforcerRuleException(
+                "Failed while checking class path. See above error report.");
           }
-          throw new EnforcerRuleException(
-              "Failed while checking class path. See above error report.");
         } else {
-          log.info("No linkage error found");
+          logger.info("No linkage error found");
         }
       } catch (IOException ex) {
         // Maven's "-e" flag does not work for EnforcerRuleException. Print stack trace here.
-        log.error("Failed to run Linkage Checker", ex);
-        throw new EnforcerRuleException("Failed to run Linkage Checker: " + ex.getMessage(), ex);
+        logger.warn("Failed to run Linkage Checker", ex);
+        return; // Not failing the build.
       }
     } catch (ExpressionEvaluationException ex) {
       throw new EnforcerRuleException("Unable to lookup an expression " + ex.getMessage(), ex);
     }
-  }
-
-  private boolean isBomProject(MavenProject project) throws EnforcerRuleException {
-    if (bom && project.getDependencyManagement().getDependencies().isEmpty()) {
-      throw new EnforcerRuleException(
-          "The rule is set for a BOM project but no managed dependency found.");
-    }
-    return bom;
   }
 
   /** Builds a class path for {@code mavenProject}. */
