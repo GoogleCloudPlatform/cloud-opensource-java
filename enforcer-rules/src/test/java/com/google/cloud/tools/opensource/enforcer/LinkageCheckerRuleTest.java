@@ -84,6 +84,10 @@ public class LinkageCheckerRuleTest {
     when(mockRuleHelper.evaluate("${project}")).thenReturn(mockProject);
   }
 
+  /**
+   * Returns a {@link Dependency} that has {@link Artifact} of {@code coordinates} with the file in
+   * local Maven repository.
+   */
   private Dependency createResolvedDependency(String coordinates) throws RepositoryException {
     Artifact artifact = new DefaultArtifact(coordinates);
     Dependency dependency = new Dependency(artifact, "compile");
