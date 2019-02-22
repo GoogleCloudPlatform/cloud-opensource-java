@@ -100,7 +100,7 @@ public final class RepositoryUtility {
    * customary ~/.m2 directory. If not found, it creates an initially empty repository in
    * a temporary location.
    */
-  static RepositorySystemSession newSession(RepositorySystem system) {
+  public static RepositorySystemSession newSession(RepositorySystem system) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
     session.setReadOnly();
     return session;

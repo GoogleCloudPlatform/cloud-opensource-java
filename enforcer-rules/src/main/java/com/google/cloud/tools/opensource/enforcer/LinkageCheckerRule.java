@@ -24,6 +24,7 @@ import com.google.cloud.tools.opensource.classpath.ClasspathCheckReport;
 import com.google.cloud.tools.opensource.classpath.ClasspathChecker;
 import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -59,7 +60,13 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    */
   private TargetSection targetSection = TargetSection.DEPENDENCIES;
 
-  private enum TargetSection {
+  @VisibleForTesting
+  void setTargetSection(TargetSection targetSection) {
+    this.targetSection = targetSection;
+  }
+
+  @VisibleForTesting
+  enum TargetSection {
     /** To read {@code dependencyManagement} section in pom.xml. Useful for BOM projects */
     DEPENDENCY_MANAGEMENT,
     /** To read {@code dependencies} seciton. Useful for library users' projects */
