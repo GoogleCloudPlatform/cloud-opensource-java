@@ -74,6 +74,7 @@
         <artifactId>maven-resolver-connector-basic</artifactId>
         <version>${resolver.version}</version>
       </dependency>
+
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
