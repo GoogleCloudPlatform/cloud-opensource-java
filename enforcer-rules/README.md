@@ -5,13 +5,14 @@ any [linkage error](../library-best-practices/glossary.md#types-of-conflicts-and
 
 ## Class path and dependencySection flag
 
-The value of the dependencySection element determines whether the rule checks the dependencies in
+The dependencySection element determines whether the rule checks the dependencies in
 the `dependencies` section or the `dependencyManagement` section.
+The following values are accepted:
 
-- When `DEPENDENCIES` (default value), the rule checks the class path calculated from the project's
-  `dependencies` section and their transitive dependencies.
-- When `DEPENDENCY_MANAGEMENT`, the rule checks a class path consisting of artifacts in the
-  `dependencyManagement` section and their transitive dependencies.
+- `DEPENDENCIES` (default value): the rule checks the class path calculated from the project's
+  `dependencies` section.
+- `DEPENDENCY_MANAGEMENT`: the rule checks the class path calculated from the project's
+  `dependencyManagement` section.
 
 # Usage
 
@@ -58,7 +59,7 @@ For a BOM project, set `dependencySection` element to `DEPENDENCY_MANAGEMENT`.
   </banLinkageErrors>
 ```
 
-When you do not want the rule to fail, set `level` element to `WARN`:
+If a violation should not fail the build, set `level` element to `WARN`:
 
 ```xml
   <banLinkageErrors
