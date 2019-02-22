@@ -57,13 +57,18 @@ For a BOM project, set `bom` flag to true.
   </banLinkageErrors>
 ```
 
-When you need to see the report only without failing `validate` lifecycle, set `warningOnly`
-to `true`
+When you do not want to fail the rule, run Maven with `-Denforcer.fail=false`:
+
+```
+$ mvn install -Denforcer.fail=false
+```
+ 
+or set `level` to `WARN`:
 
 ```xml
   <banLinkageErrors
       implementation="com.google.cloud.tools.opensource.enforcer.LinkageCheckerRule">
-      <warningOnly>true</warningOnly>
+      <level>WARN</warningOnly>
   </banLinkageErrors>
 ```
 
