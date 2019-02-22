@@ -29,7 +29,6 @@ import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * The result of checking linkages in one jar file.

@@ -59,8 +59,8 @@ public class DependencyTreeFormatter {
   }
 
   /**
-   * Prints dependencies expressed in dependency paths in tree in similar way to mvn
-   * dependency:tree.
+   * Prints dependencies expressed in dependency paths in tree in similar way to
+   * mvn dependency:tree.
    *
    * @param dependencyPaths dependency paths from @{@link
    *     DependencyGraphBuilder#getCompleteDependencies(Artifact)}. Each element must have its
