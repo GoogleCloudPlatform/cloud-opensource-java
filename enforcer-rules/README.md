@@ -49,7 +49,7 @@ Add the following plugin configuration to your `pom.xml`:
    ...
 ```
 
-For a BOM project, set `dependencySection` property to `DEPENDENCY_MANAGEMENT`.
+For a BOM project, set `dependencySection` element to `DEPENDENCY_MANAGEMENT`.
 
 ```xml
   <banLinkageErrors
@@ -58,7 +58,7 @@ For a BOM project, set `dependencySection` property to `DEPENDENCY_MANAGEMENT`.
   </banLinkageErrors>
 ```
 
-When you do not want the rule to fail, set `level` to `WARN`:
+When you do not want the rule to fail, set `level` element to `WARN`:
 
 ```xml
   <banLinkageErrors
