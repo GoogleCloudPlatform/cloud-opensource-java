@@ -1,15 +1,15 @@
 # Linkage Checker Enforcer Rule
 
 This Maven enforcer rule verifies that the transitive dependency tree of `pom.xml` does not have
-[linkage error](../library-best-practices/glossary.md#types-of-conflicts-and-compatibility).
+any [linkage error](../library-best-practices/glossary.md#types-of-conflicts-and-compatibility).
 
-## Class path and BOM flag
+## Class path and dependencySection flag
 
-The rule takes `bom` flag to control the behavior (by default `false`).
+The rule takes `dependencySection` property to control the behavior (by default `DEPENDENCIES`).
 
-- When `bom=false`, the rule checks the class path calculated from the project's `dependencies`
+- When `DEPENDENCIES`, the rule checks the class path calculated from the project's `dependencies`
   section and their transitive dependencies.
-- When `bom=true`, the rule checks a class path consisting of artifacts in the BOM's
+- When `DEPENDENCY_MANAGEMENT`, the rule checks a class path consisting of artifacts in the BOM's
   `dependencyManagement` section and their transitive dependencies.
 
 # Usage
@@ -48,27 +48,21 @@ Add the following plugin configuration to your `pom.xml`:
    ...
 ```
 
-For a BOM project, set `bom` flag to true.
+For a BOM project, set `targetSection` property to `DEPENDENCY_MANAGEMENT`.
 
 ```xml
   <banLinkageErrors
       implementation="com.google.cloud.tools.opensource.enforcer.LinkageCheckerRule">
-      <bom>true</bom>
+      <targetSection>DEPENDENCY_MANAGEMENT</targetSection>
   </banLinkageErrors>
 ```
 
-When you do not want to fail the rule, run Maven with `-Denforcer.fail=false`:
-
-```
-$ mvn install -Denforcer.fail=false
-```
- 
-or set `level` to `WARN`:
+When you do not want the rule to fail, set `level` to `WARN`:
 
 ```xml
   <banLinkageErrors
       implementation="com.google.cloud.tools.opensource.enforcer.LinkageCheckerRule">
-      <level>WARN</warningOnly>
+      <level>WARN</level>
   </banLinkageErrors>
 ```
 

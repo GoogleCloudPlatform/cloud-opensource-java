@@ -54,9 +54,17 @@ import org.eclipse.aether.graph.Dependency;
 public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
   /**
-   * Set to true to use the dependencyManagement section; otherwise it uses dependencies section.
+   * The section this rule reads dependencies from. By default, it's {@link
+   * TargetSection#DEPENDENCIES}.
    */
-  private boolean bom = false;
+  private TargetSection targetSection = TargetSection.DEPENDENCIES;
+
+  private enum TargetSection {
+    /** To read {@code dependencyManagement} section in pom.xml. Useful for BOM projects */
+    DEPENDENCY_MANAGEMENT,
+    /** To read {@code dependencies} seciton. Useful for library users' projects */
+    DEPENDENCIES
+  }
 
   @Override
   public void execute(@Nonnull EnforcerRuleHelper helper) throws EnforcerRuleException {
@@ -67,14 +75,23 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       MavenSession session = (MavenSession) helper.evaluate("${session}");
       RepositorySystemSession repositorySystemSession = session.getRepositorySession();
 
-      if (bom && project.getDependencyManagement().getDependencies().isEmpty()) {
-        logger.warn("The rule is set for a BOM project but no managed dependency found.");
+      boolean readingDependencyManagementSection =
+          targetSection == TargetSection.DEPENDENCY_MANAGEMENT;
+      if (readingDependencyManagementSection
+          && (project.getDependencyManagement() == null
+              || project.getDependencyManagement().getDependencies() == null
+              || project.getDependencyManagement().getDependencies().isEmpty())) {
+        logger.warn("The rule is set to read dependency management section but it is empty.");
       }
 
       ImmutableList<Path> classpath =
-          bom
+          readingDependencyManagementSection
               ? findBomClasspath(project)
               : findProjectClasspath(project, repositorySystemSession, helper);
+      if (classpath.isEmpty()) {
+        logger.warn("Class path is empty.");
+        return;
+      }
 
       List<Path> artifactJarsInProject = classpath.subList(0, project.getDependencies().size());
       ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInProject);
