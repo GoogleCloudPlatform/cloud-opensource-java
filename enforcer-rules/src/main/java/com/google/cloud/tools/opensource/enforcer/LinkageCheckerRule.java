@@ -52,7 +52,9 @@ import org.eclipse.aether.graph.Dependency;
 /** Linkage Checker Maven Enforcer Rule. */
 public class LinkageCheckerRule implements EnforcerRule {
 
-  /** Set to rue if the rule is used for a BOM project. */
+  /**
+   * Set to true to use the dependencyManagement section; otherwise it uses dependencies section.
+   */
   private boolean bom = false;
 
   /** Set to true if the rule should not fail upon linkage errors */
