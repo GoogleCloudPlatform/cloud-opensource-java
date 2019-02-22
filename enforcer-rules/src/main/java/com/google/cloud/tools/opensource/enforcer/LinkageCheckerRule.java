@@ -56,20 +56,20 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
   /**
    * The section this rule reads dependencies from. By default, it's {@link
-   * TargetSection#DEPENDENCIES}.
+   * DependencySection#DEPENDENCIES}.
    */
-  private TargetSection targetSection = TargetSection.DEPENDENCIES;
+  private DependencySection dependencySection = DependencySection.DEPENDENCIES;
 
   @VisibleForTesting
-  void setTargetSection(TargetSection targetSection) {
-    this.targetSection = targetSection;
+  void setDependencySection(DependencySection dependencySection) {
+    this.dependencySection = dependencySection;
   }
 
   @VisibleForTesting
-  enum TargetSection {
-    /** To read {@code dependencyManagement} section in pom.xml. Useful for BOM projects */
+  enum DependencySection {
+    /** To read {@code dependencyManagement} section in pom.xml. This is for BOM projects */
     DEPENDENCY_MANAGEMENT,
-    /** To read {@code dependencies} seciton. Useful for library users' projects */
+    /** To read {@code dependencies} section in pom.xml. This is for library users' projects */
     DEPENDENCIES
   }
 
@@ -83,7 +83,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       RepositorySystemSession repositorySystemSession = session.getRepositorySession();
 
       boolean readingDependencyManagementSection =
-          targetSection == TargetSection.DEPENDENCY_MANAGEMENT;
+          dependencySection == DependencySection.DEPENDENCY_MANAGEMENT;
       if (readingDependencyManagementSection
           && (project.getDependencyManagement() == null
               || project.getDependencyManagement().getDependencies() == null

@@ -5,10 +5,11 @@ any [linkage error](../library-best-practices/glossary.md#types-of-conflicts-and
 
 ## Class path and dependencySection flag
 
-The rule takes `dependencySection` property to control the behavior (by default `DEPENDENCIES`).
+The value of the dependencySection element determines whether the rule checks the dependencies in
+the `dependencies` section or the `dependencyManagement` section.
 
-- When `DEPENDENCIES`, the rule checks the class path calculated from the project's `dependencies`
-  section and their transitive dependencies.
+- When `DEPENDENCIES` (default value), the rule checks the class path calculated from the project's
+  `dependencies` section and their transitive dependencies.
 - When `DEPENDENCY_MANAGEMENT`, the rule checks a class path consisting of artifacts in the
   `dependencyManagement` section and their transitive dependencies.
 
@@ -48,12 +49,12 @@ Add the following plugin configuration to your `pom.xml`:
    ...
 ```
 
-For a BOM project, set `targetSection` property to `DEPENDENCY_MANAGEMENT`.
+For a BOM project, set `dependencySection` property to `DEPENDENCY_MANAGEMENT`.
 
 ```xml
   <banLinkageErrors
       implementation="com.google.cloud.tools.opensource.enforcer.LinkageCheckerRule">
-      <targetSection>DEPENDENCY_MANAGEMENT</targetSection>
+      <dependencySection>DEPENDENCY_MANAGEMENT</dependencySection>
   </banLinkageErrors>
 ```
 

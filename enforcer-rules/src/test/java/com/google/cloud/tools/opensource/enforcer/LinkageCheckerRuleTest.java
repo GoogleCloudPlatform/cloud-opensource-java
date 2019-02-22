@@ -21,7 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.cloud.tools.opensource.enforcer.LinkageCheckerRule.TargetSection;
+import com.google.cloud.tools.opensource.enforcer.LinkageCheckerRule.DependencySection;
 import com.google.common.collect.ImmutableList;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -136,7 +136,7 @@ public class LinkageCheckerRuleTest {
 
   @Test
   public void testExecute_shouldPassEmptyBom() throws EnforcerRuleException {
-    rule.setTargetSection(TargetSection.DEPENDENCY_MANAGEMENT);
+    rule.setDependencySection(DependencySection.DEPENDENCY_MANAGEMENT);
     org.apache.maven.artifact.DefaultArtifact bomArtifact =
         new org.apache.maven.artifact.DefaultArtifact(
             "com.google.dummy",
