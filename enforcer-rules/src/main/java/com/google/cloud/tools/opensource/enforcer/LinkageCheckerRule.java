@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.enforcer;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static org.apache.maven.enforcer.rule.api.EnforcerLevel.WARN;
 
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClasspathCheckReport;
@@ -31,11 +32,11 @@ import java.nio.file.Path;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
-import org.apache.maven.enforcer.rule.api.EnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugins.enforcer.AbstractNonCacheableEnforcerRule;
 import org.apache.maven.project.DefaultDependencyResolutionRequest;
 import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.DependencyResolutionRequest;
@@ -50,15 +51,12 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 
 /** Linkage Checker Maven Enforcer Rule. */
-public class LinkageCheckerRule implements EnforcerRule {
+public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
   /**
    * Set to true to use the dependencyManagement section; otherwise it uses dependencies section.
    */
   private boolean bom = false;
-
-  /** Set to true if the rule should not fail upon linkage errors */
-  private boolean warningOnly = false;
 
   @Override
   public void execute(@Nonnull EnforcerRuleHelper helper) throws EnforcerRuleException {
@@ -89,19 +87,17 @@ public class LinkageCheckerRule implements EnforcerRule {
                 .mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
                 .sum();
         if (totalErrors > 0) {
-          if (warningOnly) {
+          if (getLevel() == WARN) {
             logger.warn(
                 "Linkage Checker rule found non-zero errors. Linkage error report:\n"
                     + linkageReport);
-            logger.info("Not failing the rule as warningOnly=true");
-            return;
           } else {
             logger.error(
                 "Linkage Checker rule found non-zero errors. Linkage error report:\n"
                     + linkageReport);
-            throw new EnforcerRuleException(
-                "Failed while checking class path. See above error report.");
           }
+          throw new EnforcerRuleException(
+              "Failed while checking class path. See above error report.");
         } else {
           logger.info("No linkage error found");
         }
@@ -148,22 +144,5 @@ public class LinkageCheckerRule implements EnforcerRule {
     } catch (RepositoryException ex) {
       throw new EnforcerRuleException("Failed to collect dependency " + ex.getMessage(), ex);
     }
-  }
-
-  @Override
-  public boolean isCacheable() {
-    return false;
-  }
-
-  @Override
-  public String getCacheId() {
-    // Unused because isCacheable() is false
-    return null;
-  }
-
-  @Override
-  public boolean isResultValid(@Nonnull EnforcerRule enforcerRule) {
-    // Unused because isCacheable() is false
-    return false;
   }
 }

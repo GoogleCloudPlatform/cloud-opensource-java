@@ -52,6 +52,12 @@
       <version>${enforcer.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.maven.enforcer</groupId>
+      <artifactId>enforcer-rules</artifactId>
+      <version>${enforcer.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <!-- This dependency is not required for build but useful for debugging with source code -->
       <groupId>org.apache.maven.plugins</groupId>
       <artifactId>maven-enforcer-plugin</artifactId>
