@@ -78,7 +78,7 @@ public final class RepositoryUtility {
   /**
    * Creates a new system configured for file and HTTP repository resolution.
    */
-  static RepositorySystem newRepositorySystem() {
+  public static RepositorySystem newRepositorySystem() {
     DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
     locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
     locator.addService(TransporterFactory.class, FileTransporterFactory.class);
