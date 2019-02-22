@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHierarchy;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -39,8 +38,6 @@ import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
-import org.apache.commons.cli.ParseException;
-import org.eclipse.aether.RepositoryException;
 
 /**
  * A tool to find static linkage errors for a class path.
@@ -79,33 +76,6 @@ public class ClasspathChecker {
     this.classDumper = Preconditions.checkNotNull(classDumper);
     this.jarToSymbols = ImmutableMap.copyOf(jarToSymbols);
     this.classReferenceGraph = Preconditions.checkNotNull(classReferenceGraph);
-  }
-
-  /**
-   * Given Maven coordinates or list of the jar files as file names in filesystem, outputs the
-   * report of classpath check.
-   *
-   * @throws IOException when there is a problem in reading a jar file
-   * @throws RepositoryException when there is a problem in resolving the Maven coordinates to jar
-   *     files
-   * @throws ParseException when the arguments are invalid for the tool
-   */
-  public static void main(String[] arguments)
-      throws IOException, RepositoryException, ParseException {
-
-    ClasspathCheckerArguments linkageCheckerArguments =
-        ClasspathCheckerArguments.readCommandLine(arguments);
-
-    RepositoryUtility.setRepositories(linkageCheckerArguments.getExtraMavenRepositoryUrls(),
-        linkageCheckerArguments.getAddMavenCentral());
-
-    ClasspathChecker classpathChecker =
-        create(
-            linkageCheckerArguments.getInputClasspath(),
-            linkageCheckerArguments.getEntryPointJars());
-    ClasspathCheckReport report = classpathChecker.findLinkageErrors();
-
-    System.out.println(report);
   }
 
   /** Finds linkage errors in the input classpath and generates a classpath check report. */

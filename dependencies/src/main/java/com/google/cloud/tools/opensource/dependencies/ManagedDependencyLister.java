@@ -27,7 +27,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 /**
  * Demo retrieving list of managed dependencies from Maven coordinates.
  */
-public class ManagedDependencyLister {
+class ManagedDependencyLister {
 
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 

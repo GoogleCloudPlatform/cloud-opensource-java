@@ -21,7 +21,7 @@ import java.util.List;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
-public class DependencyLister {
+class DependencyLister {
 
   public static void main(String[] args) throws RepositoryException {
 
