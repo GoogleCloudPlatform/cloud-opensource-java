@@ -1,9 +1,9 @@
 # Linkage Checker Enforcer Rule
 
 This Maven enforcer rule verifies that the transitive dependency tree of `pom.xml` does not have
-any [linkage error](../library-best-practices/glossary.md#types-of-conflicts-and-compatibility).
+any [linkage errors](../library-best-practices/glossary.md#types-of-conflicts-and-compatibility).
 
-## Class path and dependencySection flag
+## Class path and dependencySection element
 
 The dependencySection element determines whether the rule checks the dependencies in
 the `dependencies` section or the `dependencyManagement` section.
