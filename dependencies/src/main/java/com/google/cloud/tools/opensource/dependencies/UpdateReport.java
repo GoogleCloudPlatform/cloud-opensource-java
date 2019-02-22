@@ -21,7 +21,7 @@ import java.util.List;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
-public class UpdateReport {
+class UpdateReport {
 
   /** 
    * Generate a prioritized and ordered list of 
