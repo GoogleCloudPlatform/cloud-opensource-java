@@ -64,7 +64,7 @@ public class DashboardUnavailableArtifactTest {
 
   @AfterClass
   public static void cleanUp() throws IOException {
-    MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
+    MoreFiles.deleteRecursively(outputDirectory);
   }
 
   @Test

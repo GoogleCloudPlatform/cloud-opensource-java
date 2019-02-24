@@ -93,7 +93,7 @@ public class DashboardTest {
   @AfterClass
   public static void cleanUp() {
     try {
-      MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
+      MoreFiles.deleteRecursively(outputDirectory);
     } catch (IOException ex) {
       // no big deal
     }
