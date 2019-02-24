@@ -26,7 +26,6 @@ import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -100,11 +99,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         return;
       }
 
-      List<Path> artifactJarsInProject = classpath.subList(0, project.getDependencies().size());
-      ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInProject);
+      // As sorted by level order, the first elements in classpath is direct dependencies.
+      List<Path> directDependencies = classpath.subList(0, project.getDependencies().size());
 
       try {
-        ClasspathChecker classpathChecker = ClasspathChecker.create(classpath, entryPoints);
+        ClasspathChecker classpathChecker = ClasspathChecker.create(classpath, directDependencies);
         ClasspathCheckReport linkageReport = classpathChecker.findLinkageErrors();
         int totalErrors =
             linkageReport.getJarLinkageReports().stream()
