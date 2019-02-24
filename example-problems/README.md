@@ -1,4 +1,4 @@
-# Example Projects
+# Example Problems
 
 This directory contains Maven projects that demonstrate runtime errors
 caused by missing names in the classpath.
