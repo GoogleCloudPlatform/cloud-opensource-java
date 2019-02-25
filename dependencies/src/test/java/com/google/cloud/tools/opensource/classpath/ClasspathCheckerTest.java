@@ -628,17 +628,19 @@ public class ClasspathCheckerTest {
         ClasspathCheckerArguments.readCommandLine("-b", bomCoordinates);
     ImmutableList<Path> inputClasspath = parsedArguments.getInputClasspath();
     Truth.assertThat(inputClasspath).isNotEmpty();
+    
     // These 2 files are the first 2 artifacts in the BOM
-    Truth.assertWithMessage("The files should match the elements in the BOM")
-        .that(inputClasspath.subList(0, 2))
-        .comparingElementsUsing(PATH_FILE_NAMES)
-        .containsExactly("guava-26.0-android.jar", "guava-testlib-26.0-android.jar");
-
+    Assert.assertEquals("guava-26.0-android.jar", inputClasspath.get(0).getFileName().toString());
+    Assert.assertEquals("guava-testlib-26.0-android.jar",
+        inputClasspath.get(1).getFileName().toString());
+    
     // google-cloud-bom, containing google-cloud-firestore, is in the BOM with scope:import
-    Truth.assertWithMessage("Import dependency in BOM should be resolved")
-        .that(inputClasspath)
-        .comparingElementsUsing(PATH_FILE_NAMES)
-        .contains("google-cloud-firestore-0.81.0-beta.jar");
+    for (Path path : inputClasspath) {
+      if (path.getFileName().startsWith("google-cloud-firestore-")) {
+        return;
+      }
+    }
+    Assert.fail("Import dependency in BOM should be resolved");
   }
 
   @Test
