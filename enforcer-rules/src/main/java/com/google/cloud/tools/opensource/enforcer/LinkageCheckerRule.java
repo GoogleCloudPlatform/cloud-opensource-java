@@ -165,11 +165,10 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
     ArtifactTypeRegistry artifactTypeRegistry = repositorySystemSession.getArtifactTypeRegistry();
     try {
-
       ImmutableList<Artifact> artifacts =
           bomProject.getDependencyManagement().getDependencies().stream()
               .map(dependency -> RepositoryUtils.toDependency(dependency, artifactTypeRegistry))
-              .map(dependency -> dependency.getArtifact())
+              .map(Dependency::getArtifact)
               .filter(artifact -> !shouldSkipBomMember(artifact))
               .collect(toImmutableList());
       return ClassPathBuilder.artifactsToClasspath(artifacts);
