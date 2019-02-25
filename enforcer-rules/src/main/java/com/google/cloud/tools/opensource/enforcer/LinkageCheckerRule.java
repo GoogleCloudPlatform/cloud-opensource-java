@@ -16,14 +16,14 @@
 
 package com.google.cloud.tools.opensource.enforcer;
 
+import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.shouldSkipBomMember;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.apache.maven.enforcer.rule.api.EnforcerLevel.WARN;
 
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
+import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
-import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -48,6 +48,7 @@ import org.codehaus.plexus.component.repository.exception.ComponentLookupExcepti
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.graph.Dependency;
 
 /** Linkage Checker Maven Enforcer Rule. */
@@ -92,7 +93,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
       ImmutableList<Path> classpath =
           readingDependencyManagementSection
-              ? findBomClasspath(project)
+              ? findBomClasspath(project, repositorySystemSession)
               : findProjectClasspath(project, repositorySystemSession, helper);
       if (classpath.isEmpty()) {
         logger.warn("Class path is empty.");
@@ -158,12 +159,20 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   /** Builds a class path for {@code bomProject}. */
-  private ImmutableList<Path> findBomClasspath(MavenProject bomProject)
+  private ImmutableList<Path> findBomClasspath(
+      MavenProject bomProject, RepositorySystemSession repositorySystemSession)
       throws EnforcerRuleException {
-    Artifact bom = RepositoryUtils.toArtifact(bomProject.getArtifact());
+
+    ArtifactTypeRegistry artifactTypeRegistry = repositorySystemSession.getArtifactTypeRegistry();
     try {
-      List<Artifact> bomMembers = RepositoryUtility.readBom(bom);
-      return ClassPathBuilder.artifactsToClasspath(bomMembers);
+
+      ImmutableList<Artifact> artifacts =
+          bomProject.getDependencyManagement().getDependencies().stream()
+              .map(dependency -> RepositoryUtils.toDependency(dependency, artifactTypeRegistry))
+              .map(dependency -> dependency.getArtifact())
+              .filter(artifact -> !shouldSkipBomMember(artifact))
+              .collect(toImmutableList());
+      return ClassPathBuilder.artifactsToClasspath(artifacts);
     } catch (RepositoryException ex) {
       throw new EnforcerRuleException("Failed to collect dependency " + ex.getMessage(), ex);
     }

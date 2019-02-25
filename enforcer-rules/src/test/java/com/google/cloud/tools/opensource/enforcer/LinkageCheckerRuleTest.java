@@ -145,26 +145,7 @@ public class LinkageCheckerRuleTest {
     }
   }
 
-  @Test
-  public void testExecute_shouldPassEmptyBom() throws EnforcerRuleException {
-    rule.setDependencySection(DependencySection.DEPENDENCY_MANAGEMENT);
-    org.apache.maven.artifact.DefaultArtifact bomArtifact =
-        new org.apache.maven.artifact.DefaultArtifact(
-            "com.google.dummy",
-            "dummy-bom",
-            "0.1",
-            "compile",
-            "jar",
-            "",
-            new DefaultArtifactHandler());
-    when(mockProject.getArtifact()).thenReturn(bomArtifact);
-
-    // This should not raise an EnforcerRuleException
-    rule.execute(mockRuleHelper);
-  }
-
-  private void setupMockDependencyManagementSection(String... coordinates)
-      throws RepositoryException {
+  private void setupMockDependencyManagementSection(String... coordinates) {
     org.apache.maven.artifact.DefaultArtifact bomArtifact =
         new org.apache.maven.artifact.DefaultArtifact(
             "com.google.dummy",
@@ -180,10 +161,14 @@ public class LinkageCheckerRuleTest {
     when(mockProject.getDependencyManagement()).thenReturn(mockDependencyManagement);
 
     ImmutableList<org.apache.maven.model.Dependency> bomMembers =
-        createResolvedDependency(coordinates).stream()
-            .map(dependency -> toDependency(dependency))
+        Arrays.stream(coordinates)
+            .map(DefaultArtifact::new)
+            .map(artifact -> new Dependency(artifact, "compile"))
+            .map(LinkageCheckerRuleTest::toDependency)
             .collect(toImmutableList());
     when(mockDependencyManagement.getDependencies()).thenReturn(bomMembers);
+
+    when(mockMavenSession.getRepositorySession()).thenReturn(repositorySystemSession);
   }
 
   private static org.apache.maven.model.Dependency toDependency(Dependency resolvedDependency) {
@@ -200,7 +185,16 @@ public class LinkageCheckerRuleTest {
   }
 
   @Test
-  public void testExecute_shouldPassGoodBom() throws EnforcerRuleException, RepositoryException {
+  public void testExecute_shouldPassEmptyBom() throws EnforcerRuleException {
+    rule.setDependencySection(DependencySection.DEPENDENCY_MANAGEMENT);
+    setupMockDependencyManagementSection(); // empty BOM
+
+    // This should not raise an EnforcerRuleException
+    rule.execute(mockRuleHelper);
+  }
+
+  @Test
+  public void testExecute_shouldPassGoodBom() throws EnforcerRuleException {
     rule.setDependencySection(DependencySection.DEPENDENCY_MANAGEMENT);
     setupMockDependencyManagementSection(
         "com.google.guava:guava:27.0.1-android",
@@ -211,7 +205,7 @@ public class LinkageCheckerRuleTest {
   }
 
   @Test
-  public void testExecute_shouldFailBadBom() throws RepositoryException {
+  public void testExecute_shouldFailBadBom() {
     rule.setDependencySection(DependencySection.DEPENDENCY_MANAGEMENT);
     setupMockDependencyManagementSection(
         "com.google.api-client:google-api-client:1.27.0", "io.grpc:grpc-core:1.17.1");
