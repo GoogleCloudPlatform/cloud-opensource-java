@@ -76,7 +76,7 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 
 public class DashboardMain {
-  public static final String TEST_NAME_STATIC_LINKAGE_CHECK = "Linkage Errors";
+  public static final String TEST_NAME_LINKAGE_CHECK = "Linkage Errors";
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
   public static final String TEST_NAME_GLOBAL_UPPER_BOUND = "Global Upper Bounds";
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
@@ -314,7 +314,7 @@ public class DashboardMain {
       results.addResult(TEST_NAME_UPPER_BOUND, upperBoundFailures.size());
       results.addResult(TEST_NAME_GLOBAL_UPPER_BOUND, globalUpperBoundFailures.size());
       results.addResult(TEST_NAME_DEPENDENCY_CONVERGENCE, convergenceIssues.size());
-      results.addResult(TEST_NAME_STATIC_LINKAGE_CHECK, totalLinkageErrorCount);
+      results.addResult(TEST_NAME_LINKAGE_CHECK, totalLinkageErrorCount);
 
       return results;
     }
