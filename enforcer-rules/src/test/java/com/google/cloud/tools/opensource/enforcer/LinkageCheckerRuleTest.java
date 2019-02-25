@@ -24,10 +24,12 @@ import static org.mockito.Mockito.when;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.enforcer.LinkageCheckerRule.DependencySection;
 import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.DependencyResolutionRequest;
@@ -91,14 +93,15 @@ public class LinkageCheckerRuleTest {
   /**
    * Returns a list of {@link Dependency}s resolved from {@link Artifact} of {@code coordinates}.
    */
-  private ImmutableList<Dependency> createResolvedDependency(String coordinates)
+  private ImmutableList<Dependency> createResolvedDependency(String... coordinates)
       throws RepositoryException {
-    Artifact artifact = new DefaultArtifact(coordinates);
-    Dependency dependency = new Dependency(artifact, "compile");
-
     CollectRequest collectRequest = new CollectRequest();
     collectRequest.setRepositories(ImmutableList.of(RepositoryUtility.CENTRAL));
-    collectRequest.setRoot(dependency);
+    collectRequest.setDependencies(
+        Arrays.stream(coordinates)
+            .map(DefaultArtifact::new)
+            .map(artifact -> new Dependency(artifact, "compile"))
+            .collect(toImmutableList()));
     DependencyNode dependencyNode =
         repositorySystem.collectDependencies(repositorySystemSession, collectRequest).getRoot();
 
@@ -113,7 +116,7 @@ public class LinkageCheckerRuleTest {
         .collect(toImmutableList());
   }
 
-  private void setupMockDependencyResolution(String coordinates) throws RepositoryException {
+  private void setupMockDependencyResolution(String... coordinates) throws RepositoryException {
     ImmutableList<Dependency> dummyDependencies = createResolvedDependency(coordinates);
     when(mockDependencyResolutionResult.getDependencies()).thenReturn(dummyDependencies);
   }
@@ -158,5 +161,66 @@ public class LinkageCheckerRuleTest {
 
     // This should not raise an EnforcerRuleException
     rule.execute(mockRuleHelper);
+  }
+
+  private void setupMockDependencyManagementSection(String... coordinates)
+      throws RepositoryException {
+    org.apache.maven.artifact.DefaultArtifact bomArtifact =
+        new org.apache.maven.artifact.DefaultArtifact(
+            "com.google.dummy",
+            "dummy-bom",
+            "0.1",
+            "compile",
+            "pom",
+            "",
+            new DefaultArtifactHandler());
+    when(mockProject.getArtifact()).thenReturn(bomArtifact);
+
+    DependencyManagement mockDependencyManagement = mock(DependencyManagement.class);
+    when(mockProject.getDependencyManagement()).thenReturn(mockDependencyManagement);
+
+    ImmutableList<org.apache.maven.model.Dependency> bomMembers =
+        createResolvedDependency(coordinates).stream()
+            .map(dependency -> toDependency(dependency))
+            .collect(toImmutableList());
+    when(mockDependencyManagement.getDependencies()).thenReturn(bomMembers);
+  }
+
+  private static org.apache.maven.model.Dependency toDependency(Dependency resolvedDependency) {
+    org.apache.maven.model.Dependency dependency = new org.apache.maven.model.Dependency();
+    Artifact artifact = resolvedDependency.getArtifact();
+    dependency.setArtifactId(artifact.getArtifactId());
+    dependency.setGroupId(artifact.getGroupId());
+    dependency.setVersion(artifact.getVersion());
+    dependency.setOptional(dependency.isOptional());
+    dependency.setClassifier(artifact.getClassifier());
+    dependency.setExclusions(dependency.getExclusions());
+    dependency.setScope(dependency.getScope());
+    return dependency;
+  }
+
+  @Test
+  public void testExecute_shouldPassGoodBom() throws EnforcerRuleException, RepositoryException {
+    rule.setDependencySection(DependencySection.DEPENDENCY_MANAGEMENT);
+    setupMockDependencyManagementSection(
+        "com.google.guava:guava:27.0.1-android",
+        "io.grpc:grpc-auth:1.18.0",
+        "com.google.api:api-common:1.7.0");
+    // This should not raise an EnforcerRuleException
+    rule.execute(mockRuleHelper);
+  }
+
+  @Test
+  public void testExecute_shouldFailBadBom() throws RepositoryException {
+    rule.setDependencySection(DependencySection.DEPENDENCY_MANAGEMENT);
+    setupMockDependencyManagementSection(
+        "com.google.api-client:google-api-client:1.27.0", "io.grpc:grpc-core:1.17.1");
+
+    try {
+      rule.execute(mockRuleHelper);
+      Assert.fail("Enforcer rule should detect conflict between google-api-client and grpc-core");
+    } catch (EnforcerRuleException ex) {
+      // pass
+    }
   }
 }
