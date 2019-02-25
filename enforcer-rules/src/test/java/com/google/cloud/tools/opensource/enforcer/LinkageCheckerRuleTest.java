@@ -89,8 +89,7 @@ public class LinkageCheckerRuleTest {
   }
 
   /**
-   * Returns a list of {@link Dependency}s resolved from {@link Artifact} of {@code coordinates}
-   * with the file in local Maven repository.
+   * Returns a list of {@link Dependency}s resolved from {@link Artifact} of {@code coordinates}.
    */
   private ImmutableList<Dependency> createResolvedDependency(String coordinates)
       throws RepositoryException {
