@@ -45,7 +45,7 @@ public abstract class LinkageCheckReport {
     
     String result = builder.toString();
     if (result.isEmpty()) {
-      return "No static linkage errors\n";
+      return "No linkage errors\n";
     }
     return result;
   }

@@ -74,11 +74,11 @@ public class FreemarkerTest {
     
     Artifact artifact1 = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
     ArtifactResults results1 = new ArtifactResults(artifact1);
-    results1.addResult("Static Linkage Errors", 56);
+    results1.addResult("Linkage Errors", 56);
     
     Artifact artifact2 = new DefaultArtifact("grpc:grpc:1.15.0");
     ArtifactResults results2 = new ArtifactResults(artifact2);
-    results2.addResult("Static Linkage Errors", 0);
+    results2.addResult("Linkage Errors", 0);
     
     List<ArtifactResults> table = ImmutableList.of(results1, results2);
     List<DependencyGraph> globalDependencies = ImmutableList.of();
@@ -96,7 +96,7 @@ public class FreemarkerTest {
     for (int i = 0; i < counts.size(); i++) {
       Integer.parseInt(counts.get(i).getValue().trim());
     }
-    // Static Linkage Errors
+    // Linkage Errors
     Truth.assertThat(counts.get(1).getValue().trim()).isEqualTo("1");
   }
 }

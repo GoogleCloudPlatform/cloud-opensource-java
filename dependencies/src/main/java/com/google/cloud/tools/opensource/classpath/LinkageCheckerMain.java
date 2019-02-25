@@ -23,7 +23,7 @@ import org.eclipse.aether.RepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 
 /**
- * A tool to find static linkage errors for a class path.
+ * A tool to find linkage errors for a class path.
  */
 class LinkageCheckerMain {
 

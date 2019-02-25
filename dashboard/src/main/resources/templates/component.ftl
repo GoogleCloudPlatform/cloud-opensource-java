@@ -116,7 +116,7 @@
 
     <h2 id="linkage-errors">Linkage Check</h2>
 
-    <p id="linkage-errors-total">${totalLinkageErrorCount} static linkage error(s)</p>
+    <p id="linkage-errors-total">${totalLinkageErrorCount} linkage error(s)</p>
     <#list jarLinkageReports as jarLinkageReport>
       <@formatJarLinkageReport jarLinkageReport jarToDependencyPaths {} />
     </#list>

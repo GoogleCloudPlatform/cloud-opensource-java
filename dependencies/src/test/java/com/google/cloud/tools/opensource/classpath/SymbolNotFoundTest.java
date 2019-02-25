@@ -16,13 +16,13 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.cloud.tools.opensource.classpath.StaticLinkageError.Reason;
+import com.google.cloud.tools.opensource.classpath.SymbolNotResolvable.Reason;
 import com.google.common.truth.Truth;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
 
-public class StaticLinkageErrorTest {
+public class SymbolNotFoundTest {
 
   @Test
   public void testLinkageErrorCreation() {
@@ -33,8 +33,8 @@ public class StaticLinkageErrorTest {
             .setSourceClassName("ClassD")
             .build();
 
-    StaticLinkageError<FieldSymbolReference> fieldError =
-        StaticLinkageError.errorMissingTargetClass(fieldSymbolReference, true);
+    SymbolNotResolvable<FieldSymbolReference> fieldError =
+        SymbolNotResolvable.errorMissingTargetClass(fieldSymbolReference, true);
     Truth.assertThat(fieldError.getReference()).isEqualTo(fieldSymbolReference);
 
     MethodSymbolReference methodSymbolReference =
@@ -47,8 +47,8 @@ public class StaticLinkageErrorTest {
             .build();
 
     Path targetClassLocation = Paths.get("foo", "bar");
-    StaticLinkageError<MethodSymbolReference> methodError =
-        StaticLinkageError.errorMissingMember(methodSymbolReference, targetClassLocation, true);
+    SymbolNotResolvable<MethodSymbolReference> methodError =
+        SymbolNotResolvable.errorMissingMember(methodSymbolReference, targetClassLocation, true);
     Truth.assertThat((Object) methodError.getTargetClassLocation()).isEqualTo(targetClassLocation);
 
     ClassSymbolReference classSymbolReference =
@@ -57,8 +57,8 @@ public class StaticLinkageErrorTest {
             .setSubclass(false)
             .setSourceClassName("ClassB")
             .build();
-    StaticLinkageError<ClassSymbolReference> classError =
-        StaticLinkageError.errorInaccessibleClass(classSymbolReference, targetClassLocation, true);
+    SymbolNotResolvable<ClassSymbolReference> classError =
+        SymbolNotResolvable.errorInaccessibleClass(classSymbolReference, targetClassLocation, true);
     Truth.assertThat(classError.getReason()).isEqualTo(Reason.INACCESSIBLE_CLASS);
   }
 }

@@ -187,7 +187,7 @@ public class DashboardTest {
             "3 target classes causing linkage errors referenced from 3 source classes.");
 
     ImmutableList<Node> dependencyPaths =
-        toList(dashboard.query("//p[@class='static-linkage-check-dependency-paths']"));
+        toList(dashboard.query("//p[@class='linkage-check-dependency-paths']"));
     Node log4jDependencyPathMessage = dependencyPaths.get(dependencyPaths.size() - 1);
     // There are 994 paths to log4j. These should be summarized.
     Truth.assertThat(log4jDependencyPathMessage.getValue())
@@ -195,7 +195,7 @@ public class DashboardTest {
             "Artifacts 'com.google.http-client:google-http-client >"
                 + " commons-logging:commons-logging > log4j:log4j' exist in all");
     int dependencyPathListSize =
-        dashboard.query("//ul[@class='static-linkage-check-dependency-paths']/li").size();
+        dashboard.query("//ul[@class='linkage-check-dependency-paths']/li").size();
     Truth.assertWithMessage("The dashboard should not show repetitive dependency paths")
         .that(dependencyPathListSize)
         .isLessThan(100);
@@ -319,10 +319,10 @@ public class DashboardTest {
   public void testZeroLinkageErrorShowsZero() throws IOException, ParsingException {
     // grpc-auth does not have a linkage error, and it should show zero in the section
     Document document = parseOutputFile("io.grpc_grpc-auth_1.18.0.html");
-    Nodes linkageErrorsTotal = document.query("//p[@id='static-linkage-errors-total']");
+    Nodes linkageErrorsTotal = document.query("//p[@id='linkage-errors-total']");
     Truth.assertThat(linkageErrorsTotal.size()).isEqualTo(1);
     Truth.assertThat(linkageErrorsTotal.get(0).getValue())
-        .contains("0 static linkage error(s)");
+        .contains("0 linkage error(s)");
   }
 
   private static ImmutableList<Node> toList(Nodes nodes) {
