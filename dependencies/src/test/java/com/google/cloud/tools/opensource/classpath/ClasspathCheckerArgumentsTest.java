@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.nio.file.Path;
 import java.util.List;
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
