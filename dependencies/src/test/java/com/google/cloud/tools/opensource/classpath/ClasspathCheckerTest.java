@@ -19,7 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.cloud.tools.opensource.classpath.ClassPathBuilderTest.PATH_FILE_NAMES;
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
 
-import com.google.cloud.tools.opensource.classpath.StaticLinkageError.Reason;
+import com.google.cloud.tools.opensource.classpath.SymbolNotResolvable.Reason;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -120,7 +120,7 @@ public class ClasspathCheckerTest {
             .setDescriptor("(I)Ljava/lang/Object;")
             .build();
     // When it's verified against interfaces, it should generate an error
-    Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
+    Optional<SymbolNotResolvable<MethodSymbolReference>> errorFound =
         classpathChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
@@ -143,7 +143,7 @@ public class ClasspathCheckerTest {
             .setDescriptor("(Ljava/lang/Class;)Ljava/lang/Object;")
             .build();
     // When it's verified against classes, it should generate an error
-    Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
+    Optional<SymbolNotResolvable<MethodSymbolReference>> errorFound =
         classpathChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
@@ -166,7 +166,7 @@ public class ClasspathCheckerTest {
             .setDescriptor("(Ljava/lang/Class;)Ljava/lang/Object;")
             .build();
     // There is no such method on ClassToInstanceMap
-    Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
+    Optional<SymbolNotResolvable<MethodSymbolReference>> errorFound =
         classpathChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
@@ -188,7 +188,7 @@ public class ClasspathCheckerTest {
             .setMethodName("get")
             .setDescriptor("(I)Ljava/lang/Object;")
             .build();
-    Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
+    Optional<SymbolNotResolvable<MethodSymbolReference>> errorFound =
         classpathChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isEmpty();
@@ -211,7 +211,7 @@ public class ClasspathCheckerTest {
             .setDescriptor("()V")
             .build();
 
-    Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
+    Optional<SymbolNotResolvable<MethodSymbolReference>> errorFound =
         classpathChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
@@ -238,7 +238,7 @@ public class ClasspathCheckerTest {
             .setDescriptor("()V")
             .build();
 
-    Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
+    Optional<SymbolNotResolvable<MethodSymbolReference>> errorFound =
         classpathChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     // JLS 6.6.2.2 says
@@ -264,7 +264,7 @@ public class ClasspathCheckerTest {
             .setDescriptor("()Ljava/lang/Object;")
             .build();
 
-    Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
+    Optional<SymbolNotResolvable<MethodSymbolReference>> errorFound =
         classpathChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
@@ -288,7 +288,7 @@ public class ClasspathCheckerTest {
             .setDescriptor("(C)I") // private static int getAlphaIndex(char);
             .build();
 
-    Optional<StaticLinkageError<MethodSymbolReference>> errorFound =
+    Optional<SymbolNotResolvable<MethodSymbolReference>> errorFound =
         classpathChecker.checkLinkageErrorMissingMethodAt(privateStaticReference);
 
     Truth8.assertThat(errorFound).isPresent();
@@ -369,7 +369,7 @@ public class ClasspathCheckerTest {
             .build();
 
     // There should be an error reported for the reference
-    Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
+    Optional<SymbolNotResolvable<ClassSymbolReference>> classSymbolError =
         classpathChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
     Truth8.assertThat(classSymbolError).isPresent();
     Truth.assertThat(classSymbolError.get().getReference()).isEqualTo(invalidClassReference);
@@ -392,7 +392,7 @@ public class ClasspathCheckerTest {
             .build();
 
     // There should not be an error reported for the reference
-    Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
+    Optional<SymbolNotResolvable<ClassSymbolReference>> classSymbolError =
         classpathChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
     Truth8.assertThat(classSymbolError).isEmpty();
   }
@@ -412,7 +412,7 @@ public class ClasspathCheckerTest {
             .setTargetClassName("com.google.firestore.v1beta1.FirestoreGrpc")
             .build();
 
-    Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
+    Optional<SymbolNotResolvable<ClassSymbolReference>> classSymbolError =
         classpathChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
     Truth8.assertThat(classSymbolError).isPresent();
     Truth.assertThat(classSymbolError.get().getReason())
@@ -439,7 +439,7 @@ public class ClasspathCheckerTest {
             .setTargetClassName("org.objectweb.asm.ClassWriter")
             .build();
 
-    Optional<StaticLinkageError<ClassSymbolReference>> classSymbolError =
+    Optional<SymbolNotResolvable<ClassSymbolReference>> classSymbolError =
         classpathChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
     Truth8.assertThat(classSymbolError).isPresent();
     Truth.assertWithMessage(
@@ -460,7 +460,7 @@ public class ClasspathCheckerTest {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
     ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
-    Optional<StaticLinkageError<FieldSymbolReference>> errorFound =
+    Optional<SymbolNotResolvable<FieldSymbolReference>> errorFound =
         classpathChecker.checkLinkageErrorMissingFieldAt(privateFieldReference);
 
     Truth8.assertThat(errorFound).isPresent();
@@ -491,11 +491,11 @@ public class ClasspathCheckerTest {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
     ClasspathChecker classpathChecker = ClasspathChecker.create(paths, paths);
 
-    Optional<StaticLinkageError<FieldSymbolReference>> errorOnSamePackage =
+    Optional<SymbolNotResolvable<FieldSymbolReference>> errorOnSamePackage =
         classpathChecker.checkLinkageErrorMissingFieldAt(accessFromSamePackage);
     Truth8.assertThat(errorOnSamePackage).isEmpty();
 
-    Optional<StaticLinkageError<FieldSymbolReference>> errorOnDifferentPackage =
+    Optional<SymbolNotResolvable<FieldSymbolReference>> errorOnDifferentPackage =
         classpathChecker.checkLinkageErrorMissingFieldAt(accessFromDifferentPackage);
     Truth8.assertThat(errorOnDifferentPackage).isPresent();
 
@@ -522,7 +522,7 @@ public class ClasspathCheckerTest {
 
     // Because StringCharSource is in the same package, the source class is not suitable
     // for this class.
-    Optional<StaticLinkageError<FieldSymbolReference>> errorFound =
+    Optional<SymbolNotResolvable<FieldSymbolReference>> errorFound =
         classpathChecker.checkLinkageErrorMissingFieldAt(referenceFromSubclass);
     Truth8.assertThat(errorFound).isEmpty();
   }
@@ -610,7 +610,7 @@ public class ClasspathCheckerTest {
             symbolReferenceSet);
 
     Truth.assertThat(jarLinkageReport.getMissingClassErrors()).hasSize(1);
-    StaticLinkageError<ClassSymbolReference> classReferenceError =
+    SymbolNotResolvable<ClassSymbolReference> classReferenceError =
         jarLinkageReport.getMissingClassErrors().get(0);
     Truth.assertThat(classReferenceError.getReason()).isEqualTo(Reason.INACCESSIBLE_CLASS);
     Truth.assertWithMessage(
