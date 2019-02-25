@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
  *     Java Dependency Glossary: Linkage Error</a>
  */
 @AutoValue
-abstract class SymbolNotFound<T extends SymbolReference> {
+abstract class SymbolNotResolvable<T extends SymbolReference> {
 
   /** Returns the symbol reference that could not be resolved. */
   abstract T getReference();
@@ -70,7 +70,7 @@ abstract class SymbolNotFound<T extends SymbolReference> {
   }
 
   /** Returns a SymbolNotFound caused by {@link Reason#CLASS_NOT_FOUND}. */
-  static <U extends SymbolReference> SymbolNotFound<U> errorMissingTargetClass(
+  static <U extends SymbolReference> SymbolNotResolvable<U> errorMissingTargetClass(
       U reference, boolean isReachable) {
     return builderFor(reference)
         .setReason(Reason.CLASS_NOT_FOUND)
@@ -79,7 +79,7 @@ abstract class SymbolNotFound<T extends SymbolReference> {
   }
 
   /** Returns a SymbolNotFound caused by {@link Reason#INCOMPATIBLE_CLASS_CHANGE}. */
-  static <U extends SymbolReference> SymbolNotFound<U> errorIncompatibleClassChange(
+  static <U extends SymbolReference> SymbolNotResolvable<U> errorIncompatibleClassChange(
       U reference, Path targetClassLocation, boolean isReachable) {
     return builderFor(reference)
         .setReason(Reason.INCOMPATIBLE_CLASS_CHANGE)
@@ -89,7 +89,7 @@ abstract class SymbolNotFound<T extends SymbolReference> {
   }
 
   /** Returns a SymbolNotFound caused by {@link Reason#SYMBOL_NOT_FOUND}. */
-  static <U extends SymbolReference> SymbolNotFound<U> errorMissingMember(
+  static <U extends SymbolReference> SymbolNotResolvable<U> errorMissingMember(
       U reference, Path targetClassLocation, boolean isReachable) {
     return builderFor(reference)
         .setReason(Reason.SYMBOL_NOT_FOUND)
@@ -99,7 +99,7 @@ abstract class SymbolNotFound<T extends SymbolReference> {
   }
 
   /** Returns a SymbolNotFound caused by {@link Reason#INACCESSIBLE_CLASS}. */
-  static <U extends SymbolReference> SymbolNotFound<U> errorInaccessibleClass(
+  static <U extends SymbolReference> SymbolNotResolvable<U> errorInaccessibleClass(
       U reference, Path targetClassLocation, boolean isReachable) {
     return builderFor(reference)
         .setReason(Reason.INACCESSIBLE_CLASS)
@@ -109,7 +109,7 @@ abstract class SymbolNotFound<T extends SymbolReference> {
   }
 
   /** Returns a SymbolNotFound caused by {@link Reason#INACCESSIBLE_MEMBER}. */
-  static <U extends SymbolReference> SymbolNotFound<U> errorInaccessibleMember(
+  static <U extends SymbolReference> SymbolNotResolvable<U> errorInaccessibleMember(
       U reference, Path targetClassLocation, boolean isReachable) {
     return builderFor(reference)
         .setReason(Reason.INACCESSIBLE_MEMBER)
@@ -124,7 +124,7 @@ abstract class SymbolNotFound<T extends SymbolReference> {
    */
   private static <U extends SymbolReference> Builder<U> builderFor(U reference) {
     // This method gives type-safety compared with normal builder() method.
-    Builder<U> builder = new AutoValue_SymbolNotFound.Builder<>();
+    Builder<U> builder = new AutoValue_SymbolNotResolvable.Builder<>();
     builder.setReference(reference);
     return builder;
   }
@@ -132,18 +132,18 @@ abstract class SymbolNotFound<T extends SymbolReference> {
   @AutoValue.Builder
   abstract static class Builder<T extends SymbolReference> {
 
-    abstract SymbolNotFound.Builder<T> setTargetClassLocation(Path targetClassLocation);
+    abstract SymbolNotResolvable.Builder<T> setTargetClassLocation(Path targetClassLocation);
 
-    abstract SymbolNotFound.Builder<T> setReason(Reason reason);
+    abstract SymbolNotResolvable.Builder<T> setReason(Reason reason);
 
-    abstract SymbolNotFound.Builder<T> setReference(T reference);
+    abstract SymbolNotResolvable.Builder<T> setReference(T reference);
 
-    abstract SymbolNotFound.Builder<T> setReachable(boolean reachable);
+    abstract SymbolNotResolvable.Builder<T> setReachable(boolean reachable);
 
-    abstract SymbolNotFound<T> build();
+    abstract SymbolNotResolvable<T> build();
   }
 
-  /** The kind of static linkage error against a symbol reference. */
+  /** The kind of linkage error against a symbol reference. */
   enum Reason {
     /** The target class of the symbol reference is not found in the class path. */
     CLASS_NOT_FOUND,

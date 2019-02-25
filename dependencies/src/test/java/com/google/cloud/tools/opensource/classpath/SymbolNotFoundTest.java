@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.cloud.tools.opensource.classpath.SymbolNotFound.Reason;
+import com.google.cloud.tools.opensource.classpath.SymbolNotResolvable.Reason;
 import com.google.common.truth.Truth;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,8 +33,8 @@ public class SymbolNotFoundTest {
             .setSourceClassName("ClassD")
             .build();
 
-    SymbolNotFound<FieldSymbolReference> fieldError =
-        SymbolNotFound.errorMissingTargetClass(fieldSymbolReference, true);
+    SymbolNotResolvable<FieldSymbolReference> fieldError =
+        SymbolNotResolvable.errorMissingTargetClass(fieldSymbolReference, true);
     Truth.assertThat(fieldError.getReference()).isEqualTo(fieldSymbolReference);
 
     MethodSymbolReference methodSymbolReference =
@@ -47,8 +47,8 @@ public class SymbolNotFoundTest {
             .build();
 
     Path targetClassLocation = Paths.get("foo", "bar");
-    SymbolNotFound<MethodSymbolReference> methodError =
-        SymbolNotFound.errorMissingMember(methodSymbolReference, targetClassLocation, true);
+    SymbolNotResolvable<MethodSymbolReference> methodError =
+        SymbolNotResolvable.errorMissingMember(methodSymbolReference, targetClassLocation, true);
     Truth.assertThat((Object) methodError.getTargetClassLocation()).isEqualTo(targetClassLocation);
 
     ClassSymbolReference classSymbolReference =
@@ -57,8 +57,8 @@ public class SymbolNotFoundTest {
             .setSubclass(false)
             .setSourceClassName("ClassB")
             .build();
-    SymbolNotFound<ClassSymbolReference> classError =
-        SymbolNotFound.errorInaccessibleClass(classSymbolReference, targetClassLocation, true);
+    SymbolNotResolvable<ClassSymbolReference> classError =
+        SymbolNotResolvable.errorInaccessibleClass(classSymbolReference, targetClassLocation, true);
     Truth.assertThat(classError.getReason()).isEqualTo(Reason.INACCESSIBLE_CLASS);
   }
 }

@@ -23,19 +23,19 @@ import com.google.auto.value.AutoValue;
 abstract class LinkageErrorCause {
 
   /** Returns the reason for the error */
-  abstract SymbolNotFound.Reason getReason();
+  abstract SymbolNotResolvable.Reason getReason();
 
   /** Returns the symbol causing the error. It's either class name, field name, or method name. */
   abstract String getSymbol();
 
   static <T extends SymbolReference> LinkageErrorCause from(
-      SymbolNotFound<T> staticLinkageError) {
+      SymbolNotResolvable<T> staticLinkageError) {
     String symbolName = symbolNameFrom(staticLinkageError);
     return new AutoValue_LinkageErrorCause(staticLinkageError.getReason(), symbolName);
   }
 
   private static <T extends SymbolReference> String symbolNameFrom(
-      SymbolNotFound<T> staticLinkageError) {
+      SymbolNotResolvable<T> staticLinkageError) {
     T reference = staticLinkageError.getReference();
     switch (staticLinkageError.getReason()) {
       case INACCESSIBLE_MEMBER:

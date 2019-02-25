@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.cloud.tools.opensource.classpath.SymbolNotFound.Reason;
+import com.google.cloud.tools.opensource.classpath.SymbolNotResolvable.Reason;
 import com.google.common.truth.Truth;
 import org.junit.Test;
 
@@ -31,8 +31,8 @@ public class LinkageErrorCauseTest {
             .setSourceClassName("ClassD")
             .build();
 
-    SymbolNotFound<FieldSymbolReference> fieldError =
-        SymbolNotFound.errorMissingTargetClass(fieldSymbolReference, true);
+    SymbolNotResolvable<FieldSymbolReference> fieldError =
+        SymbolNotResolvable.errorMissingTargetClass(fieldSymbolReference, true);
 
     LinkageErrorCause groupKey = LinkageErrorCause.from(fieldError);
     Truth.assertThat(groupKey.getReason()).isEqualTo(Reason.CLASS_NOT_FOUND);
