@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.enforcer;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -43,7 +44,10 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.resolution.ArtifactRequest;
+import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
+import org.eclipse.aether.resolution.DependencyResult;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -85,10 +89,11 @@ public class LinkageCheckerRuleTest {
   }
 
   /**
-   * Returns a {@link Dependency} that has {@link Artifact} of {@code coordinates} with the file in
-   * local Maven repository.
+   * Returns a list of {@link Dependency}s resolved from {@link Artifact} of {@code coordinates}
+   * with the file in local Maven repository.
    */
-  private Dependency createResolvedDependency(String coordinates) throws RepositoryException {
+  private ImmutableList<Dependency> createResolvedDependency(String coordinates)
+      throws RepositoryException {
     Artifact artifact = new DefaultArtifact(coordinates);
     Dependency dependency = new Dependency(artifact, "compile");
 
@@ -100,21 +105,25 @@ public class LinkageCheckerRuleTest {
 
     DependencyRequest dependencyRequest = new DependencyRequest();
     dependencyRequest.setRoot(dependencyNode);
-    repositorySystem.resolveDependencies(repositorySystemSession, dependencyRequest);
-
-    return dependencyNode.getDependency();
+    DependencyResult dependencyResult =
+        repositorySystem.resolveDependencies(repositorySystemSession, dependencyRequest);
+    return dependencyResult.getArtifactResults().stream()
+        .map(ArtifactResult::getRequest)
+        .map(ArtifactRequest::getDependencyNode)
+        .map(DependencyNode::getDependency)
+        .collect(toImmutableList());
   }
 
   private void setupMockDependencyResolution(String coordinates) throws RepositoryException {
-    ImmutableList<Dependency> dummyDependencies =
-        ImmutableList.of(createResolvedDependency(coordinates));
+    ImmutableList<Dependency> dummyDependencies = createResolvedDependency(coordinates);
     when(mockDependencyResolutionResult.getDependencies()).thenReturn(dummyDependencies);
   }
 
   @Test
   public void testExecute_shouldPassGoodProject()
       throws EnforcerRuleException, RepositoryException {
-    setupMockDependencyResolution("com.google.guava:guava:26.0-jre");
+    // Since Guava 27, it requires com.google.guava:failureaccess artifact in its dependency.
+    setupMockDependencyResolution("com.google.guava:guava:27.0.1-jre");
     // This should not raise an EnforcerRuleException
     rule.execute(mockRuleHelper);
   }
