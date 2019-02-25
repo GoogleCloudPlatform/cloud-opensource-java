@@ -189,20 +189,7 @@ public final class RepositoryUtility {
     List<Artifact> managedDependencies = new ArrayList<>();
     for (Dependency dependency : resolved.getManagedDependencies()) {
       Artifact managed = dependency.getArtifact();
-      if ("testlib".equals(managed.getClassifier())) {
-        // we don't report on test libraries
-        continue;
-      }
-      
-      String type = managed.getProperty(ArtifactProperties.TYPE, "jar");
-      if ("test-jar".equals(type)) {
-        continue;
-      }
-      
-      // TODO remove this hack once we get these out of 
-      // google-cloud-java's BOM
-      if (managed.getArtifactId().equals("google-cloud-logging-logback")
-          || managed.getArtifactId().equals("google-cloud-contrib")) {
+      if (shouldSkipBomMember(managed)) {
         continue;
       }
       if (!managedDependencies.contains(managed)) {
@@ -212,6 +199,29 @@ public final class RepositoryUtility {
       }
     }
     return managedDependencies;
+  }
+
+  private static final ImmutableSet<String> BOM_SKIP_ARTIFACT_IDS =
+      ImmutableSet.of("google-cloud-logging-logback", "google-cloud-contrib");
+
+  /** Returns true if the {@code artifact} in BOM should be skipped for checks. */
+  public static boolean shouldSkipBomMember(Artifact artifact) {
+    if ("testlib".equals(artifact.getClassifier())) {
+      // we don't report on test libraries
+      return true;
+    }
+
+    String type = artifact.getProperty(ArtifactProperties.TYPE, "jar");
+    if ("test-jar".equals(type)) {
+      return true;
+    }
+
+    // TODO remove this hack once we get these out of google-cloud-java's BOM
+    if (BOM_SKIP_ARTIFACT_IDS.contains(artifact.getArtifactId())) {
+      return true;
+    }
+
+    return false;
   }
 
   /**
