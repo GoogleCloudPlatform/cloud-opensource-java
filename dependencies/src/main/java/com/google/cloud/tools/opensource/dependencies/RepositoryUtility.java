@@ -123,7 +123,7 @@ public final class RepositoryUtility {
           public boolean selectDependency(Dependency dependency) {
             Artifact artifact = dependency.getArtifact();
             Map<String, String> properties = artifact.getProperties();
-            // Because ClasspathChecker only checks jar file, zip files are not needed
+            // Because LinkageChecker only checks jar file, zip files are not needed
             return !"zip".equals(properties.get("type"));
           }
 
@@ -136,11 +136,11 @@ public final class RepositoryUtility {
 
     // This combination of DependencySelector comes from the default specified in
     // `MavenRepositorySystemUtils.newSession`.
-    // ClasspathChecker needs to include 'provided' scope.
+    // LinkageChecker needs to include 'provided' scope.
     DependencySelector dependencySelector =
         new AndDependencySelector(
             // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
-            // false positive in ClasspathChecker.
+            // false positive in LinkageChecker.
             new ScopeDependencySelector("test"),
             new OptionalDependencySelector(),
             new ExclusionDependencySelector(),

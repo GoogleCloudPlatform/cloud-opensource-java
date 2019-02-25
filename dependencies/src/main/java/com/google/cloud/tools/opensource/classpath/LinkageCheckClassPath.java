@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import org.apache.bcel.util.ClassPath;
 
 /**
- * Class path to load class files for {@link ClasspathChecker}. When loading a resource for a
+ * Class path to load class files for {@link LinkageChecker}. When loading a resource for a
  * class, {@link LinkageCheckClassPath} ensures that the class file comes from only the extension
  * class loader or the class path specified at the constructor argument.
  *
@@ -34,7 +34,7 @@ import org.apache.bcel.util.ClassPath;
  * org.apache.bcel.util.ClassPathRepository#loadClass(String)} is called, meaning that it loads
  * other classes outside the class path specified at its constructor argument. In other words,
  * classes used in this cloud-opensource-java project (including Guava 26) would be unexpectedly
- * loaded by the system class loader when running classpath check, if BCEL's {@link ClassPath}
+ * loaded by the system class loader when running linkage check, if BCEL's {@link ClassPath}
  * is naively used.
  *
  * <p>This class is introduced to avoid the mix-up of the class paths. It loads resources only from

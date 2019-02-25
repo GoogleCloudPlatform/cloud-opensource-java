@@ -26,10 +26,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ClasspathCheckReportTest {
+public class LinkageCheckReportTest {
   
   private JarLinkageReport jarLinkageReport;
-  private ClasspathCheckReport classpathCheckReport;
+  private LinkageCheckReport linkageCheckReport;
 
   @Before
   public void createDummyJarLinkageReport() {
@@ -77,33 +77,33 @@ public class ClasspathCheckReportTest {
             .setMissingFieldErrors(missingFieldErrors)
             .build();
 
-    classpathCheckReport =
-        ClasspathCheckReport.create(ImmutableList.of(jarLinkageReport));
+    linkageCheckReport =
+        LinkageCheckReport.create(ImmutableList.of(jarLinkageReport));
   }
 
   @Test
   public void testJarLinkageReportToString() {
-    Truth.assertThat(classpathCheckReport.toString()).startsWith("c (3 errors)");
+    Truth.assertThat(linkageCheckReport.toString()).startsWith("c (3 errors)");
   }
   
   @Test
   public void testToString() {
-    Truth.assertThat(classpathCheckReport.toString()).contains(jarLinkageReport.toString());
+    Truth.assertThat(linkageCheckReport.toString()).contains(jarLinkageReport.toString());
   }
   
   @Test
   public void testToStringNoErrors() {
-    classpathCheckReport = ClasspathCheckReport.create(Collections.emptyList());
-    Assert.assertEquals("No static linkage errors\n", classpathCheckReport.toString());
+    linkageCheckReport = LinkageCheckReport.create(Collections.emptyList());
+    Assert.assertEquals("No linkage errors\n", linkageCheckReport.toString());
   }
   
   @Test
   public void testCreation() {
-    Assert.assertEquals(1, classpathCheckReport.getJarLinkageReports().size());
-    Assert.assertEquals(jarLinkageReport, classpathCheckReport.getJarLinkageReports().get(0));
+    Assert.assertEquals(1, linkageCheckReport.getJarLinkageReports().size());
+    Assert.assertEquals(jarLinkageReport, linkageCheckReport.getJarLinkageReports().get(0));
     Assert.assertEquals(
         "ClassA",
-        classpathCheckReport
+        linkageCheckReport
             .getJarLinkageReports()
             .get(0)
             .getMissingClassErrors()

@@ -18,7 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
 
-/** Key to group static linkage errors by their causes. */
+/** Key to group linkage errors by their causes. */
 @AutoValue
 abstract class LinkageErrorCause {
 

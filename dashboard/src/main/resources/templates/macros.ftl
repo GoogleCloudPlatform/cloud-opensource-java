@@ -32,14 +32,14 @@
         </#list>
       </ul>
     </#list>
-    <p class="static-linkage-check-dependency-paths">
+    <p class="linkage-check-dependency-paths">
       The following paths to the jar file from BOM are found in the dependency tree.
     </p>
     <#if dependencyPathRootCauses[jarPath]?? >
-      <p class="static-linkage-check-dependency-paths">${dependencyPathRootCauses[jarPath]?html}
+      <p class="linkage-check-dependency-paths">${dependencyPathRootCauses[jarPath]?html}
       </p>
     <#else>
-      <ul class="static-linkage-check-dependency-paths">
+      <ul class="linkage-check-dependency-paths">
           <#list jarToDependencyPaths.get(jarPath) as dependencyPath >
             <li>${dependencyPath}</li>
           </#list>

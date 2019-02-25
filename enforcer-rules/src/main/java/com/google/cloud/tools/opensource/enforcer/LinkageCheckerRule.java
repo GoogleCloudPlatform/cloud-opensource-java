@@ -20,8 +20,8 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.apache.maven.enforcer.rule.api.EnforcerLevel.WARN;
 
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
-import com.google.cloud.tools.opensource.classpath.ClasspathCheckReport;
-import com.google.cloud.tools.opensource.classpath.ClasspathChecker;
+import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
+import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
@@ -103,8 +103,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       List<Path> directDependencies = classpath.subList(0, project.getDependencies().size());
 
       try {
-        ClasspathChecker classpathChecker = ClasspathChecker.create(classpath, directDependencies);
-        ClasspathCheckReport linkageReport = classpathChecker.findLinkageErrors();
+        LinkageChecker linkageChecker = LinkageChecker.create(classpath, directDependencies);
+        LinkageCheckReport linkageReport = linkageChecker.findLinkageErrors();
         int totalErrors =
             linkageReport.getJarLinkageReports().stream()
                 .mapToInt(JarLinkageReport::getCauseToSourceClassesSize)

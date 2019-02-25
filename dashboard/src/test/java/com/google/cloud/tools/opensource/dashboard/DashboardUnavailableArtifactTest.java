@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,13 +43,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
-import com.google.cloud.tools.opensource.classpath.ClasspathCheckReport;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.io.MoreFiles;
-import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Truth;
 
 
@@ -81,11 +80,11 @@ public class DashboardUnavailableArtifactTest {
     
     ArtifactCache cache = new ArtifactCache();
     cache.setInfoMap(map);
-    ClasspathCheckReport classpathCheckReport =
-        ClasspathCheckReport.create(ImmutableList.of());
+    LinkageCheckReport linkageCheckReport =
+        LinkageCheckReport.create(ImmutableList.of());
     List<ArtifactResults> artifactResults =
         DashboardMain.generateReports(
-            configuration, outputDirectory, cache, classpathCheckReport,
+            configuration, outputDirectory, cache, linkageCheckReport,
             LinkedListMultimap.create());
 
     Assert.assertEquals(
@@ -126,7 +125,7 @@ public class DashboardUnavailableArtifactTest {
     table.add(errorArtifactResult);
 
     Iterable<JarLinkageReport> list = new ArrayList<>();
-    ClasspathCheckReport report = ClasspathCheckReport.create(list);
+    LinkageCheckReport report = LinkageCheckReport.create(list);
     DashboardMain.generateDashboard(
         configuration, outputDirectory, table, null, report, LinkedListMultimap.create());
 

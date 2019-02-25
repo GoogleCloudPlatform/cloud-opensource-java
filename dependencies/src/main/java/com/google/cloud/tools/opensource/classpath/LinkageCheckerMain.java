@@ -23,13 +23,13 @@ import org.eclipse.aether.RepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 
 /**
- * A tool to find static linkage errors for a class path.
+ * A tool to find linkage errors for a class path.
  */
 class LinkageCheckerMain {
 
   /**
    * Given Maven coordinates or list of the jar files as file names in filesystem, outputs the
-   * report of classpath check.
+   * report of linkage check.
    *
    * @throws IOException when there is a problem in reading a jar file
    * @throws RepositoryException when there is a problem in resolving the Maven coordinates to jar
@@ -39,16 +39,16 @@ class LinkageCheckerMain {
   public static void main(String[] arguments)
       throws IOException, RepositoryException, ParseException {
 
-    ClasspathCheckerArguments linkageCheckerArguments =
-        ClasspathCheckerArguments.readCommandLine(arguments);
+    LinkageCheckerArguments linkageCheckerArguments =
+        LinkageCheckerArguments.readCommandLine(arguments);
 
     RepositoryUtility.setRepositories(linkageCheckerArguments.getExtraMavenRepositoryUrls(),
         linkageCheckerArguments.getAddMavenCentral());
 
-    ClasspathChecker classpathChecker = ClasspathChecker.create(
+    LinkageChecker linkageChecker = LinkageChecker.create(
         linkageCheckerArguments.getInputClasspath(),
         linkageCheckerArguments.getEntryPointJars());
-    ClasspathCheckReport report = classpathChecker.findLinkageErrors();
+    LinkageCheckReport report = linkageChecker.findLinkageErrors();
 
     System.out.println(report);
   }

@@ -18,8 +18,8 @@
           <span class="desc">Total Artifacts Checked</span>
         </div>
         <div class="statistic-item statistic-item-red">
-          <h2>${dashboardMain.countFailures(table, "Static Linkage Errors")}</h2>
-          <span class="desc">Have Static Linkage Errors</span>
+          <h2>${dashboardMain.countFailures(table, "Linkage Errors")}</h2>
+          <span class="desc">Have Linkage Errors</span>
         </div>
         <div class="statistic-item statistic-item-yellow">
           <h2>${dashboardMain.countFailures(table, "Upper Bounds")}</h2>
@@ -42,8 +42,8 @@
       <tr>
         <th>Artifact</th>
         <th title=
-                "Classpath check result for the artifact and transitive dependencies. PASS means all symbol references have valid referents.">
-          Classpath Check</th>
+                "Linkage check result for the artifact and transitive dependencies. PASS means all symbol references have valid referents.">
+          Linkage Check</th>
         <th title=
           "For each transitive dependency the library pulls in, the highest version found anywhere in the dependency tree is picked.">
           Upper Bounds</th>
@@ -59,7 +59,7 @@
         <tr>
           <td class="artifact-name"><a href='${report_url}'>${row.getCoordinates()}</a></td>
           <#-- The name key should match TEST_NAME_XXXX variables -->
-          <@testResult row=row name="Static Linkage Errors"/>
+          <@testResult row=row name="Linkage Errors"/>
           <@testResult row=row name="Upper Bounds"/>
           <@testResult row=row name="Global Upper Bounds"/>
           <@testResult row=row name="Dependency Convergence"/>
@@ -69,7 +69,7 @@
     
     <hr />
 
-    <h2>Static Linkage Errors</h2>
+    <h2>Linkage Errors</h2>
 
     <#list jarLinkageReports as jarLinkageReport>
       <@formatJarLinkageReport jarLinkageReport jarToDependencyPaths dependencyPathRootCauses/>

@@ -39,18 +39,16 @@ import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 
-/**
- * A tool to find linkage errors in a class path.
- */
-public class ClasspathChecker {
+/** A tool to find linkage errors in a class path. */
+public class LinkageChecker {
 
-  private static final Logger logger = Logger.getLogger(ClasspathChecker.class.getName());
+  private static final Logger logger = Logger.getLogger(LinkageChecker.class.getName());
 
   private final ClassDumper classDumper;
   private final ImmutableMap<Path, SymbolReferenceSet> jarToSymbols;
   private final ClassReferenceGraph classReferenceGraph;
 
-  public static ClasspathChecker create(List<Path> jarPaths, Iterable<Path> entryPoints)
+  public static LinkageChecker create(List<Path> jarPaths, Iterable<Path> entryPoints)
       throws IOException {
     Preconditions.checkArgument(
         !jarPaths.isEmpty(),
@@ -66,10 +64,10 @@ public class ClasspathChecker {
     ClassReferenceGraph classReferenceGraph =
         ClassReferenceGraph.create(jarToSymbols.values(), ImmutableSet.copyOf(entryPoints));
 
-    return new ClasspathChecker(dumper, jarToSymbols, classReferenceGraph);
+    return new LinkageChecker(dumper, jarToSymbols, classReferenceGraph);
   }
 
-  private ClasspathChecker(
+  private LinkageChecker(
       ClassDumper classDumper,
       Map<Path, SymbolReferenceSet> jarToSymbols,
       ClassReferenceGraph classReferenceGraph) {
@@ -78,8 +76,8 @@ public class ClasspathChecker {
     this.classReferenceGraph = Preconditions.checkNotNull(classReferenceGraph);
   }
 
-  /** Finds linkage errors in the input classpath and generates a classpath check report. */
-  public ClasspathCheckReport findLinkageErrors() {
+  /** Finds linkage errors in the input classpath and generates a linkage check report. */
+  public LinkageCheckReport findLinkageErrors() {
     // Validate linkage error of each reference
     ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
 
@@ -87,7 +85,7 @@ public class ClasspathChecker {
         (jar, symbolReferenceSet) ->
             jarLinkageReports.add(generateLinkageReport(jar, symbolReferenceSet)));
 
-    return ClasspathCheckReport.create(jarLinkageReports.build());
+    return LinkageCheckReport.create(jarLinkageReports.build());
   }
 
   /**

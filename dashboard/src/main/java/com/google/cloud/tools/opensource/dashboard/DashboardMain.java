@@ -51,9 +51,9 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
-import com.google.cloud.tools.opensource.classpath.ClasspathCheckReport;
-import com.google.cloud.tools.opensource.classpath.ClasspathChecker;
 import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
+import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
+import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
@@ -76,7 +76,7 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 
 public class DashboardMain {
-  public static final String TEST_NAME_STATIC_LINKAGE_CHECK = "Static Linkage Errors";
+  public static final String TEST_NAME_LINKAGE_CHECK = "Linkage Errors";
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
   public static final String TEST_NAME_GLOBAL_UPPER_BOUND = "Global Upper Bounds";
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
@@ -107,9 +107,9 @@ public class DashboardMain {
     List<Path> artifactJarsInBom = classpath.subList(0, managedDependencies.size());
     ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInBom);
 
-    ClasspathChecker classpathChecker = ClasspathChecker.create(classpath, entryPoints);
+    LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints);
 
-    ClasspathCheckReport linkageReport = classpathChecker.findLinkageErrors();
+    LinkageCheckReport linkageReport = linkageChecker.findLinkageErrors();
     
     Path output = generateHtml(cache, jarToDependencyPaths, linkageReport);
 
@@ -118,7 +118,7 @@ public class DashboardMain {
 
   private static Path generateHtml(ArtifactCache cache,
       LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths,
-      ClasspathCheckReport linkageReport) throws IOException, TemplateException {
+      LinkageCheckReport linkageReport) throws IOException, TemplateException {
     
     Path relativePath = Paths.get("target", "dashboard");
     Path output = Files.createDirectories(relativePath);
@@ -163,10 +163,10 @@ public class DashboardMain {
       Configuration configuration,
       Path output,
       ArtifactCache cache,
-      ClasspathCheckReport classpathCheckReport,
+      LinkageCheckReport linkageCheckReport,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
     ImmutableMap<Path, JarLinkageReport> jarToLinkageReport =
-        classpathCheckReport.getJarLinkageReports().stream()
+        linkageCheckReport.getJarLinkageReports().stream()
             .collect(
                 toImmutableMap(JarLinkageReport::getJarPath, jarLinkageReport -> jarLinkageReport));
 
@@ -314,7 +314,7 @@ public class DashboardMain {
       results.addResult(TEST_NAME_UPPER_BOUND, upperBoundFailures.size());
       results.addResult(TEST_NAME_GLOBAL_UPPER_BOUND, globalUpperBoundFailures.size());
       results.addResult(TEST_NAME_DEPENDENCY_CONVERGENCE, convergenceIssues.size());
-      results.addResult(TEST_NAME_STATIC_LINKAGE_CHECK, totalLinkageErrorCount);
+      results.addResult(TEST_NAME_LINKAGE_CHECK, totalLinkageErrorCount);
 
       return results;
     }
@@ -353,7 +353,7 @@ public class DashboardMain {
       Path output,
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
-      ClasspathCheckReport classpathCheckReport,
+      LinkageCheckReport linkageCheckReport,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
     File dashboardFile = output.resolve("dashboard.html").toFile();
@@ -367,7 +367,7 @@ public class DashboardMain {
       templateData.put("table", table);
       templateData.put("lastUpdated", LocalDateTime.now());
       templateData.put("latestArtifacts", latestArtifacts);
-      templateData.put("jarLinkageReports", classpathCheckReport.getJarLinkageReports());
+      templateData.put("jarLinkageReports", linkageCheckReport.getJarLinkageReports());
       templateData.put("jarToDependencyPaths", jarToDependencyPaths);
       templateData.put("dependencyPathRootCauses", findRootCauses(jarToDependencyPaths));
 
