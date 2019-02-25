@@ -272,7 +272,7 @@ public class DashboardTest {
   @Test
   public void testComponent_success() throws IOException, ParsingException {
     Document document = parseOutputFile(
-        "com.google.api.grpc_proto-google-common-protos_1.12.0.html");
+        "com.google.api.grpc_proto-google-common-protos_1.14.0.html");
     Nodes greens = document.query("//h3[@style='color: green']");
     Assert.assertTrue(greens.size() >= 2);
     Nodes presDependencyMediation =
@@ -288,7 +288,7 @@ public class DashboardTest {
   @Test
   public void testComponent_failure() throws IOException, ParsingException {
     Document document = parseOutputFile(
-        "com.google.api.grpc_grpc-google-common-protos_1.12.0.html");
+        "com.google.api.grpc_grpc-google-common-protos_1.14.0.html");
     Nodes greens = document.query("//h3[@style='color: green']");
     Assert.assertEquals(0, greens.size());
     Nodes reds = document.query("//h3[@style='color: red']");
@@ -308,11 +308,10 @@ public class DashboardTest {
   public void testLinkageErrorsUnderProvidedDependency() throws IOException, ParsingException {
     // google-cloud-translate has transitive dependency to (problematic) appengine-api-1.0-sdk
     // The path to appengine-api-1.0-sdk includes scope:provided dependency
-    Document document = parseOutputFile("com.google.cloud_google-cloud-translate_1.62.0.html");
-    Nodes staticLinkageCheckMessage =
-        document.query("//ul[@class='jar-linkage-report-cause']/li");
-    Truth.assertThat(staticLinkageCheckMessage.size()).isGreaterThan(0);
-    Truth.assertThat(staticLinkageCheckMessage.get(0).getValue())
+    Document document = parseOutputFile("com.google.cloud_google-cloud-translate_1.63.0.html");
+    Nodes linkageCheckMessages = document.query("//ul[@class='jar-linkage-report-cause']/li");
+    Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
+    Truth.assertThat(linkageCheckMessages.get(1).getValue())
         .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");
   }
 
@@ -320,10 +319,9 @@ public class DashboardTest {
   public void testZeroLinkageErrorShowsZero() throws IOException, ParsingException {
     // grpc-auth does not have a linkage error, and it should show zero in the section
     Document document = parseOutputFile("io.grpc_grpc-auth_1.18.0.html");
-    Nodes staticLinkageTotalMessage =
-        document.query("//p[@id='static-linkage-errors-total']");
-    Truth.assertThat(staticLinkageTotalMessage.size()).isEqualTo(1);
-    Truth.assertThat(staticLinkageTotalMessage.get(0).getValue())
+    Nodes linkageErrorsTotal = document.query("//p[@id='static-linkage-errors-total']");
+    Truth.assertThat(linkageErrorsTotal.size()).isEqualTo(1);
+    Truth.assertThat(linkageErrorsTotal.get(0).getValue())
         .contains("0 static linkage error(s)");
   }
 
