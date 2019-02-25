@@ -636,7 +636,7 @@ public class ClasspathCheckerTest {
     
     // google-cloud-bom, containing google-cloud-firestore, is in the BOM with scope:import
     for (Path path : inputClasspath) {
-      if (path.getFileName().startsWith("google-cloud-firestore-")) {
+      if (path.getFileName().toString().startsWith("google-cloud-firestore-")) {
         return;
       }
     }
