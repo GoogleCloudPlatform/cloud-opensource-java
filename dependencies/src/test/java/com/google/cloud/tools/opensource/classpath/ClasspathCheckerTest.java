@@ -638,7 +638,7 @@ public class ClasspathCheckerTest {
     Truth.assertWithMessage("Import dependency in BOM should be resolved")
         .that(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
-        .contains("google-cloud-firestore-0.80.0-beta.jar");
+        .contains("google-cloud-firestore-0.81.0-beta.jar");
   }
 
   @Test
