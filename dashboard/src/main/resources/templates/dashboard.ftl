@@ -42,8 +42,8 @@
       <tr>
         <th>Artifact</th>
         <th title=
-                "Classpath check result for the artifact and transitive dependencies. PASS means all symbol references have valid referents.">
-          Classpath Check</th>
+                "Linkage check result for the artifact and transitive dependencies. PASS means all symbol references have valid referents.">
+          Linkage Check</th>
         <th title=
           "For each transitive dependency the library pulls in, the highest version found anywhere in the dependency tree is picked.">
           Upper Bounds</th>

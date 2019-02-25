@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,14 +30,12 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.cloud.tools.opensource.classpath.ClasspathCheckReport;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.io.MoreFiles;
-import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Truth;
 
 import freemarker.template.Configuration;
@@ -70,8 +69,8 @@ public class FreemarkerTest {
   public void testCountFailures() throws IOException, TemplateException, ValidityException, ParsingException {
     Configuration configuration = DashboardMain.configureFreemarker();
 
-    ClasspathCheckReport classpathCheckReport =
-        ClasspathCheckReport.create(ImmutableList.of());
+    LinkageCheckReport linkageCheckReport =
+        LinkageCheckReport.create(ImmutableList.of());
     
     Artifact artifact1 = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
     ArtifactResults results1 = new ArtifactResults(artifact1);
@@ -85,7 +84,7 @@ public class FreemarkerTest {
     List<DependencyGraph> globalDependencies = ImmutableList.of();
     ListMultimap<Path, DependencyPath> jarToDependencyPaths = LinkedListMultimap.create();
     DashboardMain.generateDashboard(configuration, outputDirectory, table, globalDependencies,
-        classpathCheckReport, jarToDependencyPaths);
+        linkageCheckReport, jarToDependencyPaths);
     
     Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));

@@ -171,7 +171,7 @@ public class ClassPathBuilderTest {
             .filter(path -> "httpclient-4.5.3.jar".equals(path.getFileName().toString()))
             .findFirst()
             .get();
-    ClasspathChecker classpathChecker = ClasspathChecker.create(paths, ImmutableSet.copyOf(paths));
+    LinkageChecker linkageChecker = LinkageChecker.create(paths, ImmutableSet.copyOf(paths));
 
     // httpclient-4.5.3 AbstractVerifier has a method reference of
     // 'void verify(String host, String[] cns, String[] subjectAlts)' to itself and its interface
@@ -189,7 +189,7 @@ public class ClassPathBuilderTest {
           "Somehow httpclient-4.5.3 contains GZipInputStreamFactory reference, which is added 4.5.4");
     }
 
-    JarLinkageReport jarLinkageReport = classpathChecker.generateLinkageReport(httpClientJar,
+    JarLinkageReport jarLinkageReport = linkageChecker.generateLinkageReport(httpClientJar,
         symbolReferenceSet);
 
     Truth.assertWithMessage("Method references within the same jar file should not be reported")

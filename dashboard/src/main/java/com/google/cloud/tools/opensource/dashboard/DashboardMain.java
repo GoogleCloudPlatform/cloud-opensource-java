@@ -19,6 +19,8 @@ package com.google.cloud.tools.opensource.dashboard;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
+import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
+import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -51,8 +53,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
-import com.google.cloud.tools.opensource.classpath.ClasspathCheckReport;
-import com.google.cloud.tools.opensource.classpath.ClasspathChecker;
 import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
@@ -107,9 +107,9 @@ public class DashboardMain {
     List<Path> artifactJarsInBom = classpath.subList(0, managedDependencies.size());
     ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInBom);
 
-    ClasspathChecker classpathChecker = ClasspathChecker.create(classpath, entryPoints);
+    LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints);
 
-    ClasspathCheckReport linkageReport = classpathChecker.findLinkageErrors();
+    LinkageCheckReport linkageReport = linkageChecker.findLinkageErrors();
     
     Path output = generateHtml(cache, jarToDependencyPaths, linkageReport);
 
@@ -118,7 +118,7 @@ public class DashboardMain {
 
   private static Path generateHtml(ArtifactCache cache,
       LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths,
-      ClasspathCheckReport linkageReport) throws IOException, TemplateException {
+      LinkageCheckReport linkageReport) throws IOException, TemplateException {
     
     Path relativePath = Paths.get("target", "dashboard");
     Path output = Files.createDirectories(relativePath);
@@ -163,10 +163,10 @@ public class DashboardMain {
       Configuration configuration,
       Path output,
       ArtifactCache cache,
-      ClasspathCheckReport classpathCheckReport,
+      LinkageCheckReport linkageCheckReport,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
     ImmutableMap<Path, JarLinkageReport> jarToLinkageReport =
-        classpathCheckReport.getJarLinkageReports().stream()
+        linkageCheckReport.getJarLinkageReports().stream()
             .collect(
                 toImmutableMap(JarLinkageReport::getJarPath, jarLinkageReport -> jarLinkageReport));
 
@@ -353,7 +353,7 @@ public class DashboardMain {
       Path output,
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
-      ClasspathCheckReport classpathCheckReport,
+      LinkageCheckReport linkageCheckReport,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
     File dashboardFile = output.resolve("dashboard.html").toFile();
@@ -367,7 +367,7 @@ public class DashboardMain {
       templateData.put("table", table);
       templateData.put("lastUpdated", LocalDateTime.now());
       templateData.put("latestArtifacts", latestArtifacts);
-      templateData.put("jarLinkageReports", classpathCheckReport.getJarLinkageReports());
+      templateData.put("jarLinkageReports", linkageCheckReport.getJarLinkageReports());
       templateData.put("jarToDependencyPaths", jarToDependencyPaths);
       templateData.put("dependencyPathRootCauses", findRootCauses(jarToDependencyPaths));
 

@@ -39,7 +39,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
- * Option for {@link ClasspathChecker}. To construct an input class path, the checker requires
+ * Option for {@link LinkageChecker}. To construct an input class path, the checker requires
  * exactly one of the following types of input:
  *
  * <ul>
@@ -50,9 +50,9 @@ import org.eclipse.aether.artifact.DefaultArtifact;
  *
  * @see <a href=
  *     "https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/dependencies#input">
- *     Classpath Checker: Input</a>
+ *     Linkage Checker: Input</a>
  */
-final class ClasspathCheckerArguments {
+final class LinkageCheckerArguments {
 
   private static final Options options = configureOptions();
   private static final HelpFormatter helpFormatter = new HelpFormatter();
@@ -63,7 +63,7 @@ final class ClasspathCheckerArguments {
   private final ImmutableList<String> extraMavenRepositoryUrls;
   private final boolean addMavenCentral;
 
-  private ClasspathCheckerArguments(CommandLine commandLine) {
+  private LinkageCheckerArguments(CommandLine commandLine) {
     this.commandLine = checkNotNull(commandLine);
     this.extraMavenRepositoryUrls =
         commandLine.hasOption("m")
@@ -76,17 +76,17 @@ final class ClasspathCheckerArguments {
     this.addMavenCentral = !commandLine.hasOption("nm");
   }
 
-  static ClasspathCheckerArguments readCommandLine(String... arguments) throws ParseException {
+  static LinkageCheckerArguments readCommandLine(String... arguments) throws ParseException {
     // TODO is this reentrant? Can we reuse it?
     // https://issues.apache.org/jira/browse/CLI-291
     CommandLineParser parser = new DefaultParser();
 
     try {
-      return new ClasspathCheckerArguments(parser.parse(options, arguments));
+      return new LinkageCheckerArguments(parser.parse(options, arguments));
     } catch (IllegalArgumentException ex) {
       throw new ParseException("Invalid URL syntax in Maven repository URL");
     } catch (ParseException ex) {
-      helpFormatter.printHelp("ClasspathChecker", options);
+      helpFormatter.printHelp("LinkageChecker", options);
       throw ex;
     }
   }
