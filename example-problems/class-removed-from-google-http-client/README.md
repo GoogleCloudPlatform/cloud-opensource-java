@@ -12,7 +12,8 @@ However, when the `pom.xml` uses `com.google.api-client:google-api-client:1.27.0
 `com.google.cloud:google-cloud-bigtable:0.81.0-alpha` together in this order, Maven picks up 
 `com.google.http-client:google-http-client:1.28.0` in the transitive dependencies.
 This version of the google-http-client artifact does not have `ApacheHttpTransport` any more.
-Because of the missing class for the returned value, the compilation fails.
+Because of the missing class for the returned value (not `GoogleApacheHttpTransport`), the
+compilation fails.
 
 ```
 $ mvn clean compile
