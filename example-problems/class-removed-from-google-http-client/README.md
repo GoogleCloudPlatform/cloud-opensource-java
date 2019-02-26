@@ -21,8 +21,8 @@ $ mvn clean compile
 
 Maven artifact `com.google.api-client:google-api-client:1.27.0` contains `GoogleApacheHttpTransport`
 class.
-In `HelloTransport` tries to call `GoogleApacheHttpTransport.newTrustedTransport()`. This method
-returns `ApacheHttpTransport` class.
+In this project, `HelloTransport` class tries to call
+`GoogleApacheHttpTransport.newTrustedTransport()`. This method returns `ApacheHttpTransport` class.
 This class is available in `com.google.http-client:google-http-client:1.27.0`, which is one of the
 transitive dependencies of the google-__api__-client artifact. The google-__api__-client version
 1.27.0 and the google-__http__-client version 1.27.0 work fine without any problems.
