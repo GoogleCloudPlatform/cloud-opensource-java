@@ -1,21 +1,6 @@
 This project demonstrates a hidden incompatibility between
 `com.google.api-client:google-api-client:1.27.0` and
-`com.google.cloud:google-cloud-bigtable:0.81.0-alpha`. The compilation fails due to the
-incompatibility.
-
-```
-$ mvn clean compile
- Scanning for projects...
-...
-[ERROR] COMPILATION ERROR : 
- -------------------------------------------------------------
-[ERROR] /usr/local/google/home/suztomo/cloud-opensource-java/example-problems/class-removed-from-google-http-client/src/main/java/com/google/cloud/tools/examples/HelloTransport.java:[31,50] cannot access com.google.api.client.http.apache.ApacheHttpTransport
-  class file for com.google.api.client.http.apache.ApacheHttpTransport not found
- 1 error
- -------------------------------------------------------------
- ------------------------------------------------------------------------
- BUILD FAILURE
-```
+`com.google.cloud:google-cloud-bigtable:0.81.0-alpha`.
 
 # Diagnosis
 
@@ -37,7 +22,21 @@ This version of the google-__http__-client artifact does not have `ApacheHttpTra
 https://github.com/googleapis/google-http-java-client/commit/bf4a8dad3f44772504f0223544ab7b92c9bea3be#diff-a2171533e9e559802ade0026c92d3bdf)).
 
 Because of the missing `ApacheHttpTransport` class for the return value (not
-`GoogleApacheHttpTransport`), the compilation fails.
+`GoogleApacheHttpTransport`), the compilation of this project fails.
+
+```
+$ mvn clean compile
+ Scanning for projects...
+...
+[ERROR] COMPILATION ERROR : 
+ -------------------------------------------------------------
+[ERROR] /usr/local/google/home/suztomo/cloud-opensource-java/example-problems/class-removed-from-google-http-client/src/main/java/com/google/cloud/tools/examples/HelloTransport.java:[31,50] cannot access com.google.api.client.http.apache.ApacheHttpTransport
+  class file for com.google.api.client.http.apache.ApacheHttpTransport not found
+ 1 error
+ -------------------------------------------------------------
+ ------------------------------------------------------------------------
+ BUILD FAILURE
+```
 
 # Changes in Dependency Tree
 
