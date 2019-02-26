@@ -93,6 +93,8 @@ public class DashboardTest {
   @AfterClass
   public static void cleanUp() {
     try {
+      // Mac's APFS fails with InsecureRecursiveDeleteException without ALLOW_INSECURE.
+      // Still safe as this test does not use symbolic links
       MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
     } catch (IOException ex) {
       // no big deal
