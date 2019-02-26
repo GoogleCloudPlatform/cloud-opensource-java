@@ -5,11 +5,11 @@ This project is to demonstrate a hidden incompatibility between
 Maven artifact `com.google.api-client:google-api-client:1.27.0` contains `GoogleApacheHttpTransport`
 class.
 `GoogleApacheHttpTransport.newTrustedTransport()` returns `ApacheHttpTransport` class.
-This class is available `com.google.http-client:google-http-client:1.27.0`, which is one of the
+This class is available `com.google.http-client:google-http-client:1.27.0` available in the
 transitive dependencies of the google-api-client artifact.
 
 However, when the `pom.xml` uses `com.google.api-client:google-api-client:1.27.0` and
-`com.google.cloud:google-cloud-bigtable:0.81.0-alpha` together, Maven picks up 
+`com.google.cloud:google-cloud-bigtable:0.81.0-alpha` together in this order, Maven picks up 
 `com.google.http-client:google-http-client:1.28.0` in transitive dependencies.
 `com.google.http-client:google-http-client:1.28.0` does not have `ApacheHttpTransport` any more.
 Because of the missing class for the returned value, the compilation fails.
