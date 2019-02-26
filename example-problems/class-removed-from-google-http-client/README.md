@@ -42,7 +42,7 @@ Because of the missing `ApacheHttpTransport` class for the return value (not
 # Changes in Dependency Tree
 
 The google-api-client:1.__27__.0 artifact used `ApacheHttpTransport` through
-`com.google.http-client:google-http-client:1.27.0`.
+`com.google.http-client:google-http-client:1.27.0`:
 
 ```
 com.google.api-client:google-api-client:jar:1.27.0:compile
@@ -84,13 +84,15 @@ com.google.api-client:google-api-client:jar:1.28.0:compile
    \- org.codehaus.mojo:animal-sniffer-annotations:jar:1.14:compile
 ```
 
-Dependency tree of this project:
+Dependency tree of this project shows that Maven picks up
+`com.google.http-client:google-http-client:1.28.0` and
+`com.google.api-client:google-api-client:1.27.0`:
 
 ```
 com.google.cloud.tools.opensource:class-removed-from-google-http-client:jar:1.0-SNAPSHOT
  +- com.google.cloud:google-cloud-bigtable:jar:0.81.0-alpha:compile
  |  +- com.google.cloud:google-cloud-core:jar:1.63.0:compile
- |  |  +- com.google.http-client:google-http-client:jar:1.28.0:compile   <-- No ApacheHttpTransport any more. 
+ |  |  +- com.google.http-client:google-http-client:jar:1.28.0:compile     <-- No ApacheHttpTransport any more. 
  |  |  |  +- com.google.j2objc:j2objc-annotations:jar:1.1:compile
  |  |  |  +- io.opencensus:opencensus-api:jar:0.18.0:compile
  |  |  |  \- io.opencensus:opencensus-contrib-http-util:jar:0.18.0:compile
@@ -124,7 +126,7 @@ com.google.cloud.tools.opensource:class-removed-from-google-http-client:jar:1.0-
  |  +- io.grpc:grpc-stub:jar:1.18.0:compile
  |  +- io.grpc:grpc-auth:jar:1.18.0:compile
  |  \- javax.annotation:javax.annotation-api:jar:1.2:compile
- \- com.google.api-client:google-api-client:jar:1.27.0:compile     <-- Uses com.google.api.client.http.apache.ApacheHttpTransport
+ \- com.google.api-client:google-api-client:jar:1.27.0:compile       <-- Uses com.google.api.client.http.apache.ApacheHttpTransport
     +- com.google.oauth-client:google-oauth-client:jar:1.27.0:compile
     +- com.google.http-client:google-http-client-jackson2:jar:1.27.0:compile
     |  \- com.fasterxml.jackson.core:jackson-core:jar:2.9.6:compile
