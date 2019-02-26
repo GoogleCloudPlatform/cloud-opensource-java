@@ -1,4 +1,4 @@
-This project is to demonstrate a hidden incompatibility between
+This project demonstrates a hidden incompatibility between
 `com.google.api-client:google-api-client:1.27.0` and
 `com.google.cloud:google-cloud-bigtable:0.81.0-alpha`. The compilation fails due to the
 incompatibility.
