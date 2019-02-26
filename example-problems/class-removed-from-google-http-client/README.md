@@ -5,7 +5,7 @@ This project is to demonstrate a hidden incompatibility between
 Maven artifact `com.google.api-client:google-api-client:1.27.0` contains `GoogleApacheHttpTransport`
 class.
 `GoogleApacheHttpTransport.newTrustedTransport()` returns `ApacheHttpTransport` class.
-This class is available `com.google.http-client:google-http-client:1.27.0` available in the
+This class is available in `com.google.http-client:google-http-client:1.27.0`, which is one of the
 transitive dependencies of the google-api-client artifact.
 
 However, when the `pom.xml` uses `com.google.api-client:google-api-client:1.27.0` and
