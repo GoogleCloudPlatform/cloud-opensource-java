@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Truth;
 
 import freemarker.template.Configuration;
@@ -62,7 +63,9 @@ public class FreemarkerTest {
 
   @AfterClass
   public static void cleanUp() throws IOException {
-    MoreFiles.deleteRecursively(outputDirectory);
+    // Mac's APFS fails with InsecureRecursiveDeleteException without ALLOW_INSECURE.
+    // Still safe as this test does not use symbolic links
+    MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
   }
 
   @Test
