@@ -22,7 +22,7 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
-public class DirectReport {
+class DirectReport {
 
   /**
    * Generate a list of direct dependencies. This captures the state of a published

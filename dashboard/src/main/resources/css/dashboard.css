@@ -56,7 +56,7 @@ p.dependency-tree-node {
   margin-bottom: 0;
 }
 
-.static-linkage-check-dependency-paths, .jar-linkage-report {
+.linkage-check-dependency-paths, .jar-linkage-report {
   margin-left: 1em;
 }
 

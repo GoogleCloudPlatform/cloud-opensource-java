@@ -32,7 +32,7 @@ public abstract class ExceptionAndPath {
   public abstract ImmutableList<DependencyNode> getPath();
 
   /** Returns the exception raised at the {@link DependencyNode} specified at the path. */
-  public abstract RepositoryException getException();
+  abstract RepositoryException getException();
 
   static ExceptionAndPath create(
       Iterable<DependencyNode> parentDependencyNodes,

@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.nio.file.Path;
 import java.util.List;
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -32,7 +31,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ClasspathCheckerArgumentsTest {
+public class LinkageCheckerArgumentsTest {
 
   @After
   public void cleanup() {
@@ -44,8 +43,8 @@ public class ClasspathCheckerArgumentsTest {
   public void parseCommandLineArguments_shortOptions_bom()
       throws ParseException, RepositoryException {
     // This should not raise exception
-    ClasspathCheckerArguments parsedArguments =
-        ClasspathCheckerArguments.readCommandLine("-b", "abc.com:dummy:1.2");
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine("-b", "abc.com:dummy:1.2");
 
     Truth.assertThat(parsedArguments.getArtifacts()).isEmpty();
   }
@@ -53,7 +52,7 @@ public class ClasspathCheckerArgumentsTest {
   @Test
   public void parseCommandLineArguments_duplicates() {
     try {
-      ClasspathCheckerArguments.readCommandLine(
+      LinkageCheckerArguments.readCommandLine(
           "--artifacts", "abc.com:abc:1.1,abc.com:abc-util:1.2", "-b", "abc.com:dummy:1.2");
       Assert.fail();
     } catch (ParseException ex) {
@@ -66,16 +65,16 @@ public class ClasspathCheckerArgumentsTest {
 
   @Test
   public void testReadCommandLine_multipleArtifacts() throws ParseException, RepositoryException {
-    ClasspathCheckerArguments parsedArguments =
-        ClasspathCheckerArguments.readCommandLine(
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine(
             "--artifacts", "com.google.guava:guava:26.0,io.grpc:grpc-core:1.17.1");
     Truth.assertThat(parsedArguments.getArtifacts()).hasSize(2);
   }
 
   @Test
   public void testReadCommandLine_multipleJars() throws ParseException, RepositoryException {
-    ClasspathCheckerArguments parsedArguments =
-        ClasspathCheckerArguments.readCommandLine(
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine(
             "-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar");
     Truth.assertThat(parsedArguments.getInputClasspath()).hasSize(3);
   }
@@ -83,7 +82,7 @@ public class ClasspathCheckerArgumentsTest {
   @Test
   public void parseCommandLineArguments_invalidOption() {
     try {
-      ClasspathCheckerArguments.readCommandLine("-x"); // No such option
+      LinkageCheckerArguments.readCommandLine("-x"); // No such option
       Assert.fail();
     } catch (ParseException ex) {
       Assert.assertEquals("Unrecognized option: -x", ex.getMessage());
@@ -93,8 +92,8 @@ public class ClasspathCheckerArgumentsTest {
   @Test
   public void testConfigureAdditionalMavenRepositories_addingSpringRepository()
       throws ParseException, RepositoryException {
-    ClasspathCheckerArguments parsedArguments =
-        ClasspathCheckerArguments.readCommandLine(
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine(
             "-j", "dummy.jar", "-m", "https://repo.spring.io/milestone");
     RepositoryUtility.setRepositories(
         parsedArguments.getExtraMavenRepositoryUrls(), parsedArguments.getAddMavenCentral());
@@ -110,8 +109,8 @@ public class ClasspathCheckerArgumentsTest {
   @Test
   public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral()
       throws ParseException {
-    ClasspathCheckerArguments parsedArguments =
-        ClasspathCheckerArguments.readCommandLine(
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine(
             "-j", "dummy.jar", "-m", "https://repo.spring.io/milestone", "--no-maven-central");
     RepositoryUtility.setRepositories(
         parsedArguments.getExtraMavenRepositoryUrls(), parsedArguments.getAddMavenCentral());
@@ -134,7 +133,7 @@ public class ClasspathCheckerArgumentsTest {
 
   private static void assertMavenRepositoryIsInvalid(String repositoryUrl) {
     try {
-      ClasspathCheckerArguments.readCommandLine("-j", "dummy.jar", "-m", repositoryUrl);
+      LinkageCheckerArguments.readCommandLine("-j", "dummy.jar", "-m", repositoryUrl);
       Assert.fail("URL " + repositoryUrl + " should be invalidated");
     } catch (ParseException ex) {
       // pass
@@ -143,8 +142,8 @@ public class ClasspathCheckerArgumentsTest {
 
   @Test
   public void testConfigureAdditionalMavenRepositories_fileRepositoryUrl() throws ParseException {
-    ClasspathCheckerArguments parsedArguments =
-        ClasspathCheckerArguments.readCommandLine("-j", "dummy.jar", "-m", "file:///var/tmp");
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine("-j", "dummy.jar", "-m", "file:///var/tmp");
 
     // This method should not raise an exception
     RepositoryUtility.setRepositories(
@@ -153,8 +152,8 @@ public class ClasspathCheckerArgumentsTest {
 
   @Test
   public void testReadCommandLine_multipleRepositoriesSeparatedByComma() throws ParseException {
-    ClasspathCheckerArguments parsedArguments =
-        ClasspathCheckerArguments.readCommandLine(
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine(
             "-j", "dummy.jar", "-m", "file:///var/tmp,https://repo.spring.io/milestone");
 
     Truth.assertThat(parsedArguments.getExtraMavenRepositoryUrls()).hasSize(2);

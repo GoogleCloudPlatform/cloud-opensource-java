@@ -1,13 +1,13 @@
-# Classpath Checker
+# Linkage Checker
 
-Classpath Checker is a tool that finds [linkage errors](
+Linkage Checker is a tool that finds [linkage errors](
 ../library-best-practices/glossary.md#static-linkage-error) on a class
 path. It scans the class files in the class path for references to other
 classes and reports any reference that cannot be satisfied.
 
 ### Use Cases
  
-There are two use cases for Classpath Checker:
+There are two use cases for Linkage Checker:
 
 - **For library/application developers** the tool finds linkage
   errors in their projects and helps to avoid incompatible versions of libraries

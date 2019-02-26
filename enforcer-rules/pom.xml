@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.google.cloud.tools.opensource</groupId>
+    <artifactId>cloud-tools-opensource-parent</artifactId>
+    <version>0.1-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>linkage-checker-enforcer-rules</artifactId>
+
+  <name>Linkage Checker Enforcer Rule</name>
+  <description>Linkage Checker enforcer rules</description>
+  <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/enforcer-rules</url>
+  <scm>
+    <connection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git</connection>
+    <developerConnection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git
+    </developerConnection>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/enforcer-rules</url>
+    <tag>HEAD</tag>
+  </scm>
+  <organization>
+    <name>Google LLC.</name>
+    <url>https://www.google.com</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <properties>
+    <enforcer.version>3.0.0-M2</enforcer.version>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>dependency-lister</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.enforcer</groupId>
+      <artifactId>enforcer-api</artifactId>
+      <version>${enforcer.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.enforcer</groupId>
+      <artifactId>enforcer-rules</artifactId>
+      <version>${enforcer.version}</version>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <!-- To avoid NoSuchMethodError org.eclipse.aether.util.ConfigUtils.getFloat -->
+          <groupId>org.eclipse.aether</groupId>
+          <artifactId>aether-util</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <!-- This dependency is not required for build but useful for debugging with source code -->
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-enforcer-plugin</artifactId>
+      <version>${enforcer.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>

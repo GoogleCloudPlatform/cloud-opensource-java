@@ -21,16 +21,16 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 /**
- * The result of a classpath check.
+ * The result of a linkage check.
  */
 @AutoValue
-public abstract class ClasspathCheckReport {
+public abstract class LinkageCheckReport {
 
   public abstract ImmutableList<JarLinkageReport> getJarLinkageReports();
 
   @VisibleForTesting
-  public static ClasspathCheckReport create(Iterable<JarLinkageReport> jarLinkageReports) {
-    return new AutoValue_ClasspathCheckReport(ImmutableList.copyOf(jarLinkageReports));
+  public static LinkageCheckReport create(Iterable<JarLinkageReport> jarLinkageReports) {
+    return new AutoValue_LinkageCheckReport(ImmutableList.copyOf(jarLinkageReports));
   }
   
   @Override
@@ -45,7 +45,7 @@ public abstract class ClasspathCheckReport {
     
     String result = builder.toString();
     if (result.isEmpty()) {
-      return "No static linkage errors\n";
+      return "No linkage errors\n";
     }
     return result;
   }

@@ -29,12 +29,14 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.cloud.tools.opensource.classpath.ClasspathCheckReport;
+import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Truth;
 
 import freemarker.template.Configuration;
@@ -61,29 +63,31 @@ public class FreemarkerTest {
 
   @AfterClass
   public static void cleanUp() throws IOException {
-    // MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
+    // Mac's APFS fails with InsecureRecursiveDeleteException without ALLOW_INSECURE.
+    // Still safe as this test does not use symbolic links
+    MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
   }
 
   @Test
   public void testCountFailures() throws IOException, TemplateException, ValidityException, ParsingException {
     Configuration configuration = DashboardMain.configureFreemarker();
 
-    ClasspathCheckReport classpathCheckReport =
-        ClasspathCheckReport.create(ImmutableList.of());
+    LinkageCheckReport linkageCheckReport =
+        LinkageCheckReport.create(ImmutableList.of());
     
     Artifact artifact1 = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
     ArtifactResults results1 = new ArtifactResults(artifact1);
-    results1.addResult("Static Linkage Errors", 56);
+    results1.addResult("Linkage Errors", 56);
     
     Artifact artifact2 = new DefaultArtifact("grpc:grpc:1.15.0");
     ArtifactResults results2 = new ArtifactResults(artifact2);
-    results2.addResult("Static Linkage Errors", 0);
+    results2.addResult("Linkage Errors", 0);
     
     List<ArtifactResults> table = ImmutableList.of(results1, results2);
     List<DependencyGraph> globalDependencies = ImmutableList.of();
     ListMultimap<Path, DependencyPath> jarToDependencyPaths = LinkedListMultimap.create();
     DashboardMain.generateDashboard(configuration, outputDirectory, table, globalDependencies,
-        classpathCheckReport, jarToDependencyPaths);
+        linkageCheckReport, jarToDependencyPaths);
     
     Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
@@ -95,7 +99,7 @@ public class FreemarkerTest {
     for (int i = 0; i < counts.size(); i++) {
       Integer.parseInt(counts.get(i).getValue().trim());
     }
-    // Static Linkage Errors
+    // Linkage Errors
     Truth.assertThat(counts.get(1).getValue().trim()).isEqualTo("1");
   }
 }

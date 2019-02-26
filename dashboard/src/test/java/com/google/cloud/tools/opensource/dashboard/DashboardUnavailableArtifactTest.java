@@ -16,6 +16,17 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
+import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
+import com.google.common.truth.Truth;
+import freemarker.template.Configuration;
+import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,15 +35,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import freemarker.template.Configuration;
-import freemarker.template.TemplateException;
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
-
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -40,16 +47,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
-import com.google.cloud.tools.opensource.classpath.ClasspathCheckReport;
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.io.MoreFiles;
-import com.google.common.io.RecursiveDeleteOption;
-import com.google.common.truth.Truth;
 
 
 public class DashboardUnavailableArtifactTest {
@@ -64,6 +61,8 @@ public class DashboardUnavailableArtifactTest {
 
   @AfterClass
   public static void cleanUp() throws IOException {
+    // Mac's APFS fails with InsecureRecursiveDeleteException without ALLOW_INSECURE.
+    // Still safe as this test does not use symbolic links
     MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
   }
 
@@ -81,11 +80,11 @@ public class DashboardUnavailableArtifactTest {
     
     ArtifactCache cache = new ArtifactCache();
     cache.setInfoMap(map);
-    ClasspathCheckReport classpathCheckReport =
-        ClasspathCheckReport.create(ImmutableList.of());
+    LinkageCheckReport linkageCheckReport =
+        LinkageCheckReport.create(ImmutableList.of());
     List<ArtifactResults> artifactResults =
         DashboardMain.generateReports(
-            configuration, outputDirectory, cache, classpathCheckReport,
+            configuration, outputDirectory, cache, linkageCheckReport,
             LinkedListMultimap.create());
 
     Assert.assertEquals(
@@ -126,7 +125,7 @@ public class DashboardUnavailableArtifactTest {
     table.add(errorArtifactResult);
 
     Iterable<JarLinkageReport> list = new ArrayList<>();
-    ClasspathCheckReport report = ClasspathCheckReport.create(list);
+    LinkageCheckReport report = LinkageCheckReport.create(list);
     DashboardMain.generateDashboard(
         configuration, outputDirectory, table, null, report, LinkedListMultimap.create());
 

@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.google.cloud.tools.opensource</groupId>
     <artifactId>cloud-tools-opensource-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1-SNAPSHOT</version>
   </parent>
   <artifactId>dashboard</artifactId>
 
@@ -67,7 +67,6 @@
       <groupId>com.google.truth</groupId>
       <artifactId>truth</artifactId>
       <scope>test</scope>
-      <version>0.42</version>
     </dependency>
   </dependencies>
 
