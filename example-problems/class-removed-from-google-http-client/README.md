@@ -36,7 +36,7 @@ This version of the google-__http__-client artifact does not have `ApacheHttpTra
 ([PR #543: Split http apache artifact](
 https://github.com/googleapis/google-http-java-client/commit/bf4a8dad3f44772504f0223544ab7b92c9bea3be#diff-a2171533e9e559802ade0026c92d3bdf)).
 
-Because of the missing `ApacheHttpTransport` class for the returned value (not
+Because of the missing `ApacheHttpTransport` class for the return value (not
 `GoogleApacheHttpTransport`), the compilation fails.
 
 # Changes in Dependency Tree
