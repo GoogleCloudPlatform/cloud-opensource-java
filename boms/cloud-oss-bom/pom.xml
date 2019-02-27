@@ -170,7 +170,37 @@
           </configuration>
         </plugin>
       </plugins>
-    </pluginManagement>
+    </pluginManagement><!--
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.0.0-M2</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.google.cloud.tools.opensource</groupId>
+            <artifactId>linkage-checker-enforcer-rules</artifactId>
+            <version>0.1-SNAPSHOT</version>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>enforce</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <banLinkageErrors
+                    implementation="com.google.cloud.tools.opensource.enforcer.LinkageCheckerRule">
+                  <dependencySection>DEPENDENCY_MANAGEMENT</dependencySection>
+                </banLinkageErrors>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>-->
   </build>
 
   <profiles>

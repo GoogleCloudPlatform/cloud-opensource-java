@@ -18,10 +18,14 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.io.ObjectStreamClass.lookup;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -31,12 +35,50 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import org.apache.maven.RepositoryUtils;
+import org.apache.maven.classrealm.DefaultClassRealmManager;
+import org.apache.maven.execution.DefaultMavenExecutionRequest;
+import org.apache.maven.execution.DefaultMavenExecutionResult;
+import org.apache.maven.execution.MavenExecutionRequest;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.DependencyManagement;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.Parent;
+import org.apache.maven.model.Repository;
+import org.apache.maven.model.building.DefaultModelBuilder;
+import org.apache.maven.model.building.DefaultModelBuildingRequest;
+import org.apache.maven.model.building.ModelBuilder;
+import org.apache.maven.model.building.ModelBuildingRequest;
+import org.apache.maven.model.building.ModelBuildingResult;
+import org.apache.maven.model.building.ModelSource;
+import org.apache.maven.model.composition.DefaultDependencyManagementImporter;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.apache.maven.model.management.DefaultDependencyManagementInjector;
+import org.apache.maven.model.normalization.DefaultModelNormalizer;
+import org.apache.maven.model.path.DefaultModelUrlNormalizer;
+import org.apache.maven.model.profile.DefaultProfileInjector;
+import org.apache.maven.model.profile.DefaultProfileSelector;
+import org.apache.maven.model.resolution.InvalidRepositoryException;
+import org.apache.maven.model.resolution.ModelResolver;
+import org.apache.maven.model.resolution.UnresolvableModelException;
+import org.apache.maven.model.resolution.WorkspaceModelResolver;
+import org.apache.maven.project.DefaultProjectBuilder;
+import org.apache.maven.project.ProjectBuilder;
+import org.apache.maven.project.ProjectBuildingException;
+import org.apache.maven.project.ProjectBuildingRequest;
+import org.apache.maven.project.ProjectBuildingResult;
+import org.apache.maven.project.ProjectModelResolver;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
+import org.codehaus.plexus.DefaultPlexusContainer;
+import org.codehaus.plexus.PlexusContainer;
+import org.codehaus.plexus.PlexusContainerException;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
+import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
@@ -161,6 +203,62 @@ public final class RepositoryUtility {
       temporaryDirectory.deleteOnExit();
       return temporaryDirectory; 
    }
+  }
+
+  public static ImmutableList<Artifact> readBom(Path pomFile) throws Exception {
+    // MavenXpp3Reader.read cannot interpret properties
+    MavenXpp3Reader reader = new MavenXpp3Reader();
+    Model model = reader.read(new FileReader(pomFile.toFile()));
+//    DependencyManagement dependencyManagement = model.getDependencyManagement();
+
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
+    ArtifactTypeRegistry registry = session.getArtifactTypeRegistry();
+
+    MavenExecutionRequest mavenExecutionRequest = new DefaultMavenExecutionRequest();
+    ProjectBuildingRequest projectBuildingRequest = mavenExecutionRequest.getProjectBuildingRequest();
+    // Because this requires projectBuildingHelper non null but no way to set the field
+
+    PlexusContainer container = new DefaultPlexusContainer();
+    DefaultClassRealmManager k = null;
+    ProjectBuilder projectBuilder = container.lookup(ProjectBuilder.class);
+
+//    DefaultProjectBuilder projectBuilder = new DefaultProjectBuilder();
+
+    ModelBuilder modelBuilder = container.lookup(ModelBuilder.class);
+
+/*    DefaultModelBuilder modelBuilder = new DefaultModelBuilder();
+    modelBuilder.setProfileSelector(new DefaultProfileSelector());
+    modelBuilder.setProfileInjector(new DefaultProfileInjector());
+    modelBuilder.setDependencyManagementImporter(new DefaultDependencyManagementImporter());
+    modelBuilder.setDependencyManagementInjector(new DefaultDependencyManagementInjector());
+    modelBuilder.setModelNormalizer(new DefaultModelNormalizer());
+    modelBuilder.setModelUrlNormalizer(new DefaultModelUrlNormalizer());
+*/
+    ModelBuildingRequest modelBuildingRequest = new DefaultModelBuildingRequest();
+    modelBuildingRequest.setRawModel(model);
+    modelBuildingRequest.setPomFile(pomFile.toFile());
+    // request.workspaceModelResolver and request.modelResolver cannot be null
+    //         ModelResolver resolver =
+    //             new ProjectModelResolver( config.session, trace, repoSystem, repositoryManager, config.repositories,
+    //                                       configuration.getRepositoryMerging(), config.modelPool );
+    // modelBuildingRequest.setModelResolver(new ProjectModelResolver(session, null, system,
+    //    system.newLocalRepositoryManager(session)));
+
+    ModelBuildingResult result = modelBuilder.build(modelBuildingRequest);
+    model = result.getEffectiveModel();
+    DependencyManagement dependencyManagement = model.getDependencyManagement();
+
+    // ProjectBuildingResult projectBuildingResult = projectBuilder.build(pomFile.toFile(), projectBuildingRequest);
+    //DependencyManagement dependencyManagement = projectBuildingResult.getProject().getDependencyManagement();
+
+    List<org.apache.maven.model.Dependency> dependencies = dependencyManagement.getDependencies();
+
+    return dependencies.stream()
+        .map(dependency -> RepositoryUtils.toDependency(dependency, registry))
+        .map(Dependency::getArtifact)
+        .filter(artifact -> !shouldSkipBomMember(artifact))
+        .collect(toImmutableList());
   }
 
   /**
