@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import org.apache.maven.RepositoryUtils;
+import org.apache.maven.classrealm.ClassRealmManager;
 import org.apache.maven.classrealm.DefaultClassRealmManager;
 import org.apache.maven.execution.DefaultMavenExecutionRequest;
 import org.apache.maven.execution.DefaultMavenExecutionResult;
@@ -221,6 +222,8 @@ public final class RepositoryUtility {
 
     PlexusContainer container = new DefaultPlexusContainer();
     DefaultClassRealmManager k = null;
+
+    //container.lookup(ClassRealmManager.class);
     ProjectBuilder projectBuilder = container.lookup(ProjectBuilder.class);
 
 //    DefaultProjectBuilder projectBuilder = new DefaultProjectBuilder();

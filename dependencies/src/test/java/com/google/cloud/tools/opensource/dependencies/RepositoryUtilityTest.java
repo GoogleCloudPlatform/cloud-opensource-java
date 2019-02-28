@@ -17,8 +17,10 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
-
+import org.apache.maven.classrealm.ClassRealmManager;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -48,5 +50,12 @@ public class RepositoryUtilityTest {
     // the answer won't change.
     Assert.assertEquals(134, managedDependencies.size());
   }
-  
+
+  @Test
+  public void testReadBom_relative() throws Exception {
+
+    Path pomFile = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml");
+
+    RepositoryUtility.readBom(pomFile);
+  }
 }
