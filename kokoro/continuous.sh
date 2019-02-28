@@ -5,7 +5,6 @@ set -e
 # Display commands being run.
 set -x
 
-export M2_HOME=/usr/local/apache-maven
-
 cd github/cloud-opensource-java
+# M2_HOME is not used since Maven 3.5.0 https://maven.apache.org/docs/3.5.0/release-notes.html
 mvn -B clean install
