@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -82,14 +83,14 @@ public class DashboardMain {
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
 
   public static void main(String[] args)
-      throws IOException, TemplateException, RepositoryException {
+      throws IOException, TemplateException, RepositoryException, URISyntaxException {
 
     Path output = generate();
     System.out.println("Wrote dashboard into " + output.toAbsolutePath());
   }
 
   public static Path generate()
-      throws IOException, TemplateException, RepositoryException {
+      throws IOException, TemplateException, RepositoryException, URISyntaxException {
 
     // TODO should pass in maven coordinates as argument
     DefaultArtifact bom =
@@ -116,10 +117,12 @@ public class DashboardMain {
     return output;
   }
 
-  private static Path generateHtml(ArtifactCache cache,
+  private static Path generateHtml(
+      ArtifactCache cache,
       LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths,
-      LinkageCheckReport linkageReport) throws IOException, TemplateException {
-    
+      LinkageCheckReport linkageReport)
+      throws IOException, TemplateException, URISyntaxException {
+
     Path relativePath = Paths.get("target", "dashboard");
     Path output = Files.createDirectories(relativePath);
 
@@ -141,9 +144,10 @@ public class DashboardMain {
     return output;
   }
 
-  private static void copyResource(Path output, String resourceName) throws IOException {
+  private static void copyResource(Path output, String resourceName)
+      throws IOException, URISyntaxException {
     ClassLoader classLoader = DashboardMain.class.getClassLoader();
-    Path input = Paths.get(classLoader.getResource(resourceName).getPath());
+    Path input = Paths.get(classLoader.getResource(resourceName).toURI()).toAbsolutePath();
     Path copy = output.resolve(input.getFileName());
     if (!Files.exists(copy)) {
       Files.copy(input, copy);
