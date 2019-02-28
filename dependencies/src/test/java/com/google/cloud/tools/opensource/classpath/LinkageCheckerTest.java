@@ -615,8 +615,8 @@ public class LinkageCheckerTest {
     Truth.assertThat(classReferenceError.getReason()).isEqualTo(Reason.INACCESSIBLE_CLASS);
     Truth.assertWithMessage(
             "When the superclass is unavailable, it should report the location of InnerService")
-        .that(classReferenceError.getTargetClassLocation().toString())
-        .endsWith("testdata/api-common-1.7.0.jar");
+        .that(classReferenceError.getTargetClassLocation().getFileName().toString())
+        .endsWith("api-common-1.7.0.jar");
   }
 
   @Test
