@@ -19,6 +19,38 @@ package com.google.cloud.tools.opensource.dashboard;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+
+import freemarker.template.Configuration;
+import freemarker.template.DefaultObjectWrapper;
+import freemarker.template.DefaultObjectWrapperBuilder;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import freemarker.template.TemplateHashModel;
+import freemarker.template.Version;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
@@ -43,37 +75,6 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
-import freemarker.template.Configuration;
-import freemarker.template.DefaultObjectWrapper;
-import freemarker.template.DefaultObjectWrapperBuilder;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
-import freemarker.template.TemplateHashModel;
-import freemarker.template.Version;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-import org.apache.maven.project.ProjectBuildingException;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
 
 public class DashboardMain {
   public static final String TEST_NAME_LINKAGE_CHECK = "Linkage Errors";
@@ -82,8 +83,7 @@ public class DashboardMain {
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
 
   public static void main(String[] args)
-      throws IOException, TemplateException, RepositoryException, XmlPullParserException,
-          ProjectBuildingException, Exception {
+      throws IOException, TemplateException, RepositoryException, Exception {
 
     Path pomFile = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml");
     Path output = generate(pomFile);
@@ -117,10 +117,12 @@ public class DashboardMain {
     return output;
   }
 
-  private static Path generateHtml(ArtifactCache cache,
+  private static Path generateHtml(
+      ArtifactCache cache,
       LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths,
-      LinkageCheckReport linkageReport) throws IOException, TemplateException {
-    
+      LinkageCheckReport linkageReport)
+      throws IOException, TemplateException, URISyntaxException {
+
     Path relativePath = Paths.get("target", "dashboard");
     Path output = Files.createDirectories(relativePath);
 
@@ -142,9 +144,10 @@ public class DashboardMain {
     return output;
   }
 
-  private static void copyResource(Path output, String resourceName) throws IOException {
+  private static void copyResource(Path output, String resourceName)
+      throws IOException, URISyntaxException {
     ClassLoader classLoader = DashboardMain.class.getClassLoader();
-    Path input = Paths.get(classLoader.getResource(resourceName).getPath());
+    Path input = Paths.get(classLoader.getResource(resourceName).toURI()).toAbsolutePath();
     Path copy = output.resolve(input.getFileName());
     if (!Files.exists(copy)) {
       Files.copy(input, copy);
