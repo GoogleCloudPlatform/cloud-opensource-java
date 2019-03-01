@@ -68,6 +68,7 @@ import com.google.cloud.tools.opensource.dependencies.Update;
 import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -97,6 +98,8 @@ public class DashboardMain {
   public static Path generate(Path bomFile)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
           PlexusContainerException, ComponentLookupException, ProjectBuildingException {
+    Preconditions.checkArgument(
+        Files.isReadable(bomFile), "The input BOM " + bomFile + " is not readable");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bomFile);
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
