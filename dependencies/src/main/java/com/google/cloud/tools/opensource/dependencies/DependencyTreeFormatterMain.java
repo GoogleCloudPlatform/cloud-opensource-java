@@ -21,32 +21,27 @@ import static com.google.cloud.tools.opensource.dependencies.DependencyTreeForma
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
-/** Prints artifact dependency tree represented by a list of {@link DependencyPath}s. */
+/** Prints the dependency tree of Maven artifacts. */
 class DependencyTreeFormatterMain {
   public static void main(String[] args) {
     if (args.length < 1) {
-      System.err.println("Maven coordinate not provided. E.g., 'io.grpc:grpc-auth:1.15.0'");
+      System.err.println("Maven coordinates not provided. E.g., 'io.grpc:grpc-auth:1.15.0'");
       return;
     }
-    for (String coordinate : args) {
+    for (String coordinates : args) {
       try {
-        printDependencyTree(coordinate);
+        printDependencyTree(coordinates);
       } catch (RepositoryException e) {
         System.err.println(
-            coordinate + " : Failed to retrieve dependency information:" + e.getMessage());
+            coordinates + " : Failed to retrieve dependency information:" + e.getMessage());
       }
     }
   }
 
-  /**
-   * Prints dependencies for the coordinate of an artifact
-   *
-   * @param coordinate Maven coordinate of an artifact to print its dependencies
-   */
-  private static void printDependencyTree(String coordinate) throws RepositoryException {
-    DefaultArtifact rootArtifact = new DefaultArtifact(coordinate);
+  private static void printDependencyTree(String coordinates) throws RepositoryException {
+    DefaultArtifact rootArtifact = new DefaultArtifact(coordinates);
     DependencyGraph dependencyGraph = DependencyGraphBuilder.getCompleteDependencies(rootArtifact);
-    System.out.println("Dependencies for " + coordinate);
+    System.out.println("Dependencies for " + coordinates);
     System.out.println(formatDependencyPaths(dependencyGraph.list()));
   }
 }
