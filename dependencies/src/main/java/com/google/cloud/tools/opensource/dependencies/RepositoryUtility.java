@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -31,12 +32,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import org.apache.maven.RepositoryUtils;
+import org.apache.maven.execution.DefaultMavenExecutionRequest;
+import org.apache.maven.execution.MavenExecutionRequest;
+import org.apache.maven.model.DependencyManagement;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectBuilder;
+import org.apache.maven.project.ProjectBuildingException;
+import org.apache.maven.project.ProjectBuildingRequest;
+import org.apache.maven.project.ProjectBuildingResult;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
+import org.codehaus.plexus.ContainerConfiguration;
+import org.codehaus.plexus.DefaultContainerConfiguration;
+import org.codehaus.plexus.DefaultPlexusContainer;
+import org.codehaus.plexus.PlexusConstants;
+import org.codehaus.plexus.PlexusContainer;
+import org.codehaus.plexus.PlexusContainerException;
+import org.codehaus.plexus.classworlds.ClassWorld;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
+import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
@@ -161,6 +180,50 @@ public final class RepositoryUtility {
       temporaryDirectory.deleteOnExit();
       return temporaryDirectory; 
    }
+  }
+
+  public static ImmutableList<Artifact> readBom(Path pomFile)
+      throws PlexusContainerException, ComponentLookupException, ProjectBuildingException {
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
+
+    MavenProject mavenProject = createMavenProject(pomFile, session);
+    DependencyManagement dependencyManagement = mavenProject.getDependencyManagement();
+    List<org.apache.maven.model.Dependency> dependencies = dependencyManagement.getDependencies();
+
+    ArtifactTypeRegistry registry = session.getArtifactTypeRegistry();
+    return dependencies.stream()
+        .map(dependency -> RepositoryUtils.toDependency(dependency, registry))
+        .map(Dependency::getArtifact)
+        .filter(artifact -> !shouldSkipBomMember(artifact))
+        .collect(toImmutableList());
+  }
+
+  private static MavenProject createMavenProject(Path pomFile, RepositorySystemSession session)
+      throws PlexusContainerException, ComponentLookupException, ProjectBuildingException {
+    // MavenCli's way to instantiate PlexusContainer
+    ClassWorld classWorld =
+        new ClassWorld("plexus.core", Thread.currentThread().getContextClassLoader());
+    ContainerConfiguration cc =
+        new DefaultContainerConfiguration()
+            .setClassWorld(classWorld)
+            .setRealm(classWorld.getClassRealm("plexus.core"))
+            .setClassPathScanning(PlexusConstants.SCANNING_INDEX)
+            .setAutoWiring(true)
+            .setJSR250Lifecycle(true)
+            .setName("linkage-checker");
+    PlexusContainer container = new DefaultPlexusContainer(cc);
+
+    MavenExecutionRequest mavenExecutionRequest = new DefaultMavenExecutionRequest();
+    ProjectBuildingRequest projectBuildingRequest =
+        mavenExecutionRequest.getProjectBuildingRequest();
+
+    projectBuildingRequest.setRepositorySession(session);
+
+    ProjectBuilder projectBuilder = container.lookup(ProjectBuilder.class);
+    ProjectBuildingResult projectBuildingResult =
+        projectBuilder.build(pomFile.toFile(), projectBuildingRequest);
+    return projectBuildingResult.getProject();
   }
 
   /**

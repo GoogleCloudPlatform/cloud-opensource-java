@@ -19,38 +19,6 @@ package com.google.cloud.tools.opensource.dashboard;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-
-import freemarker.template.Configuration;
-import freemarker.template.DefaultObjectWrapper;
-import freemarker.template.DefaultObjectWrapperBuilder;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
-import freemarker.template.TemplateHashModel;
-import freemarker.template.Version;
-import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
@@ -75,27 +43,59 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import freemarker.template.Configuration;
+import freemarker.template.DefaultObjectWrapper;
+import freemarker.template.DefaultObjectWrapperBuilder;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import freemarker.template.TemplateHashModel;
+import freemarker.template.Version;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+import org.apache.maven.project.ProjectBuildingException;
+import org.codehaus.plexus.PlexusContainerException;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 
 public class DashboardMain {
   public static final String TEST_NAME_LINKAGE_CHECK = "Linkage Errors";
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
   public static final String TEST_NAME_GLOBAL_UPPER_BOUND = "Global Upper Bounds";
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
+  public static final Path CLOUD_OSS_BOM_PATH =
+      Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();
 
   public static void main(String[] args)
-      throws IOException, TemplateException, RepositoryException, URISyntaxException {
-
-    Path output = generate();
+      throws IOException, TemplateException, RepositoryException, URISyntaxException,
+          PlexusContainerException, ComponentLookupException, ProjectBuildingException {
+    Path output = generate(Paths.get(args[0]));
     System.out.println("Wrote dashboard into " + output.toAbsolutePath());
   }
 
-  public static Path generate()
-      throws IOException, TemplateException, RepositoryException, URISyntaxException {
-
-    // TODO should pass in maven coordinates as argument
-    DefaultArtifact bom =
-        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
-    List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
+  public static Path generate(Path bomFile)
+      throws IOException, TemplateException, RepositoryException, URISyntaxException,
+          PlexusContainerException, ComponentLookupException, ProjectBuildingException {
+    List<Artifact> managedDependencies = RepositoryUtility.readBom(bomFile);
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
 

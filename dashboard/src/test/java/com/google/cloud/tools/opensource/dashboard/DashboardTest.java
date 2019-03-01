@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import static com.google.cloud.tools.opensource.dashboard.DashboardMain.CLOUD_OSS_BOM_PATH;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import java.io.IOException;
@@ -81,7 +82,7 @@ public class DashboardTest {
   public static void setUp() throws IOException, ParsingException {
     // Creates "dashboard.html" and artifact reports in outputDirectory
     try {
-      outputDirectory = DashboardMain.generate();
+      outputDirectory = DashboardMain.generate(CLOUD_OSS_BOM_PATH);
     } catch (Throwable t) {
       t.printStackTrace();
       Assert.fail("Could not generate dashboard");
