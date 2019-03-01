@@ -6,6 +6,8 @@ The only class `InProcessTransportTest`, which is copied from grpc-java/grpc-cor
 extends grpc-testing's `AbstractTransportTest`.
 The test fails because of `NoClassDefFoundError: com/google/common/truth/Truth`.
 
+This missing dependency will be fixed in grpc-testing:1.20.0.
+
 ## How to run
 
 Run `mvn test` to reproduce the issue.
