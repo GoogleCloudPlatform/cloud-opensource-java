@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Range;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.nio.file.Path;
@@ -57,5 +58,6 @@ public class RepositoryUtilityTest {
     Path pomFile = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml");
     ImmutableList<Artifact> artifacts = RepositoryUtility.readBom(pomFile);
     Truth.assertThat(artifacts).isNotEmpty();
+    Truth.assertThat(artifacts.size()).isIn(Range.closed(150, 200));
   }
 }
