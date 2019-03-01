@@ -23,11 +23,10 @@ import java.util.Collection;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
 
-/** Formats artifact dependency tree represented by a list of {@link DependencyPath}s. */
+/** Formats Maven artifact dependency tree. */
 public class DependencyTreeFormatter {
   /**
-   * Formats dependencies expressed in dependency paths in tree in similar way to {@code mvn
-   * dependency:tree}.
+   * Formats dependencies as a tree in a similar way to {@code mvn dependency:tree}.
    *
    * @param dependencyPaths dependency paths from @{@link
    *     DependencyGraphBuilder#getCompleteDependencies(Artifact)}. Each element must have its
