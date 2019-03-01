@@ -99,6 +99,8 @@ public class DashboardMain {
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
           PlexusContainerException, ComponentLookupException, ProjectBuildingException {
     Preconditions.checkArgument(
+        Files.isRegularFile(bomFile), "The input BOM " + bomFile + " is not a regular file");
+    Preconditions.checkArgument(
         Files.isReadable(bomFile), "The input BOM " + bomFile + " is not readable");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bomFile);
 
