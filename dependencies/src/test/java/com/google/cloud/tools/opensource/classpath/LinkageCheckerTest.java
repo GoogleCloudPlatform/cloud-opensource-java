@@ -39,6 +39,8 @@ import org.junit.Test;
 
 public class LinkageCheckerTest {
 
+  private ClassPathBuilder classPathBuilder = ClassPathBuilder.create();
+
   @Test
   public void testFindInvalidReferences_arrayCloneMethod() throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
@@ -222,7 +224,7 @@ public class LinkageCheckerTest {
   public void testCheckLinkageErrorMissingMethodAt_protectedConstructorFromAnonymousClass()
       throws IOException, RepositoryException {
     List<Path> paths =
-        ClassPathBuilder.artifactsToClasspath(
+        classPathBuilder.artifactsToClasspath(
             ImmutableList.of(new DefaultArtifact("junit:junit:4.12")));
     // junit has dependency on hamcrest-core
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
@@ -425,7 +427,7 @@ public class LinkageCheckerTest {
     // cglib 2.2 does not work with asm 4. Stackoverflow post explaining VerifyError:
     // https://stackoverflow.com/questions/21059019/cglib-is-causing-a-java-lang-verifyerror-during-query-generation-in-intuit-partn
     List<Path> paths =
-        ClassPathBuilder.artifactsToClasspath(
+        classPathBuilder.artifactsToClasspath(
             ImmutableList.of(
                 new DefaultArtifact("cglib:cglib:2.2_beta1"),
                 new DefaultArtifact("org.ow2.asm:asm:4.2")));
@@ -787,7 +789,7 @@ public class LinkageCheckerTest {
     // SLF4J classes catch NoClassDefFoundError to detect the availability of logger backends
     // the tool should not show errors for such classes.
     List<Path> paths =
-        ClassPathBuilder.artifactsToClasspath(
+        classPathBuilder.artifactsToClasspath(
             ImmutableList.of(new DefaultArtifact("org.slf4j:slf4j-api:jar:1.7.21")));
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);

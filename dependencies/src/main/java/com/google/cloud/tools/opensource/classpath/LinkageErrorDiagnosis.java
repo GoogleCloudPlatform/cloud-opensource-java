@@ -29,10 +29,10 @@ abstract class LinkageErrorDiagnosis {
   abstract LinkageErrorCause getLinkageErrorCause();
 
   /**
-   * Returns the artifacts which the source classes of the {@link
-   * SymbolNotResolvable#getReference()} belongs to.
+   * Returns the artifact which the source classes of the {@link SymbolNotResolvable#getReference()}
+   * belongs to.
    */
-  abstract ImmutableList<Artifact> getSourceArtifacts();
+  abstract Artifact getSourceArtifact();
 
   abstract Artifact getArtifactWithResolvableSymbol();
 
@@ -43,11 +43,17 @@ abstract class LinkageErrorDiagnosis {
   abstract static class Builder {
     abstract Builder setLinkageErrorCause(LinkageErrorCause linkageErrorCause);
 
-    abstract Builder getSourceArtifacts(Iterable<Artifact> artifacts);
+    abstract Builder setSourceArtifact(Artifact artifact);
 
     abstract Builder setArtifactWithResolvableSymbol(Artifact artifact);
 
     abstract Builder setArtifactInClassPath(Artifact artifact);
+
+    abstract LinkageErrorDiagnosis build();
+  }
+
+  static Builder builder() {
+    return new AutoValue_LinkageErrorDiagnosis.Builder();
   }
 
   @Override
@@ -59,7 +65,7 @@ abstract class LinkageErrorDiagnosis {
     LinkageErrorCause cause = getLinkageErrorCause();
     builder.append(cause.toString());
     builder.append(". The source classes belong to ");
-    builder.append(getSourceArtifacts());
+    builder.append(getSourceArtifact());
     builder.append(". The symbol was resolvable in ");
 
     Artifact artifactWithResolvableSymbol = getArtifactWithResolvableSymbol();

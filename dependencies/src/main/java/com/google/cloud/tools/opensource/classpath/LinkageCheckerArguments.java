@@ -21,11 +21,13 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -60,8 +62,10 @@ final class LinkageCheckerArguments {
   private final CommandLine commandLine;
   private ImmutableList<Path> cachedInputClasspath;
   private ImmutableList<Artifact> cachedArtifacts;
+  private ImmutableMap<Path, Artifact> pathToArtifact;
   private final ImmutableList<String> extraMavenRepositoryUrls;
   private final boolean addMavenCentral;
+  private final ClassPathBuilder classPathBuilder;
 
   private LinkageCheckerArguments(CommandLine commandLine) {
     this.commandLine = checkNotNull(commandLine);
@@ -74,6 +78,7 @@ final class LinkageCheckerArguments {
     extraMavenRepositoryUrls.forEach(RepositoryUtility::mavenRepositoryFromUrl);
 
     this.addMavenCentral = !commandLine.hasOption("nm");
+    this.classPathBuilder = ClassPathBuilder.create();
   }
 
   static LinkageCheckerArguments readCommandLine(String... arguments) throws ParseException {
@@ -185,7 +190,9 @@ final class LinkageCheckerArguments {
 
     if (commandLine.hasOption("b") || commandLine.hasOption("a")) {
       List<Artifact> artifacts = getArtifacts();
-      cachedInputClasspath = ClassPathBuilder.artifactsToClasspath(artifacts);
+      pathToArtifact = classPathBuilder.getPathToArtifact(artifacts);
+      // ClassPathBuilder.artifactsToClasspath(artifacts);
+      cachedInputClasspath = ImmutableList.copyOf(pathToArtifact.keySet());
     } else {
       // b, a, or j is specified in OptionGroup
       String[] jarFiles = commandLine.getOptionValues("j");
@@ -217,5 +224,11 @@ final class LinkageCheckerArguments {
 
   boolean getAddMavenCentral() {
     return addMavenCentral;
+  }
+
+  /** Returns map from jar files to Maven artifacts in the class path. */
+  @Nullable
+  ImmutableMap<Path, Artifact> getPathToArtifact() {
+    return pathToArtifact;
   }
 }

@@ -102,7 +102,7 @@ public class LinkageCheckerArgumentsTest {
     // Spring-asm is used here because it does not have complex dependencies
     Artifact artifact = new DefaultArtifact("org.springframework:spring-asm:3.1.0.RC2");
 
-    List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(artifact));
+    List<Path> paths = ClassPathBuilder.create().artifactsToClasspath(ImmutableList.of(artifact));
     Truth.assertThat(paths).isNotEmpty();
   }
 

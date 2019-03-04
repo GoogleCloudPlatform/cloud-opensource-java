@@ -21,6 +21,8 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
@@ -41,6 +43,12 @@ import org.eclipse.aether.artifact.Artifact;
  */
 public class ClassPathBuilder {
 
+  public static ClassPathBuilder create() {
+    return new ClassPathBuilder();
+  }
+
+  private ClassPathBuilder() {}
+
   /**
    * Finds jar file paths for Maven artifacts and their transitive dependencies, using Maven's
    * dependency mediation strategy.
@@ -49,12 +57,31 @@ public class ClassPathBuilder {
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem retrieving jar files
    */
-  public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
+  public ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
       throws RepositoryException {
 
     // LinkedListMultimap keeps the key order as they were first added to the multimap
+    //    LinkedListMultimap<Path, DependencyPath> multimap = artifactsToDependencyPaths(artifacts);
+    ImmutableMap<Path, Artifact> pathToArtifact = getPathToArtifact(artifacts);
+    return ImmutableList.copyOf(pathToArtifact.keySet());
+  }
+
+  ImmutableMap<Path, Artifact> getPathToArtifact(List<Artifact> artifacts)
+      throws RepositoryException {
+    //    this.artifacts = artifacts;
+
+    // LinkedListMultimap keeps the key order as they were first added to the multimap
     LinkedListMultimap<Path, DependencyPath> multimap = artifactsToDependencyPaths(artifacts);
-    return ImmutableList.copyOf(multimap.keySet());
+
+    ImmutableMap.Builder<Path, Artifact> pathToArtifact = ImmutableMap.builder();
+
+    for (Path key : multimap.keySet()) {
+      DependencyPath firstValue = Iterables.getFirst(multimap.get(key), null);
+      pathToArtifact.put(key, firstValue.getLeaf());
+    }
+    multimap.forEach((key, value) -> {});
+
+    return pathToArtifact.build();
   }
 
   /**
@@ -74,7 +101,7 @@ public class ClassPathBuilder {
    * @return an ordered map of absolute paths of jar files to one or more Maven dependency paths
    * @throws RepositoryException when there is a problem retrieving jar files
    */
-  public static LinkedListMultimap<Path, DependencyPath> artifactsToDependencyPaths(
+  public LinkedListMultimap<Path, DependencyPath> artifactsToDependencyPaths(
       List<Artifact> artifacts) throws RepositoryException {
 
     LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
@@ -117,5 +144,4 @@ public class ClassPathBuilder {
     }
     return multimap;
   }
-
 }
