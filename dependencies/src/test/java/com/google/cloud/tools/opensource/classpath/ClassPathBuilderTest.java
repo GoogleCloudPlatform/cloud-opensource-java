@@ -37,7 +37,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.DependencyNode;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 public class ClassPathBuilderTest {
@@ -55,18 +54,11 @@ public class ClassPathBuilderTest {
         }
       };
 
-  private ClassPathBuilder classPathBuilder;
-
-  @Before
-  public void setup() {
-    classPathBuilder = ClassPathBuilder.create();
-  }
-
   @Test
   public void testArtifactsToPaths_removingDuplicates() throws RepositoryException {
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
     ListMultimap<Path, DependencyPath> multimap =
-        classPathBuilder.artifactsToDependencyPaths(ImmutableList.of(grpcArtifact));
+        ClassPathBuilder.artifactsToDependencyPaths(ImmutableList.of(grpcArtifact));
 
     Set<Path> paths = multimap.keySet();
     long jsr305Count = paths.stream().filter(path -> path.toString().contains("jsr305-")).count();
@@ -90,7 +82,7 @@ public class ClassPathBuilderTest {
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
 
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        classPathBuilder.artifactsToDependencyPaths(managedDependencies);
+        ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
 
     ImmutableList<Path> paths = ImmutableList.copyOf(jarToDependencyPaths.keySet());
 
@@ -107,7 +99,7 @@ public class ClassPathBuilderTest {
 
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
     ListMultimap<Path, DependencyPath> multimap =
-        classPathBuilder.artifactsToDependencyPaths(ImmutableList.of(grpcArtifact));
+        ClassPathBuilder.artifactsToDependencyPaths(ImmutableList.of(grpcArtifact));
 
     Set<Path> paths = multimap.keySet();
 
@@ -124,7 +116,7 @@ public class ClassPathBuilderTest {
   @Test
   public void testCoordinateToClasspath_validCoordinate() throws RepositoryException {
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
-    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(grpcArtifact));
+    List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(grpcArtifact));
 
     Truth.assertThat(paths)
         .comparingElementsUsing(PATH_FILE_NAMES)
@@ -143,7 +135,8 @@ public class ClassPathBuilderTest {
   public void testCoordinateToClasspath_optionalDependency() throws RepositoryException {
     Artifact bigTableArtifact =
         new DefaultArtifact("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
-    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(bigTableArtifact));
+    List<Path> paths =
+        ClassPathBuilder.artifactsToClasspath(ImmutableList.of(bigTableArtifact));
     Truth.assertThat(paths).comparingElementsUsing(PATH_FILE_NAMES).contains("log4j-1.2.12.jar");
   }
 
@@ -151,7 +144,7 @@ public class ClassPathBuilderTest {
   public void testCoordinateToClasspath_invalidCoordinate() {
     Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nosuchartifact:1.2.3");
     try {
-      classPathBuilder.artifactsToClasspath(ImmutableList.of(nonExistentArtifact));
+      ClassPathBuilder.artifactsToClasspath(ImmutableList.of(nonExistentArtifact));
       Assert.fail("Invalid Maven coodinate should raise RepositoryException");
     } catch (RepositoryException ex) {
       Truth.assertThat(ex.getMessage())
@@ -161,7 +154,7 @@ public class ClassPathBuilderTest {
 
   @Test
   public void testCoordinateToClasspath_emptyInput() throws RepositoryException {
-    List<Path> jars = classPathBuilder.artifactsToClasspath(ImmutableList.of());
+    List<Path> jars = ClassPathBuilder.artifactsToClasspath(ImmutableList.of());
     Truth.assertThat(jars).isEmpty();
   }
 
@@ -170,7 +163,8 @@ public class ClassPathBuilderTest {
       throws RepositoryException, IOException {
     Artifact bigTableArtifact =
         new DefaultArtifact("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
-    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(bigTableArtifact));
+    List<Path> paths =
+        ClassPathBuilder.artifactsToClasspath(ImmutableList.of(bigTableArtifact));
     Path httpClientJar =
         paths
             .stream()
@@ -207,7 +201,7 @@ public class ClassPathBuilderTest {
   public void testArtifactToClasspath_notToGenerateRepositoryException()
       throws RepositoryException {
     Artifact jamonApiArtifact = new DefaultArtifact("com.google.guava:guava-gwt:jar:20.0");
-    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(jamonApiArtifact));
+    List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(jamonApiArtifact));
     Truth.assertThat(paths).isNotEmpty();
   }
 
@@ -217,7 +211,7 @@ public class ClassPathBuilderTest {
     // jamon has transitive dependency to jmxtools, which does not exist in Maven central
     Artifact jamonApiArtifact = new DefaultArtifact("com.jamonapi:jamon:2.81");
     try {
-      classPathBuilder.artifactsToClasspath(ImmutableList.of(jamonApiArtifact));
+      ClassPathBuilder.artifactsToClasspath(ImmutableList.of(jamonApiArtifact));
       Assert.fail();
     } catch (AggregatedRepositoryException ex) {
       ImmutableList<ExceptionAndPath> failures = ex.getUnderlyingFailures();

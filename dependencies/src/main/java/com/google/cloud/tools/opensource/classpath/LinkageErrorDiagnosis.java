@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.collect.ImmutableList;
 import javax.annotation.Nullable;
 import org.eclipse.aether.artifact.Artifact;
 

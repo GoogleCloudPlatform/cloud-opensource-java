@@ -65,7 +65,6 @@ final class LinkageCheckerArguments {
   private ImmutableMap<Path, Artifact> pathToArtifact;
   private final ImmutableList<String> extraMavenRepositoryUrls;
   private final boolean addMavenCentral;
-  private final ClassPathBuilder classPathBuilder;
 
   private LinkageCheckerArguments(CommandLine commandLine) {
     this.commandLine = checkNotNull(commandLine);
@@ -78,7 +77,6 @@ final class LinkageCheckerArguments {
     extraMavenRepositoryUrls.forEach(RepositoryUtility::mavenRepositoryFromUrl);
 
     this.addMavenCentral = !commandLine.hasOption("nm");
-    this.classPathBuilder = ClassPathBuilder.create();
   }
 
   static LinkageCheckerArguments readCommandLine(String... arguments) throws ParseException {
@@ -190,8 +188,7 @@ final class LinkageCheckerArguments {
 
     if (commandLine.hasOption("b") || commandLine.hasOption("a")) {
       List<Artifact> artifacts = getArtifacts();
-      pathToArtifact = classPathBuilder.getPathToArtifact(artifacts);
-      // ClassPathBuilder.artifactsToClasspath(artifacts);
+      pathToArtifact = ClassPathBuilder.getPathToArtifact(artifacts);
       cachedInputClasspath = ImmutableList.copyOf(pathToArtifact.keySet());
     } else {
       // b, a, or j is specified in OptionGroup
@@ -226,7 +223,7 @@ final class LinkageCheckerArguments {
     return addMavenCentral;
   }
 
-  /** Returns map from jar files to Maven artifacts in the class path. */
+  /** Returns map from jar files to Maven artifacts in the class path. Null if  */
   @Nullable
   ImmutableMap<Path, Artifact> getPathToArtifact() {
     return pathToArtifact;

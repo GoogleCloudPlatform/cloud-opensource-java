@@ -99,9 +99,8 @@ public class DashboardMain {
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
 
-    ClassPathBuilder classPathBuilder = ClassPathBuilder.create();
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        classPathBuilder.artifactsToDependencyPaths(managedDependencies);
+        ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
     // LinkedListMultimap preserves the key order
     ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
 

@@ -217,8 +217,7 @@ public class ClassDumperTest {
   public void testMapJarToClasses_classWithDollars()
       throws IOException, RepositoryException {
     Artifact grpcArtifact = new DefaultArtifact("com.google.code.gson:gson:2.6.2");
-    List<Path> paths =
-        ClassPathBuilder.create().artifactsToClasspath(ImmutableList.of(grpcArtifact));
+    List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(grpcArtifact));
     Path gsonJar = paths.get(0);
 
     ImmutableSetMultimap<Path, String> pathToClasses = ClassDumper

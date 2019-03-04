@@ -43,10 +43,6 @@ import org.eclipse.aether.artifact.Artifact;
  */
 public class ClassPathBuilder {
 
-  public static ClassPathBuilder create() {
-    return new ClassPathBuilder();
-  }
-
   private ClassPathBuilder() {}
 
   /**
@@ -57,7 +53,7 @@ public class ClassPathBuilder {
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem retrieving jar files
    */
-  public ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
+  public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
       throws RepositoryException {
 
     // LinkedListMultimap keeps the key order as they were first added to the multimap
@@ -66,7 +62,7 @@ public class ClassPathBuilder {
     return ImmutableList.copyOf(pathToArtifact.keySet());
   }
 
-  ImmutableMap<Path, Artifact> getPathToArtifact(List<Artifact> artifacts)
+  static ImmutableMap<Path, Artifact> getPathToArtifact(List<Artifact> artifacts)
       throws RepositoryException {
     //    this.artifacts = artifacts;
 
@@ -101,7 +97,7 @@ public class ClassPathBuilder {
    * @return an ordered map of absolute paths of jar files to one or more Maven dependency paths
    * @throws RepositoryException when there is a problem retrieving jar files
    */
-  public LinkedListMultimap<Path, DependencyPath> artifactsToDependencyPaths(
+  public static LinkedListMultimap<Path, DependencyPath> artifactsToDependencyPaths(
       List<Artifact> artifacts) throws RepositoryException {
 
     LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();

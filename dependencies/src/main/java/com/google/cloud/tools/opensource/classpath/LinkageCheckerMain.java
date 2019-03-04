@@ -16,11 +16,9 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
-
 import com.google.cloud.tools.opensource.classpath.SymbolNotResolvable.Reason;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.common.collect.ImmutableCollection;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -30,8 +28,6 @@ import java.nio.file.Path;
 import java.util.Map;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
-
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
@@ -84,9 +80,8 @@ class LinkageCheckerMain {
     ImmutableMap<String, Artifact> selectedArtifacts =
         Maps.uniqueIndex(pathToArtifact.values(), Artifacts::makeKey);
 
-    ClassPathBuilder classPathBuilderForJar = ClassPathBuilder.create();
     ImmutableMap<Path, Artifact> pathToArtifactForJar =
-        classPathBuilderForJar.getPathToArtifact(ImmutableList.of(sourceArtifact));
+        ClassPathBuilder.getPathToArtifact(ImmutableList.of(sourceArtifact));
 
     for (LinkageErrorCause cause : causeToSourceClasses.keySet()) {
       if (cause.getReason() == Reason.CLASS_NOT_FOUND) {
