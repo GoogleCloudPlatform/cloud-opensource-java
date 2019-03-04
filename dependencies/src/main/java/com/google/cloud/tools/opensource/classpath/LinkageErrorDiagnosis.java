@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
+import javax.annotation.Nullable;
 import org.eclipse.aether.artifact.Artifact;
 
 /** Diagnosis on {@link LinkageErrorCause} using Maven artifacts. */
@@ -34,9 +35,20 @@ abstract class LinkageErrorDiagnosis {
    */
   abstract Artifact getSourceArtifact();
 
+  /**
+   * Returns the artifact that has the resolvable symbol for {@link
+   * SymbolNotResolvable#getReference()}. Null if such artifact is not found in the dependencies of
+   * {@link #getSourceArtifact()}.
+   */
+  @Nullable
   abstract Artifact getArtifactWithResolvableSymbol();
 
-  /** Returns the artifact used in the linkage check. */
+  /**
+   * Returns the artifact picked up by the dependency mediation algorithm instead of {@link
+   * #getArtifactWithResolvableSymbol()}. Null if {@link #getArtifactWithResolvableSymbol()} is
+   * null.
+   */
+  @Nullable
   abstract Artifact getArtifactInClassPath();
 
   @AutoValue.Builder
@@ -66,13 +78,17 @@ abstract class LinkageErrorDiagnosis {
     builder.append(cause.toString());
     builder.append(". The source classes belong to ");
     builder.append(getSourceArtifact());
-    builder.append(". The symbol was resolvable in ");
 
     Artifact artifactWithResolvableSymbol = getArtifactWithResolvableSymbol();
-    builder.append(artifactWithResolvableSymbol);
-    builder.append(", but the class path has ");
-    Artifact artifactInClassPath = getArtifactInClassPath();
-    builder.append(artifactInClassPath);
+    if (artifactWithResolvableSymbol == null) {
+      builder.append(". The dependencies of the artifact do not have the symbol.");
+    } else {
+      builder.append(". The symbol was resolvable in ");
+      builder.append(artifactWithResolvableSymbol);
+      builder.append(", but the class path has ");
+      Artifact artifactInClassPath = getArtifactInClassPath();
+      builder.append(artifactInClassPath);
+    }
 
     return builder.toString();
   }

@@ -67,7 +67,7 @@ class LinkageCheckerMain {
     for (JarLinkageReport jarLinkageReport : report.getJarLinkageReports()) {
       diagnoseJarLinkageReport(jarLinkageReport, pathToArtifact);
     }
-    // System.out.println(report);
+    System.out.println(report);
   }
 
   private static JarLinkageReport diagnoseJarLinkageReport(
@@ -92,12 +92,9 @@ class LinkageCheckerMain {
       if (cause.getReason() == Reason.CLASS_NOT_FOUND) {
         LinkageErrorDiagnosis diagnosis =
             diagnoseMissingClass(cause, sourceArtifact, selectedArtifacts, pathToArtifactForJar);
-        if (diagnosis != null) {
-          System.out.println(diagnosis);
-        }
+        System.out.println(diagnosis);
       }
     }
-    System.out.println("Finished diagnosing errors on " + sourceArtifact);
 
     return jarLinkageReport;
   }
@@ -129,6 +126,13 @@ class LinkageCheckerMain {
       }
     }
 
-    return null;
+    LinkageErrorDiagnosis diagnosis =
+        LinkageErrorDiagnosis.builder()
+            .setLinkageErrorCause(cause)
+            .setSourceArtifact(sourceArtifact)
+            .setArtifactWithResolvableSymbol(null)
+            .setArtifactInClassPath(null)
+            .build();
+    return diagnosis;
   }
 }
