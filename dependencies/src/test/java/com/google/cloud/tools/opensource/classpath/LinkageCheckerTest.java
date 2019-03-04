@@ -802,7 +802,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindLinkageErrors_doesNotCatchNoClassDefFoundError()
-      throws URISyntaxException, IOException {
+      throws URISyntaxException, IOException, RepositoryException {
     // Checking Firestore jar file without its dependency should have linkage errors
     // Note that FirestoreGrpc.java does not have catch clause of NoClassDefFoundError
     List<Path> paths =

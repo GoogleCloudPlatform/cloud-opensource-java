@@ -38,6 +38,8 @@ import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 
 /** A tool to find linkage errors in a class path. */
 public class LinkageChecker {
@@ -47,8 +49,20 @@ public class LinkageChecker {
   private final ClassDumper classDumper;
   private final ImmutableMap<Path, SymbolReferenceSet> jarToSymbols;
   private final ClassReferenceGraph classReferenceGraph;
+  private final ImmutableMap<Path, Artifact> pathToArtifact;
 
   public static LinkageChecker create(List<Path> jarPaths, Iterable<Path> entryPoints)
+      throws IOException {
+    return create(jarPaths, entryPoints, null);
+  }
+
+  public static LinkageChecker create(
+      ImmutableMap<Path, Artifact> pathToArtifact, Iterable<Path> entryPoints) throws IOException {
+    return create(ImmutableList.copyOf(pathToArtifact.keySet()), entryPoints, pathToArtifact);
+  }
+
+  public static LinkageChecker create(
+      List<Path> jarPaths, Iterable<Path> entryPoints, ImmutableMap<Path, Artifact> pathToArtifact)
       throws IOException {
     Preconditions.checkArgument(
         !jarPaths.isEmpty(),
@@ -64,28 +78,36 @@ public class LinkageChecker {
     ClassReferenceGraph classReferenceGraph =
         ClassReferenceGraph.create(jarToSymbols.values(), ImmutableSet.copyOf(entryPoints));
 
-    return new LinkageChecker(dumper, jarToSymbols, classReferenceGraph);
+    return new LinkageChecker(dumper, jarToSymbols, classReferenceGraph, pathToArtifact);
   }
 
   private LinkageChecker(
       ClassDumper classDumper,
       Map<Path, SymbolReferenceSet> jarToSymbols,
-      ClassReferenceGraph classReferenceGraph) {
+      ClassReferenceGraph classReferenceGraph,
+      Map<Path, Artifact> pathToArtifact) {
     this.classDumper = Preconditions.checkNotNull(classDumper);
     this.jarToSymbols = ImmutableMap.copyOf(jarToSymbols);
     this.classReferenceGraph = Preconditions.checkNotNull(classReferenceGraph);
+    this.pathToArtifact = ImmutableMap.copyOf(pathToArtifact);
   }
 
   /** Finds linkage errors in the input classpath and generates a linkage check report. */
-  public LinkageCheckReport findLinkageErrors() {
+  public LinkageCheckReport findLinkageErrors() throws IOException, RepositoryException {
     // Validate linkage error of each reference
     ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
 
-    jarToSymbols.forEach(
-        (jar, symbolReferenceSet) ->
-            jarLinkageReports.add(generateLinkageReport(jar, symbolReferenceSet)));
+    ImmutableMap.Builder<LinkageErrorCause, LinkageErrorDiagnosis> diagnosis =
+        ImmutableMap.builder();
+    for (Path jar : jarToSymbols.keySet()) {
+      SymbolReferenceSet symbolReferenceSet = jarToSymbols.get(jar);
+      JarLinkageReport jarLinkageReport = generateLinkageReport(jar, symbolReferenceSet);
+      jarLinkageReports.add(jarLinkageReport);
+      diagnosis.putAll(
+          LinkageErrorDiagnosis.diagnoseJarLinkageReport(jarLinkageReport, pathToArtifact));
+    }
 
-    return LinkageCheckReport.create(jarLinkageReports.build());
+    return LinkageCheckReport.create(jarLinkageReports.build(), diagnosis.build());
   }
 
   /**

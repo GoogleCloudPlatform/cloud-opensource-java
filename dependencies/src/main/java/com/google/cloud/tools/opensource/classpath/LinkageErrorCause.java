@@ -20,7 +20,7 @@ import com.google.auto.value.AutoValue;
 
 /** Key to group linkage errors by their causes. */
 @AutoValue
-abstract class LinkageErrorCause {
+public abstract class LinkageErrorCause {
 
   /** Returns the reason for the error */
   abstract SymbolNotResolvable.Reason getReason();

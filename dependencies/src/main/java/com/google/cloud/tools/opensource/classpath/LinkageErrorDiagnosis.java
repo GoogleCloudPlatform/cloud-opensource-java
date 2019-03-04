@@ -17,14 +17,29 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Maps;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Map;
 import javax.annotation.Nullable;
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 
-/** Diagnosis on {@link LinkageErrorCause} using Maven artifacts. */
+/**
+ * The result of a diagnosis on {@link LinkageErrorCause}. The diagnosis tells which Maven artifact
+ * has a resolvable symbol for {@link LinkageErrorCause#getSymbol()} and which Maven artifact is
+ * picked up instead by the dependency mediation logic.
+ *
+ * @see <a
+ *     href='https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies'>
+ *     Introduction to the Dependency Mechanism: Dependency mediation</a>
+ */
 @AutoValue
-abstract class LinkageErrorDiagnosis {
-  // /** Returns the linkage error that is the subject of the diagnosis. */
-  //  abstract SymbolNotResolvable getSymbolNotResolvable();
+public abstract class LinkageErrorDiagnosis {
   /** Returns the cause of linkage error, which is the subject of the diagnosis. */
   abstract LinkageErrorCause getLinkageErrorCause();
 
@@ -63,7 +78,7 @@ abstract class LinkageErrorDiagnosis {
     abstract LinkageErrorDiagnosis build();
   }
 
-  static Builder builder() {
+  private static Builder builder() {
     return new AutoValue_LinkageErrorDiagnosis.Builder();
   }
 
@@ -90,5 +105,77 @@ abstract class LinkageErrorDiagnosis {
     }
 
     return builder.toString();
+  }
+
+  /** Returns a map from the cause of linkage errors to the diagnosis. */
+  public static ImmutableMap<LinkageErrorCause, LinkageErrorDiagnosis> diagnoseJarLinkageReport(
+      JarLinkageReport jarLinkageReport, Map<Path, Artifact> pathToArtifact)
+      throws RepositoryException, IOException {
+    ImmutableMap.Builder<LinkageErrorCause, LinkageErrorDiagnosis> causeToDiagnosis =
+        ImmutableMap.builder();
+    Artifact sourceArtifact = pathToArtifact.get(jarLinkageReport.getJarPath());
+
+    ImmutableMultimap<LinkageErrorCause, String> causeToSourceClasses =
+        jarLinkageReport.getCauseToSourceClasses();
+    if (causeToSourceClasses.isEmpty()) {
+      return causeToDiagnosis.build();
+    }
+
+    ImmutableMap<String, Artifact> selectedArtifacts =
+        Maps.uniqueIndex(pathToArtifact.values(), Artifacts::makeKey);
+
+    ImmutableMap<Path, Artifact> pathToArtifactForJar =
+        ClassPathBuilder.getPathToArtifact(ImmutableList.of(sourceArtifact));
+
+    for (LinkageErrorCause cause : causeToSourceClasses.keySet()) {
+      switch (cause.getReason()) {
+        case CLASS_NOT_FOUND:
+          LinkageErrorDiagnosis diagnosis =
+              diagnoseMissingClass(cause, sourceArtifact, selectedArtifacts, pathToArtifactForJar);
+          causeToDiagnosis.put(cause, diagnosis);
+          break;
+        default:
+          // TODO: Implement other cases (SYMBOL_NOT_FOUND, INACCESSIBLE_CLASS, etc.)
+      }
+    }
+
+    return causeToDiagnosis.build();
+  }
+
+  private static LinkageErrorDiagnosis diagnoseMissingClass(
+      LinkageErrorCause cause,
+      Artifact sourceArtifact,
+      Map<String, Artifact> selectedArtifacts,
+      Map<Path, Artifact> pathToArtifactForJar)
+      throws IOException {
+
+    for (Path path : pathToArtifactForJar.keySet()) {
+      boolean hasMissingClass =
+          ClassDumper.listClassesInJar(path).stream()
+              .anyMatch(javaClass -> javaClass.getClassName().equals(cause.getSymbol()));
+      if (hasMissingClass) {
+        Artifact artifactWithResolvableSymbol = pathToArtifactForJar.get(path);
+        String versionLessCoordinates = Artifacts.makeKey(artifactWithResolvableSymbol);
+        Artifact selectedArtifact = selectedArtifacts.get(versionLessCoordinates);
+
+        LinkageErrorDiagnosis diagnosis =
+            LinkageErrorDiagnosis.builder()
+                .setLinkageErrorCause(cause)
+                .setSourceArtifact(sourceArtifact)
+                .setArtifactInClassPath(selectedArtifact)
+                .setArtifactWithResolvableSymbol(artifactWithResolvableSymbol)
+                .build();
+        return diagnosis;
+      }
+    }
+
+    LinkageErrorDiagnosis diagnosis =
+        LinkageErrorDiagnosis.builder()
+            .setLinkageErrorCause(cause)
+            .setSourceArtifact(sourceArtifact)
+            .setArtifactWithResolvableSymbol(null)
+            .setArtifactInClassPath(null)
+            .build();
+    return diagnosis;
   }
 }

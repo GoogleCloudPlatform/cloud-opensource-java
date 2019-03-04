@@ -17,11 +17,10 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.truth.Truth;
-
 import java.nio.file.Paths;
 import java.util.Collections;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -78,7 +77,7 @@ public class LinkageCheckReportTest {
             .build();
 
     linkageCheckReport =
-        LinkageCheckReport.create(ImmutableList.of(jarLinkageReport));
+        LinkageCheckReport.create(ImmutableList.of(jarLinkageReport), ImmutableMap.of());
   }
 
   @Test
@@ -93,7 +92,7 @@ public class LinkageCheckReportTest {
   
   @Test
   public void testToStringNoErrors() {
-    linkageCheckReport = LinkageCheckReport.create(Collections.emptyList());
+    linkageCheckReport = LinkageCheckReport.create(Collections.emptyList(), ImmutableMap.of());
     Assert.assertEquals("No linkage errors\n", linkageCheckReport.toString());
   }
   

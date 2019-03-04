@@ -19,6 +19,8 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 
 /**
  * The result of a linkage check.
@@ -28,9 +30,14 @@ public abstract class LinkageCheckReport {
 
   public abstract ImmutableList<JarLinkageReport> getJarLinkageReports();
 
+  public abstract ImmutableMap<LinkageErrorCause, LinkageErrorDiagnosis> getCauseToDiagnosis();
+
   @VisibleForTesting
-  public static LinkageCheckReport create(Iterable<JarLinkageReport> jarLinkageReports) {
-    return new AutoValue_LinkageCheckReport(ImmutableList.copyOf(jarLinkageReports));
+  public static LinkageCheckReport create(
+      Iterable<JarLinkageReport> jarLinkageReports,
+      Map<LinkageErrorCause, LinkageErrorDiagnosis> causeToDiagnosis) {
+    return new AutoValue_LinkageCheckReport(
+        ImmutableList.copyOf(jarLinkageReports), ImmutableMap.copyOf(causeToDiagnosis));
   }
   
   @Override
@@ -42,7 +49,9 @@ public abstract class LinkageCheckReport {
         builder.append('\n');
       }
     }
-    
+
+    builder.append(getCauseToDiagnosis());
+
     String result = builder.toString();
     if (result.isEmpty()) {
       return "No linkage errors\n";

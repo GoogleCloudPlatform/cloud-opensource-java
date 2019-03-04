@@ -75,8 +75,6 @@ public class ClassPathBuilder {
       DependencyPath firstValue = Iterables.getFirst(multimap.get(key), null);
       pathToArtifact.put(key, firstValue.getLeaf());
     }
-    multimap.forEach((key, value) -> {});
-
     return pathToArtifact.build();
   }
 

@@ -26,8 +26,6 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.List;
-import javax.annotation.Nullable;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -62,7 +60,7 @@ final class LinkageCheckerArguments {
   private final CommandLine commandLine;
   private ImmutableList<Path> cachedInputClasspath;
   private ImmutableList<Artifact> cachedArtifacts;
-  private ImmutableMap<Path, Artifact> pathToArtifact;
+  private ImmutableMap<Path, Artifact> cachedPathToArtifact;
   private final ImmutableList<String> extraMavenRepositoryUrls;
   private final boolean addMavenCentral;
 
@@ -187,9 +185,7 @@ final class LinkageCheckerArguments {
     }
 
     if (commandLine.hasOption("b") || commandLine.hasOption("a")) {
-      List<Artifact> artifacts = getArtifacts();
-      pathToArtifact = ClassPathBuilder.getPathToArtifact(artifacts);
-      cachedInputClasspath = ImmutableList.copyOf(pathToArtifact.keySet());
+      cachedInputClasspath = ImmutableList.copyOf(getPathToArtifact().keySet());
     } else {
       // b, a, or j is specified in OptionGroup
       String[] jarFiles = commandLine.getOptionValues("j");
@@ -223,9 +219,11 @@ final class LinkageCheckerArguments {
     return addMavenCentral;
   }
 
-  /** Returns map from jar files to Maven artifacts in the class path. Null if  */
-  @Nullable
-  ImmutableMap<Path, Artifact> getPathToArtifact() {
-    return pathToArtifact;
+  /** Returns map from jar files to Maven artifacts in the class path. */
+  ImmutableMap<Path, Artifact> getPathToArtifact() throws RepositoryException {
+    if (cachedPathToArtifact != null) {
+      return cachedPathToArtifact;
+    }
+    return cachedPathToArtifact = ClassPathBuilder.getPathToArtifact(getArtifacts());
   }
 }
