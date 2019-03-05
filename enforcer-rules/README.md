@@ -60,8 +60,8 @@ For a BOM project, set `dependencySection` element to `DEPENDENCY_MANAGEMENT`.
 ```
 
 To suppress linkage errors that are not [_reachable in the class reference graph_](
-../library-best-practices/glossary.md#class-reference-graph) from classes in the direct dependencies
-of the project, set `reportOnlyReachable` element to `true`. (default: `false`).
+../library-best-practices/glossary.md#class-reference-graph) from the classes in the direct
+dependencies of the project, set `reportOnlyReachable` element to `true`. (default: `false`).
 
 ```xml
   <banLinkageErrors
