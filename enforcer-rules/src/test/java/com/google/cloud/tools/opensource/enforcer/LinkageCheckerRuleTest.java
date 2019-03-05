@@ -142,6 +142,7 @@ public class LinkageCheckerRuleTest {
     setupMockDependencyResolution("com.google.guava:guava:27.0.1-jre");
     // This should not raise an EnforcerRuleException
     rule.execute(mockRuleHelper);
+    verify(mockLog).info("No error found");
   }
 
   @Test
@@ -154,8 +155,7 @@ public class LinkageCheckerRuleTest {
           "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
     } catch (EnforcerRuleException ex) {
       // pass
-      verify(mockLog)
-          .error(ArgumentMatchers.startsWith("Linkage Checker rule found errors."));
+      verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found errors."));
       Assert.assertEquals(
           "Failed while checking class path. See above error report.", ex.getMessage());
     }

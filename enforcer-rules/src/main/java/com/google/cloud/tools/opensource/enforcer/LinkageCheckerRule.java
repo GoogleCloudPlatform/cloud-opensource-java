@@ -150,7 +150,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           throw new EnforcerRuleException(
               "Failed while checking class path. See above error report.");
         } else {
-          logger.info("No " + foundError + " error found");
+          logger.info("No " + foundError + " found");
         }
       } catch (IOException ex) {
         // Maven's "-e" flag does not work for EnforcerRuleException. Print stack trace here.
