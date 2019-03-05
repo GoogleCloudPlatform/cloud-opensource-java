@@ -135,7 +135,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
         String foundError =
             String.format(
-                "%s error%s", reportOnlyReachable ? "reachable" : "", errorCount > 1 ? "s" : "");
+                "%serror%s", reportOnlyReachable ? "reachable " : "", errorCount > 1 ? "s" : "");
         if (errorCount > 0) {
           String message =
               "Linkage Checker rule found "

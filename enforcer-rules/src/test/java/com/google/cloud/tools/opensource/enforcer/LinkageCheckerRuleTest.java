@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.enforcer;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
@@ -54,6 +55,7 @@ import org.eclipse.aether.resolution.DependencyResult;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentMatchers;
 
 public class LinkageCheckerRuleTest {
   private LinkageCheckerRule rule;
@@ -62,6 +64,7 @@ public class LinkageCheckerRuleTest {
 
   private MavenProject mockProject;
   private EnforcerRuleHelper mockRuleHelper;
+  private Log mockLog;
   private MavenSession mockMavenSession;
   private ProjectDependenciesResolver mockProjectDependenciesResolver;
   private DependencyResolutionResult mockDependencyResolutionResult;
@@ -82,7 +85,8 @@ public class LinkageCheckerRuleTest {
     mockRuleHelper = mock(EnforcerRuleHelper.class);
     mockProjectDependenciesResolver = mock(ProjectDependenciesResolver.class);
     mockDependencyResolutionResult = mock(DependencyResolutionResult.class);
-    when(mockRuleHelper.getLog()).thenReturn(mock(Log.class));
+    mockLog = mock(Log.class);
+    when(mockRuleHelper.getLog()).thenReturn(mockLog);
     when(mockRuleHelper.getComponent(ProjectDependenciesResolver.class))
         .thenReturn(mockProjectDependenciesResolver);
     when(mockProjectDependenciesResolver.resolve(any(DependencyResolutionRequest.class)))
@@ -150,6 +154,8 @@ public class LinkageCheckerRuleTest {
           "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
     } catch (EnforcerRuleException ex) {
       // pass
+      verify(mockLog)
+          .error(ArgumentMatchers.startsWith("Linkage Checker rule found errors."));
       Assert.assertEquals(
           "Failed while checking class path. See above error report.", ex.getMessage());
     }
@@ -167,6 +173,8 @@ public class LinkageCheckerRuleTest {
           "The rule should raise an EnforcerRuleException for artifacts with reachable errors");
     } catch (EnforcerRuleException ex) {
       // pass
+      verify(mockLog)
+          .error(ArgumentMatchers.startsWith("Linkage Checker rule found reachable errors."));
       Assert.assertEquals(
           "Failed while checking class path. See above error report.", ex.getMessage());
     }
