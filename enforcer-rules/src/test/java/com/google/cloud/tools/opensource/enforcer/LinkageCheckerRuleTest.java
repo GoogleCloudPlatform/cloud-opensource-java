@@ -24,7 +24,10 @@ import static org.mockito.Mockito.when;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.enforcer.LinkageCheckerRule.DependencySection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.graph.Traverser;
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
@@ -46,8 +49,6 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.resolution.ArtifactRequest;
-import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.junit.Assert;
@@ -90,10 +91,8 @@ public class LinkageCheckerRuleTest {
     when(mockRuleHelper.evaluate("${project}")).thenReturn(mockProject);
   }
 
-  /**
-   * Returns a list of {@link Dependency}s resolved from {@link Artifact} of {@code coordinates}.
-   */
-  private ImmutableList<Dependency> createResolvedDependency(String... coordinates)
+  /** Returns a dependency graph node resolved from {@link Artifact} of {@code coordinates}. */
+  private DependencyNode createResolvedDependencyGraph(String... coordinates)
       throws RepositoryException {
     CollectRequest collectRequest = new CollectRequest();
     collectRequest.setRepositories(ImmutableList.of(RepositoryUtility.CENTRAL));
@@ -109,16 +108,27 @@ public class LinkageCheckerRuleTest {
     dependencyRequest.setRoot(dependencyNode);
     DependencyResult dependencyResult =
         repositorySystem.resolveDependencies(repositorySystemSession, dependencyRequest);
-    return dependencyResult.getArtifactResults().stream()
-        .map(ArtifactResult::getRequest)
-        .map(ArtifactRequest::getDependencyNode)
-        .map(DependencyNode::getDependency)
-        .collect(toImmutableList());
+
+    return dependencyResult.getRoot();
   }
 
   private void setupMockDependencyResolution(String... coordinates) throws RepositoryException {
-    ImmutableList<Dependency> dummyDependencies = createResolvedDependency(coordinates);
+    DependencyNode rootNode = createResolvedDependencyGraph(coordinates);
+    Traverser<DependencyNode> traverser = Traverser.forGraph(node -> node.getChildren());
+
+    // DependencyResolutionResult.getDependencies returns depth-first order
+    ImmutableList<Dependency> dummyDependencies =
+        ImmutableList.copyOf(traverser.depthFirstPreOrder(rootNode)).stream()
+            .map(DependencyNode::getDependency)
+            .filter(Objects::nonNull)
+            .collect(toImmutableList());
     when(mockDependencyResolutionResult.getDependencies()).thenReturn(dummyDependencies);
+    when(mockDependencyResolutionResult.getDependencyGraph()).thenReturn(rootNode);
+    when(mockProject.getDependencies())
+        .thenReturn(
+            dummyDependencies.subList(0, coordinates.length).stream()
+                .map(LinkageCheckerRuleTest::toDependency)
+                .collect(Collectors.toList()));
   }
 
   @Test
@@ -143,6 +153,34 @@ public class LinkageCheckerRuleTest {
       Assert.assertEquals(
           "Failed while checking class path. See above error report.", ex.getMessage());
     }
+  }
+
+  @Test
+  public void testExecute_shouldFailForBadProject_reachableErrors() throws RepositoryException {
+    try {
+      // This pair of artifacts contains classes missing reachable errors on Verify.verify
+      setupMockDependencyResolution(
+          "com.google.api-client:google-api-client:1.27.0", "io.grpc:grpc-core:1.17.1");
+      rule.setReportOnlyReachable(true);
+      rule.execute(mockRuleHelper);
+      Assert.fail(
+          "The rule should raise an EnforcerRuleException for artifacts with reachable errors");
+    } catch (EnforcerRuleException ex) {
+      // pass
+      Assert.assertEquals(
+          "Failed while checking class path. See above error report.", ex.getMessage());
+    }
+  }
+
+  @Test
+  public void testExecute_shouldPassGoodProject_unreachableErrors()
+      throws EnforcerRuleException, RepositoryException {
+    // This artifact has transitive dependency on grpc-netty-shaded, which has linkage errors for
+    // missing classes. They are all unreachable.
+    setupMockDependencyResolution("com.google.cloud:google-cloud-automl:0.81.0-beta");
+    rule.setReportOnlyReachable(true);
+    // This should not raise EnforcerRuleException because the linkage errors are unreachable.
+    rule.execute(mockRuleHelper);
   }
 
   private void setupMockDependencyManagementSection(String... coordinates) {

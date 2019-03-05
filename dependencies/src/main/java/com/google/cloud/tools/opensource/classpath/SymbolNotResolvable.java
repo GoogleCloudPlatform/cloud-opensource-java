@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
  *     Java Dependency Glossary: Linkage Error</a>
  */
 @AutoValue
-abstract class SymbolNotResolvable<T extends SymbolReference> {
+public abstract class SymbolNotResolvable<T extends SymbolReference> {
 
   /** Returns the symbol reference that could not be resolved. */
   abstract T getReference();
@@ -52,7 +52,7 @@ abstract class SymbolNotResolvable<T extends SymbolReference> {
    *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#class-reference-graph">
    *     Java Dependency Glossary: Class Reference Graph</a>
    */
-  abstract boolean isReachable();
+  public abstract boolean isReachable();
 
   @Override
   public String toString() {

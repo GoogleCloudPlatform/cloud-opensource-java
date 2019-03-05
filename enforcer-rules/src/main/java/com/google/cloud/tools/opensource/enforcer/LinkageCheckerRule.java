@@ -26,10 +26,12 @@ import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.graph.Traverser;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -50,6 +52,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
 
 /** Linkage Checker Maven Enforcer Rule. */
 public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
@@ -60,9 +63,16 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    */
   private DependencySection dependencySection = DependencySection.DEPENDENCIES;
 
+  private boolean reportOnlyReachable = false;
+
   @VisibleForTesting
   void setDependencySection(DependencySection dependencySection) {
     this.dependencySection = dependencySection;
+  }
+
+  @VisibleForTesting
+  void setReportOnlyReachable(boolean reportOnlyReachable) {
+    this.reportOnlyReachable = reportOnlyReachable;
   }
 
   @VisibleForTesting
@@ -106,24 +116,41 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       try {
         LinkageChecker linkageChecker = LinkageChecker.create(classpath, directDependencies);
         LinkageCheckReport linkageReport = linkageChecker.findLinkageErrors();
-        int totalErrors =
+        long errorCount =
             linkageReport.getJarLinkageReports().stream()
                 .mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
                 .sum();
-        if (totalErrors > 0) {
+        if (reportOnlyReachable) {
+          ImmutableList<JarLinkageReport> reachableErrorReports =
+              linkageReport.getJarLinkageReports().stream()
+                  .map(JarLinkageReport::reachableErrors)
+                  .collect(toImmutableList());
+          linkageReport = LinkageCheckReport.create(reachableErrorReports);
+          long reachableErrorCount =
+              reachableErrorReports.stream()
+                  .mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
+                  .sum();
+          errorCount = reachableErrorCount;
+        }
+
+        String foundError =
+            String.format(
+                "%s error%s", reportOnlyReachable ? "reachable" : "", errorCount > 1 ? "s" : "");
+        if (errorCount > 0) {
+          String message =
+              "Linkage Checker rule found "
+                  + foundError
+                  + ". Linkage error report:\n"
+                  + linkageReport;
           if (getLevel() == WARN) {
-            logger.warn(
-                "Linkage Checker rule found non-zero errors. Linkage error report:\n"
-                    + linkageReport);
+            logger.warn(message);
           } else {
-            logger.error(
-                "Linkage Checker rule found non-zero errors. Linkage error report:\n"
-                    + linkageReport);
+            logger.error(message);
           }
           throw new EnforcerRuleException(
               "Failed while checking class path. See above error report.");
         } else {
-          logger.info("No linkage error found");
+          logger.info("No " + foundError + " error found");
         }
       } catch (IOException ex) {
         // Maven's "-e" flag does not work for EnforcerRuleException. Print stack trace here.
@@ -146,8 +173,12 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           new DefaultDependencyResolutionRequest(mavenProject, session);
       DependencyResolutionResult dependencyResolutionResult =
           projectDependenciesResolver.resolve(dependencyResolutionRequest);
-      return dependencyResolutionResult.getDependencies().stream()
-          .map(Dependency::getArtifact)
+      Traverser<DependencyNode> traverser = Traverser.forTree(node -> node.getChildren());
+      return ImmutableList.copyOf(
+              traverser.breadthFirst(dependencyResolutionResult.getDependencyGraph()))
+          .stream()
+          .map(DependencyNode::getArtifact)
+          .filter(Objects::nonNull)
           .map(Artifact::getFile)
           .map(File::toPath)
           .collect(toImmutableList());

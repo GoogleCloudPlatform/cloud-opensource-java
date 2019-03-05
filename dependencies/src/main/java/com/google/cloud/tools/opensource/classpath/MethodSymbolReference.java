@@ -22,7 +22,7 @@ import com.google.auto.value.AutoValue;
  * A symbol reference to a method of {@code targetClass} referenced from {@code sourceClass}.
  */
 @AutoValue
-abstract class MethodSymbolReference implements SymbolReference  {
+public abstract class MethodSymbolReference implements SymbolReference  {
   /**
    * Returns the method name of the reference. Example: {@code marshaller}
    */
