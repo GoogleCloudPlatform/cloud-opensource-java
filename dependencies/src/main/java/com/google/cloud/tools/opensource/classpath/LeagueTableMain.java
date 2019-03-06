@@ -72,11 +72,15 @@ class LeagueTableMain {
           cvsBuilder.append("-1").append(",");
           continue;
         }
+        LinkageCheckerArguments argumentForPair =
+            LinkageCheckerArguments.readCommandLine("-a",
+                bomMember1.toString() + "," + bomMember2.toString()
+            );
 
         LinkageChecker linkageChecker =
             LinkageChecker.create(
-                linkageCheckerArguments.getInputClasspath(),
-                linkageCheckerArguments.getEntryPointJars());
+                argumentForPair.getInputClasspath(),
+                argumentForPair.getEntryPointJars());
         LinkageCheckReport report = linkageChecker.findLinkageErrors();
 
         long problematicJarCount =
