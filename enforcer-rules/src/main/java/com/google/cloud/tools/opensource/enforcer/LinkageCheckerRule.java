@@ -125,7 +125,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       try {
         LinkageChecker linkageChecker = LinkageChecker.create(classpath, directDependencies);
         LinkageCheckReport linkageReport = linkageChecker.findLinkageErrors();
-        long errorCount =
+        int errorCount =
             linkageReport.getJarLinkageReports().stream()
                 .mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
                 .sum();
@@ -135,16 +135,17 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
                   .map(JarLinkageReport::reachableErrors)
                   .collect(toImmutableList());
           linkageReport = LinkageCheckReport.create(reachableErrorReports);
-          long reachableErrorCount =
+          int reachableErrorCount =
               reachableErrorReports.stream()
                   .mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
                   .sum();
           errorCount = reachableErrorCount;
         }
 
-        String foundError =
-            String.format(
-                "%serror%s", reportOnlyReachable ? "reachable " : "", errorCount > 1 ? "s" : "");
+        String foundError = reportOnlyReachable ? "reachable error" : "error";
+        if (errorCount > 1) {
+          foundError += "s";
+        }
         if (errorCount > 0) {
           String message =
               "Linkage Checker rule found "

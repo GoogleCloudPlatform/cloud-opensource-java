@@ -164,7 +164,8 @@ public class LinkageCheckerRuleTest {
   @Test
   public void testExecute_shouldFailForBadProject_reachableErrors() throws RepositoryException {
     try {
-      // This pair of artifacts contains classes missing reachable errors on Verify.verify
+      // This pair of artifacts contains linkage errors on grpc-core's use of Verify. Because
+      // grpc-core is included in entry point jars, the errors are reachable.
       setupMockDependencyResolution(
           "com.google.api-client:google-api-client:1.27.0", "io.grpc:grpc-core:1.17.1");
       rule.setReportOnlyReachable(true);
