@@ -151,13 +151,12 @@ class ClassDumper {
    *
    * @param jarFilePath absolute path to a jar file
    */
-  static SymbolReferenceSet scanSymbolReferencesInJar(Path jarFilePath)
-      throws IOException {
+  SymbolReferenceSet scanSymbolReferencesInJar(Path jarFilePath) throws IOException {
     checkArgument(jarFilePath.isAbsolute(), "The input jar file path is not an absolute path");
     checkArgument(Files.isReadable(jarFilePath), "The input jar file path is not readable");
 
     SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
-    for (JavaClass javaClass : listClassesInJar(jarFilePath)) {
+    for (JavaClass javaClass : listClassesInJarFromClassPath(jarFilePath)) {
       if (!isCompatibleClassFileVersion(javaClass)) {
         continue;
       }
@@ -356,8 +355,8 @@ class ClassDumper {
    * @param jarPaths absolute paths to jar files
    */
   @VisibleForTesting
-  static ImmutableSetMultimap<Path, String> mapJarToClasses(
-      List<Path> jarPaths) throws IOException {
+  static ImmutableSetMultimap<Path, String> mapJarToClasses(List<Path> jarPaths)
+      throws IOException {
     ImmutableSetMultimap.Builder<Path, String> pathToClasses = ImmutableSetMultimap.builder();
     for (Path jarPath : jarPaths) {
       for (JavaClass javaClass : listClassesInJar(jarPath)) {
@@ -398,8 +397,9 @@ class ClassDumper {
     return classPath.getAllClasses();
   }
 
-  static ImmutableSet<JavaClass> listClassesInJar(Path jarPath) throws IOException {
-    Repository repository = createClassRepository(ImmutableList.of(jarPath));
+  /** Returns a set of {@link JavaClass}es in {@code jarPath} through {@code repository}. */
+  static ImmutableSet<JavaClass> listClassesInJar(Path jarPath, Repository repository)
+      throws IOException {
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     URL jarUrl = jarPath.toUri().toURL();
     for (ClassInfo classInfo : listClassInfo(jarUrl)) {
@@ -413,6 +413,19 @@ class ClassDumper {
       }
     }
     return javaClasses.build();
+  }
+
+  /** Returns a set of {@link JavaClass}es in {@code jarPath}. */
+  static ImmutableSet<JavaClass> listClassesInJar(Path jarPath) throws IOException {
+    return listClassesInJar(jarPath, createClassRepository(ImmutableList.of(jarPath)));
+  }
+
+  /**
+   * Returns a set of {@link JavaClass}es in {@code jarPath} via the class path in {@link
+   * #classRepository}.
+   */
+  ImmutableSet<JavaClass> listClassesInJarFromClassPath(Path jarPath) throws IOException {
+    return listClassesInJar(jarPath, classRepository);
   }
 
   /** Returns true if two class names (binary name JLS 13.1) have the same package. */
@@ -584,7 +597,10 @@ class ClassDumper {
           constantPoolIndexForClass(sourceJavaClass, targetClassName);
       Verify.verify(
           !targetConstantPoolIndices.isEmpty(),
-          "The target class symbol reference is not found in source class");
+          "The target class symbol reference "
+              + targetClassName
+              + " is not found in source class "
+              + sourceJavaClass.getClassName());
 
       ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();
       Constant[] constantPoolEntries = sourceConstantPool.getConstantPool();
