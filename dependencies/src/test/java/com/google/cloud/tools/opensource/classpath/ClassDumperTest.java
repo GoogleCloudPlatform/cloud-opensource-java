@@ -114,9 +114,9 @@ public class ClassDumperTest {
       throws URISyntaxException, IOException {
     URL jarUrl = URLClassLoader.getSystemResource(GRPC_CLOUD_FIRESTORE_JAR);
 
+    Path path = Paths.get(jarUrl.toURI());
     SymbolReferenceSet symbolReferenceSet =
-        ClassDumper.scanSymbolReferencesInJar(
-            Paths.get(jarUrl.toURI()));
+        ClassDumper.create(ImmutableList.of(path)).scanSymbolReferencesInJar(path);
 
     Set<FieldSymbolReference> actualFieldReferences = symbolReferenceSet.getFieldReferences();
     FieldSymbolReference expectedFieldReference =
@@ -163,8 +163,9 @@ public class ClassDumperTest {
       throws URISyntaxException, IOException {
     URL jarUrl = URLClassLoader.getSystemResource("testdata/gax-1.32.0.jar");
 
+    Path path = Paths.get(jarUrl.toURI());
     SymbolReferenceSet symbolReferenceSet =
-        ClassDumper.scanSymbolReferencesInJar(Paths.get(jarUrl.toURI()));
+        ClassDumper.create(ImmutableList.of(path)).scanSymbolReferencesInJar(path);
 
     Set<ClassSymbolReference> actualClassReferences = symbolReferenceSet.getClassReferences();
     Truth.assertThat(actualClassReferences).isNotEmpty();
@@ -179,8 +180,9 @@ public class ClassDumperTest {
       throws URISyntaxException, IOException {
     URL jarUrl = URLClassLoader.getSystemResource("testdata/api-common-1.7.0.jar");
 
+    Path path = Paths.get(jarUrl.toURI());
     SymbolReferenceSet symbolReferenceSet =
-        ClassDumper.scanSymbolReferencesInJar(Paths.get(jarUrl.toURI()));
+        ClassDumper.create(ImmutableList.of(path)).scanSymbolReferencesInJar(path);
 
     Set<MethodSymbolReference> interfaceMethodSymbolReferences =
         symbolReferenceSet.getMethodReferences();
@@ -345,7 +347,9 @@ public class ClassDumperTest {
     } catch (VerifyException ex) {
       // pass
       Truth.assertThat(ex.getMessage())
-          .isEqualTo("The target class symbol reference is not found in source class");
+          .isEqualTo(
+              "The target class symbol reference dummy.NoSuchClass is not found in "
+                  + "source class org.conscrypt.Conscrypt");
     }
   }
 }

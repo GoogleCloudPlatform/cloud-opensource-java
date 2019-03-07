@@ -177,7 +177,8 @@ public class ClassPathBuilderTest {
     // 'void verify(String host, String[] cns, String[] subjectAlts)' to itself and its interface
     // X509HostnameVerifier has the method.
     // https://github.com/apache/httpcomponents-client/blob/e2cf733c60f910d17dc5cfc0a77797054a2e322e/httpclient/src/main/java/org/apache/http/conn/ssl/AbstractVerifier.java#L153
-    SymbolReferenceSet symbolReferenceSet = ClassDumper.scanSymbolReferencesInJar(httpClientJar);
+    ClassDumper dumper = ClassDumper.create(ImmutableList.of(httpClientJar));
+    SymbolReferenceSet symbolReferenceSet = dumper.scanSymbolReferencesInJar(httpClientJar);
     ClassSymbolReference referenceToGZipInputStreamFactory =
         ClassSymbolReference.builder()
             .setSourceClassName("org.apache.http.client.protocol.ResponseContentEncoding")

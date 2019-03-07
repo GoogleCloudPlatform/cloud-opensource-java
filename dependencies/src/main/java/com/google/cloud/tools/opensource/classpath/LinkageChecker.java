@@ -57,7 +57,7 @@ public class LinkageChecker {
 
     ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbolBuilder = ImmutableMap.builder();
     for (Path jarPath : jarPaths) {
-      jarToSymbolBuilder.put(jarPath, ClassDumper.scanSymbolReferencesInJar(jarPath));
+      jarToSymbolBuilder.put(jarPath, dumper.scanSymbolReferencesInJar(jarPath));
     }
     ImmutableMap<Path, SymbolReferenceSet> jarToSymbols = jarToSymbolBuilder.build();
 
