@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -95,9 +96,12 @@ public class DashboardMain {
     // TODO should pass in maven coordinates as argument
     DefaultArtifact bom =
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
+    System.out.println(new Date() + ": reading bom");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
-
+    System.out.println(new Date() + ": loading artifact info");
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
+
+    System.out.println(new Date() + ": resolving BOM dependencies");
 
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
         ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
@@ -108,11 +112,13 @@ public class DashboardMain {
     List<Path> artifactJarsInBom = classpath.subList(0, managedDependencies.size());
     ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInBom);
 
+    System.out.println(new Date() + ": creating linkage checker");
     LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints);
-
+    System.out.println(new Date() + ": finding linkage errors");
     LinkageCheckReport linkageReport = linkageChecker.findLinkageErrors();
-    
+    System.out.println(new Date() + ": generating HTML");
     Path output = generateHtml(cache, jarToDependencyPaths, linkageReport);
+    System.out.println(new Date() + ": done.");
 
     return output;
   }

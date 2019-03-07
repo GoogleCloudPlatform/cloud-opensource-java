@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.cloud.tools.opensource.classpath.LeagueTableMain;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -150,6 +151,9 @@ public class DependencyGraphBuilder {
       collectRequest.setDependencies(dependencyList);
     }
     RepositoryUtility.addRepositoriesToRequest(collectRequest);
+
+    collectRequest.setManagedDependencies(LeagueTableMain.managedDependencies);
+
     CollectResult collectResult = system.collectDependencies(session, collectRequest);
     DependencyNode node = collectResult.getRoot();
 

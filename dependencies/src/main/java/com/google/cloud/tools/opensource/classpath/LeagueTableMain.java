@@ -18,15 +18,21 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.Dependency;
 
 /** A tool to find linkage errors for a class path. */
-class LeagueTableMain {
+public class LeagueTableMain {
+
+
+  public static final List<Dependency> managedDependencies = Lists.newArrayList();
 
   /** Given Maven coordinates of a BOM, outputs the pair-wise comparison table. */
   public static void main(String[] arguments)
@@ -40,7 +46,6 @@ class LeagueTableMain {
         linkageCheckerArguments.getAddMavenCentral());
 
     ImmutableList<Artifact> bomMembers = linkageCheckerArguments.getArtifacts();
-//    bomMembers = bomMembers.subList(0, 20);
 
     Map<String, LinkageCheckReport> table = Maps.newHashMap();
 
@@ -50,7 +55,10 @@ class LeagueTableMain {
     cvsBuilder.append("artifacts,");
     for (Artifact bomMember : bomMembers) {
       cvsBuilder.append(bomMember).append(",");
+      managedDependencies.add(new Dependency(bomMember, "compile"));
     }
+//    bomMembers = bomMembers.subList(5, 20);
+
     cvsBuilder.append("\n");
     int cellTotal = bomMembers.size() * bomMembers.size();
     int cellCount = 0;
@@ -60,6 +68,8 @@ class LeagueTableMain {
       for (Artifact bomMember2 : bomMembers) {
         cellCount++;
         String key = bomMember1.toString() + " " + bomMember2;
+
+
         long currentTimeMillis = System.currentTimeMillis();
         long diffMillis = currentTimeMillis - startTimeMillis;
         // cellCount is guaranteed to be non-zero
@@ -73,9 +83,8 @@ class LeagueTableMain {
           continue;
         }
         LinkageCheckerArguments argumentForPair =
-            LinkageCheckerArguments.readCommandLine("-a",
-                bomMember1.toString() + "," + bomMember2.toString()
-            );
+            LinkageCheckerArguments.readCommandLine(
+                "-a", bomMember1.toString() + "," + bomMember2.toString());
 
         LinkageChecker linkageChecker =
             LinkageChecker.create(
