@@ -398,7 +398,7 @@ class ClassDumper {
   }
 
   /** Returns a set of {@link JavaClass}es in {@code jarPath} through {@code repository}. */
-  static ImmutableSet<JavaClass> listClassesInJar(Path jarPath, Repository repository)
+  private static ImmutableSet<JavaClass> listClassesInJar(Path jarPath, Repository repository)
       throws IOException {
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     URL jarUrl = jarPath.toUri().toURL();
@@ -424,7 +424,7 @@ class ClassDumper {
    * Returns a set of {@link JavaClass}es in {@code jarPath} via the class path in {@link
    * #classRepository}.
    */
-  ImmutableSet<JavaClass> listClassesInJarFromClassPath(Path jarPath) throws IOException {
+  private ImmutableSet<JavaClass> listClassesInJarFromClassPath(Path jarPath) throws IOException {
     return listClassesInJar(jarPath, classRepository);
   }
 
