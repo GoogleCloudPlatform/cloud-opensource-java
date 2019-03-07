@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.StreamSupport;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -147,12 +148,13 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           helper.getComponent(ProjectDependenciesResolver.class);
       DependencyResolutionRequest dependencyResolutionRequest =
           new DefaultDependencyResolutionRequest(mavenProject, session);
-      DependencyResolutionResult dependencyResolutionResult =
+      DependencyResolutionResult resolutionResult =
           projectDependenciesResolver.resolve(dependencyResolutionRequest);
-      Traverser<DependencyNode> traverser = Traverser.forTree(node -> node.getChildren());
-      return ImmutableList.copyOf(
-              traverser.breadthFirst(dependencyResolutionResult.getDependencyGraph()))
-          .stream()
+
+      Traverser<DependencyNode> traverser = Traverser.forTree(DependencyNode::getChildren);
+
+      return StreamSupport.stream(
+              traverser.breadthFirst(resolutionResult.getDependencyGraph()).spliterator(), false)
           .map(DependencyNode::getArtifact)
           .filter(Objects::nonNull)
           .map(Artifact::getFile)
