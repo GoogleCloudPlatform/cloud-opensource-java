@@ -37,16 +37,18 @@ abstract class LinkageErrorCause {
   private static <T extends SymbolReference> String symbolNameFrom(
       SymbolNotResolvable<T> staticLinkageError) {
     T reference = staticLinkageError.getReference();
+    String classNamePrefix = reference.getTargetClassName() + ".";
+
+    if (reference instanceof MethodSymbolReference) {
+      // Human-friendly format of method declaration
+      MethodSymbolReference methodSymbolReference = (MethodSymbolReference) reference;
+      return methodSymbolReference.methodDeclaration();
+    }
     switch (staticLinkageError.getReason()) {
       case INACCESSIBLE_MEMBER:
       case SYMBOL_NOT_FOUND:
-        String classNamePrefix = reference.getTargetClassName() + ".";
-        if (reference instanceof MethodSymbolReference) {
-          return classNamePrefix + ((MethodSymbolReference) reference).getMethodName();
-        } else {
           // FieldSymbolReference
           return classNamePrefix + ((FieldSymbolReference) reference).getFieldName();
-        }
       case CLASS_NOT_FOUND:
       case INACCESSIBLE_CLASS:
       case INCOMPATIBLE_CLASS_CHANGE:

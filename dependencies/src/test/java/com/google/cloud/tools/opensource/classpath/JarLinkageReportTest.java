@@ -54,7 +54,7 @@ public class JarLinkageReportTest {
             .setTargetClassName("ClassA")
             .setInterfaceMethod(false)
             .setMethodName("methodX")
-            .setDescriptor("java.lang.String")
+            .setDescriptor("(Ljava.lang.String;)V")
             .setSourceClassName("ClassB")
             .build();
     Path targetClassLocation = Paths.get("dummy.jar");
@@ -66,11 +66,12 @@ public class JarLinkageReportTest {
             .setTargetClassName("ClassA")
             .setInterfaceMethod(false)
             .setMethodName("methodX")
-            .setDescriptor("java.lang.String")
+            .setDescriptor("(Ljava.lang.String;)V")
             .setSourceClassName("ClassC$InnerC")
             .build();
     SymbolNotResolvable<MethodSymbolReference> linkageErrorMissingMethodByClass =
-        SymbolNotResolvable.errorMissingTargetClass(methodSymbolReferenceDueToMissingClass, false);
+        SymbolNotResolvable.errorMissingMember(
+            methodSymbolReferenceDueToMissingClass, targetClassLocation, false);
 
     missingMethodErrors =
         ImmutableList.of(linkageErrorMissingMethod, linkageErrorMissingMethodByClass);
@@ -126,12 +127,12 @@ public class JarLinkageReportTest {
             + ", subclass=false}, reason: CLASS_NOT_FOUND, target class location not found"
             + ", isReachable: true\n"
             + "  MethodSymbolReference{sourceClassName=ClassB, targetClassName=ClassA, "
-            + "methodName=methodX, interfaceMethod=false, descriptor=java.lang.String}"
+            + "methodName=methodX, interfaceMethod=false, descriptor=(Ljava.lang.String;)V}"
             + ", reason: SYMBOL_NOT_FOUND, target class from dummy.jar"
             + ", isReachable: true\n"
             + "  MethodSymbolReference{sourceClassName=ClassC$InnerC, targetClassName=ClassA,"
-            + " methodName=methodX, interfaceMethod=false, descriptor=java.lang.String}, "
-            + "reason: CLASS_NOT_FOUND, target class location not found"
+            + " methodName=methodX, interfaceMethod=false, descriptor=(Ljava.lang.String;)V}, "
+            + "reason: SYMBOL_NOT_FOUND, target class from dummy.jar"
             + ", isReachable: false\n"
             + "  FieldSymbolReference{sourceClassName=ClassD, targetClassName=ClassC, "
             + "fieldName=fieldX}, reason: CLASS_NOT_FOUND, target class location not found"
@@ -144,11 +145,14 @@ public class JarLinkageReportTest {
     ImmutableMultimap<LinkageErrorCause, String> causeToSourceClasses =
         jarLinkageReport.getCauseToSourceClasses();
 
-    ImmutableSet<LinkageErrorCause> linkageErrorCauses = causeToSourceClasses.keySet();
+    ImmutableList<LinkageErrorCause> linkageErrorCauses = ImmutableList.copyOf(causeToSourceClasses.keySet());
     Truth.assertThat(linkageErrorCauses).hasSize(3);
     ImmutableCollection<String> classesForFirstCause =
-        causeToSourceClasses.get(linkageErrorCauses.iterator().next());
+        causeToSourceClasses.get(linkageErrorCauses.get(0));
     // InnerC should not appear here
-    Truth.assertThat(classesForFirstCause).containsExactly("ClassB", "ClassC");
+    Truth.assertThat(classesForFirstCause).containsExactly("ClassB");
+    ImmutableCollection<String> classesForSecondCause =
+        causeToSourceClasses.get(linkageErrorCauses.get(1));
+    Truth.assertThat(classesForSecondCause).containsExactly("ClassB", "ClassC");
   }
 }

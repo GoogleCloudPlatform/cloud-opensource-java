@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
+import org.apache.bcel.classfile.Utility;
 
 /**
  * A symbol reference to a method of {@code targetClass} referenced from {@code sourceClass}.
@@ -54,5 +55,17 @@ abstract class MethodSymbolReference implements SymbolReference  {
     abstract Builder setDescriptor(String descriptor);
     abstract Builder setSourceClassName(String className);
     abstract MethodSymbolReference build();
+  }
+
+  /** Returns string format close to declaration. For example {@code }.*/
+  String methodDeclaration() {
+    String methodSignature =
+        Utility.methodSignatureToString(
+            getDescriptor(),
+            getMethodName(),
+            "",
+            true,
+            null); // var0, var1 ... are used for arguments
+    return methodSignature + " in " + getTargetClassName();
   }
 }

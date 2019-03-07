@@ -50,7 +50,7 @@ public class LinkageCheckReportTest {
             .setTargetClassName("ClassA")
             .setInterfaceMethod(false)
             .setMethodName("methodX")
-            .setDescriptor("java.lang.String")
+            .setDescriptor("(Ljava.lang.String;)V")
             .setSourceClassName("ClassB")
             .build();
     SymbolNotResolvable<MethodSymbolReference> linkageErrorMissingMethod =

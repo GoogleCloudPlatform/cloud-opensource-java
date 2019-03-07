@@ -18,6 +18,8 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.classpath.SymbolNotResolvable.Reason;
 import com.google.common.truth.Truth;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.Test;
 
 public class LinkageErrorCauseTest {
@@ -37,5 +39,27 @@ public class LinkageErrorCauseTest {
     LinkageErrorCause groupKey = LinkageErrorCause.from(fieldError);
     Truth.assertThat(groupKey.getReason()).isEqualTo(Reason.CLASS_NOT_FOUND);
     Truth.assertThat(groupKey.getSymbol()).isEqualTo("ClassC");
+  }
+
+  @Test
+  public void testToString() {
+    MethodSymbolReference fieldSymbolReference =
+        MethodSymbolReference.builder()
+            .setTargetClassName("com.google.common.base.Verify")
+            .setMethodName("verify")
+            .setDescriptor("(ZLjava/lang/String;Ljava/lang/Object;)V")
+            .setSourceClassName("com.foo.Bar")
+            .setInterfaceMethod(false)
+            .build();
+
+    Path dummyPath = Paths.get("foo", "bar");
+    SymbolNotResolvable<MethodSymbolReference> methodError =
+        SymbolNotResolvable.errorMissingMember(fieldSymbolReference, dummyPath, true);
+
+    LinkageErrorCause linkageErrorCause = LinkageErrorCause.from(methodError);
+    Truth.assertThat(linkageErrorCause.toString())
+        .isEqualTo(
+            "void verify(boolean arg1, String arg2, Object arg3) in "
+                + "com.google.common.base.Verify is not found");
   }
 }
