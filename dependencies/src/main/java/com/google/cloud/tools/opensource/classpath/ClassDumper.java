@@ -355,8 +355,8 @@ class ClassDumper {
    * @param jarPaths absolute paths to jar files
    */
   @VisibleForTesting
-  static ImmutableSetMultimap<Path, String> mapJarToClasses(List<Path> jarPaths)
-      throws IOException {
+  static ImmutableSetMultimap<Path, String> mapJarToClasses(
+      List<Path> jarPaths) throws IOException {
     ImmutableSetMultimap.Builder<Path, String> pathToClasses = ImmutableSetMultimap.builder();
     for (Path jarPath : jarPaths) {
       for (JavaClass javaClass : listClassesInJar(jarPath)) {
