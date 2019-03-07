@@ -21,52 +21,18 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import java.util.Collection;
 import java.util.List;
-import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
 
-/**
- * Formats and prints artifact dependency tree represented by a list of {@link DependencyPath}s.
- */
+/** Formats Maven artifact dependency tree. */
 public class DependencyTreeFormatter {
-
-  public static void main(String[] args) {
-    if (args.length < 1) {
-      System.err.println("Maven coordinate not provided. E.g., 'io.grpc:grpc-auth:1.15.0'");
-      return;
-    }
-    for (String coordinate : args) {
-      try {
-        printDependencyTree(coordinate);
-      } catch (RepositoryException e) {
-        System.err.println(coordinate + " : Failed to retrieve dependency information:"
-            + e.getMessage());
-      }
-    }
-  }
-
   /**
-   * Prints dependencies for the coordinate of an artifact
-   *
-   * @param coordinate Maven coordinate of an artifact to print its dependencies
-   */
-  private static void printDependencyTree(String coordinate) throws RepositoryException {
-    DefaultArtifact rootArtifact = new DefaultArtifact(coordinate);
-    DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.getCompleteDependencies(rootArtifact);
-    System.out.println("Dependencies for " + coordinate);
-    System.out.println(formatDependencyPaths(dependencyGraph.list()));
-  }
-
-  /**
-   * Prints dependencies expressed in dependency paths in tree in similar way to
-   * mvn dependency:tree.
+   * Formats dependencies as a tree in a similar way to {@code mvn dependency:tree}.
    *
    * @param dependencyPaths dependency paths from @{@link
    *     DependencyGraphBuilder#getCompleteDependencies(Artifact)}. Each element must have its
    *     parent in the list, except the ones at the root.
    */
-  public static String formatDependencyPaths(List<DependencyPath> dependencyPaths) {
+  static String formatDependencyPaths(List<DependencyPath> dependencyPaths) {
     StringBuilder stringBuilder = new StringBuilder();
     // While Maven dependencies are resolved in level-order, printing text representing a tree
     // requires traversing the items in pre-order
