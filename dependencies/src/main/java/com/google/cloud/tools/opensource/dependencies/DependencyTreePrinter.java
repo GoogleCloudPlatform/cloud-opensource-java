@@ -22,7 +22,7 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
 /** Prints the dependency tree of Maven artifacts. */
-class DependencyTreeFormatterMain {
+class DependencyTreePrinter {
   public static void main(String[] args) {
     if (args.length < 1) {
       System.err.println("Maven coordinates not provided. E.g., 'io.grpc:grpc-auth:1.15.0'");
