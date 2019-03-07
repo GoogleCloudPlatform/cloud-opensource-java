@@ -26,10 +26,13 @@ import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.graph.Traverser;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.StreamSupport;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -50,6 +53,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
 
 /** Linkage Checker Maven Enforcer Rule. */
 public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
@@ -144,10 +148,15 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           helper.getComponent(ProjectDependenciesResolver.class);
       DependencyResolutionRequest dependencyResolutionRequest =
           new DefaultDependencyResolutionRequest(mavenProject, session);
-      DependencyResolutionResult dependencyResolutionResult =
+      DependencyResolutionResult resolutionResult =
           projectDependenciesResolver.resolve(dependencyResolutionRequest);
-      return dependencyResolutionResult.getDependencies().stream()
-          .map(Dependency::getArtifact)
+
+      Traverser<DependencyNode> traverser = Traverser.forTree(DependencyNode::getChildren);
+
+      return StreamSupport.stream(
+              traverser.breadthFirst(resolutionResult.getDependencyGraph()).spliterator(), false)
+          .map(DependencyNode::getArtifact)
+          .filter(Objects::nonNull)
           .map(Artifact::getFile)
           .map(File::toPath)
           .collect(toImmutableList());
