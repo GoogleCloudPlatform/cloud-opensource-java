@@ -19,41 +19,6 @@ package com.google.cloud.tools.opensource.dashboard;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-
-import freemarker.template.Configuration;
-import freemarker.template.DefaultObjectWrapper;
-import freemarker.template.DefaultObjectWrapperBuilder;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
-import freemarker.template.TemplateHashModel;
-import freemarker.template.Version;
-import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.apache.maven.project.ProjectBuildingException;
-import org.codehaus.plexus.PlexusContainerException;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
@@ -79,6 +44,39 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import freemarker.template.Configuration;
+import freemarker.template.DefaultObjectWrapper;
+import freemarker.template.DefaultObjectWrapperBuilder;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import freemarker.template.TemplateHashModel;
+import freemarker.template.Version;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+import org.apache.maven.project.ProjectBuildingException;
+import org.codehaus.plexus.PlexusContainerException;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 
 public class DashboardMain {
   public static final String TEST_NAME_LINKAGE_CHECK = "Linkage Errors";
@@ -87,8 +85,8 @@ public class DashboardMain {
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
 
   /**
-   * Generates a code hygiene dashboard for a BOM. The file name (pom.xml) of the BOM is specified
-   * as the argument.
+   * Generates a code hygiene dashboard for a BOM. This tool takes a path to pom.xml of the BOM as
+   * an argument or Maven coordinates to a BOM.
    */
   public static void main(String[] arguments)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
@@ -97,9 +95,15 @@ public class DashboardMain {
       System.err.println("Please specify pom.xml for a BOM.");
       return;
     }
-    String bomFile = arguments[0];
-    Path output = generate(Paths.get(bomFile));
+    String bomInput = arguments[0];
+    Path output = bomInput.endsWith("xml") ? generate(Paths.get(bomInput)) : generate(bomInput);
     System.out.println("Wrote dashboard into " + output.toAbsolutePath());
+  }
+
+  private static Path generate(String bomCoordinates)
+      throws IOException, TemplateException, RepositoryException, URISyntaxException {
+    Artifact bom = new DefaultArtifact(bomCoordinates);
+    return generate(RepositoryUtility.readBom(bom));
   }
 
   @VisibleForTesting
@@ -110,8 +114,11 @@ public class DashboardMain {
         Files.isRegularFile(bomFile), "The input BOM " + bomFile + " is not a regular file");
     Preconditions.checkArgument(
         Files.isReadable(bomFile), "The input BOM " + bomFile + " is not readable");
-    List<Artifact> managedDependencies = RepositoryUtility.readBom(bomFile);
+    return generate(RepositoryUtility.readBom(bomFile));
+  }
 
+  private static Path generate(List<Artifact> managedDependencies)
+      throws IOException, TemplateException, RepositoryException, URISyntaxException {
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
 
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
@@ -126,7 +133,7 @@ public class DashboardMain {
     LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints);
 
     LinkageCheckReport linkageReport = linkageChecker.findLinkageErrors();
-    
+
     Path output = generateHtml(cache, jarToDependencyPaths, linkageReport);
 
     return output;
