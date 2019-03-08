@@ -59,6 +59,17 @@ For a BOM project, set `dependencySection` element to `DEPENDENCY_MANAGEMENT`.
   </banLinkageErrors>
 ```
 
+To suppress linkage errors that are not [_reachable in the class reference graph_](
+../library-best-practices/glossary.md#class-reference-graph) from the classes in the direct
+dependencies of the project, set `reportOnlyReachable` element to `true`. (default: `false`).
+
+```xml
+  <banLinkageErrors
+      implementation="com.google.cloud.tools.opensource.enforcer.LinkageCheckerRule">
+      <reportOnlyReachable>true</reportOnlyReachable>
+  </banLinkageErrors>
+```
+
 If a violation should not fail the build, set `level` element to `WARN`:
 
 ```xml
