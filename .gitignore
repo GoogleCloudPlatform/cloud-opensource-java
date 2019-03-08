@@ -12,4 +12,5 @@ RemoteSystemsTempFiles/
 *.iml
 .idea
 .factorypath
+.apt_generated/
 
