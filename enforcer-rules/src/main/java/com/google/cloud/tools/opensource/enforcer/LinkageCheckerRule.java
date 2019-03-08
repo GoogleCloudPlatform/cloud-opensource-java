@@ -26,10 +26,13 @@ import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.graph.Traverser;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.StreamSupport;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -50,6 +53,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
 
 /** Linkage Checker Maven Enforcer Rule. */
 public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
@@ -60,9 +64,24 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    */
   private DependencySection dependencySection = DependencySection.DEPENDENCIES;
 
+  /**
+   * Set to true to suppress linkage errors unreachable from the classes in the direct dependencies.
+   * By default, it's {@code false}.
+   *
+   * @see <a
+   *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#class-reference-graph"
+   *     >Java Dependency Glossary: Class reference graph</a>
+   */
+  private boolean reportOnlyReachable = false;
+
   @VisibleForTesting
   void setDependencySection(DependencySection dependencySection) {
     this.dependencySection = dependencySection;
+  }
+
+  @VisibleForTesting
+  void setReportOnlyReachable(boolean reportOnlyReachable) {
+    this.reportOnlyReachable = reportOnlyReachable;
   }
 
   @VisibleForTesting
@@ -106,24 +125,42 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       try {
         LinkageChecker linkageChecker = LinkageChecker.create(classpath, directDependencies);
         LinkageCheckReport linkageReport = linkageChecker.findLinkageErrors();
-        int totalErrors =
+        int errorCount =
             linkageReport.getJarLinkageReports().stream()
                 .mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
                 .sum();
-        if (totalErrors > 0) {
+        if (reportOnlyReachable) {
+          ImmutableList<JarLinkageReport> reachableErrorReports =
+              linkageReport.getJarLinkageReports().stream()
+                  .map(JarLinkageReport::reachableErrors)
+                  .collect(toImmutableList());
+          linkageReport = LinkageCheckReport.create(reachableErrorReports);
+          int reachableErrorCount =
+              reachableErrorReports.stream()
+                  .mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
+                  .sum();
+          errorCount = reachableErrorCount;
+        }
+
+        String foundError = reportOnlyReachable ? "reachable error" : "error";
+        if (errorCount > 1) {
+          foundError += "s";
+        }
+        if (errorCount > 0) {
+          String message =
+              "Linkage Checker rule found "
+                  + foundError
+                  + ". Linkage error report:\n"
+                  + linkageReport;
           if (getLevel() == WARN) {
-            logger.warn(
-                "Linkage Checker rule found non-zero errors. Linkage error report:\n"
-                    + linkageReport);
+            logger.warn(message);
           } else {
-            logger.error(
-                "Linkage Checker rule found non-zero errors. Linkage error report:\n"
-                    + linkageReport);
+            logger.error(message);
           }
           throw new EnforcerRuleException(
               "Failed while checking class path. See above error report.");
         } else {
-          logger.info("No linkage error found");
+          logger.info("No " + foundError + " found");
         }
       } catch (IOException ex) {
         // Maven's "-e" flag does not work for EnforcerRuleException. Print stack trace here.
@@ -144,10 +181,15 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           helper.getComponent(ProjectDependenciesResolver.class);
       DependencyResolutionRequest dependencyResolutionRequest =
           new DefaultDependencyResolutionRequest(mavenProject, session);
-      DependencyResolutionResult dependencyResolutionResult =
+      DependencyResolutionResult resolutionResult =
           projectDependenciesResolver.resolve(dependencyResolutionRequest);
-      return dependencyResolutionResult.getDependencies().stream()
-          .map(Dependency::getArtifact)
+
+      Traverser<DependencyNode> traverser = Traverser.forTree(DependencyNode::getChildren);
+
+      return StreamSupport.stream(
+              traverser.breadthFirst(resolutionResult.getDependencyGraph()).spliterator(), false)
+          .map(DependencyNode::getArtifact)
+          .filter(Objects::nonNull)
           .map(Artifact::getFile)
           .map(File::toPath)
           .collect(toImmutableList());
