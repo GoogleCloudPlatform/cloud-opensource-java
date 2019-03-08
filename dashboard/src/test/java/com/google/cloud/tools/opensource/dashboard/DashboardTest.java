@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import static com.google.cloud.tools.opensource.dashboard.DashboardMain.CLOUD_OSS_BOM_PATH;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import java.io.IOException;
@@ -25,6 +24,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -55,6 +55,9 @@ import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 
 public class DashboardTest {
+
+  private static final Path CLOUD_OSS_BOM_PATH =
+      Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();
 
   private static final Correspondence<Node, String> NODE_VALUES =
       new Correspondence<Node, String>() {

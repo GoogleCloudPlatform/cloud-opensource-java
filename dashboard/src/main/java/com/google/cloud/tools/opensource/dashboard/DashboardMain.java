@@ -85,13 +85,19 @@ public class DashboardMain {
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
   public static final String TEST_NAME_GLOBAL_UPPER_BOUND = "Global Upper Bounds";
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
-  public static final Path CLOUD_OSS_BOM_PATH =
-      Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();
 
-  public static void main(String[] args)
+  /**
+   * Generates a code hygiene dashboard for a BOM, specified as the argument.
+   */
+  public static void main(String[] arguments)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
           PlexusContainerException, ComponentLookupException, ProjectBuildingException {
-    Path output = generate(Paths.get(args[0]));
+    if (arguments.length != 1) {
+      System.err.println("Please specify pom.xml for a BOM.");
+      return;
+    }
+    String bomFile = arguments[0];
+    Path output = generate(Paths.get(bomFile));
     System.out.println("Wrote dashboard into " + output.toAbsolutePath());
   }
 
