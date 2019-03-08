@@ -87,7 +87,8 @@ public class DashboardMain {
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
 
   /**
-   * Generates a code hygiene dashboard for a BOM, specified as the argument.
+   * Generates a code hygiene dashboard for a BOM. The file name (pom.xml) of the BOM is specified
+   * as the argument.
    */
   public static void main(String[] arguments)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
