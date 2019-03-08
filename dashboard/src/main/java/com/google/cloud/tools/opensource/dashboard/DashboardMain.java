@@ -101,7 +101,8 @@ public class DashboardMain {
     System.out.println("Wrote dashboard into " + output.toAbsolutePath());
   }
 
-  public static Path generate(Path bomFile)
+  @VisibleForTesting
+  static Path generate(Path bomFile)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
           PlexusContainerException, ComponentLookupException, ProjectBuildingException {
     Preconditions.checkArgument(
