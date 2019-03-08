@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.util.List;
+import java.util.Date;
 import java.util.Map;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
@@ -39,7 +40,7 @@ public class LeagueTableMain {
       throws IOException, RepositoryException, ParseException {
 
     LinkageCheckerArguments linkageCheckerArguments =
-        LinkageCheckerArguments.readCommandLine(arguments);
+        LinkageCheckerArguments.readCommandLine("-b", "com.google.cloud:cloud-oss-bom:1.0.0-SNAPSHOT");
 
     RepositoryUtility.setRepositories(
         linkageCheckerArguments.getExtraMavenRepositoryUrls(),
@@ -103,5 +104,6 @@ public class LeagueTableMain {
       cvsBuilder.append("\n");
     }
     System.out.println(cvsBuilder.toString());
+    System.out.println(new Date() + ": Done");
   }
 }
