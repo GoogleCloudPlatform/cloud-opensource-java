@@ -55,7 +55,7 @@ public class ClassPathBuilderTest {
       };
 
   @Test
-  public void testArtifactsToPaths_removingDuplicates() throws RepositoryException {
+  public void testArtifactsToDependencyPaths_removingDuplicates() throws RepositoryException {
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
     ListMultimap<Path, DependencyPath> multimap =
         ClassPathBuilder.artifactsToDependencyPaths(ImmutableList.of(grpcArtifact));
@@ -76,7 +76,7 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testBomToPaths_firstElementsAreBomMembers() throws RepositoryException {
+  public void ArtifactsToDependencyPaths_firstElementsAreBomMembers() throws RepositoryException {
     DefaultArtifact bom =
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
@@ -95,7 +95,7 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testArtifactsToPaths() throws RepositoryException {
+  public void testArtifactsToDependencyPaths() throws RepositoryException {
 
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
     ListMultimap<Path, DependencyPath> multimap =
@@ -114,7 +114,7 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testCoordinateToClasspath_validCoordinate() throws RepositoryException {
+  public void testArtifactsToClasspath_validCoordinate() throws RepositoryException {
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
     List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(grpcArtifact));
 
@@ -132,7 +132,7 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testCoordinateToClasspath_optionalDependency() throws RepositoryException {
+  public void testArtifactsToClasspath_optionalDependency() throws RepositoryException {
     Artifact bigTableArtifact =
         new DefaultArtifact("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
     List<Path> paths =
@@ -141,7 +141,7 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testCoordinateToClasspath_invalidCoordinate() {
+  public void testArtifactsToClasspath_invalidCoordinate() {
     Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nosuchartifact:1.2.3");
     try {
       ClassPathBuilder.artifactsToClasspath(ImmutableList.of(nonExistentArtifact));
@@ -153,7 +153,7 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testCoordinateToClasspath_emptyInput() throws RepositoryException {
+  public void testArtifactsToClasspath_emptyInput() throws RepositoryException {
     List<Path> jars = ClassPathBuilder.artifactsToClasspath(ImmutableList.of());
     Truth.assertThat(jars).isEmpty();
   }
@@ -198,7 +198,7 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testArtifactToClasspath_notToGenerateRepositoryException()
+  public void testArtifactsToClasspath_notToGenerateRepositoryException()
       throws RepositoryException {
     Artifact jamonApiArtifact = new DefaultArtifact("com.google.guava:guava-gwt:jar:20.0");
     List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(jamonApiArtifact));
@@ -206,7 +206,7 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testArtifactToClasspath_reportAggregatedRepositoryException()
+  public void testArtifactsToClasspath_reportAggregatedRepositoryException()
       throws RepositoryException {
     // jamon has transitive dependency to jmxtools, which does not exist in Maven central
     Artifact jamonApiArtifact = new DefaultArtifact("com.jamonapi:jamon:2.81");
