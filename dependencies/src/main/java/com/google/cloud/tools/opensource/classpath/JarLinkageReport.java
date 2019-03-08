@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.auto.value.AutoValue;
@@ -128,5 +129,23 @@ public abstract class JarLinkageReport {
 
   public int getCauseToSourceClassesSize() {
     return getCauseToSourceClasses().size();
+  }
+
+  public JarLinkageReport reachableErrors() {
+    Builder builder = builder();
+    builder.setMissingClassErrors(
+        getMissingClassErrors().stream()
+            .filter(SymbolNotResolvable::isReachable)
+            .collect(toImmutableList()));
+    builder.setMissingMethodErrors(
+        getMissingMethodErrors().stream()
+            .filter(SymbolNotResolvable::isReachable)
+            .collect(toImmutableList()));
+    builder.setMissingFieldErrors(
+        getMissingFieldErrors().stream()
+            .filter(SymbolNotResolvable::isReachable)
+            .collect(toImmutableList()));
+    builder.setJarPath(getJarPath());
+    return builder.build();
   }
 }
