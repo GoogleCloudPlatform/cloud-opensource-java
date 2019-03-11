@@ -388,22 +388,17 @@ class ClassDumper {
     return ImmutableMap.copyOf(classToJar);
   }
 
-  private static ImmutableSet<ClassInfo> listClassInfo(URL jarUrl)
-      throws IOException {
+  static ImmutableSet<String> listClassNamesInJar(Path jar) throws IOException {
+    URL jarUrl = jar.toUri().toURL();
     // Setting parent as null because we don't want other classes than this jar file
-    URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[]{jarUrl}, null);
+    URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[] {jarUrl}, null);
 
     // Leveraging Google Guava reflection as BCEL doesn't list classes in a jar file
     com.google.common.reflect.ClassPath classPath =
         com.google.common.reflect.ClassPath.from(classLoaderFromJar);
 
-    return classPath.getAllClasses();
-  }
-
-  static ImmutableSet<String> listClassNamesInJar(Path jar) throws IOException {
-    URL jarUrl = jar.toUri().toURL();
-    return listClassInfo(jarUrl).stream()
-        .map(classInfo -> classInfo.getName())
+    return classPath.getAllClasses().stream()
+        .map(ClassInfo::getName)
         .collect(toImmutableSet());
   }
 
