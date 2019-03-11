@@ -41,7 +41,7 @@ jobs:
           cd boms/cloud-oss-bom
           mvn install
           cd ../..
-          mvn -e integration-test -Dmaven.home=/opt/apache-maven
+          mvn -e integration-test
 
       - run:
           name: Save test results
