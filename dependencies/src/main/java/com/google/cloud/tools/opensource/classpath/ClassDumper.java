@@ -604,10 +604,9 @@ class ClassDumper {
           constantPoolIndexForClass(sourceJavaClass, targetClassName);
       Verify.verify(
           !targetConstantPoolIndices.isEmpty(),
-          "The target class "
-              + targetClassName
-              + " is not found in source class "
-              + sourceJavaClass.getClassName());
+          "The target class %s is not found in source class %s",
+          targetClassName,
+          sourceJavaClass.getClassName());
 
       ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();
       Constant[] constantPoolEntries = sourceConstantPool.getConstantPool();
