@@ -604,7 +604,7 @@ class ClassDumper {
           constantPoolIndexForClass(sourceJavaClass, targetClassName);
       Verify.verify(
           !targetConstantPoolIndices.isEmpty(),
-          "The target class symbol reference "
+          "The target class "
               + targetClassName
               + " is not found in source class "
               + sourceJavaClass.getClassName());
