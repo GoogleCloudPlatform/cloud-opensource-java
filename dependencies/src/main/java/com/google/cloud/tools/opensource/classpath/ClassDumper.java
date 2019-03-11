@@ -427,10 +427,9 @@ class ClassDumper {
    * #classRepository}. The class path to instantiate them is from {@link #classRepository} of this
    * {@link ClassDumper} instance.
    *
-   * <p>The set of class names between the return values of {@link #listClassesInJar(Path)} and
-   * {@link #listClassesInJarFromClassPath(Path)} are the same. However, the implementation of the
-   * returned instances between them may be different if a class appears multiple times in jar files
-   * in the class path.
+   * <p>The set of class names between the return values of {@link #listClassesInJar(Path)} and this
+   * method are the same. However, the implementation of the returned instances between them may be
+   * different if a class appears multiple times in jar files in the class path.
    */
   private ImmutableSet<JavaClass> listClassesInJarFromClassPath(Path jar) throws IOException {
     return listClassesInJar(jar, classRepository);
