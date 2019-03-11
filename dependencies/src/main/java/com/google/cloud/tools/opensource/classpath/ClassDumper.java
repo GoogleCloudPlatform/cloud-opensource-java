@@ -89,9 +89,8 @@ class ClassDumper {
     ClassLoader extensionClassLoader = systemClassLoader.getParent();
     jarPaths.forEach(
         jar -> {
-          checkArgument(
-              Files.isRegularFile(jar), "The jar file " + jar + " is not a regular file.");
-          checkArgument(Files.isReadable(jar), "The jar file " + jar + " is not readable.");
+          checkArgument(Files.isRegularFile(jar), "The jar file is not a regular file: %s", jar);
+          checkArgument(Files.isReadable(jar), "The jar file is not readable: %s", jar);
         });
 
     return new ClassDumper(
