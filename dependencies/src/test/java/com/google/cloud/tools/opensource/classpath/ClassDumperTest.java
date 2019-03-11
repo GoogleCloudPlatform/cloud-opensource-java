@@ -100,11 +100,11 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testCreationInvalidInput() {
+  public void testCreationInvalidInput() throws IOException {
     try {
       ClassDumper.create(ImmutableList.of(Paths.get("")));
       Assert.fail("Empty path should generate IOException");
-    } catch (IOException ex) {
+    } catch (IllegalArgumentException ex) {
       // pass
     }
   }

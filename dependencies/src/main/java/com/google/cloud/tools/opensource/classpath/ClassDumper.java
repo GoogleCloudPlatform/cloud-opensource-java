@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Verify;
@@ -86,10 +87,15 @@ class ClassDumper {
   static ClassDumper create(List<Path> jarPaths) throws IOException {
     ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
     ClassLoader extensionClassLoader = systemClassLoader.getParent();
+    jarPaths.forEach(
+        jar -> {
+          checkArgument(
+              Files.isRegularFile(jar), "The jar file " + jar + " is not a regular file.");
+          checkArgument(Files.isReadable(jar), "The jar file " + jar + " is not readable.");
+        });
 
     return new ClassDumper(
         jarPaths,
-        createClassRepository(jarPaths),
         extensionClassLoader,
         mapJarToClasses(jarPaths),
         mapClassToJar(jarPaths));
@@ -97,12 +103,11 @@ class ClassDumper {
 
   private ClassDumper(
       List<Path> inputClassPath,
-      Repository classRepository,
       ClassLoader extensionClassLoader,
       SetMultimap<Path, String> jarToClasses,
       ImmutableMap<String, Path> classToFirstJar) {
     this.inputClassPath = ImmutableList.copyOf(inputClassPath);
-    this.classRepository = classRepository;
+    this.classRepository = createClassRepository(inputClassPath);
     this.extensionClassLoader = extensionClassLoader;
     this.jarFileToClasses = ImmutableSetMultimap.copyOf(jarToClasses);
     this.classToFirstJarFile = classToFirstJar;
@@ -156,7 +161,7 @@ class ClassDumper {
     checkArgument(Files.isReadable(jar), "The input jar file path is not readable");
 
     SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
-    for (JavaClass javaClass : listClassesInJarFromClassPath(jar)) {
+    for (JavaClass javaClass : listClassesInJar(jar)) {
       if (!isCompatibleClassFileVersion(javaClass)) {
         continue;
       }
@@ -352,15 +357,14 @@ class ClassDumper {
   /**
    * Returns mapping from jar files to the names of the classes they define.
    *
-   * @param jarPaths absolute paths to jar files
+   * @param jars absolute paths to jar files
    */
   @VisibleForTesting
-  static ImmutableSetMultimap<Path, String> mapJarToClasses(
-      List<Path> jarPaths) throws IOException {
+  static ImmutableSetMultimap<Path, String> mapJarToClasses(List<Path> jars) throws IOException {
     ImmutableSetMultimap.Builder<Path, String> pathToClasses = ImmutableSetMultimap.builder();
-    for (Path jarPath : jarPaths) {
-      for (JavaClass javaClass : listClassesInJar(jarPath)) {
-        pathToClasses.put(jarPath, javaClass.getClassName());
+    for (Path jar : jars) {
+      for (String className : listClassNamesInJar(jar)) {
+        pathToClasses.put(jar, className);
       }
     }
     return pathToClasses.build();
@@ -376,9 +380,9 @@ class ClassDumper {
   static ImmutableMap<String, Path> mapClassToJar(List<Path> jars) throws IOException {
     Map<String, Path> classToJar = new HashMap<>();
     for (Path jar : jars) {
-      for (JavaClass javaClass : listClassesInJar(jar)) {
+      for (String className : listClassNamesInJar(jar)) {
         // The first entry wins in the same manner as JVM's class loading.
-        classToJar.putIfAbsent(javaClass.getClassName(), jar);
+        classToJar.putIfAbsent(className, jar);
       }
     }
     return ImmutableMap.copyOf(classToJar);
@@ -396,43 +400,29 @@ class ClassDumper {
     return classPath.getAllClasses();
   }
 
-  /** Returns a set of {@link JavaClass}es in {@code jarPath} through {@code repository}. */
-  private static ImmutableSet<JavaClass> listClassesInJar(Path jarPath, Repository repository)
-      throws IOException {
-    ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
-    URL jarUrl = jarPath.toUri().toURL();
-    for (ClassInfo classInfo : listClassInfo(jarUrl)) {
-      String className = classInfo.getName();
-      try {
-        JavaClass javaClass = repository.loadClass(className);
-        javaClasses.add(javaClass);
-      } catch (ClassNotFoundException ex) {
-        // We couldn't load the class from the jar file where we found it.
-        throw new IOException("Corrupt jar file " + jarPath + "; could not load " + className);
-      }
-    }
-    return javaClasses.build();
-  }
-
-  /**
-   * Returns a set of {@link JavaClass}es in {@code jar}. The class path to instantiate them is
-   * created from {@code jar}.
-   */
-  static ImmutableSet<JavaClass> listClassesInJar(Path jar) throws IOException {
-    return listClassesInJar(jar, createClassRepository(ImmutableList.of(jar)));
+  static ImmutableSet<String> listClassNamesInJar(Path jar) throws IOException {
+    URL jarUrl = jar.toUri().toURL();
+    return listClassInfo(jarUrl).stream()
+        .map(classInfo -> classInfo.getName())
+        .collect(toImmutableSet());
   }
 
   /**
    * Returns a set of {@link JavaClass}es which has entries in the {@code jar} through {@link
-   * #classRepository}. The class path to instantiate them is from {@link #classRepository} of this
-   * {@link ClassDumper} instance.
-   *
-   * <p>The set of class names between the return values of {@link #listClassesInJar(Path)} and this
-   * method are the same. However, the implementation of the returned instances between them may be
-   * different if a class appears multiple times in jar files in the class path.
+   * #classRepository}.
    */
-  private ImmutableSet<JavaClass> listClassesInJarFromClassPath(Path jar) throws IOException {
-    return listClassesInJar(jar, classRepository);
+  private ImmutableSet<JavaClass> listClassesInJar(Path jar) throws IOException {
+    ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
+    for (String className : listClassNamesInJar(jar)) {
+      try {
+        JavaClass javaClass = classRepository.loadClass(className);
+        javaClasses.add(javaClass);
+      } catch (ClassNotFoundException ex) {
+        // We couldn't load the class from the jar file where we found it.
+        throw new IOException("Corrupt jar file " + jar + "; could not load " + className);
+      }
+    }
+    return javaClasses.build();
   }
 
   /** Returns true if two class names (binary name JLS 13.1) have the same package. */
