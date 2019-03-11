@@ -149,14 +149,14 @@ class ClassDumper {
    * Scans class files in the jar file and returns a {@link SymbolReferenceSet} populated with
    * symbol references.
    *
-   * @param jarFilePath absolute path to a jar file
+   * @param jar absolute path to a jar file
    */
-  SymbolReferenceSet scanSymbolReferencesInJar(Path jarFilePath) throws IOException {
-    checkArgument(jarFilePath.isAbsolute(), "The input jar file path is not an absolute path");
-    checkArgument(Files.isReadable(jarFilePath), "The input jar file path is not readable");
+  SymbolReferenceSet scanSymbolReferencesInJar(Path jar) throws IOException {
+    checkArgument(jar.isAbsolute(), "The input jar file path is not an absolute path");
+    checkArgument(Files.isReadable(jar), "The input jar file path is not readable");
 
     SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
-    for (JavaClass javaClass : listClassesInJarFromClassPath(jarFilePath)) {
+    for (JavaClass javaClass : listClassesInJarFromClassPath(jar)) {
       if (!isCompatibleClassFileVersion(javaClass)) {
         continue;
       }
@@ -370,16 +370,15 @@ class ClassDumper {
    * Returns mapping from class names to the absolute paths of the first jar file that defines the
    * classes.
    *
-   * @param jarFilePaths absolute paths to jar files
+   * @param jars absolute paths to jar files
    */
   @VisibleForTesting
-  static ImmutableMap<String, Path> mapClassToJar(List<Path> jarFilePaths)
-      throws IOException {
+  static ImmutableMap<String, Path> mapClassToJar(List<Path> jars) throws IOException {
     Map<String, Path> classToJar = new HashMap<>();
-    for (Path jarFilePath : jarFilePaths) {
-      for (JavaClass javaClass : listClassesInJar(jarFilePath)) {
+    for (Path jar : jars) {
+      for (JavaClass javaClass : listClassesInJar(jar)) {
         // The first entry wins in the same manner as JVM's class loading.
-        classToJar.putIfAbsent(javaClass.getClassName(), jarFilePath);
+        classToJar.putIfAbsent(javaClass.getClassName(), jar);
       }
     }
     return ImmutableMap.copyOf(classToJar);
@@ -415,17 +414,26 @@ class ClassDumper {
     return javaClasses.build();
   }
 
-  /** Returns a set of {@link JavaClass}es in {@code jarPath}. */
-  static ImmutableSet<JavaClass> listClassesInJar(Path jarPath) throws IOException {
-    return listClassesInJar(jarPath, createClassRepository(ImmutableList.of(jarPath)));
+  /**
+   * Returns a set of {@link JavaClass}es in {@code jar}. The class path to instantiate them is
+   * created from {@code jar}.
+   */
+  static ImmutableSet<JavaClass> listClassesInJar(Path jar) throws IOException {
+    return listClassesInJar(jar, createClassRepository(ImmutableList.of(jar)));
   }
 
   /**
-   * Returns a set of {@link JavaClass}es in {@code jarPath} via the class path in {@link
-   * #classRepository}.
+   * Returns a set of {@link JavaClass}es which has entries in the {@code jar} through {@link
+   * #classRepository}. The class path to instantiate them is from {@link #classRepository} of this
+   * {@link ClassDumper} instance.
+   *
+   * <p>The set of class names between the return values of {@link #listClassesInJar(Path)} and
+   * {@link #listClassesInJarFromClassPath(Path)} are the same. However, the implementation of the
+   * returned instances between them may be different if a class appears multiple times in jar files
+   * in the class path.
    */
-  private ImmutableSet<JavaClass> listClassesInJarFromClassPath(Path jarPath) throws IOException {
-    return listClassesInJar(jarPath, classRepository);
+  private ImmutableSet<JavaClass> listClassesInJarFromClassPath(Path jar) throws IOException {
+    return listClassesInJar(jar, classRepository);
   }
 
   /** Returns true if two class names (binary name JLS 13.1) have the same package. */
