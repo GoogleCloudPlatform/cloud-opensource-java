@@ -346,7 +346,8 @@ public class ClassDumperTest {
       Assert.fail("It should throw VerifyException when it cannot find a class symbol reference");
     } catch (VerifyException ex) {
       // pass
-      Truth.assertThat(ex.getMessage())
+      Truth.assertThat(ex)
+          .hasMessageThat()
           .isEqualTo(
               "The target class dummy.NoSuchClass is not found in "
                   + "source class org.conscrypt.Conscrypt");
