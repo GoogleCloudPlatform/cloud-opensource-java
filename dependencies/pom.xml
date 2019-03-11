@@ -10,12 +10,12 @@
   </organization>
 
   <parent>
-    <groupId>com.google.cloud.tools.opensource</groupId>
+    <groupId>com.google.cloud.tools.maven</groupId>
     <artifactId>cloud-tools-opensource-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
   
-  <artifactId>dependency-lister</artifactId>
+  <artifactId>dependencies</artifactId>
   <packaging>jar</packaging>
 
   <properties>
