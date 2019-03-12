@@ -2,12 +2,12 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>com.google.cloud.tools.maven</groupId>
-    <artifactId>cloud-tools-opensource-parent</artifactId>
+    <groupId>com.google.cloud.tools.dependencies</groupId>
+    <artifactId>cloud-tools-dependencies-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>dependencies</artifactId>
+  <artifactId>dependency-analyzers</artifactId>
 
   <name>Maven Dependency Graph Analyzer</name>
   <description>A library for analyzing Maven artifact dependency graphs</description>

@@ -41,7 +41,7 @@ Add the following plugin configuration to your `pom.xml`:
             <configuration>
               <rules>
                 <banLinkageErrors
-                    implementation="com.google.cloud.tools.maven.enforcer.LinkageCheckerRule"/>
+                    implementation="com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule"/>
               </rules>
             </configuration>
           </execution>
@@ -54,7 +54,7 @@ For a BOM project, set `dependencySection` element to `DEPENDENCY_MANAGEMENT`.
 
 ```xml
   <banLinkageErrors
-      implementation="com.google.cloud.tools.maven.enforcer.LinkageCheckerRule">
+      implementation="com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule">
       <dependencySection>DEPENDENCY_MANAGEMENT</dependencySection>
   </banLinkageErrors>
 ```
@@ -65,7 +65,7 @@ dependencies of the project, set `reportOnlyReachable` element to `true`. (defau
 
 ```xml
   <banLinkageErrors
-      implementation="com.google.cloud.tools.maven.enforcer.LinkageCheckerRule">
+      implementation="com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule">
       <reportOnlyReachable>true</reportOnlyReachable>
   </banLinkageErrors>
 ```
@@ -74,7 +74,7 @@ If a violation should not fail the build, set `level` element to `WARN`:
 
 ```xml
   <banLinkageErrors
-      implementation="com.google.cloud.tools.maven.enforcer.LinkageCheckerRule">
+      implementation="com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule">
       <level>WARN</level>
   </banLinkageErrors>
 ```
