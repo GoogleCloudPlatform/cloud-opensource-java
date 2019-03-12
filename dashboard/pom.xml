@@ -8,7 +8,7 @@
     <artifactId>dependencies-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
-  <artifactId>bom-dashboard</artifactId>
+  <artifactId>dashboard</artifactId>
 
   <name>Cloud Tools Open Source Code Hygiene Dashboard</name>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/dashboard</url>
