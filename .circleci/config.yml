@@ -42,6 +42,7 @@ jobs:
           mvn -B install
           cd ../..
           mvn -B -e integration-test
+
       - run:
           name: Save test results
           command: |
