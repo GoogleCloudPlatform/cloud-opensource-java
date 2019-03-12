@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.google.cloud.tools</groupId>
-    <artifactId>cloud-tools-dependencies-parent</artifactId>
+    <artifactId>dependencies-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
