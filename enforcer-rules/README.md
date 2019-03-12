@@ -27,7 +27,7 @@ Add the following plugin configuration to your `pom.xml`:
         <version>3.0.0-M2</version>
         <dependencies>
           <dependency>
-            <groupId>com.google.cloud.tools.dependencies</groupId>
+            <groupId>com.google.cloud.tools</groupId>
             <artifactId>linkage-checker-enforcer-rules</artifactId>
             <version>0.1-SNAPSHOT</version>
           </dependency>
