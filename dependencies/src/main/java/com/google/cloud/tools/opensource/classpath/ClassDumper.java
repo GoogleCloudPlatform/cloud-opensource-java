@@ -402,7 +402,7 @@ class ClassDumper {
   }
 
   /**
-   * Returns a set of {@link JavaClass}es which has entries in the {@code jar} through {@link
+   * Returns a set of {@link JavaClass}es which have entries in the {@code jar} through {@link
    * #classRepository}.
    */
   private ImmutableSet<JavaClass> listClassesInJar(Path jar) throws IOException {
@@ -588,7 +588,7 @@ class ClassDumper {
           constantPoolIndexForClass(sourceJavaClass, targetClassName);
       Verify.verify(
           !targetConstantPoolIndices.isEmpty(),
-          "The target class %s is not found in source class %s",
+          "The reference to the target class %s is not found in the source class %s",
           targetClassName,
           sourceJavaClass.getClassName());
 
