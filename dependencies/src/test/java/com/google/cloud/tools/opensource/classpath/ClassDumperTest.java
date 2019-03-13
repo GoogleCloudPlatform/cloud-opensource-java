@@ -345,7 +345,6 @@ public class ClassDumperTest {
 
       Assert.fail("It should throw VerifyException when it cannot find a class symbol reference");
     } catch (VerifyException ex) {
-      // pass
       Truth.assertThat(ex)
           .hasMessageThat()
           .isEqualTo(
