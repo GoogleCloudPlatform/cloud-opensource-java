@@ -1,21 +1,22 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.google.cloud.tools</groupId>
+    <artifactId>dependencies-parent</artifactId>
+    <version>0.1-SNAPSHOT</version>
+  </parent>
 
-  <name>Dependency Lister</name>
+  <artifactId>dependencies</artifactId>
+
+  <name>Maven Dependency Graph Analyzer</name>
+  <description>A library for analyzing Maven artifact dependency graphs</description>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/dependencies</url>
   <organization>
     <name>Google LLC.</name>
     <url>https://www.google.com</url>
   </organization>
 
-  <parent>
-    <groupId>com.google.cloud.tools.opensource</groupId>
-    <artifactId>cloud-tools-opensource-parent</artifactId>
-    <version>0.1-SNAPSHOT</version>
-  </parent>
-  
-  <artifactId>dependency-lister</artifactId>
   <packaging>jar</packaging>
 
   <properties>
