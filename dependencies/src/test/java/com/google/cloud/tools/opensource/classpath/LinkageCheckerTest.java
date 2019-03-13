@@ -630,8 +630,8 @@ public class LinkageCheckerTest {
     Truth.assertThat(inputClasspath).isNotEmpty();
     
     // These 2 files are the first 2 artifacts in the BOM
-    Assert.assertEquals("guava-26.0-android.jar", inputClasspath.get(0).getFileName().toString());
-    Assert.assertEquals("guava-testlib-26.0-android.jar",
+    Assert.assertEquals("protobuf-java-3.6.1.jar", inputClasspath.get(0).getFileName().toString());
+    Assert.assertEquals("protobuf-java-util-3.6.1.jar",
         inputClasspath.get(1).getFileName().toString());
     
     // google-cloud-bom, containing google-cloud-firestore, is in the BOM with scope:import
