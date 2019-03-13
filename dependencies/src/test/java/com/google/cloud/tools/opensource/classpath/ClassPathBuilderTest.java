@@ -77,6 +77,9 @@ public class ClassPathBuilderTest {
 
   @Test
   public void testBomToPaths_firstElementsAreBomMembers() throws RepositoryException {
+    
+    // that is, that the BOM members come before the transitive dependencies
+    
     DefaultArtifact bom =
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
@@ -84,10 +87,11 @@ public class ClassPathBuilderTest {
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
         ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
 
+    
     ImmutableList<Path> paths = ImmutableList.copyOf(jarToDependencyPaths.keySet());
-
+    
     Truth.assertThat(paths.get(0).getFileName().toString()).isEqualTo(
-        "guava-26.0-android.jar"); // first element in the BOM
+        "protobuf-java-3.6.1.jar"); // first element in the BOM
     int bomSize = managedDependencies.size();
     Assert.assertTrue(
         paths.get(bomSize - 1).getFileName().toString()
