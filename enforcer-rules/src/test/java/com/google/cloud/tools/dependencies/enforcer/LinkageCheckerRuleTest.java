@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.cloud.tools.opensource.enforcer;
+package com.google.cloud.tools.dependencies.enforcer;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.mockito.ArgumentMatchers.any;
@@ -22,8 +22,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule.DependencySection;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.cloud.tools.opensource.enforcer.LinkageCheckerRule.DependencySection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.graph.Traverser;
 import java.util.Arrays;
