@@ -349,8 +349,8 @@ public class ClassDumperTest {
       Truth.assertThat(ex)
           .hasMessageThat()
           .isEqualTo(
-              "The target class dummy.NoSuchClass is not found in "
-                  + "source class org.conscrypt.Conscrypt");
+              "The reference to the target class dummy.NoSuchClass is not found in "
+                  + "the source class org.conscrypt.Conscrypt");
     }
   }
 }
