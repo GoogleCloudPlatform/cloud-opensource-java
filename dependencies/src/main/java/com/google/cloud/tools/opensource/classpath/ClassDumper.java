@@ -588,8 +588,8 @@ class ClassDumper {
           constantPoolIndexForClass(sourceJavaClass, targetClassName);
       Verify.verify(
           !targetConstantPoolIndices.isEmpty(),
-          "When checking a class reference from %s to %d, the reference to the target class is not"
-              + " found in the source class's constant pool.", // This should not happen
+          "When checking a class reference from %s to %d, the reference to the target class is no"
+              + " longer found in the source class's constant pool.", // This should not happen
           sourceJavaClass.getClassName(),
           targetClassName);
 
