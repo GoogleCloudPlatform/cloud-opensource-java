@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.cloud.tools.opensource.enforcer;
+package com.google.cloud.tools.dependencies.enforcer;
 
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.shouldSkipBomMember;
 import static com.google.common.collect.ImmutableList.toImmutableList;
