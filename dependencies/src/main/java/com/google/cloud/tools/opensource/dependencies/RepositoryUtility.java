@@ -204,7 +204,7 @@ public final class RepositoryUtility {
     // MavenCli's way to instantiate PlexusContainer
     ClassWorld classWorld =
         new ClassWorld("plexus.core", Thread.currentThread().getContextClassLoader());
-    ContainerConfiguration cc =
+    ContainerConfiguration containerConfiguration =
         new DefaultContainerConfiguration()
             .setClassWorld(classWorld)
             .setRealm(classWorld.getClassRealm("plexus.core"))
@@ -212,7 +212,7 @@ public final class RepositoryUtility {
             .setAutoWiring(true)
             .setJSR250Lifecycle(true)
             .setName("linkage-checker");
-    PlexusContainer container = new DefaultPlexusContainer(cc);
+    PlexusContainer container = new DefaultPlexusContainer(containerConfiguration);
 
     MavenExecutionRequest mavenExecutionRequest = new DefaultMavenExecutionRequest();
     ProjectBuildingRequest projectBuildingRequest =

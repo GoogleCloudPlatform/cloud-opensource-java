@@ -94,7 +94,7 @@ public class DashboardMain {
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
           PlexusContainerException, ComponentLookupException, ProjectBuildingException {
     if (arguments.length != 1) {
-      System.err.println("Please specify pom.xml for a BOM.");
+      System.err.println("Please specify path to pom.xml or Maven coordinates for a BOM.");
       return;
     }
     String bomInput = arguments[0];
@@ -113,9 +113,9 @@ public class DashboardMain {
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
           PlexusContainerException, ComponentLookupException, ProjectBuildingException {
     Preconditions.checkArgument(
-        Files.isRegularFile(bomFile), "The input BOM " + bomFile + " is not a regular file");
+        Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
     Preconditions.checkArgument(
-        Files.isReadable(bomFile), "The input BOM " + bomFile + " is not readable");
+        Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
     return generate(RepositoryUtility.readBom(bomFile));
   }
 
