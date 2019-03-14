@@ -30,6 +30,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
@@ -629,10 +630,13 @@ public class LinkageCheckerTest {
     ImmutableList<Path> inputClasspath = parsedArguments.getInputClasspath();
     Truth.assertThat(inputClasspath).isNotEmpty();
     
-    // These 2 files are the first 2 artifacts in the BOM
-    Assert.assertEquals("guava-26.0-android.jar", inputClasspath.get(0).getFileName().toString());
-    Assert.assertEquals("guava-testlib-26.0-android.jar",
-        inputClasspath.get(1).getFileName().toString());
+    List<String> names =
+        inputClasspath.stream().map(x -> x.getFileName().toString()).collect(Collectors.toList());
+    
+    Truth.assertThat(names).containsAllOf(
+        "protobuf-java-3.6.1.jar",
+        "protobuf-java-util-3.6.1.jar",
+        "guava-27.1-android.jar");
     
     // google-cloud-bom, containing google-cloud-firestore, is in the BOM with scope:import
     for (Path path : inputClasspath) {
