@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
-import org.apache.bcel.classfile.JavaClass;
 
 /**
  * Directed graph of class references. Given classes in a set of entry points, it provides {@link
@@ -61,9 +60,9 @@ class ClassReferenceGraph {
             .collect(toImmutableSet());
 
     ImmutableSet.Builder<String> entryPointClassBuilder = ImmutableSet.builder();
-    for (Path jarPath : entryPointJars) {
-      for (JavaClass javaClass : ClassDumper.listClassesInJar(jarPath)) {
-        entryPointClassBuilder.add(javaClass.getClassName());
+    for (Path jar : entryPointJars) {
+      for (String className : ClassDumper.listClassNamesInJar(jar)) {
+        entryPointClassBuilder.add(className);
       }
     }
 

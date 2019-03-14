@@ -817,4 +817,24 @@ public class LinkageCheckerTest {
     Truth.assertThat(firestoreLinkageReport.getMissingMethodErrors()).isNotEmpty();
     Truth.assertThat(firestoreLinkageReport.getMissingFieldErrors()).isNotEmpty();
   }
+
+  @Test
+  public void testFindLinkageErrors_shouldNotFailOnDuplicateClass()
+      throws RepositoryException, IOException {
+    // There was an issue (#495) where com.google.api.client.http.apache.ApacheHttpRequest is in
+    // both google-http-client-1.19.0.jar and google-http-client-apache-2.0.0.jar.
+    // LinkageChecker.findLinkageErrors was not handling the case properly.
+    // These two jar files are transitive dependencies of the artifacts below.
+    List<Path> paths =
+        ClassPathBuilder.artifactsToClasspath(
+            ImmutableList.of(
+                new DefaultArtifact("io.grpc:grpc-alts:jar:1.18.0"),
+                new DefaultArtifact("com.google.cloud:google-cloud-nio:jar:0.81.0-alpha")));
+
+    LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
+
+    // This should not raise an exception
+    LinkageCheckReport report = linkageChecker.findLinkageErrors();
+    Truth.assertThat(report).isNotNull();
+  }
 }
