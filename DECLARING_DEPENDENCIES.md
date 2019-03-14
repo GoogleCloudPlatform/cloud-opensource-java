@@ -1,31 +1,31 @@
-# Declaring Dependencies on Google Java libraries
+# Declaring Dependencies on Google Java Libraries
 
 Google maintains a number of open source Java libraries that make it
-easier to use services in Google Cloud Platform. Additionally Google
+easier to use services in Google Cloud Platform (GCP). Additionally Google
 maintains several foundational libraries that can be used for very
 general purposes, which the GCP libraries also depend on. A user of
 these libraries needs to use compatible versions of them in order to
-avoid dependency conflicts. This document explains how to use of BOMs
-(Bills of Materials) to accomplish that, and additional practices that
-make dependency management go more smoothly.
+avoid dependency conflicts. This document explains how to use BOMs
+(bill of materials) to accomplish that and explains additional
+practices that make dependency management go more smoothly.
 
 These recommendations apply to the usage of the following libraries:
 
-- guava
-- protobuf
-- grpc-java
-- gax-java
-- google-http-java-client
-- google-oauth-java-client
-- google-api-java-client
-- google-cloud-java
-- Apache Beam
+- [guava](https://github.com/google/guava)
+- [protobuf](https://github.com/protocolbuffers/protobuf)
+- [grpc-java](https://github.com/grpc/grpc-java)
+- [gax-java](https://github.com/googleapis/gax-java)
+- [google-http-java-client](https://github.com/googleapis/google-http-java-client)
+- [google-oauth-java-client](https://github.com/googleapis/google-oauth-java-client)
+- [google-api-java-client](https://github.com/googleapis/google-api-java-client)
+- [google-cloud-java](https://github.com/googleapis/google-cloud-java)
+- [beam](https://github.com/apache/beam)
 
 ## Ensuring Compatibility
 
 If you depend on one or more of these libraries, in order to
 ensure that your own project uses compatible versions of them, follow
-the guidance below for the build system you are using.
+the guidance below for your build system.
 
 ### Maven
 
@@ -39,7 +39,7 @@ enforcer rule can be used to automatically discover incorrect version
 selection because it fails the build if anything other than the most
 recent version is chosen.
 
-You can add `requireUpperBoundDeps` to your build like so:
+You can add `requireUpperBoundDeps` to your build like this:
 
 ```
   <build>
@@ -153,7 +153,7 @@ the process to follow for each library that has BOM support:
    you see multiple versions of the library's artifacts
 
 Note that there will not necessarily be a BOM available at the version
-you need. See the Library reference section below for the first
+you need. See the BOM reference section below for the first
 available version of each BOM.
 
 ## BOM reference
@@ -165,8 +165,8 @@ published a BOM for, and the BOM artifact name.
 
 | library | BOM artifact | First available version |
 | --- | --- | --- |
-| guava | com.google.guava:guava-bom | 27.1-jre/27.1-android (8 Mar 2019) |
-| protobuf | com.google.protobuf:protobuf-bom | 3.7.0 (6-Mar-2019) |
+| guava | com.google.guava:guava-bom | 27.1-jre/27.1-android (08-Mar-2019) |
+| protobuf | com.google.protobuf:protobuf-bom | 3.7.0 (06-Mar-2019) |
 | grpc-java | io.grpc:grpc-bom | 1.19.0 (27-Feb-2019) |
 | gax-java | com.google.api:gax-bom | 1.34.0 (19-Oct-2018) |
 | google-http-java-client | com.google.http-client:google-http-client-bom | 1.27.0 (09-Nov-2018) |
@@ -196,14 +196,15 @@ library ecosystem:
 
 - For each library release, the artifacts included in that release are
   compatible with each other.
-- Each library publishes a BOM (bill of materials) that defines the
+- Each library publishes a BOM that defines the
   compatible versions for each release.
 - Each library follows semantic versioning. This means that once a
   library reaches a 1.x version, features can be added in minor/patch
   releases but not removed.
 
 This combination of characteristics means that you can generally avoid
-dependency conflicts by using a combination of 1) using the highest
-version of each dependency, given that the artifacts of a single
-library are compatible, which can be accomplished by 2) importing a
-BOM for each library whose versions need to be consistent.
+dependency conflicts by doing the following:
+
+1. Using the highest version of each dependency
+2. Importing a BOM for each library whose artifacts need to use a
+  consistent version.
