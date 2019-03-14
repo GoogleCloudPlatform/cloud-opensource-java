@@ -17,15 +17,16 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.graph.Traverser;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.IOException;
@@ -33,9 +34,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -77,7 +76,7 @@ class ClassDumper {
   private final Repository classRepository;
   private final ClassLoader extensionClassLoader;
   private final ImmutableSetMultimap<Path, String> jarFileToClasses;
-  private final ImmutableMap<String, Path> classToFirstJarFile;
+  private final ImmutableListMultimap<String, Path> classToJarFiles;
 
   private static Repository createClassRepository(List<Path> paths) {
     ClassPath classPath = new LinkageCheckClassPath(paths);
@@ -87,29 +86,26 @@ class ClassDumper {
   static ClassDumper create(List<Path> jarPaths) throws IOException {
     ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
     ClassLoader extensionClassLoader = systemClassLoader.getParent();
-    jarPaths.forEach(
-        jar -> {
-          checkArgument(Files.isRegularFile(jar), "The jar file is not a regular file: %s", jar);
-          checkArgument(Files.isReadable(jar), "The jar file is not readable: %s", jar);
-        });
 
-    return new ClassDumper(
-        jarPaths,
-        extensionClassLoader,
-        mapJarToClasses(jarPaths),
-        mapClassToJar(jarPaths));
+    ImmutableList<Path> unreadableFiles =
+        jarPaths.stream()
+            .filter(jar -> !Files.isRegularFile(jar) || !Files.isReadable(jar))
+            .collect(toImmutableList());
+    checkArgument(
+        unreadableFiles.isEmpty(), "Some jar files are not readable: %s", unreadableFiles);
+
+    return new ClassDumper(jarPaths, extensionClassLoader, mapJarToClasses(jarPaths));
   }
 
   private ClassDumper(
       List<Path> inputClassPath,
       ClassLoader extensionClassLoader,
-      SetMultimap<Path, String> jarToClasses,
-      ImmutableMap<String, Path> classToFirstJar) {
+      ImmutableSetMultimap<Path, String> jarToClasses) {
     this.inputClassPath = ImmutableList.copyOf(inputClassPath);
     this.classRepository = createClassRepository(inputClassPath);
     this.extensionClassLoader = extensionClassLoader;
     this.jarFileToClasses = ImmutableSetMultimap.copyOf(jarToClasses);
-    this.classToFirstJarFile = classToFirstJar;
+    this.classToJarFiles = ImmutableListMultimap.copyOf(jarToClasses.inverse());
   }
 
   /**
@@ -350,7 +346,7 @@ class ClassDumper {
     // However, it required the superclass of a target class to be loadable too; otherwise
     // ClassNotFoundException was raised. It was inconvenient because we only wanted to know the
     // location of the target class, and sometimes the superclass is unavailable.
-    return classToFirstJarFile.get(className);
+    return Iterables.getFirst(classToJarFiles.get(className), null);
   }
 
   /**
@@ -367,24 +363,6 @@ class ClassDumper {
       }
     }
     return pathToClasses.build();
-  }
-
-  /**
-   * Returns mapping from class names to the absolute paths of the first jar file that defines the
-   * classes.
-   *
-   * @param jars absolute paths to jar files
-   */
-  @VisibleForTesting
-  static ImmutableMap<String, Path> mapClassToJar(List<Path> jars) throws IOException {
-    Map<String, Path> classToJar = new HashMap<>();
-    for (Path jar : jars) {
-      for (String className : listClassNamesInJar(jar)) {
-        // The first entry wins in the same manner as JVM's class loading.
-        classToJar.putIfAbsent(className, jar);
-      }
-    }
-    return ImmutableMap.copyOf(classToJar);
   }
 
   static ImmutableSet<String> listClassNamesInJar(Path jar) throws IOException {
