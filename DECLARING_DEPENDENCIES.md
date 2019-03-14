@@ -9,11 +9,7 @@ avoid dependency conflicts. This document explains how to use of BOMs
 (Bills of Materials) to accomplish that, and additional practices that
 make dependency management go more smoothly.
 
-## Relevant libraries
-
-Below are the relevant Google-owned libraries (or libraries originally
-started by Google) that the recommended dependency management
-practices apply to:
+These recommendations apply to the usage of the following libraries:
 
 - guava
 - protobuf
@@ -27,7 +23,7 @@ practices apply to:
 
 ## Ensuring Compatibility
 
-If you are a user of one or more of these libraries, in order to
+If you depend on one or more of these libraries, in order to
 ensure that your own project uses compatible versions of them, follow
 the guidance below for the build system you are using.
 
@@ -35,13 +31,13 @@ the guidance below for the build system you are using.
 
 #### Use the requireUpperBoundDeps enforcer rule
 
-Dependency conflicts can happen with Maven even when libraries
-properly follow semver because Maven's resolution rules can cause it
-to select old versions over new versions, meaning new features will be
-missing that other libraries depend on. Using the
-`requireUpperBoundDeps` enforcer plugin ensures that library users avoid
-conflicts. The plugin achieves this by failing a build if Maven
-doesn't resolve to the highest version of each library.
+Dependency conflicts can happen with Maven even when libraries follow
+semver because Maven's dependency mediation algorithm can select older
+versions instead of newer versions, meaning new features will be
+missing that other libraries depend on. The `requireUpperBoundDeps`
+enforcer rule can be used to automatically discover incorrect version
+selection because it fails the build if anything other than the most
+recent version is chosen.
 
 You can add `requireUpperBoundDeps` to your build like so:
 
@@ -51,7 +47,7 @@ You can add `requireUpperBoundDeps` to your build like so:
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.0.0-M1</version>
+        <version>3.0.0-M2</version>
         <executions>
           <execution>
             <id>enforce</id>
@@ -70,17 +66,16 @@ You can add `requireUpperBoundDeps` to your build like so:
   </build>
 ```
 
-When using the highest versions does not result in using compatible
-versions of the libraries, you can use BOMs to ensure that you use the
-correct set of versions together (see the next section for details).
+When the newest versions are not compatible, you can use BOMs to
+select compatible versions.
 
-####Import BOMs to ensure dependencies are consistent
+#### Import BOMs to ensure dependencies are consistent
 
-Conflicts can also occur when multiple artifacts from a single library
-are part of a dependency tree, and Maven resolves different artifacts
-from that library to versions from different releases. Using BOMs
-fixes this problem because a BOM will dictate consistent versions for
-all of the artifacts from a library.
+Conflicts can occur when multiple artifacts from a single library are
+part of a dependency tree, and Maven resolves different artifacts from
+that library to versions from different releases. Using a BOM fixes
+this problem because a BOM dictates consistent versions for all
+artifacts from a library.
 
 You can use a BOM like this - this example is for `google-cloud-bom`:
 
@@ -105,24 +100,22 @@ You can use a BOM like this - this example is for `google-cloud-bom`:
   </dependencies>
 ```
 
-In the example above, since the BOM manages library versions, the version of the google-cloud-storage artifact is omitted. 
+In the example above, since the BOM manages library versions, the
+version of the google-cloud-storage artifact is omitted.
 
 See the "Choosing BOMs" section below if you need to import more than one BOM.
 
 ### Gradle
 
 Gradle automatically selects the highest version in the dependency
-tree of any given dependency, so it is not necessary to use something
-like Maven's `requireUpperBoundDeps` enforcer plugin in order to get the
-highest versions of your dependencies.
+tree of any given dependency.
 
 #### Import BOMs to ensure your dependencies are consistent
 
-However, like Maven, it is possible to use versions of different
-artifacts from a library from different releases accidentally and
-experience a dependency conflict. It's possible to import a BOM in
-Gradle to force consistent versions, as long as you are using at least
-Gradle 4.6.
+It is possible to accidentally use versions of different artifacts
+from a library from different releases and experience a dependency
+conflict. To fix this problem, you can import a BOM in Gradle to force
+consistent versions, as long as you are using at least Gradle 4.6.
 
 In order to make use of a BOM, do the following:
 
@@ -147,11 +140,10 @@ all be compatible as well.
 However, if your project independently pulls in transitive
 dependencies at different versions, you may also need to specify
 lower-level BOMs to ensure compatibility, since each BOM only controls
-the versions of the library that generates it. Since the Google Java
-libraries follow the [Java Library Best Practices](https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/library-best-practices),
-you should be able to pick the highest version in your dependency tree
-for any particular library. Here is the process to follow for each
-library that has BOM support:
+the versions of the library that generates it. Since the GCP Java
+libraries follow semver, you should be able to pick the highest
+version in your dependency tree for any particular library. Here is
+the process to follow for each library that has BOM support:
 
 1. Identify the highest version seen for any artifact produced by that library
   a. For example, if you see `gax:1.34.0` and `gax-grpc:1.42.0`, then use version 1.42.0
@@ -166,7 +158,7 @@ available version of each BOM.
 
 ## BOM reference
 
-None of the Google open source Java libraries were initially released
+None of the GCP open source Java libraries were initially released
 with BOMs - they were added later to provide better consistency for
 users. The following table shows the first version that each library
 published a BOM for, and the BOM artifact name.
@@ -183,9 +175,23 @@ published a BOM for, and the BOM artifact name.
 | google-cloud-java | com.google.cloud:google-cloud-bom | 0.32.0-alpha (11-Dec-2017)  |
 | beam | org.apache.beam:beam-sdks-java-bom | 2.10.0 (06-Feb-2019) |
 
+## Intrinsic conflicts
+
+It is possible for GCP open source Java libraries to have conflicts
+with each other that cannot be resolved when the user follows the
+recommendations of this document. Such conflicts are called intrinsic
+conflicts. There is an ongoing effort to ensure that intrinsic
+conflicts are avoided among Google open source Java libraries. A
+dashboard that reports the current results of compatibility checks is
+accessible from the [Cloud Open Source Java Dashboard](https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/target/dashboard/dashboard.html).
+As of the time of this writing, there are still some conflicts that
+are in the process of being fixed, but they should not be encountered
+by most users who only use the public APIs of the libraries. If you
+encounter such a conflict, please [file an issue against cloud-opensource-java](https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/new).
+
 ## Background details about library compatibility
 
-The following is true for the libraries in the Google open source Java
+The following is true for the libraries in the GCP open source Java
 library ecosystem:
 
 - For each library release, the artifacts included in that release are
@@ -201,28 +207,3 @@ dependency conflicts by using a combination of 1) using the highest
 version of each dependency, given that the artifacts of a single
 library are compatible, which can be accomplished by 2) importing a
 BOM for each library whose versions need to be consistent.
-
-### Sources of dependency conflicts
-
-There are two main types of conflicts for artifacts:
-
-1. **Intrinsic conflict**: When two artifacts have an intrinsic conflict,
-   there is a point in time after which there are no versions of the two
-   artifacts that are compatible.
-2. **Extrinsic conflict**: When two artifacts have an extrinsic conflict, the
-   particular versions being combined are not compatible, but there may
-   be a different combination of higher versions that are compatible. It
-   is only the particular combination that doesn't work, and is not an
-   enduring characteristic of the libraries concerned.
-
-There is an ongoing effort to ensure that intrinsic conflicts are
-avoided among Google open source Java libraries. A dashboard that
-reports the current results of compatibility checks is accessible from
-the [Cloud Open Source Java Dashboard](https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/target/dashboard/dashboard.html).
-As of the time of this writing, there are still some conflicts that
-are in the process of being fixed, but they should not be encountered
-by most users who only use the public APIs of the libraries.
-
-As for avoiding extrinsic conflicts, users of Google open source Java
-libraries need to follow the practices outlined in the present
-document to avoid unnecessary conflicts.
