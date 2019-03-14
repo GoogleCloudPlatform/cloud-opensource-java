@@ -819,7 +819,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageErrors_shouldNotFailOnDuplicatedClass()
+  public void testFindLinkageErrors_shouldNotFailOnDuplicateClass()
       throws RepositoryException, IOException {
     // There was an issue (#495) where com.google.api.client.http.apache.ApacheHttpRequest is in
     // both google-http-client-1.19.0.jar and google-http-client-apache-2.0.0.jar.
@@ -834,6 +834,7 @@ public class LinkageCheckerTest {
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     // This should not raise an exception
-    linkageChecker.findLinkageErrors();
+    LinkageCheckReport report = linkageChecker.findLinkageErrors();
+    Truth.assertThat(report).isNotNull();
   }
 }
