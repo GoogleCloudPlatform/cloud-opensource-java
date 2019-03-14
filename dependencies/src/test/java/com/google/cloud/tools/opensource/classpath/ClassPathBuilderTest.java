@@ -75,11 +75,11 @@ public class ClassPathBuilderTest {
         .isGreaterThan(1);
   }
 
+  /**
+   * Test that BOM members come before the transitive dependencies.
+   */
   @Test
-  public void testBomToPaths_firstElementsAreBomMembers() throws RepositoryException {
-    
-    // that is, that the BOM members come before the transitive dependencies
-    
+  public void testBomToPaths_firstElementsAreBomMembers() throws RepositoryException {    
     DefaultArtifact bom =
         new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
@@ -87,7 +87,6 @@ public class ClassPathBuilderTest {
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
         ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
 
-    
     ImmutableList<Path> paths = ImmutableList.copyOf(jarToDependencyPaths.keySet());
     
     Truth.assertThat(paths.get(0).getFileName().toString()).isEqualTo(
