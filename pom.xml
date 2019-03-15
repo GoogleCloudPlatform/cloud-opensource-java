@@ -17,8 +17,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <guava.version>26.0-jre</guava.version>
-    <resolver.version>1.3.1</resolver.version>
+    <guava.version>27.1-jre</guava.version>
+    <resolver.version>1.3.3</resolver.version>
     <maven.version>3.6.0</maven.version>
     <truth.version>0.42</truth.version>
   </properties>
