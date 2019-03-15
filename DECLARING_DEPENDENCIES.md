@@ -104,8 +104,8 @@ See the "Choosing BOMs" section below if you need to import more than one BOM.
 
 ### Gradle
 
-Gradle automatically selects the highest version of any given
-dependency in the dependency tree.
+Gradle selects the highest version of any given dependency in the
+dependency tree.
 
 #### Import BOMs to ensure your dependencies are consistent
 
@@ -114,8 +114,10 @@ for different artifacts may cause dependency conflicts. To fix this
 problem, you can import a BOM to force consistent versions, as long as
 you are using at least Gradle 4.6. To do this:
 
-- If you are using Gradle 4.x (4.6+):
-  - Add the following to your `settings.gradle`: `enableFeaturePreview('IMPROVED_POM_SUPPORT')`
+- Turn on BOM support:
+  - If you are using Gradle 4.x:
+    - Add the following to your `settings.gradle`: `enableFeaturePreview('IMPROVED_POM_SUPPORT')`
+  - If you are using Gradle 5.x or higher, BOM support is on by default.
 - Add a dependency on the BOM for the library you depend on
 - Remove the version from the dependency declarations of the artifacts in that library
 
@@ -142,9 +144,10 @@ your dependency tree agrees on the same major version. Here is the
 process to follow for each library that has BOM support:
 
 1. Identify the highest version seen for any artifact produced by that library
-  a. For example, if you see `gax:1.34.0` and `gax-grpc:1.42.0`, then use version 1.42.0
+  a. For example, if you see `com.google.api:gax:1.34.0` and
+     `com.google.api:gax-grpc:1.42.0`, then use version 1.42.0
 2. Import the BOM corresponding to that library using the highest version you see
-  a. For the example above, use `gax-bom:1.42.0`
+  a. For the example above, use `com.google.api:gax-bom:1.42.0`
 3. Repeat as long as there are other libraries with BOM support where
    you see multiple versions of the library's artifacts
 
