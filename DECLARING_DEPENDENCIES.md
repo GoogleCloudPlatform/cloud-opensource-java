@@ -200,7 +200,7 @@ library ecosystem:
   compatible versions for each release.
 - Each library follows semantic versioning. This means that once a
   library reaches a 1.x version, features can be added in minor/patch
-  releases but not removed.
+  releases but not removed within a major version.
 
 This combination of characteristics means that you can generally avoid
 dependency conflicts by doing the following:
