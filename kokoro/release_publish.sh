@@ -21,42 +21,42 @@ BUNDLED_JAR_FILE=$(find `pwd`/prod/cloud-opensource-java/ubuntu/release-sign/${L
 # Uses the environment variable CREDENTIALS.
 # Stores the Nexus session ID in the given variable.
 GetSessionID() {
-	local __resultvar=$1
+  local __resultvar=$1
 
-	# Makes a temporary file to store the login cookies.
-	local cookies_temp=$(mktemp /tmp/sonatype_cookies.XXXXXXX)
+  # Makes a temporary file to store the login cookies.
+  local cookies_temp=$(mktemp /tmp/sonatype_cookies.XXXXXXX)
 
-	# Sends a login request.
-	{ local login_response=$(curl 'https://oss.sonatype.org/service/local/authentication/login' -X 'GET' -u "$CREDENTIALS" -c $cookies_temp 2> /dev/null); } 2> /dev/null
+  # Sends a login request.
+  { local login_response=$(curl 'https://oss.sonatype.org/service/local/authentication/login' -X 'GET' -u "$CREDENTIALS" -c $cookies_temp 2> /dev/null); } 2> /dev/null
 
-	# Checks if login was successful.
-	echo $login_response | grep -q '<loggedIn>true</loggedIn>'
+  # Checks if login was successful.
+  echo $login_response | grep -q '<loggedIn>true</loggedIn>'
 
-	local login_check=$(echo -n $?)
+  local login_check=$(echo -n $?)
 
-	if [ "$login_check" -eq "1" ]; then
-		return 1
-	fi
+  if [ "$login_check" -eq "1" ]; then
+    return 1
+  fi
 
-	# Extracts the session ID from the cookies.
-	local nxsessionid
-	local nxsessionid_line=$(cat $cookies_temp | grep 'NXSESSIONID')
-	nxsessionid=$(echo -n $nxsessionid_line | awk '{print $NF}')
+  # Extracts the session ID from the cookies.
+  local nxsessionid
+  local nxsessionid_line=$(cat $cookies_temp | grep 'NXSESSIONID')
+  nxsessionid=$(echo -n $nxsessionid_line | awk '{print $NF}')
 
-	eval $__resultvar="'$nxsessionid'"
+  eval $__resultvar="'$nxsessionid'"
 }
 
 # Usage: UploadJAR <session ID> <file>
 # Uploads the bundled JAR file to the Nexus Staging Repository.
 UploadJAR() {
-	curl 'https://oss.sonatype.org/service/local/staging/bundle_upload' -H "Cookie: NXSESSIONID=$1" -H 'Content-Type: multipart/form-data' --compressed -F "file=@$2" --fail
+  curl 'https://oss.sonatype.org/service/local/staging/bundle_upload' -H "Cookie: NXSESSIONID=$1" -H 'Content-Type: multipart/form-data' --compressed -F "file=@$2" --fail
 }
 
 # Gets the session ID.
 GetSessionID NXSESSIONID
 if [ $? -eq 1 ]; then
-	echo 'Login failed!'
-	exit 1
+  echo 'Login failed!'
+  exit 1
 fi
 echo 'Login successful.'
 
