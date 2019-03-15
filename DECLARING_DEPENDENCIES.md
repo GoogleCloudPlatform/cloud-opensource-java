@@ -1,15 +1,13 @@
 # Declaring Dependencies on Google Java Libraries
 
 Google maintains a number of open source Java libraries that make it
-easier to use services in Google Cloud Platform (GCP). Additionally Google
-maintains several foundational libraries that can be used for very
-general purposes, which the GCP libraries also depend on. A user of
-these libraries needs to use compatible versions of them in order to
-avoid dependency conflicts. This document explains how to use BOMs
-(bill of materials) to accomplish that and explains additional
-practices that make dependency management go more smoothly.
+easier to use services in Google Cloud Platform (GCP). Additionally
+Google maintains several foundational libraries that can be used for
+very general purposes, which the GCP libraries also depend on. This
+document explains how to use bills of materials (BOMs) and other
+strategies to avoid dependency conflicts in these libraries.
 
-These recommendations apply to the usage of the following libraries:
+These recommendations apply to the following libraries:
 
 - [guava](https://github.com/google/guava)
 - [protobuf](https://github.com/protocolbuffers/protobuf)
@@ -23,9 +21,8 @@ These recommendations apply to the usage of the following libraries:
 
 ## Ensuring Compatibility
 
-If you depend on one or more of these libraries, in order to
-ensure that your own project uses compatible versions of them, follow
-the guidance below for your build system.
+To ensure that your own project uses compatible versions of these
+libraries, follow the guidance below for your build system.
 
 ### Maven
 
@@ -77,7 +74,7 @@ that library to versions from different releases. Using a BOM fixes
 this problem because a BOM dictates consistent versions for all
 artifacts from a library.
 
-You can use a BOM like this - this example is for `google-cloud-bom`:
+You can use a BOM like this — this example is for `google-cloud-bom`:
 
 ```
   <dependencyManagement>
@@ -100,26 +97,24 @@ You can use a BOM like this - this example is for `google-cloud-bom`:
   </dependencies>
 ```
 
-In the example above, since the BOM manages library versions, the
+In this example, since the BOM manages library versions, the
 version of the google-cloud-storage artifact is omitted.
 
 See the "Choosing BOMs" section below if you need to import more than one BOM.
 
 ### Gradle
 
-Gradle automatically selects the highest version in the dependency
-tree of any given dependency.
+Gradle automatically selects the highest version of any given
+dependency in the dependency tree.
 
 #### Import BOMs to ensure your dependencies are consistent
 
-It is possible to accidentally use versions of different artifacts
-from a library from different releases and experience a dependency
-conflict. To fix this problem, you can import a BOM in Gradle to force
-consistent versions, as long as you are using at least Gradle 4.6.
+When a library publishes multiple artifacts, using different versions
+for different artifacts may cause dependency conflicts. To fix this
+problem, you can import a BOM to force consistent versions, as long as
+you are using at least Gradle 4.6. To do this:
 
-In order to make use of a BOM, do the following:
-
-- Gradle 4.x (4.6+):
+- If you are using Gradle 4.x (4.6+):
   - Add the following to your `settings.gradle`: `enableFeaturePreview('IMPROVED_POM_SUPPORT')`
 - Add a dependency on the BOM for the library you depend on
 - Remove the version from the dependency declarations of the artifacts in that library
@@ -130,10 +125,10 @@ See the "Choosing BOMs" section below if you need to import more than one BOM.
 
 ## Choosing BOMs
 
-Generally, you should import the highest-level BOM that your project
+By default, import the highest-level BOM that your project
 depends on. For example, if you depend on both `grpc-java` and
 `google-cloud-java`, then use `google-cloud-bom` (since `google-cloud-java`
-depends on `grpc-java`). This should get you the versions of everything
+depends on `grpc-java`). This generally provides you the versions of everything
 you need, because the transitive dependencies of that library should
 all be compatible as well.
 
@@ -142,8 +137,9 @@ dependencies at different versions, you may also need to specify
 lower-level BOMs to ensure compatibility, since each BOM only controls
 the versions of the library that generates it. Since the GCP Java
 libraries follow semver, you should be able to pick the highest
-version in your dependency tree for any particular library. Here is
-the process to follow for each library that has BOM support:
+version in your dependency tree for any particular library, as long as
+your dependency tree agrees on the same major version. Here is the
+process to follow for each library that has BOM support:
 
 1. Identify the highest version seen for any artifact produced by that library
   a. For example, if you see `gax:1.34.0` and `gax-grpc:1.42.0`, then use version 1.42.0
@@ -178,16 +174,17 @@ published a BOM for, and the BOM artifact name.
 ## Intrinsic conflicts
 
 It is possible for GCP open source Java libraries to have conflicts
-with each other that cannot be resolved when the user follows the
-recommendations of this document. Such conflicts are called intrinsic
-conflicts. There is an ongoing effort to ensure that intrinsic
-conflicts are avoided among Google open source Java libraries. A
-dashboard that reports the current results of compatibility checks is
-accessible from the [Cloud Open Source Java Dashboard](https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/target/dashboard/dashboard.html).
-As of the time of this writing, there are still some conflicts that
-are in the process of being fixed, but they should not be encountered
-by most users who only use the public APIs of the libraries. If you
-encounter such a conflict, please [file an issue against cloud-opensource-java](https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/new).
+that cannot be resolved by following the recommendations of this
+document. Such conflicts are called *intrinsic conflicts*. There is an
+ongoing effort to remove intrinsic conflicts among GCP open source
+Java libraries and prevent new ones from occurring. A dashboard that
+reports the current results of compatibility checks is accessible from
+the [Cloud Open Source Java Dashboard](https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/target/dashboard/dashboard.html).
+As of the time of this writing, some conflicts are still in the
+process of being fixed, but they should not be encountered by most
+users who only use the public APIs of the libraries. If you encounter
+such a conflict, please
+[file an issue against cloud-opensource-java](https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/new).
 
 ## Background details about library compatibility
 
