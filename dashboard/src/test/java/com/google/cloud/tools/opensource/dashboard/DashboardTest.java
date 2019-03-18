@@ -37,6 +37,9 @@ import nu.xom.Node;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
 
+import org.apache.maven.project.ProjectBuildingException;
+import org.codehaus.plexus.PlexusContainerException;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -125,10 +128,10 @@ public class DashboardTest {
   }
 
   @Test
-  public void testDashboard() throws IOException, ArtifactDescriptorException {
-    DefaultArtifact bom =
-        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
-    List<Artifact> artifacts = RepositoryUtility.readBom(bom);
+  public void testDashboard()
+      throws IOException, PlexusContainerException, ComponentLookupException,
+      ProjectBuildingException {
+    List<Artifact> artifacts = RepositoryUtility.readBom(CLOUD_OSS_BOM_PATH);
     Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
 
     Assert.assertEquals("en-US", dashboard.getRootElement().getAttribute("lang").getValue());
