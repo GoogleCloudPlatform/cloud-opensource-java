@@ -47,6 +47,7 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateHashModel;
 import freemarker.template.Version;
+import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -92,13 +93,17 @@ public class DashboardMain {
    */
   public static void main(String[] arguments)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
-          PlexusContainerException, ComponentLookupException, ProjectBuildingException {
+          PlexusContainerException, ComponentLookupException, ProjectBuildingException,
+          ParseException {
     if (arguments.length != 1) {
       System.err.println("Please specify path to pom.xml or Maven coordinates for a BOM.");
       return;
     }
-    String bomInput = arguments[0];
-    Path output = bomInput.endsWith("xml") ? generate(Paths.get(bomInput)) : generate(bomInput);
+    DashboardArguments dashboardArguments = DashboardArguments.readCommandLine(arguments);
+    Path output =
+        dashboardArguments.hasFile()
+            ? generate(dashboardArguments.getBomFile())
+            : generate(dashboardArguments.getBomCoordinates());
     System.out.println("Wrote dashboard into " + output.toAbsolutePath());
   }
 

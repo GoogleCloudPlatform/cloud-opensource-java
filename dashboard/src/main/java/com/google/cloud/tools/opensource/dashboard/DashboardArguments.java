@@ -1,0 +1,98 @@
+/*
+ * Copyright 2019 Google LLC.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.google.cloud.tools.opensource.dashboard;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import javax.annotation.Nullable;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionGroup;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
+/**
+ * Command-line option for {@link DashboardMain}. The tool takes either an pom.xml file or Maven
+ * coordinates for a BOM.
+ */
+final class DashboardArguments {
+  private static final Options options = configureOptions();
+  private static final HelpFormatter helpFormatter = new HelpFormatter();
+
+  private final CommandLine commandLine;
+
+  private DashboardArguments(CommandLine commandLine) {
+    this.commandLine = commandLine;
+  }
+
+  /**
+   * Returns true if the argument for a file is specified. False if the argument for coordinates is
+   * specified.
+   */
+  boolean hasFile() {
+    return commandLine.hasOption('f');
+  }
+
+  /** Returns an absolute path to pom.xml file of a BOM. Null if the file is not specified. */
+  @Nullable
+  Path getBomFile() {
+    return Paths.get(commandLine.getOptionValue('f')).toAbsolutePath();
+  }
+
+  /** Returns the Maven coordinates of a BOM. Null if coordinates are not specified. */
+  @Nullable
+  String getBomCoordinates() {
+    return commandLine.getOptionValue('c');
+  }
+
+  static DashboardArguments readCommandLine(String... arguments) throws ParseException {
+    CommandLineParser parser = new DefaultParser();
+
+    try {
+      return new DashboardArguments(parser.parse(options, arguments));
+    } catch (ParseException ex) {
+      helpFormatter.printHelp("DashboardMain", options);
+      throw ex;
+    }
+  }
+
+  private static Options configureOptions() {
+    Options options = new Options();
+    OptionGroup inputGroup = new OptionGroup();
+    inputGroup.setRequired(true);
+
+    Option inputFileOption =
+        Option.builder("f").longOpt("bom-file").hasArg().desc("File to a BOM (pom.xml)").build();
+    inputGroup.addOption(inputFileOption);
+
+    Option inputCoordinatesOption =
+        Option.builder("c")
+            .longOpt("bom-coordinates")
+            .hasArg()
+            .desc(
+                "Maven coordinates of a BOM. For example"
+                    + " com.google.cloud:cloud-oss-bom:1.0.0-SNAPSHOT")
+            .build();
+    inputGroup.addOption(inputCoordinatesOption);
+
+    options.addOptionGroup(inputGroup);
+    return options;
+  }
+}
