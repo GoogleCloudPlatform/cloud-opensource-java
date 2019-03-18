@@ -6,7 +6,7 @@ set -e
 set -x
 
 cd github/cloud-opensource-java
-# 'Enforcer-rules' needs to be built with 'dependencies'
+# 'Enforcer-rules' needs to be built with 'dependencies' (without 'boms')
 mvn -pl 'dependencies,enforcer-rules' -Prelease -B -U verify
 cd enforcer-rules
 
