@@ -75,8 +75,11 @@ public class ClassPathBuilderTest {
         .isGreaterThan(1);
   }
 
+  /**
+   * Test that BOM members come before the transitive dependencies.
+   */
   @Test
-  public void testBomToPaths_firstElementsAreBomMembers() throws RepositoryException {
+  public void testBomToPaths_firstElementsAreBomMembers() throws RepositoryException {    
     DefaultArtifact bom =
         new DefaultArtifact("com.google.cloud:google-cloud-bom:0.81.0-alpha");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
@@ -85,7 +88,7 @@ public class ClassPathBuilderTest {
         ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
 
     ImmutableList<Path> paths = ImmutableList.copyOf(jarToDependencyPaths.keySet());
-
+    
     Truth.assertThat(paths.get(0).getFileName().toString()).isEqualTo(
         "api-common-1.7.0.jar"); // first element in the BOM
     int bomSize = managedDependencies.size();

@@ -30,6 +30,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
@@ -629,11 +630,14 @@ public class LinkageCheckerTest {
     ImmutableList<Path> inputClasspath = parsedArguments.getInputClasspath();
     Truth.assertThat(inputClasspath).isNotEmpty();
     
-    // These 2 files are the first 2 (non-pom) artifacts in the BOM
-    Assert.assertEquals("api-common-1.7.0.jar", inputClasspath.get(0).getFileName().toString());
-    Assert.assertEquals("proto-google-common-protos-1.14.0.jar",
-        inputClasspath.get(1).getFileName().toString());
-    
+    List<String> names =
+        inputClasspath.stream().map(x -> x.getFileName().toString()).collect(Collectors.toList());
+    // The first artifacts
+    Truth.assertThat(names).containsAllOf(
+        "api-common-1.7.0.jar",
+        "proto-google-common-protos-1.14.0.jar",
+        "grpc-google-common-protos-1.14.0.jar");
+
     // gax-bom, containing com.google.api:gax:1.42.0, is in the BOM with scope:import
     for (Path path : inputClasspath) {
       if (path.getFileName().toString().equals("gax-1.40.0.jar")) {
