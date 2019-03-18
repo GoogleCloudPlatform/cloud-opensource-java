@@ -29,7 +29,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 /**
- * Command-line option for {@link DashboardMain}. The tool takes either an pom.xml file or Maven
+ * Command-line option for {@link DashboardMain}. The tool takes either a pom.xml file path or Maven
  * coordinates for a BOM.
  */
 final class DashboardArguments {
@@ -45,12 +45,14 @@ final class DashboardArguments {
   /**
    * Returns true if the argument for a file is specified. False if the argument for coordinates is
    * specified.
+   *
+   * <p>It is guaranteed that either a file path or Maven coordinates for a BOM are available.
    */
   boolean hasFile() {
     return commandLine.hasOption('f');
   }
 
-  /** Returns an absolute path to pom.xml file of a BOM. Null if the file is not specified. */
+  /** Returns an absolute path to pom.xml file of a BOM. Null if file is not specified. */
   @Nullable
   Path getBomFile() {
     // Trim the value so that maven exec plugin can pass arguments with exec.arguments="-f pom.xml"
@@ -67,6 +69,7 @@ final class DashboardArguments {
     CommandLineParser parser = new DefaultParser();
 
     try {
+      // Throws ParseException if required option group ('-f' or '-c') is not specified
       return new DashboardArguments(parser.parse(options, arguments));
     } catch (ParseException ex) {
       helpFormatter.printHelp("DashboardMain", options);
