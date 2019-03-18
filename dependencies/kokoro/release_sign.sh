@@ -8,13 +8,14 @@ set -x
 cd $KOKORO_GFILE_DIR
 mkdir signed && chmod 777 signed
 
-# find the latest directory under prod/cloud-opensource-java/parent/gcp_ubuntu/release-build/
-LAST_BUILD=$(ls prod/cloud-opensource-java/parent/gcp_ubuntu/release-build/ | sort -rV | head -1)
+# find the latest directory under prod/cloud-opensource-java/dependencies/gcp_ubuntu/release-build/
+# This directory is an alias to Google Cloud Storage
+LAST_BUILD=$(ls prod/cloud-opensource-java/dependencies/gcp_ubuntu/release-build/ | sort -rV | head -1)
 
-echo "Signing files in " `pwd`/prod/cloud-opensource-java/parent/gcp_ubuntu/release-build/${LAST_BUILD}
+echo "Signing files in " `pwd`/prod/cloud-opensource-java/dependencies/gcp_ubuntu/release-build/${LAST_BUILD}
 
 # find the jars and the pom in the latest build artifact directory
-FILES=$(find `pwd`/prod/cloud-opensource-java/parent/gcp_ubuntu/release-build/${LAST_BUILD}/* -type f \( -iname \*.jar -o -iname \*.pom \))
+FILES=$(find `pwd`/prod/cloud-opensource-java/dependencies/gcp_ubuntu/release-build/${LAST_BUILD}/* -type f \( -iname \*.jar -o -iname \*.pom \))
 
 for f in $FILES
 do
