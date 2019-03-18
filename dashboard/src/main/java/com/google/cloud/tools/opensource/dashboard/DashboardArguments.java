@@ -53,7 +53,8 @@ final class DashboardArguments {
   /** Returns an absolute path to pom.xml file of a BOM. Null if the file is not specified. */
   @Nullable
   Path getBomFile() {
-    return Paths.get(commandLine.getOptionValue('f')).toAbsolutePath();
+    // Trim the value so that maven exec plugin can pass arguments with exec.arguments="-f pom.xml"
+    return Paths.get(commandLine.getOptionValue('f').trim()).toAbsolutePath();
   }
 
   /** Returns the Maven coordinates of a BOM. Null if coordinates are not specified. */
