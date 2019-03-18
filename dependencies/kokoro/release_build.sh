@@ -5,7 +5,7 @@ set -e
 # Display commands to stderr.
 set -x
 
-cd github/cloud-opensource-java
+cd github/cloud-opensource-java/dependencies
 
 mvn -Prelease -B -U verify
 

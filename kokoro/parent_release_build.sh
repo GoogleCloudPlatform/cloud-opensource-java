@@ -17,4 +17,3 @@ PROJECT_VERSION=$(mvn -B help:evaluate -Dexpression=project.version 2>/dev/null|
 # This build is only for parent pom. Target directory is not automatically created.
 mkdir -p target
 cp pom.xml target/${ARTIFACT_ID}-${PROJECT_VERSION}.pom
-
