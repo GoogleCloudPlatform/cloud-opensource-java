@@ -1,6 +1,12 @@
-To release artifacts 'dependencies-parent', 'dependencies', and 'linkage-checker-enforcer-rules':
+# Release Step for 
 
-1. Create a tag for a release
+To release artifacts 'dependencies-parent', 'dependencies', and 'linkage-checker-enforcer-rules',
+follow the steps below.
+
+Note: Cloud OSS BOM release procedure [boms/cloud-oss-bom/RELEASING.md](boms/cloud-oss-bom/RELEASING.md)
+is not part of this pipeline.
+
+## 1. Create a tag for a release
 
 ```
 git checkout origin/master
@@ -10,11 +16,11 @@ scripts/prepare_release.sh X.Y.Z    # X.Y.Z is version number (without previs 'v
 
 This script creates a branch and tag with the version number.
 
-2. Create a pull request for the branch in Github UI.
+## 2. Create a pull request for the branch in Github UI.
 
 The pull request should be merged to master after confirming the build.
 
-3. Initiate Rapid builds
+## 3. Initiate Rapid builds
 
 | ArtifactId | Rapid project name |
 | ---------- | ------------------ |
@@ -25,10 +31,10 @@ The pull request should be merged to master after confirming the build.
 
 Specify the tag (vX.Y.Z) as 'committish'.
 
-4. Confirm the builds
+## 4. Confirm the builds
 
 The artifacts should be available in Sonatype staging repository.
 
-5. Merge version increment PR
+## 5. Merge version increment PR
 
 Merge the PR created at Step 2.
