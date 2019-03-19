@@ -29,12 +29,12 @@ libraries, follow the guidance below for your build system.
 #### Use the requireUpperBoundDeps enforcer rule
 
 Dependency conflicts can happen with Maven even when libraries follow
-semver because Maven's dependency mediation algorithm can select older
-versions instead of newer versions, meaning new features will be
-missing that other libraries depend on. The `requireUpperBoundDeps`
-enforcer rule can be used to automatically discover incorrect version
-selection because it fails the build if anything other than the most
-recent version is chosen.
+[semver](https://semver.org/) because Maven's dependency mediation
+algorithm can select older versions instead of newer versions, meaning
+new features will be missing that other libraries depend on. The
+`requireUpperBoundDeps` enforcer rule can be used to automatically
+discover incorrect version selection because it fails the build when
+an older version is chosen instead of a newer one.
 
 You can add `requireUpperBoundDeps` to your build like this:
 
@@ -74,7 +74,7 @@ that library to versions from different releases. Using a BOM fixes
 this problem because a BOM dictates consistent versions for all
 artifacts from a library.
 
-You can use a BOM like this — this example is for `google-cloud-bom`:
+You can use a BOM like this—this example is for `google-cloud-bom`:
 
 ```
   <dependencyManagement>
@@ -138,7 +138,7 @@ However, if your project independently pulls in transitive
 dependencies at different versions, you may also need to specify
 lower-level BOMs to ensure compatibility, since each BOM only controls
 the versions of the library that generates it. Since the GCP Java
-libraries follow semver, you should be able to pick the highest
+libraries follow [semver](https://semver.org/), you should be able to pick the highest
 version in your dependency tree for any particular library, as long as
 your dependency tree agrees on the same major version. Here is the
 process to follow for each library that has BOM support:
@@ -199,7 +199,7 @@ library ecosystem:
 - Each library publishes a BOM that defines the
   compatible versions for each release.
 - Each library follows semantic versioning. This means that once a
-  library reaches a 1.x version, features can be added in minor/patch
+  library reaches a 1.x version, features and APIs can be added in minor/patch
   releases but not removed within a major version.
 
 This combination of characteristics means that you can generally avoid
