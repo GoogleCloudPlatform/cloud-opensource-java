@@ -28,8 +28,9 @@ The pull request should be merged to master after confirming the build.
 |dependencies-parent| cloud-java-tools-cloud-opensource-java-parent-kokoro-release|
 |linkage-checker-enforcer-rules|cloud-java-tools-cloud-opensource-java-enforcer-rules-kokoro-release|
 
+The order is not strict and they can run concurrently.
 
-Specify the tag (vX.Y.Z) as 'committish'.
+When asked in Rapid, specify the tag (vX.Y.Z) as 'committish'.
 
 ## 4. Confirm the builds
 
