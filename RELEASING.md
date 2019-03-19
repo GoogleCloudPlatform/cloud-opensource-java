@@ -23,8 +23,3 @@ with the same version.
 The release pipelines can run concurrently. For example, you don't have to wait for
 `dependencies-parent` pipeline before initiating `dependencies` pipeline. They use different
 GCS buckets.
-
-## Merge PR to increment version at the last step
-
-After finishing the upload to Maven Central, merge the PR created for the branch created by
-"scripts/prepare_release.sh". This increments the version in master.
