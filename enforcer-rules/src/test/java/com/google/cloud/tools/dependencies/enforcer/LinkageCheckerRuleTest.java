@@ -48,6 +48,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.DependencyRequest;
@@ -100,6 +101,7 @@ public class LinkageCheckerRuleTest {
       throws RepositoryException {
     CollectRequest collectRequest = new CollectRequest();
     collectRequest.setRepositories(ImmutableList.of(RepositoryUtility.CENTRAL));
+    collectRequest.setRootArtifact(new DefaultArtifact("dummy:mock:0.0.1"));
     collectRequest.setDependencies(
         Arrays.stream(coordinates)
             .map(DefaultArtifact::new)
@@ -143,6 +145,16 @@ public class LinkageCheckerRuleTest {
     // This should not raise an EnforcerRuleException
     rule.execute(mockRuleHelper);
     verify(mockLog).info("No error found");
+  }
+
+  @Test
+  public void testExecute_shouldPassEmptyProject()
+      throws EnforcerRuleException, RepositoryException {
+    // Empty project with no dependency
+    setupMockDependencyResolution();
+
+    // This should not raise a NullPointerException
+    rule.execute(mockRuleHelper);
   }
 
   @Test
