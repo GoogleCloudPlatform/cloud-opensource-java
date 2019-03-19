@@ -38,7 +38,8 @@ public class BomTest {
           Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();
 
   @Test
-  public void testArtifactsExist() throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException {
+  public void testArtifactsExist()
+      throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException {
     List<Artifact> artifacts = RepositoryUtility.readBom(CLOUD_OSS_BOM_PATH);
     for (Artifact artifact : artifacts) {
       assertReachable(buildMavenCentralUrl(artifact));
