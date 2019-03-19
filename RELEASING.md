@@ -21,4 +21,5 @@ The release pipelines can run concurrently. For example, you don't have to wait 
 
 ## Merge PR to increment version at the last step
 
-Merge the PR created for the branch created by "scripts/prepare_release.sh".
+After finishing the upload to Maven Central, merge the PR created for the branch created by
+"scripts/prepare_release.sh". This increments the version in master.
