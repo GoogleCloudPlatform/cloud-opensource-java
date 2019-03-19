@@ -30,6 +30,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
@@ -622,21 +623,24 @@ public class LinkageCheckerTest {
   @Test
   public void testGenerateInputClasspathFromLinkageCheckOption_mavenBom()
       throws RepositoryException, ParseException {
-    String bomCoordinates = "com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT";
+    String bomCoordinates = "com.google.cloud:google-cloud-bom:0.81.0-alpha";
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("-b", bomCoordinates);
     ImmutableList<Path> inputClasspath = parsedArguments.getInputClasspath();
     Truth.assertThat(inputClasspath).isNotEmpty();
     
-    // These 2 files are the first 2 artifacts in the BOM
-    Assert.assertEquals("guava-26.0-android.jar", inputClasspath.get(0).getFileName().toString());
-    Assert.assertEquals("guava-testlib-26.0-android.jar",
-        inputClasspath.get(1).getFileName().toString());
-    
-    // google-cloud-bom, containing google-cloud-firestore, is in the BOM with scope:import
+    List<String> names =
+        inputClasspath.stream().map(x -> x.getFileName().toString()).collect(Collectors.toList());
+    // The first artifacts
+    Truth.assertThat(names).containsAllOf(
+        "api-common-1.7.0.jar",
+        "proto-google-common-protos-1.14.0.jar",
+        "grpc-google-common-protos-1.14.0.jar");
+
+    // gax-bom, containing com.google.api:gax:1.42.0, is in the BOM with scope:import
     for (Path path : inputClasspath) {
-      if (path.getFileName().toString().startsWith("google-cloud-firestore-")) {
+      if (path.getFileName().toString().equals("gax-1.40.0.jar")) {
         return;
       }
     }
@@ -819,7 +823,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageErrors_shouldNotFailOnDuplicatedClass()
+  public void testFindLinkageErrors_shouldNotFailOnDuplicateClass()
       throws RepositoryException, IOException {
     // There was an issue (#495) where com.google.api.client.http.apache.ApacheHttpRequest is in
     // both google-http-client-1.19.0.jar and google-http-client-apache-2.0.0.jar.
@@ -834,6 +838,7 @@ public class LinkageCheckerTest {
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     // This should not raise an exception
-    linkageChecker.findLinkageErrors();
+    LinkageCheckReport report = linkageChecker.findLinkageErrors();
+    Truth.assertThat(report).isNotNull();
   }
 }

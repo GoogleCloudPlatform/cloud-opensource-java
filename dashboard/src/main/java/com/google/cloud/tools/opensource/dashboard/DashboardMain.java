@@ -31,7 +31,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -48,9 +47,13 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateHashModel;
 import freemarker.template.Version;
+import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.apache.maven.project.ProjectBuildingException;
+import org.codehaus.plexus.PlexusContainerException;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
@@ -66,6 +69,7 @@ import com.google.cloud.tools.opensource.dependencies.Update;
 import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -83,25 +87,46 @@ public class DashboardMain {
   public static final String TEST_NAME_GLOBAL_UPPER_BOUND = "Global Upper Bounds";
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
 
-  public static void main(String[] args)
-      throws IOException, TemplateException, RepositoryException, URISyntaxException {
-
-    Path output = generate();
+  /**
+   * Generates a code hygiene dashboard for a BOM. This tool takes a path to pom.xml of the BOM as
+   * an argument or Maven coordinates to a BOM.
+   */
+  public static void main(String[] arguments)
+      throws IOException, TemplateException, RepositoryException, URISyntaxException,
+          PlexusContainerException, ComponentLookupException, ProjectBuildingException,
+          ParseException {
+    if (arguments.length != 1) {
+      System.err.println("Please specify path to pom.xml or Maven coordinates for a BOM.");
+      return;
+    }
+    DashboardArguments dashboardArguments = DashboardArguments.readCommandLine(arguments);
+    Path output =
+        dashboardArguments.hasFile()
+            ? generate(dashboardArguments.getBomFile())
+            : generate(dashboardArguments.getBomCoordinates());
     System.out.println("Wrote dashboard into " + output.toAbsolutePath());
   }
 
-  public static Path generate()
+  private static Path generate(String bomCoordinates)
       throws IOException, TemplateException, RepositoryException, URISyntaxException {
+    Artifact bom = new DefaultArtifact(bomCoordinates);
+    return generate(RepositoryUtility.readBom(bom));
+  }
 
-    // TODO should pass in maven coordinates as argument
-    DefaultArtifact bom =
-        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
-    System.out.println(new Date() + ": reading bom");
-    List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
-    System.out.println(new Date() + ": loading artifact info");
+  @VisibleForTesting
+  static Path generate(Path bomFile)
+      throws IOException, TemplateException, RepositoryException, URISyntaxException,
+          PlexusContainerException, ComponentLookupException, ProjectBuildingException {
+    Preconditions.checkArgument(
+        Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
+    Preconditions.checkArgument(
+        Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
+    return generate(RepositoryUtility.readBom(bomFile));
+  }
+
+  private static Path generate(List<Artifact> managedDependencies)
+      throws IOException, TemplateException, RepositoryException, URISyntaxException {
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
-
-    System.out.println(new Date() + ": resolving BOM dependencies");
 
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
         ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
@@ -112,13 +137,11 @@ public class DashboardMain {
     List<Path> artifactJarsInBom = classpath.subList(0, managedDependencies.size());
     ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInBom);
 
-    System.out.println(new Date() + ": creating linkage checker");
     LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints);
-    System.out.println(new Date() + ": finding linkage errors");
+
     LinkageCheckReport linkageReport = linkageChecker.findLinkageErrors();
-    System.out.println(new Date() + ": generating HTML");
+
     Path output = generateHtml(cache, jarToDependencyPaths, linkageReport);
-    System.out.println(new Date() + ": done.");
 
     return output;
   }

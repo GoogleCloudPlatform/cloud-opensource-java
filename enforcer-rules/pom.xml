@@ -4,9 +4,9 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>com.google.cloud.tools.opensource</groupId>
-    <artifactId>cloud-tools-opensource-parent</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <groupId>com.google.cloud.tools</groupId>
+    <artifactId>dependencies-parent</artifactId>
+    <version>0.1.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>linkage-checker-enforcer-rules</artifactId>
@@ -42,7 +42,7 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>dependency-lister</artifactId>
+      <artifactId>dependencies</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

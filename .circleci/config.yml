@@ -8,7 +8,7 @@ jobs:
     docker:
       # specify the version you desire here
       - image: circleci/openjdk:8-jdk
-      
+
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
       # documented at https://circleci.com/docs/2.0/circleci-images/
@@ -19,7 +19,7 @@ jobs:
       # Customize the JVM maximum heap limit
       MAVEN_OPTS: -Xmx1024m -XX:MaxPermSize=128m
 
-    
+
     steps:
       - checkout:
           path: ~/cloud-opensource-java
@@ -35,13 +35,10 @@ jobs:
           paths:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
-        
+
       # run tests!
       - run: |
-          cd boms/cloud-oss-bom
-          mvn install
-          cd ../..
-          mvn -e integration-test -Dmaven.home=/opt/apache-maven
+          mvn -B -e integration-test
 
       - run:
           name: Save test results

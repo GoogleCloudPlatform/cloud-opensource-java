@@ -20,7 +20,6 @@ import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePat
 
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Correspondence;
@@ -100,12 +99,15 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testCreationInvalidInput() {
+  public void testCreationInvalidInput() throws IOException {
     try {
-      ClassDumper.create(ImmutableList.of(Paths.get("")));
+      ClassDumper.create(ImmutableList.of(Paths.get("no_such_file")));
       Assert.fail("Empty path should generate IOException");
-    } catch (IOException ex) {
+    } catch (IllegalArgumentException ex) {
       // pass
+      Truth.assertThat(ex)
+          .hasMessageThat()
+          .isEqualTo("Some jar files are not readable: [no_such_file]");
     }
   }
 
@@ -230,20 +232,20 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testMapClassToJar_firstJarFileWins() throws URISyntaxException, IOException {
+  public void testFindClassLocation() throws URISyntaxException, IOException {
     Path firestore65 = absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar");
     Path firestore66 = absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar");
 
     // This class exists in both jar files
     String grpcClass = "com.google.cloud.firestore.spi.v1beta1.GrpcFirestoreRpc";
 
-    ImmutableMap<String, Path> classToJar65First =
-        ClassDumper.mapClassToJar(ImmutableList.of(firestore65, firestore66));
-    Truth.assertThat((Object) classToJar65First.get(grpcClass)).isEqualTo(firestore65);
+    Path jarWith65First =
+        ClassDumper.create(ImmutableList.of(firestore65, firestore66)).findClassLocation(grpcClass);
+    Assert.assertEquals(firestore65, jarWith65First);
 
-    ImmutableMap<String, Path> classToJar66First =
-        ClassDumper.mapClassToJar(ImmutableList.of(firestore66, firestore65));
-    Truth.assertThat((Object) classToJar66First.get(grpcClass)).isEqualTo(firestore66);
+    Path jarWith66First =
+        ClassDumper.create(ImmutableList.of(firestore66, firestore65)).findClassLocation(grpcClass);
+    Assert.assertEquals(firestore66, jarWith66First);
   }
 
   @Test
@@ -346,10 +348,12 @@ public class ClassDumperTest {
       Assert.fail("It should throw VerifyException when it cannot find a class symbol reference");
     } catch (VerifyException ex) {
       // pass
-      Truth.assertThat(ex.getMessage())
+      Truth.assertThat(ex)
+          .hasMessageThat()
           .isEqualTo(
-              "The target class symbol reference dummy.NoSuchClass is not found in "
-                  + "source class org.conscrypt.Conscrypt");
+              "When checking a class reference from org.conscrypt.Conscrypt to dummy.NoSuchClass,"
+                  + " the reference to the target class is no longer found in the source class's"
+                  + " constant pool.");
     }
   }
 }
