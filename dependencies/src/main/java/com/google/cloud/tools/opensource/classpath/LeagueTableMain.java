@@ -32,7 +32,6 @@ import org.eclipse.aether.graph.Dependency;
 /** A tool to find linkage errors for a class path. */
 public class LeagueTableMain {
 
-
   public static final List<Dependency> managedDependencies = Lists.newArrayList();
 
   /** Given Maven coordinates of a BOM, outputs the pair-wise comparison table. */
@@ -58,7 +57,6 @@ public class LeagueTableMain {
       cvsBuilder.append(bomMember).append(",");
       managedDependencies.add(new Dependency(bomMember, "compile"));
     }
-//    bomMembers = bomMembers.subList(5, 20);
 
     cvsBuilder.append("\n");
     int cellTotal = bomMembers.size() * bomMembers.size();

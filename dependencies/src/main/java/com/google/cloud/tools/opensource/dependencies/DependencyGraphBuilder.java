@@ -152,7 +152,9 @@ public class DependencyGraphBuilder {
     }
     RepositoryUtility.addRepositoriesToRequest(collectRequest);
 
-    collectRequest.setManagedDependencies(LeagueTableMain.managedDependencies);
+    if (!LeagueTableMain.managedDependencies.isEmpty()) {
+      collectRequest.setManagedDependencies(LeagueTableMain.managedDependencies);
+    }
 
     CollectResult collectResult = system.collectDependencies(session, collectRequest);
     DependencyNode node = collectResult.getRoot();
