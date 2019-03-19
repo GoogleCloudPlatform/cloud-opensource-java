@@ -16,9 +16,12 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Truth;
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
-
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -41,12 +44,19 @@ public class RepositoryUtilityTest {
   }
   
   @Test
-  public void testReadBom() throws ArtifactDescriptorException {
+  public void testReadBom_coordinates() throws ArtifactDescriptorException {
     Artifact artifact = new DefaultArtifact("com.google.cloud:google-cloud-bom:0.61.0-alpha");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(artifact);
     // Characterization test. As long as the artifact doesn't change (and it shouldn't)
     // the answer won't change.
     Assert.assertEquals(134, managedDependencies.size());
   }
-  
+
+  @Test
+  public void testReadBom_path() throws Exception {
+    Path pomFile = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml");
+    ImmutableList<Artifact> artifacts = RepositoryUtility.readBom(pomFile);
+    Truth.assertThat(artifacts).isNotEmpty();
+    Truth.assertThat(artifacts.size()).isEqualTo(167);
+  }
 }

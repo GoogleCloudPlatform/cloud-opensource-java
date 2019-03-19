@@ -81,7 +81,7 @@ public class ClassPathBuilderTest {
   @Test
   public void testBomToPaths_firstElementsAreBomMembers() throws RepositoryException {    
     DefaultArtifact bom =
-        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
+        new DefaultArtifact("com.google.cloud:google-cloud-bom:0.81.0-alpha");
     List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
 
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
@@ -90,11 +90,10 @@ public class ClassPathBuilderTest {
     ImmutableList<Path> paths = ImmutableList.copyOf(jarToDependencyPaths.keySet());
     
     Truth.assertThat(paths.get(0).getFileName().toString()).isEqualTo(
-        "protobuf-java-3.6.1.jar"); // first element in the BOM
+        "api-common-1.7.0.jar"); // first element in the BOM
     int bomSize = managedDependencies.size();
-    Assert.assertTrue(
-        paths.get(bomSize - 1).getFileName().toString()
-        .startsWith("gax-httpjson-")); // last element in BOM
+    String lastFileName = paths.get(bomSize - 1).getFileName().toString();
+    Truth.assertThat(lastFileName).isEqualTo("gax-httpjson-0.57.0.jar"); // last element in BOM
   }
 
   @Test

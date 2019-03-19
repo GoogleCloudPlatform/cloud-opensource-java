@@ -38,9 +38,6 @@ jobs:
 
       # run tests!
       - run: |
-          cd boms/cloud-oss-bom
-          mvn -B install
-          cd ../..
           mvn -B -e integration-test
 
       - run:

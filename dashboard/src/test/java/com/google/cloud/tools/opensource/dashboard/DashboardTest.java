@@ -24,6 +24,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -36,6 +37,9 @@ import nu.xom.Node;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
 
+import org.apache.maven.project.ProjectBuildingException;
+import org.codehaus.plexus.PlexusContainerException;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -54,6 +58,9 @@ import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 
 public class DashboardTest {
+
+  private static final Path CLOUD_OSS_BOM_PATH =
+      Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();
 
   private static final Correspondence<Node, String> NODE_VALUES =
       new Correspondence<Node, String>() {
@@ -81,7 +88,7 @@ public class DashboardTest {
   public static void setUp() throws IOException, ParsingException {
     // Creates "dashboard.html" and artifact reports in outputDirectory
     try {
-      outputDirectory = DashboardMain.generate();
+      outputDirectory = DashboardMain.generate(CLOUD_OSS_BOM_PATH);
     } catch (Throwable t) {
       t.printStackTrace();
       Assert.fail("Could not generate dashboard");
@@ -121,10 +128,10 @@ public class DashboardTest {
   }
 
   @Test
-  public void testDashboard() throws IOException, ArtifactDescriptorException {
-    DefaultArtifact bom =
-        new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
-    List<Artifact> artifacts = RepositoryUtility.readBom(bom);
+  public void testDashboard()
+      throws IOException, PlexusContainerException, ComponentLookupException,
+      ProjectBuildingException {
+    List<Artifact> artifacts = RepositoryUtility.readBom(CLOUD_OSS_BOM_PATH);
     Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
 
     Assert.assertEquals("en-US", dashboard.getRootElement().getAttribute("lang").getValue());

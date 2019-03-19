@@ -623,7 +623,7 @@ public class LinkageCheckerTest {
   @Test
   public void testGenerateInputClasspathFromLinkageCheckOption_mavenBom()
       throws RepositoryException, ParseException {
-    String bomCoordinates = "com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT";
+    String bomCoordinates = "com.google.cloud:google-cloud-bom:0.81.0-alpha";
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("-b", bomCoordinates);
@@ -632,15 +632,15 @@ public class LinkageCheckerTest {
     
     List<String> names =
         inputClasspath.stream().map(x -> x.getFileName().toString()).collect(Collectors.toList());
-    
+    // The first artifacts
     Truth.assertThat(names).containsAllOf(
-        "protobuf-java-3.6.1.jar",
-        "protobuf-java-util-3.6.1.jar",
-        "guava-27.1-android.jar");
-    
-    // google-cloud-bom, containing google-cloud-firestore, is in the BOM with scope:import
+        "api-common-1.7.0.jar",
+        "proto-google-common-protos-1.14.0.jar",
+        "grpc-google-common-protos-1.14.0.jar");
+
+    // gax-bom, containing com.google.api:gax:1.42.0, is in the BOM with scope:import
     for (Path path : inputClasspath) {
-      if (path.getFileName().toString().startsWith("google-cloud-firestore-")) {
+      if (path.getFileName().toString().equals("gax-1.40.0.jar")) {
         return;
       }
     }
