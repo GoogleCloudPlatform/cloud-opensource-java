@@ -1,7 +1,8 @@
 # Release Steps
 
 To release artifacts 'dependencies-parent', 'dependencies', and 'linkage-checker-enforcer-rules',
-follow the "Developers/Releasing" steps in go/ct4j.
+follow the ["Developers/Releasing" steps in go/ct4j](
+https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md?cl=head).
 
 Note: Cloud OSS BOM release procedure [boms/cloud-oss-bom/RELEASING.md](
 boms/cloud-oss-bom/RELEASING.md) is not part of this document.
@@ -14,10 +15,14 @@ boms/cloud-oss-bom/RELEASING.md) is not part of this document.
 |dependencies| cloud-java-tools-cloud-opensource-java-dependencies-kokoro-release|dependencies-parent|
 |linkage-checker-enforcer-rules|cloud-java-tools-cloud-opensource-java-enforcer-rules-kokoro-release|dependencies-parent, dependencies|
 
-To satisfy their dependency tree, their dependency need to be released together.
+When releasing a version of `linkage-checker-enforcer-rules`, `dependencies` and
+`dependencies-parent` need to be released together with the same version.
+When releasing a version of `dependencies`, `dependencies-parent` needs to be released together
+with the same version.
 
 The release pipelines can run concurrently. For example, you don't have to wait for
-`dependencies-parent` pipeline before initiating `dependencies` pipeline.
+`dependencies-parent` pipeline before initiating `dependencies` pipeline. They use different
+GCS buckets.
 
 ## Merge PR to increment version at the last step
 
