@@ -14,12 +14,14 @@ git pull
 scripts/prepare_release.sh X.Y.Z    # X.Y.Z is version number (without prefix 'v')
 ```
 
-This script creates a branch and tag with the version number.
-
+This script creates a branch and a tag with the version number.
 
 ### Reverting prepare_release.sh
 
-When you want to revert the effect of this step, delete the tag and the branch.
+Sometimes subsequent builds fail and you want to start over with the same version number with
+updated master by reverting this step.
+To revert the effect of this step, delete the tag and the branch. For example, to revert version
+'0.1.1', do the following steps:
 
 ```
 git tag -d v0.1.1
@@ -27,7 +29,8 @@ git push origin :v0.1.1
 git branch -d 0.1.1  # branch does not have 'v' prefix
 ```
 
-Delete branch in Github: https://github.com/GoogleCloudPlatform/cloud-opensource-java/branches
+and delete the branch in [Github's branch page](
+https://github.com/GoogleCloudPlatform/cloud-opensource-java/branches).
 
 ## 2. Create a pull request for the branch in Github UI.
 
