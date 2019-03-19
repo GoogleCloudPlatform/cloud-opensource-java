@@ -189,7 +189,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       return StreamSupport.stream(
               traverser.breadthFirst(resolutionResult.getDependencyGraph()).spliterator(), false)
           .map(DependencyNode::getArtifact)
-          .skip(1) // The root project's file is null if it's not installed locally (#524)
+          .skip(1) // Not to check the root project's jar file; Maven "validate" is before "compile"
           .map(Artifact::getFile)
           .map(File::toPath)
           .collect(toImmutableList());
