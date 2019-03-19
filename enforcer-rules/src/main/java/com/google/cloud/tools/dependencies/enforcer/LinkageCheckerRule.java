@@ -189,9 +189,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       return StreamSupport.stream(
               traverser.breadthFirst(resolutionResult.getDependencyGraph()).spliterator(), false)
           .map(DependencyNode::getArtifact)
-          .filter(Objects::nonNull)
+          .skip(1) // The root project's file is null if it's not installed locally (#524)
           .map(Artifact::getFile)
-          .filter(Objects::nonNull) // The root project's file is null if it's not installed locally
           .map(File::toPath)
           .collect(toImmutableList());
     } catch (ComponentLookupException e) {
