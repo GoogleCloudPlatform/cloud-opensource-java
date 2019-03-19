@@ -191,6 +191,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           .map(DependencyNode::getArtifact)
           .filter(Objects::nonNull)
           .map(Artifact::getFile)
+          .filter(Objects::nonNull) // The root artifact is null if 'mvn install' has not run yet
           .map(File::toPath)
           .collect(toImmutableList());
     } catch (ComponentLookupException e) {
