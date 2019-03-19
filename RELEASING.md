@@ -1,57 +1,24 @@
 # Release Steps
 
 To release artifacts 'dependencies-parent', 'dependencies', and 'linkage-checker-enforcer-rules',
-follow the steps below.
+follow the "Developers/Releasing" steps in go/ct4j.
 
-Note: Cloud OSS BOM release procedure [boms/cloud-oss-bom/RELEASING.md](boms/cloud-oss-bom/RELEASING.md)
-is not part of this pipeline.
+Note: Cloud OSS BOM release procedure [boms/cloud-oss-bom/RELEASING.md](
+boms/cloud-oss-bom/RELEASING.md) is not part of this document.
 
-## 1. Create a tag for a release
+## Rapid builds
 
-```
-git checkout origin/master
-git pull
-scripts/prepare_release.sh X.Y.Z    # X.Y.Z is version number (without prefix 'v')
-```
+| ArtifactId | Rapid project name | Dependency |
+| ---------- | ------------------ | --------- |
+|dependencies-parent| cloud-java-tools-cloud-opensource-java-parent-kokoro-release||
+|dependencies| cloud-java-tools-cloud-opensource-java-dependencies-kokoro-release|dependencies-parent|
+|linkage-checker-enforcer-rules|cloud-java-tools-cloud-opensource-java-enforcer-rules-kokoro-release|dependencies-parent, dependencies|
 
-This script creates a branch and a tag with the version number.
+To satisfy their dependency tree, their dependency need to be released together.
 
-### Reverting prepare_release.sh
+The release pipelines can run concurrently. For example, you don't have to wait for
+`dependencies-parent` pipeline before initiating `dependencies` pipeline.
 
-Sometimes subsequent builds fail and you want to start over with the same version number with
-updated master by reverting this step.
-To revert the effect of this step, delete the tag and the branch. For example, to revert version
-'0.1.1', do the following steps:
+## Merge PR to increment version at the last step
 
-```
-git tag -d v0.1.1
-git push origin :v0.1.1
-git branch -d 0.1.1  # branch does not have 'v' prefix
-```
-
-and delete the branch in [Github's branch page](
-https://github.com/GoogleCloudPlatform/cloud-opensource-java/branches).
-
-## 2. Create a pull request for the branch in Github UI.
-
-The pull request should be merged to master after confirming the build.
-
-## 3. Initiate Rapid builds
-
-| ArtifactId | Rapid project name |
-| ---------- | ------------------ |
-|dependencies| cloud-java-tools-cloud-opensource-java-dependencies-kokoro-release|
-|dependencies-parent| cloud-java-tools-cloud-opensource-java-parent-kokoro-release|
-|linkage-checker-enforcer-rules|cloud-java-tools-cloud-opensource-java-enforcer-rules-kokoro-release|
-
-The order is not strict and they can run concurrently.
-
-When asked in Rapid, specify the tag (vX.Y.Z) as 'committish'.
-
-## 4. Confirm the builds
-
-The artifacts should be available in Sonatype staging repository.
-
-## 5. Merge version increment PR
-
-Merge the PR created at Step 2.
+Merge the PR created for the branch created by "scripts/prepare_release.sh".
