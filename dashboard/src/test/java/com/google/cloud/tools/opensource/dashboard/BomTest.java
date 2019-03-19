@@ -19,11 +19,14 @@ package com.google.cloud.tools.opensource.dashboard;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
+import org.apache.maven.project.ProjectBuildingException;
+import org.codehaus.plexus.PlexusContainerException;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -31,10 +34,12 @@ import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 
 public class BomTest {
 
+  private static final Path CLOUD_OSS_BOM_PATH =
+          Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();
+
   @Test
-  public void testArtifactsExist() throws ArtifactDescriptorException, IOException {
-    DefaultArtifact bom = new DefaultArtifact("com.google.cloud:cloud-oss-bom:pom:1.0.0-SNAPSHOT");
-    List<Artifact> artifacts = RepositoryUtility.readBom(bom);
+  public void testArtifactsExist() throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException {
+    List<Artifact> artifacts = RepositoryUtility.readBom(CLOUD_OSS_BOM_PATH);
     for (Artifact artifact : artifacts) {
       assertReachable(buildMavenCentralUrl(artifact));
     }
