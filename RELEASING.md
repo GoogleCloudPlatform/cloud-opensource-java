@@ -1,4 +1,4 @@
-# Release Step for 
+# Release Steps
 
 To release artifacts 'dependencies-parent', 'dependencies', and 'linkage-checker-enforcer-rules',
 follow the steps below.
