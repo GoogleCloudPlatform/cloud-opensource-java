@@ -15,9 +15,9 @@ boms/cloud-oss-bom/RELEASING.md) is not part of this document.
 |dependencies| cloud-java-tools-cloud-opensource-java-dependencies-kokoro-release|dependencies-parent|
 |linkage-checker-enforcer-rules|cloud-java-tools-cloud-opensource-java-enforcer-rules-kokoro-release|dependencies-parent, dependencies|
 
-When releasing a version of `linkage-checker-enforcer-rules`, `dependencies` and
-`dependencies-parent` need to be released together with the same version.
-When releasing a version of `dependencies`, `dependencies-parent` needs to be released together
+When releasing a version of `linkage-checker-enforcer-rules`, you need to release `dependencies`
+and `dependencies-parent` together with the same version.
+When releasing a version of `dependencies`, you need to release `dependencies-parent` together
 with the same version.
 
 The release pipelines can run concurrently. For example, you don't have to wait for
