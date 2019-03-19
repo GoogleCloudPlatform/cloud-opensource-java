@@ -29,12 +29,17 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 
-/** A tool to find linkage errors for a class path. */
+/**
+ * A tool to find linkage errors for a class path. This outputs comma-separated values for the
+ * pair-wise comparison table.
+ */
 public class LeagueTableMain {
 
+  // This values are used in resolving dependencies for a pair in the same manner as
+  // user's pom.xml importing Cloud OSS BOM.
   public static final List<Dependency> managedDependencies = Lists.newArrayList();
 
-  /** Given Maven coordinates of a BOM, outputs the pair-wise comparison table. */
+  /** Outputs the pair-wise comparison table for the members of Cloud OSS BOM. */
   public static void main(String[] arguments)
       throws IOException, RepositoryException, ParseException {
 
