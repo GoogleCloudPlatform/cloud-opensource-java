@@ -28,13 +28,12 @@ libraries, follow the guidance below for your build system.
 
 #### Use the requireUpperBoundDeps enforcer rule
 
-Dependency conflicts can happen with Maven even when libraries follow
-[semver](https://semver.org/) because Maven's dependency mediation
-algorithm can select older versions instead of newer versions, meaning
-new features will be missing that other libraries depend on. The
-`requireUpperBoundDeps` enforcer rule can be used to automatically
-discover incorrect version selection because it fails the build when
-an older version is chosen instead of a newer one.
+Maven's dependency mediation algorithm can select older versions
+instead of newer versions, meaning new features will be missing that
+other libraries depend on. The `requireUpperBoundDeps` enforcer rule
+can be used to automatically discover incorrect version selection
+because it fails the build when an older version is chosen instead of
+a newer one.
 
 You can add `requireUpperBoundDeps` to your build like this:
 
@@ -205,6 +204,6 @@ library ecosystem:
 This combination of characteristics means that you can generally avoid
 dependency conflicts by doing the following:
 
-1. Using the highest version of each dependency
-2. Importing a BOM for each library whose artifacts need to use a
+1. Use the highest version of each dependency
+2. Import a BOM for each library whose artifacts need to use a
   consistent version.
