@@ -26,12 +26,14 @@ import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.graph.Traverser;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Spliterator;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
@@ -186,13 +188,26 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
       Traverser<DependencyNode> traverser = Traverser.forTree(DependencyNode::getChildren);
 
-      return StreamSupport.stream(
-              traverser.breadthFirst(resolutionResult.getDependencyGraph()).spliterator(), false)
-          .map(DependencyNode::getArtifact)
-          .filter(Objects::nonNull)
-          .map(Artifact::getFile)
-          .map(File::toPath)
-          .collect(toImmutableList());
+      DependencyNode dependencyGraph = resolutionResult.getDependencyGraph();
+      Iterable<DependencyNode> breadthFirst = traverser.breadthFirst(dependencyGraph);
+      
+      Builder<Path> builder = ImmutableList.builder();
+      for (DependencyNode node : breadthFirst) {
+        // the very first one is the pom.xml where this rule appears
+        Artifact artifact = node.getArtifact();
+        if (artifact != null) { // why is this possible?
+          File file = artifact.getFile();
+          // and this very first one does not have a file; i.e. file == null
+          // but why do we care? perhaps we're assuming there is a jar file in
+          // the classpath but what we really need for this one is a classes directory
+          Path path = file.toPath();
+          builder.add(path);
+        }
+      }
+      ImmutableList<Path> built = builder.build();
+      return built;
+    } catch (NullPointerException e) {
+      throw new EnforcerRuleException("Null pointer " + e.getLocalizedMessage(), e);
     } catch (ComponentLookupException e) {
       throw new EnforcerRuleException("Unable to lookup a component " + e.getLocalizedMessage(), e);
     } catch (DependencyResolutionException e) {
