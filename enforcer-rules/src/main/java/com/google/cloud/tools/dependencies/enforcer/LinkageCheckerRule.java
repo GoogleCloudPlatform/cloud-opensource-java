@@ -26,15 +26,11 @@ import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.graph.Traverser;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
-import java.util.Spliterator;
-import java.util.stream.StreamSupport;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -191,7 +187,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       DependencyNode dependencyGraph = resolutionResult.getDependencyGraph();
       Iterable<DependencyNode> breadthFirst = traverser.breadthFirst(dependencyGraph);
       
-      Builder<Path> builder = ImmutableList.builder();
+      ImmutableList.Builder<Path> builder = ImmutableList.builder();
       for (DependencyNode node : breadthFirst) {
         // the very first one is the pom.xml where this rule appears
         Artifact artifact = node.getArtifact();
