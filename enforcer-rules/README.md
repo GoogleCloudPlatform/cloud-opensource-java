@@ -36,7 +36,7 @@ Add the following plugin configuration to your `pom.xml`:
           <execution>
             <id>enforce</id>
             <!-- Important! Should run after compile -->
-            <phase>process-classes</phase>
+            <phase>verify</phase>
             <goals>
               <goal>enforce</goal>
             </goals>
