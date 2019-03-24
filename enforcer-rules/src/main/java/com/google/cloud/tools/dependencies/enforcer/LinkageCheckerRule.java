@@ -24,6 +24,7 @@ import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.graph.Traverser;
@@ -184,8 +185,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
       Traverser<DependencyNode> traverser = Traverser.forTree(DependencyNode::getChildren);
 
-      DependencyNode dependencyGraph = resolutionResult.getDependencyGraph();
-      Iterable<DependencyNode> breadthFirst = traverser.breadthFirst(dependencyGraph);
+      Iterable<DependencyNode> breadthFirst =
+          traverser.breadthFirst(resolutionResult.getDependencyGraph());
       
       ImmutableList.Builder<Path> builder = ImmutableList.builder();
       for (DependencyNode node : breadthFirst) {
@@ -196,14 +197,15 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           // and this very first one does not have a file; i.e. file == null
           // but why do we care? perhaps we're assuming there is a jar file in
           // the classpath but what we really need for this one is a classes directory
+          if (file == null) {
+            throw new EnforcerRuleException(
+                "Artifact " + Artifacts.toCoordinates(artifact) + " is not associated with a file");
+          }
           Path path = file.toPath();
           builder.add(path);
         }
       }
-      ImmutableList<Path> built = builder.build();
-      return built;
-    } catch (NullPointerException e) {
-      throw new EnforcerRuleException("Null pointer " + e.getLocalizedMessage(), e);
+      return builder.build();
     } catch (ComponentLookupException e) {
       throw new EnforcerRuleException("Unable to lookup a component " + e.getLocalizedMessage(), e);
     } catch (DependencyResolutionException e) {
