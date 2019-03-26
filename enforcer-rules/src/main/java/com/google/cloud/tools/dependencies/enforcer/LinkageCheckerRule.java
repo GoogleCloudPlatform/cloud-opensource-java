@@ -183,13 +183,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       DependencyResolutionResult resolutionResult =
           projectDependenciesResolver.resolve(dependencyResolutionRequest);
 
-      Traverser<DependencyNode> traverser = Traverser.forTree(DependencyNode::getChildren);
-
-      Iterable<DependencyNode> breadthFirst =
-          traverser.breadthFirst(resolutionResult.getDependencyGraph());
+      Iterable<DependencyNode> dependencies = Traverser.forTree(DependencyNode::getChildren)
+          .breadthFirst(resolutionResult.getDependencyGraph());
       
       ImmutableList.Builder<Path> builder = ImmutableList.builder();
-      for (DependencyNode node : breadthFirst) {
+      for (DependencyNode node : dependencies) {
         // the very first one is the pom.xml where this rule appears
         Artifact artifact = node.getArtifact();
         if (artifact != null) { // why is this possible?
@@ -199,7 +197,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           // the classpath but what we really need for this one is a classes directory
           if (file == null) {
             throw new EnforcerRuleException(
-                "Artifact " + Artifacts.toCoordinates(artifact) + " is not associated with a file");
+                "Artifact " + Artifacts.toCoordinates(artifact) + " is not associated with a file."
+                    + " The linkage checker enforcer rule should be bound to the verify phase.");
           }
           Path path = file.toPath();
           builder.add(path);
