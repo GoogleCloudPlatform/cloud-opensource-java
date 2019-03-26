@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.truth.Truth;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -56,7 +55,7 @@ public class RepositoryUtilityTest {
   public void testReadBom_path() throws Exception {
     Path pomFile = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml");
     ImmutableList<Artifact> artifacts = RepositoryUtility.readBom(pomFile);
-    Truth.assertThat(artifacts).isNotEmpty();
-    Truth.assertThat(artifacts.size()).isEqualTo(167);
+    Assert.assertFalse(artifacts.isEmpty());
+    Assert.assertEquals(180, artifacts.size());
   }
 }
