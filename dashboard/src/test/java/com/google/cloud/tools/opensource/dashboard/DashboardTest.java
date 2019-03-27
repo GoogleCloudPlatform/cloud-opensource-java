@@ -42,7 +42,6 @@ import org.codehaus.plexus.PlexusContainerException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
