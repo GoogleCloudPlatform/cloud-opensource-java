@@ -313,17 +313,12 @@ public class DashboardTest {
 
   @Test
   public void testLinkageErrorsInProvidedDependency() throws IOException, ParsingException {
-    // google-cloud-translate has transitive dependency to (problematic) appengine-api-1.0-sdk
-    // The path to appengine-api-1.0-sdk includes scope:provided dependency
-    // com.google.cloud:google-cloud-translate
-    // --> com.google.cloud:google-cloud-core
-    // --> com.google.cloud:google-cloud-core-http
-    // --> com.google.http-client:google-http-client-appengine
-    // --> (provided) appengine-api-1.0-sdk
-    Document document = parseOutputFile("com.google.cloud_google-cloud-translate_1.63.0.html");
+    // google-http-client-appengine has provided dependency to (problematic) appengine-api-1.0-sdk
+    Document document = parseOutputFile(
+        "com.google.http-client_google-http-client-appengine_1.29.0.html");
     Nodes linkageCheckMessages = document.query("//ul[@class='jar-linkage-report-cause']/li");
     Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
-    Truth.assertThat(linkageCheckMessages.get(1).getValue())
+    Truth.assertThat(linkageCheckMessages.get(0).getValue())
         .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");
   }
 
