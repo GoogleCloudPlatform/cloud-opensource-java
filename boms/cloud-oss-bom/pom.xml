@@ -90,11 +90,6 @@
       </dependency>
       <dependency>
         <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client-findbugs</artifactId>
-        <version>${http.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.http-client</groupId>
         <artifactId>google-http-client-gson</artifactId>
         <version>${http.version}</version>
       </dependency>
