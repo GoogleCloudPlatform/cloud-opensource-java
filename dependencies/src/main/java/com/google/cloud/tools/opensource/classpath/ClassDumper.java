@@ -390,8 +390,12 @@ class ClassDumper {
         JavaClass javaClass = classRepository.loadClass(className);
         javaClasses.add(javaClass);
       } catch (ClassNotFoundException ex) {
+        // We couldn't find the class in the jar file where we found it.
+        throw new IOException("Corrupt jar file " + jar + "; could not load " + className, ex);
+      } catch (ClassFormatException ex) {
         // We couldn't load the class from the jar file where we found it.
-        throw new IOException("Corrupt jar file " + jar + "; could not load " + className);
+        throw new IOException("Possible corrupt jar file " + jar + "; could not load " + className
+            + "; " + ex.getMessage(), ex);
       }
     }
     return javaClasses.build();

@@ -107,7 +107,8 @@ public class DashboardMain {
     System.out.println("Wrote dashboard into " + output.toAbsolutePath());
   }
 
-  private static Path generate(String bomCoordinates)
+  @VisibleForTesting
+  static Path generate(String bomCoordinates)
       throws IOException, TemplateException, RepositoryException, URISyntaxException {
     Artifact bom = new DefaultArtifact(bomCoordinates);
     return generate(RepositoryUtility.readBom(bom));

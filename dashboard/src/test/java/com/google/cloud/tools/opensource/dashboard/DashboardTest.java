@@ -42,7 +42,6 @@ import org.codehaus.plexus.PlexusContainerException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -190,19 +189,17 @@ public class DashboardTest {
   @Test
   public void testDashboard_linkageReports() {
     Nodes reports = dashboard.query("//p[@class='jar-linkage-report']");
-    // grpc-testing-1.17.1, shown as first item in linkage errors, has these errors
+    // grpc-testing-1.18.0.jar, shown as first item in linkage errors, has these errors
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo(
             "3 target classes causing linkage errors referenced from 3 source classes.");
 
     ImmutableList<Node> dependencyPaths =
         toList(dashboard.query("//p[@class='linkage-check-dependency-paths']"));
-    Node log4jDependencyPathMessage = dependencyPaths.get(dependencyPaths.size() - 1);
-    // There are 994 paths to log4j. These should be summarized.
-    Truth.assertThat(log4jDependencyPathMessage.getValue())
-        .startsWith(
-            "Artifacts 'com.google.http-client:google-http-client >"
-                + " commons-logging:commons-logging > log4j:log4j' exist in all");
+    Node dependencyPathMessage = dependencyPaths.get(dependencyPaths.size() - 1);
+    Assert.assertEquals(
+        "The following paths to the jar file from BOM are found in the dependency tree.",
+        trimAndCollapseWhiteSpace(dependencyPathMessage.getValue()));
     int dependencyPathListSize =
         dashboard.query("//ul[@class='linkage-check-dependency-paths']/li").size();
     Truth.assertWithMessage("The dashboard should not show repetitive dependency paths")
@@ -262,20 +259,21 @@ public class DashboardTest {
   }
 
   @Test
-  public void testComponent_staticLinkageCheckResult() throws IOException, ParsingException {
-    Document document = parseOutputFile("io.grpc_grpc-alts_1.18.0.html");
+  public void testComponent_linkageCheckResult() throws IOException, ParsingException {
+    Document document = parseOutputFile(
+        "com.google.http-client_google-http-client-appengine_1.29.0.html");
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
     Assert.assertEquals(1, reports.size());
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo(
-            "2 target classes causing linkage errors referenced from 2 source classes.");
+            "106 target classes causing linkage errors referenced from 516 source classes.");
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
-    Truth.assertWithMessage("grpc-alts should show linkage errors for CommunicatorServer")
+    Truth.assertWithMessage("google-http-client-appengine should show linkage errors for RpcStubDescriptor")
         .that(toList(causes))
         .comparingElementsUsing(NODE_VALUES)
         .contains(
-            "com.sun.jdmk.comm.CommunicatorServer is not found,"
-                + " referenced from 1 source class ▶"); // '▶' is in the toggle button
+            "com.google.net.rpc3.client.RpcStubDescriptor is not found,"
+                + " referenced from 21 source classes ▶"); // '▶' is the toggle button
   }
 
   @Test
@@ -314,13 +312,13 @@ public class DashboardTest {
   }
 
   @Test
-  public void testLinkageErrorsUnderProvidedDependency() throws IOException, ParsingException {
-    // google-cloud-translate has transitive dependency to (problematic) appengine-api-1.0-sdk
-    // The path to appengine-api-1.0-sdk includes scope:provided dependency
-    Document document = parseOutputFile("com.google.cloud_google-cloud-translate_1.63.0.html");
+  public void testLinkageErrorsInProvidedDependency() throws IOException, ParsingException {
+    // google-http-client-appengine has provided dependency to (problematic) appengine-api-1.0-sdk
+    Document document = parseOutputFile(
+        "com.google.http-client_google-http-client-appengine_1.29.0.html");
     Nodes linkageCheckMessages = document.query("//ul[@class='jar-linkage-report-cause']/li");
     Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
-    Truth.assertThat(linkageCheckMessages.get(1).getValue())
+    Truth.assertThat(linkageCheckMessages.get(0).getValue())
         .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");
   }
 
