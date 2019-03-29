@@ -189,7 +189,7 @@ public class DashboardTest {
   @Test
   public void testDashboard_linkageReports() {
     Nodes reports = dashboard.query("//p[@class='jar-linkage-report']");
-    // grpc-testing-1.18.0.jar, shown as first item in linkage errors, has these errors
+    // grpc-testing-1.19.0.jar, shown as first item in linkage errors, has these errors
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo(
             "3 target classes causing linkage errors referenced from 3 source classes.");
@@ -325,7 +325,7 @@ public class DashboardTest {
   @Test
   public void testZeroLinkageErrorShowsZero() throws IOException, ParsingException {
     // grpc-auth does not have a linkage error, and it should show zero in the section
-    Document document = parseOutputFile("io.grpc_grpc-auth_1.18.0.html");
+    Document document = parseOutputFile("io.grpc_grpc-auth_1.19.0.html");
     Nodes linkageErrorsTotal = document.query("//p[@id='linkage-errors-total']");
     Truth.assertThat(linkageErrorsTotal.size()).isEqualTo(1);
     Truth.assertThat(linkageErrorsTotal.get(0).getValue())
