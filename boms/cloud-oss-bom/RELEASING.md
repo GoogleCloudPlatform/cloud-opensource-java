@@ -1,8 +1,10 @@
-To release a snapshot:
+To release a snapshot on Linux:
 
 1. Install GPG
 
-2. On Linux, run:
+2. Clone the repo if you have not already done so.
+
+3. Run:
 
 ```
 $ export GPG_TTY=$(tty)
