@@ -16,6 +16,23 @@
     <name>Google LLC.</name>
     <url>https://www.google.com</url>
   </organization>
+  <description>Library for inspecting Maven artifact dependency graphs and trees</description>
+  <inceptionYear>2018</inceptionYear>
+  <developers>
+    <developer>
+      <name>Elliotte Rusty Harold</name>
+    </developer>
+  </developers>
+
+  <!-- Environment Settings -->
+  <issueManagement>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues</url>
+  </issueManagement>
+  <scm>
+    <connection>scm:git:https://github.com/GoogleCloudPlatform/cloud-opensource-java.git</connection>
+    <developerConnection>scm:git:https://github.com/GoogleCloudPlatform/cloud-opensource-java.git</developerConnection>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java</url>
+  </scm>
 
   <packaging>jar</packaging>
 

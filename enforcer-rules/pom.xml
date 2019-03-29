@@ -12,8 +12,23 @@
   <artifactId>linkage-checker-enforcer-rules</artifactId>
 
   <name>Linkage Checker Enforcer Rule</name>
-  <description>Linkage Checker enforcer rules</description>
+  <description>Maven Enforcer rule for verifying that a project does not have linkage errors</description>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/enforcer-rules</url>
+  <organization>
+    <name>Google LLC.</name>
+    <url>https://www.google.com</url>
+  </organization>
+  <inceptionYear>2019</inceptionYear>
+  <developers>
+    <developer>
+      <name>Elliotte Rusty Harold</name>
+    </developer>
+  </developers>
+
+  <!-- Environment Settings -->
+  <issueManagement>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues</url>
+  </issueManagement>
   <scm>
     <connection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git</connection>
     <developerConnection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git
@@ -21,10 +36,6 @@
     <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/enforcer-rules</url>
     <tag>HEAD</tag>
   </scm>
-  <organization>
-    <name>Google LLC.</name>
-    <url>https://www.google.com</url>
-  </organization>
 
   <licenses>
     <license>
