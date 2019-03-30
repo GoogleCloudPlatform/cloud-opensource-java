@@ -8,12 +8,31 @@
   <artifactId>dependencies-parent</artifactId>
   <packaging>pom</packaging>
   <version>0.1.0-SNAPSHOT</version>
+
   <name>Cloud Tools Open Source Code Hygiene Tooling</name>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/</url>
   <organization>
     <name>Google LLC.</name>
     <url>https://www.google.com</url>
   </organization>
+  <description>Parent pom for tools and libraries that check Maven
+  artifacts for assorted problems</description>
+  <inceptionYear>2018</inceptionYear>
+  <developers>
+    <developer>
+      <name>Elliotte Rusty Harold</name>
+    </developer>
+  </developers>
+
+  <!-- Environment Settings -->
+  <issueManagement>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues</url>
+  </issueManagement>
+  <scm>
+    <connection>scm:git:https://github.com/GoogleCloudPlatform/cloud-opensource-java.git</connection>
+    <developerConnection>scm:git:https://github.com/GoogleCloudPlatform/cloud-opensource-java.git</developerConnection>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java</url>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
