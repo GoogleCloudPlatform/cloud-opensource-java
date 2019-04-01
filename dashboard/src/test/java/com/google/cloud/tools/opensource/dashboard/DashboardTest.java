@@ -52,6 +52,7 @@ import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Streams;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Correspondence;
@@ -219,7 +220,7 @@ public class DashboardTest {
     }
 
     ImmutableList<String> coordinateList =
-        Lists.newArrayList(recommendedListItem).stream().map(Node::getValue).collect(toImmutableList());
+        Streams.stream(recommendedListItem).map(Node::getValue).collect(toImmutableList());
     
     ArrayList<String> sorted = new ArrayList<>(coordinateList);
     Comparator<String> comparator = new SortWithoutVersion();
