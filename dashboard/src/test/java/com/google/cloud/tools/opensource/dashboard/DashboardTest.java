@@ -51,6 +51,8 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Streams;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Correspondence;
@@ -180,7 +182,7 @@ public class DashboardTest {
     Nodes artifactCount =
         dashboard.query("//div[@class='statistic-item statistic-item-green']/h2");
     Assert.assertTrue(artifactCount.size() > 0);
-    for (Node artifactCountElement : toList(artifactCount)) {
+    for (Node artifactCountElement : artifactCount) {
       String value = artifactCountElement.getValue().trim();
       Assert.assertTrue(value, Integer.parseInt(value) > 0);
     }
@@ -194,9 +196,9 @@ public class DashboardTest {
         .isEqualTo(
             "3 target classes causing linkage errors referenced from 3 source classes.");
 
-    ImmutableList<Node> dependencyPaths =
-        toList(dashboard.query("//p[@class='linkage-check-dependency-paths']"));
-    Node dependencyPathMessage = dependencyPaths.get(dependencyPaths.size() - 1);
+    Nodes dependencyPaths = dashboard.query(
+        "//p[@class='linkage-check-dependency-paths'][position()=last()]");
+    Node dependencyPathMessage = dependencyPaths.get(0);
     Assert.assertEquals(
         "The following paths to the jar file from BOM are found in the dependency tree.",
         trimAndCollapseWhiteSpace(dependencyPathMessage.getValue()));
@@ -212,11 +214,14 @@ public class DashboardTest {
     Nodes recommendedListItem = dashboard.query("//ul[@id='recommended']/li");
     Assert.assertTrue(recommendedListItem.size() > 100);
 
-    List<String> coordinateList =
-        toList(recommendedListItem).stream().map(Node::getValue).collect(toImmutableList());
     // fails if these are not valid Maven coordinates
-    coordinateList.forEach(DefaultArtifact::new);
+    for (Node node : recommendedListItem) {
+      new DefaultArtifact(node.getValue());
+    }
 
+    ImmutableList<String> coordinateList =
+        Streams.stream(recommendedListItem).map(Node::getValue).collect(toImmutableList());
+    
     ArrayList<String> sorted = new ArrayList<>(coordinateList);
     Comparator<String> comparator = new SortWithoutVersion();
     Collections.sort(sorted, comparator);
@@ -269,7 +274,7 @@ public class DashboardTest {
             "106 target classes causing linkage errors referenced from 516 source classes.");
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
     Truth.assertWithMessage("google-http-client-appengine should show linkage errors for RpcStubDescriptor")
-        .that(toList(causes))
+        .that(causes)
         .comparingElementsUsing(NODE_VALUES)
         .contains(
             "com.google.net.rpc3.client.RpcStubDescriptor is not found,"
@@ -330,13 +335,5 @@ public class DashboardTest {
     Truth.assertThat(linkageErrorsTotal.size()).isEqualTo(1);
     Truth.assertThat(linkageErrorsTotal.get(0).getValue())
         .contains("0 linkage error(s)");
-  }
-
-  private static ImmutableList<Node> toList(Nodes nodes) {
-    ImmutableList.Builder<Node> builder = ImmutableList.builder();
-    for (int i = 0; i < nodes.size(); i++) {
-      builder.add(nodes.get(i));
-    }
-    return builder.build();
   }
 }
