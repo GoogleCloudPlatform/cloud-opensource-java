@@ -155,10 +155,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
             logger.warn(message);
           } else {
             logger.error(message);
+            throw new EnforcerRuleException(
+                "Failed while checking class path. See above error report.");
           }
-          throw new EnforcerRuleException(
-              "Failed while checking class path. See above error report.");
         } else {
+          // arguably shouldn't log anything on success
           logger.info("No " + foundError + " found");
         }
       } catch (IOException ex) {
