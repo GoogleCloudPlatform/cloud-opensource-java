@@ -29,7 +29,7 @@ Add the following plugin configuration to your `pom.xml`:
           <dependency>
             <groupId>com.google.cloud.tools</groupId>
             <artifactId>linkage-checker-enforcer-rules</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.2</version>
           </dependency>
         </dependencies>
         <executions>
