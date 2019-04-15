@@ -633,7 +633,7 @@ public class LinkageCheckerTest {
     List<String> names =
         inputClasspath.stream().map(x -> x.getFileName().toString()).collect(Collectors.toList());
     // The first artifacts
-    Truth.assertThat(names).containsAllOf(
+    Truth.assertThat(names).containsAtLeast(
         "api-common-1.7.0.jar",
         "proto-google-common-protos-1.14.0.jar",
         "grpc-google-common-protos-1.14.0.jar");
@@ -728,7 +728,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testJarPathOrderInResolvingReferences()
-      throws IOException, ClassNotFoundException, URISyntaxException {
+      throws IOException, URISyntaxException {
 
     // listDocuments method on CollectionReference class is added at version 0.66.0-beta
     // https://github.com/googleapis/google-cloud-java/releases/tag/v0.66.0
