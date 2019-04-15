@@ -28,7 +28,7 @@ abstract class ClassSymbolReference implements SymbolReference {
   abstract boolean isSubclass();
   
   @Override
-  public String getDisplayString() {
+  public String getErrorString() {
     return this.getTargetClassName()
         + " is not found, referenced from "
         + this.getSourceClassName();

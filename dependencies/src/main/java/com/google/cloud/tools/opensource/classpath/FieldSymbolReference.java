@@ -30,8 +30,8 @@ abstract class FieldSymbolReference implements SymbolReference {
   abstract String getFieldName();
   
   @Override
-  public String getDisplayString() {
-    return this.getTargetClassName()
+  public String getErrorString() {
+    return this.getTargetClassName() + "." + getFieldName()
         + " is not found, referenced from "
         + this.getSourceClassName();
   }

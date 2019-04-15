@@ -42,7 +42,7 @@ public class MethodSymbolReferenceTest {
   public void testDisplayString() {
     Assert.assertEquals(
         "ClassA.methodX is not found, referenced from ClassB",
-        methodSymbolReference.getDisplayString());
+        methodSymbolReference.getErrorString());
   }
 
 }

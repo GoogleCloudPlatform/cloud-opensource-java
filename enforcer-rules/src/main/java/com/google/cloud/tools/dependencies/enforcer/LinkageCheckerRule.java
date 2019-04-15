@@ -150,7 +150,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
               "Linkage Checker rule found "
                   + foundError
                   + ". Linkage error report:\n"
-                  + linkageReport;
+                  + linkageReport.getErrorString();
           if (getLevel() == WARN) {
             logger.warn(message);
           } else {
