@@ -56,6 +56,7 @@ abstract class MethodSymbolReference implements SymbolReference  {
     abstract MethodSymbolReference build();
   }
 
+  @Override
   public String getDisplayString() {
     return this.getTargetClassName()
         + "."

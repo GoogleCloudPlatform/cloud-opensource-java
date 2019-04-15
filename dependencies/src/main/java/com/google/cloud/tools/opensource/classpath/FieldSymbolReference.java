@@ -23,10 +23,18 @@ import com.google.auto.value.AutoValue;
  */
 @AutoValue
 abstract class FieldSymbolReference implements SymbolReference {
+  
   /**
-   * Returns the field name of the reference.
+   * Returns the name of the referenced field.
    */
   abstract String getFieldName();
+  
+  @Override
+  public String getDisplayString() {
+    return this.getTargetClassName()
+        + " is not found, referenced from "
+        + this.getSourceClassName();
+  }
 
   static Builder builder() {
     return new AutoValue_FieldSymbolReference.Builder();

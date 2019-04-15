@@ -35,4 +35,10 @@ interface SymbolReference {
    * reference.
    */
   String getTargetClassName();
+  
+
+  /**
+   * Returns a string describing the reference for display to an end user.
+   */
+  String getDisplayString();
 }
