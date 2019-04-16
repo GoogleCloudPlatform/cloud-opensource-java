@@ -90,6 +90,8 @@ public abstract class JarLinkageReport {
   }
 
   /** Returns map from the cause of linkage errors to class names affected by the errors. */
+  // TODO this is only used by formatJarLinkageReport in macros.ftl. We should be able to
+  // refactor this to make it a lot clearer by removing ImmutableMultimap from the API.
   public ImmutableMultimap<LinkageErrorCause, String> getCauseToSourceClasses() {
     ImmutableListMultimap<LinkageErrorCause, SymbolNotResolvable<ClassSymbolReference>>
         groupedClassErrors = Multimaps.index(getMissingClassErrors(), LinkageErrorCause::from);
