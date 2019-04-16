@@ -31,9 +31,8 @@ abstract class FieldSymbolReference implements SymbolReference {
   
   @Override
   public String getErrorString() {
-    return this.getTargetClassName() + "." + getFieldName()
-        + " is not found, referenced from "
-        + this.getSourceClassName();
+    return getTargetClassName() + "." + getFieldName() + " is not found, referenced from "
+        + getSourceClassName();
   }
 
   static Builder builder() {
