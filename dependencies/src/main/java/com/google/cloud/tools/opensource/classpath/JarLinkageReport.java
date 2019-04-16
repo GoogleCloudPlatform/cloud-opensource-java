@@ -121,7 +121,7 @@ public abstract class JarLinkageReport {
           allErrorsForKey.stream()
               .map(SymbolNotResolvable::getReference)
               .map(SymbolReference::getSourceClassName)
-              .map(className -> className.split("\\$")[0]) // Removing duplicate inner classes
+              .map(className -> className.split("\\$")[0]) // Removing inner classes
               .collect(toImmutableSet()));
     }
     return builder.build();
