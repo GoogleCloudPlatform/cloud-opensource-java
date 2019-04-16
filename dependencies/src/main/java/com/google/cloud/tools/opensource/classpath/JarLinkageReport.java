@@ -149,7 +149,7 @@ public abstract class JarLinkageReport {
     return builder.build();
   }
 
-  public String getErrorString() {
+  String getErrorString() {
     String indent = "  ";
     StringBuilder builder = new StringBuilder();
     int totalErrors = getCauseToSourceClassesSize();
