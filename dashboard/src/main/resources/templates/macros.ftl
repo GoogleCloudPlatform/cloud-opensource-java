@@ -3,6 +3,7 @@
   <#return number + " " + plural?string(pluralNoun, singlarNoun)>
 </#function>
 
+
 <#macro formatJarLinkageReport jarLinkageReport jarToDependencyPaths dependencyPathRootCauses>
   <#if jarLinkageReport.getErrorCount() gt 0>
     <#assign jarPath = jarLinkageReport.getJarPath() />
