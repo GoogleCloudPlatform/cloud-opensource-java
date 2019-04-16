@@ -4,7 +4,7 @@
 </#function>
 
 <#macro formatJarLinkageReport jarLinkageReport jarToDependencyPaths dependencyPathRootCauses>
-  <#if jarLinkageReport.getCauseToSourceClassesSize() gt 0>
+  <#if jarLinkageReport.getErrorCount() gt 0>
     <#assign jarPath = jarLinkageReport.getJarPath() />
     <h3>${jarPath.getFileName()?html}</h3>
 
