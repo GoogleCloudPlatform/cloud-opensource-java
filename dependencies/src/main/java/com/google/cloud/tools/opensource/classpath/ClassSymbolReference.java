@@ -29,9 +29,7 @@ abstract class ClassSymbolReference implements SymbolReference {
   
   @Override
   public String getErrorString() {
-    return this.getTargetClassName()
-        + " is not found, referenced from "
-        + this.getSourceClassName();
+    return getTargetClassName() + " is not found, referenced from " + getSourceClassName();
   }
 
   static Builder builder() {
