@@ -10,7 +10,7 @@
 
     <#assign causeToSourceClasses = jarLinkageReport.getCauseToSourceClasses() />
     <#assign targetClassCount = causeToSourceClasses.keySet()?size />
-    <#assign sourceClassCount = jarLinkageReport.getCauseToSourceClassesSize() />
+    <#assign sourceClassCount = jarLinkageReport.getErrorCount() />
     <p class="jar-linkage-report">
       ${pluralize(targetClassCount, "target class", "target classes")}
       causing linkage errors referenced from
