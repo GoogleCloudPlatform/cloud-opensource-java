@@ -150,4 +150,25 @@ public abstract class JarLinkageReport {
     builder.setJarPath(getJarPath());
     return builder.build();
   }
+
+  String getErrorString() {
+    String indent = "  ";
+    StringBuilder builder = new StringBuilder();
+    int totalErrors = getCauseToSourceClassesSize();
+
+    builder.append(getJarPath().getFileName() + " (" + totalErrors + " errors):\n");
+    for (SymbolNotResolvable<ClassSymbolReference> missingClass : getMissingClassErrors()) {
+      builder.append(indent + missingClass.getReference().getErrorString());
+      builder.append("\n");
+    }
+    for (SymbolNotResolvable<MethodSymbolReference> missingMethod : getMissingMethodErrors()) {
+      builder.append(indent + missingMethod.getReference().getErrorString());
+      builder.append("\n");
+    }
+    for (SymbolNotResolvable<FieldSymbolReference> missingField : getMissingFieldErrors()) {
+      builder.append(indent + missingField.getReference().getErrorString());
+      builder.append("\n");
+    }
+    return builder.toString();
+  }
 }

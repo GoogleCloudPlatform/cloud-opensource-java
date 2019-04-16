@@ -26,6 +26,11 @@ abstract class ClassSymbolReference implements SymbolReference {
 
   /** Returns true if the symbol reference is from a class to its superclass. */
   abstract boolean isSubclass();
+  
+  @Override
+  public String getErrorString() {
+    return getTargetClassName() + " is not found, referenced from " + getSourceClassName();
+  }
 
   static Builder builder() {
     return new AutoValue_ClassSymbolReference.Builder();

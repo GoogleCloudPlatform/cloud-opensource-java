@@ -140,6 +140,17 @@ public class JarLinkageReportTest {
   }
 
   @Test
+  public void testGetErrorString() {
+    Assert.assertEquals(
+        "c (4 errors):\n"
+            + "  ClassA is not found, referenced from ClassB\n"
+            + "  ClassA.methodX is not found, referenced from ClassB\n"
+            + "  ClassA.methodX is not found, referenced from ClassC$InnerC\n"
+            + "  ClassC.fieldX is not found, referenced from ClassD\n",
+        jarLinkageReport.getErrorString());
+  }  
+  
+  @Test
   public void testGetCauseToSourceClasses() {
     ImmutableMultimap<LinkageErrorCause, String> causeToSourceClasses =
         jarLinkageReport.getCauseToSourceClasses();

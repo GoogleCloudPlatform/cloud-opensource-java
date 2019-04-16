@@ -35,4 +35,9 @@ interface SymbolReference {
    * reference.
    */
   String getTargetClassName();
+
+  /**
+   * Returns a string describing the missing reference for display to an end user.
+   */
+  String getErrorString();
 }
