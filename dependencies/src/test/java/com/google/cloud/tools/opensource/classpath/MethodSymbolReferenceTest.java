@@ -21,7 +21,7 @@ import org.junit.Test;
 
 public class MethodSymbolReferenceTest {
   
-  private MethodSymbolReference methodSymbolReference =
+  private static final MethodSymbolReference REFERENCE =
       MethodSymbolReference.builder()
           .setTargetClassName("ClassA")
           .setInterfaceMethod(false)
@@ -32,17 +32,17 @@ public class MethodSymbolReferenceTest {
 
   @Test
   public void testCreation() {
-    Assert.assertEquals("ClassA", methodSymbolReference.getTargetClassName());
-    Assert.assertEquals("methodX", methodSymbolReference.getMethodName());
-    Assert.assertEquals("java.lang.String", methodSymbolReference.getDescriptor());
-    Assert.assertEquals("ClassB", methodSymbolReference.getSourceClassName());
+    Assert.assertEquals("ClassA", REFERENCE.getTargetClassName());
+    Assert.assertEquals("methodX", REFERENCE.getMethodName());
+    Assert.assertEquals("java.lang.String", REFERENCE.getDescriptor());
+    Assert.assertEquals("ClassB", REFERENCE.getSourceClassName());
   }
 
   @Test
   public void testGetErrorString() {
     Assert.assertEquals(
         "ClassA.methodX is not found, referenced from ClassB",
-        methodSymbolReference.getErrorString());
+        REFERENCE.getErrorString());
   }
 
 }
