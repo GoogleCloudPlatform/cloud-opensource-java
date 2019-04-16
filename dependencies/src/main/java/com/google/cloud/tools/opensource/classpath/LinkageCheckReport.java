@@ -33,12 +33,11 @@ public abstract class LinkageCheckReport {
     return new AutoValue_LinkageCheckReport(ImmutableList.copyOf(jarLinkageReports));
   }
   
-  @Override
-  public String toString() {
+  public String getErrorString() {
     StringBuilder builder = new StringBuilder();
     for (JarLinkageReport jarLinkageReport : getJarLinkageReports()) {
       if (jarLinkageReport.getCauseToSourceClassesSize() > 0) {
-        builder.append(jarLinkageReport.toString());
+        builder.append(jarLinkageReport.getErrorString());
         builder.append('\n');
       }
     }

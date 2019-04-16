@@ -67,8 +67,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    * Set to true to suppress linkage errors unreachable from the classes in the direct dependencies.
    * By default, it's {@code false}.
    *
-   * @see <a
-   *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#class-reference-graph"
+   * @see <a href=
+   *     "https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#class-reference-graph"
    *     >Java Dependency Glossary: Class reference graph</a>
    */
   private boolean reportOnlyReachable = false;
@@ -150,7 +150,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
               "Linkage Checker rule found "
                   + foundError
                   + ". Linkage error report:\n"
-                  + linkageReport;
+                  + linkageReport.getErrorString();
           if (getLevel() == WARN) {
             logger.warn(message);
           } else {
