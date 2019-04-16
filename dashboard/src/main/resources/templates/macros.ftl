@@ -3,7 +3,6 @@
   <#return number + " " + plural?string(pluralNoun, singlarNoun)>
 </#function>
 
-
 <#macro formatJarLinkageReport jarLinkageReport jarToDependencyPaths dependencyPathRootCauses>
   <#if jarLinkageReport.getErrorCount() gt 0>
     <#assign jarPath = jarLinkageReport.getJarPath() />
@@ -34,7 +33,7 @@
       </ul>
     </#list>
     <p class="linkage-check-dependency-paths">
-      The following paths to the jar file from BOM are found in the dependency tree.
+      The following paths to the jar file from the BOM are found in the dependency tree.
     </p>
     <#if dependencyPathRootCauses[jarPath]?? >
       <p class="linkage-check-dependency-paths">${dependencyPathRootCauses[jarPath]?html}
