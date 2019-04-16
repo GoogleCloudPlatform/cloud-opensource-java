@@ -71,7 +71,7 @@ public abstract class JarLinkageReport {
   public String toString() {
     String indent = "  ";
     StringBuilder builder = new StringBuilder();
-    int totalErrors = getCauseToSourceClassesSize();
+    int totalErrors = getErrorCount();
 
     builder.append(getJarPath().getFileName() + " (" + totalErrors + " errors):\n");
     for (SymbolNotResolvable<ClassSymbolReference> missingClass : getMissingClassErrors()) {
@@ -90,6 +90,8 @@ public abstract class JarLinkageReport {
   }
 
   /** Returns map from the cause of linkage errors to class names affected by the errors. */
+  // TODO this is only used by formatJarLinkageReport in macros.ftl. We should be able to
+  // refactor this to make it a lot clearer by removing ImmutableMultimap from the API.
   public ImmutableMultimap<LinkageErrorCause, String> getCauseToSourceClasses() {
     ImmutableListMultimap<LinkageErrorCause, SymbolNotResolvable<ClassSymbolReference>>
         groupedClassErrors = Multimaps.index(getMissingClassErrors(), LinkageErrorCause::from);
@@ -121,13 +123,13 @@ public abstract class JarLinkageReport {
           allErrorsForKey.stream()
               .map(SymbolNotResolvable::getReference)
               .map(SymbolReference::getSourceClassName)
-              .map(className -> className.split("\\$")[0]) // Removing duplicate inner classes
+              .map(className -> className.split("\\$")[0]) // Removing inner classes
               .collect(toImmutableSet()));
     }
     return builder.build();
   }
 
-  public int getCauseToSourceClassesSize() {
+  public int getErrorCount() {
     return getCauseToSourceClasses().size();
   }
 
@@ -152,7 +154,7 @@ public abstract class JarLinkageReport {
   String getErrorString() {
     String indent = "  ";
     StringBuilder builder = new StringBuilder();
-    int totalErrors = getCauseToSourceClassesSize();
+    int totalErrors = getErrorCount();
 
     builder.append(getJarPath().getFileName() + " (" + totalErrors + " errors):\n");
     for (SymbolNotResolvable<ClassSymbolReference> missingClass : getMissingClassErrors()) {

@@ -36,7 +36,7 @@ public abstract class LinkageCheckReport {
   public String getErrorString() {
     StringBuilder builder = new StringBuilder();
     for (JarLinkageReport jarLinkageReport : getJarLinkageReports()) {
-      if (jarLinkageReport.getCauseToSourceClassesSize() > 0) {
+      if (jarLinkageReport.getErrorCount() > 0) {
         builder.append(jarLinkageReport.getErrorString());
         builder.append('\n');
       }
