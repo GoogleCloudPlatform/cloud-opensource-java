@@ -1,5 +1,5 @@
 <#function pluralize number singlarNoun pluralNoun>
-  <#local plural = number gt 1  />
+  <#local plural = number gt 1 />
   <#return number + " " + plural?string(pluralNoun, singlarNoun)>
 </#function>
 
