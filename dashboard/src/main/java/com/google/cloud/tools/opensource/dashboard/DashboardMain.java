@@ -315,7 +315,7 @@ public class DashboardMain {
       List<DependencyPath> dependencyPaths = completeDependencies.list();
 
       int totalLinkageErrorCount =
-          staticLinkageCheckReports.stream().mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
+          staticLinkageCheckReports.stream().mapToInt(JarLinkageReport::getErrorCount)
               .sum();
 
       ListMultimap<DependencyPath, DependencyPath> dependencyTree =

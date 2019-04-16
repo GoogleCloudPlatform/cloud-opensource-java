@@ -71,7 +71,7 @@ public abstract class JarLinkageReport {
   public String toString() {
     String indent = "  ";
     StringBuilder builder = new StringBuilder();
-    int totalErrors = getCauseToSourceClassesSize();
+    int totalErrors = getErrorCount();
 
     builder.append(getJarPath().getFileName() + " (" + totalErrors + " errors):\n");
     for (SymbolNotResolvable<ClassSymbolReference> missingClass : getMissingClassErrors()) {
@@ -127,7 +127,7 @@ public abstract class JarLinkageReport {
     return builder.build();
   }
 
-  public int getCauseToSourceClassesSize() {
+  public int getErrorCount() {
     return getCauseToSourceClasses().size();
   }
 
