@@ -122,7 +122,7 @@ public class DependencyGraphIntegrationTest {
     // The complete dependencies sees a path to com.google.j2objc:j2objc-annotations that's
     // been removed in newer versions so this is not bidirectional set equality.
     Assert.assertTrue(complete.containsKey("com.google.j2objc:j2objc-annotations"));
-    Truth.assertThat(completeKeyset).containsAllIn(transitiveKeySet);
+    Truth.assertThat(completeKeyset).containsAtLeastElementsIn(transitiveKeySet);
   }
 
   @Test
@@ -135,7 +135,7 @@ public class DependencyGraphIntegrationTest {
       leaves.add(Artifacts.toCoordinates(path.getLeaf()));
     }
     
-    Truth.assertThat(leaves).containsAllOf(
+    Truth.assertThat(leaves).containsAtLeast(
         "com.google.api.grpc:proto-google-common-protos:1.0.0",
         "com.google.api.grpc:proto-google-common-protos:1.11.0",
         "com.google.api.grpc:proto-google-common-protos:1.12.0");
