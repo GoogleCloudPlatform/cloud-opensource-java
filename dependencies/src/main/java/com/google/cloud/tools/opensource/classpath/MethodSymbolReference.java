@@ -60,8 +60,8 @@ abstract class MethodSymbolReference implements SymbolReference  {
   public String getErrorString() {
     return this.getTargetClassName()
         + "."
-        + this.getMethodName()
+        + getMethodName()
         + " is not found, referenced from "
-        + this.getSourceClassName();
+        + getSourceClassName();
   }
 }
