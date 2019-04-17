@@ -53,17 +53,8 @@ public class ClassDumperTest {
       "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0_FirestoreGrpc.class";
 
   private static final Correspondence<SymbolReference, String> SYMBOL_REFERENCE_TARGET_CLASS_NAME =
-      new Correspondence<SymbolReference, String>() {
-        @Override
-        public boolean compare(SymbolReference actual, String expected) {
-          return actual.getTargetClassName().equals(expected);
-        }
-
-        @Override
-        public String toString() {
-          return "has target class name equal to";
-        }
-      };
+    Correspondence.from((actual, expected) -> 
+    actual.getTargetClassName().equals(expected), "has target class name equal to");
 
   private InputStream classFileInputStream;
 

@@ -42,17 +42,8 @@ import org.junit.Test;
 public class ClassPathBuilderTest {
 
   static final Correspondence<Path, String> PATH_FILE_NAMES =
-      new Correspondence<Path, String>() {
-        @Override
-        public boolean compare(Path actual, String expected) {
-          return actual.getFileName().toString().equals(expected);
-        }
-
-        @Override
-        public String toString() {
-          return "has file name equal to";
-        }
-      };
+    Correspondence.from((actual, expected) -> 
+    actual.getFileName().toString().equals(expected), "has file name equal to");
 
   @Test
   public void testArtifactsToPaths_removingDuplicates() throws RepositoryException {
