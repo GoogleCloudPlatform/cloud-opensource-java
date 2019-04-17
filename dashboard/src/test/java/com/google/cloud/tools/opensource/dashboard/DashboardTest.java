@@ -63,9 +63,9 @@ public class DashboardTest {
       Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();
 
   private static final Correspondence<Node, String> NODE_VALUES =
-    Correspondence.from((node, expected) -> 
-    trimAndCollapseWhiteSpace(node.getValue())
-    .equals(expected), "has value equal to");
+    Correspondence.from((node, expected) ->
+        trimAndCollapseWhiteSpace(node.getValue())
+        .equals(expected), "has value equal to");
 
   private static String trimAndCollapseWhiteSpace(String value) {
     return CharMatcher.whitespace().trimAndCollapseFrom(value, ' ');
