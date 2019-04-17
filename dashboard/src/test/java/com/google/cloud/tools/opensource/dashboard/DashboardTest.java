@@ -199,7 +199,7 @@ public class DashboardTest {
         "//p[@class='linkage-check-dependency-paths'][position()=last()]");
     Node dependencyPathMessage = dependencyPaths.get(0);
     Assert.assertEquals(
-        "The following paths to the jar file from the BOM are found in the dependency tree.",
+        "The following paths to the jar file from the BOM are found in the dependency tree:",
         trimAndCollapseWhiteSpace(dependencyPathMessage.getValue()));
     int dependencyPathListSize =
         dashboard.query("//ul[@class='linkage-check-dependency-paths']/li").size();
