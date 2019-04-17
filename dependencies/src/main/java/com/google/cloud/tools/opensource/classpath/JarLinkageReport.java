@@ -71,7 +71,7 @@ public abstract class JarLinkageReport {
     abstract JarLinkageReport autoBuild();
     JarLinkageReport build() {
       JarLinkageReport report = autoBuild();
-      report.causeToSourceClasses = report.makeCauseToSourceClasses();
+      report.causeToSourceClasses = report.mapCauseToSourceClasses();
       return report;
     }
   }
@@ -105,7 +105,7 @@ public abstract class JarLinkageReport {
     return causeToSourceClasses;
   }
 
-  private ImmutableMultimap<LinkageErrorCause, String> makeCauseToSourceClasses() {
+  private ImmutableMultimap<LinkageErrorCause, String> mapCauseToSourceClasses() {
     ImmutableListMultimap<LinkageErrorCause, SymbolNotResolvable<ClassSymbolReference>>
         groupedClassErrors = Multimaps.index(getMissingClassErrors(), LinkageErrorCause::from);
 
