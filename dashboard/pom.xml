@@ -74,6 +74,10 @@
           <mainClass>com.google.cloud.tools.opensource.dashboard.DashboardMain</mainClass>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>com.coveo</groupId>
+        <artifactId>fmt-maven-plugin</artifactId>
+      </plugin>
     </plugins>
   </build>
 
