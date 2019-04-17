@@ -36,6 +36,10 @@ import java.util.Set;
  */
 @AutoValue
 public abstract class JarLinkageReport {
+  
+  // autovalue doesn't allow this to be final?
+  private ImmutableMultimap<LinkageErrorCause, String> causeToSourceClasses;
+  
   /**
    * Returns the absolute path of the jar file containing source classes of linkage errors
    */
@@ -64,7 +68,12 @@ public abstract class JarLinkageReport {
     abstract Builder setMissingFieldErrors(
         Iterable<SymbolNotResolvable<FieldSymbolReference>> errors);
 
-    abstract JarLinkageReport build();
+    abstract JarLinkageReport autoBuild();
+    JarLinkageReport build() {
+      JarLinkageReport report = autoBuild();
+      report.causeToSourceClasses = report.makeCauseToSourceClasses();
+      return report;
+    }
   }
 
   @Override
@@ -88,11 +97,15 @@ public abstract class JarLinkageReport {
     }
     return builder.toString();
   }
-
+  
   /** Returns map from the cause of linkage errors to class names affected by the errors. */
   // TODO this is only used by formatJarLinkageReport in macros.ftl. We should be able to
   // refactor this to make it a lot clearer by removing ImmutableMultimap from the API.
   public ImmutableMultimap<LinkageErrorCause, String> getCauseToSourceClasses() {
+    return causeToSourceClasses;
+  }
+
+  private ImmutableMultimap<LinkageErrorCause, String> makeCauseToSourceClasses() {
     ImmutableListMultimap<LinkageErrorCause, SymbolNotResolvable<ClassSymbolReference>>
         groupedClassErrors = Multimaps.index(getMissingClassErrors(), LinkageErrorCause::from);
 
