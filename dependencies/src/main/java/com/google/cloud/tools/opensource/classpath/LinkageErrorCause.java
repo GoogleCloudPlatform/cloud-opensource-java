@@ -27,7 +27,9 @@ abstract class LinkageErrorCause {
   /** Returns the reason for the error */
   abstract SymbolNotResolvable.Reason getReason();
 
-  /** Returns the symbol causing the error. It's either class name, field name, or method name. */
+  /** 
+   * Returns the fully package qualified name of the missing or inaccessible symbol.
+   * This is a class name, field name, or method name. */
   abstract String getSymbol();
 
   static <T extends SymbolReference> LinkageErrorCause from(
