@@ -21,6 +21,7 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.auto.value.AutoValue;
 import com.google.auto.value.extension.memoized.Memoized;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
@@ -95,7 +96,7 @@ public abstract class JarLinkageReport {
   // TODO this is only used by formatJarLinkageReport in macros.ftl. We should be able to
   // refactor this to make it a lot clearer by removing ImmutableMultimap from the API.
   @Memoized
-  public ImmutableMultimap<LinkageErrorCause, String> getCauseToSourceClasses() {
+  ImmutableMultimap<LinkageErrorCause, String> getCauseToSourceClasses() {
     return mapCauseToSourceClasses();
   }
 
@@ -139,7 +140,19 @@ public abstract class JarLinkageReport {
   public int getErrorCount() {
     return getCauseToSourceClasses().size();
   }
+  
+  public int getTargetClassCount() {
+    return getCauseToSourceClasses().keySet().size();
+  }
+  
+  public Set<LinkageErrorCause> getCauses() {
+    return getCauseToSourceClasses().keySet();
+  }
 
+  public ImmutableCollection<String> getCauses(LinkageErrorCause cause) {
+    return getCauseToSourceClasses().get(cause);
+  }
+  
   public JarLinkageReport reachableErrors() {
     Builder builder = builder();
     builder.setMissingClassErrors(
