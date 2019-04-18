@@ -8,6 +8,7 @@
     <#assign jarPath = jarLinkageReport.getJarPath() />
     <h3>${jarPath.getFileName()?html}</h3>
 
+    <#assign causeToSourceClasses = jarLinkageReport.getCauseToSourceClasses() />
     <#assign targetClassCount = jarLinkageReport.getTargetClassCount() />
     <#assign sourceClassCount = jarLinkageReport.getErrorCount() />
     <p class="jar-linkage-report">
@@ -15,8 +16,8 @@
       causing linkage errors referenced from
       ${pluralize(sourceClassCount, "source class", "source classes")}.
     </p>
-    <#list jarLinkageReport.getCauses() as cause >
-      <#assign sourceClasses = jarLinkageReport.get(cause) />
+    <#list causeToSourceClasses.keySet() as cause >
+      <#assign sourceClasses = causeToSourceClasses.get(cause) />
       <p class="jar-linkage-report-cause">${cause?html}, referenced from ${
         pluralize(sourceClasses?size, "source class", "source classes")?html}
         <button onclick="toggleSourceClassListVisibility(this)"
