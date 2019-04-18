@@ -96,7 +96,7 @@ public abstract class JarLinkageReport {
   // TODO this is only used by formatJarLinkageReport in macros.ftl. We should be able to
   // refactor this to make it a lot clearer by removing ImmutableMultimap from the API.
   @Memoized
-  public ImmutableMultimap<LinkageErrorCause, String> getCauseToSourceClasses() {
+  ImmutableMultimap<LinkageErrorCause, String> getCauseToSourceClasses() {
     return mapCauseToSourceClasses();
   }
 
@@ -142,13 +142,14 @@ public abstract class JarLinkageReport {
   }
   
   public int getTargetClassCount() {
-    return getCauseToSourceClasses().keySet().size();
+    return getCauses().size();
   }
   
   public Set<LinkageErrorCause> getCauses() {
     return getCauseToSourceClasses().keySet();
   }
 
+  // todo these two methods are not the same thing; fix
   public ImmutableCollection<String> getCauses(LinkageErrorCause cause) {
     return getCauseToSourceClasses().get(cause);
   }

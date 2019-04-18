@@ -20,6 +20,8 @@ import com.google.auto.value.AutoValue;
 
 /** Key to group linkage errors by their causes. */
 @AutoValue
+// TODO "cause" is unclear. Is it the target or the source? I don't know.
+// Rename things to remove the word "cause" and use more specific terminology.
 abstract class LinkageErrorCause {
 
   /** Returns the reason for the error */
