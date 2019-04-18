@@ -91,7 +91,7 @@ public abstract class JarLinkageReport {
     }
     return builder.toString();
   }
-  
+
   /** Returns map from the cause of linkage errors to class names affected by the errors. */
   // TODO this is only used by formatJarLinkageReport in macros.ftl. We should be able to
   // refactor this to make it a lot clearer by removing ImmutableMultimap from the API.
@@ -137,20 +137,32 @@ public abstract class JarLinkageReport {
     return builder.build();
   }
 
+  /**
+   * @return the total number of classes that refer to missing or inaccessible members
+   */
   public int getErrorCount() {
     return getCauseToSourceClasses().size();
   }
   
+  /**
+   * @return the total number of missing or inaccessible members
+   */
   public int getTargetClassCount() {
     return getCauses().size();
   }
   
+  /**
+   * @return the references to missing or inaccessible members
+   */
   public Set<LinkageErrorCause> getCauses() {
     return getCauseToSourceClasses().keySet();
   }
 
-  // todo these two methods are not the same thing; fix
-  public ImmutableCollection<String> getCauses(LinkageErrorCause cause) {
+  /**
+   * @return the fully qualified names of classes that refer to a
+   *     particular missing or inaccessible members
+   */
+  public ImmutableCollection<String> getSourceClasses(LinkageErrorCause cause) {
     return getCauseToSourceClasses().get(cause);
   }
   

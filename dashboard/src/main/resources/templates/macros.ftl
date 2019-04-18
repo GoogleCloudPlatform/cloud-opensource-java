@@ -16,7 +16,7 @@
       ${pluralize(sourceClassCount, "source class", "source classes")}.
     </p>
     <#list jarLinkageReport.getCauses() as cause >
-      <#assign sourceClasses = jarLinkageReport.getCauses(cause) />
+      <#assign sourceClasses = jarLinkageReport.getSourceClasses(cause) />
       <p class="jar-linkage-report-cause">${cause?html}, referenced from ${
         pluralize(sourceClasses?size, "source class", "source classes")?html}
         <button onclick="toggleSourceClassListVisibility(this)"
