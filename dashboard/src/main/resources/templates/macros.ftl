@@ -15,7 +15,7 @@
       causing linkage errors referenced from
       ${pluralize(sourceClassCount, "source class", "source classes")}.
     </p>
-    <#list jarLinkageReport.getCauses() as cause >
+    <#list jarLinkageReport.getUnresolvableTargets() as cause >
       <#assign sourceClasses = jarLinkageReport.getSourceClasses(cause) />
       <p class="jar-linkage-report-cause">${cause?html}, referenced from ${
         pluralize(sourceClasses?size, "source class", "source classes")?html}

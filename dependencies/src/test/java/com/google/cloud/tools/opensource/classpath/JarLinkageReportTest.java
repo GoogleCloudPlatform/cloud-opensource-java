@@ -153,7 +153,7 @@ public class JarLinkageReportTest {
   @Test
   public void testGetCauseToSourceClasses() {
     ImmutableMultimap<LinkageErrorCause, String> causeToSourceClasses =
-        jarLinkageReport.getCauseToSourceClasses();
+        jarLinkageReport.getTargetToSources();
 
     ImmutableSet<LinkageErrorCause> linkageErrorCauses = causeToSourceClasses.keySet();
     Truth.assertThat(linkageErrorCauses).hasSize(3);
