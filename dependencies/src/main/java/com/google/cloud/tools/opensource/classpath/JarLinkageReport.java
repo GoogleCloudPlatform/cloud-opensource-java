@@ -20,6 +20,8 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.auto.value.AutoValue;
+import com.google.auto.value.extension.memoized.Memoized;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
@@ -36,6 +38,7 @@ import java.util.Set;
  */
 @AutoValue
 public abstract class JarLinkageReport {
+
   /**
    * Returns the absolute path of the jar file containing source classes of linkage errors
    */
@@ -92,7 +95,12 @@ public abstract class JarLinkageReport {
   /** Returns map from the cause of linkage errors to class names affected by the errors. */
   // TODO this is only used by formatJarLinkageReport in macros.ftl. We should be able to
   // refactor this to make it a lot clearer by removing ImmutableMultimap from the API.
-  public ImmutableMultimap<LinkageErrorCause, String> getCauseToSourceClasses() {
+  @Memoized
+  ImmutableMultimap<LinkageErrorCause, String> getCauseToSourceClasses() {
+    return mapCauseToSourceClasses();
+  }
+
+  private ImmutableMultimap<LinkageErrorCause, String> mapCauseToSourceClasses() {
     ImmutableListMultimap<LinkageErrorCause, SymbolNotResolvable<ClassSymbolReference>>
         groupedClassErrors = Multimaps.index(getMissingClassErrors(), LinkageErrorCause::from);
 
@@ -129,10 +137,35 @@ public abstract class JarLinkageReport {
     return builder.build();
   }
 
+  /**
+   * @return the total number of classes that refer to missing or inaccessible members
+   */
   public int getErrorCount() {
     return getCauseToSourceClasses().size();
   }
+  
+  /**
+   * @return the total number of missing or inaccessible members
+   */
+  public int getTargetClassCount() {
+    return getCauses().size();
+  }
+  
+  /**
+   * @return the references to missing or inaccessible members
+   */
+  public Set<LinkageErrorCause> getCauses() {
+    return getCauseToSourceClasses().keySet();
+  }
 
+  /**
+   * @return the fully qualified names of classes that refer to a
+   *     particular missing or inaccessible members
+   */
+  public ImmutableCollection<String> getSourceClasses(LinkageErrorCause cause) {
+    return getCauseToSourceClasses().get(cause);
+  }
+  
   public JarLinkageReport reachableErrors() {
     Builder builder = builder();
     builder.setMissingClassErrors(
