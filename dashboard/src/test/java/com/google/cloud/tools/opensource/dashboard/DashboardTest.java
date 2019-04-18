@@ -63,18 +63,9 @@ public class DashboardTest {
       Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();
 
   private static final Correspondence<Node, String> NODE_VALUES =
-      new Correspondence<Node, String>() {
-        @Override
-        public boolean compare(Node node, String expected) {
-          String trimmedValue = trimAndCollapseWhiteSpace(node.getValue());
-          return trimmedValue.equals(expected);
-        }
-
-        @Override
-        public String toString() {
-          return "has value equal to";
-        }
-      };
+      Correspondence.from((node, expected) ->
+          trimAndCollapseWhiteSpace(node.getValue())
+          .equals(expected), "has value equal to");
 
   private static String trimAndCollapseWhiteSpace(String value) {
     return CharMatcher.whitespace().trimAndCollapseFrom(value, ' ');
@@ -199,7 +190,7 @@ public class DashboardTest {
         "//p[@class='linkage-check-dependency-paths'][position()=last()]");
     Node dependencyPathMessage = dependencyPaths.get(0);
     Assert.assertEquals(
-        "The following paths to the jar file from the BOM are found in the dependency tree.",
+        "The following paths to the jar file from the BOM are found in the dependency tree:",
         trimAndCollapseWhiteSpace(dependencyPathMessage.getValue()));
     int dependencyPathListSize =
         dashboard.query("//ul[@class='linkage-check-dependency-paths']/li").size();
