@@ -40,8 +40,8 @@ import java.util.Set;
 public abstract class JarLinkageReport {
 
   /**
-   * Returns the absolute path of the jar file that was checked. This is where the source classes
-   * were found.
+   * Returns the absolute path of the jar file that was checked. The source classes
+   * of the reported errors are all in this JAR.
    */
   public abstract Path getJarPath();
 

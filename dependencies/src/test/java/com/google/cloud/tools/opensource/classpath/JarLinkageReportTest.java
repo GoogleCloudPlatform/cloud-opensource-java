@@ -151,14 +151,13 @@ public class JarLinkageReportTest {
   }  
   
   @Test
-  public void testGetCauseToSourceClasses() {
-    ImmutableMultimap<LinkageErrorCause, String> causeToSourceClasses =
-        jarLinkageReport.getTargetToSources();
+  public void testGetTargetToSources() {
+    ImmutableMultimap<LinkageErrorCause, String> map = jarLinkageReport.getTargetToSources();
 
-    ImmutableSet<LinkageErrorCause> linkageErrorCauses = causeToSourceClasses.keySet();
+    ImmutableSet<LinkageErrorCause> linkageErrorCauses = map.keySet();
     Truth.assertThat(linkageErrorCauses).hasSize(3);
     ImmutableCollection<String> classesForFirstCause =
-        causeToSourceClasses.get(linkageErrorCauses.iterator().next());
+        map.get(linkageErrorCauses.iterator().next());
     // InnerC should not appear here
     Truth.assertThat(classesForFirstCause).containsExactly("ClassB", "ClassC");
   }
