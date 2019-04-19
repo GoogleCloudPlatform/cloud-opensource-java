@@ -15,9 +15,9 @@
       causing linkage errors referenced from
       ${pluralize(sourceClassCount, "source class", "source classes")}.
     </p>
-    <#list jarLinkageReport.getCauses() as cause >
-      <#assign sourceClasses = jarLinkageReport.getSourceClasses(cause) />
-      <p class="jar-linkage-report-cause">${cause?html}, referenced from ${
+    <#list jarLinkageReport.getUnresolvableTargets() as unresolvableTarget >
+      <#assign sourceClasses = jarLinkageReport.getSourceClasses(unresolvableTarget) />
+      <p class="jar-linkage-report-cause">${unresolvableTarget?html}, referenced from ${
         pluralize(sourceClasses?size, "source class", "source classes")?html}
         <button onclick="toggleSourceClassListVisibility(this)"
                 title="Toggle visibility of source class list">▶

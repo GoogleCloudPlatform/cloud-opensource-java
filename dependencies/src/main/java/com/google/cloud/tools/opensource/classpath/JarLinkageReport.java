@@ -34,13 +34,14 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * The result of checking linkages in one jar file.
+ * Linkage problems found in one jar file given a specific classpath.
  */
 @AutoValue
 public abstract class JarLinkageReport {
 
   /**
-   * Returns the absolute path of the jar file containing source classes of linkage errors
+   * Returns the absolute path of the jar file that was checked. The source classes
+   * of the reported errors are all in this JAR.
    */
   public abstract Path getJarPath();
 
@@ -92,15 +93,11 @@ public abstract class JarLinkageReport {
     return builder.toString();
   }
 
-  /** Returns map from the cause of linkage errors to class names affected by the errors. */
-  // TODO this is only used by formatJarLinkageReport in macros.ftl. We should be able to
-  // refactor this to make it a lot clearer by removing ImmutableMultimap from the API.
+  /** 
+   * Map missing classes and members to classes that refer to those items.
+   */
   @Memoized
-  ImmutableMultimap<LinkageErrorCause, String> getCauseToSourceClasses() {
-    return mapCauseToSourceClasses();
-  }
-
-  private ImmutableMultimap<LinkageErrorCause, String> mapCauseToSourceClasses() {
+  ImmutableMultimap<LinkageErrorCause, String> getTargetToSources() {
     ImmutableListMultimap<LinkageErrorCause, SymbolNotResolvable<ClassSymbolReference>>
         groupedClassErrors = Multimaps.index(getMissingClassErrors(), LinkageErrorCause::from);
 
@@ -141,29 +138,29 @@ public abstract class JarLinkageReport {
    * @return the total number of classes that refer to missing or inaccessible members
    */
   public int getErrorCount() {
-    return getCauseToSourceClasses().size();
+    return getTargetToSources().size();
   }
   
   /**
-   * @return the total number of missing or inaccessible members
+   * @return the total number of missing or inaccessible targets
    */
   public int getTargetClassCount() {
-    return getCauses().size();
+    return getUnresolvableTargets().size();
   }
   
   /**
-   * @return the references to missing or inaccessible members
+   * @return the references to missing or inaccessible targets
    */
-  public Set<LinkageErrorCause> getCauses() {
-    return getCauseToSourceClasses().keySet();
+  public Set<LinkageErrorCause> getUnresolvableTargets() {
+    return getTargetToSources().keySet();
   }
 
   /**
    * @return the fully qualified names of classes that refer to a
-   *     particular missing or inaccessible members
+   *     particular unresolvable target.
    */
   public ImmutableCollection<String> getSourceClasses(LinkageErrorCause cause) {
-    return getCauseToSourceClasses().get(cause);
+    return getTargetToSources().get(cause);
   }
   
   public JarLinkageReport reachableErrors() {
