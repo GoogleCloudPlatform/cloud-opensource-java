@@ -95,10 +95,6 @@ public class DashboardMain {
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
           PlexusContainerException, ComponentLookupException, ProjectBuildingException,
           ParseException {
-    if (arguments.length != 1) {
-      System.err.println("Please specify path to pom.xml or Maven coordinates for a BOM.");
-      return;
-    }
     DashboardArguments dashboardArguments = DashboardArguments.readCommandLine(arguments);
     Path output =
         dashboardArguments.hasFile()
