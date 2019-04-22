@@ -42,7 +42,7 @@
 ### Libraries using Gradle
 
 - A Gradle project can either maintain a pom.xml and release it using a
-  specially configured module or generate the`pom.xml file.
+  specially configured module or generate the `pom.xml` file.
 - Example of maintaining a `pom.xml` file: gax-java -
   [build.gradle](https://github.com/googleapis/gax-java/blob/master/gax-bom/build.gradle)
   and
