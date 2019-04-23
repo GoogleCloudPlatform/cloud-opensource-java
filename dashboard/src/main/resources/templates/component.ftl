@@ -29,8 +29,8 @@
       <ul>
         <#list globalUpperBoundFailures as lower, upper>
           <#if lower.getGroupId() == groupId && lower.getArtifactId() == artifactId
-              && lower.getVersion() == version >
-            <!-- When this is upgrading a BOM member -->
+              && lower.getVersion() == version ><#-- Not checking 'file' attribute of Artifact -->
+            <#-- When this is upgrading a BOM member -->
             <li class="global-upper-bound-bom-upgrade">
               Upgrade ${lower} in the BOM to version "${upper.getVersion()}":
 
