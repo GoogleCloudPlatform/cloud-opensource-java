@@ -60,15 +60,15 @@
 &lt;version>${upper.getVersion()}&lt;/version>
 &lt;/dependency></code></pre>
 
+              <p>If the pom.xml for ${groupId}:${artifactId}:${version} already includes this
+                dependency, update the version of the existing <code>dependency</code> element.
+                Otherwise add a new <code>dependency</code> element to the
+                <code>dependencyManagement</code> section.</p>
             </li>
           </#if>
         </#list>
       </ul>
-      
-      <p>If the pom.xml for ${groupId}:${artifactId}:${version} already includes this dependency,
-        update the version of the existing <code>dependency</code> element. Otherwise add a new 
-        <code>dependency</code> element to the <code>dependencyManagement</code> section.</p>
-      
+
     <#else>
       <h3 style="color: green">
         ${groupId}:${artifactId}:${version} selects the highest version of all dependencies.
@@ -91,7 +91,7 @@
       <ul>
         <#list upperBoundFailures as lower, upper>
           <li>Upgrade ${lower} to ${upper}:
-          
+
           <p>Add this dependency element to the pom.xml for ${groupId}:${artifactId}:${version}:</p>
           
 <pre class="suggested-dependency-mediation"><code>&lt;dependency>
@@ -103,11 +103,7 @@
           </li>
         </#list>
       </ul>
-      
-      <p>If the pom.xml already includes a dependency on ${groupId}:${artifactId}, update the version
-         on the existing <code>dependency</code> element. Otherwise add these <code>dependency</code>
-         elements to the <code>dependencyManagement</code> section.</p>
-      
+
     <#else>
       <h3 style="color: green">
         ${groupId}:${artifactId}:${version} selects the highest version of all dependencies.
