@@ -1,4 +1,4 @@
-To release a snapshot:
+# To release a snapshot:
 
 1. Install GPG
 
@@ -20,3 +20,14 @@ Notes:
 This probably doesn't work on the Mac.
 
 You might be able to skip the first deploy step; need to test that. 
+
+# To release a non-snapshot:
+
+```
+$ cd cloud-opensource-java/boms/cloud-oss-bom
+$ git checkout master
+$ git pull
+$ ../../scripts/prepare_release.sh 1.0.0 1.0.1
+```
+
+This increments the version. Remainder of kokoro build remains to be set up.
