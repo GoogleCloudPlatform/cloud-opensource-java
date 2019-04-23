@@ -328,4 +328,24 @@ public class DashboardTest {
     Truth.assertThat(linkageErrorsTotal.get(0).getValue())
         .contains("0 linkage error(s)");
   }
+
+  @Test
+  public void testGlobalUpperBoundUpgradeMessage() throws IOException, ParsingException {
+    // Case 1: BOM needs to be updated
+    Document document = parseOutputFile("com.google.protobuf_protobuf-java-util_3.6.1.html");
+    Nodes globalUpperBoundBomUpgradeNodes =
+        document.query("//li[@class='global-upper-bound-bom-upgrade']");
+    Truth.assertThat(globalUpperBoundBomUpgradeNodes.size()).isEqualTo(1);
+    String bomUpgradeMessage = globalUpperBoundBomUpgradeNodes.get(0).getValue();
+    Truth.assertThat(bomUpgradeMessage).contains(
+        "Upgrade com.google.protobuf:protobuf-java-util:jar:3.6.1 in the BOM to version \"3.7.1\"");
+
+    // Case 2: Dependency needs to be updated
+    Nodes globalUpperBoundDependencyUpgradeNodes =
+        document.query("//li[@class='global-upper-bound-dependency-upgrade']");
+    Truth.assertThat(globalUpperBoundDependencyUpgradeNodes.size()).isEqualTo(2);
+    String dependencyUpgradeMessage = globalUpperBoundDependencyUpgradeNodes.get(0).getValue();
+    Truth.assertThat(dependencyUpgradeMessage).contains(
+        "Upgrade com.google.guava:guava:jar:19.0 to version \"27.1-android\"");
+  }
 }

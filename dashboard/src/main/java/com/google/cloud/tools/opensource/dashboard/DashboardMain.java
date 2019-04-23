@@ -326,9 +326,7 @@ public class DashboardMain {
                   .equals(Artifacts.toCoordinates(dependencyPath.get(0)))));
 
       Map<String, Object> templateData = new HashMap<>();
-      templateData.put("groupId", artifact.getGroupId());
-      templateData.put("artifactId", artifact.getArtifactId());
-      templateData.put("version", artifact.getVersion());
+      templateData.put("artifact", artifact);
       templateData.put("updates", convergenceIssues);
       templateData.put("upperBoundFailures", upperBoundFailures);
       templateData.put("globalUpperBoundFailures", globalUpperBoundFailures);
