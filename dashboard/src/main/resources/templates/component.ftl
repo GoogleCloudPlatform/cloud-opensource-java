@@ -14,7 +14,6 @@
   <body>
     <h1>Dependency Analysis of ${groupId}:${artifactId}:${version}</h1>
     
-    
     <h2 id="global-upper-bounds">Global Upper Bounds Check</h2>
     
     <p>For each transitive dependency the library pulls in, the highest version 
