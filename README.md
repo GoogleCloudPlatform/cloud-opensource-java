@@ -4,6 +4,8 @@ This project explores tools and practices
 to provide consistency among Google Cloud Java libraries. The consistency
 minimizes the risk of dependency conflicts caused by the libraries.
 
+# Tools and Practices
+
 ## Google Cloud Platform Java Dependency Dashboard
 
 [Google Cloud Platform Java Dependency Dashboard](
