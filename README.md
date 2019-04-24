@@ -21,18 +21,16 @@ libraries.
 ## Linkage Checker Enforcer Rule
 
 [Linkage Checker Enforcer Rule](./enforcer-rules) verifies that the transitive
-dependency tree of a Maven project or a [BOM](
-https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Management)
-does not have any [linkage errors](
+dependency tree of a Maven project does not have any [linkage errors](
 ./library-best-practices/glossary.md#types-of-conflicts-and-compatibility).
 
 ## Google Library BOM
 
-[Google Library BOM](boms/cloud-oss-bom) is a Bill-of-Materials (BOM) that holds
-list of Google Cloud Java libraries with their versions.
+[Google Library BOM](boms/cloud-oss-bom) is a Bill-of-Materials (BOM) that
+lists of Google Cloud Java libraries with their versions.
 We choose the managed dependencies so that they are consistent with each other
 as much as possible.
-For understanding how BOMs help library users avoid dependency conflicts, read
+To understand how BOMs help library users avoid dependency conflicts, read
 [Declaring Dependencies on Google Java Libraries](DECLARING_DEPENDENCIES.md)
 
 # Development
