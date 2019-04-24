@@ -1,6 +1,6 @@
 [![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
 
-This project explores common infrastructure, toolset and practices 
+This project explores tools and practices 
 to provide consistency among Google Cloud Java libraries. The consistency
 minimizes the risk of dependency conflicts caused by the libraries.
 
