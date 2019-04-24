@@ -34,7 +34,7 @@ does not have any [linkage errors](
 list of Google Cloud Java libraries with their versions.
 We choose the managed dependencies so that they are consistent with each other
 as much as possible.
-For understanding how BOMs help you avoid dependency conflicts, read
+For understanding how BOMs help library users avoid dependency conflicts, read
 [Declaring Dependencies on Google Java Libraries](DECLARING_DEPENDENCIES.md)
 
 # Development
@@ -43,9 +43,9 @@ This project is built using _Maven_.
 
 ## Requirements
 
-1. The [Google Cloud SDK](https://cloud.google.com/sdk/); install
-  this somewhere on your file system. This is used for uploading Google Cloud
-  Platform Java Dependency Dashboard to Google Cloud Storage.
+1. (Optional) The [Google Cloud SDK](https://cloud.google.com/sdk/); install
+  this somewhere on your file system. This tool is used for uploading Google
+  Cloud Platform Java Dependency Dashboard to Google Cloud Storage.
 
 1. Maven 3.5.0 or later.
 
