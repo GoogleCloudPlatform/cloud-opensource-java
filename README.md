@@ -8,10 +8,11 @@ minimizes the risk of dependency conflicts caused by the libraries.
 
 ## Google Cloud Platform Java Dependency Dashboard
 
-[Google Cloud Platform Java Dependency Dashboard](https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/target/dashboard/dashboard.html)
+[Google Cloud Platform Java Dependency Dashboard](
+https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/target/dashboard/dashboard.html)
 (runs daily; work in progress) shows multiple checks on the consistency among
 Google Cloud Java libraries. For manually generating the dashboard, see
-[its README] (./dashboard/README.md).
+[its README](./dashboard/README.md).
 
 ## Java Library Best Practices
 
@@ -25,7 +26,7 @@ libraries.
 dependency tree of a Maven project or a [BOM](
 https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Management)
 does not have any [linkage errors](
-../library-best-practices/glossary.md#types-of-conflicts-and-compatibility).
+./library-best-practices/glossary.md#types-of-conflicts-and-compatibility).
 
 ## Cloud OSS BOM
 
