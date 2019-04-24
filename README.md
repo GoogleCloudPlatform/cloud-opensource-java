@@ -4,9 +4,7 @@ This project explores tools and practices
 to provide consistency among Google Cloud Java libraries. The consistency
 minimizes the risk of dependency conflicts caused by the libraries.
 
-# Tools and Practices
-
-## Google Cloud Platform Java Dependency Dashboard
+# Google Cloud Platform Java Dependency Dashboard
 
 [Google Cloud Platform Java Dependency Dashboard](
 https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/target/dashboard/dashboard.html)
@@ -14,24 +12,24 @@ https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/target/
 Google Cloud Java libraries. For manually generating the dashboard, see
 [its README](./dashboard/README.md).
 
-## Java Library Best Practices
+# Java Library Best Practices
 
 [The Java Library Best Practices](./library-best-practices) are a set of rules
 that we believe will minimize problems for consumers of interconnected Java
 libraries.
 
-## Linkage Checker Enforcer Rule
+# Linkage Checker Enforcer Rule
 
-[Linkage Checker Enforcer Rule](./enforcer-rules) verifies that the transitive
-dependency tree of a Maven project does not have any [linkage errors](
-./library-best-practices/glossary.md#types-of-conflicts-and-compatibility).
+[Linkage Checker Enforcer Rule](./enforcer-rules)  is a Maven enforcer rule that
+detects [linkage errors](
+./library-best-practices/glossary.md#types-of-conflicts-and-compatibility) in
+the current project.
 
-## Google Library BOM
+# Google Library BOM
 
 [Google Library BOM](boms/cloud-oss-bom) is a Bill-of-Materials (BOM) that
-lists of Google Cloud Java libraries with their versions.
-We choose the managed dependencies so that they are consistent with each other
-as much as possible.
+provides consistent versions of Google Cloud Java libraries that work together
+without linkage errors.
 To understand how BOMs help library users avoid dependency conflicts, read
 [Declaring Dependencies on Google Java Libraries](DECLARING_DEPENDENCIES.md)
 
