@@ -28,9 +28,9 @@ https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanis
 does not have any [linkage errors](
 ./library-best-practices/glossary.md#types-of-conflicts-and-compatibility).
 
-## Cloud OSS BOM
+## Google Library BOM
 
-[Cloud OSS BOM](boms/cloud-oss-bom) is a Bill-of-Materials (BOM) that holds
+[Google Library BOM](boms/cloud-oss-bom) is a Bill-of-Materials (BOM) that holds
 list of Google Cloud Java libraries with their versions.
 We choose the managed dependencies so that they are consistent with each other
 as much as possible.
