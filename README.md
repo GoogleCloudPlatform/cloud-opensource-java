@@ -1,8 +1,7 @@
 [![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
 
-This project explores tools and practices 
-to provide consistency among Google Cloud Java libraries. The consistency
-minimizes the risk of dependency conflicts caused by the libraries.
+This project explores common infrastructure and coding standards for open source
+Google Cloud Platform projects.
 
 # Google Cloud Platform Java Dependency Dashboard
 
