@@ -29,18 +29,20 @@ Add the following plugin configuration to your `pom.xml`:
           <dependency>
             <groupId>com.google.cloud.tools</groupId>
             <artifactId>linkage-checker-enforcer-rules</artifactId>
-            <version>0.1</version>
+            <version>0.2.0</version>
           </dependency>
         </dependencies>
         <executions>
           <execution>
             <id>enforce</id>
+            <!-- Important! Should run after compile -->
+            <phase>verify</phase>
             <goals>
               <goal>enforce</goal>
             </goals>
             <configuration>
               <rules>
-                <banLinkageErrors
+                <LinkageCheckerRule
                     implementation="com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule"/>
               </rules>
             </configuration>
@@ -53,10 +55,10 @@ Add the following plugin configuration to your `pom.xml`:
 For a BOM project, set `dependencySection` element to `DEPENDENCY_MANAGEMENT`.
 
 ```xml
-  <banLinkageErrors
+  <LinkageCheckerRule
       implementation="com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule">
       <dependencySection>DEPENDENCY_MANAGEMENT</dependencySection>
-  </banLinkageErrors>
+  </LinkageCheckerRule>
 ```
 
 To suppress linkage errors that are not [_reachable in the class reference graph_](
@@ -64,27 +66,19 @@ To suppress linkage errors that are not [_reachable in the class reference graph
 dependencies of the project, set `reportOnlyReachable` element to `true`. (default: `false`).
 
 ```xml
-  <banLinkageErrors
+  <LinkageCheckerRule
       implementation="com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule">
       <reportOnlyReachable>true</reportOnlyReachable>
-  </banLinkageErrors>
+  </LinkageCheckerRule>
 ```
 
 If a violation should not fail the build, set `level` element to `WARN`:
 
 ```xml
-  <banLinkageErrors
+  <LinkageCheckerRule
       implementation="com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule">
       <level>WARN</level>
-  </banLinkageErrors>
-```
-
-# Run
-
-Enforcer rules are part of the `validate` lifecycle in Maven.
-
-```
-$ mvn validate
+  </LinkageCheckerRule>
 ```
 
 ## Debug

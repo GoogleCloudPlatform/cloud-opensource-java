@@ -24,6 +24,7 @@ import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.graph.Traverser;
@@ -31,8 +32,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.StreamSupport;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -68,8 +67,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    * Set to true to suppress linkage errors unreachable from the classes in the direct dependencies.
    * By default, it's {@code false}.
    *
-   * @see <a
-   *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#class-reference-graph"
+   * @see <a href=
+   *     "https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#class-reference-graph"
    *     >Java Dependency Glossary: Class reference graph</a>
    */
   private boolean reportOnlyReachable = false;
@@ -127,7 +126,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         LinkageCheckReport linkageReport = linkageChecker.findLinkageErrors();
         int errorCount =
             linkageReport.getJarLinkageReports().stream()
-                .mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
+                .mapToInt(JarLinkageReport::getErrorCount)
                 .sum();
         if (reportOnlyReachable) {
           ImmutableList<JarLinkageReport> reachableErrorReports =
@@ -137,7 +136,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           linkageReport = LinkageCheckReport.create(reachableErrorReports);
           int reachableErrorCount =
               reachableErrorReports.stream()
-                  .mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
+                  .mapToInt(JarLinkageReport::getErrorCount)
                   .sum();
           errorCount = reachableErrorCount;
         }
@@ -151,15 +150,16 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
               "Linkage Checker rule found "
                   + foundError
                   + ". Linkage error report:\n"
-                  + linkageReport;
+                  + linkageReport.getErrorString();
           if (getLevel() == WARN) {
             logger.warn(message);
           } else {
             logger.error(message);
+            throw new EnforcerRuleException(
+                "Failed while checking class path. See above error report.");
           }
-          throw new EnforcerRuleException(
-              "Failed while checking class path. See above error report.");
         } else {
+          // arguably shouldn't log anything on success
           logger.info("No " + foundError + " found");
         }
       } catch (IOException ex) {
@@ -184,15 +184,28 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       DependencyResolutionResult resolutionResult =
           projectDependenciesResolver.resolve(dependencyResolutionRequest);
 
-      Traverser<DependencyNode> traverser = Traverser.forTree(DependencyNode::getChildren);
-
-      return StreamSupport.stream(
-              traverser.breadthFirst(resolutionResult.getDependencyGraph()).spliterator(), false)
-          .map(DependencyNode::getArtifact)
-          .filter(Objects::nonNull)
-          .map(Artifact::getFile)
-          .map(File::toPath)
-          .collect(toImmutableList());
+      Iterable<DependencyNode> dependencies = Traverser.forTree(DependencyNode::getChildren)
+          .breadthFirst(resolutionResult.getDependencyGraph());
+      
+      ImmutableList.Builder<Path> builder = ImmutableList.builder();
+      for (DependencyNode node : dependencies) {
+        // the very first one is the pom.xml where this rule appears
+        Artifact artifact = node.getArtifact();
+        if (artifact != null) { // why is this possible?
+          File file = artifact.getFile();
+          // and this very first one does not have a file; i.e. file == null
+          // but why do we care? perhaps we're assuming there is a jar file in
+          // the classpath but what we really need for this one is a classes directory
+          if (file == null) {
+            throw new EnforcerRuleException(
+                "Artifact " + Artifacts.toCoordinates(artifact) + " is not associated with a file."
+                    + " The linkage checker enforcer rule should be bound to the verify phase.");
+          }
+          Path path = file.toPath();
+          builder.add(path);
+        }
+      }
+      return builder.build();
     } catch (ComponentLookupException e) {
       throw new EnforcerRuleException("Unable to lookup a component " + e.getLocalizedMessage(), e);
     } catch (DependencyResolutionException e) {

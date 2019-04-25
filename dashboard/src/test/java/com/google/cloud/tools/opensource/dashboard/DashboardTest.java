@@ -42,7 +42,6 @@ import org.codehaus.plexus.PlexusContainerException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -52,6 +51,7 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Correspondence;
@@ -63,18 +63,9 @@ public class DashboardTest {
       Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();
 
   private static final Correspondence<Node, String> NODE_VALUES =
-      new Correspondence<Node, String>() {
-        @Override
-        public boolean compare(Node node, String expected) {
-          String trimmedValue = trimAndCollapseWhiteSpace(node.getValue());
-          return trimmedValue.equals(expected);
-        }
-
-        @Override
-        public String toString() {
-          return "has value equal to";
-        }
-      };
+      Correspondence.from((node, expected) ->
+          trimAndCollapseWhiteSpace(node.getValue())
+          .equals(expected), "has value equal to");
 
   private static String trimAndCollapseWhiteSpace(String value) {
     return CharMatcher.whitespace().trimAndCollapseFrom(value, ' ');
@@ -102,7 +93,9 @@ public class DashboardTest {
     try {
       // Mac's APFS fails with InsecureRecursiveDeleteException without ALLOW_INSECURE.
       // Still safe as this test does not use symbolic links
-      MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
+      if (outputDirectory != null) {
+        MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
+      }
     } catch (IOException ex) {
       // no big deal
     }
@@ -181,7 +174,7 @@ public class DashboardTest {
     Nodes artifactCount =
         dashboard.query("//div[@class='statistic-item statistic-item-green']/h2");
     Assert.assertTrue(artifactCount.size() > 0);
-    for (Node artifactCountElement : toList(artifactCount)) {
+    for (Node artifactCountElement : artifactCount) {
       String value = artifactCountElement.getValue().trim();
       Assert.assertTrue(value, Integer.parseInt(value) > 0);
     }
@@ -190,19 +183,17 @@ public class DashboardTest {
   @Test
   public void testDashboard_linkageReports() {
     Nodes reports = dashboard.query("//p[@class='jar-linkage-report']");
-    // grpc-testing-1.17.1, shown as first item in linkage errors, has these errors
+    // appengine-api-sdk, shown as first item in linkage errors, has these errors
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo(
-            "3 target classes causing linkage errors referenced from 3 source classes.");
+            "106 target classes causing linkage errors referenced from 516 source classes.");
 
-    ImmutableList<Node> dependencyPaths =
-        toList(dashboard.query("//p[@class='linkage-check-dependency-paths']"));
-    Node log4jDependencyPathMessage = dependencyPaths.get(dependencyPaths.size() - 1);
-    // There are 994 paths to log4j. These should be summarized.
-    Truth.assertThat(log4jDependencyPathMessage.getValue())
-        .startsWith(
-            "Artifacts 'com.google.http-client:google-http-client >"
-                + " commons-logging:commons-logging > log4j:log4j' exist in all");
+    Nodes dependencyPaths = dashboard.query(
+        "//p[@class='linkage-check-dependency-paths'][position()=last()]");
+    Node dependencyPathMessage = dependencyPaths.get(0);
+    Assert.assertEquals(
+        "The following paths to the jar file from the BOM are found in the dependency tree:",
+        trimAndCollapseWhiteSpace(dependencyPathMessage.getValue()));
     int dependencyPathListSize =
         dashboard.query("//ul[@class='linkage-check-dependency-paths']/li").size();
     Truth.assertWithMessage("The dashboard should not show repetitive dependency paths")
@@ -215,11 +206,14 @@ public class DashboardTest {
     Nodes recommendedListItem = dashboard.query("//ul[@id='recommended']/li");
     Assert.assertTrue(recommendedListItem.size() > 100);
 
-    List<String> coordinateList =
-        toList(recommendedListItem).stream().map(Node::getValue).collect(toImmutableList());
     // fails if these are not valid Maven coordinates
-    coordinateList.forEach(DefaultArtifact::new);
+    for (Node node : recommendedListItem) {
+      new DefaultArtifact(node.getValue());
+    }
 
+    ImmutableList<String> coordinateList =
+        Streams.stream(recommendedListItem).map(Node::getValue).collect(toImmutableList());
+    
     ArrayList<String> sorted = new ArrayList<>(coordinateList);
     Comparator<String> comparator = new SortWithoutVersion();
     Collections.sort(sorted, comparator);
@@ -262,20 +256,21 @@ public class DashboardTest {
   }
 
   @Test
-  public void testComponent_staticLinkageCheckResult() throws IOException, ParsingException {
-    Document document = parseOutputFile("io.grpc_grpc-alts_1.18.0.html");
+  public void testComponent_linkageCheckResult() throws IOException, ParsingException {
+    Document document = parseOutputFile(
+        "com.google.http-client_google-http-client-appengine_1.29.0.html");
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
     Assert.assertEquals(1, reports.size());
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo(
-            "2 target classes causing linkage errors referenced from 2 source classes.");
+            "106 target classes causing linkage errors referenced from 516 source classes.");
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
-    Truth.assertWithMessage("grpc-alts should show linkage errors for CommunicatorServer")
-        .that(toList(causes))
+    Truth.assertWithMessage("google-http-client-appengine should show linkage errors for RpcStubDescriptor")
+        .that(causes)
         .comparingElementsUsing(NODE_VALUES)
         .contains(
-            "com.sun.jdmk.comm.CommunicatorServer is not found,"
-                + " referenced from 1 source class ▶"); // '▶' is in the toggle button
+            "com.google.net.rpc3.client.RpcStubDescriptor is not found,"
+                + " referenced from 21 source classes ▶"); // '▶' is the toggle button
   }
 
   @Test
@@ -314,31 +309,43 @@ public class DashboardTest {
   }
 
   @Test
-  public void testLinkageErrorsUnderProvidedDependency() throws IOException, ParsingException {
-    // google-cloud-translate has transitive dependency to (problematic) appengine-api-1.0-sdk
-    // The path to appengine-api-1.0-sdk includes scope:provided dependency
-    Document document = parseOutputFile("com.google.cloud_google-cloud-translate_1.63.0.html");
+  public void testLinkageErrorsInProvidedDependency() throws IOException, ParsingException {
+    // google-http-client-appengine has provided dependency to (problematic) appengine-api-1.0-sdk
+    Document document = parseOutputFile(
+        "com.google.http-client_google-http-client-appengine_1.29.0.html");
     Nodes linkageCheckMessages = document.query("//ul[@class='jar-linkage-report-cause']/li");
     Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
-    Truth.assertThat(linkageCheckMessages.get(1).getValue())
+    Truth.assertThat(linkageCheckMessages.get(0).getValue())
         .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");
   }
 
   @Test
   public void testZeroLinkageErrorShowsZero() throws IOException, ParsingException {
     // grpc-auth does not have a linkage error, and it should show zero in the section
-    Document document = parseOutputFile("io.grpc_grpc-auth_1.18.0.html");
+    Document document = parseOutputFile("io.grpc_grpc-auth_1.20.0.html");
     Nodes linkageErrorsTotal = document.query("//p[@id='linkage-errors-total']");
     Truth.assertThat(linkageErrorsTotal.size()).isEqualTo(1);
     Truth.assertThat(linkageErrorsTotal.get(0).getValue())
         .contains("0 linkage error(s)");
   }
 
-  private static ImmutableList<Node> toList(Nodes nodes) {
-    ImmutableList.Builder<Node> builder = ImmutableList.builder();
-    for (int i = 0; i < nodes.size(); i++) {
-      builder.add(nodes.get(i));
-    }
-    return builder.build();
+  @Test
+  public void testGlobalUpperBoundUpgradeMessage() throws IOException, ParsingException {
+    // Case 1: BOM needs to be updated
+    Document document = parseOutputFile("com.google.protobuf_protobuf-java-util_3.6.1.html");
+    Nodes globalUpperBoundBomUpgradeNodes =
+        document.query("//li[@class='global-upper-bound-bom-upgrade']");
+    Truth.assertThat(globalUpperBoundBomUpgradeNodes.size()).isEqualTo(1);
+    String bomUpgradeMessage = globalUpperBoundBomUpgradeNodes.get(0).getValue();
+    Truth.assertThat(bomUpgradeMessage).contains(
+        "Upgrade com.google.protobuf:protobuf-java-util:jar:3.6.1 in the BOM to version \"3.7.1\"");
+
+    // Case 2: Dependency needs to be updated
+    Nodes globalUpperBoundDependencyUpgradeNodes =
+        document.query("//li[@class='global-upper-bound-dependency-upgrade']");
+    Truth.assertThat(globalUpperBoundDependencyUpgradeNodes.size()).isEqualTo(2);
+    String dependencyUpgradeMessage = globalUpperBoundDependencyUpgradeNodes.get(0).getValue();
+    Truth.assertThat(dependencyUpgradeMessage).contains(
+        "Upgrade com.google.guava:guava:jar:19.0 to version \"27.1-android\"");
   }
 }

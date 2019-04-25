@@ -7,20 +7,42 @@
   <groupId>com.google.cloud.tools</groupId>
   <artifactId>dependencies-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.1.1-SNAPSHOT</version>
+  <version>0.2.1-SNAPSHOT</version>
+
   <name>Cloud Tools Open Source Code Hygiene Tooling</name>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/</url>
   <organization>
     <name>Google LLC.</name>
     <url>https://www.google.com</url>
   </organization>
+  <description>Parent pom for tools and libraries that check Maven
+  artifacts for assorted problems</description>
+  <inceptionYear>2018</inceptionYear>
+  <developers>
+    <developer>
+      <name>Elliotte Rusty Harold</name>
+    </developer>
+    <developer>
+      <name>Tomo Suzuki</name>
+    </developer>
+  </developers>
+
+  <!-- Environment Settings -->
+  <issueManagement>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues</url>
+  </issueManagement>
+  <scm>
+    <connection>scm:git:https://github.com/GoogleCloudPlatform/cloud-opensource-java.git</connection>
+    <developerConnection>scm:git:https://github.com/GoogleCloudPlatform/cloud-opensource-java.git</developerConnection>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java</url>
+  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <guava.version>27.1-jre</guava.version>
     <resolver.version>1.3.3</resolver.version>
     <maven.version>3.6.0</maven.version>
-    <truth.version>0.42</truth.version>
+    <truth.version>0.44</truth.version>
   </properties>
 
   <licenses>
@@ -134,5 +156,41 @@
       </plugins>
     </pluginManagement>
   </build>
+
+  <profiles>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.0.0</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>3.0.1</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>

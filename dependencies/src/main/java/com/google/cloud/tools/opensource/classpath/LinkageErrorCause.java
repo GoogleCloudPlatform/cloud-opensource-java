@@ -20,14 +20,21 @@ import com.google.auto.value.AutoValue;
 
 /** Key to group linkage errors by their causes. */
 @AutoValue
+// TODO "cause" is unclear. Is it the target or the source? I don't know.
+// Rename things to remove the word "cause" and use more specific terminology.
+// why do we need this class at all? It's just a wrapper around a SymbolNotResolvable.
+// It has no extra information.
 abstract class LinkageErrorCause {
 
   /** Returns the reason for the error */
   abstract SymbolNotResolvable.Reason getReason();
 
-  /** Returns the symbol causing the error. It's either class name, field name, or method name. */
+  /** 
+   * Returns the fully qualified name of the missing or inaccessible symbol.
+   * This is a class name, field name, or method name. 
+   */
   abstract String getSymbol();
-
+  
   static <T extends SymbolReference> LinkageErrorCause from(
       SymbolNotResolvable<T> staticLinkageError) {
     String symbolName = symbolNameFrom(staticLinkageError);

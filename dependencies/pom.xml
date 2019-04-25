@@ -1,10 +1,14 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project 
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <groupId>com.google.cloud.tools</groupId>
     <artifactId>dependencies-parent</artifactId>
-    <version>0.1.1-SNAPSHOT</version>
+    <version>0.2.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>dependencies</artifactId>
@@ -16,6 +20,25 @@
     <name>Google LLC.</name>
     <url>https://www.google.com</url>
   </organization>
+  <inceptionYear>2018</inceptionYear>
+  <developers>
+    <developer>
+      <name>Elliotte Rusty Harold</name>
+    </developer>
+    <developer>
+      <name>Tomo Suzuki</name>
+    </developer>
+  </developers>
+
+  <!-- Environment Settings -->
+  <issueManagement>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues</url>
+  </issueManagement>
+  <scm>
+    <connection>scm:git:https://github.com/GoogleCloudPlatform/cloud-opensource-java.git</connection>
+    <developerConnection>scm:git:https://github.com/GoogleCloudPlatform/cloud-opensource-java.git</developerConnection>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java</url>
+  </scm>
 
   <packaging>jar</packaging>
 

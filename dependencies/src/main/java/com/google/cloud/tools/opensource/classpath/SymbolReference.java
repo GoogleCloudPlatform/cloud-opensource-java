@@ -18,7 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 /**
  * A reference to a symbol of {@code targetClass} from {@code sourceClass}. The values of the class
- * names are fully-qualified form known as binary names. For example {@code
+ * names are in the fully-qualified form known as binary names. For example, {@code
  * io.grpc.MethodDescriptor$MethodType}.
  *
  * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-13.html#jls-13.1">Java
@@ -35,4 +35,11 @@ interface SymbolReference {
    * reference.
    */
   String getTargetClassName();
+  
+  
+  // TODO does this belong in SymbolNotResolvable instead?
+  /**
+   * Returns a string describing the missing reference for display to an end user.
+   */
+  String getErrorString();
 }

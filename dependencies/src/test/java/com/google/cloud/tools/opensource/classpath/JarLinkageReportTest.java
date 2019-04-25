@@ -115,7 +115,7 @@ public class JarLinkageReportTest {
 
   @Test
   public void testGetTotalErrorCount() {
-    Assert.assertEquals(4, jarLinkageReport.getCauseToSourceClassesSize());
+    Assert.assertEquals(4, jarLinkageReport.getErrorCount());
   }
 
   @Test
@@ -140,14 +140,24 @@ public class JarLinkageReportTest {
   }
 
   @Test
-  public void testGetCauseToSourceClasses() {
-    ImmutableMultimap<LinkageErrorCause, String> causeToSourceClasses =
-        jarLinkageReport.getCauseToSourceClasses();
+  public void testGetErrorString() {
+    Assert.assertEquals(
+        "c (4 errors):\n"
+            + "  ClassA is not found, referenced from ClassB\n"
+            + "  ClassA.methodX is not found, referenced from ClassB\n"
+            + "  ClassA.methodX is not found, referenced from ClassC$InnerC\n"
+            + "  ClassC.fieldX is not found, referenced from ClassD\n",
+        jarLinkageReport.getErrorString());
+  }  
+  
+  @Test
+  public void testGetTargetToSources() {
+    ImmutableMultimap<LinkageErrorCause, String> map = jarLinkageReport.getTargetToSources();
 
-    ImmutableSet<LinkageErrorCause> linkageErrorCauses = causeToSourceClasses.keySet();
+    ImmutableSet<LinkageErrorCause> linkageErrorCauses = map.keySet();
     Truth.assertThat(linkageErrorCauses).hasSize(3);
     ImmutableCollection<String> classesForFirstCause =
-        causeToSourceClasses.get(linkageErrorCauses.iterator().next());
+        map.get(linkageErrorCauses.iterator().next());
     // InnerC should not appear here
     Truth.assertThat(classesForFirstCause).containsExactly("ClassB", "ClassC");
   }

@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
+import org.apache.maven.enforcer.rule.api.EnforcerLevel;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
 import org.apache.maven.execution.MavenSession;
@@ -179,6 +180,20 @@ public class LinkageCheckerRuleTest {
       Assert.assertEquals(
           "Failed while checking class path. See above error report.", ex.getMessage());
     }
+  }
+
+  @Test
+  public void testExecute_shouldPassForBadProject_levelWarn()
+      throws RepositoryException, EnforcerRuleException {
+    // This pair of artifacts contains linkage errors on grpc-core's use of Verify. Because
+    // grpc-core is included in entry point jars, the errors are reachable.
+    setupMockDependencyResolution(
+        "com.google.api-client:google-api-client:1.27.0", "io.grpc:grpc-core:1.17.1");
+    rule.setReportOnlyReachable(true);
+    rule.setLevel(EnforcerLevel.WARN);
+    rule.execute(mockRuleHelper);
+    verify(mockLog)
+        .warn(ArgumentMatchers.startsWith("Linkage Checker rule found reachable errors."));
   }
 
   @Test
