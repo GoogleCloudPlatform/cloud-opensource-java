@@ -98,7 +98,7 @@ public class LeagueTableMain {
 
         long problematicJarCount =
             report.getJarLinkageReports().stream()
-                .filter(jarLinkageReport -> jarLinkageReport.getCauseToSourceClassesSize() > 0)
+                .filter(jarLinkageReport -> jarLinkageReport.getErrorCount() > 0)
                 .count();
         table.put(key, report);
 
