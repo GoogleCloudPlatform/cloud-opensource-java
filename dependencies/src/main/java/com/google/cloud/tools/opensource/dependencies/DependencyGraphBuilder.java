@@ -32,6 +32,7 @@ import java.util.Queue;
 import java.util.Stack;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.apache.maven.artifact.ArtifactUtils;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -41,6 +42,8 @@ import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.resolution.ArtifactRequest;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
@@ -146,13 +149,16 @@ public class DependencyGraphBuilder {
             .collect(toImmutableList());
     if (dependencyList.size() == 1) {
       // With setRoot, the result includes dependencies with `optional:true` or `provided`
-      collectRequest.setRoot(dependencyList.get(0));
+      Dependency rootDependency = dependencyList.get(0);
+      collectRequest.setRoot(rootDependency);
     } else {
       collectRequest.setDependencies(dependencyList);
     }
     RepositoryUtility.addRepositoriesToRequest(collectRequest);
 
     if (!LeagueTableMain.managedDependencies.isEmpty()) {
+      // ClassicDependencyManager.manageDependency does not take managed dependencies into account
+      // if the dependency's depth < 2
       collectRequest.setManagedDependencies(LeagueTableMain.managedDependencies);
     }
 
@@ -281,6 +287,8 @@ public class DependencyGraphBuilder {
 
     // Records failures rather than existing immediately.
     List<ExceptionAndPath> resolutionFailures = Lists.newArrayList();
+    
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
@@ -291,6 +299,24 @@ public class DependencyGraphBuilder {
       if (dependencyNode.getArtifact() != null) {
         // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
         // set to null
+        
+        // Implementing managed dependency
+        Artifact temporaryArtifact = dependencyNode.getArtifact();
+        String key = Artifacts.makeKey(temporaryArtifact);
+        Artifact managedDependencyArtifact = LeagueTableMain.managedDependencyMap.get(key);
+        if (managedDependencyArtifact != null) {
+          String managedVersion = managedDependencyArtifact.getVersion();
+          dependencyNode.setArtifact(temporaryArtifact.setVersion(managedVersion));
+          try {
+            ArtifactResult result = system.resolveArtifact(session, new ArtifactRequest(dependencyNode));
+            dependencyNode.setArtifact(result.getArtifact());
+          } catch (ArtifactResolutionException ex) {
+            ExceptionAndPath failure =
+                ExceptionAndPath.create(parentNodes, dependencyNode, ex);
+            resolutionFailures.add(failure);
+          }
+        }
+        
         forPath.add(dependencyNode.getArtifact());
         if (resolveFullDependency && parentNodes.contains(dependencyNode)) {
           logger.severe(

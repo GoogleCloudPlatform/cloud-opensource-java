@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -38,6 +39,7 @@ public class LeagueTableMain {
   // This values are used in resolving dependencies for a pair in the same manner as
   // user's pom.xml importing Cloud OSS BOM.
   public static final List<Dependency> managedDependencies = Lists.newArrayList();
+  public static final Map<String, Artifact> managedDependencyMap = Maps.newHashMap();
 
   /** Outputs the pair-wise comparison table for the members of Cloud OSS BOM. */
   public static void main(String[] arguments)
@@ -61,6 +63,7 @@ public class LeagueTableMain {
     for (Artifact bomMember : bomMembers) {
       cvsBuilder.append(bomMember).append(",");
       managedDependencies.add(new Dependency(bomMember, "compile"));
+      managedDependencyMap.put(Artifacts.makeKey(bomMember), bomMember);
     }
 
     cvsBuilder.append("\n");
@@ -81,7 +84,7 @@ public class LeagueTableMain {
         System.out.println(
             String.format(
                 "Running %s (%d/%d). ETA: %d seconds", key, cellCount, cellTotal, remainingSecs));
-
+        
         if (bomMember1.getVersion().equals(bomMember2.getVersion())) {
           cvsBuilder.append("-1").append(",");
           continue;
@@ -100,6 +103,9 @@ public class LeagueTableMain {
             report.getJarLinkageReports().stream()
                 .filter(jarLinkageReport -> jarLinkageReport.getErrorCount() > 0)
                 .count();
+//        report.getJarLinkageReports().stream()
+      //  .filter(jarLinkageReport -> jarLinkageReport.getErrorCount() > 0)
+        //.forEach(r -> System.out.println(r));
         table.put(key, report);
 
         cvsBuilder.append(problematicJarCount).append(",");
