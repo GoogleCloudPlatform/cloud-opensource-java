@@ -1,7 +1,7 @@
 [![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
 
 This project explores common infrastructure and best practices for open source
-Java projects for Google Cloud Platform.
+Java projects for the Google Cloud Platform.
 
 # Google Cloud Platform Java Dependency Dashboard
 
