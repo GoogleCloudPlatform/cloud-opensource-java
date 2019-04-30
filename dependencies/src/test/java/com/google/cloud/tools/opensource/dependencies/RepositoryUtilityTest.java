@@ -56,6 +56,6 @@ public class RepositoryUtilityTest {
     Path pomFile = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml");
     ImmutableList<Artifact> artifacts = RepositoryUtility.readBom(pomFile);
     Assert.assertFalse(artifacts.isEmpty());
-    Assert.assertEquals(189, artifacts.size());
+    Assert.assertEquals(187, artifacts.size());
   }
 }
