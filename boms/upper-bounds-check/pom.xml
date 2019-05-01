@@ -5,7 +5,6 @@
                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-
   <parent>
     <groupId>com.google.cloud.tools.opensource</groupId>
     <artifactId>cloud-tools-opensource-boms</artifactId>
@@ -18,7 +17,7 @@
 
   <name>Cloud Platform Supported Libraries Upper Bounds Check</name>
   <description>
-    Import the Cloud Platform Supported Libraries and verify that 
+    Import the Cloud Platform Supported Libraries and verify that
     each library imported is the most recent of the versions
     available in the dependency tree.
   </description>
@@ -43,7 +42,7 @@
     <dependencies>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <artifactId>bom</artifactId>
+        <artifactId>libraries-bom</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
@@ -51,7 +50,7 @@
     </dependencies>
   </dependencyManagement>
 
-  <!-- TODO is there a way to run this test directly on the BOM instead of 
+  <!-- TODO is there a way to run this test directly on the BOM instead of
     on a pom.xml that imports the BOM? -->
   <dependencies>
     <dependency>

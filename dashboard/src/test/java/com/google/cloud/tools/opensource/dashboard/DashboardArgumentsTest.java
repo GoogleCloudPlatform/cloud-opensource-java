@@ -40,10 +40,10 @@ public class DashboardArgumentsTest {
   @Test
   public void testParseArgument_coordinates() throws ParseException {
     DashboardArguments dashboardArguments =
-        DashboardArguments.readCommandLine("-c", "com.google.cloud:bom:1.0.0-SNAPSHOT");
+        DashboardArguments.readCommandLine("-c", "com.google.cloud:libraries-bom:1.0.0-SNAPSHOT");
     assertFalse(dashboardArguments.hasFile());
     assertEquals(
-        "com.google.cloud:bom:1.0.0-SNAPSHOT", dashboardArguments.getBomCoordinates());
+        "com.google.cloud:libraries-bom:1.0.0-SNAPSHOT", dashboardArguments.getBomCoordinates());
   }
 
   @Test
@@ -60,7 +60,7 @@ public class DashboardArgumentsTest {
   public void testParseArgument_duplicateOptions() throws ParseException {
     try {
       DashboardArguments.readCommandLine(
-          "-c", "com.google.cloud:bom:1.0.0-SNAPSHOT", "-f", "../pom.xml");
+          "-c", "com.google.cloud:libraries-bom:1.0.0-SNAPSHOT", "-f", "../pom.xml");
       Assert.fail("The argument should validate duplicate input");
     } catch (AlreadySelectedException ex) {
       // pass
