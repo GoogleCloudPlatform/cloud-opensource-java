@@ -258,7 +258,7 @@ public class DashboardTest {
   @Test
   public void testComponent_linkageCheckResult() throws IOException, ParsingException {
     Document document = parseOutputFile(
-        "com.google.http-client_google-http-client-appengine_1.29.0.html");
+        "com.google.http-client_google-http-client-appengine_1.29.1.html");
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
     Assert.assertEquals(1, reports.size());
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
@@ -312,7 +312,7 @@ public class DashboardTest {
   public void testLinkageErrorsInProvidedDependency() throws IOException, ParsingException {
     // google-http-client-appengine has provided dependency to (problematic) appengine-api-1.0-sdk
     Document document = parseOutputFile(
-        "com.google.http-client_google-http-client-appengine_1.29.0.html");
+        "com.google.http-client_google-http-client-appengine_1.29.1.html");
     Nodes linkageCheckMessages = document.query("//ul[@class='jar-linkage-report-cause']/li");
     Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
     Truth.assertThat(linkageCheckMessages.get(0).getValue())
