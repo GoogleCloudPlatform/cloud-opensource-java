@@ -4,21 +4,20 @@
 </#function>
 
 <#macro formatJarLinkageReport jarLinkageReport jarToDependencyPaths dependencyPathRootCauses>
-  <#if jarLinkageReport.getCauseToSourceClassesSize() gt 0>
+  <#if jarLinkageReport.getErrorCount() gt 0>
     <#assign jarPath = jarLinkageReport.getJarPath() />
     <h3>${jarPath.getFileName()?html}</h3>
 
-    <#assign causeToSourceClasses = jarLinkageReport.getCauseToSourceClasses() />
-    <#assign targetClassCount = causeToSourceClasses.keySet()?size />
-    <#assign sourceClassCount = jarLinkageReport.getCauseToSourceClassesSize() />
+    <#assign targetClassCount = jarLinkageReport.getTargetClassCount() />
+    <#assign sourceClassCount = jarLinkageReport.getErrorCount() />
     <p class="jar-linkage-report">
       ${pluralize(targetClassCount, "target class", "target classes")}
       causing linkage errors referenced from
       ${pluralize(sourceClassCount, "source class", "source classes")}.
     </p>
-    <#list causeToSourceClasses.keySet() as errorCause >
-      <#assign sourceClasses = causeToSourceClasses.get(errorCause) />
-      <p class="jar-linkage-report-cause">${errorCause?html}, referenced from ${
+    <#list jarLinkageReport.getUnresolvableTargets() as unresolvableTarget >
+      <#assign sourceClasses = jarLinkageReport.getSourceClasses(unresolvableTarget) />
+      <p class="jar-linkage-report-cause">${unresolvableTarget?html}, referenced from ${
         pluralize(sourceClasses?size, "source class", "source classes")?html}
         <button onclick="toggleSourceClassListVisibility(this)"
                 title="Toggle visibility of source class list">▶
@@ -33,7 +32,7 @@
       </ul>
     </#list>
     <p class="linkage-check-dependency-paths">
-      The following paths to the jar file from BOM are found in the dependency tree.
+      The following paths to the jar file from the BOM are found in the dependency tree:
     </p>
     <#if dependencyPathRootCauses[jarPath]?? >
       <p class="linkage-check-dependency-paths">${dependencyPathRootCauses[jarPath]?html}

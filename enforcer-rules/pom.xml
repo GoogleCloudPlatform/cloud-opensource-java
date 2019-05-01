@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.google.cloud.tools</groupId>
     <artifactId>dependencies-parent</artifactId>
-    <version>0.1.3-SNAPSHOT</version>
+    <version>0.2.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>linkage-checker-enforcer-rules</artifactId>
@@ -22,6 +22,9 @@
   <developers>
     <developer>
       <name>Elliotte Rusty Harold</name>
+    </developer>
+    <developer>
+      <name>Tomo Suzuki</name>
     </developer>
   </developers>
 

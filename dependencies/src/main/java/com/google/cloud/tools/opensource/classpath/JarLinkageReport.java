@@ -20,6 +20,8 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.auto.value.AutoValue;
+import com.google.auto.value.extension.memoized.Memoized;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
@@ -32,12 +34,14 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * The result of checking linkages in one jar file.
+ * Linkage problems found in one jar file given a specific classpath.
  */
 @AutoValue
 public abstract class JarLinkageReport {
+
   /**
-   * Returns the absolute path of the jar file containing source classes of linkage errors
+   * Returns the absolute path of the jar file that was checked. The source classes
+   * of the reported errors are all in this JAR.
    */
   public abstract Path getJarPath();
 
@@ -71,7 +75,7 @@ public abstract class JarLinkageReport {
   public String toString() {
     String indent = "  ";
     StringBuilder builder = new StringBuilder();
-    int totalErrors = getCauseToSourceClassesSize();
+    int totalErrors = getErrorCount();
 
     builder.append(getJarPath().getFileName() + " (" + totalErrors + " errors):\n");
     for (SymbolNotResolvable<ClassSymbolReference> missingClass : getMissingClassErrors()) {
@@ -89,8 +93,11 @@ public abstract class JarLinkageReport {
     return builder.toString();
   }
 
-  /** Returns map from the cause of linkage errors to class names affected by the errors. */
-  public ImmutableMultimap<LinkageErrorCause, String> getCauseToSourceClasses() {
+  /** 
+   * Map missing classes and members to classes that refer to those items.
+   */
+  @Memoized
+  ImmutableMultimap<LinkageErrorCause, String> getTargetToSources() {
     ImmutableListMultimap<LinkageErrorCause, SymbolNotResolvable<ClassSymbolReference>>
         groupedClassErrors = Multimaps.index(getMissingClassErrors(), LinkageErrorCause::from);
 
@@ -121,16 +128,41 @@ public abstract class JarLinkageReport {
           allErrorsForKey.stream()
               .map(SymbolNotResolvable::getReference)
               .map(SymbolReference::getSourceClassName)
-              .map(className -> className.split("\\$")[0]) // Removing duplicate inner classes
+              .map(className -> className.split("\\$")[0]) // Removing inner classes
               .collect(toImmutableSet()));
     }
     return builder.build();
   }
 
-  public int getCauseToSourceClassesSize() {
-    return getCauseToSourceClasses().size();
+  /**
+   * @return the total number of classes that refer to missing or inaccessible members
+   */
+  public int getErrorCount() {
+    return getTargetToSources().size();
+  }
+  
+  /**
+   * @return the total number of missing or inaccessible targets
+   */
+  public int getTargetClassCount() {
+    return getUnresolvableTargets().size();
+  }
+  
+  /**
+   * @return the references to missing or inaccessible targets
+   */
+  public Set<LinkageErrorCause> getUnresolvableTargets() {
+    return getTargetToSources().keySet();
   }
 
+  /**
+   * @return the fully qualified names of classes that refer to a
+   *     particular unresolvable target.
+   */
+  public ImmutableCollection<String> getSourceClasses(LinkageErrorCause cause) {
+    return getTargetToSources().get(cause);
+  }
+  
   public JarLinkageReport reachableErrors() {
     Builder builder = builder();
     builder.setMissingClassErrors(
@@ -147,5 +179,26 @@ public abstract class JarLinkageReport {
             .collect(toImmutableList()));
     builder.setJarPath(getJarPath());
     return builder.build();
+  }
+
+  String getErrorString() {
+    String indent = "  ";
+    StringBuilder builder = new StringBuilder();
+    int totalErrors = getErrorCount();
+
+    builder.append(getJarPath().getFileName() + " (" + totalErrors + " errors):\n");
+    for (SymbolNotResolvable<ClassSymbolReference> missingClass : getMissingClassErrors()) {
+      builder.append(indent + missingClass.getReference().getErrorString());
+      builder.append("\n");
+    }
+    for (SymbolNotResolvable<MethodSymbolReference> missingMethod : getMissingMethodErrors()) {
+      builder.append(indent + missingMethod.getReference().getErrorString());
+      builder.append("\n");
+    }
+    for (SymbolNotResolvable<FieldSymbolReference> missingField : getMissingFieldErrors()) {
+      builder.append(indent + missingField.getReference().getErrorString());
+      builder.append("\n");
+    }
+    return builder.toString();
   }
 }

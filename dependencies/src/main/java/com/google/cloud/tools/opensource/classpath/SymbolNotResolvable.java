@@ -35,7 +35,7 @@ abstract class SymbolNotResolvable<T extends SymbolReference> {
   abstract T getReference();
 
   /**
-   * Returns the path to the class where symbol reference was expected to be found.
+   * Returns the path to the class where the target of the reference was expected to be found.
    * This is null if the target class is not found in the class path or the source
    * location is unavailable.
    */
@@ -163,17 +163,16 @@ abstract class SymbolNotResolvable<T extends SymbolReference> {
     INACCESSIBLE_CLASS,
 
     /**
-     * The member (method or field) is inaccessible to the source.
+     * The target member (method or field) is inaccessible to the source.
      *
      * <p>If the source is in a different package, the member is not public. If the source is in the
      * same package, the class is private. If the source is a subclass of the target class, the
-     * member is not protected.
+     * member is not protected or public.
      */
     INACCESSIBLE_MEMBER,
 
     /**
-     * For a method or field reference, the symbol is not found in the target class in the class
-     * path.
+     * For a method or field reference, the symbol is not found in the target class.
      */
     SYMBOL_NOT_FOUND
   }

@@ -95,10 +95,6 @@ public class DashboardMain {
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
           PlexusContainerException, ComponentLookupException, ProjectBuildingException,
           ParseException {
-    if (arguments.length != 1) {
-      System.err.println("Please specify path to pom.xml or Maven coordinates for a BOM.");
-      return;
-    }
     DashboardArguments dashboardArguments = DashboardArguments.readCommandLine(arguments);
     Path output =
         dashboardArguments.hasFile()
@@ -315,7 +311,7 @@ public class DashboardMain {
       List<DependencyPath> dependencyPaths = completeDependencies.list();
 
       int totalLinkageErrorCount =
-          staticLinkageCheckReports.stream().mapToInt(JarLinkageReport::getCauseToSourceClassesSize)
+          staticLinkageCheckReports.stream().mapToInt(JarLinkageReport::getErrorCount)
               .sum();
 
       ListMultimap<DependencyPath, DependencyPath> dependencyTree =
@@ -330,9 +326,7 @@ public class DashboardMain {
                   .equals(Artifacts.toCoordinates(dependencyPath.get(0)))));
 
       Map<String, Object> templateData = new HashMap<>();
-      templateData.put("groupId", artifact.getGroupId());
-      templateData.put("artifactId", artifact.getArtifactId());
-      templateData.put("version", artifact.getVersion());
+      templateData.put("artifact", artifact);
       templateData.put("updates", convergenceIssues);
       templateData.put("upperBoundFailures", upperBoundFailures);
       templateData.put("globalUpperBoundFailures", globalUpperBoundFailures);

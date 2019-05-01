@@ -63,18 +63,9 @@ public class DashboardTest {
       Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();
 
   private static final Correspondence<Node, String> NODE_VALUES =
-      new Correspondence<Node, String>() {
-        @Override
-        public boolean compare(Node node, String expected) {
-          String trimmedValue = trimAndCollapseWhiteSpace(node.getValue());
-          return trimmedValue.equals(expected);
-        }
-
-        @Override
-        public String toString() {
-          return "has value equal to";
-        }
-      };
+      Correspondence.from((node, expected) ->
+          trimAndCollapseWhiteSpace(node.getValue())
+          .equals(expected), "has value equal to");
 
   private static String trimAndCollapseWhiteSpace(String value) {
     return CharMatcher.whitespace().trimAndCollapseFrom(value, ' ');
@@ -102,7 +93,9 @@ public class DashboardTest {
     try {
       // Mac's APFS fails with InsecureRecursiveDeleteException without ALLOW_INSECURE.
       // Still safe as this test does not use symbolic links
-      MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
+      if (outputDirectory != null) {
+        MoreFiles.deleteRecursively(outputDirectory, RecursiveDeleteOption.ALLOW_INSECURE);
+      }
     } catch (IOException ex) {
       // no big deal
     }
@@ -199,7 +192,7 @@ public class DashboardTest {
         "//p[@class='linkage-check-dependency-paths'][position()=last()]");
     Node dependencyPathMessage = dependencyPaths.get(0);
     Assert.assertEquals(
-        "The following paths to the jar file from BOM are found in the dependency tree.",
+        "The following paths to the jar file from the BOM are found in the dependency tree:",
         trimAndCollapseWhiteSpace(dependencyPathMessage.getValue()));
     int dependencyPathListSize =
         dashboard.query("//ul[@class='linkage-check-dependency-paths']/li").size();
@@ -265,7 +258,7 @@ public class DashboardTest {
   @Test
   public void testComponent_linkageCheckResult() throws IOException, ParsingException {
     Document document = parseOutputFile(
-        "com.google.http-client_google-http-client-appengine_1.29.0.html");
+        "com.google.http-client_google-http-client-appengine_1.29.1.html");
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
     Assert.assertEquals(1, reports.size());
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
@@ -319,7 +312,7 @@ public class DashboardTest {
   public void testLinkageErrorsInProvidedDependency() throws IOException, ParsingException {
     // google-http-client-appengine has provided dependency to (problematic) appengine-api-1.0-sdk
     Document document = parseOutputFile(
-        "com.google.http-client_google-http-client-appengine_1.29.0.html");
+        "com.google.http-client_google-http-client-appengine_1.29.1.html");
     Nodes linkageCheckMessages = document.query("//ul[@class='jar-linkage-report-cause']/li");
     Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
     Truth.assertThat(linkageCheckMessages.get(0).getValue())
@@ -334,5 +327,25 @@ public class DashboardTest {
     Truth.assertThat(linkageErrorsTotal.size()).isEqualTo(1);
     Truth.assertThat(linkageErrorsTotal.get(0).getValue())
         .contains("0 linkage error(s)");
+  }
+
+  @Test
+  public void testGlobalUpperBoundUpgradeMessage() throws IOException, ParsingException {
+    // Case 1: BOM needs to be updated
+    Document document = parseOutputFile("com.google.protobuf_protobuf-java-util_3.6.1.html");
+    Nodes globalUpperBoundBomUpgradeNodes =
+        document.query("//li[@class='global-upper-bound-bom-upgrade']");
+    Truth.assertThat(globalUpperBoundBomUpgradeNodes.size()).isEqualTo(1);
+    String bomUpgradeMessage = globalUpperBoundBomUpgradeNodes.get(0).getValue();
+    Truth.assertThat(bomUpgradeMessage).contains(
+        "Upgrade com.google.protobuf:protobuf-java-util:jar:3.6.1 in the BOM to version \"3.7.1\"");
+
+    // Case 2: Dependency needs to be updated
+    Nodes globalUpperBoundDependencyUpgradeNodes =
+        document.query("//li[@class='global-upper-bound-dependency-upgrade']");
+    Truth.assertThat(globalUpperBoundDependencyUpgradeNodes.size()).isEqualTo(2);
+    String dependencyUpgradeMessage = globalUpperBoundDependencyUpgradeNodes.get(0).getValue();
+    Truth.assertThat(dependencyUpgradeMessage).contains(
+        "Upgrade com.google.guava:guava:jar:19.0 to version \"27.1-android\"");
   }
 }

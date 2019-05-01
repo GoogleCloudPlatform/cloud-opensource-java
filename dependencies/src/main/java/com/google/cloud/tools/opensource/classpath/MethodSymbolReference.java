@@ -55,4 +55,13 @@ abstract class MethodSymbolReference implements SymbolReference  {
     abstract Builder setSourceClassName(String className);
     abstract MethodSymbolReference build();
   }
+
+  @Override
+  public String getErrorString() {
+    return getTargetClassName()
+        + "."
+        + getMethodName()
+        + " is not found, referenced from "
+        + getSourceClassName();
+  }
 }

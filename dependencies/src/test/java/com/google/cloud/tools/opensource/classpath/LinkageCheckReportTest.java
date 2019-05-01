@@ -82,19 +82,19 @@ public class LinkageCheckReportTest {
   }
 
   @Test
-  public void testJarLinkageReportToString() {
-    Truth.assertThat(linkageCheckReport.toString()).startsWith("c (3 errors)");
+  public void testGetErrorString() {
+    Truth.assertThat(linkageCheckReport.getErrorString()).startsWith("c (3 errors)");
   }
   
   @Test
-  public void testToString() {
-    Truth.assertThat(linkageCheckReport.toString()).contains(jarLinkageReport.toString());
+  public void testGetErrorString_contents() {
+    Truth.assertThat(linkageCheckReport.getErrorString()).contains(jarLinkageReport.getErrorString());
   }
   
   @Test
-  public void testToStringNoErrors() {
+  public void testGetErrorString_noErrors() {
     linkageCheckReport = LinkageCheckReport.create(Collections.emptyList());
-    Assert.assertEquals("No linkage errors\n", linkageCheckReport.toString());
+    Assert.assertEquals("No linkage errors\n", linkageCheckReport.getErrorString());
   }
   
   @Test

@@ -42,17 +42,8 @@ import org.junit.Test;
 public class ClassPathBuilderTest {
 
   static final Correspondence<Path, String> PATH_FILE_NAMES =
-      new Correspondence<Path, String>() {
-        @Override
-        public boolean compare(Path actual, String expected) {
-          return actual.getFileName().toString().equals(expected);
-        }
-
-        @Override
-        public String toString() {
-          return "has file name equal to";
-        }
-      };
+      Correspondence.from((actual, expected) ->
+          actual.getFileName().toString().equals(expected), "has file name equal to");
 
   @Test
   public void testArtifactsToPaths_removingDuplicates() throws RepositoryException {
@@ -107,7 +98,7 @@ public class ClassPathBuilderTest {
 
     Truth.assertThat(paths)
         .comparingElementsUsing(PATH_FILE_NAMES)
-        .containsAllOf("grpc-auth-1.15.1.jar", "google-auth-library-credentials-0.9.0.jar");
+        .containsAtLeast("grpc-auth-1.15.1.jar", "google-auth-library-credentials-0.9.0.jar");
     paths.forEach(
         path ->
             Truth.assertWithMessage("Every returned path should be an absolute path")
