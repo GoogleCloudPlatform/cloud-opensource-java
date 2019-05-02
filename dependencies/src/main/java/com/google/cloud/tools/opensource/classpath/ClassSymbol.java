@@ -30,6 +30,7 @@ abstract class ClassSymbol extends Symbol {
   @AutoValue.Builder
   abstract static class Builder {
     abstract Builder setClassName(String className);
+
     abstract ClassSymbol build();
   }
 }

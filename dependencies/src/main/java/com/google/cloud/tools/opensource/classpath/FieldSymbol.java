@@ -1,17 +1,15 @@
 /*
  * Copyright 2018 Google LLC.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 
 package com.google.cloud.tools.opensource.classpath;
@@ -29,14 +27,14 @@ abstract class FieldSymbol extends Symbol {
   abstract String getName();
 
   /**
-   * Returns the descriptor of the field. A descriptor holds type information for its type.
-   * Example: {@code Ljava/lang/Object;}.
+   * Returns the descriptor of the field. A descriptor holds type information for its type. Example:
+   * {@code Ljava/lang/Object;}.
    *
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3.2">Java
-   *     Virtual Machine Specification: Field Descriptors</a>
+   *      Virtual Machine Specification: Field Descriptors</a>
    */
   abstract String getDescriptor();
-  
+
   static Builder builder() {
     return new AutoValue_FieldSymbol.Builder();
   }
@@ -44,8 +42,11 @@ abstract class FieldSymbol extends Symbol {
   @AutoValue.Builder
   abstract static class Builder {
     abstract Builder setClassName(String className);
+
     abstract Builder setName(String name);
+
     abstract Builder setDescriptor(String descriptor);
+
     abstract FieldSymbol build();
   }
 }

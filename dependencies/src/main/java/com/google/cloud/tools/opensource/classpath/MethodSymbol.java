@@ -36,10 +36,10 @@ abstract class MethodSymbol extends Symbol {
    * class is the parameter and {@code MethodDescriptor$Marshaller} class is the return type.
    *
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3.3">Java
-   *     Virtual Machine Specification: Method Descriptors</a>
+   *      Virtual Machine Specification: Method Descriptors</a>
    */
   abstract String getDescriptor();
-  
+
   static Builder builder() {
     return new AutoValue_MethodSymbol.Builder();
   }
@@ -47,8 +47,11 @@ abstract class MethodSymbol extends Symbol {
   @AutoValue.Builder
   abstract static class Builder {
     abstract Builder setClassName(String className);
+
     abstract Builder setName(String name);
+
     abstract Builder setDescriptor(String descriptor);
+
     abstract MethodSymbol build();
   }
 }

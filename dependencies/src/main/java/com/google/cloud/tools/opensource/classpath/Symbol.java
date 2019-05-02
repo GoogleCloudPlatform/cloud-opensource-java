@@ -21,7 +21,7 @@ import com.google.auto.value.AutoValue;
 /**
  * A symbol for a class, method, or field name.
  */
-abstract class Symbol {  
+abstract class Symbol {
   /**
    * Returns the fully-qualified class name (binary name) that contains the symbol. If this is a
    * class symbol, the class name itself.
