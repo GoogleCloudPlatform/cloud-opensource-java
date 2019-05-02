@@ -16,11 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.auto.value.AutoValue;
-
-/**
- * A symbol for a class, method, or field name.
- */
+/** A symbol for a class, method, or field name. */
 abstract class Symbol {
   /**
    * Returns the fully-qualified class name (binary name) that contains the symbol. If this is a

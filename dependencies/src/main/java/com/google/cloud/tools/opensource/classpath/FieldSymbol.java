@@ -14,39 +14,57 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.auto.value.AutoValue;
+import java.util.Objects;
 
-/**
- * A symbol for a field of a class.
- */
-@AutoValue
-abstract class FieldSymbol extends Symbol {
-  /**
-   * Returns the name of the field.
-   */
-  abstract String getName();
+/** A symbol for a field of a class. */
+class FieldSymbol extends Symbol {
+  private final String className;
+  private final String name;
+  private final String descriptor;
+
+  FieldSymbol(String className, String name, String descriptor) {
+    this.className = className;
+    this.name = name;
+    this.descriptor = descriptor;
+  }
+
+  @Override
+  String getClassName() {
+    return className;
+  }
+
+  /** Returns the name of the field. */
+  String getName() {
+    return name;
+  }
 
   /**
    * Returns the descriptor of the field. A descriptor holds type information for its type. Example:
    * {@code Ljava/lang/Object;}.
    *
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3.2">Java
-   *      Virtual Machine Specification: Field Descriptors</a>
+   *     Virtual Machine Specification: Field Descriptors</a>
    */
-  abstract String getDescriptor();
-
-  static Builder builder() {
-    return new AutoValue_FieldSymbol.Builder();
+  String getDescriptor() {
+    return descriptor;
   }
 
-  @AutoValue.Builder
-  abstract static class Builder {
-    abstract Builder setClassName(String className);
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    FieldSymbol that = (FieldSymbol) o;
+    return Objects.equals(className, that.className)
+        && Objects.equals(name, that.name)
+        && Objects.equals(descriptor, that.descriptor);
+  }
 
-    abstract Builder setName(String name);
-
-    abstract Builder setDescriptor(String descriptor);
-
-    abstract FieldSymbol build();
+  @Override
+  public int hashCode() {
+    return Objects.hash(className, name, descriptor);
   }
 }

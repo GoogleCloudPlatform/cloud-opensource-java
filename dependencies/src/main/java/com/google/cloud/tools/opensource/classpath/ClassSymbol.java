@@ -16,21 +16,35 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.auto.value.AutoValue;
+import java.util.Objects;
 
-/**
- * A symbol for a class.
- */
-@AutoValue
-abstract class ClassSymbol extends Symbol {
-  static Builder builder() {
-    return new AutoValue_ClassSymbol.Builder();
+/** A symbol for a class. */
+class ClassSymbol extends Symbol {
+  private String className;
+
+  ClassSymbol(String className) {
+    this.className = className;
   }
 
-  @AutoValue.Builder
-  abstract static class Builder {
-    abstract Builder setClassName(String className);
+  @Override
+  String getClassName() {
+    return className;
+  }
 
-    abstract ClassSymbol build();
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ClassSymbol that = (ClassSymbol) o;
+    return Objects.equals(className, that.className);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(className);
   }
 }

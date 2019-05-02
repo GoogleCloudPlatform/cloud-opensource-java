@@ -16,18 +16,29 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.auto.value.AutoValue;
-import com.google.cloud.tools.opensource.classpath.FieldSymbolReference.Builder;
+import java.util.Objects;
 
-/**
- * A symbol for a method of class.
- */
-@AutoValue
-abstract class MethodSymbol extends Symbol {
-  /**
-   * Returns the name of the method.
-   */
-  abstract String getName();
+/** A symbol for a method of class. */
+class MethodSymbol extends Symbol {
+  private final String className;
+  private final String name;
+  private final String descriptor;
+
+  public MethodSymbol(String className, String name, String descriptor) {
+    this.className = className;
+    this.name = name;
+    this.descriptor = descriptor;
+  }
+
+  @Override
+  String getClassName() {
+    return className;
+  }
+
+  /** Returns the name of the method. */
+  String getName() {
+    return name;
+  }
 
   /**
    * Returns the descriptor of the method. A descriptor holds type information for its parameters
@@ -36,22 +47,28 @@ abstract class MethodSymbol extends Symbol {
    * class is the parameter and {@code MethodDescriptor$Marshaller} class is the return type.
    *
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3.3">Java
-   *      Virtual Machine Specification: Method Descriptors</a>
+   *     Virtual Machine Specification: Method Descriptors</a>
    */
-  abstract String getDescriptor();
-
-  static Builder builder() {
-    return new AutoValue_MethodSymbol.Builder();
+  String getDescriptor() {
+    return descriptor;
   }
 
-  @AutoValue.Builder
-  abstract static class Builder {
-    abstract Builder setClassName(String className);
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    MethodSymbol that = (MethodSymbol) o;
+    return Objects.equals(className, that.className)
+        && Objects.equals(name, that.name)
+        && Objects.equals(descriptor, that.descriptor);
+  }
 
-    abstract Builder setName(String name);
-
-    abstract Builder setDescriptor(String descriptor);
-
-    abstract MethodSymbol build();
+  @Override
+  public int hashCode() {
+    return Objects.hash(className, name, descriptor);
   }
 }
