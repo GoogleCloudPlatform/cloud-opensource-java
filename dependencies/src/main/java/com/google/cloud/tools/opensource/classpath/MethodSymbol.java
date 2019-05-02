@@ -24,7 +24,7 @@ class MethodSymbol extends Symbol {
   private final String name;
   private final String descriptor;
 
-  public MethodSymbol(String className, String name, String descriptor) {
+  MethodSymbol(String className, String name, String descriptor) {
     this.className = className;
     this.name = name;
     this.descriptor = descriptor;
