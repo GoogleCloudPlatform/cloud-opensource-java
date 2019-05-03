@@ -64,16 +64,16 @@ final class SymbolProblem {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
+  public boolean equals(Object other) {
+    if (this == other) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (other == null || getClass() != other.getClass()) {
       return false;
     }
-    SymbolProblem that = (SymbolProblem) o;
+    SymbolProblem that = (SymbolProblem) other;
     return reason == that.reason
-        && Objects.equals(symbol, that.symbol)
+        && symbol.equals(that.symbol)
         && Objects.equals(targetClass, that.targetClass);
   }
 
