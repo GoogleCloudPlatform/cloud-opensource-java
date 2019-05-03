@@ -33,9 +33,9 @@ final class SymbolProblem {
 
   private final Reason reason;
   private final Symbol symbol;
-  private final ClassInJar targetClass;
+  private final ClassAndJar targetClass;
 
-  SymbolProblem(Symbol symbol, Reason reason, @Nullable ClassInJar targetClass) {
+  SymbolProblem(Symbol symbol, Reason reason, @Nullable ClassAndJar targetClass) {
     this.symbol = checkNotNull(symbol);
     this.reason = checkNotNull(reason);
     this.targetClass = targetClass;
@@ -59,7 +59,7 @@ final class SymbolProblem {
    * method returns the outer class.
    */
   @Nullable
-  ClassInJar getTargetClass() {
+  ClassAndJar getTargetClass() {
     return targetClass;
   }
 

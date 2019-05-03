@@ -21,12 +21,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.nio.file.Path;
 import java.util.Objects;
 
-/** A class in a jar file to uniquely locate the class implementation in a class path. */
-final class ClassInJar {
+/**
+ * A tuple of a class name and a jar file to uniquely locate the class implementation in a class
+ * path.
+ */
+final class ClassAndJar {
   private final Path jar;
   private final String className;
 
-  ClassInJar(Path jar, String className) {
+  ClassAndJar(Path jar, String className) {
     this.jar = checkNotNull(jar);
     this.className = checkNotNull(className);
   }
@@ -36,7 +39,7 @@ final class ClassInJar {
     return jar;
   }
 
-  /** Returns class name. */
+  /** Returns class name (binary name as in {@link Symbol#getClassName()}) */
   String getClassName() {
     return className;
   }
@@ -49,7 +52,7 @@ final class ClassInJar {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ClassInJar that = (ClassInJar) o;
+    ClassAndJar that = (ClassAndJar) o;
     return Objects.equals(jar, that.jar) && Objects.equals(className, that.className);
   }
 

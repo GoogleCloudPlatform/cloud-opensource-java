@@ -22,19 +22,13 @@ import java.util.Objects;
 
 /** Symbol for a method of class. */
 final class MethodSymbol extends Symbol {
-  private final String className;
   private final String name;
   private final String descriptor;
 
   MethodSymbol(String className, String name, String descriptor) {
-    this.className = checkNotNull(className);
+    super(className);
     this.name = checkNotNull(name);
-    this.descriptor = checkNotNull(descriptor); 
-  }
-
-  @Override
-  String getClassName() {
-    return className;
+    this.descriptor = checkNotNull(descriptor);
   }
 
   /** Returns the name of the method. */
@@ -63,14 +57,15 @@ final class MethodSymbol extends Symbol {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
+    if (!super.equals(o)) {
+      return false;
+    }
     MethodSymbol that = (MethodSymbol) o;
-    return Objects.equals(className, that.className)
-        && Objects.equals(name, that.name)
-        && Objects.equals(descriptor, that.descriptor);
+    return name.equals(that.name) && descriptor.equals(that.descriptor);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(className, name, descriptor);
+    return Objects.hash(super.hashCode(), name, descriptor);
   }
 }

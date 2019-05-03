@@ -20,19 +20,13 @@ import java.util.Objects;
 
 /** Symbol for a field of a class. */
 final class FieldSymbol extends Symbol {
-  private final String className;
   private final String name;
   private final String descriptor;
 
   FieldSymbol(String className, String name, String descriptor) {
-    this.className = checkNotNull(className);
+    super(className);
     this.name = checkNotNull(name);
     this.descriptor = checkNotNull(descriptor);
-  }
-
-  @Override
-  String getClassName() {
-    return className;
   }
 
   /** Returns the name of the field. */
@@ -59,14 +53,15 @@ final class FieldSymbol extends Symbol {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
+    if (!super.equals(o)) {
+      return false;
+    }
     FieldSymbol that = (FieldSymbol) o;
-    return Objects.equals(className, that.className)
-        && Objects.equals(name, that.name)
-        && Objects.equals(descriptor, that.descriptor);
+    return name.equals(that.name) && descriptor.equals(that.descriptor);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(className, name, descriptor);
+    return Objects.hash(super.hashCode(), name, descriptor);
   }
 }

@@ -16,37 +16,9 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.Objects;
-
 /** Symbol for a class. */
 final class ClassSymbol extends Symbol {
-  private final String className;
-
   ClassSymbol(String className) {
-    this.className = checkNotNull(className);
-  }
-
-  @Override
-  String getClassName() {
-    return className;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    ClassSymbol that = (ClassSymbol) o;
-    return Objects.equals(className, that.className);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(className);
+    super(className);
   }
 }
