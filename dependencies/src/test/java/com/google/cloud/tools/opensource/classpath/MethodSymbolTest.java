@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Google LLC.
+ * Copyright 2019 Google LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,21 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.testing.EqualsTester;
 import org.junit.Test;
 
-public class SymbolTest {
-
-  @Test
-  public void testClassSymbolCreation() {
-    ClassSymbol classSymbol = new ClassSymbol("java.lang.Object");
-    assertEquals(classSymbol.getClassName(), "java.lang.Object");
-  }
-
-  @Test
-  public void testClassSymbolEquality() {
-    new EqualsTester()
-        .addEqualityGroup(new ClassSymbol("java.lang.Object"), new ClassSymbol("java.lang.Object"))
-        .addEqualityGroup(new ClassSymbol("java.lang.Long"))
-        .testEquals();
-  }
+public class MethodSymbolTest {
 
   @Test
   public void testMethodSymbolCreation() {
@@ -60,26 +46,6 @@ public class SymbolTest {
         .addEqualityGroup(new MethodSymbol("java.lang.Object", "hashCode", "foo"))
         .addEqualityGroup(new MethodSymbol("Object", "equals", "foo"))
         .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "bar"))
-        .testEquals();
-  }
-
-  @Test
-  public void testFieldSymbolCreation() {
-    FieldSymbol fieldSymbol = new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I");
-    assertEquals("java.lang.Integer", fieldSymbol.getClassName());
-    assertEquals("MAX_VALUE", fieldSymbol.getName());
-    assertEquals("I", fieldSymbol.getDescriptor());
-  }
-
-  @Test
-  public void testFieldSymbolEquality() {
-    new EqualsTester()
-        .addEqualityGroup(
-            new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"),
-            new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"))
-        .addEqualityGroup(new FieldSymbol("java.lang.Float", "MAX_VALUE", "I"))
-        .addEqualityGroup(new FieldSymbol("java.lang.Integer", "MIN_VALUE", "I"))
-        .addEqualityGroup(new FieldSymbol("java.lang.Integer", "MAX_VALUE", "F"))
         .testEquals();
   }
 }
