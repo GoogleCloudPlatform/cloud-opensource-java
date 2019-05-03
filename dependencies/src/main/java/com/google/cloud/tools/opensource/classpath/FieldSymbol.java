@@ -16,7 +16,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import java.util.Objects;
 
-/** A symbol for a field of a class. */
+/** Symbol for a field of a class. */
 class FieldSymbol extends Symbol {
   private final String className;
   private final String name;

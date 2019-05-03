@@ -18,7 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import java.util.Objects;
 
-/** A symbol for a class. */
+/** Symbol for a class. */
 class ClassSymbol extends Symbol {
   private String className;
 

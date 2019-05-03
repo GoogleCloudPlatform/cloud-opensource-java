@@ -20,7 +20,15 @@ import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
+/**
+ * Linkage error caused by a symbol reference that cannot be resolved. This class does not carry the
+ * source class of the reference.
+ *
+ * @see <a href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#linkage-error">
+ * Java Dependency Glossary: Linkage Error</a>
+ */
 class SymbolProblem {
+
   private final Reason reason;
   private final Symbol symbol;
   private final ClassInJar targetClass;
@@ -31,21 +39,23 @@ class SymbolProblem {
     this.targetClass = targetClass;
   }
 
+  /** Returns the reason why the symbol was not resolved. */
   Reason getReason() {
     return reason;
   }
 
+  /** Returns the target symbol that was not resolved. */
   Symbol getSymbol() {
     return symbol;
   }
 
   /**
    * Returns an {@code Optional} describing the class that have a linkage conflict. An empty {@code
-   * Optional} when the target class itself is not found in the class path (this is the case if
-   * reason is CLASS_NOT_FOUND).
+   * Optional} when the target class is not found in the class path (this is the case if reason is
+   * CLASS_NOT_FOUND).
    *
-   * <p>In case of an inner class is missing in its outer class, this method returns the outer
-   * class.
+   * <p>In case of an inner class is missing while its outer class is found, this method returns the
+   * outer class.
    */
   Optional<ClassInJar> getTargetClass() {
     if (targetClass == null) {
