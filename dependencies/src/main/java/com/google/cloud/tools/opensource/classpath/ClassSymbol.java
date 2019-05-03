@@ -20,7 +20,7 @@ import java.util.Objects;
 
 /** Symbol for a class. */
 class ClassSymbol extends Symbol {
-  private String className;
+  private final String className;
 
   ClassSymbol(String className) {
     this.className = className;

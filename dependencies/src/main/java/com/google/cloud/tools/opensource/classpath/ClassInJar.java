@@ -20,8 +20,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * A class in a jar file. This class distinguishes class file with the same name in different jar
- * files.
+ * A class in a jar file to uniquely locate the class implementation in a class path.
  */
 class ClassInJar {
   private final Path jar;
