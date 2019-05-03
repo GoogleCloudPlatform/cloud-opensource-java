@@ -14,7 +14,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Objects;
 
 /** Symbol for a field of a class. */
@@ -24,9 +25,9 @@ final class FieldSymbol extends Symbol {
   private final String descriptor;
 
   FieldSymbol(String className, String name, String descriptor) {
-    this.className = Preconditions.checkNotNull(className);
-    this.name = Preconditions.checkNotNull(name);
-    this.descriptor = Preconditions.checkNotNull(descriptor);
+    this.className = checkNotNull(className);
+    this.name = checkNotNull(name);
+    this.descriptor = checkNotNull(descriptor);
   }
 
   @Override
