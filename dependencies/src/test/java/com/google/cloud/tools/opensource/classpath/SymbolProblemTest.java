@@ -17,9 +17,11 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
-import com.google.cloud.tools.opensource.classpath.SymbolProblem.Reason;
 import com.google.common.testing.EqualsTester;
+import com.google.common.testing.NullPointerTester;
+import com.google.common.testing.NullPointerTester.Visibility;
 import java.nio.file.Paths;
 import org.junit.Test;
 
@@ -32,11 +34,15 @@ public class SymbolProblemTest {
             new ClassSymbol("java.lang.Integer"),
             Reason.CLASS_NOT_FOUND,
             new ClassInJar(Paths.get("foo", "bar.jar"), "java.lang.Object"));
-    assertEquals(Reason.CLASS_NOT_FOUND, symbolProblem.getReason());
+    assertSame(Reason.CLASS_NOT_FOUND, symbolProblem.getReason());
     assertEquals(new ClassSymbol("java.lang.Integer"), symbolProblem.getSymbol());
     assertEquals(
         new ClassInJar(Paths.get("foo", "bar.jar"), "java.lang.Object"),
-        symbolProblem.getTargetClass().get());
+        symbolProblem.getTargetClass());
+
+    new NullPointerTester()
+        .setDefault(Symbol.class, new ClassSymbol("java.lang.Integer"))
+        .testConstructors(SymbolProblem.class, Visibility.PACKAGE);
   }
 
   @Test
@@ -67,10 +73,7 @@ public class SymbolProblemTest {
                 Reason.CLASS_NOT_FOUND,
                 new ClassInJar(Paths.get("foo", "bar.jar"), "java.lang.Long")))
         .addEqualityGroup(
-            new SymbolProblem(
-                new ClassSymbol("java.lang.Integer"),
-                Reason.CLASS_NOT_FOUND,
-                null))
+            new SymbolProblem(new ClassSymbol("java.lang.Integer"), Reason.CLASS_NOT_FOUND, null))
         .testEquals();
   }
 }

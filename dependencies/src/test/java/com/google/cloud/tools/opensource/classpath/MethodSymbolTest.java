@@ -19,6 +19,8 @@ package com.google.cloud.tools.opensource.classpath;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.testing.EqualsTester;
+import com.google.common.testing.NullPointerTester;
+import com.google.common.testing.NullPointerTester.Visibility;
 import org.junit.Test;
 
 public class MethodSymbolTest {
@@ -35,6 +37,8 @@ public class MethodSymbolTest {
     assertEquals(
         "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
         methodSymbol.getDescriptor());
+
+    new NullPointerTester().testConstructors(MethodSymbol.class, Visibility.PACKAGE);
   }
 
   @Test

@@ -14,15 +14,19 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.common.base.Preconditions;
 import java.util.Objects;
 
 /** Symbol for a field of a class. */
-class FieldSymbol extends Symbol {
+final class FieldSymbol extends Symbol {
   private final String className;
   private final String name;
   private final String descriptor;
 
   FieldSymbol(String className, String name, String descriptor) {
+    Preconditions.checkNotNull(className);
+    Preconditions.checkNotNull(name);
+    Preconditions.checkNotNull(descriptor);
     this.className = className;
     this.name = name;
     this.descriptor = descriptor;

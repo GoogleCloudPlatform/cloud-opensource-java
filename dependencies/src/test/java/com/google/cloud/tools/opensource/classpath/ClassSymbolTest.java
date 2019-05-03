@@ -19,6 +19,8 @@ package com.google.cloud.tools.opensource.classpath;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.testing.EqualsTester;
+import com.google.common.testing.NullPointerTester;
+import com.google.common.testing.NullPointerTester.Visibility;
 import org.junit.Test;
 
 public class ClassSymbolTest {
@@ -27,6 +29,8 @@ public class ClassSymbolTest {
   public void testClassSymbolCreation() {
     ClassSymbol classSymbol = new ClassSymbol("java.lang.Object");
     assertEquals("java.lang.Object", classSymbol.getClassName());
+
+    new NullPointerTester().testConstructors(ClassSymbol.class, Visibility.PACKAGE);
   }
 
   @Test
@@ -36,5 +40,4 @@ public class ClassSymbolTest {
         .addEqualityGroup(new ClassSymbol("java.lang.Long"))
         .testEquals();
   }
-
 }

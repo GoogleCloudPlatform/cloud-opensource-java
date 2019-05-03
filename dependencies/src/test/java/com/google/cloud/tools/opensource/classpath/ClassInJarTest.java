@@ -19,6 +19,8 @@ package com.google.cloud.tools.opensource.classpath;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.testing.EqualsTester;
+import com.google.common.testing.NullPointerTester;
+import com.google.common.testing.NullPointerTester.Visibility;
 import java.nio.file.Paths;
 import org.junit.Test;
 
@@ -28,6 +30,8 @@ public class ClassInJarTest {
     ClassInJar classInJar = new ClassInJar(Paths.get("foo", "bar.jar"), "com.test.Foo");
     assertEquals("com.test.Foo", classInJar.getClassName());
     assertEquals(Paths.get("foo", "bar.jar"), classInJar.getJar());
+
+    new NullPointerTester().testConstructors(ClassInJar.class, Visibility.PACKAGE);
   }
 
   @Test

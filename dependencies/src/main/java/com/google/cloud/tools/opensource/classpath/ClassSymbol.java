@@ -16,13 +16,16 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Objects;
 
 /** Symbol for a class. */
-class ClassSymbol extends Symbol {
+final class ClassSymbol extends Symbol {
   private final String className;
 
   ClassSymbol(String className) {
+    checkNotNull(className);
     this.className = className;
   }
 

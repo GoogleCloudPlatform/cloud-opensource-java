@@ -16,15 +16,20 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Objects;
 
 /** Symbol for a method of class. */
-class MethodSymbol extends Symbol {
+final class MethodSymbol extends Symbol {
   private final String className;
   private final String name;
   private final String descriptor;
 
   MethodSymbol(String className, String name, String descriptor) {
+    checkNotNull(className);
+    checkNotNull(name);
+    checkNotNull(descriptor);
     this.className = className;
     this.name = name;
     this.descriptor = descriptor;

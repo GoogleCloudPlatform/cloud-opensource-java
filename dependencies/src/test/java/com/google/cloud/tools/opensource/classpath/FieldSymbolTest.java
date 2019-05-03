@@ -19,6 +19,8 @@ package com.google.cloud.tools.opensource.classpath;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.testing.EqualsTester;
+import com.google.common.testing.NullPointerTester;
+import com.google.common.testing.NullPointerTester.Visibility;
 import org.junit.Test;
 
 public class FieldSymbolTest {
@@ -29,6 +31,8 @@ public class FieldSymbolTest {
     assertEquals("java.lang.Integer", fieldSymbol.getClassName());
     assertEquals("MAX_VALUE", fieldSymbol.getName());
     assertEquals("I", fieldSymbol.getDescriptor());
+
+    new NullPointerTester().testConstructors(FieldSymbol.class, Visibility.PACKAGE);
   }
 
   @Test
