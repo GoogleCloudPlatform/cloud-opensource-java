@@ -21,8 +21,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Objects;
 
 /**
- * The referent of the symbolic references (class, method, or field references) in the run-time
- * constant pool of JVM.
+ * The referent of symbolic references (class, method, or field references) in the run-time constant
+ * pool of JVM.
  *
  * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.1">Java
  *     Virtual Machine Specification: The Run-Time Constant Pool</a>
