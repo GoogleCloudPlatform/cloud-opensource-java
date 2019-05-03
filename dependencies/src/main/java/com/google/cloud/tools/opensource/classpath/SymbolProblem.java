@@ -52,8 +52,8 @@ final class SymbolProblem {
   }
 
   /**
-   * Returns the referenced class of the linkage conflict. Null when he target class is not found in
-   * the class path (this is the case if reason is {@code CLASS_NOT_FOUND}).
+   * Returns the referenced class of the linkage conflict. Null when the target class is not found
+   * in the class path (this is the case if the reason is {@code CLASS_NOT_FOUND}).
    *
    * <p>In case of an inner class is missing while its outer class is found in the class path, this
    * method returns the outer class.
