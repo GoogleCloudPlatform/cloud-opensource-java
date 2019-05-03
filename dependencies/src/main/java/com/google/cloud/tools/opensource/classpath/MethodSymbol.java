@@ -27,12 +27,9 @@ final class MethodSymbol extends Symbol {
   private final String descriptor;
 
   MethodSymbol(String className, String name, String descriptor) {
-    checkNotNull(className);
-    checkNotNull(name);
-    checkNotNull(descriptor);
-    this.className = className;
-    this.name = name;
-    this.descriptor = descriptor;
+    this.className = checkNotNull(className);
+    this.name = checkNotNull(name);
+    this.descriptor = checkNotNull(descriptor);
   }
 
   @Override

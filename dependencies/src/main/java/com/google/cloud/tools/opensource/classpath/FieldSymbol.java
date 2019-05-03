@@ -24,12 +24,9 @@ final class FieldSymbol extends Symbol {
   private final String descriptor;
 
   FieldSymbol(String className, String name, String descriptor) {
-    Preconditions.checkNotNull(className);
-    Preconditions.checkNotNull(name);
-    Preconditions.checkNotNull(descriptor);
-    this.className = className;
-    this.name = name;
-    this.descriptor = descriptor;
+    this.className = Preconditions.checkNotNull(className);
+    this.name = Preconditions.checkNotNull(name);
+    this.descriptor = Preconditions.checkNotNull(descriptor);
   }
 
   @Override

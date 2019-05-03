@@ -25,8 +25,7 @@ final class ClassSymbol extends Symbol {
   private final String className;
 
   ClassSymbol(String className) {
-    checkNotNull(className);
-    this.className = className;
+    this.className = checkNotNull(className);
   }
 
   @Override

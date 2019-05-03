@@ -36,10 +36,8 @@ final class SymbolProblem {
   private final ClassInJar targetClass;
 
   SymbolProblem(Symbol symbol, Reason reason, @Nullable ClassInJar targetClass) {
-    checkNotNull(symbol);
-    checkNotNull(reason);
-    this.reason = reason;
-    this.symbol = symbol;
+    this.symbol = checkNotNull(symbol);
+    this.reason = checkNotNull(reason);
     this.targetClass = targetClass;
   }
 

@@ -27,10 +27,8 @@ final class ClassInJar {
   private final String className;
 
   ClassInJar(Path jar, String className) {
-    checkNotNull(jar);
-    checkNotNull(className);
-    this.jar = jar;
-    this.className = className;
+    this.jar = checkNotNull(jar);
+    this.className = checkNotNull(className);
   }
 
   /** Returns jar file containing the class. */
