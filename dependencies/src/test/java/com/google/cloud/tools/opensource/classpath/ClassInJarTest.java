@@ -30,7 +30,10 @@ public class ClassInJarTest {
     ClassAndJar classInJar = new ClassAndJar(Paths.get("foo", "bar.jar"), "com.test.Foo");
     assertEquals("com.test.Foo", classInJar.getClassName());
     assertEquals(Paths.get("foo", "bar.jar"), classInJar.getJar());
+  }
 
+  @Test
+  public void testNull() {
     new NullPointerTester().testConstructors(ClassAndJar.class, Visibility.PACKAGE);
   }
 

@@ -39,7 +39,10 @@ public class SymbolProblemTest {
     assertEquals(
         new ClassAndJar(Paths.get("foo", "bar.jar"), "java.lang.Object"),
         symbolProblem.getTargetClass());
+  }
 
+  @Test
+  public void testNull() {
     new NullPointerTester()
         .setDefault(Symbol.class, new ClassSymbol("java.lang.Integer"))
         .testConstructors(SymbolProblem.class, Visibility.PACKAGE);

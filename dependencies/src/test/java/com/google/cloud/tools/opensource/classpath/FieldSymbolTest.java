@@ -31,7 +31,10 @@ public class FieldSymbolTest {
     assertEquals("java.lang.Integer", fieldSymbol.getClassName());
     assertEquals("MAX_VALUE", fieldSymbol.getName());
     assertEquals("I", fieldSymbol.getDescriptor());
+  }
 
+  @Test
+  public void testNull() {
     new NullPointerTester().testConstructors(FieldSymbol.class, Visibility.PACKAGE);
   }
 

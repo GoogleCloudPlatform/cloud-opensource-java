@@ -29,7 +29,10 @@ public class ClassSymbolTest {
   public void testClassSymbolCreation() {
     ClassSymbol classSymbol = new ClassSymbol("java.lang.Object");
     assertEquals("java.lang.Object", classSymbol.getClassName());
+  }
 
+  @Test
+  public void testNull() {
     new NullPointerTester().testConstructors(ClassSymbol.class, Visibility.PACKAGE);
   }
 

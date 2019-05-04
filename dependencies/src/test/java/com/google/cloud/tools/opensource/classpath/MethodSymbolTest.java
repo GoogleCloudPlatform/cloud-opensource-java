@@ -37,7 +37,10 @@ public class MethodSymbolTest {
     assertEquals(
         "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
         methodSymbol.getDescriptor());
+  }
 
+  @Test
+  public void testNull() {
     new NullPointerTester().testConstructors(MethodSymbol.class, Visibility.PACKAGE);
   }
 
