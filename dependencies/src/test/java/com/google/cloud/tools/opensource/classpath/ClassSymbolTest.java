@@ -38,6 +38,7 @@ public class ClassSymbolTest {
     new EqualsTester()
         .addEqualityGroup(new ClassSymbol("java.lang.Object"), new ClassSymbol("java.lang.Object"))
         .addEqualityGroup(new ClassSymbol("java.lang.Long"))
+        .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "foo"))
         .testEquals();
   }
 }

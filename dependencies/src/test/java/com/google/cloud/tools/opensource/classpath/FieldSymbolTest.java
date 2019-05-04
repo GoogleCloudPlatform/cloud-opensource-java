@@ -44,6 +44,7 @@ public class FieldSymbolTest {
         .addEqualityGroup(new FieldSymbol("java.lang.Float", "MAX_VALUE", "I"))
         .addEqualityGroup(new FieldSymbol("java.lang.Integer", "MIN_VALUE", "I"))
         .addEqualityGroup(new FieldSymbol("java.lang.Integer", "MAX_VALUE", "F"))
+        .addEqualityGroup(new MethodSymbol("java.lang.Integer", "MAX_VALUE", "I"))
         .testEquals();
   }
 }

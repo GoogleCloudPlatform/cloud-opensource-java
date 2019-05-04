@@ -50,6 +50,8 @@ public class MethodSymbolTest {
         .addEqualityGroup(new MethodSymbol("java.lang.Object", "hashCode", "foo"))
         .addEqualityGroup(new MethodSymbol("Object", "equals", "foo"))
         .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "bar"))
+        .addEqualityGroup(new ClassSymbol("java.lang.Object"))
+        .addEqualityGroup(new FieldSymbol("java.lang.Object", "equals", "foo"))
         .testEquals();
   }
 }

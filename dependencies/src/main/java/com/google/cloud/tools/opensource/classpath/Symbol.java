@@ -27,7 +27,7 @@ import java.util.Objects;
  * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.1">Java
  *     Virtual Machine Specification: The Run-Time Constant Pool</a>
  */
-class Symbol {
+abstract class Symbol {
   private final String className;
 
   Symbol(String className) {
