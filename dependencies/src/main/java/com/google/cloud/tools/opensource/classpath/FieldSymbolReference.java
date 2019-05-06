@@ -38,7 +38,7 @@ abstract class FieldSymbolReference implements SymbolReference {
   /**
    * Creates an instance from {@code source} and {@code symbol}.
    */
-  static FieldSymbolReference fromSymbol(ClassAndJar source, FieldSymbol symbol) {
+  static FieldSymbolReference fromSymbol(ClassFile source, FieldSymbol symbol) {
     // This method is for the refactoring (#574).
     return builder()
         .setTargetClassName(symbol.getClassName())

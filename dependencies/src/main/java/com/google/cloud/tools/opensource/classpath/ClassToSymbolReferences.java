@@ -27,36 +27,36 @@ import java.util.Objects;
  * symbols).
  */
 class ClassToSymbolReferences {
-  private final ImmutableSetMultimap<ClassAndJar, ClassSymbol> classToClassSymbols;
-  private final ImmutableSetMultimap<ClassAndJar, MethodSymbol> classToMethodSymbols;
-  private final ImmutableSetMultimap<ClassAndJar, FieldSymbol> classToFieldSymbols;
+  private final ImmutableSetMultimap<ClassFile, ClassSymbol> classToClassSymbols;
+  private final ImmutableSetMultimap<ClassFile, MethodSymbol> classToMethodSymbols;
+  private final ImmutableSetMultimap<ClassFile, FieldSymbol> classToFieldSymbols;
 
-  ImmutableSetMultimap<ClassAndJar, ClassSymbol> getClassToClassSymbols() {
+  ImmutableSetMultimap<ClassFile, ClassSymbol> getClassToClassSymbols() {
     return classToClassSymbols;
   }
 
-  ImmutableSetMultimap<ClassAndJar, MethodSymbol> getClassToMethodSymbols() {
+  ImmutableSetMultimap<ClassFile, MethodSymbol> getClassToMethodSymbols() {
     return classToMethodSymbols;
   }
 
-  ImmutableSetMultimap<ClassAndJar, FieldSymbol> getClassToFieldSymbols() {
+  ImmutableSetMultimap<ClassFile, FieldSymbol> getClassToFieldSymbols() {
     return classToFieldSymbols;
   }
 
   @VisibleForTesting
   ClassToSymbolReferences(
-      ImmutableSetMultimap<ClassAndJar, ClassSymbol> classToClassSymbols,
-      ImmutableSetMultimap<ClassAndJar, MethodSymbol> classToMethodSymbols,
-      ImmutableSetMultimap<ClassAndJar, FieldSymbol> classToFieldSymbols) {
+      ImmutableSetMultimap<ClassFile, ClassSymbol> classToClassSymbols,
+      ImmutableSetMultimap<ClassFile, MethodSymbol> classToMethodSymbols,
+      ImmutableSetMultimap<ClassFile, FieldSymbol> classToFieldSymbols) {
     this.classToClassSymbols = checkNotNull(classToClassSymbols);
     this.classToMethodSymbols = checkNotNull(classToMethodSymbols);
     this.classToFieldSymbols = checkNotNull(classToFieldSymbols);
   }
 
   static class Builder {
-    private final ImmutableSetMultimap.Builder<ClassAndJar, ClassSymbol> classToClassSymbols;
-    private final ImmutableSetMultimap.Builder<ClassAndJar, MethodSymbol> classToMethodSymbols;
-    private final ImmutableSetMultimap.Builder<ClassAndJar, FieldSymbol> classToFieldSymbols;
+    private final ImmutableSetMultimap.Builder<ClassFile, ClassSymbol> classToClassSymbols;
+    private final ImmutableSetMultimap.Builder<ClassFile, MethodSymbol> classToMethodSymbols;
+    private final ImmutableSetMultimap.Builder<ClassFile, FieldSymbol> classToFieldSymbols;
 
     Builder() {
       classToClassSymbols = ImmutableSetMultimap.builder();
@@ -64,17 +64,17 @@ class ClassToSymbolReferences {
       classToFieldSymbols = ImmutableSetMultimap.builder();
     }
 
-    Builder addClassReference(ClassAndJar source, ClassSymbol symbol) {
+    Builder addClassReference(ClassFile source, ClassSymbol symbol) {
       classToClassSymbols.put(source, symbol);
       return this;
     }
 
-    Builder addMethodReference(ClassAndJar source, MethodSymbol symbol) {
+    Builder addMethodReference(ClassFile source, MethodSymbol symbol) {
       classToMethodSymbols.put(source, symbol);
       return this;
     }
 
-    Builder addFieldReference(ClassAndJar source, FieldSymbol symbol) {
+    Builder addFieldReference(ClassFile source, FieldSymbol symbol) {
       classToFieldSymbols.put(source, symbol);
       return this;
     }

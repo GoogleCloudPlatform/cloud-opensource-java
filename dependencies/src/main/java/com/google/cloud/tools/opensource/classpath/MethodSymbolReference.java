@@ -45,7 +45,7 @@ abstract class MethodSymbolReference implements SymbolReference {
   /**
    * Creates an instance from {@code source} and {@code symbol}.
    */
-  static MethodSymbolReference fromSymbol(ClassAndJar source, MethodSymbol symbol) {
+  static MethodSymbolReference fromSymbol(ClassFile source, MethodSymbol symbol) {
     // This method is for the refactoring (#574).
     return builder()
         .setTargetClassName(symbol.getClassName())

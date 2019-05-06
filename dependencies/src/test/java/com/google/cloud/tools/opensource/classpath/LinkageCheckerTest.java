@@ -52,11 +52,11 @@ public class LinkageCheckerTest {
     //   -v com/google/common/util/concurrent/Monitor
     Truth.assertThat(classToSymbols.getClassToClassSymbols())
         .containsEntry(
-            new ClassAndJar(guavaAbsolutePath, "com.google.common.util.concurrent.Service"),
+            new ClassFile(guavaAbsolutePath, "com.google.common.util.concurrent.Service"),
             new ClassSymbol("java.util.concurrent.TimeoutException"));
     Truth.assertThat(classToSymbols.getClassToMethodSymbols())
         .containsEntry(
-            new ClassAndJar(guavaAbsolutePath, "com.google.common.util.concurrent.Monitor"),
+            new ClassFile(guavaAbsolutePath, "com.google.common.util.concurrent.Monitor"),
             new MethodSymbol(
                 "com.google.common.base.Preconditions",
                 "checkNotNull",
@@ -64,7 +64,7 @@ public class LinkageCheckerTest {
                 false));
     Truth.assertThat(classToSymbols.getClassToFieldSymbols())
         .containsEntry(
-            new ClassAndJar(guavaAbsolutePath, "com.google.common.util.concurrent.Monitor"),
+            new ClassFile(guavaAbsolutePath, "com.google.common.util.concurrent.Monitor"),
             new FieldSymbol("com.google.common.util.concurrent.Monitor$Guard", "waiterCount", "I"));
   }
 

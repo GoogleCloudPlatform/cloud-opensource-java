@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.base.MoreObjects;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -33,9 +34,9 @@ final class SymbolProblem {
 
   private final Reason reason;
   private final Symbol symbol;
-  private final ClassAndJar targetClass;
+  private final ClassFile targetClass;
 
-  SymbolProblem(Symbol symbol, Reason reason, @Nullable ClassAndJar targetClass) {
+  SymbolProblem(Symbol symbol, Reason reason, @Nullable ClassFile targetClass) {
     this.symbol = checkNotNull(symbol);
     this.reason = checkNotNull(reason);
     this.targetClass = targetClass;
@@ -53,13 +54,14 @@ final class SymbolProblem {
 
   /**
    * Returns the referenced class of the linkage conflict. Null when the target class is not found
-   * in the class path (this is the case if the reason is {@code CLASS_NOT_FOUND}).
+   * in the class path (this is the case if the reason is {@code CLASS_NOT_FOUND} for top-level
+   * classes).
    *
-   * <p>In case of an inner class is missing while its outer class is found in the class path, this
+   * <p>In case of an nested class is missing while its outer class is found in the class path, this
    * method returns the outer class.
    */
   @Nullable
-  ClassAndJar getTargetClass() {
+  ClassFile getTargetClass() {
     return targetClass;
   }
 
@@ -80,5 +82,14 @@ final class SymbolProblem {
   @Override
   public int hashCode() {
     return Objects.hash(reason, symbol, targetClass);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("reason", reason)
+        .add("symbol", symbol)
+        .add("targetClass", targetClass)
+        .toString();
   }
 }

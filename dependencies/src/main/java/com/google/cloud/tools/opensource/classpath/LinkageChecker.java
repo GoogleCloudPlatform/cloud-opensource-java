@@ -27,13 +27,10 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -96,18 +93,18 @@ public class LinkageChecker {
       ClassToSymbolReferences classToSymbols) {
     ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbolBuilder = ImmutableMap.builder();
 
-    ImmutableSet.Builder<ClassAndJar> keys = ImmutableSet.builder();
-    ImmutableSetMultimap<ClassAndJar, ClassSymbol> classSymbols =
+    ImmutableSet.Builder<ClassFile> keys = ImmutableSet.builder();
+    ImmutableSetMultimap<ClassFile, ClassSymbol> classSymbols =
         classToSymbols.getClassToClassSymbols();
     keys.addAll(classSymbols.keys());
-    ImmutableSetMultimap<ClassAndJar, MethodSymbol> methodSymbols =
+    ImmutableSetMultimap<ClassFile, MethodSymbol> methodSymbols =
         classToSymbols.getClassToMethodSymbols();
     keys.addAll(methodSymbols.keys());
-    ImmutableSetMultimap<ClassAndJar, FieldSymbol> fieldSymbols =
+    ImmutableSetMultimap<ClassFile, FieldSymbol> fieldSymbols =
         classToSymbols.getClassToFieldSymbols();
     keys.addAll(fieldSymbols.keys());
-    ImmutableMultimap<Path, ClassAndJar> pathToClassAndJar =
-        Multimaps.index(keys.build(), ClassAndJar::getJar);
+    ImmutableMultimap<Path, ClassFile> pathToClassAndJar =
+        Multimaps.index(keys.build(), ClassFile::getJar);
 
     // Iterating through inputClassPath, not pathToClassAndJar.keySet(), avoids NullPointerException
     // for jar file containing no class (for example,
@@ -115,7 +112,7 @@ public class LinkageChecker {
     for (Path jar : inputClassPath) {
       SymbolReferenceSet.Builder symbolReferenceSet = SymbolReferenceSet.builder();
 
-      for (ClassAndJar source : pathToClassAndJar.get(jar)) {
+      for (ClassFile source : pathToClassAndJar.get(jar)) {
         for (ClassSymbol symbol : classSymbols.get(source)) {
           symbolReferenceSet
               .classReferencesBuilder()

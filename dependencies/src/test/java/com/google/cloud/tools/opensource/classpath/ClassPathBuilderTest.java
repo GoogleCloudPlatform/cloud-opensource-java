@@ -179,7 +179,7 @@ public class ClassPathBuilderTest {
                 + " 4.5.4")
         .that(classToSymbolReferences.getClassToClassSymbols())
         .doesNotContainEntry(
-            new ClassAndJar(
+            new ClassFile(
                 httpClientJar, "org.apache.http.client.protocol.ResponseContentEncoding"),
             new ClassSymbol("org.apache.http.client.entity.GZIPInputStreamFactory"));
 

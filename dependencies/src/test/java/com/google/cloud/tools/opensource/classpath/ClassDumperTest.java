@@ -112,20 +112,20 @@ public class ClassDumperTest {
     Truth.assertWithMessage("Class reference should have binary names defined in JLS 13.1")
         .that(classToSymbolReferences.getClassToClassSymbols())
         .containsEntry(
-            new ClassAndJar(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
+            new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
             new ClassSymbol(
                 "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreMethodDescriptorSupplier"));
 
     Truth.assertWithMessage("Reference to superclass should have SuperClassSymbol")
         .that(classToSymbolReferences.getClassToClassSymbols())
         .containsEntry(
-            new ClassAndJar(path, "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFutureStub"),
+            new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFutureStub"),
             new SuperClassSymbol("io.grpc.stub.AbstractStub"));
 
     // Method reference
     Truth.assertThat(classToSymbolReferences.getClassToMethodSymbols())
         .containsEntry(
-            new ClassAndJar(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
+            new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
             new MethodSymbol(
                 "io.grpc.protobuf.ProtoUtils",
                 "marshaller",
@@ -135,7 +135,7 @@ public class ClassDumperTest {
     // Field reference
     Truth.assertThat(classToSymbolReferences.getClassToFieldSymbols())
         .containsEntry(
-            new ClassAndJar(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
+            new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
             new FieldSymbol(
                 "io.grpc.MethodDescriptor$MethodType",
                 "BIDI_STREAMING",
@@ -166,7 +166,7 @@ public class ClassDumperTest {
     boolean isInterfaceMethod = true;
     Truth.assertThat(classToSymbolReferences.getClassToMethodSymbols())
         .containsEntry(
-            new ClassAndJar(path, "com.google.api.resourcenames.UntypedResourceName"),
+            new ClassFile(path, "com.google.api.resourcenames.UntypedResourceName"),
             new MethodSymbol(
                 "java.util.Map",
                 "get",

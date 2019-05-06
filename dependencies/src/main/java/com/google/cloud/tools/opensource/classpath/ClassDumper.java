@@ -179,7 +179,7 @@ class ClassDumper {
   private static ClassToSymbolReferences.Builder scanSymbolReferencesInClass(
       Path jar, JavaClass javaClass) {
     ClassToSymbolReferences.Builder builder = new ClassToSymbolReferences.Builder();
-    ClassAndJar source = new ClassAndJar(jar, javaClass.getClassName());
+    ClassFile source = new ClassFile(jar, javaClass.getClassName());
 
     ConstantPool constantPool = javaClass.getConstantPool();
     Constant[] constants = constantPool.getConstantPool();
