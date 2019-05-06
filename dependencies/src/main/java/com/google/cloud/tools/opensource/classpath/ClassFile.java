@@ -35,7 +35,7 @@ final class ClassFile {
     this.className = checkNotNull(className);
   }
 
-  /** Returns jar file containing the class. */
+  /** Returns the path to the JAR file containing the class. */
   Path getJar() {
     return jar;
   }

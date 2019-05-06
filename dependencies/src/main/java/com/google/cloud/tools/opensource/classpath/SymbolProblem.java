@@ -32,19 +32,19 @@ import javax.annotation.Nullable;
  */
 final class SymbolProblem {
 
-  private final Reason reason;
+  private final ErrorType errorType;
   private final Symbol symbol;
   private final ClassFile targetClass;
 
-  SymbolProblem(Symbol symbol, Reason reason, @Nullable ClassFile targetClass) {
+  SymbolProblem(Symbol symbol, ErrorType errorType, @Nullable ClassFile targetClass) {
     this.symbol = checkNotNull(symbol);
-    this.reason = checkNotNull(reason);
+    this.errorType = checkNotNull(errorType);
     this.targetClass = targetClass;
   }
 
-  /** Returns the reason why the symbol was not resolved. */
-  Reason getReason() {
-    return reason;
+  /** Returns the errorType why the symbol was not resolved. */
+  ErrorType getErrorType() {
+    return errorType;
   }
 
   /** Returns the target symbol that was not resolved. */
@@ -54,7 +54,7 @@ final class SymbolProblem {
 
   /**
    * Returns the referenced class of the linkage conflict. Null when the target class is not found
-   * in the class path (this is the case if the reason is {@code CLASS_NOT_FOUND} for top-level
+   * in the class path (this is the case if the errorType is {@code CLASS_NOT_FOUND} for top-level
    * classes).
    *
    * <p>In case of an nested class is missing while its outer class is found in the class path, this
@@ -74,20 +74,20 @@ final class SymbolProblem {
       return false;
     }
     SymbolProblem that = (SymbolProblem) other;
-    return reason == that.reason
+    return errorType == that.errorType
         && symbol.equals(that.symbol)
         && Objects.equals(targetClass, that.targetClass);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(reason, symbol, targetClass);
+    return Objects.hash(errorType, symbol, targetClass);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("reason", reason)
+        .add("errorType", errorType)
         .add("symbol", symbol)
         .add("targetClass", targetClass)
         .toString();
