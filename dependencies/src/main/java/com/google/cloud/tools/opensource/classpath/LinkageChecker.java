@@ -73,8 +73,8 @@ public class LinkageChecker {
     ClassDumper dumper = ClassDumper.create(jarPaths);
     ClassToSymbolReferences classToSymbolReferences = dumper.scanSymbolReferencesInClassPath();
 
-    ImmutableMap<Path, SymbolReferenceSet> jarToSymbols = convert(classToSymbolReferences);
-
+    ImmutableMap<Path, SymbolReferenceSet> jarToSymbols =
+        convert(jarPaths, classToSymbolReferences);
     ClassReferenceGraph classReferenceGraph =
         ClassReferenceGraph.create(jarToSymbols.values(), ImmutableSet.copyOf(entryPoints));
 
@@ -92,7 +92,8 @@ public class LinkageChecker {
     this.classToSymbols = Preconditions.checkNotNull(classToSymbolReferences);
   }
 
-  static private ImmutableMap<Path, SymbolReferenceSet> convert(ClassToSymbolReferences classToSymbols) {
+  static private ImmutableMap<Path, SymbolReferenceSet> convert(List<Path> inputClassPath,
+      ClassToSymbolReferences classToSymbols) {
     ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbolBuilder = ImmutableMap.builder();
 
     Set<ClassAndJar> keys = Sets.newHashSet();
@@ -107,7 +108,11 @@ public class LinkageChecker {
     keys.addAll(fieldSymbols.keys());
     ImmutableMultimap<Path, ClassAndJar> pathToClassAndJar =
         Multimaps.index(keys, ClassAndJar::getJar);
-    for (Path jar : pathToClassAndJar.keySet()) {
+
+    // Iterating through inputClassPath, not pathToClassAndJar.keySet(), avoids NullPointerException
+    // for jar file containing no class (for example,
+    // com.google.http-client:google-http-client-apache:2.1.0).
+    for (Path jar : inputClassPath) {
       SymbolReferenceSet.Builder symbolReferenceSet = SymbolReferenceSet.builder();
 
       for (ClassAndJar source : pathToClassAndJar.get(jar)) {

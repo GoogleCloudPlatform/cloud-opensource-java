@@ -316,7 +316,7 @@ public class DashboardTest {
     Nodes linkageCheckMessages = document.query("//ul[@class='jar-linkage-report-cause']/li");
     Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
     Truth.assertThat(linkageCheckMessages.get(0).getValue())
-        .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");
+        .contains("com.google.appengine.api.taskqueue.TaskQueuePb");
   }
 
   @Test
