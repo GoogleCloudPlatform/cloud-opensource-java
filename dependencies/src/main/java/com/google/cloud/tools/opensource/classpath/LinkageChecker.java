@@ -96,7 +96,7 @@ public class LinkageChecker {
       ClassToSymbolReferences classToSymbols) {
     ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbolBuilder = ImmutableMap.builder();
 
-    Set<ClassAndJar> keys = Sets.newHashSet();
+    ImmutableSet.Builder<ClassAndJar> keys = ImmutableSet.builder();
     ImmutableSetMultimap<ClassAndJar, ClassSymbol> classSymbols =
         classToSymbols.getClassToClassSymbols();
     keys.addAll(classSymbols.keys());
@@ -107,7 +107,7 @@ public class LinkageChecker {
         classToSymbols.getClassToFieldSymbols();
     keys.addAll(fieldSymbols.keys());
     ImmutableMultimap<Path, ClassAndJar> pathToClassAndJar =
-        Multimaps.index(keys, ClassAndJar::getJar);
+        Multimaps.index(keys.build(), ClassAndJar::getJar);
 
     // Iterating through inputClassPath, not pathToClassAndJar.keySet(), avoids NullPointerException
     // for jar file containing no class (for example,
