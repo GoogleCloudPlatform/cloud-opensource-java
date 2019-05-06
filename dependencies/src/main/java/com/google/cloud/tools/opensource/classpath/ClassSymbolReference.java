@@ -32,6 +32,18 @@ abstract class ClassSymbolReference implements SymbolReference {
     return getTargetClassName() + " is not found, referenced from " + getSourceClassName();
   }
 
+  /**
+   * Creates an instance from {@code source} and {@code symbol}.
+   */
+  static ClassSymbolReference fromSymbol(ClassAndJar source, ClassSymbol symbol) {
+    // This method is for the refactoring (#574).
+    return builder()
+        .setTargetClassName(symbol.getClassName())
+        .setSourceClassName(source.getClassName())
+        .setSubclass(symbol instanceof SuperClassSymbol)
+        .build();
+  }
+
   static Builder builder() {
     return new AutoValue_ClassSymbolReference.Builder();
   }

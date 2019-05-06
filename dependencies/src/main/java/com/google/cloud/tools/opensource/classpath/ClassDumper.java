@@ -35,6 +35,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -146,28 +147,29 @@ class ClassDumper {
   }
 
   /**
-   * Scans class files in the jar file and returns a {@link SymbolReferenceSet} populated with
-   * symbol references.
+   * Scans the class path for symbol references from classes to class symbols, method symbols and
+   * field symbols.
    *
-   * @param jar absolute path to a jar file
+   * @return the set of symbol references found in the class path.
    */
-  SymbolReferenceSet scanSymbolReferencesInJar(Path jar) throws IOException {
-    checkArgument(jar.isAbsolute(), "The input jar file path is not an absolute path");
-    checkArgument(Files.isReadable(jar), "The input jar file path is not readable");
+  ClassToSymbolReferences scanSymbolReferencesInClassPath() throws IOException {
+    ClassToSymbolReferences.Builder builder = new ClassToSymbolReferences.Builder();
 
-    SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
-    for (JavaClass javaClass : listClassesInJar(jar)) {
-      if (!isCompatibleClassFileVersion(javaClass)) {
-        continue;
+    for (Path jar : inputClassPath) {
+      for (JavaClass javaClass : listClassesInJar(jar)) {
+        if (!isCompatibleClassFileVersion(javaClass)) {
+          continue;
+        }
+        builder.addAll(scanSymbolReferencesInClass(jar, javaClass));
       }
-      symbolTableBuilder.addAll(scanSymbolReferencesInClass(javaClass));
     }
-    return symbolTableBuilder.build();
+
+    return builder.build();
   }
 
   /**
-   * Returns true if {@code javaClass} file format is compatible with this tool. Currently
-   * Java 8 and earlier are supported.
+   * Returns true if {@code javaClass} file format is compatible with this tool. Currently Java 8
+   * and earlier are supported.
    *
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.1">Java
    *     Virtual Machine Specification: The ClassFile Structure: minor_version, major_version</a>
@@ -177,16 +179,11 @@ class ClassDumper {
     return 45 <= classFileMajorVersion && classFileMajorVersion <= 52;
   }
 
-  private static SymbolReferenceSet scanSymbolReferencesInClass(JavaClass javaClass) {
-    SymbolReferenceSet.Builder symbolTableBuilder = SymbolReferenceSet.builder();
-    ImmutableSet.Builder<ClassSymbolReference> classReferences =
-        symbolTableBuilder.classReferencesBuilder();
-    ImmutableSet.Builder<MethodSymbolReference> methodReferences =
-        symbolTableBuilder.methodReferencesBuilder();
-    ImmutableSet.Builder<FieldSymbolReference> fieldReferences =
-        symbolTableBuilder.fieldReferencesBuilder();
+  private static ClassToSymbolReferences.Builder scanSymbolReferencesInClass(
+      Path jar, JavaClass javaClass) {
+    ClassToSymbolReferences.Builder builder = new ClassToSymbolReferences.Builder();
+    ClassAndJar source = new ClassAndJar(jar, javaClass.getClassName());
 
-    String sourceClassName = javaClass.getClassName();
     ConstantPool constantPool = javaClass.getConstantPool();
     Constant[] constants = constantPool.getConstantPool();
     for (Constant constant : constants) {
@@ -197,31 +194,30 @@ class ClassDumper {
       switch (constantTag) {
         case Const.CONSTANT_Class:
           ConstantClass constantClass = (ConstantClass) constant;
-          ClassSymbolReference classSymbolReference =
-              constantToClassReference(constantClass, constantPool, javaClass);
+          ClassSymbol classSymbol = constantToClassSymbol(constantClass, constantPool, javaClass);
           // skip array class because it is provided by runtime
-          if (!classSymbolReference.getTargetClassName().startsWith("[")) {
-            classReferences.add(classSymbolReference);
+          if (classSymbol.getClassName().startsWith("[")) {
+            break;
           }
+          builder.addClassReference(source, classSymbol);
           break;
         case Const.CONSTANT_Methodref:
         case Const.CONSTANT_InterfaceMethodref:
           // Both ConstantMethodref and ConstantInterfaceMethodref are subclass of ConstantCP
           ConstantCP constantMethodref = (ConstantCP) constant;
-          methodReferences.add(
-              constantToMethodReference(constantMethodref, constantPool, sourceClassName));
+          builder.addMethodReference(
+              source, constantToMethodSymbol(constantMethodref, constantPool));
           break;
         case Const.CONSTANT_Fieldref:
           ConstantFieldref constantFieldref = (ConstantFieldref) constant;
-          fieldReferences.add(
-              constantToFieldReference(constantFieldref, constantPool, sourceClassName));
+          builder.addFieldReference(source, constantToFieldSymbol(constantFieldref, constantPool));
           break;
         default:
           break;
       }
     }
 
-    return symbolTableBuilder.build();
+    return builder;
   }
 
   private static ConstantNameAndType constantNameAndType(
@@ -240,7 +236,7 @@ class ClassDumper {
     return (ConstantNameAndType) constantAtNameAndTypeIndex;
   }
 
-  private static ClassSymbolReference constantToClassReference(
+  private static ClassSymbol constantToClassSymbol(
       ConstantClass constantClass, ConstantPool constantPool, JavaClass sourceClass) {
     int nameIndex = constantClass.getNameIndex();
     Constant classNameConstant = constantPool.getConstant(nameIndex);
@@ -253,57 +249,40 @@ class ClassDumper {
               + ". However, the content is not ConstantUtf8. It is "
               + classNameConstant);
     }
-    ConstantUtf8 classNameConstantUtf8 = (ConstantUtf8)classNameConstant;
+    ConstantUtf8 classNameConstantUtf8 = (ConstantUtf8) classNameConstant;
     // classNameConstantUtf8 has internal form of class names that uses '.' to separate identifiers
     String targetClassNameInternalForm = classNameConstantUtf8.getBytes();
     // Adjust the internal form to comply with binary names defined in JLS 13.1
     String targetClassName = targetClassNameInternalForm.replace('/', '.');
-
     String superClassName = sourceClass.getSuperclassName();
     boolean isSubclass = superClassName.equals(targetClassName);
 
-    ClassSymbolReference classReference =
-        ClassSymbolReference.builder()
-            .setSourceClassName(sourceClass.getClassName())
-            .setSubclass(isSubclass)
-            .setTargetClassName(targetClassName)
-            .build();
-    return classReference;
+    if (isSubclass) {
+      // A relationship between a superclass and subclass needs special validation for 'final'.
+      return new SuperClassSymbol(targetClassName);
+    }
+    return new ClassSymbol(targetClassName);
   }
 
-  private static MethodSymbolReference constantToMethodReference(
-      ConstantCP constantMethodref, ConstantPool constantPool, String sourceClassName) {
+  private static MethodSymbol constantToMethodSymbol(
+      ConstantCP constantMethodref, ConstantPool constantPool) {
     String classNameInMethodReference = constantMethodref.getClass(constantPool);
     ConstantNameAndType constantNameAndType = constantNameAndType(constantMethodref, constantPool);
     String methodName = constantNameAndType.getName(constantPool);
     String descriptor = constantNameAndType.getSignature(constantPool);
     // constantMethodref is either ConstantMethodref or ConstantInterfaceMethodref
     boolean isInterfaceMethod = constantMethodref instanceof ConstantInterfaceMethodref;
-    MethodSymbolReference methodReference =
-        MethodSymbolReference.builder()
-            .setSourceClassName(sourceClassName)
-            .setMethodName(methodName)
-            .setInterfaceMethod(isInterfaceMethod)
-            .setTargetClassName(classNameInMethodReference)
-            .setDescriptor(descriptor)
-            .build();
-    return methodReference;
+    return new MethodSymbol(classNameInMethodReference, methodName, descriptor, isInterfaceMethod);
   }
 
-  private static FieldSymbolReference constantToFieldReference(
-      ConstantFieldref constantFieldref, ConstantPool constantPool, String sourceClassName) {
+  private static FieldSymbol constantToFieldSymbol(
+      ConstantFieldref constantFieldref, ConstantPool constantPool) {
     // Either a class type or an interface type
     String classNameInFieldReference = constantFieldref.getClass(constantPool);
     ConstantNameAndType constantNameAndType = constantNameAndType(constantFieldref, constantPool);
     String fieldName = constantNameAndType.getName(constantPool);
-
-    FieldSymbolReference fieldSymbolReference =
-        FieldSymbolReference.builder()
-            .setSourceClassName(sourceClassName)
-            .setFieldName(fieldName)
-            .setTargetClassName(classNameInFieldReference)
-            .build();
-    return fieldSymbolReference;
+    String descriptor = constantNameAndType.getSignature(constantPool);
+    return new FieldSymbol(classNameInFieldReference, fieldName, descriptor);
   }
 
   static ImmutableSet<String> listInnerClassNames(JavaClass javaClass) {
@@ -374,9 +353,7 @@ class ClassDumper {
     com.google.common.reflect.ClassPath classPath =
         com.google.common.reflect.ClassPath.from(classLoaderFromJar);
 
-    return classPath.getAllClasses().stream()
-        .map(ClassInfo::getName)
-        .collect(toImmutableSet());
+    return classPath.getAllClasses().stream().map(ClassInfo::getName).collect(toImmutableSet());
   }
 
   /**
@@ -480,9 +457,8 @@ class ClassDumper {
       byte constantTag = constant.getTag();
       if (constantTag == Const.CONSTANT_Class) {
         ConstantClass constantClass = (ConstantClass) constant;
-        ClassSymbolReference classSymbolReference =
-            constantToClassReference(constantClass, sourceConstantPool, sourceJavaClass);
-        if (targetClassName.equals(classSymbolReference.getTargetClassName())) {
+        ClassSymbol classSymbol = constantToClassSymbol(constantClass, sourceConstantPool, sourceJavaClass);
+        if (targetClassName.equals(classSymbol.getClassName())) {
           constantPoolIndicesForTarget.add(poolIndex);
         }
       }
@@ -559,7 +535,7 @@ class ClassDumper {
     try {
       JavaClass sourceJavaClass = loadJavaClass(sourceClassName);
 
-      for (String interfaceName: sourceJavaClass.getInterfaceNames()) {
+      for (String interfaceName : sourceJavaClass.getInterfaceNames()) {
         if (interfaceName.equals(targetClassName)) {
           // The target class is used in interfaces
           return false;

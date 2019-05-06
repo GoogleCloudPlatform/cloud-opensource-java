@@ -23,11 +23,17 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,7 +52,18 @@ public class LinkageChecker {
 
   private final ClassDumper classDumper;
   private final ImmutableMap<Path, SymbolReferenceSet> jarToSymbols;
+  private final ClassToSymbolReferences classToSymbols;
   private final ClassReferenceGraph classReferenceGraph;
+
+  @VisibleForTesting
+  ClassToSymbolReferences getClassToSymbols() {
+    return classToSymbols;
+  }
+
+  @VisibleForTesting
+  ImmutableMap<Path, SymbolReferenceSet> getJarToSymbols() {
+    return jarToSymbols;
+  }
 
   public static LinkageChecker create(List<Path> jarPaths, Iterable<Path> entryPoints)
       throws IOException {
@@ -54,26 +71,66 @@ public class LinkageChecker {
         !jarPaths.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
     ClassDumper dumper = ClassDumper.create(jarPaths);
+    ClassToSymbolReferences classToSymbolReferences = dumper.scanSymbolReferencesInClassPath();
 
-    ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbolBuilder = ImmutableMap.builder();
-    for (Path jarPath : jarPaths) {
-      jarToSymbolBuilder.put(jarPath, dumper.scanSymbolReferencesInJar(jarPath));
-    }
-    ImmutableMap<Path, SymbolReferenceSet> jarToSymbols = jarToSymbolBuilder.build();
+    ImmutableMap<Path, SymbolReferenceSet> jarToSymbols = convert(classToSymbolReferences);
 
     ClassReferenceGraph classReferenceGraph =
         ClassReferenceGraph.create(jarToSymbols.values(), ImmutableSet.copyOf(entryPoints));
 
-    return new LinkageChecker(dumper, jarToSymbols, classReferenceGraph);
+    return new LinkageChecker(dumper, jarToSymbols, classToSymbolReferences, classReferenceGraph);
   }
 
   private LinkageChecker(
       ClassDumper classDumper,
       Map<Path, SymbolReferenceSet> jarToSymbols,
+      ClassToSymbolReferences classToSymbolReferences,
       ClassReferenceGraph classReferenceGraph) {
     this.classDumper = Preconditions.checkNotNull(classDumper);
     this.jarToSymbols = ImmutableMap.copyOf(jarToSymbols);
     this.classReferenceGraph = Preconditions.checkNotNull(classReferenceGraph);
+    this.classToSymbols = Preconditions.checkNotNull(classToSymbolReferences);
+  }
+
+  static private ImmutableMap<Path, SymbolReferenceSet> convert(ClassToSymbolReferences classToSymbols) {
+    ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbolBuilder = ImmutableMap.builder();
+
+    Set<ClassAndJar> keys = Sets.newHashSet();
+    ImmutableSetMultimap<ClassAndJar, ClassSymbol> classSymbols =
+        classToSymbols.getClassToClassSymbols();
+    keys.addAll(classSymbols.keys());
+    ImmutableSetMultimap<ClassAndJar, MethodSymbol> methodSymbols =
+        classToSymbols.getClassToMethodSymbols();
+    keys.addAll(methodSymbols.keys());
+    ImmutableSetMultimap<ClassAndJar, FieldSymbol> fieldSymbols =
+        classToSymbols.getClassToFieldSymbols();
+    keys.addAll(fieldSymbols.keys());
+    ImmutableMultimap<Path, ClassAndJar> pathToClassAndJar =
+        Multimaps.index(keys, ClassAndJar::getJar);
+    for (Path jar : pathToClassAndJar.keySet()) {
+      SymbolReferenceSet.Builder symbolReferenceSet = SymbolReferenceSet.builder();
+
+      for (ClassAndJar source : pathToClassAndJar.get(jar)) {
+        for (ClassSymbol symbol : classSymbols.get(source)) {
+          symbolReferenceSet
+              .classReferencesBuilder()
+              .add(ClassSymbolReference.fromSymbol(source, symbol));
+        }
+        for (FieldSymbol symbol : fieldSymbols.get(source)) {
+          symbolReferenceSet
+              .fieldReferencesBuilder()
+              .add(FieldSymbolReference.fromSymbol(source, symbol));
+        }
+        for (MethodSymbol symbol : methodSymbols.get(source)) {
+          symbolReferenceSet
+              .methodReferencesBuilder()
+              .add(MethodSymbolReference.fromSymbol(source, symbol));
+        }
+      }
+      jarToSymbolBuilder.put(jar, symbolReferenceSet.build());
+    }
+
+    return jarToSymbolBuilder.build();
   }
 
   /** Finds linkage errors in the input classpath and generates a linkage check report. */
@@ -97,8 +154,7 @@ public class LinkageChecker {
    * @return linkage report for the jar file, which includes linkage errors if any
    */
   @VisibleForTesting
-  JarLinkageReport generateLinkageReport(
-      Path jarPath, SymbolReferenceSet symbolReferenceSet) {
+  JarLinkageReport generateLinkageReport(Path jarPath, SymbolReferenceSet symbolReferenceSet) {
 
     JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder().setJarPath(jarPath);
 

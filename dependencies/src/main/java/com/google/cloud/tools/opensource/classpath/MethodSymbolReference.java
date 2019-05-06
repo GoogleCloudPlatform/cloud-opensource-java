@@ -18,14 +18,10 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
 
-/**
- * A symbol reference to a method of {@code targetClass} referenced from {@code sourceClass}.
- */
+/** A symbol reference to a method of {@code targetClass} referenced from {@code sourceClass}. */
 @AutoValue
-abstract class MethodSymbolReference implements SymbolReference  {
-  /**
-   * Returns the method name of the reference. Example: {@code marshaller}
-   */
+abstract class MethodSymbolReference implements SymbolReference {
+  /** Returns the method name of the reference. Example: {@code marshaller} */
   abstract String getMethodName();
 
   /** Returns true if {@code targetClassName} is an interface. */
@@ -44,6 +40,20 @@ abstract class MethodSymbolReference implements SymbolReference  {
 
   static Builder builder() {
     return new AutoValue_MethodSymbolReference.Builder();
+  }
+
+  /**
+   * Creates an instance from {@code source} and {@code symbol}.
+   */
+  static MethodSymbolReference fromSymbol(ClassAndJar source, MethodSymbol symbol) {
+    // This method is for the refactoring (#574).
+    return builder()
+        .setTargetClassName(symbol.getClassName())
+        .setMethodName(symbol.getName())
+        .setInterfaceMethod(symbol.isInterfaceMethod())
+        .setDescriptor(symbol.getDescriptor())
+        .setSourceClassName(source.getClassName())
+        .build();
   }
 
   @AutoValue.Builder

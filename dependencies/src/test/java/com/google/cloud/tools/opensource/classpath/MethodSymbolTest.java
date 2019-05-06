@@ -31,7 +31,8 @@ public class MethodSymbolTest {
         new MethodSymbol(
             "java.lang.Object",
             "equals",
-            "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;");
+            "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
+            false);
     assertEquals("java.lang.Object", methodSymbol.getClassName());
     assertEquals("equals", methodSymbol.getName());
     assertEquals(
@@ -48,11 +49,12 @@ public class MethodSymbolTest {
   public void testMethodSymbolEquality() {
     new EqualsTester()
         .addEqualityGroup(
-            new MethodSymbol("java.lang.Object", "equals", "foo"),
-            new MethodSymbol("java.lang.Object", "equals", "foo"))
-        .addEqualityGroup(new MethodSymbol("java.lang.Object", "hashCode", "foo"))
-        .addEqualityGroup(new MethodSymbol("Object", "equals", "foo"))
-        .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "bar"))
+            new MethodSymbol("java.lang.Object", "equals", "foo", false),
+            new MethodSymbol("java.lang.Object", "equals", "foo", false))
+        .addEqualityGroup(new MethodSymbol("java.lang.Object", "hashCode", "foo", false))
+        .addEqualityGroup(new MethodSymbol("Object", "equals", "foo", false))
+        .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "bar", false))
+        .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "foo", true))
         .addEqualityGroup(new ClassSymbol("java.lang.Object"))
         .addEqualityGroup(new FieldSymbol("java.lang.Object", "equals", "foo"))
         .testEquals();

@@ -41,6 +41,34 @@ import org.junit.Test;
 public class LinkageCheckerTest {
 
   @Test
+  public void testScannedSymbols() throws IOException, URISyntaxException {
+    Path guavaAbsolutePath = absolutePathOfResource("testdata/guava-23.5-jre.jar");
+    List<Path> paths = ImmutableList.of(guavaAbsolutePath);
+    LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
+
+    ClassToSymbolReferences classToSymbols = linkageChecker.getClassToSymbols();
+    // These example symbols below are picked up through javap command. For example
+    // javap -classpath src/test/resources/testdata/guava-23.5-jre.jar \
+    //   -v com/google/common/util/concurrent/Monitor
+    Truth.assertThat(classToSymbols.getClassToClassSymbols())
+        .containsEntry(
+            new ClassAndJar(guavaAbsolutePath, "com.google.common.util.concurrent.Service"),
+            new ClassSymbol("java.util.concurrent.TimeoutException"));
+    Truth.assertThat(classToSymbols.getClassToMethodSymbols())
+        .containsEntry(
+            new ClassAndJar(guavaAbsolutePath, "com.google.common.util.concurrent.Monitor"),
+            new MethodSymbol(
+                "com.google.common.base.Preconditions",
+                "checkNotNull",
+                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+                false));
+    Truth.assertThat(classToSymbols.getClassToFieldSymbols())
+        .containsEntry(
+            new ClassAndJar(guavaAbsolutePath, "com.google.common.util.concurrent.Monitor"),
+            new FieldSymbol("com.google.common.util.concurrent.Monitor$Guard", "waiterCount", "I"));
+  }
+
+  @Test
   public void testFindInvalidReferences_arrayCloneMethod() throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
@@ -727,8 +755,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testJarPathOrderInResolvingReferences()
-      throws IOException, URISyntaxException {
+  public void testJarPathOrderInResolvingReferences() throws IOException, URISyntaxException {
 
     // listDocuments method on CollectionReference class is added at version 0.66.0-beta
     // https://github.com/googleapis/google-cloud-java/releases/tag/v0.66.0

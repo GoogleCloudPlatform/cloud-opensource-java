@@ -24,11 +24,13 @@ import java.util.Objects;
 final class MethodSymbol extends Symbol {
   private final String name;
   private final String descriptor;
+  private final boolean isInterfaceMethod;
 
-  MethodSymbol(String className, String name, String descriptor) {
+  MethodSymbol(String className, String name, String descriptor, boolean isInterfaceMethod) {
     super(className);
     this.name = checkNotNull(name);
     this.descriptor = checkNotNull(descriptor);
+    this.isInterfaceMethod = isInterfaceMethod;
   }
 
   /** Returns the name of the method. */
@@ -49,6 +51,11 @@ final class MethodSymbol extends Symbol {
     return descriptor;
   }
 
+  /** Returns true if {@link #getClassName()} is an interface. */
+  boolean isInterfaceMethod() {
+    return isInterfaceMethod;
+  }
+
   @Override
   public boolean equals(Object other) {
     if (this == other) {
@@ -61,11 +68,13 @@ final class MethodSymbol extends Symbol {
       return false;
     }
     MethodSymbol that = (MethodSymbol) other;
-    return name.equals(that.name) && descriptor.equals(that.descriptor);
+    return isInterfaceMethod == that.isInterfaceMethod
+        && name.equals(that.name)
+        && descriptor.equals(that.descriptor);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), name, descriptor);
+    return Objects.hash(super.hashCode(), name, descriptor, isInterfaceMethod);
   }
 }

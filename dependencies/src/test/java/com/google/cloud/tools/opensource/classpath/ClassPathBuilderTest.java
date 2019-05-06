@@ -171,20 +171,21 @@ public class ClassPathBuilderTest {
     // X509HostnameVerifier has the method.
     // https://github.com/apache/httpcomponents-client/blob/e2cf733c60f910d17dc5cfc0a77797054a2e322e/httpclient/src/main/java/org/apache/http/conn/ssl/AbstractVerifier.java#L153
     ClassDumper dumper = ClassDumper.create(ImmutableList.of(httpClientJar));
-    SymbolReferenceSet symbolReferenceSet = dumper.scanSymbolReferencesInJar(httpClientJar);
-    ClassSymbolReference referenceToGZipInputStreamFactory =
-        ClassSymbolReference.builder()
-            .setSourceClassName("org.apache.http.client.protocol.ResponseContentEncoding")
-            .setSubclass(false)
-            .setTargetClassName("org.apache.http.client.entity.GZIPInputStreamFactory")
-            .build();
-    if (symbolReferenceSet.getClassReferences().contains(referenceToGZipInputStreamFactory)) {
-      System.out.println(
-          "Somehow httpclient-4.5.3 contains GZipInputStreamFactory reference, which is added 4.5.4");
-    }
 
-    JarLinkageReport jarLinkageReport = linkageChecker.generateLinkageReport(httpClientJar,
-        symbolReferenceSet);
+    ClassToSymbolReferences classToSymbolReferences = dumper.scanSymbolReferencesInClassPath();
+
+    Truth.assertWithMessage(
+            "httpclient-4.5.3 shoud not contain GZipInputStreamFactory reference, which is added"
+                + " 4.5.4")
+        .that(classToSymbolReferences.getClassToClassSymbols())
+        .doesNotContainEntry(
+            new ClassAndJar(
+                httpClientJar, "org.apache.http.client.protocol.ResponseContentEncoding"),
+            new ClassSymbol("org.apache.http.client.entity.GZIPInputStreamFactory"));
+
+    SymbolReferenceSet symbolReferenceSet = linkageChecker.getJarToSymbols().get(httpClientJar);
+    JarLinkageReport jarLinkageReport =
+        linkageChecker.generateLinkageReport(httpClientJar, symbolReferenceSet);
 
     Truth.assertWithMessage("Method references within the same jar file should not be reported")
         .that(jarLinkageReport.getMissingMethodErrors())

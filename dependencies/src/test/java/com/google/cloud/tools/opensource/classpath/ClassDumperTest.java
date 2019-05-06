@@ -52,9 +52,9 @@ public class ClassDumperTest {
   private static final String EXAMPLE_CLASS_FILE =
       "testdata/grpc-google-cloud-firestore-v1beta1-0.28.0_FirestoreGrpc.class";
 
-  private static final Correspondence<SymbolReference, String> SYMBOL_REFERENCE_TARGET_CLASS_NAME =
-      Correspondence.from((actual, expected) ->
-          actual.getTargetClassName().equals(expected), "has target class name equal to");
+  private static final Correspondence<Symbol, String> SYMBOL_TARGET_CLASS_NAME =
+      Correspondence.from(
+          (actual, expected) -> actual.getClassName().equals(expected), "has class name equal to");
 
   private InputStream classFileInputStream;
 
@@ -103,52 +103,43 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testScanSymbolTableFromJar()
-      throws URISyntaxException, IOException {
-    URL jarUrl = URLClassLoader.getSystemResource(GRPC_CLOUD_FIRESTORE_JAR);
+  public void testScanSymbolTableFromClassPath() throws URISyntaxException, IOException {
+    Path path = absolutePathOfResource(GRPC_CLOUD_FIRESTORE_JAR);
+    ClassToSymbolReferences classToSymbolReferences =
+        ClassDumper.create(ImmutableList.of(path)).scanSymbolReferencesInClassPath();
 
-    Path path = Paths.get(jarUrl.toURI());
-    SymbolReferenceSet symbolReferenceSet =
-        ClassDumper.create(ImmutableList.of(path)).scanSymbolReferencesInJar(path);
-
-    Set<FieldSymbolReference> actualFieldReferences = symbolReferenceSet.getFieldReferences();
-    FieldSymbolReference expectedFieldReference =
-        FieldSymbolReference.builder().setFieldName("BIDI_STREAMING")
-            .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
-            .setTargetClassName("io.grpc.MethodDescriptor$MethodType").build();
-    Truth.assertThat(actualFieldReferences).contains(expectedFieldReference);
-
-    Set<MethodSymbolReference> actualMethodReferences = symbolReferenceSet.getMethodReferences();
-    MethodSymbolReference expectedMethodReference =
-        MethodSymbolReference.builder()
-            .setTargetClassName("io.grpc.protobuf.ProtoUtils")
-            .setMethodName("marshaller")
-            .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
-            .setInterfaceMethod(false)
-            .setDescriptor("(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;")
-            .build();
-    Truth.assertThat(actualMethodReferences).contains(expectedMethodReference);
-
-    Set<ClassSymbolReference> actualClassReferences = symbolReferenceSet.getClassReferences();
-    Truth.assertThat(actualClassReferences).isNotEmpty();
+    // Class reference
     Truth.assertWithMessage("Class reference should have binary names defined in JLS 13.1")
-        .that(actualClassReferences)
-        .contains(
-            ClassSymbolReference.builder()
-                .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
-                .setSubclass(false)
-                .setTargetClassName(
-                    "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreMethodDescriptorSupplier")
-                .build());
-    Truth.assertWithMessage("Reference to superclass should have isSubclass=true")
-        .that(actualClassReferences)
-        .contains(
-            ClassSymbolReference.builder()
-                .setSourceClassName(
-                    "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFutureStub")
-                .setSubclass(true) // FirestoreFutureStub extends AbstractStub
-                .setTargetClassName("io.grpc.stub.AbstractStub")
-                .build());
+        .that(classToSymbolReferences.getClassToClassSymbols())
+        .containsEntry(
+            new ClassAndJar(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
+            new ClassSymbol(
+                "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreMethodDescriptorSupplier"));
+
+    Truth.assertWithMessage("Reference to superclass should have SuperClassSymbol")
+        .that(classToSymbolReferences.getClassToClassSymbols())
+        .containsEntry(
+            new ClassAndJar(path, "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFutureStub"),
+            new SuperClassSymbol("io.grpc.stub.AbstractStub"));
+
+    // Method reference
+    Truth.assertThat(classToSymbolReferences.getClassToMethodSymbols())
+        .containsEntry(
+            new ClassAndJar(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
+            new MethodSymbol(
+                "io.grpc.protobuf.ProtoUtils",
+                "marshaller",
+                "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
+                false));
+
+    // Field reference
+    Truth.assertThat(classToSymbolReferences.getClassToFieldSymbols())
+        .containsEntry(
+            new ClassAndJar(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
+            new FieldSymbol(
+                "io.grpc.MethodDescriptor$MethodType",
+                "BIDI_STREAMING",
+                "Lio/grpc/MethodDescriptor$MethodType;"));
   }
 
   @Test
@@ -157,38 +148,30 @@ public class ClassDumperTest {
     URL jarUrl = URLClassLoader.getSystemResource("testdata/gax-1.32.0.jar");
 
     Path path = Paths.get(jarUrl.toURI());
-    SymbolReferenceSet symbolReferenceSet =
-        ClassDumper.create(ImmutableList.of(path)).scanSymbolReferencesInJar(path);
+    ClassToSymbolReferences classToSymbolReferences =
+        ClassDumper.create(ImmutableList.of(path)).scanSymbolReferencesInClassPath();
 
-    Set<ClassSymbolReference> actualClassReferences = symbolReferenceSet.getClassReferences();
-    Truth.assertThat(actualClassReferences).isNotEmpty();
-    Truth.assertWithMessage("Class references should not include array class")
-        .that(actualClassReferences)
-        .comparingElementsUsing(SYMBOL_REFERENCE_TARGET_CLASS_NAME)
+    Truth.assertThat(classToSymbolReferences.getClassToClassSymbols().inverse().keys())
+        .comparingElementsUsing(SYMBOL_TARGET_CLASS_NAME)
         .doesNotContain("[Ljava.lang.Object;");
   }
 
   @Test
   public void testScanSymbolReferencesInClass_shouldPickInterfaceReference()
       throws URISyntaxException, IOException {
-    URL jarUrl = URLClassLoader.getSystemResource("testdata/api-common-1.7.0.jar");
+    Path path = absolutePathOfResource("testdata/api-common-1.7.0.jar");
+    ClassToSymbolReferences classToSymbolReferences =
+        ClassDumper.create(ImmutableList.of(path)).scanSymbolReferencesInClassPath();
 
-    Path path = Paths.get(jarUrl.toURI());
-    SymbolReferenceSet symbolReferenceSet =
-        ClassDumper.create(ImmutableList.of(path)).scanSymbolReferencesInJar(path);
-
-    Set<MethodSymbolReference> interfaceMethodSymbolReferences =
-        symbolReferenceSet.getMethodReferences();
-    Truth.assertThat(interfaceMethodSymbolReferences).isNotEmpty();
-    Truth.assertThat(interfaceMethodSymbolReferences)
-        .contains(
-            MethodSymbolReference.builder()
-                .setMethodName("get")
-                .setDescriptor("(Ljava/lang/Object;)Ljava/lang/Object;")
-                .setSourceClassName("com.google.api.resourcenames.UntypedResourceName")
-                .setTargetClassName("java.util.Map")
-                .setInterfaceMethod(true)
-                .build());
+    boolean isInterfaceMethod = true;
+    Truth.assertThat(classToSymbolReferences.getClassToMethodSymbols())
+        .containsEntry(
+            new ClassAndJar(path, "com.google.api.resourcenames.UntypedResourceName"),
+            new MethodSymbol(
+                "java.util.Map",
+                "get",
+                "(Ljava/lang/Object;)Ljava/lang/Object;",
+                isInterfaceMethod));
   }
 
   @Test
