@@ -35,7 +35,6 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -147,10 +146,8 @@ class ClassDumper {
   }
 
   /**
-   * Scans the class path for symbol references from classes to class symbols, method symbols and
-   * field symbols.
-   *
-   * @return the set of symbol references found in the class path.
+   * Returns a set of symbol references (classes to class symbols, method symbols and field symbols)
+   * found in the class path.
    */
   ClassToSymbolReferences scanSymbolReferencesInClassPath() throws IOException {
     ClassToSymbolReferences.Builder builder = new ClassToSymbolReferences.Builder();
@@ -168,8 +165,8 @@ class ClassDumper {
   }
 
   /**
-   * Returns true if {@code javaClass} file format is compatible with this tool. Currently Java 8
-   * and earlier are supported.
+   * Returns true if {@code javaClass} file format is compatible with this tool. Currently
+   * Java 8 and earlier are supported.
    *
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.1">Java
    *     Virtual Machine Specification: The ClassFile Structure: minor_version, major_version</a>
@@ -353,7 +350,9 @@ class ClassDumper {
     com.google.common.reflect.ClassPath classPath =
         com.google.common.reflect.ClassPath.from(classLoaderFromJar);
 
-    return classPath.getAllClasses().stream().map(ClassInfo::getName).collect(toImmutableSet());
+    return classPath.getAllClasses().stream()
+        .map(ClassInfo::getName)
+        .collect(toImmutableSet());
   }
 
   /**
@@ -535,7 +534,7 @@ class ClassDumper {
     try {
       JavaClass sourceJavaClass = loadJavaClass(sourceClassName);
 
-      for (String interfaceName : sourceJavaClass.getInterfaceNames()) {
+      for (String interfaceName: sourceJavaClass.getInterfaceNames()) {
         if (interfaceName.equals(targetClassName)) {
           // The target class is used in interfaces
           return false;

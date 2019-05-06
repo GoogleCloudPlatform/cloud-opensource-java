@@ -17,6 +17,8 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.testing.EqualsTester;
+import com.google.common.testing.NullPointerTester;
+import com.google.common.testing.NullPointerTester.Visibility;
 import com.google.common.truth.Truth;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -85,6 +87,11 @@ public class ClassToSymbolReferencesTest {
         .addEqualityGroup(builder4.build())
         .addEqualityGroup(builder5.build())
         .testEquals();
+  }
+
+  @Test
+  public void testNull() {
+    new NullPointerTester().testConstructors(ClassToSymbolReferences.class, Visibility.PACKAGE);
   }
 
   @Test

@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.util.Objects;
 
@@ -42,7 +43,8 @@ class ClassToSymbolReferences {
     return classToFieldSymbols;
   }
 
-  private ClassToSymbolReferences(
+  @VisibleForTesting
+  ClassToSymbolReferences(
       ImmutableSetMultimap<ClassAndJar, ClassSymbol> classToClassSymbols,
       ImmutableSetMultimap<ClassAndJar, MethodSymbol> classToMethodSymbols,
       ImmutableSetMultimap<ClassAndJar, FieldSymbol> classToFieldSymbols) {
