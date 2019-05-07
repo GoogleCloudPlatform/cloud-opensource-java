@@ -46,7 +46,7 @@ public class LinkageCheckerTest {
     List<Path> paths = ImmutableList.of(guavaAbsolutePath);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
-    ClassToSymbolReferences classToSymbols = linkageChecker.getClassToSymbols();
+    SymbolReferenceMaps classToSymbols = linkageChecker.getClassToSymbols();
     // These example symbols below are picked up through javap command. For example
     // javap -classpath src/test/resources/testdata/guava-23.5-jre.jar \
     //   -v com/google/common/util/concurrent/Monitor

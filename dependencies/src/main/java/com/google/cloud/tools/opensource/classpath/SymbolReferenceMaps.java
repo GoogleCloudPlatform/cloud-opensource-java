@@ -26,7 +26,7 @@ import java.util.Objects;
  * A set of symbol references from source class to target symbols (class, method, and field
  * symbols).
  */
-class ClassToSymbolReferences {
+class SymbolReferenceMaps {
   private final ImmutableSetMultimap<ClassFile, ClassSymbol> classToClassSymbols;
   private final ImmutableSetMultimap<ClassFile, MethodSymbol> classToMethodSymbols;
   private final ImmutableSetMultimap<ClassFile, FieldSymbol> classToFieldSymbols;
@@ -44,7 +44,7 @@ class ClassToSymbolReferences {
   }
 
   @VisibleForTesting
-  ClassToSymbolReferences(
+  SymbolReferenceMaps(
       ImmutableSetMultimap<ClassFile, ClassSymbol> classToClassSymbols,
       ImmutableSetMultimap<ClassFile, MethodSymbol> classToMethodSymbols,
       ImmutableSetMultimap<ClassFile, FieldSymbol> classToFieldSymbols) {
@@ -79,8 +79,8 @@ class ClassToSymbolReferences {
       return this;
     }
 
-    ClassToSymbolReferences build() {
-      return new ClassToSymbolReferences(
+    SymbolReferenceMaps build() {
+      return new SymbolReferenceMaps(
           classToClassSymbols.build(), classToMethodSymbols.build(), classToFieldSymbols.build());
     }
 
@@ -100,7 +100,7 @@ class ClassToSymbolReferences {
     if (other == null || getClass() != other.getClass()) {
       return false;
     }
-    ClassToSymbolReferences that = (ClassToSymbolReferences) other;
+    SymbolReferenceMaps that = (SymbolReferenceMaps) other;
     return classToClassSymbols.equals(that.classToClassSymbols)
         && classToMethodSymbols.equals(that.classToMethodSymbols)
         && classToFieldSymbols.equals(that.classToFieldSymbols);

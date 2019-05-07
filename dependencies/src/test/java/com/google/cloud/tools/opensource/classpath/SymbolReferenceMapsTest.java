@@ -24,7 +24,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
 
-public class ClassToSymbolReferencesTest {
+public class SymbolReferenceMapsTest {
   private Path path = Paths.get("foo", "bar.jar");
   private ClassFile sourceClass = new ClassFile(path, "com.google.Foo");
   private ClassSymbol classSymbol = new ClassSymbol("java.util.concurrent.TimeoutException");
@@ -40,13 +40,13 @@ public class ClassToSymbolReferencesTest {
 
   @Test
   public void testCreation() {
-    ClassToSymbolReferences.Builder builder = new ClassToSymbolReferences.Builder();
+    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
 
     builder.addClassReference(sourceClass, classSymbol);
     builder.addMethodReference(sourceClass, methodSymbol);
     builder.addFieldReference(sourceClass, fieldSymbol);
 
-    ClassToSymbolReferences references = builder.build();
+    SymbolReferenceMaps references = builder.build();
 
     Truth.assertThat(references.getClassToClassSymbols()).containsEntry(sourceClass, classSymbol);
     Truth.assertThat(references.getClassToMethodSymbols()).containsEntry(sourceClass, methodSymbol);
@@ -55,28 +55,28 @@ public class ClassToSymbolReferencesTest {
 
   @Test
   public void testEquality() {
-    ClassToSymbolReferences.Builder builder1 = new ClassToSymbolReferences.Builder();
+    SymbolReferenceMaps.Builder builder1 = new SymbolReferenceMaps.Builder();
     builder1.addClassReference(sourceClass, classSymbol);
     builder1.addMethodReference(sourceClass, methodSymbol);
     builder1.addFieldReference(sourceClass, fieldSymbol);
 
-    ClassToSymbolReferences.Builder builder2 = new ClassToSymbolReferences.Builder();
+    SymbolReferenceMaps.Builder builder2 = new SymbolReferenceMaps.Builder();
     builder2.addClassReference(sourceClass, classSymbol);
     builder2.addMethodReference(sourceClass, methodSymbol);
     builder2.addFieldReference(sourceClass, fieldSymbol);
 
     ClassFile sourceClass2 = new ClassFile(path, "com.google.Bar");
-    ClassToSymbolReferences.Builder builder3 = new ClassToSymbolReferences.Builder();
+    SymbolReferenceMaps.Builder builder3 = new SymbolReferenceMaps.Builder();
     builder3.addClassReference(sourceClass2, classSymbol);
     builder3.addMethodReference(sourceClass, methodSymbol);
     builder3.addFieldReference(sourceClass, fieldSymbol);
 
-    ClassToSymbolReferences.Builder builder4 = new ClassToSymbolReferences.Builder();
+    SymbolReferenceMaps.Builder builder4 = new SymbolReferenceMaps.Builder();
     builder4.addClassReference(sourceClass, classSymbol);
     builder4.addMethodReference(sourceClass2, methodSymbol);
     builder4.addFieldReference(sourceClass, fieldSymbol);
 
-    ClassToSymbolReferences.Builder builder5 = new ClassToSymbolReferences.Builder();
+    SymbolReferenceMaps.Builder builder5 = new SymbolReferenceMaps.Builder();
     builder5.addClassReference(sourceClass, classSymbol);
     builder5.addMethodReference(sourceClass, methodSymbol);
     builder5.addFieldReference(sourceClass2, fieldSymbol);
@@ -91,13 +91,13 @@ public class ClassToSymbolReferencesTest {
 
   @Test
   public void testNull() {
-    new NullPointerTester().testConstructors(ClassToSymbolReferences.class, Visibility.PACKAGE);
+    new NullPointerTester().testConstructors(SymbolReferenceMaps.class, Visibility.PACKAGE);
   }
 
   @Test
   public void testAddAll() {
-    ClassToSymbolReferences.Builder builder1 = new ClassToSymbolReferences.Builder();
-    ClassToSymbolReferences.Builder builder2 = new ClassToSymbolReferences.Builder();
+    SymbolReferenceMaps.Builder builder1 = new SymbolReferenceMaps.Builder();
+    SymbolReferenceMaps.Builder builder2 = new SymbolReferenceMaps.Builder();
 
     builder1.addClassReference(sourceClass, classSymbol);
     builder1.addMethodReference(sourceClass, methodSymbol);
@@ -109,7 +109,7 @@ public class ClassToSymbolReferencesTest {
     builder2.addFieldReference(sourceClass2, fieldSymbol);
 
     builder1.addAll(builder2);
-    ClassToSymbolReferences references = builder1.build();
+    SymbolReferenceMaps references = builder1.build();
 
     Truth.assertThat(references.getClassToClassSymbols()).containsEntry(sourceClass, classSymbol);
     Truth.assertThat(references.getClassToMethodSymbols()).containsEntry(sourceClass, methodSymbol);

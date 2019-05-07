@@ -49,11 +49,11 @@ public class LinkageChecker {
 
   private final ClassDumper classDumper;
   private final ImmutableMap<Path, SymbolReferenceSet> jarToSymbols;
-  private final ClassToSymbolReferences classToSymbols;
+  private final SymbolReferenceMaps classToSymbols;
   private final ClassReferenceGraph classReferenceGraph;
 
   @VisibleForTesting
-  ClassToSymbolReferences getClassToSymbols() {
+  SymbolReferenceMaps getClassToSymbols() {
     return classToSymbols;
   }
 
@@ -68,29 +68,29 @@ public class LinkageChecker {
         !jarPaths.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
     ClassDumper dumper = ClassDumper.create(jarPaths);
-    ClassToSymbolReferences classToSymbolReferences = dumper.scanSymbolReferencesInClassPath();
+    SymbolReferenceMaps symbolReferenceMaps = dumper.scanSymbolReferencesInClassPath();
 
     ImmutableMap<Path, SymbolReferenceSet> jarToSymbols =
-        convert(jarPaths, classToSymbolReferences);
+        convert(jarPaths, symbolReferenceMaps);
     ClassReferenceGraph classReferenceGraph =
         ClassReferenceGraph.create(jarToSymbols.values(), ImmutableSet.copyOf(entryPoints));
 
-    return new LinkageChecker(dumper, jarToSymbols, classToSymbolReferences, classReferenceGraph);
+    return new LinkageChecker(dumper, jarToSymbols, symbolReferenceMaps, classReferenceGraph);
   }
 
   private LinkageChecker(
       ClassDumper classDumper,
       Map<Path, SymbolReferenceSet> jarToSymbols,
-      ClassToSymbolReferences classToSymbolReferences,
+      SymbolReferenceMaps symbolReferenceMaps,
       ClassReferenceGraph classReferenceGraph) {
     this.classDumper = Preconditions.checkNotNull(classDumper);
     this.jarToSymbols = ImmutableMap.copyOf(jarToSymbols);
     this.classReferenceGraph = Preconditions.checkNotNull(classReferenceGraph);
-    this.classToSymbols = Preconditions.checkNotNull(classToSymbolReferences);
+    this.classToSymbols = Preconditions.checkNotNull(symbolReferenceMaps);
   }
 
   static private ImmutableMap<Path, SymbolReferenceSet> convert(List<Path> inputClassPath,
-      ClassToSymbolReferences classToSymbols) {
+      SymbolReferenceMaps classToSymbols) {
     ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbolBuilder = ImmutableMap.builder();
 
     ImmutableSet.Builder<ClassFile> keys = ImmutableSet.builder();

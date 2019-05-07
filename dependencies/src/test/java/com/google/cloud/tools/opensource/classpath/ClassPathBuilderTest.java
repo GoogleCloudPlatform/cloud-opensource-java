@@ -172,12 +172,12 @@ public class ClassPathBuilderTest {
     // https://github.com/apache/httpcomponents-client/blob/e2cf733c60f910d17dc5cfc0a77797054a2e322e/httpclient/src/main/java/org/apache/http/conn/ssl/AbstractVerifier.java#L153
     ClassDumper dumper = ClassDumper.create(ImmutableList.of(httpClientJar));
 
-    ClassToSymbolReferences classToSymbolReferences = dumper.scanSymbolReferencesInClassPath();
+    SymbolReferenceMaps symbolReferenceMaps = dumper.scanSymbolReferencesInClassPath();
 
     Truth.assertWithMessage(
             "httpclient-4.5.3 shoud not contain GZipInputStreamFactory reference, which is added"
                 + " 4.5.4")
-        .that(classToSymbolReferences.getClassToClassSymbols())
+        .that(symbolReferenceMaps.getClassToClassSymbols())
         .doesNotContainEntry(
             new ClassFile(
                 httpClientJar, "org.apache.http.client.protocol.ResponseContentEncoding"),

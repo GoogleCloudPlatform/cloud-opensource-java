@@ -105,25 +105,25 @@ public class ClassDumperTest {
   @Test
   public void testScanSymbolTableFromClassPath() throws URISyntaxException, IOException {
     Path path = absolutePathOfResource(GRPC_CLOUD_FIRESTORE_JAR);
-    ClassToSymbolReferences classToSymbolReferences =
+    SymbolReferenceMaps symbolReferenceMaps =
         ClassDumper.create(ImmutableList.of(path)).scanSymbolReferencesInClassPath();
 
     // Class reference
     Truth.assertWithMessage("Class reference should have binary names defined in JLS 13.1")
-        .that(classToSymbolReferences.getClassToClassSymbols())
+        .that(symbolReferenceMaps.getClassToClassSymbols())
         .containsEntry(
             new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
             new ClassSymbol(
                 "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreMethodDescriptorSupplier"));
 
     Truth.assertWithMessage("Reference to superclass should have SuperClassSymbol")
-        .that(classToSymbolReferences.getClassToClassSymbols())
+        .that(symbolReferenceMaps.getClassToClassSymbols())
         .containsEntry(
             new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFutureStub"),
             new SuperClassSymbol("io.grpc.stub.AbstractStub"));
 
     // Method reference
-    Truth.assertThat(classToSymbolReferences.getClassToMethodSymbols())
+    Truth.assertThat(symbolReferenceMaps.getClassToMethodSymbols())
         .containsEntry(
             new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
             new MethodSymbol(
@@ -133,7 +133,7 @@ public class ClassDumperTest {
                 false));
 
     // Field reference
-    Truth.assertThat(classToSymbolReferences.getClassToFieldSymbols())
+    Truth.assertThat(symbolReferenceMaps.getClassToFieldSymbols())
         .containsEntry(
             new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
             new FieldSymbol(
@@ -148,10 +148,10 @@ public class ClassDumperTest {
     URL jarUrl = URLClassLoader.getSystemResource("testdata/gax-1.32.0.jar");
 
     Path path = Paths.get(jarUrl.toURI());
-    ClassToSymbolReferences classToSymbolReferences =
+    SymbolReferenceMaps symbolReferenceMaps =
         ClassDumper.create(ImmutableList.of(path)).scanSymbolReferencesInClassPath();
 
-    Truth.assertThat(classToSymbolReferences.getClassToClassSymbols().inverse().keys())
+    Truth.assertThat(symbolReferenceMaps.getClassToClassSymbols().inverse().keys())
         .comparingElementsUsing(SYMBOL_TARGET_CLASS_NAME)
         .doesNotContain("[Ljava.lang.Object;");
   }
@@ -160,11 +160,11 @@ public class ClassDumperTest {
   public void testScanSymbolReferencesInClass_shouldPickInterfaceReference()
       throws URISyntaxException, IOException {
     Path path = absolutePathOfResource("testdata/api-common-1.7.0.jar");
-    ClassToSymbolReferences classToSymbolReferences =
+    SymbolReferenceMaps symbolReferenceMaps =
         ClassDumper.create(ImmutableList.of(path)).scanSymbolReferencesInClassPath();
 
     boolean isInterfaceMethod = true;
-    Truth.assertThat(classToSymbolReferences.getClassToMethodSymbols())
+    Truth.assertThat(symbolReferenceMaps.getClassToMethodSymbols())
         .containsEntry(
             new ClassFile(path, "com.google.api.resourcenames.UntypedResourceName"),
             new MethodSymbol(

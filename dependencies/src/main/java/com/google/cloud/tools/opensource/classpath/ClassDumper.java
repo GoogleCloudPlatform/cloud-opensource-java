@@ -146,11 +146,11 @@ class ClassDumper {
   }
 
   /**
-   * Returns a set of symbol references (classes to class symbols, method symbols and field symbols)
-   * found in the class path.
+   * Returns a set of symbol references (maps from classes to class symbols, method symbols and
+   * field symbols) found in the class path.
    */
-  ClassToSymbolReferences scanSymbolReferencesInClassPath() throws IOException {
-    ClassToSymbolReferences.Builder builder = new ClassToSymbolReferences.Builder();
+  SymbolReferenceMaps scanSymbolReferencesInClassPath() throws IOException {
+    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
 
     for (Path jar : inputClassPath) {
       for (JavaClass javaClass : listClassesInJar(jar)) {
@@ -176,9 +176,9 @@ class ClassDumper {
     return 45 <= classFileMajorVersion && classFileMajorVersion <= 52;
   }
 
-  private static ClassToSymbolReferences.Builder scanSymbolReferencesInClass(
+  private static SymbolReferenceMaps.Builder scanSymbolReferencesInClass(
       Path jar, JavaClass javaClass) {
-    ClassToSymbolReferences.Builder builder = new ClassToSymbolReferences.Builder();
+    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
     ClassFile source = new ClassFile(jar, javaClass.getClassName());
 
     ConstantPool constantPool = javaClass.getConstantPool();
