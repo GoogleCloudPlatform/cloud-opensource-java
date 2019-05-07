@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.base.MoreObjects;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -25,16 +26,16 @@ import java.util.Objects;
  * A tuple of a class name and a jar file to uniquely locate the class implementation in a class
  * path.
  */
-final class ClassAndJar {
+final class ClassFile {
   private final Path jar;
   private final String className;
 
-  ClassAndJar(Path jar, String className) {
+  ClassFile(Path jar, String className) {
     this.jar = checkNotNull(jar);
     this.className = checkNotNull(className);
   }
 
-  /** Returns jar file containing the class. */
+  /** Returns the path to the JAR file containing the class. */
   Path getJar() {
     return jar;
   }
@@ -52,12 +53,20 @@ final class ClassAndJar {
     if (other == null || getClass() != other.getClass()) {
       return false;
     }
-    ClassAndJar that = (ClassAndJar) other;
+    ClassFile that = (ClassFile) other;
     return Objects.equals(jar, that.jar) && Objects.equals(className, that.className);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(jar, className);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("jar", jar)
+        .add("className", className)
+        .toString();
   }
 }

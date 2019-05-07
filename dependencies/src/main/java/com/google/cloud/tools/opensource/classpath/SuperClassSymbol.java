@@ -16,11 +16,17 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.common.base.MoreObjects;
-
-/** Symbol for a class. */
-class ClassSymbol extends Symbol {
-  ClassSymbol(String className) {
+/**
+ * Symbol for a super class. This symbol is a special case of {@link ClassSymbol} when it is
+ * referenced only from its subclasses. Treating super class symbols apart from {@link ClassSymbol}
+ * helps to validate the relationship between a superclass and its subclasses, with regard to {code
+ * final} keyword.
+ *
+ * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.10">Java
+ *     Virtual Machine Specification: 4.10. Verification of class Files</a>
+ */
+final class SuperClassSymbol extends ClassSymbol {
+  SuperClassSymbol(String className) {
     super(className);
   }
 }

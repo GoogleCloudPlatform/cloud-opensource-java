@@ -23,31 +23,27 @@ import com.google.common.testing.NullPointerTester;
 import com.google.common.testing.NullPointerTester.Visibility;
 import org.junit.Test;
 
-public class FieldSymbolTest {
+public class SuperClassSymbolTest {
 
   @Test
-  public void testFieldSymbolCreation() {
-    FieldSymbol fieldSymbol = new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I");
-    assertEquals("java.lang.Integer", fieldSymbol.getClassName());
-    assertEquals("MAX_VALUE", fieldSymbol.getName());
-    assertEquals("I", fieldSymbol.getDescriptor());
+  public void testClassSymbolCreation() {
+    SuperClassSymbol classSymbol = new SuperClassSymbol("java.lang.Object");
+    assertEquals("java.lang.Object", classSymbol.getClassName());
   }
 
   @Test
   public void testNull() {
-    new NullPointerTester().testConstructors(FieldSymbol.class, Visibility.PACKAGE);
+    new NullPointerTester().testConstructors(SuperClassSymbol.class, Visibility.PACKAGE);
   }
 
   @Test
-  public void testFieldSymbolEquality() {
+  public void testClassSymbolEquality() {
     new EqualsTester()
         .addEqualityGroup(
-            new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"),
-            new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"))
-        .addEqualityGroup(new FieldSymbol("java.lang.Float", "MAX_VALUE", "I"))
-        .addEqualityGroup(new FieldSymbol("java.lang.Integer", "MIN_VALUE", "I"))
-        .addEqualityGroup(new FieldSymbol("java.lang.Integer", "MAX_VALUE", "F"))
-        .addEqualityGroup(new MethodSymbol("java.lang.Integer", "MAX_VALUE", "I", false))
+            new SuperClassSymbol("java.lang.Object"), new SuperClassSymbol("java.lang.Object"))
+        .addEqualityGroup(new SuperClassSymbol("java.lang.Long"))
+        .addEqualityGroup(new ClassSymbol("java.lang.Object"))
+        .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "foo", false))
         .testEquals();
   }
 }

@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.base.MoreObjects;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -31,19 +32,19 @@ import javax.annotation.Nullable;
  */
 final class SymbolProblem {
 
-  private final Reason reason;
+  private final ErrorType errorType;
   private final Symbol symbol;
-  private final ClassAndJar targetClass;
+  private final ClassFile targetClass;
 
-  SymbolProblem(Symbol symbol, Reason reason, @Nullable ClassAndJar targetClass) {
+  SymbolProblem(Symbol symbol, ErrorType errorType, @Nullable ClassFile targetClass) {
     this.symbol = checkNotNull(symbol);
-    this.reason = checkNotNull(reason);
+    this.errorType = checkNotNull(errorType);
     this.targetClass = targetClass;
   }
 
-  /** Returns the reason why the symbol was not resolved. */
-  Reason getReason() {
-    return reason;
+  /** Returns the errorType why the symbol was not resolved. */
+  ErrorType getErrorType() {
+    return errorType;
   }
 
   /** Returns the target symbol that was not resolved. */
@@ -53,13 +54,14 @@ final class SymbolProblem {
 
   /**
    * Returns the referenced class of the linkage conflict. Null when the target class is not found
-   * in the class path (this is the case if the reason is {@code CLASS_NOT_FOUND}).
+   * in the class path (this is the case if the errorType is {@code CLASS_NOT_FOUND} for top-level
+   * classes).
    *
-   * <p>In case of an inner class is missing while its outer class is found in the class path, this
+   * <p>In case of a nested class is missing while its outer class is found in the class path, this
    * method returns the outer class.
    */
   @Nullable
-  ClassAndJar getTargetClass() {
+  ClassFile getTargetClass() {
     return targetClass;
   }
 
@@ -72,13 +74,22 @@ final class SymbolProblem {
       return false;
     }
     SymbolProblem that = (SymbolProblem) other;
-    return reason == that.reason
+    return errorType == that.errorType
         && symbol.equals(that.symbol)
         && Objects.equals(targetClass, that.targetClass);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(reason, symbol, targetClass);
+    return Objects.hash(errorType, symbol, targetClass);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("errorType", errorType)
+        .add("symbol", symbol)
+        .add("targetClass", targetClass)
+        .toString();
   }
 }

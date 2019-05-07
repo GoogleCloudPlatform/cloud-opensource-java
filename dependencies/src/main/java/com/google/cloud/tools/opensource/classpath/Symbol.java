@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
 /**
@@ -60,5 +61,12 @@ abstract class Symbol {
   @Override
   public int hashCode() {
     return Objects.hash(className);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("className", className)
+        .toString();
   }
 }

@@ -32,12 +32,12 @@ public class SymbolProblemTest {
     SymbolProblem symbolProblem =
         new SymbolProblem(
             new ClassSymbol("java.lang.Integer"),
-            Reason.CLASS_NOT_FOUND,
-            new ClassAndJar(Paths.get("foo", "bar.jar"), "java.lang.Object"));
-    assertSame(Reason.CLASS_NOT_FOUND, symbolProblem.getReason());
+            ErrorType.CLASS_NOT_FOUND,
+            new ClassFile(Paths.get("foo", "bar.jar"), "java.lang.Object"));
+    assertSame(ErrorType.CLASS_NOT_FOUND, symbolProblem.getErrorType());
     assertEquals(new ClassSymbol("java.lang.Integer"), symbolProblem.getSymbol());
     assertEquals(
-        new ClassAndJar(Paths.get("foo", "bar.jar"), "java.lang.Object"),
+        new ClassFile(Paths.get("foo", "bar.jar"), "java.lang.Object"),
         symbolProblem.getTargetClass());
   }
 
@@ -54,29 +54,30 @@ public class SymbolProblemTest {
         .addEqualityGroup(
             new SymbolProblem(
                 new ClassSymbol("java.lang.Integer"),
-                Reason.CLASS_NOT_FOUND,
-                new ClassAndJar(Paths.get("foo", "bar.jar"), "java.lang.Object")),
+                ErrorType.CLASS_NOT_FOUND,
+                new ClassFile(Paths.get("foo", "bar.jar"), "java.lang.Object")),
             new SymbolProblem(
                 new ClassSymbol("java.lang.Integer"),
-                Reason.CLASS_NOT_FOUND,
-                new ClassAndJar(Paths.get("foo", "bar.jar"), "java.lang.Object")))
+                ErrorType.CLASS_NOT_FOUND,
+                new ClassFile(Paths.get("foo", "bar.jar"), "java.lang.Object")))
         .addEqualityGroup(
             new SymbolProblem(
                 new ClassSymbol("java.lang.Long"),
-                Reason.CLASS_NOT_FOUND,
-                new ClassAndJar(Paths.get("foo", "bar.jar"), "java.lang.Object")))
+                ErrorType.CLASS_NOT_FOUND,
+                new ClassFile(Paths.get("foo", "bar.jar"), "java.lang.Object")))
         .addEqualityGroup(
             new SymbolProblem(
                 new ClassSymbol("java.lang.Integer"),
-                Reason.CLASS_NOT_FOUND,
-                new ClassAndJar(Paths.get("abc", "bar.jar"), "java.lang.Object")))
+                ErrorType.CLASS_NOT_FOUND,
+                new ClassFile(Paths.get("abc", "bar.jar"), "java.lang.Object")))
         .addEqualityGroup(
             new SymbolProblem(
                 new ClassSymbol("java.lang.Integer"),
-                Reason.CLASS_NOT_FOUND,
-                new ClassAndJar(Paths.get("foo", "bar.jar"), "java.lang.Long")))
+                ErrorType.CLASS_NOT_FOUND,
+                new ClassFile(Paths.get("foo", "bar.jar"), "java.lang.Long")))
         .addEqualityGroup(
-            new SymbolProblem(new ClassSymbol("java.lang.Integer"), Reason.CLASS_NOT_FOUND, null))
+            new SymbolProblem(
+                new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null))
         .testEquals();
   }
 }

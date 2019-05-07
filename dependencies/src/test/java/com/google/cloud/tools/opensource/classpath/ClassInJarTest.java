@@ -27,24 +27,24 @@ import org.junit.Test;
 public class ClassInJarTest {
   @Test
   public void testCreation() {
-    ClassAndJar classInJar = new ClassAndJar(Paths.get("foo", "bar.jar"), "com.test.Foo");
+    ClassFile classInJar = new ClassFile(Paths.get("foo", "bar.jar"), "com.test.Foo");
     assertEquals("com.test.Foo", classInJar.getClassName());
     assertEquals(Paths.get("foo", "bar.jar"), classInJar.getJar());
   }
 
   @Test
   public void testNull() {
-    new NullPointerTester().testConstructors(ClassAndJar.class, Visibility.PACKAGE);
+    new NullPointerTester().testConstructors(ClassFile.class, Visibility.PACKAGE);
   }
 
   @Test
   public void testEquality() {
     new EqualsTester()
         .addEqualityGroup(
-            new ClassAndJar(Paths.get("foo", "bar.jar"), "com.test.Foo"),
-            new ClassAndJar(Paths.get("foo", "bar.jar"), "com.test.Foo"))
-        .addEqualityGroup(new ClassAndJar(Paths.get("abc", "bar.jar"), "com.test.Foo"))
-        .addEqualityGroup(new ClassAndJar(Paths.get("foo", "bar.jar"), "abc.Boo"))
+            new ClassFile(Paths.get("foo", "bar.jar"), "com.test.Foo"),
+            new ClassFile(Paths.get("foo", "bar.jar"), "com.test.Foo"))
+        .addEqualityGroup(new ClassFile(Paths.get("abc", "bar.jar"), "com.test.Foo"))
+        .addEqualityGroup(new ClassFile(Paths.get("foo", "bar.jar"), "abc.Boo"))
         .testEquals();
   }
 }

@@ -17,7 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 /** The kind of linkage error against a symbol reference. */
-enum Reason {
+enum ErrorType {
   /** The target class of the symbol reference is not found in the class path. */
   CLASS_NOT_FOUND,
 
