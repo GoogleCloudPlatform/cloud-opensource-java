@@ -106,7 +106,7 @@ public class ClassDumperTest {
   public void testScanSymbolTableFromClassPath() throws URISyntaxException, IOException {
     Path path = absolutePathOfResource(GRPC_CLOUD_FIRESTORE_JAR);
     SymbolReferenceMaps symbolReferenceMaps =
-        ClassDumper.create(ImmutableList.of(path)).scanSymbolReferencesInClassPath();
+        ClassDumper.create(ImmutableList.of(path)).findSymbolReferences();
 
     // Class reference
     Truth.assertWithMessage("Class reference should have binary names defined in JLS 13.1")
@@ -149,7 +149,7 @@ public class ClassDumperTest {
 
     Path path = Paths.get(jarUrl.toURI());
     SymbolReferenceMaps symbolReferenceMaps =
-        ClassDumper.create(ImmutableList.of(path)).scanSymbolReferencesInClassPath();
+        ClassDumper.create(ImmutableList.of(path)).findSymbolReferences();
 
     Truth.assertThat(symbolReferenceMaps.getClassToClassSymbols().inverse().keys())
         .comparingElementsUsing(SYMBOL_TARGET_CLASS_NAME)
@@ -161,7 +161,7 @@ public class ClassDumperTest {
       throws URISyntaxException, IOException {
     Path path = absolutePathOfResource("testdata/api-common-1.7.0.jar");
     SymbolReferenceMaps symbolReferenceMaps =
-        ClassDumper.create(ImmutableList.of(path)).scanSymbolReferencesInClassPath();
+        ClassDumper.create(ImmutableList.of(path)).findSymbolReferences();
 
     boolean isInterfaceMethod = true;
     Truth.assertThat(symbolReferenceMaps.getClassToMethodSymbols())

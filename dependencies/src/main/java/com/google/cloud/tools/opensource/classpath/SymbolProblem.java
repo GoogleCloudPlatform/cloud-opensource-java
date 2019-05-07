@@ -57,7 +57,7 @@ final class SymbolProblem {
    * in the class path (this is the case if the errorType is {@code CLASS_NOT_FOUND} for top-level
    * classes).
    *
-   * <p>In case of an nested class is missing while its outer class is found in the class path, this
+   * <p>In case of a nested class is missing while its outer class is found in the class path, this
    * method returns the outer class.
    */
   @Nullable

@@ -146,10 +146,10 @@ class ClassDumper {
   }
 
   /**
-   * Returns a set of symbol references (maps from classes to class symbols, method symbols and
-   * field symbols) found in the class path.
+   * Returns symbol references (maps from classes to class symbols, method symbols and field
+   * symbols) found in the class path.
    */
-  SymbolReferenceMaps scanSymbolReferencesInClassPath() throws IOException {
+  SymbolReferenceMaps findSymbolReferences() throws IOException {
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
 
     for (Path jar : inputClassPath) {
@@ -157,7 +157,8 @@ class ClassDumper {
         if (!isCompatibleClassFileVersion(javaClass)) {
           continue;
         }
-        builder.addAll(scanSymbolReferences(jar, javaClass));
+        ClassFile source = new ClassFile(jar, javaClass.getClassName());
+        builder.addAll(findSymbolReferences(source, javaClass));
       }
     }
 
@@ -176,9 +177,9 @@ class ClassDumper {
     return 45 <= classFileMajorVersion && classFileMajorVersion <= 52;
   }
 
-  private static SymbolReferenceMaps.Builder scanSymbolReferences(Path jar, JavaClass javaClass) {
+  private static SymbolReferenceMaps.Builder findSymbolReferences(
+      ClassFile source, JavaClass javaClass) {
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
-    ClassFile source = new ClassFile(jar, javaClass.getClassName());
 
     ConstantPool constantPool = javaClass.getConstantPool();
     Constant[] constants = constantPool.getConstantPool();
@@ -250,9 +251,9 @@ class ClassDumper {
     // Adjust the internal form to comply with binary names defined in JLS 13.1
     String targetClassName = targetClassNameInternalForm.replace('/', '.');
     String superClassName = sourceClass.getSuperclassName();
-    boolean isSubclass = superClassName.equals(targetClassName);
+    boolean isInheritance = superClassName.equals(targetClassName);
 
-    if (isSubclass) {
+    if (isInheritance) {
       // A relationship between a superclass and subclass needs special validation for 'final'.
       return new SuperClassSymbol(targetClassName);
     }
@@ -261,23 +262,23 @@ class ClassDumper {
 
   private static MethodSymbol makeSymbol(
       ConstantCP constantMethodref, ConstantPool constantPool) {
-    String classNameInMethodReference = constantMethodref.getClass(constantPool);
+    String className = constantMethodref.getClass(constantPool);
     ConstantNameAndType constantNameAndType = constantNameAndType(constantMethodref, constantPool);
     String methodName = constantNameAndType.getName(constantPool);
     String descriptor = constantNameAndType.getSignature(constantPool);
     // constantMethodref is either ConstantMethodref or ConstantInterfaceMethodref
     boolean isInterfaceMethod = constantMethodref instanceof ConstantInterfaceMethodref;
-    return new MethodSymbol(classNameInMethodReference, methodName, descriptor, isInterfaceMethod);
+    return new MethodSymbol(className, methodName, descriptor, isInterfaceMethod);
   }
 
   private static FieldSymbol makeSymbol(
       ConstantFieldref constantFieldref, ConstantPool constantPool) {
     // Either a class type or an interface type
-    String classNameInFieldReference = constantFieldref.getClass(constantPool);
+    String className = constantFieldref.getClass(constantPool);
     ConstantNameAndType constantNameAndType = constantNameAndType(constantFieldref, constantPool);
     String fieldName = constantNameAndType.getName(constantPool);
     String descriptor = constantNameAndType.getSignature(constantPool);
-    return new FieldSymbol(classNameInFieldReference, fieldName, descriptor);
+    return new FieldSymbol(className, fieldName, descriptor);
   }
 
   static ImmutableSet<String> listInnerClassNames(JavaClass javaClass) {

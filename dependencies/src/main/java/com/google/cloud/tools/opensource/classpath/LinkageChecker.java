@@ -68,7 +68,7 @@ public class LinkageChecker {
         !jarPaths.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
     ClassDumper dumper = ClassDumper.create(jarPaths);
-    SymbolReferenceMaps symbolReferenceMaps = dumper.scanSymbolReferencesInClassPath();
+    SymbolReferenceMaps symbolReferenceMaps = dumper.findSymbolReferences();
 
     ImmutableMap<Path, SymbolReferenceSet> jarToSymbols =
         convert(jarPaths, symbolReferenceMaps);
