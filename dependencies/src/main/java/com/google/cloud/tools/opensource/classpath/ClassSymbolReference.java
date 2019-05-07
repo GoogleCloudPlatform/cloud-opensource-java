@@ -40,6 +40,7 @@ abstract class ClassSymbolReference implements SymbolReference {
     return builder()
         .setTargetClassName(symbol.getClassName())
         .setSourceClassName(source.getClassName())
+        // Relationships between superclass and subclass need special validation for 'final' keyword
         .setSubclass(symbol instanceof SuperClassSymbol)
         .build();
   }

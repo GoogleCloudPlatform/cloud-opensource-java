@@ -146,8 +146,7 @@ class ClassDumper {
   }
 
   /**
-   * Returns symbol references (maps from classes to class symbols, method symbols and field
-   * symbols) found in the class path.
+   * Returns a map from classes to the symbol references they contain.
    */
   SymbolReferenceMaps findSymbolReferences() throws IOException {
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
@@ -251,10 +250,10 @@ class ClassDumper {
     // Adjust the internal form to comply with binary names defined in JLS 13.1
     String targetClassName = targetClassNameInternalForm.replace('/', '.');
     String superClassName = sourceClass.getSuperclassName();
-    boolean isInheritance = superClassName.equals(targetClassName);
 
-    if (isInheritance) {
-      // A relationship between a superclass and subclass needs special validation for 'final'.
+    // Relationships between superclass and subclass need special validation for 'final' keyword
+    boolean referenceIsForInheritance = superClassName.equals(targetClassName);
+    if (referenceIsForInheritance) {
       return new SuperClassSymbol(targetClassName);
     }
     return new ClassSymbol(targetClassName);

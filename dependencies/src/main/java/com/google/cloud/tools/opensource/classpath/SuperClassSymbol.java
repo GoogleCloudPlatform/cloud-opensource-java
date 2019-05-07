@@ -19,7 +19,8 @@ package com.google.cloud.tools.opensource.classpath;
 /**
  * Symbol for a super class. This symbol is a special case of {@link ClassSymbol} when it is
  * referenced only from its subclasses. Treating super class symbols apart from {@link ClassSymbol}
- * helps to validate the relationship between a superclass and its subclasses.
+ * helps to validate the relationship between a superclass and its subclasses, with regard to {code
+ * final} keyword.
  *
  * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.10">Java
  *     Virtual Machine Specification: 4.10. Verification of class Files</a>
