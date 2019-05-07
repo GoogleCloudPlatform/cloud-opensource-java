@@ -23,8 +23,8 @@ import com.google.common.collect.ImmutableSetMultimap;
 import java.util.Objects;
 
 /**
- * A set of symbol references from source class to target symbols (class, method, and field
- * symbols).
+ * A set of symbol references. Symbol references are stored as maps from {@link ClassFile} to {@link
+ * ClassSymbol}s, {@link MethodSymbol}s, and {@link FieldSymbol}s.
  */
 class SymbolReferenceMaps {
   private final ImmutableSetMultimap<ClassFile, ClassSymbol> classToClassSymbols;

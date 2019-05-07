@@ -157,7 +157,7 @@ class ClassDumper {
         if (!isCompatibleClassFileVersion(javaClass)) {
           continue;
         }
-        builder.addAll(scanSymbolReferencesInClass(jar, javaClass));
+        builder.addAll(scanSymbolReferences(jar, javaClass));
       }
     }
 
@@ -176,8 +176,7 @@ class ClassDumper {
     return 45 <= classFileMajorVersion && classFileMajorVersion <= 52;
   }
 
-  private static SymbolReferenceMaps.Builder scanSymbolReferencesInClass(
-      Path jar, JavaClass javaClass) {
+  private static SymbolReferenceMaps.Builder scanSymbolReferences(Path jar, JavaClass javaClass) {
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
     ClassFile source = new ClassFile(jar, javaClass.getClassName());
 
@@ -191,7 +190,7 @@ class ClassDumper {
       switch (constantTag) {
         case Const.CONSTANT_Class:
           ConstantClass constantClass = (ConstantClass) constant;
-          ClassSymbol classSymbol = constantToClassSymbol(constantClass, constantPool, javaClass);
+          ClassSymbol classSymbol = makeSymbol(constantClass, constantPool, javaClass);
           // skip array class because it is provided by runtime
           if (classSymbol.getClassName().startsWith("[")) {
             break;
@@ -202,12 +201,11 @@ class ClassDumper {
         case Const.CONSTANT_InterfaceMethodref:
           // Both ConstantMethodref and ConstantInterfaceMethodref are subclass of ConstantCP
           ConstantCP constantMethodref = (ConstantCP) constant;
-          builder.addMethodReference(
-              source, constantToMethodSymbol(constantMethodref, constantPool));
+          builder.addMethodReference(source, makeSymbol(constantMethodref, constantPool));
           break;
         case Const.CONSTANT_Fieldref:
           ConstantFieldref constantFieldref = (ConstantFieldref) constant;
-          builder.addFieldReference(source, constantToFieldSymbol(constantFieldref, constantPool));
+          builder.addFieldReference(source, makeSymbol(constantFieldref, constantPool));
           break;
         default:
           break;
@@ -233,7 +231,7 @@ class ClassDumper {
     return (ConstantNameAndType) constantAtNameAndTypeIndex;
   }
 
-  private static ClassSymbol constantToClassSymbol(
+  private static ClassSymbol makeSymbol(
       ConstantClass constantClass, ConstantPool constantPool, JavaClass sourceClass) {
     int nameIndex = constantClass.getNameIndex();
     Constant classNameConstant = constantPool.getConstant(nameIndex);
@@ -261,7 +259,7 @@ class ClassDumper {
     return new ClassSymbol(targetClassName);
   }
 
-  private static MethodSymbol constantToMethodSymbol(
+  private static MethodSymbol makeSymbol(
       ConstantCP constantMethodref, ConstantPool constantPool) {
     String classNameInMethodReference = constantMethodref.getClass(constantPool);
     ConstantNameAndType constantNameAndType = constantNameAndType(constantMethodref, constantPool);
@@ -272,7 +270,7 @@ class ClassDumper {
     return new MethodSymbol(classNameInMethodReference, methodName, descriptor, isInterfaceMethod);
   }
 
-  private static FieldSymbol constantToFieldSymbol(
+  private static FieldSymbol makeSymbol(
       ConstantFieldref constantFieldref, ConstantPool constantPool) {
     // Either a class type or an interface type
     String classNameInFieldReference = constantFieldref.getClass(constantPool);
@@ -456,7 +454,7 @@ class ClassDumper {
       byte constantTag = constant.getTag();
       if (constantTag == Const.CONSTANT_Class) {
         ConstantClass constantClass = (ConstantClass) constant;
-        ClassSymbol classSymbol = constantToClassSymbol(constantClass, sourceConstantPool, sourceJavaClass);
+        ClassSymbol classSymbol = makeSymbol(constantClass, sourceConstantPool, sourceJavaClass);
         if (targetClassName.equals(classSymbol.getClassName())) {
           constantPoolIndicesForTarget.add(poolIndex);
         }

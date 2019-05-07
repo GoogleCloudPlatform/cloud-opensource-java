@@ -89,8 +89,8 @@ public class LinkageChecker {
     this.classToSymbols = Preconditions.checkNotNull(symbolReferenceMaps);
   }
 
-  static private ImmutableMap<Path, SymbolReferenceSet> convert(List<Path> inputClassPath,
-      SymbolReferenceMaps classToSymbols) {
+  private static ImmutableMap<Path, SymbolReferenceSet> convert(
+      List<Path> inputClassPath, SymbolReferenceMaps classToSymbols) {
     ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbolBuilder = ImmutableMap.builder();
 
     ImmutableSet.Builder<ClassFile> keys = ImmutableSet.builder();
