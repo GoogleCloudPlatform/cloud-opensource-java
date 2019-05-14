@@ -34,12 +34,12 @@ final class SymbolProblem {
 
   private final ErrorType errorType;
   private final Symbol symbol;
-  private final ClassFile targetClass;
+  private final ClassFile containingClass;
 
-  SymbolProblem(Symbol symbol, ErrorType errorType, @Nullable ClassFile targetClass) {
+  SymbolProblem(Symbol symbol, ErrorType errorType, @Nullable ClassFile containingClass) {
     this.symbol = checkNotNull(symbol);
     this.errorType = checkNotNull(errorType);
-    this.targetClass = targetClass;
+    this.containingClass = containingClass;
   }
 
   /** Returns the errorType why the symbol was not resolved. */
@@ -53,7 +53,7 @@ final class SymbolProblem {
   }
 
   /**
-   * Returns the referenced class of the linkage conflict. Null when the target class is not found
+   * Returns the referenced class that contains the symbol. Null when the target class is not found
    * in the class path (this is the case if the errorType is {@code CLASS_NOT_FOUND} for top-level
    * classes).
    *
@@ -61,8 +61,8 @@ final class SymbolProblem {
    * method returns the outer class.
    */
   @Nullable
-  ClassFile getTargetClass() {
-    return targetClass;
+  ClassFile getContainingClass() {
+    return containingClass;
   }
 
   @Override
@@ -76,12 +76,12 @@ final class SymbolProblem {
     SymbolProblem that = (SymbolProblem) other;
     return errorType == that.errorType
         && symbol.equals(that.symbol)
-        && Objects.equals(targetClass, that.targetClass);
+        && Objects.equals(containingClass, that.containingClass);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(errorType, symbol, targetClass);
+    return Objects.hash(errorType, symbol, containingClass);
   }
 
   @Override
@@ -89,7 +89,7 @@ final class SymbolProblem {
     return MoreObjects.toStringHelper(this)
         .add("errorType", errorType)
         .add("symbol", symbol)
-        .add("targetClass", targetClass)
+        .add("containingClass", containingClass)
         .toString();
   }
 }

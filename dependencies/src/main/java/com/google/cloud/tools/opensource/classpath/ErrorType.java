@@ -26,8 +26,8 @@ enum ErrorType {
    * source class.
    *
    * <p>An example case of breaking binary-compatibility is when a superclass changes a method to
-   * {@code final} and subclass is still overriding the method. Another example is when there is a
-   * method call to an interface and the interface is changed to a class.
+   * {@code final} and a subclass is still overriding the method. Another example is when there is a
+   * method call to an interface and the interface is changed to a class with the same name.
    *
    * @see <a href="https://docs.oracle.com/javase/specs/jls/se7/html/jls-13.html#jls-13.4.9">Java
    *     Language Specification: 13.4.9. final Fields and Constants</a>
