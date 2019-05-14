@@ -22,25 +22,35 @@ enum ErrorType {
   CLASS_NOT_FOUND,
 
   /**
-   * The referenced class or interface found in the class path is not compatible with the source.
+   * The referenced class or interface found in the class path is not binary-compatible with the
+   * source class.
+   *
+   * <p>An example case of breaking binary-compatibility is when a superclass changes a method to
+   * {@code final} and a subclass is still overriding the method. Another example is when there is a
+   * method call to an interface and the interface is changed to a class with the same name.
+   *
+   * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-13.html#jls-13.4.9">Java
+   *     Language Specification: 13.4.9. final Fields and static Constant Variables</a>
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.4.3.4>Java
+   *     Virtual Machine Specification: 5.4.3.4. Interface Method Resolution</a>
    */
   INCOMPATIBLE_CLASS_CHANGE,
 
   /**
-   * The target class of the symbol reference is inaccessible to the source.
+   * The target class of the symbol reference is inaccessible to the source class.
    *
-   * <p>If the source is in a different package, the class or one of its enclosing types is not
-   * public. If the source is in the same package, the class or one of its enclosing types is
-   * private.
+   * <p>If the source class is in a different package, the class or one of its enclosing types is
+   * not public. If the source class is in the same package, the class or one of its enclosing types
+   * is private.
    */
   INACCESSIBLE_CLASS,
 
   /**
-   * The target member (method or field) is inaccessible to the source.
+   * The target member (method or field) is inaccessible to the source class.
    *
-   * <p>If the source is in a different package, the member is not public. If the source is in the
-   * same package, the class is private. If the source is a subclass of the target class, the member
-   * is not protected or public.
+   * <p>If the source class is in a different package, the member is not public. If the source is in
+   * the same package, the class is private. If the source is a subclass of the target class, the
+   * member is not protected or public.
    */
   INACCESSIBLE_MEMBER,
 

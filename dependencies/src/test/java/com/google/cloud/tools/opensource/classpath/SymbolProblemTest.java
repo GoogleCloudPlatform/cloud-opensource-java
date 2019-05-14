@@ -38,7 +38,7 @@ public class SymbolProblemTest {
     assertEquals(new ClassSymbol("java.lang.Integer"), symbolProblem.getSymbol());
     assertEquals(
         new ClassFile(Paths.get("foo", "bar.jar"), "java.lang.Object"),
-        symbolProblem.getTargetClass());
+        symbolProblem.getContainingClass());
   }
 
   @Test
