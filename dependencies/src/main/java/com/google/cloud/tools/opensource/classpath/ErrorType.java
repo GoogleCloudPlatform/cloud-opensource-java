@@ -29,8 +29,8 @@ enum ErrorType {
    * {@code final} and a subclass is still overriding the method. Another example is when there is a
    * method call to an interface and the interface is changed to a class with the same name.
    *
-   * @see <a href="https://docs.oracle.com/javase/specs/jls/se7/html/jls-13.html#jls-13.4.9">Java
-   *     Language Specification: 13.4.9. final Fields and Constants</a>
+   * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-13.html#jls-13.4.9">Java
+   *     Language Specification: 13.4.9. final Fields and static Constant Variables</a>
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.4.3.4>Java
    *     Virtual Machine Specification: 5.4.3.4. Interface Method Resolution</a>
    */

@@ -87,6 +87,7 @@ final class SymbolProblem {
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
+        .omitNullValues()
         .add("errorType", errorType)
         .add("symbol", symbol)
         .add("containingClass", containingClass)
