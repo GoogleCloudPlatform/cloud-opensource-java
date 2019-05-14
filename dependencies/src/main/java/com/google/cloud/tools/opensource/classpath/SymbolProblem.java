@@ -23,8 +23,8 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
- * Linkage error caused by a symbol reference that cannot be resolved. This class does not carry the
- * source class of the reference.
+ * A missing or incompatible symbol. This constitutes the cause of a linkage error (without the
+ * source class).
  *
  * @see <a
  *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#linkage-error">
