@@ -11,9 +11,9 @@ boms/cloud-oss-bom/RELEASING.md) is not part of this document.
 
 | ArtifactId | Rapid project name | Dependency |
 | ---------- | ------------------ | --------- |
-|dependencies-parent| cloud-java-tools-cloud-opensource-java-parent-kokoro-release||
-|dependencies| cloud-java-tools-cloud-opensource-java-dependencies-kokoro-release|dependencies-parent|
-|linkage-checker-enforcer-rules|cloud-java-tools-cloud-opensource-java-enforcer-rules-kokoro-release|dependencies-parent, dependencies|
+|dependencies-parent| [cloud-java-tools-cloud-opensource-java-parent-kokoro-release](http://rapid/cloud-java-tools-cloud-opensource-java-parent-kokoro-release)||
+|dependencies| [cloud-java-tools-cloud-opensource-java-dependencies-kokoro-release](http://rapid/cloud-java-tools-cloud-opensource-java-dependencies-kokoro-release)|dependencies-parent|
+|linkage-checker-enforcer-rules|[cloud-java-tools-cloud-opensource-java-enforcer-rules-kokoro-release](http://cloud-java-tools-cloud-opensource-java-enforcer-rules-kokoro-release)|dependencies-parent, dependencies|
 
 When releasing a version of `linkage-checker-enforcer-rules`, you need to release `dependencies`
 and `dependencies-parent` together with the same version.
