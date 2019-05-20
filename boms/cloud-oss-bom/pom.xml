@@ -14,11 +14,31 @@
   <description>
     A compatible set of Google Cloud open source libraries.
   </description>
-
+  <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java#google-library-bom</url>
   <organization>
     <name>Google LLC</name>
     <url>https://cloud.google.com</url>
   </organization>
+  <inceptionYear>2019</inceptionYear>
+  <developers>
+    <developer>
+      <name>Elliotte Rusty Harold</name>
+    </developer>
+    <developer>
+      <name>Tomo Suzuki</name>
+    </developer>
+  </developers>
+
+  <issueManagement>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues</url>
+  </issueManagement>
+  <scm>
+    <connection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git</connection>
+    <developerConnection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git
+    </developerConnection>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/boms/cloud-oss-bom</url>
+    <tag>HEAD</tag>
+  </scm>
 
   <licenses>
     <license>
