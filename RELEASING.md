@@ -9,7 +9,7 @@ boms/cloud-oss-bom/RELEASING.md) is not part of this document.
 
 ## Rapid builds
 
-| ArtifactId | Rapid project name | Dependency |
+| Artifact ID | Rapid project | Dependency |
 | ---------- | ------------------ | --------- |
 |dependencies-parent| [cloud-java-tools-cloud-opensource-java-parent-kokoro-release](http://rapid/cloud-java-tools-cloud-opensource-java-parent-kokoro-release)||
 |dependencies| [cloud-java-tools-cloud-opensource-java-dependencies-kokoro-release](http://rapid/cloud-java-tools-cloud-opensource-java-dependencies-kokoro-release)|dependencies-parent|

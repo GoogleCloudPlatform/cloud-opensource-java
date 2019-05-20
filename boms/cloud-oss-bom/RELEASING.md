@@ -36,4 +36,5 @@ $ ../../scripts/prepare_release.sh 1.0.0 1.0.1
 Then follow the ["Developers/Releasing" steps in go/ct4j](
 https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md?cl=head).
 
-Rapid project name is [cloud-java-tools-cloud-opensource-java-bom-kokoro-release](http://rapid/cloud-java-tools-cloud-opensource-java-bom-kokoro-release).
+Rapid project is [cloud-java-tools-cloud-opensource-java-bom-kokoro-release](
+http://rapid/cloud-java-tools-cloud-opensource-java-bom-kokoro-release).
