@@ -11,9 +11,7 @@
   <packaging>pom</packaging>
 
   <name>Google Cloud Platform Supported Libraries</name>
-  <description>
-    A compatible set of Google Cloud open source libraries.
-  </description>
+  <description>A compatible set of Google Cloud open source libraries.</description>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java#google-library-bom</url>
   <organization>
     <name>Google LLC</name>
