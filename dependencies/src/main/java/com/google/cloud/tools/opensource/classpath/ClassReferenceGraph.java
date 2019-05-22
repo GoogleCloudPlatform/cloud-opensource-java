@@ -16,15 +16,13 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
-
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.google.common.graph.Traverser;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -50,14 +48,7 @@ class ClassReferenceGraph {
   private final ImmutableSet<String> reachableClasses;
 
   static ClassReferenceGraph create(
-      Collection<SymbolReferenceSet> symbolReferenceSets, Set<Path> entryPointJars)
-      throws IOException {
-
-    // Collects all class symbol reference in symbolReferences
-    ImmutableSet<ClassSymbolReference> classSymbolReferences =
-        symbolReferenceSets.stream()
-            .flatMap(symbolReferenceSet -> symbolReferenceSet.getClassReferences().stream())
-            .collect(toImmutableSet());
+      SymbolReferenceMaps symbolReferenceMaps, Set<Path> entryPointJars) throws IOException {
 
     ImmutableSet.Builder<String> entryPointClassBuilder = ImmutableSet.builder();
     for (Path jar : entryPointJars) {
@@ -65,23 +56,24 @@ class ClassReferenceGraph {
         entryPointClassBuilder.add(className);
       }
     }
-
-    return new ClassReferenceGraph(classSymbolReferences, entryPointClassBuilder.build());
+    return new ClassReferenceGraph(
+        symbolReferenceMaps.getClassToClassSymbols(), entryPointClassBuilder.build());
   }
 
-  private ClassReferenceGraph(Set<ClassSymbolReference> classSymbolReferences,
+  private ClassReferenceGraph(
+      ImmutableSetMultimap<ClassFile, ClassSymbol> classSymbolReferences,
       Set<String> entryPointClasses) {
     MutableGraph<String> graph = GraphBuilder.directed().allowsSelfLoops(false).build();
 
-    for (ClassSymbolReference reference : classSymbolReferences) {
-      String sourceClassName = reference.getSourceClassName();
-      String targetClassName = reference.getTargetClassName();
-      if (sourceClassName.equals(targetClassName)) {
-        continue; // no self-loop
-      }
-      graph.putEdge(sourceClassName, targetClassName);
-    }
-
+    classSymbolReferences.forEach(
+        (classFile, classSymbol) -> {
+          String sourceClassName = classFile.getClassName();
+          String targetClassName = classSymbol.getClassName();
+          if (!sourceClassName.equals(targetClassName)) {
+            // no self-loop
+            graph.putEdge(sourceClassName, targetClassName);
+          }
+        });
     entryPointClasses.forEach(graph::addNode); // to avoid IllegalArgumentError in breadthFirst
 
     this.reachableClasses =
