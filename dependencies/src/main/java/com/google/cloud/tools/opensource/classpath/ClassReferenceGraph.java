@@ -30,9 +30,8 @@ import java.util.Set;
  * #isReachable(String)} for a class to check whether the class is reachable from the entry point
  * classes (reachability). The graph's nodes and edges are defined as follows:
  *
- * <p>Nodes are fully-qualified class names, returned from {@link
- * SymbolReference#getSourceClassName()} and {@link SymbolReference#getTargetClassName()} in {@code
- * symbolReferenceSets}.
+ * <p>Nodes are fully-qualified class names, returned from {@link ClassFile#getClassName()} and
+ * {@link ClassSymbol#getClassName()} in {@code symbolReferenceMaps}.
  *
  * <p>Edges are references between two classes. When {@code ClassA} has a reference to {@code
  * ClassB}, a directed edge from {@code ClassA} to {@code ClassB} exists in the graph. Edges in the
