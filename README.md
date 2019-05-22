@@ -24,9 +24,9 @@ detects [linkage errors](
 ./library-best-practices/glossary.md#types-of-conflicts-and-compatibility) in
 the current project.
 
-# Google Library BOM
+# Google Libraries BOM
 
-[Google Library BOM](boms/cloud-oss-bom) is a Bill-of-Materials (BOM) that
+[Google Libraries BOM](boms/cloud-oss-bom) is a Bill-of-Materials (BOM) that
 provides consistent versions of Google Cloud Java libraries that work together
 without linkage errors.
 To understand how BOMs help library users avoid dependency conflicts, read
