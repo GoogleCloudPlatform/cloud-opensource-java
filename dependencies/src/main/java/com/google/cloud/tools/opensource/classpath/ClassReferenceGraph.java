@@ -69,8 +69,7 @@ class ClassReferenceGraph {
         (classFile, classSymbol) -> {
           String sourceClassName = classFile.getClassName();
           String targetClassName = classSymbol.getClassName();
-          if (!sourceClassName.equals(targetClassName)) {
-            // no self-loop
+          if (!sourceClassName.equals(targetClassName)) { // no self-loop
             graph.putEdge(sourceClassName, targetClassName);
           }
         });
