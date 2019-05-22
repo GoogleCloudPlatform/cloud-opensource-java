@@ -24,7 +24,6 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -36,12 +35,9 @@ import nu.xom.Element;
 import nu.xom.Node;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
-
-import org.apache.maven.project.ProjectBuildingException;
-import org.codehaus.plexus.PlexusContainerException;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -58,9 +54,6 @@ import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 
 public class DashboardTest {
-
-  private static final Path CLOUD_OSS_BOM_PATH =
-      Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();
 
   private static final Correspondence<Node, String> NODE_VALUES =
       Correspondence.from((node, expected) ->
@@ -79,7 +72,7 @@ public class DashboardTest {
   public static void setUp() throws IOException, ParsingException {
     // Creates "dashboard.html" and artifact reports in outputDirectory
     try {
-      outputDirectory = DashboardMain.generate(CLOUD_OSS_BOM_PATH);
+      outputDirectory = DashboardMain.generate("com.google.cloud:libraries-bom:1.0.0");
     } catch (Throwable t) {
       t.printStackTrace();
       Assert.fail("Could not generate dashboard");
@@ -121,10 +114,9 @@ public class DashboardTest {
   }
 
   @Test
-  public void testDashboard()
-      throws IOException, PlexusContainerException, ComponentLookupException,
-      ProjectBuildingException {
-    List<Artifact> artifacts = RepositoryUtility.readBom(CLOUD_OSS_BOM_PATH);
+  public void testDashboard() throws IOException, ArtifactDescriptorException {
+    Artifact bom = new DefaultArtifact("com.google.cloud:libraries-bom:1.0.0");
+    List<Artifact> artifacts = RepositoryUtility.readBom(bom);
     Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
 
     Assert.assertEquals("en-US", dashboard.getRootElement().getAttribute("lang").getValue());
