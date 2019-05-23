@@ -63,6 +63,7 @@ class ClassReferenceGraph {
       ImmutableSetMultimap<ClassFile, ClassSymbol> classSymbolReferences,
       Set<String> entryPointClasses) {
     MutableGraph<String> graph = GraphBuilder.directed().allowsSelfLoops(false).build();
+
     classSymbolReferences.forEach(
         (classFile, classSymbol) -> {
           String sourceClassName = classFile.getClassName();
