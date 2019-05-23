@@ -16,15 +16,13 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
-
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.google.common.graph.Traverser;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -32,9 +30,8 @@ import java.util.Set;
  * #isReachable(String)} for a class to check whether the class is reachable from the entry point
  * classes (reachability). The graph's nodes and edges are defined as follows:
  *
- * <p>Nodes are fully-qualified class names, returned from {@link
- * SymbolReference#getSourceClassName()} and {@link SymbolReference#getTargetClassName()} in {@code
- * symbolReferenceSets}.
+ * <p>Nodes are fully-qualified class names, returned from {@link ClassFile#getClassName()} and
+ * {@link ClassSymbol#getClassName()} in {@code symbolReferenceMaps}.
  *
  * <p>Edges are references between two classes. When {@code ClassA} has a reference to {@code
  * ClassB}, a directed edge from {@code ClassA} to {@code ClassB} exists in the graph. Edges in the
@@ -50,14 +47,7 @@ class ClassReferenceGraph {
   private final ImmutableSet<String> reachableClasses;
 
   static ClassReferenceGraph create(
-      Collection<SymbolReferenceSet> symbolReferenceSets, Set<Path> entryPointJars)
-      throws IOException {
-
-    // Collects all class symbol reference in symbolReferences
-    ImmutableSet<ClassSymbolReference> classSymbolReferences =
-        symbolReferenceSets.stream()
-            .flatMap(symbolReferenceSet -> symbolReferenceSet.getClassReferences().stream())
-            .collect(toImmutableSet());
+      SymbolReferenceMaps symbolReferenceMaps, Set<Path> entryPointJars) throws IOException {
 
     ImmutableSet.Builder<String> entryPointClassBuilder = ImmutableSet.builder();
     for (Path jar : entryPointJars) {
@@ -65,23 +55,23 @@ class ClassReferenceGraph {
         entryPointClassBuilder.add(className);
       }
     }
-
-    return new ClassReferenceGraph(classSymbolReferences, entryPointClassBuilder.build());
+    return new ClassReferenceGraph(
+        symbolReferenceMaps.getClassToClassSymbols(), entryPointClassBuilder.build());
   }
 
-  private ClassReferenceGraph(Set<ClassSymbolReference> classSymbolReferences,
+  private ClassReferenceGraph(
+      ImmutableSetMultimap<ClassFile, ClassSymbol> classSymbolReferences,
       Set<String> entryPointClasses) {
     MutableGraph<String> graph = GraphBuilder.directed().allowsSelfLoops(false).build();
 
-    for (ClassSymbolReference reference : classSymbolReferences) {
-      String sourceClassName = reference.getSourceClassName();
-      String targetClassName = reference.getTargetClassName();
-      if (sourceClassName.equals(targetClassName)) {
-        continue; // no self-loop
-      }
-      graph.putEdge(sourceClassName, targetClassName);
-    }
-
+    classSymbolReferences.forEach(
+        (classFile, classSymbol) -> {
+          String sourceClassName = classFile.getClassName();
+          String targetClassName = classSymbol.getClassName();
+          if (!sourceClassName.equals(targetClassName)) { // no self-loop
+            graph.putEdge(sourceClassName, targetClassName);
+          }
+        });
     entryPointClasses.forEach(graph::addNode); // to avoid IllegalArgumentError in breadthFirst
 
     this.reachableClasses =
