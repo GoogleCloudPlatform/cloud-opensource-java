@@ -384,28 +384,36 @@ public class DashboardMain {
       LinkageCheckReport linkageCheckReport,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
-    File dashboardFile = output.resolve("dashboard.html").toFile();
     
     Map<String, String> latestArtifacts = collectLatestVersions(globalDependencies);
+
+    Map<String, Object> templateData = new HashMap<>();
+    templateData.put("table", table);
+    templateData.put("lastUpdated", LocalDateTime.now());
+    templateData.put("latestArtifacts", latestArtifacts);
+    templateData.put("jarLinkageReports", linkageCheckReport.getJarLinkageReports());
+    templateData.put("jarToDependencyPaths", jarToDependencyPaths);
+    templateData.put("dependencyPathRootCauses", findRootCauses(jarToDependencyPaths));
+
+    // Accessing static method 'countFailures' from Freemarker template
+    // https://freemarker.apache.org/docs/pgui_misc_beanwrapper.html#autoid_60
+    DefaultObjectWrapper wrapper = new DefaultObjectWrapperBuilder(Configuration.VERSION_2_3_28)
+        .build();
+    TemplateHashModel staticModels = wrapper.getStaticModels();
+    templateData.put("dashboardMain", staticModels.get(DashboardMain.class.getName()));    
     
+    File dashboardFile = output.resolve("dashboard.html").toFile();
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
       Template dashboard = configuration.getTemplate("/templates/dashboard.ftl");
-      Map<String, Object> templateData = new HashMap<>();
-      templateData.put("table", table);
-      templateData.put("lastUpdated", LocalDateTime.now());
-      templateData.put("latestArtifacts", latestArtifacts);
-      templateData.put("jarLinkageReports", linkageCheckReport.getJarLinkageReports());
-      templateData.put("jarToDependencyPaths", jarToDependencyPaths);
-      templateData.put("dependencyPathRootCauses", findRootCauses(jarToDependencyPaths));
-
-      // Accessing Static method 'countFailures' from Freemarker template
-      // https://freemarker.apache.org/docs/pgui_misc_beanwrapper.html#autoid_60
-      DefaultObjectWrapper wrapper = new DefaultObjectWrapperBuilder(Configuration.VERSION_2_3_28)
-          .build();
-      TemplateHashModel staticModels = wrapper.getStaticModels();
-      templateData.put("dashboardMain", staticModels.get(DashboardMain.class.getName()));
       dashboard.process(templateData, out);
+    }
+    
+    File detailsFile = output.resolve("artifact_details.html").toFile();
+    try (Writer out = new OutputStreamWriter(
+        new FileOutputStream(detailsFile), StandardCharsets.UTF_8)) {     
+      Template details = configuration.getTemplate("/templates/artifact_details.ftl");
+      details.process(templateData, out);
     }
   }
 

@@ -67,6 +67,7 @@ public class DashboardTest {
   private static Path outputDirectory;
   private static Builder builder = new Builder();
   private static Document dashboard;
+  private static Document details;
 
   @BeforeClass
   public static void setUp() throws IOException, ParsingException {
@@ -79,6 +80,7 @@ public class DashboardTest {
     }
 
     dashboard = parseOutputFile("dashboard.html");
+    details = parseOutputFile("artifact_details.html");
   }
 
   @AfterClass
@@ -128,16 +130,16 @@ public class DashboardTest {
       return builder.build(source);
     }
   }
-
+  
   @Test
-  public void testDashboard() throws IOException, ArtifactDescriptorException {
+  public void testArtifactDetails() throws IOException, ArtifactDescriptorException {
     Artifact bom = new DefaultArtifact("com.google.cloud:libraries-bom:1.0.0");
     List<Artifact> artifacts = RepositoryUtility.readBom(bom);
     Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
 
     Assert.assertEquals("en-US", dashboard.getRootElement().getAttribute("lang").getValue());
 
-    Nodes tr = dashboard.query("//tr");
+    Nodes tr = details.query("//tr");
     Assert.assertEquals(artifacts.size() + 1, tr.size()); // header row adds 1
     for (int i = 1; i < tr.size(); i++) { // start at 1 to skip header row
       Nodes td = tr.get(i).query("td");
@@ -146,7 +148,7 @@ public class DashboardTest {
         assertValidCellValue((Element) td.get(j));
       }
     }
-    Nodes href = dashboard.query("//tr/td[@class='artifact-name']/a/@href");
+    Nodes href = details.query("//tr/td[@class='artifact-name']/a/@href");
     for (int i = 0; i < href.size(); i++) {
       String fileName = href.get(i).getValue();
       Artifact artifact = artifacts.get(i);
@@ -189,21 +191,21 @@ public class DashboardTest {
   }
 
   @Test
-  public void testDashboard_linkageReports() {
-    Nodes reports = dashboard.query("//p[@class='jar-linkage-report']");
+  public void testLinkageReports() {
+    Nodes reports = details.query("//p[@class='jar-linkage-report']");
     // appengine-api-sdk, shown as first item in linkage errors, has these errors
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo(
             "106 target classes causing linkage errors referenced from 516 source classes.");
 
-    Nodes dependencyPaths = dashboard.query(
+    Nodes dependencyPaths = details.query(
         "//p[@class='linkage-check-dependency-paths'][position()=last()]");
     Node dependencyPathMessage = dependencyPaths.get(0);
     Assert.assertEquals(
         "The following paths to the jar file from the BOM are found in the dependency tree:",
         trimAndCollapseWhiteSpace(dependencyPathMessage.getValue()));
     int dependencyPathListSize =
-        dashboard.query("//ul[@class='linkage-check-dependency-paths']/li").size();
+        details.query("//ul[@class='linkage-check-dependency-paths']/li").size();
     Truth.assertWithMessage("The dashboard should not show repetitive dependency paths")
         .that(dependencyPathListSize)
         .isLessThan(100);
@@ -280,6 +282,7 @@ public class DashboardTest {
             "com.google.net.rpc3.client.RpcStubDescriptor is not found,"
                 + " referenced from 21 source classes ▶"); // '▶' is the toggle button
   }
+
 
   @Test
   public void testComponent_success() throws IOException, ParsingException {
