@@ -70,10 +70,9 @@ public class LinkageChecker {
     ClassDumper dumper = ClassDumper.create(jarPaths);
     SymbolReferenceMaps symbolReferenceMaps = dumper.findSymbolReferences();
 
-    ImmutableMap<Path, SymbolReferenceSet> jarToSymbols =
-        convert(jarPaths, symbolReferenceMaps);
+    ImmutableMap<Path, SymbolReferenceSet> jarToSymbols = convert(jarPaths, symbolReferenceMaps);
     ClassReferenceGraph classReferenceGraph =
-        ClassReferenceGraph.create(jarToSymbols.values(), ImmutableSet.copyOf(entryPoints));
+        ClassReferenceGraph.create(symbolReferenceMaps, ImmutableSet.copyOf(entryPoints));
 
     return new LinkageChecker(dumper, jarToSymbols, symbolReferenceMaps, classReferenceGraph);
   }
