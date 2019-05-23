@@ -93,6 +93,22 @@ public class DashboardTest {
       // no big deal
     }
   }
+  
+  @Test // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/617
+  public void testPlural() {
+    Nodes statisticItems = dashboard.query("//section[@class='statistics']/div/div");
+    for (Node node : statisticItems) {
+      Node h2 = node.query("h2").get(0);
+      Node span = node.query("span").get(0);
+      int errorCount = Integer.parseInt(h2.getValue());
+      if (errorCount == 1) {
+        String message = span.getValue();
+        Assert.assertEquals("Has Linkage Errors", message);
+      }
+    }
+    
+    Assert.assertFalse(dashboard.toXML().contains("1 HAVE"));
+  }
 
   @Test
   public void testCss() {

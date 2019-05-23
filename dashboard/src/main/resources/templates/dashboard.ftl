@@ -18,8 +18,9 @@
           <span class="desc">Total Artifacts Checked</span>
         </div>
         <div class="statistic-item statistic-item-red">
-          <h2>${dashboardMain.countFailures(table, "Linkage Errors")}</h2>
-          <span class="desc">Have Linkage Errors</span>
+          <#assign errorCount = dashboardMain.countFailures(table, "Linkage Errors")>
+          <h2>${errorCount}</h2>
+          <span class="desc">${(errorCount == 1)?then("Has", "Have")} Linkage Errors</span>
         </div>
         <div class="statistic-item statistic-item-yellow">
           <h2>${dashboardMain.countFailures(table, "Upper Bounds")}</h2>
