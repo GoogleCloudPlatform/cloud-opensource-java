@@ -84,54 +84,11 @@
 
       <!-- google-http-java-client from https://github.com/googleapis/google-http-java-client -->
      <dependency>
-       <groupId>com.google.http-client</groupId>
-       <artifactId>google-http-client</artifactId>
-       <version>${http.version}</version>
-      </dependency>
-      <dependency>
         <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client-android</artifactId>
+        <artifactId>google-http-client-bom</artifactId>
         <version>${http.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client-apache</artifactId>
-        <version>2.1.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client-appengine</artifactId>
-        <version>${http.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client-gson</artifactId>
-        <version>${http.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client-jackson</artifactId>
-        <version>${http.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client-jackson2</artifactId>
-        <version>${http.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client-protobuf</artifactId>
-        <version>${http.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client-test</artifactId>
-        <version>${http.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client-xml</artifactId>
-        <version>${http.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
 
       <!-- GRPC; specifically https://github.com/grpc/grpc-java -->
