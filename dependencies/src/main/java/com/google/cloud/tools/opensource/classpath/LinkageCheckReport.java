@@ -61,7 +61,7 @@ public abstract class LinkageCheckReport {
     return result;
   }
 
-  public static LinkageCheckReport fromSymbolProblems(
+  static LinkageCheckReport fromSymbolProblems(
       ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems,
       List<Path> jars,
       ClassReferenceGraph reachableClasses) {
@@ -129,7 +129,7 @@ public abstract class LinkageCheckReport {
     return create(linkageReportBuilder.build());
   }
 
-  static <U extends SymbolReference> SymbolNotResolvable<U> createSymbolResolvable(
+  private static <U extends SymbolReference> SymbolNotResolvable<U> createSymbolResolvable(
       U symbolReference,
       SymbolProblem symbolProblem,
       Path targetClassLocation,
