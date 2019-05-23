@@ -129,9 +129,9 @@ public class DashboardUnavailableArtifactTest {
     DashboardMain.generateDashboard(
         configuration, outputDirectory, table, null, report, LinkedListMultimap.create());
 
-    Path generatedDashboardHtml = outputDirectory.resolve("dashboard.html");
-    Assert.assertTrue(Files.isRegularFile(generatedDashboardHtml));
-    Document document = builder.build(generatedDashboardHtml.toFile());
+    Path generatedHtml = outputDirectory.resolve("artifact_details.html");
+    Assert.assertTrue(Files.isRegularFile(generatedHtml));
+    Document document = builder.build(generatedHtml.toFile());
     Assert.assertEquals("en-US", document.getRootElement().getAttribute("lang").getValue());
     Nodes tr = document.query("//tr");
 

@@ -18,65 +18,32 @@
           <span class="desc">Total Artifacts Checked</span>
         </div>
         <div class="statistic-item statistic-item-red">
-          <h2>${dashboardMain.countFailures(table, "Linkage Errors")}</h2>
-          <span class="desc">Have Linkage Errors</span>
+          <#assign errorCount = dashboardMain.countFailures(table, "Linkage Errors")>
+          <h2>${errorCount}</h2>
+          <span class="desc">${(errorCount == 1)?then("Has", "Have")} Linkage Errors</span>
         </div>
         <div class="statistic-item statistic-item-yellow">
+          <#assign errorCount = dashboardMain.countFailures(table, "Upper Bounds")>
           <h2>${dashboardMain.countFailures(table, "Upper Bounds")}</h2>
-          <span class="desc">Have Upper Bounds Errors</span>
+          <span class="desc">${(errorCount == 1)?then("Has", "Have")} Upper Bounds Errors</span>
         </div>
         <div class="statistic-item statistic-item-orange">
+          <#assign errorCount = dashboardMain.countFailures(table, "Global Upper Bounds")>
           <h2>${dashboardMain.countFailures(table, "Global Upper Bounds")}</h2>
-          <span class="desc">Have Global Upper Bounds Errors</span>
+          <span class="desc">${(errorCount == 1)?then("Has", "Have")} Global Upper Bounds Errors</span>
         </div>
         <div class="statistic-item statistic-item-blue">
+          <#assign errorCount = dashboardMain.countFailures(table, "Dependency Convergence")>
           <h2>${dashboardMain.countFailures(table, "Dependency Convergence")}</h2>
-          <span class="desc">Fail to Converge</span>
+          <span class="desc">${(errorCount == 1)?then("Fails", "Fail")} to Converge</span>
         </div>
       </div>
     </section>
-
-    <h2>Artifact Details</h2>
-
-    <table class="dependency-dashboard">
-      <tr>
-        <th>Artifact</th>
-        <th title=
-                "Linkage check result for the artifact and transitive dependencies. PASS means all symbol references have valid referents.">
-          Linkage Check</th>
-        <th title=
-          "For each transitive dependency the library pulls in, the highest version found anywhere in the dependency tree is picked.">
-          Upper Bounds</th>
-        <th title=
-          "For each transitive dependency the library pulls in, the highest version found anywhere in the union of the BOM's dependency trees is picked.">
-          Global Upper Bounds</th>
-        <th title=
-                "There is exactly one version of each dependency in the library's transitive dependency tree. That is, two artifacts with the same group ID and artifact ID but different versions do not appear in the tree. No dependency mediation is necessary.">
-          Dependency Convergence</th>
-      </tr>
-      <#list table as row>
-        <#assign report_url = row.getCoordinates()?replace(":", "_") + '.html' />
-        <tr>
-          <td class="artifact-name"><a href='${report_url}'>${row.getCoordinates()}</a></td>
-          <#-- The name key should match TEST_NAME_XXXX variables -->
-          <@testResult row=row name="Linkage Errors"/>
-          <@testResult row=row name="Upper Bounds"/>
-          <@testResult row=row name="Global Upper Bounds"/>
-          <@testResult row=row name="Dependency Convergence"/>
-        </tr>
-      </#list>
-    </table>
     
-    <hr />
+    <p>
+    <a href="artifact_detils.html">Detailed Artifact Reports</a>
+    </p>
 
-    <h2>Linkage Errors</h2>
-
-    <#list jarLinkageReports as jarLinkageReport>
-      <@formatJarLinkageReport jarLinkageReport jarToDependencyPaths dependencyPathRootCauses/>
-    </#list>
-
-    <hr />      
-      
     <h2>Recommended Versions</h2>
       
     <p>These are the most recent versions of dependencies used by any of the covered artifacts.</p> 
