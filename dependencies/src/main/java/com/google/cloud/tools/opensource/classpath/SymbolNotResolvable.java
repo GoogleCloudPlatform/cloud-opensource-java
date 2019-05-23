@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.base.VerifyException;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
 
@@ -176,4 +177,31 @@ abstract class SymbolNotResolvable<T extends SymbolReference> {
      */
     SYMBOL_NOT_FOUND
   }
+
+  static <U extends SymbolReference> SymbolNotResolvable<U> fromSymbolProblem(
+      U symbolReference,
+      SymbolProblem symbolProblem,
+      Path targetClassLocation,
+      boolean isReachable) {
+    // TODO(#574): This method will be removed once the refactoring is done.
+    switch (symbolProblem.getErrorType()) {
+      case INACCESSIBLE_CLASS:
+        return SymbolNotResolvable.errorInaccessibleClass(
+            symbolReference, targetClassLocation, isReachable);
+      case INCOMPATIBLE_CLASS_CHANGE:
+        return SymbolNotResolvable.errorIncompatibleClassChange(
+            symbolReference, targetClassLocation, isReachable);
+      case INACCESSIBLE_MEMBER:
+        return SymbolNotResolvable.errorInaccessibleMember(
+            symbolReference, targetClassLocation, isReachable);
+      case SYMBOL_NOT_FOUND:
+        return SymbolNotResolvable.errorMissingMember(
+            symbolReference, targetClassLocation, isReachable);
+      case CLASS_NOT_FOUND:
+        return SymbolNotResolvable.errorMissingTargetClass(symbolReference, isReachable);
+      default:
+        throw new VerifyException("Unknown error type found: " + symbolProblem.getErrorType());
+    }
+  }
+
 }

@@ -16,21 +16,14 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.ErrorType.CLASS_NOT_FOUND;
-import static com.google.cloud.tools.opensource.classpath.ErrorType.INACCESSIBLE_CLASS;
-import static com.google.cloud.tools.opensource.classpath.ErrorType.INACCESSIBLE_MEMBER;
-import static com.google.cloud.tools.opensource.classpath.ErrorType.INCOMPATIBLE_CLASS_CHANGE;
-import static com.google.cloud.tools.opensource.classpath.ErrorType.SYMBOL_NOT_FOUND;
+import static com.google.cloud.tools.opensource.classpath.SymbolNotResolvable.fromSymbolProblem;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * The result of a linkage check.
@@ -89,21 +82,21 @@ public abstract class LinkageCheckReport {
             ClassSymbolReference classSymbolReference =
                 ClassSymbolReference.fromSymbol(classFile, (ClassSymbol) symbol);
             SymbolNotResolvable<ClassSymbolReference> symbolNotResolvable =
-                createSymbolResolvable(
+                fromSymbolProblem(
                     classSymbolReference, symbolProblem, targetClassLocation, isReachable);
             classSymbolProblemsBuilder.put(jar, symbolNotResolvable);
           } else if (symbol instanceof MethodSymbol) {
             MethodSymbolReference methodSymbolReference =
                 MethodSymbolReference.fromSymbol(classFile, (MethodSymbol) symbol);
             SymbolNotResolvable<MethodSymbolReference> symbolNotResolvable =
-                createSymbolResolvable(
+                fromSymbolProblem(
                     methodSymbolReference, symbolProblem, targetClassLocation, isReachable);
             methodSymbolProblemsBuilder.put(jar, symbolNotResolvable);
           } else if (symbol instanceof FieldSymbol) {
             FieldSymbolReference fieldSymbolReference =
                 FieldSymbolReference.fromSymbol(classFile, (FieldSymbol) symbol);
             SymbolNotResolvable<FieldSymbolReference> symbolNotResolvable =
-                createSymbolResolvable(
+                fromSymbolProblem(
                     fieldSymbolReference, symbolProblem, targetClassLocation, isReachable);
             fieldSymbolProblemsBuilder.put(jar, symbolNotResolvable);
           }
@@ -127,31 +120,5 @@ public abstract class LinkageCheckReport {
     }
 
     return create(linkageReportBuilder.build());
-  }
-
-  private static <U extends SymbolReference> SymbolNotResolvable<U> createSymbolResolvable(
-      U symbolReference,
-      SymbolProblem symbolProblem,
-      Path targetClassLocation,
-      boolean isReachable) {
-    switch (symbolProblem.getErrorType()) {
-      case INACCESSIBLE_CLASS:
-        return SymbolNotResolvable.errorInaccessibleClass(
-            symbolReference, targetClassLocation, isReachable);
-      case INCOMPATIBLE_CLASS_CHANGE:
-        return SymbolNotResolvable.errorIncompatibleClassChange(
-            symbolReference, targetClassLocation, isReachable);
-      case INACCESSIBLE_MEMBER:
-        return SymbolNotResolvable.errorInaccessibleMember(
-            symbolReference, targetClassLocation, isReachable);
-      case SYMBOL_NOT_FOUND:
-        return SymbolNotResolvable.errorMissingMember(
-            symbolReference, targetClassLocation, isReachable);
-      case CLASS_NOT_FOUND:
-        return SymbolNotResolvable.errorMissingTargetClass(symbolReference, isReachable);
-      default:
-        throw new UnsupportedOperationException(
-            "Unknown error type found: " + symbolProblem.getErrorType());
-    }
   }
 }
