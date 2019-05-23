@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import org.junit.Test;
 
 public class ClassReferenceGraphTest {
@@ -31,33 +32,17 @@ public class ClassReferenceGraphTest {
 
   private static ClassReferenceGraph createExampleGraph() throws URISyntaxException, IOException {
 
-    ClassSymbolReference grpcToA =
-        ClassSymbolReference.builder()
-            .setSourceClassName("com.google.firestore.v1beta1.FirestoreGrpc")
-            .setSubclass(false)
-            .setTargetClassName("ClassA")
-            .build();
-    ClassSymbolReference aToB =
-        ClassSymbolReference.builder()
-            .setSourceClassName("ClassA")
-            .setSubclass(false)
-            .setTargetClassName("ClassB")
-            .build();
-    ClassSymbolReference cToD =
-        ClassSymbolReference.builder()
-            .setSourceClassName("ClassC")
-            .setSubclass(false)
-            .setTargetClassName("ClassD")
-            .build();
+    Path jar = absolutePathOfResource(GRPC_CLOUD_FIRESTORE_JAR);
 
-    SymbolReferenceSet symbolReferenceSet =
-        SymbolReferenceSet.builder()
-            .setClassReferences(ImmutableSet.of(grpcToA, aToB, cToD))
-            .setFieldReferences(ImmutableSet.of())
-            .setMethodReferences(ImmutableSet.of())
-            .build();
+    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
+    builder.addClassReference(
+        new ClassFile(jar, "com.google.firestore.v1beta1.FirestoreGrpc"),
+        new ClassSymbol("ClassA"));
+    builder.addClassReference(new ClassFile(jar, "ClassA"), new ClassSymbol("ClassB"));
+    builder.addClassReference(new ClassFile(jar, "ClassC"), new ClassSymbol("ClassD"));
+
     return ClassReferenceGraph.create(
-        ImmutableSet.of(symbolReferenceSet),
+        builder.build(),
         // This jar file contains com.google.firestore.v1beta1.FirestoreGrpc
         ImmutableSet.of(absolutePathOfResource(GRPC_CLOUD_FIRESTORE_JAR)));
   }
