@@ -18,20 +18,24 @@
           <span class="desc">Total Artifacts Checked</span>
         </div>
         <div class="statistic-item statistic-item-red">
-          <h2>${dashboardMain.countFailures(table, "Linkage Errors")}</h2>
-          <span class="desc">Have Linkage Errors</span>
+          <#assign errorCount = dashboardMain.countFailures(table, "Linkage Errors")>
+          <h2>${errorCount}</h2>
+          <span class="desc">${(errorCount == 1)?then("Has", "Have")} Linkage Errors</span>
         </div>
         <div class="statistic-item statistic-item-yellow">
+          <#assign errorCount = dashboardMain.countFailures(table, "Upper Bounds")>
           <h2>${dashboardMain.countFailures(table, "Upper Bounds")}</h2>
-          <span class="desc">Have Upper Bounds Errors</span>
+          <span class="desc">${(errorCount == 1)?then("Has", "Have")} Upper Bounds Errors</span>
         </div>
         <div class="statistic-item statistic-item-orange">
+          <#assign errorCount = dashboardMain.countFailures(table, "Global Upper Bounds")>
           <h2>${dashboardMain.countFailures(table, "Global Upper Bounds")}</h2>
-          <span class="desc">Have Global Upper Bounds Errors</span>
+          <span class="desc">${(errorCount == 1)?then("Has", "Have")} Global Upper Bounds Errors</span>
         </div>
         <div class="statistic-item statistic-item-blue">
+          <#assign errorCount = dashboardMain.countFailures(table, "Dependency Convergence")>
           <h2>${dashboardMain.countFailures(table, "Dependency Convergence")}</h2>
-          <span class="desc">Fail to Converge</span>
+          <span class="desc">${(errorCount == 1)?then("Fails", "Fail")} to Converge</span>
         </div>
       </div>
     </section>
