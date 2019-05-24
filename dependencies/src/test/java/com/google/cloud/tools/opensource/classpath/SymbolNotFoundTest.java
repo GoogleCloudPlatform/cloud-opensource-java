@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.cloud.tools.opensource.classpath.SymbolNotResolvable.Reason;
 import com.google.common.truth.Truth;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -59,6 +58,6 @@ public class SymbolNotFoundTest {
             .build();
     SymbolNotResolvable<ClassSymbolReference> classError =
         SymbolNotResolvable.errorInaccessibleClass(classSymbolReference, targetClassLocation, true);
-    Truth.assertThat(classError.getReason()).isEqualTo(Reason.INACCESSIBLE_CLASS);
+    Truth.assertThat(classError.getReason()).isEqualTo(ErrorType.INACCESSIBLE_CLASS);
   }
 }

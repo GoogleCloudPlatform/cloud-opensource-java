@@ -20,7 +20,6 @@ import static com.google.cloud.tools.opensource.classpath.ClassPathBuilderTest.P
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
 import static org.junit.Assert.assertSame;
 
-import com.google.cloud.tools.opensource.classpath.SymbolNotResolvable.Reason;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -153,7 +152,7 @@ public class LinkageCheckerTest {
         linkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
-    assertSame(Reason.INCOMPATIBLE_CLASS_CHANGE, errorFound.get().getReason());
+    assertSame(ErrorType.INCOMPATIBLE_CLASS_CHANGE, errorFound.get().getReason());
   }
 
   @Test
@@ -176,7 +175,7 @@ public class LinkageCheckerTest {
         linkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
-    assertSame(Reason.INCOMPATIBLE_CLASS_CHANGE, errorFound.get().getReason());
+    assertSame(ErrorType.INCOMPATIBLE_CLASS_CHANGE, errorFound.get().getReason());
   }
 
   @Test
@@ -199,7 +198,7 @@ public class LinkageCheckerTest {
         linkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
-    assertSame(Reason.SYMBOL_NOT_FOUND, errorFound.get().getReason());
+    assertSame(ErrorType.SYMBOL_NOT_FOUND, errorFound.get().getReason());
   }
 
   @Test
@@ -244,7 +243,7 @@ public class LinkageCheckerTest {
         linkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
-    assertSame(Reason.INACCESSIBLE_CLASS, errorFound.get().getReason());
+    assertSame(ErrorType.INACCESSIBLE_CLASS, errorFound.get().getReason());
   }
 
   @Test
@@ -297,7 +296,7 @@ public class LinkageCheckerTest {
         linkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
     Truth8.assertThat(errorFound).isPresent();
-    assertSame(Reason.INACCESSIBLE_CLASS, errorFound.get().getReason());
+    assertSame(ErrorType.INACCESSIBLE_CLASS, errorFound.get().getReason());
   }
 
   @Test
@@ -321,7 +320,7 @@ public class LinkageCheckerTest {
         linkageChecker.checkLinkageErrorMissingMethodAt(privateStaticReference);
 
     Truth8.assertThat(errorFound).isPresent();
-    assertSame(Reason.INACCESSIBLE_MEMBER, errorFound.get().getReason());
+    assertSame(ErrorType.INACCESSIBLE_MEMBER, errorFound.get().getReason());
   }
 
   @Test
@@ -444,7 +443,7 @@ public class LinkageCheckerTest {
     Optional<SymbolNotResolvable<ClassSymbolReference>> classSymbolError =
         linkageChecker.checkLinkageErrorMissingClassAt(invalidClassReference);
     Truth8.assertThat(classSymbolError).isPresent();
-    assertSame(Reason.INCOMPATIBLE_CLASS_CHANGE, classSymbolError.get().getReason());
+    assertSame(ErrorType.INCOMPATIBLE_CLASS_CHANGE, classSymbolError.get().getReason());
   }
 
   @Test
@@ -472,7 +471,7 @@ public class LinkageCheckerTest {
     Truth8.assertThat(classSymbolError).isPresent();
     assertSame(
         "ClassWriter.verify, which DebuggingClassWriter overrides, is final in asm 4",
-        Reason.INCOMPATIBLE_CLASS_CHANGE,
+        ErrorType.INCOMPATIBLE_CLASS_CHANGE,
         classSymbolError.get().getReason());
   }
 
@@ -494,7 +493,7 @@ public class LinkageCheckerTest {
     Truth8.assertThat(errorFound).isPresent();
     assertSame(
         "PathTemplate.SLASH_SPLITTER is private field and not accessible.",
-        Reason.INACCESSIBLE_MEMBER,
+        ErrorType.INACCESSIBLE_MEMBER,
         errorFound.get().getReason());
   }
 
@@ -530,7 +529,7 @@ public class LinkageCheckerTest {
 
     assertSame(
         "CharSequenceCharSource.seq is protected field and is not accessible from outside package",
-        Reason.INACCESSIBLE_CLASS,
+        ErrorType.INACCESSIBLE_CLASS,
         errorOnDifferentPackage.get().getReason());
   }
 
@@ -585,7 +584,7 @@ public class LinkageCheckerTest {
     Truth.assertThat(
             jarLinkageReport.getMissingClassErrors().get(0).getReference().getTargetClassName())
         .isEqualTo(nonExistentClassName);
-    assertSame(Reason.CLASS_NOT_FOUND, jarLinkageReport.getMissingClassErrors().get(0).getReason());
+    assertSame(ErrorType.CLASS_NOT_FOUND, jarLinkageReport.getMissingClassErrors().get(0).getReason());
   }
 
   @Test
@@ -639,7 +638,7 @@ public class LinkageCheckerTest {
     Truth.assertThat(jarLinkageReport.getMissingClassErrors()).hasSize(1);
     SymbolNotResolvable<ClassSymbolReference> classReferenceError =
         jarLinkageReport.getMissingClassErrors().get(0);
-    assertSame(Reason.INACCESSIBLE_CLASS, classReferenceError.getReason());
+    assertSame(ErrorType.INACCESSIBLE_CLASS, classReferenceError.getReason());
     Truth.assertWithMessage(
             "When the superclass is unavailable, it should report the location of InnerService")
         .that(classReferenceError.getTargetClassLocation().getFileName().toString())

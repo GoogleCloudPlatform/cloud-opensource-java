@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.auto.value.AutoValue;
-import com.google.common.base.VerifyException;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
 
@@ -44,7 +43,7 @@ abstract class SymbolNotResolvable<T extends SymbolReference> {
   abstract Path getTargetClassLocation();
 
   /** Returns the reason why the symbol reference is marked as a linkage error. */
-  abstract Reason getReason();
+  abstract ErrorType getReason();
 
   /**
    * Returns true if the source class of the reference is reachable from entry point classes.
@@ -70,50 +69,50 @@ abstract class SymbolNotResolvable<T extends SymbolReference> {
     return builder.toString();
   }
 
-  /** Returns a SymbolNotFound caused by {@link Reason#CLASS_NOT_FOUND}. */
+  /** Returns a SymbolNotFound caused by {@link ErrorType#CLASS_NOT_FOUND}. */
   static <U extends SymbolReference> SymbolNotResolvable<U> errorMissingTargetClass(
       U reference, boolean isReachable) {
     return builderFor(reference)
-        .setReason(Reason.CLASS_NOT_FOUND)
+        .setReason(ErrorType.CLASS_NOT_FOUND)
         .setReachable(isReachable)
         .build();
   }
 
-  /** Returns a SymbolNotFound caused by {@link Reason#INCOMPATIBLE_CLASS_CHANGE}. */
+  /** Returns a SymbolNotFound caused by {@link ErrorType#INCOMPATIBLE_CLASS_CHANGE}. */
   static <U extends SymbolReference> SymbolNotResolvable<U> errorIncompatibleClassChange(
       U reference, Path targetClassLocation, boolean isReachable) {
     return builderFor(reference)
-        .setReason(Reason.INCOMPATIBLE_CLASS_CHANGE)
+        .setReason(ErrorType.INCOMPATIBLE_CLASS_CHANGE)
         .setTargetClassLocation(targetClassLocation)
         .setReachable(isReachable)
         .build();
   }
 
-  /** Returns a SymbolNotFound caused by {@link Reason#SYMBOL_NOT_FOUND}. */
+  /** Returns a SymbolNotFound caused by {@link ErrorType#SYMBOL_NOT_FOUND}. */
   static <U extends SymbolReference> SymbolNotResolvable<U> errorMissingMember(
       U reference, Path targetClassLocation, boolean isReachable) {
     return builderFor(reference)
-        .setReason(Reason.SYMBOL_NOT_FOUND)
+        .setReason(ErrorType.SYMBOL_NOT_FOUND)
         .setTargetClassLocation(targetClassLocation)
         .setReachable(isReachable)
         .build();
   }
 
-  /** Returns a SymbolNotFound caused by {@link Reason#INACCESSIBLE_CLASS}. */
+  /** Returns a SymbolNotFound caused by {@link ErrorType#INACCESSIBLE_CLASS}. */
   static <U extends SymbolReference> SymbolNotResolvable<U> errorInaccessibleClass(
       U reference, Path targetClassLocation, boolean isReachable) {
     return builderFor(reference)
-        .setReason(Reason.INACCESSIBLE_CLASS)
+        .setReason(ErrorType.INACCESSIBLE_CLASS)
         .setTargetClassLocation(targetClassLocation)
         .setReachable(isReachable)
         .build();
   }
 
-  /** Returns a SymbolNotFound caused by {@link Reason#INACCESSIBLE_MEMBER}. */
+  /** Returns a SymbolNotFound caused by {@link ErrorType#INACCESSIBLE_MEMBER}. */
   static <U extends SymbolReference> SymbolNotResolvable<U> errorInaccessibleMember(
       U reference, Path targetClassLocation, boolean isReachable) {
     return builderFor(reference)
-        .setReason(Reason.INACCESSIBLE_MEMBER)
+        .setReason(ErrorType.INACCESSIBLE_MEMBER)
         .setTargetClassLocation(targetClassLocation)
         .setReachable(isReachable)
         .build();
@@ -135,7 +134,7 @@ abstract class SymbolNotResolvable<T extends SymbolReference> {
 
     abstract SymbolNotResolvable.Builder<T> setTargetClassLocation(Path targetClassLocation);
 
-    abstract SymbolNotResolvable.Builder<T> setReason(Reason reason);
+    abstract SymbolNotResolvable.Builder<T> setReason(ErrorType reason);
 
     abstract SymbolNotResolvable.Builder<T> setReference(T reference);
 
@@ -144,64 +143,15 @@ abstract class SymbolNotResolvable<T extends SymbolReference> {
     abstract SymbolNotResolvable<T> build();
   }
 
-  /** The kind of linkage error against a symbol reference. */
-  enum Reason {
-    /** The target class of the symbol reference is not found in the class path. */
-    CLASS_NOT_FOUND,
-
-    /**
-     * The referenced class or interface found in the class path is not compatible with the source.
-     */
-    INCOMPATIBLE_CLASS_CHANGE,
-
-    /**
-     * The target class of the symbol reference is inaccessible to the source.
-     *
-     * <p>If the source is in a different package, the class or one of its enclosing types is not
-     * public. If the source is in the same package, the class or one of its enclosing types is
-     * private.
-     */
-    INACCESSIBLE_CLASS,
-
-    /**
-     * The target member (method or field) is inaccessible to the source.
-     *
-     * <p>If the source is in a different package, the member is not public. If the source is in the
-     * same package, the class is private. If the source is a subclass of the target class, the
-     * member is not protected or public.
-     */
-    INACCESSIBLE_MEMBER,
-
-    /**
-     * For a method or field reference, the symbol is not found in the target class.
-     */
-    SYMBOL_NOT_FOUND
-  }
-
   static <U extends SymbolReference> SymbolNotResolvable<U> fromSymbolProblem(
       U symbolReference,
       SymbolProblem symbolProblem,
       Path targetClassLocation,
       boolean isReachable) {
-    // TODO(#574): This method will be removed once the refactoring is done.
-    switch (symbolProblem.getErrorType()) {
-      case INACCESSIBLE_CLASS:
-        return SymbolNotResolvable.errorInaccessibleClass(
-            symbolReference, targetClassLocation, isReachable);
-      case INCOMPATIBLE_CLASS_CHANGE:
-        return SymbolNotResolvable.errorIncompatibleClassChange(
-            symbolReference, targetClassLocation, isReachable);
-      case INACCESSIBLE_MEMBER:
-        return SymbolNotResolvable.errorInaccessibleMember(
-            symbolReference, targetClassLocation, isReachable);
-      case SYMBOL_NOT_FOUND:
-        return SymbolNotResolvable.errorMissingMember(
-            symbolReference, targetClassLocation, isReachable);
-      case CLASS_NOT_FOUND:
-        return SymbolNotResolvable.errorMissingTargetClass(symbolReference, isReachable);
-      default:
-        throw new VerifyException("Unknown error type found: " + symbolProblem.getErrorType());
-    }
+    return builderFor(symbolReference)
+        .setReason(symbolProblem.getErrorType())
+        .setTargetClassLocation(targetClassLocation)
+        .setReachable(isReachable)
+        .build();
   }
-
 }
