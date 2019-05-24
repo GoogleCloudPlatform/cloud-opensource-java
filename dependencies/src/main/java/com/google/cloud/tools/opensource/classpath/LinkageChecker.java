@@ -53,12 +53,6 @@ public class LinkageChecker {
     return classToSymbols;
   }
 
-  @VisibleForTesting
-  @Deprecated
-  ImmutableMap<Path, SymbolReferenceSet> getJarToSymbols() {
-    return null;
-  }
-
   public static LinkageChecker create(List<Path> jars, Iterable<Path> entryPoints)
       throws IOException {
     Preconditions.checkArgument(
@@ -144,23 +138,38 @@ public class LinkageChecker {
     ImmutableSetMultimap<ClassFile, ClassSymbol> classToClassSymbols =
         classToSymbols.getClassToClassSymbols();
     classToClassSymbols.forEach(
-        (classFile, classSymbol) ->
+        (classFile, classSymbol) -> {
+          if (!classDumper
+              .classesDefinedInJar(classFile.getJar())
+              .contains(classSymbol.getClassName())) {
             findSymbolProblem(classFile, classSymbol)
-                .ifPresent(problem -> problemToClass.put(problem, classFile)));
+                .ifPresent(problem -> problemToClass.put(problem, classFile));
+          }
+        });
 
     ImmutableSetMultimap<ClassFile, MethodSymbol> classToMethodSymbols =
         classToSymbols.getClassToMethodSymbols();
     classToMethodSymbols.forEach(
-        (classFile, methodSymbol) ->
+        (classFile, methodSymbol) -> {
+          if (!classDumper
+              .classesDefinedInJar(classFile.getJar())
+              .contains(methodSymbol.getClassName())) {
             findSymbolProblem(classFile, methodSymbol)
-                .ifPresent(problem -> problemToClass.put(problem, classFile)));
+                .ifPresent(problem -> problemToClass.put(problem, classFile));
+          }
+        });
 
     ImmutableSetMultimap<ClassFile, FieldSymbol> classToFieldSymbols =
         classToSymbols.getClassToFieldSymbols();
     classToFieldSymbols.forEach(
-        (classFile, fieldSymbol) ->
+        (classFile, fieldSymbol) -> {
+          if (!classDumper
+              .classesDefinedInJar(classFile.getJar())
+              .contains(fieldSymbol.getClassName())) {
             findSymbolProblem(classFile, fieldSymbol)
-                .ifPresent(problem -> problemToClass.put(problem, classFile)));
+                .ifPresent(problem -> problemToClass.put(problem, classFile));
+          }
+        });
 
     return problemToClass.build().inverse();
   }
