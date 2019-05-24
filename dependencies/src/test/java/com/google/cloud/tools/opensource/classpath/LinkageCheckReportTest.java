@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
 
-import com.google.cloud.tools.opensource.classpath.SymbolNotResolvable.Reason;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -162,7 +161,7 @@ public class LinkageCheckReportTest {
         path2Report.getMissingMethodErrors().get(0);
     Truth.assertThat(methodSymbolUnresolvable.getReference().getMethodName()).isEqualTo("toString");
     Truth.assertThat(methodSymbolUnresolvable.getReason())
-        .isSameInstanceAs(Reason.INACCESSIBLE_MEMBER);
+        .isSameInstanceAs(ErrorType.INACCESSIBLE_MEMBER);
     Truth.assertWithMessage("The source class 'ClassB' should not be reachable")
         .that(methodSymbolUnresolvable.isReachable())
         .isFalse();

@@ -27,7 +27,7 @@ import com.google.auto.value.AutoValue;
 abstract class LinkageErrorCause {
 
   /** Returns the reason for the error */
-  abstract SymbolNotResolvable.Reason getReason();
+  abstract ErrorType getReason();
 
   /** 
    * Returns the fully qualified name of the missing or inaccessible symbol.
