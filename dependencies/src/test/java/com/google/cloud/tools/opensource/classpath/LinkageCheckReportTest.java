@@ -145,7 +145,7 @@ public class LinkageCheckReportTest {
             ClassReferenceGraph.create(referenceMapBuilder.build(), ImmutableSet.of(grpcPath)));
     Truth.assertThat(linkageCheckReport.getJarLinkageReports()).hasSize(2);
     JarLinkageReport path1Report = linkageCheckReport.getJarLinkageReports().get(0);
-    Truth.assertThat(path1Report.getMissingClassErrors()).hasSize(2);
+    Truth.assertThat(path1Report.getMissingClassErrors()).hasSize(1);
     SymbolNotResolvable<ClassSymbolReference> classSymbolNotResolvable =
         path1Report.getMissingClassErrors().get(0);
     ClassSymbolReference missingReference = classSymbolNotResolvable.getReference();
