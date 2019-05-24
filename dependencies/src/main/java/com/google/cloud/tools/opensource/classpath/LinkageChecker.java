@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHierarchy;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -32,10 +31,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
 import java.util.logging.Logger;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
@@ -48,7 +44,7 @@ public class LinkageChecker {
   private static final Logger logger = Logger.getLogger(LinkageChecker.class.getName());
 
   private final ClassDumper classDumper;
-  private final ImmutableMap<Path, SymbolReferenceSet> jarToSymbols;
+  private final ImmutableList<Path> jars;
   private final SymbolReferenceMaps classToSymbols;
   private final ClassReferenceGraph classReferenceGraph;
 
@@ -58,32 +54,37 @@ public class LinkageChecker {
   }
 
   @VisibleForTesting
+  @Deprecated
   ImmutableMap<Path, SymbolReferenceSet> getJarToSymbols() {
-    return jarToSymbols;
+    return null;
   }
 
-  public static LinkageChecker create(List<Path> jarPaths, Iterable<Path> entryPoints)
+  public static LinkageChecker create(List<Path> jars, Iterable<Path> entryPoints)
       throws IOException {
     Preconditions.checkArgument(
-        !jarPaths.isEmpty(),
+        !jars.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
-    ClassDumper dumper = ClassDumper.create(jarPaths);
+    ClassDumper dumper = ClassDumper.create(jars);
     SymbolReferenceMaps symbolReferenceMaps = dumper.findSymbolReferences();
 
-    ImmutableMap<Path, SymbolReferenceSet> jarToSymbols = convert(jarPaths, symbolReferenceMaps);
     ClassReferenceGraph classReferenceGraph =
         ClassReferenceGraph.create(symbolReferenceMaps, ImmutableSet.copyOf(entryPoints));
 
-    return new LinkageChecker(dumper, jarToSymbols, symbolReferenceMaps, classReferenceGraph);
+    return new LinkageChecker(dumper, jars, symbolReferenceMaps, classReferenceGraph);
+  }
+
+  @VisibleForTesting
+  LinkageChecker cloneWith(SymbolReferenceMaps newSymbolMaps) {
+    return new LinkageChecker(classDumper, jars, newSymbolMaps, classReferenceGraph);
   }
 
   private LinkageChecker(
       ClassDumper classDumper,
-      Map<Path, SymbolReferenceSet> jarToSymbols,
+      List<Path> jars,
       SymbolReferenceMaps symbolReferenceMaps,
       ClassReferenceGraph classReferenceGraph) {
     this.classDumper = Preconditions.checkNotNull(classDumper);
-    this.jarToSymbols = ImmutableMap.copyOf(jarToSymbols);
+    this.jars = ImmutableList.copyOf(jars);
     this.classReferenceGraph = Preconditions.checkNotNull(classReferenceGraph);
     this.classToSymbols = Preconditions.checkNotNull(symbolReferenceMaps);
   }
@@ -134,8 +135,40 @@ public class LinkageChecker {
     return jarToSymbolBuilder.build();
   }
 
+  @VisibleForTesting
+  ImmutableSetMultimap<ClassFile, SymbolProblem> findSymbolProblems() {
+    // Having Problem in key will dedup SymbolProblems
+    ImmutableSetMultimap.Builder<SymbolProblem, ClassFile> problemToClass =
+        ImmutableSetMultimap.builder();
+
+    ImmutableSetMultimap<ClassFile, ClassSymbol> classToClassSymbols =
+        classToSymbols.getClassToClassSymbols();
+    classToClassSymbols.forEach(
+        (classFile, classSymbol) ->
+            findSymbolProblem(classFile, classSymbol)
+                .ifPresent(problem -> problemToClass.put(problem, classFile)));
+
+    ImmutableSetMultimap<ClassFile, MethodSymbol> classToMethodSymbols =
+        classToSymbols.getClassToMethodSymbols();
+    classToMethodSymbols.forEach(
+        (classFile, methodSymbol) ->
+            findSymbolProblem(classFile, methodSymbol)
+                .ifPresent(problem -> problemToClass.put(problem, classFile)));
+
+    ImmutableSetMultimap<ClassFile, FieldSymbol> classToFieldSymbols =
+        classToSymbols.getClassToFieldSymbols();
+    classToFieldSymbols.forEach(
+        (classFile, fieldSymbol) ->
+            findSymbolProblem(classFile, fieldSymbol)
+                .ifPresent(problem -> problemToClass.put(problem, classFile)));
+
+    return problemToClass.build().inverse();
+  }
+
   /** Finds linkage errors in the input classpath and generates a linkage check report. */
   public LinkageCheckReport findLinkageErrors() {
+    return LinkageCheckReport.fromSymbolProblems(findSymbolProblems(), jars, classReferenceGraph);
+    /*
     // Validate linkage error of each reference
     ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
 
@@ -144,59 +177,7 @@ public class LinkageChecker {
             jarLinkageReports.add(generateLinkageReport(jar, symbolReferenceSet)));
 
     return LinkageCheckReport.create(jarLinkageReports.build());
-  }
-
-  /**
-   * Generates a linkage report for a jar file, by checking linkage errors in the symbol references
-   * against the input class path.
-   *
-   * @param jarPath absolute path to the jar file
-   * @param symbolReferenceSet symbol references from {@code jarPath} to check its linkage errors
-   * @return linkage report for the jar file, which includes linkage errors if any
-   */
-  @VisibleForTesting
-  JarLinkageReport generateLinkageReport(Path jarPath, SymbolReferenceSet symbolReferenceSet) {
-
-    JarLinkageReport.Builder reportBuilder = JarLinkageReport.builder().setJarPath(jarPath);
-
-    // Because the Java compiler ensures that there are no linkage errors between classes
-    // defined in the same jar file, this validation excludes reference within the same jar file.
-    ImmutableSet<String> classesDefinedInJar = classDumper.classesDefinedInJar(jarPath);
-
-    reportBuilder.setMissingClassErrors(
-        errorsFromSymbolReferences(
-            symbolReferenceSet.getClassReferences(),
-            classesDefinedInJar,
-            this::checkLinkageErrorMissingClassAt));
-
-    reportBuilder.setMissingMethodErrors(
-        errorsFromSymbolReferences(
-            symbolReferenceSet.getMethodReferences(),
-            classesDefinedInJar,
-            this::checkLinkageErrorMissingMethodAt));
-
-    reportBuilder.setMissingFieldErrors(
-        errorsFromSymbolReferences(
-            symbolReferenceSet.getFieldReferences(),
-            classesDefinedInJar,
-            this::checkLinkageErrorMissingFieldAt));
-
-    return reportBuilder.build();
-  }
-
-  private static <R extends SymbolReference>
-      ImmutableList<SymbolNotResolvable<R>> errorsFromSymbolReferences(
-          Set<R> symbolReferences,
-          Set<String> classesDefinedInJar,
-          Function<R, Optional<SymbolNotResolvable<R>>> checkFunction) {
-    ImmutableList<SymbolNotResolvable<R>> linkageErrors =
-        symbolReferences.stream()
-            .filter(reference -> !classesDefinedInJar.contains(reference.getTargetClassName()))
-            .map(checkFunction)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .collect(toImmutableList());
-    return linkageErrors;
+    */
   }
 
   /**
@@ -210,12 +191,10 @@ public class LinkageChecker {
    *     Virtual Machine Specification: 5.4.3.4. Interface Method Resolution</a>
    */
   @VisibleForTesting
-  Optional<SymbolNotResolvable<MethodSymbolReference>> checkLinkageErrorMissingMethodAt(
-      MethodSymbolReference reference) {
-    String targetClassName = reference.getTargetClassName();
-    String sourceClassName = reference.getSourceClassName();
-    boolean isSourceClassReachable = classReferenceGraph.isReachable(sourceClassName);
-    String methodName = reference.getMethodName();
+  Optional<SymbolProblem> findSymbolProblem(ClassFile classFile, MethodSymbol symbol) {
+    String sourceClassName = classFile.getClassName();
+    String targetClassName = symbol.getClassName();
+    String methodName = symbol.getName();
 
     // Skip references to Java runtime class. For example, java.lang.String.
     if (classDumper.isSystemClass(targetClassName)) {
@@ -225,16 +204,17 @@ public class LinkageChecker {
     try {
       JavaClass targetJavaClass = classDumper.loadJavaClass(targetClassName);
       Path classFileLocation = classDumper.findClassLocation(targetClassName);
+      ClassFile containingClassFile =
+          classFileLocation == null ? null : new ClassFile(classFileLocation, targetClassName);
+
       if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
         return Optional.of(
-            SymbolNotResolvable.errorInaccessibleClass(
-                reference, classFileLocation, isSourceClassReachable));
+            new SymbolProblem(symbol, ErrorType.INACCESSIBLE_CLASS, containingClassFile));
       }
 
-      if (targetJavaClass.isInterface() != reference.isInterfaceMethod()) {
+      if (targetJavaClass.isInterface() != symbol.isInterfaceMethod()) {
         return Optional.of(
-            SymbolNotResolvable.errorIncompatibleClassChange(
-                reference, classFileLocation, isSourceClassReachable));
+            new SymbolProblem(symbol, ErrorType.INCOMPATIBLE_CLASS_CHANGE, containingClassFile));
       }
 
       // Checks the target class, its parent classes, and its interfaces.
@@ -249,11 +229,10 @@ public class LinkageChecker {
       for (JavaClass javaClass : typesToCheck) {
         for (Method method : javaClass.getMethods()) {
           if (method.getName().equals(methodName)
-              && method.getSignature().equals(reference.getDescriptor())) {
+              && method.getSignature().equals(symbol.getDescriptor())) {
             if (!isMemberAccessibleFrom(javaClass, method, sourceClassName)) {
               return Optional.of(
-                  SymbolNotResolvable.errorInaccessibleMember(
-                      reference, classFileLocation, isSourceClassReachable));
+                  new SymbolProblem(symbol, ErrorType.INACCESSIBLE_MEMBER, containingClassFile));
             }
             // The method is found and accessible. Returning no error.
             return Optional.empty();
@@ -263,14 +242,12 @@ public class LinkageChecker {
 
       // The class is in class path but the symbol is not found
       return Optional.of(
-          SymbolNotResolvable.errorMissingMember(
-              reference, classFileLocation, isSourceClassReachable));
+          new SymbolProblem(symbol, ErrorType.SYMBOL_NOT_FOUND, containingClassFile));
     } catch (ClassNotFoundException ex) {
-      if (classDumper.catchesNoClassDefFoundError(reference)) {
+      if (classDumper.catchesNoClassDefFoundError(sourceClassName)) {
         return Optional.empty();
       }
-      return Optional.of(
-          SymbolNotResolvable.errorMissingTargetClass(reference, isSourceClassReachable));
+      return Optional.of(new SymbolProblem(symbol, ErrorType.CLASS_NOT_FOUND, null));
     }
   }
 
@@ -280,19 +257,20 @@ public class LinkageChecker {
    * Optional}.
    */
   @VisibleForTesting
-  Optional<SymbolNotResolvable<FieldSymbolReference>> checkLinkageErrorMissingFieldAt(
-      FieldSymbolReference reference) {
-    String targetClassName = reference.getTargetClassName();
-    String sourceClassName = reference.getSourceClassName();
-    boolean isSourceClassReachable = classReferenceGraph.isReachable(sourceClassName);
-    String fieldName = reference.getFieldName();
+  Optional<SymbolProblem> findSymbolProblem(ClassFile classFile, FieldSymbol symbol) {
+    String sourceClassName = classFile.getClassName();
+    String targetClassName = symbol.getClassName();
+
+    String fieldName = symbol.getName();
     try {
       JavaClass targetJavaClass = classDumper.loadJavaClass(targetClassName);
       Path classFileLocation = classDumper.findClassLocation(targetClassName);
+      ClassFile containingClassFile =
+          classFileLocation == null ? null : new ClassFile(classFileLocation, targetClassName);
+
       if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
         return Optional.of(
-            SymbolNotResolvable.errorInaccessibleClass(
-                reference, classFileLocation, isSourceClassReachable));
+            new SymbolProblem(symbol, ErrorType.INACCESSIBLE_CLASS, containingClassFile));
       }
 
       for (JavaClass javaClass : getClassHierarchy(targetJavaClass)) {
@@ -300,8 +278,7 @@ public class LinkageChecker {
           if (field.getName().equals(fieldName)) {
             if (!isMemberAccessibleFrom(javaClass, field, sourceClassName)) {
               return Optional.of(
-                  SymbolNotResolvable.errorInaccessibleMember(
-                      reference, classFileLocation, isSourceClassReachable));
+                  new SymbolProblem(symbol, ErrorType.INACCESSIBLE_MEMBER, containingClassFile));
             }
             // The field is found and accessible. Returning no error.
             return Optional.empty();
@@ -310,14 +287,12 @@ public class LinkageChecker {
       }
       // The field was not found in the class from the classpath
       return Optional.of(
-          SymbolNotResolvable.errorMissingMember(
-              reference, classFileLocation, isSourceClassReachable));
+          new SymbolProblem(symbol, ErrorType.SYMBOL_NOT_FOUND, containingClassFile));
     } catch (ClassNotFoundException ex) {
-      if (classDumper.catchesNoClassDefFoundError(reference)) {
+      if (classDumper.catchesNoClassDefFoundError(sourceClassName)) {
         return Optional.empty();
       }
-      return Optional.of(
-          SymbolNotResolvable.errorMissingTargetClass(reference, isSourceClassReachable));
+      return Optional.of(new SymbolProblem(symbol, ErrorType.CLASS_NOT_FOUND, null));
     }
   }
 
@@ -370,37 +345,36 @@ public class LinkageChecker {
    * Optional}.
    */
   @VisibleForTesting
-  Optional<SymbolNotResolvable<ClassSymbolReference>> checkLinkageErrorMissingClassAt(
-      ClassSymbolReference reference) {
-    String sourceClassName = reference.getSourceClassName();
-    String targetClassName = reference.getTargetClassName();
-    boolean isSourceClassReachable = classReferenceGraph.isReachable(sourceClassName);
+  Optional<SymbolProblem> findSymbolProblem(ClassFile classFile, ClassSymbol symbol) {
+    String sourceClassName = classFile.getClassName();
+    String targetClassName = symbol.getClassName();
+
     try {
       JavaClass targetClass = classDumper.loadJavaClass(targetClassName);
       Path classFileLocation = classDumper.findClassLocation(targetClassName);
+      ClassFile containingClassFile =
+          classFileLocation == null ? null : new ClassFile(classFileLocation, targetClassName);
 
-      if (reference.isSubclass()
+      boolean isSubclassReference = symbol instanceof SuperClassSymbol;
+      if (isSubclassReference
           && !classDumper.hasValidSuperclass(
               classDumper.loadJavaClass(sourceClassName), targetClass)) {
         return Optional.of(
-            SymbolNotResolvable.errorIncompatibleClassChange(
-                reference, classFileLocation, isSourceClassReachable));
+            new SymbolProblem(symbol, ErrorType.INCOMPATIBLE_CLASS_CHANGE, containingClassFile));
       }
 
       if (!isClassAccessibleFrom(targetClass, sourceClassName)) {
         return Optional.of(
-            SymbolNotResolvable.errorInaccessibleClass(
-                reference, classFileLocation, isSourceClassReachable));
+            new SymbolProblem(symbol, ErrorType.INACCESSIBLE_CLASS, containingClassFile));
       }
       return Optional.empty();
     } catch (ClassNotFoundException ex) {
-      if (classDumper.isUnusedClassSymbolReference(reference)
-          || classDumper.catchesNoClassDefFoundError(reference)) {
+      if (classDumper.isUnusedClassSymbolReference(sourceClassName, symbol)
+          || classDumper.catchesNoClassDefFoundError(sourceClassName)) {
         // The class reference is unused in the source
         return Optional.empty();
       }
-      return Optional.of(
-          SymbolNotResolvable.errorMissingTargetClass(reference, isSourceClassReachable));
+      return Optional.of(new SymbolProblem(symbol, ErrorType.CLASS_NOT_FOUND, null));
     }
   }
 

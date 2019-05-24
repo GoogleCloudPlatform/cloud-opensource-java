@@ -18,10 +18,12 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.ClassPathBuilderTest.PATH_FILE_NAMES;
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
@@ -73,38 +75,11 @@ public class LinkageCheckerTest {
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     // Array's clone is available in Java runtime and thus should not be reported as linkage error
-    MethodSymbolReference arrayClone =
-        MethodSymbolReference.builder()
-            .setSourceClassName(LinkageCheckReportTest.class.getName())
-            .setTargetClassName("[Lio.grpc.InternalKnownTransport;")
-            .setInterfaceMethod(false)
-            .setMethodName("clone")
-            .setDescriptor("()Ljava/lang/Object")
-            .build();
-
-    // ImmutableList does not have clone method
-    MethodSymbolReference invalidCloneOnNonArray =
-        MethodSymbolReference.builder()
-            .setSourceClassName(LinkageCheckReportTest.class.getName())
-            .setTargetClassName("com.google.common.collect.ImmutableList")
-            .setInterfaceMethod(false)
-            .setMethodName("clone")
-            .setDescriptor("()Ljava/lang/Object")
-            .build();
-    SymbolReferenceSet symbolReferenceSet =
-        SymbolReferenceSet.builder()
-            .setMethodReferences(ImmutableList.of(invalidCloneOnNonArray, arrayClone))
-            .build();
-
-    Path jarNotContainingImmutableList =
-        absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar");
-    JarLinkageReport jarLinkageReport =
-        linkageChecker.generateLinkageReport(
-            jarNotContainingImmutableList, symbolReferenceSet);
-
-    Truth.assertThat(jarLinkageReport.getMissingMethodErrors()).hasSize(1);
-    Assert.assertEquals(
-        invalidCloneOnNonArray, jarLinkageReport.getMissingMethodErrors().get(0).getReference());
+    long arraySymbolProblemCount =
+        linkageChecker.findSymbolProblems().values().stream()
+            .filter(problem -> problem.getSymbol().getClassName().startsWith("["))
+            .count();
+    assertEquals(0, arraySymbolProblemCount);
   }
 
   @Test
@@ -113,23 +88,24 @@ public class LinkageCheckerTest {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar"));
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
-    MethodSymbolReference methodSymbolReference =
-        MethodSymbolReference.builder()
-            .setSourceClassName(LinkageCheckReportTest.class.getName())
-            .setTargetClassName(
-                "com.google.common.collect.LinkedHashMultimapGwtSerializationDependencies")
-            .setInterfaceMethod(false)
-            .setMethodName("<init>")
-            .setDescriptor("(Ljava/util/Map;)V")
-            .build();
-    ImmutableList<MethodSymbolReference> methodReferences = ImmutableList.of(methodSymbolReference);
-    SymbolReferenceSet symbolReferenceSet =
-        SymbolReferenceSet.builder().setMethodReferences(methodReferences).build();
+    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
+    builder.addMethodReference(
+        new ClassFile(paths.get(0), LinkageCheckReportTest.class.getName()),
+        new MethodSymbol(
+            "com.google.common.collect.LinkedHashMultimapGwtSerializationDependencies",
+            "<init>",
+            "(Ljava/util/Map;)V",
+            false));
 
-    JarLinkageReport jarLinkageReport = linkageChecker.generateLinkageReport(paths.get(0),
-        symbolReferenceSet);
+    ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems =
+        linkageChecker.cloneWith(builder.build()).findSymbolProblems();
 
-    Truth.assertThat(jarLinkageReport.getMissingMethodErrors()).isEmpty();
+    Truth.assertThat(symbolProblems).isEmpty();
+    long methodSymbolProblemCount =
+        symbolProblems.values().stream()
+            .filter(problem -> problem.getSymbol() instanceof MethodSymbol)
+            .count();
+    assertEquals(0, methodSymbolProblemCount);
   }
 
   @Test
@@ -147,14 +123,25 @@ public class LinkageCheckerTest {
             .setMethodName("get")
             .setDescriptor("(I)Ljava/lang/Object;")
             .build();
-    // When it's verified against interfaces, it should generate an error
-    Optional<SymbolNotResolvable<MethodSymbolReference>> errorFound =
-        linkageChecker.checkLinkageErrorMissingMethodAt(methodSymbolReference);
 
-    Truth8.assertThat(errorFound).isPresent();
-    assertSame(ErrorType.INCOMPATIBLE_CLASS_CHANGE, errorFound.get().getReason());
+    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
+    MethodSymbol methodSymbol = new MethodSymbol(
+        "com.google.common.collect.ImmutableList",
+        "get",
+        "(I)Ljava/lang/Object;",
+        true);
+
+    // When it's verified against interfaces, it should generate an error
+    Optional<SymbolProblem> symbolProblem = linkageChecker.cloneWith(builder.build())
+        .findSymbolProblem(
+            new ClassFile(paths.get(0), LinkageCheckReportTest.class.getName()),
+            methodSymbol);
+
+    Truth8.assertThat(symbolProblem).isPresent();
+    assertSame(ErrorType.INCOMPATIBLE_CLASS_CHANGE, symbolProblem.get().getErrorType());
   }
 
+  /*
   @Test
   public void testCheckLinkageErrorMissingMethodAt_interfaceAndClassSeparation()
       throws IOException, URISyntaxException {
@@ -865,4 +852,5 @@ public class LinkageCheckerTest {
     LinkageCheckReport report = linkageChecker.findLinkageErrors();
     Truth.assertThat(report).isNotNull();
   }
+  */
 }
