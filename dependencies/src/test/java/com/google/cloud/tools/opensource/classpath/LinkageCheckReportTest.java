@@ -23,13 +23,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Truth;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -122,8 +120,9 @@ public class LinkageCheckReportTest {
 
   @Test
   public void testConversion() throws IOException, URISyntaxException {
-    Path path1 = absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar");
-    Path path2 = absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar");
+    Path grpcPath =
+        absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar");
+    Path firestorePath = absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar");
     SymbolProblem symbolProblem1 =
         new SymbolProblem(
             new ClassSymbol("java.lang.Integer"),
@@ -133,21 +132,21 @@ public class LinkageCheckReportTest {
         new SymbolProblem(
             new MethodSymbol("java.lang.Integer", "toString", "Ljava.lang.String;", false),
             ErrorType.INACCESSIBLE_MEMBER,
-            new ClassFile(path2, "java.lang.Object"));
+            new ClassFile(firestorePath, "java.lang.Object"));
     ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems =
         ImmutableSetMultimap.of(
-            new ClassFile(path1, "com.google.firestore.v1beta1.FirestoreGrpc"), symbolProblem1,
-            new ClassFile(path2, "com.google.ClassB"), symbolProblem2);
+            new ClassFile(grpcPath, "com.google.firestore.v1beta1.FirestoreGrpc"), symbolProblem1,
+            new ClassFile(firestorePath, "com.google.ClassB"), symbolProblem2);
 
     SymbolReferenceMaps.Builder referenceMapBuilder = new SymbolReferenceMaps.Builder();
     LinkageCheckReport linkageCheckReport =
         LinkageCheckReport.fromSymbolProblems(
             symbolProblems,
-            ImmutableList.of(path1, path2),
-            ClassReferenceGraph.create(referenceMapBuilder.build(), ImmutableSet.of(path1)));
-    Truth.assertThat(linkageCheckReport.getJarLinkageReports()).hasSize(2);
+            ImmutableList.of(grpcPath, firestorePath),
+            ClassReferenceGraph.create(referenceMapBuilder.build(), ImmutableSet.of(grpcPath)));
+    Truth.assertThat(linkageCheckReport.getJarLinkageReports()).hasSize(1);
     JarLinkageReport path1Report = linkageCheckReport.getJarLinkageReports().get(0);
-    Truth.assertThat(path1Report.getMissingClassErrors()).hasSize(1);
+    Truth.assertThat(path1Report.getMissingClassErrors()).hasSize(2);
     SymbolNotResolvable<ClassSymbolReference> classSymbolNotResolvable =
         path1Report.getMissingClassErrors().get(0);
     ClassSymbolReference missingReference = classSymbolNotResolvable.getReference();
