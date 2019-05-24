@@ -143,7 +143,7 @@ public class LinkageCheckReportTest {
             symbolProblems,
             ImmutableList.of(grpcPath, firestorePath),
             ClassReferenceGraph.create(referenceMapBuilder.build(), ImmutableSet.of(grpcPath)));
-    Truth.assertThat(linkageCheckReport.getJarLinkageReports()).hasSize(1);
+    Truth.assertThat(linkageCheckReport.getJarLinkageReports()).hasSize(2);
     JarLinkageReport path1Report = linkageCheckReport.getJarLinkageReports().get(0);
     Truth.assertThat(path1Report.getMissingClassErrors()).hasSize(2);
     SymbolNotResolvable<ClassSymbolReference> classSymbolNotResolvable =
