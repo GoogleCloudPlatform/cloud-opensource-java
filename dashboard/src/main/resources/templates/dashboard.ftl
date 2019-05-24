@@ -42,18 +42,19 @@
     </section>
     
     <section class="piecharts">
-    
-    
-      <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, 0.25)>
-      <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, 0.25)>
-    
-      <p>${endPointX}, ${endPointY}</p>
-    
-      <div class="container">
-        <svg xmlns="http://www.w3.org/2000/svg">
-          <desc>Add data here</desc>
+      <h3>Linkage Errors</h3>
+      
+      <#assign ratio = linkageErrorCount / totalArtifacts >
+      <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
+      <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
+      
+      <p>${linkageErrorCount} out of ${totalArtifacts} artifacts have linkage errors.</p>
+      
+      <div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
+          <desc>${linkageErrorCount} out of ${totalArtifacts} artifacts have linkage errors.</desc>
           <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
-          <path d="M100,100 v -100 a100,100 0 0 1 100,100 z" fill="red" />
+          <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
       </div>
     </section>
@@ -77,7 +78,7 @@
     <h2>Pre 1.0 Versions</h2>
       
     <p>
-      These are dependencies found in the GCP orbit which have not yet reached 1.0.
+      These are dependencies found in the GCP orbit that have not yet reached 1.0.
       No 1.0 or later library should depend on them.
       If the libraries are stable, advance them to 1.0.
       Otherwise replace the dependency with something else.

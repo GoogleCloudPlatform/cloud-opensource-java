@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import java.awt.Point;
+import java.awt.geom.Point2D;
 
 public class PieChart {
 
@@ -27,9 +27,8 @@ public class PieChart {
    * 
    * 1. SVG origin starts at top left.
    * 2. x increases to the right and y increases **down**.
-   * 3. SVG coordinates are integers.
    */
-  static Point calculateEndPoint(int radius, int centerX, int centerY, double ratio) {
+  static Point2D calculateEndPoint(double radius, double centerX, double centerY, double ratio) {
     if (ratio > 1) {
       ratio = 1.0;
     }
@@ -38,17 +37,19 @@ public class PieChart {
     
     // Since we're starting at the top of the circle this is rotated 90 degrees
     // from the normal coordinates. This is why we use sine for x and cosine for y.
-    int dx = (int) (radius * Math.sin(radians));
-    int dy = (int) -(radius * Math.cos(radians));
-    return new Point(centerX + dx, centerY + dy);
+    double x = radius * (1 + Math.sin(radians));
+    double y = radius * (1 - Math.cos(radians));
+    return new Point2D.Double(x + centerX - radius, y + centerY - radius);
   }
-  
+
   // so I can avoid teaching FreeMarker how to wrap a java.awt.Point
-  public static int calculateEndPointX(int radius, int centerX, int centerY, double ratio) {
-    return calculateEndPoint(radius, centerX, centerY, ratio).x;
+  public static double calculateEndPointX(
+      double radius, double centerX, double centerY, double ratio) {
+    return calculateEndPoint(radius, centerX, centerY, ratio).getX();
   }
-  
-  public static int calculateEndPointY(int radius, int centerX, int centerY, double ratio) {
-    return calculateEndPoint(radius, centerX, centerY, ratio).y;
+
+  public static double calculateEndPointY(
+      double radius, double centerX, double centerY, double ratio) {
+    return calculateEndPoint(radius, centerX, centerY, ratio).getY();
   }
 }

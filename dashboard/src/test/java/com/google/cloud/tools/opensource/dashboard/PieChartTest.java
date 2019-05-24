@@ -16,59 +16,69 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import java.awt.Point;
+import java.awt.geom.Point2D;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class PieChartTest {
   
+  private static final double TOLERANCE = 0.0001;
+
   @Test
   public void testRightAngle() {
-    Point actual = PieChart.calculateEndPoint(100, 100, 100, .25);
-    Point expected = new Point(200, 100);
-    Assert.assertEquals(expected, actual);
+    Point2D actual = PieChart.calculateEndPoint(100, 100, 100, .25);
+    Point2D expected = new Point2D.Double(200, 100);
+    Assert.assertEquals(expected.getX(), actual.getX(), TOLERANCE);
+    Assert.assertEquals(expected.getY(), actual.getY(), TOLERANCE);
   }
   
   @Test
   public void testZero() {
-    Point actual = PieChart.calculateEndPoint(100, 100, 100, 0);
-    Point expected = new Point(100, 0);
-    Assert.assertEquals(expected, actual);
+    Point2D actual = PieChart.calculateEndPoint(100, 100, 100, 0);
+    Point2D expected = new Point2D.Double(100, 0);
+    Assert.assertEquals(expected.getX(), actual.getX(), TOLERANCE);
+    Assert.assertEquals(expected.getY(), actual.getY(), TOLERANCE);
   }
   
   @Test
   public void testOneEighth() {
-    Point actual = PieChart.calculateEndPoint(100, 100, 100, 1.0/8.0);
-    Point expected = new Point(170, 30);
-    Assert.assertEquals(expected, actual);
+    int radius = 100;
+    double ratio = 1.0/8.0;
+    Point2D actual = PieChart.calculateEndPoint(radius, 100, 100, ratio);    
+    Point2D expected = new Point2D.Double(100 + 100 / Math.sqrt(2), 100 - 100 / Math.sqrt(2));
+    Assert.assertEquals(expected.getX(), actual.getX(), TOLERANCE);
+    Assert.assertEquals(expected.getY(), actual.getY(), TOLERANCE);
   }
   
   @Test
   public void testHalf() {
-    Point actual = PieChart.calculateEndPoint(100, 100, 100, 0.5);
-    Point expected = new Point(100, 200);
-    Assert.assertEquals(expected, actual);
+    Point2D actual = PieChart.calculateEndPoint(100, 100, 100, 0.5);
+    Point2D expected = new Point2D.Double(100, 200);
+    Assert.assertEquals(expected.getX(), actual.getX(), TOLERANCE);
+    Assert.assertEquals(expected.getY(), actual.getY(), TOLERANCE);
   }
 
   @Test
   public void testOffCenter() {
-    Point actual = PieChart.calculateEndPoint(150, 150, 100, 0.5);
-    Point expected = new Point(150, 250);
-    Assert.assertEquals(expected, actual);
+    Point2D actual = PieChart.calculateEndPoint(150, 150, 100, 0.5);
+    Point2D expected = new Point2D.Double(150, 250);
+    Assert.assertEquals(expected.getX(), actual.getX(), TOLERANCE);
+    Assert.assertEquals(expected.getY(), actual.getY(), TOLERANCE);
   }
  
   @Test
   public void testFull() {
-    Point actual = PieChart.calculateEndPoint(100, 100, 100, 1.0);
-    Point expected = new Point(100, 0);
-    Assert.assertEquals(expected, actual);
-  }
+    Point2D actual = PieChart.calculateEndPoint(100, 100, 100, 1.0);
+    Point2D expected = new Point2D.Double(100, 0);
+    Assert.assertEquals(expected.getX(), actual.getX(), TOLERANCE);
+    Assert.assertEquals(expected.getY(), actual.getY(), TOLERANCE);  }
   
   @Test
   public void testMoreThanFull() {
-    Point actual = PieChart.calculateEndPoint(100, 100, 100, 5.5);
-    Point expected = new Point(100, 0);
-    Assert.assertEquals(expected, actual);
+    Point2D actual = PieChart.calculateEndPoint(100, 100, 100, 5.5);
+    Point2D expected = new Point2D.Double(100, 0);
+    Assert.assertEquals(expected.getX(), actual.getX(), TOLERANCE);
+    Assert.assertEquals(expected.getY(), actual.getY(), TOLERANCE);
   }
   
 }
