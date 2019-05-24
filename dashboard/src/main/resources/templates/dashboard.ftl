@@ -41,7 +41,7 @@
     </section>
     
     <p>
-    <a href="artifact_detils.html">Detailed Artifact Reports</a>
+    <a href="artifact_details.html">Detailed Artifact Reports</a>
     </p>
 
     <h2>Recommended Versions</h2>
