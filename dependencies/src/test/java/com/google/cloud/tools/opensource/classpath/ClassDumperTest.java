@@ -254,16 +254,10 @@ public class ClassDumperTest {
         ClassDumper.create(
             ImmutableList.of(absolutePathOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
 
-    ClassSymbolReference referenceToUnusedClass =
-        ClassSymbolReference.builder()
-            .setSourceClassName("org.conscrypt.Conscrypt")
-            .setSubclass(false)
-            .setTargetClassName("org.conscrypt.NativeConstants")
-            .build();
-
     // See the issue below for the analysis of inlined fields in Conscrypt:
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/301
-    boolean result = classDumper.isUnusedClassSymbolReference(referenceToUnusedClass);
+    boolean result = classDumper.isUnusedClassSymbolReference("org.conscrypt.Conscrypt",
+        new ClassSymbol("org.conscrypt.NativeConstants"));
     Truth.assertWithMessage(
         "As the values in NativeConstants are all inlined. "
             + "There should not be any usage in Conscrypt").that(result).isTrue();
@@ -298,7 +292,8 @@ public class ClassDumperTest {
               .setTargetClassName(usedClass)
               .build();
       Truth.assertWithMessage(usedClass + " should be used in the class file")
-          .that(classDumper.isUnusedClassSymbolReference(referenceToUsedClass))
+          .that(classDumper.isUnusedClassSymbolReference("org.conscrypt.Conscrypt",
+              new ClassSymbol(usedClass)))
           .isFalse();
     }
   }
@@ -311,13 +306,7 @@ public class ClassDumperTest {
             ImmutableList.of(absolutePathOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
 
     try {
-      ClassSymbolReference referenceToUnusedClass =
-          ClassSymbolReference.builder()
-              .setSourceClassName("org.conscrypt.Conscrypt")
-              .setSubclass(false)
-              .setTargetClassName("dummy.NoSuchClass")
-              .build();
-      classDumper.isUnusedClassSymbolReference(referenceToUnusedClass);
+      classDumper.isUnusedClassSymbolReference("org.conscrypt.Conscrypt", new ClassSymbol("dummy.NoSuchClass"));
 
       Assert.fail("It should throw VerifyException when it cannot find a class symbol reference");
     } catch (VerifyException ex) {

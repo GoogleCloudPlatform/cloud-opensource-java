@@ -465,11 +465,10 @@ class ClassDumper {
   }
 
   /**
-   * Returns true if {@link SymbolReference#getSourceClassName()} has a method that has an exception
+   * Returns true if {@code sourceClassName} has a method that has an exception
    * handler for {@link NoClassDefFoundError}.
    */
-  boolean catchesNoClassDefFoundError(SymbolReference reference) {
-    String sourceClassName = reference.getSourceClassName();
+  boolean catchesNoClassDefFoundError(String sourceClassName) {
     try {
       JavaClass sourceJavaClass = loadJavaClass(sourceClassName);
       ClassGen classGen = new ClassGen(sourceJavaClass);
@@ -520,14 +519,13 @@ class ClassDumper {
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.10">Java
    *     Virtual Machine Specification: Exceptions</a>
    */
-  boolean isUnusedClassSymbolReference(ClassSymbolReference reference) {
-    if (reference.isSubclass()) {
+  boolean isUnusedClassSymbolReference(String sourceClassName, ClassSymbol classSymbol) {
+    if (classSymbol instanceof SuperClassSymbol) {
       // The target class is used in class inheritance
       return false;
     }
 
-    String sourceClassName = reference.getSourceClassName();
-    String targetClassName = reference.getTargetClassName();
+    String targetClassName = classSymbol.getClassName();
 
     try {
       JavaClass sourceJavaClass = loadJavaClass(sourceClassName);
