@@ -21,12 +21,9 @@ import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHi
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Multimaps;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -83,52 +80,6 @@ public class LinkageChecker {
     this.classToSymbols = Preconditions.checkNotNull(symbolReferenceMaps);
   }
 
-  private static ImmutableMap<Path, SymbolReferenceSet> convert(
-      List<Path> inputClassPath, SymbolReferenceMaps classToSymbols) {
-    ImmutableMap.Builder<Path, SymbolReferenceSet> jarToSymbolBuilder = ImmutableMap.builder();
-
-    ImmutableSet.Builder<ClassFile> keys = ImmutableSet.builder();
-    ImmutableSetMultimap<ClassFile, ClassSymbol> classSymbols =
-        classToSymbols.getClassToClassSymbols();
-    keys.addAll(classSymbols.keys());
-    ImmutableSetMultimap<ClassFile, MethodSymbol> methodSymbols =
-        classToSymbols.getClassToMethodSymbols();
-    keys.addAll(methodSymbols.keys());
-    ImmutableSetMultimap<ClassFile, FieldSymbol> fieldSymbols =
-        classToSymbols.getClassToFieldSymbols();
-    keys.addAll(fieldSymbols.keys());
-    ImmutableMultimap<Path, ClassFile> pathToClassAndJar =
-        Multimaps.index(keys.build(), ClassFile::getJar);
-
-    // Iterating through inputClassPath, not pathToClassAndJar.keySet(), avoids NullPointerException
-    // for jar file containing no class (for example,
-    // com.google.http-client:google-http-client-apache:2.1.0).
-    for (Path jar : inputClassPath) {
-      SymbolReferenceSet.Builder symbolReferenceSet = SymbolReferenceSet.builder();
-
-      for (ClassFile source : pathToClassAndJar.get(jar)) {
-        for (ClassSymbol symbol : classSymbols.get(source)) {
-          symbolReferenceSet
-              .classReferencesBuilder()
-              .add(ClassSymbolReference.fromSymbol(source, symbol));
-        }
-        for (FieldSymbol symbol : fieldSymbols.get(source)) {
-          symbolReferenceSet
-              .fieldReferencesBuilder()
-              .add(FieldSymbolReference.fromSymbol(source, symbol));
-        }
-        for (MethodSymbol symbol : methodSymbols.get(source)) {
-          symbolReferenceSet
-              .methodReferencesBuilder()
-              .add(MethodSymbolReference.fromSymbol(source, symbol));
-        }
-      }
-      jarToSymbolBuilder.put(jar, symbolReferenceSet.build());
-    }
-
-    return jarToSymbolBuilder.build();
-  }
-
   @VisibleForTesting
   ImmutableSetMultimap<ClassFile, SymbolProblem> findSymbolProblems() {
     // Having Problem in key will dedup SymbolProblems
@@ -176,17 +127,8 @@ public class LinkageChecker {
 
   /** Finds linkage errors in the input classpath and generates a linkage check report. */
   public LinkageCheckReport findLinkageErrors() {
+    // TODO(#574): This method will be removed once the refactoring is done.
     return LinkageCheckReport.fromSymbolProblems(findSymbolProblems(), jars, classReferenceGraph);
-    /*
-    // Validate linkage error of each reference
-    ImmutableList.Builder<JarLinkageReport> jarLinkageReports = ImmutableList.builder();
-
-    jarToSymbols.forEach(
-        (jar, symbolReferenceSet) ->
-            jarLinkageReports.add(generateLinkageReport(jar, symbolReferenceSet)));
-
-    return LinkageCheckReport.create(jarLinkageReports.build());
-    */
   }
 
   /**
