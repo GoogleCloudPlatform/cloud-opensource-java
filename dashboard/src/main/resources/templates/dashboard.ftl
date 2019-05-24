@@ -10,6 +10,7 @@
   <body>
     <h1>Google Cloud Platform Java Dependency Dashboard</h1>
     <hr />
+    <#assign totalArtifacts = table?size>
     
     <section class="statistics">
       <div class="container">
@@ -18,9 +19,9 @@
           <span class="desc">Total Artifacts Checked</span>
         </div>
         <div class="statistic-item statistic-item-red">
-          <#assign errorCount = dashboardMain.countFailures(table, "Linkage Errors")>
-          <h2>${errorCount}</h2>
-          <span class="desc">${(errorCount == 1)?then("Has", "Have")} Linkage Errors</span>
+          <#assign linkageErrorCount = dashboardMain.countFailures(table, "Linkage Errors")>
+          <h2>${linkageErrorCount}</h2>
+          <span class="desc">${(linkageErrorCount == 1)?then("Has", "Have")} Linkage Errors</span>
         </div>
         <div class="statistic-item statistic-item-yellow">
           <#assign errorCount = dashboardMain.countFailures(table, "Upper Bounds")>
@@ -40,8 +41,25 @@
       </div>
     </section>
     
+    <section class="piecharts">
+    
+    
+      <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, 0.25)>
+      <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, 0.25)>
+    
+      <p>${endPointX}, ${endPointY}</p>
+    
+      <div class="container">
+        <svg xmlns="http://www.w3.org/2000/svg">
+          <desc>Add data here</desc>
+          <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
+          <path d="M100,100 v -100 a100,100 0 0 1 100,100 z" fill="red" />
+        </svg>
+      </div>
+    </section>
+    
     <p>
-    <a href="artifact_detils.html">Detailed Artifact Reports</a>
+    <a href="artifact_details.html">Detailed Artifact Reports</a>
     </p>
 
     <h2>Recommended Versions</h2>
