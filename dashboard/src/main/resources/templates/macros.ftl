@@ -1,6 +1,6 @@
-<#function pluralize number singlarNoun pluralNoun>
+<#function pluralize number singularNoun pluralNoun>
   <#local plural = number gt 1 />
-  <#return number + " " + plural?string(pluralNoun, singlarNoun)>
+  <#return number + " " + plural?string(pluralNoun, singularNoun)>
 </#function>
 
 <#macro formatJarLinkageReport jarLinkageReport jarToDependencyPaths dependencyPathRootCauses>
