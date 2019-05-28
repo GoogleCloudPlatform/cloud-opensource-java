@@ -42,6 +42,8 @@
     </section>
     
     <section class="piecharts">
+      <table><tr>
+      <td>
       <h3>Linkage Errors</h3>
       
       <#assign ratio = linkageErrorCount / totalArtifacts >
@@ -49,7 +51,7 @@
       <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
       
       <p>${linkageErrorCount} out of ${totalArtifacts} artifacts 
-         ${pluralize(linkageErrorCount, "has", "have")} linkage errors.</p>
+         ${plural(linkageErrorCount, "has", "have")} linkage errors.</p>
       
       <div>
         <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
@@ -58,7 +60,7 @@
           <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
       </div>
-      
+     </td><td>
      <h3>Local Upper Bounds</h3>
       
       <#assign ratio = localUpperBoundsErrorCount / totalArtifacts >
@@ -66,51 +68,67 @@
       <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
       
       <p>${localUpperBoundsErrorCount} out of ${totalArtifacts} artifacts 
-         ${pluralize(localUpperBoundsErrorCount, "has", "have")} linkage errors.</p>
+         ${plural(localUpperBoundsErrorCount, "does not", "do not")} pick the
+         latest versions of all artifacts in their own dependency tree.</p>
       
       <div>
         <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
-          <desc>${linkageErrorCount} out of ${totalArtifacts} artifacts have local upper bounds errors.</desc>
+          <desc>{localUpperBoundsErrorCount} out of ${totalArtifacts} artifacts 
+         ${plural(localUpperBoundsErrorCount, "does not", "do not")} pick the
+         latest versions of all artifacts in their own dependency tree.</desc>
           <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
           <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
       </div>
+      </td>
+      <td>
       
      <h3>Global Upper Bounds</h3>
       
       <#assign ratio = globalUpperBoundsErrorCount / totalArtifacts >
+      <#assign largeArcFlag = "0">
+      <#if ratio gt 0.5>
+        <#assign largeArcFlag = "1">
+      </#if>
       <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
       <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
       
       <p>${globalUpperBoundsErrorCount} out of ${totalArtifacts} artifacts 
-         ${pluralize(linkageErrorCount, "has", "have")} linkage errors.</p>
+         ${plural(linkageErrorCount, "does not", "do not")} select the most recent version 
+         of all artifacts in the BOM.</p>
       
       <div>
         <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
           <desc>${globalUpperBoundsErrorCount} out of ${totalArtifacts} artifacts
                have global upper bounds errors.</desc>
           <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
-          <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
+          <path d="M100,100 v -100 A100,100 ${largeArcFlag} 0 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
       </div>
-      
+    </td>
+    <td>
     <h3>Dependency Convergence</h3>
       
       <#assign ratio = convergenceErrorCount / totalArtifacts >
+      <#assign largeArcFlag = "0">
+      <#if ratio gt 0.5>
+        <#assign largeArcFlag = "1">
+      </#if>
       <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
       <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
       
       <p>${convergenceErrorCount} out of ${totalArtifacts} artifacts 
-         ${pluralize(convergenceErrorCount, "has", "have")} linkage errors.</p>
+         ${plural(convergenceErrorCount, "fails", "fail")} to converge.</p>
       
       <div>
         <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
-          <desc>${linkageErrorCount} out of ${totalArtifacts} artifacts fail to converge.</desc>
+          <desc>${convergenceErrorCount} out of ${totalArtifacts} artifacts 
+          ${plural(convergenceErrorCount, "fails", "fail")} to converge.</desc>
           <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
-          <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
+          <path d="M100,100 v -100 A100,100 ${largeArcFlag} 0 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
       </div>
-      
+      </td></tr></table>
     </section>
     
     <p>

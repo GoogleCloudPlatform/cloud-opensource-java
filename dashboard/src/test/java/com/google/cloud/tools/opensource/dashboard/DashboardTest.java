@@ -113,14 +113,12 @@ public class DashboardTest {
     Assert.assertFalse(dashboard.toXML().contains("1 HAVE"));
   }
   
-
   @Test
   public void testSvg() {
     XPathContext context = new XPathContext("svg", "http://www.w3.org/2000/svg");
     Nodes svg = dashboard.query("//svg:svg", context);
-    Assert.assertEquals(1, svg.size());
+    Assert.assertEquals(4, svg.size());
   }
-
 
   @Test
   public void testCss() {
