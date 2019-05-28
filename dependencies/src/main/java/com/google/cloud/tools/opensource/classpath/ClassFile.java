@@ -36,7 +36,7 @@ public final class ClassFile {
   }
 
   /** Returns the path to the JAR file containing the class. */
-  Path getJar() {
+  public Path getJar() {
     return jar;
   }
 

@@ -17,8 +17,8 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
+import com.google.common.collect.Table;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,6 +32,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -57,7 +58,6 @@ import org.codehaus.plexus.component.repository.exception.ComponentLookupExcepti
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
-import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -71,7 +71,9 @@ import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -191,29 +193,62 @@ public class DashboardMain {
   }
 
   @VisibleForTesting
+  static Table<String, SymbolProblem, Set<ClassFile>> createSymbolProblemTable(
+      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems,
+      ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
+    // Coordinates of BOM member
+    //   -> Symbol Problem
+    //     -> ClassFiles in the BOM member or its dependencies
+    Table<String, SymbolProblem, Set<ClassFile>> symbolProblemTable
+        = HashBasedTable.create();
+
+
+    // Coordinates of BOM member -> One or more jar files (the BOM member and its dependencies)
+    ImmutableMultimap.Builder<Path, String> jarToCoordinatesBuilder = ImmutableMultimap.builder();
+    for (Path path : jarToDependencyPaths.keySet()) {
+      for (DependencyPath dependencyPath : jarToDependencyPaths.get(path)) {
+        Artifact artifact = dependencyPath.get(0);
+        jarToCoordinatesBuilder.put(path, Artifacts.toCoordinates(artifact));
+      }
+    }
+
+    ImmutableMultimap<Path, String> jarToBomMembers = jarToCoordinatesBuilder.build();
+
+    for(SymbolProblem problem : symbolProblems.keySet()) {
+      ImmutableSet<ClassFile> classFiles = symbolProblems.get(problem);
+      ImmutableListMultimap<Path, ClassFile> jarToClassFile =
+          Multimaps.index(classFiles, ClassFile::getJar);
+
+      for (Path jar : jarToClassFile.keySet()) {
+        ImmutableList<ClassFile> classFilesForJar = jarToClassFile.get(jar);
+
+        // For each BOM member that contains this jar in dependencies
+        for(String coordinates: jarToBomMembers.get(jar)) {
+          Set<ClassFile> classFilesForProblem = symbolProblemTable.get(coordinates, problem);
+          if (classFilesForProblem == null) {
+            classFilesForProblem = new HashSet<>();
+            symbolProblemTable.put(coordinates, problem, classFilesForProblem);
+          }
+          classFilesForProblem.addAll(classFilesForJar);
+        }
+      }
+    }
+
+    return symbolProblemTable;
+  }
+
+  @VisibleForTesting
   static List<ArtifactResults> generateReports(
       Configuration configuration,
       Path output,
       ArtifactCache cache,
       ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
-    /*
-    ImmutableMap<Path, JarLinkageReport> jarToLinkageReport =
-        linkageCheckReport.getJarLinkageReports().stream()
-            .collect(
-                toImmutableMap(JarLinkageReport::getJarPath, jarLinkageReport -> jarLinkageReport));
+
     // Map from Artifact's coordinates to (unique) JarLinkageReports.
     // Using string coordinates rather than Artifact class because its equality includes file.
-    ImmutableSetMultimap.Builder<String, JarLinkageReport> builder = ImmutableSetMultimap.builder();
-    for (Path path : jarToDependencyPaths.keySet()) {
-      for (DependencyPath dependencyPath : jarToDependencyPaths.get(path)) {
-        Artifact artifact = dependencyPath.get(0);
-        builder.put(Artifacts.toCoordinates(artifact), jarToLinkageReport.get(path));
-      }
-    }
-
-    ImmutableSetMultimap<String, JarLinkageReport> artifactToLinkageReports = builder.build();
-*/
+    Table<String, SymbolProblem, Set<ClassFile>> symbolProblemTable =
+        createSymbolProblemTable(symbolProblems, jarToDependencyPaths);
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();
@@ -233,7 +268,7 @@ public class DashboardMain {
                   artifact,
                   entry.getValue(),
                   cache.getGlobalDependencies(),
-                  null, //artifactToLinkageReports.get(Artifacts.toCoordinates(artifact)),
+                  symbolProblemTable.row(Artifacts.toCoordinates(artifact)), //artifactToLinkageReports.get(),
                   jarToDependencyPaths);
           table.add(results);
         }
@@ -289,7 +324,7 @@ public class DashboardMain {
       Artifact artifact,
       ArtifactInfo artifactInfo,
       List<DependencyGraph> globalDependencies,
-      Set<JarLinkageReport> staticLinkageCheckReports,
+      Map<SymbolProblem, Set<ClassFile>> symbolProblems,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
 
@@ -314,9 +349,7 @@ public class DashboardMain {
 
       List<DependencyPath> dependencyPaths = completeDependencies.list();
 
-      int totalLinkageErrorCount =
-          staticLinkageCheckReports.stream().mapToInt(JarLinkageReport::getErrorCount)
-              .sum();
+      int totalLinkageErrorCount = symbolProblems.keySet().size();
 
       ListMultimap<DependencyPath, DependencyPath> dependencyTree =
           DependencyTreeFormatter.buildDependencyPathTree(dependencyPaths);
@@ -337,7 +370,7 @@ public class DashboardMain {
       templateData.put("lastUpdated", LocalDateTime.now());
       templateData.put("dependencyTree", dependencyTree);
       templateData.put("dependencyRootNode", Iterables.getFirst(dependencyTree.values(), null));
-      templateData.put("jarLinkageReports", staticLinkageCheckReports);
+      templateData.put("jarLinkageReports", symbolProblems);
       templateData.put("jarToDependencyPaths", jarToDependencyPathsForArtifact);
       templateData.put("totalLinkageErrorCount", totalLinkageErrorCount);
       report.process(templateData, out);
