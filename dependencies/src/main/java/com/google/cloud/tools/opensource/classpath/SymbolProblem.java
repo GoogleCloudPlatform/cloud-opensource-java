@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.base.MoreObjects;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -30,13 +29,13 @@ import javax.annotation.Nullable;
  *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#linkage-error">
  *     Java Dependency Glossary: Linkage Error</a>
  */
-final class SymbolProblem {
+public final class SymbolProblem {
 
   private final ErrorType errorType;
   private final Symbol symbol;
   private final ClassFile containingClass;
 
-  SymbolProblem(Symbol symbol, ErrorType errorType, @Nullable ClassFile containingClass) {
+  public SymbolProblem(Symbol symbol, ErrorType errorType, @Nullable ClassFile containingClass) {
     this.symbol = checkNotNull(symbol);
     this.errorType = checkNotNull(errorType);
     this.containingClass = containingClass;
@@ -85,12 +84,7 @@ final class SymbolProblem {
   }
 
   @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .omitNullValues()
-        .add("errorType", errorType)
-        .add("symbol", symbol)
-        .add("containingClass", containingClass)
-        .toString();
+  public final String toString() {
+    return getErrorType().getMessage(symbol.toString());
   }
 }

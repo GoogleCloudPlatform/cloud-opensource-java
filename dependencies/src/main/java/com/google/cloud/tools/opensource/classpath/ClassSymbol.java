@@ -16,11 +16,14 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.common.base.MoreObjects;
-
 /** Symbol for a class. */
-class ClassSymbol extends Symbol {
-  ClassSymbol(String className) {
+public class ClassSymbol extends Symbol {
+  public ClassSymbol(String className) {
     super(className);
+  }
+
+  @Override
+  public String toString() {
+    return "Class " + getClassName();
   }
 }

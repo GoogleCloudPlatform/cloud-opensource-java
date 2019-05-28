@@ -50,6 +50,10 @@ public class LinkageChecker {
     return classToSymbols;
   }
 
+  public ClassReferenceGraph getClassReferenceGraph() {
+    return classReferenceGraph;
+  }
+
   public static LinkageChecker create(List<Path> jars, Iterable<Path> entryPoints)
       throws IOException {
     Preconditions.checkArgument(
@@ -80,8 +84,7 @@ public class LinkageChecker {
     this.classToSymbols = Preconditions.checkNotNull(symbolReferenceMaps);
   }
 
-  @VisibleForTesting
-  ImmutableSetMultimap<ClassFile, SymbolProblem> findSymbolProblems() {
+  public ImmutableSetMultimap<ClassFile, SymbolProblem> findSymbolProblems() {
     // Having Problem in key will dedup SymbolProblems
     ImmutableSetMultimap.Builder<SymbolProblem, ClassFile> problemToClass =
         ImmutableSetMultimap.builder();

@@ -20,18 +20,23 @@ import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.s
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.apache.maven.enforcer.rule.api.EnforcerLevel.WARN;
 
+import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
-import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
-import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
+import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
+import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Sets;
 import com.google.common.graph.Traverser;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map.Entry;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -123,23 +128,16 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
       try {
         LinkageChecker linkageChecker = LinkageChecker.create(classpath, directDependencies);
-        LinkageCheckReport linkageReport = linkageChecker.findLinkageErrors();
-        int errorCount =
-            linkageReport.getJarLinkageReports().stream()
-                .mapToInt(JarLinkageReport::getErrorCount)
-                .sum();
+        ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems = linkageChecker
+            .findSymbolProblems();
         if (reportOnlyReachable) {
-          ImmutableList<JarLinkageReport> reachableErrorReports =
-              linkageReport.getJarLinkageReports().stream()
-                  .map(JarLinkageReport::reachableErrors)
-                  .collect(toImmutableList());
-          linkageReport = LinkageCheckReport.create(reachableErrorReports);
-          int reachableErrorCount =
-              reachableErrorReports.stream()
-                  .mapToInt(JarLinkageReport::getErrorCount)
-                  .sum();
-          errorCount = reachableErrorCount;
+          ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
+          symbolProblems = symbolProblems.entries().stream()
+              .filter(entry -> classReferenceGraph.isReachable(entry.getKey().getClassName()))
+              .collect(ImmutableSetMultimap.toImmutableSetMultimap(Entry::getKey,Entry::getValue));
         }
+        // Count unique SymbolProblems
+        int errorCount = Sets.newHashSet(symbolProblems.values()).size();
 
         String foundError = reportOnlyReachable ? "reachable error" : "error";
         if (errorCount > 1) {
@@ -148,9 +146,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         if (errorCount > 0) {
           String message =
               "Linkage Checker rule found "
+                  + errorCount
+                  + " "
                   + foundError
                   + ". Linkage error report:\n"
-                  + linkageReport.getErrorString();
+                  + formatSymbolProblems(symbolProblems);
           if (getLevel() == WARN) {
             logger.warn(message);
           } else {
@@ -170,6 +170,28 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     } catch (ExpressionEvaluationException ex) {
       throw new EnforcerRuleException("Unable to lookup an expression " + ex.getMessage(), ex);
     }
+  }
+
+  @VisibleForTesting
+  static String formatSymbolProblems(ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems) {
+    ImmutableSetMultimap<SymbolProblem, ClassFile> inversedSymbolProblems = symbolProblems
+        .inverse();
+    StringBuilder output = new StringBuilder();
+
+    for (SymbolProblem problem : inversedSymbolProblems.keySet()) {
+      output.append(problem);
+      output.append("\n  referenced by ");
+      ImmutableSet<ClassFile> references = inversedSymbolProblems.get(problem);
+      int referenceCount = references.size();
+      output.append(referenceCount);
+      output.append(" class file");
+      if (referenceCount > 1) {
+        output.append("s");
+      }
+      output.append("\n");
+    }
+
+    return output.toString();
   }
 
   /** Builds a class path for {@code mavenProject}. */
