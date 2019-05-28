@@ -49,14 +49,26 @@ public class MethodSymbolTest {
   public void testMethodSymbolEquality() {
     new EqualsTester()
         .addEqualityGroup(
-            new MethodSymbol("java.lang.Object", "equals", "foo", false),
-            new MethodSymbol("java.lang.Object", "equals", "foo", false))
-        .addEqualityGroup(new MethodSymbol("java.lang.Object", "hashCode", "foo", false))
-        .addEqualityGroup(new MethodSymbol("Object", "equals", "foo", false))
-        .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "bar", false))
-        .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "foo", true))
+            new MethodSymbol("java.lang.Object", "equals", "(I)Lcom.Foo;", false),
+            new MethodSymbol("java.lang.Object", "equals", "(I)Lcom.Foo;", false))
+        .addEqualityGroup(new MethodSymbol("java.lang.Object", "hashCode", "(I)Lcom.Foo;", false))
+        .addEqualityGroup(new MethodSymbol("Object", "equals", "(I)Lcom.Foo;", false))
+        .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "(I)Lcom.Bar;", false))
+        .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "(I)Lcom.Foo;", true))
         .addEqualityGroup(new ClassSymbol("java.lang.Object"))
-        .addEqualityGroup(new FieldSymbol("java.lang.Object", "equals", "foo"))
+        .addEqualityGroup(new FieldSymbol("java.lang.Object", "equals", "(I)Lcom.Foo;"))
         .testEquals();
+  }
+
+  @Test
+  public void testToString() {
+    MethodSymbol symbol = new MethodSymbol(
+        "java.lang.Object",
+        "equals",
+        "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
+        false);
+    assertEquals(
+        "java.lang.Object's method io.grpc.MethodDescriptor$Marshaller equals(com.google.protobuf.Message arg1)",
+        symbol.toString());
   }
 }

@@ -42,7 +42,7 @@ import java.util.Set;
  *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#class-reference-graph">
  *     Java Dependency Glossary: Class Reference Graph</a>
  */
-class ClassReferenceGraph {
+public class ClassReferenceGraph {
 
   private final ImmutableSet<String> reachableClasses;
 
@@ -82,7 +82,7 @@ class ClassReferenceGraph {
    * Returns true if {@code className} is reachable from one of classes in {@code entryPointJars}
    * in the graph.
    */
-  boolean isReachable(String className) {
+  public boolean isReachable(String className) {
     return reachableClasses.contains(className);
   }
 }

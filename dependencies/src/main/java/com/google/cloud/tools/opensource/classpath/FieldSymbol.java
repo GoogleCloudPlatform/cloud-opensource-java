@@ -16,7 +16,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
 /** Symbol for a field of a class. */
@@ -68,10 +67,6 @@ final class FieldSymbol extends Symbol {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("className", getClassName())
-        .add("name", name)
-        .add("descriptor", descriptor)
-        .toString();
+    return getClassName() + "'s field " + name;
   }
 }

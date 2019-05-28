@@ -16,12 +16,15 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static org.junit.Assert.assertEquals;
+
 import com.google.cloud.tools.opensource.dependencies.AggregatedRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.ExceptionAndPath;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.truth.Correspondence;
@@ -183,13 +186,14 @@ public class ClassPathBuilderTest {
                 httpClientJar, "org.apache.http.client.protocol.ResponseContentEncoding"),
             new ClassSymbol("org.apache.http.client.entity.GZIPInputStreamFactory"));
 
-    SymbolReferenceSet symbolReferenceSet = linkageChecker.getJarToSymbols().get(httpClientJar);
-    JarLinkageReport jarLinkageReport =
-        linkageChecker.generateLinkageReport(httpClientJar, symbolReferenceSet);
-
-    Truth.assertWithMessage("Method references within the same jar file should not be reported")
-        .that(jarLinkageReport.getMissingMethodErrors())
-        .isEmpty();
+    ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems =
+        linkageChecker.findSymbolProblems();
+    assertEquals(
+        "Method references within the same jar file should not be reported",
+        0,
+        symbolProblems.keySet().stream()
+            .filter(classFile -> httpClientJar.equals(classFile.getJar()))
+            .count());
   }
 
   @Test
