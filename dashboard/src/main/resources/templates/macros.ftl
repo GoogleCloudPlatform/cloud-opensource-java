@@ -3,8 +3,8 @@
   <#return number + " " + plural?string(pluralNoun, singularNoun)>
 </#function>
 
-<#macro formatJarLinkageReport jarLinkageReport jarToDependencyPaths dependencyPathRootCauses>
-  <#if jarLinkageReport.getErrorCount() gt 0>
+<#macro formatJarLinkageReport coordinates problems jarToDependencyPaths dependencyPathRootCauses>
+  <#if problems.keySet()?size gt 0>
     <#assign jarPath = jarLinkageReport.getJarPath() />
     <h3>${jarPath.getFileName()?html}</h3>
 

@@ -45,8 +45,8 @@
 
     <h2>Linkage Errors</h2>
 
-    <#list coordinatesToProblems as symbolProblem>
-      <@formatJarLinkageReport jarLinkageReport jarToDependencyPaths dependencyPathRootCauses/>
+    <#list coordinatesToProblems as coordinates, problems>
+      <@formatJarLinkageReport coordinates problems jarToDependencyPaths dependencyPathRootCauses/>
     </#list>
 
     <hr />

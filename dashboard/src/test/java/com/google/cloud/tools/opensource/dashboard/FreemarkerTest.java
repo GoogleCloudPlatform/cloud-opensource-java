@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableTable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -83,7 +84,7 @@ public class FreemarkerTest {
     List<DependencyGraph> globalDependencies = ImmutableList.of();
     ListMultimap<Path, DependencyPath> jarToDependencyPaths = LinkedListMultimap.create();
     DashboardMain.generateDashboard(configuration, outputDirectory, table, globalDependencies,
-        ImmutableSetMultimap.of(), jarToDependencyPaths);
+        ImmutableTable.of(), jarToDependencyPaths);
     
     Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));

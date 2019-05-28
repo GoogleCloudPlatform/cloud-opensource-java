@@ -20,6 +20,7 @@ import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
@@ -81,7 +82,7 @@ public class DashboardUnavailableArtifactTest {
     cache.setInfoMap(map);
     List<ArtifactResults> artifactResults =
         DashboardMain.generateReports(
-            configuration, outputDirectory, cache, ImmutableSetMultimap.of(),
+            configuration, outputDirectory, cache, ImmutableTable.of(),
             LinkedListMultimap.create());
 
     Assert.assertEquals(
@@ -127,7 +128,7 @@ public class DashboardUnavailableArtifactTest {
         outputDirectory,
         table,
         null,
-        ImmutableSetMultimap.of(),
+        ImmutableTable.of(),
         LinkedListMultimap.create());
 
     Path generatedHtml = outputDirectory.resolve("artifact_details.html");
