@@ -32,7 +32,6 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -78,6 +77,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -160,15 +160,18 @@ public class DashboardMain {
     copyResource(output, "js/dashboard.js");
     Configuration configuration = configureFreemarker();
 
+    ImmutableTable<String, SymbolProblem, Set<ClassFile>> symbolProblemTable =
+        createSymbolProblemTable(symbolProblems, jarToDependencyPaths);
+
     List<ArtifactResults> table =
-        generateReports(configuration, output, cache, symbolProblems, jarToDependencyPaths);
+        generateReports(configuration, output, cache, symbolProblemTable, jarToDependencyPaths);
 
     generateDashboard(
         configuration,
         output,
         table,
         cache.getGlobalDependencies(),
-        symbolProblems,
+        symbolProblemTable,
         jarToDependencyPaths);
 
     return output;
@@ -192,8 +195,17 @@ public class DashboardMain {
     return configuration;
   }
 
+  /**
+   * Returns a table where rows are the Maven coordinates of BOM members, columns are symbol
+   * problems, and the values are set of class files.
+   *
+   * <p>{@code classFiles = symbolProblemTable.get("com.google.abc:foo:1.0.0", ProblemA)} means that
+   * the jar files of the {@code classFiles} are in the dependency tree of {@code
+   * "com.google.abc:foo:1.0.0"} and that the {@code classFiles} are referencing the symbol of
+   * {ProblemA}.
+   */
   @VisibleForTesting
-  static Table<String, SymbolProblem, Set<ClassFile>> createSymbolProblemTable(
+  static ImmutableTable<String, SymbolProblem, Set<ClassFile>> createSymbolProblemTable(
       ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
     // Coordinates of BOM member
@@ -201,7 +213,6 @@ public class DashboardMain {
     //     -> ClassFiles in the BOM member or its dependencies
     Table<String, SymbolProblem, Set<ClassFile>> symbolProblemTable
         = HashBasedTable.create();
-
 
     // Coordinates of BOM member -> One or more jar files (the BOM member and its dependencies)
     ImmutableMultimap.Builder<Path, String> jarToCoordinatesBuilder = ImmutableMultimap.builder();
@@ -226,7 +237,7 @@ public class DashboardMain {
         for(String coordinates: jarToBomMembers.get(jar)) {
           Set<ClassFile> classFilesForProblem = symbolProblemTable.get(coordinates, problem);
           if (classFilesForProblem == null) {
-            classFilesForProblem = new HashSet<>();
+            classFilesForProblem = Sets.newHashSet();
             symbolProblemTable.put(coordinates, problem, classFilesForProblem);
           }
           classFilesForProblem.addAll(classFilesForJar);
@@ -234,7 +245,7 @@ public class DashboardMain {
       }
     }
 
-    return symbolProblemTable;
+    return ImmutableTable.copyOf(symbolProblemTable);
   }
 
   @VisibleForTesting
@@ -242,13 +253,8 @@ public class DashboardMain {
       Configuration configuration,
       Path output,
       ArtifactCache cache,
-      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems,
+      ImmutableTable<String, SymbolProblem, Set<ClassFile>> symbolProblemTable,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
-
-    // Map from Artifact's coordinates to (unique) JarLinkageReports.
-    // Using string coordinates rather than Artifact class because its equality includes file.
-    Table<String, SymbolProblem, Set<ClassFile>> symbolProblemTable =
-        createSymbolProblemTable(symbolProblems, jarToDependencyPaths);
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();
@@ -268,7 +274,7 @@ public class DashboardMain {
                   artifact,
                   entry.getValue(),
                   cache.getGlobalDependencies(),
-                  symbolProblemTable.row(Artifacts.toCoordinates(artifact)), //artifactToLinkageReports.get(),
+                  symbolProblemTable.row(Artifacts.toCoordinates(artifact)),
                   jarToDependencyPaths);
           table.add(results);
         }
@@ -418,7 +424,7 @@ public class DashboardMain {
       Path output,
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
-      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems,
+      ImmutableTable<String, SymbolProblem, Set<ClassFile>> coordinatesToProblems,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
     
@@ -428,7 +434,7 @@ public class DashboardMain {
     templateData.put("table", table);
     templateData.put("lastUpdated", LocalDateTime.now());
     templateData.put("latestArtifacts", latestArtifacts);
-    templateData.put("jarLinkageReports", null);//linkageCheckReport.getJarLinkageReports());
+    templateData.put("coordinatesToProblems", coordinatesToProblems);
     templateData.put("jarToDependencyPaths", jarToDependencyPaths);
     templateData.put("dependencyPathRootCauses", findRootCauses(jarToDependencyPaths));
 
