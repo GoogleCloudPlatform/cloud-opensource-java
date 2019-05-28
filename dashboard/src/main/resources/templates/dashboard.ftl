@@ -102,7 +102,7 @@
           <desc>${globalUpperBoundsErrorCount} out of ${totalArtifacts} artifacts
                have global upper bounds errors.</desc>
           <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
-          <path d="M100,100 v -100 A100,100 ${largeArcFlag} 0 1 ${endPointX}, ${endPointY} z" fill="red" />
+          <path d="M100,100 v -100 A100,100 0 ${largeArcFlag} 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
       </div>
     </td>
@@ -125,7 +125,7 @@
           <desc>${convergenceErrorCount} out of ${totalArtifacts} artifacts 
           ${plural(convergenceErrorCount, "fails", "fail")} to converge.</desc>
           <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
-          <path d="M100,100 v -100 A100,100 ${largeArcFlag} 0 1 ${endPointX}, ${endPointY} z" fill="red" />
+          <path d="M100,100 v -100 A100,100 0 ${largeArcFlag} 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
       </div>
       </td></tr></table>
