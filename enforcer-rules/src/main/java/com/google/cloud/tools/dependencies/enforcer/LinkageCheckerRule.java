@@ -139,7 +139,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         // Count unique SymbolProblems
         int errorCount = Sets.newHashSet(symbolProblems.values()).size();
 
-        String foundError = reportOnlyReachable ? " reachable error" : " error";
+        String foundError = reportOnlyReachable ? "reachable error" : "error";
         if (errorCount > 1) {
           foundError += "s";
         }
@@ -147,6 +147,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           String message =
               "Linkage Checker rule found "
                   + errorCount
+                  + " "
                   + foundError
                   + ". Linkage error report:\n"
                   + formatSymbolProblems(symbolProblems);
@@ -159,7 +160,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           }
         } else {
           // arguably shouldn't log anything on success
-          logger.info("No" + foundError + " found");
+          logger.info("No " + foundError + " found");
         }
       } catch (IOException ex) {
         // Maven's "-e" flag does not work for EnforcerRuleException. Print stack trace here.

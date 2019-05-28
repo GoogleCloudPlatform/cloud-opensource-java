@@ -23,8 +23,8 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * A compiled class file of {@code className} in {@code jar} to uniquely locate the class
- * implementation in a class path.
+ * A locator for a compiled class file of {@code className} in {@code jar} to uniquely locate the
+ * class implementation in a class path.
  */
 public final class ClassFile {
   private final Path jar;

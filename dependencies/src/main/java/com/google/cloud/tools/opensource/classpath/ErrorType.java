@@ -43,7 +43,7 @@ public enum ErrorType {
    * not public. If the source class is in the same package, the class or one of its enclosing types
    * is private.
    */
-  INACCESSIBLE_CLASS("is not accessible class"),
+  INACCESSIBLE_CLASS("is not accessible"),
 
   /**
    * The target member (method or field) is inaccessible to the source class.
