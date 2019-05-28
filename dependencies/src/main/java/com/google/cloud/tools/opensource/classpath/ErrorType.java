@@ -19,7 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 /** The kind of linkage error against a symbol reference. */
 public enum ErrorType {
   /** The target class of the symbol reference is not found in the class path. */
-  CLASS_NOT_FOUND(" is not found"),
+  CLASS_NOT_FOUND("is not found"),
 
   /**
    * The referenced class or interface found in the class path is not binary-compatible with the
@@ -34,7 +34,7 @@ public enum ErrorType {
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.4.3.4>Java
    *     Virtual Machine Specification: 5.4.3.4. Interface Method Resolution</a>
    */
-  INCOMPATIBLE_CLASS_CHANGE(" has changed incompatibly"),
+  INCOMPATIBLE_CLASS_CHANGE("has changed incompatibly"),
 
   /**
    * The target class of the symbol reference is inaccessible to the source class.
@@ -43,7 +43,7 @@ public enum ErrorType {
    * not public. If the source class is in the same package, the class or one of its enclosing types
    * is private.
    */
-  INACCESSIBLE_CLASS(" is not accessible class"),
+  INACCESSIBLE_CLASS("is not accessible class"),
 
   /**
    * The target member (method or field) is inaccessible to the source class.
@@ -52,10 +52,10 @@ public enum ErrorType {
    * the same package, the class is private. If the source is a subclass of the target class, the
    * member is not protected or public.
    */
-  INACCESSIBLE_MEMBER(" is not accessible"),
+  INACCESSIBLE_MEMBER("is not accessible"),
 
   /** For a method or field reference, the symbol is not found in the target class. */
-  SYMBOL_NOT_FOUND(" is not found in the class");
+  SYMBOL_NOT_FOUND("is not found in the class");
 
   private final String message;
 
