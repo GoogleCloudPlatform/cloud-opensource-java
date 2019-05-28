@@ -24,19 +24,19 @@
           <span class="desc">${(linkageErrorCount == 1)?then("Has", "Have")} Linkage Errors</span>
         </div>
         <div class="statistic-item statistic-item-yellow">
-          <#assign errorCount = dashboardMain.countFailures(table, "Upper Bounds")>
+          <#assign localUpperBoundsErrorCount = dashboardMain.countFailures(table, "Upper Bounds")>
           <h2>${dashboardMain.countFailures(table, "Upper Bounds")}</h2>
-          <span class="desc">${(errorCount == 1)?then("Has", "Have")} Upper Bounds Errors</span>
+          <span class="desc">${(localUpperBoundsErrorCount == 1)?then("Has", "Have")} Upper Bounds Errors</span>
         </div>
         <div class="statistic-item statistic-item-orange">
-          <#assign errorCount = dashboardMain.countFailures(table, "Global Upper Bounds")>
+          <#assign globalUpperBoundsErrorCount = dashboardMain.countFailures(table, "Global Upper Bounds")>
           <h2>${dashboardMain.countFailures(table, "Global Upper Bounds")}</h2>
-          <span class="desc">${(errorCount == 1)?then("Has", "Have")} Global Upper Bounds Errors</span>
+          <span class="desc">${(globalUpperBoundsErrorCount == 1)?then("Has", "Have")} Global Upper Bounds Errors</span>
         </div>
         <div class="statistic-item statistic-item-blue">
-          <#assign errorCount = dashboardMain.countFailures(table, "Dependency Convergence")>
+          <#assign convergenceErrorCount = dashboardMain.countFailures(table, "Dependency Convergence")>
           <h2>${dashboardMain.countFailures(table, "Dependency Convergence")}</h2>
-          <span class="desc">${(errorCount == 1)?then("Fails", "Fail")} to Converge</span>
+          <span class="desc">${(convergenceErrorCount == 1)?then("Fails", "Fail")} to Converge</span>
         </div>
       </div>
     </section>
@@ -58,6 +58,59 @@
           <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
       </div>
+      
+     <h3>Local Upper Bounds</h3>
+      
+      <#assign ratio = localUpperBoundsErrorCount / totalArtifacts >
+      <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
+      <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
+      
+      <p>${localUpperBoundsErrorCount} out of ${totalArtifacts} artifacts 
+         ${pluralize(localUpperBoundsErrorCount, "has", "have")} linkage errors.</p>
+      
+      <div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
+          <desc>${linkageErrorCount} out of ${totalArtifacts} artifacts have local upper bounds errors.</desc>
+          <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
+          <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
+        </svg>
+      </div>
+      
+     <h3>Global Upper Bounds</h3>
+      
+      <#assign ratio = globalUpperBoundsErrorCount / totalArtifacts >
+      <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
+      <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
+      
+      <p>${globalUpperBoundsErrorCount} out of ${totalArtifacts} artifacts 
+         ${pluralize(linkageErrorCount, "has", "have")} linkage errors.</p>
+      
+      <div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
+          <desc>${globalUpperBoundsErrorCount} out of ${totalArtifacts} artifacts
+               have global upper bounds errors.</desc>
+          <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
+          <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
+        </svg>
+      </div>
+      
+    <h3>Dependency Convergence</h3>
+      
+      <#assign ratio = convergenceErrorCount / totalArtifacts >
+      <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
+      <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
+      
+      <p>${convergenceErrorCount} out of ${totalArtifacts} artifacts 
+         ${pluralize(convergenceErrorCount, "has", "have")} linkage errors.</p>
+      
+      <div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
+          <desc>${linkageErrorCount} out of ${totalArtifacts} artifacts fail to converge.</desc>
+          <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
+          <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
+        </svg>
+      </div>
+      
     </section>
     
     <p>
