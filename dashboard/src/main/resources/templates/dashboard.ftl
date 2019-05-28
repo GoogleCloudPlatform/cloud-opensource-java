@@ -94,8 +94,8 @@
       <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
       
       <p>${globalUpperBoundsErrorCount} out of ${totalArtifacts} artifacts 
-         ${plural(linkageErrorCount, "does not", "do not")} select the most recent version 
-         of all artifacts in the BOM.</p>
+         ${plural(globalUpperBoundsErrorCount, "does not", "do not")} select the
+         most recent version of all artifacts in the BOM.</p>
       
       <div>
         <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
