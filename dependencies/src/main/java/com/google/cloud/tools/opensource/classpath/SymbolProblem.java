@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.base.MoreObjects;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
