@@ -48,7 +48,8 @@
       <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
       <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
       
-      <p>${linkageErrorCount} out of ${totalArtifacts} artifacts have linkage errors.</p>
+      <p>${linkageErrorCount} out of ${totalArtifacts} artifacts 
+         ${pluralize(linkageErrorCount, "has", "have")} linkage errors.</p>
       
       <div>
         <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">

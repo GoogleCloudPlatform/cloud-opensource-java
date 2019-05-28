@@ -71,7 +71,8 @@ public class PieChartTest {
     Point2D actual = PieChart.calculateEndPoint(100, 100, 100, 1.0);
     Point2D expected = new Point2D.Double(100, 0);
     Assert.assertEquals(expected.getX(), actual.getX(), TOLERANCE);
-    Assert.assertEquals(expected.getY(), actual.getY(), TOLERANCE);  }
+    Assert.assertEquals(expected.getY(), actual.getY(), TOLERANCE);
+  }
   
   @Test
   public void testMoreThanFull() {
