@@ -85,24 +85,6 @@ public final class SymbolProblem {
 
   @Override
   public final String toString() {
-    StringBuilder builder = new StringBuilder(symbol.toString());
-    switch (getErrorType()) {
-      case CLASS_NOT_FOUND:
-        builder.append(" is not found");
-        break;
-      case INACCESSIBLE_CLASS:
-        builder.append(" is not accessible class");
-        break;
-      case INCOMPATIBLE_CLASS_CHANGE:
-        builder.append(" has changed incompatibly");
-        break;
-      case SYMBOL_NOT_FOUND:
-        builder.append(" is not found in the class");
-        break;
-      case INACCESSIBLE_MEMBER:
-        builder.append(" is not accessible");
-        break;
-    }
-    return builder.toString();
+    return getErrorType().getMessage(symbol.toString());
   }
 }

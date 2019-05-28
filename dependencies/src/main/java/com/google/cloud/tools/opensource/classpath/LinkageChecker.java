@@ -84,7 +84,6 @@ public class LinkageChecker {
     this.classToSymbols = Preconditions.checkNotNull(symbolReferenceMaps);
   }
 
-  @VisibleForTesting
   public ImmutableSetMultimap<ClassFile, SymbolProblem> findSymbolProblems() {
     // Having Problem in key will dedup SymbolProblems
     ImmutableSetMultimap.Builder<SymbolProblem, ClassFile> problemToClass =

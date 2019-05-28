@@ -132,13 +132,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
             .findSymbolProblems();
         if (reportOnlyReachable) {
           ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
-          symbolProblems = symbolProblems.entries().stream().filter(
-              entry -> classReferenceGraph.isReachable(entry.getKey().getClassName())).collect(
-              ImmutableSetMultimap.toImmutableSetMultimap(
-                  Entry::getKey,
-                  Entry::getValue
-              )
-          );
+          symbolProblems = symbolProblems.entries().stream()
+              .filter(entry -> classReferenceGraph.isReachable(entry.getKey().getClassName()))
+              .collect(ImmutableSetMultimap.toImmutableSetMultimap(Entry::getKey,Entry::getValue));
         }
         // Count unique SymbolProblems
         int errorCount = Sets.newHashSet(symbolProblems.values()).size();
