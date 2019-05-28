@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.common.collect.ImmutableSetMultimap;
 import java.io.IOException;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
@@ -48,9 +49,10 @@ class LinkageCheckerMain {
     LinkageChecker linkageChecker = LinkageChecker.create(
         linkageCheckerArguments.getInputClasspath(),
         linkageCheckerArguments.getEntryPointJars());
-    LinkageCheckReport report = linkageChecker.findLinkageErrors();
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems = linkageChecker
+        .findSymbolProblems();
 
-    System.out.println(report);
+    System.out.println(symbolProblems);
   }
 
 }

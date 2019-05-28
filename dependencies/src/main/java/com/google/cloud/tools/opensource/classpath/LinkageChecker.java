@@ -84,7 +84,11 @@ public class LinkageChecker {
     this.classToSymbols = Preconditions.checkNotNull(symbolReferenceMaps);
   }
 
-  public ImmutableSetMultimap<ClassFile, SymbolProblem> findSymbolProblems() {
+  /**
+   * Returns {@link SymbolProblem}s found in the class path and referencing classes for each
+   * problem.
+   */
+  public ImmutableSetMultimap<SymbolProblem, ClassFile> findSymbolProblems() {
     // Having Problem in key will dedup SymbolProblems
     ImmutableSetMultimap.Builder<SymbolProblem, ClassFile> problemToClass =
         ImmutableSetMultimap.builder();
@@ -125,13 +129,7 @@ public class LinkageChecker {
           }
         });
 
-    return problemToClass.build().inverse();
-  }
-
-  /** Finds linkage errors in the input classpath and generates a linkage check report. */
-  public LinkageCheckReport findLinkageErrors() {
-    // TODO(#574): This method will be removed once the refactoring is done.
-    return LinkageCheckReport.fromSymbolProblems(findSymbolProblems(), jars, classReferenceGraph);
+    return problemToClass.build();
   }
 
   /**

@@ -287,40 +287,4 @@ public class LinkageCheckerRuleTest {
       // pass
     }
   }
-
-  @Test
-  public void testFormatSymbolProblems() {
-    SymbolProblem methodSymbolProblem =
-        new SymbolProblem(
-            new MethodSymbol(
-                "java.lang.Object",
-                "equals",
-                "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
-                false),
-            ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(Paths.get("aaa", "bbb.jar"), "java.lang.Object"));
-
-    SymbolProblem classSymbolProblem =
-        new SymbolProblem(
-            new ClassSymbol("java.lang.Integer"),
-            ErrorType.CLASS_NOT_FOUND,
-            null);
-
-    ClassFile source1 = new ClassFile(Paths.get("foo", "dummy.jar"),
-        "java.lang.Object");
-    ClassFile source2 = new ClassFile(Paths.get("bar", "dummy.jar"),
-        "java.lang.Object");
-
-    ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems =
-        ImmutableSetMultimap.of(source1, methodSymbolProblem,
-            source1, classSymbolProblem,
-            source2, classSymbolProblem);
-    assertEquals(
-        "java.lang.Object's method io.grpc.MethodDescriptor$Marshaller "
-            + "equals(com.google.protobuf.Message arg1) is not found in the class\n"
-            + "  referenced by 1 class file\n"
-            + "Class java.lang.Integer is not found\n"
-            + "  referenced by 2 class files\n",
-        LinkageCheckerRule.formatSymbolProblems(symbolProblems));
-  }
 }

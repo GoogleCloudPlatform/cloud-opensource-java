@@ -137,7 +137,7 @@ public class DashboardMain {
 
     LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints);
 
-    ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems =
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
 
     Path output = generateHtml(cache, jarToDependencyPaths, symbolProblems);
@@ -148,7 +148,7 @@ public class DashboardMain {
   private static Path generateHtml(
       ArtifactCache cache,
       LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths,
-      ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems)
+      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems)
       throws IOException, TemplateException, URISyntaxException {
 
     Path relativePath = Paths.get("target", "dashboard");
@@ -195,13 +195,13 @@ public class DashboardMain {
       Configuration configuration,
       Path output,
       ArtifactCache cache,
-      ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems,
+      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
+    /*
     ImmutableMap<Path, JarLinkageReport> jarToLinkageReport =
         linkageCheckReport.getJarLinkageReports().stream()
             .collect(
                 toImmutableMap(JarLinkageReport::getJarPath, jarLinkageReport -> jarLinkageReport));
-
     // Map from Artifact's coordinates to (unique) JarLinkageReports.
     // Using string coordinates rather than Artifact class because its equality includes file.
     ImmutableSetMultimap.Builder<String, JarLinkageReport> builder = ImmutableSetMultimap.builder();
@@ -211,7 +211,9 @@ public class DashboardMain {
         builder.put(Artifacts.toCoordinates(artifact), jarToLinkageReport.get(path));
       }
     }
+
     ImmutableSetMultimap<String, JarLinkageReport> artifactToLinkageReports = builder.build();
+*/
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();
@@ -231,7 +233,7 @@ public class DashboardMain {
                   artifact,
                   entry.getValue(),
                   cache.getGlobalDependencies(),
-                  artifactToLinkageReports.get(Artifacts.toCoordinates(artifact)),
+                  null, //artifactToLinkageReports.get(Artifacts.toCoordinates(artifact)),
                   jarToDependencyPaths);
           table.add(results);
         }
@@ -383,7 +385,7 @@ public class DashboardMain {
       Path output,
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
-      ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems,
+      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
     
@@ -393,7 +395,7 @@ public class DashboardMain {
     templateData.put("table", table);
     templateData.put("lastUpdated", LocalDateTime.now());
     templateData.put("latestArtifacts", latestArtifacts);
-    templateData.put("jarLinkageReports", linkageCheckReport.getJarLinkageReports());
+    templateData.put("jarLinkageReports", null);//linkageCheckReport.getJarLinkageReports());
     templateData.put("jarToDependencyPaths", jarToDependencyPaths);
     templateData.put("dependencyPathRootCauses", findRootCauses(jarToDependencyPaths));
 

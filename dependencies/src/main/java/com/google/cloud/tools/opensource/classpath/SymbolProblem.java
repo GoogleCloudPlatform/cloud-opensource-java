@@ -18,6 +18,8 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -86,5 +88,25 @@ public final class SymbolProblem {
   @Override
   public final String toString() {
     return getErrorType().getMessage(symbol.toString());
+  }
+
+  public static String formatSymbolProblems(
+      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems) {
+    StringBuilder output = new StringBuilder();
+
+    for (SymbolProblem problem : symbolProblems.keySet()) {
+      output.append(problem);
+      output.append("\n  referenced by ");
+      ImmutableSet<ClassFile> references = symbolProblems.get(problem);
+      int referenceCount = references.size();
+      output.append(referenceCount);
+      output.append(" class file");
+      if (referenceCount > 1) {
+        output.append("s");
+      }
+      output.append("\n");
+    }
+
+    return output.toString();
   }
 }
