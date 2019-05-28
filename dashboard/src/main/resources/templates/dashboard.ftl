@@ -43,7 +43,7 @@
     
     <section class="piecharts">
       <table><tr>
-      <td>
+      <td style="vertical-align:top">
       <h3>Linkage Errors</h3>
       
       <#assign ratio = linkageErrorCount / totalArtifacts >
@@ -60,7 +60,7 @@
           <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
       </div>
-     </td><td>
+     </td><td style="vertical-align:top">
      <h3>Local Upper Bounds</h3>
       
       <#assign ratio = localUpperBoundsErrorCount / totalArtifacts >
@@ -81,7 +81,7 @@
         </svg>
       </div>
       </td>
-      <td>
+      <td style="vertical-align:top">
       
      <h3>Global Upper Bounds</h3>
       
@@ -106,7 +106,7 @@
         </svg>
       </div>
     </td>
-    <td>
+    <td style="vertical-align:top">
     <h3>Dependency Convergence</h3>
       
       <#assign ratio = convergenceErrorCount / totalArtifacts >
