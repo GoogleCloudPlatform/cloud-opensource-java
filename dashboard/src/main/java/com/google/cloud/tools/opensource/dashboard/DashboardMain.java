@@ -55,10 +55,11 @@ import org.apache.maven.project.ProjectBuildingException;
 import org.codehaus.plexus.PlexusContainerException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 
+import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
-import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
+import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
@@ -136,9 +137,10 @@ public class DashboardMain {
 
     LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints);
 
-    LinkageCheckReport linkageReport = linkageChecker.findLinkageErrors();
+    ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems =
+        linkageChecker.findSymbolProblems();
 
-    Path output = generateHtml(cache, jarToDependencyPaths, linkageReport);
+    Path output = generateHtml(cache, jarToDependencyPaths, symbolProblems);
 
     return output;
   }
@@ -146,7 +148,7 @@ public class DashboardMain {
   private static Path generateHtml(
       ArtifactCache cache,
       LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths,
-      LinkageCheckReport linkageReport)
+      ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems)
       throws IOException, TemplateException, URISyntaxException {
 
     Path relativePath = Paths.get("target", "dashboard");
@@ -157,14 +159,14 @@ public class DashboardMain {
     Configuration configuration = configureFreemarker();
 
     List<ArtifactResults> table =
-        generateReports(configuration, output, cache, linkageReport, jarToDependencyPaths);
+        generateReports(configuration, output, cache, symbolProblems, jarToDependencyPaths);
 
     generateDashboard(
         configuration,
         output,
         table,
         cache.getGlobalDependencies(),
-        linkageReport,
+        symbolProblems,
         jarToDependencyPaths);
 
     return output;
@@ -193,7 +195,7 @@ public class DashboardMain {
       Configuration configuration,
       Path output,
       ArtifactCache cache,
-      LinkageCheckReport linkageCheckReport,
+      ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
     ImmutableMap<Path, JarLinkageReport> jarToLinkageReport =
         linkageCheckReport.getJarLinkageReports().stream()
@@ -381,7 +383,7 @@ public class DashboardMain {
       Path output,
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
-      LinkageCheckReport linkageCheckReport,
+      ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
     
