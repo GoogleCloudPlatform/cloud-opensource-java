@@ -68,10 +68,6 @@ final class FieldSymbol extends Symbol {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("className", getClassName())
-        .add("name", name)
-        .add("descriptor", descriptor)
-        .toString();
+    return getClassName() + "'s field " + name;
   }
 }

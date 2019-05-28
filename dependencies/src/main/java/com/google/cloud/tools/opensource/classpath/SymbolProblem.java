@@ -30,13 +30,13 @@ import javax.annotation.Nullable;
  *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#linkage-error">
  *     Java Dependency Glossary: Linkage Error</a>
  */
-final class SymbolProblem {
+public final class SymbolProblem {
 
   private final ErrorType errorType;
   private final Symbol symbol;
   private final ClassFile containingClass;
 
-  SymbolProblem(Symbol symbol, ErrorType errorType, @Nullable ClassFile containingClass) {
+  public SymbolProblem(Symbol symbol, ErrorType errorType, @Nullable ClassFile containingClass) {
     this.symbol = checkNotNull(symbol);
     this.errorType = checkNotNull(errorType);
     this.containingClass = containingClass;
@@ -85,12 +85,25 @@ final class SymbolProblem {
   }
 
   @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .omitNullValues()
-        .add("errorType", errorType)
-        .add("symbol", symbol)
-        .add("containingClass", containingClass)
-        .toString();
+  public final String toString() {
+    StringBuilder builder = new StringBuilder(symbol.toString());
+    switch (getErrorType()) {
+      case CLASS_NOT_FOUND:
+        builder.append(" is not found");
+        break;
+      case INACCESSIBLE_CLASS:
+        builder.append(" is not accessible class");
+        break;
+      case INCOMPATIBLE_CLASS_CHANGE:
+        builder.append(" has changed incompatibly");
+        break;
+      case SYMBOL_NOT_FOUND:
+        builder.append(" is not found in the class");
+        break;
+      case INACCESSIBLE_MEMBER:
+        builder.append(" is not accessible");
+        break;
+    }
+    return builder.toString();
   }
 }

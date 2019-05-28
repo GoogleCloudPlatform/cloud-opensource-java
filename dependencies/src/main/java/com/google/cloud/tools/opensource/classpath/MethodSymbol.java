@@ -20,14 +20,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.MoreObjects;
 import java.util.Objects;
+import org.apache.bcel.classfile.Utility;
 
 /** Symbol for a method of class. */
-final class MethodSymbol extends Symbol {
+public final class MethodSymbol extends Symbol {
   private final String name;
   private final String descriptor;
   private final boolean isInterfaceMethod;
 
-  MethodSymbol(String className, String name, String descriptor, boolean isInterfaceMethod) {
+  public MethodSymbol(String className, String name, String descriptor, boolean isInterfaceMethod) {
     super(className);
     this.name = checkNotNull(name);
     this.descriptor = checkNotNull(descriptor);
@@ -81,11 +82,7 @@ final class MethodSymbol extends Symbol {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("className", getClassName())
-        .add("name", name)
-        .add("descriptor", descriptor)
-        .add("isInterfaceMethod", isInterfaceMethod)
-        .toString();
+    return (isInterfaceMethod ? "Interface " : "") + getClassName() + "'s method " + Utility
+        .methodSignatureToString(descriptor, name, "");
   }
 }

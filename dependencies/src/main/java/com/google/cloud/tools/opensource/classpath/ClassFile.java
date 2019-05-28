@@ -26,11 +26,11 @@ import java.util.Objects;
  * A tuple of a class name and a jar file to uniquely locate the class implementation in a class
  * path.
  */
-final class ClassFile {
+public final class ClassFile {
   private final Path jar;
   private final String className;
 
-  ClassFile(Path jar, String className) {
+  public ClassFile(Path jar, String className) {
     this.jar = checkNotNull(jar);
     this.className = checkNotNull(className);
   }
@@ -41,7 +41,7 @@ final class ClassFile {
   }
 
   /** Returns class name (binary name as in {@link Symbol#getClassName()}) */
-  String getClassName() {
+  public String getClassName() {
     return className;
   }
 
