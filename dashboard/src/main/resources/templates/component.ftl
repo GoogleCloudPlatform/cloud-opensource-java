@@ -141,7 +141,7 @@
     <p id="linkage-errors-total">${totalLinkageErrorCount} linkage error(s)</p>
     <#list jarToSymbolProblemToClasses.rowKeySet() as jar >
       <#assign problemsToClassFiles = jarToSymbolProblemToClasses.row(jar) />
-      <@formatJarLinkageReport jar problemsToClassFiles jarToDependencyPaths dependencyPathRootCauses/>
+      <@formatJarLinkageReport jar problemsToClassFiles jarToDependencyPaths {} />
     </#list>
 
     <h2>Dependencies</h2>

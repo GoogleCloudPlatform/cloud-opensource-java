@@ -199,7 +199,8 @@ public class LinkageChecker {
       if (classDumper.catchesNoClassDefFoundError(sourceClassName)) {
         return Optional.empty();
       }
-      return Optional.of(new SymbolProblem(symbol, ErrorType.CLASS_NOT_FOUND, null));
+      ClassSymbol classSymbol = new ClassSymbol(symbol.getClassName());
+      return Optional.of(new SymbolProblem(classSymbol, ErrorType.CLASS_NOT_FOUND, null));
     }
   }
 
@@ -244,7 +245,8 @@ public class LinkageChecker {
       if (classDumper.catchesNoClassDefFoundError(sourceClassName)) {
         return Optional.empty();
       }
-      return Optional.of(new SymbolProblem(symbol, ErrorType.CLASS_NOT_FOUND, null));
+      ClassSymbol classSymbol = new ClassSymbol(symbol.getClassName());
+      return Optional.of(new SymbolProblem(classSymbol, ErrorType.CLASS_NOT_FOUND, null));
     }
   }
 

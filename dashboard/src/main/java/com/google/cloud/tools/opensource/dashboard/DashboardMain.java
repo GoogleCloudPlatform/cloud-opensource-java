@@ -374,6 +374,8 @@ public class DashboardMain {
 
       ImmutableTable<Path, SymbolProblem, Set<String>> jarToSymbolProblemToClasses =
           indexByJar(symbolProblems);
+//      ImmutableMap<SymbolProblem, Set<String>> row = jarToSymbolProblemToClasses.row(Paths.get(""));
+//      row.keySet();
 
       Map<String, Object> templateData = new HashMap<>();
       templateData.put("artifact", artifact);
@@ -425,6 +427,34 @@ public class DashboardMain {
     return upperBoundFailures;
   }
 
+  /**
+   * Returns a table where rows are jar files, columns are {@link SymbolProblem}, and values are
+   * class names referencing the problems.
+   */
+  private static ImmutableTable<Path, SymbolProblem, Set<String>> indexByJar(
+      ImmutableTable<String, SymbolProblem, Set<ClassFile>> coordinatesToProblems) {
+    ImmutableSetMultimap.Builder<SymbolProblem, ClassFile> builder = ImmutableSetMultimap.builder();
+    coordinatesToProblems.columnMap().forEach((symbolProblem, coordinatesToClassFile) -> {
+      ImmutableSet<ClassFile> classFilesCombined = coordinatesToClassFile
+          .values().stream()
+          .flatMap(Collection::stream)
+          .collect(toImmutableSet());
+      builder.putAll(symbolProblem, classFilesCombined);
+    });
+
+    // To adjust type for the input of the other indexByJar
+    ImmutableMap<SymbolProblem, Set<ClassFile>> problemToClassFiles = builder.build()
+        .asMap().entrySet().stream().collect(
+            toImmutableMap(
+                Entry::getKey,
+                entry -> ImmutableSet.copyOf(entry.getValue())));
+    return indexByJar(problemToClassFiles);
+  }
+
+  /**
+   * Returns a table where rows are jar files, columns are {@link SymbolProblem}, and values are
+   * class names referencing the problems.
+   */
   private static ImmutableTable<Path, SymbolProblem, Set<String>> indexByJar(
       Map<SymbolProblem, Set<ClassFile>> problemWithClassFiles) {
     Table<Path, SymbolProblem, Set<String>> table = HashBasedTable.create();
@@ -460,20 +490,8 @@ public class DashboardMain {
     
     Map<String, String> latestArtifacts = collectLatestVersions(globalDependencies);
 
-    ImmutableSetMultimap.Builder<SymbolProblem, ClassFile> builder = ImmutableSetMultimap.builder();
-    coordinatesToProblems.columnMap().forEach((symbolProblem, coordinatesToClassFile) -> {
-      ImmutableSet<ClassFile> classFilesCombined = coordinatesToClassFile
-          .values().stream()
-          .flatMap(Collection::stream)
-          .collect(toImmutableSet());
-      builder.putAll(symbolProblem, classFilesCombined);
-    });
-    // To adjust type for the input of indexByJar
-    ImmutableMap<SymbolProblem, Set<ClassFile>> problemToClassFiles = builder.build()
-        .asMap().entrySet().stream().collect(toImmutableMap(Entry::getKey,
-            entry -> ImmutableSet.copyOf(entry.getValue())));
     ImmutableTable<Path, SymbolProblem, Set<String>> jarToSymbolProblemToClasses =
-        indexByJar(problemToClassFiles);
+        indexByJar(coordinatesToProblems);
 
     Map<String, Object> templateData = new HashMap<>();
     templateData.put("table", table);
