@@ -8,10 +8,10 @@
   <#return plural?string(pluralNoun, singularNoun)>
 </#function>
 
-<#macro formatJarLinkageReport jar problemsToClassesMultimap jarToDependencyPaths dependencyPathRootCauses>
-  <!-- problemsToClasses: ImmutableSetMultimap<SymbolProblem, String>
-    converted to ImmutableMap<SymbolProblem, Collection<String>> -->
-  <#assign problemsToClasses = problemsToClassesMultimap.asMap() />
+<#macro formatJarLinkageReport jar problemsWithClass jarToDependencyPaths dependencyPathRootCauses>
+  <!-- problemsToClasses: ImmutableSetMultimap<SymbolProblem, String> converted to
+    ImmutableMap<SymbolProblem, Collection<String>>; Multimaps don't work well with Freemarker -->
+  <#assign problemsToClasses = problemsWithClass.asMap() />
   <#if problemsToClasses?size gt 0>
     <h3>${jar.getFileName()?html}</h3>
     <#assign symbolProblemCount = problemsToClasses?keys?size />
