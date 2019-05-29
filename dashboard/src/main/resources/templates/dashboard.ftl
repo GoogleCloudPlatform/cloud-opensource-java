@@ -76,7 +76,7 @@
       <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, linkageRatio)>
         <svg xmlns="http://www.w3.org/2000/svg" width="${pieSize}" height="${pieSize}">
           <desc>${linkageErrorCount} out of ${totalArtifacts} artifacts have linkage errors.</desc>
-          <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
+          <circle cx="100" cy="100" r="100" stroke-width="3" fill="lightgreen" />
           <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
      </td>
@@ -90,7 +90,7 @@
           <desc>{localUpperBoundsErrorCount} out of ${totalArtifacts} artifacts 
          ${plural(localUpperBoundsErrorCount, "does not", "do not")} pick the
          latest versions of all artifacts in their own dependency tree.</desc>
-          <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
+          <circle cx="100" cy="100" r="100" stroke-width="3" fill="lightgreen" />
           <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
       </td>
@@ -106,7 +106,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="${pieSize}" height="${pieSize}">
           <desc>${globalUpperBoundsErrorCount} out of ${totalArtifacts} artifacts
                have global upper bounds errors.</desc>
-          <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
+          <circle cx="100" cy="100" r="100" stroke-width="3" fill="lightgreen" />
           <path d="M100,100 v -100 A100,100 0 ${largeArcFlag} 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
     </td>
@@ -122,7 +122,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="${pieSize}" height="${pieSize}">
           <desc>${convergenceErrorCount} out of ${totalArtifacts} artifacts 
           ${plural(convergenceErrorCount, "fails", "fail")} to converge.</desc>
-          <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
+          <circle cx="100" cy="100" r="100" stroke-width="3" fill="lightgreen" />
           <path d="M100,100 v -100 A100,100 0 ${largeArcFlag} 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
       </td></tr></table>
