@@ -20,8 +20,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.collect.ImmutableTable.toImmutableTable;
 
-import com.google.common.collect.Table;
-import com.google.common.collect.Table.Cell;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -87,6 +85,8 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import com.google.common.collect.Table;
+import com.google.common.collect.Table.Cell;
 
 public class DashboardMain {
   public static final String TEST_NAME_LINKAGE_CHECK = "Linkage Errors";
