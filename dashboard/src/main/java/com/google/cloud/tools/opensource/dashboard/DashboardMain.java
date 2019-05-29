@@ -410,7 +410,9 @@ public class DashboardMain {
     return ImmutableMap.copyOf(
         Maps.transformValues(
             jarMap,
-            entries -> entries.stream().collect(
+            entries -> entries // These entries have same JAR file for entry.getValue.getJar()
+                .stream()
+                .collect(
                 toImmutableSetMultimap(
                     Entry::getKey, // SymbolProblem
                     entry -> entry.getValue().getClassName())
