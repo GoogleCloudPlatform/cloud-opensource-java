@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.cloud.tools.opensource.classpath.ClassPathBuilderTest.PATH_FILE_NAMES;
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -734,9 +735,11 @@ public class LinkageCheckerTest {
     boolean hasClassSymbolProblem = symbolProblems.keySet().stream().anyMatch(problem -> problem.getSymbol() instanceof ClassSymbol);
     assertTrue(hasClassSymbolProblem);
     boolean hasMethodSymbolProblem = symbolProblems.keySet().stream().anyMatch(problem -> problem.getSymbol() instanceof MethodSymbol);
-    assertTrue(hasMethodSymbolProblem);
+    assertFalse("Method reference missing class should be reported as class symbol problem",
+        hasMethodSymbolProblem);
     boolean hasFieldSymbolProblem = symbolProblems.keySet().stream().anyMatch(problem -> problem.getSymbol() instanceof FieldSymbol);
-    assertTrue(hasFieldSymbolProblem);
+    assertFalse("Field reference missing class should be reported as class symbol problem",
+        hasFieldSymbolProblem);
   }
 
   @Test
