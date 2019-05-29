@@ -87,8 +87,8 @@ public class SymbolProblemTest {
     SymbolProblem methodSymbolProblem =
         new SymbolProblem(
             new MethodSymbol(
-                "java.lang.Object",
-                "equals",
+                "io.grpc.protobuf.ProtoUtils.marshaller",
+                "marshaller",
                 "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
                 false),
             ErrorType.SYMBOL_NOT_FOUND,
@@ -104,8 +104,8 @@ public class SymbolProblemTest {
         ImmutableSetMultimap.of(
             methodSymbolProblem, source1, classSymbolProblem, source1, classSymbolProblem, source2);
     assertEquals(
-        "java.lang.Object's method io.grpc.MethodDescriptor$Marshaller "
-            + "equals(com.google.protobuf.Message arg1) is not found in the class\n"
+        "io.grpc.protobuf.ProtoUtils.marshaller's method io.grpc.MethodDescriptor$Marshaller "
+            + "marshaller(com.google.protobuf.Message arg1) is not found in the class\n"
             + "  referenced by 1 class file\n"
             + "Class java.lang.Integer is not found\n"
             + "  referenced by 2 class files\n",

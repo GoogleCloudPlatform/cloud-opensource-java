@@ -52,7 +52,7 @@ class LinkageCheckerMain {
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems = linkageChecker
         .findSymbolProblems();
 
-    System.out.println(symbolProblems);
+    System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
   }
 
 }
