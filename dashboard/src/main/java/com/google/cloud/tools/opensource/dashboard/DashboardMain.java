@@ -18,8 +18,10 @@ package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static com.google.common.collect.ImmutableSetMultimap.toImmutableSetMultimap;
 import static com.google.common.collect.ImmutableTable.toImmutableTable;
 
+import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,6 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -164,15 +167,18 @@ public class DashboardMain {
     copyResource(output, "js/dashboard.js");
     Configuration configuration = configureFreemarker();
 
+    ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable = indexByJar(
+        symbolProblems);
+
     List<ArtifactResults> table =
-        generateReports(configuration, output, cache, symbolProblems, jarToDependencyPaths);
+        generateReports(configuration, output, cache, symbolProblemTable, jarToDependencyPaths);
 
     generateDashboard(
         configuration,
         output,
         table,
         cache.getGlobalDependencies(),
-        symbolProblems,
+        symbolProblemTable,
         jarToDependencyPaths);
 
     return output;
@@ -202,15 +208,12 @@ public class DashboardMain {
    */
   private static ImmutableSetMultimap<String, Path> bomMemberToJars(
       ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
-    // Coordinates of BOM member -> One or more jar files (the BOM member and its dependencies)
     ImmutableSetMultimap.Builder<String, Path> bomMemberToJars = ImmutableSetMultimap
         .builder();
-    for (Path path : jarToDependencyPaths.keySet()) {
-      for (DependencyPath dependencyPath : jarToDependencyPaths.get(path)) {
-        Artifact artifact = dependencyPath.get(0);
-        bomMemberToJars.put(Artifacts.toCoordinates(artifact), path);
-      }
-    }
+    jarToDependencyPaths.forEach((path, dependencyPath) -> {
+      Artifact artifact = dependencyPath.get(0);
+      bomMemberToJars.put(Artifacts.toCoordinates(artifact), path);
+    });
 
     return bomMemberToJars.build();
   }
@@ -220,10 +223,11 @@ public class DashboardMain {
       Configuration configuration,
       Path output,
       ArtifactCache cache,
-      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems,
+      ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
 
     ImmutableSetMultimap<String, Path> bomMemberToJars = bomMemberToJars(jarToDependencyPaths);
+
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();
@@ -238,6 +242,8 @@ public class DashboardMain {
           Artifact artifact = entry.getKey();
           ImmutableSet<Path> jarsInDependencyTree = bomMemberToJars
               .get(Artifacts.toCoordinates(artifact));
+          Map<Path, ImmutableSetMultimap<SymbolProblem, String>> relevantSymbolProblemTable = Maps
+              .filterKeys(symbolProblemTable, jarsInDependencyTree::contains);
 
           ArtifactResults results =
               generateArtifactReport(
@@ -246,7 +252,7 @@ public class DashboardMain {
                   artifact,
                   entry.getValue(),
                   cache.getGlobalDependencies(),
-                  indexByJar(symbolProblems, jarsInDependencyTree),
+                  ImmutableMap.copyOf(relevantSymbolProblemTable),
                   jarToDependencyPaths);
           table.add(results);
         }
@@ -302,7 +308,7 @@ public class DashboardMain {
       Artifact artifact,
       ArtifactInfo artifactInfo,
       List<DependencyGraph> globalDependencies,
-      ImmutableTable<Path, SymbolProblem, ImmutableSet<String>> symbolProblemTable,
+      ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
 
@@ -327,7 +333,11 @@ public class DashboardMain {
 
       List<DependencyPath> dependencyPaths = completeDependencies.list();
 
-      int totalLinkageErrorCount = symbolProblemTable.columnKeySet().size();
+      long totalLinkageErrorCount = symbolProblemTable.values()
+          .stream()
+          .flatMap(problemToClasses -> problemToClasses.keySet().stream())
+          .distinct()
+          .count();
 
       ListMultimap<DependencyPath, DependencyPath> dependencyTree =
           DependencyTreeFormatter.buildDependencyPathTree(dependencyPaths);
@@ -357,7 +367,7 @@ public class DashboardMain {
       results.addResult(TEST_NAME_UPPER_BOUND, upperBoundFailures.size());
       results.addResult(TEST_NAME_GLOBAL_UPPER_BOUND, globalUpperBoundFailures.size());
       results.addResult(TEST_NAME_DEPENDENCY_CONVERGENCE, convergenceIssues.size());
-      results.addResult(TEST_NAME_LINKAGE_CHECK, totalLinkageErrorCount);
+      results.addResult(TEST_NAME_LINKAGE_CHECK, (int) totalLinkageErrorCount);
 
       return results;
     }
@@ -388,6 +398,28 @@ public class DashboardMain {
       }
     }
     return upperBoundFailures;
+  }
+
+  /**
+   * Returns a table (nested maps) where rows are JAR files with problems, columns are the problems,
+   * and values are class names in those JAR files with the problems.
+   *
+   * <p>For example, {@code classes = table.get(JarX).get(SymbolProblemY)} means that {@code JarX} has
+   * {@code SymbolProblemY} and that {@code classes} in {@code JarX} reference the symbol of {@code
+   * SymbolProblemY}.
+   */
+  private static ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> indexByJar(
+      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems) {
+    ImmutableMap<Path, Collection<Entry<SymbolProblem, ClassFile>>> jarMap = Multimaps
+        .index(symbolProblems.entries(), entry -> entry.getValue().getJar()).asMap();
+    return ImmutableMap.copyOf(
+        Maps.transformValues(
+            jarMap,
+            entries -> entries.stream().collect(
+                toImmutableSetMultimap(
+                    Entry::getKey,
+                    entry -> entry.getValue().getClassName())
+            )));
   }
 
   /**
@@ -438,20 +470,17 @@ public class DashboardMain {
       Path output,
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
-      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems,
+      ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
     
     Map<String, String> latestArtifacts = collectLatestVersions(globalDependencies);
 
-    ImmutableTable<Path, SymbolProblem, ImmutableSet<String>> jarToSymbolProblemToClasses =
-        indexByJar(symbolProblems, null);
-
     Map<String, Object> templateData = new HashMap<>();
     templateData.put("table", table);
     templateData.put("lastUpdated", LocalDateTime.now());
     templateData.put("latestArtifacts", latestArtifacts);
-    templateData.put("jarToSymbolProblemToClasses", jarToSymbolProblemToClasses);
+    templateData.put("jarToSymbolProblemToClasses", symbolProblemTable);
     templateData.put("jarToDependencyPaths", jarToDependencyPaths);
     templateData.put("dependencyPathRootCauses", findRootCauses(jarToDependencyPaths));
 
