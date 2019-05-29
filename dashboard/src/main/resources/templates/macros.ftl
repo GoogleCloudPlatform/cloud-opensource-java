@@ -3,10 +3,10 @@
   <#return number + " " + plural?string(pluralNoun, singularNoun)>
 </#function>
 
-<#macro formatJarLinkageReport coordinates problems jarToDependencyPaths dependencyPathRootCauses>
-  <#if problems.keySet()?size gt 0>
-    <#assign jarPath = jarLinkageReport.getJarPath() />
-    <h3>${jarPath.getFileName()?html}</h3>
+<#macro formatJarLinkageReport jar problemsToClassFiles jarToDependencyPaths dependencyPathRootCauses>
+  <#assign problemSize = problemsToClassFiles.keySet()?size />
+  <#if problemSize gt 0>
+    <h3>${jar.getFileName()?html}</h3>
 
     <#assign targetClassCount = jarLinkageReport.getTargetClassCount() />
     <#assign sourceClassCount = jarLinkageReport.getErrorCount() />
@@ -34,12 +34,12 @@
     <p class="linkage-check-dependency-paths">
       The following paths to the jar file from the BOM are found in the dependency tree:
     </p>
-    <#if dependencyPathRootCauses[jarPath]?? >
-      <p class="linkage-check-dependency-paths">${dependencyPathRootCauses[jarPath]?html}
+    <#if dependencyPathRootCauses[jar]?? >
+      <p class="linkage-check-dependency-paths">${dependencyPathRootCauses[jar]?html}
       </p>
     <#else>
       <ul class="linkage-check-dependency-paths">
-          <#list jarToDependencyPaths.get(jarPath) as dependencyPath >
+          <#list jarToDependencyPaths.get(jar) as dependencyPath >
             <li>${dependencyPath}</li>
           </#list>
       </ul>

@@ -139,8 +139,9 @@
     <h2 id="linkage-errors">Linkage Check</h2>
 
     <p id="linkage-errors-total">${totalLinkageErrorCount} linkage error(s)</p>
-    <#list jarLinkageReports as jarLinkageReport>
-      <@formatJarLinkageReport jarLinkageReport jarToDependencyPaths {} />
+    <#list jarToSymbolProblemToClasses.rowKeySet() as jar >
+      <#assign problemsToClassFiles = jarToSymbolProblemToClasses.row(jar) />
+      <@formatJarLinkageReport jar problemsToClassFiles jarToDependencyPaths dependencyPathRootCauses/>
     </#list>
 
     <h2>Dependencies</h2>
