@@ -41,50 +41,61 @@
       </div>
     </section>
     
+    <#assign pieSize = 400 >
     <section class="piecharts">
-      <table><tr>
-      <td style="vertical-align:top">
-      <h3>Linkage Errors</h3>
-      
-      <#assign ratio = linkageErrorCount / totalArtifacts >
-      <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
-      <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
-      
-      <p>${linkageErrorCount} out of ${totalArtifacts} artifacts 
-         ${plural(linkageErrorCount, "has", "have")} linkage errors.</p>
-      
-      <div>
-        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
+      <table>
+      <col width="${pieSize}" />
+      <col width="${pieSize}" />
+      <col width="${pieSize}" />
+      <col width="${pieSize}" />
+      <tr>
+      <th style="vertical-align:top">Linkage Errors</th>
+      <th style="vertical-align:top">Global Upper Bounds</th>
+      <th style="vertical-align:top">Local Upper Bounds</th>
+      <th style="vertical-align:top">Dependency Convergence</th>
+      </tr>
+      <tr>
+        <td>${linkageErrorCount} out of ${totalArtifacts} artifacts 
+         ${plural(linkageErrorCount, "has", "have")} linkage errors.</td>
+        <td style="vertical-align:top">
+         ${localUpperBoundsErrorCount} out of ${totalArtifacts} artifacts 
+         ${plural(localUpperBoundsErrorCount, "does not", "do not")} pick the
+         latest versions of all artifacts in their own dependency tree.
+      </td>
+      <td>${globalUpperBoundsErrorCount} out of ${totalArtifacts} artifacts 
+         ${plural(globalUpperBoundsErrorCount, "does not", "do not")} select the
+         most recent version of all artifacts in the BOM.</td>
+      <td>${convergenceErrorCount} out of ${totalArtifacts} artifacts 
+         ${plural(convergenceErrorCount, "fails", "fail")} to converge.
+      </td>
+      </tr>
+      <tr>
+      <td>
+      <#assign linkageRatio = linkageErrorCount / totalArtifacts >
+      <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, linkageRatio)>
+      <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, linkageRatio)>
+        <svg xmlns="http://www.w3.org/2000/svg" width="${pieSize}" height="${pieSize}">
           <desc>${linkageErrorCount} out of ${totalArtifacts} artifacts have linkage errors.</desc>
           <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
           <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
-      </div>
-     </td><td style="vertical-align:top">
-     <h3>Local Upper Bounds</h3>
-      
+     </td>
+     <td>
+           
       <#assign ratio = localUpperBoundsErrorCount / totalArtifacts >
       <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
       <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
       
-      <p>${localUpperBoundsErrorCount} out of ${totalArtifacts} artifacts 
-         ${plural(localUpperBoundsErrorCount, "does not", "do not")} pick the
-         latest versions of all artifacts in their own dependency tree.</p>
-      
-      <div>
-        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
+        <svg xmlns="http://www.w3.org/2000/svg" width="${pieSize}" height="${pieSize}">
           <desc>{localUpperBoundsErrorCount} out of ${totalArtifacts} artifacts 
          ${plural(localUpperBoundsErrorCount, "does not", "do not")} pick the
          latest versions of all artifacts in their own dependency tree.</desc>
           <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
           <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
-      </div>
       </td>
-      <td style="vertical-align:top">
       
-     <h3>Global Upper Bounds</h3>
-      
+      <td> 
       <#assign ratio = globalUpperBoundsErrorCount / totalArtifacts >
       <#assign largeArcFlag = "0">
       <#if ratio gt 0.5>
@@ -92,23 +103,14 @@
       </#if>
       <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
       <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
-      
-      <p>${globalUpperBoundsErrorCount} out of ${totalArtifacts} artifacts 
-         ${plural(globalUpperBoundsErrorCount, "does not", "do not")} select the
-         most recent version of all artifacts in the BOM.</p>
-      
-      <div>
-        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
+        <svg xmlns="http://www.w3.org/2000/svg" width="${pieSize}" height="${pieSize}">
           <desc>${globalUpperBoundsErrorCount} out of ${totalArtifacts} artifacts
                have global upper bounds errors.</desc>
           <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
           <path d="M100,100 v -100 A100,100 0 ${largeArcFlag} 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
-      </div>
     </td>
-    <td style="vertical-align:top">
-    <h3>Dependency Convergence</h3>
-      
+    <td>      
       <#assign ratio = convergenceErrorCount / totalArtifacts >
       <#assign largeArcFlag = "0">
       <#if ratio gt 0.5>
@@ -117,17 +119,12 @@
       <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
       <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
       
-      <p>${convergenceErrorCount} out of ${totalArtifacts} artifacts 
-         ${plural(convergenceErrorCount, "fails", "fail")} to converge.</p>
-      
-      <div>
-        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
+        <svg xmlns="http://www.w3.org/2000/svg" width="${pieSize}" height="${pieSize}">
           <desc>${convergenceErrorCount} out of ${totalArtifacts} artifacts 
           ${plural(convergenceErrorCount, "fails", "fail")} to converge.</desc>
           <circle cx="100" cy="100" r="100" stroke-width="3" fill="green" />
           <path d="M100,100 v -100 A100,100 0 ${largeArcFlag} 1 ${endPointX}, ${endPointY} z" fill="red" />
         </svg>
-      </div>
       </td></tr></table>
     </section>
     
