@@ -2,6 +2,11 @@
   <#local plural = number gt 1 />
   <#return number + " " + plural?string(pluralNoun, singularNoun)>
 </#function>
+<!-- same as above but without the number -->
+<#function plural number singularNoun pluralNoun>
+  <#local plural = number gt 1 />
+  <#return plural?string(pluralNoun, singularNoun)>
+</#function>
 
 <#macro formatJarLinkageReport jar problemsToClassFiles jarToDependencyPaths dependencyPathRootCauses>
   <!-- problemsToClassFiles: ImmutableMap<SymbolProblem, Set<String>> -->

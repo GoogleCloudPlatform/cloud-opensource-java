@@ -499,12 +499,13 @@ public class DashboardMain {
     templateData.put("jarToDependencyPaths", jarToDependencyPaths);
     templateData.put("dependencyPathRootCauses", findRootCauses(jarToDependencyPaths));
 
-    // Accessing static method 'countFailures' from Freemarker template
+    // Accessing static methods from Freemarker template
     // https://freemarker.apache.org/docs/pgui_misc_beanwrapper.html#autoid_60
     DefaultObjectWrapper wrapper = new DefaultObjectWrapperBuilder(Configuration.VERSION_2_3_28)
         .build();
     TemplateHashModel staticModels = wrapper.getStaticModels();
     templateData.put("dashboardMain", staticModels.get(DashboardMain.class.getName()));    
+    templateData.put("pieChart", staticModels.get(PieChart.class.getName()));    
     
     File dashboardFile = output.resolve("dashboard.html").toFile();
     try (Writer out = new OutputStreamWriter(

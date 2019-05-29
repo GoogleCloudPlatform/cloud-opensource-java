@@ -35,6 +35,7 @@ import nu.xom.Element;
 import nu.xom.Node;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
+import nu.xom.XPathContext;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
@@ -110,6 +111,13 @@ public class DashboardTest {
     }
     
     Assert.assertFalse(dashboard.toXML().contains("1 HAVE"));
+  }
+  
+  @Test
+  public void testSvg() {
+    XPathContext context = new XPathContext("svg", "http://www.w3.org/2000/svg");
+    Nodes svg = dashboard.query("//svg:svg", context);
+    Assert.assertEquals(4, svg.size());
   }
 
   @Test
