@@ -4,19 +4,10 @@
 </#function>
 
 <#macro formatJarLinkageReport jar problemsToClassFiles jarToDependencyPaths dependencyPathRootCauses>
-  <!-- problemsToClassFiles is an ImmutableMap<SymbolProblem, Set<String>>, but keySet() does not
-    work in Freemarker template -->
+  <!-- problemsToClassFiles: ImmutableMap<SymbolProblem, Set<String>> -->
   <#if problemsToClassFiles?size gt 0>
     <h3>${jar.getFileName()?html}</h3>
-    <#--
-    <#assign targetClassCount = jarLinkageReport.getTargetClassCount() />
-    <#assign sourceClassCount = jarLinkageReport.getErrorCount() />
-    <p class="jar-linkage-report">
-      ${pluralize(targetClassCount, "target class", "target classes")}
-      causing linkage errors referenced from
-      ${pluralize(sourceClassCount, "source class", "source classes")}.
-    </p>
-    -->
+
     <#list problemsToClassFiles as symbolProblem, sourceClasses>
       <p class="jar-linkage-report-cause">${symbolProblem?html}, referenced from ${
         pluralize(sourceClasses?size, "source class", "source classes")?html}

@@ -192,12 +192,6 @@ public class DashboardTest {
 
   @Test
   public void testLinkageReports() {
-    Nodes reports = details.query("//p[@class='jar-linkage-report']");
-    // appengine-api-sdk, shown as first item in linkage errors, has these errors
-    Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-        .isEqualTo(
-            "106 target classes causing linkage errors referenced from 516 source classes.");
-
     Nodes dependencyPaths = details.query(
         "//p[@class='linkage-check-dependency-paths'][position()=last()]");
     Node dependencyPathMessage = dependencyPaths.get(0);
@@ -269,11 +263,6 @@ public class DashboardTest {
   public void testComponent_linkageCheckResult() throws IOException, ParsingException {
     Document document = parseOutputFile(
         "com.google.http-client_google-http-client-appengine_1.29.1.html");
-    Nodes reports = document.query("//p[@class='jar-linkage-report']");
-    Assert.assertEquals(1, reports.size());
-    Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-        .isEqualTo(
-            "106 target classes causing linkage errors referenced from 516 source classes.");
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
     Truth.assertWithMessage("google-http-client-appengine should show linkage errors for RpcStubDescriptor")
         .that(causes)
@@ -327,7 +316,7 @@ public class DashboardTest {
     Nodes linkageCheckMessages = document.query("//ul[@class='jar-linkage-report-cause']/li");
     Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
     Truth.assertThat(linkageCheckMessages.get(0).getValue())
-        .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");
+        .contains("com.google.appengine.api.xmpp.XMPPServicePb$XmppService_3$1");
   }
 
   @Test

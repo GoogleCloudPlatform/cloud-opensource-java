@@ -374,8 +374,6 @@ public class DashboardMain {
 
       ImmutableTable<Path, SymbolProblem, Set<String>> jarToSymbolProblemToClasses =
           indexByJar(symbolProblems);
-//      ImmutableMap<SymbolProblem, Set<String>> row = jarToSymbolProblemToClasses.row(Paths.get(""));
-//      row.keySet();
 
       Map<String, Object> templateData = new HashMap<>();
       templateData.put("artifact", artifact);
