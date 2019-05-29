@@ -12,7 +12,16 @@
   <!-- problemsToClassFiles: ImmutableMap<SymbolProblem, Set<String>> -->
   <#if problemsToClassFiles?size gt 0>
     <h3>${jar.getFileName()?html}</h3>
-
+    <#assign symbolProblemCount = problemsToClassFiles?keys?size />
+    <#assign sourceClassCount = 0 />
+    <#list problemsToClassFiles?values as classFiles>
+      <#assign sourceClassCount = sourceClassCount + classFiles?size />
+    </#list>
+    <p class="jar-linkage-report">
+      ${pluralize(symbolProblemCount, "symbol", "symbols")}
+      causing linkage errors referenced from
+      ${pluralize(sourceClassCount, "class", "classes")}.
+    </p>
     <#list problemsToClassFiles as symbolProblem, sourceClasses>
       <p class="jar-linkage-report-cause">${symbolProblem?html}, referenced from ${
         pluralize(sourceClasses?size, "source class", "source classes")?html}
