@@ -95,16 +95,12 @@ public final class SymbolProblem {
     StringBuilder output = new StringBuilder();
 
     for (SymbolProblem problem : symbolProblems.keySet()) {
-      output.append(problem);
-      output.append("\n  referenced by ");
-      ImmutableSet<ClassFile> references = symbolProblems.get(problem);
-      int referenceCount = references.size();
-      output.append(referenceCount);
-      output.append(" class file");
-      if (referenceCount > 1) {
-        output.append("s");
-      }
-      output.append("\n");
+      int referenceCount = symbolProblems.get(problem).size();
+      output.append(String.format("%s\n  referenced by %d class file%s\n",
+          problem,
+          referenceCount,
+          referenceCount > 1 ? "s" : ""
+      ));
     }
 
     return output.toString();
