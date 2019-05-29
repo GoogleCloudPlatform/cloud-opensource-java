@@ -324,7 +324,7 @@ public class DashboardTest {
     Nodes linkageCheckMessages = document.query("//ul[@class='jar-linkage-report-cause']/li");
     Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
     Truth.assertThat(linkageCheckMessages.get(0).getValue())
-        .contains("com.google.appengine.api.xmpp.XMPPServicePb$XmppService_3$1");
+        .contains("com.google.appengine.api.appidentity.AppIdentityServicePb$SigningService$1");
   }
 
   @Test
