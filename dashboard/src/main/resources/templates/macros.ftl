@@ -8,23 +8,25 @@
   <#return plural?string(pluralNoun, singularNoun)>
 </#function>
 
-<#macro formatJarLinkageReport jar problemsToClassFiles jarToDependencyPaths dependencyPathRootCauses>
-  <!-- problemsToClassFiles: ImmutableMap<SymbolProblem, Set<String>> -->
-  <#if problemsToClassFiles?size gt 0>
+<#macro formatJarLinkageReport jar problemsToClassesMultimap jarToDependencyPaths dependencyPathRootCauses>
+  <!-- problemsToClasses: ImmutableSetMultimap<SymbolProblem, String>
+    converted to ImmutableMap<SymbolProblem, Collection<String>> -->
+  <#assign problemsToClasses = problemsToClassesMultimap.asMap() />
+  <#if problemsToClasses?size gt 0>
     <h3>${jar.getFileName()?html}</h3>
-    <#assign symbolProblemCount = problemsToClassFiles?keys?size />
+    <#assign symbolProblemCount = problemsToClasses?keys?size />
     <#assign sourceClassCount = 0 />
-    <#list problemsToClassFiles?values as classFiles>
-      <#assign sourceClassCount = sourceClassCount + classFiles?size />
+    <#list problemsToClasses as symbolProblem, sourceClasses>
+      <#assign sourceClassCount = sourceClassCount + sourceClasses?size />
     </#list>
     <p class="jar-linkage-report">
       ${pluralize(symbolProblemCount, "symbol", "symbols")}
       causing linkage errors referenced from
       ${pluralize(sourceClassCount, "class", "classes")}.
     </p>
-    <#list problemsToClassFiles as symbolProblem, sourceClasses>
+    <#list problemsToClasses as symbolProblem, sourceClasses>
       <p class="jar-linkage-report-cause">${symbolProblem?html}, referenced from ${
-        pluralize(sourceClasses?size, "source class", "source classes")?html}
+        pluralize(sourceClasses?size, "class", "classes")?html}
         <button onclick="toggleSourceClassListVisibility(this)"
                 title="Toggle visibility of source class list">▶
         </button>

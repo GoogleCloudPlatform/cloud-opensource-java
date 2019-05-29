@@ -17,9 +17,7 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.collect.ImmutableSetMultimap.toImmutableSetMultimap;
-import static com.google.common.collect.ImmutableTable.toImmutableTable;
 
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -41,7 +39,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TreeMap;
 
 import freemarker.template.Configuration;
@@ -51,7 +48,6 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateHashModel;
 import freemarker.template.Version;
-import javax.annotation.Nullable;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -75,21 +71,16 @@ import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
-import com.google.common.collect.Table;
-import com.google.common.collect.Table.Cell;
 
 public class DashboardMain {
   public static final String TEST_NAME_LINKAGE_CHECK = "Linkage Errors";
@@ -401,67 +392,29 @@ public class DashboardMain {
   }
 
   /**
-   * Returns a table (nested maps) where rows are JAR files with problems, columns are the problems,
-   * and values are class names in those JAR files with the problems.
+   * Returns a nested map where first keys are JAR files with symbol problems, second keys are the
+   * problems, and values are class names in those JAR files with the problems.
    *
-   * <p>For example, {@code classes = table.get(JarX).get(SymbolProblemY)} means that {@code JarX} has
-   * {@code SymbolProblemY} and that {@code classes} in {@code JarX} reference the symbol of {@code
-   * SymbolProblemY}.
+   * <p>For example, {@code classes = table.get(JarX).get(SymbolProblemY)} where {@code classes} are
+   * not null means that {@code JarX} has {@code SymbolProblemY} and that {@code JarX} contains
+   * {@code classes} which reference {@code SymbolProblemY.getSymbol()}.
    */
   private static ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> indexByJar(
       ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems) {
+
     ImmutableMap<Path, Collection<Entry<SymbolProblem, ClassFile>>> jarMap = Multimaps
-        .index(symbolProblems.entries(), entry -> entry.getValue().getJar()).asMap();
+        .index(
+            symbolProblems.entries(),
+            entry -> entry.getValue().getJar()).asMap();
+
     return ImmutableMap.copyOf(
         Maps.transformValues(
             jarMap,
             entries -> entries.stream().collect(
                 toImmutableSetMultimap(
-                    Entry::getKey,
+                    Entry::getKey, // SymbolProblem
                     entry -> entry.getValue().getClassName())
             )));
-  }
-
-  /**
-   * Returns a table where rows are jar files in {@code jarFilter}, columns are {@link
-   * SymbolProblem}, and values are class names referencing the problems. When {@code jarFilter} is
-   * {@code null}, jar files are not filtered.
-   *
-   * <p>For example, {@code classes = table.get(JarX, SymbolProblemY)} means that {@code JarX} has
-   * {@code SymbolProblemY} and that {@code classes} in {@code JarX} reference the symbol of {@code
-   * SymbolProblemY}.
-   */
-  private static ImmutableTable<Path, SymbolProblem, ImmutableSet<String>> indexByJar(
-      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems,
-      @Nullable Set<Path> jarFilter) {
-    Table<Path, SymbolProblem, ImmutableSet.Builder<String>> table = HashBasedTable.create();
-
-    symbolProblems.asMap().forEach((symbolProblem, classFiles) -> {
-      ImmutableListMultimap<Path, ClassFile> jarToClassFiles =
-          Multimaps.index(classFiles, ClassFile::getJar);
-      jarToClassFiles.forEach((jar, classFilesWithJar) -> {
-        if (jarFilter != null && !jarFilter.contains(jar)) {
-          return;
-        }
-        ImmutableSet.Builder<String> classNames = table.get(jar, symbolProblem);
-        if (classNames == null) {
-          classNames = ImmutableSet.builder();
-          table.put(jar, symbolProblem, classNames);
-        }
-
-        ImmutableSet<String> newClassNames = classFiles.stream().map(ClassFile::getClassName)
-            .collect(toImmutableSet());
-        classNames.addAll(newClassNames);
-      });
-    });
-
-    return table.cellSet()
-        .stream()
-        .collect(toImmutableTable(
-            Cell::getRowKey,
-            Cell::getColumnKey,
-            cell -> cell.getValue().build()
-        ));
   }
 
   @VisibleForTesting

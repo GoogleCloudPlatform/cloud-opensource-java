@@ -287,7 +287,7 @@ public class DashboardTest {
         .comparingElementsUsing(NODE_VALUES)
         .contains(
             "Class com.google.net.rpc3.client.RpcStubDescriptor is not found,"
-                + " referenced from 21 source classes ▶"); // '▶' is the toggle button
+                + " referenced from 21 classes ▶"); // '▶' is the toggle button
   }
 
   @Test

@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.cloud.tools.opensource.classpath.ClassSymbol;
+import com.google.cloud.tools.opensource.classpath.ErrorType;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,9 +31,11 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -54,10 +58,18 @@ public class FreemarkerTest {
 
   private static Path outputDirectory;
   private Builder builder = new Builder();
+  static ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable;
 
   @BeforeClass
   public static void setUp() throws IOException {
     outputDirectory = Files.createDirectories(Paths.get("target", "dashboard"));
+
+    ImmutableSetMultimap<SymbolProblem, String> dummyProblems = ImmutableSetMultimap.of(
+        new SymbolProblem(new ClassSymbol("com.foo.Bar"), ErrorType.CLASS_NOT_FOUND, null),
+        "abc.def.G"
+    );
+    symbolProblemTable = ImmutableMap.of(Paths.get("foo", "bar-1.2.3.jar"),
+        dummyProblems);
   }
 
   @AfterClass
@@ -83,7 +95,7 @@ public class FreemarkerTest {
     List<DependencyGraph> globalDependencies = ImmutableList.of();
     ListMultimap<Path, DependencyPath> jarToDependencyPaths = LinkedListMultimap.create();
     DashboardMain.generateDashboard(configuration, outputDirectory, table, globalDependencies,
-        ImmutableSetMultimap.of(), jarToDependencyPaths);
+        symbolProblemTable, jarToDependencyPaths);
     
     Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));

@@ -45,9 +45,8 @@
 
     <h2>Linkage Errors</h2>
 
-    <#list jarToSymbolProblemToClasses.rowKeySet() as jar >
-      <#assign problemsToClassFiles = jarToSymbolProblemToClasses.row(jar) />
-      <@formatJarLinkageReport jar problemsToClassFiles jarToDependencyPaths dependencyPathRootCauses/>
+    <#list jarToSymbolProblemToClasses as jar, problemsToClasses>
+      <@formatJarLinkageReport jar problemsToClasses jarToDependencyPaths dependencyPathRootCauses/>
     </#list>
 
     <hr />
