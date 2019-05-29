@@ -133,3 +133,8 @@ ul.jar-linkage-report-cause > li {
 .statistic-item-yellow {
   background: #f1c40f;
 }
+
+#piecharts th {
+  vertical-align: top;
+}
+}
