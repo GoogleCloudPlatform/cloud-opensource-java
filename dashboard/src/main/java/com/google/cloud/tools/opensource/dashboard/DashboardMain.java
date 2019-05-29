@@ -197,21 +197,22 @@ public class DashboardMain {
   }
 
   /**
-   * Returns mapping from BOM member to jar files that are in the dependency tree of the BOM member.
+   * Returns mapping from the Maven coordinates of BOM members to jar files that are in the
+   * dependency tree of the BOM members.
    */
   private static ImmutableSetMultimap<String, Path> bomMemberToJars(
       ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
     // Coordinates of BOM member -> One or more jar files (the BOM member and its dependencies)
-    ImmutableSetMultimap.Builder<String, Path> jarToCoordinatesBuilder = ImmutableSetMultimap
+    ImmutableSetMultimap.Builder<String, Path> bomMemberToJars = ImmutableSetMultimap
         .builder();
     for (Path path : jarToDependencyPaths.keySet()) {
       for (DependencyPath dependencyPath : jarToDependencyPaths.get(path)) {
         Artifact artifact = dependencyPath.get(0);
-        jarToCoordinatesBuilder.put(Artifacts.toCoordinates(artifact), path);
+        bomMemberToJars.put(Artifacts.toCoordinates(artifact), path);
       }
     }
 
-    return jarToCoordinatesBuilder.build();
+    return bomMemberToJars.build();
   }
 
   @VisibleForTesting
@@ -394,10 +395,9 @@ public class DashboardMain {
    * SymbolProblem}, and values are class names referencing the problems. When {@code jarFilter} is
    * {@code null}, jar files are not filtered.
    *
-   * <p>For example, {@code classes = table.get("com.google.abc:foo:1.0.0", ProblemA)} means that
-   * the jar files containing the {@code classFiles} are in the dependency tree of{@code
-   * "com.google.abc:foo:1.0.0"} and that the {@code classes} reference the symbol of {@code
-   * ProblemA}.
+   * <p>For example, {@code classes = table.get(JarX, SymbolProblemY)} means that {@code JarX} has
+   * {@code SymbolProblemY} and that {@code classes} in {@code JarX} reference the symbol of {@code
+   * SymbolProblemY}.
    */
   private static ImmutableTable<Path, SymbolProblem, ImmutableSet<String>> indexByJar(
       ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems,

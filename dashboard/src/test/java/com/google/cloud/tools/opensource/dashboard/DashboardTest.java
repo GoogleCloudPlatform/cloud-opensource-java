@@ -290,7 +290,6 @@ public class DashboardTest {
                 + " referenced from 21 source classes ▶"); // '▶' is the toggle button
   }
 
-
   @Test
   public void testComponent_success() throws IOException, ParsingException {
     Document document = parseOutputFile(
