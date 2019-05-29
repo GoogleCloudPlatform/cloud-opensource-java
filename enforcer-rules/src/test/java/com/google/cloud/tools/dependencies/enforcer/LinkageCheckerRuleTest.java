@@ -164,9 +164,8 @@ public class LinkageCheckerRuleTest {
           "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
     } catch (EnforcerRuleException ex) {
       // pass
-      verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found 384 errors."));
-      assertEquals(
-          "Failed while checking class path. See above error report.", ex.getMessage());
+      verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found 123 errors."));
+      assertEquals("Failed while checking class path. See above error report.", ex.getMessage());
     }
   }
 

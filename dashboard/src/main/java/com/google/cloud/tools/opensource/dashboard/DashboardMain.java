@@ -203,12 +203,12 @@ public class DashboardMain {
 
   /**
    * Returns a table where rows are the Maven coordinates of BOM members, columns are symbol
-   * problems, and the values are set of class files.
+   * problems, and the values are sets of class files.
    *
    * <p>For example, {@code classFiles = symbolProblemTable.get("com.google.abc:foo:1.0.0",
-   * ProblemA)} means that the jar files of the {@code classFiles} are in the dependency tree of
-   * {@code "com.google.abc:foo:1.0.0"} and that the {@code classFiles} are referencing the symbol of
-   * {@code ProblemA}.
+   * ProblemA)} means that the jar files containing the {@code classFiles} are in the dependency
+   * tree of{@code "com.google.abc:foo:1.0.0"} and that the {@code classFiles} reference the
+   * symbol of {@code ProblemA}.
    */
   @VisibleForTesting
   static ImmutableTable<String, SymbolProblem, ImmutableSet<ClassFile>> createSymbolProblemTable(
