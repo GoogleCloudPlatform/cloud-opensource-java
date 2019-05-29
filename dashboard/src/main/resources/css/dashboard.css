@@ -137,4 +137,11 @@ ul.jar-linkage-report-cause > li {
 #piecharts th {
   vertical-align: top;
 }
+
+#piecharts td {
+  vertical-align: top;
+}
+
+.pie {
+  "text-align: center" 
 }

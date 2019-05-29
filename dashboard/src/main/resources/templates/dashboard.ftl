@@ -41,7 +41,7 @@
       </div>
     </section>
     
-    <#assign pieSize = 400 >
+    <#assign pieSize = 300 >
     <section id="piecharts">
       <table>
         <col width="${pieSize}" />
@@ -70,17 +70,18 @@
         </td>
       </tr>
       <tr>
-        <td>
-        <#assign linkageRatio = linkageErrorCount / totalArtifacts >
-        <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, linkageRatio)>
-        <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, linkageRatio)>
+        <td class='pie'>    
+          <#assign linkageRatio = linkageErrorCount / totalArtifacts >
+          <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, linkageRatio)>
+          <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, linkageRatio)>
           <svg xmlns="http://www.w3.org/2000/svg" width="${pieSize}" height="${pieSize}">
             <desc>${linkageErrorCount} out of ${totalArtifacts} artifacts have linkage errors.</desc>
             <circle cx="100" cy="100" r="100" stroke-width="3" fill="lightgreen" />
             <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
           </svg>
        </td>
-       <td>    
+
+       <td class='pie'>    
         <#assign ratio = localUpperBoundsErrorCount / totalArtifacts >
         <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
         <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
@@ -94,7 +95,7 @@
           </svg>
         </td>
       
-        <td> 
+       <td class='pie'>    
         <#assign ratio = globalUpperBoundsErrorCount / totalArtifacts >
         <#assign largeArcFlag = "0">
         <#if ratio gt 0.5>
@@ -108,8 +109,9 @@
             <circle cx="100" cy="100" r="100" stroke-width="3" fill="lightgreen" />
             <path d="M100,100 v -100 A100,100 0 ${largeArcFlag} 1 ${endPointX}, ${endPointY} z" fill="red" />
           </svg>
-        </td>
-        <td>      
+       </td>
+        
+       <td class='pie'>    
           <#assign ratio = convergenceErrorCount / totalArtifacts >
           <#assign largeArcFlag = "0">
           <#if ratio gt 0.5>
