@@ -16,8 +16,6 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import com.google.cloud.tools.opensource.classpath.ClassSymbol;
-import com.google.cloud.tools.opensource.classpath.ErrorType;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,6 +29,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.cloud.tools.opensource.classpath.ClassSymbol;
+import com.google.cloud.tools.opensource.classpath.ErrorType;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
