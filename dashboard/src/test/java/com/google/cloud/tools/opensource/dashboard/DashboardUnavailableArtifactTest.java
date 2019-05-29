@@ -82,7 +82,7 @@ public class DashboardUnavailableArtifactTest {
     cache.setInfoMap(map);
     List<ArtifactResults> artifactResults =
         DashboardMain.generateReports(
-            configuration, outputDirectory, cache, ImmutableTable.of(),
+            configuration, outputDirectory, cache, ImmutableSetMultimap.of(),
             LinkedListMultimap.create());
 
     Assert.assertEquals(
@@ -128,7 +128,7 @@ public class DashboardUnavailableArtifactTest {
         outputDirectory,
         table,
         null,
-        ImmutableTable.of(),
+        ImmutableSetMultimap.of(),
         LinkedListMultimap.create());
 
     Path generatedHtml = outputDirectory.resolve("artifact_details.html");
