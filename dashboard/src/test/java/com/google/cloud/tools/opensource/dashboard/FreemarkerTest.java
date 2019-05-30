@@ -88,7 +88,7 @@ public class FreemarkerTest {
     List<DependencyGraph> globalDependencies = ImmutableList.of();
     ListMultimap<Path, DependencyPath> jarToDependencyPaths = LinkedListMultimap.create();
     DashboardMain.generateDashboard(configuration, outputDirectory, table, globalDependencies,
-        linkageCheckReport, jarToDependencyPaths, new Bom(null, null));
+        linkageCheckReport, jarToDependencyPaths, new Bom("mock:artifact:1.6.7", null));
     
     Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
