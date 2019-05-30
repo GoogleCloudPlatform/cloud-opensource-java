@@ -49,8 +49,8 @@ class LinkageCheckerMain {
     LinkageChecker linkageChecker = LinkageChecker.create(
         linkageCheckerArguments.getInputClasspath(),
         linkageCheckerArguments.getEntryPointJars());
-    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems = linkageChecker
-        .findSymbolProblems();
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
 
     System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
   }

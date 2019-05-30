@@ -126,13 +126,15 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
       try {
         LinkageChecker linkageChecker = LinkageChecker.create(classpath, directDependencies);
-        ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems = linkageChecker
-            .findSymbolProblems();
+        ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+            linkageChecker.findSymbolProblems();
         if (reportOnlyReachable) {
           ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
-          symbolProblems = symbolProblems.entries().stream()
-              .filter(entry -> classReferenceGraph.isReachable(entry.getValue().getClassName()))
-              .collect(ImmutableSetMultimap.toImmutableSetMultimap(Entry::getKey,Entry::getValue));
+          symbolProblems =
+              symbolProblems.entries().stream()
+                  .filter(entry -> classReferenceGraph.isReachable(entry.getValue().getClassName()))
+                  .collect(
+                      ImmutableSetMultimap.toImmutableSetMultimap(Entry::getKey, Entry::getValue));
         }
         // Count unique SymbolProblems
         int errorCount = symbolProblems.keySet().size();
@@ -142,11 +144,10 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           foundError += "s";
         }
         if (errorCount > 0) {
-          String message = String.format(
-              "Linkage Checker rule found %d %s. Linkage error report:\n%s",
-              errorCount,
-              foundError,
-              SymbolProblem.formatSymbolProblems(symbolProblems));
+          String message =
+              String.format(
+                  "Linkage Checker rule found %d %s. Linkage error report:\n%s",
+                  errorCount, foundError, SymbolProblem.formatSymbolProblems(symbolProblems));
           if (getLevel() == WARN) {
             logger.warn(message);
           } else {
