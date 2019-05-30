@@ -543,6 +543,25 @@ public class LinkageCheckerTest {
         .endsWith("api-common-1.7.0.jar");
   }
 
+  @Test
+  public void testFindSymbolProblems_shouldStripSourceInnerClasses() throws IOException, URISyntaxException {
+    // The superclass of AbstractApiService$InnerService (Guava's ApiService) is not in the paths
+    Path dummySource = firestorePath;
+    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
+    LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
+
+    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
+    builder.addClassReference(
+        new ClassFile(dummySource, "com.google.foo.Bar$Baz"),
+        // This private inner class is defined in firestore-v1beta1-0.28.0.jar
+        new ClassSymbol("com.google.api.core.AbstractApiService$InnerService"));
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.cloneWith(builder.build()).findSymbolProblems();
+
+    long innerClassCount = symbolProblems.values().stream().map(ClassFile::getClassName)
+        .filter(className -> className.contains("$")).count();
+    assertEquals(0L, innerClassCount);
+  }
 
   @Test
   public void testGenerateInputClasspathFromLinkageCheckOption_mavenBom()

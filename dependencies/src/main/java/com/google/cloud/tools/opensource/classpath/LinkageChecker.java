@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimaps;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -129,7 +130,14 @@ public class LinkageChecker {
           }
         });
 
-    return problemToClass.build();
+    // Remove duplicate references from inner classes of same Java class file
+    return ImmutableSetMultimap.copyOf(
+        Multimaps.transformValues(
+            problemToClass.build(),
+            classFile ->
+                classFile.getClassName().contains("$")
+                    ? new ClassFile(classFile.getJar(), classFile.getClassName().split("\\$")[0])
+                    : classFile));
   }
 
   /**

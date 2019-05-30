@@ -203,7 +203,7 @@ public class DashboardTest {
     Nodes reports = details.query("//p[@class='jar-linkage-report']");
     // appengine-api-sdk, shown as first item in linkage errors, has these errors
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-        .isEqualTo("106 symbols causing linkage errors referenced from 741 classes.");
+        .isEqualTo("106 symbols causing linkage errors referenced from 51 classes.");
 
     Nodes dependencyPaths = details.query(
         "//p[@class='linkage-check-dependency-paths'][position()=last()]");
@@ -279,10 +279,11 @@ public class DashboardTest {
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
     Assert.assertEquals(1, reports.size());
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-        .isEqualTo("106 symbols causing linkage errors referenced from 741 classes.");
+        .isEqualTo("106 symbols causing linkage errors referenced from 51 classes.");
 
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
-    Truth.assertWithMessage("google-http-client-appengine should show linkage errors for RpcStubDescriptor")
+    Truth.assertWithMessage(
+            "google-http-client-appengine should show linkage errors for RpcStubDescriptor")
         .that(causes)
         .comparingElementsUsing(NODE_VALUES)
         .contains(
@@ -333,7 +334,7 @@ public class DashboardTest {
     Nodes linkageCheckMessages = document.query("//ul[@class='jar-linkage-report-cause']/li");
     Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
     Truth.assertThat(linkageCheckMessages.get(0).getValue())
-        .contains("com.google.appengine.api.appidentity.AppIdentityServicePb$SigningService$1");
+        .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");
   }
 
   @Test
