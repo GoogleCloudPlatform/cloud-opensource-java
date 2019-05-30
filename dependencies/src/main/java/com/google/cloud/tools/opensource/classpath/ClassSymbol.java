@@ -26,4 +26,6 @@ public class ClassSymbol extends Symbol {
   public String toString() {
     return "Class " + getClassName();
   }
+
+
 }

@@ -14,11 +14,8 @@
   <#assign problemsToClasses = problemsWithClass.asMap() />
   <#if problemsToClasses?size gt 0>
     <h3>${jar.getFileName()?html}</h3>
-    <#assign symbolProblemCount = problemsToClasses?keys?size />
-    <#assign sourceClassCount = 0 />
-    <#list problemsToClasses as symbolProblem, sourceClasses>
-      <#assign sourceClassCount = sourceClassCount + sourceClasses?size />
-    </#list>
+    <#assign symbolProblemCount = problemsToClasses?size />
+    <#assign sourceClassCount = problemsWithClass.inverse().keySet()?size />
     <p class="jar-linkage-report">
       ${pluralize(symbolProblemCount, "symbol", "symbols")}
       causing linkage errors referenced from

@@ -203,7 +203,7 @@ public class DashboardTest {
     Nodes reports = details.query("//p[@class='jar-linkage-report']");
     // appengine-api-sdk, shown as first item in linkage errors, has these errors
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-        .isEqualTo("115 symbols causing linkage errors referenced from 1,648 classes.");
+        .isEqualTo("106 symbols causing linkage errors referenced from 741 classes.");
 
     Nodes dependencyPaths = details.query(
         "//p[@class='linkage-check-dependency-paths'][position()=last()]");
@@ -279,7 +279,7 @@ public class DashboardTest {
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
     Assert.assertEquals(1, reports.size());
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-        .isEqualTo("115 symbols causing linkage errors referenced from 1,648 classes.");
+        .isEqualTo("106 symbols causing linkage errors referenced from 741 classes.");
 
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
     Truth.assertWithMessage("google-http-client-appengine should show linkage errors for RpcStubDescriptor")
@@ -334,6 +334,22 @@ public class DashboardTest {
     Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
     Truth.assertThat(linkageCheckMessages.get(0).getValue())
         .contains("com.google.appengine.api.appidentity.AppIdentityServicePb$SigningService$1");
+  }
+
+  @Test
+  public void testLinkageErrors_ensureNoDuplicateSymbols() throws IOException, ParsingException {
+    Document document = parseOutputFile(
+        "com.google.http-client_google-http-client-appengine_1.29.1.html");
+    Nodes linkageCheckMessages = document.query("//p[@class='jar-linkage-report-cause']");
+    Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
+
+    List<String> messages = new ArrayList<>();
+    for (int i =0 ;i<linkageCheckMessages.size(); ++i) {
+      messages.add(linkageCheckMessages.get(i).getValue());
+    }
+
+    // When uniqueness of SymbolProblem and Symbol classes are incorrect, dashboard has duplicates.
+    Truth.assertThat(messages).containsNoDuplicates();
   }
 
   @Test

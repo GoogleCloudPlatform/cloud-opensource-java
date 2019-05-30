@@ -219,7 +219,6 @@ public class DashboardMain {
 
     ImmutableSetMultimap<String, Path> bomMemberToJars = bomMemberToJars(jarToDependencyPaths);
 
-
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();
     for (Entry<Artifact, ArtifactInfo> entry : artifacts.entrySet()) {
@@ -392,31 +391,25 @@ public class DashboardMain {
   }
 
   /**
-   * Returns a nested map where first keys are JAR files with symbol problems, second keys are the
-   * problems, and values are class names in those JAR files with the problems.
+   * Partitions {@code symbolProblems} by the JAR file that contains the {@link ClassFile}.
    *
-   * <p>For example, {@code classes = table.get(JarX).get(SymbolProblemY)} where {@code classes} are
-   * not null means that {@code JarX} has {@code SymbolProblemY} and that {@code JarX} contains
+   * <p>For example, {@code classes = result.get(JarX).get(SymbolProblemY)} where {@code classes}
+   * are not null means that {@code JarX} has {@code SymbolProblemY} and that {@code JarX} contains
    * {@code classes} which reference {@code SymbolProblemY.getSymbol()}.
    */
   private static ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> indexByJar(
       ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems) {
 
-    ImmutableMap<Path, Collection<Entry<SymbolProblem, ClassFile>>> jarMap = Multimaps
-        .index(
-            symbolProblems.entries(),
-            entry -> entry.getValue().getJar()).asMap();
+    ImmutableMap<Path, Collection<Entry<SymbolProblem, ClassFile>>> jarMap =
+        Multimaps.index(symbolProblems.entries(), entry -> entry.getValue().getJar()).asMap();
 
     return ImmutableMap.copyOf(
         Maps.transformValues(
             jarMap,
-            entries -> entries // These entries have same JAR file for entry.getValue.getJar()
-                .stream()
-                .collect(
-                toImmutableSetMultimap(
-                    Entry::getKey, // SymbolProblem
-                    entry -> entry.getValue().getClassName())
-            )));
+            entries ->
+                ImmutableSetMultimap.copyOf(
+                    Multimaps.transformValues(
+                        ImmutableSetMultimap.copyOf(entries), ClassFile::getClassName))));
   }
 
   @VisibleForTesting
