@@ -112,7 +112,6 @@ public class DashboardTest {
     
     Assert.assertFalse(dashboard.toXML().contains("1 HAVE"));
   }
-  
 
   @Test
   public void testHeader() {
