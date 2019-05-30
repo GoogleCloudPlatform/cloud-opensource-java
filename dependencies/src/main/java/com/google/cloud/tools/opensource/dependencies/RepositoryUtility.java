@@ -182,21 +182,27 @@ public final class RepositoryUtility {
    }
   }
 
-  public static ImmutableList<Artifact> readBom(Path pomFile)
+  // TODO arguably this now belongs in the BOM class
+  public static Bom readBom(Path pomFile)
       throws PlexusContainerException, ComponentLookupException, ProjectBuildingException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 
     MavenProject mavenProject = createMavenProject(pomFile, session);
+    // TODO(elharo): see if we can just use getId() here instead
+    String coordinates = mavenProject.getGroupId() + ":" + mavenProject.getArtifactId() + ":" + mavenProject.getVersion();
     DependencyManagement dependencyManagement = mavenProject.getDependencyManagement();
     List<org.apache.maven.model.Dependency> dependencies = dependencyManagement.getDependencies();
 
     ArtifactTypeRegistry registry = session.getArtifactTypeRegistry();
-    return dependencies.stream()
+    ImmutableList<Artifact> artifacts = dependencies.stream()
         .map(dependency -> RepositoryUtils.toDependency(dependency, registry))
         .map(Dependency::getArtifact)
         .filter(artifact -> !shouldSkipBomMember(artifact))
         .collect(toImmutableList());
+    
+    Bom bom = new Bom(coordinates, artifacts);
+    return bom;
   }
 
   private static MavenProject createMavenProject(Path pomFile, RepositorySystemSession session)
@@ -232,7 +238,7 @@ public final class RepositoryUtility {
    */
   // TODO Consider the possibility that the artifact is not a BOM; 
   // that is, that it does not have a dependency management section.
-  public static List<Artifact> readBom(Artifact artifact) throws ArtifactDescriptorException {
+  public static Bom readBom(Artifact artifact) throws ArtifactDescriptorException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 
@@ -261,7 +267,9 @@ public final class RepositoryUtility {
         logger.severe("Duplicate dependency " + dependency);
       }
     }
-    return managedDependencies;
+    
+    Bom bom = new Bom(Artifacts.toCoordinates(artifact), ImmutableList.copyOf(managedDependencies));
+    return bom;
   }
 
   private static final ImmutableSet<String> BOM_SKIP_ARTIFACT_IDS =

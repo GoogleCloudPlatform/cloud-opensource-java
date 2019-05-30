@@ -60,6 +60,7 @@ import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -121,8 +122,10 @@ public class DashboardMain {
     return generate(RepositoryUtility.readBom(bomFile));
   }
 
-  private static Path generate(List<Artifact> managedDependencies)
+  private static Path generate(Bom bom)
       throws IOException, TemplateException, RepositoryException, URISyntaxException {
+    
+    ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
 
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
