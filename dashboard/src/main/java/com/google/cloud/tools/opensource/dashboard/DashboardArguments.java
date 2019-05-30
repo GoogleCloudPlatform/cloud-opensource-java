@@ -91,7 +91,7 @@ final class DashboardArguments {
             .longOpt("bom-coordinates")
             .hasArg()
             .desc(
-                "Maven coordinates of a BOM. For example, com.google.cloud:libraries-bom:1.0.0-SNAPSHOT")
+                "Maven coordinates of a BOM. For example, com.google.cloud:libraries-bom:1.0.0")
             .build();
     inputGroup.addOption(inputCoordinatesOption);
 

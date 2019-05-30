@@ -40,10 +40,10 @@ public class DashboardArgumentsTest {
   @Test
   public void testParseArgument_coordinates() throws ParseException {
     DashboardArguments dashboardArguments =
-        DashboardArguments.readCommandLine("-c", "com.google.cloud:libraries-bom:1.0.0-SNAPSHOT");
+        DashboardArguments.readCommandLine("-c", "com.google.cloud:libraries-bom:1.0.0");
     assertFalse(dashboardArguments.hasFile());
     assertEquals(
-        "com.google.cloud:libraries-bom:1.0.0-SNAPSHOT", dashboardArguments.getBomCoordinates());
+        "com.google.cloud:libraries-bom:1.0.0", dashboardArguments.getBomCoordinates());
   }
 
   @Test
