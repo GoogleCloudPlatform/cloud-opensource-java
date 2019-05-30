@@ -113,6 +113,15 @@ public class DashboardTest {
     Assert.assertFalse(dashboard.toXML().contains("1 HAVE"));
   }
   
+
+  @Test
+  public void testHeader() {
+    Nodes h1 = dashboard.query("//h1");
+    Assert.assertEquals(1, h1.size());
+    Assert.assertEquals("Dependency Status of com.google.cloud:libraries-bom:1.0.0",
+        h1.get(0).getValue());
+  }
+  
   @Test
   public void testSvg() {
     XPathContext context = new XPathContext("svg", "http://www.w3.org/2000/svg");
