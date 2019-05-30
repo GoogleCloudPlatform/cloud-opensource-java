@@ -45,6 +45,14 @@ public final class ClassFile {
     return className;
   }
 
+  /**
+   * Returns {@link ClassFile} with top level class if this class is an inner class by checking "$"
+   * character; otherwise the instance itself.
+   */
+  public ClassFile topLevelClassFile() {
+    return className.contains("$") ? new ClassFile(jar, className.split("\\$")[0]) : this;
+  }
+
   @Override
   public boolean equals(Object other) {
     if (this == other) {

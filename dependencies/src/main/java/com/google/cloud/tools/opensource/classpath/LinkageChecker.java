@@ -102,7 +102,7 @@ public class LinkageChecker {
               .classesDefinedInJar(classFile.getJar())
               .contains(classSymbol.getClassName())) {
             findSymbolProblem(classFile, classSymbol)
-                .ifPresent(problem -> problemToClass.put(problem, classFile));
+                .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
           }
         });
 
@@ -114,7 +114,7 @@ public class LinkageChecker {
               .classesDefinedInJar(classFile.getJar())
               .contains(methodSymbol.getClassName())) {
             findSymbolProblem(classFile, methodSymbol)
-                .ifPresent(problem -> problemToClass.put(problem, classFile));
+                .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
           }
         });
 
@@ -126,18 +126,11 @@ public class LinkageChecker {
               .classesDefinedInJar(classFile.getJar())
               .contains(fieldSymbol.getClassName())) {
             findSymbolProblem(classFile, fieldSymbol)
-                .ifPresent(problem -> problemToClass.put(problem, classFile));
+                .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
           }
         });
 
-    // Remove duplicate references from inner classes of same Java class file
-    return ImmutableSetMultimap.copyOf(
-        Multimaps.transformValues(
-            problemToClass.build(),
-            classFile ->
-                classFile.getClassName().contains("$")
-                    ? new ClassFile(classFile.getJar(), classFile.getClassName().split("\\$")[0])
-                    : classFile));
+    return problemToClass.build();
   }
 
   /**

@@ -9,13 +9,14 @@
 </#function>
 
 <#macro formatJarLinkageReport jar problemsWithClass jarToDependencyPaths dependencyPathRootCauses>
-  <!-- problemsToClasses: ImmutableSetMultimap<SymbolProblem, String> converted to
-    ImmutableMap<SymbolProblem, Collection<String>>; Multimaps don't work well with Freemarker -->
-  <#assign problemsToClasses = problemsWithClass.asMap() />
-  <#if problemsToClasses?size gt 0>
-    <h3>${jar.getFileName()?html}</h3>
+  <#if problemsWithClass?size gt 0>
+    <!-- problemsWithClass: ImmutableSetMultimap<SymbolProblem, String> converted to
+      ImmutableMap<SymbolProblem, Collection<String>> to get key and set of values in Freemarker -->
+    <#assign problemsToClasses = problemsWithClass.asMap() />
     <#assign symbolProblemCount = problemsToClasses?size />
     <#assign sourceClassCount = problemsWithClass.inverse().keySet()?size />
+
+    <h3>${jar.getFileName()?html}</h3>
     <p class="jar-linkage-report">
       ${pluralize(symbolProblemCount, "symbol", "symbols")}
       causing linkage errors referenced from
