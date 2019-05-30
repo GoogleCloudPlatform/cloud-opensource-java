@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.dashboard;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
@@ -81,8 +80,7 @@ public class DashboardUnavailableArtifactTest {
     cache.setInfoMap(map);
     List<ArtifactResults> artifactResults =
         DashboardMain.generateReports(
-            configuration, outputDirectory, cache, ImmutableMap.of(),
-            LinkedListMultimap.create());
+            configuration, outputDirectory, cache, ImmutableMap.of(), LinkedListMultimap.create());
 
     Assert.assertEquals(
         "The length of the ArtifactResults should match the length of artifacts",

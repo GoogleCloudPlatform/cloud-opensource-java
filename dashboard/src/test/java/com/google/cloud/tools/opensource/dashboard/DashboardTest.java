@@ -339,13 +339,13 @@ public class DashboardTest {
 
   @Test
   public void testLinkageErrors_ensureNoDuplicateSymbols() throws IOException, ParsingException {
-    Document document = parseOutputFile(
-        "com.google.http-client_google-http-client-appengine_1.29.1.html");
+    Document document =
+        parseOutputFile("com.google.http-client_google-http-client-appengine_1.29.1.html");
     Nodes linkageCheckMessages = document.query("//p[@class='jar-linkage-report-cause']");
     Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
 
     List<String> messages = new ArrayList<>();
-    for (int i =0 ;i<linkageCheckMessages.size(); ++i) {
+    for (int i = 0; i < linkageCheckMessages.size(); ++i) {
       messages.add(linkageCheckMessages.get(i).getValue());
     }
 

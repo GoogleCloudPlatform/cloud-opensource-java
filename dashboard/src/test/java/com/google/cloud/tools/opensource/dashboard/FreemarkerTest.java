@@ -64,12 +64,11 @@ public class FreemarkerTest {
   public static void setUp() throws IOException {
     outputDirectory = Files.createDirectories(Paths.get("target", "dashboard"));
 
-    ImmutableSetMultimap<SymbolProblem, String> dummyProblems = ImmutableSetMultimap.of(
-        new SymbolProblem(new ClassSymbol("com.foo.Bar"), ErrorType.CLASS_NOT_FOUND, null),
-        "abc.def.G"
-    );
-    symbolProblemTable = ImmutableMap.of(Paths.get("foo", "bar-1.2.3.jar"),
-        dummyProblems);
+    ImmutableSetMultimap<SymbolProblem, String> dummyProblems =
+        ImmutableSetMultimap.of(
+            new SymbolProblem(new ClassSymbol("com.foo.Bar"), ErrorType.CLASS_NOT_FOUND, null),
+            "abc.def.G");
+    symbolProblemTable = ImmutableMap.of(Paths.get("foo", "bar-1.2.3.jar"), dummyProblems);
   }
 
   @AfterClass
@@ -94,9 +93,14 @@ public class FreemarkerTest {
     List<ArtifactResults> table = ImmutableList.of(results1, results2);
     List<DependencyGraph> globalDependencies = ImmutableList.of();
     ListMultimap<Path, DependencyPath> jarToDependencyPaths = LinkedListMultimap.create();
-    DashboardMain.generateDashboard(configuration, outputDirectory, table, globalDependencies,
-        symbolProblemTable, jarToDependencyPaths);
-    
+    DashboardMain.generateDashboard(
+        configuration,
+        outputDirectory,
+        table,
+        globalDependencies,
+        symbolProblemTable,
+        jarToDependencyPaths);
+
     Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
     Document document = builder.build(dashboardHtml.toFile());

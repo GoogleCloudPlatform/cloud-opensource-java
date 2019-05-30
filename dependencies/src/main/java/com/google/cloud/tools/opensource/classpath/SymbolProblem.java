@@ -99,11 +99,10 @@ public final class SymbolProblem {
 
     for (SymbolProblem problem : symbolProblems.keySet()) {
       int referenceCount = symbolProblems.get(problem).size();
-      output.append(String.format("%s\n  referenced by %d class file%s\n",
-          problem,
-          referenceCount,
-          referenceCount > 1 ? "s" : ""
-      ));
+      output.append(
+          String.format(
+              "%s\n  referenced by %d class file%s\n",
+              problem, referenceCount, referenceCount > 1 ? "s" : ""));
     }
 
     return output.toString();

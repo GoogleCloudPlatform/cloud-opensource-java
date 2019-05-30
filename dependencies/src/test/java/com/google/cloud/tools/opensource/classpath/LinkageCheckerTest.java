@@ -279,7 +279,8 @@ public class LinkageCheckerTest {
     Truth8.assertThat(problemFound).isPresent();
     SymbolProblem symbolProblem = problemFound.get();
     assertSame(ErrorType.CLASS_NOT_FOUND, symbolProblem.getErrorType());
-    assertTrue("Method reference missing class should report it as class symbol problem",
+    assertTrue(
+        "Method reference missing class should report it as class symbol problem",
         symbolProblem.getSymbol() instanceof ClassSymbol);
   }
 
@@ -327,15 +328,13 @@ public class LinkageCheckerTest {
     Optional<SymbolProblem> problemFound =
         linkageChecker.findSymbolProblem(
             new ClassFile(paths.get(0), "com.google.common.collect.ImmutableList"),
-            new FieldSymbol(
-                "com.google.NoSuchClass",
-                "DUMMY_FIELD",
-                "Ljava.lang.String;"));
+            new FieldSymbol("com.google.NoSuchClass", "DUMMY_FIELD", "Ljava.lang.String;"));
 
     Truth8.assertThat(problemFound).isPresent();
     SymbolProblem symbolProblem = problemFound.get();
     assertSame(ErrorType.CLASS_NOT_FOUND, symbolProblem.getErrorType());
-    assertTrue("Field reference missing class should report it as class symbol problem",
+    assertTrue(
+        "Field reference missing class should report it as class symbol problem",
         symbolProblem.getSymbol() instanceof ClassSymbol);
   }
 
@@ -417,8 +416,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblem_privateField()
-      throws IOException, URISyntaxException {
+  public void testFindSymbolProblem_privateField() throws IOException, URISyntaxException {
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
@@ -438,8 +436,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblem_protectedFieldFromSamePackage()
-      throws IOException {
+  public void testFindSymbolProblem_protectedFieldFromSamePackage() throws IOException {
     String targetClassName = "com.google.common.io.CharSource$CharSequenceCharSource";
 
     List<Path> paths = ImmutableList.of(guavaPath);
@@ -544,7 +541,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblems_shouldStripSourceInnerClasses() throws IOException, URISyntaxException {
+  public void testFindSymbolProblems_shouldStripSourceInnerClasses()
+      throws IOException, URISyntaxException {
     // The superclass of AbstractApiService$InnerService (Guava's ApiService) is not in the paths
     Path dummySource = firestorePath;
     List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
@@ -558,8 +556,11 @@ public class LinkageCheckerTest {
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.cloneWith(builder.build()).findSymbolProblems();
 
-    long innerClassCount = symbolProblems.values().stream().map(ClassFile::getClassName)
-        .filter(className -> className.contains("$")).count();
+    long innerClassCount =
+        symbolProblems.values().stream()
+            .map(ClassFile::getClassName)
+            .filter(className -> className.contains("$"))
+            .count();
     assertEquals(0L, innerClassCount);
   }
 
@@ -750,14 +751,21 @@ public class LinkageCheckerTest {
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
 
-
-    boolean hasClassSymbolProblem = symbolProblems.keySet().stream().anyMatch(problem -> problem.getSymbol() instanceof ClassSymbol);
+    boolean hasClassSymbolProblem =
+        symbolProblems.keySet().stream()
+            .anyMatch(problem -> problem.getSymbol() instanceof ClassSymbol);
     assertTrue(hasClassSymbolProblem);
-    boolean hasMethodSymbolProblem = symbolProblems.keySet().stream().anyMatch(problem -> problem.getSymbol() instanceof MethodSymbol);
-    assertFalse("Method reference missing class should be reported as class symbol problem",
+    boolean hasMethodSymbolProblem =
+        symbolProblems.keySet().stream()
+            .anyMatch(problem -> problem.getSymbol() instanceof MethodSymbol);
+    assertFalse(
+        "Method reference missing class should be reported as class symbol problem",
         hasMethodSymbolProblem);
-    boolean hasFieldSymbolProblem = symbolProblems.keySet().stream().anyMatch(problem -> problem.getSymbol() instanceof FieldSymbol);
-    assertFalse("Field reference missing class should be reported as class symbol problem",
+    boolean hasFieldSymbolProblem =
+        symbolProblems.keySet().stream()
+            .anyMatch(problem -> problem.getSymbol() instanceof FieldSymbol);
+    assertFalse(
+        "Field reference missing class should be reported as class symbol problem",
         hasFieldSymbolProblem);
   }
 

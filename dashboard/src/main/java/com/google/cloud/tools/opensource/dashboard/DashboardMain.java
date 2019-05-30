@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableSetMultimap.toImmutableSetMultimap;
 
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -158,8 +157,8 @@ public class DashboardMain {
     copyResource(output, "js/dashboard.js");
     Configuration configuration = configureFreemarker();
 
-    ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable = indexByJar(
-        symbolProblems);
+    ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable =
+        indexByJar(symbolProblems);
 
     List<ArtifactResults> table =
         generateReports(configuration, output, cache, symbolProblemTable, jarToDependencyPaths);
@@ -199,12 +198,12 @@ public class DashboardMain {
    */
   private static ImmutableSetMultimap<String, Path> bomMemberToJars(
       ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
-    ImmutableSetMultimap.Builder<String, Path> bomMemberToJars = ImmutableSetMultimap
-        .builder();
-    jarToDependencyPaths.forEach((path, dependencyPath) -> {
-      Artifact artifact = dependencyPath.get(0);
-      bomMemberToJars.put(Artifacts.toCoordinates(artifact), path);
-    });
+    ImmutableSetMultimap.Builder<String, Path> bomMemberToJars = ImmutableSetMultimap.builder();
+    jarToDependencyPaths.forEach(
+        (path, dependencyPath) -> {
+          Artifact artifact = dependencyPath.get(0);
+          bomMemberToJars.put(Artifacts.toCoordinates(artifact), path);
+        });
 
     return bomMemberToJars.build();
   }
@@ -230,10 +229,10 @@ public class DashboardMain {
           table.add(unavailable);
         } else {
           Artifact artifact = entry.getKey();
-          ImmutableSet<Path> jarsInDependencyTree = bomMemberToJars
-              .get(Artifacts.toCoordinates(artifact));
-          Map<Path, ImmutableSetMultimap<SymbolProblem, String>> relevantSymbolProblemTable = Maps
-              .filterKeys(symbolProblemTable, jarsInDependencyTree::contains);
+          ImmutableSet<Path> jarsInDependencyTree =
+              bomMemberToJars.get(Artifacts.toCoordinates(artifact));
+          Map<Path, ImmutableSetMultimap<SymbolProblem, String>> relevantSymbolProblemTable =
+              Maps.filterKeys(symbolProblemTable, jarsInDependencyTree::contains);
 
           ArtifactResults results =
               generateArtifactReport(
@@ -323,11 +322,11 @@ public class DashboardMain {
 
       List<DependencyPath> dependencyPaths = completeDependencies.list();
 
-      long totalLinkageErrorCount = symbolProblemTable.values()
-          .stream()
-          .flatMap(problemToClasses -> problemToClasses.keySet().stream())
-          .distinct()
-          .count();
+      long totalLinkageErrorCount =
+          symbolProblemTable.values().stream()
+              .flatMap(problemToClasses -> problemToClasses.keySet().stream())
+              .distinct()
+              .count();
 
       ListMultimap<DependencyPath, DependencyPath> dependencyTree =
           DependencyTreeFormatter.buildDependencyPathTree(dependencyPaths);
@@ -421,7 +420,7 @@ public class DashboardMain {
       ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
-    
+
     Map<String, String> latestArtifacts = collectLatestVersions(globalDependencies);
 
     Map<String, Object> templateData = new HashMap<>();
