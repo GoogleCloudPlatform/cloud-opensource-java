@@ -30,6 +30,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
+import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
@@ -87,7 +88,7 @@ public class FreemarkerTest {
     List<DependencyGraph> globalDependencies = ImmutableList.of();
     ListMultimap<Path, DependencyPath> jarToDependencyPaths = LinkedListMultimap.create();
     DashboardMain.generateDashboard(configuration, outputDirectory, table, globalDependencies,
-        linkageCheckReport, jarToDependencyPaths);
+        linkageCheckReport, jarToDependencyPaths, new Bom(null, null));
     
     Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));

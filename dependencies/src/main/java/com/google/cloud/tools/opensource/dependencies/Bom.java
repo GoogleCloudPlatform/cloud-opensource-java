@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.artifact.Artifact;
 
@@ -28,7 +29,8 @@ public final class Bom {
    * @param coordinates group:artifact:version
    * @param artifacts the artifacts found in this BOM's managedDependencies section
    */
-  Bom(String coordinates, ImmutableList<Artifact> artifacts) {
+  @VisibleForTesting
+  public Bom(String coordinates, ImmutableList<Artifact> artifacts) {
     this.coordinates = coordinates;
     this.artifacts = artifacts;
   }

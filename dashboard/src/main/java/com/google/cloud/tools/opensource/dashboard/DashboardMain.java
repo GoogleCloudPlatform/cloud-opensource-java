@@ -141,12 +141,13 @@ public class DashboardMain {
 
     LinkageCheckReport linkageReport = linkageChecker.findLinkageErrors();
 
-    Path output = generateHtml(cache, jarToDependencyPaths, linkageReport);
+    Path output = generateHtml(bom, cache, jarToDependencyPaths, linkageReport);
 
     return output;
   }
 
   private static Path generateHtml(
+      Bom bom,
       ArtifactCache cache,
       LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths,
       LinkageCheckReport linkageReport)
@@ -168,7 +169,8 @@ public class DashboardMain {
         table,
         cache.getGlobalDependencies(),
         linkageReport,
-        jarToDependencyPaths);
+        jarToDependencyPaths,
+        bom);
 
     return output;
   }
@@ -385,7 +387,8 @@ public class DashboardMain {
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
       LinkageCheckReport linkageCheckReport,
-      ListMultimap<Path, DependencyPath> jarToDependencyPaths)
+      ListMultimap<Path, DependencyPath> jarToDependencyPaths,
+      Bom bom)
       throws IOException, TemplateException {
     
     Map<String, String> latestArtifacts = collectLatestVersions(globalDependencies);
@@ -397,6 +400,7 @@ public class DashboardMain {
     templateData.put("jarLinkageReports", linkageCheckReport.getJarLinkageReports());
     templateData.put("jarToDependencyPaths", jarToDependencyPaths);
     templateData.put("dependencyPathRootCauses", findRootCauses(jarToDependencyPaths));
+    templateData.put("coordinates", bom.getCoordinates());
 
     // Accessing static methods from Freemarker template
     // https://freemarker.apache.org/docs/pgui_misc_beanwrapper.html#autoid_60
