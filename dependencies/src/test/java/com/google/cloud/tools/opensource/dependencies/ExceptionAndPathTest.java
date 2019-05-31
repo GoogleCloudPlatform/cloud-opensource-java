@@ -16,9 +16,7 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.common.collect.ImmutableList;
-import com.google.common.testing.EqualsTester;
 import com.google.common.testing.NullPointerTester;
 import com.google.common.testing.NullPointerTester.Visibility;
 import com.google.common.truth.Truth;
@@ -31,7 +29,8 @@ import org.junit.Test;
 
 public class ExceptionAndPathTest {
 
-  private static final RepositoryException repositoryException = new RepositoryException("Dummy Exception");
+  private static final RepositoryException repositoryException =
+      new RepositoryException("Dummy Exception");
 
   static ExceptionAndPath createDummyInstance() {
     Artifact jamonApiArtifact = new DefaultArtifact("com.jamonapi:jamon:2.81");
