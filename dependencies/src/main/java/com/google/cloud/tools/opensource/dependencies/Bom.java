@@ -47,7 +47,7 @@ public final class Bom {
   }
 
   /**
-   * Returns group:artifact:version
+   * Returns group:artifact:version.
    */
   public String getCoordinates() {
     return coordinates;
