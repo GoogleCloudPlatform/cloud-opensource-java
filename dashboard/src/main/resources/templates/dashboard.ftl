@@ -8,7 +8,7 @@
     <script src="dashboard.js"></script>
   </head>
   <body>
-    <h1>Google Cloud Platform Java Dependency Dashboard</h1>
+    <h1>Dependency Status of ${coordinates}</h1>
     <hr />
     <#assign totalArtifacts = table?size>
     

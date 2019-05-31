@@ -39,8 +39,10 @@ public class BomTest {
 
   @Test
   public void testArtifactsExist()
-      throws IOException, PlexusContainerException, ComponentLookupException, ProjectBuildingException {
-    List<Artifact> artifacts = RepositoryUtility.readBom(CLOUD_OSS_BOM_PATH);
+      throws IOException, PlexusContainerException, ComponentLookupException,
+          ProjectBuildingException {
+    List<Artifact> artifacts =
+        RepositoryUtility.readBom(CLOUD_OSS_BOM_PATH).getManagedDependencies();
     for (Artifact artifact : artifacts) {
       assertReachable(buildMavenCentralUrl(artifact));
     }

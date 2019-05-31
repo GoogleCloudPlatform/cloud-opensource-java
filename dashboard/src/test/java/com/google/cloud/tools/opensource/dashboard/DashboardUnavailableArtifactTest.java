@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.dashboard;
 import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
 import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
@@ -126,8 +127,9 @@ public class DashboardUnavailableArtifactTest {
 
     Iterable<JarLinkageReport> list = new ArrayList<>();
     LinkageCheckReport report = LinkageCheckReport.create(list);
+    Bom bom = new Bom("test:test:1.2.4", null);
     DashboardMain.generateDashboard(
-        configuration, outputDirectory, table, null, report, LinkedListMultimap.create());
+        configuration, outputDirectory, table, null, report, LinkedListMultimap.create(), bom);
 
     Path generatedHtml = outputDirectory.resolve("artifact_details.html");
     Assert.assertTrue(Files.isRegularFile(generatedHtml));
