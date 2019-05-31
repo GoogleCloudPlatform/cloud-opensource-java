@@ -285,12 +285,6 @@ public class ClassDumperTest {
             );
 
     for (String usedClass : usedClassesInConscrypt) {
-      ClassSymbolReference referenceToUsedClass =
-          ClassSymbolReference.builder()
-              .setSourceClassName("org.conscrypt.Conscrypt")
-              .setSubclass(false)
-              .setTargetClassName(usedClass)
-              .build();
       Truth.assertWithMessage(usedClass + " should be used in the class file")
           .that(classDumper.isUnusedClassSymbolReference("org.conscrypt.Conscrypt",
               new ClassSymbol(usedClass)))

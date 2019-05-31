@@ -16,7 +16,11 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.common.collect.ImmutableList;
+import com.google.common.testing.EqualsTester;
+import com.google.common.testing.NullPointerTester;
+import com.google.common.testing.NullPointerTester.Visibility;
 import com.google.common.truth.Truth;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -26,6 +30,8 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.junit.Test;
 
 public class ExceptionAndPathTest {
+
+  private static final RepositoryException repositoryException = new RepositoryException("Dummy Exception");
 
   static ExceptionAndPath createDummyInstance() {
     Artifact jamonApiArtifact = new DefaultArtifact("com.jamonapi:jamon:2.81");
@@ -38,7 +44,7 @@ public class ExceptionAndPathTest {
         ExceptionAndPath.create(
             ImmutableList.of(jamonDependencyNode),
             springContextDependencyNode,
-            new RepositoryException("Dummy Exception"));
+            repositoryException);
     return exceptionAndPath;
   }
 
@@ -48,5 +54,10 @@ public class ExceptionAndPathTest {
 
     Truth.assertThat(exceptionAndPath.getPath()).hasSize(2);
     Truth.assertThat(exceptionAndPath.getException().getMessage()).isEqualTo("Dummy Exception");
+  }
+
+  @Test
+  public void testNull() {
+    new NullPointerTester().testConstructors(ExceptionAndPath.class, Visibility.PACKAGE);
   }
 }

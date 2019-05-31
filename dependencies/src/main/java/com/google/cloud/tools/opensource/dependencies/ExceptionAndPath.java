@@ -16,7 +16,8 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import com.google.auto.value.AutoValue;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.graph.DependencyNode;
@@ -25,39 +26,38 @@ import org.eclipse.aether.graph.DependencyNode;
  * Tuple of a path in a Maven dependency graph and a {@link RepositoryException}, indicating that
  * the {@link DependencyNode} specified at the path raises the exception.
  */
-@AutoValue
-public abstract class ExceptionAndPath {
+public final class ExceptionAndPath {
+
+  private final ImmutableList<DependencyNode> path;
+
+  private final RepositoryException exception;
 
   /** Returns a path from the root of dependency graph to a dependency node. */
-  public abstract ImmutableList<DependencyNode> getPath();
+  public ImmutableList<DependencyNode> getPath() {
+    return path;
+  }
 
   /** Returns the exception raised at the {@link DependencyNode} specified at the path. */
-  abstract RepositoryException getException();
+  RepositoryException getException() {
+    return exception;
+  }
+
+  private ExceptionAndPath(ImmutableList<DependencyNode> path, RepositoryException exception) {
+    this.path = checkNotNull(path);
+    this.exception = checkNotNull(exception);
+  }
 
   static ExceptionAndPath create(
       Iterable<DependencyNode> parentDependencyNodes,
       DependencyNode dependencyNode,
       RepositoryException repositoryException) {
-    return builder()
-        .setPath(
-            ImmutableList.<DependencyNode>builder()
-                .addAll(parentDependencyNodes)
-                .add(dependencyNode)
-                .build())
-        .setException(repositoryException)
-        .build();
+    return new ExceptionAndPath(
+        ImmutableList.<DependencyNode>builder()
+            .addAll(parentDependencyNodes)
+            .add(dependencyNode)
+            .build(),
+        repositoryException);
   }
 
-  private static Builder builder() {
-    return new AutoValue_ExceptionAndPath.Builder();
-  }
-
-  @AutoValue.Builder
-  abstract static class Builder {
-    public abstract Builder setPath(Iterable<DependencyNode> path);
-
-    public abstract Builder setException(RepositoryException exception);
-
-    public abstract ExceptionAndPath build();
-  }
+  // No hashCode or equals needed as long as this instance is only used in a list.
 }
