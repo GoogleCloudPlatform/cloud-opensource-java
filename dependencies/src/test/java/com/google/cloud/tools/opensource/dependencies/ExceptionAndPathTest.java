@@ -17,6 +17,8 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.testing.NullPointerTester;
+import com.google.common.testing.NullPointerTester.Visibility;
 import com.google.common.truth.Truth;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -48,5 +50,12 @@ public class ExceptionAndPathTest {
 
     Truth.assertThat(exceptionAndPath.getPath()).hasSize(2);
     Truth.assertThat(exceptionAndPath.getException().getMessage()).isEqualTo("Dummy Exception");
+  }
+
+  @Test
+  public void testNull() {
+    new NullPointerTester()
+        .setDefault(RepositoryException.class, new RepositoryException("Dummy Exception"))
+        .testConstructors(ExceptionAndPath.class, Visibility.PACKAGE);
   }
 }
