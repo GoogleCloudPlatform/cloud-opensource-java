@@ -107,5 +107,7 @@ public final class SymbolProblem {
                       "%s\n  referenced by %d class file%s\n",
                       problem, referenceCount, referenceCount > 1 ? "s" : ""));
             });
+
+    return output.toString();
   }
 }
