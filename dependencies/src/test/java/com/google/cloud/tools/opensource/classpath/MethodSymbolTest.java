@@ -31,12 +31,12 @@ public class MethodSymbolTest {
         new MethodSymbol(
             "java.lang.Object",
             "equals",
-            "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
+            "(Ljava/lang/Object;)Z",
             false);
     assertEquals("java.lang.Object", methodSymbol.getClassName());
     assertEquals("equals", methodSymbol.getName());
     assertEquals(
-        "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
+        "(Ljava/lang/Object;)Z",
         methodSymbol.getDescriptor());
   }
 
@@ -49,14 +49,14 @@ public class MethodSymbolTest {
   public void testMethodSymbolEquality() {
     new EqualsTester()
         .addEqualityGroup(
-            new MethodSymbol("java.lang.Object", "equals", "(I)Lcom.Foo;", false),
-            new MethodSymbol("java.lang.Object", "equals", "(I)Lcom.Foo;", false))
-        .addEqualityGroup(new MethodSymbol("java.lang.Object", "hashCode", "(I)Lcom.Foo;", false))
-        .addEqualityGroup(new MethodSymbol("Object", "equals", "(I)Lcom.Foo;", false))
+            new MethodSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z", false),
+            new MethodSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z", false))
+        .addEqualityGroup(new MethodSymbol("java.lang.Object", "hashCode", "(Ljava/lang/Object;)Z", false))
+        .addEqualityGroup(new MethodSymbol("Object", "equals", "(Ljava/lang/Object;)Z", false))
         .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "(I)Lcom.Bar;", false))
-        .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "(I)Lcom.Foo;", true))
+        .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z", true))
         .addEqualityGroup(new ClassSymbol("java.lang.Object"))
-        .addEqualityGroup(new FieldSymbol("java.lang.Object", "equals", "(I)Lcom.Foo;"))
+        .addEqualityGroup(new FieldSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z"))
         .testEquals();
   }
 

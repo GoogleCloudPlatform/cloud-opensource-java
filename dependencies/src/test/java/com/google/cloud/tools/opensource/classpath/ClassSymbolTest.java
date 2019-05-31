@@ -42,7 +42,7 @@ public class ClassSymbolTest {
         .addEqualityGroup(new ClassSymbol("java.lang.Object"), new ClassSymbol("java.lang.Object"))
         .addEqualityGroup(new ClassSymbol("java.lang.Long"))
         .addEqualityGroup(new SuperClassSymbol("java.lang.Object"))
-        .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "(I)Lcom.Foo;", false))
+        .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z", false))
         .testEquals();
   }
 }
