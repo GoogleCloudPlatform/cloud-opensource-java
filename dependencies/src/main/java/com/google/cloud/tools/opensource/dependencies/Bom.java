@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Google LLC.
+ * Copyright 2019 Google LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.artifact.Artifact;
 
@@ -31,19 +32,22 @@ public final class Bom {
    */
   @VisibleForTesting
   public Bom(String coordinates, ImmutableList<Artifact> artifacts) {
-    this.coordinates = coordinates;
+    this.coordinates = Preconditions.checkNotNull(coordinates);
+    if (artifacts == null) {
+      artifacts = ImmutableList.of();
+    }
     this.artifacts = artifacts;
   }
 
   /**
-   * @return the artifacts found in this BOM's managedDependencies section
+   * Returns the artifacts found in this BOM's managedDependencies section.
    */
   public ImmutableList<Artifact> getManagedDependencies() {
     return artifacts;
   }
 
   /**
-   * @return group:artifact:version
+   * Returns group:artifact:version
    */
   public String getCoordinates() {
     return coordinates;
