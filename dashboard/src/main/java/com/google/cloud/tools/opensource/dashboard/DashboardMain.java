@@ -347,7 +347,7 @@ public class DashboardMain {
       templateData.put("lastUpdated", LocalDateTime.now());
       templateData.put("dependencyTree", dependencyTree);
       templateData.put("dependencyRootNode", Iterables.getFirst(dependencyTree.values(), null));
-      templateData.put("jarToSymbolProblemToClasses", symbolProblemTable);
+      templateData.put("symbolProblems", symbolProblemTable);
       templateData.put("jarToDependencyPaths", jarToDependencyPathsForArtifact);
       templateData.put("totalLinkageErrorCount", totalLinkageErrorCount);
       report.process(templateData, out);
@@ -427,7 +427,7 @@ public class DashboardMain {
     templateData.put("table", table);
     templateData.put("lastUpdated", LocalDateTime.now());
     templateData.put("latestArtifacts", latestArtifacts);
-    templateData.put("jarToSymbolProblemToClasses", symbolProblemTable);
+    templateData.put("symbolProblems", symbolProblemTable);
     templateData.put("jarToDependencyPaths", jarToDependencyPaths);
     templateData.put("dependencyPathRootCauses", findRootCauses(jarToDependencyPaths));
 
