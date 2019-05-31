@@ -29,9 +29,6 @@ import org.junit.Test;
 
 public class ExceptionAndPathTest {
 
-  private static final RepositoryException repositoryException =
-      new RepositoryException("Dummy Exception");
-
   static ExceptionAndPath createDummyInstance() {
     Artifact jamonApiArtifact = new DefaultArtifact("com.jamonapi:jamon:2.81");
     Artifact springContextArtifact =
@@ -43,7 +40,7 @@ public class ExceptionAndPathTest {
         ExceptionAndPath.create(
             ImmutableList.of(jamonDependencyNode),
             springContextDependencyNode,
-            repositoryException);
+            new RepositoryException("Dummy Exception"));
     return exceptionAndPath;
   }
 

@@ -59,5 +59,7 @@ public final class ExceptionAndPath {
         repositoryException);
   }
 
-  // No hashCode or equals needed as long as this instance is only used in a list.
+  // Regarding equality of this instance, equals and hashCode are not needed as long as this
+  // instance is only used in a list. RepositoryException and DefaultDependencyNode do not
+  // implement equals methods and no hashCode.
 }
