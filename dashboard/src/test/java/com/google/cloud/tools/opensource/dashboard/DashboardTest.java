@@ -203,7 +203,8 @@ public class DashboardTest {
     Nodes reports = details.query("//p[@class='jar-linkage-report']");
     // appengine-api-sdk, shown as first item in linkage errors, has these errors
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-        .isEqualTo("106 symbols causing linkage errors on 516 references.");
+        .isEqualTo(
+            "106 target classes causing linkage errors referenced from 516 source classes.");
 
     Nodes dependencyPaths = details.query(
         "//p[@class='linkage-check-dependency-paths'][position()=last()]");
@@ -279,7 +280,7 @@ public class DashboardTest {
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
     Assert.assertEquals(1, reports.size());
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-        .isEqualTo("106 symbols causing linkage errors on 516 references.");
+        .isEqualTo("106 target classes causing linkage errors referenced from 516 source classes.");
 
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
     Truth.assertWithMessage(

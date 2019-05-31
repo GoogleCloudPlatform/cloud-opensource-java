@@ -20,9 +20,9 @@
 
   <h3>${jar.getFileName()?html}</h3>
   <p class="jar-linkage-report">
-    ${pluralize(symbolProblemCount, "symbol", "symbols")}
-    causing linkage errors on
-    ${pluralize(referenceCount, "reference", "references")}.
+    ${pluralize(symbolProblemCount, "target class", "target classes")}
+    causing linkage errors referenced from
+    ${pluralize(referenceCount, "source class", "source classes")}.
   </p>
   <#list problemsToClasses as symbolProblem, sourceClasses>
     <p class="jar-linkage-report-cause">${symbolProblem?html}, referenced from ${
