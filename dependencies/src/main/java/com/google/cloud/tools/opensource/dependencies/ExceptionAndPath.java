@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.graph.DependencyNode;
@@ -42,7 +43,8 @@ public final class ExceptionAndPath {
     return exception;
   }
 
-  private ExceptionAndPath(ImmutableList<DependencyNode> path, RepositoryException exception) {
+  @VisibleForTesting
+  ExceptionAndPath(ImmutableList<DependencyNode> path, RepositoryException exception) {
     this.path = checkNotNull(path);
     this.exception = checkNotNull(exception);
   }

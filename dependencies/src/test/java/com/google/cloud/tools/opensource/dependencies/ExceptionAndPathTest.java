@@ -54,6 +54,8 @@ public class ExceptionAndPathTest {
 
   @Test
   public void testNull() {
-    new NullPointerTester().testConstructors(ExceptionAndPath.class, Visibility.PACKAGE);
+    new NullPointerTester()
+        .setDefault(RepositoryException.class, new RepositoryException("Dummy Exception"))
+        .testConstructors(ExceptionAndPath.class, Visibility.PACKAGE);
   }
 }
