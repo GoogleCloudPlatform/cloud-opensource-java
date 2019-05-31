@@ -58,13 +58,15 @@ public class MethodSymbolTest {
 
   @Test
   public void testToString() {
-    MethodSymbol symbol = new MethodSymbol(
-        "io.grpc.protobuf.ProtoUtils",
-        "marshaller",
-        "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
-        false);
+    MethodSymbol symbol =
+        new MethodSymbol(
+            "io.grpc.protobuf.ProtoUtils",
+            "marshaller",
+            "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
+            false);
     assertEquals(
-        "io.grpc.protobuf.ProtoUtils's method io.grpc.MethodDescriptor$Marshaller "+"marshaller(com.google.protobuf.Message arg1)",
+        "io.grpc.protobuf.ProtoUtils's method io.grpc.MethodDescriptor$Marshaller "
+            + "marshaller(com.google.protobuf.Message arg1)",
         symbol.toString());
   }
 }
