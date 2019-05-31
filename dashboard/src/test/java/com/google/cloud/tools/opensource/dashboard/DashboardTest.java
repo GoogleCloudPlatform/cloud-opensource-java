@@ -112,7 +112,15 @@ public class DashboardTest {
     
     Assert.assertFalse(dashboard.toXML().contains("1 HAVE"));
   }
-  
+
+  @Test
+  public void testHeader() {
+    Nodes h1 = dashboard.query("//h1");
+    Assert.assertEquals(1, h1.size());
+    Assert.assertEquals("Dependency Status of com.google.cloud:libraries-bom:1.0.0",
+        h1.get(0).getValue());
+  }
+
   @Test
   public void testSvg() {
     XPathContext context = new XPathContext("svg", "http://www.w3.org/2000/svg");
@@ -142,7 +150,7 @@ public class DashboardTest {
   @Test
   public void testArtifactDetails() throws IOException, ArtifactDescriptorException {
     Artifact bom = new DefaultArtifact("com.google.cloud:libraries-bom:1.0.0");
-    List<Artifact> artifacts = RepositoryUtility.readBom(bom);
+    List<Artifact> artifacts = RepositoryUtility.readBom(bom).getManagedDependencies();
     Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
 
     Assert.assertEquals("en-US", dashboard.getRootElement().getAttribute("lang").getValue());

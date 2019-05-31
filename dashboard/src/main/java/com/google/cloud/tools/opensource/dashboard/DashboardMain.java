@@ -59,6 +59,7 @@ import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -121,8 +122,10 @@ public class DashboardMain {
     return generate(RepositoryUtility.readBom(bomFile));
   }
 
-  private static Path generate(List<Artifact> managedDependencies)
+  private static Path generate(Bom bom)
       throws IOException, TemplateException, RepositoryException, URISyntaxException {
+
+    ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
 
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
@@ -139,12 +142,13 @@ public class DashboardMain {
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
 
-    Path output = generateHtml(cache, jarToDependencyPaths, symbolProblems);
+    Path output = generateHtml(bom, cache, jarToDependencyPaths, symbolProblems);
 
     return output;
   }
 
   private static Path generateHtml(
+      Bom bom,
       ArtifactCache cache,
       LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths,
       ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems)
@@ -169,7 +173,8 @@ public class DashboardMain {
         table,
         cache.getGlobalDependencies(),
         symbolProblemTable,
-        jarToDependencyPaths);
+        jarToDependencyPaths,
+        bom);
 
     return output;
   }
@@ -418,7 +423,8 @@ public class DashboardMain {
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
       ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
-      ListMultimap<Path, DependencyPath> jarToDependencyPaths)
+      ListMultimap<Path, DependencyPath> jarToDependencyPaths,
+      Bom bom)
       throws IOException, TemplateException {
 
     Map<String, String> latestArtifacts = collectLatestVersions(globalDependencies);
@@ -430,6 +436,7 @@ public class DashboardMain {
     templateData.put("symbolProblems", symbolProblemTable);
     templateData.put("jarToDependencyPaths", jarToDependencyPaths);
     templateData.put("dependencyPathRootCauses", findRootCauses(jarToDependencyPaths));
+    templateData.put("coordinates", bom.getCoordinates());
 
     // Accessing static methods from Freemarker template
     // https://freemarker.apache.org/docs/pgui_misc_beanwrapper.html#autoid_60

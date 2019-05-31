@@ -45,17 +45,22 @@ public class RepositoryUtilityTest {
   @Test
   public void testReadBom_coordinates() throws ArtifactDescriptorException {
     Artifact artifact = new DefaultArtifact("com.google.cloud:google-cloud-bom:0.61.0-alpha");
-    List<Artifact> managedDependencies = RepositoryUtility.readBom(artifact);
+    Bom bom = RepositoryUtility.readBom(artifact);
+    List<Artifact> managedDependencies = bom.getManagedDependencies();
     // Characterization test. As long as the artifact doesn't change (and it shouldn't)
     // the answer won't change.
     Assert.assertEquals(134, managedDependencies.size());
+    Assert.assertEquals("com.google.cloud:google-cloud-bom:0.61.0-alpha", bom.getCoordinates());
   }
 
   @Test
   public void testReadBom_path() throws Exception {
     Path pomFile = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml");
-    ImmutableList<Artifact> artifacts = RepositoryUtility.readBom(pomFile);
-    Assert.assertFalse(artifacts.isEmpty());
+    
+    Bom bom = RepositoryUtility.readBom(pomFile);
+    
+    ImmutableList<Artifact> artifacts = bom.getManagedDependencies();
     Assert.assertEquals(187, artifacts.size());
+    Assert.assertEquals("com.google.cloud:libraries-bom:1.0.1-SNAPSHOT", bom.getCoordinates());
   }
 }

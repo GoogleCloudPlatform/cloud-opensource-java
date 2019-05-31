@@ -32,6 +32,7 @@ import org.junit.Test;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.cloud.tools.opensource.classpath.ErrorType;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
@@ -99,7 +100,8 @@ public class FreemarkerTest {
         table,
         globalDependencies,
         symbolProblemTable,
-        jarToDependencyPaths);
+        jarToDependencyPaths,
+        new Bom("mock:artifact:1.6.7", null));
 
     Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));

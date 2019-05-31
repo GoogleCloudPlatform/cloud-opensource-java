@@ -76,7 +76,7 @@ public class ClassPathBuilderTest {
   public void testBomToPaths_firstElementsAreBomMembers() throws RepositoryException {    
     DefaultArtifact bom =
         new DefaultArtifact("com.google.cloud:google-cloud-bom:0.81.0-alpha");
-    List<Artifact> managedDependencies = RepositoryUtility.readBom(bom);
+    List<Artifact> managedDependencies = RepositoryUtility.readBom(bom).getManagedDependencies();
 
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
         ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
