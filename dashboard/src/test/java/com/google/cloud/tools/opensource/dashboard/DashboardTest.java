@@ -120,7 +120,7 @@ public class DashboardTest {
     Assert.assertEquals("Dependency Status of com.google.cloud:libraries-bom:1.0.0",
         h1.get(0).getValue());
   }
-  
+
   @Test
   public void testSvg() {
     XPathContext context = new XPathContext("svg", "http://www.w3.org/2000/svg");
@@ -288,17 +288,17 @@ public class DashboardTest {
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
     Assert.assertEquals(1, reports.size());
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-        .isEqualTo(
-            "106 target classes causing linkage errors referenced from 516 source classes.");
+        .isEqualTo("106 target classes causing linkage errors referenced from 516 source classes.");
+
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
-    Truth.assertWithMessage("google-http-client-appengine should show linkage errors for RpcStubDescriptor")
+    Truth.assertWithMessage(
+            "google-http-client-appengine should show linkage errors for RpcStubDescriptor")
         .that(causes)
         .comparingElementsUsing(NODE_VALUES)
         .contains(
-            "com.google.net.rpc3.client.RpcStubDescriptor is not found,"
-                + " referenced from 21 source classes ▶"); // '▶' is the toggle button
+            "Class com.google.net.rpc3.client.RpcStubDescriptor is not found,"
+                + " referenced from 21 classes ▶"); // '▶' is the toggle button
   }
-
 
   @Test
   public void testComponent_success() throws IOException, ParsingException {
@@ -344,6 +344,22 @@ public class DashboardTest {
     Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
     Truth.assertThat(linkageCheckMessages.get(0).getValue())
         .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");
+  }
+
+  @Test
+  public void testLinkageErrors_ensureNoDuplicateSymbols() throws IOException, ParsingException {
+    Document document =
+        parseOutputFile("com.google.http-client_google-http-client-appengine_1.29.1.html");
+    Nodes linkageCheckMessages = document.query("//p[@class='jar-linkage-report-cause']");
+    Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
+
+    List<String> messages = new ArrayList<>();
+    for (int i = 0; i < linkageCheckMessages.size(); ++i) {
+      messages.add(linkageCheckMessages.get(i).getValue());
+    }
+
+    // When uniqueness of SymbolProblem and Symbol classes are incorrect, dashboard has duplicates.
+    Truth.assertThat(messages).containsNoDuplicates();
   }
 
   @Test

@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.collect.ImmutableSetMultimap;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -36,7 +37,11 @@ public final class SymbolProblem {
   private final ClassFile containingClass;
 
   public SymbolProblem(Symbol symbol, ErrorType errorType, @Nullable ClassFile containingClass) {
-    this.symbol = checkNotNull(symbol);
+    checkNotNull(symbol);
+
+    // After finding symbol problem, there is no need to have SuperClassSymbol over ClassSymbol.
+    this.symbol =
+        symbol instanceof SuperClassSymbol ? new ClassSymbol(symbol.getClassName()) : symbol;
     this.errorType = checkNotNull(errorType);
     this.containingClass = containingClass;
   }
@@ -86,5 +91,20 @@ public final class SymbolProblem {
   @Override
   public final String toString() {
     return getErrorType().getMessage(symbol.toString());
+  }
+
+  public static String formatSymbolProblems(
+      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems) {
+    StringBuilder output = new StringBuilder();
+
+    for (SymbolProblem problem : symbolProblems.keySet()) {
+      int referenceCount = symbolProblems.get(problem).size();
+      output.append(
+          String.format(
+              "%s\n  referenced by %d class file%s\n",
+              problem, referenceCount, referenceCount > 1 ? "s" : ""));
+    }
+
+    return output.toString();
   }
 }

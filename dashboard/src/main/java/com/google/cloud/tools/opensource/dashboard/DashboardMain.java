@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,13 +30,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TreeMap;
 
 import freemarker.template.Configuration;
@@ -55,10 +54,10 @@ import org.apache.maven.project.ProjectBuildingException;
 import org.codehaus.plexus.PlexusContainerException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 
+import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
-import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
-import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
+import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
@@ -79,6 +78,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 
@@ -124,7 +124,7 @@ public class DashboardMain {
 
   private static Path generate(Bom bom)
       throws IOException, TemplateException, RepositoryException, URISyntaxException {
-    
+
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
 
@@ -139,9 +139,10 @@ public class DashboardMain {
 
     LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints);
 
-    LinkageCheckReport linkageReport = linkageChecker.findLinkageErrors();
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
 
-    Path output = generateHtml(bom, cache, jarToDependencyPaths, linkageReport);
+    Path output = generateHtml(bom, cache, jarToDependencyPaths, symbolProblems);
 
     return output;
   }
@@ -150,7 +151,7 @@ public class DashboardMain {
       Bom bom,
       ArtifactCache cache,
       LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths,
-      LinkageCheckReport linkageReport)
+      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems)
       throws IOException, TemplateException, URISyntaxException {
 
     Path relativePath = Paths.get("target", "dashboard");
@@ -160,15 +161,18 @@ public class DashboardMain {
     copyResource(output, "js/dashboard.js");
     Configuration configuration = configureFreemarker();
 
+    ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable =
+        indexByJar(symbolProblems);
+
     List<ArtifactResults> table =
-        generateReports(configuration, output, cache, linkageReport, jarToDependencyPaths);
+        generateReports(configuration, output, cache, symbolProblemTable, jarToDependencyPaths);
 
     generateDashboard(
         configuration,
         output,
         table,
         cache.getGlobalDependencies(),
-        linkageReport,
+        symbolProblemTable,
         jarToDependencyPaths,
         bom);
 
@@ -193,28 +197,31 @@ public class DashboardMain {
     return configuration;
   }
 
+  /**
+   * Returns mapping from the Maven coordinates of BOM members to jar files that are in the
+   * dependency tree of the BOM members.
+   */
+  private static ImmutableSetMultimap<String, Path> bomMemberToJars(
+      ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
+    ImmutableSetMultimap.Builder<String, Path> bomMemberToJars = ImmutableSetMultimap.builder();
+    jarToDependencyPaths.forEach(
+        (path, dependencyPath) -> {
+          Artifact artifact = dependencyPath.get(0);
+          bomMemberToJars.put(Artifacts.toCoordinates(artifact), path);
+        });
+
+    return bomMemberToJars.build();
+  }
+
   @VisibleForTesting
   static List<ArtifactResults> generateReports(
       Configuration configuration,
       Path output,
       ArtifactCache cache,
-      LinkageCheckReport linkageCheckReport,
+      ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
-    ImmutableMap<Path, JarLinkageReport> jarToLinkageReport =
-        linkageCheckReport.getJarLinkageReports().stream()
-            .collect(
-                toImmutableMap(JarLinkageReport::getJarPath, jarLinkageReport -> jarLinkageReport));
 
-    // Map from Artifact's coordinates to (unique) JarLinkageReports.
-    // Using string coordinates rather than Artifact class because its equality includes file.
-    ImmutableSetMultimap.Builder<String, JarLinkageReport> builder = ImmutableSetMultimap.builder();
-    for (Path path : jarToDependencyPaths.keySet()) {
-      for (DependencyPath dependencyPath : jarToDependencyPaths.get(path)) {
-        Artifact artifact = dependencyPath.get(0);
-        builder.put(Artifacts.toCoordinates(artifact), jarToLinkageReport.get(path));
-      }
-    }
-    ImmutableSetMultimap<String, JarLinkageReport> artifactToLinkageReports = builder.build();
+    ImmutableSetMultimap<String, Path> bomMemberToJars = bomMemberToJars(jarToDependencyPaths);
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();
@@ -227,6 +234,11 @@ public class DashboardMain {
           table.add(unavailable);
         } else {
           Artifact artifact = entry.getKey();
+          ImmutableSet<Path> jarsInDependencyTree =
+              bomMemberToJars.get(Artifacts.toCoordinates(artifact));
+          Map<Path, ImmutableSetMultimap<SymbolProblem, String>> relevantSymbolProblemTable =
+              Maps.filterKeys(symbolProblemTable, jarsInDependencyTree::contains);
+
           ArtifactResults results =
               generateArtifactReport(
                   configuration,
@@ -234,7 +246,7 @@ public class DashboardMain {
                   artifact,
                   entry.getValue(),
                   cache.getGlobalDependencies(),
-                  artifactToLinkageReports.get(Artifacts.toCoordinates(artifact)),
+                  ImmutableMap.copyOf(relevantSymbolProblemTable),
                   jarToDependencyPaths);
           table.add(results);
         }
@@ -290,7 +302,7 @@ public class DashboardMain {
       Artifact artifact,
       ArtifactInfo artifactInfo,
       List<DependencyGraph> globalDependencies,
-      Set<JarLinkageReport> staticLinkageCheckReports,
+      ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths)
       throws IOException, TemplateException {
 
@@ -315,9 +327,11 @@ public class DashboardMain {
 
       List<DependencyPath> dependencyPaths = completeDependencies.list();
 
-      int totalLinkageErrorCount =
-          staticLinkageCheckReports.stream().mapToInt(JarLinkageReport::getErrorCount)
-              .sum();
+      long totalLinkageErrorCount =
+          symbolProblemTable.values().stream()
+              .flatMap(problemToClasses -> problemToClasses.keySet().stream())
+              .distinct()
+              .count();
 
       ListMultimap<DependencyPath, DependencyPath> dependencyTree =
           DependencyTreeFormatter.buildDependencyPathTree(dependencyPaths);
@@ -338,7 +352,7 @@ public class DashboardMain {
       templateData.put("lastUpdated", LocalDateTime.now());
       templateData.put("dependencyTree", dependencyTree);
       templateData.put("dependencyRootNode", Iterables.getFirst(dependencyTree.values(), null));
-      templateData.put("jarLinkageReports", staticLinkageCheckReports);
+      templateData.put("symbolProblems", symbolProblemTable);
       templateData.put("jarToDependencyPaths", jarToDependencyPathsForArtifact);
       templateData.put("totalLinkageErrorCount", totalLinkageErrorCount);
       report.process(templateData, out);
@@ -347,7 +361,7 @@ public class DashboardMain {
       results.addResult(TEST_NAME_UPPER_BOUND, upperBoundFailures.size());
       results.addResult(TEST_NAME_GLOBAL_UPPER_BOUND, globalUpperBoundFailures.size());
       results.addResult(TEST_NAME_DEPENDENCY_CONVERGENCE, convergenceIssues.size());
-      results.addResult(TEST_NAME_LINKAGE_CHECK, totalLinkageErrorCount);
+      results.addResult(TEST_NAME_LINKAGE_CHECK, (int) totalLinkageErrorCount);
 
       return results;
     }
@@ -380,24 +394,46 @@ public class DashboardMain {
     return upperBoundFailures;
   }
 
+  /**
+   * Partitions {@code symbolProblems} by the JAR file that contains the {@link ClassFile}.
+   *
+   * <p>For example, {@code classes = result.get(JarX).get(SymbolProblemY)} where {@code classes}
+   * are not null means that {@code JarX} has {@code SymbolProblemY} and that {@code JarX} contains
+   * {@code classes} which reference {@code SymbolProblemY.getSymbol()}.
+   */
+  private static ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> indexByJar(
+      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems) {
+
+    ImmutableMap<Path, Collection<Entry<SymbolProblem, ClassFile>>> jarMap =
+        Multimaps.index(symbolProblems.entries(), entry -> entry.getValue().getJar()).asMap();
+
+    return ImmutableMap.copyOf(
+        Maps.transformValues(
+            jarMap,
+            entries ->
+                ImmutableSetMultimap.copyOf(
+                    Multimaps.transformValues(
+                        ImmutableSetMultimap.copyOf(entries), ClassFile::getClassName))));
+  }
+
   @VisibleForTesting
   static void generateDashboard(
       Configuration configuration,
       Path output,
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
-      LinkageCheckReport linkageCheckReport,
+      ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
       ListMultimap<Path, DependencyPath> jarToDependencyPaths,
       Bom bom)
       throws IOException, TemplateException {
-    
+
     Map<String, String> latestArtifacts = collectLatestVersions(globalDependencies);
 
     Map<String, Object> templateData = new HashMap<>();
     templateData.put("table", table);
     templateData.put("lastUpdated", LocalDateTime.now());
     templateData.put("latestArtifacts", latestArtifacts);
-    templateData.put("jarLinkageReports", linkageCheckReport.getJarLinkageReports());
+    templateData.put("symbolProblems", symbolProblemTable);
     templateData.put("jarToDependencyPaths", jarToDependencyPaths);
     templateData.put("dependencyPathRootCauses", findRootCauses(jarToDependencyPaths));
     templateData.put("coordinates", bom.getCoordinates());

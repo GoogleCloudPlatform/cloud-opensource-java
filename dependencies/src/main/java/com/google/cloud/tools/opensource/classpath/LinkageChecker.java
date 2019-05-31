@@ -84,7 +84,11 @@ public class LinkageChecker {
     this.classToSymbols = Preconditions.checkNotNull(symbolReferenceMaps);
   }
 
-  public ImmutableSetMultimap<ClassFile, SymbolProblem> findSymbolProblems() {
+  /**
+   * Returns {@link SymbolProblem}s found in the class path and referencing classes for each
+   * problem.
+   */
+  public ImmutableSetMultimap<SymbolProblem, ClassFile> findSymbolProblems() {
     // Having Problem in key will dedup SymbolProblems
     ImmutableSetMultimap.Builder<SymbolProblem, ClassFile> problemToClass =
         ImmutableSetMultimap.builder();
@@ -97,7 +101,7 @@ public class LinkageChecker {
               .classesDefinedInJar(classFile.getJar())
               .contains(classSymbol.getClassName())) {
             findSymbolProblem(classFile, classSymbol)
-                .ifPresent(problem -> problemToClass.put(problem, classFile));
+                .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
           }
         });
 
@@ -109,7 +113,7 @@ public class LinkageChecker {
               .classesDefinedInJar(classFile.getJar())
               .contains(methodSymbol.getClassName())) {
             findSymbolProblem(classFile, methodSymbol)
-                .ifPresent(problem -> problemToClass.put(problem, classFile));
+                .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
           }
         });
 
@@ -121,17 +125,11 @@ public class LinkageChecker {
               .classesDefinedInJar(classFile.getJar())
               .contains(fieldSymbol.getClassName())) {
             findSymbolProblem(classFile, fieldSymbol)
-                .ifPresent(problem -> problemToClass.put(problem, classFile));
+                .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
           }
         });
 
-    return problemToClass.build().inverse();
-  }
-
-  /** Finds linkage errors in the input classpath and generates a linkage check report. */
-  public LinkageCheckReport findLinkageErrors() {
-    // TODO(#574): This method will be removed once the refactoring is done.
-    return LinkageCheckReport.fromSymbolProblems(findSymbolProblems(), jars, classReferenceGraph);
+    return problemToClass.build();
   }
 
   /**
@@ -201,7 +199,8 @@ public class LinkageChecker {
       if (classDumper.catchesNoClassDefFoundError(sourceClassName)) {
         return Optional.empty();
       }
-      return Optional.of(new SymbolProblem(symbol, ErrorType.CLASS_NOT_FOUND, null));
+      ClassSymbol classSymbol = new ClassSymbol(symbol.getClassName());
+      return Optional.of(new SymbolProblem(classSymbol, ErrorType.CLASS_NOT_FOUND, null));
     }
   }
 
@@ -246,7 +245,8 @@ public class LinkageChecker {
       if (classDumper.catchesNoClassDefFoundError(sourceClassName)) {
         return Optional.empty();
       }
-      return Optional.of(new SymbolProblem(symbol, ErrorType.CLASS_NOT_FOUND, null));
+      ClassSymbol classSymbol = new ClassSymbol(symbol.getClassName());
+      return Optional.of(new SymbolProblem(classSymbol, ErrorType.CLASS_NOT_FOUND, null));
     }
   }
 

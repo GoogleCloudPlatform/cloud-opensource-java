@@ -16,12 +16,10 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import com.google.cloud.tools.opensource.classpath.JarLinkageReport;
-import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
@@ -81,12 +79,9 @@ public class DashboardUnavailableArtifactTest {
     
     ArtifactCache cache = new ArtifactCache();
     cache.setInfoMap(map);
-    LinkageCheckReport linkageCheckReport =
-        LinkageCheckReport.create(ImmutableList.of());
     List<ArtifactResults> artifactResults =
         DashboardMain.generateReports(
-            configuration, outputDirectory, cache, linkageCheckReport,
-            LinkedListMultimap.create());
+            configuration, outputDirectory, cache, ImmutableMap.of(), LinkedListMultimap.create());
 
     Assert.assertEquals(
         "The length of the ArtifactResults should match the length of artifacts",
@@ -120,16 +115,21 @@ public class DashboardUnavailableArtifactTest {
     Artifact invalidArtifact = new DefaultArtifact("io.grpc:nonexistent:jar:1.15.0");
     ArtifactResults errorArtifactResult = new ArtifactResults(invalidArtifact);
     errorArtifactResult.setExceptionMessage(
-        "Could not find artifact io.grpc:nonexistent:jar:1.15.0 in central (http://repo1.maven.org/maven2/)");
+        "Could not find artifact io.grpc:nonexistent:jar:1.15.0 in central"
+            + " (http://repo1.maven.org/maven2/)");
     List<ArtifactResults> table = new ArrayList<>();
     table.add(validArtifactResult);
     table.add(errorArtifactResult);
 
-    Iterable<JarLinkageReport> list = new ArrayList<>();
-    LinkageCheckReport report = LinkageCheckReport.create(list);
     Bom bom = new Bom("test:test:1.2.4", null);
     DashboardMain.generateDashboard(
-        configuration, outputDirectory, table, null, report, LinkedListMultimap.create(), bom);
+        configuration,
+        outputDirectory,
+        table,
+        null,
+        ImmutableMap.of(),
+        LinkedListMultimap.create(),
+        bom);
 
     Path generatedHtml = outputDirectory.resolve("artifact_details.html");
     Assert.assertTrue(Files.isRegularFile(generatedHtml));

@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.testing.EqualsTester;
 import com.google.common.testing.NullPointerTester;
 import com.google.common.testing.NullPointerTester.Visibility;
@@ -79,5 +80,35 @@ public class SymbolProblemTest {
             new SymbolProblem(
                 new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null))
         .testEquals();
+  }
+
+  @Test
+  public void testFormatSymbolProblems() {
+    SymbolProblem methodSymbolProblem =
+        new SymbolProblem(
+            new MethodSymbol(
+                "io.grpc.protobuf.ProtoUtils.marshaller",
+                "marshaller",
+                "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
+                false),
+            ErrorType.SYMBOL_NOT_FOUND,
+            new ClassFile(Paths.get("aaa", "bbb.jar"), "java.lang.Object"));
+
+    SymbolProblem classSymbolProblem =
+        new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
+
+    ClassFile source1 = new ClassFile(Paths.get("foo", "dummy.jar"), "java.lang.Object");
+    ClassFile source2 = new ClassFile(Paths.get("bar", "dummy.jar"), "java.lang.Object");
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        ImmutableSetMultimap.of(
+            methodSymbolProblem, source1, classSymbolProblem, source1, classSymbolProblem, source2);
+    assertEquals(
+        "io.grpc.protobuf.ProtoUtils.marshaller's method io.grpc.MethodDescriptor$Marshaller "
+            + "marshaller(com.google.protobuf.Message arg1) is not found in the class\n"
+            + "  referenced by 1 class file\n"
+            + "Class java.lang.Integer is not found\n"
+            + "  referenced by 2 class files\n",
+        SymbolProblem.formatSymbolProblems(symbolProblems));
   }
 }

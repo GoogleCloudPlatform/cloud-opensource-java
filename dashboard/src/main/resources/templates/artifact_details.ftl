@@ -45,8 +45,8 @@
 
     <h2>Linkage Errors</h2>
 
-    <#list jarLinkageReports as jarLinkageReport>
-      <@formatJarLinkageReport jarLinkageReport jarToDependencyPaths dependencyPathRootCauses/>
+    <#list symbolProblems as jar, problemsToClasses>
+      <@formatJarLinkageReport jar problemsToClasses jarToDependencyPaths dependencyPathRootCauses/>
     </#list>
 
     <hr />

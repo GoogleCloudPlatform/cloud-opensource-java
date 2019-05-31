@@ -29,11 +29,15 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.cloud.tools.opensource.classpath.LinkageCheckReport;
+import com.google.cloud.tools.opensource.classpath.ClassSymbol;
+import com.google.cloud.tools.opensource.classpath.ErrorType;
+import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.io.MoreFiles;
@@ -46,7 +50,6 @@ import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
-import nu.xom.ValidityException;
 
 
 /**
@@ -56,10 +59,17 @@ public class FreemarkerTest {
 
   private static Path outputDirectory;
   private Builder builder = new Builder();
+  static ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable;
 
   @BeforeClass
   public static void setUp() throws IOException {
     outputDirectory = Files.createDirectories(Paths.get("target", "dashboard"));
+
+    ImmutableSetMultimap<SymbolProblem, String> dummyProblems =
+        ImmutableSetMultimap.of(
+            new SymbolProblem(new ClassSymbol("com.foo.Bar"), ErrorType.CLASS_NOT_FOUND, null),
+            "abc.def.G");
+    symbolProblemTable = ImmutableMap.of(Paths.get("foo", "bar-1.2.3.jar"), dummyProblems);
   }
 
   @AfterClass
@@ -70,12 +80,9 @@ public class FreemarkerTest {
   }
 
   @Test
-  public void testCountFailures() throws IOException, TemplateException, ValidityException, ParsingException {
+  public void testCountFailures() throws IOException, TemplateException, ParsingException {
     Configuration configuration = DashboardMain.configureFreemarker();
 
-    LinkageCheckReport linkageCheckReport =
-        LinkageCheckReport.create(ImmutableList.of());
-    
     Artifact artifact1 = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
     ArtifactResults results1 = new ArtifactResults(artifact1);
     results1.addResult("Linkage Errors", 56);
@@ -87,9 +94,15 @@ public class FreemarkerTest {
     List<ArtifactResults> table = ImmutableList.of(results1, results2);
     List<DependencyGraph> globalDependencies = ImmutableList.of();
     ListMultimap<Path, DependencyPath> jarToDependencyPaths = LinkedListMultimap.create();
-    DashboardMain.generateDashboard(configuration, outputDirectory, table, globalDependencies,
-        linkageCheckReport, jarToDependencyPaths, new Bom("mock:artifact:1.6.7", null));
-    
+    DashboardMain.generateDashboard(
+        configuration,
+        outputDirectory,
+        table,
+        globalDependencies,
+        symbolProblemTable,
+        jarToDependencyPaths,
+        new Bom("mock:artifact:1.6.7", null));
+
     Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
     Document document = builder.build(dashboardHtml.toFile());

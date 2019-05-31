@@ -36,13 +36,21 @@ public final class ClassFile {
   }
 
   /** Returns the path to the JAR file containing the class. */
-  Path getJar() {
+  public Path getJar() {
     return jar;
   }
 
   /** Returns class name (binary name as in {@link Symbol#getClassName()}) */
   public String getClassName() {
     return className;
+  }
+
+  /**
+   * Returns {@link ClassFile} with top level class if this class is an inner class by checking "$"
+   * character; otherwise the instance itself.
+   */
+  public ClassFile topLevelClassFile() {
+    return className.contains("$") ? new ClassFile(jar, className.split("\\$")[0]) : this;
   }
 
   @Override

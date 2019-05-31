@@ -24,16 +24,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule.DependencySection;
-import com.google.cloud.tools.opensource.classpath.ClassFile;
-import com.google.cloud.tools.opensource.classpath.ClassSymbol;
-import com.google.cloud.tools.opensource.classpath.ErrorType;
-import com.google.cloud.tools.opensource.classpath.MethodSymbol;
-import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.graph.Traverser;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -164,9 +157,8 @@ public class LinkageCheckerRuleTest {
           "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
     } catch (EnforcerRuleException ex) {
       // pass
-      verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found 384 errors."));
-      assertEquals(
-          "Failed while checking class path. See above error report.", ex.getMessage());
+      verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found 112 errors."));
+      assertEquals("Failed while checking class path. See above error report.", ex.getMessage());
     }
   }
 
@@ -286,41 +278,5 @@ public class LinkageCheckerRuleTest {
     } catch (EnforcerRuleException ex) {
       // pass
     }
-  }
-
-  @Test
-  public void testFormatSymbolProblems() {
-    SymbolProblem methodSymbolProblem =
-        new SymbolProblem(
-            new MethodSymbol(
-                "java.lang.Object",
-                "equals",
-                "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
-                false),
-            ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(Paths.get("aaa", "bbb.jar"), "java.lang.Object"));
-
-    SymbolProblem classSymbolProblem =
-        new SymbolProblem(
-            new ClassSymbol("java.lang.Integer"),
-            ErrorType.CLASS_NOT_FOUND,
-            null);
-
-    ClassFile source1 = new ClassFile(Paths.get("foo", "dummy.jar"),
-        "java.lang.Object");
-    ClassFile source2 = new ClassFile(Paths.get("bar", "dummy.jar"),
-        "java.lang.Object");
-
-    ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems =
-        ImmutableSetMultimap.of(source1, methodSymbolProblem,
-            source1, classSymbolProblem,
-            source2, classSymbolProblem);
-    assertEquals(
-        "java.lang.Object's method io.grpc.MethodDescriptor$Marshaller "
-            + "equals(com.google.protobuf.Message arg1) is not found in the class\n"
-            + "  referenced by 1 class file\n"
-            + "Class java.lang.Integer is not found\n"
-            + "  referenced by 2 class files\n",
-        LinkageCheckerRule.formatSymbolProblems(symbolProblems));
   }
 }

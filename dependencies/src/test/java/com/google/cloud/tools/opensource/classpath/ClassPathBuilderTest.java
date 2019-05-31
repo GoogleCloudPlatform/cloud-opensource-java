@@ -186,12 +186,12 @@ public class ClassPathBuilderTest {
                 httpClientJar, "org.apache.http.client.protocol.ResponseContentEncoding"),
             new ClassSymbol("org.apache.http.client.entity.GZIPInputStreamFactory"));
 
-    ImmutableSetMultimap<ClassFile, SymbolProblem> symbolProblems =
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
     assertEquals(
         "Method references within the same jar file should not be reported",
         0,
-        symbolProblems.keySet().stream()
+        symbolProblems.values().stream()
             .filter(classFile -> httpClientJar.equals(classFile.getJar()))
             .count());
   }
