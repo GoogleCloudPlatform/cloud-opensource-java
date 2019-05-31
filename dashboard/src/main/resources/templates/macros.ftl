@@ -9,47 +9,45 @@
 </#function>
 
 <#macro formatJarLinkageReport jar problemsWithClass jarToDependencyPaths dependencyPathRootCauses>
-  <#if problemsWithClass?size gt 0>
-    <!-- problemsWithClass: ImmutableSetMultimap<SymbolProblem, String> converted to
-      ImmutableMap<SymbolProblem, Collection<String>> to get key and set of values in Freemarker -->
-    <#assign problemsToClasses = problemsWithClass.asMap() />
-    <#assign symbolProblemCount = problemsToClasses?size />
-    <#assign sourceClassCount = problemsWithClass.inverse().keySet()?size />
+  <!-- problemsWithClass: ImmutableSetMultimap<SymbolProblem, String> converted to
+    ImmutableMap<SymbolProblem, Collection<String>> to get key and set of values in Freemarker -->
+  <#assign problemsToClasses = problemsWithClass.asMap() />
+  <#assign symbolProblemCount = problemsToClasses?size />
+  <#assign sourceClassCount = problemsWithClass.inverse().keySet()?size />
 
-    <h3>${jar.getFileName()?html}</h3>
-    <p class="jar-linkage-report">
-      ${pluralize(symbolProblemCount, "symbol", "symbols")}
-      causing linkage errors referenced from
-      ${pluralize(sourceClassCount, "class", "classes")}.
+  <h3>${jar.getFileName()?html}</h3>
+  <p class="jar-linkage-report">
+    ${pluralize(symbolProblemCount, "symbol", "symbols")}
+    causing linkage errors referenced from
+    ${pluralize(sourceClassCount, "class", "classes")}.
+  </p>
+  <#list problemsToClasses as symbolProblem, sourceClasses>
+    <p class="jar-linkage-report-cause">${symbolProblem?html}, referenced from ${
+      pluralize(sourceClasses?size, "class", "classes")?html}
+      <button onclick="toggleSourceClassListVisibility(this)"
+              title="Toggle visibility of source class list">▶
+      </button>
     </p>
-    <#list problemsToClasses as symbolProblem, sourceClasses>
-      <p class="jar-linkage-report-cause">${symbolProblem?html}, referenced from ${
-        pluralize(sourceClasses?size, "class", "classes")?html}
-        <button onclick="toggleSourceClassListVisibility(this)"
-                title="Toggle visibility of source class list">▶
-        </button>
-      </p>
 
-      <!-- The visibility of this list is toggled via the button above. Hidden by default -->
-      <ul class="jar-linkage-report-cause" style="display:none">
-        <#list sourceClasses as sourceClass>
-          <li>${sourceClass?html}</li>
+    <!-- The visibility of this list is toggled via the button above. Hidden by default -->
+    <ul class="jar-linkage-report-cause" style="display:none">
+      <#list sourceClasses as sourceClass>
+        <li>${sourceClass?html}</li>
+      </#list>
+    </ul>
+  </#list>
+  <p class="linkage-check-dependency-paths">
+    The following paths to the jar file from the BOM are found in the dependency tree:
+  </p>
+  <#if dependencyPathRootCauses[jar]?? >
+    <p class="linkage-check-dependency-paths">${dependencyPathRootCauses[jar]?html}
+    </p>
+  <#else>
+    <ul class="linkage-check-dependency-paths">
+        <#list jarToDependencyPaths.get(jar) as dependencyPath >
+          <li>${dependencyPath}</li>
         </#list>
-      </ul>
-    </#list>
-    <p class="linkage-check-dependency-paths">
-      The following paths to the jar file from the BOM are found in the dependency tree:
-    </p>
-    <#if dependencyPathRootCauses[jar]?? >
-      <p class="linkage-check-dependency-paths">${dependencyPathRootCauses[jar]?html}
-      </p>
-    <#else>
-      <ul class="linkage-check-dependency-paths">
-          <#list jarToDependencyPaths.get(jar) as dependencyPath >
-            <li>${dependencyPath}</li>
-          </#list>
-      </ul>
-    </#if>
+    </ul>
   </#if>
 </#macro>
 
