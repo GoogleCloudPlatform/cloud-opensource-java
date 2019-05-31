@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Multimaps;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -98,13 +97,15 @@ public final class SymbolProblem {
       ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems) {
     StringBuilder output = new StringBuilder();
 
-    symbolProblems.asMap().forEach(
-        (problem, classFiles) -> {
-          int referenceCount = classFiles.size();
-          output.append(
-              String.format(
-                  "%s\n  referenced by %d class file%s\n",
-                  problem, referenceCount, referenceCount > 1 ? "s" : ""));
-        });
+    symbolProblems
+        .asMap()
+        .forEach(
+            (problem, classFiles) -> {
+              int referenceCount = classFiles.size();
+              output.append(
+                  String.format(
+                      "%s\n  referenced by %d class file%s\n",
+                      problem, referenceCount, referenceCount > 1 ? "s" : ""));
+            });
   }
 }

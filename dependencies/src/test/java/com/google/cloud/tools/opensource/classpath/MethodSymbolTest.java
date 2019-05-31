@@ -28,16 +28,10 @@ public class MethodSymbolTest {
   @Test
   public void testMethodSymbolCreation() {
     MethodSymbol methodSymbol =
-        new MethodSymbol(
-            "java.lang.Object",
-            "equals",
-            "(Ljava/lang/Object;)Z",
-            false);
+        new MethodSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z", false);
     assertEquals("java.lang.Object", methodSymbol.getClassName());
     assertEquals("equals", methodSymbol.getName());
-    assertEquals(
-        "(Ljava/lang/Object;)Z",
-        methodSymbol.getDescriptor());
+    assertEquals("(Ljava/lang/Object;)Z", methodSymbol.getDescriptor());
   }
 
   @Test
@@ -51,10 +45,12 @@ public class MethodSymbolTest {
         .addEqualityGroup(
             new MethodSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z", false),
             new MethodSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z", false))
-        .addEqualityGroup(new MethodSymbol("java.lang.Object", "hashCode", "(Ljava/lang/Object;)Z", false))
+        .addEqualityGroup(
+            new MethodSymbol("java.lang.Object", "hashCode", "(Ljava/lang/Object;)Z", false))
         .addEqualityGroup(new MethodSymbol("Object", "equals", "(Ljava/lang/Object;)Z", false))
         .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "(I)Lcom.Bar;", false))
-        .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z", true))
+        .addEqualityGroup(
+            new MethodSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z", true))
         .addEqualityGroup(new ClassSymbol("java.lang.Object"))
         .addEqualityGroup(new FieldSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z"))
         .testEquals();
