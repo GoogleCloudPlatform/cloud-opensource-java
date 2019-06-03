@@ -45,6 +45,11 @@ public class LinkageChecker {
   private final SymbolReferenceMaps classToSymbols;
   private final ClassReferenceGraph classReferenceGraph;
 
+  static {
+    // To use ConstantUtf8 cache
+    System.setProperty("bcel.maxcached.size", "200");
+  }
+
   @VisibleForTesting
   SymbolReferenceMaps getClassToSymbols() {
     return classToSymbols;
