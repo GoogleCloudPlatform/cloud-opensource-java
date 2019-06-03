@@ -43,7 +43,8 @@ public class SuperClassSymbolTest {
             new SuperClassSymbol("java.lang.Object"), new SuperClassSymbol("java.lang.Object"))
         .addEqualityGroup(new SuperClassSymbol("java.lang.Long"))
         .addEqualityGroup(new ClassSymbol("java.lang.Object"))
-        .addEqualityGroup(new MethodSymbol("java.lang.Object", "equals", "(I)Lcom.Foo;", false))
+        .addEqualityGroup(
+            new MethodSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z", false))
         .testEquals();
   }
 }

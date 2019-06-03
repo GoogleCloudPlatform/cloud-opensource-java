@@ -97,13 +97,16 @@ public final class SymbolProblem {
       ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems) {
     StringBuilder output = new StringBuilder();
 
-    for (SymbolProblem problem : symbolProblems.keySet()) {
-      int referenceCount = symbolProblems.get(problem).size();
-      output.append(
-          String.format(
-              "%s\n  referenced by %d class file%s\n",
-              problem, referenceCount, referenceCount > 1 ? "s" : ""));
-    }
+    symbolProblems
+        .asMap()
+        .forEach(
+            (problem, classFiles) -> {
+              int referenceCount = classFiles.size();
+              output.append(
+                  String.format(
+                      "%s\n  referenced by %d class file%s\n",
+                      problem, referenceCount, referenceCount > 1 ? "s" : ""));
+            });
 
     return output.toString();
   }
