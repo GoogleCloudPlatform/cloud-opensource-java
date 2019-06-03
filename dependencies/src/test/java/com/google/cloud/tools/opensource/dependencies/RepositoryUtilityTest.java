@@ -61,6 +61,6 @@ public class RepositoryUtilityTest {
     
     ImmutableList<Artifact> artifacts = bom.getManagedDependencies();
     Assert.assertEquals(187, artifacts.size());
-    Assert.assertEquals("com.google.cloud:libraries-bom:1.0.1-SNAPSHOT", bom.getCoordinates());
+    Assert.assertEquals("com.google.cloud:libraries-bom:1.1.0-SNAPSHOT", bom.getCoordinates());
   }
 }
