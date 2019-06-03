@@ -124,7 +124,6 @@ public class LinkageCheckerTest {
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     // ImmutableList is an abstract class, but setting isInterfaceMethod = true to get an error
-    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
     MethodSymbol methodSymbol =
         new MethodSymbol(
             "com.google.common.collect.ImmutableList",
