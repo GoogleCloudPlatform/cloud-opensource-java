@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Map;
 import java.util.Objects;
 import org.apache.bcel.classfile.Utility;
 
@@ -26,6 +27,20 @@ public final class MethodSymbol extends Symbol {
   private final String name;
   private final String descriptor;
   private final boolean isInterfaceMethod;
+
+  public static Map<MethodSymbol, MethodSymbol> instanceMap;
+
+  public static MethodSymbol create(
+      String className, String name, String descriptor, boolean isInterfaceMethod) {
+    MethodSymbol newInstance = new MethodSymbol(className, name, descriptor, isInterfaceMethod);
+
+    MethodSymbol instance = instanceMap.get(newInstance);
+    if (instance == null) {
+      return instance;
+    }
+    instanceMap.put(newInstance, newInstance);
+    return newInstance;
+  }
 
   public MethodSymbol(String className, String name, String descriptor, boolean isInterfaceMethod) {
     super(className);
