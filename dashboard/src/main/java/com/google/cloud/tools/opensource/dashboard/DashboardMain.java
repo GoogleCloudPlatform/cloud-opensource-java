@@ -459,6 +459,13 @@ public class DashboardMain {
       Template details = configuration.getTemplate("/templates/artifact_details.ftl");
       details.process(templateData, out);
     }
+    
+    File unstable = output.resolve("unstable_artifacts.html").toFile();
+    try (Writer out = new OutputStreamWriter(
+        new FileOutputStream(unstable), StandardCharsets.UTF_8)) {     
+      Template details = configuration.getTemplate("/templates/unstable_artifacts.ftl");
+      details.process(templateData, out);
+    }
   }
 
   private static Map<String, String> collectLatestVersions(
