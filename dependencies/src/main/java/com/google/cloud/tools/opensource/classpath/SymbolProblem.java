@@ -92,7 +92,11 @@ public final class SymbolProblem {
   public final String toString() {
     String jarInfo =
         containingClass != null ? " (" + containingClass.getJar().getFileName() + ")" : "";
-    return getErrorType().getMessage(symbol.toString()) + jarInfo;
+    if (containingClass != null) {
+      return getErrorType().getMessage(symbol.toStringWithJar(containingClass.getJar().getFileName()));
+    } else {
+      return getErrorType().getMessage(symbol.toString());
+    }
   }
 
   public static String formatSymbolProblems(

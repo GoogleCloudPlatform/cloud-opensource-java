@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.nio.file.Path;
 import java.util.Objects;
 import org.apache.bcel.classfile.Utility;
 
@@ -83,5 +84,15 @@ public final class MethodSymbol extends Symbol {
   public String toString() {
     return (isInterfaceMethod ? "Interface " : "") + getClassName() + "'s method " + Utility
         .methodSignatureToString(descriptor, name, "");
+  }
+
+  @Override
+  String toStringWithJar(Path fileName) {
+    return (isInterfaceMethod ? "Interface " : "")
+        + getClassName()
+        + "("
+        + fileName
+        + ")'s method "
+        + Utility.methodSignatureToString(descriptor, name, "");
   }
 }
