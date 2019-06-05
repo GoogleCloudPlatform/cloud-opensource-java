@@ -47,6 +47,16 @@ public class DashboardArgumentsTest {
   }
 
   @Test
+  public void testParseArgument_coordinatesWithLeadingSpace() throws ParseException {
+    // Maven exec plugin adds leading space when arguments are passed as
+    // -Dexec.arguments="-c com.google.cloud:libraries-bom:$VERSION"
+    DashboardArguments dashboardArguments =
+        DashboardArguments.readCommandLine("-c", " com.google.cloud:libraries-bom:1.0.0");
+    assertEquals(
+        "com.google.cloud:libraries-bom:1.0.0", dashboardArguments.getBomCoordinates());
+  }
+
+  @Test
   public void testParseArgument_missingInput() throws ParseException {
     try {
       DashboardArguments.readCommandLine();

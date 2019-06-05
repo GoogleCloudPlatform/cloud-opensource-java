@@ -62,7 +62,7 @@ final class DashboardArguments {
   /** Returns the Maven coordinates of a BOM. Null if coordinates are not specified. */
   @Nullable
   String getBomCoordinates() {
-    return commandLine.getOptionValue('c');
+    return commandLine.getOptionValue('c').trim();
   }
 
   static DashboardArguments readCommandLine(String... arguments) throws ParseException {
