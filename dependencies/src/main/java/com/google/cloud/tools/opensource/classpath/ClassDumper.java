@@ -78,9 +78,9 @@ class ClassDumper {
   private final Repository classRepository;
 
   // Sometimes classes are not placed in the root of a JAR file. For example, Spring Boot Gradle
-  // Java plugin places class files under "BOOT-INF/classes". ClassDumper needs to remember the
-  // special location to load JavaClass by a class name.
-  // https://docs.spring.io/spring-boot/docs/current/gradle-plugin/reference/html/#reacting-to-other-plugins-java
+  // Java plugin places class files under "BOOT-INF/classes" (
+  // https://docs.spring.io/spring-boot/docs/current/reference/html/executable-jar.html).
+  // ClassDumper needs to remember the special location to load JavaClass by a class name.
   private final Map<String, String> specialClassFileLocation;
   private final ClassLoader extensionClassLoader;
   private final ImmutableSetMultimap<Path, String> jarFileToClasses;

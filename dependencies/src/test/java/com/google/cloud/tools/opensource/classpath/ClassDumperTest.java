@@ -316,24 +316,16 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testLoadJavaClass_classNotInRoot() throws IOException, URISyntaxException {
+  public void testLoadJavaClass_classNotInRoot()
+      throws IOException, URISyntaxException, ClassNotFoundException {
     // This JAR file contains com.google.firestore.v1beta1.FirestoreGrpc under BOOT-INF/classes.
     // Spring-cloud-gcp's spring-cloud-gcp-kotlin-app-sample module generates such file.
     Path path = absolutePathOfResource("testdata/dummy-boot-inf-prefix.jar");
     ClassDumper classDumper = ClassDumper.create(ImmutableList.of(path));
 
-    SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
-    symbolReferences
-        .getClassToClassSymbols()
-        .forEach(
-            (classFile, classSymbol) -> {
-              try {
-                classDumper.loadJavaClass(classFile.getClassName());
-              } catch (ClassNotFoundException ex) {
-                fail(
-                    "The class in findSymbolReferences should be able to load again: "
-                        + ex.getMessage());
-              }
-            });
+    classDumper.findSymbolReferences(); // This builds specialClassFileLocation
+
+    // This should not raise ClassNotFoundException
+    classDumper.loadJavaClass("com.google.firestore.v1beta1.FirestoreGrpc");
   }
 }
