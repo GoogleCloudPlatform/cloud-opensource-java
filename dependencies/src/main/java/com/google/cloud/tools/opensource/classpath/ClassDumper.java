@@ -277,7 +277,7 @@ class ClassDumper {
     String descriptor = constantNameAndType.getSignature(constantPool);
     // constantMethodref is either ConstantMethodref or ConstantInterfaceMethodref
     boolean isInterfaceMethod = constantMethodref instanceof ConstantInterfaceMethodref;
-    return MethodSymbol.create(className, methodName, descriptor, isInterfaceMethod);
+    return new MethodSymbol(className, methodName, descriptor, isInterfaceMethod);
   }
 
   private static FieldSymbol makeSymbol(

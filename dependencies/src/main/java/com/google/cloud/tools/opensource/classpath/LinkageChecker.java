@@ -30,7 +30,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
-import org.apache.bcel.classfile.ConstantUtf8;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
@@ -45,11 +44,6 @@ public class LinkageChecker {
   private final ImmutableList<Path> jars;
   private final SymbolReferenceMaps classToSymbols;
   private final ClassReferenceGraph classReferenceGraph;
-
-  static {
-    // To use ConstantUtf8 cache
-    System.setProperty("bcel.maxcached.size", "200");
-  }
 
   @VisibleForTesting
   SymbolReferenceMaps getClassToSymbols() {
