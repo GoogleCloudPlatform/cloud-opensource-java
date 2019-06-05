@@ -105,7 +105,7 @@ public class SymbolProblemTest {
             methodSymbolProblem, source1, classSymbolProblem, source1, classSymbolProblem, source2);
     assertEquals(
         "io.grpc.protobuf.ProtoUtils.marshaller's method io.grpc.MethodDescriptor$Marshaller "
-            + "marshaller(com.google.protobuf.Message arg1) is not found in the class\n"
+            + "marshaller(com.google.protobuf.Message arg1) is not found in the class (bbb.jar)\n"
             + "  referenced by 1 class file\n"
             + "Class java.lang.Integer is not found\n"
             + "  referenced by 2 class files\n",

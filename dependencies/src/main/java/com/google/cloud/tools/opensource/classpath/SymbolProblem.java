@@ -90,7 +90,9 @@ public final class SymbolProblem {
 
   @Override
   public final String toString() {
-    return getErrorType().getMessage(symbol.toString());
+    String jarInfo =
+        containingClass != null ? " (" + containingClass.getJar().getFileName() + ")" : "";
+    return getErrorType().getMessage(symbol.toString()) + jarInfo;
   }
 
   public static String formatSymbolProblems(
