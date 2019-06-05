@@ -378,7 +378,7 @@ class ClassDumper {
         javaClasses.add(javaClass);
 
         if (!javaClass.getClassName().equals(className)) {
-          // When class name is not in the root of jar file, remember the special location
+          // When class file has special location such as "BOOT-INF/classes"
           specialClassFileLocation.put(javaClass.getClassName(), className);
         }
       } catch (ClassNotFoundException ex) {
