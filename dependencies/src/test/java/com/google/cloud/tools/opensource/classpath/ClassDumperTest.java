@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static org.junit.Assert.fail;
 
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
@@ -93,7 +94,7 @@ public class ClassDumperTest {
   public void testCreationInvalidInput() throws IOException {
     try {
       ClassDumper.create(ImmutableList.of(Paths.get("no_such_file")));
-      Assert.fail("Empty path should generate IOException");
+      fail("Empty path should generate IOException");
     } catch (IllegalArgumentException ex) {
       // pass
       Truth.assertThat(ex)
@@ -302,7 +303,7 @@ public class ClassDumperTest {
     try {
       classDumper.isUnusedClassSymbolReference("org.conscrypt.Conscrypt", new ClassSymbol("dummy.NoSuchClass"));
 
-      Assert.fail("It should throw VerifyException when it cannot find a class symbol reference");
+      fail("It should throw VerifyException when it cannot find a class symbol reference");
     } catch (VerifyException ex) {
       // pass
       Truth.assertThat(ex)
@@ -312,5 +313,27 @@ public class ClassDumperTest {
                   + " the reference to the target class is no longer found in the source class's"
                   + " constant pool.");
     }
+  }
+
+  @Test
+  public void testLoadJavaClass_classNotInRoot() throws IOException, URISyntaxException {
+    // This JAR file contains com.google.firestore.v1beta1.FirestoreGrpc under BOOT-INF/classes.
+    // Spring-cloud-gcp's spring-cloud-gcp-kotlin-app-sample module generates such file.
+    Path path = absolutePathOfResource("testdata/dummy-boot-inf-prefix.jar");
+    ClassDumper classDumper = ClassDumper.create(ImmutableList.of(path));
+
+    SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
+    symbolReferences
+        .getClassToClassSymbols()
+        .forEach(
+            (classFile, classSymbol) -> {
+              try {
+                classDumper.loadJavaClass(classFile.getClassName());
+              } catch (ClassNotFoundException ex) {
+                fail(
+                    "The class in findSymbolReferences should be able to load again: "
+                        + ex.getMessage());
+              }
+            });
   }
 }

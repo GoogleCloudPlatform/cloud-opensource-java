@@ -34,7 +34,9 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -74,6 +76,12 @@ class ClassDumper {
 
   private final ImmutableList<Path> inputClassPath;
   private final Repository classRepository;
+
+  // Sometimes classes are not placed in the root of a JAR file. For example, Spring Boot Gradle
+  // Java plugin places class files under "BOOT-INF/classes". ClassDumper needs to remember the
+  // special location to load JavaClass by a class name.
+  // https://docs.spring.io/spring-boot/docs/current/gradle-plugin/reference/html/#reacting-to-other-plugins-java
+  private final Map<String, String> specialClassFileLocation;
   private final ClassLoader extensionClassLoader;
   private final ImmutableSetMultimap<Path, String> jarFileToClasses;
   private final ImmutableListMultimap<String, Path> classToJarFiles;
@@ -103,6 +111,7 @@ class ClassDumper {
       ImmutableSetMultimap<Path, String> jarToClasses) {
     this.inputClassPath = ImmutableList.copyOf(inputClassPath);
     this.classRepository = createClassRepository(inputClassPath);
+    this.specialClassFileLocation = new HashMap<>();
     this.extensionClassLoader = extensionClassLoader;
     this.jarFileToClasses = ImmutableSetMultimap.copyOf(jarToClasses);
     this.classToJarFiles = ImmutableListMultimap.copyOf(jarToClasses.inverse());
@@ -115,7 +124,8 @@ class ClassDumper {
    *     API</a>
    */
   JavaClass loadJavaClass(String className) throws ClassNotFoundException {
-    return classRepository.loadClass(className);
+    String classFileName = specialClassFileLocation.getOrDefault(className, className);
+    return classRepository.loadClass(classFileName);
   }
 
   /** Loads a system class available in JVM runtime. */
@@ -359,10 +369,18 @@ class ClassDumper {
    */
   private ImmutableSet<JavaClass> listClassesInJar(Path jar) throws IOException {
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
+
+    // Not to keep JavaClasses retained by class repository while parsing hundreds of jar files
+    Repository classRepository = createClassRepository(inputClassPath);
     for (String className : listClassNamesInJar(jar)) {
       try {
         JavaClass javaClass = classRepository.loadClass(className);
         javaClasses.add(javaClass);
+
+        if (!javaClass.getClassName().equals(className)) {
+          // When class name is not in the root of jar file, remember the special location
+          specialClassFileLocation.put(javaClass.getClassName(), className);
+        }
       } catch (ClassNotFoundException ex) {
         // We couldn't find the class in the jar file where we found it.
         throw new IOException("Corrupt jar file " + jar + "; could not load " + className, ex);
