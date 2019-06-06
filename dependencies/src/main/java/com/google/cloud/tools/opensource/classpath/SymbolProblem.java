@@ -92,7 +92,7 @@ public final class SymbolProblem {
   public final String toString() {
     String jarInfo =
         containingClass != null
-            ? String.format("(%s)", containingClass.getJar().getFileName())
+            ? String.format("(%s) ", containingClass.getJar().getFileName())
             : "";
     return jarInfo + getErrorType().getMessage(symbol.toString());
   }

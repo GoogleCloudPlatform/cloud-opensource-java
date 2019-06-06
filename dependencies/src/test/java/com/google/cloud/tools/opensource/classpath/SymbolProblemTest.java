@@ -117,12 +117,13 @@ public class SymbolProblemTest {
             fieldSymbolProblem,
             source2);
     assertEquals(
-        "(bbb-1.2.3.jar)io.grpc.protobuf.ProtoUtils.marshaller's method io.grpc.MethodDescriptor$Marshaller "
+        "(bbb-1.2.3.jar) "
+            +"io.grpc.protobuf.ProtoUtils.marshaller's method io.grpc.MethodDescriptor$Marshaller "
             + "marshaller(com.google.protobuf.Message arg1) is not found in the class\n"
             + "  referenced by 1 class file\n"
             + "Class java.lang.Integer is not found\n"
             + "  referenced by 2 class files\n"
-            + "(ccc-1.2.3.jar)java.lang.Integer's field MAX_VALUE is not found in the class\n"
+            + "(ccc-1.2.3.jar) java.lang.Integer's field MAX_VALUE is not found in the class\n"
             + "  referenced by 1 class file\n",
         SymbolProblem.formatSymbolProblems(symbolProblems));
   }
