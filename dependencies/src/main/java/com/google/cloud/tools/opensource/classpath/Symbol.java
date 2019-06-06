@@ -71,7 +71,8 @@ abstract class Symbol {
         .toString();
   }
 
-  String toStringWithJar(Path fileName) {
-    return String.format("Class %s (%s)", getClassName(), fileName);
+  /** Returns string representation of the symbol inside the {@code jar} file. */
+  String toStringWithJar(Path jar) {
+    return String.format("Class %s(%s)", getClassName(), jar);
   }
 }

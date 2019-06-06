@@ -82,17 +82,20 @@ public final class MethodSymbol extends Symbol {
 
   @Override
   public String toString() {
-    return (isInterfaceMethod ? "Interface " : "") + getClassName() + "'s method " + Utility
-        .methodSignatureToString(descriptor, name, "");
+    return String.format(
+        "%s%s's method %s",
+        (isInterfaceMethod ? "Interface " : ""),
+        getClassName(),
+        Utility.methodSignatureToString(descriptor, name, ""));
   }
 
   @Override
-  String toStringWithJar(Path fileName) {
-    return (isInterfaceMethod ? "Interface " : "")
-        + getClassName()
-        + "("
-        + fileName
-        + ")'s method "
-        + Utility.methodSignatureToString(descriptor, name, "");
+  String toStringWithJar(Path jar) {
+    return String.format(
+        "%s%s(%s)'s method %s",
+        (isInterfaceMethod ? "Interface " : ""),
+        getClassName(),
+        jar,
+        Utility.methodSignatureToString(descriptor, name, ""));
   }
 }

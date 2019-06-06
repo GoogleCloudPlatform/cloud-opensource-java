@@ -18,7 +18,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.nio.file.Path;
 import java.util.Objects;
-import org.apache.bcel.classfile.Utility;
 
 /** Symbol for a field of a class. */
 final class FieldSymbol extends Symbol {
@@ -69,11 +68,11 @@ final class FieldSymbol extends Symbol {
 
   @Override
   public String toString() {
-    return getClassName() + "'s field " + name;
+    return String.format("%s's field %s", getClassName(), name);
   }
 
   @Override
-  String toStringWithJar(Path fileName) {
-    return getClassName() + "(" + fileName + ")'s field " + name;
+  String toStringWithJar(Path jar) {
+    return String.format("%s(%s)'s field %s", getClassName(), jar, name);
   }
 }

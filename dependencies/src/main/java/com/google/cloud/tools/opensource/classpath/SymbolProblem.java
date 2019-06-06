@@ -90,10 +90,9 @@ public final class SymbolProblem {
 
   @Override
   public final String toString() {
-    String jarInfo =
-        containingClass != null ? " (" + containingClass.getJar().getFileName() + ")" : "";
     if (containingClass != null) {
-      return getErrorType().getMessage(symbol.toStringWithJar(containingClass.getJar().getFileName()));
+      return getErrorType()
+          .getMessage(symbol.toStringWithJar(containingClass.getJar().getFileName()));
     } else {
       return getErrorType().getMessage(symbol.toString());
     }
