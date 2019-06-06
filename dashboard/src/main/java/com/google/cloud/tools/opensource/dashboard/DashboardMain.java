@@ -126,7 +126,6 @@ public class DashboardMain {
       throws IOException, TemplateException, RepositoryException, URISyntaxException {
 
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
-    ArtifactCache cache = loadArtifactInfo(managedDependencies);
 
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
         ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
@@ -142,6 +141,7 @@ public class DashboardMain {
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
 
+    ArtifactCache cache = loadArtifactInfo(managedDependencies);
     Path output = generateHtml(bom, cache, jarToDependencyPaths, symbolProblems);
 
     return output;
