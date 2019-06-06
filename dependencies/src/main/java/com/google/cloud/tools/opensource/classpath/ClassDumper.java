@@ -81,6 +81,8 @@ class ClassDumper {
   // Java plugin places class files under "BOOT-INF/classes" (
   // https://docs.spring.io/spring-boot/docs/current/reference/html/executable-jar.html).
   // ClassDumper needs to remember the special location to load JavaClass by a class name.
+  // Key: class name (value from JavaClass.getClassName).
+  // Value: location of class file from root, separated by '.' (value from JavaClass.getFileName)
   private final Map<String, String> specialClassFileLocation;
   private final ClassLoader extensionClassLoader;
   private final ImmutableSetMultimap<Path, String> jarFileToClasses;

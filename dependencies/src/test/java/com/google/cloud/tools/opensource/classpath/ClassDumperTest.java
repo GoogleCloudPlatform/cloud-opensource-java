@@ -17,6 +17,8 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import com.google.common.base.VerifyException;
@@ -326,6 +328,10 @@ public class ClassDumperTest {
     classDumper.findSymbolReferences(); // This builds specialClassFileLocation
 
     // This should not raise ClassNotFoundException
-    classDumper.loadJavaClass("com.google.firestore.v1beta1.FirestoreGrpc");
+    JavaClass javaClass = classDumper.loadJavaClass("com.google.firestore.v1beta1.FirestoreGrpc");
+    assertNotNull(javaClass);
+    assertEquals("com.google.firestore.v1beta1.FirestoreGrpc", javaClass.getClassName());
+    assertEquals(
+        "BOOT-INF.classes.com.google.firestore.v1beta1.FirestoreGrpc", javaClass.getFileName());
   }
 }
