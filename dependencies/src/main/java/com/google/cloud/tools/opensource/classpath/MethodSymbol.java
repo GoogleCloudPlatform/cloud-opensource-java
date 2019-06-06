@@ -81,7 +81,8 @@ public final class MethodSymbol extends Symbol {
 
   @Override
   public String toString() {
-    return (isInterfaceMethod ? "Interface " : "") + getClassName() + "'s method " + Utility
-        .methodSignatureToString(descriptor, name, "");
+    String signature = Utility.methodSignatureToString(descriptor, name, "");
+    String noReturnType = signature.substring(signature.indexOf(' ') + 1);
+    return (isInterfaceMethod ? "Interface " : "") + getClassName() + "'s method " + noReturnType;
   }
 }
