@@ -81,8 +81,9 @@ public final class MethodSymbol extends Symbol {
 
   @Override
   public String toString() {
-    String signature = Utility.methodSignatureToString(descriptor, name, "");
-    String noReturnType = signature.substring(signature.indexOf(' ') + 1);
-    return (isInterfaceMethod ? "Interface " : "") + getClassName() + "'s method " + noReturnType;
+    // https://docs.oracle.com/javase/specs/jls/se7/html/jls-8.html#jls-8.4.2
+    String signaturePlusReturnType = Utility.methodSignatureToString(descriptor, name, "");
+    String signature = signaturePlusReturnType.substring(signaturePlusReturnType.indexOf(' ') + 1);
+    return (isInterfaceMethod ? "Interface " : "") + getClassName() + "'s method " + signature;
   }
 }
