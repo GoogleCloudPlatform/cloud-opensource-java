@@ -183,6 +183,7 @@ public final class RepositoryUtility {
   }
 
   // TODO arguably this now belongs in the BOM class
+  // TODO these exceptions are exposing our own dependencies
   public static Bom readBom(Path pomFile)
       throws PlexusContainerException, ComponentLookupException, ProjectBuildingException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
