@@ -15,7 +15,7 @@ mvn -B clean install
 cd dashboard
 
 # Step 1: Generate dashboards for the released BOMs with the latest DashboardMain class
-# For example https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/target/1.1.0/dashboard.html
+# For example: https://storage.googleapis.com/cloud-opensource-java-dashboard/1.1.0/dashboard.html
 
 # Querying https://search.maven.org/classic/#api with
 # groupId:com.google.cloud AND artifactId:libraries-bom, receiving latest (sorted) 10 versions.
@@ -29,6 +29,6 @@ for VERSION in $VERSIONS; do
 done
 
 # Step 2: Generate dashboard for the snapshot
-# For example https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/target/dashboard/dashboard.html
+# https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/dashboard.html
 mvn -B exec:java -Dexec.mainClass="com.google.cloud.tools.opensource.dashboard.DashboardMain" \
   -Dexec.arguments="-f ../boms/cloud-oss-bom/pom.xml"
