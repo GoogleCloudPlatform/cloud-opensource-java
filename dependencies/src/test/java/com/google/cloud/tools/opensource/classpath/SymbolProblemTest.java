@@ -108,15 +108,21 @@ public class SymbolProblemTest {
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         ImmutableSetMultimap.of(
-            methodSymbolProblem, source1, classSymbolProblem, source1, classSymbolProblem, source2,
-            fieldSymbolProblem, source2);
+            methodSymbolProblem,
+            source1,
+            classSymbolProblem,
+            source1,
+            classSymbolProblem,
+            source2,
+            fieldSymbolProblem,
+            source2);
     assertEquals(
-        "io.grpc.protobuf.ProtoUtils.marshaller(bbb.jar)'s method io.grpc.MethodDescriptor$Marshaller "
+        "(bbb.jar)io.grpc.protobuf.ProtoUtils.marshaller's method io.grpc.MethodDescriptor$Marshaller "
             + "marshaller(com.google.protobuf.Message arg1) is not found in the class\n"
             + "  referenced by 1 class file\n"
             + "Class java.lang.Integer is not found\n"
             + "  referenced by 2 class files\n"
-            + "java.lang.Integer(ccc.jar)'s field MAX_VALUE is not found in the class\n"
+            + "(ccc.jar)java.lang.Integer's field MAX_VALUE is not found in the class\n"
             + "  referenced by 1 class file\n",
         SymbolProblem.formatSymbolProblems(symbolProblems));
   }
