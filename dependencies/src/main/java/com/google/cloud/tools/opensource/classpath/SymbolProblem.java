@@ -91,12 +91,10 @@ public final class SymbolProblem {
   @Override
   public final String toString() {
     String jarInfo =
-        containingClass != null ? " (" + containingClass.getJar().getFileName() + ")" : "";
-    if (containingClass != null) {
-      return getErrorType().getMessage(symbol.toStringWithJar(containingClass.getJar().getFileName()));
-    } else {
-      return getErrorType().getMessage(symbol.toString());
-    }
+        containingClass != null
+            ? String.format("(%s)", containingClass.getJar().getFileName())
+            : "";
+    return jarInfo + getErrorType().getMessage(symbol.toString());
   }
 
   public static String formatSymbolProblems(

@@ -16,9 +16,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.nio.file.Path;
 import java.util.Objects;
-import org.apache.bcel.classfile.Utility;
 
 /** Symbol for a field of a class. */
 final class FieldSymbol extends Symbol {
@@ -70,10 +68,5 @@ final class FieldSymbol extends Symbol {
   @Override
   public String toString() {
     return getClassName() + "'s field " + name;
-  }
-
-  @Override
-  String toStringWithJar(Path fileName) {
-    return getClassName() + "(" + fileName + ")'s field " + name;
   }
 }

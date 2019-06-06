@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.MoreObjects;
-import java.nio.file.Path;
 import java.util.Objects;
 
 /**
@@ -69,9 +68,5 @@ abstract class Symbol {
     return MoreObjects.toStringHelper(this)
         .add("className", className)
         .toString();
-  }
-
-  String toStringWithJar(Path fileName) {
-    return String.format("Class %s (%s)", getClassName(), fileName);
   }
 }
