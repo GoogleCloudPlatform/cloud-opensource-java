@@ -108,7 +108,7 @@ public final class SymbolProblem {
               int referenceCount = classFiles.size();
               output.append(
                   String.format(
-                      "%s\n  referenced by %d class file%s\n",
+                      "%s;\n  referenced by %d class file%s\n",
                       problem, referenceCount, referenceCount > 1 ? "s" : ""));
             });
 
