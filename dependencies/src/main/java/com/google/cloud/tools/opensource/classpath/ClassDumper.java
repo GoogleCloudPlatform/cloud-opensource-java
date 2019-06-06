@@ -126,6 +126,7 @@ class ClassDumper {
    *     API</a>
    */
   JavaClass loadJavaClass(String className) throws ClassNotFoundException {
+    // Check special location for the class; if none, using className to lookup JavaClass
     String classFileName = specialClassFileLocation.getOrDefault(className, className);
     return classRepository.loadClass(classFileName);
   }
