@@ -92,7 +92,7 @@ public class SymbolProblemTest {
                 "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
                 false),
             ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(Paths.get("aaa", "bbb.jar"), "java.lang.Object"));
+            new ClassFile(Paths.get("aaa", "bbb-1.2.3.jar"), "java.lang.Object"));
 
     SymbolProblem classSymbolProblem =
         new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
@@ -101,7 +101,7 @@ public class SymbolProblemTest {
         new SymbolProblem(
             new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"),
             ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(Paths.get("ccc.jar"), "java.lang.Integer"));
+            new ClassFile(Paths.get("ccc-1.2.3.jar"), "java.lang.Integer"));
 
     ClassFile source1 = new ClassFile(Paths.get("foo", "dummy.jar"), "java.lang.Object");
     ClassFile source2 = new ClassFile(Paths.get("bar", "dummy.jar"), "java.lang.Object");
@@ -117,12 +117,12 @@ public class SymbolProblemTest {
             fieldSymbolProblem,
             source2);
     assertEquals(
-        "(bbb.jar)io.grpc.protobuf.ProtoUtils.marshaller's method io.grpc.MethodDescriptor$Marshaller "
+        "(bbb-1.2.3.jar)io.grpc.protobuf.ProtoUtils.marshaller's method io.grpc.MethodDescriptor$Marshaller "
             + "marshaller(com.google.protobuf.Message arg1) is not found in the class\n"
             + "  referenced by 1 class file\n"
             + "Class java.lang.Integer is not found\n"
             + "  referenced by 2 class files\n"
-            + "(ccc.jar)java.lang.Integer's field MAX_VALUE is not found in the class\n"
+            + "(ccc-1.2.3.jar)java.lang.Integer's field MAX_VALUE is not found in the class\n"
             + "  referenced by 1 class file\n",
         SymbolProblem.formatSymbolProblems(symbolProblems));
   }
