@@ -339,9 +339,10 @@ class ClassDumper {
   }
 
   /**
-   * Returns a list of class file names in {@code jar} as in {@link JavaClass#getFileName()}.
-   * Usually class name and class file name are the same. However sometimes class file name has a
-   * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
+   * Returns a list of class file names in {@code jar} as in {@link JavaClass#getFileName()}. This
+   * class file name is a path ("." as element separator) that locates a class file in a class path.
+   * Usually class name and class file name are the same for a class. However a class file name may
+   * have a framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
    */
   static ImmutableSet<String> listClassNamesInJar(Path jar) throws IOException {
     URL jarUrl = jar.toUri().toURL();
