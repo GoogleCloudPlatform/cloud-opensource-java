@@ -8,9 +8,9 @@
     <script src="dashboard.js"></script>
   </head>
   <body>
-    <h1>Google Cloud Platform Java Dependency Dashboard Artifact Details Table</h1>
+    <h1>Google Cloud Platform Java Dependency Dashboard Artifact Details</h1>
 
-    <h2>Artifact Details</h2>
+    <h2>Dependency Details</h2>
 
     <table class="dependency-dashboard">
       <tr>

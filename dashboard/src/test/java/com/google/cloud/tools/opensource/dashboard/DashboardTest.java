@@ -69,6 +69,7 @@ public class DashboardTest {
   private static Builder builder = new Builder();
   private static Document dashboard;
   private static Document details;
+  private static Document unstable;
 
   @BeforeClass
   public static void setUp() throws IOException, ParsingException {
@@ -82,6 +83,7 @@ public class DashboardTest {
 
     dashboard = parseOutputFile("dashboard.html");
     details = parseOutputFile("artifact_details.html");
+    unstable = parseOutputFile("unstable_artifacts.html");
   }
 
   @AfterClass
@@ -117,7 +119,7 @@ public class DashboardTest {
   public void testHeader() {
     Nodes h1 = dashboard.query("//h1");
     Assert.assertEquals(1, h1.size());
-    Assert.assertEquals("Dependency Status of com.google.cloud:libraries-bom:1.0.0",
+    Assert.assertEquals("com.google.cloud:libraries-bom:1.0.0 Dependency Status",
         h1.get(0).getValue());
   }
 
@@ -262,10 +264,10 @@ public class DashboardTest {
   @Test
   public void testDashboard_unstableDependencies() {
     // Pre 1.0 version section
-    Nodes unstable = dashboard.query("//ul[@id='unstable']/li");
-    Assert.assertTrue(unstable.size() > 1);
-    for (int i = 0; i < unstable.size(); i++) {
-      String value = unstable.get(i).getValue();
+    Nodes li = unstable.query("//ul[@id='unstable']/li");
+    Assert.assertTrue(li.size() > 1);
+    for (int i = 0; i < li.size(); i++) {
+      String value = li.get(i).getValue();
       Assert.assertTrue(value, value.contains(":0"));
     }
 
