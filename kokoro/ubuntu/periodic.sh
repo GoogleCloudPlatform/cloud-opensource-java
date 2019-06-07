@@ -19,7 +19,7 @@ cd dashboard
 
 # Querying https://search.maven.org/classic/#api with
 # groupId:com.google.cloud AND artifactId:libraries-bom, receiving latest (sorted) 10 versions.
-SONATYPE_RESPONSE=`curl 'https://search.maven.org/solrsearch/select?q=g:%22com.google.cloud%22+AND+a:%22libraries-bom%22&core=gav&rows=10&wt=json'`
+SONATYPE_RESPONSE=`curl 'https://search.maven.org/solrsearch/select?q=g:%22com.google.cloud%22+AND+a:%22libraries-bom%22&core=gav&wt=json'`
 # Example: '1.0.0 1.1.0'
 VERSIONS=`echo $SONATYPE_RESPONSE | perl -nle 'print $1 while m/"v":"(.+?)"/g'`
 for VERSION in $VERSIONS; do
