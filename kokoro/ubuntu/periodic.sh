@@ -18,7 +18,7 @@ cd dashboard
 # For example: https://storage.googleapis.com/cloud-opensource-java-dashboard/1.1.0/dashboard.html
 
 # Querying https://search.maven.org/classic/#api with
-# groupId:com.google.cloud AND artifactId:libraries-bom, receiving latest (sorted) versions.
+# groupId:com.google.cloud AND artifactId:libraries-bom, receiving latest (sorted) 1000 versions.
 # Note: if `rows` parameter is omitted, it only returns latest 10 items.
 SONATYPE_RESPONSE=`curl 'https://search.maven.org/solrsearch/select?q=g:%22com.google.cloud%22+AND+a:%22libraries-bom%22&core=gav&rows=1000&wt=json'`
 # Example: '1.0.0 1.1.0'
