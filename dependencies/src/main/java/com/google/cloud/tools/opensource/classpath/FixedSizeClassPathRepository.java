@@ -26,16 +26,17 @@ import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.ClassPathRepository;
 
 /**
- * This repository behaves same as {@link ClassPathRepository} except that this sets size limit in
- * its cache. When the cache reaches the limit, it evicts entries that haven't been used recently.
+ * This repository behaves the same as {@link ClassPathRepository} except that this class limits the
+ * size of its cache of {@link JavaClass}. When the cache reaches the limit, it evicts entries that
+ * haven't been used recently.
  *
- * <p>This class avoids OutOfMemoryError that occurs when parsing too many JAR files to handle with
- * {@link ClassPathRepository} or {@link org.apache.bcel.util.MemorySensitiveClassPathRepository},
- * while providing reasonable speed by caching frequently-used {@link JavaClass} instances.
+ * <p>This class avoids {@code OutOfMemoryError: gc overhead limit exceeded} that occurs when
+ * parsing too many JAR files to handle with {@link ClassPathRepository} or {@link
+ * org.apache.bcel.util.MemorySensitiveClassPathRepository}, while providing reasonable speed by
+ * caching frequently-used instances.
  *
  * <p>The default maximum size is 1000 entries. As per experiments with spring-cloud-gcp project,
- * setting the limit as 1000 gives the best performance without causing {@code OutOfMemoryError: gc
- * overhead limit exceeded}.
+ * maximum size 1000 gives the best performance.
  *
  * @see <a href="https://github.com/google/guava/wiki/CachesExplained#size-based-eviction">Guava
  *     CachesExplained: Size-based Eviction</a>
@@ -104,11 +105,6 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
     // prefix. Example: "BOOT-INF.classes.com.google.Foo"
     String classFileName = specialClassFileName.getOrDefault(className, className);
     return super.loadClass(classFileName);
-  }
-
-  @Override
-  public ClassPath getClassPath() {
-    return super.getClassPath();
   }
 
   @Override
