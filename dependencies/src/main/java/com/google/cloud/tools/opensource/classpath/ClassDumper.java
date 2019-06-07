@@ -63,7 +63,6 @@ import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.ObjectType;
 import org.apache.bcel.generic.Type;
 import org.apache.bcel.util.ClassPath;
-import org.apache.bcel.util.ClassPathRepository;
 import org.apache.bcel.util.Repository;
 
 /**
@@ -80,7 +79,7 @@ class ClassDumper {
 
   private static Repository createClassRepository(List<Path> paths) {
     ClassPath classPath = new LinkageCheckClassPath(paths);
-    return new ClassPathRepository(classPath);
+    return new FixedSizeClassPathRepository(classPath);
   }
 
   static ClassDumper create(List<Path> jarPaths) throws IOException {
