@@ -338,6 +338,11 @@ class ClassDumper {
     return pathToClasses.build();
   }
 
+  /**
+   * Returns a list of class file names in {@code jar} as in {@link JavaClass#getFileName()}.
+   * Usually class name and class file name are the same. However sometimes class file name has a
+   * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
+   */
   static ImmutableSet<String> listClassNamesInJar(Path jar) throws IOException {
     URL jarUrl = jar.toUri().toURL();
     // Setting parent as null because we don't want other classes than this jar file
@@ -358,17 +363,23 @@ class ClassDumper {
    */
   private ImmutableSet<JavaClass> listClassesInJar(Path jar) throws IOException {
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
-    for (String className : listClassNamesInJar(jar)) {
+    for (String classFileName : listClassNamesInJar(jar)) {
       try {
-        JavaClass javaClass = classRepository.loadClass(className);
+        JavaClass javaClass = classRepository.loadClass(classFileName);
         javaClasses.add(javaClass);
       } catch (ClassNotFoundException ex) {
         // We couldn't find the class in the jar file where we found it.
-        throw new IOException("Corrupt jar file " + jar + "; could not load " + className, ex);
+        throw new IOException("Corrupt jar file " + jar + "; could not load " + classFileName, ex);
       } catch (ClassFormatException ex) {
         // We couldn't load the class from the jar file where we found it.
-        throw new IOException("Possible corrupt jar file " + jar + "; could not load " + className
-            + "; " + ex.getMessage(), ex);
+        throw new IOException(
+            "Possible corrupt jar file "
+                + jar
+                + "; could not load "
+                + classFileName
+                + "; "
+                + ex.getMessage(),
+            ex);
       }
     }
     return javaClasses.build();

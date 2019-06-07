@@ -96,7 +96,9 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
 
   @Override
   public JavaClass loadClass(String className) throws ClassNotFoundException {
-    // Check special location for the class; if none, using className to lookup JavaClass
+    // Check special location for the class; if none, using className to lookup JavaClass.
+    // Usually classFileName == className. But sometimes classFileName has a framework-specific
+    // prefix. Example: "BOOT-INF.classes.com.google.Foo"
     String classFileName = specialClassFileName.getOrDefault(className, className);
     return super.loadClass(classFileName);
   }
