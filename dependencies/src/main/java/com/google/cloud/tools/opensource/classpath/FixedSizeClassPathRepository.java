@@ -54,9 +54,10 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
    * this class remembers the special location once they are loaded.
    *
    * <ul>
-   *   <li>Key: class name (value from JavaClass.getClassName). Example: {@code com.google.Foo}
-   *   <li>Value: location of class file from root, separated by '.' (value from
-   *       JavaClass.getFileName). Example: {@code BOOT-INF.classes.com.google.Foo}
+   *   <li>Key: class name (value from {@link JavaClass#getClassName()}). Example: {@code
+   *       com.google.Foo}
+   *   <li>Value: location of class file from root, separated by '.' (value from {@link
+   *       JavaClass#getFileName()}). Example: {@code BOOT-INF.classes.com.google.Foo}
    * </ul>
    *
    * @see <a
