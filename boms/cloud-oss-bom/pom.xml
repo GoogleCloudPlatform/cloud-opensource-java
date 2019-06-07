@@ -7,7 +7,7 @@
 
   <groupId>com.google.cloud</groupId>
   <artifactId>libraries-bom</artifactId>
-  <version>1.0.1-SNAPSHOT</version>
+  <version>1.2.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Google Cloud Platform Supported Libraries</name>
@@ -48,7 +48,7 @@
     <google.cloud.java.version>0.84.0-alpha</google.cloud.java.version>
     <io.grpc.version>1.21.0</io.grpc.version>
     <protobuf.version>3.6.1</protobuf.version>
-    <http.version>1.29.1</http.version>
+    <http.version>1.29.2</http.version>
   </properties>
 
   <distributionManagement>

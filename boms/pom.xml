@@ -31,6 +31,7 @@
   <modules>
     <module>cloud-oss-bom</module>
     <module>upper-bounds-check</module>
+    <module>integration-tests</module>
   </modules>
 
   <build>

@@ -126,7 +126,6 @@ public class DashboardMain {
       throws IOException, TemplateException, RepositoryException, URISyntaxException {
 
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
-    ArtifactCache cache = loadArtifactInfo(managedDependencies);
 
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
         ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
@@ -142,6 +141,7 @@ public class DashboardMain {
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
 
+    ArtifactCache cache = loadArtifactInfo(managedDependencies);
     Path output = generateHtml(bom, cache, jarToDependencyPaths, symbolProblems);
 
     return output;
@@ -457,6 +457,13 @@ public class DashboardMain {
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(detailsFile), StandardCharsets.UTF_8)) {     
       Template details = configuration.getTemplate("/templates/artifact_details.ftl");
+      details.process(templateData, out);
+    }
+    
+    File unstable = output.resolve("unstable_artifacts.html").toFile();
+    try (Writer out = new OutputStreamWriter(
+        new FileOutputStream(unstable), StandardCharsets.UTF_8)) {     
+      Template details = configuration.getTemplate("/templates/unstable_artifacts.ftl");
       details.process(templateData, out);
     }
   }
