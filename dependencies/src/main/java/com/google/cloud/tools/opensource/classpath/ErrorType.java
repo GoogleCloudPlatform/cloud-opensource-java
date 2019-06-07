@@ -55,7 +55,7 @@ public enum ErrorType {
   INACCESSIBLE_MEMBER("is not accessible"),
 
   /** For a method or field reference, the symbol is not found in the target class. */
-  SYMBOL_NOT_FOUND("is not found in the class");
+  SYMBOL_NOT_FOUND("is not found");
 
   private final String message;
 
