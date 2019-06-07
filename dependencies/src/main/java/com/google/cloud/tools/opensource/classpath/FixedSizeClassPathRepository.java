@@ -38,6 +38,8 @@ import org.apache.bcel.util.ClassPathRepository;
  *
  * @see <a href="https://github.com/google/guava/wiki/CachesExplained#size-based-eviction">Guava
  *     CachesExplained: Size-based Eviction</a>
+ * @see <a href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/653"
+ *     >Performance evaluation of FixedSizeClassPathRepository with different maximum cache size</a>
  */
 final class FixedSizeClassPathRepository extends ClassPathRepository {
 
