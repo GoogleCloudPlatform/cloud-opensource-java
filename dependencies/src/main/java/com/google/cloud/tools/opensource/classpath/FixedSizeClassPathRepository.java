@@ -59,8 +59,8 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
    * <ul>
    *   <li>Key: class name (value from {@link JavaClass#getClassName()}). Example: {@code
    *       com.google.Foo}
-   *   <li>Value: class file name, separated by '.' (value from {@link JavaClass#getFileName()}).
-   *       Example: {@code BOOT-INF.classes.com.google.Foo}
+   *   <li>Value: class file name as in {@link JavaClass#getFileName()}, a path that locates a class
+   *       file in a class path. Example: {@code BOOT-INF.classes.com.google.Foo}
    * </ul>
    *
    * @see <a

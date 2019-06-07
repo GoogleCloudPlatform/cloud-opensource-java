@@ -31,18 +31,12 @@ import org.junit.Test;
 
 public class FixedSizeClassPathRepositoryTest {
   private FixedSizeClassPathRepository repository;
-  ClassPath classPath;
 
   @Before
   public void setup() throws URISyntaxException {
     Path path = absolutePathOfResource("testdata/api-common-1.7.0.jar");
-    classPath = new LinkageCheckClassPath(Arrays.asList(path));
+    ClassPath classPath = new LinkageCheckClassPath(Arrays.asList(path));
     repository = new FixedSizeClassPathRepository(classPath, 3);
-  }
-
-  @Test
-  public void testPath() {
-    assertEquals(classPath, repository.getClassPath());
   }
 
   @Test
@@ -56,8 +50,7 @@ public class FixedSizeClassPathRepositoryTest {
   }
 
   @Test
-  public void testCacheEvictionLeastRecentlyUsed()
-      throws URISyntaxException, ClassNotFoundException {
+  public void testCacheEvictionLeastRecentlyUsed() throws ClassNotFoundException {
     // Rename for clarity
     FixedSizeClassPathRepository repositoryWithSize3 = repository;
     repositoryWithSize3.loadClass("com.google.api.core.ApiFuture");
