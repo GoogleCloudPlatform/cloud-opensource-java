@@ -27,8 +27,8 @@ import org.apache.bcel.util.ClassPathRepository;
 
 /**
  * This repository behaves the same as {@link ClassPathRepository} except that this class limits the
- * size of its cache of {@link JavaClass}. When the cache reaches the limit, it evicts entries that
- * haven't been used recently.
+ * size of its cache of {@link JavaClass} at most {@code maximumSize} entries. When the cache
+ * reaches the limit, it evicts entries that have not been used recently.
  *
  * <p>This class avoids {@code OutOfMemoryError: gc overhead limit exceeded} that occurs when
  * parsing too many JAR files to handle with {@link ClassPathRepository} or {@link
@@ -36,7 +36,8 @@ import org.apache.bcel.util.ClassPathRepository;
  * caching frequently-used instances.
  *
  * <p>The default maximum size is 1000 entries. As per experiments with spring-cloud-gcp project,
- * maximum size 1000 gives the best performance.
+ * this maximum size gives the best performance when running {@link
+ * LinkageChecker#findSymbolProblems()}.
  *
  * @see <a href="https://github.com/google/guava/wiki/CachesExplained#size-based-eviction">Guava
  *     CachesExplained: Size-based Eviction</a>
@@ -50,15 +51,16 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
   /**
    * Mapping from class names to special class file locations.
    *
-   * <p>Sometimes classes are not placed in the root of a JAR file. For example, Spring Boot Gradle
-   * Java plugin places class files under "BOOT-INF/classes". To load such classes by class name,
-   * this class remembers the special location once they are loaded.
+   * <p>While class name and class file name are the same in most cases, sometimes classes are not
+   * placed in the root of a JAR file to support a framework-specific JAR structure. For example,
+   * Spring Boot Gradle Java plugin places class files under "BOOT-INF/classes". To load such
+   * classes by class name, this mapping keeps track of the special location once they are loaded.
    *
    * <ul>
    *   <li>Key: class name (value from {@link JavaClass#getClassName()}). Example: {@code
    *       com.google.Foo}
-   *   <li>Value: location of class file from root, separated by '.' (value from {@link
-   *       JavaClass#getFileName()}). Example: {@code BOOT-INF.classes.com.google.Foo}
+   *   <li>Value: class file name, separated by '.' (value from {@link JavaClass#getFileName()}).
+   *       Example: {@code BOOT-INF.classes.com.google.Foo}
    * </ul>
    *
    * @see <a
