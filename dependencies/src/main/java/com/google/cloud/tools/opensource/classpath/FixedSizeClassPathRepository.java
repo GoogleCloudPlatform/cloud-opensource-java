@@ -15,6 +15,7 @@
  */
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import java.util.HashMap;
@@ -68,7 +69,8 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
     this(path, 1000);
   }
 
-  private FixedSizeClassPathRepository(ClassPath path, long maximumSize) {
+  @VisibleForTesting
+  FixedSizeClassPathRepository(ClassPath path, long maximumSize) {
     super(path);
     loadedClass = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
     this.specialClassFileName = new HashMap<>();
