@@ -72,6 +72,6 @@ public class MaximumLinkageErrorsTest {
     
     // If this next line fails, then the situation has actually improved and we should update
     // the test to match. 
-    Assert.assertEquals("Total linkage errors reduced; update test", 525, symbolProblems.keys().size());
+    Assert.assertEquals("Total linkage errors reduced; update test", 516, symbolProblems.keys().size());
   }
 }
