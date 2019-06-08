@@ -27,8 +27,8 @@ import org.apache.bcel.util.ClassPathRepository;
 
 /**
  * This repository behaves the same as {@link ClassPathRepository} except that this class limits the
- * size of its cache of {@link JavaClass} at most {@code maximumSize} entries. When the cache
- * reaches the limit, it evicts entries that have not been used recently.
+ * size of its {@link JavaClass} cache at most {@code maximumSize} entries. When the cache reaches
+ * the limit, it evicts entries that have not been used recently.
  *
  * <p>This class avoids {@code OutOfMemoryError: gc overhead limit exceeded} that occurs when
  * parsing too many JAR files to handle with {@link ClassPathRepository} or {@link
@@ -57,10 +57,10 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
    * classes by class name, this mapping keeps track of the special location once they are loaded.
    *
    * <ul>
-   *   <li>Key: class name (value from {@link JavaClass#getClassName()}). Example: {@code
-   *       com.google.Foo}
-   *   <li>Value: class file name as in {@link JavaClass#getFileName()}, a path that locates a class
-   *       file in a class path. Example: {@code BOOT-INF.classes.com.google.Foo}
+   *   <li>Key: class name (value from {@link JavaClass#getClassName()}) which has a special class
+   *       file name different from its class name. Example: {@code com.google.Foo}
+   *   <li>Value: the special class file name as in {@link JavaClass#getFileName()}, a path that
+   *       locates a class file in a class path. Example: {@code BOOT-INF.classes.com.google.Foo}
    * </ul>
    *
    * @see <a
