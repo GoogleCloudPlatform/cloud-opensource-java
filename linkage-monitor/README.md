@@ -10,7 +10,14 @@ Use this tool as part of presubmit checks in GitHub, it notifies when code or a 
 in such a way as to introduce a new linkage error in [Google Cloud Libraries BOM](
 ../#google-libraries-bom);
 
+Example presubmit build script:
+
 ```
-$ curl http://.../linkage-monitor-X.Y.Z-all-deps.jar # not needed if it's installed already
-$ java -jar /path/to/linkage-monitor-X.Y.Z-all-deps.jar
+set -e # fail if any of command fails
+# Install artifacts to local Maven repository. The command depends on build system of the project.
+mvn install -DskipTests
+
+# Linkage Monitor
+curl http://.../linkage-monitor-X.Y.Z-all-deps.jar # unless it's installed already
+java -jar /path/to/linkage-monitor-X.Y.Z-all-deps.jar com.google.cloud:libraries-bom:1.1.2
 ```

@@ -23,6 +23,15 @@ package com.google.cloud.tools.dependencies.linkagemonitor;
 public class LinkageMonitor {
 
   public static void main(String[] arguments) {
-    System.out.println("Linkage Monitor");
+    if (arguments.length < 1) {
+      System.err.println(
+          "Please specify BOM coordinates. Example: com.google.cloud:libraries-bom:1.2.1");
+      System.exit(1);
+    }
+    String bomCoordinates = arguments[0];
+    System.out.println("Linkage Monitor for " + bomCoordinates);
+    // TODO(#681): Run Linkage Checker for the BOM specified in argument
+    // TODO(#682): Copy the BOM with locally-installed snapshot versions
+    // TODO(#683): Display new linkage errors caused by snapshot versions if any
   }
 }
