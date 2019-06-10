@@ -32,7 +32,7 @@ import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 public class BomTest {
 
   private static final Path CLOUD_OSS_BOM_PATH =
-          Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();
+      Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();
 
   @Test
   public void testArtifactsExist()
