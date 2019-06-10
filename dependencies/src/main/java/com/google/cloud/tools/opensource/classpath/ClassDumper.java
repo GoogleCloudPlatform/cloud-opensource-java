@@ -63,7 +63,6 @@ import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.ObjectType;
 import org.apache.bcel.generic.Type;
 import org.apache.bcel.util.ClassPath;
-import org.apache.bcel.util.ClassPathRepository;
 import org.apache.bcel.util.Repository;
 
 /**
@@ -80,7 +79,7 @@ class ClassDumper {
 
   private static Repository createClassRepository(List<Path> paths) {
     ClassPath classPath = new LinkageCheckClassPath(paths);
-    return new ClassPathRepository(classPath);
+    return new FixedSizeClassPathRepository(classPath);
   }
 
   static ClassDumper create(List<Path> jarPaths) throws IOException {
@@ -152,7 +151,7 @@ class ClassDumper {
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
 
     for (Path jar : inputClassPath) {
-      for (JavaClass javaClass : listClassesInJar(jar)) {
+      for (JavaClass javaClass : listClasses(jar)) {
         if (!isCompatibleClassFileVersion(javaClass)) {
           continue;
         }
@@ -332,14 +331,20 @@ class ClassDumper {
   static ImmutableSetMultimap<Path, String> mapJarToClasses(List<Path> jars) throws IOException {
     ImmutableSetMultimap.Builder<Path, String> pathToClasses = ImmutableSetMultimap.builder();
     for (Path jar : jars) {
-      for (String className : listClassNamesInJar(jar)) {
+      for (String className : listClassFileNames(jar)) {
         pathToClasses.put(jar, className);
       }
     }
     return pathToClasses.build();
   }
 
-  static ImmutableSet<String> listClassNamesInJar(Path jar) throws IOException {
+  /**
+   * Returns a list of class file names in {@code jar} as in {@link JavaClass#getFileName()}. This
+   * class file name is a path ("." as element separator) that locates a class file in a class path.
+   * Usually the class name and class file name are the same. However a class file name may have a
+   * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
+   */
+  static ImmutableSet<String> listClassFileNames(Path jar) throws IOException {
     URL jarUrl = jar.toUri().toURL();
     // Setting parent as null because we don't want other classes than this jar file
     URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[] {jarUrl}, null);
@@ -357,19 +362,25 @@ class ClassDumper {
    * Returns a set of {@link JavaClass}es which have entries in the {@code jar} through {@link
    * #classRepository}.
    */
-  private ImmutableSet<JavaClass> listClassesInJar(Path jar) throws IOException {
+  private ImmutableSet<JavaClass> listClasses(Path jar) throws IOException {
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
-    for (String className : listClassNamesInJar(jar)) {
+    for (String classFileName : listClassFileNames(jar)) {
       try {
-        JavaClass javaClass = classRepository.loadClass(className);
+        JavaClass javaClass = classRepository.loadClass(classFileName);
         javaClasses.add(javaClass);
       } catch (ClassNotFoundException ex) {
         // We couldn't find the class in the jar file where we found it.
-        throw new IOException("Corrupt jar file " + jar + "; could not load " + className, ex);
+        throw new IOException("Corrupt jar file " + jar + "; could not load " + classFileName, ex);
       } catch (ClassFormatException ex) {
         // We couldn't load the class from the jar file where we found it.
-        throw new IOException("Possible corrupt jar file " + jar + "; could not load " + className
-            + "; " + ex.getMessage(), ex);
+        throw new IOException(
+            "Corrupt jar file "
+                + jar
+                + "; could not load "
+                + classFileName
+                + "; "
+                + ex.getMessage(),
+            ex);
       }
     }
     return javaClasses.build();
