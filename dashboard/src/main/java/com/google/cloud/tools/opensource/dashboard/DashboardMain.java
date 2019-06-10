@@ -110,7 +110,8 @@ public class DashboardMain {
 
   @VisibleForTesting
   static Path generate(Path bomFile)
-      throws IOException, TemplateException, RepositoryException, URISyntaxException, MavenRepositoryException {
+      throws IOException, TemplateException, RepositoryException, URISyntaxException,
+          MavenRepositoryException {
     Preconditions.checkArgument(
         Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
     Preconditions.checkArgument(
