@@ -17,14 +17,13 @@
 
 package com.google.cloud;
 
-import static org.junit.Assert.assertTrue;
-
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -34,9 +33,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import org.apache.maven.project.ProjectBuildingException;
-import org.codehaus.plexus.PlexusContainerException;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.junit.Assert;
@@ -46,8 +42,8 @@ public class MaximumLinkageErrorsTest {
 
   @Test
   public void textMaximumLinkageErrors() 
-      throws PlexusContainerException, ComponentLookupException, ProjectBuildingException, 
-             RepositoryException, IOException {
+      throws IOException, MavenRepositoryException, RepositoryException {
+
     Path bomFile = Paths.get("../cloud-oss-bom/pom.xml");
     Bom bom = RepositoryUtility.readBom(bomFile);
     
@@ -72,6 +68,6 @@ public class MaximumLinkageErrorsTest {
     
     // If this next line fails, then the situation has actually improved and we should update
     // the test to match. 
-    Assert.assertEquals("Total linkage errors reduced; update test", 525, symbolProblems.keys().size());
+    Assert.assertEquals("Total linkage errors reduced; update test", 516, symbolProblems.keys().size());
   }
 }

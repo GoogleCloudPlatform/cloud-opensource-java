@@ -7,7 +7,7 @@
   <groupId>com.google.cloud.tools</groupId>
   <artifactId>dependencies-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.2.1-SNAPSHOT</version>
+  <version>0.2.2-SNAPSHOT</version>
 
   <name>Cloud Tools Open Source Code Hygiene Tooling</name>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/</url>
@@ -150,7 +150,7 @@
           <configuration>
             <!-- To avoid ForkedBooter loading issue -->
             <useSystemClassLoader>false</useSystemClassLoader>
-            <argLine>-Xms128m -Xmx2048m</argLine>
+            <argLine>-Xms128m -Xmx1024m</argLine>
           </configuration>
         </plugin>
       </plugins>

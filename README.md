@@ -38,10 +38,6 @@ This project is built using _Maven_.
 
 ## Requirements
 
-1. (Optional) The [Google Cloud SDK](https://cloud.google.com/sdk/); install
-  this somewhere on your file system. This tool is used for uploading Google
-  Cloud Platform Java Dependency Dashboard to Google Cloud Storage.
-
 1. Maven 3.5.0 or later.
 
 1. JDK 8
@@ -50,7 +46,3 @@ This project is built using _Maven_.
 
 1. Clone the project to a local directory using `git clone
    git@github.com:GoogleCloudPlatform/cloud-opensource-java.git`.
-
-
-
-
