@@ -50,9 +50,6 @@ import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.apache.maven.project.ProjectBuildingException;
-import org.codehaus.plexus.PlexusContainerException;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
@@ -64,6 +61,7 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
+import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.Update;
 import com.google.cloud.tools.opensource.dependencies.VersionComparator;
@@ -94,8 +92,7 @@ public class DashboardMain {
    */
   public static void main(String[] arguments)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
-          PlexusContainerException, ComponentLookupException, ProjectBuildingException,
-          ParseException {
+          ParseException, MavenRepositoryException {
     DashboardArguments dashboardArguments = DashboardArguments.readCommandLine(arguments);
     Path output =
         dashboardArguments.hasFile()
@@ -113,8 +110,7 @@ public class DashboardMain {
 
   @VisibleForTesting
   static Path generate(Path bomFile)
-      throws IOException, TemplateException, RepositoryException, URISyntaxException,
-          PlexusContainerException, ComponentLookupException, ProjectBuildingException {
+      throws IOException, TemplateException, RepositoryException, URISyntaxException, MavenRepositoryException {
     Preconditions.checkArgument(
         Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
     Preconditions.checkArgument(
