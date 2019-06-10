@@ -26,16 +26,15 @@ import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.ClassPathRepository;
 
 /**
- * This repository behaves the same as {@link ClassPathRepository} except that this class limits the
- * size of its {@link JavaClass} cache at most {@code maximumSize} entries. When the cache reaches
- * the limit, it evicts entries that have not been used recently.
+ * This class limits the size of its {@link JavaClass} cache to at most {@code maximumSize} entries.
+ * When the cache reaches the limit, it evicts entries that have not been used recently.
  *
- * <p>This class avoids {@code OutOfMemoryError: gc overhead limit exceeded} that occurs when
- * parsing too many JAR files to handle with {@link ClassPathRepository} or {@link
+ * <p>This class avoids {@code OutOfMemoryError}s that occurs when parsing too many JAR files to
+ * handle with {@link ClassPathRepository} or {@link
  * org.apache.bcel.util.MemorySensitiveClassPathRepository}, while providing reasonable speed by
  * caching frequently-used instances.
  *
- * <p>The default maximum size is 1000 entries. As per experiments with spring-cloud-gcp project,
+ * <p>The default maximum size is 1000 entries. From the experiment with spring-cloud-gcp project,
  * this maximum size gives the best performance when running {@link
  * LinkageChecker#findSymbolProblems()}.
  *
@@ -67,7 +66,7 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
    *     href="https://docs.spring.io/spring-boot/docs/current/reference/html/executable-jar.html"
    *     >Spring Boot Reference Guide: The Executable Jar Format</a>
    */
-  private final Map<String, String> specialClassFileName;
+  private final Map<String, String> classFileNames;
 
   FixedSizeClassPathRepository(ClassPath path) {
     this(path, 1000);
@@ -77,7 +76,7 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
   FixedSizeClassPathRepository(ClassPath path, long maximumSize) {
     super(path);
     loadedClass = CacheBuilder.newBuilder().maximumSize(maximumSize).build();
-    this.specialClassFileName = new HashMap<>();
+    this.classFileNames = new HashMap<>();
   }
 
   @Override
@@ -86,11 +85,11 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
     loadedClass.put(className, javaClass);
     javaClass.setRepository(this);
 
-    String fileName = javaClass.getFileName();
-    if (!className.equals(fileName)) {
+    String classFileName = javaClass.getFileName();
+    if (!className.equals(classFileName)) {
       // When class file has special location not matching class name, remember it to load the class
       // file by class name.
-      specialClassFileName.put(className, fileName);
+      classFileNames.put(className, classFileName);
     }
   }
 
@@ -102,10 +101,10 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
 
   @Override
   public JavaClass loadClass(String className) throws ClassNotFoundException {
-    // Check special location for the class; if none, using className to lookup JavaClass.
+    // Check special location for the class. If it's not found, lookup by className instead.
     // Usually classFileName == className. But sometimes classFileName has a framework-specific
     // prefix. Example: "BOOT-INF.classes.com.google.Foo"
-    String classFileName = specialClassFileName.getOrDefault(className, className);
+    String classFileName = classFileNames.getOrDefault(className, className);
     return super.loadClass(classFileName);
   }
 
