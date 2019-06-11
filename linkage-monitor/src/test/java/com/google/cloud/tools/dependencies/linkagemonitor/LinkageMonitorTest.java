@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.dependencies.linkagemonitor;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -30,6 +32,8 @@ import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
+import org.eclipse.aether.util.version.GenericVersionScheme;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,27 +49,33 @@ public class LinkageMonitorTest {
 
   @Test
   public void testFindSnapshotVersion() throws VersionRangeResolutionException {
-    // Android should be found locally
-    linkageMonitor.copyWithSnapshot(
-        new Bom(
-            "com.google.cloud.tools:test-bom:0.0.1",
-            ImmutableList.of(new DefaultArtifact("com.google.guava:guava:27.1-android"))));
+    // This version of Guava should be found locally because this module uses it.
+    Bom snapshotBom =
+        linkageMonitor.copyWithSnapshot(
+            RepositoryUtility.newRepositorySystem(),
+            new Bom(
+                "com.google.cloud.tools:test-bom:0.0.1",
+                ImmutableList.of(new DefaultArtifact("com.google.guava:guava:27.1-android"))));
+    assertNotNull(snapshotBom);
   }
 
   @Test
-  public void testBomSnapshot() throws VersionRangeResolutionException {
-
+  public void testBomSnapshot()
+      throws VersionRangeResolutionException, InvalidVersionSpecificationException {
     VersionRangeResult dummyVersionRangeResult = new VersionRangeResult(new VersionRangeRequest());
-    //    dummyVersionRangeResult.setVersions(ImmutableList.of(new
-    // DefaultArtifactVersion("1.2.3")));
+    GenericVersionScheme versionScheme = new GenericVersionScheme();
+    dummyVersionRangeResult.setVersions(
+        ImmutableList.of(
+            versionScheme.parseVersion("1.2.3"),
+            versionScheme.parseVersion("2.1.1"),
+            versionScheme.parseVersion("2.1.2-SNAPSHOT")));
 
     RepositorySystem mockSystem = mock(RepositorySystem.class);
     when(mockSystem.resolveVersionRange(
             any(RepositorySystemSession.class), any(VersionRangeRequest.class)))
         .thenReturn(dummyVersionRangeResult);
 
-    //    linkageMonitor.setRepositorySystem(mockSystem);
-
-    Bom snapshotBom = linkageMonitor.copyWithSnapshot(this.bom);
+    Bom snapshotBom = linkageMonitor.copyWithSnapshot(mockSystem, bom);
+    assertEquals("2.1.2-SNAPSHOT", snapshotBom.getManagedDependencies().get(0).getVersion());
   }
 }

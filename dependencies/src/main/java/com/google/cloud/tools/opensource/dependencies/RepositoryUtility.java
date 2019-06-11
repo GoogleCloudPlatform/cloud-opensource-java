@@ -107,15 +107,6 @@ public final class RepositoryUtility {
     return locator.getService(RepositorySystem.class);
   }
 
-  /** Creates a new system configured for file repository resolution. */
-  public static RepositorySystem newFileRepositorySystem() {
-    DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
-    locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
-    locator.addService(TransporterFactory.class, FileTransporterFactory.class);
-
-    return locator.getService(RepositorySystem.class);
-  }
-
   private static DefaultRepositorySystemSession createDefaultRepositorySystemSession(
       RepositorySystem system) {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();

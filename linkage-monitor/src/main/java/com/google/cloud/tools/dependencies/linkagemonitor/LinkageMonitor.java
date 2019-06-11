@@ -41,8 +41,8 @@ import org.eclipse.aether.resolution.VersionRangeResult;
  */
 public class LinkageMonitor {
 
-  private final RepositorySystem repositorySystem = RepositoryUtility.newFileRepositorySystem();
-  private final RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
+  // Finding latest version requires metadata from remote repository
+  private final RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
 
   public static void main(String[] arguments)
       throws RepositoryException, IOException, LinkageMonitorException {
@@ -61,7 +61,7 @@ public class LinkageMonitor {
     ImmutableSet<SymbolProblem> problemsInBaseline =
         LinkageChecker.create(baseline).findSymbolProblems().keySet();
 
-    Bom snapshot = copyWithSnapshot(baseline);
+    Bom snapshot = copyWithSnapshot(repositorySystem, baseline);
 
     ImmutableSet<SymbolProblem> problemsInSnapshot =
         LinkageChecker.create(snapshot).findSymbolProblems().keySet();
@@ -84,15 +84,16 @@ public class LinkageMonitor {
    * snapshot versions.
    */
   @VisibleForTesting
-  Bom copyWithSnapshot(Bom bom) throws VersionRangeResolutionException {
+  static Bom copyWithSnapshot(RepositorySystem repositorySystem, Bom bom) throws VersionRangeResolutionException {
     ImmutableList.Builder<Artifact> managedDependencies = ImmutableList.builder();
+    RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
 
     for (Artifact managedDependency : bom.getManagedDependencies()) {
       String snapshotVersion = findSnapshotVersion(repositorySystem, session, managedDependency);
       if (snapshotVersion == null) {
         managedDependencies.add(managedDependency);
       } else {
-        managedDependency.setVersion(snapshotVersion);
+        managedDependencies.add(managedDependency.setVersion(snapshotVersion));
       }
     }
     // "-SNAPSHOT" suffix for coordinate to distinguish easily.
@@ -108,7 +109,9 @@ public class LinkageMonitor {
       RepositorySystem repositorySystem, RepositorySystemSession session, Artifact artifact)
       throws VersionRangeResolutionException {
     Artifact artifactWithVersionRange = artifact.setVersion("(0,]");
-    VersionRangeRequest request = new VersionRangeRequest(artifactWithVersionRange, null, null);
+    VersionRangeRequest request =
+        new VersionRangeRequest(
+            artifactWithVersionRange, ImmutableList.of(RepositoryUtility.CENTRAL), null);
     VersionRangeResult versionResult = repositorySystem.resolveVersionRange(session, request);
 
     Verify.verify(versionResult.getHighestVersion() != null, "Highest version should not be null");
