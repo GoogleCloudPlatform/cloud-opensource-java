@@ -104,8 +104,7 @@ public class DashboardMain {
   @VisibleForTesting
   static Path generate(String bomCoordinates)
       throws IOException, TemplateException, RepositoryException, URISyntaxException {
-    Artifact bom = new DefaultArtifact(bomCoordinates);
-    return generate(RepositoryUtility.readBom(bom));
+    return generate(RepositoryUtility.readBom(bomCoordinates));
   }
 
   @VisibleForTesting
