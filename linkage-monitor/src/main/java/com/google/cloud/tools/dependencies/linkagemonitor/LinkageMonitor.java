@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.Set;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
@@ -89,12 +90,12 @@ public class LinkageMonitor {
     RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
 
     for (Artifact managedDependency : bom.getManagedDependencies()) {
-      String snapshotVersion = findSnapshotVersion(repositorySystem, session, managedDependency);
-      if (snapshotVersion == null) {
-        managedDependencies.add(managedDependency);
-      } else {
-        managedDependencies.add(managedDependency.setVersion(snapshotVersion));
+      Optional<String> snapshotVersion =
+          findSnapshotVersion(repositorySystem, session, managedDependency);
+      if (snapshotVersion.isPresent()) {
+        managedDependency = managedDependency.setVersion(snapshotVersion.get());
       }
+      managedDependencies.add(managedDependency);
     }
     // "-SNAPSHOT" suffix for coordinate to distinguish easily.
     return new Bom(bom.getCoordinates() + "-SNAPSHOT", managedDependencies.build());
@@ -105,7 +106,7 @@ public class LinkageMonitor {
    * version is not a snapshot.
    */
   @VisibleForTesting
-  static String findSnapshotVersion(
+  static Optional<String> findSnapshotVersion(
       RepositorySystem repositorySystem, RepositorySystemSession session, Artifact artifact)
       throws VersionRangeResolutionException {
     Artifact artifactWithVersionRange = artifact.setVersion("(0,]");
@@ -117,8 +118,8 @@ public class LinkageMonitor {
     Verify.verify(versionResult.getHighestVersion() != null, "Highest version should not be null");
     String version = versionResult.getHighestVersion().toString();
     if (version.contains("-SNAPSHOT")) {
-      return version;
+      return Optional.of(version);
     }
-    return null;
+    return Optional.empty();
   }
 }
