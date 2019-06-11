@@ -181,7 +181,8 @@ document. Such conflicts are called *intrinsic conflicts*. There is an
 ongoing effort to remove intrinsic conflicts among GCP open source
 Java libraries and prevent new ones from occurring. A dashboard that
 reports the current results of compatibility checks is accessible from
-the [Cloud Open Source Java Dashboard](https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/dashboard.html).
+the [Cloud Open Source Java Dashboard](
+https://storage.googleapis.com/cloud-opensource-java-dashboard/com.google.cloud/libraries-bom/snapshot/index.html).
 As of the time of this writing, some conflicts are still in the
 process of being fixed, but they should not be encountered by most
 users who only use the public APIs of the libraries. If you encounter
