@@ -242,17 +242,7 @@ public final class RepositoryUtility {
    */
   public static Bom readBom(String coordinates) throws ArtifactDescriptorException {
     Artifact artifact = new DefaultArtifact(coordinates);
-    Bom bom = RepositoryUtility.readBom(artifact);
-    return bom;
-  }
 
-  /**
-   * Parse the dependencyManagement section of an artifact and return the
-   * artifacts included there.
-   */
-  // TODO Consider the possibility that the artifact is not a BOM; 
-  // that is, that it does not have a dependency management section.
-  public static Bom readBom(Artifact artifact) throws ArtifactDescriptorException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 
@@ -282,7 +272,7 @@ public final class RepositoryUtility {
       }
     }
     
-    Bom bom = new Bom(Artifacts.toCoordinates(artifact), ImmutableList.copyOf(managedDependencies));
+    Bom bom = new Bom(coordinates, ImmutableList.copyOf(managedDependencies));
     return bom;
   }
 
