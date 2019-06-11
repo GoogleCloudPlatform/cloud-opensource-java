@@ -68,8 +68,8 @@ public class LinkageMonitor {
 
     Set<SymbolProblem> newErrors = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newErrors.isEmpty()) {
-      // TODO(#683): Display new linkage newErrors caused by snapshot versions if any
-      System.err.println("There are one or more new new linkage newErrors in snapshot versions:");
+      // TODO(#683): Display new linkage errors caused by snapshot versions if any
+      System.err.println("There are one or more new new linkage errors in snapshot versions:");
       System.err.println(newErrors);
       int errorSize = newErrors.size();
       throw new LinkageMonitorException(
