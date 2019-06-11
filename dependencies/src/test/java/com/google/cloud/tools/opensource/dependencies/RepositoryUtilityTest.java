@@ -24,7 +24,6 @@ import java.util.List;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -44,8 +43,7 @@ public class RepositoryUtilityTest {
   
   @Test
   public void testReadBom_coordinates() throws ArtifactDescriptorException {
-    Artifact artifact = new DefaultArtifact("com.google.cloud:google-cloud-bom:0.61.0-alpha");
-    Bom bom = RepositoryUtility.readBom(artifact);
+    Bom bom = RepositoryUtility.readBom("com.google.cloud:google-cloud-bom:0.61.0-alpha");
     List<Artifact> managedDependencies = bom.getManagedDependencies();
     // Characterization test. As long as the artifact doesn't change (and it shouldn't)
     // the answer won't change.
