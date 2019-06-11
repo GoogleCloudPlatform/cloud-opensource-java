@@ -18,17 +18,26 @@ package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.base.CharMatcher;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
+import com.google.common.truth.Correspondence;
+import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
@@ -43,16 +52,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.common.base.CharMatcher;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Streams;
-import com.google.common.io.MoreFiles;
-import com.google.common.io.RecursiveDeleteOption;
-import com.google.common.truth.Correspondence;
-import com.google.common.truth.Truth;
 
 public class DashboardTest {
 
@@ -396,7 +395,13 @@ public class DashboardTest {
 
   @Test
   public void testOutputDirectory() {
-    Truth.assertThat(outputDirectory.toString())
-        .isEqualTo("target/com.google.cloud/libraries-bom/1.0.0");
+    Truth.assertWithMessage(
+            "The dashboard should be created at target/com.google.cloud/libraries-bom/1.0.0")
+        .that((Iterable<Path>) outputDirectory)
+        .containsAtLeast(
+            Paths.get("target"),
+            Paths.get("com.google.cloud"),
+            Paths.get("libraries-bom"),
+            Paths.get("1.0.0"));
   }
 }
