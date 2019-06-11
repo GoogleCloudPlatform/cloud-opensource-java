@@ -33,7 +33,6 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 public class LinkageMonitor {
 
   public static void main(String[] arguments) throws VersionRangeResolutionException {
-
     if (arguments.length < 1) {
       System.err.println(
           "Please specify BOM coordinates. Example: com.google.cloud:libraries-bom:1.2.1");
@@ -65,7 +64,7 @@ public class LinkageMonitor {
         managedDependency.setVersion(snapshotVersion);
       }
     }
-    // "-SNAPSHOT" suffix for coordinate to distinguish easily.
+    // "-COPY" suffix for coordinate to distinguish easily.
     return new Bom(bom.getCoordinates() + "-COPY", managedDependencies.build());
   }
 

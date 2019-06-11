@@ -56,6 +56,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
@@ -199,8 +200,8 @@ public final class RepositoryUtility {
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 
     MavenProject mavenProject = createMavenProject(pomFile, session);
-    // TODO(elharo): see if we can just use getId() here instead
-    String coordinates = mavenProject.getGroupId() + ":" + mavenProject.getArtifactId() + ":" + mavenProject.getVersion();
+    String coordinates = mavenProject.getGroupId() + ":" + mavenProject.getArtifactId() 
+        + ":" + mavenProject.getVersion();
     DependencyManagement dependencyManagement = mavenProject.getDependencyManagement();
     List<org.apache.maven.model.Dependency> dependencies = dependencyManagement.getDependencies();
 
@@ -245,14 +246,14 @@ public final class RepositoryUtility {
       throw new MavenRepositoryException(ex);
     }
   }
-
+  
   /**
    * Parse the dependencyManagement section of an artifact and return the
    * artifacts included there.
    */
-  // TODO Consider the possibility that the artifact is not a BOM; 
-  // that is, that it does not have a dependency management section.
-  public static Bom readBom(Artifact artifact) throws ArtifactDescriptorException {
+  public static Bom readBom(String coordinates) throws ArtifactDescriptorException {
+    Artifact artifact = new DefaultArtifact(coordinates);
+
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 
@@ -282,7 +283,7 @@ public final class RepositoryUtility {
       }
     }
     
-    Bom bom = new Bom(Artifacts.toCoordinates(artifact), ImmutableList.copyOf(managedDependencies));
+    Bom bom = new Bom(coordinates, ImmutableList.copyOf(managedDependencies));
     return bom;
   }
 
