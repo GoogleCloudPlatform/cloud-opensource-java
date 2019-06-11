@@ -195,9 +195,7 @@ public final class RepositoryUtility {
   }
 
   // TODO arguably this now belongs in the BOM class
-  // TODO these exceptions are exposing our own dependencies
-  public static Bom readBom(Path pomFile)
-      throws PlexusContainerException, ComponentLookupException, ProjectBuildingException {
+  public static Bom readBom(Path pomFile) throws MavenRepositoryException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 
@@ -219,7 +217,7 @@ public final class RepositoryUtility {
   }
 
   private static MavenProject createMavenProject(Path pomFile, RepositorySystemSession session)
-      throws PlexusContainerException, ComponentLookupException, ProjectBuildingException {
+      throws MavenRepositoryException {
     // MavenCli's way to instantiate PlexusContainer
     ClassWorld classWorld =
         new ClassWorld("plexus.core", Thread.currentThread().getContextClassLoader());
@@ -231,6 +229,7 @@ public final class RepositoryUtility {
             .setAutoWiring(true)
             .setJSR250Lifecycle(true)
             .setName("linkage-checker");
+    try {
     PlexusContainer container = new DefaultPlexusContainer(containerConfiguration);
 
     MavenExecutionRequest mavenExecutionRequest = new DefaultMavenExecutionRequest();
@@ -243,6 +242,9 @@ public final class RepositoryUtility {
     ProjectBuildingResult projectBuildingResult =
         projectBuilder.build(pomFile.toFile(), projectBuildingRequest);
     return projectBuildingResult.getProject();
+    } catch (PlexusContainerException | ComponentLookupException | ProjectBuildingException ex) {
+      throw new MavenRepositoryException(ex);
+    }
   }
 
   /**
