@@ -16,11 +16,12 @@
 
 package com.google.cloud.tools.dependencies.linkagemonitor;
 
+import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
@@ -33,12 +34,6 @@ public class LinkageMonitor {
 
   public static void main(String[] arguments) throws VersionRangeResolutionException {
 
-    RepositorySystem repositorySystem = RepositoryUtility.newFileRepositorySystem();
-    RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
-
-    Artifact artifact = new DefaultArtifact("com.google.cloud.tools:dependencies:0.2.1");
-    String version = findSnapshotVersion(repositorySystem, session, artifact);
-    System.out.println(version);
     if (arguments.length < 1) {
       System.err.println(
           "Please specify BOM coordinates. Example: com.google.cloud:libraries-bom:1.2.1");
@@ -49,6 +44,29 @@ public class LinkageMonitor {
     // TODO(#681): Run Linkage Checker for the BOM specified in argument
     // TODO(#682): Copy the BOM with locally-installed snapshot versions
     // TODO(#683): Display new linkage errors caused by snapshot versions if any
+  }
+
+  /**
+   * Returns a copy of {@code bom} replacing its managed dependencies that have locally-installed
+   * snapshot versions.
+   */
+  private static Bom copyWithSnapshot(Bom bom) throws VersionRangeResolutionException {
+    ImmutableList.Builder<Artifact> managedDependencies = ImmutableList.builder();
+
+    RepositorySystem repositorySystem = RepositoryUtility.newFileRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
+
+    for (Artifact managedDependency : bom.getManagedDependencies()) {
+
+      String snapshotVersion = findSnapshotVersion(repositorySystem, session, managedDependency);
+      if (snapshotVersion == null) {
+        managedDependencies.add(managedDependency);
+      } else {
+        managedDependency.setVersion(snapshotVersion);
+      }
+    }
+    // "-SNAPSHOT" suffix for coordinate to distinguish easily.
+    return new Bom(bom.getCoordinates() + "-COPY", managedDependencies.build());
   }
 
   /**
