@@ -66,13 +66,12 @@ public class LinkageMonitor {
     ImmutableSet<SymbolProblem> problemsInSnapshot =
         LinkageChecker.create(snapshot).findSymbolProblems().keySet();
 
-    if (!problemsInBaseline.containsAll(problemsInSnapshot)) {
-      // TODO(#683): Display new linkage errors caused by snapshot versions if any
-      System.err.println("There are one or more new new linkage errors in snapshot versions:");
-      Set<SymbolProblem> errors =
-          Sets.filter(problemsInSnapshot, item -> !problemsInBaseline.contains(item));
-      System.err.println(errors);
-      int errorSize = errors.size();
+    Set<SymbolProblem> newErrors = Sets.difference(problemsInSnapshot, problemsInBaseline);
+    if (!newErrors.isEmpty()) {
+      // TODO(#683): Display new linkage newErrors caused by snapshot versions if any
+      System.err.println("There are one or more new new linkage newErrors in snapshot versions:");
+      System.err.println(newErrors);
+      int errorSize = newErrors.size();
       throw new LinkageMonitorException(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
     }
