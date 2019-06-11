@@ -188,8 +188,8 @@ public final class RepositoryUtility {
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 
     MavenProject mavenProject = createMavenProject(pomFile, session);
-    // TODO(elharo): see if we can just use getId() here instead
-    String coordinates = mavenProject.getGroupId() + ":" + mavenProject.getArtifactId() + ":" + mavenProject.getVersion();
+    String coordinates = mavenProject.getGroupId() + ":" + mavenProject.getArtifactId() 
+        + ":" + mavenProject.getVersion();
     DependencyManagement dependencyManagement = mavenProject.getDependencyManagement();
     List<org.apache.maven.model.Dependency> dependencies = dependencyManagement.getDependencies();
 
@@ -241,6 +241,7 @@ public final class RepositoryUtility {
    */
   // TODO Consider the possibility that the artifact is not a BOM; 
   // that is, that it does not have a dependency management section.
+  // TODO this should take a string, not an Artifact
   public static Bom readBom(Artifact artifact) throws ArtifactDescriptorException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     RepositorySystemSession session = RepositoryUtility.newSession(system);
