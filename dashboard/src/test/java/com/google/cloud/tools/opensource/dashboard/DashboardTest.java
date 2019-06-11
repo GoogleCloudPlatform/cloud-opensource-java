@@ -151,8 +151,8 @@ public class DashboardTest {
   
   @Test
   public void testArtifactDetails() throws IOException, ArtifactDescriptorException {
-    Artifact bom = new DefaultArtifact("com.google.cloud:libraries-bom:1.0.0");
-    List<Artifact> artifacts = RepositoryUtility.readBom(bom).getManagedDependencies();
+    List<Artifact> artifacts = RepositoryUtility.readBom("com.google.cloud:libraries-bom:1.0.0")
+        .getManagedDependencies();
     Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
 
     Assert.assertEquals("en-US", dashboard.getRootElement().getAttribute("lang").getValue());
