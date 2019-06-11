@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -44,7 +45,11 @@ public class LinkageMonitorTest {
 
   @Test
   public void testFindSnapshotVersion() throws VersionRangeResolutionException {
-    linkageMonitor.findSnapshotVersion(new DefaultArtifact("com.google.guava:guava:27.1-android"));
+    // Android should be found locally
+    linkageMonitor.copyWithSnapshot(
+        new Bom(
+            "com.google.cloud.tools:test-bom:0.0.1",
+            ImmutableList.of(new DefaultArtifact("com.google.guava:guava:27.1-android"))));
   }
 
   @Test
