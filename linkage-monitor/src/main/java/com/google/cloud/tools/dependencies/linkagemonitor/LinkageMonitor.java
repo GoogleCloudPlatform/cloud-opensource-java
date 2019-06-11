@@ -16,9 +16,15 @@
 
 package com.google.cloud.tools.dependencies.linkagemonitor;
 
+import com.google.cloud.tools.opensource.classpath.LinkageChecker;
+import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import java.io.IOException;
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -32,17 +38,30 @@ import org.eclipse.aether.resolution.VersionRangeResult;
  */
 public class LinkageMonitor {
 
-  public static void main(String[] arguments) throws VersionRangeResolutionException {
+  public static void main(String[] arguments) throws RepositoryException, IOException {
     if (arguments.length < 1) {
       System.err.println(
           "Please specify BOM coordinates. Example: com.google.cloud:libraries-bom:1.2.1");
       System.exit(1);
     }
     String bomCoordinates = arguments[0];
-    System.out.println("Linkage Monitor for " + bomCoordinates);
-    // TODO(#681): Run Linkage Checker for the BOM specified in argument
-    // TODO(#682): Copy the BOM with locally-installed snapshot versions
-    // TODO(#683): Display new linkage errors caused by snapshot versions if any
+    Bom baseline = RepositoryUtility.readBom(bomCoordinates);
+    Bom snapshot = copyWithSnapshot(baseline);
+
+    ImmutableSet<SymbolProblem> problemInBaseline =
+        LinkageChecker.create(baseline).findSymbolProblems().keySet();
+    ImmutableSet<SymbolProblem> problemsInSnapshot =
+        LinkageChecker.create(snapshot).findSymbolProblems().keySet();
+
+    if (problemInBaseline.containsAll(problemsInSnapshot)) {
+      // No new symbol problems introduced by snapshot BOM. Returning success.
+      return;
+    } else {
+      // TODO(#683): Display new linkage errors caused by snapshot versions if any
+      System.err.println("There are one or more new new linkage errors in snapshot versions:");
+      System.err.println(Sets.difference(problemInBaseline, problemsInSnapshot));
+      System.exit(1);
+    }
   }
 
   /**
