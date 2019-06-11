@@ -84,7 +84,8 @@ public class LinkageMonitor {
    * snapshot versions.
    */
   @VisibleForTesting
-  static Bom copyWithSnapshot(RepositorySystem repositorySystem, Bom bom) throws VersionRangeResolutionException {
+  static Bom copyWithSnapshot(RepositorySystem repositorySystem, Bom bom)
+      throws VersionRangeResolutionException {
     ImmutableList.Builder<Artifact> managedDependencies = ImmutableList.builder();
     RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
 
