@@ -20,10 +20,12 @@ import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.util.Set;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -38,45 +40,64 @@ import org.eclipse.aether.resolution.VersionRangeResult;
  */
 public class LinkageMonitor {
 
-  public static void main(String[] arguments) throws RepositoryException, IOException {
+  private RepositorySystem repositorySystem = RepositoryUtility.newFileRepositorySystem();
+  private RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
+
+  @VisibleForTesting
+  void setRepositorySystem(RepositorySystem repositorySystem) {
+    this.repositorySystem = repositorySystem;
+  }
+
+  @VisibleForTesting
+  void setSession(RepositorySystemSession session) {
+    this.session = session;
+  }
+
+  public static void main(String[] arguments)
+      throws RepositoryException, IOException, LinkageMonitorException {
     if (arguments.length < 1) {
       System.err.println(
           "Please specify BOM coordinates. Example: com.google.cloud:libraries-bom:1.2.1");
       System.exit(1);
     }
     String bomCoordinates = arguments[0];
-    Bom baseline = RepositoryUtility.readBom(bomCoordinates);
-    Bom snapshot = copyWithSnapshot(baseline);
+    new LinkageMonitor().run(bomCoordinates);
+  }
 
+  private void run(String bomCoordinates)
+      throws RepositoryException, IOException, LinkageMonitorException {
+    Bom baseline = RepositoryUtility.readBom(bomCoordinates);
     ImmutableSet<SymbolProblem> problemInBaseline =
         LinkageChecker.create(baseline).findSymbolProblems().keySet();
+
+    Bom snapshot = copyWithSnapshot(baseline);
+
     ImmutableSet<SymbolProblem> problemsInSnapshot =
         LinkageChecker.create(snapshot).findSymbolProblems().keySet();
 
-    if (problemInBaseline.containsAll(problemsInSnapshot)) {
-      // No new symbol problems introduced by snapshot BOM. Returning success.
-      return;
-    } else {
+    if (!problemInBaseline.containsAll(problemsInSnapshot)) {
       // TODO(#683): Display new linkage errors caused by snapshot versions if any
       System.err.println("There are one or more new new linkage errors in snapshot versions:");
-      System.err.println(Sets.difference(problemInBaseline, problemsInSnapshot));
-      System.exit(1);
+      Set<SymbolProblem> errors =
+          Sets.filter(problemsInSnapshot, item -> !problemInBaseline.contains(item));
+      System.err.println(errors);
+      int errorSize = errors.size();
+      throw new LinkageMonitorException(
+          String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
     }
+    // No new symbol problems introduced by snapshot BOM. Returning success.
   }
 
   /**
    * Returns a copy of {@code bom} replacing its managed dependencies that have locally-installed
    * snapshot versions.
    */
-  private static Bom copyWithSnapshot(Bom bom) throws VersionRangeResolutionException {
+  @VisibleForTesting
+  Bom copyWithSnapshot(Bom bom) throws VersionRangeResolutionException {
     ImmutableList.Builder<Artifact> managedDependencies = ImmutableList.builder();
 
-    RepositorySystem repositorySystem = RepositoryUtility.newFileRepositorySystem();
-    RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
-
     for (Artifact managedDependency : bom.getManagedDependencies()) {
-
-      String snapshotVersion = findSnapshotVersion(repositorySystem, session, managedDependency);
+      String snapshotVersion = findSnapshotVersion(managedDependency);
       if (snapshotVersion == null) {
         managedDependencies.add(managedDependency);
       } else {
@@ -91,12 +112,15 @@ public class LinkageMonitor {
    * Returns the highest snapshot version installed in {@code repositorySystem}. Null if highest
    * version is not a snapshot.
    */
-  private static String findSnapshotVersion(
-      RepositorySystem repositorySystem, RepositorySystemSession session, Artifact artifact)
-      throws VersionRangeResolutionException {
+  @VisibleForTesting
+  String findSnapshotVersion(Artifact artifact) throws VersionRangeResolutionException {
     Artifact artifactWithVersionRange = artifact.setVersion("(0,]");
     VersionRangeRequest request = new VersionRangeRequest(artifactWithVersionRange, null, null);
     VersionRangeResult versionResult = repositorySystem.resolveVersionRange(session, request);
+    if (versionResult.getHighestVersion() == null) {
+      // The artifact is not installed in local repository.
+      return null;
+    }
     String version = versionResult.getHighestVersion().toString();
     if (version.contains("-SNAPSHOT")) {
       return version;
