@@ -41,18 +41,8 @@ import org.eclipse.aether.resolution.VersionRangeResult;
  */
 public class LinkageMonitor {
 
-  private RepositorySystem repositorySystem = RepositoryUtility.newFileRepositorySystem();
-  private RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
-
-  @VisibleForTesting
-  void setRepositorySystem(RepositorySystem repositorySystem) {
-    this.repositorySystem = repositorySystem;
-  }
-
-  @VisibleForTesting
-  void setSession(RepositorySystemSession session) {
-    this.session = session;
-  }
+  private final RepositorySystem repositorySystem = RepositoryUtility.newFileRepositorySystem();
+  private final RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
 
   public static void main(String[] arguments)
       throws RepositoryException, IOException, LinkageMonitorException {
@@ -98,7 +88,7 @@ public class LinkageMonitor {
     ImmutableList.Builder<Artifact> managedDependencies = ImmutableList.builder();
 
     for (Artifact managedDependency : bom.getManagedDependencies()) {
-      String snapshotVersion = findSnapshotVersion(managedDependency);
+      String snapshotVersion = findSnapshotVersion(repositorySystem, session, managedDependency);
       if (snapshotVersion == null) {
         managedDependencies.add(managedDependency);
       } else {
@@ -114,7 +104,9 @@ public class LinkageMonitor {
    * version is not a snapshot.
    */
   @VisibleForTesting
-  String findSnapshotVersion(Artifact artifact) throws VersionRangeResolutionException {
+  static String findSnapshotVersion(
+      RepositorySystem repositorySystem, RepositorySystemSession session, Artifact artifact)
+      throws VersionRangeResolutionException {
     Artifact artifactWithVersionRange = artifact.setVersion("(0,]");
     VersionRangeRequest request = new VersionRangeRequest(artifactWithVersionRange, null, null);
     VersionRangeResult versionResult = repositorySystem.resolveVersionRange(session, request);
