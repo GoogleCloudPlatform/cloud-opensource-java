@@ -158,8 +158,7 @@ final class LinkageCheckerArguments {
 
     if (commandLine.hasOption("b")) {
       String bomCoordinates = commandLine.getOptionValue("b");
-      DefaultArtifact bomArtifact = new DefaultArtifact(bomCoordinates);
-      return cachedArtifacts = RepositoryUtility.readBom(bomArtifact).getManagedDependencies();
+      return cachedArtifacts = RepositoryUtility.readBom(bomCoordinates).getManagedDependencies();
     } else if (commandLine.hasOption("a")) {
       // option 'a'
       String[] mavenCoordinatesOption = commandLine.getOptionValues("a");
