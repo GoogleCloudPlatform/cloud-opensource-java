@@ -68,7 +68,7 @@ public class LinkageMonitor {
   private void run(String bomCoordinates)
       throws RepositoryException, IOException, LinkageMonitorException {
     Bom baseline = RepositoryUtility.readBom(bomCoordinates);
-    ImmutableSet<SymbolProblem> problemInBaseline =
+    ImmutableSet<SymbolProblem> problemsInBaseline =
         LinkageChecker.create(baseline).findSymbolProblems().keySet();
 
     Bom snapshot = copyWithSnapshot(baseline);
@@ -76,11 +76,11 @@ public class LinkageMonitor {
     ImmutableSet<SymbolProblem> problemsInSnapshot =
         LinkageChecker.create(snapshot).findSymbolProblems().keySet();
 
-    if (!problemInBaseline.containsAll(problemsInSnapshot)) {
+    if (!problemsInBaseline.containsAll(problemsInSnapshot)) {
       // TODO(#683): Display new linkage errors caused by snapshot versions if any
       System.err.println("There are one or more new new linkage errors in snapshot versions:");
       Set<SymbolProblem> errors =
-          Sets.filter(problemsInSnapshot, item -> !problemInBaseline.contains(item));
+          Sets.filter(problemsInSnapshot, item -> !problemsInBaseline.contains(item));
       System.err.println(errors);
       int errorSize = errors.size();
       throw new LinkageMonitorException(
@@ -105,8 +105,8 @@ public class LinkageMonitor {
         managedDependency.setVersion(snapshotVersion);
       }
     }
-    // "-COPY" suffix for coordinate to distinguish easily.
-    return new Bom(bom.getCoordinates() + "-COPY", managedDependencies.build());
+    // "-SNAPSHOT" suffix for coordinate to distinguish easily.
+    return new Bom(bom.getCoordinates() + "-SNAPSHOT", managedDependencies.build());
   }
 
   /**
