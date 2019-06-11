@@ -26,7 +26,6 @@ VERSIONS=`echo $SONATYPE_RESPONSE | perl -nle 'print $1 while m/"v":"(.+?)"/g'`
 for VERSION in $VERSIONS; do
   mvn -B exec:java -Dexec.mainClass="com.google.cloud.tools.opensource.dashboard.DashboardMain" \
     -Dexec.arguments="-c com.google.cloud:libraries-bom:${VERSION}"
-  mv target/dashboard target/${VERSION}
 done
 
 # Step 2: Generate dashboard for the snapshot
