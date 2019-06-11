@@ -3,6 +3,8 @@
 # Fail on any error.
 set -e
 
+SONATYPE_USERNAME=$(cat "${KOKORO_KEYSTORE_DIR}/72743_sonatype_username")
+SONATYPE_PASSWORD=$(cat "${KOKORO_KEYSTORE_DIR}/72743_sonatype_password")
 CREDENTIALS="$SONATYPE_USERNAME:$SONATYPE_PASSWORD"
 
 # Display commands to stderr.
