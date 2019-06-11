@@ -38,12 +38,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class LinkageMonitorTest {
-  private LinkageMonitor linkageMonitor;
   private Bom bom;
 
   @Before
   public void setup() throws ArtifactDescriptorException {
-    linkageMonitor = new LinkageMonitor();
     bom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:1.2.0");
   }
 
@@ -51,7 +49,7 @@ public class LinkageMonitorTest {
   public void testFindSnapshotVersion() throws VersionRangeResolutionException {
     // This version of Guava should be found locally because this module uses it.
     Bom snapshotBom =
-        linkageMonitor.copyWithSnapshot(
+        LinkageMonitor.copyWithSnapshot(
             RepositoryUtility.newRepositorySystem(),
             new Bom(
                 "com.google.cloud.tools:test-bom:0.0.1",
@@ -75,7 +73,7 @@ public class LinkageMonitorTest {
             any(RepositorySystemSession.class), any(VersionRangeRequest.class)))
         .thenReturn(dummyVersionRangeResult);
 
-    Bom snapshotBom = linkageMonitor.copyWithSnapshot(mockSystem, bom);
+    Bom snapshotBom = LinkageMonitor.copyWithSnapshot(mockSystem, bom);
     assertEquals("2.1.2-SNAPSHOT", snapshotBom.getManagedDependencies().get(0).getVersion());
   }
 }
