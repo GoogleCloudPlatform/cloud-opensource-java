@@ -56,6 +56,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
@@ -234,6 +235,16 @@ public final class RepositoryUtility {
       throw new MavenRepositoryException(ex);
     }
   }
+  
+  /**
+   * Parse the dependencyManagement section of an artifact and return the
+   * artifacts included there.
+   */
+  public static Bom readBom(String coordinates) throws ArtifactDescriptorException {
+    Artifact artifact = new DefaultArtifact(coordinates);
+    Bom bom = RepositoryUtility.readBom(artifact);
+    return bom;
+  }
 
   /**
    * Parse the dependencyManagement section of an artifact and return the
@@ -241,7 +252,6 @@ public final class RepositoryUtility {
    */
   // TODO Consider the possibility that the artifact is not a BOM; 
   // that is, that it does not have a dependency management section.
-  // TODO this should take a string, not an Artifact
   public static Bom readBom(Artifact artifact) throws ArtifactDescriptorException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     RepositorySystemSession session = RepositoryUtility.newSession(system);

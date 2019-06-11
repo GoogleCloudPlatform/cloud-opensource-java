@@ -26,20 +26,16 @@ import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedListMultimap;
-import com.google.common.truth.MultimapSubject;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.List;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -49,8 +45,7 @@ public class MaximumLinkageErrorsTest {
   public void textMaximumLinkageErrors() 
       throws IOException, MavenRepositoryException, RepositoryException {
 
-    Artifact artifact = new DefaultArtifact("com.google.cloud:libraries-bom:1.2.0");
-    Bom baseline = RepositoryUtility.readBom(artifact);
+    Bom baseline = RepositoryUtility.readBom("com.google.cloud:libraries-bom:1.2.0");
 
     Path bomFile = Paths.get("../cloud-oss-bom/pom.xml");
     Bom bom = RepositoryUtility.readBom(bomFile);
