@@ -21,6 +21,7 @@ import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -117,10 +118,8 @@ public class LinkageMonitor {
     Artifact artifactWithVersionRange = artifact.setVersion("(0,]");
     VersionRangeRequest request = new VersionRangeRequest(artifactWithVersionRange, null, null);
     VersionRangeResult versionResult = repositorySystem.resolveVersionRange(session, request);
-    if (versionResult.getHighestVersion() == null) {
-      // The artifact is not installed in local repository.
-      return null;
-    }
+
+    Verify.verify(versionResult.getHighestVersion() != null, "Highest version should not be null");
     String version = versionResult.getHighestVersion().toString();
     if (version.contains("-SNAPSHOT")) {
       return version;

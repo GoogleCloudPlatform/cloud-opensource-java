@@ -22,15 +22,13 @@ import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.common.collect.ImmutableList;
-import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
-import org.eclipse.aether.version.Version;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,16 +43,23 @@ public class LinkageMonitorTest {
   }
 
   @Test
+  public void testFindSnapshotVersion() throws VersionRangeResolutionException {
+    linkageMonitor.findSnapshotVersion(new DefaultArtifact("com.google.guava:guava:27.1-android"));
+  }
+
+  @Test
   public void testBomSnapshot() throws VersionRangeResolutionException {
 
     VersionRangeResult dummyVersionRangeResult = new VersionRangeResult(new VersionRangeRequest());
-//    dummyVersionRangeResult.setVersions(ImmutableList.of(new DefaultArtifactVersion("1.2.3")));
+    //    dummyVersionRangeResult.setVersions(ImmutableList.of(new
+    // DefaultArtifactVersion("1.2.3")));
 
     RepositorySystem mockSystem = mock(RepositorySystem.class);
-    when(mockSystem.resolveVersionRange(any(RepositorySystemSession.class),
-        any(VersionRangeRequest.class))).thenReturn(dummyVersionRangeResult);
+    when(mockSystem.resolveVersionRange(
+            any(RepositorySystemSession.class), any(VersionRangeRequest.class)))
+        .thenReturn(dummyVersionRangeResult);
 
-//    linkageMonitor.setRepositorySystem(mockSystem);
+    //    linkageMonitor.setRepositorySystem(mockSystem);
 
     Bom snapshotBom = linkageMonitor.copyWithSnapshot(this.bom);
   }
