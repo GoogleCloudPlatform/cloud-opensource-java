@@ -31,7 +31,7 @@ public enum ErrorType {
    *
    * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-13.html#jls-13.4.9">Java
    *     Language Specification: 13.4.9. final Fields and static Constant Variables</a>
-   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.4.3.4>Java
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.4.3.4">Java
    *     Virtual Machine Specification: 5.4.3.4. Interface Method Resolution</a>
    */
   INCOMPATIBLE_CLASS_CHANGE("has changed incompatibly"),
