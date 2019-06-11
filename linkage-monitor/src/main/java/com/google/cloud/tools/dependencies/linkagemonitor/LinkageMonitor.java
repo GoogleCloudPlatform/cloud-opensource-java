@@ -16,13 +16,29 @@
 
 package com.google.cloud.tools.dependencies.linkagemonitor;
 
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.resolution.VersionRangeRequest;
+import org.eclipse.aether.resolution.VersionRangeResolutionException;
+import org.eclipse.aether.resolution.VersionRangeResult;
+
 /**
  * Linkage Monitor detects new linkage errors caused by locally-installed snapshot artifacts for a
  * BOM (bill-of-materials).
  */
 public class LinkageMonitor {
 
-  public static void main(String[] arguments) {
+  public static void main(String[] arguments) throws VersionRangeResolutionException {
+
+    RepositorySystem repositorySystem = RepositoryUtility.newFileRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
+
+    Artifact artifact = new DefaultArtifact("com.google.cloud.tools:dependencies:0.2.1");
+    String version = findSnapshotVersion(repositorySystem, session, artifact);
+    System.out.println(version);
     if (arguments.length < 1) {
       System.err.println(
           "Please specify BOM coordinates. Example: com.google.cloud:libraries-bom:1.2.1");
@@ -33,5 +49,22 @@ public class LinkageMonitor {
     // TODO(#681): Run Linkage Checker for the BOM specified in argument
     // TODO(#682): Copy the BOM with locally-installed snapshot versions
     // TODO(#683): Display new linkage errors caused by snapshot versions if any
+  }
+
+  /**
+   * Returns the highest snapshot version installed in {@code repositorySystem}. Null if highest
+   * version is not a snapshot.
+   */
+  private static String findSnapshotVersion(
+      RepositorySystem repositorySystem, RepositorySystemSession session, Artifact artifact)
+      throws VersionRangeResolutionException {
+    Artifact artifactWithVersionRange = artifact.setVersion("(0,]");
+    VersionRangeRequest request = new VersionRangeRequest(artifactWithVersionRange, null, null);
+    VersionRangeResult versionResult = repositorySystem.resolveVersionRange(session, request);
+    String version = versionResult.getHighestVersion().toString();
+    if (version.contains("-SNAPSHOT")) {
+      return version;
+    }
+    return null;
   }
 }
