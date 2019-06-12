@@ -18,15 +18,6 @@ package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.common.base.CharMatcher;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Streams;
-import com.google.common.io.MoreFiles;
-import com.google.common.io.RecursiveDeleteOption;
-import com.google.common.truth.Correspondence;
-import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
@@ -38,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
@@ -52,6 +44,16 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.base.CharMatcher;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
+import com.google.common.truth.Correspondence;
+import com.google.common.truth.Truth;
 
 public class DashboardTest {
 
