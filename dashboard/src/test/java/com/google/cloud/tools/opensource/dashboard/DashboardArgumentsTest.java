@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dashboard;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Paths;
@@ -35,6 +36,7 @@ public class DashboardArgumentsTest {
 
     assertTrue(dashboardArguments.hasFile());
     assertEquals(Paths.get("../pom.xml").toAbsolutePath(), dashboardArguments.getBomFile());
+    assertNull(dashboardArguments.getBomCoordinates());
   }
 
   @Test
@@ -44,6 +46,17 @@ public class DashboardArgumentsTest {
     assertFalse(dashboardArguments.hasFile());
     assertEquals(
         "com.google.cloud:libraries-bom:1.0.0", dashboardArguments.getBomCoordinates());
+  }
+
+  @Test
+  public void testParseArgument_coordinatesWithLeadingSpace() throws ParseException {
+    // Maven exec plugin adds a leading space when arguments are passed as
+    // -Dexec.arguments="-c com.google.cloud:libraries-bom:$VERSION"
+    DashboardArguments dashboardArguments =
+        DashboardArguments.readCommandLine("-c", " com.google.cloud:libraries-bom:1.0.0");
+    assertEquals(
+        "com.google.cloud:libraries-bom:1.0.0", dashboardArguments.getBomCoordinates());
+    assertNull(dashboardArguments.getBomFile());
   }
 
   @Test
