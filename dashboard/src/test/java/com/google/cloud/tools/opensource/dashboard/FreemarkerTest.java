@@ -103,7 +103,7 @@ public class FreemarkerTest {
         jarToDependencyPaths,
         new Bom("mock:artifact:1.6.7", null));
 
-    Path dashboardHtml = outputDirectory.resolve("index.html");
+    Path dashboardHtml = outputDirectory.resolve("dashboard.html");
     Assert.assertTrue(Files.isRegularFile(dashboardHtml));
     Document document = builder.build(dashboardHtml.toFile());
 

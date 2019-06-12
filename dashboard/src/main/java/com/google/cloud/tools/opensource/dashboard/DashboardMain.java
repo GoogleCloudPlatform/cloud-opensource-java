@@ -90,7 +90,7 @@ public class DashboardMain {
    * Generates a code hygiene dashboard for a BOM. This tool takes a path to pom.xml of the BOM as
    * an argument or Maven coordinates to a BOM.
    *
-   * <p>Generated dashboard is at {@code target/$groupId/$artifactId/$version/index.html}, where
+   * <p>Generated dashboard is at {@code target/$groupId/$artifactId/$version/dashboard.html}, where
    * each value is from BOM coordinates except {@code $version} is "snapshot" if the BOM has
    * snapshot version.
    */
@@ -452,7 +452,7 @@ public class DashboardMain {
     templateData.put("dashboardMain", staticModels.get(DashboardMain.class.getName()));
     templateData.put("pieChart", staticModels.get(PieChart.class.getName()));
 
-    File dashboardFile = output.resolve("index.html").toFile();
+    File dashboardFile = output.resolve("dashboard.html").toFile();
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
       Template dashboard = configuration.getTemplate("/templates/dashboard.ftl");

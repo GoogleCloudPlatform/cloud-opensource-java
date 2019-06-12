@@ -82,7 +82,7 @@ public class DashboardTest {
       Assert.fail("Could not generate dashboard");
     }
 
-    dashboard = parseOutputFile("index.html");
+    dashboard = parseOutputFile("dashboard.html");
     details = parseOutputFile("artifact_details.html");
     unstable = parseOutputFile("unstable_artifacts.html");
   }
