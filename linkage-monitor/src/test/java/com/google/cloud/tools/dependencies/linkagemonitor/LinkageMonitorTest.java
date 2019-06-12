@@ -60,20 +60,31 @@ public class LinkageMonitorTest {
   @Test
   public void testBomSnapshot()
       throws VersionRangeResolutionException, InvalidVersionSpecificationException {
-    VersionRangeResult dummyVersionRangeResult = new VersionRangeResult(new VersionRangeRequest());
+    VersionRangeResult dummyVersionRangeResult1 = new VersionRangeResult(new VersionRangeRequest());
+    VersionRangeResult dummyVersionRangeResult2 = new VersionRangeResult(new VersionRangeRequest());
     GenericVersionScheme versionScheme = new GenericVersionScheme();
-    dummyVersionRangeResult.setVersions(
+    dummyVersionRangeResult1.setVersions(
         ImmutableList.of(
             versionScheme.parseVersion("1.2.3"),
             versionScheme.parseVersion("2.1.1"),
             versionScheme.parseVersion("2.1.2-SNAPSHOT")));
+    dummyVersionRangeResult2.setVersions(
+        ImmutableList.of(versionScheme.parseVersion("1.2.3"), versionScheme.parseVersion("1.1.1")));
 
     RepositorySystem mockSystem = mock(RepositorySystem.class);
     when(mockSystem.resolveVersionRange(
             any(RepositorySystemSession.class), any(VersionRangeRequest.class)))
-        .thenReturn(dummyVersionRangeResult);
+        .thenReturn(dummyVersionRangeResult1)
+        .thenReturn(dummyVersionRangeResult2);
 
     Bom snapshotBom = LinkageMonitor.copyWithSnapshot(mockSystem, bom);
-    assertEquals("2.1.2-SNAPSHOT", snapshotBom.getManagedDependencies().get(0).getVersion());
+    assertEquals(
+        "The first artifact should have SNAPSHOT version",
+        "2.1.2-SNAPSHOT",
+        snapshotBom.getManagedDependencies().get(0).getVersion());
+    assertEquals(
+        "The second artifact should not have SNAPSHOT version",
+        bom.getManagedDependencies().get(1).getVersion(),
+        snapshotBom.getManagedDependencies().get(1).getVersion());
   }
 }
