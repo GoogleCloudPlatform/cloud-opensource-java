@@ -74,7 +74,7 @@ public class DashboardTest {
 
   @BeforeClass
   public static void setUp() throws IOException, ParsingException {
-    // Creates "dashboard.html" and artifact reports in outputDirectory
+    // Creates "index.html" and artifact reports in outputDirectory
     try {
       outputDirectory = DashboardMain.generate("com.google.cloud:libraries-bom:1.0.0");
     } catch (Throwable t) {
@@ -82,7 +82,7 @@ public class DashboardTest {
       Assert.fail("Could not generate dashboard");
     }
 
-    dashboard = parseOutputFile("dashboard.html");
+    dashboard = parseOutputFile("index.html");
     details = parseOutputFile("artifact_details.html");
     unstable = parseOutputFile("unstable_artifacts.html");
   }
