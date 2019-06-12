@@ -24,6 +24,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -392,5 +393,18 @@ public class DashboardTest {
     String dependencyUpgradeMessage = globalUpperBoundDependencyUpgradeNodes.get(0).getValue();
     Truth.assertThat(dependencyUpgradeMessage).contains(
         "Upgrade com.google.guava:guava:jar:19.0 to version \"27.1-android\"");
+  }
+
+  @Test
+  public void testOutputDirectory() {
+    Truth.assertWithMessage(
+            "The dashboard should be created at target/com.google.cloud/libraries-bom/1.0.0")
+        .that((Iterable<Path>) outputDirectory)
+        .containsAtLeast(
+            Paths.get("target"),
+            Paths.get("com.google.cloud"),
+            Paths.get("libraries-bom"),
+            Paths.get("1.0.0"))
+        .inOrder();
   }
 }
