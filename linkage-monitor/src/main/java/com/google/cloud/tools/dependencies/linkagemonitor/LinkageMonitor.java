@@ -16,22 +16,110 @@
 
 package com.google.cloud.tools.dependencies.linkagemonitor;
 
+import com.google.cloud.tools.opensource.classpath.LinkageChecker;
+import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Verify;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.util.Optional;
+import java.util.Set;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.resolution.VersionRangeRequest;
+import org.eclipse.aether.resolution.VersionRangeResolutionException;
+import org.eclipse.aether.resolution.VersionRangeResult;
+
 /**
  * Linkage Monitor detects new linkage errors caused by locally-installed snapshot artifacts for a
  * BOM (bill-of-materials).
  */
 public class LinkageMonitor {
 
-  public static void main(String[] arguments) {
+  // Finding latest version requires metadata from remote repository
+  private final RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
+
+  public static void main(String[] arguments)
+      throws RepositoryException, IOException, LinkageMonitorException {
     if (arguments.length < 1) {
       System.err.println(
           "Please specify BOM coordinates. Example: com.google.cloud:libraries-bom:1.2.1");
       System.exit(1);
     }
     String bomCoordinates = arguments[0];
-    System.out.println("Linkage Monitor for " + bomCoordinates);
-    // TODO(#681): Run Linkage Checker for the BOM specified in argument
-    // TODO(#682): Copy the BOM with locally-installed snapshot versions
-    // TODO(#683): Display new linkage errors caused by snapshot versions if any
+    new LinkageMonitor().run(bomCoordinates);
+  }
+
+  private void run(String bomCoordinates)
+      throws RepositoryException, IOException, LinkageMonitorException {
+    Bom baseline = RepositoryUtility.readBom(bomCoordinates);
+    ImmutableSet<SymbolProblem> problemsInBaseline =
+        LinkageChecker.create(baseline).findSymbolProblems().keySet();
+
+    Bom snapshot = copyWithSnapshot(repositorySystem, baseline);
+
+    ImmutableSet<SymbolProblem> problemsInSnapshot =
+        LinkageChecker.create(snapshot).findSymbolProblems().keySet();
+
+    Set<SymbolProblem> newErrors = Sets.difference(problemsInSnapshot, problemsInBaseline);
+    if (!newErrors.isEmpty()) {
+      // TODO(#683): Display new linkage errors caused by snapshot versions if any
+      System.err.println("There are one or more new new linkage errors in snapshot versions:");
+      System.err.println(newErrors);
+      int errorSize = newErrors.size();
+      throw new LinkageMonitorException(
+          String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
+    }
+    // No new symbol problems introduced by snapshot BOM. Returning success.
+  }
+
+  /**
+   * Returns a copy of {@code bom} replacing its managed dependencies that have locally-installed
+   * snapshot versions.
+   */
+  @VisibleForTesting
+  static Bom copyWithSnapshot(RepositorySystem repositorySystem, Bom bom)
+      throws VersionRangeResolutionException {
+    ImmutableList.Builder<Artifact> managedDependencies = ImmutableList.builder();
+    RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
+
+    for (Artifact managedDependency : bom.getManagedDependencies()) {
+      Optional<String> snapshotVersion =
+          findSnapshotVersion(repositorySystem, session, managedDependency);
+      if (snapshotVersion.isPresent()) {
+        managedDependency = managedDependency.setVersion(snapshotVersion.get());
+      }
+      managedDependencies.add(managedDependency);
+    }
+    // "-SNAPSHOT" suffix for coordinate to distinguish easily.
+    return new Bom(bom.getCoordinates() + "-SNAPSHOT", managedDependencies.build());
+  }
+
+  /**
+   * Returns the highest snapshot version installed in {@code repositorySystem}. Null if highest
+   * version is not a snapshot.
+   */
+  @VisibleForTesting
+  static Optional<String> findSnapshotVersion(
+      RepositorySystem repositorySystem, RepositorySystemSession session, Artifact artifact)
+      throws VersionRangeResolutionException {
+    Artifact artifactWithVersionRange = artifact.setVersion("(0,]");
+    VersionRangeRequest request =
+        new VersionRangeRequest(
+            artifactWithVersionRange, ImmutableList.of(RepositoryUtility.CENTRAL), null);
+    VersionRangeResult versionResult = repositorySystem.resolveVersionRange(session, request);
+
+    Verify.verify(versionResult.getHighestVersion() != null, "Highest version should not be null");
+    String version = versionResult.getHighestVersion().toString();
+    if (version.contains("-SNAPSHOT")) {
+      return Optional.of(version);
+    }
+    return Optional.empty();
   }
 }
