@@ -60,22 +60,22 @@ public class LinkageMonitorTest {
   @Test
   public void testBomSnapshot()
       throws VersionRangeResolutionException, InvalidVersionSpecificationException {
-    VersionRangeResult versionWithSNAPSHOT = new VersionRangeResult(new VersionRangeRequest());
-    VersionRangeResult versionWithoutSNAPSHOT = new VersionRangeResult(new VersionRangeRequest());
+    VersionRangeResult versionWithSnapshot = new VersionRangeResult(new VersionRangeRequest());
+    VersionRangeResult versionWithoutSnapshot = new VersionRangeResult(new VersionRangeRequest());
     GenericVersionScheme versionScheme = new GenericVersionScheme();
-    versionWithSNAPSHOT.setVersions(
+    versionWithSnapshot.setVersions(
         ImmutableList.of(
             versionScheme.parseVersion("1.2.3"),
             versionScheme.parseVersion("2.1.1"),
             versionScheme.parseVersion("2.1.2-SNAPSHOT")));
-    versionWithoutSNAPSHOT.setVersions(
+    versionWithoutSnapshot.setVersions(
         ImmutableList.of(versionScheme.parseVersion("1.2.3"), versionScheme.parseVersion("1.1.1")));
 
     RepositorySystem mockSystem = mock(RepositorySystem.class);
     when(mockSystem.resolveVersionRange(
             any(RepositorySystemSession.class), any(VersionRangeRequest.class)))
-        .thenReturn(versionWithSNAPSHOT)
-        .thenReturn(versionWithoutSNAPSHOT);
+        .thenReturn(versionWithSnapshot) // first invocation
+        .thenReturn(versionWithoutSnapshot); // subsequent invocation
 
     Bom snapshotBom = LinkageMonitor.copyWithSnapshot(mockSystem, bom);
     assertEquals(
