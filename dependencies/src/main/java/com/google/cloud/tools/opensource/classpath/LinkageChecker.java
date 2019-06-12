@@ -18,12 +18,15 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHierarchy;
 
+import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedListMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -34,6 +37,8 @@ import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 
 /** A tool to find linkage errors in a class path. */
 public class LinkageChecker {
@@ -66,6 +71,22 @@ public class LinkageChecker {
         ClassReferenceGraph.create(symbolReferenceMaps, ImmutableSet.copyOf(entryPoints));
 
     return new LinkageChecker(dumper, jars, symbolReferenceMaps, classReferenceGraph);
+  }
+
+  public static LinkageChecker create(Bom bom) throws RepositoryException, IOException {
+    // duplicate code from DashboardMain follows. We need to refactor to extract this.
+    ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
+
+    LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
+        ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
+    // LinkedListMultimap preserves the key order
+    ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
+
+    // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
+    List<Path> artifactJarsInBom = classpath.subList(0, managedDependencies.size());
+    ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInBom);
+
+    return LinkageChecker.create(classpath, entryPoints);
   }
 
   @VisibleForTesting
