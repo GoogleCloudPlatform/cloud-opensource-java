@@ -89,6 +89,10 @@ public class DashboardMain {
   /**
    * Generates a code hygiene dashboard for a BOM. This tool takes a path to pom.xml of the BOM as
    * an argument or Maven coordinates to a BOM.
+   *
+   * <p>Generated dashboard is at {@code target/$groupId/$artifactId/$version/dashboard.html}, where
+   * each value is from BOM coordinates except {@code $version} is "snapshot" if the BOM has
+   * snapshot version.
    */
   public static void main(String[] arguments)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
@@ -150,7 +154,13 @@ public class DashboardMain {
       ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems)
       throws IOException, TemplateException, URISyntaxException {
 
-    Path relativePath = Paths.get("target", "dashboard");
+    Artifact bomArtifact = new DefaultArtifact(bom.getCoordinates());
+
+    String version = bomArtifact.getVersion();
+    String versionPathElement = version.contains("-SNAPSHOT") ? "snapshot" : version;
+    Path relativePath =
+        Paths.get(
+            "target", bomArtifact.getGroupId(), bomArtifact.getArtifactId(), versionPathElement);
     Path output = Files.createDirectories(relativePath);
 
     copyResource(output, "css/dashboard.css");
@@ -304,10 +314,10 @@ public class DashboardMain {
 
     String coordinates = Artifacts.toCoordinates(artifact);
     File outputFile = output.resolve(coordinates.replace(':', '_') + ".html").toFile();
-    
+
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
-      
+
       // includes all versions
       DependencyGraph completeDependencies = artifactInfo.getCompleteDependencies();
       List<Update> convergenceIssues = completeDependencies.findUpdates();
@@ -362,7 +372,7 @@ public class DashboardMain {
       return results;
     }
   }
-  
+
   private static Map<Artifact, Artifact> findUpperBoundsFailures(
       Map<String, String> expectedVersionMap,
       DependencyGraph transitiveDependencies) {
@@ -439,9 +449,9 @@ public class DashboardMain {
     DefaultObjectWrapper wrapper = new DefaultObjectWrapperBuilder(Configuration.VERSION_2_3_28)
         .build();
     TemplateHashModel staticModels = wrapper.getStaticModels();
-    templateData.put("dashboardMain", staticModels.get(DashboardMain.class.getName()));    
-    templateData.put("pieChart", staticModels.get(PieChart.class.getName()));    
-    
+    templateData.put("dashboardMain", staticModels.get(DashboardMain.class.getName()));
+    templateData.put("pieChart", staticModels.get(PieChart.class.getName()));
+
     File dashboardFile = output.resolve("dashboard.html").toFile();
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
