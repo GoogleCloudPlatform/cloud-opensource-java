@@ -16,8 +16,11 @@
 
 package com.google.cloud.tools.dependencies.linkagemonitor;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
@@ -49,7 +52,7 @@ public class LinkageMonitor {
       throws RepositoryException, IOException, LinkageMonitorException {
     if (arguments.length < 1) {
       System.err.println(
-          "Please specify BOM coordinates. Example: com.google.cloud:libraries-bom:1.2.1");
+          "Please specify BOM coordinates. Example: com.google.cloud:libraries-bom:1.2.0");
       System.exit(1);
     }
     String bomCoordinates = arguments[0];
@@ -61,8 +64,20 @@ public class LinkageMonitor {
     Bom baseline = RepositoryUtility.readBom(bomCoordinates);
     ImmutableSet<SymbolProblem> problemsInBaseline =
         LinkageChecker.create(baseline).findSymbolProblems().keySet();
+    ImmutableList<String> baselineCoordinates =
+        baseline.getManagedDependencies().stream()
+            .map(Artifacts::toCoordinates)
+            .collect(toImmutableList());
 
     Bom snapshot = copyWithSnapshot(repositorySystem, baseline);
+    ImmutableList<String> snapshotCoordinates =
+        snapshot.getManagedDependencies().stream()
+            .map(Artifacts::toCoordinates)
+            .collect(toImmutableList());
+    if (baselineCoordinates.equals(snapshotCoordinates)) {
+      System.out.println("No snapshot version for the BOM found. Not running comparison.");
+      return;
+    }
 
     ImmutableSet<SymbolProblem> problemsInSnapshot =
         LinkageChecker.create(snapshot).findSymbolProblems().keySet();
@@ -75,6 +90,11 @@ public class LinkageMonitor {
       int errorSize = newErrors.size();
       throw new LinkageMonitorException(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
+    }
+    Set<SymbolProblem> disappearedErrors = Sets.difference(problemsInBaseline, problemsInSnapshot);
+    if (!disappearedErrors.isEmpty()) {
+      System.out.println("The following errors disappeared:");
+      System.out.println(disappearedErrors);
     }
     // No new symbol problems introduced by snapshot BOM. Returning success.
   }
@@ -90,12 +110,10 @@ public class LinkageMonitor {
     RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
 
     for (Artifact managedDependency : bom.getManagedDependencies()) {
-      Optional<String> snapshotVersion =
-          findSnapshotVersion(repositorySystem, session, managedDependency);
-      if (snapshotVersion.isPresent()) {
-        managedDependency = managedDependency.setVersion(snapshotVersion.get());
-      }
-      managedDependencies.add(managedDependency);
+      managedDependencies.add(
+          findSnapshotVersion(repositorySystem, session, managedDependency)
+              .map(managedDependency::setVersion)
+              .orElse(managedDependency));
     }
     // "-SNAPSHOT" suffix for coordinate to distinguish easily.
     return new Bom(bom.getCoordinates() + "-SNAPSHOT", managedDependencies.build());
