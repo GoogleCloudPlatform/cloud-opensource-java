@@ -64,12 +64,13 @@ public class LinkageMonitor {
     Bom baseline = RepositoryUtility.readBom(bomCoordinates);
     ImmutableSet<SymbolProblem> problemsInBaseline =
         LinkageChecker.create(baseline).findSymbolProblems().keySet();
+    Bom snapshot = copyWithSnapshot(repositorySystem, baseline);
+
+    // Compare coordinates of the two BOM. No need to run comparison if they are the same.
     ImmutableList<String> baselineCoordinates =
         baseline.getManagedDependencies().stream()
-            .map(Artifacts::toCoordinates)
+            .map(Artifacts::toCoordinates) // DefaultArtifact does not have equal overridden
             .collect(toImmutableList());
-
-    Bom snapshot = copyWithSnapshot(repositorySystem, baseline);
     ImmutableList<String> snapshotCoordinates =
         snapshot.getManagedDependencies().stream()
             .map(Artifacts::toCoordinates)
