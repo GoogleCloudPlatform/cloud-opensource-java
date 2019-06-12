@@ -58,7 +58,7 @@ public class RepositoryUtilityTest {
     Bom bom = RepositoryUtility.readBom(pomFile);
     
     ImmutableList<Artifact> artifacts = bom.getManagedDependencies();
-    Assert.assertEquals(187, artifacts.size());
+    Assert.assertEquals(186, artifacts.size());
     String coordinates = bom.getCoordinates();
     Assert.assertTrue(coordinates.startsWith("com.google.cloud:libraries-bom:"));
     Assert.assertTrue(coordinates.endsWith("-SNAPSHOT"));
