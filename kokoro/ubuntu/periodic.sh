@@ -23,6 +23,12 @@ cd dashboard
 SONATYPE_RESPONSE=`curl 'https://search.maven.org/solrsearch/select?q=g:%22com.google.cloud%22+AND+a:%22libraries-bom%22&core=gav&rows=1000&wt=json'`
 # Example: '1.0.0 1.1.0'
 VERSIONS=`echo $SONATYPE_RESPONSE | perl -nle 'print $1 while m/"v":"(.+?)"/g'`
+
+if [[ -z "${VERSIONS}" ]]; then
+  echo "Failed to read Sonatype API response"
+  exit 1
+fi
+
 for VERSION in $VERSIONS; do
   # Generates dashboards for published BOMs.
   # Example: target/com.google.cloud/libraries-bom/1.1.1/index.html
