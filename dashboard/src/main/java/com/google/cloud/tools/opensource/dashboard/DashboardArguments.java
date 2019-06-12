@@ -55,6 +55,9 @@ final class DashboardArguments {
   /** Returns an absolute path to pom.xml file of a BOM. Null if file is not specified. */
   @Nullable
   Path getBomFile() {
+    if (!commandLine.hasOption('f')) {
+      return null;
+    }
     // Trim the value so that maven exec plugin can pass arguments with exec.arguments="-f pom.xml"
     return Paths.get(commandLine.getOptionValue('f').trim()).toAbsolutePath();
   }
@@ -62,7 +65,10 @@ final class DashboardArguments {
   /** Returns the Maven coordinates of a BOM. Null if coordinates are not specified. */
   @Nullable
   String getBomCoordinates() {
-    return commandLine.getOptionValue('c');
+    if (!commandLine.hasOption('c')) {
+      return null;
+    }
+    return commandLine.getOptionValue('c').trim();
   }
 
   static DashboardArguments readCommandLine(String... arguments) throws ParseException {
