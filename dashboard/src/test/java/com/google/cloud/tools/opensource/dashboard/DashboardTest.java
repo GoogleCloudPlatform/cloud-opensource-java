@@ -261,7 +261,7 @@ public class DashboardTest {
     }
   }
 
-  @Test
+  @Test 
   public void testDashboard_unstableDependencies() {
     // Pre 1.0 version section
     Nodes li = unstable.query("//ul[@id='unstable']/li");
