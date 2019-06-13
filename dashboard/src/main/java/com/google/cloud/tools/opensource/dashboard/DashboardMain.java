@@ -171,7 +171,8 @@ public class DashboardMain {
         indexByJar(symbolProblems);
 
     List<ArtifactResults> table =
-        generateReports(configuration, output, cache, symbolProblemTable, jarToDependencyPaths);
+        generateReports(
+            configuration, output, cache, symbolProblemTable, jarToDependencyPaths, bom);
 
     generateDashboard(
         configuration,
@@ -225,7 +226,8 @@ public class DashboardMain {
       Path output,
       ArtifactCache cache,
       ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
-      ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
+      ListMultimap<Path, DependencyPath> jarToDependencyPaths,
+      Bom bom) {
 
     ImmutableSetMultimap<String, Path> bomMemberToJars = bomMemberToJars(jarToDependencyPaths);
 
@@ -253,7 +255,8 @@ public class DashboardMain {
                   entry.getValue(),
                   cache.getGlobalDependencies(),
                   ImmutableMap.copyOf(relevantSymbolProblemTable),
-                  jarToDependencyPaths);
+                  jarToDependencyPaths,
+                  bom);
           table.add(results);
         }
       } catch (IOException ex) {
@@ -309,7 +312,8 @@ public class DashboardMain {
       ArtifactInfo artifactInfo,
       List<DependencyGraph> globalDependencies,
       ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
-      ListMultimap<Path, DependencyPath> jarToDependencyPaths)
+      ListMultimap<Path, DependencyPath> jarToDependencyPaths,
+      Bom bom)
       throws IOException, TemplateException {
 
     String coordinates = Artifacts.toCoordinates(artifact);
@@ -361,6 +365,7 @@ public class DashboardMain {
       templateData.put("symbolProblems", symbolProblemTable);
       templateData.put("jarToDependencyPaths", jarToDependencyPathsForArtifact);
       templateData.put("totalLinkageErrorCount", totalLinkageErrorCount);
+      templateData.put("coordinates", bom.getCoordinates());
       report.process(templateData, out);
 
       ArtifactResults results = new ArtifactResults(artifact);
