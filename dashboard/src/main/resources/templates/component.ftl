@@ -13,7 +13,7 @@
   </head>
   <body>
     <h1>Dependency Analysis of ${groupId}:${artifactId}:${version}</h1>
-    <p>BOM: ${coordinates?html}</p>
+    <p class="bom-coordinates">BOM: ${coordinates?html}</p>
     <h2 id="global-upper-bounds">Global Upper Bounds Check</h2>
     
     <p>For each transitive dependency the library pulls in, the highest version 
