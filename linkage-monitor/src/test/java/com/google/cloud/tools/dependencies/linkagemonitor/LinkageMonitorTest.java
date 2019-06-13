@@ -19,6 +19,7 @@ package com.google.cloud.tools.dependencies.linkagemonitor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -65,26 +66,42 @@ public class LinkageMonitorTest {
     GenericVersionScheme versionScheme = new GenericVersionScheme();
     versionWithSnapshot.setVersions(
         ImmutableList.of(
-            versionScheme.parseVersion("1.2.3"),
-            versionScheme.parseVersion("2.1.1"),
-            versionScheme.parseVersion("2.1.2-SNAPSHOT")));
+            versionScheme.parseVersion("3.6.0"),
+            versionScheme.parseVersion("3.7.0"),
+            versionScheme.parseVersion("3.8.0-SNAPSHOT")));
     versionWithoutSnapshot.setVersions(
         ImmutableList.of(versionScheme.parseVersion("1.2.3"), versionScheme.parseVersion("1.1.1")));
 
     RepositorySystem mockSystem = mock(RepositorySystem.class);
     when(mockSystem.resolveVersionRange(
             any(RepositorySystemSession.class), any(VersionRangeRequest.class)))
-        .thenReturn(versionWithSnapshot) // first invocation
-        .thenReturn(versionWithoutSnapshot); // subsequent invocation
+        .thenReturn(versionWithoutSnapshot); // other invocations than protobuf-java
+    when(mockSystem.resolveVersionRange(
+            any(RepositorySystemSession.class),
+            argThat(request -> "protobuf-java".equals(request.getArtifact().getArtifactId()))))
+        .thenReturn(versionWithSnapshot); // invocation for protobuf-java
 
     Bom snapshotBom = LinkageMonitor.copyWithSnapshot(mockSystem, bom);
+
     assertEquals(
-        "The first artifact should have SNAPSHOT version",
-        "2.1.2-SNAPSHOT",
+        "The first element of the SNAPSHOT BOM should be the same as the original BOM",
+        "protobuf-java",
+        snapshotBom.getManagedDependencies().get(0).getArtifactId());
+    assertEquals(
+        "The protobuf-java artifact should have SNAPSHOT version",
+        "3.8.0-SNAPSHOT",
         snapshotBom.getManagedDependencies().get(0).getVersion());
+
+    int bomSize = bom.getManagedDependencies().size();
     assertEquals(
-        "The second artifact should not have SNAPSHOT version",
-        bom.getManagedDependencies().get(1).getVersion(),
-        snapshotBom.getManagedDependencies().get(1).getVersion());
+        "Snapshot BOM should have the same length as original BOM.",
+        bomSize,
+        snapshotBom.getManagedDependencies().size());
+    for (int i = 1; i < bomSize; ++i) {
+      assertEquals(
+          "The other artifacts than protobuf-java should have the original version",
+          bom.getManagedDependencies().get(i).getVersion(),
+          snapshotBom.getManagedDependencies().get(i).getVersion());
+    }
   }
 }

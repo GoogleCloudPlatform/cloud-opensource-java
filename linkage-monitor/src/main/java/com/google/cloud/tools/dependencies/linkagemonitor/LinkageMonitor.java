@@ -69,7 +69,7 @@ public class LinkageMonitor {
     // Compare coordinates of the two BOM. No need to run comparison if they are the same.
     ImmutableList<String> baselineCoordinates =
         baseline.getManagedDependencies().stream()
-            .map(Artifacts::toCoordinates) // DefaultArtifact does not have equal overridden
+            .map(Artifacts::toCoordinates) // DefaultArtifact does not override equals
             .collect(toImmutableList());
     ImmutableList<String> snapshotCoordinates =
         snapshot.getManagedDependencies().stream()
@@ -83,18 +83,18 @@ public class LinkageMonitor {
     ImmutableSet<SymbolProblem> problemsInSnapshot =
         LinkageChecker.create(snapshot).findSymbolProblems().keySet();
 
-    Set<SymbolProblem> fixedErrors = Sets.difference(problemsInBaseline, problemsInSnapshot);
-    Set<SymbolProblem> newErrors = Sets.difference(problemsInSnapshot, problemsInBaseline);
-
-    if (newErrors.equals(fixedErrors)) {
+    if (problemsInBaseline.equals(problemsInSnapshot)) {
       System.out.println(
           "Snapshot versions have the same " + problemsInBaseline.size() + " errors as baseline");
       return;
     }
+
+    Set<SymbolProblem> fixedErrors = Sets.difference(problemsInBaseline, problemsInSnapshot);
     if (!fixedErrors.isEmpty()) {
-      System.out.println("The following errors are fixed:");
+      System.out.println("The following errors in the baseline no longer appear in the snapshot:");
       System.out.println(fixedErrors);
     }
+    Set<SymbolProblem> newErrors = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newErrors.isEmpty()) {
       // TODO(#683): Display new linkage errors caused by snapshot versions if any
       System.err.println("There are one or more new new linkage errors in snapshot versions:");
