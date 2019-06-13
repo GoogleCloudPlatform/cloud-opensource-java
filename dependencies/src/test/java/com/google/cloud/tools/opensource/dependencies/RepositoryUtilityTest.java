@@ -52,7 +52,7 @@ public class RepositoryUtilityTest {
   }
 
   @Test
-  public void testReadBom_path() throws Exception {
+  public void testReadBom_path() throws MavenRepositoryException {
     Path pomFile = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml");
     
     Bom bom = RepositoryUtility.readBom(pomFile);
