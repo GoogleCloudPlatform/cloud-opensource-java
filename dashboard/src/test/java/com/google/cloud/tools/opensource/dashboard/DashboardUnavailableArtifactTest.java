@@ -51,6 +51,7 @@ import org.junit.Test;
 public class DashboardUnavailableArtifactTest {
 
   private static Path outputDirectory;
+  private Bom bom = new Bom("test:test:1.2.4", null);
   private Builder builder = new Builder();
 
   @BeforeClass
@@ -81,7 +82,12 @@ public class DashboardUnavailableArtifactTest {
     cache.setInfoMap(map);
     List<ArtifactResults> artifactResults =
         DashboardMain.generateReports(
-            configuration, outputDirectory, cache, ImmutableMap.of(), LinkedListMultimap.create());
+            configuration,
+            outputDirectory,
+            cache,
+            ImmutableMap.of(),
+            LinkedListMultimap.create(),
+            bom);
 
     Assert.assertEquals(
         "The length of the ArtifactResults should match the length of artifacts",
@@ -121,7 +127,6 @@ public class DashboardUnavailableArtifactTest {
     table.add(validArtifactResult);
     table.add(errorArtifactResult);
 
-    Bom bom = new Bom("test:test:1.2.4", null);
     DashboardMain.generateDashboard(
         configuration,
         outputDirectory,

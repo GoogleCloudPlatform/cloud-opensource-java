@@ -9,7 +9,7 @@
   </head>
   <body>
     <h1>Google Cloud Platform Java Dependency Dashboard Artifact Details</h1>
-
+    <p>BOM: ${coordinates?html}</p>
     <h2>Dependency Details</h2>
 
     <table class="dependency-dashboard">

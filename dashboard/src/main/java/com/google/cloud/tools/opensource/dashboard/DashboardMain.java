@@ -18,39 +18,6 @@ package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-
-import freemarker.template.Configuration;
-import freemarker.template.DefaultObjectWrapper;
-import freemarker.template.DefaultObjectWrapperBuilder;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
-import freemarker.template.TemplateHashModel;
-import freemarker.template.Version;
-import org.apache.commons.cli.ParseException;
-import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
@@ -79,6 +46,37 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import freemarker.template.Configuration;
+import freemarker.template.DefaultObjectWrapper;
+import freemarker.template.DefaultObjectWrapperBuilder;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import freemarker.template.TemplateHashModel;
+import freemarker.template.Version;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+import org.apache.commons.cli.ParseException;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 
 public class DashboardMain {
   public static final String TEST_NAME_LINKAGE_CHECK = "Linkage Errors";
@@ -171,7 +169,8 @@ public class DashboardMain {
         indexByJar(symbolProblems);
 
     List<ArtifactResults> table =
-        generateReports(configuration, output, cache, symbolProblemTable, jarToDependencyPaths);
+        generateReports(
+            configuration, output, cache, symbolProblemTable, jarToDependencyPaths, bom);
 
     generateDashboard(
         configuration,
@@ -225,7 +224,8 @@ public class DashboardMain {
       Path output,
       ArtifactCache cache,
       ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
-      ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
+      ListMultimap<Path, DependencyPath> jarToDependencyPaths,
+      Bom bom) {
 
     ImmutableSetMultimap<String, Path> bomMemberToJars = bomMemberToJars(jarToDependencyPaths);
 
@@ -253,7 +253,8 @@ public class DashboardMain {
                   entry.getValue(),
                   cache.getGlobalDependencies(),
                   ImmutableMap.copyOf(relevantSymbolProblemTable),
-                  jarToDependencyPaths);
+                  jarToDependencyPaths,
+                  bom);
           table.add(results);
         }
       } catch (IOException ex) {
@@ -309,7 +310,8 @@ public class DashboardMain {
       ArtifactInfo artifactInfo,
       List<DependencyGraph> globalDependencies,
       ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
-      ListMultimap<Path, DependencyPath> jarToDependencyPaths)
+      ListMultimap<Path, DependencyPath> jarToDependencyPaths,
+      Bom bom)
       throws IOException, TemplateException {
 
     String coordinates = Artifacts.toCoordinates(artifact);
@@ -361,6 +363,7 @@ public class DashboardMain {
       templateData.put("symbolProblems", symbolProblemTable);
       templateData.put("jarToDependencyPaths", jarToDependencyPathsForArtifact);
       templateData.put("totalLinkageErrorCount", totalLinkageErrorCount);
+      templateData.put("coordinates", bom.getCoordinates());
       report.process(templateData, out);
 
       ArtifactResults results = new ArtifactResults(artifact);

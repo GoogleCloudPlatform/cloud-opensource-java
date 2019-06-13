@@ -9,6 +9,7 @@
   </head>
   <body>
     <h1>Dependency Status of ${coordinates}</h1>
+    <p>BOM: ${coordinates?html}</p>
     <h2>Pre 1.0 Versions</h2>
       
     <p>
