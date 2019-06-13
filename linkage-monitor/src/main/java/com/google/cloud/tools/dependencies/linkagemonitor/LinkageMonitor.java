@@ -83,7 +83,18 @@ public class LinkageMonitor {
     ImmutableSet<SymbolProblem> problemsInSnapshot =
         LinkageChecker.create(snapshot).findSymbolProblems().keySet();
 
+    Set<SymbolProblem> fixedErrors = Sets.difference(problemsInBaseline, problemsInSnapshot);
     Set<SymbolProblem> newErrors = Sets.difference(problemsInSnapshot, problemsInBaseline);
+
+    if (newErrors.equals(fixedErrors)) {
+      System.out.println(
+          "Snapshot versions have the same " + problemsInBaseline.size() + " errors as baseline");
+      return;
+    }
+    if (!fixedErrors.isEmpty()) {
+      System.out.println("The following errors are fixed:");
+      System.out.println(fixedErrors);
+    }
     if (!newErrors.isEmpty()) {
       // TODO(#683): Display new linkage errors caused by snapshot versions if any
       System.err.println("There are one or more new new linkage errors in snapshot versions:");
@@ -91,14 +102,6 @@ public class LinkageMonitor {
       int errorSize = newErrors.size();
       throw new LinkageMonitorException(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
-    }
-    Set<SymbolProblem> disappearedErrors = Sets.difference(problemsInBaseline, problemsInSnapshot);
-    if (!disappearedErrors.isEmpty()) {
-      System.out.println("The following errors disappeared:");
-      System.out.println(disappearedErrors);
-    } else {
-      System.out.println(
-          "Snapshot versions have the same " + problemsInBaseline.size() + " errors as baseline");
     }
     // No new symbol problems introduced by snapshot BOM. Returning success.
   }
