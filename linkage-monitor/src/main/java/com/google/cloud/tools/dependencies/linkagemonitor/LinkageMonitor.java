@@ -96,6 +96,9 @@ public class LinkageMonitor {
     if (!disappearedErrors.isEmpty()) {
       System.out.println("The following errors disappeared:");
       System.out.println(disappearedErrors);
+    } else {
+      System.out.println(
+          "Snapshot versions have the same " + problemsInBaseline.size() + " errors as baseline");
     }
     // No new symbol problems introduced by snapshot BOM. Returning success.
   }
