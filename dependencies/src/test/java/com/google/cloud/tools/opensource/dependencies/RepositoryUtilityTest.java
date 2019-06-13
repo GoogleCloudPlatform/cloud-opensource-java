@@ -52,13 +52,13 @@ public class RepositoryUtilityTest {
   }
 
   @Test
-  public void testReadBom_path() throws Exception {
+  public void testReadBom_path() throws MavenRepositoryException {
     Path pomFile = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml");
     
     Bom bom = RepositoryUtility.readBom(pomFile);
     
     ImmutableList<Artifact> artifacts = bom.getManagedDependencies();
-    Assert.assertEquals(203, artifacts.size());
+    Assert.assertEquals(209, artifacts.size());
     String coordinates = bom.getCoordinates();
     Assert.assertTrue(coordinates.startsWith("com.google.cloud:libraries-bom:"));
     Assert.assertTrue(coordinates.endsWith("-SNAPSHOT"));
