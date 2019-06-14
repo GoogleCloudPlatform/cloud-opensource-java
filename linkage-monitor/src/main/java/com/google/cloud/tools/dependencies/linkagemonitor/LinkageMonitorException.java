@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.dependencies.linkagemonitor;
 
-/** Error when {@link LinkageMonitor} reports new linkage errors. */
+/** Exception thrown if {@link LinkageMonitor} reports new linkage errors. */
 class LinkageMonitorException extends Exception {
   LinkageMonitorException(String message) {
     super(message);
