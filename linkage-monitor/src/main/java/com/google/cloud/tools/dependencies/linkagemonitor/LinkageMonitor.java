@@ -111,14 +111,15 @@ public class LinkageMonitor {
   }
 
   /**
-   * Returns the highest snapshot version installed in {@code repositorySystem}. Null if highest
-   * version is not a snapshot.
+   * Returns {@code Optional} describing the highest snapshot version if such version is available
+   * in {@code repositorySystem}; otherwise an empty {@code Optional}.
    */
-  @VisibleForTesting
-  static Optional<String> findSnapshotVersion(
+  private static Optional<String> findSnapshotVersion(
       RepositorySystem repositorySystem, RepositorySystemSession session, Artifact artifact)
       throws VersionRangeResolutionException {
-    String version = findHighestVersion(repositorySystem, session, artifact);
+    String version =
+        findHighestVersion(
+            repositorySystem, session, artifact.getGroupId(), artifact.getArtifactId());
     if (version.contains("-SNAPSHOT")) {
       return Optional.of(version);
     }
@@ -126,9 +127,12 @@ public class LinkageMonitor {
   }
 
   private static String findHighestVersion(
-      RepositorySystem repositorySystem, RepositorySystemSession session, Artifact artifact)
+      RepositorySystem repositorySystem,
+      RepositorySystemSession session,
+      String groupId,
+      String artifactId)
       throws VersionRangeResolutionException {
-    Artifact artifactWithVersionRange = artifact.setVersion("(0,]");
+    Artifact artifactWithVersionRange = new DefaultArtifact(groupId, artifactId, null, "(0,]");
     VersionRangeRequest request =
         new VersionRangeRequest(
             artifactWithVersionRange, ImmutableList.of(RepositoryUtility.CENTRAL), null);
@@ -141,13 +145,7 @@ public class LinkageMonitor {
   private String findLatestCoordinates(String groupId, String artifactId)
       throws VersionRangeResolutionException {
     RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
-    Artifact artifact = new DefaultArtifact(groupId, artifactId, null,
-        "0.0.1"); // dummy version
-    String highestVersion =
-        findHighestVersion(
-            repositorySystem,
-            session,
-            artifact);
-    return Artifacts.toCoordinates(artifact.setVersion(highestVersion));
+    String highestVersion = findHighestVersion(repositorySystem, session, groupId, artifactId);
+    return String.format("%s:%s:%s", groupId, artifactId, highestVersion);
   }
 }
