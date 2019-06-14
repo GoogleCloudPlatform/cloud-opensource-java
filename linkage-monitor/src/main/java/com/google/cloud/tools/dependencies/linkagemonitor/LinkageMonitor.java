@@ -94,10 +94,18 @@ public class LinkageMonitor {
       return;
     }
 
-    Set<SymbolProblem> fixedErrors = Sets.difference(problemsInBaseline, problemsInSnapshot);
-    if (!fixedErrors.isEmpty()) {
-      System.out.println("The following errors in the baseline no longer appear in the snapshot:");
-      System.out.println(fixedErrors);
+    Set<SymbolProblem> fixedProblems = Sets.difference(problemsInBaseline, problemsInSnapshot);
+    if (!fixedProblems.isEmpty()) {
+      int problemSize = fixedProblems.size();
+      StringBuilder message =
+          new StringBuilder(
+              "The following problem"
+                  + (problemSize > 1 ? "s" : "")
+                  + " in the baseline no longer appear in the snapshot:\n");
+      for (SymbolProblem problem : fixedProblems) {
+        message.append(problem + "\n");
+      }
+      System.out.println(message.toString());
     }
     Set<SymbolProblem> newErrors = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newErrors.isEmpty()) {
@@ -116,8 +124,10 @@ public class LinkageMonitor {
       System.err.println(message.toString());
       throw new LinkageMonitorException(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
+    } else {
+      // No new symbol problems introduced by snapshot BOM. Returning success.
+      System.out.println("No new problem found");
     }
-    // No new symbol problems introduced by snapshot BOM. Returning success.
   }
 
   /**
