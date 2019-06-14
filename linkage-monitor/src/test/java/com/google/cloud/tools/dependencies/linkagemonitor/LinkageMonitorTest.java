@@ -61,10 +61,11 @@ public class LinkageMonitorTest {
   @Test
   public void testBomSnapshot()
       throws VersionRangeResolutionException, InvalidVersionSpecificationException {
-    VersionRangeResult versionWithSnapshot = new VersionRangeResult(new VersionRangeRequest());
+    VersionRangeResult protobufSnapshotVersionResult =
+        new VersionRangeResult(new VersionRangeRequest());
     VersionRangeResult versionWithoutSnapshot = new VersionRangeResult(new VersionRangeRequest());
     GenericVersionScheme versionScheme = new GenericVersionScheme();
-    versionWithSnapshot.setVersions(
+    protobufSnapshotVersionResult.setVersions(
         ImmutableList.of(
             versionScheme.parseVersion("3.6.0"),
             versionScheme.parseVersion("3.7.0"),
@@ -79,7 +80,7 @@ public class LinkageMonitorTest {
     when(mockSystem.resolveVersionRange(
             any(RepositorySystemSession.class),
             argThat(request -> "protobuf-java".equals(request.getArtifact().getArtifactId()))))
-        .thenReturn(versionWithSnapshot); // invocation for protobuf-java
+        .thenReturn(protobufSnapshotVersionResult); // invocation for protobuf-java
 
     Bom snapshotBom = LinkageMonitor.copyWithSnapshot(mockSystem, bom);
 
