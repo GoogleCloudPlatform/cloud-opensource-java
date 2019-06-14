@@ -18,23 +18,14 @@ package com.google.cloud.tools.dependencies.linkagemonitor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.google.cloud.tools.opensource.classpath.ClassFile;
-import com.google.cloud.tools.opensource.classpath.ClassSymbol;
-import com.google.cloud.tools.opensource.classpath.ErrorType;
-import com.google.cloud.tools.opensource.classpath.FieldSymbol;
-import com.google.cloud.tools.opensource.classpath.MethodSymbol;
-import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSetMultimap;
-import java.nio.file.Paths;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -112,85 +103,6 @@ public class LinkageMonitorTest {
           "Artifacts other than protobuf-java should have the original version",
           bom.getManagedDependencies().get(i).getVersion(),
           snapshotBom.getManagedDependencies().get(i).getVersion());
-    }
-  }
-
-  private ClassFile classFile =
-      new ClassFile(Paths.get("aaa", "bbb-1.2.3.jar"), "java.lang.Object");
-  private SymbolProblem methodSymbolProblem =
-      new SymbolProblem(
-          new MethodSymbol(
-              "io.grpc.protobuf.ProtoUtils.marshaller",
-              "marshaller",
-              "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
-              false),
-          ErrorType.SYMBOL_NOT_FOUND,
-          classFile);
-
-  private SymbolProblem classSymbolProblem =
-      new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
-
-  private SymbolProblem fieldSymbolProblem =
-      new SymbolProblem(
-          new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"),
-          ErrorType.SYMBOL_NOT_FOUND,
-          classFile);
-
-  @Test
-  public void testValidateDifference_noNewSymbolProblems() throws LinkageMonitorException {
-    ImmutableSetMultimap<SymbolProblem, ClassFile> baselineSymbolProblems =
-        ImmutableSetMultimap.of(
-            methodSymbolProblem,
-            classFile,
-            classSymbolProblem,
-            classFile,
-            classSymbolProblem,
-            classFile,
-            fieldSymbolProblem,
-            classFile);
-
-    ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems =
-        ImmutableSetMultimap.of(
-            methodSymbolProblem,
-            classFile,
-            classSymbolProblem,
-            classFile,
-            classSymbolProblem,
-            classFile,
-            fieldSymbolProblem,
-            classFile);
-
-    // Should not throw exception
-    LinkageMonitor.validateDifference(snapshotSymbolProblems, baselineSymbolProblems);
-  }
-
-  @Test
-  public void testValidateDifference_newSymbolProblems() {
-    ImmutableSetMultimap<SymbolProblem, ClassFile> baselineSymbolProblems =
-        ImmutableSetMultimap.of(
-            methodSymbolProblem,
-            classFile,
-            classSymbolProblem,
-            classFile,
-            classSymbolProblem,
-            classFile);
-
-    ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems =
-        ImmutableSetMultimap.of(
-            methodSymbolProblem,
-            classFile,
-            classSymbolProblem,
-            classFile,
-            classSymbolProblem,
-            classFile,
-            fieldSymbolProblem, // This is not in baseline
-            classFile);
-
-    try {
-      LinkageMonitor.validateDifference(snapshotSymbolProblems, baselineSymbolProblems);
-      fail("Linkage Monitor should throw exception when it finds new linkage error");
-    } catch (LinkageMonitorException ex) {
-      // pass
     }
   }
 }

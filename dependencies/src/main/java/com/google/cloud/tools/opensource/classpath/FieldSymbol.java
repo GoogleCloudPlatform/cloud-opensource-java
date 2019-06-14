@@ -19,11 +19,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Objects;
 
 /** Symbol for a field of a class. */
-public final class FieldSymbol extends Symbol {
+final class FieldSymbol extends Symbol {
   private final String name;
   private final String descriptor;
 
-  public FieldSymbol(String className, String name, String descriptor) {
+  FieldSymbol(String className, String name, String descriptor) {
     super(className);
     this.name = checkNotNull(name);
     this.descriptor = checkNotNull(descriptor);

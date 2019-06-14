@@ -18,7 +18,6 @@ package com.google.cloud.tools.dependencies.linkagemonitor;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -29,7 +28,6 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.List;
@@ -72,8 +70,8 @@ public class LinkageMonitor {
     String latestBomCoordinates = findLatestCoordinates(groupId, artifactId);
     System.out.println("BOM Coordinates: " + latestBomCoordinates);
     Bom baseline = RepositoryUtility.readBom(latestBomCoordinates);
-    ImmutableSetMultimap<SymbolProblem, ClassFile> baselineSymbolProblems =
-        LinkageChecker.create(baseline).findSymbolProblems();
+    ImmutableSet<SymbolProblem> problemsInBaseline =
+        LinkageChecker.create(baseline).findSymbolProblems().keySet();
     Bom snapshot = copyWithSnapshot(repositorySystem, baseline);
 
     // Compare coordinates of the two BOMs. No need to run comparison if they are the same.
@@ -92,27 +90,8 @@ public class LinkageMonitor {
       return;
     }
 
-    ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems =
-        LinkageChecker.create(snapshot).findSymbolProblems();
-    validateDifference(snapshotSymbolProblems, baselineSymbolProblems);
-    // No new symbol problems introduced by snapshot BOM. Returning success.
-  }
-
-  /**
-   * Validates the difference of linkage erros between {@code snapshotSymbolProblems} and {@code
-   * baselineSymbolProblems}.
-   *
-   * @throws LinkageMonitorException if there are new linkage errors in {@code
-   *     snapshotSymbolProblems}
-   */
-  @VisibleForTesting
-  static void validateDifference(
-      ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems,
-      ImmutableSetMultimap<SymbolProblem, ClassFile> baselineSymbolProblems)
-      throws LinkageMonitorException {
-    ImmutableSet<SymbolProblem> problemsInBaseline = baselineSymbolProblems.keySet();
-
-    ImmutableSet<SymbolProblem> problemsInSnapshot = snapshotSymbolProblems.keySet();
+    ImmutableSet<SymbolProblem> problemsInSnapshot =
+        LinkageChecker.create(snapshot).findSymbolProblems().keySet();
 
     if (problemsInBaseline.equals(problemsInSnapshot)) {
       System.out.println(
@@ -134,6 +113,7 @@ public class LinkageMonitor {
       throw new LinkageMonitorException(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
     }
+    // No new symbol problems introduced by snapshot BOM. Returning success.
   }
 
   /**
