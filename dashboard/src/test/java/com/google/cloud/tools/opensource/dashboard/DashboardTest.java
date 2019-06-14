@@ -396,6 +396,33 @@ public class DashboardTest {
   }
 
   @Test
+  public void testBomCoordinatesInComponent() throws IOException, ParsingException {
+    Document document = parseOutputFile("com.google.protobuf_protobuf-java-util_3.6.1.html");
+    Nodes bomCoordinatesNodes = document.query("//p[@class='bom-coordinates']");
+    Assert.assertEquals(1, bomCoordinatesNodes.size());
+    Assert.assertEquals(
+        "BOM: com.google.cloud:libraries-bom:1.0.0", bomCoordinatesNodes.get(0).getValue());
+  }
+
+  @Test
+  public void testBomCoordinatesInArtifactDetails() throws IOException, ParsingException {
+    Document document = parseOutputFile("artifact_details.html");
+    Nodes bomCoordinatesNodes = document.query("//p[@class='bom-coordinates']");
+    Assert.assertEquals(1, bomCoordinatesNodes.size());
+    Assert.assertEquals(
+        "BOM: com.google.cloud:libraries-bom:1.0.0", bomCoordinatesNodes.get(0).getValue());
+  }
+
+  @Test
+  public void testBomCoordinatesInUnstableArtifacts() throws IOException, ParsingException {
+    Document document = parseOutputFile("unstable_artifacts.html");
+    Nodes bomCoordinatesNodes = document.query("//p[@class='bom-coordinates']");
+    Assert.assertEquals(1, bomCoordinatesNodes.size());
+    Assert.assertEquals(
+        "BOM: com.google.cloud:libraries-bom:1.0.0", bomCoordinatesNodes.get(0).getValue());
+  }
+
+  @Test
   public void testOutputDirectory() {
     Truth.assertWithMessage(
             "The dashboard should be created at target/com.google.cloud/libraries-bom/1.0.0")
