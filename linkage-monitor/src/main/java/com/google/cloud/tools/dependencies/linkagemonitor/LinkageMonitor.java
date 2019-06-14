@@ -18,6 +18,7 @@ package com.google.cloud.tools.dependencies.linkagemonitor;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -27,6 +28,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Optional;
@@ -82,8 +84,9 @@ public class LinkageMonitor {
       return;
     }
 
-    ImmutableSet<SymbolProblem> problemsInSnapshot =
-        LinkageChecker.create(snapshot).findSymbolProblems().keySet();
+    ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems =
+        LinkageChecker.create(snapshot).findSymbolProblems();
+    ImmutableSet<SymbolProblem> problemsInSnapshot = snapshotSymbolProblems.keySet();
 
     if (problemsInBaseline.equals(problemsInSnapshot)) {
       System.out.println(
@@ -98,10 +101,19 @@ public class LinkageMonitor {
     }
     Set<SymbolProblem> newErrors = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newErrors.isEmpty()) {
-      // TODO(#683): Display new linkage errors caused by snapshot versions if any
-      System.err.println("There are one or more new new linkage errors in snapshot versions:");
-      System.err.println(newErrors);
       int errorSize = newErrors.size();
+      StringBuilder message =
+          new StringBuilder("Newly introduced problem" + (errorSize > 1 ? "s" : "") + ":\n");
+      for (SymbolProblem problem : newErrors) {
+        message.append(problem + "\n");
+        for (ClassFile classFile : snapshotSymbolProblems.get(problem)) {
+          message.append(
+              String.format(
+                  "  link from %s (%s)",
+                  classFile.getClassName(), classFile.getJar().getFileName()));
+        }
+      }
+      System.err.println(message.toString());
       throw new LinkageMonitorException(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
     }
