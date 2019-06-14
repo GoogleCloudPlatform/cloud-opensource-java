@@ -107,12 +107,12 @@ public class LinkageMonitor {
       }
       System.out.println(message.toString());
     }
-    Set<SymbolProblem> newErrors = Sets.difference(problemsInSnapshot, problemsInBaseline);
-    if (!newErrors.isEmpty()) {
-      int errorSize = newErrors.size();
+    Set<SymbolProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
+    if (!newProblems.isEmpty()) {
+      int errorSize = newProblems.size();
       StringBuilder message =
           new StringBuilder("Newly introduced problem" + (errorSize > 1 ? "s" : "") + ":\n");
-      for (SymbolProblem problem : newErrors) {
+      for (SymbolProblem problem : newProblems) {
         message.append(problem + "\n");
         for (ClassFile classFile : snapshotSymbolProblems.get(problem)) {
           message.append(
