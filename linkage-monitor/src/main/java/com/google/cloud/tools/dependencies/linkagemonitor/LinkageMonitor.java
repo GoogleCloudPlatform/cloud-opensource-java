@@ -102,7 +102,8 @@ public class LinkageMonitor {
    * Validates the difference of linkage erros between {@code snapshotSymbolProblems} and {@code
    * baselineSymbolProblems}.
    *
-   * @throws LinkageMonitorException if there are new linkage errors
+   * @throws LinkageMonitorException if there are new linkage errors in {@code
+   *     snapshotSymbolProblems}
    */
   @VisibleForTesting
   static void validateDifference(
