@@ -16,8 +16,11 @@
 
 package com.google.cloud.tools.dependencies.linkagemonitor;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
@@ -69,12 +72,38 @@ public class LinkageMonitor {
     Bom baseline = RepositoryUtility.readBom(latestBomCoordinates);
     ImmutableSet<SymbolProblem> problemsInBaseline =
         LinkageChecker.create(baseline).findSymbolProblems().keySet();
-
     Bom snapshot = copyWithSnapshot(repositorySystem, baseline);
+
+    // Compare coordinates of the two BOMs. No need to run comparison if they are the same.
+    ImmutableList<String> baselineCoordinates =
+        baseline.getManagedDependencies().stream()
+            .map(Artifacts::toCoordinates) // DefaultArtifact does not override equals
+            .collect(toImmutableList());
+    ImmutableList<String> snapshotCoordinates =
+        snapshot.getManagedDependencies().stream()
+            .map(Artifacts::toCoordinates)
+            .collect(toImmutableList());
+    if (baselineCoordinates.equals(snapshotCoordinates)) {
+      System.out.println(
+          "The content of the snapshot BOM and the original BOM are the same. Not running"
+              + " comparison.");
+      return;
+    }
 
     ImmutableSet<SymbolProblem> problemsInSnapshot =
         LinkageChecker.create(snapshot).findSymbolProblems().keySet();
 
+    if (problemsInBaseline.equals(problemsInSnapshot)) {
+      System.out.println(
+          "Snapshot versions have the same " + problemsInBaseline.size() + " errors as baseline");
+      return;
+    }
+
+    Set<SymbolProblem> fixedErrors = Sets.difference(problemsInBaseline, problemsInSnapshot);
+    if (!fixedErrors.isEmpty()) {
+      System.out.println("The following errors in the baseline no longer appear in the snapshot:");
+      System.out.println(fixedErrors);
+    }
     Set<SymbolProblem> newErrors = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newErrors.isEmpty()) {
       // TODO(#683): Display new linkage errors caused by snapshot versions if any
@@ -98,12 +127,10 @@ public class LinkageMonitor {
     RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
 
     for (Artifact managedDependency : bom.getManagedDependencies()) {
-      Optional<String> snapshotVersion =
-          findSnapshotVersion(repositorySystem, session, managedDependency);
-      if (snapshotVersion.isPresent()) {
-        managedDependency = managedDependency.setVersion(snapshotVersion.get());
-      }
-      managedDependencies.add(managedDependency);
+      managedDependencies.add(
+          findSnapshotVersion(repositorySystem, session, managedDependency)
+              .map(managedDependency::setVersion)
+              .orElse(managedDependency));
     }
     // "-SNAPSHOT" suffix for coordinate to distinguish easily.
     return new Bom(bom.getCoordinates() + "-SNAPSHOT", managedDependencies.build());
