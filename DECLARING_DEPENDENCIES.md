@@ -179,9 +179,10 @@ It is possible for GCP open source Java libraries to have conflicts
 that cannot be resolved by following the recommendations of this
 document. Such conflicts are called *intrinsic conflicts*. There is an
 ongoing effort to remove intrinsic conflicts among GCP open source
-Java libraries and prevent new ones from occurring. A dashboard that
-reports the current results of compatibility checks is accessible from
-the [Cloud Open Source Java Dashboard](https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/dashboard.html).
+Java libraries and prevent new ones from occurring.
+The [Cloud Open Source Java Dashboard](
+https://storage.googleapis.com/cloud-opensource-java-dashboard/com.google.cloud/libraries-bom/snapshot/index.html)
+reports the current results of compatibility checks.
 As of the time of this writing, some conflicts are still in the
 process of being fixed, but they should not be encountered by most
 users who only use the public APIs of the libraries. If you encounter
