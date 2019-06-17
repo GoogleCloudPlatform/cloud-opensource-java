@@ -17,8 +17,11 @@ set -e # fail if any of command fails
 # Install artifacts to local Maven repository. The command depends on build system of the project.
 mvn install -DskipTests
 
-curl http://.../linkage-monitor-X.Y.Z-all-deps.jar # unless it's installed already
-# Latest version of Google Cloud Libraries BOM. Example: "1.1.1"
-LATEST_VERSION=`curl 'https://search.maven.org/solrsearch/select?q=g:%22com.google.cloud%22+AND+a:%22libraries-bom%22&core=gav&rows=1&wt=json' |perl -nle 'print $1 while m/"v":"(.+?)"/g'`
-java -jar /path/to/linkage-monitor-X.Y.Z-all-deps.jar com.google.cloud:libraries-bom:${LATEST_VERSION}
+# Get uber JAR unless it's installed already
+curl https://storage.googleapis.com/.../linkage-monitor-latest-all-deps.jar 
+java -jar linkage-monitor-X.Y.Z-all-deps.jar com.google.cloud:libraries-bom
 ```
+
+# Kokoro Job to Update GCS Object
+
+Kokoro job to update the GCS object is `cloud-opensource-java/ubuntu/linkage-monitor-gcs`.
