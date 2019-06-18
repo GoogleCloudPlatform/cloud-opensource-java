@@ -38,7 +38,7 @@ class ManagedDependencyLister {
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 
     ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
-    request.addRepository(RepositoryUtility.GOOGLE_MIRROR);
+    request.addRepository(RepositoryUtility.CENTRAL);
     request.setArtifact(artifact);
 
     ArtifactDescriptorResult resolved = system.readArtifactDescriptor(session, request);

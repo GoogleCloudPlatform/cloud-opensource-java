@@ -83,12 +83,13 @@ import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 public final class RepositoryUtility {
 
   private static final Logger logger = Logger.getLogger(RepositoryUtility.class.getName());
-  
-  public static final RemoteRepository GOOGLE_MIRROR =
-      new RemoteRepository.Builder("central", "default", "https://maven-central.storage-download.googleapis.com/repos/central/data/").build();
 
-  private static ImmutableList<RemoteRepository> mavenRepositories =
-      ImmutableList.of(GOOGLE_MIRROR);
+  // Default URL from https://maven.apache.org/pom.html#Repositories
+  public static final RemoteRepository CENTRAL =
+      new RemoteRepository.Builder("central", "default", " https://repo.maven.apache.org/maven2/")
+          .build();
+
+  private static ImmutableList<RemoteRepository> mavenRepositories = ImmutableList.of(CENTRAL);
 
   // DefaultTransporterProvider.newTransporter checks these transporters
   private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
@@ -316,7 +317,7 @@ public final class RepositoryUtility {
     }
 
     if (addMavenCentral) {
-      repositoryListBuilder.add(GOOGLE_MIRROR);
+      repositoryListBuilder.add(CENTRAL);
     }
 
     mavenRepositories = repositoryListBuilder.build();
