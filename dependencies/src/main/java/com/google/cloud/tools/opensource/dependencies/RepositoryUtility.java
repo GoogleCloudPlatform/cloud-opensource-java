@@ -64,6 +64,7 @@ import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
+import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
@@ -88,8 +89,9 @@ public final class RepositoryUtility {
   public static final RemoteRepository CENTRAL =
       new RemoteRepository.Builder("central", "default", "https://repo.maven.apache.org/maven2/")
           .build();
-  // URL from https://cloudplatform.googleblog.com/2015/11/faster-builds-for-Java-developers-with-Maven-Central-mirror.html
-  private static final RemoteRepository GOOGLE_MIRROR =
+  // URL from
+  // https://cloudplatform.googleblog.com/2015/11/faster-builds-for-Java-developers-with-Maven-Central-mirror.html
+  public static final RemoteRepository GOOGLE_MIRROR =
       new RemoteRepository.Builder(
               "google_mirror",
               "default",
@@ -123,6 +125,15 @@ public final class RepositoryUtility {
     LocalRepository localRepository = new LocalRepository(findLocalRepository().getAbsolutePath());
     session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
 
+    session.setMirrorSelector(
+        new MirrorSelector() {
+          @Override
+          public RemoteRepository getMirror(RemoteRepository repository) {
+            System.out.println("Getting mirror for " + repository);
+            System.out.println("Returning Google Mirror");
+            return RepositoryUtility.GOOGLE_MIRROR;
+          }
+        });
     return session;
   }
 
