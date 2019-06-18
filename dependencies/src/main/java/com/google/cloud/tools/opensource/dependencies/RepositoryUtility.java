@@ -84,12 +84,20 @@ public final class RepositoryUtility {
 
   private static final Logger logger = Logger.getLogger(RepositoryUtility.class.getName());
 
-  // Default URL from https://maven.apache.org/pom.html#Repositories
+  // URL from https://maven.apache.org/pom.html#Repositories
   public static final RemoteRepository CENTRAL =
       new RemoteRepository.Builder("central", "default", " https://repo.maven.apache.org/maven2/")
           .build();
+  // URL from https://cloudplatform.googleblog.com/2015/11/faster-builds-for-Java-developers-with-Maven-Central-mirror.html
+  private static final RemoteRepository GOOGLE_MIRROR =
+      new RemoteRepository.Builder(
+              "google_mirror",
+              "default",
+              "https://maven-central.storage-download.googleapis.com/repos/central/data/")
+          .build();
 
-  private static ImmutableList<RemoteRepository> mavenRepositories = ImmutableList.of(CENTRAL);
+  private static ImmutableList<RemoteRepository> mavenRepositories =
+      ImmutableList.of(GOOGLE_MIRROR, CENTRAL);
 
   // DefaultTransporterProvider.newTransporter checks these transporters
   private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
