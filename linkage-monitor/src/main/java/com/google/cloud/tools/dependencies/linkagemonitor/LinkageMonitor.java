@@ -18,6 +18,7 @@ package com.google.cloud.tools.dependencies.linkagemonitor;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -28,6 +29,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.List;
@@ -90,8 +92,9 @@ public class LinkageMonitor {
       return;
     }
 
-    ImmutableSet<SymbolProblem> problemsInSnapshot =
-        LinkageChecker.create(snapshot).findSymbolProblems().keySet();
+    ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems =
+        LinkageChecker.create(snapshot).findSymbolProblems();
+    ImmutableSet<SymbolProblem> problemsInSnapshot = snapshotSymbolProblems.keySet();
 
     if (problemsInBaseline.equals(problemsInSnapshot)) {
       System.out.println(
@@ -99,21 +102,40 @@ public class LinkageMonitor {
       return;
     }
 
-    Set<SymbolProblem> fixedErrors = Sets.difference(problemsInBaseline, problemsInSnapshot);
-    if (!fixedErrors.isEmpty()) {
-      System.out.println("The following errors in the baseline no longer appear in the snapshot:");
-      System.out.println(fixedErrors);
+    Set<SymbolProblem> fixedProblems = Sets.difference(problemsInBaseline, problemsInSnapshot);
+    if (!fixedProblems.isEmpty()) {
+      int problemSize = fixedProblems.size();
+      StringBuilder message =
+          new StringBuilder(
+              "The following problem"
+                  + (problemSize > 1 ? "s" : "")
+                  + " in the baseline no longer appear in the snapshot:\n");
+      for (SymbolProblem problem : fixedProblems) {
+        message.append(problem + "\n");
+      }
+      System.out.println(message.toString());
     }
-    Set<SymbolProblem> newErrors = Sets.difference(problemsInSnapshot, problemsInBaseline);
-    if (!newErrors.isEmpty()) {
-      // TODO(#683): Display new linkage errors caused by snapshot versions if any
-      System.err.println("There are one or more new new linkage errors in snapshot versions:");
-      System.err.println(newErrors);
-      int errorSize = newErrors.size();
+    Set<SymbolProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
+    if (!newProblems.isEmpty()) {
+      int errorSize = newProblems.size();
+      StringBuilder message =
+          new StringBuilder("Newly introduced problem" + (errorSize > 1 ? "s" : "") + ":\n");
+      for (SymbolProblem problem : newProblems) {
+        message.append(problem + "\n");
+        for (ClassFile classFile : snapshotSymbolProblems.get(problem)) {
+          message.append(
+              String.format(
+                  "  referenced from %s (%s)",
+                  classFile.getClassName(), classFile.getJar().getFileName()));
+        }
+      }
+      System.err.println(message.toString());
       throw new LinkageMonitorException(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
+    } else {
+      // No new symbol problems introduced by snapshot BOM. Returning success.
+      System.out.println("No new problem found");
     }
-    // No new symbol problems introduced by snapshot BOM. Returning success.
   }
 
   /**
