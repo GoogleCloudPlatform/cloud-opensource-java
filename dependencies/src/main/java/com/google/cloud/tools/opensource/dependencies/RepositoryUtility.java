@@ -94,7 +94,8 @@ public final class RepositoryUtility {
               "https://maven-central.storage-download.googleapis.com/repos/central/data/")
           .build();
 
-  private static ImmutableList<RemoteRepository> mavenRepositories = ImmutableList.of(CENTRAL);
+  private static ImmutableList<RemoteRepository> mavenRepositories =
+      ImmutableList.of(GOOGLE, CENTRAL);
 
   // DefaultTransporterProvider.newTransporter checks these transporters
   private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
@@ -114,23 +115,11 @@ public final class RepositoryUtility {
     return locator.getService(RepositorySystem.class);
   }
 
-  private static MirrorSelector googleAmericasMavenMirrorSelector() {
-    return new MirrorSelector() {
-      @Override
-      public RemoteRepository getMirror(RemoteRepository repository) {
-        return "central".equals(repository.getId()) ? GOOGLE : null;
-      }
-    };
-  }
-
   private static DefaultRepositorySystemSession createDefaultRepositorySystemSession(
       RepositorySystem system) {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
     LocalRepository localRepository = new LocalRepository(findLocalRepository().getAbsolutePath());
     session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
-
-    // Only when explicitly specified
-    session.setMirrorSelector(googleAmericasMavenMirrorSelector());
 
     return session;
   }
