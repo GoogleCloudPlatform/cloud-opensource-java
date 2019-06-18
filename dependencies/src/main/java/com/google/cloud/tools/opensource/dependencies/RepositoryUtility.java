@@ -64,6 +64,7 @@ import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
+import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
@@ -86,6 +87,12 @@ public final class RepositoryUtility {
   
   public static final RemoteRepository CENTRAL =
       new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
+  public static final RemoteRepository GOOGLE =
+      new RemoteRepository.Builder(
+              "google",
+              "default",
+              "https://maven-central.storage-download.googleapis.com/repos/central/data/")
+          .build();
 
   private static ImmutableList<RemoteRepository> mavenRepositories = ImmutableList.of(CENTRAL);
 
@@ -103,8 +110,17 @@ public final class RepositoryUtility {
     locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
     locator.addService(TransporterFactory.class, FileTransporterFactory.class);
     locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
-  
+
     return locator.getService(RepositorySystem.class);
+  }
+
+  private static MirrorSelector googleAmericasMavenMirrorSelector() {
+    return new MirrorSelector() {
+      @Override
+      public RemoteRepository getMirror(RemoteRepository repository) {
+        return "central".equals(repository.getId()) ? GOOGLE : null;
+      }
+    };
   }
 
   private static DefaultRepositorySystemSession createDefaultRepositorySystemSession(
@@ -112,6 +128,10 @@ public final class RepositoryUtility {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
     LocalRepository localRepository = new LocalRepository(findLocalRepository().getAbsolutePath());
     session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
+
+    // Only when explicitly specified
+    session.setMirrorSelector(googleAmericasMavenMirrorSelector());
+
     return session;
   }
 
