@@ -86,7 +86,7 @@ public final class RepositoryUtility {
 
   // URL from https://maven.apache.org/pom.html#Repositories
   public static final RemoteRepository CENTRAL =
-      new RemoteRepository.Builder("central", "default", " https://repo.maven.apache.org/maven2/")
+      new RemoteRepository.Builder("central", "default", "https://repo.maven.apache.org/maven2/")
           .build();
   // URL from https://cloudplatform.googleblog.com/2015/11/faster-builds-for-Java-developers-with-Maven-Central-mirror.html
   private static final RemoteRepository GOOGLE_MIRROR =
