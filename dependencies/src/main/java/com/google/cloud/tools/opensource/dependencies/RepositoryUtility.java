@@ -64,7 +64,6 @@ import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
-import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
@@ -85,17 +84,11 @@ public final class RepositoryUtility {
 
   private static final Logger logger = Logger.getLogger(RepositoryUtility.class.getName());
   
-  public static final RemoteRepository CENTRAL =
-      new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
-  public static final RemoteRepository GOOGLE =
-      new RemoteRepository.Builder(
-              "google",
-              "default",
-              "https://maven-central.storage-download.googleapis.com/repos/central/data/")
-          .build();
+  public static final RemoteRepository GOOGLE_MIRROR =
+      new RemoteRepository.Builder("central", "default", "https://maven-central.storage-download.googleapis.com/repos/central/data/").build();
 
   private static ImmutableList<RemoteRepository> mavenRepositories =
-      ImmutableList.of(GOOGLE, CENTRAL);
+      ImmutableList.of(GOOGLE_MIRROR);
 
   // DefaultTransporterProvider.newTransporter checks these transporters
   private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
@@ -323,7 +316,7 @@ public final class RepositoryUtility {
     }
 
     if (addMavenCentral) {
-      repositoryListBuilder.add(CENTRAL);
+      repositoryListBuilder.add(GOOGLE_MIRROR);
     }
 
     mavenRepositories = repositoryListBuilder.build();

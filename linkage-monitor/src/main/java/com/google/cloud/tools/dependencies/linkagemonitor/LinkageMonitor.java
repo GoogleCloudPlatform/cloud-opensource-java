@@ -183,7 +183,7 @@ public class LinkageMonitor {
     Artifact artifactWithVersionRange = new DefaultArtifact(groupId, artifactId, null, "(0,]");
     VersionRangeRequest request =
         new VersionRangeRequest(
-            artifactWithVersionRange, ImmutableList.of(RepositoryUtility.CENTRAL), null);
+            artifactWithVersionRange, ImmutableList.of(RepositoryUtility.GOOGLE_MIRROR), null);
     VersionRangeResult versionResult = repositorySystem.resolveVersionRange(session, request);
 
     Verify.verify(versionResult.getHighestVersion() != null, "Highest version should not be null");

@@ -101,7 +101,7 @@ public class LinkageCheckerRuleTest {
   private DependencyNode createResolvedDependencyGraph(String... coordinates)
       throws RepositoryException {
     CollectRequest collectRequest = new CollectRequest();
-    collectRequest.setRepositories(ImmutableList.of(RepositoryUtility.CENTRAL));
+    collectRequest.setRepositories(ImmutableList.of(RepositoryUtility.GOOGLE_MIRROR));
     collectRequest.setDependencies(
         Arrays.stream(coordinates)
             .map(DefaultArtifact::new)
