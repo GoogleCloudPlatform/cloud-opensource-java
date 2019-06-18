@@ -90,21 +90,24 @@ public class LinkageCheckerArgumentsTest {
   }
 
   @Test
-  public void testConfigureAdditionalMavenRepositories_addingSpringRepository()
+  public void testConfigureAdditionalMavenRepositories_addingGoogleAndroidRepository()
       throws ParseException, RepositoryException {
+    // Previously this test was using https://repo.spring.io/milestone and artifact
+    // org.springframework:spring-asm:3.1.0.RC2 but the repository was not stable.
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine(
-            "-j", "dummy.jar", "-m", "https://repo.spring.io/milestone");
+            "-j", "dummy.jar", "-m", "https://dl.google.com/dl/android/maven2");
     RepositoryUtility.setRepositories(
         parsedArguments.getExtraMavenRepositoryUrls(), parsedArguments.getAddMavenCentral());
 
     // This artifact does not exist in Maven central, but it is in Spring's repository
     // Spring-asm is used here because it does not have complex dependencies
-    Artifact artifact = new DefaultArtifact("org.springframework:spring-asm:3.1.0.RC2");
+    Artifact artifact = new DefaultArtifact("androidx.lifecycle:lifecycle-common-java8:2.0.0");
 
     List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(artifact));
     Truth.assertThat(paths).isNotEmpty();
   }
+
 
   @Test
   public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral()
