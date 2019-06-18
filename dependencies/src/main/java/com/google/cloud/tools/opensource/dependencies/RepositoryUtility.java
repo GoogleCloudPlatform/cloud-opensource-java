@@ -130,8 +130,11 @@ public final class RepositoryUtility {
           @Override
           public RemoteRepository getMirror(RemoteRepository repository) {
             System.out.println("Getting mirror for " + repository);
-            System.out.println("Returning Google Mirror");
-            return RepositoryUtility.GOOGLE_MIRROR;
+            if ("central".equals(repository.getId())) {
+              System.out.println("Returning Google Mirror");
+              return RepositoryUtility.GOOGLE_MIRROR;
+            }
+            return null;
           }
         });
     return session;
