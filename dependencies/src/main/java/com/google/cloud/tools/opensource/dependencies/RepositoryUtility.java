@@ -64,7 +64,6 @@ import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
-import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
@@ -85,21 +84,10 @@ public final class RepositoryUtility {
 
   private static final Logger logger = Logger.getLogger(RepositoryUtility.class.getName());
 
-  // URL from https://maven.apache.org/pom.html#Repositories
   public static final RemoteRepository CENTRAL =
-      new RemoteRepository.Builder("central", "default", "https://repo.maven.apache.org/maven2/")
-          .build();
-  // URL from
-  // https://cloudplatform.googleblog.com/2015/11/faster-builds-for-Java-developers-with-Maven-Central-mirror.html
-  public static final RemoteRepository GOOGLE_MIRROR =
-      new RemoteRepository.Builder(
-              "google_mirror",
-              "default",
-              "https://maven-central.storage-download.googleapis.com/repos/central/data/")
-          .build();
+      new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
 
-  private static ImmutableList<RemoteRepository> mavenRepositories =
-      ImmutableList.of(GOOGLE_MIRROR, CENTRAL);
+  private static ImmutableList<RemoteRepository> mavenRepositories = ImmutableList.of(CENTRAL);
 
   // DefaultTransporterProvider.newTransporter checks these transporters
   private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
@@ -124,19 +112,6 @@ public final class RepositoryUtility {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
     LocalRepository localRepository = new LocalRepository(findLocalRepository().getAbsolutePath());
     session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
-
-    session.setMirrorSelector(
-        new MirrorSelector() {
-          @Override
-          public RemoteRepository getMirror(RemoteRepository repository) {
-            System.out.println("Getting mirror for " + repository);
-            if ("central".equals(repository.getId())) {
-              System.out.println("Returning Google Mirror");
-              return RepositoryUtility.GOOGLE_MIRROR;
-            }
-            return null;
-          }
-        });
     return session;
   }
 
