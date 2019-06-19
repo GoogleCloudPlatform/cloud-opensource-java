@@ -83,7 +83,7 @@ import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 public final class RepositoryUtility {
 
   private static final Logger logger = Logger.getLogger(RepositoryUtility.class.getName());
-
+  
   public static final RemoteRepository CENTRAL =
       new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
 
@@ -103,7 +103,7 @@ public final class RepositoryUtility {
     locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
     locator.addService(TransporterFactory.class, FileTransporterFactory.class);
     locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
-
+  
     return locator.getService(RepositorySystem.class);
   }
 
