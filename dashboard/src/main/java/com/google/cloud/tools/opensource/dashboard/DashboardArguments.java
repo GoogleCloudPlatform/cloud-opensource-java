@@ -53,7 +53,7 @@ final class DashboardArguments {
   }
 
   /**
-   * Returns true if the argument for a version-less coordinates is specified; otherwise false.
+   * Returns true if the argument for a versionless coordinates is specified; otherwise false.
    *
    * <p>It is guaranteed that either a file path or Maven coordinates for a BOM are available.
    */
@@ -81,7 +81,7 @@ final class DashboardArguments {
   }
 
   /**
-   * Returns the version-less Maven coordinates of a BOM. Null if version-less coordinates are not
+   * Returns the versionless Maven coordinates of a BOM. Null if versionless coordinates are not
    * specified.
    */
   @Nullable
@@ -124,10 +124,11 @@ final class DashboardArguments {
 
     Option versionlessCoordinatesOption =
         Option.builder("a")
-            .longOpt("version-less-coordinates")
+            .longOpt("versionless-coordinates")
             .hasArg()
             .desc(
-                "Maven coordinates of a BOM without version. For example, com.google.cloud:libraries-bom")
+                "Maven coordinates of a BOM without version. "
+                    + "For example, com.google.cloud:libraries-bom")
             .build();
     inputGroup.addOption(versionlessCoordinatesOption);
 
