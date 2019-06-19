@@ -16,8 +16,10 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.common.base.Splitter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -79,6 +81,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import org.eclipse.aether.resolution.VersionRangeResolutionException;
 
 public class DashboardMain {
   public static final String TEST_NAME_LINKAGE_CHECK = "Linkage Errors";
@@ -98,11 +101,36 @@ public class DashboardMain {
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
           ParseException, MavenRepositoryException {
     DashboardArguments dashboardArguments = DashboardArguments.readCommandLine(arguments);
-    Path output =
-        dashboardArguments.hasFile()
-            ? generate(dashboardArguments.getBomFile())
-            : generate(dashboardArguments.getBomCoordinates());
-    System.out.println("Wrote dashboard into " + output.toAbsolutePath());
+
+    if (dashboardArguments.hasVersionlessCoordinates()) {
+      generateAllVersions(dashboardArguments.getVersionlessCoordinates());
+    } else {
+      Path output =
+          dashboardArguments.hasFile()
+              ? generate(dashboardArguments.getBomFile())
+              : generate(dashboardArguments.getBomCoordinates());
+      System.out.println("Wrote dashboard into " + output.toAbsolutePath());
+    }
+  }
+
+  private static void generateAllVersions(String versionlessCoordinates)
+      throws IOException, TemplateException, RepositoryException, URISyntaxException,
+      MavenRepositoryException {
+    List<String> elements = Splitter.on(':').splitToList(versionlessCoordinates);
+    checkArgument(elements.size() == 2,
+        "The version-less coordinates should have one colon character: " + versionlessCoordinates);
+    String groupId = elements.get(0);
+    String artifactId = elements.get(1);
+    try {
+      ImmutableList<String> versions = RepositoryUtility
+          .findVersions(groupId, artifactId);
+      for (String version : versions) {
+        Path output = generate(String.format("%s:%s:%s", groupId, artifactId, version));
+        System.out.println("Wrote dashboard version " + version + " at " + output);
+      }
+    } catch (VersionRangeResolutionException ex) {
+      throw new MavenRepositoryException(ex);
+    }
   }
 
   @VisibleForTesting
@@ -115,9 +143,9 @@ public class DashboardMain {
   static Path generate(Path bomFile)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
           MavenRepositoryException {
-    Preconditions.checkArgument(
+    checkArgument(
         Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
-    Preconditions.checkArgument(
+    checkArgument(
         Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
     return generate(RepositoryUtility.readBom(bomFile));
   }

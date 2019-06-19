@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -68,6 +69,9 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
 import org.eclipse.aether.resolution.ArtifactDescriptorResult;
+import org.eclipse.aether.resolution.VersionRangeRequest;
+import org.eclipse.aether.resolution.VersionRangeResolutionException;
+import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
@@ -350,5 +354,48 @@ public final class RepositoryUtility {
         repository.getProtocol(),
         ALLOWED_REPOSITORY_URL_SCHEMES);
     return repository;
+  }
+
+  private static VersionRangeResult findVersionRange(
+      RepositorySystem repositorySystem,
+      RepositorySystemSession session,
+      String groupId,
+      String artifactId) throws VersionRangeResolutionException {
+    Artifact artifactWithVersionRange = new DefaultArtifact(groupId, artifactId, null, "(0,]");
+    VersionRangeRequest request =
+        new VersionRangeRequest(
+            artifactWithVersionRange, ImmutableList.of(RepositoryUtility.CENTRAL), null);
+    VersionRangeResult versionResult = repositorySystem.resolveVersionRange(session, request);
+
+    Verify.verify(versionResult.getHighestVersion() != null, "Highest version should not be null");
+    return versionResult;
+  }
+
+  public static String findHighestVersion(
+      RepositorySystem repositorySystem,
+      RepositorySystemSession session,
+      String groupId,
+      String artifactId)
+      throws VersionRangeResolutionException {
+    return findVersionRange(repositorySystem, session, groupId, artifactId).getHighestVersion()
+        .toString();
+  }
+
+  public static ImmutableList<String> findVersions(      String groupId,
+      String artifactId)
+      throws VersionRangeResolutionException {
+    RepositorySystem repositorySystem = newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
+    return findVersionRange(repositorySystem, session, groupId, artifactId).getVersions().stream()
+        .map(version -> version.toString()).collect(toImmutableList());
+  }
+
+
+  public static String findLatestCoordinates(RepositorySystem repositorySystem, String groupId,
+      String artifactId)
+      throws VersionRangeResolutionException {
+    RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
+    String highestVersion = findHighestVersion(repositorySystem, session, groupId, artifactId);
+    return String.format("%s:%s:%s", groupId, artifactId, highestVersion);
   }
 }

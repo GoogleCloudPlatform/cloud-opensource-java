@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.dependencies.linkagemonitor;
 
+import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.findHighestVersion;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
@@ -69,7 +70,8 @@ public class LinkageMonitor {
 
   private void run(String groupId, String artifactId)
       throws RepositoryException, IOException, LinkageMonitorException {
-    String latestBomCoordinates = findLatestCoordinates(groupId, artifactId);
+    String latestBomCoordinates = RepositoryUtility
+        .findLatestCoordinates(repositorySystem, groupId, artifactId);
     System.out.println("BOM Coordinates: " + latestBomCoordinates);
     Bom baseline = RepositoryUtility.readBom(latestBomCoordinates);
     ImmutableSet<SymbolProblem> problemsInBaseline =
@@ -166,34 +168,11 @@ public class LinkageMonitor {
       RepositorySystem repositorySystem, RepositorySystemSession session, Artifact artifact)
       throws VersionRangeResolutionException {
     String version =
-        findHighestVersion(
+        RepositoryUtility.findHighestVersion(
             repositorySystem, session, artifact.getGroupId(), artifact.getArtifactId());
     if (version.contains("-SNAPSHOT")) {
       return Optional.of(version);
     }
     return Optional.empty();
-  }
-
-  private static String findHighestVersion(
-      RepositorySystem repositorySystem,
-      RepositorySystemSession session,
-      String groupId,
-      String artifactId)
-      throws VersionRangeResolutionException {
-    Artifact artifactWithVersionRange = new DefaultArtifact(groupId, artifactId, null, "(0,]");
-    VersionRangeRequest request =
-        new VersionRangeRequest(
-            artifactWithVersionRange, ImmutableList.of(RepositoryUtility.CENTRAL), null);
-    VersionRangeResult versionResult = repositorySystem.resolveVersionRange(session, request);
-
-    Verify.verify(versionResult.getHighestVersion() != null, "Highest version should not be null");
-    return versionResult.getHighestVersion().toString();
-  }
-
-  private String findLatestCoordinates(String groupId, String artifactId)
-      throws VersionRangeResolutionException {
-    RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
-    String highestVersion = findHighestVersion(repositorySystem, session, groupId, artifactId);
-    return String.format("%s:%s:%s", groupId, artifactId, highestVersion);
   }
 }
