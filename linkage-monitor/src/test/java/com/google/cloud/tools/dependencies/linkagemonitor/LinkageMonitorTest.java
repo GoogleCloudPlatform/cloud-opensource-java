@@ -62,7 +62,7 @@ public class LinkageMonitorTest {
   @Test
   public void testBomSnapshot()
       throws VersionRangeResolutionException, MavenRepositoryException,
-      InvalidVersionSpecificationException {
+          InvalidVersionSpecificationException {
     VersionRangeResult protobufSnapshotVersionResult =
         new VersionRangeResult(new VersionRangeRequest());
     VersionRangeResult versionWithoutSnapshot = new VersionRangeResult(new VersionRangeRequest());

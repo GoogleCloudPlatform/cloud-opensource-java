@@ -70,7 +70,6 @@ import com.google.cloud.tools.opensource.dependencies.Update;
 import com.google.cloud.tools.opensource.dependencies.VersionComparator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -82,7 +81,6 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
-import org.eclipse.aether.resolution.VersionRangeResolutionException;
 
 public class DashboardMain {
   public static final String TEST_NAME_LINKAGE_CHECK = "Linkage Errors";
@@ -116,16 +114,17 @@ public class DashboardMain {
 
   private static void generateAllVersions(String versionlessCoordinates)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
-      MavenRepositoryException {
+          MavenRepositoryException {
     List<String> elements = Splitter.on(':').splitToList(versionlessCoordinates);
-    checkArgument(elements.size() == 2,
+    checkArgument(
+        elements.size() == 2,
         "The version-less coordinates should have one colon character: " + versionlessCoordinates);
     String groupId = elements.get(0);
     String artifactId = elements.get(1);
 
     RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
-    ImmutableList<String> versions = RepositoryUtility
-        .findVersions(repositorySystem, groupId, artifactId);
+    ImmutableList<String> versions =
+        RepositoryUtility.findVersions(repositorySystem, groupId, artifactId);
     for (String version : versions) {
       if (version.contains("SNAPSHOT")) {
         continue;
@@ -145,10 +144,8 @@ public class DashboardMain {
   static Path generate(Path bomFile)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
           MavenRepositoryException {
-    checkArgument(
-        Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
-    checkArgument(
-        Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
+    checkArgument(Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
+    checkArgument(Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
     return generate(RepositoryUtility.readBom(bomFile));
   }
 

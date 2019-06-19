@@ -65,8 +65,8 @@ public class LinkageMonitor {
 
   private void run(String groupId, String artifactId)
       throws RepositoryException, IOException, LinkageMonitorException, MavenRepositoryException {
-    String latestBomCoordinates = RepositoryUtility
-        .findLatestCoordinates(repositorySystem, groupId, artifactId);
+    String latestBomCoordinates =
+        RepositoryUtility.findLatestCoordinates(repositorySystem, groupId, artifactId);
     System.out.println("BOM Coordinates: " + latestBomCoordinates);
     Bom baseline = RepositoryUtility.readBom(latestBomCoordinates);
     ImmutableSet<SymbolProblem> problemsInBaseline =
