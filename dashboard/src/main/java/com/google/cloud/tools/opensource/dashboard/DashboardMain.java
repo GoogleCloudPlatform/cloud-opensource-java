@@ -118,7 +118,7 @@ public class DashboardMain {
     List<String> elements = Splitter.on(':').splitToList(versionlessCoordinates);
     checkArgument(
         elements.size() == 2,
-        "The version-less coordinates should have one colon character: " + versionlessCoordinates);
+        "The versionless coordinates should have one colon character: " + versionlessCoordinates);
     String groupId = elements.get(0);
     String artifactId = elements.get(1);
 
