@@ -108,7 +108,6 @@ public class LinkageCheckerArgumentsTest {
     Truth.assertThat(paths).isNotEmpty();
   }
 
-
   @Test
   public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral()
       throws ParseException {
