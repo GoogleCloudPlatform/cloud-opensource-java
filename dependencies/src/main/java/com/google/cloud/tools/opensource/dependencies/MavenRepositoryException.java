@@ -21,7 +21,7 @@ package com.google.cloud.tools.opensource.dependencies;
  */
 public class MavenRepositoryException extends Exception {
 
-  public MavenRepositoryException(Exception ex) {
+  MavenRepositoryException(Exception ex) {
     super(ex);
   }
   

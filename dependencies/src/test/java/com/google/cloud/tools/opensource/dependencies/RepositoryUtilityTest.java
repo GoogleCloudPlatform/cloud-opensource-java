@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Truth;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -62,5 +63,24 @@ public class RepositoryUtilityTest {
     String coordinates = bom.getCoordinates();
     Assert.assertTrue(coordinates.startsWith("com.google.cloud:libraries-bom:"));
     Assert.assertTrue(coordinates.endsWith("-SNAPSHOT"));
+  }
+
+  @Test
+  public void testFindVersions() throws MavenRepositoryException {
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    ImmutableList<String> versions = RepositoryUtility
+        .findVersions(system, "com.google.cloud", "libraries-bom");
+    Truth.assertThat(versions).containsAtLeast("1.1.0", "1.1.1", "1.2.0", "2.0.0").inOrder();
+  }
+
+  @Test
+  public void testFindHighestVersions() throws MavenRepositoryException {
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    String guavaHighestVersion = RepositoryUtility
+        .findHighestVersion(system, RepositoryUtility.newSession(system), "com.google.guava",
+            "guava");
+    Assert.assertNotNull(guavaHighestVersion);
+    // Latest guava release is greater than or equal to 28.0.
+    Truth.assertThat(guavaHighestVersion).isAtLeast("28.0");
   }
 }

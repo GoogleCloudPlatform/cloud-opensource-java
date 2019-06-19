@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.dependencies.linkagemonitor;
 
-import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.findHighestVersion;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
@@ -24,10 +23,10 @@ import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -40,10 +39,6 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.resolution.VersionRangeRequest;
-import org.eclipse.aether.resolution.VersionRangeResolutionException;
-import org.eclipse.aether.resolution.VersionRangeResult;
 
 /**
  * Linkage Monitor detects new linkage errors caused by locally-installed snapshot artifacts for a
@@ -55,7 +50,7 @@ public class LinkageMonitor {
   private final RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
 
   public static void main(String[] arguments)
-      throws RepositoryException, IOException, LinkageMonitorException {
+      throws RepositoryException, IOException, LinkageMonitorException, MavenRepositoryException {
     if (arguments.length < 1 || arguments[0].split(":").length != 2) {
       System.err.println(
           "Please specify BOM coordinates without version. Example:"
@@ -69,7 +64,7 @@ public class LinkageMonitor {
   }
 
   private void run(String groupId, String artifactId)
-      throws RepositoryException, IOException, LinkageMonitorException {
+      throws RepositoryException, IOException, LinkageMonitorException, MavenRepositoryException {
     String latestBomCoordinates = RepositoryUtility
         .findLatestCoordinates(repositorySystem, groupId, artifactId);
     System.out.println("BOM Coordinates: " + latestBomCoordinates);
@@ -146,7 +141,7 @@ public class LinkageMonitor {
    */
   @VisibleForTesting
   static Bom copyWithSnapshot(RepositorySystem repositorySystem, Bom bom)
-      throws VersionRangeResolutionException {
+      throws MavenRepositoryException {
     ImmutableList.Builder<Artifact> managedDependencies = ImmutableList.builder();
     RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
 
@@ -166,7 +161,7 @@ public class LinkageMonitor {
    */
   private static Optional<String> findSnapshotVersion(
       RepositorySystem repositorySystem, RepositorySystemSession session, Artifact artifact)
-      throws VersionRangeResolutionException {
+      throws MavenRepositoryException {
     String version =
         RepositoryUtility.findHighestVersion(
             repositorySystem, session, artifact.getGroupId(), artifact.getArtifactId());

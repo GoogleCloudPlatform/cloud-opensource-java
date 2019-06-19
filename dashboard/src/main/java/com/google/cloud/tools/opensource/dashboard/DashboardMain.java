@@ -50,6 +50,7 @@ import freemarker.template.TemplateHashModel;
 import freemarker.template.Version;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
@@ -121,15 +122,16 @@ public class DashboardMain {
         "The version-less coordinates should have one colon character: " + versionlessCoordinates);
     String groupId = elements.get(0);
     String artifactId = elements.get(1);
-    try {
-      ImmutableList<String> versions = RepositoryUtility
-          .findVersions(groupId, artifactId);
-      for (String version : versions) {
-        Path output = generate(String.format("%s:%s:%s", groupId, artifactId, version));
-        System.out.println("Wrote dashboard version " + version + " at " + output);
+
+    RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
+    ImmutableList<String> versions = RepositoryUtility
+        .findVersions(repositorySystem, groupId, artifactId);
+    for (String version : versions) {
+      if (version.contains("SNAPSHOT")) {
+        continue;
       }
-    } catch (VersionRangeResolutionException ex) {
-      throw new MavenRepositoryException(ex);
+      Path output = generate(String.format("%s:%s:%s", groupId, artifactId, version));
+      System.out.println("Wrote dashboard version " + version + " at " + output);
     }
   }
 

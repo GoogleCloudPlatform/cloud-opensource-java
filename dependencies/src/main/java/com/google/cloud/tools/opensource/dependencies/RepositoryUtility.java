@@ -360,40 +360,53 @@ public final class RepositoryUtility {
       RepositorySystem repositorySystem,
       RepositorySystemSession session,
       String groupId,
-      String artifactId) throws VersionRangeResolutionException {
+      String artifactId) throws MavenRepositoryException {
+
     Artifact artifactWithVersionRange = new DefaultArtifact(groupId, artifactId, null, "(0,]");
     VersionRangeRequest request =
         new VersionRangeRequest(
             artifactWithVersionRange, ImmutableList.of(RepositoryUtility.CENTRAL), null);
-    VersionRangeResult versionResult = repositorySystem.resolveVersionRange(session, request);
 
-    Verify.verify(versionResult.getHighestVersion() != null, "Highest version should not be null");
-    return versionResult;
+    try {
+      return repositorySystem.resolveVersionRange(session, request);
+    } catch (VersionRangeResolutionException ex) {
+      throw new MavenRepositoryException(ex);
+    }
   }
 
+  /**
+   * Returns the highest version for {@code groupId:artifactId} in {@code repositorySystem}.
+   */
   public static String findHighestVersion(
       RepositorySystem repositorySystem,
       RepositorySystemSession session,
       String groupId,
       String artifactId)
-      throws VersionRangeResolutionException {
+      throws MavenRepositoryException {
     return findVersionRange(repositorySystem, session, groupId, artifactId).getHighestVersion()
         .toString();
   }
 
-  public static ImmutableList<String> findVersions(      String groupId,
+  /**
+   * Returns list of versions available for {@code groupId:artifactId} in {@code repositorySystem}.
+   */
+  public static ImmutableList<String> findVersions(
+      RepositorySystem repositorySystem,
+      String groupId,
       String artifactId)
-      throws VersionRangeResolutionException {
-    RepositorySystem repositorySystem = newRepositorySystem();
+      throws MavenRepositoryException {
     RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
     return findVersionRange(repositorySystem, session, groupId, artifactId).getVersions().stream()
         .map(version -> version.toString()).collect(toImmutableList());
   }
 
-
+  /**
+   * Returns the latest Maven coordinates for {@code groupId:artifactId} in {@code
+   * repositorySystem}.
+   */
   public static String findLatestCoordinates(RepositorySystem repositorySystem, String groupId,
       String artifactId)
-      throws VersionRangeResolutionException {
+      throws MavenRepositoryException {
     RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
     String highestVersion = findHighestVersion(repositorySystem, session, groupId, artifactId);
     return String.format("%s:%s:%s", groupId, artifactId, highestVersion);
