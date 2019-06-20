@@ -19,7 +19,41 @@ package com.google.cloud.tools.opensource.dashboard;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.cloud.tools.opensource.classpath.ClassFile;
+import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
+import com.google.cloud.tools.opensource.classpath.LinkageChecker;
+import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
+import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.cloud.tools.opensource.dependencies.Update;
+import com.google.cloud.tools.opensource.dependencies.VersionComparator;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
+import freemarker.template.Configuration;
+import freemarker.template.DefaultObjectWrapper;
+import freemarker.template.DefaultObjectWrapperBuilder;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import freemarker.template.TemplateHashModel;
+import freemarker.template.Version;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -40,49 +74,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-
-import freemarker.template.Configuration;
-import freemarker.template.DefaultObjectWrapper;
-import freemarker.template.DefaultObjectWrapperBuilder;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
-import freemarker.template.TemplateHashModel;
-import freemarker.template.Version;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
-import com.google.cloud.tools.opensource.classpath.ClassFile;
-import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
-import com.google.cloud.tools.opensource.classpath.LinkageChecker;
-import com.google.cloud.tools.opensource.classpath.SymbolProblem;
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.Bom;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
-import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.cloud.tools.opensource.dependencies.Update;
-import com.google.cloud.tools.opensource.dependencies.VersionComparator;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Sets;
-
 public class DashboardMain {
+
   public static final String TEST_NAME_LINKAGE_CHECK = "Linkage Errors";
   public static final String TEST_NAME_UPPER_BOUND = "Upper Bounds";
   public static final String TEST_NAME_GLOBAL_UPPER_BOUND = "Global Upper Bounds";
@@ -98,7 +97,7 @@ public class DashboardMain {
    */
   public static void main(String[] arguments)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
-          ParseException, MavenRepositoryException {
+      ParseException, MavenRepositoryException {
     DashboardArguments dashboardArguments = DashboardArguments.readCommandLine(arguments);
 
     if (dashboardArguments.hasVersionlessCoordinates()) {
@@ -112,7 +111,7 @@ public class DashboardMain {
 
   private static void generateAllVersions(String versionlessCoordinates)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
-          MavenRepositoryException {
+      MavenRepositoryException {
     List<String> elements = Splitter.on(':').splitToList(versionlessCoordinates);
     checkArgument(
         elements.size() == 2,
@@ -139,7 +138,7 @@ public class DashboardMain {
   @VisibleForTesting
   static Path generate(Path bomFile)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
-          MavenRepositoryException {
+      MavenRepositoryException {
     checkArgument(Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
     checkArgument(Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
     Path output = generate(RepositoryUtility.readBom(bomFile));
@@ -355,7 +354,8 @@ public class DashboardMain {
       DependencyGraph transitiveDependencies = artifactInfo.getTransitiveDependencies();
 
       Map<Artifact, Artifact> upperBoundFailures =
-          findUpperBoundsFailures(completeDependencies.getHighestVersionMap(), transitiveDependencies);
+          findUpperBoundsFailures(completeDependencies.getHighestVersionMap(),
+              transitiveDependencies);
 
       Map<Artifact, Artifact> globalUpperBoundFailures = findUpperBoundsFailures(
           collectLatestVersions(globalDependencies), transitiveDependencies);
@@ -488,17 +488,17 @@ public class DashboardMain {
       Template dashboard = configuration.getTemplate("/templates/index.ftl");
       dashboard.process(templateData, out);
     }
-    
+
     File detailsFile = output.resolve("artifact_details.html").toFile();
     try (Writer out = new OutputStreamWriter(
-        new FileOutputStream(detailsFile), StandardCharsets.UTF_8)) {     
+        new FileOutputStream(detailsFile), StandardCharsets.UTF_8)) {
       Template details = configuration.getTemplate("/templates/artifact_details.ftl");
       details.process(templateData, out);
     }
-    
+
     File unstable = output.resolve("unstable_artifacts.html").toFile();
     try (Writer out = new OutputStreamWriter(
-        new FileOutputStream(unstable), StandardCharsets.UTF_8)) {     
+        new FileOutputStream(unstable), StandardCharsets.UTF_8)) {
       Template details = configuration.getTemplate("/templates/unstable_artifacts.ftl");
       details.process(templateData, out);
     }
@@ -506,9 +506,9 @@ public class DashboardMain {
 
   private static Map<String, String> collectLatestVersions(
       List<DependencyGraph> globalDependencies) {
-    Map<String, String> latestArtifacts = new TreeMap<>(); 
+    Map<String, String> latestArtifacts = new TreeMap<>();
     VersionComparator comparator = new VersionComparator();
-    
+
     if (globalDependencies != null) {
       for (DependencyGraph graph : globalDependencies) {
         Map<String, String> map = graph.getHighestVersionMap();
@@ -549,8 +549,8 @@ public class DashboardMain {
    *
    * <p>Using this summary in the BOM dashboard avoids repetitive items in the {@link
    * DependencyPath} list that share the same root problem caused by widely-used libraries, for
-   * example, {@code commons-logging:commons-logging}, {@code
-   * com.google.http-client:google-http-client} and {@code log4j:log4j}.
+   * example, {@code commons-logging:commons-logging}, {@code com.google.http-client:google-http-client}
+   * and {@code log4j:log4j}.
    */
   private static ImmutableMap<String, String> findRootCauses(
       ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
