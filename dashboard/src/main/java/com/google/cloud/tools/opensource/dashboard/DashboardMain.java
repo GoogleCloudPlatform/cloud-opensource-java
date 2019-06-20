@@ -129,15 +129,16 @@ public class DashboardMain {
       if (version.contains("SNAPSHOT")) {
         continue;
       }
-      Path output = generate(String.format("%s:%s:%s", groupId, artifactId, version));
-      System.out.println("Wrote dashboard version " + version + " at " + output);
+      generate(String.format("%s:%s:%s", groupId, artifactId, version));
     }
   }
 
   @VisibleForTesting
   static Path generate(String bomCoordinates)
       throws IOException, TemplateException, RepositoryException, URISyntaxException {
-    return generate(RepositoryUtility.readBom(bomCoordinates));
+    Path output = generate(RepositoryUtility.readBom(bomCoordinates));
+    System.out.println("Wrote dashboard for " + bomCoordinates + " at " + output);
+    return output;
   }
 
   @VisibleForTesting
@@ -146,7 +147,9 @@ public class DashboardMain {
           MavenRepositoryException {
     checkArgument(Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
     checkArgument(Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
-    return generate(RepositoryUtility.readBom(bomFile));
+    Path output = generate(RepositoryUtility.readBom(bomFile));
+    System.out.println("Wrote dashboard for " + bomFile + " at " + output);
+    return output;
   }
 
   private static Path generate(Bom bom)

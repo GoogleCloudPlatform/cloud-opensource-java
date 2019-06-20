@@ -26,6 +26,10 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
+import org.eclipse.aether.util.version.GenericVersionScheme;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
+import org.eclipse.aether.version.Version;
+import org.eclipse.aether.version.VersionScheme;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -74,13 +78,20 @@ public class RepositoryUtilityTest {
   }
 
   @Test
-  public void testFindHighestVersions() throws MavenRepositoryException {
+  public void testFindHighestVersions()
+      throws MavenRepositoryException, InvalidVersionSpecificationException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     String guavaHighestVersion =
         RepositoryUtility.findHighestVersion(
             system, RepositoryUtility.newSession(system), "com.google.guava", "guava");
     Assert.assertNotNull(guavaHighestVersion);
-    // Latest guava release is greater than or equal to 28.0.
-    Truth.assertThat(guavaHighestVersion).isAtLeast("28.0");
+
+    // Not comparing alphabetically; otherwise "100.0" would be smaller than "28.0"
+    VersionScheme versionScheme = new GenericVersionScheme();
+    Version highestGuava = versionScheme.parseVersion(guavaHighestVersion);
+    Version guava28 = versionScheme.parseVersion("28.0");
+
+    Truth.assertWithMessage("Latest guava release is greater than or equal to 28.0")
+        .that(highestGuava).isAtLeast(guava28);
   }
 }

@@ -70,10 +70,21 @@ public class DashboardArgumentsTest {
   }
 
   @Test
-  public void testParseArgument_duplicateOptions() throws ParseException {
+  public void testParseArgument_duplicateOptions_coordinates_file() throws ParseException {
     try {
       DashboardArguments.readCommandLine(
           "-c", "com.google.cloud:libraries-bom:1.0.0", "-f", "../pom.xml");
+      Assert.fail("The argument should validate duplicate input");
+    } catch (AlreadySelectedException ex) {
+      // pass
+    }
+  }
+
+  @Test
+  public void testParseArgument_duplicateOptions_coordinates_allVersions() throws ParseException {
+    try {
+      DashboardArguments.readCommandLine(
+          "-c", "com.google.cloud:libraries-bom:1.0.0", "-a", "com.google.cloud:libraries-bom");
       Assert.fail("The argument should validate duplicate input");
     } catch (AlreadySelectedException ex) {
       // pass
