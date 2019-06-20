@@ -122,7 +122,7 @@ public class LinkageMonitor {
         for (ClassFile classFile : snapshotSymbolProblems.get(problem)) {
           message.append(
               String.format(
-                  "  referenced from %s (%s)",
+                  "  referenced from %s (%s)\n",
                   classFile.getClassName(), classFile.getJar().getFileName()));
         }
       }
