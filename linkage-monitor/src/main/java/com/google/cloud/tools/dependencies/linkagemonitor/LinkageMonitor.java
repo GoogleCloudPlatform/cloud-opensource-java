@@ -74,14 +74,8 @@ public class LinkageMonitor {
     Bom snapshot = copyWithSnapshot(repositorySystem, baseline);
 
     // Compare coordinates of the two BOMs. No need to run comparison if they are the same.
-    ImmutableList<String> baselineCoordinates =
-        baseline.getManagedDependencies().stream()
-            .map(Artifacts::toCoordinates) // DefaultArtifact does not override equals
-            .collect(toImmutableList());
-    ImmutableList<String> snapshotCoordinates =
-        snapshot.getManagedDependencies().stream()
-            .map(Artifacts::toCoordinates)
-            .collect(toImmutableList());
+    ImmutableList<String> baselineCoordinates = coordinatesList(snapshot.getManagedDependencies());
+    ImmutableList<String> snapshotCoordinates = coordinatesList(snapshot.getManagedDependencies());
     if (baselineCoordinates.equals(snapshotCoordinates)) {
       System.out.println(
           "The content of the snapshot BOM and the original BOM are the same. Not running"
@@ -101,38 +95,65 @@ public class LinkageMonitor {
 
     Set<SymbolProblem> fixedProblems = Sets.difference(problemsInBaseline, problemsInSnapshot);
     if (!fixedProblems.isEmpty()) {
-      int problemSize = fixedProblems.size();
-      StringBuilder message =
-          new StringBuilder(
-              "The following problem"
-                  + (problemSize > 1 ? "s" : "")
-                  + " in the baseline no longer appear in the snapshot:\n");
-      for (SymbolProblem problem : fixedProblems) {
-        message.append(problem + "\n");
-      }
-      System.out.println(message.toString());
+      System.out.println(generateFixedErrorMessage(fixedProblems));
     }
     Set<SymbolProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newProblems.isEmpty()) {
+      System.err.println(generateNewErrorMessage(snapshotSymbolProblems, problemsInBaseline));
       int errorSize = newProblems.size();
-      StringBuilder message =
-          new StringBuilder("Newly introduced problem" + (errorSize > 1 ? "s" : "") + ":\n");
-      for (SymbolProblem problem : newProblems) {
-        message.append(problem + "\n");
-        for (ClassFile classFile : snapshotSymbolProblems.get(problem)) {
-          message.append(
-              String.format(
-                  "  referenced from %s (%s)\n",
-                  classFile.getClassName(), classFile.getJar().getFileName()));
-        }
-      }
-      System.err.println(message.toString());
       throw new LinkageMonitorException(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
     } else {
       // No new symbol problems introduced by snapshot BOM. Returning success.
       System.out.println("No new problem found");
     }
+  }
+
+  private static ImmutableList<String> coordinatesList(List<Artifact> artifacts) {
+    return artifacts.stream()
+        .map(Artifacts::toCoordinates)
+        .collect(toImmutableList());
+  }
+
+  /**
+   * Returns error message if {@code snapshotSymbolProblems} contains new problems compared with
+   * {@code baselineProblems}; otherwise null.
+   */
+  @VisibleForTesting
+  String generateNewErrorMessage(
+      ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems,
+      ImmutableSet<SymbolProblem> baselineProblems) {
+    Set<SymbolProblem> newProblems = Sets
+        .difference(snapshotSymbolProblems.keySet(), baselineProblems);
+    StringBuilder message =
+        new StringBuilder("Newly introduced problem" + (newProblems.size() > 1 ? "s" : "") + ":\n");
+    for (SymbolProblem problem : newProblems) {
+      message.append(problem + "\n");
+      for (ClassFile classFile : snapshotSymbolProblems.get(problem)) {
+        message.append(
+            String.format(
+                "  referenced from %s (%s)\n",
+                classFile.getClassName(), classFile.getJar().getFileName()));
+      }
+    }
+    return message.toString();
+  }
+
+  /**
+   * Returns a message explains the improvement of {@code fixedProblems}.
+   */
+  @VisibleForTesting
+  String generateFixedErrorMessage(Set<SymbolProblem> fixedProblems) {
+    int problemSize = fixedProblems.size();
+    StringBuilder message =
+        new StringBuilder(
+            "The following problem"
+                + (problemSize > 1 ? "s" : "")
+                + " in the baseline no longer appear in the snapshot:\n");
+    for (SymbolProblem problem : fixedProblems) {
+      message.append("  " + problem + "\n");
+    }
+    return message.toString();
   }
 
   /**
