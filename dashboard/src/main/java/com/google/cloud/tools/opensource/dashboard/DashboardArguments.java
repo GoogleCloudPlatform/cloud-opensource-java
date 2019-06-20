@@ -124,7 +124,7 @@ final class DashboardArguments {
 
     Option versionlessCoordinatesOption =
         Option.builder("a")
-            .longOpt("versionless-coordinates")
+            .longOpt("all-versions")
             .hasArg()
             .desc(
                 "Maven coordinates of a BOM without version. "
