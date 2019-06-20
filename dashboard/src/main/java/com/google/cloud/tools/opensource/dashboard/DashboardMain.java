@@ -103,12 +103,10 @@ public class DashboardMain {
 
     if (dashboardArguments.hasVersionlessCoordinates()) {
       generateAllVersions(dashboardArguments.getVersionlessCoordinates());
+    } else if (dashboardArguments.hasFile()) {
+      generate(dashboardArguments.getBomFile());
     } else {
-      if (dashboardArguments.hasFile()) {
-        generate(dashboardArguments.getBomFile());
-      } else {
-        generate(dashboardArguments.getBomCoordinates());
-      }
+      generate(dashboardArguments.getBomCoordinates());
     }
   }
 
@@ -126,9 +124,6 @@ public class DashboardMain {
     ImmutableList<String> versions =
         RepositoryUtility.findVersions(repositorySystem, groupId, artifactId);
     for (String version : versions) {
-      if (version.contains("SNAPSHOT")) {
-        continue;
-      }
       generate(String.format("%s:%s:%s", groupId, artifactId, version));
     }
   }
@@ -137,7 +132,7 @@ public class DashboardMain {
   static Path generate(String bomCoordinates)
       throws IOException, TemplateException, RepositoryException, URISyntaxException {
     Path output = generate(RepositoryUtility.readBom(bomCoordinates));
-    System.out.println("Wrote dashboard for " + bomCoordinates + " at " + output);
+    System.out.println("Wrote dashboard for " + bomCoordinates + " to " + output);
     return output;
   }
 
@@ -148,7 +143,7 @@ public class DashboardMain {
     checkArgument(Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
     checkArgument(Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
     Path output = generate(RepositoryUtility.readBom(bomFile));
-    System.out.println("Wrote dashboard for " + bomFile + " at " + output);
+    System.out.println("Wrote dashboard for " + bomFile + " to " + output);
     return output;
   }
 

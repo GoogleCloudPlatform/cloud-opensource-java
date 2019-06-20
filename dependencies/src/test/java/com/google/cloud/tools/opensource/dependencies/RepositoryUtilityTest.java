@@ -92,6 +92,7 @@ public class RepositoryUtilityTest {
     Version guava28 = versionScheme.parseVersion("28.0");
 
     Truth.assertWithMessage("Latest guava release is greater than or equal to 28.0")
-        .that(highestGuava).isAtLeast(guava28);
+        .that(highestGuava)
+        .isAtLeast(guava28);
   }
 }
