@@ -101,30 +101,26 @@ public class DashboardMain {
           ParseException, MavenRepositoryException {
     DashboardArguments dashboardArguments = DashboardArguments.readCommandLine(arguments);
 
-    if (dashboardArguments.hasVersionlessCoordinates()) {
-      generateAllVersions(dashboardArguments.getVersionlessCoordinates());
+    if (dashboardArguments.hasFile()) {
+      generate(dashboardArguments.getBomFile());
     } else {
-      if (dashboardArguments.hasFile()) {
-        generate(dashboardArguments.getBomFile());
-      } else {
-        generate(dashboardArguments.getBomCoordinates());
-      }
+      generateWithRange(dashboardArguments.getBomCoordinates());
     }
   }
 
-  private static void generateAllVersions(String versionlessCoordinates)
+  private static void generateWithRange(String versionRangeCoordinates)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
           MavenRepositoryException {
-    List<String> elements = Splitter.on(':').splitToList(versionlessCoordinates);
+    List<String> elements = Splitter.on(':').splitToList(versionRangeCoordinates);
     checkArgument(
-        elements.size() == 2,
-        "The versionless coordinates should have one colon character: " + versionlessCoordinates);
+        elements.size() < 3,
+        "The coordinates should have two colon character: " + versionRangeCoordinates);
     String groupId = elements.get(0);
     String artifactId = elements.get(1);
 
     RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
     ImmutableList<String> versions =
-        RepositoryUtility.findVersions(repositorySystem, groupId, artifactId);
+        RepositoryUtility.findVersions(repositorySystem, versionRangeCoordinates);
     for (String version : versions) {
       if (version.contains("SNAPSHOT")) {
         continue;

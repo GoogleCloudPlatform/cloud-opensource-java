@@ -358,11 +358,10 @@ public final class RepositoryUtility {
   private static VersionRangeResult findVersionRange(
       RepositorySystem repositorySystem,
       RepositorySystemSession session,
-      String groupId,
-      String artifactId)
+      String versionRangeCoordinates)
       throws MavenRepositoryException {
 
-    Artifact artifactWithVersionRange = new DefaultArtifact(groupId, artifactId, null, "(0,]");
+    Artifact artifactWithVersionRange = new DefaultArtifact(versionRangeCoordinates);
     VersionRangeRequest request =
         new VersionRangeRequest(
             artifactWithVersionRange, ImmutableList.of(RepositoryUtility.CENTRAL), null);
@@ -381,7 +380,8 @@ public final class RepositoryUtility {
       String groupId,
       String artifactId)
       throws MavenRepositoryException {
-    return findVersionRange(repositorySystem, session, groupId, artifactId)
+    return findVersionRange(
+            repositorySystem, session, String.format("%s:%s:%s", groupId, artifactId, "(0,]"))
         .getHighestVersion()
         .toString();
   }
@@ -390,10 +390,12 @@ public final class RepositoryUtility {
    * Returns list of versions available for {@code groupId:artifactId} in {@code repositorySystem}.
    */
   public static ImmutableList<String> findVersions(
-      RepositorySystem repositorySystem, String groupId, String artifactId)
+      RepositorySystem repositorySystem, String versionRangeCoordinates)
       throws MavenRepositoryException {
     RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
-    return findVersionRange(repositorySystem, session, groupId, artifactId).getVersions().stream()
+    return findVersionRange(repositorySystem, session, versionRangeCoordinates)
+        .getVersions()
+        .stream()
         .map(version -> version.toString())
         .collect(toImmutableList());
   }

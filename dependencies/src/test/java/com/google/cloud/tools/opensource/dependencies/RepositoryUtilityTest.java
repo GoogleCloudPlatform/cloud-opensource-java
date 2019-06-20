@@ -73,7 +73,7 @@ public class RepositoryUtilityTest {
   public void testFindVersions() throws MavenRepositoryException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     ImmutableList<String> versions =
-        RepositoryUtility.findVersions(system, "com.google.cloud", "libraries-bom");
+        RepositoryUtility.findVersions(system, "com.google.cloud:libraries-bom:(0,]");
     Truth.assertThat(versions).containsAtLeast("1.1.0", "1.1.1", "1.2.0", "2.0.0").inOrder();
   }
 
@@ -92,6 +92,7 @@ public class RepositoryUtilityTest {
     Version guava28 = versionScheme.parseVersion("28.0");
 
     Truth.assertWithMessage("Latest guava release is greater than or equal to 28.0")
-        .that(highestGuava).isAtLeast(guava28);
+        .that(highestGuava)
+        .isAtLeast(guava28);
   }
 }
