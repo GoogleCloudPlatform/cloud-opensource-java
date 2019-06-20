@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.RepositorySystem;
@@ -47,7 +48,7 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void testFindSnapshotVersion() throws VersionRangeResolutionException {
+  public void testFindSnapshotVersion() throws MavenRepositoryException {
     // This version of Guava should be found locally because this module uses it.
     Bom snapshotBom =
         LinkageMonitor.copyWithSnapshot(
@@ -60,7 +61,8 @@ public class LinkageMonitorTest {
 
   @Test
   public void testBomSnapshot()
-      throws VersionRangeResolutionException, InvalidVersionSpecificationException {
+      throws VersionRangeResolutionException, MavenRepositoryException,
+          InvalidVersionSpecificationException {
     VersionRangeResult protobufSnapshotVersionResult =
         new VersionRangeResult(new VersionRangeRequest());
     VersionRangeResult versionWithoutSnapshot = new VersionRangeResult(new VersionRangeRequest());

@@ -52,6 +52,15 @@ final class DashboardArguments {
     return commandLine.hasOption('f');
   }
 
+  /**
+   * Returns true if the argument for a versionless coordinates is specified; otherwise false.
+   *
+   * <p>It is guaranteed that either a file path or Maven coordinates for a BOM are available.
+   */
+  boolean hasVersionlessCoordinates() {
+    return commandLine.hasOption('a');
+  }
+
   /** Returns an absolute path to pom.xml file of a BOM. Null if file is not specified. */
   @Nullable
   Path getBomFile() {
@@ -69,6 +78,18 @@ final class DashboardArguments {
       return null;
     }
     return commandLine.getOptionValue('c').trim();
+  }
+
+  /**
+   * Returns the versionless Maven coordinates of a BOM. Null if versionless coordinates are not
+   * specified.
+   */
+  @Nullable
+  String getVersionlessCoordinates() {
+    if (!commandLine.hasOption('a')) {
+      return null;
+    }
+    return commandLine.getOptionValue('a').trim();
   }
 
   static DashboardArguments readCommandLine(String... arguments) throws ParseException {
@@ -100,6 +121,16 @@ final class DashboardArguments {
                 "Maven coordinates of a BOM. For example, com.google.cloud:libraries-bom:1.0.0")
             .build();
     inputGroup.addOption(inputCoordinatesOption);
+
+    Option versionlessCoordinatesOption =
+        Option.builder("a")
+            .longOpt("all-versions")
+            .hasArg()
+            .desc(
+                "Maven coordinates of a BOM without version. "
+                    + "For example, com.google.cloud:libraries-bom")
+            .build();
+    inputGroup.addOption(versionlessCoordinatesOption);
 
     options.addOptionGroup(inputGroup);
     return options;
