@@ -104,11 +104,11 @@ public class DashboardMain {
     if (dashboardArguments.hasVersionlessCoordinates()) {
       generateAllVersions(dashboardArguments.getVersionlessCoordinates());
     } else {
-      Path output =
-          dashboardArguments.hasFile()
-              ? generate(dashboardArguments.getBomFile())
-              : generate(dashboardArguments.getBomCoordinates());
-      System.out.println("Wrote dashboard into " + output.toAbsolutePath());
+      if (dashboardArguments.hasFile()) {
+        generate(dashboardArguments.getBomFile());
+      } else {
+        generate(dashboardArguments.getBomCoordinates());
+      }
     }
   }
 
