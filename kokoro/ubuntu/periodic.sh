@@ -17,7 +17,3 @@ cd dashboard
 # For all versions available in Maven Central
 mvn -B exec:java -Dexec.mainClass="com.google.cloud.tools.opensource.dashboard.DashboardMain" \
   -Dexec.arguments="-a com.google.cloud:libraries-bom:(0,]"
-
-# For latest snapshot
-mvn -B exec:java -Dexec.mainClass="com.google.cloud.tools.opensource.dashboard.DashboardMain" \
-  -Dexec.arguments="-f ../boms/cloud-oss-bom/pom.xml"

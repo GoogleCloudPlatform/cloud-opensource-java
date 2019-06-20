@@ -122,9 +122,6 @@ public class DashboardMain {
     ImmutableList<String> versions =
         RepositoryUtility.findVersions(repositorySystem, versionRangeCoordinates);
     for (String version : versions) {
-      if (version.contains("SNAPSHOT")) {
-        continue;
-      }
       generate(String.format("%s:%s:%s", groupId, artifactId, version));
     }
   }
