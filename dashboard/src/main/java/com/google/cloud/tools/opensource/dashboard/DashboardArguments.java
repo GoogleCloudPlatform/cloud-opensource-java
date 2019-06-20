@@ -63,8 +63,10 @@ final class DashboardArguments {
   }
 
   /**
-   * Returns the Maven coordinates or version range of a BOM. Null if coordinates are not
-   * specified.
+   * Returns the Maven coordinates or version range of a BOM. Null if coordinates are not specified.
+   *
+   * @see <a href="https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification"
+   *     >Maven POM Reference: Dependency Version Requirement Specification</a>
    */
   @Nullable
   String getBomCoordinates() {
