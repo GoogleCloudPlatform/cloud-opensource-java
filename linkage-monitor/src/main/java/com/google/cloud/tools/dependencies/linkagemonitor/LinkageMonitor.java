@@ -79,7 +79,7 @@ public class LinkageMonitor {
     if (baselineCoordinates.equals(snapshotCoordinates)) {
       System.out.println(
           "Could not find SNAPSHOT versions for the artifacts in the BOM. "
-          + "Not running comparison.");
+              + "Not running comparison.");
       return;
     }
 
@@ -95,11 +95,11 @@ public class LinkageMonitor {
 
     Set<SymbolProblem> fixedProblems = Sets.difference(problemsInBaseline, problemsInSnapshot);
     if (!fixedProblems.isEmpty()) {
-      System.out.println(formatMessageForFixedError(fixedProblems));
+      System.out.println(messageForFixedErrors(fixedProblems));
     }
     Set<SymbolProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newProblems.isEmpty()) {
-      System.err.println(formatMessageForNewError(snapshotSymbolProblems, problemsInBaseline));
+      System.err.println(messageForNewErrors(snapshotSymbolProblems, problemsInBaseline));
       int errorSize = newProblems.size();
       throw new LinkageMonitorException(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
@@ -118,7 +118,7 @@ public class LinkageMonitor {
    * baselineProblems}.
    */
   @VisibleForTesting
-  static String formatMessageForNewError(
+  static String messageForNewErrors(
       ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems,
       Set<SymbolProblem> baselineProblems) {
     Set<SymbolProblem> newProblems =
@@ -139,7 +139,7 @@ public class LinkageMonitor {
 
   /** Returns a message on {@code fixedProblems}. */
   @VisibleForTesting
-  static String formatMessageForFixedError(Set<SymbolProblem> fixedProblems) {
+  static String messageForFixedErrors(Set<SymbolProblem> fixedProblems) {
     int problemSize = fixedProblems.size();
     StringBuilder message =
         new StringBuilder(

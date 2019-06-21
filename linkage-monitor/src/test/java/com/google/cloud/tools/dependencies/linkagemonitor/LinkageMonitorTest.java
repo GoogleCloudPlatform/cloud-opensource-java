@@ -141,7 +141,7 @@ public class LinkageMonitorTest {
             methodNotFoundProblem,
             new ClassFile(Paths.get("aaa", "bbb-1.2.3.jar"), "com.abc.BBB"));
 
-    String message = LinkageMonitor.formatMessageForNewError(snapshotProblems, baselineProblems);
+    String message = LinkageMonitor.messageForNewErrors(snapshotProblems, baselineProblems);
     assertEquals(
         "Newly introduced problem:\n"
             + "(bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils.marshaller's method"
@@ -154,7 +154,7 @@ public class LinkageMonitorTest {
   @Test
   public void testGenerateMessageForFixedError() {
     String message =
-        LinkageMonitor.formatMessageForFixedError(
+        LinkageMonitor.messageForFixedErrors(
             ImmutableSet.of(classNotFoundProblem, methodNotFoundProblem));
     assertEquals(
         "The following problems in the baseline no longer appear in the snapshot:\n"
