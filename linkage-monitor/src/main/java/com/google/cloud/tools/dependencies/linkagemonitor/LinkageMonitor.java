@@ -78,8 +78,8 @@ public class LinkageMonitor {
     ImmutableList<String> snapshotCoordinates = coordinatesList(snapshot.getManagedDependencies());
     if (baselineCoordinates.equals(snapshotCoordinates)) {
       System.out.println(
-          "The content of the HEAD BOM and the original BOM are the same. Not running"
-              + " comparison.");
+          "The content of the original BOM and the BOM with snapshot versions are the same. "
+          + "Not running comparison.");
       return;
     }
 
