@@ -110,9 +110,7 @@ public class LinkageMonitor {
   }
 
   private static ImmutableList<String> coordinatesList(List<Artifact> artifacts) {
-    return artifacts.stream()
-        .map(Artifacts::toCoordinates)
-        .collect(toImmutableList());
+    return artifacts.stream().map(Artifacts::toCoordinates).collect(toImmutableList());
   }
 
   /**
@@ -123,8 +121,8 @@ public class LinkageMonitor {
   String generateNewErrorMessage(
       ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems,
       ImmutableSet<SymbolProblem> baselineProblems) {
-    Set<SymbolProblem> newProblems = Sets
-        .difference(snapshotSymbolProblems.keySet(), baselineProblems);
+    Set<SymbolProblem> newProblems =
+        Sets.difference(snapshotSymbolProblems.keySet(), baselineProblems);
     StringBuilder message =
         new StringBuilder("Newly introduced problem" + (newProblems.size() > 1 ? "s" : "") + ":\n");
     for (SymbolProblem problem : newProblems) {
@@ -139,9 +137,7 @@ public class LinkageMonitor {
     return message.toString();
   }
 
-  /**
-   * Returns a message explains the improvement of {@code fixedProblems}.
-   */
+  /** Returns a message explains the improvement of {@code fixedProblems}. */
   @VisibleForTesting
   String generateFixedErrorMessage(Set<SymbolProblem> fixedProblems) {
     int problemSize = fixedProblems.size();
