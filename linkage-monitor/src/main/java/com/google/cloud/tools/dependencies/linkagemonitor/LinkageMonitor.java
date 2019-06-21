@@ -78,7 +78,7 @@ public class LinkageMonitor {
     ImmutableList<String> snapshotCoordinates = coordinatesList(snapshot.getManagedDependencies());
     if (baselineCoordinates.equals(snapshotCoordinates)) {
       System.out.println(
-          "Could not find SNAPSHOT versions for dependencyManagement section of the BOM. "
+          "Could not find SNAPSHOT versions for the artifacts in the BOM. "
           + "Not running comparison.");
       return;
     }
