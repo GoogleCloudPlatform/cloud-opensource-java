@@ -73,7 +73,7 @@ public class LinkageMonitor {
         LinkageChecker.create(baseline).findSymbolProblems().keySet();
     Bom snapshot = copyWithSnapshot(repositorySystem, baseline);
 
-    // Compare coordinates of the two BOMs. No need to run comparison if they are the same.
+    // Comparing coordinates because DefaultArtifact does not override equals
     ImmutableList<String> baselineCoordinates = coordinatesList(snapshot.getManagedDependencies());
     ImmutableList<String> snapshotCoordinates = coordinatesList(snapshot.getManagedDependencies());
     if (baselineCoordinates.equals(snapshotCoordinates)) {
