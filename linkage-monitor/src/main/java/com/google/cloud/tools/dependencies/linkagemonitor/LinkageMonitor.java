@@ -95,11 +95,11 @@ public class LinkageMonitor {
 
     Set<SymbolProblem> fixedProblems = Sets.difference(problemsInBaseline, problemsInSnapshot);
     if (!fixedProblems.isEmpty()) {
-      System.out.println(generateFixedErrorMessage(fixedProblems));
+      System.out.println(formatMessageForFixedError(fixedProblems));
     }
     Set<SymbolProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newProblems.isEmpty()) {
-      System.err.println(generateNewErrorMessage(snapshotSymbolProblems, problemsInBaseline));
+      System.err.println(formatMessageForNewError(snapshotSymbolProblems, problemsInBaseline));
       int errorSize = newProblems.size();
       throw new LinkageMonitorException(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
@@ -114,13 +114,13 @@ public class LinkageMonitor {
   }
 
   /**
-   * Returns error message if {@code snapshotSymbolProblems} contains new problems compared with
+   * Returns an error message if {@code snapshotSymbolProblems} contains new problems compared with
    * {@code baselineProblems}; otherwise null.
    */
   @VisibleForTesting
-  String generateNewErrorMessage(
+  static String formatMessageForNewError(
       ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems,
-      ImmutableSet<SymbolProblem> baselineProblems) {
+      Set<SymbolProblem> baselineProblems) {
     Set<SymbolProblem> newProblems =
         Sets.difference(snapshotSymbolProblems.keySet(), baselineProblems);
     StringBuilder message =
@@ -137,9 +137,9 @@ public class LinkageMonitor {
     return message.toString();
   }
 
-  /** Returns a message explains the improvement of {@code fixedProblems}. */
+  /** Returns a message on {@code fixedProblems}. */
   @VisibleForTesting
-  String generateFixedErrorMessage(Set<SymbolProblem> fixedProblems) {
+  static String formatMessageForFixedError(Set<SymbolProblem> fixedProblems) {
     int problemSize = fixedProblems.size();
     StringBuilder message =
         new StringBuilder(

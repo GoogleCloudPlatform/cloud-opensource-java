@@ -23,10 +23,19 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.google.cloud.tools.opensource.classpath.ClassFile;
+import com.google.cloud.tools.opensource.classpath.ClassSymbol;
+import com.google.cloud.tools.opensource.classpath.ErrorType;
+import com.google.cloud.tools.opensource.classpath.MethodSymbol;
+import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import java.nio.file.Paths;
+import java.util.Set;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -106,5 +115,51 @@ public class LinkageMonitorTest {
           bom.getManagedDependencies().get(i).getVersion(),
           snapshotBom.getManagedDependencies().get(i).getVersion());
     }
+  }
+
+  private final SymbolProblem classNotFoundProblem =
+      new SymbolProblem(
+          new ClassSymbol("java.lang.Integer"),
+          ErrorType.CLASS_NOT_FOUND,
+          null);
+  private final SymbolProblem methodNotFoundProblem =
+      new SymbolProblem(
+          new MethodSymbol(
+              "io.grpc.protobuf.ProtoUtils.marshaller",
+              "marshaller",
+              "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
+              false),
+          ErrorType.SYMBOL_NOT_FOUND,
+          new ClassFile(Paths.get("aaa", "bbb-1.2.3.jar"), "java.lang.Object"));
+
+  @Test
+  public void generateMessageForNewError() {
+    Set<SymbolProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
+    ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotProblems = ImmutableSetMultimap.of(
+        classNotFoundProblem, // This is in baseline. It should not be printed
+        new ClassFile(Paths.get("aaa", "bbb-1.2.3.jar"), "com.abc.AAA"),
+        methodNotFoundProblem,
+        new ClassFile(Paths.get("aaa", "bbb-1.2.3.jar"), "com.abc.AAA"),
+        methodNotFoundProblem,
+        new ClassFile(Paths.get("aaa", "bbb-1.2.3.jar"), "com.abc.BBB")
+    );
+
+    String message = LinkageMonitor.formatMessageForNewError(snapshotProblems, baselineProblems);
+    assertEquals("Newly introduced problem:\n"
+        + "(bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils.marshaller's method"
+        +" marshaller(com.google.protobuf.Message arg1) is not found\n"
+        + "  referenced from com.abc.AAA (bbb-1.2.3.jar)\n"
+        + "  referenced from com.abc.BBB (bbb-1.2.3.jar)\n", message);
+  }
+
+  @Test
+  public void testGenerateMessageForFixedError() {
+    String message = LinkageMonitor
+        .formatMessageForFixedError(ImmutableSet.of(classNotFoundProblem, methodNotFoundProblem));
+    assertEquals("The following problems in the baseline no longer appear in the snapshot:\n"
+            + "  Class java.lang.Integer is not found\n"
+            + "  (bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils.marshaller's method "
+            + "marshaller(com.google.protobuf.Message arg1) is not found\n",
+        message);
   }
 }
