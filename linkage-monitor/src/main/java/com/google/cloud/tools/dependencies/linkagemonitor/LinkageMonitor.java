@@ -74,7 +74,7 @@ public class LinkageMonitor {
     Bom snapshot = copyWithSnapshot(repositorySystem, baseline);
 
     // Comparing coordinates because DefaultArtifact does not override equals
-    ImmutableList<String> baselineCoordinates = coordinatesList(snapshot.getManagedDependencies());
+    ImmutableList<String> baselineCoordinates = coordinatesList(baseline.getManagedDependencies());
     ImmutableList<String> snapshotCoordinates = coordinatesList(snapshot.getManagedDependencies());
     if (baselineCoordinates.equals(snapshotCoordinates)) {
       System.out.println(
