@@ -87,7 +87,7 @@ public class DashboardMain {
   public static final String TEST_NAME_GLOBAL_UPPER_BOUND = "Global Upper Bounds";
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
 
-  private static Configuration freemarkerConfiguration = configureFreemarker();
+  private static final Configuration freemarkerConfiguration = configureFreemarker();
 
   /**
    * Generates a code hygiene dashboard for a BOM. This tool takes a path to pom.xml of the BOM as
@@ -130,6 +130,7 @@ public class DashboardMain {
     generateVersionIndex(groupId, artifactId, versions);
   }
 
+  @VisibleForTesting
   static Path generateVersionIndex(String groupId, String artifactId, List<String> versions)
       throws IOException, TemplateException, URISyntaxException {
     Path directory = outputDirectory(groupId, artifactId, ".");

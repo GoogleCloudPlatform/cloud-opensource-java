@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en-US">
-<#include "macros.ftl">
 <head>
   <meta charset="utf-8" />
   <title>${groupId}:${artifactId}</title>
@@ -11,7 +10,9 @@
 
 <ul>
   <#list versions as version>
-    <li><a href="./${version?contains('-SNAPSHOT')?then('snapshot', version)}/index.html">${version}</a></li>
+    <li>
+      <a href="${version?contains('-SNAPSHOT')?then('snapshot', version)}/index.html">${version}</a>
+    </li>
   </#list>
 </ul>
 
