@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -71,7 +72,7 @@ public class FreemarkerTest {
     symbolProblemTable = ImmutableMap.of(Paths.get("foo", "bar-1.2.3.jar"), dummyProblems);
   }
 
-
+  @AfterClass
   public static void cleanUp() throws IOException {
     // Mac's APFS fails with InsecureRecursiveDeleteException without ALLOW_INSECURE.
     // Still safe as this test does not use symbolic links
