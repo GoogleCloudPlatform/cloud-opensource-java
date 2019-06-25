@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -118,7 +119,7 @@ public class FreemarkerTest {
   }
 
   @Test
-  public void testVersionIndex() throws IOException, TemplateException {
+  public void testVersionIndex() throws IOException, TemplateException, URISyntaxException {
     Path output =
         DashboardMain.generateVersionIndex(
             "com.google.cloud",

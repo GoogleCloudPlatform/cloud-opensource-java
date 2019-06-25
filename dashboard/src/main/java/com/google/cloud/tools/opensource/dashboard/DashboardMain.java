@@ -131,18 +131,24 @@ public class DashboardMain {
   }
 
   static Path generateVersionIndex(String groupId, String artifactId, List<String> versions)
-      throws IOException, TemplateException {
-    Path page = outputDirectory(groupId, artifactId, ".").resolve("index.html");
+      throws IOException, TemplateException, URISyntaxException {
+    Path directory = outputDirectory(groupId, artifactId, ".");
+    Path page = directory.resolve("index.html");
+
     Map<String, Object> templateData = new HashMap<>();
     templateData.put("versions", versions);
     templateData.put("groupId", groupId);
     templateData.put("artifactId", artifactId);
+
     File dashboardFile = page.toFile();
     try (Writer out =
         new OutputStreamWriter(new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
       Template dashboard = freemarkerConfiguration.getTemplate("/templates/version_index.ftl");
       dashboard.process(templateData, out);
     }
+
+    copyResource(directory, "css/dashboard.css");
+
     return page;
   }
 
