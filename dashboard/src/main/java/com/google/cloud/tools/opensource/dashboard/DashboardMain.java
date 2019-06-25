@@ -138,8 +138,8 @@ public class DashboardMain {
     templateData.put("groupId", groupId);
     templateData.put("artifactId", artifactId);
     File dashboardFile = page.toFile();
-    try (Writer out = new OutputStreamWriter(
-        new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
+    try (Writer out =
+        new OutputStreamWriter(new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
       Template dashboard = freemarkerConfiguration.getTemplate("/templates/version_index.ftl");
       dashboard.process(templateData, out);
     }
@@ -192,8 +192,7 @@ public class DashboardMain {
 
   private static Path outputDirectory(String groupId, String artifactId, String version) {
     String versionPathElement = version.contains("-SNAPSHOT") ? "snapshot" : version;
-    return Paths.get(
-        "target", groupId, artifactId, versionPathElement);
+    return Paths.get("target", groupId, artifactId, versionPathElement);
   }
 
   private static Path generateHtml(
@@ -205,7 +204,9 @@ public class DashboardMain {
 
     Artifact bomArtifact = new DefaultArtifact(bom.getCoordinates());
 
-    Path relativePath = outputDirectory(bomArtifact.getGroupId(), bomArtifact.getArtifactId(), bomArtifact.getVersion());
+    Path relativePath =
+        outputDirectory(
+            bomArtifact.getGroupId(), bomArtifact.getArtifactId(), bomArtifact.getVersion());
     Path output = Files.createDirectories(relativePath);
 
     copyResource(output, "css/dashboard.css");

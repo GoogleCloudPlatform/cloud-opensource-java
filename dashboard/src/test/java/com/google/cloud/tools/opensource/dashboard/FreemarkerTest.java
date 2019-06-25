@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -119,13 +118,17 @@ public class FreemarkerTest {
 
   @Test
   public void testVersionIndex() throws IOException, TemplateException {
-    Path output = DashboardMain.generateVersionIndex("com.google.cloud", "libraries-bom",
-        ImmutableList.of("1.0.0", "2.0.0", "2.1.0-SNAPSHOT"));
-    Truth.assertThat((Iterable<Path>) output).containsAtLeast(
-        Paths.get("target"),
-        Paths.get("com.google.cloud"),
-        Paths.get("libraries-bom"),
-        Paths.get("index.html"))
+    Path output =
+        DashboardMain.generateVersionIndex(
+            "com.google.cloud",
+            "libraries-bom",
+            ImmutableList.of("1.0.0", "2.0.0", "2.1.0-SNAPSHOT"));
+    Truth.assertThat((Iterable<Path>) output)
+        .containsAtLeast(
+            Paths.get("target"),
+            Paths.get("com.google.cloud"),
+            Paths.get("libraries-bom"),
+            Paths.get("index.html"))
         .inOrder();
     Assert.assertTrue(Files.isRegularFile(output));
   }
