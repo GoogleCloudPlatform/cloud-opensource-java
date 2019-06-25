@@ -72,7 +72,7 @@ public class FreemarkerTest {
     symbolProblemTable = ImmutableMap.of(Paths.get("foo", "bar-1.2.3.jar"), dummyProblems);
   }
 
-  @AfterClass
+
   public static void cleanUp() throws IOException {
     // Mac's APFS fails with InsecureRecursiveDeleteException without ALLOW_INSECURE.
     // Still safe as this test does not use symbolic links
@@ -115,5 +115,18 @@ public class FreemarkerTest {
     }
     // Linkage Errors
     Truth.assertThat(counts.get(1).getValue().trim()).isEqualTo("1");
+  }
+
+  @Test
+  public void testVersionIndex() throws IOException, TemplateException {
+    Path output = DashboardMain.generateVersionIndex("com.google.cloud", "libraries-bom",
+        ImmutableList.of("1.0.0", "2.0.0", "2.1.0-SNAPSHOT"));
+    Truth.assertThat((Iterable<Path>) output).containsAtLeast(
+        Paths.get("target"),
+        Paths.get("com.google.cloud"),
+        Paths.get("libraries-bom"),
+        Paths.get("index.html"))
+        .inOrder();
+    Assert.assertTrue(Files.isRegularFile(output));
   }
 }
