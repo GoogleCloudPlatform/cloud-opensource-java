@@ -40,6 +40,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import nu.xom.Builder;
 import nu.xom.Document;
+import nu.xom.Node;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
 import org.eclipse.aether.artifact.Artifact;
@@ -115,7 +116,8 @@ public class FreemarkerTest {
   }
 
   @Test
-  public void testVersionIndex() throws IOException, TemplateException, URISyntaxException {
+  public void testVersionIndex()
+      throws IOException, TemplateException, URISyntaxException, ParsingException {
     Path output =
         DashboardMain.generateVersionIndex(
             "com.google.cloud",
@@ -129,5 +131,12 @@ public class FreemarkerTest {
             Paths.get("index.html"))
         .inOrder();
     Assert.assertTrue(Files.isRegularFile(output));
+
+    Document document = builder.build(output.toFile());
+    Nodes links = document.query("//a/@href");
+    Assert.assertEquals(3, links.size());
+    Node snapshotlink = links.get(2);
+    // 2.1.0-SNAPSHOT has directory 'snapshot'
+    Assert.assertEquals("snapshot/index.html", snapshotlink.getValue());
   }
 }
