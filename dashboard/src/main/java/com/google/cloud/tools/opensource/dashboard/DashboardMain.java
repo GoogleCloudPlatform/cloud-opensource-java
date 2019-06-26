@@ -87,6 +87,8 @@ public class DashboardMain {
   public static final String TEST_NAME_GLOBAL_UPPER_BOUND = "Global Upper Bounds";
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
 
+  private static final Configuration freemarkerConfiguration = configureFreemarker();
+
   /**
    * Generates a code hygiene dashboard for a BOM. This tool takes a path to pom.xml of the BOM as
    * an argument or Maven coordinates to a BOM.
@@ -125,6 +127,31 @@ public class DashboardMain {
     for (String version : versions) {
       generate(String.format("%s:%s:%s", groupId, artifactId, version));
     }
+    generateVersionIndex(groupId, artifactId, versions);
+  }
+
+  @VisibleForTesting
+  static Path generateVersionIndex(String groupId, String artifactId, List<String> versions)
+      throws IOException, TemplateException, URISyntaxException {
+    Path directory = outputDirectory(groupId, artifactId, "snapshot").getParent();
+    directory.toFile().mkdirs();
+    Path page = directory.resolve("index.html");
+
+    Map<String, Object> templateData = new HashMap<>();
+    templateData.put("versions", versions);
+    templateData.put("groupId", groupId);
+    templateData.put("artifactId", artifactId);
+
+    File dashboardFile = page.toFile();
+    try (Writer out =
+        new OutputStreamWriter(new FileOutputStream(dashboardFile), StandardCharsets.UTF_8)) {
+      Template dashboard = freemarkerConfiguration.getTemplate("/templates/version_index.ftl");
+      dashboard.process(templateData, out);
+    }
+
+    copyResource(directory, "css/dashboard.css");
+
+    return page;
   }
 
   @VisibleForTesting
@@ -171,6 +198,11 @@ public class DashboardMain {
     return output;
   }
 
+  private static Path outputDirectory(String groupId, String artifactId, String version) {
+    String versionPathElement = version.contains("-SNAPSHOT") ? "snapshot" : version;
+    return Paths.get("target", groupId, artifactId, versionPathElement);
+  }
+
   private static Path generateHtml(
       Bom bom,
       ArtifactCache cache,
@@ -180,26 +212,23 @@ public class DashboardMain {
 
     Artifact bomArtifact = new DefaultArtifact(bom.getCoordinates());
 
-    String version = bomArtifact.getVersion();
-    String versionPathElement = version.contains("-SNAPSHOT") ? "snapshot" : version;
     Path relativePath =
-        Paths.get(
-            "target", bomArtifact.getGroupId(), bomArtifact.getArtifactId(), versionPathElement);
+        outputDirectory(
+            bomArtifact.getGroupId(), bomArtifact.getArtifactId(), bomArtifact.getVersion());
     Path output = Files.createDirectories(relativePath);
 
     copyResource(output, "css/dashboard.css");
     copyResource(output, "js/dashboard.js");
-    Configuration configuration = configureFreemarker();
 
     ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable =
         indexByJar(symbolProblems);
 
     List<ArtifactResults> table =
         generateReports(
-            configuration, output, cache, symbolProblemTable, jarToDependencyPaths, bom);
+            freemarkerConfiguration, output, cache, symbolProblemTable, jarToDependencyPaths, bom);
 
     generateDashboard(
-        configuration,
+        freemarkerConfiguration,
         output,
         table,
         cache.getGlobalDependencies(),
