@@ -124,19 +124,16 @@ public class FreemarkerTest {
             "libraries-bom",
             ImmutableList.of("1.0.0", "2.0.0", "2.1.0-SNAPSHOT"));
     Truth.assertThat((Iterable<Path>) output)
-        .containsAtLeast(
-            Paths.get("target"),
-            Paths.get("com.google.cloud"),
-            Paths.get("libraries-bom"),
-            Paths.get("index.html"))
+        .containsAtLeastElementsIn(
+            Paths.get("target","com.google.cloud", "libraries-bom", "index.html"))
         .inOrder();
     Assert.assertTrue(Files.isRegularFile(output));
 
     Document document = builder.build(output.toFile());
     Nodes links = document.query("//a/@href");
     Assert.assertEquals(3, links.size());
-    Node snapshotlink = links.get(2);
+    Node snapshotLink = links.get(2);
     // 2.1.0-SNAPSHOT has directory 'snapshot'
-    Assert.assertEquals("snapshot/index.html", snapshotlink.getValue());
+    Assert.assertEquals("snapshot/index.html", snapshotLink.getValue());
   }
 }

@@ -427,11 +427,8 @@ public class DashboardTest {
     Truth.assertWithMessage(
             "The dashboard should be created at target/com.google.cloud/libraries-bom/1.0.0")
         .that((Iterable<Path>) outputDirectory)
-        .containsAtLeast(
-            Paths.get("target"),
-            Paths.get("com.google.cloud"),
-            Paths.get("libraries-bom"),
-            Paths.get("1.0.0"))
+        .containsAtLeastElementsIn(
+            Paths.get("target", "com.google.cloud", "libraries-bom", "1.0.0"))
         .inOrder();
   }
 }
