@@ -133,7 +133,7 @@ public class DashboardMain {
   @VisibleForTesting
   static Path generateVersionIndex(String groupId, String artifactId, List<String> versions)
       throws IOException, TemplateException, URISyntaxException {
-    Path directory = outputDirectory(groupId, artifactId, ".");
+    Path directory = outputDirectory(groupId, artifactId, "snapshot").getParent();
     Path page = directory.resolve("index.html");
 
     Map<String, Object> templateData = new HashMap<>();
