@@ -427,7 +427,7 @@ public class DashboardTest {
     Truth.assertWithMessage(
             "The dashboard should be created at target/com.google.cloud/libraries-bom/1.0.0")
         .that((Iterable<Path>) outputDirectory)
-        .containsExactlyElementsIn(
+        .containsAtLeastElementsIn(
             Paths.get("target", "com.google.cloud", "libraries-bom", "1.0.0"))
         .inOrder();
   }

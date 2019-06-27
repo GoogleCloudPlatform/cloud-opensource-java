@@ -124,7 +124,7 @@ public class FreemarkerTest {
             "libraries-bom",
             ImmutableList.of("1.0.0", "2.0.0", "2.1.0-SNAPSHOT"));
     Truth.assertThat((Iterable<Path>) output)
-        .containsExactlyElementsIn(
+        .containsAtLeastElementsIn(
             Paths.get("target", "com.google.cloud", "libraries-bom", "index.html"))
         .inOrder();
     Assert.assertTrue(Files.isRegularFile(output));
