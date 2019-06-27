@@ -424,11 +424,9 @@ public class DashboardTest {
 
   @Test
   public void testOutputDirectory() {
-    Truth.assertWithMessage(
-            "The dashboard should be created at target/com.google.cloud/libraries-bom/1.0.0")
-        .that((Iterable<Path>) outputDirectory)
-        .containsAtLeastElementsIn(
-            Paths.get("target", "com.google.cloud", "libraries-bom", "1.0.0"))
-        .inOrder();
+    Assert.assertTrue(
+        "The dashboard should be created at target/com.google.cloud/libraries-bom/1.0.0",
+        outputDirectory
+            .endsWith(Paths.get("target", "com.google.cloud", "libraries-bom", "1.0.0")));
   }
 }
