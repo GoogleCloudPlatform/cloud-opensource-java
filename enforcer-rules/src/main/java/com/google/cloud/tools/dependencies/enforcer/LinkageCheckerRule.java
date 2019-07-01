@@ -26,6 +26,7 @@ import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -204,6 +205,24 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           }
           Path path = file.toPath();
           builder.add(path);
+        }
+
+        try {
+          List<Artifact> directProvidedDependencies = DependencyGraphBuilder
+              .getDirectProvidedDependencies(artifact);
+          for(Artifact providedDependency: directProvidedDependencies) {
+            File file = providedDependency.getFile();
+            if (file == null) {
+              throw new EnforcerRuleException(
+                  "Provided artifact " + Artifacts.toCoordinates(providedDependency)
+                      + " is not associated with a file."
+                      + " The linkage checker enforcer rule should be bound to the verify phase.");
+            }
+            builder.add(file.toPath());
+          }
+        } catch (RepositoryException e) {
+          // DependencyGraphBuilder cannot resolve the artifact of the target project
+          System.out.println("skipped " + artifact);
         }
       }
       return builder.build();

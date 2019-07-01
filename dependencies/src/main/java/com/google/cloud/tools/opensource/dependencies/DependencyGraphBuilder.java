@@ -178,6 +178,24 @@ public class DependencyGraphBuilder {
   }
 
   /**
+   * Returns the non-transitive provided dependencies of an artifact.
+   */
+  public static List<Artifact> getDirectProvidedDependencies(Artifact artifact)
+      throws RepositoryException {
+
+    List<Artifact> result = new ArrayList<>();
+
+    DependencyNode node = resolveCompileTimeDependencies(artifact);
+    for (DependencyNode child : node.getChildren()) {
+      if ("provided".equals(child.getDependency().getScope())){
+        result.add(child.getArtifact());
+      }
+    }
+    return result;
+  }
+
+
+  /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
    * versions, and dependencies with 'provided' scope.
    *
