@@ -16,6 +16,9 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static org.junit.Assert.assertEquals;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.util.ArrayList;
@@ -27,8 +30,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class DependencyGraphBuilderTest {
 
@@ -131,7 +132,8 @@ public class DependencyGraphBuilderTest {
   public void testProvidedDependency() throws RepositoryException {
     Artifact artifact = new DefaultArtifact("net.bytebuddy:byte-buddy-agent:1.9.13");
     List<Artifact> dependencies = DependencyGraphBuilder.getDirectProvidedDependencies(artifact);
-    Truth.assertThat(dependencies).hasSize(2);
-    assertEquals("junixsocket-native-common", dependencies.get(0).getArtifactId());
+    ImmutableList<String> coordinates = dependencies.stream().map(Artifacts::toCoordinates)
+        .collect(toImmutableList());
+    Truth.assertThat(coordinates).contains("com.kohlschutter.junixsocket:junixsocket-common:2.0.4");
   }
 }

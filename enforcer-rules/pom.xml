@@ -55,6 +55,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>com.kohlschutter.junixsocket</groupId>
+      <artifactId>junixsocket-native-common</artifactId>
+      <version>2.0.4</version>
+    </dependency>
+    <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>dependencies</artifactId>
       <version>${project.version}</version>

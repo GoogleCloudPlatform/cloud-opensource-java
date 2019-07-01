@@ -21,6 +21,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.graph.Traverser;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -165,10 +166,8 @@ public class DependencyGraphBuilder {
     return node;
   }
 
-
-  private static DependencyNode resolveProvidedDependencies(
-          Artifact artifact)
-          throws DependencyCollectionException, DependencyResolutionException {
+  private static DependencyNode resolveProvidedDependencies(Artifact artifact)
+      throws DependencyCollectionException, DependencyResolutionException {
 
     RepositorySystemSession session = RepositoryUtility.newSessionOnlyProvidedScope(system);
     CollectRequest collectRequest = new CollectRequest();
@@ -182,7 +181,6 @@ public class DependencyGraphBuilder {
     dependencyRequest.setRoot(node);
     dependencyRequest.setCollectRequest(collectRequest);
 
-    // This might be able to speed up by using collectDependencies here instead
     system.resolveDependencies(session, dependencyRequest);
 
     return node;
@@ -201,13 +199,14 @@ public class DependencyGraphBuilder {
   }
 
   /** Returns the provided dependencies of an artifact. */
-  public static List<Artifact> getDirectProvidedDependencies(Artifact artifact) throws RepositoryException {
-    DependencyNode node = resolveProvidedDependencies(artifact);
-    ImmutableList.Builder<Artifact> result = ImmutableList.builder();
-    for (DependencyNode child : node.getChildren()) {
-      result.add(child.getArtifact());
-    }
-    return result.build();
+  public static List<Artifact> getDirectProvidedDependencies(Artifact artifact)
+      throws RepositoryException {
+    DependencyNode root = resolveProvidedDependencies(artifact);
+    Traverser<DependencyNode> traverser = Traverser.forTree(node -> node.getChildren());
+
+    ImmutableList.Builder<Artifact> artifacts = ImmutableList.builder();
+    traverser.breadthFirst(root.getChildren()).forEach(node -> artifacts.add(node.getArtifact()));
+    return artifacts.build();
   }
 
   /**
