@@ -28,6 +28,8 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+
 public class DependencyGraphBuilderTest {
 
   private DefaultArtifact datastore =
@@ -44,7 +46,7 @@ public class DependencyGraphBuilderTest {
 
     // This method should find Guava exactly once.
     int guavaCount = countGuava(graph);
-    Assert.assertEquals(1, guavaCount);
+    assertEquals(1, guavaCount);
   }
 
   @Test
@@ -55,11 +57,11 @@ public class DependencyGraphBuilderTest {
 
     // verify we didn't double count anything
     HashSet<DependencyPath> noDups = new HashSet<>(paths);
-    Assert.assertEquals(paths.size(), noDups.size());
+    assertEquals(paths.size(), noDups.size());
 
     // This method should find Guava multiple times.
     int guavaCount = countGuava(graph);
-    Assert.assertEquals(31, guavaCount);
+    assertEquals(31, guavaCount);
   }
 
   private static int countGuava(DependencyGraph graph) {
@@ -105,12 +107,12 @@ public class DependencyGraphBuilderTest {
     List<DependencyPath> list = graph.list();
     Assert.assertTrue(list.size() > 10);
     DependencyPath firstElement = list.get(0);
-    Assert.assertEquals(
+    assertEquals(
         "Level-order should pick up datastore as first element in the list",
         "google-cloud-datastore",
         firstElement.getLeaf().getArtifactId());
     DependencyPath secondElement = list.get(1);
-    Assert.assertEquals(
+    assertEquals(
         "Level-order should pick up guava before the dependencies of the two",
         "guava",
         secondElement.getLeaf().getArtifactId());
@@ -123,5 +125,13 @@ public class DependencyGraphBuilderTest {
     // Without system properties "os.detected.arch" and "os.detected.name", this would fail.
     List<Artifact> artifacts = DependencyGraphBuilder.getDirectDependencies(nettyArtifact);
     Truth.assertThat(artifacts).isNotEmpty();
+  }
+
+  @Test
+  public void testProvidedDependency() throws RepositoryException {
+    Artifact artifact = new DefaultArtifact("net.bytebuddy:byte-buddy-agent:1.9.13");
+    List<Artifact> dependencies = DependencyGraphBuilder.getDirectProvidedDependencies(artifact);
+    Truth.assertThat(dependencies).hasSize(2);
+    assertEquals("junixsocket-native-common", dependencies.get(0).getArtifactId());
   }
 }

@@ -165,6 +165,29 @@ public class DependencyGraphBuilder {
     return node;
   }
 
+
+  private static DependencyNode resolveProvidedDependencies(
+          Artifact artifact)
+          throws DependencyCollectionException, DependencyResolutionException {
+
+    RepositorySystemSession session = RepositoryUtility.newSessionOnlyProvidedScope(system);
+    CollectRequest collectRequest = new CollectRequest();
+
+    collectRequest.setRoot(new Dependency(artifact, "provided"));
+    RepositoryUtility.addRepositoriesToRequest(collectRequest);
+    CollectResult collectResult = system.collectDependencies(session, collectRequest);
+    DependencyNode node = collectResult.getRoot();
+
+    DependencyRequest dependencyRequest = new DependencyRequest();
+    dependencyRequest.setRoot(node);
+    dependencyRequest.setCollectRequest(collectRequest);
+
+    // This might be able to speed up by using collectDependencies here instead
+    system.resolveDependencies(session, dependencyRequest);
+
+    return node;
+  }
+
   /** Returns the non-transitive compile time dependencies of an artifact. */
   public static List<Artifact> getDirectDependencies(Artifact artifact) throws RepositoryException {
 
@@ -175,6 +198,16 @@ public class DependencyGraphBuilder {
       result.add(child.getArtifact());
     }
     return result;
+  }
+
+  /** Returns the provided dependencies of an artifact. */
+  public static List<Artifact> getDirectProvidedDependencies(Artifact artifact) throws RepositoryException {
+    DependencyNode node = resolveProvidedDependencies(artifact);
+    ImmutableList.Builder<Artifact> result = ImmutableList.builder();
+    for (DependencyNode child : node.getChildren()) {
+      result.add(child.getArtifact());
+    }
+    return result.build();
   }
 
   /**
