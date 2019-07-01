@@ -132,8 +132,8 @@ public class DependencyGraphBuilderTest {
   public void testProvidedDependency() throws RepositoryException {
     Artifact artifact = new DefaultArtifact("net.bytebuddy:byte-buddy-agent:1.9.13");
     List<Artifact> dependencies = DependencyGraphBuilder.getDirectProvidedDependencies(artifact);
-    ImmutableList<String> coordinates = dependencies.stream().map(Artifacts::toCoordinates)
-        .collect(toImmutableList());
+    ImmutableList<String> coordinates =
+        dependencies.stream().map(Artifacts::toCoordinates).collect(toImmutableList());
     Truth.assertThat(coordinates).contains("com.kohlschutter.junixsocket:junixsocket-common:2.0.4");
   }
 }

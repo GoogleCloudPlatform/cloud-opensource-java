@@ -147,7 +147,6 @@ public final class RepositoryUtility {
     }
   }
 
-
   private RepositoryUtility() {}
 
   /**
