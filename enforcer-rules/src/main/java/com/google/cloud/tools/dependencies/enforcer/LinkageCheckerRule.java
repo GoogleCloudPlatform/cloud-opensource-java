@@ -182,8 +182,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       throws EnforcerRuleException {
 
     // DependencyGraphBuilder to use the project-specific repository URLs
-    RepositoryUtility.setRepositories(mavenProject.getRemoteArtifactRepositories()
-        .stream().map(ArtifactRepository::getUrl).collect(toImmutableList()), false);
+    RepositoryUtility.setRepositories(
+        mavenProject.getRemoteArtifactRepositories().stream()
+            .map(ArtifactRepository::getUrl)
+            .collect(toImmutableList()),
+        false);
 
     try {
       ProjectDependenciesResolver projectDependenciesResolver =
@@ -216,8 +219,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
         List<Artifact> directProvidedDependencies =
             DependencyGraphBuilder.getDirectProvidedDependencies(artifact);
-        builder.addAll(directProvidedDependencies.stream().map(Artifact::getFile).map(File::toPath)
-            .collect(toImmutableList()));
+        builder.addAll(
+            directProvidedDependencies.stream()
+                .map(Artifact::getFile)
+                .map(File::toPath)
+                .collect(toImmutableList()));
       }
       return builder.build();
     } catch (ComponentLookupException e) {
