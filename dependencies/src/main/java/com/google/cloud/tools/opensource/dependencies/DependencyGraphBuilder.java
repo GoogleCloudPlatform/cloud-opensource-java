@@ -202,7 +202,7 @@ public class DependencyGraphBuilder {
   public static List<Artifact> getDirectProvidedDependencies(Artifact artifact)
       throws RepositoryException {
     DependencyNode root = resolveProvidedDependencies(artifact);
-    Traverser<DependencyNode> traverser = Traverser.forTree(node -> node.getChildren());
+    Traverser<DependencyNode> traverser = Traverser.forTree(DependencyNode::getChildren);
 
     ImmutableList.Builder<Artifact> artifacts = ImmutableList.builder();
     traverser.breadthFirst(root.getChildren()).forEach(node -> artifacts.add(node.getArtifact()));
