@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.dependencies.enforcer;
 
-import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.selectNonTestDependencySelector;
+import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.nonTestDependencySelector;
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.shouldSkipBomMember;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.apache.maven.enforcer.rule.api.EnforcerLevel.WARN;
@@ -184,7 +184,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       ProjectDependenciesResolver projectDependenciesResolver =
           helper.getComponent(ProjectDependenciesResolver.class);
       DefaultRepositorySystemSession fullDependencyResolutionSession = new DefaultRepositorySystemSession(session);
-      fullDependencyResolutionSession.setDependencySelector(selectNonTestDependencySelector);
+      fullDependencyResolutionSession.setDependencySelector(nonTestDependencySelector);
       DependencyResolutionRequest dependencyResolutionRequest =
           new DefaultDependencyResolutionRequest(mavenProject, fullDependencyResolutionSession);
 
