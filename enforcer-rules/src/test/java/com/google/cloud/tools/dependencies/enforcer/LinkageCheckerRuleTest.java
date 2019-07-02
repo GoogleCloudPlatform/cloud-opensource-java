@@ -104,7 +104,7 @@ public class LinkageCheckerRuleTest {
   private DependencyNode createResolvedDependencyGraph(String... coordinates)
       throws RepositoryException, URISyntaxException {
     CollectRequest collectRequest = new CollectRequest();
-    //    Artifact dummyRootArtifact = new DefaultArtifact("com.google.cloud:dummy:0.0.1");
+    // This dummy artifact must be something that exists in a repository
     Artifact dummyRootArtifact = new DefaultArtifact("com.google.guava:guava:28.0-android");
     collectRequest.setRootArtifact(
         dummyRootArtifact.setFile(
