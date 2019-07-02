@@ -121,13 +121,14 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         return;
       }
 
-      // As sorted by level order, the first elements in classpath are the project and its direct dependencies.
+      // As sorted by level order, the first elements in classpath are the project and its direct
+      // dependencies.
       List<Path> entryPoints = classpath.subList(0, project.getDependencies().size() + 1);
 
       try {
-        
+
         // TODO LinkageChecker.create and LinkageChecker.findSymbolProblems
-        // should not be two separate public methods since we all call 
+        // should not be two separate public methods since we all call
         // findSymbolProblems immediately after create
         LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints);
         ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
