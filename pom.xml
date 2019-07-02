@@ -39,10 +39,10 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <guava.version>27.1-jre</guava.version>
+    <guava.version>28.0-jre</guava.version>
     <resolver.version>1.4.0</resolver.version>
     <maven.version>3.6.0</maven.version>
-    <truth.version>0.44</truth.version>
+    <truth.version>0.45</truth.version>
   </properties>
 
   <licenses>
