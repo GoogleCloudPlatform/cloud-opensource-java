@@ -27,6 +27,7 @@ import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -38,6 +39,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
 import org.apache.maven.execution.MavenSession;
@@ -178,6 +180,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   private ImmutableList<Path> findProjectClasspath(
       MavenProject mavenProject, RepositorySystemSession session, EnforcerRuleHelper helper)
       throws EnforcerRuleException {
+
+    // DependencyGraphBuilder to use the project-specific repository URLs
+    RepositoryUtility.setRepositories(mavenProject.getRemoteArtifactRepositories()
+        .stream().map(ArtifactRepository::getUrl).collect(toImmutableList()), false);
+
     try {
       ProjectDependenciesResolver projectDependenciesResolver =
           helper.getComponent(ProjectDependenciesResolver.class);
@@ -188,7 +195,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
       Iterable<DependencyNode> dependencies = Traverser.forTree(DependencyNode::getChildren)
           .breadthFirst(resolutionResult.getDependencyGraph());
-      
+
       ImmutableList.Builder<Path> builder = ImmutableList.builder();
       for (DependencyNode node : dependencies) {
         // the very first one is the pom.xml where this rule appears
