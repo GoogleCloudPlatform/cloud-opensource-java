@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.dependencies.enforcer;
 
+import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.selectNonTestDependencySelector;
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.shouldSkipBomMember;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.apache.maven.enforcer.rule.api.EnforcerLevel.WARN;
@@ -50,6 +51,7 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectDependenciesResolver;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -181,8 +183,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     try {
       ProjectDependenciesResolver projectDependenciesResolver =
           helper.getComponent(ProjectDependenciesResolver.class);
+      DefaultRepositorySystemSession fullDependencyResolutionSession = new DefaultRepositorySystemSession(session);
+      fullDependencyResolutionSession.setDependencySelector(selectNonTestDependencySelector);
       DependencyResolutionRequest dependencyResolutionRequest =
-          new DefaultDependencyResolutionRequest(mavenProject, session);
+          new DefaultDependencyResolutionRequest(mavenProject, fullDependencyResolutionSession);
+
       DependencyResolutionResult resolutionResult =
           projectDependenciesResolver.resolve(dependencyResolutionRequest);
 

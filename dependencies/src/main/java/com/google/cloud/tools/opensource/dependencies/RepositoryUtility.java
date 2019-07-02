@@ -96,6 +96,21 @@ public final class RepositoryUtility {
   private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
       ImmutableSet.of("file", "http", "https");
 
+  public static final DependencySelector selectNonTestDependencySelector =
+      new DependencySelector() {
+
+        @Override
+        public boolean selectDependency(Dependency dependency) {
+          return ! "test".equals(dependency.getScope());
+        }
+
+        @Override
+        public DependencySelector deriveChildSelector(
+            DependencyCollectionContext dependencyCollectionContext) {
+          return this;
+        }
+      };
+
   private RepositoryUtility() {}
 
   /**
