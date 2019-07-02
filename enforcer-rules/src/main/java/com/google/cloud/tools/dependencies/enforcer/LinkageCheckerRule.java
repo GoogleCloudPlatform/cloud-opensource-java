@@ -197,7 +197,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           projectDependenciesResolver.resolve(dependencyResolutionRequest);
 
       Iterable<DependencyNode> dependencies = Traverser.forTree(DependencyNode::getChildren)
-          .breadthFirst(resolutionResult.getDependencyGraph());
+          .breadthFirst(resolutionResult.getDependencyGraph().getChildren());
 
       ImmutableList.Builder<Path> providedDependencies = ImmutableList.builder();
 
