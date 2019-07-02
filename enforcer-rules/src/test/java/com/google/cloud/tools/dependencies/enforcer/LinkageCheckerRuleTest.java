@@ -75,8 +75,9 @@ public class LinkageCheckerRuleTest {
   private DependencyResolutionResult mockDependencyResolutionResult;
 
   @Before
-  public void setup() throws ExpressionEvaluationException, ComponentLookupException,
-      DependencyResolutionException {
+  public void setup()
+      throws ExpressionEvaluationException, ComponentLookupException,
+          DependencyResolutionException {
     rule = new LinkageCheckerRule();
     repositorySystem = RepositoryUtility.newRepositorySystem();
     repositorySystemSession = RepositoryUtility.newSession(repositorySystem);

@@ -101,7 +101,7 @@ public final class RepositoryUtility {
 
         @Override
         public boolean selectDependency(Dependency dependency) {
-          return ! "test".equals(dependency.getScope());
+          return !"test".equals(dependency.getScope());
         }
 
         @Override
