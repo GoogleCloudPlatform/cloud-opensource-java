@@ -27,7 +27,6 @@ import com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule.Dependenc
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.graph.Traverser;
-import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URLClassLoader;
 import java.nio.file.Paths;
@@ -105,10 +104,11 @@ public class LinkageCheckerRuleTest {
   private DependencyNode createResolvedDependencyGraph(String... coordinates)
       throws RepositoryException, URISyntaxException {
     CollectRequest collectRequest = new CollectRequest();
-//    Artifact dummyRootArtifact = new DefaultArtifact("com.google.cloud:dummy:0.0.1");
+    //    Artifact dummyRootArtifact = new DefaultArtifact("com.google.cloud:dummy:0.0.1");
     Artifact dummyRootArtifact = new DefaultArtifact("com.google.guava:guava:28.0-android");
-    collectRequest.setRootArtifact(dummyRootArtifact.setFile(
-        Paths.get(URLClassLoader.getSystemResource("dummy-0.0.1.jar").toURI()).toFile()));
+    collectRequest.setRootArtifact(
+        dummyRootArtifact.setFile(
+            Paths.get(URLClassLoader.getSystemResource("dummy-0.0.1.jar").toURI()).toFile()));
     collectRequest.setRepositories(ImmutableList.of(RepositoryUtility.CENTRAL));
     collectRequest.setDependencies(
         Arrays.stream(coordinates)
