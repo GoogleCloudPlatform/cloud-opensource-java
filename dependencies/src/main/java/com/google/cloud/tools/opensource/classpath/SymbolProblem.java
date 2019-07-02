@@ -110,6 +110,10 @@ public final class SymbolProblem {
                   String.format(
                       "%s;\n  referenced by %d class file%s\n",
                       problem, referenceCount, referenceCount > 1 ? "s" : ""));
+              classFiles.forEach(classFile -> {
+                output.append("    " + classFile.getClassName());
+                output.append(" (" + classFile.getJar().getFileName() + ")\n");
+              });
             });
 
     return output.toString();
