@@ -214,29 +214,15 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           builder.add(path);
         }
 
-        try {
-          List<Artifact> directProvidedDependencies =
-              DependencyGraphBuilder.getDirectProvidedDependencies(artifact);
-          for (Artifact providedDependency : directProvidedDependencies) {
-            File file = providedDependency.getFile();
-            if (file == null) {
-              throw new EnforcerRuleException(
-                  "Provided artifact "
-                      + Artifacts.toCoordinates(providedDependency)
-                      + " is not associated with a file."
-                      + " The linkage checker enforcer rule should be bound to the verify phase.");
-            }
-            builder.add(file.toPath());
-          }
-        } catch (RepositoryException e) {
-          // DependencyGraphBuilder cannot resolve the artifact of the target project
-          System.out.println("skipped " + artifact);
-        }
+        List<Artifact> directProvidedDependencies =
+            DependencyGraphBuilder.getDirectProvidedDependencies(artifact);
+        builder.addAll(directProvidedDependencies.stream().map(Artifact::getFile).map(File::toPath)
+            .collect(toImmutableList()));
       }
       return builder.build();
     } catch (ComponentLookupException e) {
       throw new EnforcerRuleException("Unable to lookup a component " + e.getLocalizedMessage(), e);
-    } catch (DependencyResolutionException e) {
+    } catch (DependencyResolutionException | RepositoryException e) {
       throw new EnforcerRuleException("Unable to build a dependency graph", e);
     }
   }
