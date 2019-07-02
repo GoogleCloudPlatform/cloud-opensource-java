@@ -27,6 +27,9 @@ import com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule.Dependenc
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.graph.Traverser;
+import java.net.URISyntaxException;
+import java.net.URLClassLoader;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -99,8 +102,13 @@ public class LinkageCheckerRuleTest {
 
   /** Returns a dependency graph node resolved from {@link Artifact} of {@code coordinates}. */
   private DependencyNode createResolvedDependencyGraph(String... coordinates)
-      throws RepositoryException {
+      throws RepositoryException, URISyntaxException {
     CollectRequest collectRequest = new CollectRequest();
+    // This dummy artifact must be something that exists in a repository
+    Artifact dummyRootArtifact = new DefaultArtifact("com.google.guava:guava:28.0-android");
+    collectRequest.setRootArtifact(
+        dummyRootArtifact.setFile(
+            Paths.get(URLClassLoader.getSystemResource("dummy-0.0.1.jar").toURI()).toFile()));
     collectRequest.setRepositories(ImmutableList.of(RepositoryUtility.CENTRAL));
     collectRequest.setDependencies(
         Arrays.stream(coordinates)
@@ -118,7 +126,8 @@ public class LinkageCheckerRuleTest {
     return dependencyResult.getRoot();
   }
 
-  private void setupMockDependencyResolution(String... coordinates) throws RepositoryException {
+  private void setupMockDependencyResolution(String... coordinates)
+      throws RepositoryException, URISyntaxException {
     DependencyNode rootNode = createResolvedDependencyGraph(coordinates);
     Traverser<DependencyNode> traverser = Traverser.forGraph(node -> node.getChildren());
 
@@ -139,7 +148,7 @@ public class LinkageCheckerRuleTest {
 
   @Test
   public void testExecute_shouldPassGoodProject()
-      throws EnforcerRuleException, RepositoryException {
+      throws EnforcerRuleException, RepositoryException, URISyntaxException {
     // Since Guava 27, it requires com.google.guava:failureaccess artifact in its dependency.
     setupMockDependencyResolution("com.google.guava:guava:27.0.1-jre");
     // This should not raise an EnforcerRuleException
@@ -148,7 +157,7 @@ public class LinkageCheckerRuleTest {
   }
 
   @Test
-  public void testExecute_shouldFailForBadProject() throws RepositoryException {
+  public void testExecute_shouldFailForBadProject() throws RepositoryException, URISyntaxException {
     try {
       // This artifact is known to contain classes missing dependencies
       setupMockDependencyResolution("com.google.appengine:appengine-api-1.0-sdk:1.9.64");
@@ -163,7 +172,8 @@ public class LinkageCheckerRuleTest {
   }
 
   @Test
-  public void testExecute_shouldFailForBadProject_reachableErrors() throws RepositoryException {
+  public void testExecute_shouldFailForBadProject_reachableErrors()
+      throws RepositoryException, URISyntaxException {
     try {
       // This pair of artifacts contains linkage errors on grpc-core's use of Verify. Because
       // grpc-core is included in entry point jars, the errors are reachable.
@@ -184,7 +194,7 @@ public class LinkageCheckerRuleTest {
 
   @Test
   public void testExecute_shouldPassForBadProject_levelWarn()
-      throws RepositoryException, EnforcerRuleException {
+      throws RepositoryException, EnforcerRuleException, URISyntaxException {
     // This pair of artifacts contains linkage errors on grpc-core's use of Verify. Because
     // grpc-core is included in entry point jars, the errors are reachable.
     setupMockDependencyResolution(
@@ -198,7 +208,7 @@ public class LinkageCheckerRuleTest {
 
   @Test
   public void testExecute_shouldPassGoodProject_unreachableErrors()
-      throws EnforcerRuleException, RepositoryException {
+      throws EnforcerRuleException, RepositoryException, URISyntaxException {
     // This artifact has transitive dependency on grpc-netty-shaded, which has linkage errors for
     // missing classes. They are all unreachable.
     setupMockDependencyResolution("com.google.cloud:google-cloud-automl:0.81.0-beta");
