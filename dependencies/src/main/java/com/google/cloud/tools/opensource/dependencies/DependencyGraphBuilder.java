@@ -21,6 +21,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.graph.Traverser;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -165,6 +166,26 @@ public class DependencyGraphBuilder {
     return node;
   }
 
+  private static DependencyNode resolveProvidedDependencies(Artifact artifact)
+      throws DependencyCollectionException, DependencyResolutionException {
+
+    RepositorySystemSession session = RepositoryUtility.newSessionOnlyProvidedScope(system);
+    CollectRequest collectRequest = new CollectRequest();
+
+    collectRequest.setRoot(new Dependency(artifact, "provided"));
+    RepositoryUtility.addRepositoriesToRequest(collectRequest);
+    CollectResult collectResult = system.collectDependencies(session, collectRequest);
+    DependencyNode node = collectResult.getRoot();
+
+    DependencyRequest dependencyRequest = new DependencyRequest();
+    dependencyRequest.setRoot(node);
+    dependencyRequest.setCollectRequest(collectRequest);
+
+    system.resolveDependencies(session, dependencyRequest);
+
+    return node;
+  }
+
   /** Returns the non-transitive compile time dependencies of an artifact. */
   public static List<Artifact> getDirectDependencies(Artifact artifact) throws RepositoryException {
 
@@ -177,23 +198,16 @@ public class DependencyGraphBuilder {
     return result;
   }
 
-  /**
-   * Returns the non-transitive provided dependencies of an artifact.
-   */
+  /** Returns the provided dependencies of an artifact. */
   public static List<Artifact> getDirectProvidedDependencies(Artifact artifact)
       throws RepositoryException {
+    DependencyNode root = resolveProvidedDependencies(artifact);
+    Traverser<DependencyNode> traverser = Traverser.forTree(DependencyNode::getChildren);
 
-    List<Artifact> result = new ArrayList<>();
-
-    DependencyNode node = resolveCompileTimeDependencies(artifact);
-    for (DependencyNode child : node.getChildren()) {
-      if ("provided".equals(child.getDependency().getScope())){
-        result.add(child.getArtifact());
-      }
-    }
-    return result;
+    ImmutableList.Builder<Artifact> artifacts = ImmutableList.builder();
+    traverser.breadthFirst(root.getChildren()).forEach(node -> artifacts.add(node.getArtifact()));
+    return artifacts.build();
   }
-
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting

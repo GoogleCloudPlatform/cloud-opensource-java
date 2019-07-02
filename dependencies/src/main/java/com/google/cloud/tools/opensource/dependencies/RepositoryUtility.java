@@ -96,6 +96,57 @@ public final class RepositoryUtility {
   private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
       ImmutableSet.of("file", "http", "https");
 
+  // To exclude log4j-api-java9:zip:2.11.1, which is not published.
+  // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/339
+  private static final DependencySelector filteringZipDependencySelector =
+      new DependencySelector() {
+
+        @Override
+        public boolean selectDependency(Dependency dependency) {
+          Artifact artifact = dependency.getArtifact();
+          Map<String, String> properties = artifact.getProperties();
+          // Because LinkageChecker only checks jar file, zip files are not needed
+          return !"zip".equals(properties.get("type"));
+        }
+
+        @Override
+        public DependencySelector deriveChildSelector(
+            DependencyCollectionContext dependencyCollectionContext) {
+          return this;
+        }
+      };
+
+  static class DirectProvidedDependencySelector implements DependencySelector {
+
+    private final int depth;
+
+    DirectProvidedDependencySelector() {
+      this.depth = 0;
+    }
+
+    private DirectProvidedDependencySelector(int depth) {
+      this.depth = depth;
+    }
+
+    @Override
+    public boolean selectDependency(Dependency dependency) {
+      if (depth == 1 && "provided".equals(dependency.getScope())) {
+        return true;
+      }
+      return false;
+    }
+
+    @Override
+    public DependencySelector deriveChildSelector(
+        DependencyCollectionContext dependencyCollectionContext) {
+      if (depth >= 1) {
+        // Only compile
+        return new ScopeDependencySelector("test", "provided", "runtime");
+      }
+      return new DirectProvidedDependencySelector(depth + 1);
+    }
+  }
+
   private RepositoryUtility() {}
 
   /**
@@ -137,26 +188,6 @@ public final class RepositoryUtility {
   static RepositorySystemSession newSessionWithProvidedScope(RepositorySystem system) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
 
-    // To exclude log4j-api-java9:zip:2.11.1, which is not published.
-    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/339
-    DependencySelector filteringZipDependencySelector =
-        new DependencySelector() {
-
-          @Override
-          public boolean selectDependency(Dependency dependency) {
-            Artifact artifact = dependency.getArtifact();
-            Map<String, String> properties = artifact.getProperties();
-            // Because LinkageChecker only checks jar file, zip files are not needed
-            return !"zip".equals(properties.get("type"));
-          }
-
-          @Override
-          public DependencySelector deriveChildSelector(
-              DependencyCollectionContext dependencyCollectionContext) {
-            return this;
-          }
-        };
-
     // This combination of DependencySelector comes from the default specified in
     // `MavenRepositorySystemUtils.newSession`.
     // LinkageChecker needs to include 'provided' scope.
@@ -165,6 +196,30 @@ public final class RepositoryUtility {
             // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
             // false positive in LinkageChecker.
             new ScopeDependencySelector("test"),
+            new OptionalDependencySelector(),
+            new ExclusionDependencySelector(),
+            filteringZipDependencySelector);
+    session.setDependencySelector(dependencySelector);
+    session.setReadOnly();
+
+    return session;
+  }
+
+  /**
+   * Opens a new Maven repository session in the same way as {@link
+   * RepositoryUtility#newSession(RepositorySystem)}, with its dependency selector to include only
+   * dependencies with 'provided' scope.
+   */
+  static RepositorySystemSession newSessionOnlyProvidedScope(RepositorySystem system) {
+    DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
+
+    // This combination of DependencySelector comes from the default specified in
+    // `MavenRepositorySystemUtils.newSession`.
+    // LinkageChecker needs to include 'provided' scope.
+    DependencySelector dependencySelector =
+        new AndDependencySelector(
+            // ScopeDependencySelector takes exclusions. Scopes except 'provided'
+            new DirectProvidedDependencySelector(),
             new OptionalDependencySelector(),
             new ExclusionDependencySelector(),
             filteringZipDependencySelector);

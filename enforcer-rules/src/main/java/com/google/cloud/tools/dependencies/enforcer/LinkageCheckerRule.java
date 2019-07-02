@@ -208,13 +208,14 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         }
 
         try {
-          List<Artifact> directProvidedDependencies = DependencyGraphBuilder
-              .getDirectProvidedDependencies(artifact);
-          for(Artifact providedDependency: directProvidedDependencies) {
+          List<Artifact> directProvidedDependencies =
+              DependencyGraphBuilder.getDirectProvidedDependencies(artifact);
+          for (Artifact providedDependency : directProvidedDependencies) {
             File file = providedDependency.getFile();
             if (file == null) {
               throw new EnforcerRuleException(
-                  "Provided artifact " + Artifacts.toCoordinates(providedDependency)
+                  "Provided artifact "
+                      + Artifacts.toCoordinates(providedDependency)
                       + " is not associated with a file."
                       + " The linkage checker enforcer rule should be bound to the verify phase.");
             }
