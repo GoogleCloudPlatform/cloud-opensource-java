@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
@@ -47,7 +46,7 @@ public class DependencyGraphBuilderTest {
 
     // This method should find Guava exactly once.
     int guavaCount = countGuava(graph);
-    assertEquals(1, guavaCount);
+    Assert.assertEquals(1, guavaCount);
   }
 
   @Test
@@ -58,11 +57,11 @@ public class DependencyGraphBuilderTest {
 
     // verify we didn't double count anything
     HashSet<DependencyPath> noDups = new HashSet<>(paths);
-    assertEquals(paths.size(), noDups.size());
+    Assert.assertEquals(paths.size(), noDups.size());
 
     // This method should find Guava multiple times.
     int guavaCount = countGuava(graph);
-    assertEquals(31, guavaCount);
+    Assert.assertEquals(31, guavaCount);
   }
 
   private static int countGuava(DependencyGraph graph) {
@@ -108,12 +107,12 @@ public class DependencyGraphBuilderTest {
     List<DependencyPath> list = graph.list();
     Assert.assertTrue(list.size() > 10);
     DependencyPath firstElement = list.get(0);
-    assertEquals(
+    Assert.assertEquals(
         "Level-order should pick up datastore as first element in the list",
         "google-cloud-datastore",
         firstElement.getLeaf().getArtifactId());
     DependencyPath secondElement = list.get(1);
-    assertEquals(
+    Assert.assertEquals(
         "Level-order should pick up guava before the dependencies of the two",
         "guava",
         secondElement.getLeaf().getArtifactId());

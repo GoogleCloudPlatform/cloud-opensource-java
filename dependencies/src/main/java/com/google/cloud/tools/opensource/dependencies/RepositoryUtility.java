@@ -116,11 +116,12 @@ public final class RepositoryUtility {
         }
       };
 
-  static class DirectProvidedDependencySelector implements DependencySelector {
+  /** Selects direct provided dependencies and their compile dependencies. */
+  private static class DirectProvidedDependencySelector implements DependencySelector {
 
     private final int depth;
 
-    DirectProvidedDependencySelector() {
+    private DirectProvidedDependencySelector() {
       this.depth = 0;
     }
 
@@ -130,17 +131,14 @@ public final class RepositoryUtility {
 
     @Override
     public boolean selectDependency(Dependency dependency) {
-      if (depth == 1 && "provided".equals(dependency.getScope())) {
-        return true;
-      }
-      return false;
+      return depth == 1 && "provided".equals(dependency.getScope());
     }
 
     @Override
     public DependencySelector deriveChildSelector(
         DependencyCollectionContext dependencyCollectionContext) {
       if (depth >= 1) {
-        // Only compile
+        // Only compile dependencies
         return new ScopeDependencySelector("test", "provided", "runtime");
       }
       return new DirectProvidedDependencySelector(depth + 1);
@@ -208,7 +206,7 @@ public final class RepositoryUtility {
   /**
    * Opens a new Maven repository session in the same way as {@link
    * RepositoryUtility#newSession(RepositorySystem)}, with its dependency selector to include only
-   * dependencies with 'provided' scope.
+   * dependencies with 'provided' scope and their compile dependencies.
    */
   static RepositorySystemSession newSessionOnlyProvidedScope(RepositorySystem system) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
