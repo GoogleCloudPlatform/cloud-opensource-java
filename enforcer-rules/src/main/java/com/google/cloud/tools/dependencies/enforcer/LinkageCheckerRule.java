@@ -186,7 +186,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         mavenProject.getRemoteArtifactRepositories().stream()
             .map(ArtifactRepository::getUrl)
             .collect(toImmutableList()),
-        false);
+        true);
 
     try {
       ProjectDependenciesResolver projectDependenciesResolver =
@@ -198,6 +198,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
       Iterable<DependencyNode> dependencies = Traverser.forTree(DependencyNode::getChildren)
           .breadthFirst(resolutionResult.getDependencyGraph());
+
+      ImmutableList.Builder<Path> providedDependencies = ImmutableList.builder();
 
       ImmutableList.Builder<Path> builder = ImmutableList.builder();
       for (DependencyNode node : dependencies) {
@@ -219,12 +221,13 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
         List<Artifact> directProvidedDependencies =
             DependencyGraphBuilder.getDirectProvidedDependencies(artifact);
-        builder.addAll(
+        providedDependencies.addAll(
             directProvidedDependencies.stream()
                 .map(Artifact::getFile)
                 .map(File::toPath)
                 .collect(toImmutableList()));
       }
+      builder.addAll(providedDependencies.build());
       return builder.build();
     } catch (ComponentLookupException e) {
       throw new EnforcerRuleException("Unable to lookup a component " + e.getLocalizedMessage(), e);
