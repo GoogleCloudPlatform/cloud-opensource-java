@@ -23,9 +23,9 @@ import org.eclipse.aether.graph.Dependency;
 /**
  * Selects dependencies except {@code test} scope.
  *
- * <p>This class selects all scopes except {@code test} even for direct dependencies, while Maven's
- * default {@link org.eclipse.aether.util.graph.selector.ScopeDependencySelector} selects all direct
- * dependencies regardless of their scope.
+ * <p>This class selects all dependencies except {@code test}-scoped ones, while Maven's default
+ * {@link org.eclipse.aether.util.graph.selector.ScopeDependencySelector} selects all direct
+ * dependencies (including {@code test} scope).
  */
 public class NonTestDependencySelector implements DependencySelector {
   @Override
