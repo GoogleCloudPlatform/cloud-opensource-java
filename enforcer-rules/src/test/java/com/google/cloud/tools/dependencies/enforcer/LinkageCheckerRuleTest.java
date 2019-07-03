@@ -84,7 +84,7 @@ public class LinkageCheckerRuleTest {
     setupMock();
   }
 
-  public void setupMock()
+  private void setupMock()
       throws ExpressionEvaluationException, ComponentLookupException,
           DependencyResolutionException {
     mockProject = mock(MavenProject.class);
