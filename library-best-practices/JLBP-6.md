@@ -1,5 +1,5 @@
-[JLBP-6] Package and artifact renaming rules
---------------------------------------------
+[JLBP-6] Rename artifacts and packages together
+-----------------------------------------------
 
 When a library B in Java depends on another library A through the Maven
 repository system, there are two types of handles that library B needs to use to
