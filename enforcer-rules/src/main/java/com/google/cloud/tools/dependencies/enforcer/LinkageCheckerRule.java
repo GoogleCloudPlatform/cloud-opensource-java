@@ -189,10 +189,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           new DefaultRepositorySystemSession(session);
       fullDependencyResolutionSession.setDependencySelector(
           new AndDependencySelector(
-              new NonTestDependencySelector(),
-              new ExclusionDependencySelector()
-          )
-      );
+              new NonTestDependencySelector(), new ExclusionDependencySelector()));
       DependencyResolutionRequest dependencyResolutionRequest =
           new DefaultDependencyResolutionRequest(mavenProject, fullDependencyResolutionSession);
 
