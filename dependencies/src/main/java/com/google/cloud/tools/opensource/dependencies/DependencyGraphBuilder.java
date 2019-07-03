@@ -20,7 +20,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -264,7 +263,7 @@ public class DependencyGraphBuilder {
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
     // Records failures rather than existing immediately.
-    List<ExceptionAndPath> resolutionFailures = Lists.newArrayList();
+    List<ExceptionAndPath> resolutionFailures = new ArrayList<>();
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
