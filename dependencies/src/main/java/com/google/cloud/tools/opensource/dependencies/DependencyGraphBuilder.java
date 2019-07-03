@@ -54,8 +54,8 @@ public class DependencyGraphBuilder {
 
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
-  private static final CharMatcher LOWER_ALPHA_NUMERIC = CharMatcher.inRange('a', 'z')
-      .or(CharMatcher.inRange('0', '9'));
+  private static final CharMatcher LOWER_ALPHA_NUMERIC =
+      CharMatcher.inRange('a', 'z').or(CharMatcher.inRange('0', '9'));
 
   static {
     setDetectedOsSystemProperties();
@@ -78,8 +78,7 @@ public class DependencyGraphBuilder {
 
   private static String osDetectedName() {
     String osNameNormalized =
-        LOWER_ALPHA_NUMERIC
-            .retainFrom(System.getProperty("os.name").toLowerCase(Locale.ENGLISH));
+        LOWER_ALPHA_NUMERIC.retainFrom(System.getProperty("os.name").toLowerCase(Locale.ENGLISH));
 
     if (osNameNormalized.startsWith("macosx") || osNameNormalized.startsWith("osx")) {
       return "osx";
@@ -93,8 +92,7 @@ public class DependencyGraphBuilder {
 
   private static String osDetectedArch() {
     String osArchNormalized =
-        LOWER_ALPHA_NUMERIC
-            .retainFrom(System.getProperty("os.arch").toLowerCase(Locale.ENGLISH));
+        LOWER_ALPHA_NUMERIC.retainFrom(System.getProperty("os.arch").toLowerCase(Locale.ENGLISH));
     switch (osArchNormalized) {
       case "x8664":
       case "amd64":
@@ -219,8 +217,7 @@ public class DependencyGraphBuilder {
     final DependencyNode dependencyNode;
     final Stack<DependencyNode> parentNodes;
 
-    LevelOrderQueueItem(DependencyNode dependencyNode,
-        Stack<DependencyNode> parentNodes) {
+    LevelOrderQueueItem(DependencyNode dependencyNode, Stack<DependencyNode> parentNodes) {
       this.dependencyNode = dependencyNode;
       this.parentNodes = parentNodes;
     }
@@ -237,8 +234,7 @@ public class DependencyGraphBuilder {
     FULL_DEPENDENCY_WITH_PROVIDED;
 
     private boolean resolveFullDependencies() {
-      return this == FULL_DEPENDENCY
-          || this == FULL_DEPENDENCY_WITH_PROVIDED;
+      return this == FULL_DEPENDENCY || this == FULL_DEPENDENCY_WITH_PROVIDED;
     }
   }
 
@@ -260,8 +256,8 @@ public class DependencyGraphBuilder {
   private static DependencyGraph levelOrder(
       DependencyNode firstNode, GraphTraversalOption graphTraversalOption)
       throws AggregatedRepositoryException {
-	  
-	DependencyGraph graph = new DependencyGraph();
+
+    DependencyGraph graph = new DependencyGraph();
 
     boolean resolveFullDependency = graphTraversalOption.resolveFullDependencies();
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
@@ -334,7 +330,7 @@ public class DependencyGraphBuilder {
     if (!resolutionFailures.isEmpty()) {
       throw new AggregatedRepositoryException(resolutionFailures);
     }
-    
+
     return graph;
   }
 
@@ -350,7 +346,8 @@ public class DependencyGraphBuilder {
       return true;
     }
     boolean hasProvidedParent =
-        dependencyNodes.stream()
+        dependencyNodes
+            .stream()
             .anyMatch(node -> "provided".equals(node.getDependency().getScope()));
     return !hasProvidedParent;
   }
