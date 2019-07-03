@@ -188,10 +188,7 @@ public class DependencyGraphBuilder {
   public static DependencyGraph getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
       throws RepositoryException {
     DependencyNode node = resolveCompileTimeDependencies(artifacts, true);
-    DependencyGraph graph = new DependencyGraph();
-    levelOrder(node, graph, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
-
-    return graph;
+    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
   }
 
   /**
@@ -203,10 +200,7 @@ public class DependencyGraphBuilder {
 
     // root node
     DependencyNode node = resolveCompileTimeDependencies(artifact);
-    DependencyGraph graph = new DependencyGraph();
-    levelOrder(node, graph, GraphTraversalOption.FULL_DEPENDENCY);
-
-    return graph;
+    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY);
   }
 
   /**
@@ -218,9 +212,7 @@ public class DependencyGraphBuilder {
       throws RepositoryException {
     // root node
     DependencyNode node = resolveCompileTimeDependencies(artifact);
-    DependencyGraph graph = new DependencyGraph();
-    levelOrder(node, graph);
-    return graph;
+    return levelOrder(node);
   }
 
   private static final class LevelOrderQueueItem {
@@ -234,9 +226,9 @@ public class DependencyGraphBuilder {
     }
   }
 
-  private static void levelOrder(DependencyNode node, DependencyGraph graph)
+  private static DependencyGraph levelOrder(DependencyNode node)
       throws AggregatedRepositoryException {
-    levelOrder(node, graph, GraphTraversalOption.NONE);
+    return levelOrder(node, GraphTraversalOption.NONE);
   }
 
   private enum GraphTraversalOption {
@@ -265,9 +257,11 @@ public class DependencyGraphBuilder {
    *     DependencyCollectionException} or {@link DependencyResolutionException}. This happens only
    *     when graphTraversalOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
    */
-  private static void levelOrder(
-      DependencyNode firstNode, DependencyGraph graph, GraphTraversalOption graphTraversalOption)
+  private static DependencyGraph levelOrder(
+      DependencyNode firstNode, GraphTraversalOption graphTraversalOption)
       throws AggregatedRepositoryException {
+	  
+	DependencyGraph graph = new DependencyGraph();
 
     boolean resolveFullDependency = graphTraversalOption.resolveFullDependencies();
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
@@ -340,6 +334,8 @@ public class DependencyGraphBuilder {
     if (!resolutionFailures.isEmpty()) {
       throw new AggregatedRepositoryException(resolutionFailures);
     }
+    
+    return graph;
   }
 
   /**
