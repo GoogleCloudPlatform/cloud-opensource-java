@@ -6,6 +6,9 @@ import org.eclipse.aether.graph.Dependency;
 
 /**
  * Selects dependencies except {@code test} scope.
+ *
+ * <p>{@link org.eclipse.aether.util.graph.selector.ScopeDependencySelector} has similar capability
+ * but it selects all direct dependencies regardless of their scope.
  */
 public class NonTestDependencySelector implements DependencySelector {
   @Override
