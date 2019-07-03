@@ -4,6 +4,9 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 
+/**
+ * Selects dependencies except {@code test} scope.
+ */
 public class NonTestDependencySelector implements DependencySelector {
   @Override
   public boolean selectDependency(Dependency dependency) {
