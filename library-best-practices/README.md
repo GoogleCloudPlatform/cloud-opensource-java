@@ -22,7 +22,7 @@ or significantly changed before the set is classified as Beta.
 - [JLBP-4](JLBP-4.md): Avoid dependencies on unstable libraries and features
 - [JLBP-5](JLBP-5.md): Avoid dependencies that overlap classes with other
   dependencies
-- [JLBP-6](JLBP-6.md): Package and artifact renaming rules
+- [JLBP-6](JLBP-6.md): Rename artifacts and packages together
 - [JLBP-7](JLBP-7.md): Make breaking transitions easy
 - [JLBP-8](JLBP-8.md): Advance widely used functionality to a stable version
 - [JLBP-9](JLBP-9.md): Support the minimum Java version of your consumers
