@@ -262,7 +262,7 @@ public class DependencyGraphBuilder {
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
-    // Records failures rather than existing immediately.
+    // Records failures rather than throwing immediately.
     List<ExceptionAndPath> resolutionFailures = new ArrayList<>();
 
     while (!queue.isEmpty()) {
