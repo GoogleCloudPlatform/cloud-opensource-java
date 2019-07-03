@@ -2,7 +2,7 @@
 --------------------------------------------
 
 When a library B in Java depends on another library A through the Maven
-repository system, there are two types of handles that library B needs to use to
+repository system, there are two identifiers that library B needs to
 access classes in library A:
 
 1. The Maven coordinates of library A, following the form
@@ -17,9 +17,7 @@ access classes in library A:
    generally share a Java package (the package as defined in `package`
    statements, for example `package com.google.common.collect`). The classpath,
    which is formed from Maven artifacts and possibly non-Maven sources, is
-   searched for each fully-qualified class name at runtime. In order to simplify
-   the discussion, we only talk about the Java package, assuming that the
-   classes of the library are located in that package or subpackages.
+   searched for each fully-qualified class name at runtime.
 
 When breaking changes are introduced to library A between major version 1 and
 major version 2, a choice needs to be made: to rename or not rename? This
