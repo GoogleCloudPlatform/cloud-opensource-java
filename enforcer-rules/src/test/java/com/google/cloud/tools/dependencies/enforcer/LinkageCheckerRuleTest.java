@@ -75,18 +75,21 @@ public class LinkageCheckerRuleTest {
   private DependencyResolutionResult mockDependencyResolutionResult;
 
   @Before
-  public void setup() {
+  public void setup()
+      throws ExpressionEvaluationException, ComponentLookupException,
+          DependencyResolutionException {
     rule = new LinkageCheckerRule();
     repositorySystem = RepositoryUtility.newRepositorySystem();
     repositorySystemSession = RepositoryUtility.newSession(repositorySystem);
+    setupMock();
   }
 
-  @Before
-  public void setupMock()
+  private void setupMock()
       throws ExpressionEvaluationException, ComponentLookupException,
           DependencyResolutionException {
     mockProject = mock(MavenProject.class);
     mockMavenSession = mock(MavenSession.class);
+    when(mockMavenSession.getRepositorySession()).thenReturn(repositorySystemSession);
     mockRuleHelper = mock(EnforcerRuleHelper.class);
     mockProjectDependenciesResolver = mock(ProjectDependenciesResolver.class);
     mockDependencyResolutionResult = mock(DependencyResolutionResult.class);

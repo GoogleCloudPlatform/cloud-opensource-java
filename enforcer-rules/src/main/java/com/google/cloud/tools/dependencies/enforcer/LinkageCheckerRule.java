@@ -26,6 +26,7 @@ import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.NonTestDependencySelector;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -50,12 +51,15 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectDependenciesResolver;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.util.graph.selector.AndDependencySelector;
+import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 
 /** Linkage Checker Maven Enforcer Rule. */
 public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
@@ -181,8 +185,14 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     try {
       ProjectDependenciesResolver projectDependenciesResolver =
           helper.getComponent(ProjectDependenciesResolver.class);
+      DefaultRepositorySystemSession fullDependencyResolutionSession =
+          new DefaultRepositorySystemSession(session);
+      fullDependencyResolutionSession.setDependencySelector(
+          new AndDependencySelector(
+              new NonTestDependencySelector(), new ExclusionDependencySelector()));
       DependencyResolutionRequest dependencyResolutionRequest =
-          new DefaultDependencyResolutionRequest(mavenProject, session);
+          new DefaultDependencyResolutionRequest(mavenProject, fullDependencyResolutionSession);
+
       DependencyResolutionResult resolutionResult =
           projectDependenciesResolver.resolve(dependencyResolutionRequest);
 
