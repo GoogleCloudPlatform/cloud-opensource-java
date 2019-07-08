@@ -241,8 +241,8 @@ public class DependencyGraphBuilder {
    * Returns a dependency graph by traversing dependency tree in level-order (breadth-first search).
    *
    * <p>When {@code graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED, then
-   * it resolves the dependency of the artifact of the each node in the dependency tree; otherwise
-   * it just follows the given dependency tree starting with firstNode.
+   * it resolves the dependency of the artifact of each node in the dependency tree; otherwise it
+   * just follows the given dependency tree starting with firstNode.
    *
    * @param firstNode node to start traversal
    * @param graphTraversalOption option to recursively resolve the dependency to build complete
