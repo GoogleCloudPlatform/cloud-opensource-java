@@ -23,9 +23,6 @@ Example 1: Guava's main artifact ID is `guava`, but from versions 13.0 to 17.0,
   `guava-jdk5` with `guava` because the artifact names are different.
   When Guava classes overlapped in the two jars, users suffered from 
   runtime errors resulting from classes and methods not being found.
-  The only Google Cloud library propagating
-  this dependency was google-api-client <= 1.23.0, and it has removed the
-  `guava-jdk5` dependency (and switched to the `guava` artifact) since 1.24.1.
 
 Example 2: There are multiple artifacts that provide classes under
   `javax.servlet` (`javax.servlet:javax.servlet-api:3.1.0` and
