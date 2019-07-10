@@ -21,7 +21,7 @@ Example 1: Guava's main artifact ID is `guava`, but from versions 13.0 to 17.0,
   another artifact `guava-jdk5` was also published with classes that overlap
   with `guava`. Build systems such as Maven and Gradle cannot deduplicate
   `guava-jdk5` with `guava` because the artifact names are different.
-  When Guava classes overlapped in the two jars, users suffered from 
+  When both artifacts apear in the classpath, users encounter 
   runtime errors resulting from classes and methods not being found.
 
 Example 2: There are multiple artifacts that provide classes under
