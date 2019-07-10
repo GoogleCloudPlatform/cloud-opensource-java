@@ -42,7 +42,7 @@
     <guava.version>28.0-jre</guava.version>
     <resolver.version>1.4.0</resolver.version>
     <maven.version>3.6.0</maven.version>
-    <truth.version>0.45</truth.version>
+    <truth.version>1.0.0</truth.version>
   </properties>
 
   <licenses>
