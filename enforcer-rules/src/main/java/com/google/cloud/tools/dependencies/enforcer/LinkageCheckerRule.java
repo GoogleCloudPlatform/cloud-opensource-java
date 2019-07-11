@@ -118,7 +118,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
       String projectType = project.getArtifact().getType();
       if (dependencySection == DependencySection.DEPENDENCIES && ! "jar".equals(projectType)) {
-        // Not interested in (parent) pom or tar.gz artifacts
+        // Not interested in (parent) pom artifact
         logger.info("Skipping project type " + projectType);
         return;
       }
