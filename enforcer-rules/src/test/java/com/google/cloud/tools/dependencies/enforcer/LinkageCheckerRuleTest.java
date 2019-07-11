@@ -303,7 +303,7 @@ public class LinkageCheckerRuleTest {
   @Test
   public void testExecute_shouldSkipParentPom() throws  EnforcerRuleException {
     when(mockProject.getArtifact()).thenReturn(new org.apache.maven.artifact.DefaultArtifact(
-        "com.google.cloud", "linakge-checker-rule-parent", "0.0.1", "compile",
+        "com.google.cloud", "linkage-checker-rule-parent", "0.0.1", "compile",
         "pom", null, new DefaultArtifactHandler()
     ));
     rule.execute(mockRuleHelper);
