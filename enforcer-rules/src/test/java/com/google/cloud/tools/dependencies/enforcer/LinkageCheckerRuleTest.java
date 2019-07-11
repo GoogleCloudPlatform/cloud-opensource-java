@@ -305,7 +305,7 @@ public class LinkageCheckerRuleTest {
   }
 
   @Test
-  public void testExecute_shouldSkipParentPom() throws EnforcerRuleException {
+  public void testExecute_shouldSkipNonBomPom() throws EnforcerRuleException {
     when(mockProject.getArtifact())
         .thenReturn(
             new org.apache.maven.artifact.DefaultArtifact(
