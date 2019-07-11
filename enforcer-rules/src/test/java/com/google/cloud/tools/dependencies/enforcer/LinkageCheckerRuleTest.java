@@ -53,6 +53,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.DependencyRequest;
@@ -67,6 +68,7 @@ public class LinkageCheckerRuleTest {
   private LinkageCheckerRule rule;
   private RepositorySystem repositorySystem;
   private RepositorySystemSession repositorySystemSession;
+  private Artifact dummyArtifactWithFile;
 
   private MavenProject mockProject;
   private EnforcerRuleHelper mockRuleHelper;
@@ -78,16 +80,19 @@ public class LinkageCheckerRuleTest {
   @Before
   public void setup()
       throws ExpressionEvaluationException, ComponentLookupException,
-          DependencyResolutionException {
+      DependencyResolutionException, URISyntaxException {
     rule = new LinkageCheckerRule();
     repositorySystem = RepositoryUtility.newRepositorySystem();
     repositorySystemSession = RepositoryUtility.newSession(repositorySystem);
+    // This dummy artifact must be something that exists in a repository
+    dummyArtifactWithFile = (new DefaultArtifact("com.google.guava:guava:28.0-android"))
+        .setFile(Paths.get(URLClassLoader.getSystemResource("dummy-0.0.1.jar").toURI()).toFile());
     setupMock();
   }
 
   private void setupMock()
       throws ExpressionEvaluationException, ComponentLookupException,
-          DependencyResolutionException {
+      DependencyResolutionException {
     mockProject = mock(MavenProject.class);
     mockMavenSession = mock(MavenSession.class);
     when(mockMavenSession.getRepositorySession()).thenReturn(repositorySystemSession);
@@ -114,15 +119,13 @@ public class LinkageCheckerRuleTest {
                 new DefaultArtifactHandler()));
   }
 
-  /** Returns a dependency graph node resolved from {@link Artifact} of {@code coordinates}. */
+  /**
+   * Returns a dependency graph node resolved from {@link Artifact} of {@code coordinates}.
+   */
   private DependencyNode createResolvedDependencyGraph(String... coordinates)
       throws RepositoryException, URISyntaxException {
     CollectRequest collectRequest = new CollectRequest();
-    // This dummy artifact must be something that exists in a repository
-    Artifact dummyRootArtifact = new DefaultArtifact("com.google.guava:guava:28.0-android");
-    collectRequest.setRootArtifact(
-        dummyRootArtifact.setFile(
-            Paths.get(URLClassLoader.getSystemResource("dummy-0.0.1.jar").toURI()).toFile()));
+    collectRequest.setRootArtifact(dummyArtifactWithFile);
     collectRequest.setRepositories(ImmutableList.of(RepositoryUtility.CENTRAL));
     collectRequest.setDependencies(
         Arrays.stream(coordinates)
@@ -317,6 +320,25 @@ public class LinkageCheckerRuleTest {
                 null,
                 new DefaultArtifactHandler()));
     // No exception
+    rule.execute(mockRuleHelper);
+  }
+
+  @Test
+  public void testExecute_shouldExcludeTestScope() throws EnforcerRuleException {
+    org.apache.maven.model.Dependency dependency = new org.apache.maven.model.Dependency();
+    Artifact artifact = new DefaultArtifact("junit:junit:3.8.2");
+    dependency.setArtifactId(artifact.getArtifactId());
+    dependency.setGroupId(artifact.getGroupId());
+    dependency.setVersion(artifact.getVersion());
+    dependency.setClassifier(artifact.getClassifier());
+    dependency.setScope("test");
+
+    when(mockDependencyResolutionResult.getDependencyGraph()).thenReturn(
+        new DefaultDependencyNode(dummyArtifactWithFile)
+    );
+    when(mockProject.getDependencies())
+        .thenReturn(ImmutableList.of(dependency));
+
     rule.execute(mockRuleHelper);
   }
 }

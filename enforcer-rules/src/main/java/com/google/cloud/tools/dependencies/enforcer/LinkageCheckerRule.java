@@ -133,10 +133,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
       // As sorted by level order, the first elements in classpath are the project and its direct
       // non-test dependencies.
-      int projectDependencyCount = (int) project.getDependencies()
-          .stream()
-          .filter(dependency -> !"test".equals(dependency.getScope()))
-          .count();
+      int projectDependencyCount =
+          (int)
+              project.getDependencies().stream()
+                  .filter(dependency -> !"test".equals(dependency.getScope()))
+                  .count();
       List<Path> entryPoints = classpath.subList(0, projectDependencyCount + 1);
 
       try {
