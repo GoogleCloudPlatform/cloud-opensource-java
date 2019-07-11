@@ -66,7 +66,7 @@ import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
   /**
-   * List of Maven packaging known to be irrelevant to Linkage Check for non-BOM project.
+   * Maven packaging values known to be irrelevant to Linkage Check for non-BOM project.
    *
    * @see <a href="https://maven.apache.org/ref/3.6.1/maven-core/artifact-handlers.html" >Maven
    * Core: Default Artifact Handlers Reference</a>
