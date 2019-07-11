@@ -305,6 +305,24 @@ public class LinkageCheckerRuleTest {
   }
 
   @Test
+  public void testExecute_shouldSkipBadBomWithNonPomPackaging() throws EnforcerRuleException {
+    rule.setDependencySection(DependencySection.DEPENDENCY_MANAGEMENT);
+    setupMockDependencyManagementSection(
+        "com.google.api-client:google-api-client:1.27.0", "io.grpc:grpc-core:1.17.1");
+    when(mockProject.getArtifact())
+        .thenReturn(
+            new org.apache.maven.artifact.DefaultArtifact(
+                "com.google.cloud",
+                "linkage-checker-rule-test-bom",
+                "0.0.1",
+                "compile",
+                "jar", // BOM should have pom here
+                null,
+                new DefaultArtifactHandler()));
+    rule.execute(mockRuleHelper);
+  }
+
+  @Test
   public void testExecute_shouldSkipNonBomPom() throws EnforcerRuleException {
     when(mockProject.getArtifact())
         .thenReturn(

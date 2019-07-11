@@ -128,11 +128,18 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       }
 
       String projectType = project.getArtifact().getType();
-      if (!readingDependencyManagementSection &&
-          UNSUPPORTED_NONBOM_PACKAGING.contains(projectType)) {
-        // Unless checking BOM project, not interested in pom artifact
-        return;
+      if (readingDependencyManagementSection) {
+        if (!"pom".equals(projectType)) {
+          logger.warn("A BOM should have packaging pom");
+          return;
+        }
+      } else {
+        if (UNSUPPORTED_NONBOM_PACKAGING.contains(projectType)) {
+          // Unless checking BOM project, not interested in pom artifact
+          return;
+        }
       }
+
 
       ImmutableList<Path> classpath =
           readingDependencyManagementSection
