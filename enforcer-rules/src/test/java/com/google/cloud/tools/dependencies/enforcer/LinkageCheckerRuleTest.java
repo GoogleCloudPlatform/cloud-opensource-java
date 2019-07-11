@@ -319,4 +319,31 @@ public class LinkageCheckerRuleTest {
     // No exception
     rule.execute(mockRuleHelper);
   }
+
+  @Test
+  public void testExecute_shouldFailForBadProjectWithBundlePackaging() throws RepositoryException, URISyntaxException {
+    try {
+      // This artifact is known to contain classes missing dependencies
+      setupMockDependencyResolution("com.google.appengine:appengine-api-1.0-sdk:1.9.64");
+
+      when(mockProject.getArtifact())
+          .thenReturn(
+              new org.apache.maven.artifact.DefaultArtifact(
+                  "com.google.cloud",
+                  "linkage-checker-rule-test",
+                  "0.0.1",
+                  "compile",
+                  "bundle", // Maven Bundle Plugin uses "bundle" packaging.
+                  null,
+                  new DefaultArtifactHandler()));
+
+      rule.execute(mockRuleHelper);
+      Assert.fail(
+          "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
+    } catch (EnforcerRuleException ex) {
+      // pass
+      verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found 112 errors."));
+      assertEquals("Failed while checking class path. See above error report.", ex.getMessage());
+    }
+  }
 }
