@@ -63,6 +63,7 @@ import org.junit.Test;
 import org.mockito.ArgumentMatchers;
 
 public class LinkageCheckerRuleTest {
+
   private LinkageCheckerRule rule;
   private RepositorySystem repositorySystem;
   private RepositorySystemSession repositorySystemSession;
@@ -101,6 +102,16 @@ public class LinkageCheckerRuleTest {
         .thenReturn(mockDependencyResolutionResult);
     when(mockRuleHelper.evaluate("${session}")).thenReturn(mockMavenSession);
     when(mockRuleHelper.evaluate("${project}")).thenReturn(mockProject);
+    when(mockProject.getArtifact())
+        .thenReturn(
+            new org.apache.maven.artifact.DefaultArtifact(
+                "com.google.cloud",
+                "linkage-checker-rule-test",
+                "0.0.1",
+                "compile",
+                "jar",
+                null,
+                new DefaultArtifactHandler()));
   }
 
   /** Returns a dependency graph node resolved from {@link Artifact} of {@code coordinates}. */
@@ -291,5 +302,21 @@ public class LinkageCheckerRuleTest {
     } catch (EnforcerRuleException ex) {
       // pass
     }
+  }
+
+  @Test
+  public void testExecute_shouldSkipNonBomPom() throws EnforcerRuleException {
+    when(mockProject.getArtifact())
+        .thenReturn(
+            new org.apache.maven.artifact.DefaultArtifact(
+                "com.google.cloud",
+                "linkage-checker-rule-parent",
+                "0.0.1",
+                "compile",
+                "pom",
+                null,
+                new DefaultArtifactHandler()));
+    // No exception
+    rule.execute(mockRuleHelper);
   }
 }

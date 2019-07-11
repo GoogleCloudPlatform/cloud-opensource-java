@@ -116,6 +116,12 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         logger.warn("The rule is set to read dependency management section but it is empty.");
       }
 
+      String projectType = project.getArtifact().getType();
+      if (dependencySection == DependencySection.DEPENDENCIES && !"jar".equals(projectType)) {
+        // When checking non-BOM project, not interested in non JAR artifact
+        return;
+      }
+
       ImmutableList<Path> classpath =
           readingDependencyManagementSection
               ? findBomClasspath(project, repositorySystemSession)
