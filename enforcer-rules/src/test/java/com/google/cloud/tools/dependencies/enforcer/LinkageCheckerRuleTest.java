@@ -78,7 +78,7 @@ public class LinkageCheckerRuleTest {
   @Before
   public void setup()
       throws ExpressionEvaluationException, ComponentLookupException,
-      DependencyResolutionException {
+          DependencyResolutionException {
     rule = new LinkageCheckerRule();
     repositorySystem = RepositoryUtility.newRepositorySystem();
     repositorySystemSession = RepositoryUtility.newSession(repositorySystem);
@@ -87,7 +87,7 @@ public class LinkageCheckerRuleTest {
 
   private void setupMock()
       throws ExpressionEvaluationException, ComponentLookupException,
-      DependencyResolutionException {
+          DependencyResolutionException {
     mockProject = mock(MavenProject.class);
     mockMavenSession = mock(MavenSession.class);
     when(mockMavenSession.getRepositorySession()).thenReturn(repositorySystemSession);
@@ -102,15 +102,19 @@ public class LinkageCheckerRuleTest {
         .thenReturn(mockDependencyResolutionResult);
     when(mockRuleHelper.evaluate("${session}")).thenReturn(mockMavenSession);
     when(mockRuleHelper.evaluate("${project}")).thenReturn(mockProject);
-    when(mockProject.getArtifact()).thenReturn(new org.apache.maven.artifact.DefaultArtifact(
-        "com.google.cloud", "linakge-checker-rule-test", "0.0.1", "compile",
-        "jar", null, new DefaultArtifactHandler()
-    ));
+    when(mockProject.getArtifact())
+        .thenReturn(
+            new org.apache.maven.artifact.DefaultArtifact(
+                "com.google.cloud",
+                "linkage-checker-rule-test",
+                "0.0.1",
+                "compile",
+                "jar",
+                null,
+                new DefaultArtifactHandler()));
   }
 
-  /**
-   * Returns a dependency graph node resolved from {@link Artifact} of {@code coordinates}.
-   */
+  /** Returns a dependency graph node resolved from {@link Artifact} of {@code coordinates}. */
   private DependencyNode createResolvedDependencyGraph(String... coordinates)
       throws RepositoryException, URISyntaxException {
     CollectRequest collectRequest = new CollectRequest();
@@ -301,13 +305,18 @@ public class LinkageCheckerRuleTest {
   }
 
   @Test
-  public void testExecute_shouldSkipParentPom() throws  EnforcerRuleException {
-    when(mockProject.getArtifact()).thenReturn(new org.apache.maven.artifact.DefaultArtifact(
-        "com.google.cloud", "linkage-checker-rule-parent", "0.0.1", "compile",
-        "pom", null, new DefaultArtifactHandler()
-    ));
+  public void testExecute_shouldSkipParentPom() throws EnforcerRuleException {
+    when(mockProject.getArtifact())
+        .thenReturn(
+            new org.apache.maven.artifact.DefaultArtifact(
+                "com.google.cloud",
+                "linkage-checker-rule-parent",
+                "0.0.1",
+                "compile",
+                "pom",
+                null,
+                new DefaultArtifactHandler()));
     rule.execute(mockRuleHelper);
-    verify(mockLog)
-        .info(ArgumentMatchers.eq("Skipping project type pom"));
+    verify(mockLog).info(ArgumentMatchers.eq("Skipping project type pom"));
   }
 }
