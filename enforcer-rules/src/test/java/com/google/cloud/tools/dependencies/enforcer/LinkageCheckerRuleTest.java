@@ -317,6 +317,6 @@ public class LinkageCheckerRuleTest {
                 null,
                 new DefaultArtifactHandler()));
     rule.execute(mockRuleHelper);
-    verify(mockLog).info(ArgumentMatchers.eq("Skipping project type pom"));
+    verify(mockLog).debug(ArgumentMatchers.eq("Skipping project type pom"));
   }
 }
