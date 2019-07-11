@@ -68,7 +68,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   /**
    * Maven packaging values known to be irrelevant to Linkage Check for non-BOM project.
    *
-   * @see <a href="https://maven.apache.org/ref/3.6.1/maven-core/artifact-handlers.html" >Maven
+   * @see <a href="https://maven.apache.org/ref/3.6.1/maven-core/artifact-handlers.html">Maven
    * Core: Default Artifact Handlers Reference</a>
    */
   private static final ImmutableSet<String> UNSUPPORTED_NONBOM_PACKAGING = ImmutableSet.of("pom",
@@ -134,7 +134,6 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         }
       } else {
         if (UNSUPPORTED_NONBOM_PACKAGING.contains(projectType)) {
-          // Unless checking BOM project, not interested in pom artifact
           return;
         }
       }
