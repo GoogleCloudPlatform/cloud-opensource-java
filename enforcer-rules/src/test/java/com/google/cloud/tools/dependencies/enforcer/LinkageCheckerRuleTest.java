@@ -339,7 +339,8 @@ public class LinkageCheckerRuleTest {
   }
 
   @Test
-  public void testExecute_shouldFailForBadProjectWithBundlePackaging() throws RepositoryException, URISyntaxException {
+  public void testExecute_shouldFailForBadProjectWithBundlePackaging() throws RepositoryException,
+      URISyntaxException {
     try {
       // This artifact is known to contain classes missing dependencies
       setupMockDependencyResolution("com.google.appengine:appengine-api-1.0-sdk:1.9.64");
