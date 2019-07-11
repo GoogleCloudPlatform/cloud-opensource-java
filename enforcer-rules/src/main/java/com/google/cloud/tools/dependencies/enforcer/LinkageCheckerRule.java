@@ -29,6 +29,7 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.NonTestDependencySelector;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.graph.Traverser;
 import java.io.File;
@@ -63,6 +64,16 @@ import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 
 /** Linkage Checker Maven Enforcer Rule. */
 public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
+
+  /**
+   * List of Maven packaging known to be irrelevant to non-BOM project ({@code dependencySection ==
+   * DEPENDENCIES}).
+   *
+   * @see <a href="https://maven.apache.org/ref/3.6.1/maven-core/artifact-handlers.html"
+   * >Maven Core: Default Artifact Handlers Reference</a>
+   */
+  private static final ImmutableSet<String> UNSUPPORTED_NONBOM_PACKAGING = ImmutableSet.of("pom",
+      "java-source", "javadoc");
 
   /**
    * The section this rule reads dependencies from. By default, it's {@link
@@ -117,7 +128,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       }
 
       String projectType = project.getArtifact().getType();
-      if (dependencySection == DependencySection.DEPENDENCIES && "pom".equals(projectType)) {
+      if (!readingDependencyManagementSection &&
+          UNSUPPORTED_NONBOM_PACKAGING.contains(projectType)) {
         // Unless checking BOM project, not interested in pom artifact
         return;
       }
@@ -204,7 +216,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
       Iterable<DependencyNode> dependencies = Traverser.forTree(DependencyNode::getChildren)
           .breadthFirst(resolutionResult.getDependencyGraph());
-      
+
       ImmutableList.Builder<Path> builder = ImmutableList.builder();
       for (DependencyNode node : dependencies) {
         // the very first one is the pom.xml where this rule appears
