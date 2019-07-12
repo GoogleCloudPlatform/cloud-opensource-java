@@ -43,7 +43,6 @@
     <resolver.version>1.4.0</resolver.version>
     <maven.version>3.6.0</maven.version>
     <truth.version>1.0</truth.version>
-    <license.plugin.version>3.0</license.plugin.version>
   </properties>
 
   <licenses>
@@ -165,7 +164,7 @@
         <plugin>
           <groupId>com.mycila</groupId>
           <artifactId>license-maven-plugin</artifactId>
-          <version>${license.plugin.version}</version>
+          <version>3.0</version>
           <configuration>
             <header>com/mycila/maven/plugin/license/templates/APACHE-2.txt</header>
             <skipExistingHeaders>true</skipExistingHeaders>
@@ -188,7 +187,6 @@
       <plugin>
         <groupId>com.mycila</groupId>
         <artifactId>license-maven-plugin</artifactId>
-        <version>${license.plugin.version}</version>
       </plugin>
     </plugins>
   </build>
