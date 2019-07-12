@@ -185,6 +185,7 @@
     </pluginManagement>
     <plugins>
       <plugin>
+        <!-- this plugin is bound to validate phase -->
         <groupId>com.mycila</groupId>
         <artifactId>license-maven-plugin</artifactId>
         <version>${license.plugin.version}</version>
