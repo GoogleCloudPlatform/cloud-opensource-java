@@ -43,6 +43,7 @@
     <resolver.version>1.4.0</resolver.version>
     <maven.version>3.6.0</maven.version>
     <truth.version>1.0</truth.version>
+    <license.plugin.version>3.0</license.plugin.version>
   </properties>
 
   <licenses>
@@ -161,8 +162,34 @@
             <argLine>-Xms128m -Xmx1024m</argLine>
           </configuration>
         </plugin>
+        <plugin>
+          <groupId>com.mycila</groupId>
+          <artifactId>license-maven-plugin</artifactId>
+          <version>${license.plugin.version}</version>
+          <configuration>
+            <header>com/mycila/maven/plugin/license/templates/APACHE-2.txt</header>
+            <skipExistingHeaders>true</skipExistingHeaders>
+            <includes>
+              <include>**/*.java</include>
+            </includes>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
       </plugins>
     </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>${license.plugin.version}</version>
+      </plugin>
+    </plugins>
   </build>
 
   <profiles>
