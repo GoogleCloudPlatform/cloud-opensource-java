@@ -30,18 +30,13 @@ public class AggregatedRepositoryException extends RepositoryException {
     super("There were failure(s) in dependency resolution");
     this.underlyingFailures = ImmutableList.copyOf(failures);
   }
-
-  /** Returns a list of underlying {@link RepositoryException}s and paths in a dependency graph. */
-  public ImmutableList<ExceptionAndPath> getUnderlyingFailures() {
-    return underlyingFailures;
-  }
   
   @Override
-  public String toString() {
-    StringBuilder builder = new StringBuilder(getMessage());
+  public String getMessage() {
+    StringBuilder builder = new StringBuilder(super.getMessage());
     builder.append("\n");
 
-    for (ExceptionAndPath exceptionAndPath : getUnderlyingFailures()) {
+    for (ExceptionAndPath exceptionAndPath : underlyingFailures) {
       builder.append(Joiner.on(" / ").join(exceptionAndPath.getPath()));
       builder.append(": ");
       builder.append(exceptionAndPath.getException());

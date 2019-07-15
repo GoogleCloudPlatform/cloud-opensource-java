@@ -20,7 +20,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,8 +53,8 @@ public class DependencyGraphBuilder {
 
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
-  private static final CharMatcher LOWER_ALPHA_NUMERIC = CharMatcher.inRange('a', 'z')
-      .or(CharMatcher.inRange('0', '9'));
+  private static final CharMatcher LOWER_ALPHA_NUMERIC =
+      CharMatcher.inRange('a', 'z').or(CharMatcher.inRange('0', '9'));
 
   static {
     setDetectedOsSystemProperties();
@@ -78,8 +77,7 @@ public class DependencyGraphBuilder {
 
   private static String osDetectedName() {
     String osNameNormalized =
-        LOWER_ALPHA_NUMERIC
-            .retainFrom(System.getProperty("os.name").toLowerCase(Locale.ENGLISH));
+        LOWER_ALPHA_NUMERIC.retainFrom(System.getProperty("os.name").toLowerCase(Locale.ENGLISH));
 
     if (osNameNormalized.startsWith("macosx") || osNameNormalized.startsWith("osx")) {
       return "osx";
@@ -93,8 +91,7 @@ public class DependencyGraphBuilder {
 
   private static String osDetectedArch() {
     String osArchNormalized =
-        LOWER_ALPHA_NUMERIC
-            .retainFrom(System.getProperty("os.arch").toLowerCase(Locale.ENGLISH));
+        LOWER_ALPHA_NUMERIC.retainFrom(System.getProperty("os.arch").toLowerCase(Locale.ENGLISH));
     switch (osArchNormalized) {
       case "x8664":
       case "amd64":
@@ -188,10 +185,7 @@ public class DependencyGraphBuilder {
   public static DependencyGraph getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
       throws RepositoryException {
     DependencyNode node = resolveCompileTimeDependencies(artifacts, true);
-    DependencyGraph graph = new DependencyGraph();
-    levelOrder(node, graph, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
-
-    return graph;
+    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
   }
 
   /**
@@ -203,10 +197,7 @@ public class DependencyGraphBuilder {
 
     // root node
     DependencyNode node = resolveCompileTimeDependencies(artifact);
-    DependencyGraph graph = new DependencyGraph();
-    levelOrder(node, graph, GraphTraversalOption.FULL_DEPENDENCY);
-
-    return graph;
+    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY);
   }
 
   /**
@@ -218,25 +209,22 @@ public class DependencyGraphBuilder {
       throws RepositoryException {
     // root node
     DependencyNode node = resolveCompileTimeDependencies(artifact);
-    DependencyGraph graph = new DependencyGraph();
-    levelOrder(node, graph);
-    return graph;
+    return levelOrder(node);
   }
 
   private static final class LevelOrderQueueItem {
     final DependencyNode dependencyNode;
     final Stack<DependencyNode> parentNodes;
 
-    LevelOrderQueueItem(DependencyNode dependencyNode,
-        Stack<DependencyNode> parentNodes) {
+    LevelOrderQueueItem(DependencyNode dependencyNode, Stack<DependencyNode> parentNodes) {
       this.dependencyNode = dependencyNode;
       this.parentNodes = parentNodes;
     }
   }
 
-  private static void levelOrder(DependencyNode node, DependencyGraph graph)
+  private static DependencyGraph levelOrder(DependencyNode node)
       throws AggregatedRepositoryException {
-    levelOrder(node, graph, GraphTraversalOption.NONE);
+    return levelOrder(node, GraphTraversalOption.NONE);
   }
 
   private enum GraphTraversalOption {
@@ -245,36 +233,36 @@ public class DependencyGraphBuilder {
     FULL_DEPENDENCY_WITH_PROVIDED;
 
     private boolean resolveFullDependencies() {
-      return this == FULL_DEPENDENCY
-          || this == FULL_DEPENDENCY_WITH_PROVIDED;
+      return this == FULL_DEPENDENCY || this == FULL_DEPENDENCY_WITH_PROVIDED;
     }
   }
 
   /**
-   * Traverses dependency tree in level-order (breadth-first search) and stores {@link
-   * DependencyPath} instances corresponding to tree nodes to {@link DependencyGraph}. When {@code
-   * graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED, then it resolves the
-   * dependency of the artifact of the each node in the dependency tree; otherwise it just follows
-   * the given dependency tree starting with firstNode.
+   * Returns a dependency graph by traversing dependency tree in level-order (breadth-first search).
+   *
+   * <p>When {@code graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED, then
+   * it resolves the dependency of the artifact of each node in the dependency tree; otherwise it
+   * just follows the given dependency tree starting with firstNode.
    *
    * @param firstNode node to start traversal
-   * @param graph graph to store {@link DependencyPath} instances
    * @param graphTraversalOption option to recursively resolve the dependency to build complete
    *     dependency tree, with or without dependencies of provided scope
    * @throws AggregatedRepositoryException when there are one ore more problems due to {@link
    *     DependencyCollectionException} or {@link DependencyResolutionException}. This happens only
    *     when graphTraversalOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
    */
-  private static void levelOrder(
-      DependencyNode firstNode, DependencyGraph graph, GraphTraversalOption graphTraversalOption)
+  private static DependencyGraph levelOrder(
+      DependencyNode firstNode, GraphTraversalOption graphTraversalOption)
       throws AggregatedRepositoryException {
+
+    DependencyGraph graph = new DependencyGraph();
 
     boolean resolveFullDependency = graphTraversalOption.resolveFullDependencies();
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
-    // Records failures rather than existing immediately.
-    List<ExceptionAndPath> resolutionFailures = Lists.newArrayList();
+    // Records failures rather than throwing immediately.
+    List<ExceptionAndPath> resolutionFailures = new ArrayList<>();
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
@@ -340,6 +328,8 @@ public class DependencyGraphBuilder {
     if (!resolutionFailures.isEmpty()) {
       throw new AggregatedRepositoryException(resolutionFailures);
     }
+
+    return graph;
   }
 
   /**
@@ -354,7 +344,8 @@ public class DependencyGraphBuilder {
       return true;
     }
     boolean hasProvidedParent =
-        dependencyNodes.stream()
+        dependencyNodes
+            .stream()
             .anyMatch(node -> "provided".equals(node.getDependency().getScope()));
     return !hasProvidedParent;
   }

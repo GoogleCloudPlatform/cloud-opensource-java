@@ -18,6 +18,15 @@ package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.base.CharMatcher;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
+import com.google.common.truth.Correspondence;
+import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
@@ -29,7 +38,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
@@ -44,16 +52,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.common.base.CharMatcher;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Streams;
-import com.google.common.io.MoreFiles;
-import com.google.common.io.RecursiveDeleteOption;
-import com.google.common.truth.Correspondence;
-import com.google.common.truth.Truth;
 
 public class DashboardTest {
 
@@ -396,15 +394,37 @@ public class DashboardTest {
   }
 
   @Test
+  public void testBomCoordinatesInComponent() throws IOException, ParsingException {
+    Document document = parseOutputFile("com.google.protobuf_protobuf-java-util_3.6.1.html");
+    Nodes bomCoordinatesNodes = document.query("//p[@class='bom-coordinates']");
+    Assert.assertEquals(1, bomCoordinatesNodes.size());
+    Assert.assertEquals(
+        "BOM: com.google.cloud:libraries-bom:1.0.0", bomCoordinatesNodes.get(0).getValue());
+  }
+
+  @Test
+  public void testBomCoordinatesInArtifactDetails() throws IOException, ParsingException {
+    Document document = parseOutputFile("artifact_details.html");
+    Nodes bomCoordinatesNodes = document.query("//p[@class='bom-coordinates']");
+    Assert.assertEquals(1, bomCoordinatesNodes.size());
+    Assert.assertEquals(
+        "BOM: com.google.cloud:libraries-bom:1.0.0", bomCoordinatesNodes.get(0).getValue());
+  }
+
+  @Test
+  public void testBomCoordinatesInUnstableArtifacts() throws IOException, ParsingException {
+    Document document = parseOutputFile("unstable_artifacts.html");
+    Nodes bomCoordinatesNodes = document.query("//p[@class='bom-coordinates']");
+    Assert.assertEquals(1, bomCoordinatesNodes.size());
+    Assert.assertEquals(
+        "BOM: com.google.cloud:libraries-bom:1.0.0", bomCoordinatesNodes.get(0).getValue());
+  }
+
+  @Test
   public void testOutputDirectory() {
-    Truth.assertWithMessage(
-            "The dashboard should be created at target/com.google.cloud/libraries-bom/1.0.0")
-        .that((Iterable<Path>) outputDirectory)
-        .containsAtLeast(
-            Paths.get("target"),
-            Paths.get("com.google.cloud"),
-            Paths.get("libraries-bom"),
-            Paths.get("1.0.0"))
-        .inOrder();
+    Assert.assertTrue(
+        "The dashboard should be created at target/com.google.cloud/libraries-bom/1.0.0",
+        outputDirectory.endsWith(
+            Paths.get("target", "com.google.cloud", "libraries-bom", "1.0.0")));
   }
 }

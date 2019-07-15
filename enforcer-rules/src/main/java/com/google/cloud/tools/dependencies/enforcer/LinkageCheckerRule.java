@@ -26,8 +26,10 @@ import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.NonTestDependencySelector;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.graph.Traverser;
 import java.io.File;
@@ -50,15 +52,27 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectDependenciesResolver;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.util.graph.selector.AndDependencySelector;
+import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 
 /** Linkage Checker Maven Enforcer Rule. */
 public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
+
+  /**
+   * Maven packaging values known to be irrelevant to Linkage Check for non-BOM project.
+   *
+   * @see <a href="https://maven.apache.org/ref/3.6.1/maven-core/artifact-handlers.html">Maven
+   * Core: Default Artifact Handlers Reference</a>
+   */
+  private static final ImmutableSet<String> UNSUPPORTED_NONBOM_PACKAGING = ImmutableSet.of("pom",
+      "java-source", "javadoc");
 
   /**
    * The section this rule reads dependencies from. By default, it's {@link
@@ -112,6 +126,19 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         logger.warn("The rule is set to read dependency management section but it is empty.");
       }
 
+      String projectType = project.getArtifact().getType();
+      if (readingDependencyManagementSection) {
+        if (!"pom".equals(projectType)) {
+          logger.warn("A BOM should have packaging pom");
+          return;
+        }
+      } else {
+        if (UNSUPPORTED_NONBOM_PACKAGING.contains(projectType)) {
+          return;
+        }
+      }
+
+
       ImmutableList<Path> classpath =
           readingDependencyManagementSection
               ? findBomClasspath(project, repositorySystemSession)
@@ -121,15 +148,19 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         return;
       }
 
-      // As sorted by level order, the first elements in classpath is direct dependencies.
-      List<Path> directDependencies = classpath.subList(0, project.getDependencies().size());
+      // As sorted by level order, the first elements in classpath are the project and its direct
+      // non-test dependencies.
+      long projectDependencyCount = project.getDependencies().stream()
+                  .filter(dependency -> !"test".equals(dependency.getScope()))
+                  .count();
+      List<Path> entryPoints = classpath.subList(0, (int) projectDependencyCount + 1);
 
       try {
-        
+
         // TODO LinkageChecker.create and LinkageChecker.findSymbolProblems
-        // should not be two separate public methods since we all call 
+        // should not be two separate public methods since we all call
         // findSymbolProblems immediately after create
-        LinkageChecker linkageChecker = LinkageChecker.create(classpath, directDependencies);
+        LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints);
         ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
             linkageChecker.findSymbolProblems();
         if (reportOnlyReachable) {
@@ -180,14 +211,20 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     try {
       ProjectDependenciesResolver projectDependenciesResolver =
           helper.getComponent(ProjectDependenciesResolver.class);
+      DefaultRepositorySystemSession fullDependencyResolutionSession =
+          new DefaultRepositorySystemSession(session);
+      fullDependencyResolutionSession.setDependencySelector(
+          new AndDependencySelector(
+              new NonTestDependencySelector(), new ExclusionDependencySelector()));
       DependencyResolutionRequest dependencyResolutionRequest =
-          new DefaultDependencyResolutionRequest(mavenProject, session);
+          new DefaultDependencyResolutionRequest(mavenProject, fullDependencyResolutionSession);
+
       DependencyResolutionResult resolutionResult =
           projectDependenciesResolver.resolve(dependencyResolutionRequest);
 
       Iterable<DependencyNode> dependencies = Traverser.forTree(DependencyNode::getChildren)
           .breadthFirst(resolutionResult.getDependencyGraph());
-      
+
       ImmutableList.Builder<Path> builder = ImmutableList.builder();
       for (DependencyNode node : dependencies) {
         // the very first one is the pom.xml where this rule appears

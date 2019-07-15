@@ -6,7 +6,7 @@ Java projects for the Google Cloud Platform.
 # Google Cloud Platform Java Dependency Dashboard
 
 [Google Cloud Platform Java Dependency Dashboard](
-https://storage.googleapis.com/cloud-opensource-java-dashboard/dashboard/dashboard.html)
+https://storage.googleapis.com/cloud-opensource-java-dashboard/com.google.cloud/libraries-bom/snapshot/index.html)
 (runs daily; work in progress) shows multiple checks on the consistency among
 Google Cloud Java libraries. For manually generating the dashboard, see
 [its README](./dashboard/README.md).

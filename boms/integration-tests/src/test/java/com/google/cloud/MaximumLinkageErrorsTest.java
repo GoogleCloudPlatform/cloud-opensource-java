@@ -23,8 +23,10 @@ import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.truth.Truth;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,12 +47,35 @@ public class MaximumLinkageErrorsTest {
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> oldProblems =
         LinkageChecker.create(baseline).findSymbolProblems();
-    ImmutableSetMultimap<SymbolProblem, ClassFile> newProblems =
+    ImmutableSetMultimap<SymbolProblem, ClassFile> currentProblems =
         LinkageChecker.create(bom).findSymbolProblems();
 
-    Assert.assertTrue("New linkage errors introduced", newProblems.keys().size() <= 525);
-    
+    // This only tests for newly missing methods, not new references to
+    // previously missing methods.
+    SetView<SymbolProblem> newProblems =
+        Sets.difference(currentProblems.keySet(), oldProblems.keySet());
+
     // Check that no new linkage errors have been introduced since 1.2.0
-    Truth.assertThat(oldProblems).containsAtLeastEntriesIn(newProblems);
+    if (!newProblems.isEmpty()) {
+      StringBuilder message = new StringBuilder("Newly introduced problems:\n");
+      for (SymbolProblem problem : newProblems) {
+        message.append(problem + "\n");
+      }
+      Assert.fail(message.toString());
+    }
+    
+    // If that passes, check whether there are any new references to missing methods:
+    for (SymbolProblem problem : currentProblems.keySet()) {
+      ImmutableSet<ClassFile> oldReferences = oldProblems.get(problem);
+      ImmutableSet<ClassFile> currentReferences = currentProblems.get(problem);
+      SetView<ClassFile> newReferences = Sets.difference(currentReferences, oldReferences);
+      if (!newReferences.isEmpty()) {
+        StringBuilder message = new StringBuilder("Newly introduced classes linking to " + problem + ":\n");
+        for (ClassFile classFile : newReferences) {
+          message.append("Link from " + classFile + "\n");
+        }
+        Assert.fail(message.toString());
+      }
+    }
   }
 }
