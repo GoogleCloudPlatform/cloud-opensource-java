@@ -7,7 +7,7 @@
   <groupId>com.google.cloud.tools</groupId>
   <artifactId>dependencies-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.2.3-SNAPSHOT</version>
+  <version>0.2.4-SNAPSHOT</version>
 
   <name>Cloud Tools Open Source Code Hygiene Tooling</name>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/</url>
