@@ -70,16 +70,12 @@
       </dependency>
 
       <!-- protobufs from https://github.com/protocolbuffers/protobuf/tree/master/java -->
-      <!-- We should import the officially-provided protobuf BOM once it is created - #64 -->
       <dependency>
         <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java</artifactId>
+        <artifactId>protobuf-bom</artifactId>
         <version>${protobuf.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java-util</artifactId>
-        <version>${protobuf.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
 
       <!-- google-http-java-client from https://github.com/googleapis/google-http-java-client -->
