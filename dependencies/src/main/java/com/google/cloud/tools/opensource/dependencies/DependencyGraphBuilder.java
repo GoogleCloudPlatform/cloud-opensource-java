@@ -238,14 +238,13 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Traverses dependency tree in level-order (breadth-first search) and stores {@link
-   * DependencyPath} instances corresponding to tree nodes to {@link DependencyGraph}. When {@code
-   * graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED, then it resolves the
-   * dependency of the artifact of the each node in the dependency tree; otherwise it just follows
-   * the given dependency tree starting with firstNode.
+   * Returns a dependency graph by traversing dependency tree in level-order (breadth-first search).
+   *
+   * <p>When {@code graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED, then
+   * it resolves the dependency of the artifact of each node in the dependency tree; otherwise it
+   * just follows the given dependency tree starting with firstNode.
    *
    * @param firstNode node to start traversal
-   * @param graph graph to store {@link DependencyPath} instances
    * @param graphTraversalOption option to recursively resolve the dependency to build complete
    *     dependency tree, with or without dependencies of provided scope
    * @throws AggregatedRepositoryException when there are one ore more problems due to {@link

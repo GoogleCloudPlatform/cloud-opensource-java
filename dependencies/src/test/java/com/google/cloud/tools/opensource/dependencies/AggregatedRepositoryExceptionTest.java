@@ -29,7 +29,7 @@ public class AggregatedRepositoryExceptionTest {
     AggregatedRepositoryException exception =
         new AggregatedRepositoryException(ImmutableList.of(exceptionAndPath));
 
-    Truth.assertThat(exception.toString())
+    Truth.assertThat(exception.getMessage())
         .isEqualTo(
             "There were failure(s) in dependency resolution\n"
                 + "com.jamonapi:jamon:jar:2.81 / "
