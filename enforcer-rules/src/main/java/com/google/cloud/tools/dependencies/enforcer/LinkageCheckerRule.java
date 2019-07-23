@@ -28,7 +28,6 @@ import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.NonTestDependencySelector;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -36,13 +35,8 @@ import com.google.common.graph.Traverser;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Stack;
-import java.util.StringJoiner;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -65,9 +59,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.resolution.ArtifactResolutionException;
-import org.eclipse.aether.transfer.ArtifactNotFoundException;
-import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 
@@ -257,8 +248,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       throw new EnforcerRuleException("Unable to lookup a component " + e.getMessage(), e);
     } catch (DependencyResolutionException e) {
 
-      throw new EnforcerRuleException(
-          "Unable to build a dependency graph: " + e.getMessage(), e);
+      throw new EnforcerRuleException("Unable to build a dependency graph: " + e.getMessage(), e);
     }
   }
 
