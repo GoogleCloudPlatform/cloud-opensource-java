@@ -254,11 +254,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     } catch (ComponentLookupException e) {
       throw new EnforcerRuleException("Unable to lookup a component " + e.getMessage(), e);
     } catch (DependencyResolutionException e) {
-      formatDependencyPath(e)
-          .ifPresent(
-              path -> {
-                helper.getLog().error("Exception at " + path);
-              });
+      formatDependencyPath(e).ifPresent(path -> helper.getLog().error("Exception at " + path));
       throw new EnforcerRuleException("Unable to build a dependency graph: " + e.getMessage(), e);
     }
   }
