@@ -419,7 +419,7 @@ public class LinkageCheckerRuleTest {
     Throwable cause2 = new ArtifactResolutionException(null, "dummy 2", null);
     Throwable cause1 = new DependencyResolutionException(resolutionResult, "dummy 1", cause2);
     DependencyResolutionException exception =
-        new DependencyResolutionException(resolutionResult, "dummy" + " 2", cause1);
+        new DependencyResolutionException(resolutionResult, "dummy 2", cause1);
     assertFalse(LinkageCheckerRule.formatDependencyPath(exception).isPresent());
   }
 }

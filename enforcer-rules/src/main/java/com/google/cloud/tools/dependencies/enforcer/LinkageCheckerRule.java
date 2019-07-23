@@ -143,7 +143,6 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         }
       }
 
-
       ImmutableList<Path> classpath =
           readingDependencyManagementSection
               ? findBomClasspath(project, repositorySystemSession)
@@ -284,7 +283,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
   /**
    * Returns {code Optional} describing describing the path from the project root to a problematic
-   * artifact causing {@code exception}.
+   * artifact causing {@link ArtifactTransferException}. Empty {@code Optional} if {@code exception}
+   * is not indirectly caused by {@link ArtifactTransferException}.
    */
   @VisibleForTesting
   static Optional<String> formatDependencyPath(DependencyResolutionException exception) {
