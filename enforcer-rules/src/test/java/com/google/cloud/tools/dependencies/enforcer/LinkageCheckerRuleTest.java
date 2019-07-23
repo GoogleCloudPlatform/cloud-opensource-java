@@ -33,6 +33,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import javax.enterprise.inject.Default;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.enforcer.rule.api.EnforcerLevel;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -56,8 +57,11 @@ import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
+import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResult;
+import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -386,5 +390,22 @@ public class LinkageCheckerRuleTest {
       verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found 112 errors."));
       assertEquals("Failed while checking class path. See above error report.", ex.getMessage());
     }
+  }
+
+  @Test
+  public void testFormatDependencyPath() throws RepositoryException,
+      URISyntaxException {
+    DependencyNode graph = createResolvedDependencyGraph("org.apache.maven:maven-core:jar:3.5.2");
+    DependencyResolutionResult resolutionResult = mock(DependencyResolutionResult.class);
+    when(resolutionResult.getDependencyGraph()).thenReturn(graph);
+    Throwable cause3 = new ArtifactNotFoundException(new DefaultArtifact("aopalliance:aopalliance:1.0"), null);
+    Throwable cause2 = new ArtifactResolutionException(null, "dummy 2", cause3);
+    Throwable cause1 = new DependencyResolutionException(resolutionResult, "dummy 1", cause2);
+    DependencyResolutionException exception = new DependencyResolutionException(resolutionResult, "dummy 2", cause1);
+
+    assertEquals("com.google.guava:guava:jar:28.0-android > org.apache.maven:maven-core:jar:3.5.2"
+        + " (compile) > com.google.inject:guice:jar:no_aop:4.0 (compile) > "
+            +"aopalliance:aopalliance:jar:1.0 (compile)\n",
+        LinkageCheckerRule.formatDependencyPath(exception));
   }
 }

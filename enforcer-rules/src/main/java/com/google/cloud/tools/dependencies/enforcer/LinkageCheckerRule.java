@@ -28,6 +28,7 @@ import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.NonTestDependencySelector;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -35,6 +36,8 @@ import com.google.common.graph.Traverser;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map.Entry;
 import javax.annotation.Nonnull;
@@ -59,6 +62,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 
@@ -236,7 +240,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           // the classpath but what we really need for this one is a classes directory
           if (file == null) {
             throw new EnforcerRuleException(
-                "Artifact " + Artifacts.toCoordinates(artifact) + " is not associated with a file."
+                "Artifact "
+                    + Artifacts.toCoordinates(artifact)
+                    + " is not associated with a file."
                     + " The linkage checker enforcer rule should be bound to the verify phase.");
           }
           Path path = file.toPath();
@@ -248,7 +254,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       throw new EnforcerRuleException("Unable to lookup a component " + e.getMessage(), e);
     } catch (DependencyResolutionException e) {
 
-      throw new EnforcerRuleException("Unable to build a dependency graph: " + e.getMessage(), e);
+      throw new EnforcerRuleException(
+          "Unable to build a dependency graph: " + e.getMessage(), e);
     }
   }
 
@@ -268,6 +275,51 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       return ClassPathBuilder.artifactsToClasspath(artifacts);
     } catch (RepositoryException ex) {
       throw new EnforcerRuleException("Failed to collect dependency " + ex.getMessage(), ex);
+    }
+  }
+
+  /**
+   * Returns message describing the path from the project root to a problematic artifact causing
+   * {@code exception}.
+   */
+  @VisibleForTesting
+  static String formatDependencyPath(DependencyResolutionException exception) {
+    Throwable cause = exception.getCause();
+    while (cause != null) {
+      if (cause instanceof ArtifactTransferException) {
+        ArtifactTransferException notFoundException = (ArtifactTransferException)cause;
+        Artifact problemArtifact = notFoundException.getArtifact();
+        return findPaths(
+            exception.getResult().getDependencyGraph(), problemArtifact);
+      } else {
+        cause = cause.getCause();
+      }
+    }
+    return null;
+  }
+
+  private static String findPaths(DependencyNode root, Artifact artifact) {
+    ImmutableList.Builder<ImmutableList<DependencyNode>> result = ImmutableList.builder();
+
+    ArrayDeque stack = new ArrayDeque<>();
+    stack.addLast(root);
+    findArtifact(result, root, stack, artifact);
+    StringBuilder builder = new StringBuilder();
+    for (ImmutableList<DependencyNode> path: result.build()) {
+      builder.append(Joiner.on(" > ").join(path));
+      builder.append("\n");
+    }
+    return builder.toString();
+  }
+
+  private static void findArtifact(ImmutableList.Builder<ImmutableList<DependencyNode>> result, DependencyNode node, Deque<DependencyNode> path, Artifact artifact) {
+    if (Artifacts.toCoordinates(node.getArtifact()).equals(Artifacts.toCoordinates(artifact))) {
+      result.add(ImmutableList.copyOf(path));
+    }
+    for (DependencyNode child : node.getChildren()) {
+      path.addLast(child);
+      findArtifact(result, child, path, artifact);
+      path.removeLast();
     }
   }
 }
