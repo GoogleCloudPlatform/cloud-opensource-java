@@ -241,9 +241,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           // the classpath but what we really need for this one is a classes directory
           if (file == null) {
             throw new EnforcerRuleException(
-                "Artifact "
-                    + Artifacts.toCoordinates(artifact)
-                    + " is not associated with a file."
+                "Artifact " + Artifacts.toCoordinates(artifact) + " is not associated with a file."
                     + " The linkage checker enforcer rule should be bound to the verify phase.");
           }
           Path path = file.toPath();
