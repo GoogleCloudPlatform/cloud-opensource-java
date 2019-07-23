@@ -37,3 +37,4 @@ or significantly changed before the set is classified as Beta.
   consumers
 - [JLBP-17](JLBP-17.md): Coordinate Rollout of Breaking Changes
 - [JLBP-18](JLBP-18.md): Only shade dependencies as a last resort
+- [JLBP-19](JLBP-19.md): Place each package in a single jar
