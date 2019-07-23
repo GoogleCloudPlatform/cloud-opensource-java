@@ -2,7 +2,7 @@
 -----------------------------------------------
 
 When a library B in Java depends on another library A through the Maven
-repository system, library B needs two identifiers  to find classes in library A:
+repository system, library B needs two identifiers to find classes in library A:
 
 1. The Maven coordinates of library A, following the form
    `${groupId}:${artifactId}:${version}`; for example
