@@ -409,6 +409,7 @@ public class LinkageCheckerRuleTest {
             + "aopalliance:aopalliance:jar:1.0 (compile)\n",
         LinkageCheckerRule.formatDependencyPath(exception).get());
   }
+
   @Test
   public void testFormatDependencyPath_causeNotFound() throws RepositoryException,
       URISyntaxException {
