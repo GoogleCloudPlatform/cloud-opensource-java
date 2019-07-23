@@ -18,6 +18,7 @@ package com.google.cloud.tools.dependencies.enforcer;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -33,7 +34,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import javax.enterprise.inject.Default;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.enforcer.rule.api.EnforcerLevel;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -58,7 +58,6 @@ import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
-import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
@@ -393,19 +392,33 @@ public class LinkageCheckerRuleTest {
   }
 
   @Test
-  public void testFormatDependencyPath() throws RepositoryException,
+  public void testFormatDependencyPath() throws RepositoryException, URISyntaxException {
+    DependencyNode graph = createResolvedDependencyGraph("org.apache.maven:maven-core:jar:3.5.2");
+    DependencyResolutionResult resolutionResult = mock(DependencyResolutionResult.class);
+    when(resolutionResult.getDependencyGraph()).thenReturn(graph);
+    Throwable cause3 =
+        new ArtifactNotFoundException(new DefaultArtifact("aopalliance:aopalliance:1.0"), null);
+    Throwable cause2 = new ArtifactResolutionException(null, "dummy 2", cause3);
+    Throwable cause1 = new DependencyResolutionException(resolutionResult, "dummy 1", cause2);
+    DependencyResolutionException exception =
+        new DependencyResolutionException(resolutionResult, "dummy 2", cause1);
+
+    assertEquals(
+        "com.google.guava:guava:jar:28.0-android > org.apache.maven:maven-core:jar:3.5.2"
+            + " (compile) > com.google.inject:guice:jar:no_aop:4.0 (compile) > "
+            + "aopalliance:aopalliance:jar:1.0 (compile)\n",
+        LinkageCheckerRule.formatDependencyPath(exception).get());
+  }
+  @Test
+  public void testFormatDependencyPath_causeNotFound() throws RepositoryException,
       URISyntaxException {
     DependencyNode graph = createResolvedDependencyGraph("org.apache.maven:maven-core:jar:3.5.2");
     DependencyResolutionResult resolutionResult = mock(DependencyResolutionResult.class);
     when(resolutionResult.getDependencyGraph()).thenReturn(graph);
-    Throwable cause3 = new ArtifactNotFoundException(new DefaultArtifact("aopalliance:aopalliance:1.0"), null);
-    Throwable cause2 = new ArtifactResolutionException(null, "dummy 2", cause3);
+    Throwable cause2 = new ArtifactResolutionException(null, "dummy 2", null);
     Throwable cause1 = new DependencyResolutionException(resolutionResult, "dummy 1", cause2);
-    DependencyResolutionException exception = new DependencyResolutionException(resolutionResult, "dummy 2", cause1);
-
-    assertEquals("com.google.guava:guava:jar:28.0-android > org.apache.maven:maven-core:jar:3.5.2"
-        + " (compile) > com.google.inject:guice:jar:no_aop:4.0 (compile) > "
-            +"aopalliance:aopalliance:jar:1.0 (compile)\n",
-        LinkageCheckerRule.formatDependencyPath(exception));
+    DependencyResolutionException exception = new DependencyResolutionException(resolutionResult, "dummy"
+                                                                                                      + " 2", cause1);
+    assertFalse(LinkageCheckerRule.formatDependencyPath(exception).isPresent());
   }
 }
