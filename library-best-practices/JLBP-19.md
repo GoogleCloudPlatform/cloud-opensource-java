@@ -14,7 +14,7 @@ and `com.google.i18n.Characters` must also be in the artifact
 This rule does not apply to subpackages. It is acceptable for
 `com.google.i18n.charactersets.Latin1` to have different Maven coordinates
 than `com.google.i18n.Localization`; for example, `com.google.foo:i18n-charactersets`.
-It is alsoacceptable K to publish classes from both `com.google.i18n` and
+It is also acceptable to publish classes from both `com.google.i18n` and
 `com.google.i18n.charactersets` under the same group ID and artifact ID.
 Similarly, it is fine to publish completely different packages such as
 `com.google.foo` and `org.example.bar` under the same group ID and artifact ID.
