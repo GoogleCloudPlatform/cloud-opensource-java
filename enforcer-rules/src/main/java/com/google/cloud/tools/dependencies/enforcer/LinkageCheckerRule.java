@@ -277,9 +277,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   /**
-   * Returns {code Optional} describing describing the path from the project root to a problematic
-   * artifact causing {@link ArtifactTransferException}. Empty {@code Optional} if {@code exception}
-   * is not indirectly caused by {@link ArtifactTransferException}.
+   * Returns {code Optional} describing the path from project root to a problematic artifact that
+   * caused {@link ArtifactTransferException}. An empty {@code Optional} if {@code exception}
+   * is not caused by {@link ArtifactTransferException}.
    */
   @VisibleForTesting
   static Optional<String> formatDependencyPath(DependencyResolutionException exception) {
