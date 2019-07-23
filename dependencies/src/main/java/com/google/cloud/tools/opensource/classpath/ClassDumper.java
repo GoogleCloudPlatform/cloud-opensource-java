@@ -34,7 +34,9 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -155,7 +157,8 @@ class ClassDumper {
         if (!isCompatibleClassFileVersion(javaClass)) {
           continue;
         }
-        ClassFile source = new ClassFile(jar, javaClass.getClassName());
+        String className = javaClass.getClassName();
+        ClassFile source = new ClassFile(findClassLocation(className), className);
         builder.addAll(findSymbolReferences(source, javaClass));
       }
     }
