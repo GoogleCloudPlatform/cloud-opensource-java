@@ -53,6 +53,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.DependencyRequest;
@@ -63,9 +64,11 @@ import org.junit.Test;
 import org.mockito.ArgumentMatchers;
 
 public class LinkageCheckerRuleTest {
+
   private LinkageCheckerRule rule;
   private RepositorySystem repositorySystem;
   private RepositorySystemSession repositorySystemSession;
+  private Artifact dummyArtifactWithFile;
 
   private MavenProject mockProject;
   private EnforcerRuleHelper mockRuleHelper;
@@ -77,16 +80,19 @@ public class LinkageCheckerRuleTest {
   @Before
   public void setup()
       throws ExpressionEvaluationException, ComponentLookupException,
-          DependencyResolutionException {
+      DependencyResolutionException, URISyntaxException {
     rule = new LinkageCheckerRule();
     repositorySystem = RepositoryUtility.newRepositorySystem();
     repositorySystemSession = RepositoryUtility.newSession(repositorySystem);
+    // This dummy artifact must be something that exists in a repository
+    dummyArtifactWithFile = (new DefaultArtifact("com.google.guava:guava:28.0-android"))
+        .setFile(Paths.get(URLClassLoader.getSystemResource("dummy-0.0.1.jar").toURI()).toFile());
     setupMock();
   }
 
   private void setupMock()
       throws ExpressionEvaluationException, ComponentLookupException,
-          DependencyResolutionException {
+      DependencyResolutionException {
     mockProject = mock(MavenProject.class);
     mockMavenSession = mock(MavenSession.class);
     when(mockMavenSession.getRepositorySession()).thenReturn(repositorySystemSession);
@@ -101,17 +107,25 @@ public class LinkageCheckerRuleTest {
         .thenReturn(mockDependencyResolutionResult);
     when(mockRuleHelper.evaluate("${session}")).thenReturn(mockMavenSession);
     when(mockRuleHelper.evaluate("${project}")).thenReturn(mockProject);
+    when(mockProject.getArtifact())
+        .thenReturn(
+            new org.apache.maven.artifact.DefaultArtifact(
+                "com.google.cloud",
+                "linkage-checker-rule-test",
+                "0.0.1",
+                "compile",
+                "jar",
+                null,
+                new DefaultArtifactHandler()));
   }
 
-  /** Returns a dependency graph node resolved from {@link Artifact} of {@code coordinates}. */
+  /**
+   * Returns a dependency graph node resolved from {@link Artifact} of {@code coordinates}.
+   */
   private DependencyNode createResolvedDependencyGraph(String... coordinates)
       throws RepositoryException, URISyntaxException {
     CollectRequest collectRequest = new CollectRequest();
-    // This dummy artifact must be something that exists in a repository
-    Artifact dummyRootArtifact = new DefaultArtifact("com.google.guava:guava:28.0-android");
-    collectRequest.setRootArtifact(
-        dummyRootArtifact.setFile(
-            Paths.get(URLClassLoader.getSystemResource("dummy-0.0.1.jar").toURI()).toFile()));
+    collectRequest.setRootArtifact(dummyArtifactWithFile);
     collectRequest.setRepositories(ImmutableList.of(RepositoryUtility.CENTRAL));
     collectRequest.setDependencies(
         Arrays.stream(coordinates)
@@ -290,6 +304,87 @@ public class LinkageCheckerRuleTest {
       Assert.fail("Enforcer rule should detect conflict between google-api-client and grpc-core");
     } catch (EnforcerRuleException ex) {
       // pass
+    }
+  }
+
+  @Test
+  public void testExecute_shouldSkipBadBomWithNonPomPackaging() throws EnforcerRuleException {
+    rule.setDependencySection(DependencySection.DEPENDENCY_MANAGEMENT);
+    setupMockDependencyManagementSection(
+        "com.google.api-client:google-api-client:1.27.0", "io.grpc:grpc-core:1.17.1");
+    when(mockProject.getArtifact())
+        .thenReturn(
+            new org.apache.maven.artifact.DefaultArtifact(
+                "com.google.cloud",
+                "linkage-checker-rule-test-bom",
+                "0.0.1",
+                "compile",
+                "jar", // BOM should have pom here
+                null,
+                new DefaultArtifactHandler()));
+    rule.execute(mockRuleHelper);
+  }
+
+  @Test
+  public void testExecute_shouldSkipNonBomPom() throws EnforcerRuleException {
+    when(mockProject.getArtifact())
+        .thenReturn(
+            new org.apache.maven.artifact.DefaultArtifact(
+                "com.google.cloud",
+                "linkage-checker-rule-parent",
+                "0.0.1",
+                "compile",
+                "pom",
+                null,
+                new DefaultArtifactHandler()));
+    // No exception
+    rule.execute(mockRuleHelper);
+  }
+
+  @Test
+  public void testExecute_shouldExcludeTestScope() throws EnforcerRuleException {
+    org.apache.maven.model.Dependency dependency = new org.apache.maven.model.Dependency();
+    Artifact artifact = new DefaultArtifact("junit:junit:3.8.2");
+    dependency.setArtifactId(artifact.getArtifactId());
+    dependency.setGroupId(artifact.getGroupId());
+    dependency.setVersion(artifact.getVersion());
+    dependency.setClassifier(artifact.getClassifier());
+    dependency.setScope("test");
+
+    when(mockDependencyResolutionResult.getDependencyGraph()).thenReturn(
+        new DefaultDependencyNode(dummyArtifactWithFile)
+    );
+    when(mockProject.getDependencies())
+        .thenReturn(ImmutableList.of(dependency));
+
+    rule.execute(mockRuleHelper);
+  }
+
+  @Test
+  public void testExecute_shouldFailForBadProjectWithBundlePackaging() throws RepositoryException,
+      URISyntaxException {
+    try {
+      // This artifact is known to contain classes missing dependencies
+      setupMockDependencyResolution("com.google.appengine:appengine-api-1.0-sdk:1.9.64");
+
+      when(mockProject.getArtifact())
+          .thenReturn(
+              new org.apache.maven.artifact.DefaultArtifact(
+                  "com.google.cloud",
+                  "linkage-checker-rule-test",
+                  "0.0.1",
+                  "compile",
+                  "bundle", // Maven Bundle Plugin uses "bundle" packaging.
+                  null,
+                  new DefaultArtifactHandler()));
+
+      rule.execute(mockRuleHelper);
+      Assert.fail(
+          "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
+    } catch (EnforcerRuleException ex) {
+      // pass
+      verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found 112 errors."));
+      assertEquals("Failed while checking class path. See above error report.", ex.getMessage());
     }
   }
 }
