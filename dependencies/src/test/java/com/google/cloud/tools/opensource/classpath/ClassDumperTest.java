@@ -315,8 +315,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testFindSymbolReferences_overLappingClass()
-      throws IOException, RepositoryException {
+  public void testFindSymbolReferences_overLappingClass() throws IOException, RepositoryException {
     // Both artifacts contain com.google.inject.internal.InjectorImpl$BindingsMultimap. The one from
     // sisu-guice should not appear in symbol references because guice supersedes in the class path.
     Artifact guice = new DefaultArtifact("com.google.inject:guice:3.0");
@@ -326,12 +325,13 @@ public class ClassDumperTest {
 
     ClassDumper classDumper = ClassDumper.create(paths);
     SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
-    ImmutableSetMultimap<ClassSymbol, ClassFile> classReferences = symbolReferences
-        .getClassToClassSymbols().inverse();
-    ImmutableSet<ClassFile> classFiles = classReferences
-        .get(new ClassSymbol("com.google.inject.internal.util.$Lists"));
-    Truth.assertThat(classFiles).doesNotContain(
-        new ClassFile(sisuGuicePath, "com.google.inject.internal.InjectorImpl$BindingsMultimap")
-    );
+    ImmutableSetMultimap<ClassSymbol, ClassFile> classReferences =
+        symbolReferences.getClassToClassSymbols().inverse();
+    ImmutableSet<ClassFile> classFiles =
+        classReferences.get(new ClassSymbol("com.google.inject.internal.util.$Lists"));
+    Truth.assertThat(classFiles)
+        .doesNotContain(
+            new ClassFile(
+                sisuGuicePath, "com.google.inject.internal.InjectorImpl$BindingsMultimap"));
   }
 }
