@@ -280,49 +280,4 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       throw new EnforcerRuleException("Failed to collect dependency " + ex.getMessage(), ex);
     }
   }
-
-  /**
-   * Returns message describing the path from the project root to a problematic artifact causing
-   * {@code exception}.
-   */
-  @VisibleForTesting
-  static String formatDependencyPath(DependencyResolutionException exception) {
-    Throwable cause = exception.getCause();
-    while (cause != null) {
-      if (cause instanceof ArtifactTransferException) {
-        ArtifactTransferException notFoundException = (ArtifactTransferException)cause;
-        Artifact problemArtifact = notFoundException.getArtifact();
-        return findPaths(
-            exception.getResult().getDependencyGraph(), problemArtifact);
-      } else {
-        cause = cause.getCause();
-      }
-    }
-    return null;
-  }
-
-  private static String findPaths(DependencyNode root, Artifact artifact) {
-    ImmutableList.Builder<ImmutableList<DependencyNode>> result = ImmutableList.builder();
-
-    ArrayDeque stack = new ArrayDeque<>();
-    stack.addLast(root);
-    findArtifact(result, root, stack, artifact);
-    StringBuilder builder = new StringBuilder();
-    for (ImmutableList<DependencyNode> path: result.build()) {
-      builder.append(Joiner.on(">").join(path));
-      builder.append("\n");
-    }
-    return builder.toString();
-  }
-
-  private static void findArtifact(ImmutableList.Builder<ImmutableList<DependencyNode>> result, DependencyNode node, Deque<DependencyNode> path, Artifact artifact) {
-    if (Artifacts.toCoordinates(node.getArtifact()).equals(Artifacts.toCoordinates(artifact))) {
-      result.add(ImmutableList.copyOf(path));
-    }
-    for (DependencyNode child : node.getChildren()) {
-      path.addLast(child);
-      findArtifact(result, child, path, artifact);
-      path.removeLast();
-    }
-  }
 }

@@ -391,19 +391,4 @@ public class LinkageCheckerRuleTest {
       assertEquals("Failed while checking class path. See above error report.", ex.getMessage());
     }
   }
-
-  @Test
-  public void testFormatDependencyPath() throws RepositoryException,
-      URISyntaxException {
-    DependencyNode graph = createResolvedDependencyGraph("org.apache.maven:maven-core:jar:3.5.2");
-    DependencyResolutionResult resolutionResult = mock(DependencyResolutionResult.class);
-    when(resolutionResult.getDependencyGraph()).thenReturn(graph);
-    Throwable cause3 = new ArtifactNotFoundException(new DefaultArtifact("org.apache.maven.resolver:maven-resolver-impl:1.1.0"), null);
-    Throwable cause2 = new ArtifactResolutionException(null, "dummy 2", cause3);
-    Throwable cause1 = new DependencyResolutionException(resolutionResult, "dummy 1", cause2);
-    DependencyResolutionException exception = new DependencyResolutionException(resolutionResult, "dummy 2", cause1);
-
-    assertEquals("a",
-        LinkageCheckerRule.formatDependencyPath(exception));
-  }
 }
