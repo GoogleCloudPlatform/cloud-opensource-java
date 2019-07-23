@@ -41,6 +41,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -307,12 +308,10 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     ArrayDeque stack = new ArrayDeque<>();
     stack.addLast(root);
     findArtifact(result, root, stack, artifact);
-    StringBuilder builder = new StringBuilder();
-    for (ImmutableList<DependencyNode> path : result.build()) {
-      builder.append(Joiner.on(" > ").join(path));
-      builder.append("\n");
-    }
-    return builder.toString();
+
+    return result.build().stream()
+        .map(path -> Joiner.on(" > ").join(path))
+        .collect(Collectors.joining("\n"));
   }
 
   private static void findArtifact(
