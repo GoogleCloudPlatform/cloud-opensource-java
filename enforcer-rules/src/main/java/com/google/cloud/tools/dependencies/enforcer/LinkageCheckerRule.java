@@ -259,8 +259,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
               path -> {
                 helper.getLog().error("Exception at " + path);
               });
-      throw new EnforcerRuleException(
-          "Unable to build a dependency graph: " + e.getMessage(), e);
+      throw new EnforcerRuleException("Unable to build a dependency graph: " + e.getMessage(), e);
     }
   }
 

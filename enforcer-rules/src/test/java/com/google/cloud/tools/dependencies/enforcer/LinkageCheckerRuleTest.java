@@ -411,15 +411,15 @@ public class LinkageCheckerRuleTest {
   }
 
   @Test
-  public void testFormatDependencyPath_causeNotFound() throws RepositoryException,
-      URISyntaxException {
+  public void testFormatDependencyPath_causeNotFound()
+      throws RepositoryException, URISyntaxException {
     DependencyNode graph = createResolvedDependencyGraph("org.apache.maven:maven-core:jar:3.5.2");
     DependencyResolutionResult resolutionResult = mock(DependencyResolutionResult.class);
     when(resolutionResult.getDependencyGraph()).thenReturn(graph);
     Throwable cause2 = new ArtifactResolutionException(null, "dummy 2", null);
     Throwable cause1 = new DependencyResolutionException(resolutionResult, "dummy 1", cause2);
-    DependencyResolutionException exception = new DependencyResolutionException(resolutionResult, "dummy"
-                                                                                                      + " 2", cause1);
+    DependencyResolutionException exception =
+        new DependencyResolutionException(resolutionResult, "dummy" + " 2", cause1);
     assertFalse(LinkageCheckerRule.formatDependencyPath(exception).isPresent());
   }
 }
