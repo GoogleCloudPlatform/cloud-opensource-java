@@ -303,7 +303,10 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
   private static String findPaths(DependencyNode root, Artifact artifact) {
     ImmutableList.Builder<ImmutableList<DependencyNode>> result = ImmutableList.builder();
-    findArtifact(result, root, new ArrayDeque<>(), artifact);
+
+    ArrayDeque stack = new ArrayDeque<>();
+    stack.addLast(root);
+    findArtifact(result, root, stack, artifact);
     StringBuilder builder = new StringBuilder();
     for (ImmutableList<DependencyNode> path: result.build()) {
       builder.append(Joiner.on(">").join(path));
@@ -313,7 +316,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   private static void findArtifact(ImmutableList.Builder<ImmutableList<DependencyNode>> result, DependencyNode node, Deque<DependencyNode> path, Artifact artifact) {
-    if (node.getArtifact().equals(artifact)) {
+    if (Artifacts.toCoordinates(node.getArtifact()).equals(Artifacts.toCoordinates(artifact))) {
       result.add(ImmutableList.copyOf(path));
     }
     for (DependencyNode child : node.getChildren()) {
