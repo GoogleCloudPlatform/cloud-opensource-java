@@ -156,6 +156,8 @@ class ClassDumper {
           continue;
         }
         String className = javaClass.getClassName();
+        // In listClasses(jar), ClassPathRepository creates JavaClass through the first JAR file
+        // that contains the class. It may be different from "jar" for an overlapping class.
         ClassFile source = new ClassFile(findClassLocation(className), className);
         builder.addAll(findSymbolReferences(source, javaClass));
       }
