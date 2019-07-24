@@ -55,6 +55,7 @@
 
   <dependencyManagement>
     <dependencies>
+      <!-- To avoid plexus-util version conflict (#803) -->
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven</artifactId>
