@@ -53,6 +53,18 @@
     <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.maven</groupId>
+        <artifactId>maven</artifactId>
+        <version>${maven.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -79,11 +91,6 @@
           <groupId>org.eclipse.aether</groupId>
           <artifactId>aether-util</artifactId>
         </exclusion>
-        <exclusion>
-          <!-- To avoid NoClassDefFoundError org.codehaus.plexus.util.xml.Xpp3DomBuilder$InputLocationBuilder -->
-          <groupId>org.codehaus.plexus</groupId>
-          <artifactId>plexus-utils</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -92,13 +99,6 @@
       <artifactId>maven-enforcer-plugin</artifactId>
       <version>${enforcer.version}</version>
       <scope>provided</scope>
-      <exclusions>
-        <exclusion>
-          <!-- To avoid NoClassDefFoundError org.codehaus.plexus.util.xml.Xpp3DomBuilder$InputLocationBuilder -->
-          <groupId>org.codehaus.plexus</groupId>
-          <artifactId>plexus-utils</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
