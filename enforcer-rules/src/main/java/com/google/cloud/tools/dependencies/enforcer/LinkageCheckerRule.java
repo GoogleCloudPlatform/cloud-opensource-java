@@ -41,6 +41,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
@@ -95,6 +96,12 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    *     >Java Dependency Glossary: Class reference graph</a>
    */
   private boolean reportOnlyReachable = false;
+
+  /**
+   * The root of dependency node for the project. Null when {@link #dependencySection} is {@link
+   * DependencySection#DEPENDENCY_MANAGEMENT}.
+   */
+  private DependencyNode dependencyRoot = null;
 
   @VisibleForTesting
   void setDependencySection(DependencySection dependencySection) {
@@ -192,6 +199,12 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
             logger.warn(message);
           } else {
             logger.error(message);
+          }
+          symbolProblems.values().stream()
+              .map(ClassFile::getJar)
+              .distinct()
+              .forEach(jar -> logPathsToProblematicJars(logger, dependencyRoot, jar));
+          if (getLevel() != WARN) {
             throw new EnforcerRuleException(
                 "Failed while checking class path. See above error report.");
           }
@@ -227,8 +240,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       DependencyResolutionResult resolutionResult =
           projectDependenciesResolver.resolve(dependencyResolutionRequest);
 
-      Iterable<DependencyNode> dependencies = Traverser.forTree(DependencyNode::getChildren)
-          .breadthFirst(resolutionResult.getDependencyGraph());
+      // This dependency tree explains why a JAR file is included in a tree. So keeping it as
+      // an instance variable.
+      dependencyRoot = resolutionResult.getDependencyGraph();
+      Iterable<DependencyNode> dependencies =
+          Traverser.forTree(DependencyNode::getChildren).breadthFirst(dependencyRoot);
 
       ImmutableList.Builder<Path> builder = ImmutableList.builder();
       for (DependencyNode node : dependencies) {
@@ -252,7 +268,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     } catch (ComponentLookupException e) {
       throw new EnforcerRuleException("Unable to lookup a component " + e.getMessage(), e);
     } catch (DependencyResolutionException e) {
-      formatDependencyPathInException(e).ifPresent(path -> helper.getLog().error("Exception at " + path));
+      formatDependencyPathInException(e)
+          .ifPresent(path -> helper.getLog().error("Exception at " + path));
       throw new EnforcerRuleException("Unable to build a dependency graph: " + e.getMessage(), e);
     }
   }
@@ -288,7 +305,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       if (cause instanceof ArtifactTransferException) {
         ArtifactTransferException artifactException = (ArtifactTransferException) cause;
         return Optional.of(
-            findPaths(exception.getResult().getDependencyGraph(), artifactException.getArtifact()));
+            findPaths(
+                exception.getResult().getDependencyGraph(),
+                artifact ->
+                    Artifacts.toCoordinates(artifact)
+                        .equals(Artifacts.toCoordinates(artifactException.getArtifact()))));
       } else {
         cause = cause.getCause();
       }
@@ -296,12 +317,12 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     return Optional.empty();
   }
 
-  private static String findPaths(DependencyNode root, Artifact artifact) {
+  private static String findPaths(DependencyNode root, Predicate<Artifact> predicate) {
     ImmutableList.Builder<ImmutableList<DependencyNode>> result = ImmutableList.builder();
 
     Deque<DependencyNode> stack = new ArrayDeque<>();
     stack.addLast(root);
-    findArtifact(result, root, stack, artifact);
+    findArtifact(result, root, stack, predicate);
 
     return result.build().stream()
         .map(path -> Joiner.on(" > ").join(path))
@@ -312,14 +333,20 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       ImmutableList.Builder<ImmutableList<DependencyNode>> result,
       DependencyNode node,
       Deque<DependencyNode> path,
-      Artifact artifact) {
-    if (Artifacts.toCoordinates(node.getArtifact()).equals(Artifacts.toCoordinates(artifact))) {
+      Predicate<Artifact> predicate) {
+    if (predicate.test(node.getArtifact())) {
       result.add(ImmutableList.copyOf(path));
     }
     for (DependencyNode child : node.getChildren()) {
       path.addLast(child);
-      findArtifact(result, child, path, artifact);
+      findArtifact(result, child, path, predicate);
       path.removeLast();
     }
+  }
+
+  private static void logPathsToProblematicJars(
+      Log logger, DependencyNode dependencyRoot, Path jar) {
+    String path = findPaths(dependencyRoot, artifact -> artifact.getFile().toPath().equals(jar));
+    logger.info("Dependency: " + path);
   }
 }
