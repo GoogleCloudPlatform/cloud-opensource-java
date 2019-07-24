@@ -40,8 +40,6 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -252,7 +250,18 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     } catch (ComponentLookupException e) {
       throw new EnforcerRuleException("Unable to lookup a component " + e.getMessage(), e);
     } catch (DependencyResolutionException e) {
-      formatDependencyPathInException(e).ifPresent(path -> helper.getLog().error("Exception at " + path));
+      Throwable cause = e.getCause();
+      while (cause != null) {
+        if (cause instanceof ArtifactTransferException) {
+          ArtifactTransferException artifactException = (ArtifactTransferException) cause;
+          String pathsToArtifact =
+              findPaths(e.getResult().getDependencyGraph(), artifactException.getArtifact());
+          helper.getLog().error("Dependency: " + pathsToArtifact);
+          break;
+        } else {
+          cause = cause.getCause();
+        }
+      }
       throw new EnforcerRuleException("Unable to build a dependency graph: " + e.getMessage(), e);
     }
   }
@@ -276,26 +285,6 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     }
   }
 
-  /**
-   * Returns {code Optional} describing the path from project root to a problematic artifact that
-   * caused {@link ArtifactTransferException}. An empty {@code Optional} if {@code exception} is not
-   * caused by {@link ArtifactTransferException}.
-   */
-  @VisibleForTesting
-  static Optional<String> formatDependencyPathInException(DependencyResolutionException exception) {
-    Throwable cause = exception.getCause();
-    while (cause != null) {
-      if (cause instanceof ArtifactTransferException) {
-        ArtifactTransferException artifactException = (ArtifactTransferException) cause;
-        return Optional.of(
-            findPaths(exception.getResult().getDependencyGraph(), artifactException.getArtifact()));
-      } else {
-        cause = cause.getCause();
-      }
-    }
-    return Optional.empty();
-  }
-
   private static String findPaths(DependencyNode root, Artifact artifact) {
     ImmutableList.Builder<ImmutableList<DependencyNode>> result = ImmutableList.builder();
 
@@ -303,9 +292,10 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     stack.addLast(root);
     findArtifact(result, root, stack, artifact);
 
-    return result.build().stream()
-        .map(path -> Joiner.on(" > ").join(path))
-        .collect(Collectors.joining("\n"));
+    ImmutableList<String> paths =
+        result.build().stream().map(path -> Joiner.on(" > ").join(path)).collect(toImmutableList());
+    // Joining one or more paths to the artifact
+    return Joiner.on("\n").join(paths);
   }
 
   private static void findArtifact(
