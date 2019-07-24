@@ -278,17 +278,17 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
   /**
    * Returns {code Optional} describing the path from project root to a problematic artifact that
-   * caused {@link ArtifactTransferException}. An empty {@code Optional} if {@code exception}
-   * is not caused by {@link ArtifactTransferException}.
+   * caused {@link ArtifactTransferException}. An empty {@code Optional} if {@code exception} is not
+   * caused by {@link ArtifactTransferException}.
    */
   @VisibleForTesting
   static Optional<String> formatDependencyPath(DependencyResolutionException exception) {
     Throwable cause = exception.getCause();
     while (cause != null) {
       if (cause instanceof ArtifactTransferException) {
-        ArtifactTransferException notFoundException = (ArtifactTransferException) cause;
-        Artifact problemArtifact = notFoundException.getArtifact();
-        return Optional.of(findPaths(exception.getResult().getDependencyGraph(), problemArtifact));
+        ArtifactTransferException artifactException = (ArtifactTransferException) cause;
+        return Optional.of(
+            findPaths(exception.getResult().getDependencyGraph(), artifactException.getArtifact()));
       } else {
         cause = cause.getCause();
       }
@@ -299,7 +299,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   private static String findPaths(DependencyNode root, Artifact artifact) {
     ImmutableList.Builder<ImmutableList<DependencyNode>> result = ImmutableList.builder();
 
-    ArrayDeque stack = new ArrayDeque<>();
+    Deque<DependencyNode> stack = new ArrayDeque<>();
     stack.addLast(root);
     findArtifact(result, root, stack, artifact);
 
