@@ -254,9 +254,14 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       while (cause != null) {
         if (cause instanceof ArtifactTransferException) {
           ArtifactTransferException artifactException = (ArtifactTransferException) cause;
+          Artifact artifact = artifactException.getArtifact();
+          DependencyNode dependencyGraph = e.getResult().getDependencyGraph();
           String pathsToArtifact =
-              findPaths(e.getResult().getDependencyGraph(), artifactException.getArtifact());
-          helper.getLog().error("Dependency: " + pathsToArtifact);
+              findPaths(dependencyGraph, artifact);
+          Log logger = helper.getLog();
+          logger.error("Could not get artifact " + artifact);
+          logger.error("Check dependencies of " + findDependent(dependencyGraph, Artifacts.toCoordinates(artifact)));
+          logger.error("Path to the missing artifact: " + pathsToArtifact);
           break;
         } else {
           cause = cause.getCause();
@@ -312,4 +317,19 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       path.removeLast();
     }
   }
+
+  private static Artifact findDependent(DependencyNode node, String coordinates) {
+    for (DependencyNode child : node.getChildren()) {
+      if (Artifacts.toCoordinates(child.getArtifact()).equals(coordinates)) {
+        return node.getArtifact();
+      } else {
+        Artifact childResult = findDependent(child, coordinates);
+        if (childResult != null) {
+          return childResult;
+        }
+      }
+    }
+    return null;
+  }
+
 }
