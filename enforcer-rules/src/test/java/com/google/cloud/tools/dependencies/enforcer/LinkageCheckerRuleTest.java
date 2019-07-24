@@ -394,7 +394,7 @@ public class LinkageCheckerRuleTest {
   }
 
   @Test
-  public void testFormatDependencyPath() throws RepositoryException, URISyntaxException {
+  public void testFormatDependencyPathInException() throws RepositoryException, URISyntaxException {
     DependencyNode graph = createResolvedDependencyGraph("org.apache.maven:maven-core:jar:3.5.2");
     DependencyResolutionResult resolutionResult = mock(DependencyResolutionResult.class);
     when(resolutionResult.getDependencyGraph()).thenReturn(graph);
@@ -405,7 +405,7 @@ public class LinkageCheckerRuleTest {
     DependencyResolutionException exception =
         new DependencyResolutionException(resolutionResult, "dummy 2", cause1);
 
-    Optional<String> formattedPath = LinkageCheckerRule.formatDependencyPath(exception);
+    Optional<String> formattedPath = LinkageCheckerRule.formatDependencyPathInException(exception);
     assertTrue(formattedPath.isPresent());
     assertEquals(
         "com.google.guava:guava:jar:28.0-android > org.apache.maven:maven-core:jar:3.5.2"
@@ -415,7 +415,7 @@ public class LinkageCheckerRuleTest {
   }
 
   @Test
-  public void testFormatDependencyPath_withoutArtifactNotFoundException()
+  public void testFormatDependencyPathInException_withoutArtifactNotFoundException()
       throws RepositoryException, URISyntaxException {
     DependencyNode graph = createResolvedDependencyGraph("org.apache.maven:maven-core:jar:3.5.2");
     DependencyResolutionResult resolutionResult = mock(DependencyResolutionResult.class);
@@ -424,6 +424,6 @@ public class LinkageCheckerRuleTest {
     Throwable cause1 = new DependencyResolutionException(resolutionResult, "dummy 1", cause2);
     DependencyResolutionException exception =
         new DependencyResolutionException(resolutionResult, "dummy 2", cause1);
-    assertFalse(LinkageCheckerRule.formatDependencyPath(exception).isPresent());
+    assertFalse(LinkageCheckerRule.formatDependencyPathInException(exception).isPresent());
   }
 }

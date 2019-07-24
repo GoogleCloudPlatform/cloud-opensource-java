@@ -252,7 +252,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     } catch (ComponentLookupException e) {
       throw new EnforcerRuleException("Unable to lookup a component " + e.getMessage(), e);
     } catch (DependencyResolutionException e) {
-      formatDependencyPath(e).ifPresent(path -> helper.getLog().error("Exception at " + path));
+      formatDependencyPathInException(e).ifPresent(path -> helper.getLog().error("Exception at " + path));
       throw new EnforcerRuleException("Unable to build a dependency graph: " + e.getMessage(), e);
     }
   }
@@ -282,7 +282,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    * caused by {@link ArtifactTransferException}.
    */
   @VisibleForTesting
-  static Optional<String> formatDependencyPath(DependencyResolutionException exception) {
+  static Optional<String> formatDependencyPathInException(DependencyResolutionException exception) {
     Throwable cause = exception.getCause();
     while (cause != null) {
       if (cause instanceof ArtifactTransferException) {
