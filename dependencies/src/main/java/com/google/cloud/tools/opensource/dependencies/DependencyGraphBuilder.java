@@ -60,10 +60,6 @@ public class DependencyGraphBuilder {
     setDetectedOsSystemProperties();
   }
 
-  // caching cuts time by about a factor of 4.
-  private static final Map<String, DependencyNode> cacheWithProvidedScope = new HashMap<>();
-  private static final Map<String, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
-
   private static void setDetectedOsSystemProperties() {
     // System properties to select Netty dependencies through os-maven-plugin
     // Definition of the properties: https://github.com/trustin/os-maven-plugin
@@ -119,19 +115,8 @@ public class DependencyGraphBuilder {
   private static DependencyNode resolveCompileTimeDependencies(
       List<Artifact> dependencyArtifacts, boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
-
-    Map<String, DependencyNode> cache =
-        includeProvidedScope ? cacheWithProvidedScope : cacheWithoutProvidedScope;
-    String cacheKey =
-        dependencyArtifacts.stream().map(Artifacts::toCoordinates).collect(Collectors.joining(","));
-    if (cache.containsKey(cacheKey)) {
-      return cache.get(cacheKey);
-    }
-
-    RepositorySystemSession session =
-        includeProvidedScope
-            ? RepositoryUtility.newSessionWithProvidedScope(system)
-            : RepositoryUtility.newSession(system);
+    RepositorySystemSession session = RepositoryUtility.newSessionWithDuplicateArtifacts(system);
+    //RepositorySystemSession session = RepositoryUtility.newSession(system);
 
     CollectRequest collectRequest = new CollectRequest();
 
@@ -156,8 +141,6 @@ public class DependencyGraphBuilder {
 
     // This might be able to speed up by using collectDependencies here instead
     system.resolveDependencies(session, dependencyRequest);
-
-    cache.put(cacheKey, node);
 
     return node;
   }
@@ -185,7 +168,7 @@ public class DependencyGraphBuilder {
   public static DependencyGraph getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
       throws RepositoryException {
     DependencyNode node = resolveCompileTimeDependencies(artifacts, true);
-    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
+    return new DependencyGraph(node);
   }
 
   /**
@@ -194,10 +177,9 @@ public class DependencyGraphBuilder {
    */
   public static DependencyGraph getCompleteDependencies(Artifact artifact)
       throws RepositoryException {
-
     // root node
     DependencyNode node = resolveCompileTimeDependencies(artifact);
-    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY);
+    return new DependencyGraph(node);
   }
 
   /**
@@ -209,7 +191,7 @@ public class DependencyGraphBuilder {
       throws RepositoryException {
     // root node
     DependencyNode node = resolveCompileTimeDependencies(artifact);
-    return levelOrder(node);
+    return new DependencyGraph(node);
   }
 
   private static final class LevelOrderQueueItem {

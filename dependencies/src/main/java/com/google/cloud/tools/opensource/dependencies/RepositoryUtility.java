@@ -129,6 +129,19 @@ public final class RepositoryUtility {
     return session;
   }
 
+
+  /**
+   * Opens a new Maven repository session that allows dependency tree to have duplicate artifacts.
+   */
+  public static RepositorySystemSession newSessionWithDuplicateArtifacts(RepositorySystem system) {
+    DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
+
+    session.setDependencyGraphTransformer(new NoopGraphTransformer());
+
+    session.setReadOnly();
+    return session;
+  }
+
   /**
    * Opens a new Maven repository session in the same way as {@link
    * RepositoryUtility#newSession(RepositorySystem)}, with its dependency selector to include

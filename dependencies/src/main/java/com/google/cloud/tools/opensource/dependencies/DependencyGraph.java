@@ -32,6 +32,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
+import org.eclipse.aether.graph.DependencyNode;
 
 /**
  * A representation of the complete non-cyclic transitive dependency tree of a Maven artifact.
@@ -45,6 +46,8 @@ import com.google.common.collect.TreeMultimap;
  * <p>Artifacts are considered to be the same if they have the same group ID, artifact ID, and version.
  */
 public class DependencyGraph {
+
+  private final DependencyNode root;
 
   // DependencyGraphBuilder builds this in breadth first order, unless explicitly stated otherwise.
   // That is, this list contains the paths to each node in breadth first order 
@@ -61,6 +64,11 @@ public class DependencyGraph {
   
   @VisibleForTesting
   public DependencyGraph() {
+    root = null;
+  }
+
+  public DependencyGraph(DependencyNode root) {
+    this.root = root;
   }
 
   void addPath(DependencyPath path) {
