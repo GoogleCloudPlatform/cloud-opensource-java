@@ -187,6 +187,15 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
             logger.warn(message);
           } else {
             logger.error(message);
+
+            if (reportOnlyReachable) {
+              ClassReferenceGraph graph = linkageChecker.getClassReferenceGraph();
+              symbolProblems.inverse().keySet().stream()
+                  .map(ClassFile::getClassName)
+                  .distinct()
+                  .forEach(graph::printPath);
+            }
+
             throw new EnforcerRuleException(
                 "Failed while checking class path. See above error report.");
           }

@@ -19,10 +19,14 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.graph.GraphBuilder;
+import com.google.common.graph.ImmutableGraph;
 import com.google.common.graph.MutableGraph;
 import com.google.common.graph.Traverser;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -46,6 +50,10 @@ public class ClassReferenceGraph {
 
   private final ImmutableSet<String> reachableClasses;
 
+  private final ImmutableSet<String> entryPointClasses;
+
+  private final ImmutableGraph<String> graph;
+
   static ClassReferenceGraph create(
       SymbolReferenceMaps symbolReferenceMaps, Set<Path> entryPointJars) throws IOException {
 
@@ -61,7 +69,8 @@ public class ClassReferenceGraph {
 
   private ClassReferenceGraph(
       ImmutableSetMultimap<ClassFile, ClassSymbol> classSymbolReferences,
-      Set<String> entryPointClasses) {
+      ImmutableSet<String> entryPointClasses) {
+    this.entryPointClasses = entryPointClasses;
     MutableGraph<String> graph = GraphBuilder.directed().allowsSelfLoops(false).build();
 
     classSymbolReferences.forEach(
@@ -76,6 +85,7 @@ public class ClassReferenceGraph {
 
     this.reachableClasses =
         ImmutableSet.copyOf(Traverser.forGraph(graph).breadthFirst(entryPointClasses));
+    this.graph = ImmutableGraph.copyOf(graph);
   }
 
   /**
@@ -84,5 +94,35 @@ public class ClassReferenceGraph {
    */
   public boolean isReachable(String className) {
     return reachableClasses.contains(className);
+  }
+
+  static class Item {
+    String path;
+    String className;
+
+    Item(String className, String path) {
+      this.path = path;
+      this.className = className;
+    }
+  }
+
+  public void printPath(String className) {
+    Deque<Item> queue = new ArrayDeque<>();
+    queue.add(new Item(className, className));
+    Set<String> visited = new HashSet<>();
+
+    while (!queue.isEmpty()) {
+      Item item = queue.remove();
+
+      if (entryPointClasses.contains((item.className))) {
+        System.out.println(item.path);
+      } else {
+        for (String predecessor : graph.predecessors(item.className)) {
+          if (visited.add(predecessor)) {
+            queue.add(new Item(predecessor, predecessor + " > " + item.path));
+          }
+        }
+      }
+    }
   }
 }
