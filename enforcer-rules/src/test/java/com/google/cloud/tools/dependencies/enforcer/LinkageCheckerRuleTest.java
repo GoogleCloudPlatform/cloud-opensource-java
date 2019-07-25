@@ -407,9 +407,8 @@ public class LinkageCheckerRuleTest {
 
     try {
       rule.execute(mockRuleHelper);
-      fail("The rule should throw EnforcerRuleException upon dependency resolution exceptoin");
+      fail("The rule should throw EnforcerRuleException upon dependency resolution exception");
     } catch (EnforcerRuleException e) {
-      verify(mockLog).error("Check dependencies of com.google.inject:guice:jar:no_aop:4.0");
       verify(mockLog)
           .error(
               "Path to the missing artifact: com.google.guava:guava:jar:28.0-android > "
