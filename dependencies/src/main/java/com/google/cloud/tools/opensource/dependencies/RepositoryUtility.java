@@ -96,6 +96,27 @@ public final class RepositoryUtility {
   private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
       ImmutableSet.of("file", "http", "https");
 
+
+  // To exclude log4j-api-java9:zip:2.11.1, which is not published.
+  // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/339
+  private static DependencySelector filteringZipDependencySelector =
+      new DependencySelector() {
+
+        @Override
+        public boolean selectDependency(Dependency dependency) {
+          Artifact artifact = dependency.getArtifact();
+          Map<String, String> properties = artifact.getProperties();
+          // Because LinkageChecker only checks jar file, zip files are not needed
+          return !"zip".equals(properties.get("type"));
+        }
+
+        @Override
+        public DependencySelector deriveChildSelector(
+            DependencyCollectionContext dependencyCollectionContext) {
+          return this;
+        }
+      };
+
   private RepositoryUtility() {}
 
   /**
@@ -138,6 +159,14 @@ public final class RepositoryUtility {
 
     session.setDependencyGraphTransformer(new NoopGraphTransformer());
 
+    DependencySelector dependencySelector =
+        new AndDependencySelector(
+            // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
+            // false positive in LinkageChecker.
+            new ScopeDependencySelector("provided", "test"),
+            new ExclusionDependencySelector());
+    session.setDependencySelector(dependencySelector);
+
     session.setReadOnly();
     return session;
   }
@@ -149,26 +178,6 @@ public final class RepositoryUtility {
    */
   static RepositorySystemSession newSessionWithProvidedScope(RepositorySystem system) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
-
-    // To exclude log4j-api-java9:zip:2.11.1, which is not published.
-    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/339
-    DependencySelector filteringZipDependencySelector =
-        new DependencySelector() {
-
-          @Override
-          public boolean selectDependency(Dependency dependency) {
-            Artifact artifact = dependency.getArtifact();
-            Map<String, String> properties = artifact.getProperties();
-            // Because LinkageChecker only checks jar file, zip files are not needed
-            return !"zip".equals(properties.get("type"));
-          }
-
-          @Override
-          public DependencySelector deriveChildSelector(
-              DependencyCollectionContext dependencyCollectionContext) {
-            return this;
-          }
-        };
 
     // This combination of DependencySelector comes from the default specified in
     // `MavenRepositorySystemUtils.newSession`.

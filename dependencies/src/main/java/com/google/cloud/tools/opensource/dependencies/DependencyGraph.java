@@ -16,11 +16,16 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.graph.Traverser;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -69,8 +74,47 @@ public class DependencyGraph {
 
   public DependencyGraph(DependencyNode root) {
     this.root = root;
+    savePaths(root);
   }
 
+  private void savePaths(DependencyNode root) {
+    Deque<ArrayDeque<DependencyNode>> queue = new ArrayDeque<>();
+    ArrayDeque<DependencyNode> firstItem = new ArrayDeque<>();
+    firstItem.add(root);
+    queue.add(firstItem);
+    while(!queue.isEmpty()) {
+      ArrayDeque<DependencyNode> item = queue.remove();
+
+      DependencyPath path = new DependencyPath();
+      item.forEach(element -> {
+            if (element.getArtifact() != null) {
+              path.add(element.getArtifact());
+            }
+          }
+      );
+      if (path.size() > 0) {
+        addPath(path);
+      }
+
+      DependencyNode node = item.getLast();
+      HashSet<DependencyNode> parents = new HashSet<>(item);
+      for (DependencyNode child : node.getChildren()) {
+        if (parents.contains(child)) {
+          continue;
+        }
+
+        ArrayDeque<DependencyNode> copy = new ArrayDeque<>(item);
+        copy.add(child);
+        queue.add(copy);
+      }
+    }
+
+    new DependencyPath();
+  }
+
+
+
+  // TODO(suztomo): Remove this
   void addPath(DependencyPath path) {
     graph.add(path);
     Artifact leaf = path.getLeaf();
