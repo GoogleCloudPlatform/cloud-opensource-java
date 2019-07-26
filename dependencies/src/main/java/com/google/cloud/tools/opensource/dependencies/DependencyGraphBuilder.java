@@ -97,13 +97,6 @@ public class DependencyGraphBuilder {
     }
   }
 
-  private static DependencyNode resolveCompileTimeDependenciesWithoutProvided(
-      Artifact rootDependencyArtifact, boolean completeDependencyTree)
-      throws DependencyCollectionException, DependencyResolutionException {
-    return resolveCompileTimeDependencies(
-        ImmutableList.of(rootDependencyArtifact), completeDependencyTree, false);
-  }
-
   private static DependencyNode resolveCompileTimeDependencies(
       List<Artifact> dependencyArtifacts,
       boolean completeDependencyTree,
@@ -144,6 +137,27 @@ public class DependencyGraphBuilder {
     return node;
   }
 
+  /**
+   * Finds the full compile time, transitive dependency graph including duplicates, conflicting
+   * versions, and dependencies with 'provided' scope.
+   *
+   * @param artifacts Maven artifacts to retrieve their dependencies
+   * @return dependency graph representing the tree of Maven artifacts
+   * @throws RepositoryException when there is a problem in resolving or collecting dependency
+   */
+  public static DependencyGraph getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
+      throws RepositoryException {
+    DependencyNode root = resolveCompileTimeDependencies(artifacts, true, true);
+    return new DependencyGraph(root);
+  }
+
+  private static DependencyNode resolveCompileTimeDependenciesWithoutProvided(
+      Artifact rootDependencyArtifact, boolean completeDependencyTree)
+      throws DependencyCollectionException, DependencyResolutionException {
+    return resolveCompileTimeDependencies(
+        ImmutableList.of(rootDependencyArtifact), completeDependencyTree, false);
+  }
+
   /** Returns the non-transitive compile time dependencies of an artifact. */
   public static List<Artifact> getDirectDependencies(Artifact artifact) throws RepositoryException {
 
@@ -157,28 +171,13 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Finds the full compile time, transitive dependency graph including duplicates, conflicting
-   * versions, and dependencies with 'provided' scope.
-   *
-   * @param artifacts Maven artifacts to retrieve their dependencies
-   * @return dependency graph representing the tree of Maven artifacts
-   * @throws RepositoryException when there is a problem in resolving or collecting dependency
-   */
-  public static DependencyGraph getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
-      throws RepositoryException {
-    DependencyNode node = resolveCompileTimeDependencies(artifacts, true, true);
-    return new DependencyGraph(node);
-  }
-
-  /**
    * Finds the full compile time, transitive dependency graph including duplicates and conflicting
    * versions.
    */
   public static DependencyGraph getCompleteDependencies(Artifact artifact)
       throws RepositoryException {
-    // root node
-    DependencyNode node = resolveCompileTimeDependenciesWithoutProvided(artifact, true);
-    return new DependencyGraph(node);
+    DependencyNode root = resolveCompileTimeDependenciesWithoutProvided(artifact, true);
+    return new DependencyGraph(root);
   }
 
   /**
@@ -188,9 +187,8 @@ public class DependencyGraphBuilder {
    */
   public static DependencyGraph getTransitiveDependencies(Artifact artifact)
       throws RepositoryException {
-    // root node
-    DependencyNode node = resolveCompileTimeDependenciesWithoutProvided(artifact, false);
-    return new DependencyGraph(node);
+    DependencyNode root = resolveCompileTimeDependenciesWithoutProvided(artifact, false);
+    return new DependencyGraph(root);
   }
 
   private static final class LevelOrderQueueItem {
