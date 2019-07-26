@@ -50,8 +50,6 @@ import com.google.common.collect.TreeMultimap;
  */
 public class DependencyGraph {
 
-  private final DependencyNode root;
-
   // DependencyGraphBuilder builds this in breadth first order, unless explicitly stated otherwise.
   // That is, this list contains the paths to each node in breadth first order 
   private final List<DependencyPath> graph = new ArrayList<>();
@@ -66,12 +64,9 @@ public class DependencyGraph {
   private SetMultimap<String, DependencyPath> paths = HashMultimap.create();
   
   @VisibleForTesting
-  public DependencyGraph() {
-    root = null;
-  }
+  public DependencyGraph() {}
 
   public DependencyGraph(DependencyNode root) {
-    this.root = root;
     addPaths(root);
   }
 
