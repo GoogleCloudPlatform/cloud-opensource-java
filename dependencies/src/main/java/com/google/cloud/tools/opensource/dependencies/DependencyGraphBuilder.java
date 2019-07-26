@@ -46,8 +46,6 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
  */
 public class DependencyGraphBuilder {
 
-  private static final Logger logger = Logger.getLogger(DependencyGraphBuilder.class.getName());
-
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
   private static final CharMatcher LOWER_ALPHA_NUMERIC =
@@ -154,6 +152,7 @@ public class DependencyGraphBuilder {
   private static DependencyNode resolveCompileTimeDependenciesWithoutProvided(
       Artifact rootDependencyArtifact, boolean completeDependencyTree)
       throws DependencyCollectionException, DependencyResolutionException {
+    // Dashboard's dependency convergence does not need dependencies with provided scope.
     return resolveCompileTimeDependencies(
         ImmutableList.of(rootDependencyArtifact), completeDependencyTree, false);
   }
@@ -189,144 +188,5 @@ public class DependencyGraphBuilder {
       throws RepositoryException {
     DependencyNode root = resolveCompileTimeDependenciesWithoutProvided(artifact, false);
     return new DependencyGraph(root);
-  }
-
-  private static final class LevelOrderQueueItem {
-    final DependencyNode dependencyNode;
-    final Stack<DependencyNode> parentNodes;
-
-    LevelOrderQueueItem(DependencyNode dependencyNode, Stack<DependencyNode> parentNodes) {
-      this.dependencyNode = dependencyNode;
-      this.parentNodes = parentNodes;
-    }
-  }
-
-  private static DependencyGraph levelOrder(DependencyNode node)
-      throws AggregatedRepositoryException {
-    return levelOrder(node, GraphTraversalOption.NONE);
-  }
-
-  private enum GraphTraversalOption {
-    NONE,
-    FULL_DEPENDENCY,
-    FULL_DEPENDENCY_WITH_PROVIDED;
-
-    private boolean resolveFullDependencies() {
-      return this == FULL_DEPENDENCY || this == FULL_DEPENDENCY_WITH_PROVIDED;
-    }
-  }
-
-  /**
-   * Returns a dependency graph by traversing dependency tree in level-order (breadth-first search).
-   *
-   * <p>When {@code graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED, then
-   * it resolves the dependency of the artifact of each node in the dependency tree; otherwise it
-   * just follows the given dependency tree starting with firstNode.
-   *
-   * @param firstNode node to start traversal
-   * @param graphTraversalOption option to recursively resolve the dependency to build complete
-   *     dependency tree, with or without dependencies of provided scope
-   * @throws AggregatedRepositoryException when there are one ore more problems due to {@link
-   *     DependencyCollectionException} or {@link DependencyResolutionException}. This happens only
-   *     when graphTraversalOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
-   */
-  private static DependencyGraph levelOrder(
-      DependencyNode firstNode, GraphTraversalOption graphTraversalOption)
-      throws AggregatedRepositoryException {
-
-    DependencyGraph graph = new DependencyGraph();
-
-    boolean resolveFullDependency = graphTraversalOption.resolveFullDependencies();
-    Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
-    queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
-
-    // Records failures rather than throwing immediately.
-    List<ExceptionAndPath> resolutionFailures = new ArrayList<>();
-
-    while (!queue.isEmpty()) {
-      LevelOrderQueueItem item = queue.poll();
-      DependencyNode dependencyNode = item.dependencyNode;
-      DependencyPath forPath = new DependencyPath();
-      Stack<DependencyNode> parentNodes = item.parentNodes;
-      parentNodes.forEach(parentNode -> forPath.add(parentNode.getArtifact()));
-      if (dependencyNode.getArtifact() != null) {
-        // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
-        // set to null
-        forPath.add(dependencyNode.getArtifact());
-        if (resolveFullDependency && parentNodes.contains(dependencyNode)) {
-          logger.severe(
-              "Infinite recursion resolving "
-                  + dependencyNode
-                  + ". Likely cycle in "
-                  + parentNodes);
-          continue;
-        }
-        parentNodes.push(dependencyNode);
-        graph.addPath(forPath);
-
-        if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
-          Artifact dependencyNodeArtifact = dependencyNode.getArtifact();
-          try {
-            boolean includeProvidedScope =
-                graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
-            dependencyNode =
-                resolveCompileTimeDependenciesWithoutProvided(
-                    dependencyNodeArtifact, includeProvidedScope);
-          } catch (DependencyResolutionException resolutionException) {
-            // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0
-            // has a transitive dependency to org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not
-            // found in Maven central)
-            for (ArtifactResult artifactResult :
-                resolutionException.getResult().getArtifactResults()) {
-              if (artifactResult.getExceptions().isEmpty()) {
-                continue;
-              }
-              DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
-              ExceptionAndPath failure =
-                  ExceptionAndPath.create(parentNodes, failedDependencyNode, resolutionException);
-              if (isUnacceptableResolutionException(failure)) {
-                resolutionFailures.add(failure);
-              }
-            }
-          } catch (DependencyCollectionException collectionException) {
-            DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
-            ExceptionAndPath failure =
-                ExceptionAndPath.create(parentNodes, failedDependencyNode, collectionException);
-            if (isUnacceptableResolutionException(failure)) {
-              resolutionFailures.add(failure);
-            }
-          }
-        }
-      }
-      for (DependencyNode child : dependencyNode.getChildren()) {
-        @SuppressWarnings("unchecked")
-        Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
-        queue.add(new LevelOrderQueueItem(child, clone));
-      }
-    }
-
-    if (!resolutionFailures.isEmpty()) {
-      throw new AggregatedRepositoryException(resolutionFailures);
-    }
-
-    return graph;
-  }
-
-  /**
-   * Returns true if {@code exceptionAndPath.getPath} does not contain {@code optional} dependency
-   * and the path does not contain {@code scope:provided} dependency.
-   */
-  private static boolean isUnacceptableResolutionException(ExceptionAndPath exceptionAndPath) {
-    ImmutableList<DependencyNode> dependencyNodes = exceptionAndPath.getPath();
-    boolean hasOptionalParent =
-        dependencyNodes.stream().anyMatch(node -> node.getDependency().isOptional());
-    if (!hasOptionalParent) {
-      return true;
-    }
-    boolean hasProvidedParent =
-        dependencyNodes
-            .stream()
-            .anyMatch(node -> "provided".equals(node.getDependency().getScope()));
-    return !hasProvidedParent;
   }
 }
