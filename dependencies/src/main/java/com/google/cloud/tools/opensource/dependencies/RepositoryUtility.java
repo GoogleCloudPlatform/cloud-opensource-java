@@ -95,26 +95,6 @@ public final class RepositoryUtility {
   private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
       ImmutableSet.of("file", "http", "https");
 
-  // To exclude log4j-api-java9:zip:2.11.1, which is not published.
-  // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/339
-  private static DependencySelector filteringZipDependencySelector =
-      new DependencySelector() {
-
-        @Override
-        public boolean selectDependency(Dependency dependency) {
-          Artifact artifact = dependency.getArtifact();
-          Map<String, String> properties = artifact.getProperties();
-          // Because LinkageChecker only checks jar file, zip files are not needed
-          return !"zip".equals(properties.get("type"));
-        }
-
-        @Override
-        public DependencySelector deriveChildSelector(
-            DependencyCollectionContext dependencyCollectionContext) {
-          return this;
-        }
-      };
-
   private RepositoryUtility() {}
 
   /**
@@ -156,6 +136,26 @@ public final class RepositoryUtility {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
 
     session.setDependencyGraphTransformer(null);
+
+    // To exclude log4j-api-java9:zip:2.11.1, which is not published.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/339
+    DependencySelector filteringZipDependencySelector =
+        new DependencySelector() {
+
+          @Override
+          public boolean selectDependency(Dependency dependency) {
+            Artifact artifact = dependency.getArtifact();
+            Map<String, String> properties = artifact.getProperties();
+            // Because LinkageChecker only checks jar file, zip files are not needed
+            return !"zip".equals(properties.get("type"));
+          }
+
+          @Override
+          public DependencySelector deriveChildSelector(
+              DependencyCollectionContext dependencyCollectionContext) {
+            return this;
+          }
+        };
 
     String[] excludedScopes =
         includeProvidedScope ? new String[] {"test"} : new String[] {"provided", "test"};
