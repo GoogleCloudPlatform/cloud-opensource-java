@@ -29,12 +29,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.DependencyNode;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.graph.DependencyNode;
 
 /**
  * A representation of the complete non-cyclic transitive dependency tree of a Maven artifact.
