@@ -16,15 +16,11 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.TreeMultimap;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,6 +28,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.SetMultimap;
+import com.google.common.collect.TreeMultimap;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
 
@@ -107,7 +108,7 @@ public class DependencyGraph {
     }
   }
 
-  // TODO(suztomo): Remove this
+  @VisibleForTesting
   void addPath(DependencyPath path) {
     graph.add(path);
     Artifact leaf = path.getLeaf();

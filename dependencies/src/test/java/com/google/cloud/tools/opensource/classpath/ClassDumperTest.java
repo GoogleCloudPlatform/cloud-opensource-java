@@ -320,6 +320,7 @@ public class ClassDumperTest {
     // sisu-guice should not appear in symbol references because guice supersedes in the class path.
     Artifact guice = new DefaultArtifact("com.google.inject:guice:3.0");
     Artifact sisuGuice = new DefaultArtifact("org.sonatype.sisu:sisu-guice:3.2.6");
+    // Artifact guice = new DefaultArtifact("com.google.inject:guice:4.2.1");
     List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(guice, sisuGuice));
     Path sisuGuicePath = paths.get(1);
 
