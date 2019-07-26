@@ -62,7 +62,7 @@ public class DependencyGraph {
   
   // map of groupId:artifactId:version to paths
   private SetMultimap<String, DependencyPath> paths = HashMultimap.create();
-  
+
   @VisibleForTesting
   public DependencyGraph() {}
 
