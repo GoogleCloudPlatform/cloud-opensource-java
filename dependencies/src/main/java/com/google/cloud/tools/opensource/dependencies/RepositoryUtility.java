@@ -77,7 +77,6 @@ import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
-import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
 import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 
 /**
@@ -156,7 +155,7 @@ public final class RepositoryUtility {
       RepositorySystem system, boolean includeProvidedScope) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
 
-    session.setDependencyGraphTransformer(new NoopGraphTransformer());
+    session.setDependencyGraphTransformer(null);
 
     String[] excludedScopes =
         includeProvidedScope ? new String[] {"test"} : new String[] {"provided", "test"};
@@ -165,38 +164,15 @@ public final class RepositoryUtility {
         new AndDependencySelector(
             // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
             // false positive in LinkageChecker.
-            new ScopeDependencySelector(excludedScopes), new ExclusionDependencySelector());
+            new ScopeDependencySelector(excludedScopes),
+            new ExclusionDependencySelector(),
+            filteringZipDependencySelector);
     session.setDependencySelector(dependencySelector);
 
     // Not to control versions in transitive dependencies by managed dependency section
     session.setDependencyManager(null);
 
     session.setReadOnly();
-    return session;
-  }
-
-  /**
-   * Opens a new Maven repository session in the same way as {@link
-   * RepositoryUtility#newSession(RepositorySystem)}, with its dependency selector to include
-   * dependencies with 'provided' scope.
-   */
-  static RepositorySystemSession newSessionWithProvidedScope(RepositorySystem system) {
-    DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
-
-    // This combination of DependencySelector comes from the default specified in
-    // `MavenRepositorySystemUtils.newSession`.
-    // LinkageChecker needs to include 'provided' scope.
-    DependencySelector dependencySelector =
-        new AndDependencySelector(
-            // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
-            // false positive in LinkageChecker.
-            new ScopeDependencySelector("test"),
-            new OptionalDependencySelector(),
-            new ExclusionDependencySelector(),
-            filteringZipDependencySelector);
-    session.setDependencySelector(dependencySelector);
-    session.setReadOnly();
-
     return session;
   }
 

@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.cloud.tools.opensource.dependencies.AggregatedRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
@@ -212,9 +211,11 @@ public class ClassPathBuilderTest {
       ClassPathBuilder.artifactsToClasspath(ImmutableList.of(jamonApiArtifact));
       Assert.fail("ClassPathBuilder should throw exception when it cannot resolve artifacts");
     } catch (DependencyResolutionException ex) {
-      Truth.assertThat(ex.getMessage()).contains("The following artifacts could not be resolved: "
-          + "xerces:xerces-impl:jar:2.6.2, xml-apis:xml-apis:jar:2.6.2, "
-          + "org.jruby:readline:jar:1.0, org.jruby:openssl:jar:0.9.4");
+      Truth.assertThat(ex.getMessage())
+          .contains(
+              "The following artifacts could not be resolved: "
+                  + "xerces:xerces-impl:jar:2.6.2, xml-apis:xml-apis:jar:2.6.2, "
+                  + "org.jruby:readline:jar:1.0, org.jruby:openssl:jar:0.9.4");
     }
   }
 }

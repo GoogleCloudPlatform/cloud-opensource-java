@@ -59,11 +59,11 @@ public class DependencyGraphBuilderTest {
     Assert.assertEquals(paths.size(), noDups.size());
 
     Truth.assertWithMessage("Dependency Management should not control guava version")
-        .that(countGuavaVersion(graph).size())
-        .isGreaterThan(1);
+        .that(countGuavaVersion(graph))
+        .containsExactly("18.0", "19.0", "20.0");
     // This method should find Guava multiple times.
     int guavaCount = countGuava(graph);
-    Assert.assertEquals(31, guavaCount);
+    Assert.assertEquals(29, guavaCount);
   }
 
   private static int countGuava(DependencyGraph graph) {
