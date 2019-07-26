@@ -97,13 +97,6 @@ public class DependencyGraphBuilder {
     }
   }
 
-  private static DependencyNode resolveCompileTimeDependenciesWithoutProvided(
-      Artifact rootDependencyArtifact, boolean completeDependencyTree)
-      throws DependencyCollectionException, DependencyResolutionException {
-    return resolveCompileTimeDependencies(
-        ImmutableList.of(rootDependencyArtifact), completeDependencyTree, false);
-  }
-
   private static DependencyNode resolveCompileTimeDependencies(
       List<Artifact> dependencyArtifacts,
       boolean completeDependencyTree,
@@ -144,18 +137,6 @@ public class DependencyGraphBuilder {
     return node;
   }
 
-  /** Returns the non-transitive compile time dependencies of an artifact. */
-  public static List<Artifact> getDirectDependencies(Artifact artifact) throws RepositoryException {
-
-    List<Artifact> result = new ArrayList<>();
-
-    DependencyNode node = resolveCompileTimeDependenciesWithoutProvided(artifact, false);
-    for (DependencyNode child : node.getChildren()) {
-      result.add(child.getArtifact());
-    }
-    return result;
-  }
-
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
    * versions, and dependencies with 'provided' scope.
@@ -166,8 +147,27 @@ public class DependencyGraphBuilder {
    */
   public static DependencyGraph getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
       throws RepositoryException {
-    DependencyNode node = resolveCompileTimeDependencies(artifacts, true, true);
-    return new DependencyGraph(node);
+    DependencyNode root = resolveCompileTimeDependencies(artifacts, true, true);
+    return new DependencyGraph(root);
+  }
+
+  private static DependencyNode resolveCompileTimeDependenciesWithoutProvided(
+      Artifact rootDependencyArtifact, boolean completeDependencyTree)
+      throws DependencyCollectionException, DependencyResolutionException {
+    return resolveCompileTimeDependencies(
+        ImmutableList.of(rootDependencyArtifact), completeDependencyTree, false);
+  }
+
+  /** Returns the non-transitive compile time dependencies of an artifact. */
+  static List<Artifact> getDirectDependencies(Artifact artifact) throws RepositoryException {
+
+    List<Artifact> result = new ArrayList<>();
+
+    DependencyNode root = resolveCompileTimeDependenciesWithoutProvided(artifact, false);
+    for (DependencyNode child : root.getChildren()) {
+      result.add(child.getArtifact());
+    }
+    return result;
   }
 
   /**
@@ -176,9 +176,8 @@ public class DependencyGraphBuilder {
    */
   public static DependencyGraph getCompleteDependencies(Artifact artifact)
       throws RepositoryException {
-    // root node
-    DependencyNode node = resolveCompileTimeDependenciesWithoutProvided(artifact, true);
-    return new DependencyGraph(node);
+    DependencyNode root = resolveCompileTimeDependenciesWithoutProvided(artifact, true);
+    return new DependencyGraph(root);
   }
 
   /**
@@ -188,9 +187,8 @@ public class DependencyGraphBuilder {
    */
   public static DependencyGraph getTransitiveDependencies(Artifact artifact)
       throws RepositoryException {
-    // root node
-    DependencyNode node = resolveCompileTimeDependenciesWithoutProvided(artifact, false);
-    return new DependencyGraph(node);
+    DependencyNode root = resolveCompileTimeDependenciesWithoutProvided(artifact, false);
+    return new DependencyGraph(root);
   }
 
   private static final class LevelOrderQueueItem {
