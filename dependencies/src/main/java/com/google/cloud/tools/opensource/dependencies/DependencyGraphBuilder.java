@@ -22,14 +22,11 @@ import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -116,7 +113,7 @@ public class DependencyGraphBuilder {
       List<Artifact> dependencyArtifacts, boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
     RepositorySystemSession session = RepositoryUtility.newSessionWithDuplicateArtifacts(system);
-    //RepositorySystemSession session = RepositoryUtility.newSession(system);
+    // RepositorySystemSession session = RepositoryUtility.newSession(system);
 
     CollectRequest collectRequest = new CollectRequest();
 

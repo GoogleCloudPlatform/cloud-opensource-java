@@ -16,8 +16,10 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.graph.Traverser;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.SetMultimap;
+import com.google.common.collect.TreeMultimap;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,13 +32,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.eclipse.aether.artifact.Artifact;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.TreeMultimap;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
@@ -74,25 +70,26 @@ public class DependencyGraph {
 
   public DependencyGraph(DependencyNode root) {
     this.root = root;
-    savePaths(root);
+    addPaths(root);
   }
 
-  private void savePaths(DependencyNode root) {
+  private void addPaths(DependencyNode root) {
     Deque<ArrayDeque<DependencyNode>> queue = new ArrayDeque<>();
     ArrayDeque<DependencyNode> firstItem = new ArrayDeque<>();
     firstItem.add(root);
     queue.add(firstItem);
-    while(!queue.isEmpty()) {
+    while (!queue.isEmpty()) {
       ArrayDeque<DependencyNode> item = queue.remove();
 
       DependencyPath path = new DependencyPath();
-      item.forEach(element -> {
+      item.forEach(
+          element -> {
             if (element.getArtifact() != null) {
               path.add(element.getArtifact());
             }
-          }
-      );
+          });
       if (path.size() > 0) {
+        // Root node may be empty
         addPath(path);
       }
 
@@ -108,11 +105,7 @@ public class DependencyGraph {
         queue.add(copy);
       }
     }
-
-    new DependencyPath();
   }
-
-
 
   // TODO(suztomo): Remove this
   void addPath(DependencyPath path) {

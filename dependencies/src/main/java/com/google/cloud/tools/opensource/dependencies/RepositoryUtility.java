@@ -59,7 +59,6 @@ import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionContext;
-import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
@@ -96,7 +95,6 @@ public final class RepositoryUtility {
   // DefaultTransporterProvider.newTransporter checks these transporters
   private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
       ImmutableSet.of("file", "http", "https");
-
 
   // To exclude log4j-api-java9:zip:2.11.1, which is not published.
   // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/339
@@ -151,21 +149,6 @@ public final class RepositoryUtility {
     return session;
   }
 
-  private static class NoopDependencyManager implements DependencyManager {
-
-    @Override
-    public org.eclipse.aether.collection.DependencyManagement manageDependency(
-        Dependency dependency) {
-      return null;
-    }
-
-    @Override
-    public DependencyManager deriveChildManager(DependencyCollectionContext context) {
-      return this;
-    }
-  }
-
-
   /**
    * Opens a new Maven repository session that allows dependency tree to have duplicate artifacts.
    */
@@ -178,11 +161,10 @@ public final class RepositoryUtility {
         new AndDependencySelector(
             // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
             // false positive in LinkageChecker.
-            new ScopeDependencySelector("provided", "test"),
-            new ExclusionDependencySelector());
+            new ScopeDependencySelector("provided", "test"), new ExclusionDependencySelector());
     session.setDependencySelector(dependencySelector);
 
-
+    session.setDependencyManager(null);
 
     session.setReadOnly();
     return session;

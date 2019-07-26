@@ -24,8 +24,9 @@ import org.eclipse.aether.graph.DependencyNode;
 class NoopGraphTransformer implements DependencyGraphTransformer {
 
   @Override
-  public DependencyNode transformGraph(DependencyNode node,
-      DependencyGraphTransformationContext context) throws RepositoryException {
+  public DependencyNode transformGraph(
+      DependencyNode node, DependencyGraphTransformationContext context)
+      throws RepositoryException {
     return node;
   }
 }
