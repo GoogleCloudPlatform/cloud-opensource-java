@@ -97,23 +97,25 @@ public class DependencyGraphBuilder {
     }
   }
 
-  private static DependencyNode resolveCompileTimeDependencies(Artifact rootDependencyArtifact)
-      throws DependencyCollectionException, DependencyResolutionException {
-    return resolveCompileTimeDependencies(rootDependencyArtifact, false);
-  }
-
-  private static DependencyNode resolveCompileTimeDependencies(
-      Artifact rootDependencyArtifact, boolean includeProvidedScope)
+  private static DependencyNode resolveCompileTimeDependenciesWithoutProvided(
+      Artifact rootDependencyArtifact, boolean completeDependencyTree)
       throws DependencyCollectionException, DependencyResolutionException {
     return resolveCompileTimeDependencies(
-        ImmutableList.of(rootDependencyArtifact), includeProvidedScope);
+        ImmutableList.of(rootDependencyArtifact), completeDependencyTree, false);
   }
 
   private static DependencyNode resolveCompileTimeDependencies(
-      List<Artifact> dependencyArtifacts, boolean includeProvidedScope)
+      List<Artifact> dependencyArtifacts,
+      boolean completeDependencyTree,
+      boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
-    RepositorySystemSession session = RepositoryUtility.newSessionWithDuplicateArtifacts(system);
-    // RepositorySystemSession session = RepositoryUtility.newSession(system);
+
+    RepositorySystemSession session;
+    if (completeDependencyTree) {
+      session = RepositoryUtility.newSessionWithDuplicateArtifacts(system, includeProvidedScope);
+    } else {
+      session = RepositoryUtility.newSession(system);
+    }
 
     CollectRequest collectRequest = new CollectRequest();
 
@@ -147,7 +149,7 @@ public class DependencyGraphBuilder {
 
     List<Artifact> result = new ArrayList<>();
 
-    DependencyNode node = resolveCompileTimeDependencies(artifact);
+    DependencyNode node = resolveCompileTimeDependenciesWithoutProvided(artifact, false);
     for (DependencyNode child : node.getChildren()) {
       result.add(child.getArtifact());
     }
@@ -164,7 +166,7 @@ public class DependencyGraphBuilder {
    */
   public static DependencyGraph getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
       throws RepositoryException {
-    DependencyNode node = resolveCompileTimeDependencies(artifacts, true);
+    DependencyNode node = resolveCompileTimeDependencies(artifacts, true, true);
     return new DependencyGraph(node);
   }
 
@@ -175,7 +177,7 @@ public class DependencyGraphBuilder {
   public static DependencyGraph getCompleteDependencies(Artifact artifact)
       throws RepositoryException {
     // root node
-    DependencyNode node = resolveCompileTimeDependencies(artifact);
+    DependencyNode node = resolveCompileTimeDependenciesWithoutProvided(artifact, true);
     return new DependencyGraph(node);
   }
 
@@ -187,7 +189,7 @@ public class DependencyGraphBuilder {
   public static DependencyGraph getTransitiveDependencies(Artifact artifact)
       throws RepositoryException {
     // root node
-    DependencyNode node = resolveCompileTimeDependencies(artifact);
+    DependencyNode node = resolveCompileTimeDependenciesWithoutProvided(artifact, false);
     return new DependencyGraph(node);
   }
 
@@ -270,7 +272,8 @@ public class DependencyGraphBuilder {
             boolean includeProvidedScope =
                 graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
             dependencyNode =
-                resolveCompileTimeDependencies(dependencyNodeArtifact, includeProvidedScope);
+                resolveCompileTimeDependenciesWithoutProvided(
+                    dependencyNodeArtifact, includeProvidedScope);
           } catch (DependencyResolutionException resolutionException) {
             // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0
             // has a transitive dependency to org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not

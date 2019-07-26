@@ -152,18 +152,23 @@ public final class RepositoryUtility {
   /**
    * Opens a new Maven repository session that allows dependency tree to have duplicate artifacts.
    */
-  public static RepositorySystemSession newSessionWithDuplicateArtifacts(RepositorySystem system) {
+  public static RepositorySystemSession newSessionWithDuplicateArtifacts(
+      RepositorySystem system, boolean includeProvidedScope) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
 
     session.setDependencyGraphTransformer(new NoopGraphTransformer());
+
+    String[] excludedScopes =
+        includeProvidedScope ? new String[] {"test"} : new String[] {"provided", "test"};
 
     DependencySelector dependencySelector =
         new AndDependencySelector(
             // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
             // false positive in LinkageChecker.
-            new ScopeDependencySelector("provided", "test"), new ExclusionDependencySelector());
+            new ScopeDependencySelector(excludedScopes), new ExclusionDependencySelector());
     session.setDependencySelector(dependencySelector);
 
+    // Not to control versions in transitive dependencies by managed dependency section
     session.setDependencyManager(null);
 
     session.setReadOnly();
