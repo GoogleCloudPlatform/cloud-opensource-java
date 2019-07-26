@@ -70,7 +70,6 @@ public class DependencyGraphBuilderTest {
     int guavaCount = 0;
     for (DependencyPath path : graph.list()) {
       if (path.getLeaf().getArtifactId().equals("guava")) {
-        System.out.println(path);
         guavaCount++;
       }
     }
