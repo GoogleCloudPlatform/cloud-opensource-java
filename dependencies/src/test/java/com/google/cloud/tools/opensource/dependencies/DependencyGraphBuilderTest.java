@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Truth;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,6 +58,7 @@ public class DependencyGraphBuilderTest {
     HashSet<DependencyPath> noDups = new HashSet<>(paths);
     Assert.assertEquals(paths.size(), noDups.size());
 
+    Truth.assertThat(countGuavaVersion(graph).size()).isGreaterThan(1);
     // This method should find Guava multiple times.
     int guavaCount = countGuava(graph);
     Assert.assertEquals(31, guavaCount);
@@ -70,6 +72,17 @@ public class DependencyGraphBuilderTest {
       }
     }
     return guavaCount;
+  }
+
+  private static ImmutableSet<String> countGuavaVersion(DependencyGraph graph) {
+    ImmutableSet.Builder<String> versions = ImmutableSet.builder();
+    for (DependencyPath path : graph.list()) {
+      Artifact artifact = path.getLeaf();
+      if (artifact.getArtifactId().equals("guava")) {
+        versions.add(artifact.getVersion());
+      }
+    }
+    return versions.build();
   }
 
   @Test

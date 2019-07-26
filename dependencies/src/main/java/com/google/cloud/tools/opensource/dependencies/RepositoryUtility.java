@@ -59,6 +59,7 @@ import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionContext;
+import org.eclipse.aether.collection.DependencyManager;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
@@ -150,6 +151,20 @@ public final class RepositoryUtility {
     return session;
   }
 
+  private static class NoopDependencyManager implements DependencyManager {
+
+    @Override
+    public org.eclipse.aether.collection.DependencyManagement manageDependency(
+        Dependency dependency) {
+      return null;
+    }
+
+    @Override
+    public DependencyManager deriveChildManager(DependencyCollectionContext context) {
+      return this;
+    }
+  }
+
 
   /**
    * Opens a new Maven repository session that allows dependency tree to have duplicate artifacts.
@@ -166,6 +181,8 @@ public final class RepositoryUtility {
             new ScopeDependencySelector("provided", "test"),
             new ExclusionDependencySelector());
     session.setDependencySelector(dependencySelector);
+
+
 
     session.setReadOnly();
     return session;
