@@ -741,6 +741,26 @@ public class LinkageCheckerTest {
   }
 
   @Test
+  public void testFindSymbolProblems_catchesLinkageError() throws RepositoryException, IOException {
+    // org.eclipse.sisu.inject.Implementations catches LinkageError to detect the availability of
+    // implementation for dependency injection. The tool should not show errors for such classes.
+    List<Path> paths =
+        ClassPathBuilder.artifactsToClasspath(
+            ImmutableList.of(
+                new DefaultArtifact("org.eclipse.sisu:org.eclipse.sisu.inject:0.3.3")));
+
+    LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
+
+    ImmutableSetMultimap<ClassFile, SymbolProblem> problems =
+        linkageChecker.findSymbolProblems().inverse();
+
+    Path sisuJar = paths.get(0);
+    Truth.assertThat(
+            problems.get(new ClassFile(sisuJar, "org.eclipse.sisu.inject.Implementations")))
+        .isEmpty();
+  }
+
+  @Test
   public void testFindSymbolProblems_doesNotCatchNoClassDefFoundError() throws IOException {
     // Checking Firestore jar file without its dependency should have linkage errors
     // Note that FirestoreGrpc.java does not have catch clause of NoClassDefFoundError
