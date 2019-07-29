@@ -36,8 +36,20 @@ Example 2: There are multiple artifacts that provide classes under
     might be used anywhere that is not a servlet. Define these status codes
     yourself or choose a different library to provide them.
 
+In Java 9 and later overlapping classes become compile-time errors when
+named modules are used.
+
 Problems caused by overlapping classes can be extremely difficult to resolve.
-If at all possible, eliminate all but one of the
-overlapping dependencies. Otherwise pay very close attention to which version of
-each overlapping class is chosen. Make sure the project does not depend on any
-behavior or API of the class that is not selected.
+Nonetheless it is critical, especially in Java 9 and later, to eliminate all but one of the
+overlapping dependencies. 
+
+If possible, upgrade all dependencies on the overlapping classes
+to import them only by the same group ID and artifact ID. 
+
+If this isn't possible, for instance because the dependency that imports the renamed
+artifact is unmaintained, then add
+[dependency exclusions](https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html) for all but one of the renamed artifacts
+in your own pom.xml.
+
+
+
