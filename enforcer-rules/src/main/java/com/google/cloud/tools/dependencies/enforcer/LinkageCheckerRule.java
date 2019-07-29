@@ -26,6 +26,7 @@ import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.FilteringZipDependencySelector;
 import com.google.cloud.tools.opensource.dependencies.NonTestDependencySelector;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -218,7 +219,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           new DefaultRepositorySystemSession(session);
       fullDependencyResolutionSession.setDependencySelector(
           new AndDependencySelector(
-              new NonTestDependencySelector(), new ExclusionDependencySelector()));
+              new NonTestDependencySelector(),
+              new ExclusionDependencySelector(),
+              new FilteringZipDependencySelector()));
       DependencyResolutionRequest dependencyResolutionRequest =
           new DefaultDependencyResolutionRequest(mavenProject, fullDependencyResolutionSession);
 
