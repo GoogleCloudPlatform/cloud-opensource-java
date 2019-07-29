@@ -217,7 +217,7 @@ public class LinkageChecker {
       return Optional.of(
           new SymbolProblem(symbol, ErrorType.SYMBOL_NOT_FOUND, containingClassFile));
     } catch (ClassNotFoundException ex) {
-      if (classDumper.catchesNoClassDefFoundError(sourceClassName)) {
+      if (classDumper.catchesLinkageError(sourceClassName)) {
         return Optional.empty();
       }
       ClassSymbol classSymbol = new ClassSymbol(symbol.getClassName());
@@ -263,7 +263,7 @@ public class LinkageChecker {
       return Optional.of(
           new SymbolProblem(symbol, ErrorType.SYMBOL_NOT_FOUND, containingClassFile));
     } catch (ClassNotFoundException ex) {
-      if (classDumper.catchesNoClassDefFoundError(sourceClassName)) {
+      if (classDumper.catchesLinkageError(sourceClassName)) {
         return Optional.empty();
       }
       ClassSymbol classSymbol = new ClassSymbol(symbol.getClassName());
@@ -345,7 +345,7 @@ public class LinkageChecker {
       return Optional.empty();
     } catch (ClassNotFoundException ex) {
       if (classDumper.isUnusedClassSymbolReference(sourceClassName, symbol)
-          || classDumper.catchesNoClassDefFoundError(sourceClassName)) {
+          || classDumper.catchesLinkageError(sourceClassName)) {
         // The class reference is unused in the source
         return Optional.empty();
       }
