@@ -250,22 +250,19 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     } catch (ComponentLookupException e) {
       throw new EnforcerRuleException("Unable to lookup a component " + e.getMessage(), e);
     } catch (DependencyResolutionException e) {
-      Throwable cause = e.getCause();
-      while (cause != null) {
+      Log logger = helper.getLog();
+      for (Throwable cause = e.getCause(); cause != null; cause = cause.getCause()) {
         if (cause instanceof ArtifactTransferException) {
           ArtifactTransferException artifactException = (ArtifactTransferException) cause;
           Artifact artifact = artifactException.getArtifact();
           DependencyNode dependencyGraph = e.getResult().getDependencyGraph();
           String pathsToArtifact = findPaths(dependencyGraph, artifact);
-          Log logger = helper.getLog();
           logger.error("Could not get artifact " + artifact);
           logger.error(
               "Check dependencies of "
                   + findDependent(dependencyGraph, Artifacts.toCoordinates(artifact)));
-          logger.error("Path to the missing artifact: " + pathsToArtifact);
+          logger.error("Paths to the missing artifact: " + pathsToArtifact);
           break;
-        } else {
-          cause = cause.getCause();
         }
       }
       throw new EnforcerRuleException("Unable to build a dependency graph: " + e.getMessage(), e);
@@ -292,16 +289,24 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   private static String findPaths(DependencyNode root, Artifact artifact) {
-    ImmutableList.Builder<ImmutableList<DependencyNode>> result = ImmutableList.builder();
-
-    Deque<DependencyNode> stack = new ArrayDeque<>();
-    stack.addLast(root);
-    findArtifact(result, root, stack, artifact);
+    ImmutableList<ImmutableList<DependencyNode>> dependencyPaths =
+        findArtifactPaths(root, artifact);
 
     ImmutableList<String> paths =
-        result.build().stream().map(path -> Joiner.on(" > ").join(path)).collect(toImmutableList());
-    // Joining one or more paths to the artifact
+        dependencyPaths.stream()
+            .map(path -> Joiner.on(" > ").join(path))
+            .collect(toImmutableList());
+    // Joining one or more paths from root to the artifact
     return Joiner.on("\n").join(paths);
+  }
+
+  private static ImmutableList<ImmutableList<DependencyNode>> findArtifactPaths(
+      DependencyNode node, Artifact artifact) {
+    Deque<DependencyNode> stack = new ArrayDeque<>();
+    stack.addLast(node);
+    ImmutableList.Builder<ImmutableList<DependencyNode>> builder = ImmutableList.builder();
+    findArtifact(builder, node, stack, artifact);
+    return builder.build();
   }
 
   private static void findArtifact(

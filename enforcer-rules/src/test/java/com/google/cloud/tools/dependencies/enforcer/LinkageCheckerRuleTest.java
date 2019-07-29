@@ -412,7 +412,7 @@ public class LinkageCheckerRuleTest {
       verify(mockLog).error("Check dependencies of com.google.inject:guice:jar:no_aop:4.0");
       verify(mockLog)
           .error(
-              "Path to the missing artifact: com.google.guava:guava:jar:28.0-android > "
+              "Paths to the missing artifact: com.google.guava:guava:jar:28.0-android > "
                   + "org.apache.maven:maven-core:jar:3.5.2 (compile) > "
                   + "com.google.inject:guice:jar:no_aop:4.0 (compile) > "
                   + "aopalliance:aopalliance:jar:1.0 (compile)");
