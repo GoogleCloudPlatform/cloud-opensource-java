@@ -12,9 +12,10 @@ For example, if the class `com.google.i18n.Localization` is in the artifact
 and `com.google.i18n.Characters` must also be in the artifact
 `com.google.i18n:i18n-utilities`.
 
-This rule does not apply to subpackages. It is acceptable for
-`com.google.i18n.charactersets.Latin1` to have different Maven coordinates
-than `com.google.i18n.Localization`; for example, `com.google.foo:i18n-charactersets`.
+It is acceptable for a package and its subpackage to have different Maven coordinates.
+For example, `com.google.i18n.Localization` can be in the artifact
+`com.google.i18n:i18n-utilities` while `com.google.i18n.charactersets.Latin1` is in
+`com.google.foo:i18n-charactersets`.
 It is also acceptable to publish classes from both `com.google.i18n` and
 `com.google.i18n.charactersets` under the same group ID and artifact ID.
 Similarly, it is fine to include completely different packages such as
