@@ -257,7 +257,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           Artifact artifact = artifactException.getArtifact();
           DependencyNode dependencyRoot = e.getResult().getDependencyGraph();
           String pathsToArtifact = findPaths(dependencyRoot, artifact);
-          logger.error("Could not get artifact " + artifact);
+          logger.error("Could not find artifact " + artifact);
           logger.error("Paths to the missing artifact: " + pathsToArtifact);
           break;
         }
