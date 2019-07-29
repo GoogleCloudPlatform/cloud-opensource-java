@@ -30,7 +30,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.execution.DefaultMavenExecutionRequest;
@@ -58,7 +57,6 @@ import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
@@ -137,26 +135,6 @@ public final class RepositoryUtility {
   static RepositorySystemSession newSessionWithProvidedScope(RepositorySystem system) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
 
-    // To exclude log4j-api-java9:zip:2.11.1, which is not published.
-    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/339
-    DependencySelector filteringZipDependencySelector =
-        new DependencySelector() {
-
-          @Override
-          public boolean selectDependency(Dependency dependency) {
-            Artifact artifact = dependency.getArtifact();
-            Map<String, String> properties = artifact.getProperties();
-            // Because LinkageChecker only checks jar file, zip files are not needed
-            return !"zip".equals(properties.get("type"));
-          }
-
-          @Override
-          public DependencySelector deriveChildSelector(
-              DependencyCollectionContext dependencyCollectionContext) {
-            return this;
-          }
-        };
-
     // This combination of DependencySelector comes from the default specified in
     // `MavenRepositorySystemUtils.newSession`.
     // LinkageChecker needs to include 'provided' scope.
@@ -167,7 +145,7 @@ public final class RepositoryUtility {
             new ScopeDependencySelector("test"),
             new OptionalDependencySelector(),
             new ExclusionDependencySelector(),
-            filteringZipDependencySelector);
+            new FilteringZipDependencySelector());
     session.setDependencySelector(dependencySelector);
     session.setReadOnly();
 
