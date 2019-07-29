@@ -13,8 +13,8 @@ with different group IDs or different artifact IDs,
 it is easy to construct a classpath that
 splits packages. This is a problem even if individual classes
 do not overlap. For example, the google-cloud-vision Java API client
-places compiled protobufs in `com.google.api.grpc:proto-google-cloud-vision-v1`
-and hand written code in `com.google.api.grpc:google-cloud-vision-v1`.
+places protobufs in `com.google.api.grpc:proto-google-cloud-vision-v1`
+and gRPC stubs in `com.google.api.grpc:grpc-google-cloud-vision-v1`.
 Since both artifacts contain classes in the `com.google.cloud.vision.v1` package,
 these two artifacts cannot be used together after Java 8.
 
