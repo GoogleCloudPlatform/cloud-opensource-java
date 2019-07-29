@@ -80,6 +80,7 @@
       <groupId>org.apache.maven.enforcer</groupId>
       <artifactId>enforcer-api</artifactId>
       <version>${enforcer.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.enforcer</groupId>
@@ -104,10 +105,12 @@
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-api</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-core</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
