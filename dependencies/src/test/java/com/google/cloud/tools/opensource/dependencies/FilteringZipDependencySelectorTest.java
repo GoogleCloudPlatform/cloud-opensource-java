@@ -29,7 +29,7 @@ import org.junit.Test;
 
 public class FilteringZipDependencySelectorTest {
 
-  private FilteringZipDependencySelector selector = new FilteringZipDependencySelector();
+  private final FilteringZipDependencySelector selector = new FilteringZipDependencySelector();
 
   @Test
   public void testDeriveChildSelector() {
@@ -39,16 +39,14 @@ public class FilteringZipDependencySelectorTest {
 
   @Test
   public void testFilteringZip() {
-    Artifact artifact =
-        new DefaultArtifact(
-            "org.apache.logging.log4j:log4j-api-java9:zip:2.11.1", ImmutableMap.of("type", "zip"));
+    Artifact artifact = new DefaultArtifact("test:dummy:zip:1.0.0", ImmutableMap.of("type", "zip"));
     Dependency dependency = new Dependency(artifact, "compile");
     assertFalse(selector.selectDependency(dependency));
   }
 
   @Test
   public void testFilteringNonZip() {
-    Artifact artifact = new DefaultArtifact("com.google.guava", "guava", "jar", "28.0-android");
+    Artifact artifact = new DefaultArtifact("test", "dummy", "jar", "1.0.0");
     Dependency dependency = new Dependency(artifact, "compile");
     assertTrue(selector.selectDependency(dependency));
   }
