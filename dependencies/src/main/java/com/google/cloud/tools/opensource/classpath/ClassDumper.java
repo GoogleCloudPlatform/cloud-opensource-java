@@ -478,11 +478,14 @@ class ClassDumper {
     return constantPoolIndicesForTarget.build();
   }
 
+  private static final ImmutableSet<String> ERRORS_CAUGHT_IN_SOURCE =
+      ImmutableSet.of(NoClassDefFoundError.class.getName(), LinkageError.class.getName());
+
   /**
-   * Returns true if {@code sourceClassName} has a method that has an exception
-   * handler for {@link NoClassDefFoundError}.
+   * Returns true if {@code sourceClassName} has a method that has an exception handler for {@link
+   * NoClassDefFoundError} or {@link LinkageError}.
    */
-  boolean catchesNoClassDefFoundError(String sourceClassName) {
+  boolean catchesLinkageError(String sourceClassName) {
     try {
       JavaClass sourceJavaClass = loadJavaClass(sourceClassName);
       ClassGen classGen = new ClassGen(sourceJavaClass);
@@ -496,11 +499,19 @@ class ClassDumper {
             continue;
           }
           String caughtClassName = catchType.getClassName();
-          if (NoClassDefFoundError.class.getName().equals(caughtClassName)) {
-            // NoClassDefFoundError is caught in the source class
+          if (ERRORS_CAUGHT_IN_SOURCE.contains(caughtClassName)) {
+            // The source class catches an error and thus will not cause a runtime error
             return true;
           }
         }
+      }
+
+      String outerClassName = outerClassName(sourceJavaClass);
+      if (outerClassName != null) {
+        return catchesLinkageError(outerClassName);
+      } else {
+        // The source class does not have a method that catches NoClassDefFoundError
+        return false;
       }
     } catch (ClassNotFoundException ex) {
       // Because the reference in the argument was extracted from the source class file,
@@ -508,9 +519,37 @@ class ClassDumper {
       throw new ClassFormatException(
           "The source class in the reference is no longer available in the class path", ex);
     }
+  }
 
-    // The source class does not have a method that catches NoClassDefFoundError
-    return false;
+  private static String outerClassName(JavaClass sourceJavaClass) {
+    ConstantPool constantPool = sourceJavaClass.getConstantPool();
+    if (sourceJavaClass.isNested()) {
+      for (Attribute attribute : sourceJavaClass.getAttributes()) {
+        if (attribute instanceof InnerClasses) {
+          InnerClasses innerClasses = (InnerClasses) attribute;
+          for (InnerClass innerClass : innerClasses.getInnerClasses()) {
+            // Some auto-generated classes may not have correct inner class entries,
+            // for example com.google.inject.internal.cglib.core.$DebuggingClassWriter.java
+            if (innerClass.getInnerClassIndex() <= 0 || innerClass.getOuterClassIndex() <= 0) {
+              continue;
+            }
+            // Class names in constant pool has '/' as separator
+            String innerClassName =
+                constantPool
+                    .getConstantString(innerClass.getInnerClassIndex(), Const.CONSTANT_Class)
+                    .replaceAll("/", ".");
+            String outerClassName =
+                constantPool
+                    .getConstantString(innerClass.getOuterClassIndex(), Const.CONSTANT_Class)
+                    .replaceAll("/", ".");
+            if (innerClassName.equals(sourceJavaClass.getClassName())) {
+              return outerClassName;
+            }
+          }
+        }
+      }
+    }
+    return null;
   }
 
   /**
