@@ -22,8 +22,8 @@ import org.eclipse.aether.collection.DependencyCollectionContext;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 
-/** Filters artifacts with {@code zip} type. */
-public class FilteringZipDependencySelector implements DependencySelector {
+/** Excludes artifacts with {@code zip} type. */
+public final class FilteringZipDependencySelector implements DependencySelector {
   // To exclude log4j-api-java9:zip:2.11.1, which is not published.
   // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/339
 
