@@ -18,7 +18,7 @@
     <dependency>
       <groupId>com.google.cloud.tools</groupId>
       <artifactId>dependencies</artifactId>
-      <version>0.2.4-SNAPSHOT</version>
+      <version>0.2.4</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
