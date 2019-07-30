@@ -36,8 +36,14 @@ Example 2: There are multiple artifacts that provide classes under
     might be used anywhere that is not a servlet. Define these status codes
     yourself or choose a different library to provide them.
 
-Problems caused by overlapping classes can be extremely difficult to resolve.
-If at all possible, eliminate all but one of the
-overlapping dependencies. Otherwise pay very close attention to which version of
-each overlapping class is chosen. Make sure the project does not depend on any
-behavior or API of the class that is not selected.
+In Java 9 and later overlapping classes become compile-time and runtime errors when
+named modules are used. It is critical, especially in Java 9 and later,
+to remove all but one of the artifacts that contain overlapping classes from the classpath.
+Generally this requires changing the POMs of multiple Maven artifacts so they no 
+longer include any dependencies on the artifacts you need to remove from your
+project's classpath.
+
+If this isn't possible, for instance because a dependency that imports an undesired
+artifact is unmaintained, then add
+[dependency exclusions](https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html)
+for the artifacts you wish to remove in your own project's pom.xml.
