@@ -3,8 +3,11 @@
 
 Each Java package such as `com.google.i18n` should
 appear in a single jar file in the classpath.
+All classes from the same Java package must be in one and only
+one jar file in the classpath.
 In Java 9 and later splitting the classes in a package across
-more than one jar file can be a compile time error.
+more than one jar file is a compile time error when those classes are
+imported from a named module.
 In OSGI environments such as Eclipse plugins, split packages
 can lead to nondeterministic behavior.
 
