@@ -18,7 +18,7 @@ repository system, library B needs two identifiers to find classes in library A:
    which is formed from Maven artifacts and possibly non-Maven sources, is
    searched for each fully-qualified class name at runtime.
 
-When breaking changes are introduced to library between major version 1 and
+When breaking changes are introduced to a library between major version 1 and
 major version 2, a choice needs to be made: to rename or not rename? This
 question applies to both items listed above, the Maven ID (1) and the Java
 package (2).
@@ -26,6 +26,7 @@ package (2).
 Recommendations:
 
 - When making a breaking change, take one of the following approaches:
+
   1. If the new library surface is delivered under a new Java package, either
      use a different Maven ID (different group ID or artifact ID) or bundle the
      old and new packages together under the original Maven ID.
