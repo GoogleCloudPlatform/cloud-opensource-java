@@ -38,12 +38,12 @@ Example 2: There are multiple artifacts that provide classes under
 
 In Java 9 and later overlapping classes become compile-time and runtime errors when
 named modules are used. It is critical, especially in Java 9 and later,
-to remove all but one of the overlapping classes from the classpath.
+to remove all but one of the artifacts that contain overlapping classes from the classpath.
+Generally this requires changing the POMs of multiple Maven artifacts so they no 
+longer include any dependencies on the artifacts you need to remove from your
+project's classpath.
 
-If possible, upgrade all dependencies on the overlapping classes
-to import them only by the same group ID and artifact ID.
-
-If this isn't possible, for instance because a dependency that imports the
-renamed artifact is unmaintained, then add
-[dependency exclusions](https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html) for all but one of the renamed artifacts
-in your own pom.xml.
+If this isn't possible, for instance because a dependency that imports an undesired
+artifact is unmaintained, then add
+[dependency exclusions](https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html)
+for the artifacts you wish to remove in your own project's pom.xml.
