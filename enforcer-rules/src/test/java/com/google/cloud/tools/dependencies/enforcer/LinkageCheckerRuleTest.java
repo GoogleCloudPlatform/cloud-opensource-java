@@ -190,7 +190,9 @@ public class LinkageCheckerRuleTest {
     ArgumentCaptor<DependencyResolutionRequest> argumentCaptor =
         ArgumentCaptor.forClass(DependencyResolutionRequest.class);
     verify(mockProjectDependenciesResolver).resolve(argumentCaptor.capture());
-    Truth.assertThat(argumentCaptor.getValue().getRepositorySession().getSystemProperties())
+    Truth.assertWithMessage(
+            "RepositorySystemSession should have variables defined in os-maven-plugin")
+        .that(argumentCaptor.getValue().getRepositorySession().getSystemProperties())
         .containsAtLeastEntriesIn(DependencyGraphBuilder.detectOsProperties());
   }
 
@@ -435,5 +437,4 @@ public class LinkageCheckerRuleTest {
                   + "aopalliance:aopalliance:jar:1.0 (compile)");
     }
   }
-
 }
