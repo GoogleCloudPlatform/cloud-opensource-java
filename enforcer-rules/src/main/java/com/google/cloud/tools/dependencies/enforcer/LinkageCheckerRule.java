@@ -40,7 +40,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
@@ -220,8 +222,10 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           new DefaultRepositorySystemSession(session);
 
       // For netty-handler referencing its dependencies with ${os.detected.classifier}
-      fullDependencyResolutionSession.setSystemProperties(
-          DependencyGraphBuilder.detectOsProperties());
+      Map<String, String> properties = new HashMap<>(); // allowing duplicate entries
+      properties.putAll(fullDependencyResolutionSession.getSystemProperties());
+      properties.putAll(DependencyGraphBuilder.detectOsProperties());
+      fullDependencyResolutionSession.setSystemProperties(properties);
 
       fullDependencyResolutionSession.setDependencySelector(
           new AndDependencySelector(
