@@ -479,11 +479,14 @@ class ClassDumper {
   }
 
   private static final ImmutableSet<String> ERRORS_CAUGHT_IN_SOURCE =
-      ImmutableSet.of(NoClassDefFoundError.class.getName(), LinkageError.class.getName());
+      ImmutableSet.of(
+          NoClassDefFoundError.class.getName(),
+          LinkageError.class.getName(),
+          NoSuchMethodError.class.getName());
 
   /**
    * Returns true if {@code sourceClassName} has a method that has an exception handler for {@link
-   * NoClassDefFoundError} or {@link LinkageError}.
+   * NoClassDefFoundError}, {@link NoSuchMethodError} or {@link LinkageError}.
    */
   boolean catchesLinkageError(String sourceClassName) {
     try {
