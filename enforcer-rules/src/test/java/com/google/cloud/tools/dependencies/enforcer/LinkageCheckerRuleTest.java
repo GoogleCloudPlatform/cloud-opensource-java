@@ -25,9 +25,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule.DependencySection;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.graph.Traverser;
+import com.google.common.truth.Truth;
 import java.net.URISyntaxException;
 import java.net.URLClassLoader;
 import java.nio.file.Paths;
@@ -64,6 +66,7 @@ import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 
 public class LinkageCheckerRuleTest {
@@ -174,6 +177,21 @@ public class LinkageCheckerRuleTest {
     // This should not raise an EnforcerRuleException
     rule.execute(mockRuleHelper);
     verify(mockLog).info("No error found");
+  }
+
+  @Test
+  public void testExecute_shouldPassGoodProject_sessionProperties()
+      throws EnforcerRuleException, RepositoryException, URISyntaxException,
+          DependencyResolutionException {
+    setupMockDependencyResolution("com.google.guava:guava:27.0.1-jre");
+
+    rule.execute(mockRuleHelper);
+
+    ArgumentCaptor<DependencyResolutionRequest> argumentCaptor =
+        ArgumentCaptor.forClass(DependencyResolutionRequest.class);
+    verify(mockProjectDependenciesResolver).resolve(argumentCaptor.capture());
+    Truth.assertThat(argumentCaptor.getValue().getRepositorySession().getSystemProperties())
+        .containsAtLeastEntriesIn(DependencyGraphBuilder.detectOsProperties());
   }
 
   @Test
@@ -417,4 +435,5 @@ public class LinkageCheckerRuleTest {
                   + "aopalliance:aopalliance:jar:1.0 (compile)");
     }
   }
+
 }

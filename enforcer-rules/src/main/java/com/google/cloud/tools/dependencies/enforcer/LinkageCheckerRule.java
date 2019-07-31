@@ -26,6 +26,7 @@ import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.FilteringZipDependencySelector;
 import com.google.cloud.tools.opensource.dependencies.NonTestDependencySelector;
 import com.google.common.annotations.VisibleForTesting;
@@ -217,6 +218,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           helper.getComponent(ProjectDependenciesResolver.class);
       DefaultRepositorySystemSession fullDependencyResolutionSession =
           new DefaultRepositorySystemSession(session);
+
+      // For netty-handler referencing its dependencies with ${os.detected.classifier}
+      fullDependencyResolutionSession.setSystemProperties(
+          DependencyGraphBuilder.detectOsProperties());
+
       fullDependencyResolutionSession.setDependencySelector(
           new AndDependencySelector(
               new NonTestDependencySelector(),
