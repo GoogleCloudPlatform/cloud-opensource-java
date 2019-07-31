@@ -480,8 +480,8 @@ class ClassDumper {
 
   private static final ImmutableSet<String> ERRORS_CAUGHT_IN_SOURCE =
       ImmutableSet.of(
-          NoClassDefFoundError.class.getName(),
           LinkageError.class.getName(),
+          NoClassDefFoundError.class.getName(),
           NoSuchMethodError.class.getName());
 
   /**

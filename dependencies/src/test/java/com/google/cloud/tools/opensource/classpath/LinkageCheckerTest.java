@@ -172,7 +172,7 @@ public class LinkageCheckerTest {
     // There is no such method on ClassToInstanceMap
     Optional<SymbolProblem> problemFound =
         linkageChecker.findSymbolProblem(
-            new ClassFile(paths.get(0), LinkageCheckerTest.class.getName()),
+            new ClassFile(guavaPath, "com.google.common.collect.ImmutableList"),
             new MethodSymbol(
                 "com.google.common.collect.ClassToInstanceMap",
                 "noSuchMethod",
@@ -686,7 +686,8 @@ public class LinkageCheckerTest {
     List<Path> pathsForJarWithVersion65First =
         Lists.newArrayList(
             absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"),
-            absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"));
+            absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"),
+            firestorePath);
     pathsForJarWithVersion65First.addAll(firestoreDependencies);
 
     LinkageChecker linkageChecker65First =
@@ -697,7 +698,8 @@ public class LinkageCheckerTest {
     List<Path> pathsForJarWithVersion66First =
         Lists.newArrayList(
             absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"),
-            absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"));
+            absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"),
+            firestorePath);
     pathsForJarWithVersion66First.addAll(firestoreDependencies);
     LinkageChecker linkageChecker66First =
         LinkageChecker.create(
@@ -706,7 +708,7 @@ public class LinkageCheckerTest {
 
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
 
-    ClassFile source = new ClassFile(firestorePath, LinkageCheckerTest.class.getName());
+    ClassFile source = new ClassFile(firestorePath, "com.google.firestore.v1beta1.FirestoreGrpc");
 
     builder.addMethodReference(
         source,
