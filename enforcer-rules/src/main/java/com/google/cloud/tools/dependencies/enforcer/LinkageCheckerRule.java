@@ -32,7 +32,6 @@ import com.google.cloud.tools.opensource.dependencies.NonTestDependencySelector;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.graph.Traverser;
@@ -41,7 +40,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
@@ -221,10 +222,10 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           new DefaultRepositorySystemSession(session);
 
       // For netty-handler referencing its dependencies with ${os.detected.classifier}
-      ImmutableMap.Builder<Object, Object> properties = ImmutableMap.builder();
+      Map<String, String> properties = new HashMap<>(); // allowing duplicate entries
       properties.putAll(fullDependencyResolutionSession.getSystemProperties());
       properties.putAll(DependencyGraphBuilder.detectOsProperties());
-      fullDependencyResolutionSession.setSystemProperties(properties.build());
+      fullDependencyResolutionSession.setSystemProperties(properties);
 
       fullDependencyResolutionSession.setDependencySelector(
           new AndDependencySelector(

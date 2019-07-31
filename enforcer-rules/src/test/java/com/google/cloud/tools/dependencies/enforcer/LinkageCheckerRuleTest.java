@@ -197,7 +197,7 @@ public class LinkageCheckerRuleTest {
             "RepositorySystemSession should have variables such as os.detected.classifier")
         .that(propertiesUsedInSession)
         .containsAtLeastEntriesIn(DependencyGraphBuilder.detectOsProperties());
-    // There was a problem in resolving profiles because property object was replaced (#817)
+    // There was a problem in resolving profiles because original properties were missing (#817)
     Truth.assertWithMessage("RepositorySystemSession should have original properties")
         .that(propertiesUsedInSession)
         .containsAtLeastEntriesIn(repositorySystemSession.getSystemProperties());
