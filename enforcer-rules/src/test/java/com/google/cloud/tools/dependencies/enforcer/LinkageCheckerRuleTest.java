@@ -191,7 +191,7 @@ public class LinkageCheckerRuleTest {
         ArgumentCaptor.forClass(DependencyResolutionRequest.class);
     verify(mockProjectDependenciesResolver).resolve(argumentCaptor.capture());
     Truth.assertWithMessage(
-            "RepositorySystemSession should have variables defined in os-maven-plugin")
+            "RepositorySystemSession should have variables such as os.detected.classifier")
         .that(argumentCaptor.getValue().getRepositorySession().getSystemProperties())
         .containsAtLeastEntriesIn(DependencyGraphBuilder.detectOsProperties());
   }
