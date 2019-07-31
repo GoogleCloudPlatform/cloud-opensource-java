@@ -1,13 +1,11 @@
 [JLBP-19] Place each package in only one module
 --------------------------------------------------
 
-Each Java package such as `com.google.i18n` should
-appear in a single JAR file in the classpath.
 All classes from the same Java package must be in one and only
 one JAR file in the classpath.
 In Java 9 and later splitting the classes in a package across
-more than one JAR file is a compile time error when those classes are
-imported from a named module.
+more than one JAR file causes a compile time error when those classes are
+required in module-info.java.
 In OSGI environments such as Eclipse plugins, split packages
 can lead to nondeterministic behavior.
 
@@ -22,7 +20,7 @@ Since both artifacts contain classes in the `com.google.cloud.vision.v1` package
 these two artifacts cannot be used together after Java 8.
 
 All classes from a single package, whatever its sources, should
-be published with a single Maven group ID and artifact ID.
+be published in a single Maven module with one group ID and one artifact ID.
 Do not publish different classes in the same package in separate
 Maven artifacts with different group IDs or artifact IDs.
 
@@ -36,9 +34,9 @@ For example, `com.google.i18n.Localization` can be in the artifact
 `com.google.i18n:i18n-utilities` while `com.google.i18n.charactersets.Latin1` is in
 `com.google.foo:i18n-charactersets`.
 
-It is also acceptable to publish classes from both `com.google.i18n` and
-`com.google.i18n.charactersets` under the same group ID and artifact ID.
-Similarly, it is fine to bundle completely different packages such as
+It is also acceptable to bundle classes from both `com.google.i18n` and
+`com.google.i18n.charactersets` in a single Maven module.
+Similarly, it is fine to combine completely different packages such as
 `com.google.foo` and `org.example.bar` in the same JAR with the same group ID and artifact ID.
 However, once any class from a package has been published under a certain
 group ID and artifact ID, no other class in that package should ever use
