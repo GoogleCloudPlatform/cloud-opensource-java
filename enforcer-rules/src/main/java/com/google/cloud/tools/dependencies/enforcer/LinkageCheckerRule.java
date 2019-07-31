@@ -32,6 +32,7 @@ import com.google.cloud.tools.opensource.dependencies.NonTestDependencySelector;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.graph.Traverser;
@@ -220,8 +221,10 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           new DefaultRepositorySystemSession(session);
 
       // For netty-handler referencing its dependencies with ${os.detected.classifier}
-      fullDependencyResolutionSession.setSystemProperties(
-          DependencyGraphBuilder.detectOsProperties());
+      ImmutableMap.Builder<Object, Object> properties = ImmutableMap.builder();
+      properties.putAll(fullDependencyResolutionSession.getSystemProperties());
+      properties.putAll(DependencyGraphBuilder.detectOsProperties());
+      fullDependencyResolutionSession.setSystemProperties(properties.build());
 
       fullDependencyResolutionSession.setDependencySelector(
           new AndDependencySelector(

@@ -34,6 +34,7 @@ import java.net.URISyntaxException;
 import java.net.URLClassLoader;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
@@ -190,10 +191,16 @@ public class LinkageCheckerRuleTest {
     ArgumentCaptor<DependencyResolutionRequest> argumentCaptor =
         ArgumentCaptor.forClass(DependencyResolutionRequest.class);
     verify(mockProjectDependenciesResolver).resolve(argumentCaptor.capture());
+    Map<String, String> propertiesUsedInSession =
+        argumentCaptor.getValue().getRepositorySession().getSystemProperties();
     Truth.assertWithMessage(
             "RepositorySystemSession should have variables such as os.detected.classifier")
-        .that(argumentCaptor.getValue().getRepositorySession().getSystemProperties())
+        .that(propertiesUsedInSession)
         .containsAtLeastEntriesIn(DependencyGraphBuilder.detectOsProperties());
+    // There was a problem in resolving profiles because property object was replaced (#817)
+    Truth.assertWithMessage("RepositorySystemSession should have original properties")
+        .that(propertiesUsedInSession)
+        .containsAtLeastEntriesIn(repositorySystemSession.getSystemProperties());
   }
 
   @Test
