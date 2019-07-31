@@ -20,6 +20,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,22 +58,25 @@ public class DependencyGraphBuilder {
       CharMatcher.inRange('a', 'z').or(CharMatcher.inRange('0', '9'));
 
   static {
-    setDetectedOsSystemProperties();
+    detectOsProperties().forEach(System::setProperty);
   }
 
   // caching cuts time by about a factor of 4.
   private static final Map<String, DependencyNode> cacheWithProvidedScope = new HashMap<>();
   private static final Map<String, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
 
-  private static void setDetectedOsSystemProperties() {
+  public static ImmutableMap<String, String> detectOsProperties() {
     // System properties to select Netty dependencies through os-maven-plugin
     // Definition of the properties: https://github.com/trustin/os-maven-plugin
-
     String osDetectedName = osDetectedName();
-    System.setProperty("os.detected.name", osDetectedName);
     String osDetectedArch = osDetectedArch();
-    System.setProperty("os.detected.arch", osDetectedArch);
-    System.setProperty("os.detected.classifier", osDetectedName + "-" + osDetectedArch);
+    return ImmutableMap.of(
+        "os.detected.name",
+        osDetectedName,
+        "os.detected.arch",
+        osDetectedArch,
+        "os.detected.classifier",
+        osDetectedName + "-" + osDetectedArch);
   }
 
   private static String osDetectedName() {
