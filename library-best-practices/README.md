@@ -18,7 +18,7 @@ or significantly changed before the set is classified as Beta.
 
 - [JLBP-1](JLBP-1.md): Minimize dependencies
 - [JLBP-2](JLBP-2.md): Minimize API surface
-- [JLBP-3](JLBP-3.md): Use Semantic versioning
+- [JLBP-3](JLBP-3.md): Use semantic versioning
 - [JLBP-4](JLBP-4.md): Avoid dependencies on unstable libraries and features
 - [JLBP-5](JLBP-5.md): Avoid dependencies that overlap classes with other
   dependencies
@@ -37,4 +37,4 @@ or significantly changed before the set is classified as Beta.
   consumers
 - [JLBP-17](JLBP-17.md): Coordinate Rollout of Breaking Changes
 - [JLBP-18](JLBP-18.md): Only shade dependencies as a last resort
-- [JLBP-19](JLBP-19.md): Place each package in a single jar
+- [JLBP-19](JLBP-19.md): Place each package in only one module

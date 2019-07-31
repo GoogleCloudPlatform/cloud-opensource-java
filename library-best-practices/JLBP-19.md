@@ -1,12 +1,12 @@
-[JLBP-19] Place each package in a single jar
+[JLBP-19] Place each package in only one module
 --------------------------------------------------
 
 Each Java package such as `com.google.i18n` should
-appear in a single jar file in the classpath.
+appear in a single JAR file in the classpath.
 All classes from the same Java package must be in one and only
-one jar file in the classpath.
+one JAR file in the classpath.
 In Java 9 and later splitting the classes in a package across
-more than one jar file is a compile time error when those classes are
+more than one JAR file is a compile time error when those classes are
 imported from a named module.
 In OSGI environments such as Eclipse plugins, split packages
 can lead to nondeterministic behavior.
@@ -39,7 +39,7 @@ For example, `com.google.i18n.Localization` can be in the artifact
 It is also acceptable to publish classes from both `com.google.i18n` and
 `com.google.i18n.charactersets` under the same group ID and artifact ID.
 Similarly, it is fine to bundle completely different packages such as
-`com.google.foo` and `org.example.bar` in the same jar with the same group ID and artifact ID.
+`com.google.foo` and `org.example.bar` in the same JAR with the same group ID and artifact ID.
 However, once any class from a package has been published under a certain
 group ID and artifact ID, no other class in that package should ever use
 a different group ID or artifact ID.
@@ -47,4 +47,4 @@ a different group ID or artifact ID.
 Finally, it is acceptable to publish the same package in Maven artifacts with
 different versions as long as the group ID and artifact ID remain the same.
 The Maven or Gradle dependency mediation algorithms ensure that no more than one
-such jar is added to the classpath.
+such JAR is added to the classpath.
