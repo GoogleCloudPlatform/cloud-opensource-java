@@ -70,7 +70,8 @@ public class MaximumLinkageErrorsTest {
       ImmutableSet<ClassFile> currentReferences = currentProblems.get(problem);
       SetView<ClassFile> newReferences = Sets.difference(currentReferences, oldReferences);
       if (!newReferences.isEmpty()) {
-        StringBuilder message = new StringBuilder("Newly introduced classes linking to " + problem + ":\n");
+        StringBuilder message =
+            new StringBuilder("Newly introduced classes linking to " + problem + ":\n");
         for (ClassFile classFile : newReferences) {
           message.append("Link from " + classFile + "\n");
         }
