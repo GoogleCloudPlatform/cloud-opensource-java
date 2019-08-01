@@ -24,6 +24,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -170,7 +172,7 @@ public class LinkageCheckerTest {
     // There is no such method on ClassToInstanceMap
     Optional<SymbolProblem> problemFound =
         linkageChecker.findSymbolProblem(
-            new ClassFile(paths.get(0), LinkageCheckerTest.class.getName()),
+            new ClassFile(guavaPath, "com.google.common.collect.ImmutableList"),
             new MethodSymbol(
                 "com.google.common.collect.ClassToInstanceMap",
                 "noSuchMethod",
@@ -684,7 +686,8 @@ public class LinkageCheckerTest {
     List<Path> pathsForJarWithVersion65First =
         Lists.newArrayList(
             absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"),
-            absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"));
+            absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"),
+            firestorePath);
     pathsForJarWithVersion65First.addAll(firestoreDependencies);
 
     LinkageChecker linkageChecker65First =
@@ -695,7 +698,8 @@ public class LinkageCheckerTest {
     List<Path> pathsForJarWithVersion66First =
         Lists.newArrayList(
             absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"),
-            absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"));
+            absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"),
+            firestorePath);
     pathsForJarWithVersion66First.addAll(firestoreDependencies);
     LinkageChecker linkageChecker66First =
         LinkageChecker.create(
@@ -704,7 +708,7 @@ public class LinkageCheckerTest {
 
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
 
-    ClassFile source = new ClassFile(firestorePath, LinkageCheckerTest.class.getName());
+    ClassFile source = new ClassFile(firestorePath, "com.google.firestore.v1beta1.FirestoreGrpc");
 
     builder.addMethodReference(
         source,
@@ -758,6 +762,30 @@ public class LinkageCheckerTest {
     Truth.assertThat(
             problems.get(new ClassFile(sisuJar, "org.eclipse.sisu.inject.Implementations")))
         .isEmpty();
+  }
+
+  @Test
+  public void testFindSymbolProblems_catchesNoSuchMethodError()
+      throws RepositoryException, IOException {
+    // org.slf4j.MDC catches NoSuchMethodError to detect the availability of
+    // implementation for logging backend. The tool should not show errors for such classes.
+    DependencyGraph slf4jGraph =
+        DependencyGraphBuilder.getTransitiveDependencies(
+            new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"));
+    DependencyGraph logbackGraph =
+        DependencyGraphBuilder.getTransitiveDependencies(
+            new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"));
+
+    Path slf4jJar = slf4jGraph.list().get(0).getLeaf().getFile().toPath();
+    Path log4jJar = logbackGraph.list().get(0).getLeaf().getFile().toPath();
+    List<Path> paths = ImmutableList.of(slf4jJar, log4jJar);
+
+    LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
+
+    ImmutableSetMultimap<ClassFile, SymbolProblem> problems =
+        linkageChecker.findSymbolProblems().inverse();
+
+    Truth.assertThat(problems.get(new ClassFile(slf4jJar, "org.slf4j.MDC"))).isEmpty();
   }
 
   @Test

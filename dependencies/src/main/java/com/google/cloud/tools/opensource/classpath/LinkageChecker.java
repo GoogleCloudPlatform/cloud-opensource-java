@@ -213,6 +213,11 @@ public class LinkageChecker {
         }
       }
 
+      // Slf4J catches LinkageError to check the existence of other classes
+      if (classDumper.catchesLinkageError(sourceClassName)) {
+        return Optional.empty();
+      }
+
       // The class is in class path but the symbol is not found
       return Optional.of(
           new SymbolProblem(symbol, ErrorType.SYMBOL_NOT_FOUND, containingClassFile));
