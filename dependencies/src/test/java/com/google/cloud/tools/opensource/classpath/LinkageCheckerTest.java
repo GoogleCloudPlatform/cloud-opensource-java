@@ -840,8 +840,11 @@ public class LinkageCheckerTest {
 
 
   @Test
-  public void testFindSymbolProblems_shouldNotDetectReactorTraces()
+  public void testFindSymbolProblems_shouldNotDetectWhitelistedClass()
       throws RepositoryException, IOException {
+    // Reactor-core's Traces is known to catch Throwable to detect availability of Java 9+ classes.
+    // Linkage Checker does not need to report it.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/816
     DependencyGraph dependencies = DependencyGraphBuilder.getTransitiveDependencies(
         new DefaultArtifact("io.projectreactor:reactor-core:3.2.11.RELEASE"));
     ImmutableList<Path> jars = dependencies.list().stream()
