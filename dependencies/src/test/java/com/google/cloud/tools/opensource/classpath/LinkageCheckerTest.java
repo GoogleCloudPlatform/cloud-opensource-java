@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.ClassPathBuilderTest.PATH_FILE_NAMES;
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -837,4 +838,19 @@ public class LinkageCheckerTest {
     assertNotNull(symbolProblems);
   }
 
+
+  @Test
+  public void testFindSymbolProblems_shouldNotDetectReactorTraces()
+      throws RepositoryException, IOException {
+    DependencyGraph dependencies = DependencyGraphBuilder.getTransitiveDependencies(
+        new DefaultArtifact("io.projectreactor:reactor-core:3.2.11.RELEASE"));
+    ImmutableList<Path> jars = dependencies.list().stream()
+        .map(path -> path.getLeaf().getFile().toPath()).collect(toImmutableList());
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+    ImmutableSetMultimap<ClassFile, SymbolProblem> problems = linkageChecker.findSymbolProblems()
+        .inverse();
+    Truth.assertThat(problems.keySet()).doesNotContain(
+        new ClassFile(jars.get(0), "reactor.core.publisher.Traces"));
+  }
 }

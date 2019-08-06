@@ -27,10 +27,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.SetMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 import org.apache.bcel.classfile.Field;
@@ -44,6 +47,11 @@ import org.eclipse.aether.artifact.Artifact;
 public class LinkageChecker {
 
   private static final Logger logger = Logger.getLogger(LinkageChecker.class.getName());
+
+  private static final ImmutableSet<String> SOURCE_CLASSES_TO_SUPPRESS = ImmutableSet.of(
+      // reactor-core's Traces catches Throwable to detect classes available in Java 9+ (#816)
+      "reactor.core.publisher.Traces"
+  );
 
   private final ClassDumper classDumper;
   private final ImmutableList<Path> jars;
@@ -150,7 +158,11 @@ public class LinkageChecker {
           }
         });
 
-    return problemToClass.build();
+    // Filter classes in whitelist
+    SetMultimap<SymbolProblem, ClassFile> filteredMap = Multimaps
+        .filterValues(problemToClass.build(),
+            classFile -> !SOURCE_CLASSES_TO_SUPPRESS.contains(classFile.getClassName()));
+    return ImmutableSetMultimap.copyOf(filteredMap);
   }
 
   /**
