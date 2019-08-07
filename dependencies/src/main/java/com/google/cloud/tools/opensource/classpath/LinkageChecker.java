@@ -23,6 +23,7 @@ import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
@@ -32,6 +33,7 @@ import com.google.common.collect.SetMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -73,6 +75,28 @@ public class LinkageChecker {
         !jars.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
     ClassDumper dumper = ClassDumper.create(jars);
+
+    ImmutableSetMultimap<Path, String> jarToPackages = jars.stream()
+        .collect(ImmutableSetMultimap.flatteningToImmutableSetMultimap(
+            path -> path,
+            path -> dumper.listPackages(path).stream()
+        ));
+
+    ImmutableMap<String, Collection<Path>> packageToJars = jarToPackages.inverse()
+        .asMap();
+    for (Map.Entry<String, Collection<Path>> entry: packageToJars.entrySet()) {
+      String packageName = entry.getKey();
+      Collection<Path> jarFiles = entry.getValue();
+      if (jarFiles.size() <= 1) {
+        continue;
+      }
+      System.out.println("Package: " + packageName);
+      for (Path path : jarFiles) {
+        System.out.println("  " + path.getFileName());
+      }
+    }
+
+
     SymbolReferenceMaps symbolReferenceMaps = dumper.findSymbolReferences();
 
     ClassReferenceGraph classReferenceGraph =

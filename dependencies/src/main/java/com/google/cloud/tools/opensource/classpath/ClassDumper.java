@@ -69,7 +69,7 @@ import org.apache.bcel.util.Repository;
  * Class to read symbol references in Java class files and to verify the availability of references
  * in them, through the input class path for a linkage check.
  */
-class ClassDumper {
+public class ClassDumper {
 
   private final ImmutableList<Path> inputClassPath;
   private final Repository classRepository;
@@ -359,6 +359,15 @@ class ClassDumper {
     return classPath.getAllClasses().stream()
         .map(ClassInfo::getName)
         .collect(toImmutableSet());
+  }
+
+  public ImmutableSet<String> listPackages(Path jar) throws RuntimeException {
+    try {
+      ImmutableSet<JavaClass> classes = listClasses(jar);
+      return classes.stream().map(javaClass -> javaClass.getPackageName()).collect(toImmutableSet());
+    } catch (IOException ex) {
+      throw new RuntimeException(ex);
+    }
   }
 
   /**
