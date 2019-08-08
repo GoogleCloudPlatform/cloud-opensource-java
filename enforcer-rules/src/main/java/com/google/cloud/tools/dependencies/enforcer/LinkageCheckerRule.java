@@ -34,8 +34,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.graph.Traverser;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
@@ -97,7 +95,6 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    *     >Java Dependency Glossary: Class reference graph</a>
    */
   private boolean reportOnlyReachable = false;
-
 
   private boolean allowPartialDependency = true;
 
@@ -241,28 +238,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       DependencyResolutionResult resolutionResult =
           projectDependenciesResolver.resolve(dependencyResolutionRequest);
 
-      Iterable<DependencyNode> dependencies = Traverser.forTree(DependencyNode::getChildren)
-          .breadthFirst(resolutionResult.getDependencyGraph());
-
-      ImmutableList.Builder<Path> builder = ImmutableList.builder();
-      for (DependencyNode node : dependencies) {
-        // the very first one is the pom.xml where this rule appears
-        Artifact artifact = node.getArtifact();
-        if (artifact != null) { // why is this possible?
-          File file = artifact.getFile();
-          // and this very first one does not have a file; i.e. file == null
-          // but why do we care? perhaps we're assuming there is a jar file in
-          // the classpath but what we really need for this one is a classes directory
-          if (file == null) {
-            throw new EnforcerRuleException(
-                "Artifact " + Artifacts.toCoordinates(artifact) + " is not associated with a file."
-                    + " The linkage checker enforcer rule should be bound to the verify phase.");
-          }
-          Path path = file.toPath();
-          builder.add(path);
-        }
-      }
-      return builder.build();
+      return buildClasspath(resolutionResult);
     } catch (ComponentLookupException e) {
       throw new EnforcerRuleException("Unable to lookup a component " + e.getMessage(), e);
     } catch (DependencyResolutionException e) {
@@ -279,12 +255,22 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         }
       }
       if (allowPartialDependency) {
-        return e.getResult().getResolvedDependencies().stream().map(dependency -> dependency.getArtifact().getFile().toPath()).collect(
-            toImmutableList()
-        );
+        return buildClasspath(e.getResult());
       }
       throw new EnforcerRuleException("Unable to build a dependency graph: " + e.getMessage(), e);
     }
+  }
+
+  private ImmutableList<Path> buildClasspath(DependencyResolutionResult result) throws EnforcerRuleException {
+    ImmutableList.Builder<Path> builder = ImmutableList.builder();
+
+    // The first item is the project's JAR file
+    builder.add(result.getDependencyGraph().getArtifact().getFile().toPath());
+    // The rest are the dependencies
+    for (Dependency dependency : result.getResolvedDependencies()) {
+      builder.add(dependency.getArtifact().getFile().toPath());
+    }
+    return builder.build();
   }
 
   /** Builds a class path for {@code bomProject}. */
