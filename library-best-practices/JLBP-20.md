@@ -1,4 +1,4 @@
-[JLBP-19] Give each jar a module name
+[JLBP-20] Give each jar a module name
 --------------------------------------------------
 
 For compatibility with the Java Platform Module System (JPMS) in Java 9 and
