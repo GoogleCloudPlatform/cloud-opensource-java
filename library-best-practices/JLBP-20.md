@@ -30,13 +30,12 @@ Maven jar plugin in pom.xml like so:
     <plugin>
       <artifactId>maven-jar-plugin</artifactId>
       <configuration>
-      <archive>  
-        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-        <manifestEntries>
-          <Automatic-Module-Name>com.google.api.client</Automatic-Module-Name>
-        </manifestEntries>
-      </archive> 
-    </configuration>
+        <archive>  
+          <manifestEntries>
+            <Automatic-Module-Name>com.google.api.client</Automatic-Module-Name>
+          </manifestEntries>
+        </archive> 
+      </configuration>
     </plugin> 
 ```
 
