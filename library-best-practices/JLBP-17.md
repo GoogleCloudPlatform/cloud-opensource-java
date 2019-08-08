@@ -1,4 +1,4 @@
-[JLBP-17] Coordinate Rollout of Breaking Changes
+[JLBP-17] Coordinate rollout of breaking changes
 ------------------------------------------------
 
 When a library introduces a breaking change, consumers
