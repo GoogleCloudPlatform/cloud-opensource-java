@@ -38,3 +38,4 @@ or significantly changed before the set is classified as Beta.
 - [JLBP-17](JLBP-17.md): Coordinate rollout of breaking changes
 - [JLBP-18](JLBP-18.md): Only shade dependencies as a last resort
 - [JLBP-19](JLBP-19.md): Place each package in only one module
+- [JLBP-20](JLBP-19.md): Give each jar a module name
