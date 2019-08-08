@@ -29,12 +29,16 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.graph.Traverser;
 import com.google.common.reflect.ClassPath.ClassInfo;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.jar.Attributes;
+import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 import javax.annotation.Nullable;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -361,11 +365,20 @@ class ClassDumper {
         .collect(toImmutableSet());
   }
 
+  private String readAutomaticModuleName(Path jar) throws IOException {
+    JarInputStream jarStream = new JarInputStream(new FileInputStream(jar.toFile()));
+    Manifest manifest = jarStream.getManifest();
+    String name = "Automatic-Module-Name";
+    Attributes attributes = manifest.getAttributes(name);
+    return attributes.getValue(name);
+  }
+
   /**
    * Returns a set of {@link JavaClass}es which have entries in the {@code jar} through {@link
    * #classRepository}.
    */
   private ImmutableSet<JavaClass> listClasses(Path jar) throws IOException {
+
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     for (String classFileName : listClassFileNames(jar)) {
       try {
