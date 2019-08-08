@@ -17,8 +17,8 @@ as commonly found in Java package names. It often has the same name as the root
 package of the JAR. For example, if a JAR contains `com.google.utilities.i18n`
 and `com.google.utilities.strings` then `com.google.utilities` is a good 
 choice for module name. However if there's a second artifact that contains
-`com.google.utilities.math` and `com.google.utilities.stats`, you can't use
-`com.google.utilities` for both.
+`com.google.utilities.math` and `com.google.utilities.stats`, you can't choose
+the name `com.google.utilities` for both modules.
 
 This is similar to the OSGI Bundle-SymbolicName and should probably have the
 same value as that field.
