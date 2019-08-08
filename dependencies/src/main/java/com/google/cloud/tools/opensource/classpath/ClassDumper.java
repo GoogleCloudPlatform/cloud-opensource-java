@@ -24,9 +24,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.graph.Traverser;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.FileInputStream;
@@ -35,7 +38,9 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
@@ -88,6 +93,29 @@ class ClassDumper {
 
   static ClassDumper create(List<Path> jarPaths) throws IOException {
     ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+
+    ImmutableListMultimap.Builder<String, Path> builder = ImmutableListMultimap.builder();
+    for (Path jar : jarPaths) {
+      readAutomaticModuleName(jar).ifPresent(
+          moduleName -> {
+            builder.put(moduleName, jar);
+          }
+      );
+    }
+
+    ImmutableListMultimap<String, Path> moduleNameToJar = builder.build();
+    for (String moduleName: moduleNameToJar.keySet()) {
+      ImmutableList<Path> paths = moduleNameToJar.get(moduleName);
+      System.out.println("Automatic Module Name: " + moduleName);
+      if (paths.size() == 1) {
+        System.out.println("  : " + paths.get(0).getFileName());
+        continue;
+      }
+      paths.forEach(path -> {
+        System.out.println("NG: " + path);
+      });
+    }
+
     ClassLoader extensionClassLoader = systemClassLoader.getParent();
 
     ImmutableList<Path> unreadableFiles =
@@ -365,12 +393,21 @@ class ClassDumper {
         .collect(toImmutableSet());
   }
 
-  private String readAutomaticModuleName(Path jar) throws IOException {
-    JarInputStream jarStream = new JarInputStream(new FileInputStream(jar.toFile()));
-    Manifest manifest = jarStream.getManifest();
-    String name = "Automatic-Module-Name";
-    Attributes attributes = manifest.getAttributes(name);
-    return attributes.getValue(name);
+  private static Optional<String> readAutomaticModuleName(Path jar) {
+    try (JarInputStream jarStream = new JarInputStream(new FileInputStream(jar.toFile()))) {
+      Manifest manifest = jarStream.getManifest();
+      String name = "Automatic-Module-Name";
+      if (manifest == null) {
+        return Optional.empty();
+      }
+      Attributes attributes = manifest.getMainAttributes();
+      if (attributes == null || attributes.size() < 1) {
+        return Optional.empty();
+      }
+      return Optional.ofNullable(attributes.getValue(name));
+    } catch (IOException ex) {
+      throw new RuntimeException("Could not open putstream", ex);
+    }
   }
 
   /**
