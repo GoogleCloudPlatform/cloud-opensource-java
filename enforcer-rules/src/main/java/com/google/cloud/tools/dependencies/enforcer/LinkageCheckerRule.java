@@ -98,6 +98,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    */
   private boolean reportOnlyReachable = false;
 
+
+  private boolean allowPartialDependency = true;
+
   @VisibleForTesting
   void setDependencySection(DependencySection dependencySection) {
     this.dependencySection = dependencySection;
@@ -274,6 +277,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           logger.error("Paths to the missing artifact: " + pathsToArtifact);
           break;
         }
+      }
+      if (allowPartialDependency) {
+        return e.getResult().getResolvedDependencies().stream().map(dependency -> dependency.getArtifact().getFile().toPath()).collect(
+            toImmutableList()
+        );
       }
       throw new EnforcerRuleException("Unable to build a dependency graph: " + e.getMessage(), e);
     }
