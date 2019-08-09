@@ -308,7 +308,7 @@ public class DependencyGraphBuilder {
               DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
               ExceptionAndPath failure =
                   ExceptionAndPath.create(parentNodes, failedDependencyNode, resolutionException);
-              if (isUnacceptableResolutionExceptionAt(failure.getPath())) {
+              if (isUnacceptableMissingDependency(failure.getPath())) {
                 resolutionFailures.add(failure);
               }
             }
@@ -316,7 +316,7 @@ public class DependencyGraphBuilder {
             DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
             ExceptionAndPath failure =
                 ExceptionAndPath.create(parentNodes, failedDependencyNode, collectionException);
-            if (isUnacceptableResolutionExceptionAt(failure.getPath())) {
+            if (isUnacceptableMissingDependency(failure.getPath())) {
               resolutionFailures.add(failure);
             }
           }
@@ -340,7 +340,7 @@ public class DependencyGraphBuilder {
    * Returns true if {@code dependencyPath} does not contain {@code optional} dependency and the
    * path does not contain {@code scope:provided} dependency.
    */
-  public static boolean isUnacceptableResolutionExceptionAt(List<DependencyNode> dependencyPath) {
+  public static boolean isUnacceptableMissingDependency(List<DependencyNode> dependencyPath) {
     boolean hasOptionalParent =
         dependencyPath.stream()
             .filter(node -> node.getDependency() != null) // Root node does not have dependency
