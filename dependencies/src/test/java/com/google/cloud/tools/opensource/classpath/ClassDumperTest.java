@@ -198,8 +198,8 @@ public class ClassDumperTest {
     List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(grpcArtifact));
     Path gsonJar = paths.get(0);
 
-    ImmutableSetMultimap<Path, String> pathToClasses = ClassDumper
-        .mapJarToClasses(paths.subList(0, 1));
+    ImmutableSetMultimap<Path, String> pathToClasses =
+        ClassDumper.mapJarToClassFileNames(paths.subList(0, 1));
     ImmutableSet<String> classesInGsonJar = pathToClasses.get(gsonJar);
     // Dollar character ($) is a valid character for a class name, not just for nested ones.
     Truth.assertThat(classesInGsonJar).contains("com.google.gson.internal.$Gson$Preconditions");
@@ -220,6 +220,19 @@ public class ClassDumperTest {
     Path jarWith66First =
         ClassDumper.create(ImmutableList.of(firestore66, firestore65)).findClassLocation(grpcClass);
     Assert.assertEquals(firestore66, jarWith66First);
+  }
+
+  @Test
+  public void testFindClassLocation_prefixedClassName() throws URISyntaxException, IOException {
+    // This JAR file contains com.google.firestore.v1beta1.FirestoreGrpc under BOOT-INF/classes.
+    Path path = absolutePathOfResource("testdata/dummy-boot-inf-prefix.jar");
+    ClassDumper classDumper = ClassDumper.create(ImmutableList.of(path));
+    classDumper.findSymbolReferences();
+
+    Path classLocation =
+        classDumper.findClassLocation("com.google.firestore.v1beta1.FirestoreGrpc");
+
+    Assert.assertEquals(path, classLocation);
   }
 
   @Test

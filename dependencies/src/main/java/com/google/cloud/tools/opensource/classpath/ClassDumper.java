@@ -63,7 +63,6 @@ import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.ObjectType;
 import org.apache.bcel.generic.Type;
 import org.apache.bcel.util.ClassPath;
-import org.apache.bcel.util.Repository;
 
 /**
  * Class to read symbol references in Java class files and to verify the availability of references
@@ -72,12 +71,12 @@ import org.apache.bcel.util.Repository;
 class ClassDumper {
 
   private final ImmutableList<Path> inputClassPath;
-  private final Repository classRepository;
+  private final FixedSizeClassPathRepository classRepository;
   private final ClassLoader extensionClassLoader;
-  private final ImmutableSetMultimap<Path, String> jarFileToClasses;
-  private final ImmutableListMultimap<String, Path> classToJarFiles;
+  private final ImmutableSetMultimap<Path, String> jarFileToClassFileNames;
+  private final ImmutableListMultimap<String, Path> classFileNameToJarFiles;
 
-  private static Repository createClassRepository(List<Path> paths) {
+  private static FixedSizeClassPathRepository createClassRepository(List<Path> paths) {
     ClassPath classPath = new LinkageCheckClassPath(paths);
     return new FixedSizeClassPathRepository(classPath);
   }
@@ -93,7 +92,7 @@ class ClassDumper {
     checkArgument(
         unreadableFiles.isEmpty(), "Some jar files are not readable: %s", unreadableFiles);
 
-    return new ClassDumper(jarPaths, extensionClassLoader, mapJarToClasses(jarPaths));
+    return new ClassDumper(jarPaths, extensionClassLoader, mapJarToClassFileNames(jarPaths));
   }
 
   private ClassDumper(
@@ -103,8 +102,8 @@ class ClassDumper {
     this.inputClassPath = ImmutableList.copyOf(inputClassPath);
     this.classRepository = createClassRepository(inputClassPath);
     this.extensionClassLoader = extensionClassLoader;
-    this.jarFileToClasses = ImmutableSetMultimap.copyOf(jarToClasses);
-    this.classToJarFiles = ImmutableListMultimap.copyOf(jarToClasses.inverse());
+    this.jarFileToClassFileNames = ImmutableSetMultimap.copyOf(jarToClasses);
+    this.classFileNameToJarFiles = ImmutableListMultimap.copyOf(jarToClasses.inverse());
   }
 
   /**
@@ -136,12 +135,12 @@ class ClassDumper {
   }
 
   /**
-   * Returns class names defined in the jar file.
+   * Returns class file names defined in the jar file.
    *
    * @param jarPath absolute path to the jar file
    */
   ImmutableSet<String> classesDefinedInJar(Path jarPath) {
-    return jarFileToClasses.get(jarPath);
+    return jarFileToClassFileNames.get(jarPath);
   }
 
   /**
@@ -322,20 +321,32 @@ class ClassDumper {
     // However, it required the superclass of a target class to be loadable too; otherwise
     // ClassNotFoundException was raised. It was inconvenient because we only wanted to know the
     // location of the target class, and sometimes the superclass is unavailable.
-    return Iterables.getFirst(classToJarFiles.get(className), null);
+    Path path = Iterables.getFirst(classFileNameToJarFiles.get(className), null);
+    if (path != null) {
+      return path;
+    }
+
+    // Some classes have framework-specific prefix such as "WEB-INF.classes.AppWidgetset" in its
+    // class file name.
+    String specialLocation = classRepository.getSpecialLocation(className);
+    if (specialLocation == null) {
+      return null;
+    }
+    return Iterables.getFirst(classFileNameToJarFiles.get(specialLocation), null);
   }
 
   /**
-   * Returns mapping from jar files to the names of the classes they define.
+   * Returns mapping from jar files to class file names they contain.
    *
    * @param jars absolute paths to jar files
    */
   @VisibleForTesting
-  static ImmutableSetMultimap<Path, String> mapJarToClasses(List<Path> jars) throws IOException {
+  static ImmutableSetMultimap<Path, String> mapJarToClassFileNames(List<Path> jars)
+      throws IOException {
     ImmutableSetMultimap.Builder<Path, String> pathToClasses = ImmutableSetMultimap.builder();
     for (Path jar : jars) {
-      for (String className : listClassFileNames(jar)) {
-        pathToClasses.put(jar, className);
+      for (String classFileName : listClassFileNames(jar)) {
+        pathToClasses.put(jar, classFileName);
       }
     }
     return pathToClasses.build();

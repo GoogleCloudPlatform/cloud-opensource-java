@@ -112,4 +112,13 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
   public void clear() {
     loadedClass.invalidateAll();
   }
+
+  /**
+   * Returns the special location for {@code className}. Null if no special location is known.
+   *
+   * @see #classFileNames
+   */
+  String getSpecialLocation(String className) {
+    return classFileNames.get(className);
+  }
 }
