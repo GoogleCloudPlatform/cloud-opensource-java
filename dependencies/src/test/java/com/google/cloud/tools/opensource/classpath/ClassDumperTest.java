@@ -224,6 +224,7 @@ public class ClassDumperTest {
 
   @Test
   public void testFindClassLocation_prefixedClassName() throws URISyntaxException, IOException {
+    // This JAR file contains com.google.firestore.v1beta1.FirestoreGrpc under BOOT-INF/classes.
     Path path = absolutePathOfResource("testdata/dummy-boot-inf-prefix.jar");
     ClassDumper classDumper = ClassDumper.create(ImmutableList.of(path));
     classDumper.findSymbolReferences();
@@ -346,5 +347,4 @@ public class ClassDumperTest {
             new ClassFile(
                 sisuGuicePath, "com.google.inject.internal.InjectorImpl$BindingsMultimap"));
   }
-
 }
