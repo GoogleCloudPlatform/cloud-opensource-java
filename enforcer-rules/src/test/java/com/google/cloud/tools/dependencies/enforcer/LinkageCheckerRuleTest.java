@@ -84,9 +84,6 @@ public class LinkageCheckerRuleTest {
   private ProjectDependenciesResolver mockProjectDependenciesResolver;
   private DependencyResolutionResult mockDependencyResolutionResult;
 
-  private Traverser<DependencyNode> dependencyTraverser =
-      Traverser.forGraph(node -> node.getChildren());
-
   @Before
   public void setup()
       throws ExpressionEvaluationException, ComponentLookupException,
@@ -160,17 +157,19 @@ public class LinkageCheckerRuleTest {
   private void setupMockDependencyResolution(String... coordinates)
       throws RepositoryException, URISyntaxException {
     DependencyNode rootNode = createResolvedDependencyGraph(coordinates);
+    Traverser<DependencyNode> traverser = Traverser.forGraph(node -> node.getChildren());
 
     // DependencyResolutionResult.getDependencies returns depth-first order
+
     ImmutableList<Dependency> dummyDependencies =
-        ImmutableList.copyOf(dependencyTraverser.depthFirstPreOrder(rootNode)).stream()
+        ImmutableList.copyOf(traverser.depthFirstPreOrder(rootNode)).stream()
             .map(DependencyNode::getDependency)
             .filter(Objects::nonNull)
             .collect(toImmutableList());
     when(mockDependencyResolutionResult.getDependencies()).thenReturn(dummyDependencies);
     when(mockDependencyResolutionResult.getResolvedDependencies())
         .thenReturn(
-            ImmutableList.copyOf(dependencyTraverser.breadthFirst(rootNode.getChildren())).stream()
+            ImmutableList.copyOf(traverser.breadthFirst(rootNode.getChildren())).stream()
                 .map(DependencyNode::getDependency)
                 .filter(Objects::nonNull)
                 .collect(toImmutableList()));
@@ -467,11 +466,11 @@ public class LinkageCheckerRuleTest {
   @Test
   public void testArtifactTransferError_acceptableMissingArtifact()
       throws URISyntaxException, DependencyResolutionException, EnforcerRuleException {
-    // Creating dummy tree
-    // com.google.foo:project
-    //   +- com.google.foo:child1 (provided)
-    //      +- com.google.foo:child2 (optional)
-    //         +- xerces:xerces-impl:jar:2.6.2 (optional)
+    // Creating a dummy tree
+    //   com.google.foo:project
+    //     +- com.google.foo:child1 (provided)
+    //        +- com.google.foo:child2 (optional)
+    //           +- xerces:xerces-impl:jar:2.6.2 (optional)
     DefaultDependencyNode missingArtifactNode =
         new DefaultDependencyNode(
             new Dependency(
@@ -504,7 +503,8 @@ public class LinkageCheckerRuleTest {
 
     when(mockProjectDependenciesResolver.resolve(any())).thenThrow(exception);
 
-    // Should run Linkage Check without xerces-impl, without DependencyResolutionException
+    // Should run Linkage Check without xerces-impl, without DependencyResolutionException, because
+    // the missing xerces-impl is under both provided and optional dependencies.
     rule.execute(mockRuleHelper);
   }
 }

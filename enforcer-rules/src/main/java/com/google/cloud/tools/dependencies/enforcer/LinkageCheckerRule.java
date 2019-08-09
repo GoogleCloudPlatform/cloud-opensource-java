@@ -290,12 +290,12 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       throws EnforcerRuleException {
     ImmutableList.Builder<Path> builder = ImmutableList.builder();
 
-    // The first item is the project's JAR file
+    // The root node must have the project's JAR file
     File rootFile = result.getDependencyGraph().getArtifact().getFile();
     if (rootFile == null) {
       throw new EnforcerRuleException(
           "The root project artifact is not associated with a file."
-              + " The linkage checker enforcer rule should be bound to the verify phase.");
+              + " The linkage checker enforcer rule should be bound to the 'verify' phase.");
     }
     builder.add(rootFile.toPath());
     // The rest are the dependencies
