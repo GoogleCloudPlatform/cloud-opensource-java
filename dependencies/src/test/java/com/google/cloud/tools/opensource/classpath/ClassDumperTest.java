@@ -199,7 +199,7 @@ public class ClassDumperTest {
     Path gsonJar = paths.get(0);
 
     ImmutableSetMultimap<Path, String> pathToClasses = ClassDumper
-        .mapJarToClasses(paths.subList(0, 1));
+        .mapJarToClassFileNames(paths.subList(0, 1));
     ImmutableSet<String> classesInGsonJar = pathToClasses.get(gsonJar);
     // Dollar character ($) is a valid character for a class name, not just for nested ones.
     Truth.assertThat(classesInGsonJar).contains("com.google.gson.internal.$Gson$Preconditions");
