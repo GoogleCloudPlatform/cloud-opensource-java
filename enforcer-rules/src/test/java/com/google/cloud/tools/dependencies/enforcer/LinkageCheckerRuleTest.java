@@ -84,6 +84,9 @@ public class LinkageCheckerRuleTest {
   private ProjectDependenciesResolver mockProjectDependenciesResolver;
   private DependencyResolutionResult mockDependencyResolutionResult;
 
+  private Traverser<DependencyNode> dependencyTraverser =
+      Traverser.forGraph(node -> node.getChildren());
+
   @Before
   public void setup()
       throws ExpressionEvaluationException, ComponentLookupException,
@@ -92,9 +95,13 @@ public class LinkageCheckerRuleTest {
     repositorySystem = RepositoryUtility.newRepositorySystem();
     repositorySystemSession = RepositoryUtility.newSession(repositorySystem);
     // This dummy artifact must be something that exists in a repository
-    dummyArtifactWithFile = (new DefaultArtifact("com.google.guava:guava:28.0-android"))
-        .setFile(Paths.get(URLClassLoader.getSystemResource("dummy-0.0.1.jar").toURI()).toFile());
+    dummyArtifactWithFile = createArtifactWithDummyFile("com.google.guava:guava:28.0-android");
     setupMock();
+  }
+
+  private Artifact createArtifactWithDummyFile(String coordinates) throws URISyntaxException {
+    return new DefaultArtifact(coordinates)
+        .setFile(Paths.get(URLClassLoader.getSystemResource("dummy-0.0.1.jar").toURI()).toFile());
   }
 
   private void setupMock()
@@ -153,15 +160,20 @@ public class LinkageCheckerRuleTest {
   private void setupMockDependencyResolution(String... coordinates)
       throws RepositoryException, URISyntaxException {
     DependencyNode rootNode = createResolvedDependencyGraph(coordinates);
-    Traverser<DependencyNode> traverser = Traverser.forGraph(node -> node.getChildren());
 
     // DependencyResolutionResult.getDependencies returns depth-first order
     ImmutableList<Dependency> dummyDependencies =
-        ImmutableList.copyOf(traverser.depthFirstPreOrder(rootNode)).stream()
+        ImmutableList.copyOf(dependencyTraverser.depthFirstPreOrder(rootNode)).stream()
             .map(DependencyNode::getDependency)
             .filter(Objects::nonNull)
             .collect(toImmutableList());
     when(mockDependencyResolutionResult.getDependencies()).thenReturn(dummyDependencies);
+    when(mockDependencyResolutionResult.getResolvedDependencies())
+        .thenReturn(
+            ImmutableList.copyOf(dependencyTraverser.breadthFirst(rootNode.getChildren())).stream()
+                .map(DependencyNode::getDependency)
+                .filter(Objects::nonNull)
+                .collect(toImmutableList()));
     when(mockDependencyResolutionResult.getDependencyGraph()).thenReturn(rootNode);
     when(mockProject.getDependencies())
         .thenReturn(
@@ -418,18 +430,25 @@ public class LinkageCheckerRuleTest {
     }
   }
 
+  private DependencyResolutionException createDummyResolutionException(
+      Artifact missingArtifact, DependencyResolutionResult resolutionResult) {
+    Throwable cause3 = new ArtifactNotFoundException(missingArtifact, null);
+    Throwable cause2 = new ArtifactResolutionException(null, "dummy 3", cause3);
+    Throwable cause1 = new DependencyResolutionException(resolutionResult, "dummy 2", cause2);
+    DependencyResolutionException exception =
+        new DependencyResolutionException(resolutionResult, "dummy 1", cause1);
+    return exception;
+  }
+
   @Test
   public void testArtifactTransferError()
       throws RepositoryException, URISyntaxException, DependencyResolutionException {
     DependencyNode graph = createResolvedDependencyGraph("org.apache.maven:maven-core:jar:3.5.2");
     DependencyResolutionResult resolutionResult = mock(DependencyResolutionResult.class);
     when(resolutionResult.getDependencyGraph()).thenReturn(graph);
-    Throwable cause3 =
-        new ArtifactNotFoundException(new DefaultArtifact("aopalliance:aopalliance:1.0"), null);
-    Throwable cause2 = new ArtifactResolutionException(null, "dummy 3", cause3);
-    Throwable cause1 = new DependencyResolutionException(resolutionResult, "dummy 2", cause2);
     DependencyResolutionException exception =
-        new DependencyResolutionException(resolutionResult, "dummy 1", cause1);
+        createDummyResolutionException(
+            new DefaultArtifact("aopalliance:aopalliance:1.0"), resolutionResult);
     when(mockProjectDependenciesResolver.resolve(any())).thenThrow(exception);
 
     try {
@@ -443,5 +462,49 @@ public class LinkageCheckerRuleTest {
                   + "com.google.inject:guice:jar:no_aop:4.0 (compile) > "
                   + "aopalliance:aopalliance:jar:1.0 (compile)");
     }
+  }
+
+  @Test
+  public void testArtifactTransferError_acceptableMissingArtifact()
+      throws URISyntaxException, DependencyResolutionException, EnforcerRuleException {
+    // Creating dummy tree
+    // com.google.foo:project
+    //   +- com.google.foo:child1 (provided)
+    //      +- com.google.foo:child2 (optional)
+    //         +- xerces:xerces-impl:jar:2.6.2 (optional)
+    DefaultDependencyNode missingArtifactNode =
+        new DefaultDependencyNode(
+            new Dependency(
+                createArtifactWithDummyFile("xerces:xerces-impl:jar:2.6.2"), "compile", true));
+    DefaultDependencyNode child2 =
+        new DefaultDependencyNode(
+            new Dependency(
+                createArtifactWithDummyFile("com.google.foo:child2:1.0.0"), "compile", true));
+    child2.setChildren(ImmutableList.of(missingArtifactNode));
+    DefaultDependencyNode child1 =
+        new DefaultDependencyNode(
+            new Dependency(createArtifactWithDummyFile("com.google.foo:child1:1.0.0"), "provided"));
+    child1.setChildren(ImmutableList.of(child2));
+    DefaultDependencyNode root =
+        new DefaultDependencyNode(createArtifactWithDummyFile("com.google.foo:project:1.0.0"));
+    root.setChildren(ImmutableList.of(child1));
+
+    DependencyResolutionResult resolutionResult = mock(DependencyResolutionResult.class);
+    when(resolutionResult.getDependencyGraph()).thenReturn(root);
+    when(resolutionResult.getResolvedDependencies())
+        .thenReturn(
+            ImmutableList.of(
+                child1.getDependency(),
+                child2.getDependency(),
+                missingArtifactNode.getDependency()));
+
+    // xerces-impl does not exist in Maven Central
+    DependencyResolutionException exception =
+        createDummyResolutionException(missingArtifactNode.getArtifact(), resolutionResult);
+
+    when(mockProjectDependenciesResolver.resolve(any())).thenThrow(exception);
+
+    // Should run Linkage Check without xerces-impl, without DependencyResolutionException
+    rule.execute(mockRuleHelper);
   }
 }

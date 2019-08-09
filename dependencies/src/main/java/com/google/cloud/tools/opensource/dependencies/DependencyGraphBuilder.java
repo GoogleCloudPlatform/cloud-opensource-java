@@ -308,7 +308,7 @@ public class DependencyGraphBuilder {
               DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
               ExceptionAndPath failure =
                   ExceptionAndPath.create(parentNodes, failedDependencyNode, resolutionException);
-              if (isUnacceptableResolutionException(failure)) {
+              if (isUnacceptableResolutionExceptionAt(failure.getPath())) {
                 resolutionFailures.add(failure);
               }
             }
@@ -316,7 +316,7 @@ public class DependencyGraphBuilder {
             DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
             ExceptionAndPath failure =
                 ExceptionAndPath.create(parentNodes, failedDependencyNode, collectionException);
-            if (isUnacceptableResolutionException(failure)) {
+            if (isUnacceptableResolutionExceptionAt(failure.getPath())) {
               resolutionFailures.add(failure);
             }
           }
@@ -337,19 +337,20 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Returns true if {@code exceptionAndPath.getPath} does not contain {@code optional} dependency
-   * and the path does not contain {@code scope:provided} dependency.
+   * Returns true if {@code dependencyPath} does not contain {@code optional} dependency and the
+   * path does not contain {@code scope:provided} dependency.
    */
-  private static boolean isUnacceptableResolutionException(ExceptionAndPath exceptionAndPath) {
-    ImmutableList<DependencyNode> dependencyNodes = exceptionAndPath.getPath();
+  public static boolean isUnacceptableResolutionExceptionAt(List<DependencyNode> dependencyPath) {
     boolean hasOptionalParent =
-        dependencyNodes.stream().anyMatch(node -> node.getDependency().isOptional());
+        dependencyPath.stream()
+            .filter(node -> node.getDependency() != null) // Root node does not have dependency
+            .anyMatch(node -> node.getDependency().isOptional());
     if (!hasOptionalParent) {
       return true;
     }
     boolean hasProvidedParent =
-        dependencyNodes
-            .stream()
+        dependencyPath.stream()
+            .filter(node -> node.getDependency() != null)
             .anyMatch(node -> "provided".equals(node.getDependency().getScope()));
     return !hasProvidedParent;
   }

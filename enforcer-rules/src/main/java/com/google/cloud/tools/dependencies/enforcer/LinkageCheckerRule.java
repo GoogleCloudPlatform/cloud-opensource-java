@@ -34,7 +34,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.graph.Traverser;
+import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -116,9 +116,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     DEPENDENCIES
   }
 
+  private Log logger;
+
   @Override
   public void execute(@Nonnull EnforcerRuleHelper helper) throws EnforcerRuleException {
-    Log logger = helper.getLog();
+    logger = helper.getLog();
 
     try {
       MavenProject project = (MavenProject) helper.evaluate("${project}");
@@ -238,45 +240,69 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       DependencyResolutionResult resolutionResult =
           projectDependenciesResolver.resolve(dependencyResolutionRequest);
 
-      Iterable<DependencyNode> dependencies = Traverser.forTree(DependencyNode::getChildren)
-          .breadthFirst(resolutionResult.getDependencyGraph());
-
-      ImmutableList.Builder<Path> builder = ImmutableList.builder();
-      for (DependencyNode node : dependencies) {
-        // the very first one is the pom.xml where this rule appears
-        Artifact artifact = node.getArtifact();
-        if (artifact != null) { // why is this possible?
-          File file = artifact.getFile();
-          // and this very first one does not have a file; i.e. file == null
-          // but why do we care? perhaps we're assuming there is a jar file in
-          // the classpath but what we really need for this one is a classes directory
-          if (file == null) {
-            throw new EnforcerRuleException(
-                "Artifact " + Artifacts.toCoordinates(artifact) + " is not associated with a file."
-                    + " The linkage checker enforcer rule should be bound to the verify phase.");
-          }
-          Path path = file.toPath();
-          builder.add(path);
-        }
-      }
-      return builder.build();
+      return buildClasspath(resolutionResult);
     } catch (ComponentLookupException e) {
       throw new EnforcerRuleException("Unable to lookup a component " + e.getMessage(), e);
     } catch (DependencyResolutionException e) {
-      Log logger = helper.getLog();
-      for (Throwable cause = e.getCause(); cause != null; cause = cause.getCause()) {
-        if (cause instanceof ArtifactTransferException) {
-          ArtifactTransferException artifactException = (ArtifactTransferException) cause;
-          Artifact artifact = artifactException.getArtifact();
-          DependencyNode dependencyRoot = e.getResult().getDependencyGraph();
-          String pathsToArtifact = findPaths(dependencyRoot, artifact);
+      return buildClasspathFromException(e);
+    }
+  }
+
+  /**
+   * Returns class path built from partial dependency graph of {@code resolutionException}.
+   *
+   * @throws EnforcerRuleException when {@code resolutionException} is invalidated by {@link
+   *     DependencyGraphBuilder#isUnacceptableResolutionExceptionAt(List)}
+   */
+  private ImmutableList<Path> buildClasspathFromException(
+      DependencyResolutionException resolutionException) throws EnforcerRuleException {
+    DependencyResolutionResult result = resolutionException.getResult();
+    DependencyNode root = result.getDependencyGraph();
+
+    for (Throwable cause = resolutionException.getCause();
+        cause != null;
+        cause = cause.getCause()) {
+      if (cause instanceof ArtifactTransferException) {
+        ArtifactTransferException artifactException = (ArtifactTransferException) cause;
+        Artifact artifact = artifactException.getArtifact();
+        String pathsToArtifact = findPaths(root, artifact);
+        ImmutableList<DependencyNode> firstArtifactPath = findFirstArtifactPath(root, artifact);
+        if (DependencyGraphBuilder.isUnacceptableResolutionExceptionAt(firstArtifactPath)) {
           logger.error("Could not find artifact " + artifact);
           logger.error("Paths to the missing artifact: " + pathsToArtifact);
-          break;
+          throw new EnforcerRuleException(
+              "Unable to build a dependency graph: " + resolutionException.getMessage(),
+              resolutionException);
+        } else {
+          logger.warn(
+              "There was missing artifact at "
+                  + pathsToArtifact
+                  + ". Continuing with partial dependency graph.");
         }
+        break;
       }
-      throw new EnforcerRuleException("Unable to build a dependency graph: " + e.getMessage(), e);
     }
+    // The exception is acceptable enough to build a class path.
+    return buildClasspath(result);
+  }
+
+  private ImmutableList<Path> buildClasspath(DependencyResolutionResult result)
+      throws EnforcerRuleException {
+    ImmutableList.Builder<Path> builder = ImmutableList.builder();
+
+    // The first item is the project's JAR file
+    File rootFile = result.getDependencyGraph().getArtifact().getFile();
+    if (rootFile == null) {
+      throw new EnforcerRuleException(
+          "The root project artifact is not associated with a file."
+              + " The linkage checker enforcer rule should be bound to the verify phase.");
+    }
+    builder.add(rootFile.toPath());
+    // The rest are the dependencies
+    for (Dependency dependency : result.getResolvedDependencies()) {
+      builder.add(dependency.getArtifact().getFile().toPath());
+    }
+    return builder.build();
   }
 
   /** Builds a class path for {@code bomProject}. */
@@ -308,6 +334,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
             .collect(toImmutableList());
     // Joining one or more paths from root to the artifact
     return Joiner.on("\n").join(paths);
+  }
+
+  private static ImmutableList<DependencyNode> findFirstArtifactPath(
+      DependencyNode node, Artifact artifact) {
+    return Iterables.getFirst(findArtifactPaths(node, artifact), null);
   }
 
   private static ImmutableList<ImmutableList<DependencyNode>> findArtifactPaths(
