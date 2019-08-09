@@ -63,7 +63,6 @@ import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.ObjectType;
 import org.apache.bcel.generic.Type;
 import org.apache.bcel.util.ClassPath;
-import org.apache.bcel.util.Repository;
 
 /**
  * Class to read symbol references in Java class files and to verify the availability of references
@@ -72,12 +71,12 @@ import org.apache.bcel.util.Repository;
 class ClassDumper {
 
   private final ImmutableList<Path> inputClassPath;
-  private final Repository classRepository;
+  private final FixedSizeClassPathRepository classRepository;
   private final ClassLoader extensionClassLoader;
   private final ImmutableSetMultimap<Path, String> jarFileToClassFileNames;
   private final ImmutableListMultimap<String, Path> classFileNameToJarFiles;
 
-  private static Repository createClassRepository(List<Path> paths) {
+  private static FixedSizeClassPathRepository createClassRepository(List<Path> paths) {
     ClassPath classPath = new LinkageCheckClassPath(paths);
     return new FixedSizeClassPathRepository(classPath);
   }
@@ -322,7 +321,7 @@ class ClassDumper {
     // However, it required the superclass of a target class to be loadable too; otherwise
     // ClassNotFoundException was raised. It was inconvenient because we only wanted to know the
     // location of the target class, and sometimes the superclass is unavailable.
-    return Iterables.getFirst(classToJarFiles.get(className), null);
+    return Iterables.getFirst(classFileNameToJarFiles.get(className), null);
   }
 
   /**
@@ -331,7 +330,8 @@ class ClassDumper {
    * @param jars absolute paths to jar files
    */
   @VisibleForTesting
-  static ImmutableSetMultimap<Path, String> mapJarToClassFileNames(List<Path> jars) throws IOException {
+  static ImmutableSetMultimap<Path, String> mapJarToClassFileNames(List<Path> jars)
+      throws IOException {
     ImmutableSetMultimap.Builder<Path, String> pathToClasses = ImmutableSetMultimap.builder();
     for (Path jar : jars) {
       for (String classFileName : listClassFileNames(jar)) {
