@@ -266,7 +266,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         ArtifactTransferException artifactException = (ArtifactTransferException) cause;
         Artifact artifact = artifactException.getArtifact();
         String pathsToArtifact = findPaths(root, artifact);
-        ImmutableList<DependencyNode> firstArtifactPath = findFirstArtifactPath(root, artifact);
+        ImmutableList<DependencyNode> firstArtifactPath =
+            Iterables.getFirst(findArtifactPaths(root, artifact), null);
         if (DependencyGraphBuilder.isUnacceptableResolutionExceptionAt(firstArtifactPath)) {
           logger.error("Could not find artifact " + artifact);
           logger.error("Paths to the missing artifact: " + pathsToArtifact);
@@ -335,11 +336,6 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
             .collect(toImmutableList());
     // Joining one or more paths from root to the artifact
     return Joiner.on("\n").join(paths);
-  }
-
-  private static ImmutableList<DependencyNode> findFirstArtifactPath(
-      DependencyNode node, Artifact artifact) {
-    return Iterables.getFirst(findArtifactPaths(node, artifact), null);
   }
 
   private static ImmutableList<ImmutableList<DependencyNode>> findArtifactPaths(
