@@ -160,7 +160,6 @@ public class LinkageCheckerRuleTest {
     Traverser<DependencyNode> traverser = Traverser.forGraph(node -> node.getChildren());
 
     // DependencyResolutionResult.getDependencies returns depth-first order
-
     ImmutableList<Dependency> dummyDependencies =
         ImmutableList.copyOf(traverser.depthFirstPreOrder(rootNode)).stream()
             .map(DependencyNode::getDependency)
@@ -503,8 +502,8 @@ public class LinkageCheckerRuleTest {
 
     when(mockProjectDependenciesResolver.resolve(any())).thenThrow(exception);
 
-    // Should run Linkage Check without xerces-impl, without DependencyResolutionException, because
-    // the missing xerces-impl is under both provided and optional dependencies.
+    // Should not throw DependencyResolutionException, because the missing xerces-impl is under both
+    // provided and optional dependencies.
     rule.execute(mockRuleHelper);
   }
 }
