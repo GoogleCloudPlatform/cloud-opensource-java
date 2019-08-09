@@ -300,6 +300,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     builder.add(rootFile.toPath());
     // The rest are the dependencies
     for (Dependency dependency : result.getResolvedDependencies()) {
+      // Resolved dependencies are guaranteed to have file.
       builder.add(dependency.getArtifact().getFile().toPath());
     }
     return builder.build();
