@@ -321,7 +321,18 @@ class ClassDumper {
     // However, it required the superclass of a target class to be loadable too; otherwise
     // ClassNotFoundException was raised. It was inconvenient because we only wanted to know the
     // location of the target class, and sometimes the superclass is unavailable.
-    return Iterables.getFirst(classFileNameToJarFiles.get(className), null);
+    Path path = Iterables.getFirst(classFileNameToJarFiles.get(className), null);
+    if (path != null) {
+      return path;
+    }
+
+    // Some classes have framework-specific prefix such as "WEB-INF.classes.AppWidgetset" in its
+    // class file name.
+    String specialLocation = classRepository.getSpecialLocation(className);
+    if (specialLocation == null) {
+      return null;
+    }
+    return Iterables.getFirst(classFileNameToJarFiles.get(specialLocation), null);
   }
 
   /**

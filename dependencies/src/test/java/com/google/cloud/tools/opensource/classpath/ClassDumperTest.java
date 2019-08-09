@@ -223,6 +223,18 @@ public class ClassDumperTest {
   }
 
   @Test
+  public void testFindClassLocation_prefixedClassName() throws URISyntaxException, IOException {
+    Path path = absolutePathOfResource("testdata/dummy-boot-inf-prefix.jar");
+    ClassDumper classDumper = ClassDumper.create(ImmutableList.of(path));
+    classDumper.findSymbolReferences();
+
+    Path classLocation =
+        classDumper.findClassLocation("com.google.firestore.v1beta1.FirestoreGrpc");
+
+    Assert.assertEquals(path, classLocation);
+  }
+
+  @Test
   public void testIsSystemClass() throws URISyntaxException, IOException {
     ClassDumper classDumper =
         ClassDumper.create(ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar")));
@@ -334,4 +346,5 @@ public class ClassDumperTest {
             new ClassFile(
                 sisuGuicePath, "com.google.inject.internal.InjectorImpl$BindingsMultimap"));
   }
+
 }
