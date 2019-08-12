@@ -102,6 +102,9 @@ class ClassDumper {
       } else {
         nonAutomaticModuleNameJars.add(jar);
       }
+
+      Optional<String> moduleInfo = readModuleInfo(jar);
+
     }
 
     ImmutableListMultimap<String, Path> moduleNameToJar = builder.build();
@@ -409,6 +412,17 @@ class ClassDumper {
     return classPath.getAllClasses().stream()
         .map(ClassInfo::getName)
         .collect(toImmutableSet());
+  }
+
+  private static Optional<String> readModuleInfo(Path jar) throws IOException {
+    ImmutableSet<String> classFileNames = listClassFileNames(jar);
+    for (String classFileName : classFileNames) {
+      if (classFileName.toLowerCase().endsWith("module-info")) {
+        System.out.println("Found module-info");
+        return Optional.of("module-info");
+      }
+    }
+    return Optional.empty();
   }
 
   private static Optional<String> readAutomaticModuleName(Path jar) {
