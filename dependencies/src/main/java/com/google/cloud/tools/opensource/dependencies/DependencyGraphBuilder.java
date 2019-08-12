@@ -308,7 +308,7 @@ public class DependencyGraphBuilder {
               DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
               ExceptionAndPath failure =
                   ExceptionAndPath.create(parentNodes, failedDependencyNode, resolutionException);
-              if (unacceptableMissingDependency(failure.getPath())) {
+              if (requiredDependency(failure.getPath())) {
                 resolutionFailures.add(failure);
               }
             }
@@ -316,7 +316,7 @@ public class DependencyGraphBuilder {
             DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
             ExceptionAndPath failure =
                 ExceptionAndPath.create(parentNodes, failedDependencyNode, collectionException);
-            if (unacceptableMissingDependency(failure.getPath())) {
+            if (requiredDependency(failure.getPath())) {
               resolutionFailures.add(failure);
             }
           }
@@ -340,18 +340,18 @@ public class DependencyGraphBuilder {
    * Returns true if {@code dependencyPath} does not contain {@code optional} dependency and the
    * path does not contain {@code scope:provided} dependency.
    */
-  public static boolean unacceptableMissingDependency(List<DependencyNode> dependencyPath) {
-    boolean hasOptionalParent =
+  public static boolean requiredDependency(List<DependencyNode> dependencyPath) {
+    boolean hasOptional =
         dependencyPath.stream()
             .filter(node -> node.getDependency() != null) // Root node does not have dependency
             .anyMatch(node -> node.getDependency().isOptional());
-    if (!hasOptionalParent) {
+    if (!hasOptional) {
       return true;
     }
-    boolean hasProvidedParent =
+    boolean hasProvided =
         dependencyPath.stream()
             .filter(node -> node.getDependency() != null)
             .anyMatch(node -> "provided".equals(node.getDependency().getScope()));
-    return !hasProvidedParent;
+    return !hasProvided;
   }
 }

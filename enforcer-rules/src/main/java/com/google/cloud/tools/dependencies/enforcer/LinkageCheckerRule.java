@@ -252,7 +252,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    * Returns class path built from partial dependency graph of {@code resolutionException}.
    *
    * @throws EnforcerRuleException when {@code resolutionException} is invalidated by {@link
-   *     DependencyGraphBuilder#unacceptableMissingDependency(List)}
+   *     DependencyGraphBuilder#requiredDependency(List)}
    */
   private ImmutableList<Path> buildClasspathFromException(
       DependencyResolutionException resolutionException) throws EnforcerRuleException {
@@ -268,7 +268,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         String pathsToArtifact = findPaths(root, artifact);
         ImmutableList<DependencyNode> firstArtifactPath =
             Iterables.getFirst(findArtifactPaths(root, artifact), null);
-        if (DependencyGraphBuilder.unacceptableMissingDependency(firstArtifactPath)) {
+        if (DependencyGraphBuilder.requiredDependency(firstArtifactPath)) {
           logger.error("Could not find artifact " + artifact);
           logger.error("Paths to the missing artifact: " + pathsToArtifact);
           throw new EnforcerRuleException(
