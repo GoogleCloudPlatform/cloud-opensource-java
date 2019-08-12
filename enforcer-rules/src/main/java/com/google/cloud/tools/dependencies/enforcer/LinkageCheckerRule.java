@@ -257,6 +257,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   private ImmutableList<Path> buildClasspathFromException(
       DependencyResolutionException resolutionException) throws EnforcerRuleException {
     DependencyResolutionResult result = resolutionException.getResult();
+
     DependencyNode root = result.getDependencyGraph();
 
     for (Throwable cause = resolutionException.getCause();
@@ -283,8 +284,13 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         break;
       }
     }
-    // The exception is acceptable enough to build a class path.
-    return buildClasspath(result);
+    if (result.getResolvedDependencies().isEmpty()) {
+      // Nothing is resolved. Probably failed at collection phase before resolve phase.
+      throw new EnforcerRuleException("Unable to collect dependencies", resolutionException);
+    } else {
+      // The exception is acceptable enough to build a class path.
+      return buildClasspath(result);
+    }
   }
 
   private ImmutableList<Path> buildClasspath(DependencyResolutionResult result)
