@@ -95,12 +95,14 @@ class ClassDumper {
     ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
 
     ImmutableListMultimap.Builder<String, Path> builder = ImmutableListMultimap.builder();
+    ImmutableList.Builder<Path> nonAutomaticModuleNameJars = ImmutableList.builder();
     for (Path jar : jarPaths) {
-      readAutomaticModuleName(jar).ifPresent(
-          moduleName -> {
-            builder.put(moduleName, jar);
-          }
-      );
+      Optional<String> automaticModuleName = readAutomaticModuleName(jar);
+      if (automaticModuleName.isPresent()) {
+          builder.put(automaticModuleName.get(), jar);
+      } else {
+        nonAutomaticModuleNameJars.add(jar);
+      }
     }
 
     ImmutableListMultimap<String, Path> moduleNameToJar = builder.build();
@@ -115,6 +117,11 @@ class ClassDumper {
         System.out.println("NG: " + path);
       });
     }
+
+    System.out.println("Jar files without Automatic Module Name");
+    nonAutomaticModuleNameJars.build().forEach(jar -> {
+      System.out.println("  " + jar.getFileName());
+    });
 
     ClassLoader extensionClassLoader = systemClassLoader.getParent();
 
