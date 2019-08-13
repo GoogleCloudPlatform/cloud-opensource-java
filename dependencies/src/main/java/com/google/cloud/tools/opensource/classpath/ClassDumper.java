@@ -451,6 +451,16 @@ class ClassDumper {
   }
 
   private static Optional<String> readModuleInfo(Path jar) {
+    /* This logic is tested by recent logr4j-api 2 that supports Java 9 module via multi-release JAR
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/339
+
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>2.12.1</version>
+      </dependency>
+
+     */
     try (JarInputStream jarStream = new JarInputStream(new FileInputStream(jar.toFile()))) {
       for (JarEntry jarEntry = jarStream.getNextJarEntry(); jarEntry != null; jarEntry = jarStream.getNextJarEntry()) {
         String name = jarEntry.getName();
