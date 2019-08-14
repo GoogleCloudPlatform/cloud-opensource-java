@@ -22,6 +22,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
+import com.google.cloud.tools.opensource.classpath.ModularityChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
@@ -182,6 +183,11 @@ public class DashboardMain {
         ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
     // LinkedListMultimap preserves the key order
     ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
+
+    ImmutableList<Artifact> artifacts = jarToDependencyPaths.values().stream()
+        .map(dependencyPath -> dependencyPath.getLeaf()).distinct().collect(toImmutableList());
+    ModularityChecker modularityChecker = new ModularityChecker(classpath, artifacts);
+    modularityChecker.run();
 
     // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
     List<Path> artifactJarsInBom = classpath.subList(0, managedDependencies.size());

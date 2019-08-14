@@ -94,56 +94,6 @@ class ClassDumper {
   static ClassDumper create(List<Path> jarPaths) throws IOException {
     ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
 
-    ImmutableListMultimap.Builder<String, Path> builder = ImmutableListMultimap.builder();
-    ImmutableList.Builder<Path> moduleInfoJars = ImmutableList.builder();
-    ImmutableList.Builder<Path> nonAutomaticModuleNameJars = ImmutableList.builder();
-    for (Path jar : jarPaths) {
-
-      Optional<String> moduleInfo = readModuleInfo(jar);
-      if (moduleInfo.isPresent()) {
-        moduleInfoJars.add(jar);
-      }
-      Optional<String> automaticModuleName = readAutomaticModuleName(jar);
-      if (automaticModuleName.isPresent()) {
-          builder.put(automaticModuleName.get(), jar);
-      } else {
-        nonAutomaticModuleNameJars.add(jar);
-      }
-
-    }
-    System.out.println("Total JAR files: " + jarPaths.size());
-    ImmutableList<Path> jarsWithoutAutomaticModuleName = nonAutomaticModuleNameJars.build();
-    System.out.println("JAR files with Automatic Module Name in Manifest: " + jarsWithoutAutomaticModuleName.size());
-    ImmutableList<Path> jarWithModuleInfo = moduleInfoJars.build();
-    System.out.println("JAR files with Module-Info: " + jarWithModuleInfo.size());
-
-    ImmutableListMultimap<String, Path> moduleNameToJar = builder.build();
-    for (String moduleName: moduleNameToJar.keySet()) {
-      ImmutableList<Path> paths = moduleNameToJar.get(moduleName);
-      System.out.println("Automatic Module Name: " + moduleName);
-      if (paths.size() == 1) {
-        System.out.println("  : " + paths.get(0).getFileName());
-        continue;
-      }
-      paths.forEach(path -> {
-        System.out.println("  duplicate: " + path);
-      });
-    }
-
-    if (!jarWithModuleInfo.isEmpty()) {
-      System.out.println("\nJar including module-info:");
-      jarWithModuleInfo.forEach(jar -> {
-        System.out.println("  " + jar.getFileName());
-      });
-    }
-
-    if (!jarsWithoutAutomaticModuleName.isEmpty()) {
-      System.out.println("\nJar files without Automatic Module Name");
-      jarsWithoutAutomaticModuleName.forEach(jar -> {
-        System.out.println("  " + jar.getFileName());
-      });
-    }
-
     ClassLoader extensionClassLoader = systemClassLoader.getParent();
 
     ImmutableList<Path> unreadableFiles =
@@ -431,48 +381,6 @@ class ClassDumper {
     return classPath.getAllClasses().stream()
         .map(ClassInfo::getName)
         .collect(toImmutableSet());
-  }
-
-  private static Optional<String> readAutomaticModuleName(Path jar) {
-    try (JarInputStream jarStream = new JarInputStream(new FileInputStream(jar.toFile()))) {
-      Manifest manifest = jarStream.getManifest();
-      String name = "Automatic-Module-Name";
-      if (manifest == null) {
-        return Optional.empty();
-      }
-      Attributes attributes = manifest.getMainAttributes();
-      if (attributes == null || attributes.size() < 1) {
-        return Optional.empty();
-      }
-      return Optional.ofNullable(attributes.getValue(name));
-    } catch (IOException ex) {
-      throw new RuntimeException("Could not open putstream", ex);
-    }
-  }
-
-  private static Optional<String> readModuleInfo(Path jar) {
-    /* This logic is tested by recent logr4j-api 2 that supports Java 9 module via multi-release JAR
-      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/339
-
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-api</artifactId>
-        <version>2.12.1</version>
-      </dependency>
-
-     */
-    try (JarInputStream jarStream = new JarInputStream(new FileInputStream(jar.toFile()))) {
-      for (JarEntry jarEntry = jarStream.getNextJarEntry(); jarEntry != null; jarEntry = jarStream.getNextJarEntry()) {
-        String name = jarEntry.getName();
-        if (name.toLowerCase().contains("module-info")) {
-          System.out.println("Found module-info");
-          return Optional.of(name);
-        }
-      }
-      return Optional.empty();
-    } catch (IOException ex) {
-      throw new RuntimeException("Could not open putstream", ex);
-    }
   }
 
   /**
