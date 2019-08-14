@@ -42,6 +42,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 import javax.annotation.Nullable;
@@ -94,8 +95,14 @@ class ClassDumper {
     ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
 
     ImmutableListMultimap.Builder<String, Path> builder = ImmutableListMultimap.builder();
+    ImmutableList.Builder<Path> moduleInfoJars = ImmutableList.builder();
     ImmutableList.Builder<Path> nonAutomaticModuleNameJars = ImmutableList.builder();
     for (Path jar : jarPaths) {
+
+      Optional<String> moduleInfo = readModuleInfo(jar);
+      if (moduleInfo.isPresent()) {
+        moduleInfoJars.add(jar);
+      }
       Optional<String> automaticModuleName = readAutomaticModuleName(jar);
       if (automaticModuleName.isPresent()) {
           builder.put(automaticModuleName.get(), jar);
@@ -103,9 +110,12 @@ class ClassDumper {
         nonAutomaticModuleNameJars.add(jar);
       }
 
-      Optional<String> moduleInfo = readModuleInfo(jar);
-
     }
+    System.out.println("Total JAR files: " + jarPaths.size());
+    ImmutableList<Path> jarsWithoutAutomaticModuleName = nonAutomaticModuleNameJars.build();
+    System.out.println("JAR files with Automatic Module Name in Manifest: " + jarsWithoutAutomaticModuleName.size());
+    ImmutableList<Path> jarWithModuleInfo = moduleInfoJars.build();
+    System.out.println("JAR files with Module-Info: " + jarWithModuleInfo.size());
 
     ImmutableListMultimap<String, Path> moduleNameToJar = builder.build();
     for (String moduleName: moduleNameToJar.keySet()) {
@@ -116,14 +126,23 @@ class ClassDumper {
         continue;
       }
       paths.forEach(path -> {
-        System.out.println("NG: " + path);
+        System.out.println("  duplicate: " + path);
       });
     }
 
-    System.out.println("Jar files without Automatic Module Name");
-    nonAutomaticModuleNameJars.build().forEach(jar -> {
-      System.out.println("  " + jar.getFileName());
-    });
+    if (!jarWithModuleInfo.isEmpty()) {
+      System.out.println("\nJar including module-info:");
+      jarWithModuleInfo.forEach(jar -> {
+        System.out.println("  " + jar.getFileName());
+      });
+    }
+
+    if (!jarsWithoutAutomaticModuleName.isEmpty()) {
+      System.out.println("\nJar files without Automatic Module Name");
+      jarsWithoutAutomaticModuleName.forEach(jar -> {
+        System.out.println("  " + jar.getFileName());
+      });
+    }
 
     ClassLoader extensionClassLoader = systemClassLoader.getParent();
 
@@ -414,17 +433,6 @@ class ClassDumper {
         .collect(toImmutableSet());
   }
 
-  private static Optional<String> readModuleInfo(Path jar) throws IOException {
-    ImmutableSet<String> classFileNames = listClassFileNames(jar);
-    for (String classFileName : classFileNames) {
-      if (classFileName.toLowerCase().endsWith("module-info")) {
-        System.out.println("Found module-info");
-        return Optional.of("module-info");
-      }
-    }
-    return Optional.empty();
-  }
-
   private static Optional<String> readAutomaticModuleName(Path jar) {
     try (JarInputStream jarStream = new JarInputStream(new FileInputStream(jar.toFile()))) {
       Manifest manifest = jarStream.getManifest();
@@ -437,6 +445,31 @@ class ClassDumper {
         return Optional.empty();
       }
       return Optional.ofNullable(attributes.getValue(name));
+    } catch (IOException ex) {
+      throw new RuntimeException("Could not open putstream", ex);
+    }
+  }
+
+  private static Optional<String> readModuleInfo(Path jar) {
+    /* This logic is tested by recent logr4j-api 2 that supports Java 9 module via multi-release JAR
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/339
+
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>2.12.1</version>
+      </dependency>
+
+     */
+    try (JarInputStream jarStream = new JarInputStream(new FileInputStream(jar.toFile()))) {
+      for (JarEntry jarEntry = jarStream.getNextJarEntry(); jarEntry != null; jarEntry = jarStream.getNextJarEntry()) {
+        String name = jarEntry.getName();
+        if (name.toLowerCase().contains("module-info")) {
+          System.out.println("Found module-info");
+          return Optional.of(name);
+        }
+      }
+      return Optional.empty();
     } catch (IOException ex) {
       throw new RuntimeException("Could not open putstream", ex);
     }
