@@ -24,27 +24,18 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.graph.Traverser;
 import com.google.common.reflect.ClassPath.ClassInfo;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.jar.Attributes;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
-import java.util.jar.Manifest;
 import javax.annotation.Nullable;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -740,4 +731,23 @@ class ClassDumper {
               return ImmutableSet.of();
             }
           });
+
+  public void findDuplicateClasses() {
+    classes:
+    for (String classFileName : classFileNameToJarFiles.keySet()) {
+      ImmutableList<Path> paths = classFileNameToJarFiles.get(classFileName);
+
+      for (String knownProblem: Arrays.asList("appengine-api-1.0-sdk", "guava-jdk5", "servlet-api", "javaee-api", "protobuf-lite", "android-4.1.1.4")) {
+        if (paths.stream().anyMatch(path -> path.getFileName().toString().contains(knownProblem))) {
+          continue classes;
+        }
+      }
+      if (paths.size() > 1) {
+        System.out.println("Duplicate paths for " + classFileName);
+        paths.forEach(path -> {
+          System.out.println("  " + path.getFileName());
+        });
+      }
+    }
+  }
 }

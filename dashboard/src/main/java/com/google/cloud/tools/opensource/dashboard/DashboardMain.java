@@ -184,8 +184,11 @@ public class DashboardMain {
     // LinkedListMultimap preserves the key order
     ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
 
-    ImmutableList<Artifact> artifacts = jarToDependencyPaths.values().stream()
-        .map(dependencyPath -> dependencyPath.getLeaf()).distinct().collect(toImmutableList());
+    ImmutableList<Artifact> artifacts =
+        jarToDependencyPaths.values().stream()
+            .map(dependencyPath -> dependencyPath.getLeaf())
+            .distinct()
+            .collect(toImmutableList());
     ModularityChecker modularityChecker = new ModularityChecker(classpath, artifacts);
     modularityChecker.run();
 
@@ -194,6 +197,9 @@ public class DashboardMain {
     ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInBom);
 
     LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints);
+
+    System.out.println("Checking overlapping classes");
+    linkageChecker.printDuplicateClass();
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();

@@ -405,4 +405,8 @@ public class LinkageChecker {
       return false;
     }
   }
+
+  public void printDuplicateClass() {
+    classDumper.findDuplicateClasses();;
+  }
 }

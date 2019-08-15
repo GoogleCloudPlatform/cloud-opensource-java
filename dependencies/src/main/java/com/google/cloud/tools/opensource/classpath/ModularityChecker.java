@@ -37,7 +37,7 @@ public class ModularityChecker {
     this.jars = ImmutableList.copyOf(jars);
 
     ImmutableMap.Builder<Path, Artifact> builder = ImmutableMap.builder();
-    for (Artifact artifact: artifacts) {
+    for (Artifact artifact : artifacts) {
       builder.put(artifact.getFile().toPath(), artifact);
     }
     this.artifacts = builder.build();
@@ -59,43 +59,47 @@ public class ModularityChecker {
       } else {
         nonAutomaticModuleNameJars.add(jar);
       }
-
     }
     ImmutableListMultimap<String, Path> moduleNameToJar = builder.build();
 
     System.out.println("Total Artifacts: " + jars.size());
     ImmutableList<Path> jarsWithoutAutomaticModuleName = nonAutomaticModuleNameJars.build();
-    System.out.println("Artifacts with Automatic Module Name in Manifest: " + moduleNameToJar.values().stream().distinct().count());
+    System.out.println(
+        "Artifacts with Automatic Module Name in Manifest: "
+            + moduleNameToJar.values().stream().distinct().count());
     ImmutableList<Path> jarWithModuleInfo = moduleInfoJars.build();
     System.out.println("Artifacts with Module-Info: " + jarWithModuleInfo.size());
 
-    for (String moduleName: moduleNameToJar.keySet()) {
+    for (String moduleName : moduleNameToJar.keySet()) {
       ImmutableList<Path> paths = moduleNameToJar.get(moduleName);
       System.out.println("Automatic Module Name: " + moduleName);
       if (paths.size() == 1) {
         System.out.println("  : " + artifacts.get(paths.get(0)));
         continue;
       }
-      paths.forEach(path -> {
-        System.out.println("  duplicate: " + artifacts.get(path));
-      });
+      paths.forEach(
+          path -> {
+            System.out.println("  duplicate: " + artifacts.get(path));
+          });
     }
 
     if (!jarWithModuleInfo.isEmpty()) {
       System.out.println("\nArtifacts including module-info: " + jarWithModuleInfo.size());
-      jarWithModuleInfo.forEach(jar -> {
-        System.out.println("  " + artifacts.get(jar));
-      });
+      jarWithModuleInfo.forEach(
+          jar -> {
+            System.out.println("  " + artifacts.get(jar));
+          });
     }
 
     if (!jarsWithoutAutomaticModuleName.isEmpty()) {
-      System.out.println("\nArtifacts without Automatic Module Name: " + jarsWithoutAutomaticModuleName.size());
-      jarsWithoutAutomaticModuleName.forEach(jar -> {
-        System.out.println("  " + artifacts.get(jar));
-      });
+      System.out.println(
+          "\nArtifacts without Automatic Module Name: " + jarsWithoutAutomaticModuleName.size());
+      jarsWithoutAutomaticModuleName.forEach(
+          jar -> {
+            System.out.println("  " + artifacts.get(jar));
+          });
     }
   }
-
 
   private static Optional<String> readAutomaticModuleName(Path jar) {
     try (JarInputStream jarStream = new JarInputStream(new FileInputStream(jar.toFile()))) {
@@ -116,17 +120,19 @@ public class ModularityChecker {
 
   private static Optional<String> readModuleInfo(Path jar) {
     /* This logic is tested by recent logr4j-api 2 that supports Java 9 module via multi-release JAR
-      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/339
+     https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/339
 
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-api</artifactId>
-        <version>2.12.1</version>
-      </dependency>
+     <dependency>
+       <groupId>org.apache.logging.log4j</groupId>
+       <artifactId>log4j-api</artifactId>
+       <version>2.12.1</version>
+     </dependency>
 
-     */
+    */
     try (JarInputStream jarStream = new JarInputStream(new FileInputStream(jar.toFile()))) {
-      for (JarEntry jarEntry = jarStream.getNextJarEntry(); jarEntry != null; jarEntry = jarStream.getNextJarEntry()) {
+      for (JarEntry jarEntry = jarStream.getNextJarEntry();
+          jarEntry != null;
+          jarEntry = jarStream.getNextJarEntry()) {
         String name = jarEntry.getName();
         if (name.toLowerCase().contains("module-info")) {
           System.out.println("Found module-info");
