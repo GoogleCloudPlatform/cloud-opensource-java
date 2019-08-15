@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 import org.apache.bcel.classfile.Field;
@@ -407,6 +406,6 @@ public class LinkageChecker {
   }
 
   public void printDuplicateClass() {
-    classDumper.findDuplicateClasses();;
+    classDumper.printDuplicateClasses();;
   }
 }

@@ -732,7 +732,7 @@ class ClassDumper {
             }
           });
 
-  public void findDuplicateClasses() {
+  void printDuplicateClasses() {
     classes:
     for (String classFileName : classFileNameToJarFiles.keySet()) {
       ImmutableList<Path> paths = classFileNameToJarFiles.get(classFileName);
