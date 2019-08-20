@@ -38,8 +38,6 @@ import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,10 +63,12 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
+import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
 
 /** Linkage Checker Maven Enforcer Rule. */
 public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
@@ -267,7 +267,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         ArtifactTransferException artifactException = (ArtifactTransferException) cause;
         Artifact artifact = artifactException.getArtifact();
         String pathsToArtifact = findPaths(root, artifact);
-        ImmutableList<DependencyNode> firstArtifactPath =
+        List<DependencyNode> firstArtifactPath =
             Iterables.getFirst(findArtifactPaths(root, artifact), ImmutableList.of());
         if (DependencyGraphBuilder.requiredDependency(firstArtifactPath)) {
           logger.error("Could not find artifact " + artifact);
@@ -333,8 +333,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   private static String findPaths(DependencyNode root, Artifact artifact) {
-    ImmutableList<ImmutableList<DependencyNode>> dependencyPaths =
-        findArtifactPaths(root, artifact);
+    ImmutableList<List<DependencyNode>> dependencyPaths = findArtifactPaths(root, artifact);
 
     ImmutableList<String> paths =
         dependencyPaths.stream()
@@ -344,27 +343,13 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     return Joiner.on("\n").join(paths);
   }
 
-  private static ImmutableList<ImmutableList<DependencyNode>> findArtifactPaths(
-      DependencyNode node, Artifact artifact) {
-    Deque<DependencyNode> stack = new ArrayDeque<>();
-    stack.addLast(node);
-    ImmutableList.Builder<ImmutableList<DependencyNode>> builder = ImmutableList.builder();
-    findArtifact(builder, node, stack, artifact);
-    return builder.build();
-  }
-
-  private static void findArtifact(
-      ImmutableList.Builder<ImmutableList<DependencyNode>> result,
-      DependencyNode node,
-      Deque<DependencyNode> path,
-      Artifact artifact) {
-    if (Artifacts.toCoordinates(node.getArtifact()).equals(Artifacts.toCoordinates(artifact))) {
-      result.add(ImmutableList.copyOf(path));
-    }
-    for (DependencyNode child : node.getChildren()) {
-      path.addLast(child);
-      findArtifact(result, child, path, artifact);
-      path.removeLast();
-    }
+  private static ImmutableList<List<DependencyNode>> findArtifactPaths(
+      DependencyNode root, Artifact artifact) {
+    String coordinates = Artifacts.toCoordinates(artifact);
+    DependencyFilter filter =
+        (node, parents) -> Artifacts.toCoordinates(node.getArtifact()).equals(coordinates);
+    PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(filter);
+    root.accept(visitor);
+    return ImmutableList.copyOf(visitor.getPaths());
   }
 }
