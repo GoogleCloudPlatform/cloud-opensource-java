@@ -346,8 +346,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   private static ImmutableList<List<DependencyNode>> findArtifactPaths(
       DependencyNode root, Artifact artifact) {
     String coordinates = Artifacts.toCoordinates(artifact);
-    DependencyFilter filter = (node, parents) -> Artifacts
-        .toCoordinates(node.getArtifact()).equals(coordinates);
+    DependencyFilter filter =
+        (node, parents) -> Artifacts.toCoordinates(node.getArtifact()).equals(coordinates);
     PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(filter);
     root.accept(visitor);
     return ImmutableList.copyOf(visitor.getPaths());
