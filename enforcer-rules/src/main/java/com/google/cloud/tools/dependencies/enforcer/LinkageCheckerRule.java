@@ -63,6 +63,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
@@ -345,9 +346,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   private static ImmutableList<List<DependencyNode>> findArtifactPaths(
       DependencyNode root, Artifact artifact) {
     String coordinates = Artifacts.toCoordinates(artifact);
-    PathRecordingDependencyVisitor visitor =
-        new PathRecordingDependencyVisitor(
-            (node, parents) -> Artifacts.toCoordinates(node.getArtifact()).equals(coordinates));
+    DependencyFilter filter = (node, parents) -> Artifacts
+        .toCoordinates(node.getArtifact()).equals(coordinates);
+    PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(filter);
     root.accept(visitor);
     return ImmutableList.copyOf(visitor.getPaths());
   }
