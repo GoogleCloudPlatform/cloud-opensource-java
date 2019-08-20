@@ -509,7 +509,7 @@ public class LinkageCheckerRuleTest {
 
   @Test
   public void testArtifactTransferError_missingArtifactNotInGraph()
-      throws URISyntaxException, DependencyResolutionException, EnforcerRuleException {
+      throws URISyntaxException, DependencyResolutionException {
     // Creating a dummy tree
     //   com.google.foo:project
     //     +- com.google.foo:child1 (provided)
