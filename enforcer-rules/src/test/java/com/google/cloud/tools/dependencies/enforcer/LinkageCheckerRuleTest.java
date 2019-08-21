@@ -547,7 +547,7 @@ public class LinkageCheckerRuleTest {
       fail("The rule should throw EnforcerRuleException upon DependencyResolutionException");
     } catch (EnforcerRuleException ex) {
       verify(mockLog)
-          .warn("The transformed dependency graph does not contain the missing artifact");
+          .error("The transformed dependency graph does not contain the missing artifact");
     }
   }
 }
