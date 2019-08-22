@@ -258,7 +258,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       DependencyResolutionException resolutionException) throws EnforcerRuleException {
     DependencyResolutionResult result = resolutionException.getResult();
 
-    DependencyNode root = result.getDependencyGraph();
+    DependencyNode dependencyGraph = result.getDependencyGraph();
 
     for (Throwable cause = resolutionException.getCause();
         cause != null;
@@ -266,12 +266,20 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       if (cause instanceof ArtifactTransferException) {
         ArtifactTransferException artifactException = (ArtifactTransferException) cause;
         Artifact artifact = artifactException.getArtifact();
-        String pathsToArtifact = findPaths(root, artifact);
+        String pathsToArtifact = findPaths(dependencyGraph, artifact);
         List<DependencyNode> firstArtifactPath =
-            Iterables.getFirst(findArtifactPaths(root, artifact), ImmutableList.of());
+            Iterables.getFirst(findArtifactPaths(dependencyGraph, artifact), ImmutableList.of());
         if (DependencyGraphBuilder.requiredDependency(firstArtifactPath)) {
           logger.error("Could not find artifact " + artifact);
-          logger.error("Paths to the missing artifact: " + pathsToArtifact);
+          if (pathsToArtifact.isEmpty()) {
+            // On certain conditions, Maven throws ArtifactDescriptorException even when the
+            // (transformed) dependency graph does not contain the problematic artifact any more.
+            // https://issues.apache.org/jira/browse/MNG-6732
+            logger.error(
+                "The transformed dependency graph does not contain the missing artifact");
+          } else {
+            logger.error("Paths to the missing artifact: " + pathsToArtifact);
+          }
           throw new EnforcerRuleException(
               "Unable to build a dependency graph: " + resolutionException.getMessage(),
               resolutionException);

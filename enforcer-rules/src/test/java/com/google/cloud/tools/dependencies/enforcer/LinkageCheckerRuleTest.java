@@ -506,4 +506,48 @@ public class LinkageCheckerRuleTest {
     // provided and optional dependencies.
     rule.execute(mockRuleHelper);
   }
+
+  @Test
+  public void testArtifactTransferError_missingArtifactNotInGraph()
+      throws URISyntaxException, DependencyResolutionException {
+    // Creating a dummy tree
+    //   com.google.foo:project
+    //     +- com.google.foo:child1 (provided)
+    //        +- com.google.foo:child2 (optional)
+    DefaultDependencyNode child2 =
+        new DefaultDependencyNode(
+            new Dependency(
+                createArtifactWithDummyFile("com.google.foo:child2:1.0.0"), "compile", true));
+    DefaultDependencyNode child1 =
+        new DefaultDependencyNode(
+            new Dependency(createArtifactWithDummyFile("com.google.foo:child1:1.0.0"), "provided"));
+    child1.setChildren(ImmutableList.of(child2));
+    DefaultDependencyNode root =
+        new DefaultDependencyNode(createArtifactWithDummyFile("com.google.foo:project:1.0.0"));
+    root.setChildren(ImmutableList.of(child1));
+
+    DependencyResolutionResult resolutionResult = mock(DependencyResolutionResult.class);
+    when(resolutionResult.getDependencyGraph()).thenReturn(root);
+    when(resolutionResult.getResolvedDependencies())
+        .thenReturn(ImmutableList.of(child1.getDependency(), child2.getDependency()));
+
+    // The exception is caused by this node but this node does not appear in the dependency graph.
+    DefaultDependencyNode missingArtifactNode =
+        new DefaultDependencyNode(
+            new Dependency(
+                createArtifactWithDummyFile("xerces:xerces-impl:jar:2.6.2"), "compile", true));
+    // xerces-impl does not exist in Maven Central
+    DependencyResolutionException exception =
+        createDummyResolutionException(missingArtifactNode.getArtifact(), resolutionResult);
+
+    when(mockProjectDependenciesResolver.resolve(any())).thenThrow(exception);
+
+    try {
+      rule.execute(mockRuleHelper);
+      fail("The rule should throw EnforcerRuleException upon DependencyResolutionException");
+    } catch (EnforcerRuleException ex) {
+      verify(mockLog)
+          .error("The transformed dependency graph does not contain the missing artifact");
+    }
+  }
 }
