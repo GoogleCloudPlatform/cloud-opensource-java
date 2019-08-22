@@ -272,8 +272,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         if (DependencyGraphBuilder.requiredDependency(firstArtifactPath)) {
           logger.error("Could not find artifact " + artifact);
           if (pathsToArtifact.isEmpty()) {
-            // Maven may throw ArtifactDescriptorException even when the (transformed) dependency
-            // graph does not contain the problematic artifact any more.
+            // On certain conditions, Maven throws ArtifactDescriptorException even when the
+            // (transformed) dependency graph does not contain the problematic artifact any more.
             // https://issues.apache.org/jira/browse/MNG-6732
             logger.error(
                 "The transformed dependency graph does not contain the missing artifact");
