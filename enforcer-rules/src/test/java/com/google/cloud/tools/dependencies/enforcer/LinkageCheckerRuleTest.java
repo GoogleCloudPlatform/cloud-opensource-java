@@ -594,7 +594,7 @@ public class LinkageCheckerRuleTest {
     } catch (EnforcerRuleException ex) {
       assertEquals(
           "To run the check on the compiled class files, the linkage checker enforcer rule should"
-              + " be bound to the 'verify' phase.",
+              + " be bound to the 'verify' phase. Current phase: validate",
           ex.getMessage());
     }
   }
