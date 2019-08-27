@@ -30,6 +30,7 @@ import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.graph.Traverser;
 import com.google.common.truth.Truth;
+import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URLClassLoader;
 import java.nio.file.Paths;
@@ -43,6 +44,7 @@ import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.DependencyManagement;
+import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.DependencyResolutionRequest;
@@ -81,6 +83,7 @@ public class LinkageCheckerRuleTest {
   private EnforcerRuleHelper mockRuleHelper;
   private Log mockLog;
   private MavenSession mockMavenSession;
+  private MojoExecution mockMojoExecution;
   private ProjectDependenciesResolver mockProjectDependenciesResolver;
   private DependencyResolutionResult mockDependencyResolutionResult;
 
@@ -118,16 +121,20 @@ public class LinkageCheckerRuleTest {
         .thenReturn(mockDependencyResolutionResult);
     when(mockRuleHelper.evaluate("${session}")).thenReturn(mockMavenSession);
     when(mockRuleHelper.evaluate("${project}")).thenReturn(mockProject);
-    when(mockProject.getArtifact())
-        .thenReturn(
-            new org.apache.maven.artifact.DefaultArtifact(
-                "com.google.cloud",
-                "linkage-checker-rule-test",
-                "0.0.1",
-                "compile",
-                "jar",
-                null,
-                new DefaultArtifactHandler()));
+    mockMojoExecution = mock(MojoExecution.class);
+    when(mockMojoExecution.getLifecyclePhase()).thenReturn("verify");
+    when(mockRuleHelper.evaluate("${mojoExecution}")).thenReturn(mockMojoExecution);
+    org.apache.maven.artifact.DefaultArtifact rootArtifact =
+        new org.apache.maven.artifact.DefaultArtifact(
+            "com.google.cloud",
+            "linkage-checker-rule-test",
+            "0.0.1",
+            "compile",
+            "jar",
+            null,
+            new DefaultArtifactHandler());
+    rootArtifact.setFile(new File("dummy.jar"));
+    when(mockProject.getArtifact()).thenReturn(rootArtifact);
   }
 
   /**
@@ -407,16 +414,17 @@ public class LinkageCheckerRuleTest {
       // This artifact is known to contain classes missing dependencies
       setupMockDependencyResolution("com.google.appengine:appengine-api-1.0-sdk:1.9.64");
 
-      when(mockProject.getArtifact())
-          .thenReturn(
-              new org.apache.maven.artifact.DefaultArtifact(
-                  "com.google.cloud",
-                  "linkage-checker-rule-test",
-                  "0.0.1",
-                  "compile",
-                  "bundle", // Maven Bundle Plugin uses "bundle" packaging.
-                  null,
-                  new DefaultArtifactHandler()));
+      org.apache.maven.artifact.DefaultArtifact rootArtifact =
+          new org.apache.maven.artifact.DefaultArtifact(
+              "com.google.cloud",
+              "linkage-checker-rule-test",
+              "0.0.1",
+              "compile",
+              "bundle", // Maven Bundle Plugin uses "bundle" packaging.
+              null,
+              new DefaultArtifactHandler());
+      rootArtifact.setFile(new File("dummy.jar"));
+      when(mockProject.getArtifact()).thenReturn(rootArtifact);
 
       rule.execute(mockRuleHelper);
       Assert.fail(
@@ -548,6 +556,46 @@ public class LinkageCheckerRuleTest {
     } catch (EnforcerRuleException ex) {
       verify(mockLog)
           .error("The transformed dependency graph does not contain the missing artifact");
+    }
+  }
+
+  @Test
+  public void testSkippingProjectWithoutFile() throws EnforcerRuleException {
+    when(mockProject.getArtifact())
+        .thenReturn(
+            new org.apache.maven.artifact.DefaultArtifact(
+                "com.google.cloud",
+                "foo-tests",
+                "0.0.1",
+                "compile",
+                "jar",
+                null,
+                new DefaultArtifactHandler()));
+    rule.execute(mockRuleHelper);
+  }
+
+  @Test
+  public void testValidatePhase() {
+    when(mockProject.getArtifact())
+        .thenReturn(
+            new org.apache.maven.artifact.DefaultArtifact(
+                "com.google.cloud",
+                "foo-tests",
+                "0.0.1",
+                "compile",
+                "jar",
+                null,
+                new DefaultArtifactHandler()));
+
+    when(mockMojoExecution.getLifecyclePhase()).thenReturn("validate");
+    try {
+      rule.execute(mockRuleHelper);
+      fail("The rule should throw EnforcerRuleException when running in validate phase");
+    } catch (EnforcerRuleException ex) {
+      assertEquals(
+          "To run the check on the compiled class files, the linkage checker enforcer rule should"
+              + " be bound to the 'verify' phase. Current phase: validate",
+          ex.getMessage());
     }
   }
 }
