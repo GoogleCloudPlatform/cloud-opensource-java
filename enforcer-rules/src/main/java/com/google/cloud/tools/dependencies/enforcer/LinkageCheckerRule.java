@@ -151,7 +151,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         if (!"verify".equals(execution.getLifecyclePhase())) {
           throw new EnforcerRuleException(
               "To run the check on the compiled class files, the linkage checker enforcer rule"
-                  + " should be bound to the 'verify' phase. Current phase: " + execution.getLifecyclePhase());
+                  + " should be bound to the 'verify' phase. Current phase: "
+                  + execution.getLifecyclePhase());
         }
         if (project.getArtifact().getFile() == null) {
           // Skipping projects without a file, such as Guava's guava-tests module.
