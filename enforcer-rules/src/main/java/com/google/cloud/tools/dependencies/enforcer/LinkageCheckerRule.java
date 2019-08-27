@@ -148,15 +148,16 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         if (UNSUPPORTED_NONBOM_PACKAGING.contains(projectType)) {
           return;
         }
-      }
-
-      if (!"verify".equals(execution.getLifecyclePhase())) {
-        throw new EnforcerRuleException("To run the check on the compiled class files, the linkage checker enforcer rule should be bound to the 'verify' phase.");
-      }
-      if (project.getArtifact().getFile() == null) {
-        // Skipping projects without a file, such as Guava's guava-tests module.
-        // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/850
-        return;
+        if (!"verify".equals(execution.getLifecyclePhase())) {
+          throw new EnforcerRuleException(
+              "To run the check on the compiled class files, the linkage checker enforcer rule"
+                  + " should be bound to the 'verify' phase. Current phase: " + execution.getLifecyclePhase());
+        }
+        if (project.getArtifact().getFile() == null) {
+          // Skipping projects without a file, such as Guava's guava-tests module.
+          // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/850
+          return;
+        }
       }
 
       ImmutableList<Path> classpath =
@@ -319,8 +320,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     // The root node must have the project's JAR file
     File rootFile = result.getDependencyGraph().getArtifact().getFile();
     if (rootFile == null) {
-      throw new EnforcerRuleException(
-          "The root project artifact is not associated with a file.");
+      throw new EnforcerRuleException("The root project artifact is not associated with a file.");
     }
     builder.add(rootFile.toPath());
     // The rest are the dependencies
