@@ -36,10 +36,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.nio.file.Paths;
 import java.util.Set;
+import org.apache.maven.model.building.ModelBuildingException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
@@ -57,7 +59,8 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void testFindSnapshotVersion() throws MavenRepositoryException {
+  public void testFindSnapshotVersion()
+      throws MavenRepositoryException, ModelBuildingException, ArtifactResolutionException {
     // This version of Guava should be found locally because this module uses it.
     Bom snapshotBom =
         LinkageMonitor.copyWithSnapshot(
@@ -69,9 +72,22 @@ public class LinkageMonitorTest {
   }
 
   @Test
+  public void testFindSnapshotVersionBom()
+      throws MavenRepositoryException, ModelBuildingException, ArtifactResolutionException {
+    // This version of Guava should be found locally because this module uses it.
+    Bom snapshotBom =
+        LinkageMonitor.copyWithSnapshot(
+            RepositoryUtility.newRepositorySystem(),
+            new Bom(
+                "com.google.cloud:libraries-bom:pom:2.2.1",
+                ImmutableList.of(new DefaultArtifact("com.google.guava:guava:27.1-android"))));
+    assertNotNull(snapshotBom);
+  }
+
+  @Test
   public void testBomSnapshot()
       throws VersionRangeResolutionException, MavenRepositoryException,
-          InvalidVersionSpecificationException {
+      InvalidVersionSpecificationException, ModelBuildingException, ArtifactResolutionException {
     VersionRangeResult protobufSnapshotVersionResult =
         new VersionRangeResult(new VersionRangeRequest());
     VersionRangeResult versionWithoutSnapshot = new VersionRangeResult(new VersionRangeRequest());
