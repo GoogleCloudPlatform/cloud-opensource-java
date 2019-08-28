@@ -215,7 +215,14 @@ public class LinkageMonitorTest {
     Model model =
         LinkageMonitor.buildModelWithSnapshotBom(
             system, session, "com.google.cloud:libraries-bom:2.2.1");
-    assertEquals(224, model.getDependencyManagement().getDependencies().size());
+    if () {
+      List<Dependency> dependencies = model.getDependencyManagement().getDependencies();
+      if (dependencies.size() != 224) {
+        System.out.println("The number does not match");
+        dependencies.forEach(System.out::println);
+      }
+      assertEquals(224, dependencies.size());
+    }
   }
 
   @Test
@@ -266,6 +273,7 @@ public class LinkageMonitorTest {
         LinkageMonitor.buildModelWithSnapshotBom(
             spySystem, session, "com.google.cloud:libraries-bom:2.2.1");
     List<Dependency> dependencies = model.getDependencyManagement().getDependencies();
+
     assertEquals(224, dependencies.size());
 
     // google-cloud-bom:0.106.0-alpha has gax:1.48.0
