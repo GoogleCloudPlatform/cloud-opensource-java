@@ -122,6 +122,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   @Override
   public void execute(@Nonnull EnforcerRuleHelper helper) throws EnforcerRuleException {
     logger = helper.getLog();
+    ImmutableSet.toImmutableSet();
 
     try {
       MavenProject project = (MavenProject) helper.evaluate("${project}");

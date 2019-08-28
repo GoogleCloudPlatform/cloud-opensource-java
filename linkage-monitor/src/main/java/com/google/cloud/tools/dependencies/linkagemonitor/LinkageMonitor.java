@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.dependencies.linkagemonitor;
 
+import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.CENTRAL;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
@@ -37,6 +38,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.model.DependencyManagement;
+import org.apache.maven.model.Model;
 import org.apache.maven.model.building.DefaultModelBuilder;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.DefaultModelBuildingRequest;
@@ -51,7 +53,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.internal.impl.DefaultRemoteRepositoryManager;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
@@ -67,7 +68,8 @@ public class LinkageMonitor {
   private final RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
 
   public static void main(String[] arguments)
-      throws RepositoryException, IOException, LinkageMonitorException, MavenRepositoryException, ModelBuildingException {
+      throws RepositoryException, IOException, LinkageMonitorException, MavenRepositoryException,
+          ModelBuildingException {
     if (arguments.length < 1 || arguments[0].split(":").length != 2) {
       System.err.println(
           "Please specify BOM coordinates without version. Example:"
@@ -81,8 +83,8 @@ public class LinkageMonitor {
   }
 
   private void run(String groupId, String artifactId)
-      throws RepositoryException, IOException, LinkageMonitorException, MavenRepositoryException
-      , ModelBuildingException {
+      throws RepositoryException, IOException, LinkageMonitorException, MavenRepositoryException,
+          ModelBuildingException {
     String latestBomCoordinates =
         RepositoryUtility.findLatestCoordinates(repositorySystem, groupId, artifactId);
     System.out.println("BOM Coordinates: " + latestBomCoordinates);
@@ -171,19 +173,29 @@ public class LinkageMonitor {
   }
 
   /**
-   * Returns a copy of {@code bom} replacing its managed dependencies that have locally-installed
-   * snapshot versions.
+   * Builds Maven model of {@code bomCoordinates} replacing its importing BOMs with
+   * locally-installed snapshot versions between
+   *
+   * @see <a href="https://maven.apache.org/ref/3.6.1/maven-model-builder/">Maven Model Builder</a>
    */
   @VisibleForTesting
-  static Bom copyWithSnapshot(RepositorySystem repositorySystem, Bom bom)
-      throws MavenRepositoryException, ModelBuildingException, ArtifactResolutionException {
-    ImmutableList.Builder<Artifact> managedDependencies = ImmutableList.builder();
-    RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
-
-
+  static Model buildModelWithSnapshotBom(
+      RepositorySystem repositorySystem, RepositorySystemSession session, String bomCoordinates)
+      throws ModelBuildingException, ArtifactResolutionException, MavenRepositoryException {
+    String[] elements = bomCoordinates.split(":", 4);
+    DefaultArtifact bom = null;
+    if (elements.length == 4) {
+      bom = new DefaultArtifact(bomCoordinates);
+    } else if (elements.length == 3) {
+      // groupId, artifactId, extension, and version
+      bom = new DefaultArtifact(elements[0], elements[1], "pom", elements[2]);
+    } else {
+      throw new IllegalArgumentException(
+          "BOM coordinates do not have valid format: " + bomCoordinates);
+    }
     ArtifactResult artifactResult =
         repositorySystem.resolveArtifact(
-            session, new ArtifactRequest(new DefaultArtifact(bom.getCoordinates()), null, null));
+            session, new ArtifactRequest(bom, ImmutableList.of(CENTRAL), null));
 
     DefaultModelBuilder modelBuilder =
         new DefaultModelBuilderFactory().newInstance(); // new DefaultModelBuilder();
@@ -194,20 +206,21 @@ public class LinkageMonitor {
     modelRequest.setTwoPhaseBuilding(true);
     modelRequest.setPomFile(artifactResult.getArtifact().getFile());
 
-    ProjectModelResolver modelResolver = new ProjectModelResolver(session, null,repositorySystem,
-        new DefaultRemoteRepositoryManager(),
-        ImmutableList.of(), null, null
-        );
-    /*
-    modelRequest.setModelResolver( new DefaultModelResolver( session, trace.newChild( modelRequest ),
-        request.getRequestContext(), artifactResolver,
-        versionRangeResolver, remoteRepositoryManager,
-        request.getRepositories() ) ));
-     */
+    ProjectModelResolver modelResolver =
+        new ProjectModelResolver(
+            session,
+            null,
+            repositorySystem,
+            new DefaultRemoteRepositoryManager(),
+            ImmutableList.of(),
+            null,
+            null);
     modelRequest.setModelResolver(modelResolver);
     ModelBuildingResult resultPhase1 = modelBuilder.build(modelRequest);
     DependencyManagement dependencyManagement =
         resultPhase1.getEffectiveModel().getDependencyManagement();
+
+    // Phase 1 has not yet resolved dependency management imports
     for (org.apache.maven.model.Dependency dependency : dependencyManagement.getDependencies()) {
       if ("import".equals(dependency.getScope())) {
         findSnapshotVersion(
@@ -215,14 +228,34 @@ public class LinkageMonitor {
             .ifPresent(dependency::setVersion);
       }
     }
+
+    // Phase 2 resolves dependency management imports
     ModelBuildingResult resultPhase2 = modelBuilder.build(modelRequest, resultPhase1);
+    return resultPhase2.getEffectiveModel();
+  }
+
+  /**
+   * Returns a copy of {@code bom} replacing its managed dependencies that have locally-installed
+   * snapshot versions.
+   */
+  @VisibleForTesting
+  static Bom copyWithSnapshot(RepositorySystem repositorySystem, Bom bom)
+      throws MavenRepositoryException, ModelBuildingException, ArtifactResolutionException {
+    ImmutableList.Builder<Artifact> managedDependencies = ImmutableList.builder();
+    RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
+
+    Model model = buildModelWithSnapshotBom(repositorySystem, session, bom.getCoordinates());
+
     ArtifactTypeRegistry registry = session.getArtifactTypeRegistry();
     ImmutableList<Artifact> newManagedDependencies =
-        resultPhase2.getEffectiveModel().getDependencyManagement().getDependencies().stream()
+        model.getDependencyManagement().getDependencies().stream()
             .map(dependency -> RepositoryUtils.toDependency(dependency, registry))
             .map(Dependency::getArtifact)
             .collect(toImmutableList());
     for (Artifact managedDependency : newManagedDependencies) {
+      if (RepositoryUtility.shouldSkipBomMember(managedDependency)) {
+        continue;
+      }
       managedDependencies.add(
           findSnapshotVersion(repositorySystem, session, managedDependency)
               .map(managedDependency::setVersion)

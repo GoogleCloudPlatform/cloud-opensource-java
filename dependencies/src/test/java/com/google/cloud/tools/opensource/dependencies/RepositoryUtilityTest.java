@@ -83,7 +83,7 @@ public class RepositoryUtilityTest {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
     // The logic should work for both jar and pom artifacts
-    for (String artifactId: ImmutableList.of("guava", "guava-bom")) {
+    for (String artifactId : ImmutableList.of("guava", "guava-bom")) {
       String guavaHighestVersion =
           RepositoryUtility.findHighestVersion(
               system, RepositoryUtility.newSession(system), "com.google.guava", artifactId);

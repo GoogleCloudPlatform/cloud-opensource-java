@@ -34,29 +34,25 @@ import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import java.io.File;
 import java.nio.file.Paths;
 import java.util.Set;
 import org.apache.maven.model.building.ModelBuildingException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.resolution.ArtifactDescriptorException;
+import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
+import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
-import org.junit.Before;
 import org.junit.Test;
 
 public class LinkageMonitorTest {
-  private Bom bom;
-
-  @Before
-  public void setup() throws ArtifactDescriptorException {
-    bom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:1.2.0");
-  }
 
   @Test
   public void testFindSnapshotVersion()
@@ -66,7 +62,7 @@ public class LinkageMonitorTest {
         LinkageMonitor.copyWithSnapshot(
             RepositoryUtility.newRepositorySystem(),
             new Bom(
-                "com.google.cloud.tools:test-bom:0.0.1",
+                "com.google.guava:guava-bom:27.1-android",
                 ImmutableList.of(new DefaultArtifact("com.google.guava:guava:27.1-android"))));
     assertNotNull(snapshotBom);
   }
@@ -87,7 +83,8 @@ public class LinkageMonitorTest {
   @Test
   public void testBomSnapshot()
       throws VersionRangeResolutionException, MavenRepositoryException,
-      InvalidVersionSpecificationException, ModelBuildingException, ArtifactResolutionException {
+          InvalidVersionSpecificationException, ModelBuildingException,
+          ArtifactResolutionException {
     VersionRangeResult protobufSnapshotVersionResult =
         new VersionRangeResult(new VersionRangeRequest());
     VersionRangeResult versionWithoutSnapshot = new VersionRangeResult(new VersionRangeRequest());
@@ -109,6 +106,21 @@ public class LinkageMonitorTest {
             argThat(request -> "protobuf-java".equals(request.getArtifact().getArtifactId()))))
         .thenReturn(protobufSnapshotVersionResult); // invocation for protobuf-java
 
+    ArtifactRequest dummyBomRequest = new ArtifactRequest();
+    ArtifactResult dummyBomResult = new ArtifactResult(dummyBomRequest);
+
+    File bomFile = new File("src/test/resources/dummy-0.0.1.xml");
+    Artifact dummyBomArtifact =
+        new DefaultArtifact("com.google.cloud.tools.dependencies.linkagemonitor:dummy-bom:1.2.0")
+            .setFile(bomFile);
+    dummyBomResult.setArtifact(dummyBomArtifact);
+
+    when(mockSystem.resolveArtifact(
+            any(RepositorySystemSession.class),
+            argThat(request -> "dummy-bom".equals(request.getArtifact().getArtifactId()))))
+        .thenReturn(dummyBomResult);
+
+    Bom bom = RepositoryUtility.readBom(bomFile.toPath());
     Bom snapshotBom = LinkageMonitor.copyWithSnapshot(mockSystem, bom);
 
     assertEquals(
