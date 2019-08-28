@@ -174,7 +174,8 @@ public class LinkageMonitor {
 
   /**
    * Builds Maven model of {@code bomCoordinates} replacing its importing BOMs with
-   * locally-installed snapshot versions between.
+   * locally-installed snapshot versions. The replacement occurs between the two phases of the model
+   * building.
    *
    * @see <a href="https://maven.apache.org/ref/3.6.1/maven-model-builder/">Maven Model Builder</a>
    */
@@ -183,6 +184,7 @@ public class LinkageMonitor {
       RepositorySystem repositorySystem, RepositorySystemSession session, String bomCoordinates)
       throws ModelBuildingException, ArtifactResolutionException, MavenRepositoryException {
 
+    // BOM Coordinates may not have extension.
     String[] elements = bomCoordinates.split(":");
     DefaultArtifact bom;
     if (elements.length >= 4) {
@@ -194,35 +196,33 @@ public class LinkageMonitor {
       throw new IllegalArgumentException(
           "BOM coordinates do not have valid format: " + bomCoordinates);
     }
-    ArtifactResult artifactResult =
+
+    ArtifactResult bomResult =
         repositorySystem.resolveArtifact(
             session, new ArtifactRequest(bom, ImmutableList.of(CENTRAL), null));
-
-    DefaultModelBuilder modelBuilder =
-        new DefaultModelBuilderFactory().newInstance(); // new DefaultModelBuilder();
 
     ModelBuildingRequest modelRequest = new DefaultModelBuildingRequest();
     modelRequest.setValidationLevel(ModelBuildingRequest.VALIDATION_LEVEL_MINIMAL);
     modelRequest.setProcessPlugins(false);
-    modelRequest.setTwoPhaseBuilding(true);
-    modelRequest.setPomFile(artifactResult.getArtifact().getFile());
+    modelRequest.setTwoPhaseBuilding(true); // This forces the builder stop after phase 1
+    modelRequest.setPomFile(bomResult.getArtifact().getFile());
+    modelRequest.setModelResolver(new ProjectModelResolver(
+        session,
+        null,
+        repositorySystem,
+        new DefaultRemoteRepositoryManager(),
+        ImmutableList.of(),
+        null,
+        null));
 
-    ProjectModelResolver modelResolver =
-        new ProjectModelResolver(
-            session,
-            null,
-            repositorySystem,
-            new DefaultRemoteRepositoryManager(),
-            ImmutableList.of(),
-            null,
-            null);
-    modelRequest.setModelResolver(modelResolver);
+    DefaultModelBuilder modelBuilder = new DefaultModelBuilderFactory().newInstance();
+    // Phase 1 done. Now variables are interpolated.
     ModelBuildingResult resultPhase1 = modelBuilder.build(modelRequest);
     DependencyManagement dependencyManagement =
         resultPhase1.getEffectiveModel().getDependencyManagement();
 
-    // Phase 1 has not yet resolved dependency management imports
     for (org.apache.maven.model.Dependency dependency : dependencyManagement.getDependencies()) {
+      // Replaces the versions of imported BOMs
       if ("import".equals(dependency.getScope())) {
         findSnapshotVersion(
                 repositorySystem, session, dependency.getGroupId(), dependency.getArtifactId())
