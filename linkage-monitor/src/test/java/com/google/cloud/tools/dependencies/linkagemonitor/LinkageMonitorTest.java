@@ -215,14 +215,12 @@ public class LinkageMonitorTest {
     Model model =
         LinkageMonitor.buildModelWithSnapshotBom(
             system, session, "com.google.cloud:libraries-bom:2.2.1");
-    if () {
-      List<Dependency> dependencies = model.getDependencyManagement().getDependencies();
-      if (dependencies.size() != 224) {
-        System.out.println("The number does not match");
-        dependencies.forEach(System.out::println);
-      }
-      assertEquals(224, dependencies.size());
+    List<Dependency> dependencies = model.getDependencyManagement().getDependencies();
+    if (dependencies.size() != 224) {
+      System.out.println("The number does not match");
+      dependencies.forEach(System.out::println);
     }
+    assertEquals(224, dependencies.size());
   }
 
   @Test
