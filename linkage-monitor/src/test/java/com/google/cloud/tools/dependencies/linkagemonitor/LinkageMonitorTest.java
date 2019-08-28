@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.dependencies.linkagemonitor;
 
+import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.CENTRAL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -213,14 +214,15 @@ public class LinkageMonitorTest {
       throws MavenRepositoryException, ModelBuildingException, ArtifactResolutionException,
           InvalidVersionSpecificationException, VersionRangeResolutionException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
 
     VersionRangeResult googleCloudBomVersionRangeResult =
         new VersionRangeResult(new VersionRangeRequest());
     GenericVersionScheme versionScheme = new GenericVersionScheme();
     googleCloudBomVersionRangeResult.setVersions(
         ImmutableList.of(
-            versionScheme.parseVersion("0.102.0-alpha"),
-            versionScheme.parseVersion("0.102.0-alpha-SNAPSHOT")));
+            versionScheme.parseVersion("0.106.0-alpha"),
+            versionScheme.parseVersion("0.106.0-alpha-SNAPSHOT")));
 
     RepositorySystem spySystem = spy(system);
     doReturn(googleCloudBomVersionRangeResult)
@@ -229,14 +231,25 @@ public class LinkageMonitorTest {
             any(RepositorySystemSession.class),
             argThat(request -> "google-cloud-bom".equals(request.getArtifact().getArtifactId())));
 
+    DefaultArtifact googleCloudBom0_106 = new DefaultArtifact(
+        "com.google.cloud","google-cloud-bom", "pom", "0.106.0-alpha");
+    ArtifactResult googleCloudBomResult =
+        system.resolveArtifact(
+            session, new ArtifactRequest(
+                googleCloudBom0_106,
+                ImmutableList.of(CENTRAL), null));
+    doReturn(googleCloudBomResult).when(spySystem).resolveArtifact(
+        any(RepositorySystemSession.class),
+        argThat(request -> "google-cloud-bom".equals(request.getArtifact().getArtifactId())));
+
     // Libraries-bom:2.2.1 has google-cloud-bom:0.91.0-alpha, which has gax:1.44.0
     Model model =
         LinkageMonitor.buildModelWithSnapshotBom(
-            system, RepositoryUtility.newSession(system), "com.google.cloud:libraries-bom:2.2.1");
+            spySystem, session, "com.google.cloud:libraries-bom:2.2.1");
     List<Dependency> dependencies = model.getDependencyManagement().getDependencies();
     assertEquals(224, dependencies.size());
 
-    // google-cloud-bom:0.102.0-alpha has gax:1.48.0
+    // google-cloud-bom:0.106.0-alpha has gax:1.48.0
     assertTrue(
         dependencies.stream()
             .anyMatch(
