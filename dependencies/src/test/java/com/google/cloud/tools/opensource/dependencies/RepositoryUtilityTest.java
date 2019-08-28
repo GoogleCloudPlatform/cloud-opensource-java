@@ -81,18 +81,22 @@ public class RepositoryUtilityTest {
   public void testFindHighestVersions()
       throws MavenRepositoryException, InvalidVersionSpecificationException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
-    String guavaHighestVersion =
-        RepositoryUtility.findHighestVersion(
-            system, RepositoryUtility.newSession(system), "com.google.guava", "guava");
-    Assert.assertNotNull(guavaHighestVersion);
 
-    // Not comparing alphabetically; otherwise "100.0" would be smaller than "28.0"
-    VersionScheme versionScheme = new GenericVersionScheme();
-    Version highestGuava = versionScheme.parseVersion(guavaHighestVersion);
-    Version guava28 = versionScheme.parseVersion("28.0");
+    // The logic should work for both jar and pom artifacts
+    for (String artifactId: ImmutableList.of("guava", "guava-bom")) {
+      String guavaHighestVersion =
+          RepositoryUtility.findHighestVersion(
+              system, RepositoryUtility.newSession(system), "com.google.guava", artifactId);
+      Assert.assertNotNull(guavaHighestVersion);
 
-    Truth.assertWithMessage("Latest guava release is greater than or equal to 28.0")
-        .that(highestGuava)
-        .isAtLeast(guava28);
+      // Not comparing alphabetically; otherwise "100.0" would be smaller than "28.0"
+      VersionScheme versionScheme = new GenericVersionScheme();
+      Version highestGuava = versionScheme.parseVersion(guavaHighestVersion);
+      Version guava28 = versionScheme.parseVersion("28.0");
+
+      Truth.assertWithMessage("Latest guava release is greater than or equal to 28.0")
+          .that(highestGuava)
+          .isAtLeast(guava28);
+    }
   }
 }
