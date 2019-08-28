@@ -235,13 +235,14 @@ public class LinkageMonitorTest {
   @Test
   public void testBuildModelWithSnapshotBom_invalidCoordinates()
       throws MavenRepositoryException, ModelBuildingException, ArtifactResolutionException {
-    for (String invalidCoordinates : ImmutableList.of("a.b.c:d", "a:b:c:d:e:1", "a::c:0.1"))
+    for (String invalidCoordinates : ImmutableList.of("a.b.c:d", "a:b:c:d:e:1", "a::c:0.1")) {
       try {
         LinkageMonitor.buildModelWithSnapshotBom(system, session, invalidCoordinates);
         fail("The method should invalidate coordinates: " + invalidCoordinates);
       } catch (IllegalArgumentException ex) {
         // pass
       }
+    }
   }
 
   @Test
