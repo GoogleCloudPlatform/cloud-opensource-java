@@ -20,6 +20,7 @@ import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.C
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
@@ -57,9 +58,18 @@ import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
+import org.junit.Before;
 import org.junit.Test;
 
 public class LinkageMonitorTest {
+  private RepositorySystem system;
+  private RepositorySystemSession session;
+
+  @Before
+  public void setup() {
+    system = RepositoryUtility.newRepositorySystem();
+    session = RepositoryUtility.newSession(system);
+  }
 
   @Test
   public void testFindSnapshotVersion()
@@ -210,11 +220,22 @@ public class LinkageMonitorTest {
   }
 
   @Test
+  public void testBuildModelWithSnapshotBom_invalidCoordinates()
+      throws MavenRepositoryException, ModelBuildingException, ArtifactResolutionException {
+    for (String invalidCoordinates: ImmutableList.of("a.b.c:d", "a:b:c:d:e:1", "a::c:0.1"))
+      try {
+        LinkageMonitor.buildModelWithSnapshotBom(
+            system, session, invalidCoordinates);
+        fail("The method should invalidate coordinates: " + invalidCoordinates);
+      } catch (IllegalArgumentException ex) {
+        // pass
+      }
+  }
+
+  @Test
   public void testBuildModelWithSnapshotBom_BomSnapshotUpdate()
       throws MavenRepositoryException, ModelBuildingException, ArtifactResolutionException,
           InvalidVersionSpecificationException, VersionRangeResolutionException {
-    RepositorySystem system = RepositoryUtility.newRepositorySystem();
-    RepositorySystemSession session = RepositoryUtility.newSession(system);
 
     VersionRangeResult googleCloudBomVersionRangeResult =
         new VersionRangeResult(new VersionRangeRequest());

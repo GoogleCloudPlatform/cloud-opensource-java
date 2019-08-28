@@ -29,6 +29,7 @@ import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
@@ -174,7 +175,7 @@ public class LinkageMonitor {
 
   /**
    * Builds Maven model of {@code bomCoordinates} replacing its importing BOMs with
-   * locally-installed snapshot versions between
+   * locally-installed snapshot versions between.
    *
    * @see <a href="https://maven.apache.org/ref/3.6.1/maven-model-builder/">Maven Model Builder</a>
    */
@@ -182,12 +183,13 @@ public class LinkageMonitor {
   static Model buildModelWithSnapshotBom(
       RepositorySystem repositorySystem, RepositorySystemSession session, String bomCoordinates)
       throws ModelBuildingException, ArtifactResolutionException, MavenRepositoryException {
-    String[] elements = bomCoordinates.split(":", 4);
-    DefaultArtifact bom = null;
-    if (elements.length == 4) {
-      bom = new DefaultArtifact(bomCoordinates);
+
+    String[] elements = bomCoordinates.split(":");
+    DefaultArtifact bom;
+    if (elements.length >= 4) {
+      bom = new DefaultArtifact(bomCoordinates); // This may throw InvalidArgumentException
     } else if (elements.length == 3) {
-      // groupId, artifactId, extension, and version
+      // When extension is not specified, use "pom"
       bom = new DefaultArtifact(elements[0], elements[1], "pom", elements[2]);
     } else {
       throw new IllegalArgumentException(
