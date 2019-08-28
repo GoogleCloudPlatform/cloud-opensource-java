@@ -24,9 +24,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
@@ -39,7 +37,6 @@ import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import java.io.File;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
@@ -50,6 +47,7 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
@@ -63,12 +61,21 @@ import org.junit.Test;
 
 public class LinkageMonitorTest {
   private RepositorySystem system;
+  private RepositorySystem spySystem;
   private RepositorySystemSession session;
+  private GenericVersionScheme versionScheme = new GenericVersionScheme();
 
   @Before
   public void setup() {
     system = RepositoryUtility.newRepositorySystem();
+    spySystem = spy(system);
     session = RepositoryUtility.newSession(system);
+  }
+
+  private ArtifactResult resolveArtifact(String coordinates) throws ArtifactResolutionException {
+    Artifact protobufJavaArtifact = new DefaultArtifact(coordinates);
+    return system.resolveArtifact(
+        session, new ArtifactRequest(protobufJavaArtifact, ImmutableList.of(CENTRAL), null));
   }
 
   @Test
@@ -100,45 +107,38 @@ public class LinkageMonitorTest {
   @Test
   public void testBomSnapshot()
       throws VersionRangeResolutionException, MavenRepositoryException,
-          InvalidVersionSpecificationException, ModelBuildingException,
-          ArtifactResolutionException {
+          InvalidVersionSpecificationException, ModelBuildingException, ArtifactResolutionException,
+          ArtifactDescriptorException {
     VersionRangeResult protobufSnapshotVersionResult =
         new VersionRangeResult(new VersionRangeRequest());
-    VersionRangeResult versionWithoutSnapshot = new VersionRangeResult(new VersionRangeRequest());
-    GenericVersionScheme versionScheme = new GenericVersionScheme();
+
     protobufSnapshotVersionResult.setVersions(
         ImmutableList.of(
             versionScheme.parseVersion("3.6.0"),
             versionScheme.parseVersion("3.7.0"),
             versionScheme.parseVersion("3.8.0-SNAPSHOT")));
-    versionWithoutSnapshot.setVersions(
-        ImmutableList.of(versionScheme.parseVersion("1.2.3"), versionScheme.parseVersion("1.1.1")));
 
-    RepositorySystem mockSystem = mock(RepositorySystem.class);
-    when(mockSystem.resolveVersionRange(
-            any(RepositorySystemSession.class), any(VersionRangeRequest.class)))
-        .thenReturn(versionWithoutSnapshot); // other invocations than protobuf-java
-    when(mockSystem.resolveVersionRange(
+    // invocation for protobuf-java
+    doReturn(protobufSnapshotVersionResult)
+        .when(spySystem)
+        .resolveVersionRange(
             any(RepositorySystemSession.class),
-            argThat(request -> "protobuf-java".equals(request.getArtifact().getArtifactId()))))
-        .thenReturn(protobufSnapshotVersionResult); // invocation for protobuf-java
+            argThat(request -> "protobuf-java".equals(request.getArtifact().getArtifactId())));
 
-    ArtifactRequest dummyBomRequest = new ArtifactRequest();
-    ArtifactResult dummyBomResult = new ArtifactResult(dummyBomRequest);
+    ArtifactResult protobufJavaResult = resolveArtifact("com.google.protobuf:protobuf-java:3.8.0");
 
-    File bomFile = new File("src/test/resources/dummy-0.0.1.xml");
-    Artifact dummyBomArtifact =
-        new DefaultArtifact("com.google.cloud.tools.dependencies.linkagemonitor:dummy-bom:1.2.0")
-            .setFile(bomFile);
-    dummyBomResult.setArtifact(dummyBomArtifact);
+    Artifact protobufJavaSnapshotArtifact =
+        new DefaultArtifact("com.google.protobuf:protobuf-java:3.8.0-SNAPSHOT")
+            .setFile(protobufJavaResult.getArtifact().getFile());
 
-    when(mockSystem.resolveArtifact(
+    doReturn(protobufJavaResult.setArtifact(protobufJavaSnapshotArtifact))
+        .when(spySystem)
+        .resolveArtifact(
             any(RepositorySystemSession.class),
-            argThat(request -> "dummy-bom".equals(request.getArtifact().getArtifactId()))))
-        .thenReturn(dummyBomResult);
+            argThat(request -> "protobuf-java".equals(request.getArtifact().getArtifactId())));
 
-    Bom bom = RepositoryUtility.readBom(bomFile.toPath());
-    Bom snapshotBom = LinkageMonitor.copyWithSnapshot(mockSystem, bom);
+    Bom bom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:1.2.0");
+    Bom snapshotBom = LinkageMonitor.copyWithSnapshot(spySystem, bom);
 
     assertEquals(
         "The first element of the SNAPSHOT BOM should be the same as the original BOM",
@@ -216,11 +216,16 @@ public class LinkageMonitorTest {
         LinkageMonitor.buildModelWithSnapshotBom(
             system, session, "com.google.cloud:libraries-bom:2.2.1");
     List<Dependency> dependencies = model.getDependencyManagement().getDependencies();
-    if (dependencies.size() != 224) {
-      System.out.println("The number does not match");
-      dependencies.forEach(System.out::println);
-    }
-    assertEquals(224, dependencies.size());
+
+    assertEquals(
+        "There should not be a duplicate",
+        dependencies.stream().distinct().count(),
+        dependencies.size());
+
+    // This number is different from the number appearing in BOM dashboard because model from
+    // buildModelWithSnapshotBom still contains unnecessary artifacts that would be filtered by
+    // RepositoryUtility.shouldSkipBomMember
+    assertEquals(214, dependencies.size());
   }
 
   @Test
@@ -239,27 +244,27 @@ public class LinkageMonitorTest {
   public void testBuildModelWithSnapshotBom_BomSnapshotUpdate()
       throws MavenRepositoryException, ModelBuildingException, ArtifactResolutionException,
           InvalidVersionSpecificationException, VersionRangeResolutionException {
+    // Linkage Monitor should update a BOM in Google Cloud Libraries BOM when it's available local
+    // repository. This test case simulates the issue below where
+    // google-cloud-bom:0.106.0-alpha-SNAPSHOT should provide gax:1.48.0.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/853
 
     VersionRangeResult googleCloudBomVersionRangeResult =
         new VersionRangeResult(new VersionRangeRequest());
-    GenericVersionScheme versionScheme = new GenericVersionScheme();
     googleCloudBomVersionRangeResult.setVersions(
         ImmutableList.of(
             versionScheme.parseVersion("0.106.0-alpha"),
             versionScheme.parseVersion("0.106.0-alpha-SNAPSHOT")));
 
-    RepositorySystem spySystem = spy(system);
     doReturn(googleCloudBomVersionRangeResult)
         .when(spySystem)
         .resolveVersionRange(
             any(RepositorySystemSession.class),
             argThat(request -> "google-cloud-bom".equals(request.getArtifact().getArtifactId())));
 
-    DefaultArtifact googleCloudBom0_106 =
-        new DefaultArtifact("com.google.cloud", "google-cloud-bom", "pom", "0.106.0-alpha");
     ArtifactResult googleCloudBomResult =
-        system.resolveArtifact(
-            session, new ArtifactRequest(googleCloudBom0_106, ImmutableList.of(CENTRAL), null));
+        resolveArtifact("com.google.cloud:google-cloud-bom:pom:0.106.0-alpha");
+
     doReturn(googleCloudBomResult)
         .when(spySystem)
         .resolveArtifact(
@@ -272,6 +277,7 @@ public class LinkageMonitorTest {
             spySystem, session, "com.google.cloud:libraries-bom:2.2.1");
     List<Dependency> dependencies = model.getDependencyManagement().getDependencies();
 
+    // Google-cloud-bom:0.106.0 has new artifacts such as google-cloud-gameservices
     assertEquals(224, dependencies.size());
 
     // google-cloud-bom:0.106.0-alpha has gax:1.48.0
