@@ -68,6 +68,10 @@ public class LinkageMonitorTest {
   @Before
   public void setup() {
     system = RepositoryUtility.newRepositorySystem();
+
+    // If possible, spy object should be avoided. But Maven is tightly coupled with RepositorySystem
+    // and thus normal mock objects on RepositorySystem would make the test even complicated.
+    // https://static.javadoc.io/org.mockito/mockito-core/3.0.0/org/mockito/Mockito.html#spy-T-
     spySystem = spy(system);
     session = RepositoryUtility.newSession(system);
   }
