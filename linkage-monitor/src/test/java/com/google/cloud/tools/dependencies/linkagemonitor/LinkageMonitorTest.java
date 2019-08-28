@@ -231,16 +231,16 @@ public class LinkageMonitorTest {
             any(RepositorySystemSession.class),
             argThat(request -> "google-cloud-bom".equals(request.getArtifact().getArtifactId())));
 
-    DefaultArtifact googleCloudBom0_106 = new DefaultArtifact(
-        "com.google.cloud","google-cloud-bom", "pom", "0.106.0-alpha");
+    DefaultArtifact googleCloudBom0_106 =
+        new DefaultArtifact("com.google.cloud", "google-cloud-bom", "pom", "0.106.0-alpha");
     ArtifactResult googleCloudBomResult =
         system.resolveArtifact(
-            session, new ArtifactRequest(
-                googleCloudBom0_106,
-                ImmutableList.of(CENTRAL), null));
-    doReturn(googleCloudBomResult).when(spySystem).resolveArtifact(
-        any(RepositorySystemSession.class),
-        argThat(request -> "google-cloud-bom".equals(request.getArtifact().getArtifactId())));
+            session, new ArtifactRequest(googleCloudBom0_106, ImmutableList.of(CENTRAL), null));
+    doReturn(googleCloudBomResult)
+        .when(spySystem)
+        .resolveArtifact(
+            any(RepositorySystemSession.class),
+            argThat(request -> "google-cloud-bom".equals(request.getArtifact().getArtifactId())));
 
     // Libraries-bom:2.2.1 has google-cloud-bom:0.91.0-alpha, which has gax:1.44.0
     Model model =
