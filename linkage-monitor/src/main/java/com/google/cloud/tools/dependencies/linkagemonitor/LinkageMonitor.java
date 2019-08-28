@@ -184,7 +184,7 @@ public class LinkageMonitor {
       RepositorySystem repositorySystem, RepositorySystemSession session, String bomCoordinates)
       throws ModelBuildingException, ArtifactResolutionException, MavenRepositoryException {
 
-    // BOM Coordinates may not have extension.
+    // BOM Coordinates might not have extension.
     String[] elements = bomCoordinates.split(":");
     DefaultArtifact bom;
     if (elements.length >= 4) {

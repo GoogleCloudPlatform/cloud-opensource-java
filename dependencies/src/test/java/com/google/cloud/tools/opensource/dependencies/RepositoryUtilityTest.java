@@ -82,7 +82,7 @@ public class RepositoryUtilityTest {
       throws MavenRepositoryException, InvalidVersionSpecificationException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
-    // The logic should work for both jar and pom artifacts
+    // FindHighestVersion should work for both jar and pom (extension:pom) artifacts
     for (String artifactId : ImmutableList.of("guava", "guava-bom")) {
       String guavaHighestVersion =
           RepositoryUtility.findHighestVersion(
