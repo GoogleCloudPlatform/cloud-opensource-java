@@ -77,7 +77,7 @@ public class LinkageMonitorTest {
     // This version of Guava should be found locally because this module uses it.
     Bom snapshotBom =
         LinkageMonitor.copyWithSnapshot(
-            RepositoryUtility.newRepositorySystem(),
+            system,
             new Bom(
                 "com.google.guava:guava-bom:27.1-android",
                 ImmutableList.of(new DefaultArtifact("com.google.guava:guava:27.1-android"))));
@@ -90,7 +90,7 @@ public class LinkageMonitorTest {
     // This version of Guava should be found locally because this module uses it.
     Bom snapshotBom =
         LinkageMonitor.copyWithSnapshot(
-            RepositoryUtility.newRepositorySystem(),
+            system,
             new Bom(
                 "com.google.cloud:libraries-bom:pom:2.2.1",
                 ImmutableList.of(new DefaultArtifact("com.google.guava:guava:27.1-android"))));
@@ -212,20 +212,18 @@ public class LinkageMonitorTest {
   @Test
   public void testBuildModelWithSnapshotBom_noSnapshotUpdate()
       throws MavenRepositoryException, ModelBuildingException, ArtifactResolutionException {
-    RepositorySystem system = RepositoryUtility.newRepositorySystem();
     Model model =
         LinkageMonitor.buildModelWithSnapshotBom(
-            system, RepositoryUtility.newSession(system), "com.google.cloud:libraries-bom:2.2.1");
+            system, session, "com.google.cloud:libraries-bom:2.2.1");
     assertEquals(224, model.getDependencyManagement().getDependencies().size());
   }
 
   @Test
   public void testBuildModelWithSnapshotBom_invalidCoordinates()
       throws MavenRepositoryException, ModelBuildingException, ArtifactResolutionException {
-    for (String invalidCoordinates: ImmutableList.of("a.b.c:d", "a:b:c:d:e:1", "a::c:0.1"))
+    for (String invalidCoordinates : ImmutableList.of("a.b.c:d", "a:b:c:d:e:1", "a::c:0.1"))
       try {
-        LinkageMonitor.buildModelWithSnapshotBom(
-            system, session, invalidCoordinates);
+        LinkageMonitor.buildModelWithSnapshotBom(system, session, invalidCoordinates);
         fail("The method should invalidate coordinates: " + invalidCoordinates);
       } catch (IllegalArgumentException ex) {
         // pass
