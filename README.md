@@ -13,13 +13,13 @@ Google Cloud Java libraries. For manually generating the dashboard, see
 
 # Java Library Best Practices
 
-[The Java Library Best Practices](./library-best-practices) are a set of rules
-that we believe will minimize problems for consumers of interconnected Java
+[Java Library Best Practices](./docs) are a set of rules
+that we believe minimize problems for consumers of interconnected Java
 libraries.
 
 # Linkage Checker Enforcer Rule
 
-[Linkage Checker Enforcer Rule](./enforcer-rules)  is a Maven enforcer rule that
+[Linkage Checker Enforcer Rule](./enforcer-rules) is a Maven enforcer rule that
 detects [linkage errors](
 ./library-best-practices/glossary.md#types-of-conflicts-and-compatibility) in
 the current project.
