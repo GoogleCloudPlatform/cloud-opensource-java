@@ -16,6 +16,11 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.io.File;
@@ -26,6 +31,9 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
+import org.eclipse.aether.resolution.VersionRangeRequest;
+import org.eclipse.aether.resolution.VersionRangeResolutionException;
+import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
@@ -34,6 +42,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class RepositoryUtilityTest {
+
+  private VersionScheme versionScheme = new GenericVersionScheme();
 
   @Test
   public void testFindLocalRepository() {
@@ -78,7 +88,7 @@ public class RepositoryUtilityTest {
   }
 
   @Test
-  public void testFindHighestVersions()
+  public void testFindHighestVersion()
       throws MavenRepositoryException, InvalidVersionSpecificationException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
@@ -90,7 +100,6 @@ public class RepositoryUtilityTest {
       Assert.assertNotNull(guavaHighestVersion);
 
       // Not comparing alphabetically; otherwise "100.0" would be smaller than "28.0"
-      VersionScheme versionScheme = new GenericVersionScheme();
       Version highestGuava = versionScheme.parseVersion(guavaHighestVersion);
       Version guava28 = versionScheme.parseVersion("28.0");
 
@@ -98,5 +107,66 @@ public class RepositoryUtilityTest {
           .that(highestGuava)
           .isAtLeast(guava28);
     }
+  }
+
+  @Test
+  public void testFindHighestVersion_secondHighestSnapshot()
+      throws MavenRepositoryException, InvalidVersionSpecificationException,
+          VersionRangeResolutionException {
+    // Protobuf repository keeps the latest released version in its master without incrementing
+    // its version. RepositorySystem.resolveVersionRange considers version "X.Y.Z" is higher than
+    // "X.Y.Z-SNAPSHOT". Therefore, RepositoryUtility.findHighestVersion needs to take this into
+    // account to pick up the version from master branch ("X.Y.Z-SNAPSHOT").
+    RepositorySystem mockSystem = mock(RepositorySystem.class);
+
+    VersionRangeResult protobufSnapshotVersionResult =
+        new VersionRangeResult(new VersionRangeRequest());
+
+    // Mock response that simulates RepositorySystem.resolveVersionRange returning 3.9.1 as highest
+    // rather than 3.9.1-SNAPSHOT.
+    protobufSnapshotVersionResult.setVersions(
+        ImmutableList.of(
+            versionScheme.parseVersion("3.6.0"),
+            versionScheme.parseVersion("3.9.1-SNAPSHOT"), // HEAD
+            versionScheme.parseVersion("3.9.1"))); // latest in Maven central
+    when(mockSystem.resolveVersionRange(
+            any(RepositorySystemSession.class),
+            argThat(request -> "protobuf-java".equals(request.getArtifact().getArtifactId()))))
+        .thenReturn(protobufSnapshotVersionResult);
+
+    String highestVersion =
+        RepositoryUtility.findHighestVersion(
+            mockSystem,
+            mock(RepositorySystemSession.class),
+            "com.google.protobuf",
+            "protobuf-java");
+
+    Assert.assertEquals("3.9.1-SNAPSHOT", highestVersion);
+  }
+
+  @Test
+  public void testFindHighestVersion_onlyOneVersion()
+      throws MavenRepositoryException, InvalidVersionSpecificationException,
+          VersionRangeResolutionException {
+    RepositorySystem mockSystem = mock(RepositorySystem.class);
+
+    VersionRangeResult protobufSnapshotVersionResult =
+        new VersionRangeResult(new VersionRangeRequest());
+
+    protobufSnapshotVersionResult.setVersions(
+        ImmutableList.of(versionScheme.parseVersion("3.9.1")));
+    when(mockSystem.resolveVersionRange(
+            any(RepositorySystemSession.class),
+            argThat(request -> "protobuf-java".equals(request.getArtifact().getArtifactId()))))
+        .thenReturn(protobufSnapshotVersionResult);
+
+    String highestVersion =
+        RepositoryUtility.findHighestVersion(
+            mockSystem,
+            mock(RepositorySystemSession.class),
+            "com.google.protobuf",
+            "protobuf-java");
+
+    Assert.assertEquals("3.9.1", highestVersion);
   }
 }

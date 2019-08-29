@@ -77,6 +77,7 @@ import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
 import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
+import org.eclipse.aether.version.Version;
 
 /**
  * Aether initialization.
@@ -359,9 +360,20 @@ public final class RepositoryUtility {
       String groupId,
       String artifactId)
       throws MavenRepositoryException {
-    return findVersionRange(repositorySystem, session, groupId, artifactId)
-        .getHighestVersion()
-        .toString();
+    VersionRangeResult versionRange =
+        findVersionRange(repositorySystem, session, groupId, artifactId);
+    String highestVersion = versionRange.getHighestVersion().toString();
+    List<Version> versions = versionRange.getVersions();
+    int versionCount = versions.size();
+    if (versionCount >= 2) {
+      // For protobuf repository keeping last released version in master, "3.9.1-SNAPSHOT" should
+      // win over "3.9.1".
+      String secondHighest = versions.get(versionCount - 2).toString();
+      if (secondHighest.startsWith(highestVersion) && secondHighest.endsWith("-SNAPSHOT")) {
+        return secondHighest;
+      }
+    }
+    return highestVersion;
   }
 
   /**
