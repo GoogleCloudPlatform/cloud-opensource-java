@@ -20,7 +20,7 @@ choice for module name. However if there's a second artifact that contains
 `com.google.utilities.math` and `com.google.utilities.stats`, you can't choose
 the name `com.google.utilities` for both modules.
 
-Automatic-Module_name is similar to the OSGI Bundle-SymbolicName and should
+Automatic-Module-Name is similar to the OSGI Bundle-SymbolicName and should
 probably have the same value as that field.
 
 To add an Automatic-Module-Name field to a jar using Maven, configure the 
