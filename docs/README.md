@@ -1,3 +1,7 @@
+---
+page.title: Java Library Best Practices
+---
+
 Java Library Best Practices
 ---------------------------
 
