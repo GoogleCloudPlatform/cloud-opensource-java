@@ -215,7 +215,10 @@ public class ClassPathBuilderTest {
           "com.google.cloud.tools.opensource.dependencies.AggregatedRepositoryException: "
               + ex.getMessage(),
           ex.toString());
-      Assert.assertEquals("There were failure(s) in dependency resolution\n"
+
+      String actualMessage = ex.getMessage();
+
+      String expected = "There were failure(s) in dependency resolution\n"
           + "com.jamonapi:jamon:jar:2.81 (compile) / log4j:log4j:jar:1.2.15 (provided) /"
           + " javax.jms:jms:jar:1.1 (compile): org.eclipse.aether.resolution.DependencyResolutionException: "
           + "The following artifacts could not be resolved: javax.jms:jms:jar:1.1, "
@@ -241,8 +244,13 @@ public class ClassPathBuilderTest {
           + "artifact javax.jms:jms:jar:1.1 from/to java.net "
           + "(https://maven-repository.dev.java.net/nonav/repository): Cannot access "
           + "https://maven-repository.dev.java.net/nonav/repository with type legacy using "
-          + "the available connector factories: BasicRepositoryConnectorFactory\n",
-          ex.getMessage());
+          + "the available connector factories: BasicRepositoryConnectorFactory\n";
+
+      if (!expected.equals(actualMessage)) {
+        System.out.println("Expected: " + expected);
+        System.out.println("Actual  : " + actualMessage);
+      }
+      Assert.assertEquals(expected, actualMessage);
     }
   }
 }
