@@ -1,4 +1,6 @@
 title:
+name: something
+title: null
 plugins:
   - jekyll-readme-index
 
