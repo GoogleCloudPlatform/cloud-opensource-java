@@ -1,5 +1,6 @@
 ---
 page.title: Java Library Best Practices
+permalink: /
 ---
 
 # Java Library Best Practices
