@@ -83,7 +83,8 @@ If a violation should not fail the build, set `level` element to `WARN`:
 
 ## Run
 
-The enforcer rule is bound to verify lifecycle:
+Linkage Checker Enforcer Rule is bound to `verify` lifecycle. Run the enforcer rule by `mvn`
+command:
 
 ```
 $ mvn verify
@@ -101,7 +102,7 @@ Successful checks should output no error.
 
 ### Failed Result
 
-Failed checks should output the missing class, fields or methods and the referencing classes.
+Failed checks should output the missing classes, fields, or methods and the referencing classes.
 
 ```
 [INFO] --- maven-enforcer-plugin:3.0.0-M2:enforce (enforce-linkage-checker) @ google-cloud-core-grpc ---
@@ -112,11 +113,10 @@ Class org.eclipse.jetty.npn.NextProtoNego is not found;
 ...
 ```
 
+# Debug
 
-## Debug
-
-For developers of this enforcer rule, set the `MAVEN_OPTS` environment variable to wait for
-debuggers (`suspend=y`).
+For developers to debug the enforcer rule implementation, set the `MAVEN_OPTS` environment variable
+to wait for debuggers (`suspend=y`) before running `mvn` command.
 
 ```
 $ export MAVEN_OPTS='-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005'
