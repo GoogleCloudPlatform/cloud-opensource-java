@@ -1,6 +1,5 @@
 name: something
 title: null
-theme: jekyll-theme-primer
 plugins:
   - jekyll-readme-index
 
