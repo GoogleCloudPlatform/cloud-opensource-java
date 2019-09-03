@@ -29,12 +29,12 @@ Add the following plugin configuration to your `pom.xml`:
           <dependency>
             <groupId>com.google.cloud.tools</groupId>
             <artifactId>linkage-checker-enforcer-rules</artifactId>
-            <version>0.2.1</version>
+            <version>1.0.0</version>
           </dependency>
         </dependencies>
         <executions>
           <execution>
-            <id>enforce</id>
+            <id>linkage-checker</id>
             <!-- Important! Should run after compile -->
             <phase>verify</phase>
             <goals>
@@ -88,7 +88,7 @@ debuggers (`suspend=y`).
 
 ```
 $ export MAVEN_OPTS='-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005'
-$ mvn validate
+$ mvn verify
 Listening for transport dt_socket at address: 5005
 ```
 
