@@ -34,7 +34,7 @@ Add the following plugin configuration to your `pom.xml`:
         </dependencies>
         <executions>
           <execution>
-            <id>linkage-checker</id>
+            <id>enforce-linkage-checker</id>
             <!-- Important! Should run after compile -->
             <phase>verify</phase>
             <goals>
@@ -80,6 +80,38 @@ If a violation should not fail the build, set `level` element to `WARN`:
       <level>WARN</level>
   </LinkageCheckerRule>
 ```
+
+## Run
+
+The enforcer rule is bound to verify lifecycle:
+
+```
+$ mvn verify
+```
+
+### Successful Result
+
+Successful checks should output no error.
+
+```
+[INFO] --- maven-enforcer-plugin:3.0.0-M2:enforce (enforce-linkage-checker) @ protobuf-java-util ---
+[INFO] No error found
+```
+
+
+### Failed Result
+
+Failed checks should output the missing class, fields or methods and the referencing classes.
+
+```
+[INFO] --- maven-enforcer-plugin:3.0.0-M2:enforce (enforce-linkage-checker) @ google-cloud-core-grpc ---
+[ERROR] Linkage Checker rule found 21 reachable errors. Linkage error report:
+Class org.eclipse.jetty.npn.NextProtoNego is not found;
+  referenced by 1 class file
+    io.grpc.netty.shaded.io.netty.handler.ssl.JettyNpnSslEngine (grpc-netty-shaded-1.23.0.jar)
+...
+```
+
 
 ## Debug
 
