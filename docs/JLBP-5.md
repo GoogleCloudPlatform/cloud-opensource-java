@@ -1,5 +1,4 @@
-[JLBP-5] Avoid dependencies that overlap classes with other dependencies
-------------------------------------------------------------------------
+# [JLBP-5] Avoid dependencies that overlap classes with other dependencies
 
 Definition: When the same fully qualified class name is provided by
   two or more distinct artifacts (different group IDs, different

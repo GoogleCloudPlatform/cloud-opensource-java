@@ -1,5 +1,4 @@
-[JLBP-9] Support the minimum Java version of your consumers
------------------------------------------------------------
+# [JLBP-9] Support the minimum Java version of your consumers
 
 Imagine that library B depends on library A and both work with Java 8.
 If library A releases a new version that requires Java 11, library B cannot upgrade

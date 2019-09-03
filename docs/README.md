@@ -2,8 +2,7 @@
 page.title: Java Library Best Practices
 ---
 
-Java Library Best Practices
----------------------------
+# Java Library Best Practices
 
 The Java Library Best Practices are a set of rules that we believe will minimize
 problems for consumers of interconnected Java libraries.  These practices come
