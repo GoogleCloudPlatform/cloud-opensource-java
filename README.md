@@ -11,11 +11,10 @@ https://storage.googleapis.com/cloud-opensource-java-dashboard/com.google.cloud/
 Google Cloud Java libraries. For manually generating the dashboard, see
 [its README](./dashboard/README.md).
 
-# Java Library Best Practices
+# Google Best Practices for Java Libraries
 
-[The Java Library Best Practices](./docs) are a set of rules
-that we believe will minimize problems for consumers of interconnected Java
-libraries.
+[Google Best Practices for Java Libraries](https://googlecloudplatform.github.io/cloud-opensource-java/)
+are rules that minimize problems for consumers of interconnected Java libraries.
 
 # Linkage Checker Enforcer Rule
 

@@ -29,12 +29,12 @@ Add the following plugin configuration to your `pom.xml`:
           <dependency>
             <groupId>com.google.cloud.tools</groupId>
             <artifactId>linkage-checker-enforcer-rules</artifactId>
-            <version>0.2.1</version>
+            <version>1.0.0</version>
           </dependency>
         </dependencies>
         <executions>
           <execution>
-            <id>enforce</id>
+            <id>enforce-linkage-checker</id>
             <!-- Important! Should run after compile -->
             <phase>verify</phase>
             <goals>
@@ -81,14 +81,46 @@ If a violation should not fail the build, set `level` element to `WARN`:
   </LinkageCheckerRule>
 ```
 
-## Debug
+## Run
 
-For developers of this enforcer rule, set the `MAVEN_OPTS` environment variable to wait for
-debuggers (`suspend=y`).
+Linkage Checker Enforcer Rule is bound to `verify` lifecycle. Run the enforcer rule by `mvn`
+command:
+
+```
+$ mvn verify
+```
+
+### Successful Result
+
+Successful checks should output no error.
+
+```
+[INFO] --- maven-enforcer-plugin:3.0.0-M2:enforce (enforce-linkage-checker) @ protobuf-java-util ---
+[INFO] No error found
+```
+
+
+### Failed Result
+
+Failed checks should output the missing classes, fields, or methods and the referencing classes.
+
+```
+[INFO] --- maven-enforcer-plugin:3.0.0-M2:enforce (enforce-linkage-checker) @ google-cloud-core-grpc ---
+[ERROR] Linkage Checker rule found 21 reachable errors. Linkage error report:
+Class org.eclipse.jetty.npn.NextProtoNego is not found;
+  referenced by 1 class file
+    io.grpc.netty.shaded.io.netty.handler.ssl.JettyNpnSslEngine (grpc-netty-shaded-1.23.0.jar)
+...
+```
+
+# Debug
+
+For developers to debug the enforcer rule implementation, set the `MAVEN_OPTS` environment variable
+to wait for debuggers (`suspend=y`) before running `mvn` command.
 
 ```
 $ export MAVEN_OPTS='-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005'
-$ mvn validate
+$ mvn verify
 Listening for transport dt_socket at address: 5005
 ```
 
