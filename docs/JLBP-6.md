@@ -1,5 +1,4 @@
-[JLBP-6] Rename artifacts and packages together
------------------------------------------------
+# [JLBP-6] Rename artifacts and packages together
 
 When a library B in Java depends on another library A through the Maven
 repository system, library B needs two identifiers to find classes in library A:

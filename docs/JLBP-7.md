@@ -1,5 +1,4 @@
-[JLBP-7] Make breaking transitions easy
----------------------------------------
+# [JLBP-7] Make breaking transitions easy
 
 When a library makes an in-place breaking change (meaning that the Java package
 is not renamed - see [JLBP-6](JLBP-6.md) for more discussion on renaming rules),

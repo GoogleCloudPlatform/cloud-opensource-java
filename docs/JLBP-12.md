@@ -1,5 +1,4 @@
-[JLBP-12] Make level of support and API stability clear
--------------------------------------------------------
+# [JLBP-12] Make level of support and API stability clear
 
 - Clearly document the lifecycle status (and corresponding level of support)
   of the library. Examples include:
