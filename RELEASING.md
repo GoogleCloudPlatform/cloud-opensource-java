@@ -4,7 +4,14 @@ To release artifacts 'dependencies-parent', 'dependencies', and 'linkage-checker
 follow the ["Developers/Releasing" steps in go/ct4j](
 https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md?cl=head).
 
-Note: Cloud OSS BOM release procedure [boms/cloud-oss-bom/RELEASING.md](
+To distinguish the enforcer rule release and Google Cloud Libraries BOM release, the release script
+takes `enforcer` as the first argument:
+
+```
+./script/prepare_release.sh enforcer 1.0.0
+```
+
+Note: Google Cloud Libraries BOM release procedure [boms/cloud-oss-bom/RELEASING.md](
 boms/cloud-oss-bom/RELEASING.md) is not part of this document.
 
 ## Rapid builds

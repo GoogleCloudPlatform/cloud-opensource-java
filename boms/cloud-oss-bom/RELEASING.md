@@ -7,7 +7,7 @@ in `boms/cloud-oss-bom` directory:
 $ cd cloud-opensource-java/boms/cloud-oss-bom
 $ git checkout master
 $ git pull
-$ ../../scripts/prepare_release.sh 1.0.0 1.0.1
+$ ../../scripts/prepare_release.sh bom 1.0.0 1.0.1
 ```
 
 Then follow the ["Developers/Releasing" steps in go/ct4j](
