@@ -1,5 +1,4 @@
-[JLBP-10] Maintain API stability as long as needed for consumers
-----------------------------------------------------------------
+# [JLBP-10] Maintain API stability as long as needed for consumers
 
 Every breaking change that consumers must incorporate into their own code incurs
 a cost to them. There is the immediate cost of the consumers who are forced to

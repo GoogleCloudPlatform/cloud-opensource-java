@@ -1,5 +1,4 @@
-[JLBP-13] Quickly remove references to deprecated features in dependencies
---------------------------------------------------------------------------
+# [JLBP-13] Quickly remove references to deprecated features in dependencies
 
 - This best practice refers to code that *uses* deprecated functionality from
   another library or the JDK, not to the deprecated functionality itself.
