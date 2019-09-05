@@ -1,5 +1,5 @@
 #!/bin/bash -
-# Usage: ./prepare_release.sh <enforcer|bom> <release version>
+# Usage: ./prepare_release.sh <dependencies|bom> <release version>
 
 set -e
 
@@ -16,7 +16,7 @@ Die() {
 }
 
 DieUsage() {
-  Die "Usage: ./prepare_release.sh <enforcer|bom> <release version> [<post-release-version>]"
+  Die "Usage: ./prepare_release.sh <dependencies|bom> <release version> [<post-release-version>]"
 }
 
 # Usage: CheckVersion <version>
@@ -38,7 +38,7 @@ EchoGreen '===== RELEASE SETUP SCRIPT ====='
 
 PREFIX=$1
 
-if [[ "${PREFIX}" != "enforcer" && "${PREFIX}" != "bom" ]]; then
+if [[ "${PREFIX}" != "dependencies" && "${PREFIX}" != "bom" ]]; then
   DieUsage
 fi
 
