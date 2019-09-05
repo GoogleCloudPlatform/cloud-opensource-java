@@ -1,5 +1,4 @@
-[JLBP-3] Use Semantic Versioning
---------------------------------
+# [JLBP-3] Use Semantic Versioning
 
 Definition of semantic versioning (SemVer): https://semver.org
 

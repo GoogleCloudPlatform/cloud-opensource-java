@@ -1,5 +1,4 @@
-[JLBP-11] Stay up to date with compatible dependencies
-------------------------------------------------------
+# [JLBP-11] Stay up to date with compatible dependencies
 
 - Recommendation: Release no later than 6 weeks after any of your dependencies
   releases a version that is higher than the one your library depends on.

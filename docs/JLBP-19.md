@@ -1,5 +1,4 @@
-[JLBP-19] Place each package in only one module
---------------------------------------------------
+# [JLBP-19] Place each package in only one module
 
 All classes from the same Java package must be in one and only
 one JAR file in the classpath.

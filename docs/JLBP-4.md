@@ -1,5 +1,4 @@
-[JLBP-4] Avoid dependencies on unstable libraries and features
---------------------------------------------------------------
+# [JLBP-4] Avoid dependencies on unstable libraries and features
 
 - Unstable libraries allow breaking changes to their
   public APIs within the same major version. For libraries following semantic
