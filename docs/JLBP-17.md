@@ -1,5 +1,4 @@
-[JLBP-17] Coordinate rollout of breaking changes
-------------------------------------------------
+# [JLBP-17] Coordinate rollout of breaking changes
 
 When a library introduces a breaking change, consumers
 can't update to that version until all their other dependencies which also use

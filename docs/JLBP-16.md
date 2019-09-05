@@ -1,5 +1,4 @@
-[JLBP-16] Ensure upper version alignment of dependencies for consumers
-----------------------------------------------------------------------
+# [JLBP-16] Ensure upper version alignment of dependencies for consumers
 
 For multi-module projects, this best practice assumes you have already applied
 [JLBP-15](JLBP-15.md), so that your project has a BOM.

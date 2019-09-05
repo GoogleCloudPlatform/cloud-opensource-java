@@ -1,5 +1,4 @@
-[JLBP-2] Minimize API surface
------------------------------
+# [JLBP-2] Minimize API surface
 
 - Avoid exposing types from your dependencies.
 

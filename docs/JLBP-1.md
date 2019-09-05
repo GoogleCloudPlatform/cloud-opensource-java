@@ -1,5 +1,4 @@
-[JLBP-1] Minimize dependencies
-------------------------------
+# [JLBP-1] Minimize dependencies
 
 Use the minimum number of dependencies that is reasonable.
 Every dependency of a library is a liability of both

@@ -1,5 +1,4 @@
-[JLBP-8] Advance widely used functionality to a stable version
---------------------------------------------------------------
+# [JLBP-8] Advance widely used functionality to a stable version
 
 Libraries at 0.x versions and unstable features (which should be marked with
 annotations if they live in a stable library, as outlined in
