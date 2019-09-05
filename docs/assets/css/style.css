@@ -9,3 +9,8 @@ h1 {
   font-weight: light;
   font-size: 96;
 }
+
+
+p, li {
+  width: 40em;
+}
