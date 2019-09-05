@@ -1,5 +1,4 @@
-[JLBP-14] Do not use version ranges
------------------------------------
+# [JLBP-14] Do not use version ranges
 
 - If the pom.xml of your library specifies a version range instead of a
   single version for any particular dependency, builds at different points

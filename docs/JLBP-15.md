@@ -1,5 +1,4 @@
-[JLBP-15] Publish a BOM for multi-module projects
--------------------------------------------------
+# [JLBP-15] Publish a BOM for multi-module projects
 
 ### The BOM (Bill of Materials)
 
