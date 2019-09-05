@@ -84,4 +84,4 @@ git push --set-upstream origin ${PREFIX}-${VERSION}
 
 # File a PR on Github for the new branch. Have someone LGTM it, which gives you permission to continue.
 EchoGreen 'File a PR for the new release branch:'
-echo https://github.com/GoogleCloudPlatform/cloud-opensource-java/compare/${VERSION}
+echo https://github.com/GoogleCloudPlatform/cloud-opensource-java/compare/${PREFIX}-${VERSION}
