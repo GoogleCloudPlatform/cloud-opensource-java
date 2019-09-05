@@ -21,13 +21,15 @@ value to having a stable surface than there is to having a surface with zero
 deprecated methods.
 
 To avoid getting stuck in the first place, do not evangelize your pre-1.0 library
-or suggest that other teams and projects depend on it. 
+or suggest that other teams and projects depend on it.
 
 - Be very clear with any teams and projects you work with that the library is unstable
   and should only be adopted if they are prepared to upgrade their own product regularly.
-- Add an [unstable or experimental badge](https://github.com/badges/stability-badges) 
+
+- Add an [unstable or experimental badge](https://github.com/badges/stability-badges)
   to your Github `README.md`.
+  
 - Consider not pushing a pre-1.0 artifact to the Central repository.
 
 Once the API is stable and has reached 1.0 is the time to seek customers,
-not before. 
+not before.

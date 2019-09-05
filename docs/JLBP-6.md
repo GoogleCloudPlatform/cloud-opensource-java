@@ -11,6 +11,7 @@ repository system, library B needs two identifiers to find classes in library A:
    Maven or Gradle) selects exactly one version to put on
    the classpath. Different build systems use different rules for selecting
    from multiple versions.
+
 2. The fully-qualified class names of the classes in library A. These classes
    generally share a Java package (the package as defined in `package`
    statements, for example `package com.google.common.collect`). The classpath,
@@ -29,6 +30,7 @@ Recommendations:
   1. If the new library surface is delivered under a new Java package, either
      use a different Maven ID (different group ID or artifact ID) or bundle the
      old and new packages together under the original Maven ID.
+
   2. If the breaking change is made in-place and the Java package is kept the
      same, use the same Maven ID (same group ID and same artifact ID).
 
@@ -48,30 +50,38 @@ Recommendations:
 
   - Corollary 1: Once you have published under a particular Maven ID, you are
     stuck with it until you rename your Java package.
+
   - Corollary 2: Don't fork an artifact owned by someone else and publish
     classes with the same fully-qualified classnames.
 
 Consider the following renaming scenario:
 
 - The Maven coordinates start as `g1:a1:1.0.0`
+
   - With no rename of the Maven ID, the new major version's Maven coordinates
     are `g1:a1:2.0.0`. (Only one of the versions will be present on the
     classpath even if both are in the dependency tree.)
+
   - With a rename of the Maven ID, the new major version's Maven coordinates are
     `g2:a2:2.0.0`. (Both versions can be present on the classpath.)
+
 - The Java package starts as `com.google.a1`
+
   - With no rename, the new major version's Java package is still
     `com.google.a1`.
+
   - With a rename, the new major version's Java package is `com.google.a2`.
 
 Given this scenario, here are the possible combinations of renamings:
 
 - **Don't rename Java package**:
+
   - **Case 1: Don't rename Maven ID**. This approach can result in diamond
     dependency conflicts because different branches of a dependency tree can
     depend on different major versions, and the build system (Maven or Gradle)
     will only choose one of them to use. Users are forced to change their code
     between versions, but only for library surface that was changed.
+    
   - **Case 2: Rename Maven ID**. Users can easily pull in both the old jar
     (`g1:a1:1.0.0`) and the new jar (`g2:a2:2.0.0`) into their classpath
     accidentally through transitive dependencies because Maven artifact
@@ -79,7 +89,9 @@ Given this scenario, here are the possible combinations of renamings:
     "overlapping classes" since they have classes with the same fully-qualified
     path. This can lead to runtime exceptions such as`NoSuchMethodDefError`
     and can be a compile-time error in Java 9 and later. **NEVER DO THIS**.
+
 - **Rename Java package**:
+
   - **Case 3: Don't rename Maven ID**. The classes from `g1:a1:1.0.0` and
     `g1:a1:2.0.0` could technically be used together, but since they share the
     Maven group ID and artifact ID, only one jar can be pulled in.
@@ -87,6 +99,7 @@ Given this scenario, here are the possible combinations of renamings:
     It is strictly better to either also rename the Maven ID (case 4)
     or to keep the Maven ID and also bundle the old package (case 5), so that
     the major versions can be used side by side.
+
   - **Case 4: Rename Maven ID**. The two major versions can be used side by
     side, allowing users to incrementally transition from the old to the new
     version, or even use them side by side indefinitely if
@@ -97,6 +110,7 @@ Given this scenario, here are the possible combinations of renamings:
     there are consuming libraries that have not also created new major versions
     that can accept new types from this library. This approach is essentially
     like creating a new library.
+
   - **Case 5: Bundle old and new in the existing Maven ID**. Like case 4, the
     two versions can be used side by side. The impact is the same as case 4,
     except with the slight drawback that the user's class space is polluted with

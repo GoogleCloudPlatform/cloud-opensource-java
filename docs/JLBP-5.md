@@ -27,6 +27,7 @@ Example 2: There are multiple artifacts that provide classes under
   `javax.servlet` (`javax.servlet:javax.servlet-api:3.1.0` and
   `javax.servlet:servlet-api:2.5` at least). The correct choice
   depends on the runtime.
+  
   - The only type of library that should depend on `servlet-api` is
     one used exclusively in servlet applications. In this case,
     the `servlet-api` dependency should have `provided` scope. Other libraries should
@@ -38,7 +39,7 @@ Example 2: There are multiple artifacts that provide classes under
 In Java 9 and later overlapping classes become compile-time and runtime errors when
 named modules are used. It is critical, especially in Java 9 and later,
 to remove all but one of the artifacts that contain overlapping classes from the classpath.
-Generally this requires changing the POMs of multiple Maven artifacts so they no 
+Generally this requires changing the POMs of multiple Maven artifacts so they no
 longer include any dependencies on the artifacts you need to remove from your
 project's classpath.
 

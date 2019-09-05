@@ -15,6 +15,7 @@ features:
 
 1. Mark old methods/classes as `@Deprecated` at the same time as adding new
    methods/classes. This is a "stepping stone" release.
+
 2. Delete the deprecated methods/classes. This should wait until major consumers
    have stopped using the deprecated functionality, where major consumers means
    consumers with high usage or consumers that are deep in the dependency tree.
