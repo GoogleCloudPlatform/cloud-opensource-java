@@ -22,8 +22,11 @@ One thing to keep in mind is that many consumers are highly resistant to
 accepting breaking changes for various reasons:
 
 - They might have low test coverage, making it costly to verify correctness.
+
 - They might not have enough developers and time to do dependency upgrade work.
+
 - They might have a high risk aversion.
+
 - They might have put your major version on their own surface and they don't
   want to force a breaking change on their own users for a long period.
 

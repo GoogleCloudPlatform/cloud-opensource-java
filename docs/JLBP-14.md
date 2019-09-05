@@ -17,13 +17,13 @@ releases new versions), which can break your library unexpectedly.
     is pushed to Maven Central, it will be picked up by downstream dependencies
     automatically. This can be used a by a malicious actor with release privileges
     to slip new malicious code into projects without proper review. [A version
-    of this attack has been used in the node.js ecosystem to steal 
-    Bitcoins](https://www.theregister.co.uk/2018/11/26/npm_repo_bitcoin_stealer/). 
+    of this attack has been used in the node.js ecosystem to steal
+    Bitcoins](https://www.theregister.co.uk/2018/11/26/npm_repo_bitcoin_stealer/).
 
   Thus, always specify a single version instead of a version range for dependencies.
 
 Single-element version ranges ("hard requirements") have a much different
 impact, and this rule does not apply to them.
 
-[The Maven POM Reference]()]https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification)
+[The Maven POM Reference](https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification)
 contains more information.

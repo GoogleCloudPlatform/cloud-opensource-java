@@ -1,11 +1,14 @@
 # [JLBP-13] Quickly remove references to deprecated features in dependencies
 
-- This best practice refers to code that *uses* deprecated functionality from
-  another library or the JDK, not to the deprecated functionality itself.
-  - It does not apply to usage of deprecated features within a library.
-- The earlier you remove usages of external deprecated functionality, the
-  more versions of your product will work with your dependency once the
-  deprecated features are fully deleted or hidden in the dependency.
+This best practice refers to code that *uses* deprecated functionality from
+another library or the JDK, not to the deprecated functionality itself.
+
+It does not apply to usage of deprecated features within a library.
+
+The earlier you remove usages of external deprecated functionality, the
+more versions of your product will work with your dependency once the
+deprecated features are fully deleted or hidden in the dependency.
+
   - For example, api-common-java 1.6.0 refers to `Futures.transform(ListenableFuture, Function)`
     in Guava, which was deprecated in 19.0 and removed in 26.0. In
     api-common-java 1.7, the code was changed to instead call
