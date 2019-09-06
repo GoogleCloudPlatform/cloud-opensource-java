@@ -37,7 +37,7 @@ import org.junit.Test;
 public class MaximumLinkageErrorsTest {
 
   @Test
-  public void textMaximumLinkageErrors() 
+  public void testMaximumLinkageErrors()
       throws IOException, MavenRepositoryException, RepositoryException {
 
     Bom baseline = RepositoryUtility.readBom("com.google.cloud:libraries-bom:2.2.0");
