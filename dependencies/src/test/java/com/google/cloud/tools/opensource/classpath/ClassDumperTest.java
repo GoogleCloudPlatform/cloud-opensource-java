@@ -338,8 +338,8 @@ public class ClassDumperTest {
 
     // There was VerifyError when handling multi-release JAR
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/890
-    classDumper.isUnusedClassSymbolReference("org.graalvm.libgraal.LibGraal",
-        new ClassSymbol("jdk.vm.ci.services.Services"));
+    classDumper.isUnusedClassSymbolReference(
+        "org.graalvm.libgraal.LibGraal", new ClassSymbol("jdk.vm.ci.services.Services"));
   }
 
   @Test
