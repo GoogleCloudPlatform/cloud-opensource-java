@@ -8,10 +8,14 @@ h1 {
   font-family: Roboto, sans-serif;
   font-weight: light;
   font-size: 96;
-  margin-top: 3ex;
   margin-bottom: 1ex;
 }
 
+div.cloud-logo {
+  height: 60px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
 
 p, li {
   width: 40em;
