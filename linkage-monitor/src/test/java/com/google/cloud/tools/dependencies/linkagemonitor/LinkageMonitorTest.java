@@ -159,10 +159,13 @@ public class LinkageMonitorTest {
         bomSize,
         snapshotBom.getManagedDependencies().size());
     for (int i = 1; i < bomSize; ++i) {
-      assertEquals(
-          "Artifacts other than protobuf-java should have the original version",
-          bom.getManagedDependencies().get(i).getVersion(),
-          snapshotBom.getManagedDependencies().get(i).getVersion());
+      Artifact expected = bom.getManagedDependencies().get(i);
+      Artifact actual = snapshotBom.getManagedDependencies().get(i);
+assertEquals(
+          "Artifacts other than protobuf-java should have the original version: "
+		  + expected + " != " + actual,
+          expected.getVersion(),
+          actual.getVersion());
     }
   }
 
