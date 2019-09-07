@@ -330,6 +330,8 @@ public class ClassDumperTest {
   @Test
   public void testIsUnusedClassSymbolReference_multiReleaseJar()
       throws IOException, RepositoryException {
+    // org.graalvm.libgraal.LibGraal class has different implementations between Java 8 and 11 via
+    // Multi-release JAR of this artifact.
     Artifact grpcArtifact = new DefaultArtifact("org.graalvm.compiler:compiler:19.0.0");
     List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(grpcArtifact));
 
