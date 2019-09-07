@@ -381,6 +381,7 @@ class ClassDumper {
     for (String classFileName : listClassFileNames(jar)) {
       if (classFileName.startsWith("META-INF.versions.")) {
         // Linkage Checker does not support multi-release JAR (for Java 9+) yet
+        // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/897
         continue;
       }
 
