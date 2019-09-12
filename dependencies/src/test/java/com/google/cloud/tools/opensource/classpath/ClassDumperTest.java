@@ -328,6 +328,23 @@ public class ClassDumperTest {
   }
 
   @Test
+  public void testIsUnusedClassSymbolReference_multiReleaseJar()
+      throws IOException, RepositoryException {
+    // org.graalvm.libgraal.LibGraal class has different implementations between Java 8 and 11 via
+    // Multi-release JAR of this artifact.
+    Artifact grpcArtifact = new DefaultArtifact("org.graalvm.compiler:compiler:19.0.0");
+    List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(grpcArtifact));
+
+    ClassDumper classDumper = ClassDumper.create(paths);
+    classDumper.findSymbolReferences();
+
+    // There was VerifyError when handling multi-release JAR
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/890
+    classDumper.isUnusedClassSymbolReference(
+        "org.graalvm.libgraal.LibGraal", new ClassSymbol("jdk.vm.ci.services.Services"));
+  }
+
+  @Test
   public void testFindSymbolReferences_overLappingClass() throws IOException, RepositoryException {
     // Both artifacts contain com.google.inject.internal.InjectorImpl$BindingsMultimap. The one from
     // sisu-guice should not appear in symbol references because guice supersedes in the class path.
