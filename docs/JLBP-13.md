@@ -18,5 +18,4 @@ combinations of versions.
 
 This best practice refers to code that *uses* deprecated functionality from
 another library or the JDK, not to the deprecated functionality itself.
-
 It does not apply to usage of deprecated features within a library.
