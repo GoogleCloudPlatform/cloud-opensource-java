@@ -23,6 +23,7 @@ Perform the rollout in this manner:
    - Some types of changes cannot be done using a two-phase approach, for
      example, making classes or methods `final` or adding methods to interfaces
      without a default implementation. Minimize these types of changes.
+
 2. Make sure that consuming libraries are prepared for the breakage.
    - In the case of in-place breakage, submit pull requests to the
      consuming libraries that switch from the old surface to the new surface,
@@ -36,6 +37,7 @@ Perform the rollout in this manner:
      `@Deprecated` and release. Make sure that all consuming libraries
      have removed their references to the deprecated functionality. This invokes
      [JLBP-13](JLBP-13.md) for consuming libraries.
+     
 3. Release the incompatible version and make sure that the version propagates up
    the dependency tree as quickly as possible. In the case of in-place breakage,
    update the provisionally-approved PRs with published dependency versions,
