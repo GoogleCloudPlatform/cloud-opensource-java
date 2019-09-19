@@ -15,8 +15,11 @@ h1 {
 
 p, li {
   width: 40em;
+  max-width: 90%;
 }
 
-body {
-  margin-left: 10em;
+@media only screen and (min-device-width : 1024px) {
+  body {
+    margin-left: 8em;
+  }
 }
