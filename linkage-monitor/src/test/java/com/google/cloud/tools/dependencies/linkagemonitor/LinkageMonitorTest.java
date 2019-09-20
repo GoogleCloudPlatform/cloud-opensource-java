@@ -304,7 +304,7 @@ assertEquals(
     // a profile. Without JDK system property, this throws ModelBuildingException.
     Model model =
         LinkageMonitor.buildModelWithSnapshotBom(
-            spySystem, session, "com.google.cloud:google-cloud-shared-config:0.1.2");
+            spySystem, session, "com.google.cloud:google-cloud-core-parent:1.91.0");
     assertNotNull(model);
   }
 }
