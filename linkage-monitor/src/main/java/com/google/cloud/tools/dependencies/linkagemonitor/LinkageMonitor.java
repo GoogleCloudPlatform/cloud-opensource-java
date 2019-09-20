@@ -212,7 +212,7 @@ public class LinkageMonitor {
         null,
         repositorySystem,
         new DefaultRemoteRepositoryManager(),
-        ImmutableList.of(),
+        ImmutableList.of(CENTRAL), // Needed when parent pom is not locally available
         null,
         null));
     // Profile activation needs JDK version through system properties
@@ -226,14 +226,12 @@ public class LinkageMonitor {
     DependencyManagement dependencyManagement =
         resultPhase1.getEffectiveModel().getDependencyManagement();
 
-    if (dependencyManagement != null) {
-      for (org.apache.maven.model.Dependency dependency : dependencyManagement.getDependencies()) {
-        // Replaces the versions of imported BOMs
-        if ("import".equals(dependency.getScope())) {
-          findSnapshotVersion(
-              repositorySystem, session, dependency.getGroupId(), dependency.getArtifactId())
-              .ifPresent(dependency::setVersion);
-        }
+    for (org.apache.maven.model.Dependency dependency : dependencyManagement.getDependencies()) {
+      // Replaces the versions of imported BOMs
+      if ("import".equals(dependency.getScope())) {
+        findSnapshotVersion(
+            repositorySystem, session, dependency.getGroupId(), dependency.getArtifactId())
+            .ifPresent(dependency::setVersion);
       }
     }
 
