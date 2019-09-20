@@ -35,6 +35,7 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.model.DependencyManagement;
@@ -214,6 +215,9 @@ public class LinkageMonitor {
         ImmutableList.of(),
         null,
         null));
+    Properties modelBuildingProperties = modelRequest.getSystemProperties();
+    modelBuildingProperties.putAll(System.getProperties());
+    modelRequest.setSystemProperties(modelBuildingProperties);
 
     DefaultModelBuilder modelBuilder = new DefaultModelBuilderFactory().newInstance();
     // Phase 1 done. Now variables are interpolated.
