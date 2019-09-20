@@ -207,14 +207,15 @@ public class LinkageMonitor {
     modelRequest.setProcessPlugins(false);
     modelRequest.setTwoPhaseBuilding(true); // This forces the builder stop after phase 1
     modelRequest.setPomFile(bomResult.getArtifact().getFile());
-    modelRequest.setModelResolver(new ProjectModelResolver(
-        session,
-        null,
-        repositorySystem,
-        new DefaultRemoteRepositoryManager(),
-        ImmutableList.of(CENTRAL), // Needed when parent pom is not locally available
-        null,
-        null));
+    modelRequest.setModelResolver(
+        new ProjectModelResolver(
+            session,
+            null,
+            repositorySystem,
+            new DefaultRemoteRepositoryManager(),
+            ImmutableList.of(CENTRAL), // Needed when parent pom is not locally available
+            null,
+            null));
     // Profile activation needs JDK version through system properties
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/923
     Properties modelBuildingProperties = modelRequest.getSystemProperties();
@@ -230,7 +231,7 @@ public class LinkageMonitor {
       // Replaces the versions of imported BOMs
       if ("import".equals(dependency.getScope())) {
         findSnapshotVersion(
-            repositorySystem, session, dependency.getGroupId(), dependency.getArtifactId())
+                repositorySystem, session, dependency.getGroupId(), dependency.getArtifactId())
             .ifPresent(dependency::setVersion);
       }
     }
