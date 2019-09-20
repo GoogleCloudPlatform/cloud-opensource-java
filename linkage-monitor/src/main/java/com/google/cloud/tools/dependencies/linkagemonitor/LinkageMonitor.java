@@ -226,12 +226,14 @@ public class LinkageMonitor {
     DependencyManagement dependencyManagement =
         resultPhase1.getEffectiveModel().getDependencyManagement();
 
-    for (org.apache.maven.model.Dependency dependency : dependencyManagement.getDependencies()) {
-      // Replaces the versions of imported BOMs
-      if ("import".equals(dependency.getScope())) {
-        findSnapshotVersion(
-                repositorySystem, session, dependency.getGroupId(), dependency.getArtifactId())
-            .ifPresent(dependency::setVersion);
+    if (dependencyManagement != null) {
+      for (org.apache.maven.model.Dependency dependency : dependencyManagement.getDependencies()) {
+        // Replaces the versions of imported BOMs
+        if ("import".equals(dependency.getScope())) {
+          findSnapshotVersion(
+              repositorySystem, session, dependency.getGroupId(), dependency.getArtifactId())
+              .ifPresent(dependency::setVersion);
+        }
       }
     }
 
