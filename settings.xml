@@ -18,15 +18,4 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
                           https://maven.apache.org/xsd/settings-1.0.0.xsd">
-  <mirrors>
-    <!-- Google's Maven Central mirror for Americas
-     https://cloudplatform.googleblog.com/2015/11/faster-builds-for-Java-developers-with-Maven-Central-mirror.html
-     -->
-    <mirror>
-      <id>google-maven-central</id>
-      <name>GCS Maven Central mirror</name>
-      <url>https://maven-central.storage-download.googleapis.com/repos/central/data/</url>
-      <mirrorOf>central</mirrorOf>
-    </mirror>
-  </mirrors>
 </settings>
