@@ -218,8 +218,7 @@ public class LinkageMonitor {
             null));
     // Profile activation needs JDK version through system properties
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/923
-    Properties modelBuildingProperties = modelRequest.getSystemProperties();
-    modelBuildingProperties.putAll(System.getProperties());
+    modelRequest.setSystemProperties(System.getProperties());
 
     DefaultModelBuilder modelBuilder = new DefaultModelBuilderFactory().newInstance();
     // Phase 1 done. Now variables are interpolated.
