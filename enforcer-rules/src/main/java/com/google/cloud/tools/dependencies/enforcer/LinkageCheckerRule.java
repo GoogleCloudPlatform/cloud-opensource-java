@@ -237,7 +237,6 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           helper.getComponent(ProjectDependenciesResolver.class);
       DefaultRepositorySystemSession fullDependencyResolutionSession =
           new DefaultRepositorySystemSession(session);
-      RepositoryCache cache = fullDependencyResolutionSession.getCache();
       fullDependencyResolutionSession.setCache(new DefaultRepositoryCache());
 
       // For netty-handler referencing its dependencies with ${os.detected.classifier}
