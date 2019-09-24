@@ -58,7 +58,9 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectDependenciesResolver;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.eclipse.aether.DefaultRepositoryCache;
 import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -235,6 +237,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           helper.getComponent(ProjectDependenciesResolver.class);
       DefaultRepositorySystemSession fullDependencyResolutionSession =
           new DefaultRepositorySystemSession(session);
+      RepositoryCache cache = fullDependencyResolutionSession.getCache();
+      fullDependencyResolutionSession.setCache(new DefaultRepositoryCache());
 
       // For netty-handler referencing its dependencies with ${os.detected.classifier}
       Map<String, String> properties = new HashMap<>(); // allowing duplicate entries
