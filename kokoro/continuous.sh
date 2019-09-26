@@ -11,4 +11,4 @@ cd github/cloud-opensource-java
 mkdir -p ${HOME}/.m2
 cp settings.xml ${HOME}/.m2
 
-mvn -B clean install javadoc:jar
+mvn -B -U clean install javadoc:jar
