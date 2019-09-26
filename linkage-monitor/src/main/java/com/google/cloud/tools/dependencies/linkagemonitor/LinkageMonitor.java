@@ -35,6 +35,7 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.model.DependencyManagement;
@@ -206,14 +207,18 @@ public class LinkageMonitor {
     modelRequest.setProcessPlugins(false);
     modelRequest.setTwoPhaseBuilding(true); // This forces the builder stop after phase 1
     modelRequest.setPomFile(bomResult.getArtifact().getFile());
-    modelRequest.setModelResolver(new ProjectModelResolver(
-        session,
-        null,
-        repositorySystem,
-        new DefaultRemoteRepositoryManager(),
-        ImmutableList.of(),
-        null,
-        null));
+    modelRequest.setModelResolver(
+        new ProjectModelResolver(
+            session,
+            null,
+            repositorySystem,
+            new DefaultRemoteRepositoryManager(),
+            ImmutableList.of(CENTRAL), // Needed when parent pom is not locally available
+            null,
+            null));
+    // Profile activation needs JDK version through system properties
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/923
+    modelRequest.setSystemProperties(System.getProperties());
 
     DefaultModelBuilder modelBuilder = new DefaultModelBuilderFactory().newInstance();
     // Phase 1 done. Now variables are interpolated.
