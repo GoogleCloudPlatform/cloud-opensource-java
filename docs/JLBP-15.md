@@ -15,7 +15,7 @@ The BOM can omit the `<modules>` section and does not have a `<dependencies>`
 section.
 
 Consumers of a multi-module library import the library's BOM
-in their own `dependencyManagement` section. They can then omit the
+in their own `<dependencyManagement>` section. They can then omit the
 versions from the specific modules they import. The versions will
 be set by the BOM. This provides consistent versions for artifacts released
 by a single project.
