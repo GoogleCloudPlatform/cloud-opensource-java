@@ -856,4 +856,41 @@ public class LinkageCheckerTest {
     Truth.assertThat(problems.keySet()).doesNotContain(
         new ClassFile(jars.get(0), "reactor.core.publisher.Traces"));
   }
+
+  @Test
+  public void testFindSymbolProblems_shouldDetectMissingParentClass()
+      throws RepositoryException, IOException {
+    // There was a false positive of missing class problem of
+    // com.oracle.graal.pointsto.meta.AnalysisType (in com.oracle.substratevm:svm:19.0.0). The class
+    // was in the class path but its parent class was missing.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/933
+    DependencyGraph dependencies =
+        DependencyGraphBuilder.getTransitiveDependencies(
+            new DefaultArtifact("com.oracle.substratevm:svm:19.2.0.1"));
+    ImmutableList<Path> jars =
+        dependencies.list().stream()
+            .map(path -> path.getLeaf().getFile().toPath())
+            .collect(toImmutableList());
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+    ImmutableSet<SymbolProblem> problems = linkageChecker.findSymbolProblems().keySet();
+    assertFalse(
+        "Graal's AnalysisType, whose interface is missing, should not be reported",
+        problems.stream()
+            .anyMatch(
+                problem ->
+                    problem
+                        .getSymbol()
+                        .getClassName()
+                        .equals("com.oracle.graal.pointsto.meta.AnalysisType")));
+    assertFalse(
+        "Graal's NodeSourcePosition, whose superclass is missing, should not be reported",
+        problems.stream()
+            .anyMatch(
+                problem ->
+                    problem
+                        .getSymbol()
+                        .getClassName()
+                        .equals("org.graalvm.compiler.graph.NodeSourcePosition")));
+  }
 }
