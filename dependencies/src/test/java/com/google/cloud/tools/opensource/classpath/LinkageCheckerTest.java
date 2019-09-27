@@ -876,7 +876,7 @@ public class LinkageCheckerTest {
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
     ImmutableSet<SymbolProblem> problems = linkageChecker.findSymbolProblems().keySet();
     assertFalse(
-        "Graal's AnalysisType, whose interface is missing, should not be reported",
+        "GraalVM's AnalysisType, whose interface is missing, should not be reported",
         problems.stream()
             .anyMatch(
                 problem ->
@@ -885,7 +885,7 @@ public class LinkageCheckerTest {
                         .getClassName()
                         .equals("com.oracle.graal.pointsto.meta.AnalysisType")));
     assertFalse(
-        "Graal's NodeSourcePosition, whose superclass is missing, should not be reported",
+        "GraalVM's NodeSourcePosition, whose superclass is missing, should not be reported",
         problems.stream()
             .anyMatch(
                 problem ->
