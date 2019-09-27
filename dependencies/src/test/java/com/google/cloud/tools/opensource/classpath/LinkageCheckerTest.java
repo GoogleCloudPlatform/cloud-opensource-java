@@ -36,7 +36,6 @@ import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,6 +51,16 @@ public class LinkageCheckerTest {
 
   private Path guavaPath;
   private Path firestorePath;
+
+  private static ImmutableList<Path> resolvePaths(String coordinates) throws RepositoryException {
+    DependencyGraph dependencies =
+        DependencyGraphBuilder.getTransitiveDependencies(new DefaultArtifact(coordinates));
+    ImmutableList<Path> jars =
+        dependencies.list().stream()
+            .map(path -> path.getLeaf().getFile().toPath())
+            .collect(toImmutableList());
+    return jars;
+  }
 
   @Before
   public void setup() throws URISyntaxException {
@@ -846,10 +855,7 @@ public class LinkageCheckerTest {
     // Reactor-core's Traces is known to catch Throwable to detect availability of Java 9+ classes.
     // Linkage Checker does not need to report it.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/816
-    DependencyGraph dependencies = DependencyGraphBuilder.getTransitiveDependencies(
-        new DefaultArtifact("io.projectreactor:reactor-core:3.2.11.RELEASE"));
-    ImmutableList<Path> jars = dependencies.list().stream()
-        .map(path -> path.getLeaf().getFile().toPath()).collect(toImmutableList());
+    ImmutableList<Path> jars = resolvePaths("io.projectreactor:reactor-core:3.2.11.RELEASE");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
     ImmutableSetMultimap<ClassFile, SymbolProblem> problems = linkageChecker.findSymbolProblems()
@@ -865,13 +871,7 @@ public class LinkageCheckerTest {
     // com.oracle.graal.pointsto.meta.AnalysisType (in com.oracle.substratevm:svm:19.0.0). The class
     // was in the class path but its parent class was missing.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/933
-    DependencyGraph dependencies =
-        DependencyGraphBuilder.getTransitiveDependencies(
-            new DefaultArtifact("com.oracle.substratevm:svm:19.2.0.1"));
-    ImmutableList<Path> jars =
-        dependencies.list().stream()
-            .map(path -> path.getLeaf().getFile().toPath())
-            .collect(toImmutableList());
+    ImmutableList<Path> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
     ImmutableSet<SymbolProblem> problems = linkageChecker.findSymbolProblems().keySet();
@@ -894,14 +894,21 @@ public class LinkageCheckerTest {
                         .getSymbol()
                         .getClassName()
                         .equals("org.graalvm.compiler.graph.NodeSourcePosition")));
+  }
 
-    // Instead, these missing superclass and interface should be reported
-    for (String expectedMissingClassName :
-        Arrays.asList("jdk.vm.ci.meta.ResolvedJavaType", "jdk.vm.ci.code.BytecodePosition")) {
-      assertTrue(
-          problems.stream()
-              .anyMatch(
-                  problem -> problem.getSymbol().getClassName().equals(expectedMissingClassName)));
-    }
+  @Test
+  public void testFindSymbolProblems_shouldSuppressJvmCIPackage()
+      throws RepositoryException, IOException {
+    // There was a false positive of missing class problem of
+    // com.oracle.graal.pointsto.meta.AnalysisType (in com.oracle.substratevm:svm:19.0.0). The class
+    // was in the class path but its parent class was missing.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/933
+    ImmutableList<Path> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    Truth.assertWithMessage("Missing classes from jdk.vm.ci should not be reported")
+        .that(linkageChecker.findSymbolProblems().keySet())
+        .isEmpty();
   }
 }

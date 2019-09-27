@@ -161,11 +161,10 @@ public class LinkageChecker {
         });
 
     // Filter classes in whitelist
-    SetMultimap<SymbolProblem, ClassFile> filteredMap = Multimaps
-        .filterEntries(problemToClass.build(), LinkageChecker::problemFilter);
+    SetMultimap<SymbolProblem, ClassFile> filteredMap =
+        Multimaps.filterEntries(problemToClass.build(), LinkageChecker::problemFilter);
     return ImmutableSetMultimap.copyOf(filteredMap);
   }
-
 
   /**
    * Returns true if the linkage error {@code entry} should be reported. False if it should be
