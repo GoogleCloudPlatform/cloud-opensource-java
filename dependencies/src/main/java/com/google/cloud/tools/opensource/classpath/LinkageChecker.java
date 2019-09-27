@@ -34,6 +34,7 @@ import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.logging.Logger;
@@ -161,9 +162,28 @@ public class LinkageChecker {
 
     // Filter classes in whitelist
     SetMultimap<SymbolProblem, ClassFile> filteredMap = Multimaps
-        .filterValues(problemToClass.build(),
-            classFile -> !SOURCE_CLASSES_TO_SUPPRESS.contains(classFile.getClassName()));
+        .filterEntries(problemToClass.build(), LinkageChecker::problemFilter);
     return ImmutableSetMultimap.copyOf(filteredMap);
+  }
+
+
+  /**
+   * Returns true if the linkage error {@code entry} should be reported. False if it should be
+   * suppressed.
+   */
+  private static boolean problemFilter(Map.Entry<SymbolProblem, ClassFile> entry) {
+    ClassFile classFile = entry.getValue();
+    SymbolProblem symbolProblem = entry.getKey();
+    if (SOURCE_CLASSES_TO_SUPPRESS.contains(classFile.getClassName())) {
+      return false;
+    }
+
+    // GraalVM-related library depends on Java Compiler Interface (JVMCI) that only exists in
+    // special JDK. https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929
+    if (symbolProblem.getSymbol().getClassName().startsWith("jdk.vm.ci")) {
+      return false;
+    }
+    return true;
   }
 
   /**
