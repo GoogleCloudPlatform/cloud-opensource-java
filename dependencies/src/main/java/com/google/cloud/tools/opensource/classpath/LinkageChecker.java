@@ -31,10 +31,12 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.logging.Logger;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
@@ -200,6 +202,34 @@ public class LinkageChecker {
       if (targetJavaClass.isInterface() != symbol.isInterfaceMethod()) {
         return Optional.of(
             new SymbolProblem(symbol, ErrorType.INCOMPATIBLE_CLASS_CHANGE, containingClassFile));
+      }
+
+      // Check the existence of parent classes and interfaces
+      Queue<String> queue = new ArrayDeque<>();
+      queue.add(targetClassName);
+      while(!queue.isEmpty()) {
+        String className = queue.remove();
+        JavaClass baseClass;
+        try {
+          baseClass = classDumper.loadJavaClass(className);
+          queue.add(baseClass.getSuperclassName());
+        } catch (ClassNotFoundException ex) {
+          // baseClass is not updated yet
+          SymbolProblem problem = new SymbolProblem(new ClassSymbol(className),
+              ErrorType.SYMBOL_NOT_FOUND, null);
+          return Optional.of(problem);
+        }
+
+        for (String interfaceName : baseClass.getInterfaceNames()) {
+          try {
+            JavaClass interfaceClass = classDumper.loadJavaClass(interfaceName);
+            queue.addAll(Arrays.asList(interfaceClass.getInterfaceNames()));
+          } catch (ClassNotFoundException ex) {
+            SymbolProblem problem = new SymbolProblem(new ClassSymbol(interfaceName),
+                ErrorType.SYMBOL_NOT_FOUND, null);
+            return Optional.of(problem);
+          }
+        }
       }
 
       // Checks the target class, its parent classes, and its interfaces.
