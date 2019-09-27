@@ -875,6 +875,7 @@ public class LinkageCheckerTest {
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
     ImmutableSet<SymbolProblem> problems = linkageChecker.findSymbolProblems().keySet();
+
     assertFalse(
         "GraalVM's AnalysisType, whose interface is missing, should not be reported",
         problems.stream()
