@@ -36,6 +36,7 @@ import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -892,5 +893,14 @@ public class LinkageCheckerTest {
                         .getSymbol()
                         .getClassName()
                         .equals("org.graalvm.compiler.graph.NodeSourcePosition")));
+
+    // Instead, these missing superclass and interface should be reported
+    for (String expectedMissingClassName :
+        Arrays.asList("jdk.vm.ci.meta.ResolvedJavaType", "jdk.vm.ci.code.BytecodePosition")) {
+      assertTrue(
+          problems.stream()
+              .anyMatch(
+                  problem -> problem.getSymbol().getClassName().equals(expectedMissingClassName)));
+    }
   }
 }
