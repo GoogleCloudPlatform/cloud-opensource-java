@@ -23,9 +23,8 @@ breaking change to your users.
 
 If you only use the unstable feature in your implementation, then each minor
 or patch version of your library requires a very specific version of
-your dependency; and it is unsafe for your users to upgrade your
-library on its own, creating opportunities for hard-to-diagnose runtime
-conflicts for users.
+your dependency. It is unsafe for users to upgrade your library on its own,
+creating opportunities for hard-to-diagnose runtime conflicts.
 
 Depending on unstable features between submodules of a single library is
 acceptable, provided that users can easily force their build system to use
