@@ -34,7 +34,6 @@ import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.logging.Logger;
@@ -204,32 +203,10 @@ public class LinkageChecker {
             new SymbolProblem(symbol, ErrorType.INCOMPATIBLE_CLASS_CHANGE, containingClassFile));
       }
 
-      // Check the existence of parent classes and interfaces
-      Queue<String> queue = new ArrayDeque<>();
-      queue.add(targetClassName);
-      while(!queue.isEmpty()) {
-        String className = queue.remove();
-        JavaClass baseClass;
-        try {
-          baseClass = classDumper.loadJavaClass(className);
-          queue.add(baseClass.getSuperclassName());
-        } catch (ClassNotFoundException ex) {
-          // baseClass is not updated yet
-          SymbolProblem problem = new SymbolProblem(new ClassSymbol(className),
-              ErrorType.SYMBOL_NOT_FOUND, null);
-          return Optional.of(problem);
-        }
-
-        for (String interfaceName : baseClass.getInterfaceNames()) {
-          try {
-            JavaClass interfaceClass = classDumper.loadJavaClass(interfaceName);
-            queue.addAll(Arrays.asList(interfaceClass.getInterfaceNames()));
-          } catch (ClassNotFoundException ex) {
-            SymbolProblem problem = new SymbolProblem(new ClassSymbol(interfaceName),
-                ErrorType.SYMBOL_NOT_FOUND, null);
-            return Optional.of(problem);
-          }
-        }
+      // Check the existence of the parent class or interface for the class
+      Optional<SymbolProblem> parentSymbolProblem = findParentSymbolProblem(targetClassName);
+      if (parentSymbolProblem.isPresent()) {
+        return parentSymbolProblem;
       }
 
       // Checks the target class, its parent classes, and its interfaces.
@@ -434,5 +411,42 @@ public class LinkageChecker {
       // The class is not public and not in the same package as the source class.
       return false;
     }
+  }
+
+  /**
+   * Returns an {@code Optional} describing the symbol problem in the parent classes or interfaces
+   * for {@code baseClassName}, if any of them are missing; otherwise an empty {@code Optional}.
+   */
+  private Optional<SymbolProblem> findParentSymbolProblem(String baseClassName) {
+    Queue<String> queue = new ArrayDeque<>();
+    queue.add(baseClassName);
+    while (!queue.isEmpty()) {
+      String className = queue.remove();
+      if (Object.class.getName().equals(className)) {
+        continue; // java.lang.Object is the root of the inheritance tree
+      }
+      JavaClass baseClass;
+      try {
+        baseClass = classDumper.loadJavaClass(className);
+        queue.add(baseClass.getSuperclassName());
+      } catch (ClassNotFoundException ex) {
+        // baseClass is not updated yet
+        SymbolProblem problem =
+            new SymbolProblem(new ClassSymbol(className), ErrorType.SYMBOL_NOT_FOUND, null);
+        return Optional.of(problem);
+      }
+
+      for (String interfaceName : baseClass.getInterfaceNames()) {
+        try {
+          JavaClass interfaceClass = classDumper.loadJavaClass(interfaceName);
+          queue.addAll(Arrays.asList(interfaceClass.getInterfaceNames()));
+        } catch (ClassNotFoundException ex) {
+          SymbolProblem problem =
+              new SymbolProblem(new ClassSymbol(interfaceName), ErrorType.SYMBOL_NOT_FOUND, null);
+          return Optional.of(problem);
+        }
+      }
+    }
+    return Optional.empty();
   }
 }
