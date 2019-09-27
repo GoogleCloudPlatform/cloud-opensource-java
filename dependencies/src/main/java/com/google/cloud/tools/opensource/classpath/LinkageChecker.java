@@ -415,7 +415,7 @@ public class LinkageChecker {
 
   /**
    * Returns an {@code Optional} describing the symbol problem in the parent classes or interfaces
-   * for {@code baseClassName}, if any of them are missing; otherwise an empty {@code Optional}.
+   * of {@code baseClassName}, if any of them are missing; otherwise an empty {@code Optional}.
    */
   private Optional<SymbolProblem> findParentSymbolProblem(String baseClassName) {
     Queue<String> queue = new ArrayDeque<>();
@@ -437,7 +437,7 @@ public class LinkageChecker {
           queue.addAll(Arrays.asList(interfaceClass.getInterfaceNames()));
         }
       } catch (ClassNotFoundException ex) {
-        // baseClass is not updated yet
+        // potentiallyMissingClassName (either className or interfaceName) is missing
         SymbolProblem problem =
             new SymbolProblem(
                 new ClassSymbol(potentiallyMissingClassName), ErrorType.SYMBOL_NOT_FOUND, null);
