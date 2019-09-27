@@ -173,15 +173,20 @@ public class LinkageChecker {
   private static boolean problemFilter(Map.Entry<SymbolProblem, ClassFile> entry) {
     ClassFile classFile = entry.getValue();
     SymbolProblem symbolProblem = entry.getKey();
-    if (SOURCE_CLASSES_TO_SUPPRESS.contains(classFile.getClassName())) {
+    String sourceClassName = classFile.getClassName();
+    if (SOURCE_CLASSES_TO_SUPPRESS.contains(sourceClassName)) {
       return false;
     }
 
-    // GraalVM-related library depends on Java Compiler Interface (JVMCI) that only exists in
+    // GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that only exists in
     // special JDK. https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929
-    if (symbolProblem.getSymbol().getClassName().startsWith("jdk.vm.ci")) {
+    if (symbolProblem.getSymbol().getClassName().startsWith("jdk.vm.ci")
+        && (sourceClassName.startsWith("com.oracle.svm")
+            || sourceClassName.startsWith("com.oracle.graal")
+            || sourceClassName.startsWith("org.graalvm"))) {
       return false;
     }
+
     return true;
   }
 
