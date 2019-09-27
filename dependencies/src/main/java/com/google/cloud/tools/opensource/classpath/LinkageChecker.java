@@ -425,13 +425,13 @@ public class LinkageChecker {
       if (Object.class.getName().equals(className)) {
         continue; // java.lang.Object is the root of the inheritance tree
       }
-      String potentiallyMissingTypeName = className;
+      String potentiallyMissingClassName = className;
       try {
         JavaClass baseClass = classDumper.loadJavaClass(className);
         queue.add(baseClass.getSuperclassName());
 
         for (String interfaceName : baseClass.getInterfaceNames()) {
-          potentiallyMissingTypeName = interfaceName;
+          potentiallyMissingClassName = interfaceName;
           JavaClass interfaceClass = classDumper.loadJavaClass(interfaceName);
           // An interface may implement other interfaces
           queue.addAll(Arrays.asList(interfaceClass.getInterfaceNames()));
@@ -440,7 +440,7 @@ public class LinkageChecker {
         // baseClass is not updated yet
         SymbolProblem problem =
             new SymbolProblem(
-                new ClassSymbol(potentiallyMissingTypeName), ErrorType.SYMBOL_NOT_FOUND, null);
+                new ClassSymbol(potentiallyMissingClassName), ErrorType.SYMBOL_NOT_FOUND, null);
         return Optional.of(problem);
       }
     }
