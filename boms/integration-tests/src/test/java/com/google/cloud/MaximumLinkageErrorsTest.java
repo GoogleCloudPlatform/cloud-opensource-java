@@ -18,7 +18,6 @@
 package com.google.cloud;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
-import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
@@ -26,7 +25,6 @@ import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import java.io.IOException;
@@ -38,18 +36,6 @@ import org.junit.Test;
 
 public class MaximumLinkageErrorsTest {
 
-  private ImmutableSetMultimap<SymbolProblem, ClassFile> findReachableProblems(Bom bom)
-      throws IOException, RepositoryException {
-    LinkageChecker linkageCheckerCurrentProblems = LinkageChecker.create(bom);
-    ImmutableSetMultimap<SymbolProblem, ClassFile> problems =
-        linkageCheckerCurrentProblems.findSymbolProblems();
-    ClassReferenceGraph classReferenceGraph =
-        linkageCheckerCurrentProblems.getClassReferenceGraph();
-    return ImmutableSetMultimap.copyOf(
-        Multimaps.filterValues(
-            problems, classFile -> classReferenceGraph.isReachable(classFile.getClassName())));
-  }
-
   @Test
   public void testMaximumLinkageErrors()
       throws IOException, MavenRepositoryException, RepositoryException {
@@ -59,8 +45,10 @@ public class MaximumLinkageErrorsTest {
     Path bomFile = Paths.get("../cloud-oss-bom/pom.xml");
     Bom bom = RepositoryUtility.readBom(bomFile);
 
-    ImmutableSetMultimap<SymbolProblem, ClassFile> oldProblems = findReachableProblems(baseline);
-    ImmutableSetMultimap<SymbolProblem, ClassFile> currentProblems = findReachableProblems(bom);
+    ImmutableSetMultimap<SymbolProblem, ClassFile> oldProblems =
+        LinkageChecker.create(baseline).findSymbolProblems();
+    ImmutableSetMultimap<SymbolProblem, ClassFile> currentProblems =
+        LinkageChecker.create(bom).findSymbolProblems();
 
     // This only tests for newly missing methods, not new references to
     // previously missing methods.
