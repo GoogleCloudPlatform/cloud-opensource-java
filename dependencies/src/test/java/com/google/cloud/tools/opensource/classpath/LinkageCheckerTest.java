@@ -36,6 +36,7 @@ import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -855,5 +856,52 @@ public class LinkageCheckerTest {
         .inverse();
     Truth.assertThat(problems.keySet()).doesNotContain(
         new ClassFile(jars.get(0), "reactor.core.publisher.Traces"));
+  }
+
+  @Test
+  public void testFindSymbolProblems_shouldDetectMissingParentClass()
+      throws RepositoryException, IOException {
+    // There was a false positive of missing class problem of
+    // com.oracle.graal.pointsto.meta.AnalysisType (in com.oracle.substratevm:svm:19.0.0). The class
+    // was in the class path but its parent class was missing.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/933
+    DependencyGraph dependencies =
+        DependencyGraphBuilder.getTransitiveDependencies(
+            new DefaultArtifact("com.oracle.substratevm:svm:19.2.0.1"));
+    ImmutableList<Path> jars =
+        dependencies.list().stream()
+            .map(path -> path.getLeaf().getFile().toPath())
+            .collect(toImmutableList());
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+    ImmutableSet<SymbolProblem> problems = linkageChecker.findSymbolProblems().keySet();
+
+    assertFalse(
+        "GraalVM's AnalysisType, whose interface is missing, should not be reported",
+        problems.stream()
+            .anyMatch(
+                problem ->
+                    problem
+                        .getSymbol()
+                        .getClassName()
+                        .equals("com.oracle.graal.pointsto.meta.AnalysisType")));
+    assertFalse(
+        "GraalVM's NodeSourcePosition, whose superclass is missing, should not be reported",
+        problems.stream()
+            .anyMatch(
+                problem ->
+                    problem
+                        .getSymbol()
+                        .getClassName()
+                        .equals("org.graalvm.compiler.graph.NodeSourcePosition")));
+
+    // Instead, these missing superclass and interface should be reported
+    for (String expectedMissingClassName :
+        Arrays.asList("jdk.vm.ci.meta.ResolvedJavaType", "jdk.vm.ci.code.BytecodePosition")) {
+      assertTrue(
+          problems.stream()
+              .anyMatch(
+                  problem -> problem.getSymbol().getClassName().equals(expectedMissingClassName)));
+    }
   }
 }
