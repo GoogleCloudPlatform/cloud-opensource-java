@@ -19,16 +19,14 @@
     xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
                           https://maven.apache.org/xsd/settings-1.0.0.xsd">
   <mirrors>
-    <!-- Google's Maven Central mirror for Americas is missing new artifacts, such as BCEL 6.4.0
-      as of September 25th, 2019
-     https://cloudplatform.googleblog.com/2015/11/faster-builds-for-Java-developers-with-Maven-Central-mirror.html
-
+    <!-- Google's Maven Central mirror for Americas
+     https://maven-central.storage.googleapis.com/index.html
+    -->
     <mirror>
       <id>google-maven-central</id>
       <name>GCS Maven Central mirror</name>
       <url>https://maven-central.storage-download.googleapis.com/repos/central/data/</url>
       <mirrorOf>central</mirrorOf>
     </mirror>
-    -->
   </mirrors>
 </settings>
