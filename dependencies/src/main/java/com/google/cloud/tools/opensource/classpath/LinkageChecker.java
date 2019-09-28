@@ -31,10 +31,11 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.logging.Logger;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
@@ -200,6 +201,12 @@ public class LinkageChecker {
       if (targetJavaClass.isInterface() != symbol.isInterfaceMethod()) {
         return Optional.of(
             new SymbolProblem(symbol, ErrorType.INCOMPATIBLE_CLASS_CHANGE, containingClassFile));
+      }
+
+      // Check the existence of the parent class or interface for the class
+      Optional<SymbolProblem> parentSymbolProblem = findParentSymbolProblem(targetClassName);
+      if (parentSymbolProblem.isPresent()) {
+        return parentSymbolProblem;
       }
 
       // Checks the target class, its parent classes, and its interfaces.
@@ -404,5 +411,39 @@ public class LinkageChecker {
       // The class is not public and not in the same package as the source class.
       return false;
     }
+  }
+
+  /**
+   * Returns an {@code Optional} describing the symbol problem in the parent classes or interfaces
+   * of {@code baseClassName}, if any of them are missing; otherwise an empty {@code Optional}.
+   */
+  private Optional<SymbolProblem> findParentSymbolProblem(String baseClassName) {
+    Queue<String> queue = new ArrayDeque<>();
+    queue.add(baseClassName);
+    while (!queue.isEmpty()) {
+      String className = queue.remove();
+      if (Object.class.getName().equals(className)) {
+        continue; // java.lang.Object is the root of the inheritance tree
+      }
+      String potentiallyMissingClassName = className;
+      try {
+        JavaClass baseClass = classDumper.loadJavaClass(className);
+        queue.add(baseClass.getSuperclassName());
+
+        for (String interfaceName : baseClass.getInterfaceNames()) {
+          potentiallyMissingClassName = interfaceName;
+          JavaClass interfaceClass = classDumper.loadJavaClass(interfaceName);
+          // An interface may implement other interfaces
+          queue.addAll(Arrays.asList(interfaceClass.getInterfaceNames()));
+        }
+      } catch (ClassNotFoundException ex) {
+        // potentiallyMissingClassName (either className or interfaceName) is missing
+        SymbolProblem problem =
+            new SymbolProblem(
+                new ClassSymbol(potentiallyMissingClassName), ErrorType.SYMBOL_NOT_FOUND, null);
+        return Optional.of(problem);
+      }
+    }
+    return Optional.empty();
   }
 }
