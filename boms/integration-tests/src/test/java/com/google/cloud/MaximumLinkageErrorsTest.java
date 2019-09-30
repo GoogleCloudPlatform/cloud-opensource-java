@@ -40,7 +40,7 @@ public class MaximumLinkageErrorsTest {
   public void testMaximumLinkageErrors()
       throws IOException, MavenRepositoryException, RepositoryException {
 
-    Bom baseline = RepositoryUtility.readBom("com.google.cloud:libraries-bom:2.2.0");
+    Bom baseline = RepositoryUtility.readBom("com.google.cloud:libraries-bom:2.3.0");
 
     Path bomFile = Paths.get("../cloud-oss-bom/pom.xml");
     Bom bom = RepositoryUtility.readBom(bomFile);
