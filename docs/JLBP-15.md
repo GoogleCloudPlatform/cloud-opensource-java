@@ -2,10 +2,10 @@
 
 A [BOM](https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html)
 enables consumers of a library to select
-consistent versions for artifacts included in that library. When
-imported, a BOM operates as a filter. It does not cause any modules to be
-added as dependencies. Instead, for any dependency in a project's dependency
-tree, *if* that module appears in the BOM, the version from the BOM is used.
+consistent versions for artifacts included in that library. Importing a
+BOM does not add any dependencies to a project. Instead, for any module
+in a project's dependency tree, *if* that module appears in the BOM
+the version from the BOM is used.
 
 ## The BOM (Bill of Materials)
 
