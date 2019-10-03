@@ -46,7 +46,7 @@ VERSION=$2
 CheckVersion ${VERSION}
 
 if [ -n "$3" ]; then
-  NEXT_VERSION=$2
+  NEXT_VERSION=$3
   CheckVersion ${NEXT_VERSION}
 else
   NEXT_VERSION=$(IncrementVersion $VERSION)
