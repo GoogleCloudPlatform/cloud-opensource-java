@@ -13,13 +13,11 @@ A BOM is a `pom.xml` file that has `<packaging>pom</packaging>`.
 The `<dependencyManagement>` section lists all the modules of a project.
 The BOM can omit the `<modules>` section and does not have a `<dependencies>`
 section.
-
 Consumers of a multi-module library import the library's BOM
-in their own `<dependencyManagement>` section. They can then omit the
+in their own `<dependencyManagement>` section and omit the
 versions from the specific modules they import. The versions will
 be set by the BOM. This provides consistent versions for artifacts released
 by a single project.
-
 Your project's BOM should include every non-test-scoped module in the project.
 Otherwise, a consumer who depends on an unspecified module must specify and
 upgrade the version of that module, defeating the purpose of the BOM.
@@ -29,35 +27,28 @@ no consistency problem in that case.
 
 See the details specific to each build system in the following sections.
 
-## Libraries using Maven
+## Libraries built with Maven
 
 Create a module containing only the BOM `pom.xml` file and add the BOM module
 to the parent `<modules>` list.
-
 A BOM can inherit from a parent as long as the parent is not part of the build
-  path.
-
-  - Unlike the module POMs of a Maven project, the BOM does not inherit from the
-    parent POM that's used for building other modules of the library.
-
-  - The reason is that a parent will have direct (and possibly transitive)
-    dependencies in its `<dependencyManagement>` section to ensure that its
-    build is consistent, but these dependency versions shouldn't be imported by
-    consumers who import the BOM.
+path. Unlike the module POMs of a Maven project, the BOM does not inherit from the
+parent POM that's used for building other modules of the library.
+The reason is that a parent will have direct (and possibly transitive)
+dependencies in its `<dependencyManagement>` section to ensure that its
+build is consistent, but these dependency versions shouldn't be imported by
+consumers who import the BOM.
 
 Example BOM: [google-cloud-bom](https://github.com/GoogleCloudPlatform/google-cloud-java/blob/master/google-cloud-bom/pom.xml).
 
-## Libraries using Gradle
+## Libraries built with Gradle
 
-A Gradle project can either maintain a pom.xml and release it using a
-specially configured module or generate the `pom.xml` file.
+A Gradle project can either generate the `pom.xml` file
+or maintain a pom.xml and release it using a specially configured module.
+gax-java is an example of maintaining a `pom.xml` file:
 
-Example of maintaining a `pom.xml` file: gax-java -
   [build.gradle](https://github.com/googleapis/gax-java/blob/master/gax-bom/build.gradle)
   and
   [pom.xml](https://github.com/googleapis/gax-java/blob/master/gax-bom/pom.xml).
 
-There is not yet an example of a project that generates a `pom.xml` file.
-
-  - Note: This approach has a limitation that the BOM cannot include any
-    classifiers in the dependency specifications.
+This approach has a limitation that the BOM cannot include any classifiers in the dependency specifications.
