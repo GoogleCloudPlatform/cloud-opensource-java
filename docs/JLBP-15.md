@@ -4,7 +4,7 @@ A [BOM](https://maven.apache.org/guides/introduction/introduction-to-dependency-
 enables consumers of a library to select
 consistent versions for artifacts included in that library. Importing a
 BOM does not add any dependencies to a project. Instead, for any module
-in a project's dependency tree, *if* that module appears in the BOM
+in a project's dependency tree, *if* that module appears in the BOM,
 the version from the BOM is used.
 
 ## The BOM (Bill of Materials)
