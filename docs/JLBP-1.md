@@ -40,8 +40,8 @@ any method in those classes.
 
 ## Minimize dependency scope
 
-When you do add a dependency, keep it scoped as narrowly as possible. 
-In Maven libraries used only for testing such as JUnit, Mockito, and Truth
+When you do add a dependency, keep it scoped as narrowly as possible.
+For example, Maven libraries used only for testing such as JUnit, Mockito, and Truth
 should have `test` scope:
 
 ```
@@ -51,6 +51,7 @@ should have `test` scope:
     <version>4.12</version>
     <scope>test</scope>
   </dependency>
+```
 
 In Gradle these libraries should have `testCompile` scope:
 
@@ -60,8 +61,8 @@ In Gradle these libraries should have `testCompile` scope:
   }
 ```
 
-Libraries needed at compile time but not at runtime should be marked optional 
-in Maven. For example, 
+Libraries needed at compile time but not at runtime should be marked optional
+in Maven. For example,
 
 ```
   <dependency>
@@ -71,7 +72,7 @@ in Maven. For example,
     <optional>true</optional> <!-- not needed at runtime -->
   </dependency>
 ```
- 
+
 In Gradle these libraries should have `compileOnly` scope:
 
 ```
@@ -82,11 +83,5 @@ In Gradle these libraries should have `compileOnly` scope:
 
 The `provided` scope should be used when the dependency is needed at runtime
 and compile time. However the specific jar will be supplied by the environment
-in which the code runs; for example a Java servlet container.
-
-
-
-- Use the smallest scope possible. For example, AutoValue doesn't
-  need to use `compile` scope, and can instead use `compile-only`,
-  since it doesn't need to appear on the classpath of consumers.
-  
+in which the code runs. For example, Java servlet containers such as Tomcat,
+Jetty, and App Engine supply `javax.servlet:javax.servlet-api`.
