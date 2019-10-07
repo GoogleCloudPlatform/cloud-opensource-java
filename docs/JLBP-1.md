@@ -10,9 +10,10 @@ Remember you're also paying the cost of transitive dependencies.
 Before adding a dependency, consider what that dependency depends on.
 
 Scrutinize all dependency additions. Whenever you add a new
-dependency, check the full tree of transitive dependencies that
-are pulled in as a result. If a large number of transitive
-dependencies are pulled in, consider a different direct dependency.
+dependency, check the transitive dependencies it adds to your classpath.
+If many new transitive dependencies are pulled in, consider whether the
+functionality is worth the cost. If a different library
+solves the same problem but adds fewer dependencies, it might be preferable.
 Alternatively, if the functionality you need is small, reimplement
 it in your own library.
 
@@ -41,8 +42,8 @@ any method in those classes.
 ## Minimize dependency scope
 
 When you do add a dependency, keep it scoped as narrowly as possible.
-For example, Maven libraries used only for testing such as JUnit, Mockito, and Truth
-should have `test` scope:
+For example, libraries used only for testing such as JUnit, Mockito,
+and Truth should have `test` scope in a Maven build:
 
 ```
   <dependency>
@@ -53,7 +54,7 @@ should have `test` scope:
   </dependency>
 ```
 
-In Gradle these libraries should have `testCompile` scope:
+When building with Gradle, these libraries should have `testCompile` scope:
 
 ```
   dependencies {
@@ -62,7 +63,9 @@ In Gradle these libraries should have `testCompile` scope:
 ```
 
 Libraries needed at compile time but not at runtime should be marked optional
-in Maven. For example,
+in Maven. For example, dependents of a library that uses AutoValue
+do not usually need to transitively depend on
+`com.google.auto.value:auto-value-annotations`.
 
 ```
   <dependency>
@@ -82,6 +85,6 @@ In Gradle these libraries should have `compileOnly` scope:
 ```
 
 The `provided` scope should be used when the dependency is needed at runtime
-and compile time. However the specific jar will be supplied by the environment
+and compile time. However, the specific jar will be supplied by the environment
 in which the code runs. For example, Java servlet containers such as Tomcat,
 Jetty, and App Engine supply `javax.servlet:javax.servlet-api`.
