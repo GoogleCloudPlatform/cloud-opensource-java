@@ -10,7 +10,7 @@ of the library. Examples include:
   - Archived: no work is expected
 
 Clearly state the API and behavioral stability clients can expect from the
-library. Example statements:
+library. For example you might say:
 
   - This API is stable and suitable for production use, aside from packages,
     classes, and methods marked internal or unstable.
