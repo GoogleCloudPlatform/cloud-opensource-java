@@ -62,15 +62,15 @@ public class RepositoryUtilityTest {
     Path pomFile = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml");
     
     Bom currentBom = RepositoryUtility.readBom(pomFile);
-    Bom oldBom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:2.6.0");
+    Bom oldBom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:2.5.0");
     ImmutableList<Artifact> currentArtifacts = currentBom.getManagedDependencies();
     ImmutableList<Artifact> oldArtifacts = oldBom.getManagedDependencies();
     
     String coordinates = currentBom.getCoordinates();
-    Truth.assertThat(coordinates).startsWith("com.google.cloud:libraries-bom:");
-    Truth.assertThat(coordinates).endsWith("-SNAPSHOT");
+    Assert.assertTrue(coordinates.startsWith("com.google.cloud:libraries-bom:"));
+    Assert.assertTrue(coordinates.endsWith("-SNAPSHOT"));
     
-    // This is a characterization test to verify that the managed dependencies haven't changed.
+    // We're testing that the managed dependencies haven't changed.
     // However sometimes this list does change. If so, we want to 
     // output the specific difference so we can manually verify whether
     // the changes make sense. When they do make sense, we update the test. 
