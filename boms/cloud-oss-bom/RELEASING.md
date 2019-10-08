@@ -14,18 +14,20 @@ Create a PR for the release, and get it approved.
 ## Rapid build
 
 Rapid project is [cloud-java-tools-cloud-opensource-java-bom-kokoro-release](
-http://rapid/cloud-java-tools-cloud-opensource-java-bom-kokoro-release).
+https://rapid/cloud-java-tools-cloud-opensource-java-bom-kokoro-release).
 
 ## Deleting a release
 
-Occasionally you may need to clean up after an aborted release, typically becaus the release script had
+Occasionally you may need to clean up after an aborted release, typically because the release script had
 problems. If so:
 
 1. Delete the release branch on Github.
 
 2. Fetch the tags in your local client:
 
-   `$ git fetch --tags --force`
+   ```
+   $ git fetch --tags --force`
+   ```
      
 3. Delete the tag locally:
 
