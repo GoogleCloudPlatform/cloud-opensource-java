@@ -57,16 +57,25 @@ public class RepositoryUtilityTest {
   }
 
   @Test
-  public void testReadBom_path() throws MavenRepositoryException {
+  public void testReadBom_path() throws MavenRepositoryException, ArtifactDescriptorException {
     Path pomFile = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml");
     
-    Bom bom = RepositoryUtility.readBom(pomFile);
+    Bom currentBom = RepositoryUtility.readBom(pomFile);
+    Bom oldBom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:2.5.0");
+    ImmutableList<Artifact> currentArtifacts = currentBom.getManagedDependencies();
+    ImmutableList<Artifact> oldArtifacts = oldBom.getManagedDependencies();
     
-    ImmutableList<Artifact> artifacts = bom.getManagedDependencies();
-    Assert.assertEquals(217, artifacts.size());
-    String coordinates = bom.getCoordinates();
+    String coordinates = currentBom.getCoordinates();
     Assert.assertTrue(coordinates.startsWith("com.google.cloud:libraries-bom:"));
     Assert.assertTrue(coordinates.endsWith("-SNAPSHOT"));
+    
+    // We're testing that the managed dependencies haven't changed.
+    // However sometimes this list does change. If so, we want to 
+    // output the specific difference so we can manually verify whether
+    // the changes make sense. When they do make sense, we update the test. 
+    if (currentArtifacts.size() != 217) {
+      Truth.assertThat(currentArtifacts).containsExactlyElementsIn(oldArtifacts);
+    }
   }
 
   @Test
