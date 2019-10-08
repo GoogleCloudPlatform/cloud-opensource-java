@@ -1,5 +1,4 @@
-Java Dependency Glossary
-------------------------
+# Java Dependency Glossary
 
 - **Class path**: an ordered list of jar files, zip files, and directories, each of which
   contains Java class files.
@@ -16,7 +15,7 @@ Java Dependency Glossary
   each with its own class path, but for our purposes we can treat this as 
   a single class path formed by appending parent class paths to child class paths.
 
-### Types of conflicts and compatibility
+## Types of conflicts and compatibility
 
 <a name="linkage-error"></a>
 - **Linkage error**: an abnormal condition of a classpath in which a
@@ -70,14 +69,14 @@ Java Dependency Glossary
       will be no new linkage conflicts.
 
 
-#### Conflict relationships
+### Conflict relationships
 
 - A particular conflict cannot be both a linkage error and behavior conflict.
   They are mutually exclusive.
 - A combination of jars at runtime can have any number of linkage errors and
   behavior conflicts.
 
-### States of compatibility
+## States of compatibility
 
 <a name="linkage-compatible"></a>
 - **Linkage-compatible** (said of a particular version of A and a particular
@@ -88,7 +87,7 @@ Java Dependency Glossary
   to all versions of B): There exists some version of B such that the version of
   A and the version of B are linkage-compatible.
 
-### Class reference graph
+## Class reference graph
 
 <a name="method-reference"></a>
 - **Method reference**: a reference indicating that a _source class_ links to a method of

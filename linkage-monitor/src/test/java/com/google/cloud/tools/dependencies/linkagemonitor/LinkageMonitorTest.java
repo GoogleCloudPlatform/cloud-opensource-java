@@ -159,10 +159,13 @@ public class LinkageMonitorTest {
         bomSize,
         snapshotBom.getManagedDependencies().size());
     for (int i = 1; i < bomSize; ++i) {
-      assertEquals(
-          "Artifacts other than protobuf-java should have the original version",
-          bom.getManagedDependencies().get(i).getVersion(),
-          snapshotBom.getManagedDependencies().get(i).getVersion());
+      Artifact expected = bom.getManagedDependencies().get(i);
+      Artifact actual = snapshotBom.getManagedDependencies().get(i);
+assertEquals(
+          "Artifacts other than protobuf-java should have the original version: "
+		  + expected + " != " + actual,
+          expected.getVersion(),
+          actual.getVersion());
     }
   }
 
@@ -292,5 +295,16 @@ public class LinkageMonitorTest {
                 dependency ->
                     "gax".equals(dependency.getArtifactId())
                         && "1.48.0".equals(dependency.getVersion())));
+  }
+
+  @Test
+  public void testBuildModelWithSnapshotBom_JdkVersionActivation()
+      throws MavenRepositoryException, ModelBuildingException, ArtifactResolutionException {
+    // google-cloud-core-parent's parent google-cloud-shared-config uses JDK version to activate
+    // a profile. Without JDK system property, this throws ModelBuildingException.
+    Model model =
+        LinkageMonitor.buildModelWithSnapshotBom(
+            spySystem, session, "com.google.cloud:google-cloud-core-parent:1.91.0");
+    assertNotNull(model);
   }
 }

@@ -1,0 +1,25 @@
+body {
+  font-family: Roboto, sans-serif;
+  line-height: 1.15;
+  font-size: 16;
+}
+
+h1 {
+  font-family: Roboto, sans-serif;
+  font-weight: light;
+  font-size: 96;
+  margin-top: 3ex;
+  margin-bottom: 1ex;
+}
+
+
+p, li {
+  width: 40em;
+  max-width: 90%;
+}
+
+@media only screen and (min-device-width : 1024px) {
+  body {
+    margin-left: 8em;
+  }
+}
