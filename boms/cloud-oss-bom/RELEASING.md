@@ -14,7 +14,7 @@ Create a PR for the release, and get it approved.
 ## Rapid build
 
 Rapid project is [cloud-java-tools-cloud-opensource-java-bom-kokoro-release](
-https://rapid/cloud-java-tools-cloud-opensource-java-bom-kokoro-release).
+http://rapid/cloud-java-tools-cloud-opensource-java-bom-kokoro-release).
 
 ## Deleting a release
 
