@@ -17,6 +17,8 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.IterableSubject;
+import com.google.common.truth.Subject;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.nio.file.Path;
@@ -73,7 +75,10 @@ public class RepositoryUtilityTest {
     // However sometimes this list does change. If so, we want to 
     // output the specific difference so we can manually verify whether
     // the changes make sense. When they do make sense, we update the test. 
-    Truth.assertThat(currentArtifacts).containsExactlyElementsIn(oldArtifacts);
+    if (currentArtifacts.size() != 217) {
+      IterableSubject subject = Subject.check();
+      Truth.assertThat(currentArtifacts).containsExactlyElementsIn(oldArtifacts);
+    }
   }
 
   @Test
