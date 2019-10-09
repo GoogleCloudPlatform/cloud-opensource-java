@@ -67,16 +67,14 @@ public class RepositoryUtilityTest {
     ImmutableList<Artifact> oldArtifacts = oldBom.getManagedDependencies();
     
     String coordinates = currentBom.getCoordinates();
-    Assert.assertTrue(coordinates.startsWith("com.google.cloud:libraries-bom:"));
-    Assert.assertTrue(coordinates.endsWith("-SNAPSHOT"));
+    Truth.assertThat(coordinates).startsWith("com.google.cloud:libraries-bom:");
+    Truth.assertThat(coordinates).endsWith("-SNAPSHOT");
     
     // This is a characterization test to verify that the managed dependencies haven't changed.
     // However sometimes this list does change. If so, we want to 
     // output the specific difference so we can manually verify whether
     // the changes make sense. When they do make sense, we update the test. 
-    if (currentArtifacts.size() != 217) {
-      Truth.assertThat(currentArtifacts).containsExactlyElementsIn(oldArtifacts);
-    }
+    Truth.assertThat(currentArtifacts).containsExactlyElementsIn(oldArtifacts);
   }
 
   @Test
