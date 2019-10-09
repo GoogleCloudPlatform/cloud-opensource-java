@@ -16,15 +16,16 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.truth.IterableSubject;
-import com.google.common.truth.Subject;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-
+import java.util.Set;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -77,8 +78,13 @@ public class RepositoryUtilityTest {
     // output the specific difference so we can manually verify whether
     // the changes make sense. When they do make sense, we update the test. 
     if (currentArtifacts.size() != 217) {
-      IterableSubject subject = Subject.check();
-      Truth.assertThat(currentArtifacts).containsExactlyElementsIn(oldArtifacts);
+        Set<Artifact> current = Sets.newHashSet(currentArtifacts);
+        Set<Artifact> old = Sets.newHashSet(oldArtifacts);
+        SetView<Artifact> currentMinusOld = Sets.difference(current, old);
+        String added = Joiner.on(", ").join(currentMinusOld);
+        SetView<Artifact> oldMinusCurrent = Sets.difference(old, current);
+        String subtracted = Joiner.on(", ").join(oldMinusCurrent);
+        Assert.fail("Dependency tree changed.\n  Added " + added + "\n  Removed" + subtracted);
     }
   }
 
