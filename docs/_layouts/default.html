@@ -22,7 +22,11 @@
     {% endif %}
 
   <hr>
-  <footer>Copyright 2019 Google LLC</footer>
-
+  <footer>
+    {% if site.google_analytics %}
+      <p><a href='https://policies.google.com/privacy'>Privacy</a></p>
+    {% endif %}
+    <p>Copyright 2019 Google LLC</p>
+  </footer>
   </body>
 </html>
