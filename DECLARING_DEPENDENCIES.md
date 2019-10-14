@@ -69,19 +69,18 @@ select compatible versions.
 
 Conflicts can occur when multiple artifacts from a single library are
 part of a dependency tree, and Maven resolves different artifacts from
-that library to versions from different releases. Using a BOM fixes
-this problem because a BOM dictates consistent versions for all
-artifacts from a library.
+that library to versions from different releases. The libraries-bom
+dictates consistent versions for all GCP orbit artifacts.
 
-You can use a BOM like this—this example is for `google-cloud-bom`:
+You use the BOM like this:
 
 ```
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-bom</artifactId>
-        <version>0.81.0-alpha</version>
+        <artifactId>libraries-bom</artifactId>
+        <version>2.5.0</version>
         <type>pom</type>
         <scope>import</scope>
        </dependency>
@@ -93,11 +92,15 @@ You can use a BOM like this—this example is for `google-cloud-bom`:
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-storage</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
   </dependencies>
 ```
 
 In this example, since the BOM manages library versions, the
-version of the google-cloud-storage artifact is omitted.
+version of google-cloud-storage and guava are omitted.
 
 See the "Choosing BOMs" section below if you need to import more than one BOM.
 
