@@ -43,12 +43,7 @@ Example BOM: [google-cloud-bom](https://github.com/GoogleCloudPlatform/google-cl
 
 ## Libraries built with Gradle
 
-A Gradle project can either generate the `pom.xml` file
-or maintain a pom.xml and release it using a specially configured module.
-gax-java is an example of maintaining a `pom.xml` file:
-
-  [build.gradle](https://github.com/googleapis/gax-java/blob/master/gax-bom/build.gradle)
-  and
-  [pom.xml](https://github.com/googleapis/gax-java/blob/master/gax-bom/pom.xml).
-
-This approach has a limitation that the BOM cannot include any classifiers in the dependency specifications.
+A Gradle project should maintain a pom.xml and release it using a specially
+configured module. gax-java does this, for example,
+in its [gax-bom](https://github.com/googleapis/gax-java/tree/master/gax-bom)
+module.
