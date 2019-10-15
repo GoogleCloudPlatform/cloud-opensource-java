@@ -69,7 +69,7 @@ select compatible versions.
 
 Conflicts can occur when multiple artifacts from a single library are
 part of a dependency tree, and Maven resolves different artifacts from
-that library to versions from different releases. The libraries-bom
+that library to versions from different releases. The `libraries-bom`
 dictates consistent versions for all GCP orbit artifacts.
 
 You use the BOM like this:
