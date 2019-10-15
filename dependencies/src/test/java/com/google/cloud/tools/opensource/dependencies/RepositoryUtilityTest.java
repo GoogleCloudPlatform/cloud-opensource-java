@@ -81,13 +81,7 @@ public class RepositoryUtilityTest {
     // output the specific difference so we can manually verify whether
     // the changes make sense. When they do make sense, we update the test. 
     if (currentArtifacts.size() != 217) {
-        Set<Artifact> current = Sets.newHashSet(currentArtifacts);
-        Set<Artifact> old = Sets.newHashSet(oldArtifacts);
-        SetView<Artifact> currentMinusOld = Sets.difference(current, old);
-        String added = Joiner.on(", ").join(currentMinusOld);
-        SetView<Artifact> oldMinusCurrent = Sets.difference(old, current);
-        String subtracted = Joiner.on(", ").join(oldMinusCurrent);
-        Assert.fail("Dependency tree changed.\n  Added " + added + "\n  Removed" + subtracted);
+        Truth.assertThat(currentArtifacts).containsExactly(oldArtifacts);
     }
   }
 
