@@ -158,10 +158,10 @@ public class LinkageMonitorTest {
         "Snapshot BOM should have the same length as original BOM.",
         bomSize,
         snapshotBom.getManagedDependencies().size());
-    for (int i = 1; i < bomSize; ++i) {
+    for (int i = 1; i < bomSize; i++) {
       Artifact expected = bom.getManagedDependencies().get(i);
       Artifact actual = snapshotBom.getManagedDependencies().get(i);
-assertEquals(
+      assertEquals(
           "Artifacts other than protobuf-java should have the original version: "
 		  + expected + " != " + actual,
           expected.getVersion(),
