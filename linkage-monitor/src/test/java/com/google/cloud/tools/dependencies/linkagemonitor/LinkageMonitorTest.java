@@ -150,15 +150,19 @@ public class LinkageMonitorTest {
     Bom snapshotBom = LinkageMonitor.copyWithSnapshot(spySystem, bom);
 
     assertWithMessage(
-        "The first element of the SNAPSHOT BOM should be the same as the original BOM")
+            "The first element of the SNAPSHOT BOM should be the same as the original BOM")
         .that(toCoordinates(snapshotBom.getManagedDependencies().get(0)))
         .isEqualTo("com.google.protobuf:protobuf-java:3.8.0-SNAPSHOT");
 
     assertWithMessage("Artifacts other than protobuf-java should have the original version")
-        .that(skip(snapshotBom.getManagedDependencies(), 1)).comparingElementsUsing(
-        transforming(Artifacts::toCoordinates, Artifacts::toCoordinates,
-            "has the same Maven coordinates as"))
-        .containsExactlyElementsIn(skip(bom.getManagedDependencies(), 1)).inOrder();
+        .that(skip(snapshotBom.getManagedDependencies(), 1))
+        .comparingElementsUsing(
+            transforming(
+                Artifacts::toCoordinates,
+                Artifacts::toCoordinates,
+                "has the same Maven coordinates as"))
+        .containsExactlyElementsIn(skip(bom.getManagedDependencies(), 1))
+        .inOrder();
   }
 
   private final SymbolProblem classNotFoundProblem =
