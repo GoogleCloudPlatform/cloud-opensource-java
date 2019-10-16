@@ -16,7 +16,11 @@
 
 package com.google.cloud.tools.dependencies.linkagemonitor;
 
+import static com.google.cloud.tools.opensource.dependencies.Artifacts.toCoordinates;
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.CENTRAL;
+import static com.google.common.collect.Iterables.skip;
+import static com.google.common.truth.Correspondence.transforming;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -31,6 +35,7 @@ import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.cloud.tools.opensource.classpath.ErrorType;
 import com.google.cloud.tools.opensource.classpath.MethodSymbol;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
@@ -144,29 +149,16 @@ public class LinkageMonitorTest {
     Bom bom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:1.2.0");
     Bom snapshotBom = LinkageMonitor.copyWithSnapshot(spySystem, bom);
 
-    assertEquals(
-        "The first element of the SNAPSHOT BOM should be the same as the original BOM",
-        "protobuf-java",
-        snapshotBom.getManagedDependencies().get(0).getArtifactId());
-    assertEquals(
-        "The protobuf-java artifact should have SNAPSHOT version",
-        "3.8.0-SNAPSHOT",
-        snapshotBom.getManagedDependencies().get(0).getVersion());
+    assertWithMessage(
+        "The first element of the SNAPSHOT BOM should be the same as the original BOM")
+        .that(toCoordinates(snapshotBom.getManagedDependencies().get(0)))
+        .isEqualTo("com.google.protobuf:protobuf-java:3.8.0-SNAPSHOT");
 
-    int bomSize = bom.getManagedDependencies().size();
-    assertEquals(
-        "Snapshot BOM should have the same length as original BOM.",
-        bomSize,
-        snapshotBom.getManagedDependencies().size());
-    for (int i = 1; i < bomSize; ++i) {
-      Artifact expected = bom.getManagedDependencies().get(i);
-      Artifact actual = snapshotBom.getManagedDependencies().get(i);
-assertEquals(
-          "Artifacts other than protobuf-java should have the original version: "
-		  + expected + " != " + actual,
-          expected.getVersion(),
-          actual.getVersion());
-    }
+    assertWithMessage("Artifacts other than protobuf-java should have the original version")
+        .that(skip(snapshotBom.getManagedDependencies(), 1)).comparingElementsUsing(
+        transforming(Artifacts::toCoordinates, Artifacts::toCoordinates,
+            "has the same Maven coordinates as"))
+        .containsExactlyElementsIn(skip(bom.getManagedDependencies(), 1)).inOrder();
   }
 
   private final SymbolProblem classNotFoundProblem =
