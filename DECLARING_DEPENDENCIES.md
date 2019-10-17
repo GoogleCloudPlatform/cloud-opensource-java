@@ -34,7 +34,7 @@ You use the BOM like this:
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>libraries-bom</artifactId>
-        <version>2.5.0</version>
+        <version>2.6.0</version>
         <type>pom</type>
         <scope>import</scope>
        </dependency>
