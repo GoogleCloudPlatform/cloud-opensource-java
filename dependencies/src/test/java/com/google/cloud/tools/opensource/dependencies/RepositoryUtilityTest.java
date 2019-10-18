@@ -71,7 +71,6 @@ public class RepositoryUtilityTest {
 
   private static final String UPDATE_GOLDEN_ARTIFACTS = "UPDATE_GOLDEN_ARTIFACTS";
 
-  // src/test/resources/RepositoryUtilityTestGoldenBomArtifacts.txt
   private static final Path GOLDEN_FILE =
       Paths.get("src", "test", "resources")
           .resolve(RepositoryUtilityTest.class.getSimpleName() + "GoldenBomArtifacts.txt");
