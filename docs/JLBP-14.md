@@ -10,16 +10,17 @@ Version ranges cause builds to be non-reproducible. Builds of the
 same code with the same compiler at different
 times can produce different artifacts with different behavior.
 Version ranges can pull in incomplete releases that break the
-build. For example:
-https://github.com/GoogleCloudPlatform/appengine-gcs-client/issues/71.
+build. For example, a [version range in appengine-gcs-client's
+dependency on google-http-java-client broke multiple customers' 
+builds](https://github.com/GoogleCloudPlatform/appengine-gcs-client/issues/71)
+when only half the artifacts in the project were pushed one afternoon. 
 
 Version ranges can be a security hole. When a new version of a dependency
 is pushed to Maven Central, it is picked up by downstream dependencies
 automatically. This can be used by a malicious actor with release privileges
-to slip new malicious code into projects without proper review. A version
+to slip new malicious code into projects without proper review. A variant
 of this [attack in the node.js ecosystem was used to steal
 Bitcoins](https://www.theregister.co.uk/2018/11/26/npm_repo_bitcoin_stealer/).
-
 Single-element version ranges ("hard requirements") have a much different
 impact, and this rule does not apply to them.
 
