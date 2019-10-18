@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.Iterables.filter;
+import static com.google.common.collect.Streams.stream;
 import static com.google.common.io.Files.asCharSink;
 import static com.google.common.io.Resources.getResource;
 import static com.google.common.io.Resources.readLines;
@@ -72,15 +73,16 @@ public class RepositoryUtilityTest {
   }
 
   private static final String UPDATE_GOLDEN_ARTIFACTS = "UPDATE_GOLDEN_ARTIFACTS";
-  private static final Path GOLDEN_FILE = goldenFile();
 
-  private static Path goldenFile() {
-    Path goldenFile = Paths.get("src", "test", "resources");
-    for (String dir : Splitter.on('.').split(getPackageName(RepositoryUtilityTest.class))) {
-      goldenFile = goldenFile.resolve(dir);
-    }
-    return goldenFile.resolve("goldenBomArtifacts.txt");
-  }
+  // src/test/resources/testPackage/goldenBomArtifacts.txt
+  private static final Path GOLDEN_FILE =
+      Paths.get("src", "test", "resources")
+          .resolve(
+              stream(Splitter.on('.').split(getPackageName(RepositoryUtilityTest.class)))
+                  .map(Paths::get)
+                  .reduce(Paths.get("."), Path::resolve))
+          .resolve("goldenBomArtifacts.txt")
+          .normalize();
 
   @Test
   public void testReadBom_path() throws MavenRepositoryException, IOException {
