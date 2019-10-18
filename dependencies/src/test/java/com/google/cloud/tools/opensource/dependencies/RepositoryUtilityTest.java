@@ -73,11 +73,8 @@ public class RepositoryUtilityTest {
 
   // src/test/resources/RepositoryUtilityTestGoldenBomArtifacts.txt
   private static final Path GOLDEN_FILE =
-      Paths.get(
-          "src",
-          "test",
-          "resources",
-          RepositoryUtilityTest.class.getSimpleName() + "GoldenBomArtifacts.txt");
+      Paths.get("src", "test", "resources")
+          .resolve(RepositoryUtilityTest.class.getSimpleName() + "GoldenBomArtifacts.txt");
 
   @Test
   public void testReadBom_path() throws MavenRepositoryException, IOException {
