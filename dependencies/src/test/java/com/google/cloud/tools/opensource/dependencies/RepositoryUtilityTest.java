@@ -103,8 +103,9 @@ public class RepositoryUtilityTest {
 
     assertWithMessage(
             "If BOM artifacts have changed, rerun this test setting the environment variable %s"
-                + " and then try again.",
-            UPDATE_GOLDEN_ARTIFACTS)
+                + " and then try again.\n"
+                + "If you see this in a presubmit, make sure the PR includes the change to %s.",
+            UPDATE_GOLDEN_ARTIFACTS, GOLDEN_FILE.getFileName())
         .that(currentBom.getManagedDependencies())
         .comparingElementsUsing(transforming(Artifacts::toCoordinates, "has Maven coordinates"))
         .containsExactlyElementsIn(loadExpectedArtifacts());
