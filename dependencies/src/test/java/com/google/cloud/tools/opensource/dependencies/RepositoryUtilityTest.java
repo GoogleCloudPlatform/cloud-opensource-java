@@ -16,16 +16,13 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Set;
+
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -78,7 +75,7 @@ public class RepositoryUtilityTest {
     // output the specific difference so we can manually verify whether
     // the changes make sense. When they do make sense, we update the test. 
     if (currentArtifacts.size() != 217) {
-        Truth.assertThat(currentArtifacts).containsExactly(oldArtifacts);
+        Truth.assertThat(currentArtifacts).containsExactlyElementsIn(oldArtifacts);
     }
   }
 
@@ -87,9 +84,7 @@ public class RepositoryUtilityTest {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     ImmutableList<String> versions =
         RepositoryUtility.findVersions(system, "com.google.cloud", "libraries-bom");
-    Truth.assertThat(versions)
-        .containsAtLeast("1.1.0", "1.1.1", "1.2.0", "2.0.0", "2.4.0", "2.5.0", "2.6.0")
-        .inOrder();
+    Truth.assertThat(versions).containsAtLeast("1.1.0", "1.1.1", "1.2.0", "2.0.0").inOrder();
   }
 
   @Test
