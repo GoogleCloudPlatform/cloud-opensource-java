@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {% seo %}
     <link rel="stylesheet" href="{{ "/assets/css/style.css" | relative_url }}">
+    <link rel="shortcut icon" type="image/png" href="favicon.png">
   </head>
   <body>
     {{ content }}
@@ -21,7 +22,13 @@
     {% endif %}
 
   <hr>
-  <footer>Copyright 2019 Google LLC</footer>
-
+  <footer>
+    {% if site.google_analytics %}
+    <p>This site uses cookies from Google to deliver its services and to analyze traffic.</p>
+    <p><a href='https://policies.google.com/technologies/cookies'>Learn more</a></p>
+    <p><a href='https://policies.google.com/privacy'>Privacy</a></p>
+    {% endif %}
+    <p>Copyright 2019 Google LLC</p>
+  </footer>
   </body>
 </html>
