@@ -84,7 +84,7 @@ public class RepositoryUtilityTest {
     assertThat(coordinates).startsWith("com.google.cloud:libraries-bom:");
     assertThat(coordinates).endsWith("-SNAPSHOT");
     
-    maybeUpdateExpectedArguments(currentBom);
+    maybeUpdateGoldenFile(currentBom);
     
     // Assert that the managed dependencies haven't unexpectedly changed.
     // If this fails, update the golden file so the changes can be reviewed by running
@@ -103,7 +103,7 @@ public class RepositoryUtilityTest {
         .containsExactlyElementsIn(expectedArtifacts);
   }
 
-  private static void maybeUpdateExpectedArguments(Bom currentBom) throws IOException {
+  private static void maybeUpdateGoldenFile(Bom currentBom) throws IOException {
     if (!isNullOrEmpty(System.getenv(UPDATE_GOLDEN_ARTIFACTS))) {
       Path goldenFile = goldenFile();
       asCharSink(goldenFile.toFile(), UTF_8)
