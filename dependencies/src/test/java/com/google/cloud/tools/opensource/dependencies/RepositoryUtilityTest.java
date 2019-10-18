@@ -62,7 +62,7 @@ public class RepositoryUtilityTest {
     Path pomFile = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml");
     
     Bom currentBom = RepositoryUtility.readBom(pomFile);
-    Bom oldBom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:2.5.0");
+    Bom oldBom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:2.6.0");
     ImmutableList<Artifact> currentArtifacts = currentBom.getManagedDependencies();
     ImmutableList<Artifact> oldArtifacts = oldBom.getManagedDependencies();
     
@@ -75,7 +75,7 @@ public class RepositoryUtilityTest {
     // output the specific difference so we can manually verify whether
     // the changes make sense. When they do make sense, we update the test. 
     if (currentArtifacts.size() != 217) {
-        Truth.assertThat(currentArtifacts).containsExactlyElementsIn(oldArtifacts);
+      Truth.assertThat(currentArtifacts).containsExactlyElementsIn(oldArtifacts);
     }
   }
 
@@ -84,7 +84,9 @@ public class RepositoryUtilityTest {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     ImmutableList<String> versions =
         RepositoryUtility.findVersions(system, "com.google.cloud", "libraries-bom");
-    Truth.assertThat(versions).containsAtLeast("1.1.0", "1.1.1", "1.2.0", "2.0.0").inOrder();
+    Truth.assertThat(versions)
+        .containsAtLeast("1.1.0", "1.1.1", "1.2.0", "2.0.0", "2.4.0", "2.5.0", "2.6.0")
+        .inOrder();
   }
 
   @Test
