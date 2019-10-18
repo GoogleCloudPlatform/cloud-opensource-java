@@ -16,18 +16,12 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-import com.google.common.truth.IterableSubject;
-import com.google.common.truth.Subject;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -81,7 +75,7 @@ public class RepositoryUtilityTest {
     // output the specific difference so we can manually verify whether
     // the changes make sense. When they do make sense, we update the test. 
     if (currentArtifacts.size() != 217) {
-        Truth.assertThat(currentArtifacts).containsExactly(oldArtifacts);
+        Truth.assertThat(currentArtifacts).containsExactlyElementsIn(oldArtifacts);
     }
   }
 
