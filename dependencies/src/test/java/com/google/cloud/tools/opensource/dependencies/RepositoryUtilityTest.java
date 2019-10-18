@@ -28,6 +28,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.fail;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.io.File;
@@ -71,11 +72,15 @@ public class RepositoryUtilityTest {
   }
 
   private static final String UPDATE_GOLDEN_ARTIFACTS = "UPDATE_GOLDEN_ARTIFACTS";
-  private static final Path GOLDEN_FILE =
-      Paths.get(
-          "src/test/resources",
-          getPackageName(RepositoryUtilityTest.class).replace('.', '/'),
-          "goldenBomArtifacts.txt");
+  private static final Path GOLDEN_FILE = goldenFile();
+
+  private static Path goldenFile() {
+    Path goldenFile = Paths.get("src", "test", "resources");
+    for (String dir : Splitter.on('.').split(getPackageName(RepositoryUtilityTest.class))) {
+      goldenFile = goldenFile.resolve(dir);
+    }
+    return goldenFile.resolve("goldenBomArtifacts.txt");
+  }
 
   @Test
   public void testReadBom_path() throws MavenRepositoryException, IOException {
