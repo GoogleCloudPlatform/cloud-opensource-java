@@ -18,18 +18,15 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.Iterables.filter;
-import static com.google.common.collect.Streams.stream;
 import static com.google.common.io.Files.asCharSink;
 import static com.google.common.io.Resources.getResource;
 import static com.google.common.io.Resources.readLines;
-import static com.google.common.reflect.Reflection.getPackageName;
 import static com.google.common.truth.Correspondence.transforming;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.fail;
 
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.io.File;
@@ -74,15 +71,13 @@ public class RepositoryUtilityTest {
 
   private static final String UPDATE_GOLDEN_ARTIFACTS = "UPDATE_GOLDEN_ARTIFACTS";
 
-  // src/test/resources/testPackage/goldenBomArtifacts.txt
+  // src/test/resources/RepositoryUtilityTestGoldenBomArtifacts.txt
   private static final Path GOLDEN_FILE =
-      Paths.get("src", "test", "resources")
-          .resolve(
-              stream(Splitter.on('.').split(getPackageName(RepositoryUtilityTest.class)))
-                  .map(Paths::get)
-                  .reduce(Paths.get("."), Path::resolve))
-          .resolve("goldenBomArtifacts.txt")
-          .normalize();
+      Paths.get(
+          "src",
+          "test",
+          "resources",
+          RepositoryUtilityTest.class.getSimpleName() + "GoldenBomArtifacts.txt");
 
   @Test
   public void testReadBom_path() throws MavenRepositoryException, IOException {
@@ -136,8 +131,7 @@ public class RepositoryUtilityTest {
 
   private static Iterable<String> loadExpectedArtifacts() throws IOException {
     return filter(
-        readLines(
-            getResource(RepositoryUtilityTest.class, GOLDEN_FILE.getFileName().toString()), UTF_8),
+        readLines(getResource(GOLDEN_FILE.getFileName().toString()), UTF_8),
         line -> !line.isEmpty() && !line.startsWith("#"));
   }
 
