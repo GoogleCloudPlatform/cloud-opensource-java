@@ -32,14 +32,14 @@ problems. If so:
 3. Delete the tag locally:
 
    ```
-   $ git tag -d bom-v2.6.0
-   Deleted tag 'bom-v2.6.0' (was 3b96602)
+   $ git tag -d v2.6.0-bom
+   Deleted tag 'v2.6.0-bom' (was 3b96602)
    ```
 
 4. Push the deleted tag:
    
    ```
-   $ git push origin :bom-v2.6.0
+   $ git push origin :v2.6.0-bom
    To github.com:GoogleCloudPlatform/cloud-opensource-java.git
-   - [deleted]         bom-v2.6.0
+   - [deleted]         v2.6.0-bom
    ```
