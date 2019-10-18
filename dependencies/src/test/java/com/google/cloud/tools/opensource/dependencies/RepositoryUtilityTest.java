@@ -70,10 +70,9 @@ public class RepositoryUtilityTest {
   }
 
   private static final String UPDATE_GOLDEN_ARTIFACTS = "UPDATE_GOLDEN_ARTIFACTS";
-
-  private static final Path GOLDEN_FILE =
-      Paths.get("src", "test", "resources")
-          .resolve(RepositoryUtilityTest.class.getSimpleName() + "GoldenBomArtifacts.txt");
+  private static final String GOLDEN_FILE_NAME =
+      RepositoryUtilityTest.class.getSimpleName() + "GoldenBomArtifacts.txt";
+  private static final Path GOLDEN_FILE = Paths.get("src", "test", "resources", GOLDEN_FILE_NAME);
 
   @Test
   public void testReadBom_path() throws MavenRepositoryException, IOException {
@@ -98,7 +97,7 @@ public class RepositoryUtilityTest {
             "If BOM artifacts have changed, rerun this test setting the environment variable %s"
                 + " and then try again.\n"
                 + "If you see this in a presubmit, make sure the PR includes the change to %s.",
-            UPDATE_GOLDEN_ARTIFACTS, GOLDEN_FILE.getFileName())
+            UPDATE_GOLDEN_ARTIFACTS, GOLDEN_FILE_NAME)
         .that(currentBom.getManagedDependencies())
         .comparingElementsUsing(transforming(Artifacts::toCoordinates, "has Maven coordinates"))
         .containsExactlyElementsIn(loadExpectedArtifacts());
@@ -127,7 +126,7 @@ public class RepositoryUtilityTest {
 
   private static Iterable<String> loadExpectedArtifacts() throws IOException {
     return filter(
-        readLines(getResource(GOLDEN_FILE.getFileName().toString()), UTF_8),
+        readLines(getResource(GOLDEN_FILE_NAME), UTF_8),
         line -> !line.isEmpty() && !line.startsWith("#"));
   }
 
