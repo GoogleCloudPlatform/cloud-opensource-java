@@ -5,14 +5,22 @@ any [linkage errors](../library-best-practices/glossary.md#types-of-conflicts-an
 
 This rule performs the following steps:
 
-1. Builds a dependency tree of Maven artifacts with a root node having the dependencies of the
+1. Build a dependency tree of Maven artifacts with a root node having the dependencies of the
    project
 
    Unlike Maven's resolution algorithm, this tree includes `optional` and `provided` dependencies
    of transitive dependencies to detect incompatibilities beyond Maven's build class path.
-1. Builds a class path from the dependency tree
-1. Runs [Linkage Checker](../dependencies) with the class path (list of JAR files) as input, and
-1. Succeeds if there is no linkage error; otherwise fails
+1. Build a class path from the dependency tree
+1. Run [Linkage Checker](../dependencies) with the class path (list of JAR files) as input
+
+   Linkage Checker performs the following steps:
+   - From all of the class files in the input JAR files, it reads class, method and field
+     references.
+   - It verifies the references have valid referents in the input files.
+     A reference is invalidated when the referenced symbol (class, field, or method) is not found or
+     inaccessible from the referencing class.
+   - Invalidated references are reported as linkage errors.
+1. Succeed if there is no linkage error; otherwise fails
 
 ## Class path and dependencySection element
 
