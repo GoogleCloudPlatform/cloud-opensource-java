@@ -5,11 +5,15 @@ any [linkage errors](../library-best-practices/glossary.md#types-of-conflicts-an
 
 This rule performs the following steps:
 
-1. Build a dependency tree of Maven artifacts with a root node having the dependencies of the
-   project
+1. Build a dependency tree of Maven artifacts with the project as the root node
 
-   Unlike Maven's resolution algorithm, this tree includes `optional` and `provided` dependencies
-   of transitive dependencies to detect incompatibilities beyond Maven's build class path.
+   In the tree, a Maven artifact has directed edges to other Maven artifacts when the artifact's
+   pom.xml declares dependencies to them. The root node of the tree is the Maven artifact
+   of the project in which the enforce rule runs.
+
+   **`Optional` and `provided`**: Unlike Maven's resolution algorithm, the tree includes transitive
+   dependencies marked as `optional` or `provided`.
+   This inclusion helps to detect incompatibilities beyond Maven's build class path.
 1. Build a class path from the dependency tree
 1. Run [Linkage Checker](../dependencies) with the class path (list of JAR files) as input
 
