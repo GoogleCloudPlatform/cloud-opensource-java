@@ -15,6 +15,8 @@ This rule performs the following steps:
    dependencies marked as `optional` or `provided`.
    This inclusion helps to detect incompatibilities beyond Maven's build class path.
 1. Build a class path from the dependency tree
+
+   It traverses the tree in level-order to generate a list of Maven artifacts.
 1. Run [Linkage Checker](../dependencies) with the class path (list of JAR files) as input
 
    Linkage Checker performs the following steps:
