@@ -85,7 +85,7 @@ public class RepositoryUtilityTest {
       SetView<Artifact> removed = Sets.difference(old, current);
       String removedMessage = "\n  Removed " + Joiner.on(", ").join(removed);
 
-      String message = "Dependency tree changed.";
+      String message = "Dependency tree changed. New size is " + currentArtifacts.size();
       if (!added.isEmpty()) {
         message += addedMessage;
       }
