@@ -83,7 +83,7 @@ public class RepositoryUtilityTest {
       SetView<Artifact> added = Sets.difference(current, old);
       String addedMessage = "\n  Added " + Joiner.on(", ").join(added);
       SetView<Artifact> removed = Sets.difference(old, current);
-      String removedMessage = "\n  Removed" + Joiner.on(", ").join(removed);
+      String removedMessage = "\n  Removed " + Joiner.on(", ").join(removed);
 
       String message = "Dependency tree changed.";
       if (!added.isEmpty()) {
