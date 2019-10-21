@@ -36,9 +36,9 @@ IncrementVersion() {
 
 EchoGreen '===== RELEASE SETUP SCRIPT ====='
 
-PREFIX=$1
+SUFFIX=$1
 
-if [[ "${PREFIX}" != "dependencies" && "${PREFIX}" != "bom" ]]; then
+if [[ "${SUFFIX}" != "dependencies" && "${SUFFIX}" != "bom" ]]; then
   DieUsage
 fi
 
@@ -46,7 +46,7 @@ VERSION=$2
 CheckVersion ${VERSION}
 
 if [ -n "$3" ]; then
-  NEXT_VERSION=$2
+  NEXT_VERSION=$3
   CheckVersion ${NEXT_VERSION}
 else
   NEXT_VERSION=$(IncrementVersion $VERSION)
@@ -58,14 +58,14 @@ if [[ $(git status -uno --porcelain) ]]; then
 fi
 
 # Checks out a new branch for this version release (eg. 1.5.7).
-git checkout -b ${PREFIX}-${VERSION}
+git checkout -b ${VERSION}-${SUFFIX}
 
 # Updates the pom.xml with the version to release.
 mvn versions:set versions:commit -DnewVersion=${VERSION}
 
 # Tags a new commit for this release.
-git commit -am "preparing release ${PREFIX}-${VERSION}"
-git tag ${PREFIX}-v${VERSION}
+git commit -am "preparing release ${VERSION}-${SUFFIX}"
+git tag v${VERSION}-${SUFFIX}
 
 # Updates the pom.xml with the next snapshot version.
 # For example, when releasing 1.5.7, the next snapshot version would be 1.5.8-SNAPSHOT.
@@ -79,9 +79,9 @@ mvn versions:set versions:commit -DnewVersion=${NEXT_SNAPSHOT}
 git commit -am "${NEXT_SNAPSHOT}"
 
 # Pushes the tag and release branch to Github.
-git push origin ${PREFIX}-v${VERSION}
-git push --set-upstream origin ${PREFIX}-${VERSION}
+git push origin v${VERSION}-${SUFFIX}
+git push --set-upstream origin ${VERSION}-${SUFFIX}
 
 # File a PR on Github for the new branch. Have someone LGTM it, which gives you permission to continue.
 EchoGreen 'File a PR for the new release branch:'
-echo https://github.com/GoogleCloudPlatform/cloud-opensource-java/compare/${PREFIX}-${VERSION}
+echo https://github.com/GoogleCloudPlatform/cloud-opensource-java/compare/${VERSION}-${SUFFIX}
