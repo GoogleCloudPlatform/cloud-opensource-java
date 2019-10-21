@@ -16,13 +16,16 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-
+import java.util.Set;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -74,8 +77,25 @@ public class RepositoryUtilityTest {
     // However sometimes this list does change. If so, we want to 
     // output the specific difference so we can manually verify whether
     // the changes make sense. When they do make sense, we update the test. 
-    if (currentArtifacts.size() != 217) {
-      Truth.assertThat(currentArtifacts).containsExactlyElementsIn(oldArtifacts);
+    if (currentArtifacts.size() != 217) {      
+      Set<Artifact> current = Sets.newHashSet(currentArtifacts);
+      Set<Artifact> old = Sets.newHashSet(oldArtifacts);
+      SetView<Artifact> added = Sets.difference(current, old);
+      String addedMessage = "\n  Added " + Joiner.on(", ").join(added);
+      SetView<Artifact> removed = Sets.difference(old, current);
+      String removedMessage = "\n  Removed" + Joiner.on(", ").join(removed);
+
+      String message = "Dependency tree changed.";
+      if (!added.isEmpty()) {
+        message += addedMessage;
+      }
+      if (!removed.isEmpty()) {
+        message += removedMessage;
+      }
+      
+      if (!added.isEmpty() || ! removed.isEmpty()) {
+        Assert.fail(message);
+      }
     }
   }
 
