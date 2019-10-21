@@ -17,9 +17,9 @@ This rule performs the following steps:
 1. Build a class path from the dependency tree
 
    It traverses the tree in level-order to generate a list of Maven artifacts.
-1. Run Linkage Checker with the class path (list of JAR files) as input
+1. Verify the references in the class path (list of JAR files)
 
-   Linkage Checker performs the following steps:
+   It performs the following steps:
    - From all of the class files in the input JAR files, it reads class, method and field
      references.
    - It verifies the references have valid referents in the input files.
