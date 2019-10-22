@@ -16,7 +16,7 @@ dependency on google-http-java-client broke multiple customers'
 builds](https://github.com/GoogleCloudPlatform/appengine-gcs-client/issues/71)
 when only half the artifacts in the project were pushed one afternoon.
 
-Version ranges can be a security hole. A project that uses a range to specify
+Version ranges can be a security hole. A project that uses a range to select
 the version of a dependency picks up new versions of that dependency when they're
 pushed to Maven Central. Someone with release privileges can take advantage
 of this to slip malicious code into projects without proper review. A variant
