@@ -97,9 +97,7 @@ public class RepositoryUtilityTest {
         message += removedMessage;
       }
       
-      if (!added.isEmpty() || !removed.isEmpty()) {
-        Assert.fail(message);
-      }
+      Assert.fail(message);
     }
   }
 
