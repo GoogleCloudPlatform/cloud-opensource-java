@@ -79,14 +79,10 @@ public class RepositoryUtilityTest {
     // output the specific difference so we can manually verify whether
     // the changes make sense. When they do make sense, we update the test. 
     int expectedArtifactCount = 219;
-    if (currentArtifacts.size() != expectedArtifactCount) {
-      // find out exactly what changed
-      Set<Artifact> current = Sets.newHashSet(currentArtifacts);
-      Set<Artifact> old = Sets.newHashSet(oldArtifacts);
-      
+    if (currentArtifacts.size() != expectedArtifactCount) { // Find out exactly what changed
       // Version updates are expected. We only care about new and removed groupUId:artifactId.
-      Set<String> currentKeys = current.stream().map(Artifacts::makeKey).collect(Collectors.toSet());
-      Set<String> oldKeys = old.stream().map(Artifacts::makeKey).collect(Collectors.toSet());
+      Set<String> currentKeys = currentArtifacts.stream().map(Artifacts::makeKey).collect(Collectors.toSet());
+      Set<String> oldKeys = oldArtifacts.stream().map(Artifacts::makeKey).collect(Collectors.toSet());
       
       SetView<String> added = Sets.difference(currentKeys, oldKeys);
       String addedMessage = "\n  Added " + Joiner.on(", ").join(added);
@@ -101,7 +97,7 @@ public class RepositoryUtilityTest {
         message += removedMessage;
       }
       
-      if (!added.isEmpty() || ! removed.isEmpty()) {
+      if (!added.isEmpty() || !removed.isEmpty()) {
         Assert.fail(message);
       }
     }
