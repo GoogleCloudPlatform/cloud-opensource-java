@@ -144,7 +144,7 @@
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-core</artifactId>
-        <version>${io.grpc.version}</version>
+        <version>1.21.0</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
