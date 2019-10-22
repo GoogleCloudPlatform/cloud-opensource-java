@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -80,9 +81,13 @@ public class RepositoryUtilityTest {
     if (currentArtifacts.size() != 217) {      
       Set<Artifact> current = Sets.newHashSet(currentArtifacts);
       Set<Artifact> old = Sets.newHashSet(oldArtifacts);
-      SetView<Artifact> added = Sets.difference(current, old);
+      
+      Set<String> currentKeys = current.stream().map(Artifacts::makeKey).collect(Collectors.toSet());
+      Set<String> oldKeys = old.stream().map(Artifacts::makeKey).collect(Collectors.toSet());
+      
+      SetView<String> added = Sets.difference(currentKeys, oldKeys);
       String addedMessage = "\n  Added " + Joiner.on(", ").join(added);
-      SetView<Artifact> removed = Sets.difference(old, current);
+      SetView<String> removed = Sets.difference(oldKeys, currentKeys);
       String removedMessage = "\n  Removed " + Joiner.on(", ").join(removed);
 
       String message = "Dependency tree changed. New size is " + currentArtifacts.size();
