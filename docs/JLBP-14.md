@@ -1,4 +1,4 @@
-# [JLBP-14] Do not use version ranges
+# [JLBP-14] Specify exactly one version of each dependency
 
 Always specify a single version such as `2.3` or `[2.3]`
 instead of a range such as `[2.3,2.9]` or `[2.3,)` for dependencies.
