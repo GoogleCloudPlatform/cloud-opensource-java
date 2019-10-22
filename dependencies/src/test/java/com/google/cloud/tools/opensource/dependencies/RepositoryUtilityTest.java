@@ -78,7 +78,7 @@ public class RepositoryUtilityTest {
     // However sometimes this list does change. If so, we want to 
     // output the specific difference so we can manually verify whether
     // the changes make sense. When they do make sense, we update the test. 
-    int expectedArtifactCount = 219;
+    int expectedArtifactCount = 221; // google-cloud-java 0.116.0
     if (currentArtifacts.size() != expectedArtifactCount) { // Find out exactly what changed
       // Version updates are expected. We only care about new and removed groupUId:artifactId.
       Set<String> currentKeys = currentArtifacts.stream().map(Artifacts::makeKey).collect(Collectors.toSet());
