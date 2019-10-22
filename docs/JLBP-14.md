@@ -1,6 +1,7 @@
 # [JLBP-14] Do not use version ranges
 
-Always specify a single version instead of a range for dependencies.
+Always specify a single version such as `2.3` or `[2.3]`
+instead of a range such as `[2.3,2.5]` or `[2.3,)` for dependencies.
 When a pom.xml specifies a range instead of a
 single version for any particular dependency, builds at different points
 in time can see different versions of that dependency (as your dependency
