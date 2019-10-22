@@ -31,7 +31,7 @@ list is open-ended, so new ones may be added from time to time.
 - [JLBP-12](JLBP-12.md): Make level of support and API stability clear
 - [JLBP-13](JLBP-13.md): Quickly remove references to deprecated features in
    dependencies
-- [JLBP-14](JLBP-14.md): Do not use version ranges
+- [JLBP-14](JLBP-14.md): Specify exactly one version of each dependency
 - [JLBP-15](JLBP-15.md): Produce a BOM for multi-module projects
 - [JLBP-16](JLBP-16.md): Ensure upper version alignment of dependencies for
   consumers
