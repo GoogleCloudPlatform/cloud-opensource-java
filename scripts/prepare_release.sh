@@ -61,7 +61,7 @@ fi
 git checkout -b ${VERSION}-${SUFFIX}
 
 # Updates the pom.xml with the version to release.
-mvn versions:set versions:commit -DnewVersion=${VERSION}
+mvn versions:set versions:commit -DnewVersion=${VERSION} -DgenerateBackupPoms=false
 
 # Tags a new commit for this release.
 git commit -am "preparing release ${VERSION}-${SUFFIX}"
@@ -73,7 +73,7 @@ NEXT_SNAPSHOT=${NEXT_VERSION}
 if [[ "${NEXT_SNAPSHOT}" != *-SNAPSHOT ]]; then
   NEXT_SNAPSHOT=${NEXT_SNAPSHOT}-SNAPSHOT
 fi
-mvn versions:set versions:commit -DnewVersion=${NEXT_SNAPSHOT}
+mvn versions:set versions:commit -DnewVersion=${NEXT_SNAPSHOT} -DgenerateBackupPoms=false
 
 # Commits this next snapshot version.
 git commit -am "${NEXT_SNAPSHOT}"
