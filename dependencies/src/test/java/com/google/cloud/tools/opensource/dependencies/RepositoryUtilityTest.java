@@ -39,7 +39,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class RepositoryUtilityTest {
-
+ 
   @Test
   public void testFindLocalRepository() {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
@@ -78,10 +78,13 @@ public class RepositoryUtilityTest {
     // However sometimes this list does change. If so, we want to 
     // output the specific difference so we can manually verify whether
     // the changes make sense. When they do make sense, we update the test. 
-    if (currentArtifacts.size() != 217) {      
+    int expectedArtifactCount = 219;
+    if (currentArtifacts.size() != expectedArtifactCount) {
+      // find out exactly what changed
       Set<Artifact> current = Sets.newHashSet(currentArtifacts);
       Set<Artifact> old = Sets.newHashSet(oldArtifacts);
       
+      // Version updates are expected. We only care about new and removed groupUId:artifactId.
       Set<String> currentKeys = current.stream().map(Artifacts::makeKey).collect(Collectors.toSet());
       Set<String> oldKeys = old.stream().map(Artifacts::makeKey).collect(Collectors.toSet());
       
