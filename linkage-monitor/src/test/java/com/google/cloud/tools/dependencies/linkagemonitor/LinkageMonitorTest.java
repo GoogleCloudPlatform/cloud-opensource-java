@@ -173,7 +173,7 @@ public class LinkageMonitorTest {
   private final SymbolProblem methodNotFoundProblem =
       new SymbolProblem(
           new MethodSymbol(
-              "io.grpc.protobuf.ProtoUtils.marshaller",
+              "io.grpc.protobuf.ProtoUtils",
               "marshaller",
               "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
               false),
@@ -201,7 +201,7 @@ public class LinkageMonitorTest {
             snapshotProblems, baselineProblems, ImmutableListMultimap.of(jar, dependencyPath));
     assertEquals(
         "Newly introduced problem:\n"
-            + "(bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils.marshaller's method"
+            + "(bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils's method"
             + " marshaller(com.google.protobuf.Message arg1) is not found\n"
             + "  referenced from com.abc.AAA (ccc-1.2.3.jar)\n"
             + "  referenced from com.abc.BBB (ccc-1.2.3.jar)\n"
@@ -217,7 +217,7 @@ public class LinkageMonitorTest {
     assertEquals(
         "The following problems in the baseline no longer appear in the snapshot:\n"
             + "  Class java.lang.Integer is not found\n"
-            + "  (bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils.marshaller's method "
+            + "  (bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils's method "
             + "marshaller(com.google.protobuf.Message arg1) is not found\n",
         message);
   }
