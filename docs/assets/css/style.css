@@ -12,14 +12,18 @@ h1 {
 }
 
 div.cloud-logo {
-  height: 60px;
+  height: 22px;
   margin-top: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 p, li {
   width: 40em;
   max-width: 90%;
+}
+
+li {
+  margin-bottom: 0.5ex;
 }
 
 @media only screen and (min-device-width : 1024px) {
