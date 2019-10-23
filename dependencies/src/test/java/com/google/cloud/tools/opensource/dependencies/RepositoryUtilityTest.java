@@ -16,12 +16,17 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -34,7 +39,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class RepositoryUtilityTest {
-
+ 
   @Test
   public void testFindLocalRepository() {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
@@ -57,16 +62,43 @@ public class RepositoryUtilityTest {
   }
 
   @Test
-  public void testReadBom_path() throws MavenRepositoryException {
+  public void testReadBom_path() throws MavenRepositoryException, ArtifactDescriptorException {
     Path pomFile = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml");
     
-    Bom bom = RepositoryUtility.readBom(pomFile);
+    Bom currentBom = RepositoryUtility.readBom(pomFile);
+    Bom oldBom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:2.6.0");
+    ImmutableList<Artifact> currentArtifacts = currentBom.getManagedDependencies();
+    ImmutableList<Artifact> oldArtifacts = oldBom.getManagedDependencies();
     
-    ImmutableList<Artifact> artifacts = bom.getManagedDependencies();
-    Assert.assertEquals(209, artifacts.size());
-    String coordinates = bom.getCoordinates();
-    Assert.assertTrue(coordinates.startsWith("com.google.cloud:libraries-bom:"));
-    Assert.assertTrue(coordinates.endsWith("-SNAPSHOT"));
+    String coordinates = currentBom.getCoordinates();
+    Truth.assertThat(coordinates).startsWith("com.google.cloud:libraries-bom:");
+    Truth.assertThat(coordinates).endsWith("-SNAPSHOT");
+    
+    // This is a characterization test to verify that the managed dependencies haven't changed.
+    // However sometimes this list does change. If so, we want to 
+    // output the specific difference so we can manually verify whether
+    // the changes make sense. When they do make sense, we update the test. 
+    int expectedArtifactCount = 219;
+    if (currentArtifacts.size() != expectedArtifactCount) { // Find out exactly what changed
+      // Version updates are expected. We only care about new and removed groupUId:artifactId.
+      Set<String> currentKeys = currentArtifacts.stream().map(Artifacts::makeKey).collect(Collectors.toSet());
+      Set<String> oldKeys = oldArtifacts.stream().map(Artifacts::makeKey).collect(Collectors.toSet());
+      
+      SetView<String> added = Sets.difference(currentKeys, oldKeys);
+      String addedMessage = "\n  Added " + Joiner.on(", ").join(added);
+      SetView<String> removed = Sets.difference(oldKeys, currentKeys);
+      String removedMessage = "\n  Removed " + Joiner.on(", ").join(removed);
+
+      String message = "Dependency tree changed. New size is " + currentArtifacts.size();
+      if (!added.isEmpty()) {
+        message += addedMessage;
+      }
+      if (!removed.isEmpty()) {
+        message += removedMessage;
+      }
+      
+      Assert.fail(message);
+    }
   }
 
   @Test
@@ -74,7 +106,9 @@ public class RepositoryUtilityTest {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     ImmutableList<String> versions =
         RepositoryUtility.findVersions(system, "com.google.cloud", "libraries-bom");
-    Truth.assertThat(versions).containsAtLeast("1.1.0", "1.1.1", "1.2.0", "2.0.0").inOrder();
+    Truth.assertThat(versions)
+        .containsAtLeast("1.1.0", "1.1.1", "1.2.0", "2.0.0", "2.4.0", "2.5.0", "2.6.0")
+        .inOrder();
   }
 
   @Test

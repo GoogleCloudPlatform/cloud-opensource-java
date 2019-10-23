@@ -379,6 +379,12 @@ class ClassDumper {
   private ImmutableSet<JavaClass> listClasses(Path jar) throws IOException {
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
     for (String classFileName : listClassFileNames(jar)) {
+      if (classFileName.startsWith("META-INF.versions.")) {
+        // Linkage Checker does not support multi-release JAR (for Java 9+) yet
+        // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/897
+        continue;
+      }
+
       try {
         JavaClass javaClass = classRepository.loadClass(classFileName);
         javaClasses.add(javaClass);
