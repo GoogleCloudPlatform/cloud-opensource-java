@@ -8,14 +8,23 @@ h1 {
   font-family: Roboto, sans-serif;
   font-weight: light;
   font-size: 96;
-  margin-top: 3ex;
   margin-bottom: 1ex;
 }
 
+div.cloud-logo {
+  height: 22px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
 
 p, li {
   width: 40em;
   max-width: 90%;
+}
+
+li {
+  margin-top: 0.5ex;
+  margin-bottom: 0.5ex;
 }
 
 @media only screen and (min-device-width : 1024px) {
