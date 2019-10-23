@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +31,8 @@ public final class DependencyPath {
 
   private List<Artifact> path = new ArrayList<>();
 
-  void add(Artifact artifact) {
+  @VisibleForTesting
+  public void add(Artifact artifact) {
     path.add(artifact);
   }
   

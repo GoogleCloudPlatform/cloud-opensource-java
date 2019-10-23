@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -152,7 +153,7 @@ public class LinkageMonitor {
   static String messageForNewErrors(
       ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems,
       Set<SymbolProblem> baselineProblems,
-      LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths) {
+      Multimap<Path, DependencyPath> jarToDependencyPaths) {
     Set<SymbolProblem> newProblems =
         Sets.difference(snapshotSymbolProblems.keySet(), baselineProblems);
     StringBuilder message =
@@ -170,9 +171,9 @@ public class LinkageMonitor {
     }
 
     for (Path problematicJar : problematicJars.build()) {
-      message.append(problematicJar.getFileName() + "is in path:");
+      message.append(problematicJar.getFileName() + " is at:\n");
       for (DependencyPath dependencyPath : jarToDependencyPaths.get(problematicJar)) {
-        message.append("  " + dependencyPath);
+        message.append("  " + dependencyPath + "\n");
       }
     }
 
