@@ -20,10 +20,12 @@ import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.C
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
+import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
@@ -31,11 +33,12 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.Set;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.model.DependencyManagement;
@@ -104,8 +107,14 @@ public class LinkageMonitor {
       return;
     }
 
+    ImmutableList<Artifact> snapshotManagedDependencies = snapshot.getManagedDependencies();
+    LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
+        ClassPathBuilder.artifactsToDependencyPaths(snapshotManagedDependencies);
+    ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
+    List<Path> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
+
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems =
-        LinkageChecker.create(snapshot).findSymbolProblems();
+        LinkageChecker.create(classpath, ImmutableSet.copyOf(entryPointJars)).findSymbolProblems();
     ImmutableSet<SymbolProblem> problemsInSnapshot = snapshotSymbolProblems.keySet();
 
     if (problemsInBaseline.equals(problemsInSnapshot)) {
@@ -120,7 +129,8 @@ public class LinkageMonitor {
     }
     Set<SymbolProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newProblems.isEmpty()) {
-      System.err.println(messageForNewErrors(snapshotSymbolProblems, problemsInBaseline));
+      System.err.println(
+          messageForNewErrors(snapshotSymbolProblems, problemsInBaseline, jarToDependencyPaths));
       int errorSize = newProblems.size();
       throw new LinkageMonitorException(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
@@ -141,11 +151,13 @@ public class LinkageMonitor {
   @VisibleForTesting
   static String messageForNewErrors(
       ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems,
-      Set<SymbolProblem> baselineProblems) {
+      Set<SymbolProblem> baselineProblems,
+      LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths) {
     Set<SymbolProblem> newProblems =
         Sets.difference(snapshotSymbolProblems.keySet(), baselineProblems);
     StringBuilder message =
         new StringBuilder("Newly introduced problem" + (newProblems.size() > 1 ? "s" : "") + ":\n");
+    ImmutableSet.Builder<Path> problematicJars = ImmutableSet.builder();
     for (SymbolProblem problem : newProblems) {
       message.append(problem + "\n");
       for (ClassFile classFile : snapshotSymbolProblems.get(problem)) {
@@ -153,8 +165,17 @@ public class LinkageMonitor {
             String.format(
                 "  referenced from %s (%s)\n",
                 classFile.getClassName(), classFile.getJar().getFileName()));
+        problematicJars.add(classFile.getJar());
       }
     }
+
+    for (Path problematicJar : problematicJars.build()) {
+      message.append(problematicJar.getFileName() + "is in path:");
+      for (DependencyPath dependencyPath : jarToDependencyPaths.get(problematicJar)) {
+        message.append("  " + dependencyPath);
+      }
+    }
+
     return message.toString();
   }
 
