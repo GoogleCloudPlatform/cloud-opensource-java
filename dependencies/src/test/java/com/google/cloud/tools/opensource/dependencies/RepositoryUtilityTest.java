@@ -64,15 +64,14 @@ public class RepositoryUtilityTest {
       throws MavenRepositoryException, ArtifactDescriptorException, URISyntaxException {
     Path pomFile = absolutePathOfResource("libraries-bom-2.7.0.pom");
     Bom bomFromFile = RepositoryUtility.readBom(pomFile);
+    ImmutableList<Artifact> artifactsFromFile = bomFromFile.getManagedDependencies();
 
     // Compare the result with readBom(String coordinates)
     Bom expectedBom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:2.7.0");
     ImmutableList<Artifact> expectedArtifacts = expectedBom.getManagedDependencies();
 
-    ImmutableList<Artifact> artifactsFromFile = bomFromFile.getManagedDependencies();
-
-    Assert.assertEquals("com.google.cloud:libraries-bom:2.7.0", bomFromFile.getCoordinates());
-    Truth.assertThat(artifactsFromFile).hasSize(221);
+    Truth.assertThat(bomFromFile.getCoordinates())
+        .isEqualTo("com.google.cloud:libraries-bom:2.7.0");
     Truth.assertThat(artifactsFromFile)
         .comparingElementsUsing(
             transforming(

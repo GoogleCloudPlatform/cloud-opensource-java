@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import java.net.URISyntaxException;
-import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -28,6 +27,6 @@ public class TestHelper {
 
   /** Returns an absolute path of {@code resourceName}. */
   public static Path absolutePathOfResource(String resourceName) throws URISyntaxException {
-    return Paths.get(URLClassLoader.getSystemResource(resourceName).toURI()).toAbsolutePath();
+    return Paths.get(ClassLoader.getSystemResource(resourceName).toURI()).toAbsolutePath();
   }
 }
