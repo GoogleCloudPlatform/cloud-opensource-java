@@ -67,11 +67,12 @@ public class RepositoryUtilityTest {
     ImmutableList<Artifact> artifactsFromFile = bomFromFile.getManagedDependencies();
 
     // Compare the result with readBom(String coordinates)
-    Bom expectedBom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:2.7.0");
+    String expectedBomCoordinates = "com.google.cloud:libraries-bom:2.7.0";
+    Bom expectedBom = RepositoryUtility.readBom(expectedBomCoordinates);
     ImmutableList<Artifact> expectedArtifacts = expectedBom.getManagedDependencies();
 
     Truth.assertThat(bomFromFile.getCoordinates())
-        .isEqualTo("com.google.cloud:libraries-bom:2.7.0");
+        .isEqualTo(expectedBomCoordinates);
     Truth.assertThat(artifactsFromFile)
         .comparingElementsUsing(
             transforming(
