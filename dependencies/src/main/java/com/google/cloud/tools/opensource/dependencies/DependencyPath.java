@@ -28,9 +28,7 @@ import java.util.Objects;
 
 import org.eclipse.aether.artifact.Artifact;
 
-/**
- * Path from the root to a node Artifact in a dependency tree.
- */
+/** Path from the root to a node Artifact in a dependency tree. */
 public final class DependencyPath {
 
   private List<Node> path = new ArrayList<>();
@@ -66,7 +64,7 @@ public final class DependencyPath {
       if (!thisNode.getScope().equals(otherNode.getScope())) {
         return false;
       }
-      if (!thisNode.isOptional().equals(otherNode.isOptional())) {
+      if (thisNode.isOptional() != otherNode.isOptional()) {
         return false;
       }
     }
@@ -77,17 +75,16 @@ public final class DependencyPath {
   public int hashCode() {
     int hashCode = 31;
     for (Node node : path) {
+
       Artifact artifact = node.getArtifact();
       hashCode =
           37 * hashCode
-              + (artifact.getGroupId()
-                      + ":"
-                      + artifact.getArtifactId()
-                      + ":"
-                      + artifact.getVersion())
-                  .hashCode()
-              + node.scope.hashCode()
-              + node.optional.hashCode();
+              + Objects.hash(
+                  artifact.getGroupId(),
+                  artifact.getArtifactId(),
+                  artifact.getVersion(),
+                  node.scope,
+                  node.optional);
     }
     return hashCode; 
   }
@@ -123,7 +120,7 @@ public final class DependencyPath {
   private static class Node {
     private Artifact artifact;
     private String scope;
-    private Boolean optional;
+    private boolean optional;
 
     private Node(Artifact artifact, String scope, boolean optional) {
       this.artifact = checkNotNull(artifact);
@@ -139,7 +136,7 @@ public final class DependencyPath {
       return scope;
     }
 
-    private Boolean isOptional() {
+    private boolean isOptional() {
       return optional;
     }
 
