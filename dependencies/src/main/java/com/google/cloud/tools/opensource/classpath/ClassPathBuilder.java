@@ -90,7 +90,7 @@ public class ClassPathBuilder {
     Map<String, String> keyToFirstArtifactVersion = Maps.newHashMap();
 
     for (DependencyPath dependencyPath : dependencyPaths) {
-      Artifact artifact = dependencyPath.getLeaf();
+      Artifact artifact = dependencyPath.getLeafArtifact();
       Path jarAbsolutePath = artifact.getFile().toPath().toAbsolutePath();
       if (!jarAbsolutePath.toString().endsWith(".jar")) {
         continue;

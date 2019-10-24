@@ -16,30 +16,35 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 
 import java.util.stream.Collectors;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.DependencyNode;
 
 /**
- * A representation of a dependency path from a root Artifact to a node Artifact.
+ * A representation of a dependency path from a root {@link org.eclipse.aether.graph.DependencyNode}
+ * to a {@link org.eclipse.aether.graph.DependencyNode}.
  */
 public final class DependencyPath {
 
-  private List<Artifact> path = new ArrayList<>();
+  private List<DependencyNode> path = new ArrayList<>();
 
   @VisibleForTesting
-  public void add(Artifact artifact) {
-    path.add(artifact);
+  public void add(DependencyNode node) {
+    path.add(node);
   }
-  
+
   @Override
   public String toString() {
     return Joiner.on(" / ")
-        .join(path.stream().map(Artifacts::toCoordinates).collect(Collectors.toList()));
+        .join(path.stream().map(Object::toString).collect(Collectors.toList()));
   }
   
   @Override
@@ -64,7 +69,8 @@ public final class DependencyPath {
   @Override
   public int hashCode() {
     int hashCode = 31;
-    for (Artifact artifact : path) {
+    for (DependencyNode node : path) {
+      Artifact artifact = node.getArtifact();
       hashCode = 37 * hashCode
           + (artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion())
               .hashCode();
@@ -76,7 +82,9 @@ public final class DependencyPath {
    * Artifacts are considered to be the same if they have the same group ID,
    * artifact ID, and version.
    */
-  private static boolean artifactsEqual(Artifact artifact1, Artifact artifact2) {
+  private static boolean artifactsEqual(DependencyNode node1, DependencyNode node2) {
+    Artifact artifact1 = node1.getArtifact();
+    Artifact artifact2 = node2.getArtifact();
     return artifact1.getArtifactId().equals(artifact2.getArtifactId())
         && artifact1.getGroupId().equals(artifact2.getGroupId())
         && artifact1.getVersion().equals(artifact2.getVersion());
@@ -86,17 +94,17 @@ public final class DependencyPath {
     return path.size();
   }
 
-  public Artifact getLeaf() {
-    return path.get(size() - 1);
+  public Artifact getLeafArtifact() {
+    return path.get(size() - 1).getArtifact();
   }
 
-  public List<Artifact> getPath() {
-    return path;
+  public ImmutableList<Artifact> getArtifactPath() {
+    return path.stream().map(DependencyNode::getArtifact).collect(toImmutableList());
   }
 
   // TODO think about index out of bounds
-  public Artifact get(int i) {
-    return path.get(i);
+  public Artifact getArtifact(int i) {
+    return path.get(i).getArtifact();
   }
 
 }

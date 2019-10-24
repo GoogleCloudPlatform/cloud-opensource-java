@@ -272,7 +272,7 @@ public final class RepositoryUtility {
       return true;
     }
 
-    // TODO remove this hack once we get these out of google-cloud-java's BOM
+    // TODO remove this hack once we getArtifact these out of google-cloud-java's BOM
     if (BOM_SKIP_ARTIFACT_IDS.contains(artifact.getArtifactId())) {
       return true;
     }

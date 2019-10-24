@@ -169,7 +169,7 @@ public class ClassDumperTest {
             new ClassFile(path, "com.google.api.resourcenames.UntypedResourceName"),
             new MethodSymbol(
                 "java.util.Map",
-                "get",
+                "getArtifact",
                 "(Ljava/lang/Object;)Ljava/lang/Object;",
                 isInterfaceMethod));
   }

@@ -42,8 +42,8 @@ public class DependencyPathTest {
     DependencyPath path = new DependencyPath();
     path.add(foo);
     path.add(bar);
-    Assert.assertEquals(foo, path.get(0));
-    Assert.assertEquals(bar, path.get(1));
+    Assert.assertEquals(foo, path.getArtifact(0));
+    Assert.assertEquals(bar, path.getArtifact(1));
   }
   
   @Test

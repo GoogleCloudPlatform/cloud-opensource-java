@@ -266,7 +266,7 @@ public class DashboardMain {
     ImmutableSetMultimap.Builder<String, Path> bomMemberToJars = ImmutableSetMultimap.builder();
     jarToDependencyPaths.forEach(
         (path, dependencyPath) -> {
-          Artifact artifact = dependencyPath.get(0);
+          Artifact artifact = dependencyPath.getArtifact(0);
           bomMemberToJars.put(Artifacts.toCoordinates(artifact), path);
         });
 
@@ -406,7 +406,7 @@ public class DashboardMain {
           ImmutableMultimap.copyOf(Multimaps.filterValues(
               jarToDependencyPaths,
               dependencyPath -> coordinates
-                  .equals(Artifacts.toCoordinates(dependencyPath.get(0)))));
+                  .equals(Artifacts.toCoordinates(dependencyPath.getArtifact(0)))));
 
       Map<String, Object> templateData = new HashMap<>();
       templateData.put("artifact", artifact);
@@ -462,7 +462,7 @@ public class DashboardMain {
   /**
    * Partitions {@code symbolProblems} by the JAR file that contains the {@link ClassFile}.
    *
-   * <p>For example, {@code classes = result.get(JarX).get(SymbolProblemY)} where {@code classes}
+   * <p>For example, {@code classes = result.getArtifact(JarX).getArtifact(SymbolProblemY)} where {@code classes}
    * are not null means that {@code JarX} has {@code SymbolProblemY} and that {@code JarX} contains
    * {@code classes} which reference {@code SymbolProblemY.getSymbol()}.
    */
@@ -622,7 +622,7 @@ public class DashboardMain {
   }
 
   private static ImmutableList<String> versionlessCoordinates(DependencyPath dependencyPath) {
-    return dependencyPath.getPath().stream().map(Artifacts::makeKey).collect(toImmutableList());
+    return dependencyPath.getArtifactPath().stream().map(Artifacts::makeKey).collect(toImmutableList());
   }
 
   private static String summaryMessage(

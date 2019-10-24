@@ -51,7 +51,7 @@ public class DependencyTreeFormatter {
     if (depth > 0) {
       // Nodes at top have one or more depth
       stringBuilder.append(Strings.repeat(indentCharacter, depth));
-      stringBuilder.append(currentNode.getLeaf());
+      stringBuilder.append(currentNode.getLeafArtifact());
       stringBuilder.append("\n");
     }
     for (DependencyPath childPath : tree.get(currentNode)) {
@@ -76,7 +76,7 @@ public class DependencyTreeFormatter {
     // LinkedListMultimap preserves insertion order for values
     ListMultimap<DependencyPath, DependencyPath> tree = LinkedListMultimap.create();
     for (DependencyPath dependencyPath : dependencyPaths) {
-      List<Artifact> artifactPath = dependencyPath.getPath();
+      List<Artifact> artifactPath = dependencyPath.getArtifactPath();
       List<Artifact> parentArtifactPath = artifactPath.subList(0, artifactPath.size() - 1);
       DependencyPath parentDependencyPath = new DependencyPath();
       parentArtifactPath.forEach(

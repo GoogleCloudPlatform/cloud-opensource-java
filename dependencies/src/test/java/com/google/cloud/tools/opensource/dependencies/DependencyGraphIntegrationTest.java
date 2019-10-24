@@ -45,7 +45,7 @@ public class DependencyGraphIntegrationTest {
     List<String> strings = updates.stream().map(e -> e.toString()).collect(Collectors.toList());
 
     // ordering not working yet
-    // TODO get order working
+    // TODO getArtifact order working
     Truth.assertThat(strings).containsExactly("com.google.guava:guava:20.0 needs to "
         + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
         "com.google.http-client:google-http-client:1.23.0 needs to "
@@ -132,7 +132,7 @@ public class DependencyGraphIntegrationTest {
     List<DependencyPath> conflicts = graph.findConflicts();
     List<String> leaves = new ArrayList<>();
     for (DependencyPath path : conflicts) {
-      leaves.add(Artifacts.toCoordinates(path.getLeaf()));
+      leaves.add(Artifacts.toCoordinates(path.getLeafArtifact()));
     }
     
     Truth.assertThat(leaves).containsAtLeast(

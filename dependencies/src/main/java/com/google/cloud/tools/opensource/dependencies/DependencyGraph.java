@@ -65,7 +65,7 @@ public class DependencyGraph {
 
   void addPath(DependencyPath path) {
     graph.add(path);
-    Artifact leaf = path.getLeaf();
+    Artifact leaf = path.getLeafArtifact();
     String coordinates = Artifacts.toCoordinates(leaf);
     versions.put(Artifacts.makeKey(leaf), leaf.getVersion());
     paths.put(coordinates, path);
@@ -111,11 +111,11 @@ public class DependencyGraph {
     // now generate necessary upgrades
     LinkedHashSet<Update> upgrades = new LinkedHashSet<>();
     for (DependencyPath path : paths) {
-      Artifact leaf = path.getLeaf();
+      Artifact leaf = path.getLeafArtifact();
       String key = Artifacts.makeKey(leaf);
       String highestVersion = versions.get(key).last();
       if (!leaf.getVersion().equals(highestVersion)) {
-        Artifact parent = path.get(path.size() - 2);
+        Artifact parent = path.getArtifact(path.size() - 2);
         // when the parent is out of date, update the parent instead
         // TODO drop if any ancestor needs an update, instead of just the parent
         // or perhaps we just order the updates from root down, and then rerun after

@@ -236,8 +236,8 @@ public class LinkageChecker {
       // Checks the target class, its parent classes, and its interfaces.
       // Interface check is needed to avoid false positive for a method reference to an abstract
       // class that implements an interface. For example, Guava's ImmutableList is an abstract class
-      // that implements the List interface, but the class does not have a get() method. A method
-      // reference to ImmutableList.get() should not be reported as a linkage error.
+      // that implements the List interface, but the class does not have a getArtifact() method. A method
+      // reference to ImmutableList.getArtifact() should not be reported as a linkage error.
       Iterable<JavaClass> typesToCheck =
           Iterables.concat(
               getClassHierarchy(targetJavaClass),

@@ -10,7 +10,7 @@
 
 <#macro formatJarLinkageReport jar problemsWithClass jarToDependencyPaths dependencyPathRootCauses>
   <!-- problemsWithClass: ImmutableSetMultimap<SymbolProblem, String> converted to
-    ImmutableMap<SymbolProblem, Collection<String>> to get key and set of values in Freemarker -->
+    ImmutableMap<SymbolProblem, Collection<String>> to getArtifact key and set of values in Freemarker -->
   <#assign problemsToClasses = problemsWithClass.asMap() />
   <#assign symbolProblemCount = problemsToClasses?size />
   <#assign referenceCount = 0 />

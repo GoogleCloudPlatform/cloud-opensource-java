@@ -57,7 +57,7 @@ public class LinkageCheckerTest {
         DependencyGraphBuilder.getTransitiveDependencies(new DefaultArtifact(coordinates));
     ImmutableList<Path> jars =
         dependencies.list().stream()
-            .map(path -> path.getLeaf().getFile().toPath())
+            .map(path -> path.getLeafArtifact().getFile().toPath())
             .collect(toImmutableList());
     return jars;
   }
@@ -136,11 +136,11 @@ public class LinkageCheckerTest {
     List<Path> paths = ImmutableList.of(guavaPath);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
-    // ImmutableList is an abstract class, but setting isInterfaceMethod = true to get an error
+    // ImmutableList is an abstract class, but setting isInterfaceMethod = true to getArtifact an error
     MethodSymbol methodSymbol =
         new MethodSymbol(
             "com.google.common.collect.ImmutableList",
-            "get",
+            "getArtifact",
             "(I)Ljava/lang/Object;",
             true); // invalid
 
@@ -199,12 +199,12 @@ public class LinkageCheckerTest {
     List<Path> paths = ImmutableList.of(guavaPath);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
-    // ImmutableList is an abstract class that implements List, but does not implement get() method
+    // ImmutableList is an abstract class that implements List, but does not implement getArtifact() method
     Optional<SymbolProblem> problemFound =
         linkageChecker.findSymbolProblem(
             new ClassFile(paths.get(0), LinkageCheckerTest.class.getName()),
             new MethodSymbol(
-                "com.google.common.collect.ImmutableList", "get", "(I)Ljava/lang/Object;", false));
+                "com.google.common.collect.ImmutableList", "getArtifact", "(I)Ljava/lang/Object;", false));
     Truth8.assertThat(problemFound).isEmpty();
   }
 
@@ -787,8 +787,8 @@ public class LinkageCheckerTest {
         DependencyGraphBuilder.getTransitiveDependencies(
             new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"));
 
-    Path slf4jJar = slf4jGraph.list().get(0).getLeaf().getFile().toPath();
-    Path log4jJar = logbackGraph.list().get(0).getLeaf().getFile().toPath();
+    Path slf4jJar = slf4jGraph.list().get(0).getLeafArtifact().getFile().toPath();
+    Path log4jJar = logbackGraph.list().get(0).getLeafArtifact().getFile().toPath();
     List<Path> paths = ImmutableList.of(slf4jJar, log4jJar);
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);

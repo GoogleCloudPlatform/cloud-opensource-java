@@ -65,7 +65,7 @@ public class DependencyGraphBuilderTest {
   private static int countGuava(DependencyGraph graph) {
     int guavaCount = 0;
     for (DependencyPath path : graph.list()) {
-      if (path.getLeaf().getArtifactId().equals("guava")) {
+      if (path.getLeafArtifact().getArtifactId().equals("guava")) {
         guavaCount++;
       }
     }
@@ -108,12 +108,12 @@ public class DependencyGraphBuilderTest {
     Assert.assertEquals(
         "Level-order should pick up datastore as first element in the list",
         "google-cloud-datastore",
-        firstElement.getLeaf().getArtifactId());
+        firstElement.getLeafArtifact().getArtifactId());
     DependencyPath secondElement = list.get(1);
     Assert.assertEquals(
         "Level-order should pick up guava before the dependencies of the two",
         "guava",
-        secondElement.getLeaf().getArtifactId());
+        secondElement.getLeafArtifact().getArtifactId());
   }
 
   @Test
