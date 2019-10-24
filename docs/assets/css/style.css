@@ -22,6 +22,10 @@ p, li {
   max-width: 90%;
 }
 
+footer p {
+  margin: 0.15ex;
+}
+
 li {
   margin-top: 0.5ex;
   margin-bottom: 0.5ex;
