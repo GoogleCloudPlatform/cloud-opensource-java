@@ -37,7 +37,23 @@ public final class DependencyPath {
   public void add(Artifact artifact, String scope, Boolean optional) {
     path.add(new Node(artifact, scope, optional));
   }
-  
+
+  public int size() {
+    return path.size();
+  }
+
+  public Artifact getLeaf() {
+    return path.get(size() - 1).getArtifact();
+  }
+
+  public ImmutableList<Artifact> getPath() {
+    return path.stream().map(Node::getArtifact).collect(toImmutableList());
+  }
+
+  public Artifact get(int i) {
+    return path.get(i).getArtifact();
+  }
+
   @Override
   public String toString() {
     return Joiner.on(" / ").join(path);
@@ -57,7 +73,6 @@ public final class DependencyPath {
     for (int i = 0; i < path.size(); i++) {
       Node thisNode = path.get(i);
       Node otherNode = other.path.get(i);
-      // DefaultArtifact's equality checks file, which we do not care
       if (!artifactsEqual(thisNode.getArtifact(), otherNode.getArtifact())) {
         return false; 
       }
@@ -69,6 +84,19 @@ public final class DependencyPath {
       }
     }
     return true;
+  }
+
+  /**
+   * Artifacts are considered to be the same if they have the same group ID, artifact ID, and
+   * version.
+   *
+   * <p>{@link org.eclipse.aether.artifact.DefaultArtifact#equals(Object)} uses {@code file} field,
+   * which is unnecessary for our usage.
+   */
+  private static boolean artifactsEqual(Artifact artifact1, Artifact artifact2) {
+    return artifact1.getArtifactId().equals(artifact2.getArtifactId())
+        && artifact1.getGroupId().equals(artifact2.getGroupId())
+        && artifact1.getVersion().equals(artifact2.getVersion());
   }
 
   @Override
@@ -85,34 +113,7 @@ public final class DependencyPath {
                   node.scope,
                   node.optional);
     }
-    return hashCode; 
-  }
-  
-  /**
-   * Artifacts are considered to be the same if they have the same group ID,
-   * artifact ID, and version.
-   */
-  private static boolean artifactsEqual(Artifact artifact1, Artifact artifact2) {
-    return artifact1.getArtifactId().equals(artifact2.getArtifactId())
-        && artifact1.getGroupId().equals(artifact2.getGroupId())
-        && artifact1.getVersion().equals(artifact2.getVersion());
-  }
-
-  public int size() {
-    return path.size();
-  }
-
-  public Artifact getLeaf() {
-    return path.get(size() - 1).getArtifact();
-  }
-
-  public ImmutableList<Artifact> getPath() {
-    return path.stream().map(Node::getArtifact).collect(toImmutableList());
-  }
-
-  // TODO think about index out of bounds
-  public Artifact get(int i) {
-    return path.get(i).getArtifact();
+    return hashCode;
   }
 
   /** Node in a dependency tree, holding scope and optional flag. */
