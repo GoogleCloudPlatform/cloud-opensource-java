@@ -22,12 +22,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /** Utility used among tests. */
-class TestHelper {
+public class TestHelper {
 
   private TestHelper() {}
 
   /** Returns an absolute path of {@code resourceName}. */
-  static Path absolutePathOfResource(String resourceName) throws URISyntaxException {
+  public static Path absolutePathOfResource(String resourceName) throws URISyntaxException {
     return Paths.get(URLClassLoader.getSystemResource(resourceName).toURI()).toAbsolutePath();
   }
 }

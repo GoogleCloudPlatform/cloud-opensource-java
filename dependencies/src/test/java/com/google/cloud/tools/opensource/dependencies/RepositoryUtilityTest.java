@@ -16,17 +16,15 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import com.google.common.base.Joiner;
+import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static com.google.common.truth.Correspondence.transforming;
+
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
 import com.google.common.truth.Truth;
 import java.io.File;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -62,43 +60,25 @@ public class RepositoryUtilityTest {
   }
 
   @Test
-  public void testReadBom_path() throws MavenRepositoryException, ArtifactDescriptorException {
-    Path pomFile = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml");
-    
-    Bom currentBom = RepositoryUtility.readBom(pomFile);
-    Bom oldBom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:2.6.0");
-    ImmutableList<Artifact> currentArtifacts = currentBom.getManagedDependencies();
-    ImmutableList<Artifact> oldArtifacts = oldBom.getManagedDependencies();
-    
-    String coordinates = currentBom.getCoordinates();
-    Truth.assertThat(coordinates).startsWith("com.google.cloud:libraries-bom:");
-    Truth.assertThat(coordinates).endsWith("-SNAPSHOT");
-    
-    // This is a characterization test to verify that the managed dependencies haven't changed.
-    // However sometimes this list does change. If so, we want to 
-    // output the specific difference so we can manually verify whether
-    // the changes make sense. When they do make sense, we update the test. 
-    int expectedArtifactCount = 221; // google-cloud-java 0.116.0
-    if (currentArtifacts.size() != expectedArtifactCount) { // Find out exactly what changed
-      // Version updates are expected. We only care about new and removed groupUId:artifactId.
-      Set<String> currentKeys = currentArtifacts.stream().map(Artifacts::makeKey).collect(Collectors.toSet());
-      Set<String> oldKeys = oldArtifacts.stream().map(Artifacts::makeKey).collect(Collectors.toSet());
-      
-      SetView<String> added = Sets.difference(currentKeys, oldKeys);
-      String addedMessage = "\n  Added " + Joiner.on(", ").join(added);
-      SetView<String> removed = Sets.difference(oldKeys, currentKeys);
-      String removedMessage = "\n  Removed " + Joiner.on(", ").join(removed);
+  public void testReadBom_path()
+      throws MavenRepositoryException, ArtifactDescriptorException, URISyntaxException {
+    Path pomFile = absolutePathOfResource("libraries-bom-2.7.0.pom");
+    Bom bomFromFile = RepositoryUtility.readBom(pomFile);
 
-      String message = "Dependency tree changed. New size is " + currentArtifacts.size();
-      if (!added.isEmpty()) {
-        message += addedMessage;
-      }
-      if (!removed.isEmpty()) {
-        message += removedMessage;
-      }
-      
-      Assert.fail(message);
-    }
+    // Compare the result with readBom(String coordinates)
+    Bom expectedBom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:2.7.0");
+    ImmutableList<Artifact> expectedArtifacts = expectedBom.getManagedDependencies();
+
+    ImmutableList<Artifact> artifactsFromFile = bomFromFile.getManagedDependencies();
+
+    Assert.assertEquals("com.google.cloud:libraries-bom:2.7.0", bomFromFile.getCoordinates());
+    Truth.assertThat(artifactsFromFile).hasSize(221);
+    Truth.assertThat(artifactsFromFile)
+        .comparingElementsUsing(
+            transforming(
+                Artifacts::toCoordinates, Artifacts::toCoordinates, "has Maven coordinates"))
+        .containsExactlyElementsIn(expectedArtifacts)
+        .inOrder();
   }
 
   @Test

@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This file is copied from com.google.cloud:libraries-bom:2.7.0 for RepositoryUtilityTest -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.google.cloud</groupId>
+  <artifactId>libraries-bom</artifactId>
+  <version>2.7.0</version>
+  <packaging>pom</packaging>
+
+  <name>Google Cloud Platform Supported Libraries</name>
+  <description>A compatible set of Google Cloud open source libraries.</description>
+  <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java#google-library-bom</url>
+  <organization>
+    <name>Google LLC</name>
+    <url>https://cloud.google.com</url>
+  </organization>
+  <inceptionYear>2019</inceptionYear>
+  <developers>
+    <developer>
+      <name>Elliotte Rusty Harold</name>
+    </developer>
+  </developers>
+
+  <issueManagement>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues</url>
+  </issueManagement>
+  <scm>
+    <connection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git</connection>
+    <developerConnection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git
+    </developerConnection>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/boms/cloud-oss-bom</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <guava.version>28.1-android</guava.version>
+    <google.cloud.java.version>0.116.0-alpha</google.cloud.java.version>
+    <io.grpc.version>1.24.0</io.grpc.version>
+    <protobuf.version>3.10.0</protobuf.version>
+    <http.version>1.32.1</http.version>
+  </properties>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava-bom</artifactId>
+        <version>${guava.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- protobufs from https://github.com/protocolbuffers/protobuf/tree/master/java -->
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-bom</artifactId>
+        <version>${protobuf.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- google-http-java-client from https://github.com/googleapis/google-http-java-client -->
+     <dependency>
+       <groupId>com.google.http-client</groupId>
+       <artifactId>google-http-client</artifactId>
+       <version>${http.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client-android</artifactId>
+        <version>${http.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client-apache</artifactId>
+        <version>2.1.2</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client-appengine</artifactId>
+        <version>${http.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client-gson</artifactId>
+        <version>${http.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client-jackson2</artifactId>
+        <version>${http.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client-protobuf</artifactId>
+        <version>${http.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client-test</artifactId>
+        <version>${http.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client-xml</artifactId>
+        <version>${http.version}</version>
+      </dependency>
+
+      <!-- GRPC; specifically https://github.com/grpc/grpc-java -->
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-alts</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-auth</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-context</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-core</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-grpclb</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-netty</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-netty-shaded</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-okhttp</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-protobuf</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-stub</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-testing</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+
+      <!-- google-cloud-java from https://github.com/googleapis/google-cloud-java -->
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-bom</artifactId>
+        <version>${google.cloud.java.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+</project>
