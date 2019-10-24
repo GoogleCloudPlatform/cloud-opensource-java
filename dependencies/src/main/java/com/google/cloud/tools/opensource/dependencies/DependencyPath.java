@@ -75,7 +75,6 @@ public final class DependencyPath {
   public int hashCode() {
     int hashCode = 31;
     for (Node node : path) {
-
       Artifact artifact = node.getArtifact();
       hashCode =
           37 * hashCode
