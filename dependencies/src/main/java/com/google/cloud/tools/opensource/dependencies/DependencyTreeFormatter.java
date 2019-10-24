@@ -76,7 +76,7 @@ public class DependencyTreeFormatter {
     // LinkedListMultimap preserves insertion order for values
     ListMultimap<DependencyPath, DependencyPath> tree = LinkedListMultimap.create();
     for (DependencyPath dependencyPath : dependencyPaths) {
-      List<Artifact> artifactPath = dependencyPath.getPath();
+      List<Artifact> artifactPath = dependencyPath.getArtifacts();
       List<Artifact> parentArtifactPath = artifactPath.subList(0, artifactPath.size() - 1);
       DependencyPath parentDependencyPath = new DependencyPath();
       parentArtifactPath.forEach(

@@ -28,7 +28,10 @@ import java.util.Objects;
 
 import org.eclipse.aether.artifact.Artifact;
 
-/** Path from the root to a node Artifact in a dependency tree. */
+/**
+ * Path from the root to a node in a dependency tree, where a node is {@link Artifact} with scope
+ * and optional flag.
+ */
 public final class DependencyPath {
 
   private List<Node> path = new ArrayList<>();
@@ -38,18 +41,25 @@ public final class DependencyPath {
     path.add(new Node(artifact, scope, optional));
   }
 
+  /** Returns the length of the path. */
   public int size() {
     return path.size();
   }
 
+  /** Returns the artifact in the leaf (the furthest node from the node) of the path. */
   public Artifact getLeaf() {
     return path.get(size() - 1).getArtifact();
   }
 
-  public ImmutableList<Artifact> getPath() {
+  /** Returns the list of artifact in the path. */
+  public ImmutableList<Artifact> getArtifacts() {
     return path.stream().map(Node::getArtifact).collect(toImmutableList());
   }
 
+  /**
+   * Returns the artifact at {@code i}th node in the path. The {@code 0}th element is the root of
+   * the dependency tree.
+   */
   public Artifact get(int i) {
     return path.get(i).getArtifact();
   }
@@ -161,8 +171,9 @@ public final class DependencyPath {
 
     @Override
     public String toString() {
-      return String.format(
-          "%s (%s%s)", Artifacts.toCoordinates(artifact), scope, optional ? ", optional" : "");
+      String scopeAndOptional = scope + (optional ? ", optional" : "");
+      String coordinates = Artifacts.toCoordinates(artifact);
+      return String.format("%s (%s)", coordinates, scopeAndOptional);
     }
   }
 
