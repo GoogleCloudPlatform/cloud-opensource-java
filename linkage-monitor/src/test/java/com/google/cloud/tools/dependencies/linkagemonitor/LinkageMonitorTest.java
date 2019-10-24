@@ -205,7 +205,8 @@ public class LinkageMonitorTest {
             + " marshaller(com.google.protobuf.Message arg1) is not found\n"
             + "  referenced from com.abc.AAA (ccc-1.2.3.jar)\n"
             + "  referenced from com.abc.BBB (ccc-1.2.3.jar)\n"
-            + "ccc-1.2.3.jar is at:\n  foo:bar:1.0.0 (provided) / aaa:ccc:1.2.3 (compile, optional)\n",
+            + "ccc-1.2.3.jar is at:\n"
+            + "  foo:bar:1.0.0 (provided) / aaa:ccc:1.2.3 (compile, optional)\n",
         message);
   }
 

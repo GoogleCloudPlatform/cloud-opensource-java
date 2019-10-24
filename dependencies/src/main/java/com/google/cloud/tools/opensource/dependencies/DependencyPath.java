@@ -16,48 +16,38 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.eclipse.aether.artifact.Artifact;
 
 /**
- * A representation of a dependency path from a root Artifact to a node Artifact.
+ * Path from the root to a node Artifact in a dependency tree.
  */
 public final class DependencyPath {
 
-  private List<Artifact> path = new ArrayList<>();
-  private List<String> scopes = new ArrayList<>();
-  private List<Boolean> optionals = new ArrayList<>();
+  private List<Node> path = new ArrayList<>();
 
   @VisibleForTesting
   public void add(Artifact artifact, String scope, Boolean optional) {
-    path.add(artifact);
-    scopes.add(scope);
-    optionals.add(optional);
+    path.add(new Node(artifact, scope, optional));
   }
   
   @Override
   public String toString() {
-
-    ImmutableList.Builder<String> elements = ImmutableList.builder();
-    for (int i = 0; i < path.size(); ++i) {
-      Artifact artifact = path.get(i);
-      String scope = scopes.get(i);
-      boolean optional = optionals.get(i);
-      elements.add(
-          String.format(
-              "%s (%s%s)", Artifacts.toCoordinates(artifact), scope, optional ? ", optional" : ""));
-    }
-    return Joiner.on(" / ").join(elements.build());
+    return Joiner.on(" / ").join(path);
   }
   
   @Override
   public boolean equals(Object o) {
-    if (o == null || !(o instanceof DependencyPath)) {
+    if (!(o instanceof DependencyPath)) {
       return false;
     }
     DependencyPath other = (DependencyPath) o;
@@ -67,8 +57,17 @@ public final class DependencyPath {
     }
     
     for (int i = 0; i < path.size(); i++) {
-      if (!artifactsEqual(path.get(i), other.path.get(i))) {
+      Node thisNode = path.get(i);
+      Node otherNode = other.path.get(i);
+      // DefaultArtifact's equality checks file, which we do not care
+      if (!artifactsEqual(thisNode.getArtifact(), otherNode.getArtifact())) {
         return false; 
+      }
+      if (!thisNode.getScope().equals(otherNode.getScope())) {
+        return false;
+      }
+      if (!thisNode.isOptional().equals(otherNode.isOptional())) {
+        return false;
       }
     }
     return true;
@@ -77,10 +76,18 @@ public final class DependencyPath {
   @Override
   public int hashCode() {
     int hashCode = 31;
-    for (Artifact artifact : path) {
-      hashCode = 37 * hashCode
-          + (artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion())
-              .hashCode();
+    for (Node node : path) {
+      Artifact artifact = node.getArtifact();
+      hashCode =
+          37 * hashCode
+              + (artifact.getGroupId()
+                      + ":"
+                      + artifact.getArtifactId()
+                      + ":"
+                      + artifact.getVersion())
+                  .hashCode()
+              + node.scope.hashCode()
+              + node.optional.hashCode();
     }
     return hashCode; 
   }
@@ -100,16 +107,66 @@ public final class DependencyPath {
   }
 
   public Artifact getLeaf() {
-    return path.get(size() - 1);
+    return path.get(size() - 1).getArtifact();
   }
 
-  public List<Artifact> getPath() {
-    return path;
+  public ImmutableList<Artifact> getPath() {
+    return path.stream().map(Node::getArtifact).collect(toImmutableList());
   }
 
   // TODO think about index out of bounds
   public Artifact get(int i) {
-    return path.get(i);
+    return path.get(i).getArtifact();
+  }
+
+  /** Node in a dependency tree, holding scope and optional flag. */
+  private static class Node {
+    private Artifact artifact;
+    private String scope;
+    private Boolean optional;
+
+    private Node(Artifact artifact, String scope, boolean optional) {
+      this.artifact = checkNotNull(artifact);
+      this.scope = checkNotNull(scope);
+      this.optional = optional;
+    }
+
+    private Artifact getArtifact() {
+      return artifact;
+    }
+
+    private String getScope() {
+      return scope;
+    }
+
+    private Boolean isOptional() {
+      return optional;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+      if (this == other) {
+        return true;
+      }
+      if (!(other instanceof Node)) {
+        return false;
+      }
+      Node that = (Node) other;
+      return optional == that.optional
+          && artifact.equals(that.artifact)
+          && scope.equals(that.scope);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(artifact, scope, optional);
+    }
+
+    @Override
+    public String toString() {
+      return String.format(
+          "%s (%s%s)", Artifacts.toCoordinates(artifact), scope, optional ? ", optional" : "");
+    }
   }
 
 }
