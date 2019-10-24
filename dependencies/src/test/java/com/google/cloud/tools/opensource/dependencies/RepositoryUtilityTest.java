@@ -71,8 +71,7 @@ public class RepositoryUtilityTest {
     Bom expectedBom = RepositoryUtility.readBom(expectedBomCoordinates);
     ImmutableList<Artifact> expectedArtifacts = expectedBom.getManagedDependencies();
 
-    Truth.assertThat(bomFromFile.getCoordinates())
-        .isEqualTo(expectedBomCoordinates);
+    Truth.assertThat(bomFromFile.getCoordinates()).isEqualTo(expectedBomCoordinates);
     Truth.assertThat(artifactsFromFile)
         .comparingElementsUsing(
             transforming(
