@@ -30,10 +30,14 @@ import org.eclipse.aether.artifact.Artifact;
 public final class DependencyPath {
 
   private List<Artifact> path = new ArrayList<>();
+  private List<String> scopes = new ArrayList<>();
+  private List<Boolean> optionals = new ArrayList<>();
 
   @VisibleForTesting
-  public void add(Artifact artifact) {
+  public void add(Artifact artifact, String scope, Boolean optional) {
     path.add(artifact);
+    scopes.add(scope);
+    optionals.add(optional);
   }
   
   @Override

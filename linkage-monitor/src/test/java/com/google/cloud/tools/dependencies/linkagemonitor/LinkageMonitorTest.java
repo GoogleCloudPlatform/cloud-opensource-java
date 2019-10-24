@@ -194,8 +194,8 @@ public class LinkageMonitorTest {
             new ClassFile(jar, "com.abc.BBB"));
 
     DependencyPath dependencyPath = new DependencyPath();
-    dependencyPath.add(new DefaultArtifact("foo:bar:1.0.0"));
-    dependencyPath.add(new DefaultArtifact("aaa:ccc:1.2.3"));
+    dependencyPath.add(new DefaultArtifact("foo:bar:1.0.0"), "compile", false);
+    dependencyPath.add(new DefaultArtifact("aaa:ccc:1.2.3"), "compile", false);
     String message =
         LinkageMonitor.messageForNewErrors(
             snapshotProblems, baselineProblems, ImmutableListMultimap.of(jar, dependencyPath));
