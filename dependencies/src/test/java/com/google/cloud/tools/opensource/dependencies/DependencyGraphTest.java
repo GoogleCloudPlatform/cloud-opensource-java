@@ -45,12 +45,12 @@ public class DependencyGraphTest {
   
   @Before
   public void setUp() {
-    
-    // WARNING the way the path is built here does not necessarily meet 
+
+    // WARNING the way the path is built here does not necessarily meet
     // all the preconditions of a path built from a real artifact. In
-    // particular, there can be a path to a leaf without including all 
-    // the subpaths of that path. 
-    
+    // particular, there can be a path to a leaf without including all
+    // the subpaths of that path.
+
     path1.add(foo, "compile", false);
     path2.add(foo, "compile", false);
     path2.add(bar, "compile", false);
@@ -64,7 +64,7 @@ public class DependencyGraphTest {
     path5.add(baz1, "compile", false); // 2 paths to baz1
     path6.add(foo, "compile", false);
     path6.add(bat1, "compile", false);
-    
+
     graph.addPath(path1);
     graph.addPath(path2);
     graph.addPath(path3);

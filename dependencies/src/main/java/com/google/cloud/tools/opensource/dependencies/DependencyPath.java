@@ -19,12 +19,9 @@ package com.google.cloud.tools.opensource.dependencies;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Streams;
 import java.util.ArrayList;
 import java.util.List;
 
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
@@ -47,12 +44,13 @@ public final class DependencyPath {
   public String toString() {
 
     ImmutableList.Builder<String> elements = ImmutableList.builder();
-    for (int i=0; i< path.size(); ++i) {
+    for (int i = 0; i < path.size(); ++i) {
       Artifact artifact = path.get(i);
       String scope = scopes.get(i);
       boolean optional = optionals.get(i);
-      elements.add(String.format("%s (%s%s)", Artifacts.toCoordinates(artifact),
-          scope, optional ? ", optional" : ""));
+      elements.add(
+          String.format(
+              "%s (%s%s)", Artifacts.toCoordinates(artifact), scope, optional ? ", optional" : ""));
     }
     return Joiner.on(" / ").join(elements.build());
   }

@@ -273,13 +273,17 @@ public class DependencyGraphBuilder {
       DependencyNode dependencyNode = item.dependencyNode;
       DependencyPath forPath = new DependencyPath();
       Stack<DependencyNode> parentNodes = item.parentNodes;
-      parentNodes.forEach(parentNode -> forPath.add(parentNode.getArtifact(),
-          parentNode.getDependency().getScope(),
-          parentNode.getDependency().getOptional()));
+      parentNodes.forEach(
+          parentNode ->
+              forPath.add(
+                  parentNode.getArtifact(),
+                  parentNode.getDependency().getScope(),
+                  parentNode.getDependency().getOptional()));
       if (dependencyNode.getArtifact() != null) {
         // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
         // set to null
-        forPath.add(dependencyNode.getArtifact(),
+        forPath.add(
+            dependencyNode.getArtifact(),
             dependencyNode.getDependency().getScope(),
             dependencyNode.getDependency().getOptional());
         if (resolveFullDependency && parentNodes.contains(dependencyNode)) {

@@ -49,9 +49,10 @@ public class DependencyPathTest {
   @Test
   public void testToString() {
     DependencyPath path = new DependencyPath();
-    path.add(foo, "compile", false);
-    path.add(bar, "compile", false);
-    Assert.assertEquals("com.google:foo:1 / com.google:bar:1", path.toString());
+    path.add(foo, "test", false);
+    path.add(bar, "compile", true);
+    Assert.assertEquals(
+        "com.google:foo:1 (test) / com.google:bar:1 (compile, optional)", path.toString());
   }
   
   @Test
@@ -68,7 +69,7 @@ public class DependencyPathTest {
     path3.add(bar, "compile", false);
     path3.add(foo, "compile", false);
     path4.add(foo, "compile", false);
-    
+
     new EqualsTester()
         .addEqualityGroup(path1, path2)
         .addEqualityGroup(path3)
