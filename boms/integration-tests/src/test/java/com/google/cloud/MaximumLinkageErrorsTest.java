@@ -17,6 +17,8 @@
 
 package com.google.cloud;
 
+import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.newRepositorySystem;
+
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
@@ -40,7 +42,11 @@ public class MaximumLinkageErrorsTest {
   public void testMaximumLinkageErrors()
       throws IOException, MavenRepositoryException, RepositoryException {
 
-    Bom baseline = RepositoryUtility.readBom("com.google.cloud:libraries-bom:2.4.0");
+    String latestCoordinates =
+        RepositoryUtility.findLatestCoordinates(
+            newRepositorySystem(), "com.google.cloud", "libraries-bom");
+
+    Bom baseline = RepositoryUtility.readBom(latestCoordinates);
 
     Path bomFile = Paths.get("../cloud-oss-bom/pom.xml");
     Bom bom = RepositoryUtility.readBom(bomFile);
@@ -56,8 +62,9 @@ public class MaximumLinkageErrorsTest {
         Sets.difference(currentProblems.keySet(), oldProblems.keySet());
 
     // Check that no new linkage errors have been introduced since 1.2.0
+    StringBuilder message = new StringBuilder("Baseline: " + latestCoordinates);
     if (!newProblems.isEmpty()) {
-      StringBuilder message = new StringBuilder("Newly introduced problems:\n");
+      message.append("Newly introduced problems since :\n");
       for (SymbolProblem problem : newProblems) {
         message.append(problem + "\n");
       }
@@ -70,8 +77,7 @@ public class MaximumLinkageErrorsTest {
       ImmutableSet<ClassFile> currentReferences = currentProblems.get(problem);
       SetView<ClassFile> newReferences = Sets.difference(currentReferences, oldReferences);
       if (!newReferences.isEmpty()) {
-        StringBuilder message =
-            new StringBuilder("Newly introduced classes linking to " + problem + ":\n");
+        message.append("Newly introduced classes linking to " + problem + ":\n");
         for (ClassFile classFile : newReferences) {
           message.append("Link from " + classFile + "\n");
         }
