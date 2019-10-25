@@ -17,8 +17,6 @@
 
 package com.google.cloud;
 
-import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.newRepositorySystem;
-
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
@@ -88,7 +86,8 @@ public class MaximumLinkageErrorsTest {
 
   private String findLatestNonSnapshotVersion() throws MavenRepositoryException {
     ImmutableList<String> versions =
-        RepositoryUtility.findVersions(newRepositorySystem(), "com.google.cloud", "libraries-bom");
+        RepositoryUtility.findVersions(
+            RepositoryUtility.newRepositorySystem(), "com.google.cloud", "libraries-bom");
     ImmutableList<String> versionsLatestFirst = versions.reverse();
     Optional<String> highestNonsnapshotVersion =
         versionsLatestFirst.stream().filter(version -> !version.contains("SNAPSHOT")).findFirst();
