@@ -366,11 +366,14 @@ public final class RepositoryUtility {
 
   /**
    * Returns list of versions available for {@code groupId:artifactId} in {@code repositorySystem}.
+   * The returned list is in ascending order with regard to {@link
+   * org.eclipse.aether.util.version.GenericVersionScheme}.
    */
   public static ImmutableList<String> findVersions(
       RepositorySystem repositorySystem, String groupId, String artifactId)
       throws MavenRepositoryException {
     RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
+    // getVersions returns a list in ascending order
     return findVersionRange(repositorySystem, session, groupId, artifactId).getVersions().stream()
         .map(version -> version.toString())
         .collect(toImmutableList());

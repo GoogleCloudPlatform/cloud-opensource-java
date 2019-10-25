@@ -43,6 +43,7 @@ public class MaximumLinkageErrorsTest {
   @Test
   public void testMaximumLinkageErrors()
       throws IOException, MavenRepositoryException, RepositoryException {
+    // Not using RepositoryUtility.findLatestCoordinates, which may return a snapshot version
     String version = findLatestNonSnapshotVersion();
     String baselineCoordinates = "com.google.cloud:libraries-bom:" + version;
     Bom baseline = RepositoryUtility.readBom(baselineCoordinates);
