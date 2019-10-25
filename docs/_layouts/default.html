@@ -7,10 +7,7 @@
     {% seo %}
     <link rel="stylesheet" href="{{ "/assets/css/style.css" | relative_url }}">
     <link rel="shortcut icon" type="image/png" href="favicon.png">
-  </head>
-  <body>
-    {{ content }}
-    {% if site.google_analytics %}
+    {% if site.google_analytics and jekyll.environment == 'production'  %}
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -20,13 +17,19 @@
       ga('send', 'pageview');
     </script>
     {% endif %}
+  </head>
+  <body>
+    <div class="cloud-logo">
+      <img src="https://cloud.google.com/_static/84c8863210/images/cloud/cloud-logo.svg" 
+         alt="Google Cloud" width="139px" height="21.5px">
+    </div>
+    {{ content }}
 
   <hr>
 
   <footer>
     {% if site.google_analytics %}
-    <p>This site uses cookies from Google to deliver its services and to analyze traffic.</p>
-    <p><a href='https://policies.google.com/technologies/cookies'>Learn more</a></p>
+    <p>This site uses cookies from Google to deliver its services and to analyze traffic. <a href='https://policies.google.com/technologies/cookies'>Learn more</a></p>
     <p><a href='https://policies.google.com/privacy'>Privacy</a></p>
     {% endif %}
     <p>
