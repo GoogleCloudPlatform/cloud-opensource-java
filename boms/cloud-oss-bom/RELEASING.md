@@ -16,6 +16,17 @@ Create a PR for the release, and get it approved.
 Rapid project is [cloud-java-tools-cloud-opensource-java-bom-kokoro-release](
 http://rapid/cloud-java-tools-cloud-opensource-java-bom-kokoro-release).
 
+## Update the docs
+
+Several docs in this and other repositories need to be updated once the 
+new release is available on Maven Central. Send pull requests to up[date these
+documents:
+
+* https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM
+* https://github.com/googleapis/google-http-java-client/blob/master/docs/setup.md
+* https://developers.google.com/api-client-library/java/google-http-java-client/setup
+* https://github.com/googleapis/google-cloud-java/blob/master/TROUBLESHOOTING.md
+
 ## Deleting a release
 
 Occasionally you may need to clean up after an aborted release, typically because the release script had
