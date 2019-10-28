@@ -16,7 +16,11 @@
 
 package com.google.cloud.tools.dependencies.linkagemonitor;
 
+import static com.google.cloud.tools.opensource.dependencies.Artifacts.toCoordinates;
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.CENTRAL;
+import static com.google.common.collect.Iterables.skip;
+import static com.google.common.truth.Correspondence.transforming;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -31,12 +35,16 @@ import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.cloud.tools.opensource.classpath.ErrorType;
 import com.google.cloud.tools.opensource.classpath.MethodSymbol;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
@@ -144,29 +152,20 @@ public class LinkageMonitorTest {
     Bom bom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:1.2.0");
     Bom snapshotBom = LinkageMonitor.copyWithSnapshot(spySystem, bom);
 
-    assertEquals(
-        "The first element of the SNAPSHOT BOM should be the same as the original BOM",
-        "protobuf-java",
-        snapshotBom.getManagedDependencies().get(0).getArtifactId());
-    assertEquals(
-        "The protobuf-java artifact should have SNAPSHOT version",
-        "3.8.0-SNAPSHOT",
-        snapshotBom.getManagedDependencies().get(0).getVersion());
+    assertWithMessage(
+            "The first element of the SNAPSHOT BOM should be the same as the original BOM")
+        .that(toCoordinates(snapshotBom.getManagedDependencies().get(0)))
+        .isEqualTo("com.google.protobuf:protobuf-java:3.8.0-SNAPSHOT");
 
-    int bomSize = bom.getManagedDependencies().size();
-    assertEquals(
-        "Snapshot BOM should have the same length as original BOM.",
-        bomSize,
-        snapshotBom.getManagedDependencies().size());
-    for (int i = 1; i < bomSize; ++i) {
-      Artifact expected = bom.getManagedDependencies().get(i);
-      Artifact actual = snapshotBom.getManagedDependencies().get(i);
-assertEquals(
-          "Artifacts other than protobuf-java should have the original version: "
-		  + expected + " != " + actual,
-          expected.getVersion(),
-          actual.getVersion());
-    }
+    assertWithMessage("Artifacts other than protobuf-java should have the original version")
+        .that(skip(snapshotBom.getManagedDependencies(), 1))
+        .comparingElementsUsing(
+            transforming(
+                Artifacts::toCoordinates,
+                Artifacts::toCoordinates,
+                "has the same Maven coordinates as"))
+        .containsExactlyElementsIn(skip(bom.getManagedDependencies(), 1))
+        .inOrder();
   }
 
   private final SymbolProblem classNotFoundProblem =
@@ -174,7 +173,7 @@ assertEquals(
   private final SymbolProblem methodNotFoundProblem =
       new SymbolProblem(
           new MethodSymbol(
-              "io.grpc.protobuf.ProtoUtils.marshaller",
+              "io.grpc.protobuf.ProtoUtils",
               "marshaller",
               "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
               false),
@@ -184,22 +183,29 @@ assertEquals(
   @Test
   public void generateMessageForNewError() {
     Set<SymbolProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
+    Path jar = Paths.get("aaa", "ccc-1.2.3.jar");
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotProblems =
         ImmutableSetMultimap.of(
             classNotFoundProblem, // This is in baseline. It should not be printed
-            new ClassFile(Paths.get("aaa", "bbb-1.2.3.jar"), "com.abc.AAA"),
+            new ClassFile(jar, "com.abc.AAA"),
             methodNotFoundProblem,
-            new ClassFile(Paths.get("aaa", "bbb-1.2.3.jar"), "com.abc.AAA"),
+            new ClassFile(jar, "com.abc.AAA"),
             methodNotFoundProblem,
-            new ClassFile(Paths.get("aaa", "bbb-1.2.3.jar"), "com.abc.BBB"));
+            new ClassFile(jar, "com.abc.BBB"));
 
-    String message = LinkageMonitor.messageForNewErrors(snapshotProblems, baselineProblems);
+    DependencyPath dependencyPath = new DependencyPath();
+    dependencyPath.add(new DefaultArtifact("foo:bar:1.0.0"));
+    dependencyPath.add(new DefaultArtifact("aaa:ccc:1.2.3"));
+    String message =
+        LinkageMonitor.messageForNewErrors(
+            snapshotProblems, baselineProblems, ImmutableListMultimap.of(jar, dependencyPath));
     assertEquals(
         "Newly introduced problem:\n"
-            + "(bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils.marshaller's method"
+            + "(bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils's method"
             + " marshaller(com.google.protobuf.Message arg1) is not found\n"
-            + "  referenced from com.abc.AAA (bbb-1.2.3.jar)\n"
-            + "  referenced from com.abc.BBB (bbb-1.2.3.jar)\n",
+            + "  referenced from com.abc.AAA (ccc-1.2.3.jar)\n"
+            + "  referenced from com.abc.BBB (ccc-1.2.3.jar)\n"
+            + "ccc-1.2.3.jar is at:\n  foo:bar:1.0.0 / aaa:ccc:1.2.3\n",
         message);
   }
 
@@ -211,7 +217,7 @@ assertEquals(
     assertEquals(
         "The following problems in the baseline no longer appear in the snapshot:\n"
             + "  Class java.lang.Integer is not found\n"
-            + "  (bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils.marshaller's method "
+            + "  (bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils's method "
             + "marshaller(com.google.protobuf.Message arg1) is not found\n",
         message);
   }
