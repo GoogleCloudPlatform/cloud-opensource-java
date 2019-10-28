@@ -23,6 +23,7 @@ import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
@@ -30,6 +31,7 @@ import com.google.common.collect.Sets.SetView;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.eclipse.aether.RepositoryException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -39,8 +41,10 @@ public class MaximumLinkageErrorsTest {
   @Test
   public void testMaximumLinkageErrors()
       throws IOException, MavenRepositoryException, RepositoryException {
-
-    Bom baseline = RepositoryUtility.readBom("com.google.cloud:libraries-bom:2.7.0");
+    // Not using RepositoryUtility.findLatestCoordinates, which may return a snapshot version
+    String version = findLatestNonSnapshotVersion();
+    String baselineCoordinates = "com.google.cloud:libraries-bom:" + version;
+    Bom baseline = RepositoryUtility.readBom(baselineCoordinates);
 
     Path bomFile = Paths.get("../cloud-oss-bom/pom.xml");
     Bom bom = RepositoryUtility.readBom(bomFile);
@@ -55,9 +59,10 @@ public class MaximumLinkageErrorsTest {
     SetView<SymbolProblem> newProblems =
         Sets.difference(currentProblems.keySet(), oldProblems.keySet());
 
-    // Check that no new linkage errors have been introduced since 1.2.0
+    // Check that no new linkage errors have been introduced since the baseline
+    StringBuilder message = new StringBuilder("Baseline BOM: " + baselineCoordinates + "\n");
     if (!newProblems.isEmpty()) {
-      StringBuilder message = new StringBuilder("Newly introduced problems:\n");
+      message.append("Newly introduced problems:\n");
       for (SymbolProblem problem : newProblems) {
         message.append(problem + "\n");
       }
@@ -70,13 +75,25 @@ public class MaximumLinkageErrorsTest {
       ImmutableSet<ClassFile> currentReferences = currentProblems.get(problem);
       SetView<ClassFile> newReferences = Sets.difference(currentReferences, oldReferences);
       if (!newReferences.isEmpty()) {
-        StringBuilder message =
-            new StringBuilder("Newly introduced classes linking to " + problem + ":\n");
+        message.append("Newly introduced classes linking to " + problem + ":\n");
         for (ClassFile classFile : newReferences) {
           message.append("Link from " + classFile + "\n");
         }
         Assert.fail(message.toString());
       }
     }
+  }
+
+  private String findLatestNonSnapshotVersion() throws MavenRepositoryException {
+    ImmutableList<String> versions =
+        RepositoryUtility.findVersions(
+            RepositoryUtility.newRepositorySystem(), "com.google.cloud", "libraries-bom");
+    ImmutableList<String> versionsLatestFirst = versions.reverse();
+    Optional<String> highestNonsnapshotVersion =
+        versionsLatestFirst.stream().filter(version -> !version.contains("SNAPSHOT")).findFirst();
+    if (!highestNonsnapshotVersion.isPresent()) {
+      Assert.fail("Could not find non-snapshot version of the BOM");
+    }
+    return highestNonsnapshotVersion.get();
   }
 }
