@@ -15,7 +15,8 @@ Indeed `javac` does not transmit its own dependencies into the products
 it builds, but not all tools are this well behaved. Maven annotation processors
 such as AutoValue and Animal Sniffer are sometimes declared to be dependencies
 of the product itself in the pom.xml. Since they are only needed at
-compile time, they should instead be added to the annotation processor classpath.
+compile time, they should instead be added to the [annotation processor 
+path](https://maven.apache.org/plugins/maven-compiler-plugin/compile-mojo.html#annotationProcessorPaths ).
 
 When running code from Maven, prefer `mvn exec:exec` to `mvn exec:java`.
 `mvn exec:exec` uses a completely separate process to run the user's
