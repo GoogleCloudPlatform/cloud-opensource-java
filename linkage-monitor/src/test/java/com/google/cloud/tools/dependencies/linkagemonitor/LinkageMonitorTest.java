@@ -194,8 +194,8 @@ public class LinkageMonitorTest {
             new ClassFile(jar, "com.abc.BBB"));
 
     DependencyPath dependencyPath = new DependencyPath();
-    dependencyPath.add(new DefaultArtifact("foo:bar:1.0.0"));
-    dependencyPath.add(new DefaultArtifact("aaa:ccc:1.2.3"));
+    dependencyPath.add(new DefaultArtifact("foo:bar:1.0.0"), "provided", false);
+    dependencyPath.add(new DefaultArtifact("aaa:ccc:1.2.3"), "compile", true);
     String message =
         LinkageMonitor.messageForNewErrors(
             snapshotProblems, baselineProblems, ImmutableListMultimap.of(jar, dependencyPath));
@@ -205,7 +205,8 @@ public class LinkageMonitorTest {
             + " marshaller(com.google.protobuf.Message arg1) is not found\n"
             + "  referenced from com.abc.AAA (ccc-1.2.3.jar)\n"
             + "  referenced from com.abc.BBB (ccc-1.2.3.jar)\n"
-            + "ccc-1.2.3.jar is at:\n  foo:bar:1.0.0 / aaa:ccc:1.2.3\n",
+            + "ccc-1.2.3.jar is at:\n"
+            + "  foo:bar:1.0.0 (provided) / aaa:ccc:1.2.3 (compile, optional)\n",
         message);
   }
 
