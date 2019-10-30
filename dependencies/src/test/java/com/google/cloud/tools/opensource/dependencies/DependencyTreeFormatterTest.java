@@ -31,26 +31,26 @@ public class DependencyTreeFormatterTest {
     // 4 artifacts as DependencyPath dummy inputs
 
     DependencyPath dependency2 = new DependencyPath();
-    dependency2.add(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"));
-    dependency2.add(new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"));
+    dependency2.add(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", false);
+    dependency2.add(new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"), "compile", false);
     dependencyPathList.add(dependency2);
 
     // dependency1 and dependency2 are intentionally added in wrong order
     // formatDependencyPaths is responsible to sort the items in the tree
     DependencyPath dependency1 = new DependencyPath();
-    dependency1.add(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"));
+    dependency1.add(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", false);
     dependencyPathList.add(dependency1);
 
     DependencyPath dependency3 = new DependencyPath();
-    dependency3.add(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"));
-    dependency3.add(new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"));
-    dependency3.add(new DefaultArtifact("io.grpc:grpc-context:jar:1.15.0"));
+    dependency3.add(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", false);
+    dependency3.add(new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"), "compile", false);
+    dependency3.add(new DefaultArtifact("io.grpc:grpc-context:jar:1.15.0"), "compile", false);
     dependencyPathList.add(dependency3);
 
     DependencyPath dependency4 = new DependencyPath();
-    dependency4.add(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"));
-    dependency4.add(new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"));
-    dependency4.add(new DefaultArtifact("com.google.code.gson:gson:jar:2.7"));
+    dependency4.add(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", false);
+    dependency4.add(new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"), "compile", false);
+    dependency4.add(new DefaultArtifact("com.google.code.gson:gson:jar:2.7"), "compile", false);
     dependencyPathList.add(dependency4);
 
     String actualTreeOutput = DependencyTreeFormatter.formatDependencyPaths(dependencyPathList);
