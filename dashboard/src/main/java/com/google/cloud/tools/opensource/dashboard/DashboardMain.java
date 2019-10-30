@@ -622,7 +622,9 @@ public class DashboardMain {
   }
 
   private static ImmutableList<String> versionlessCoordinates(DependencyPath dependencyPath) {
-    return dependencyPath.getPath().stream().map(Artifacts::makeKey).collect(toImmutableList());
+    return dependencyPath.getArtifacts().stream()
+        .map(Artifacts::makeKey)
+        .collect(toImmutableList());
   }
 
   private static String summaryMessage(
