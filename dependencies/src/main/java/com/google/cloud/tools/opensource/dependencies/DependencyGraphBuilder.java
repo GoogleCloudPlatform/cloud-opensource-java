@@ -271,13 +271,21 @@ public class DependencyGraphBuilder {
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
       DependencyNode dependencyNode = item.dependencyNode;
-      DependencyPath forPath = new DependencyPath();
+      DependencyPath path = new DependencyPath();
       Stack<DependencyNode> parentNodes = item.parentNodes;
-      parentNodes.forEach(parentNode -> forPath.add(parentNode.getArtifact()));
+      parentNodes.forEach(
+          parentNode ->
+              path.add(
+                  parentNode.getArtifact(),
+                  parentNode.getDependency().getScope(),
+                  parentNode.getDependency().getOptional()));
       if (dependencyNode.getArtifact() != null) {
         // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
         // set to null
-        forPath.add(dependencyNode.getArtifact());
+        path.add(
+            dependencyNode.getArtifact(),
+            dependencyNode.getDependency().getScope(),
+            dependencyNode.getDependency().getOptional());
         if (resolveFullDependency && parentNodes.contains(dependencyNode)) {
           logger.severe(
               "Infinite recursion resolving "
@@ -287,7 +295,7 @@ public class DependencyGraphBuilder {
           continue;
         }
         parentNodes.push(dependencyNode);
-        graph.addPath(forPath);
+        graph.addPath(path);
 
         if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
           Artifact dependencyNodeArtifact = dependencyNode.getArtifact();
