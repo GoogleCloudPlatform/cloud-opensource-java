@@ -31,17 +31,17 @@ public class DependencyPathTest {
   public void testSize() {
     DependencyPath path = new DependencyPath();
     Assert.assertEquals(0, path.size());
-    path.add(foo);
+    path.add(foo, "compile", false);
     Assert.assertEquals(1, path.size());
-    path.add(bar);
+    path.add(bar, "compile", false);
     Assert.assertEquals(2, path.size());
   }
   
   @Test
   public void testGetNode() {
     DependencyPath path = new DependencyPath();
-    path.add(foo);
-    path.add(bar);
+    path.add(foo, "compile", false);
+    path.add(bar, "compile", false);
     Assert.assertEquals(foo, path.get(0));
     Assert.assertEquals(bar, path.get(1));
   }
@@ -49,9 +49,10 @@ public class DependencyPathTest {
   @Test
   public void testToString() {
     DependencyPath path = new DependencyPath();
-    path.add(foo);
-    path.add(bar);
-    Assert.assertEquals("com.google:foo:1 / com.google:bar:1", path.toString());
+    path.add(foo, "test", false);
+    path.add(bar, "compile", true);
+    Assert.assertEquals(
+        "com.google:foo:1 (test) / com.google:bar:1 (compile, optional)", path.toString());
   }
   
   @Test
@@ -61,14 +62,14 @@ public class DependencyPathTest {
     DependencyPath path3 = new DependencyPath();
     DependencyPath path4 = new DependencyPath();
 
-    path1.add(foo);
-    path1.add(bar);
-    path2.add(foo);
-    path2.add(bar);
-    path3.add(bar);
-    path3.add(foo);
-    path4.add(foo);
-    
+    path1.add(foo, "compile", false);
+    path1.add(bar, "compile", false);
+    path2.add(foo, "compile", false);
+    path2.add(bar, "compile", false);
+    path3.add(bar, "compile", false);
+    path3.add(foo, "compile", false);
+    path4.add(foo, "compile", false);
+
     new EqualsTester()
         .addEqualityGroup(path1, path2)
         .addEqualityGroup(path3)
