@@ -121,4 +121,4 @@ was not as aggressively maintained. The jre/lib/ext directory in particular
 has been a common source of hard to debug dependency issues where a different
 version of a library was loaded instead of the one the user expected. If you are
 creating a product that runs user supplied code, implement
-completely separate classpaths for the user code and the runtime code.
+completely separate classpaths for user code and your product's code.
