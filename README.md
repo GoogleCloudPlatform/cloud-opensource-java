@@ -18,18 +18,16 @@ are rules that minimize problems for consumers of interconnected Java libraries.
 
 # Linkage Checker Enforcer Rule
 
-[Linkage Checker Enforcer Rule](./enforcer-rules)  is a Maven enforcer rule that
+[Linkage Checker Enforcer Rule](./enforcer-rules) is a Maven enforcer rule that
 detects [linkage errors](
 ./library-best-practices/glossary.md#types-of-conflicts-and-compatibility) in
 the current project.
 
 # Google Libraries BOM
 
-[Google Libraries BOM](boms/cloud-oss-bom) is a Bill-of-Materials (BOM) that
+[Google Libraries BOM](https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM) is a Bill-of-Materials (BOM) that
 provides consistent versions of Google Cloud Java libraries that work together
 without linkage errors.
-To understand how BOMs help library users avoid dependency conflicts, read
-[Declaring Dependencies on Google Java Libraries](DECLARING_DEPENDENCIES.md)
 
 # Development
 

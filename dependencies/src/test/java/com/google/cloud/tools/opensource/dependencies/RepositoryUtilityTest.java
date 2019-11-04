@@ -16,13 +16,15 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static com.google.common.truth.Correspondence.transforming;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.io.File;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -35,7 +37,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class RepositoryUtilityTest {
-
+ 
   @Test
   public void testFindLocalRepository() {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
@@ -58,25 +60,24 @@ public class RepositoryUtilityTest {
   }
 
   @Test
-  public void testReadBom_path() throws MavenRepositoryException, ArtifactDescriptorException {
-    Path pomFile = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml");
-    
-    Bom currentBom = RepositoryUtility.readBom(pomFile);
-    Bom oldBom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:2.6.0");
-    ImmutableList<Artifact> currentArtifacts = currentBom.getManagedDependencies();
-    ImmutableList<Artifact> oldArtifacts = oldBom.getManagedDependencies();
-    
-    String coordinates = currentBom.getCoordinates();
-    Truth.assertThat(coordinates).startsWith("com.google.cloud:libraries-bom:");
-    Truth.assertThat(coordinates).endsWith("-SNAPSHOT");
-    
-    // This is a characterization test to verify that the managed dependencies haven't changed.
-    // However sometimes this list does change. If so, we want to 
-    // output the specific difference so we can manually verify whether
-    // the changes make sense. When they do make sense, we update the test. 
-    if (currentArtifacts.size() != 217) {
-      Truth.assertThat(currentArtifacts).containsExactlyElementsIn(oldArtifacts);
-    }
+  public void testReadBom_path()
+      throws MavenRepositoryException, ArtifactDescriptorException, URISyntaxException {
+    Path pomFile = absolutePathOfResource("libraries-bom-2.7.0.pom");
+    Bom bomFromFile = RepositoryUtility.readBom(pomFile);
+    ImmutableList<Artifact> artifactsFromFile = bomFromFile.getManagedDependencies();
+
+    // Compare the result with readBom(String coordinates)
+    String expectedBomCoordinates = "com.google.cloud:libraries-bom:2.7.0";
+    Bom expectedBom = RepositoryUtility.readBom(expectedBomCoordinates);
+    ImmutableList<Artifact> expectedArtifacts = expectedBom.getManagedDependencies();
+
+    Truth.assertThat(bomFromFile.getCoordinates()).isEqualTo(expectedBomCoordinates);
+    Truth.assertThat(artifactsFromFile)
+        .comparingElementsUsing(
+            transforming(
+                Artifacts::toCoordinates, Artifacts::toCoordinates, "has Maven coordinates"))
+        .containsExactlyElementsIn(expectedArtifacts)
+        .inOrder();
   }
 
   @Test
