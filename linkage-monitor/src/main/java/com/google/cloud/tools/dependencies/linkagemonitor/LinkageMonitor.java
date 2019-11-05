@@ -96,7 +96,8 @@ public class LinkageMonitor {
     Bom baseline = RepositoryUtility.readBom(latestBomCoordinates);
     ImmutableSet<SymbolProblem> problemsInBaseline =
         LinkageChecker.create(baseline).findSymbolProblems().keySet();
-    Bom snapshot = copyWithSnapshot(repositorySystem, baseline);
+    RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
+    Bom snapshot = copyWithSnapshot(repositorySystem, session, baseline);
 
     // Comparing coordinates because DefaultArtifact does not override equals
     ImmutableList<String> baselineCoordinates = coordinatesList(baseline.getManagedDependencies());
@@ -267,10 +268,10 @@ public class LinkageMonitor {
    * snapshot versions.
    */
   @VisibleForTesting
-  static Bom copyWithSnapshot(RepositorySystem repositorySystem, Bom bom)
+  static Bom copyWithSnapshot(
+      RepositorySystem repositorySystem, RepositorySystemSession session, Bom bom)
       throws MavenRepositoryException, ModelBuildingException, ArtifactResolutionException {
     ImmutableList.Builder<Artifact> managedDependencies = ImmutableList.builder();
-    RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
 
     Model model = buildModelWithSnapshotBom(repositorySystem, session, bom.getCoordinates());
 
