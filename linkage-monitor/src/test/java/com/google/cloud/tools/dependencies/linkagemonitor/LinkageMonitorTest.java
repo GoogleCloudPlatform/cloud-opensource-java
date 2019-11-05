@@ -172,7 +172,6 @@ public class LinkageMonitorTest {
             argThat(request -> "protobuf-java".equals(request.getArtifact().getArtifactId())));
 
     Bom bom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:1.2.0");
-
     Bom snapshotBom = LinkageMonitor.copyWithSnapshot(spySystem, session, bom);
 
     assertWithMessage(
