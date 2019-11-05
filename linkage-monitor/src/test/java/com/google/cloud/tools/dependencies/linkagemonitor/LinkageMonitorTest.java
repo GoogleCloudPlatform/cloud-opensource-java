@@ -152,7 +152,7 @@ public class LinkageMonitorTest {
             versionScheme.parseVersion("3.7.0"),
             versionScheme.parseVersion("3.8.0-SNAPSHOT")));
 
-    // invocation for protobuf-java
+    // invocation for protobuf-java to return 3.8.0-SNAPSHOT
     doReturn(protobufSnapshotVersionResult)
         .when(spySystem)
         .resolveVersionRange(
