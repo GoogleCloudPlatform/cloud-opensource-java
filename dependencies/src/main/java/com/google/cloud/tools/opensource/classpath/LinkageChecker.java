@@ -191,7 +191,7 @@ public class LinkageChecker {
     // Mockito's MockMethodDispatcher uses special class loader to load MockMethodDispatcher.raw
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/407
     if (problematicClassName.equals("org.mockito.internal.creation.bytebuddy.MockMethodDispatcher")
-        && (sourceClassName.startsWith("org.mockito.internal.creation.bytebuddy"))) {
+        && sourceClassName.startsWith("org.mockito.internal.creation.bytebuddy")) {
       return false;
     }
 
