@@ -16,7 +16,11 @@
 
 package com.google.cloud.tools.dependencies.linkagemonitor;
 
+import static com.google.cloud.tools.opensource.dependencies.Artifacts.toCoordinates;
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.CENTRAL;
+import static com.google.common.collect.Iterables.skip;
+import static com.google.common.truth.Correspondence.transforming;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -25,28 +29,38 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
-
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.cloud.tools.opensource.classpath.ErrorType;
 import com.google.cloud.tools.opensource.classpath.MethodSymbol;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.building.ModelBuildingException;
+import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
@@ -56,24 +70,38 @@ import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public class LinkageMonitorTest {
   private RepositorySystem system;
   private RepositorySystem spySystem;
-  private RepositorySystemSession session;
+  private Path localEmptyRepositoryPath;
+  private DefaultRepositorySystemSession session;
   private GenericVersionScheme versionScheme = new GenericVersionScheme();
 
   @Before
-  public void setup() {
+  public void setup() throws IOException {
     system = RepositoryUtility.newRepositorySystem();
 
     // If possible, spy object should be avoided. But Maven is tightly coupled with RepositorySystem
     // and thus normal mock objects on RepositorySystem would make the test even complicated.
     // https://static.javadoc.io/org.mockito/mockito-core/3.0.0/org/mockito/Mockito.html#spy-T-
     spySystem = spy(system);
-    session = RepositoryUtility.newSession(system);
+
+    // This session uses an empty directory as Maven local repository so that the test result
+    // is not affected by other Maven artifacts installed locally.
+    session = MavenRepositorySystemUtils.newSession();
+    localEmptyRepositoryPath = Files.createTempDirectory("LinkageMonitorTest").toAbsolutePath();
+    LocalRepository localRepository = new LocalRepository(localEmptyRepositoryPath.toString());
+    session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
+    session.setReadOnly();
+  }
+
+  @After
+  public void cleanup() throws IOException {
+    MoreFiles.deleteRecursively(localEmptyRepositoryPath, RecursiveDeleteOption.ALLOW_INSECURE);
   }
 
   private ArtifactResult resolveArtifact(String coordinates) throws ArtifactResolutionException {
@@ -89,6 +117,7 @@ public class LinkageMonitorTest {
     Bom snapshotBom =
         LinkageMonitor.copyWithSnapshot(
             system,
+            session,
             new Bom(
                 "com.google.guava:guava-bom:27.1-android",
                 ImmutableList.of(new DefaultArtifact("com.google.guava:guava:27.1-android"))));
@@ -102,6 +131,7 @@ public class LinkageMonitorTest {
     Bom snapshotBom =
         LinkageMonitor.copyWithSnapshot(
             system,
+            session,
             new Bom(
                 "com.google.cloud:libraries-bom:pom:2.2.1",
                 ImmutableList.of(new DefaultArtifact("com.google.guava:guava:27.1-android"))));
@@ -112,7 +142,7 @@ public class LinkageMonitorTest {
   public void testBomSnapshot()
       throws VersionRangeResolutionException, MavenRepositoryException,
           InvalidVersionSpecificationException, ModelBuildingException, ArtifactResolutionException,
-          ArtifactDescriptorException {
+          ArtifactDescriptorException, IOException {
     VersionRangeResult protobufSnapshotVersionResult =
         new VersionRangeResult(new VersionRangeRequest());
 
@@ -122,7 +152,7 @@ public class LinkageMonitorTest {
             versionScheme.parseVersion("3.7.0"),
             versionScheme.parseVersion("3.8.0-SNAPSHOT")));
 
-    // invocation for protobuf-java
+    // invocation for protobuf-java to return 3.8.0-SNAPSHOT
     doReturn(protobufSnapshotVersionResult)
         .when(spySystem)
         .resolveVersionRange(
@@ -142,31 +172,22 @@ public class LinkageMonitorTest {
             argThat(request -> "protobuf-java".equals(request.getArtifact().getArtifactId())));
 
     Bom bom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:1.2.0");
-    Bom snapshotBom = LinkageMonitor.copyWithSnapshot(spySystem, bom);
+    Bom snapshotBom = LinkageMonitor.copyWithSnapshot(spySystem, session, bom);
 
-    assertEquals(
-        "The first element of the SNAPSHOT BOM should be the same as the original BOM",
-        "protobuf-java",
-        snapshotBom.getManagedDependencies().get(0).getArtifactId());
-    assertEquals(
-        "The protobuf-java artifact should have SNAPSHOT version",
-        "3.8.0-SNAPSHOT",
-        snapshotBom.getManagedDependencies().get(0).getVersion());
+    assertWithMessage(
+            "The first element of the SNAPSHOT BOM should be the same as the original BOM")
+        .that(toCoordinates(snapshotBom.getManagedDependencies().get(0)))
+        .isEqualTo("com.google.protobuf:protobuf-java:3.8.0-SNAPSHOT");
 
-    int bomSize = bom.getManagedDependencies().size();
-    assertEquals(
-        "Snapshot BOM should have the same length as original BOM.",
-        bomSize,
-        snapshotBom.getManagedDependencies().size());
-    for (int i = 1; i < bomSize; ++i) {
-      Artifact expected = bom.getManagedDependencies().get(i);
-      Artifact actual = snapshotBom.getManagedDependencies().get(i);
-assertEquals(
-          "Artifacts other than protobuf-java should have the original version: "
-		  + expected + " != " + actual,
-          expected.getVersion(),
-          actual.getVersion());
-    }
+    assertWithMessage("Artifacts other than protobuf-java should have the original version")
+        .that(skip(snapshotBom.getManagedDependencies(), 1))
+        .comparingElementsUsing(
+            transforming(
+                Artifacts::toCoordinates,
+                Artifacts::toCoordinates,
+                "has the same Maven coordinates as"))
+        .containsExactlyElementsIn(skip(bom.getManagedDependencies(), 1))
+        .inOrder();
   }
 
   private final SymbolProblem classNotFoundProblem =
@@ -174,7 +195,7 @@ assertEquals(
   private final SymbolProblem methodNotFoundProblem =
       new SymbolProblem(
           new MethodSymbol(
-              "io.grpc.protobuf.ProtoUtils.marshaller",
+              "io.grpc.protobuf.ProtoUtils",
               "marshaller",
               "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
               false),
@@ -184,22 +205,30 @@ assertEquals(
   @Test
   public void generateMessageForNewError() {
     Set<SymbolProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
+    Path jar = Paths.get("aaa", "ccc-1.2.3.jar");
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotProblems =
         ImmutableSetMultimap.of(
             classNotFoundProblem, // This is in baseline. It should not be printed
-            new ClassFile(Paths.get("aaa", "bbb-1.2.3.jar"), "com.abc.AAA"),
+            new ClassFile(jar, "com.abc.AAA"),
             methodNotFoundProblem,
-            new ClassFile(Paths.get("aaa", "bbb-1.2.3.jar"), "com.abc.AAA"),
+            new ClassFile(jar, "com.abc.AAA"),
             methodNotFoundProblem,
-            new ClassFile(Paths.get("aaa", "bbb-1.2.3.jar"), "com.abc.BBB"));
+            new ClassFile(jar, "com.abc.BBB"));
 
-    String message = LinkageMonitor.messageForNewErrors(snapshotProblems, baselineProblems);
+    DependencyPath dependencyPath = new DependencyPath();
+    dependencyPath.add(new DefaultArtifact("foo:bar:1.0.0"), "provided", false);
+    dependencyPath.add(new DefaultArtifact("aaa:ccc:1.2.3"), "compile", true);
+    String message =
+        LinkageMonitor.messageForNewErrors(
+            snapshotProblems, baselineProblems, ImmutableListMultimap.of(jar, dependencyPath));
     assertEquals(
         "Newly introduced problem:\n"
-            + "(bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils.marshaller's method"
+            + "(bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils's method"
             + " marshaller(com.google.protobuf.Message arg1) is not found\n"
-            + "  referenced from com.abc.AAA (bbb-1.2.3.jar)\n"
-            + "  referenced from com.abc.BBB (bbb-1.2.3.jar)\n",
+            + "  referenced from com.abc.AAA (ccc-1.2.3.jar)\n"
+            + "  referenced from com.abc.BBB (ccc-1.2.3.jar)\n"
+            + "ccc-1.2.3.jar is at:\n"
+            + "  foo:bar:1.0.0 (provided) / aaa:ccc:1.2.3 (compile, optional)\n",
         message);
   }
 
@@ -211,7 +240,7 @@ assertEquals(
     assertEquals(
         "The following problems in the baseline no longer appear in the snapshot:\n"
             + "  Class java.lang.Integer is not found\n"
-            + "  (bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils.marshaller's method "
+            + "  (bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils's method "
             + "marshaller(com.google.protobuf.Message arg1) is not found\n",
         message);
   }
