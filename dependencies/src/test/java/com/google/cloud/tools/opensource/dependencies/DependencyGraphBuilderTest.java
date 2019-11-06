@@ -18,10 +18,12 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
+import com.google.common.truth.Truth8;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -126,13 +128,19 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testGetStaticLinkageCheckDependencyGraph_Bom() throws RepositoryException {
+  public void testGetStaticLinkageCheckDependencyGraph_ManagedDependency() throws RepositoryException {
     Artifact artifact = new DefaultArtifact("io.grpc:grpc-core:1.24.0");
     DependencyGraph graph = DependencyGraphBuilder
         .getStaticLinkageCheckDependencyGraph(ImmutableList.of(artifact));
     List<DependencyPath> list = graph.list();
     System.out.println(list);
 
+    Optional<Artifact> guava = list.stream()
+        .map(DependencyPath::getLeaf)
+        .filter(item -> Artifacts.makeKey(item).startsWith("com.google.guava:guava"))
+        .findFirst();
+    Truth8.assertThat(guava).isPresent();
+    Truth.assertThat(guava.get().getVersion()).isEqualTo("28.1-android");
   }
 
 }

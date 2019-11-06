@@ -35,6 +35,7 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
@@ -151,6 +152,11 @@ public class DependencyGraphBuilder {
       collectRequest.setDependencies(dependencyList);
     }
     RepositoryUtility.addRepositoriesToRequest(collectRequest);
+
+    List<Dependency> managedDependencies = ImmutableList
+        .of(new Dependency(new DefaultArtifact("com.google.guava:guava:28.1-android"), "compile"));
+    collectRequest.setManagedDependencies(managedDependencies);
+
     CollectResult collectResult = system.collectDependencies(session, collectRequest);
     DependencyNode node = collectResult.getRoot();
 
