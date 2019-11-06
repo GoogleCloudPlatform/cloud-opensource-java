@@ -105,6 +105,11 @@
         <artifactId>maven-resolver-connector-basic</artifactId>
         <version>${resolver.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.maven.resolver</groupId>
+        <artifactId>maven-resolver-util</artifactId>
+        <version>${resolver.version}</version>
+      </dependency>
 
       <dependency>
         <groupId>junit</groupId>

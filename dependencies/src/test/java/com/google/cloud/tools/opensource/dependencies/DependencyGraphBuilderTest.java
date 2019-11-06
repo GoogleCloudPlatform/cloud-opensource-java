@@ -124,4 +124,15 @@ public class DependencyGraphBuilderTest {
     List<Artifact> artifacts = DependencyGraphBuilder.getDirectDependencies(nettyArtifact);
     Truth.assertThat(artifacts).isNotEmpty();
   }
+
+  @Test
+  public void testGetStaticLinkageCheckDependencyGraph_Bom() throws RepositoryException {
+    Artifact artifact = new DefaultArtifact("io.grpc:grpc-core:1.24.0");
+    DependencyGraph graph = DependencyGraphBuilder
+        .getStaticLinkageCheckDependencyGraph(ImmutableList.of(artifact));
+    List<DependencyPath> list = graph.list();
+    System.out.println(list);
+
+  }
+
 }
