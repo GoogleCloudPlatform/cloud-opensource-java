@@ -77,7 +77,8 @@ public class LinkageMonitor {
   // Finding latest version requires metadata from remote repository
   private final RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
   private final RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
-  private final ImmutableMap<String, String> localArtifacts;
+  private final ImmutableMap<String, String> localArtifacts =
+      findLocalArtifacts(repositorySystem, session, Paths.get(".").toAbsolutePath());
 
   public static void main(String[] arguments)
       throws RepositoryException, IOException, LinkageMonitorException, MavenRepositoryException,
@@ -92,10 +93,6 @@ public class LinkageMonitor {
     List<String> coordinatesElements = Splitter.on(':').splitToList(bomCoordinates);
 
     new LinkageMonitor().run(coordinatesElements.get(0), coordinatesElements.get(1));
-  }
-
-  private LinkageMonitor() throws ModelBuildingException, LinkageMonitorException {
-    localArtifacts = findLocalArtifacts(repositorySystem, session, Paths.get(".").toAbsolutePath());
   }
 
   /**
@@ -134,7 +131,9 @@ public class LinkageMonitor {
         Model model = modelBuildingResult.getEffectiveModel();
         artifactToVersion.put(model.getGroupId() + ":" + model.getArtifactId(), model.getVersion());
       } catch (ModelBuildingException ex) {
-        System.out.println("Could not build model: " + path);
+        // When there's a pom.xml file that is not (indirectly) referenced by the root pom.xml,
+        // Maven may fail to build the model. Such pom.xml can be ignored.
+        System.out.println("Ignoring bad model: " + path);
       }
     }
     return artifactToVersion.build();

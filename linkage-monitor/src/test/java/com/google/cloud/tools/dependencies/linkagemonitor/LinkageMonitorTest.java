@@ -17,7 +17,6 @@
 package com.google.cloud.tools.dependencies.linkagemonitor;
 
 import static com.google.cloud.tools.opensource.dependencies.Artifacts.toCoordinates;
-import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.CENTRAL;
 import static com.google.common.collect.Iterables.skip;
 import static com.google.common.truth.Correspondence.transforming;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -50,14 +49,9 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.building.ModelBuildingException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
-import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
-import org.eclipse.aether.resolution.ArtifactResult;
-import org.eclipse.aether.resolution.VersionRangeResolutionException;
-import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -70,12 +64,6 @@ public class LinkageMonitorTest {
     system = RepositoryUtility.newRepositorySystem();
 
     session = RepositoryUtility.newSession(system);
-  }
-
-  private ArtifactResult resolveArtifact(String coordinates) throws ArtifactResolutionException {
-    Artifact protobufJavaArtifact = new DefaultArtifact(coordinates);
-    return system.resolveArtifact(
-        session, new ArtifactRequest(protobufJavaArtifact, ImmutableList.of(CENTRAL), null));
   }
 
   @Test
@@ -196,8 +184,7 @@ public class LinkageMonitorTest {
 
   @Test
   public void testBuildModelWithSnapshotBom_BomSnapshotUpdate()
-      throws ModelBuildingException, ArtifactResolutionException,
-          InvalidVersionSpecificationException, VersionRangeResolutionException {
+      throws ModelBuildingException, ArtifactResolutionException {
     // Linkage Monitor should update a BOM in Google Cloud Libraries BOM when it's available local
     // repository. This test case simulates the issue below where
     // google-cloud-bom:0.106.0-alpha-SNAPSHOT should provide gax:1.48.0.
@@ -235,7 +222,7 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void testFindLocalArtifacts_currentDirectory() throws ModelBuildingException {
+  public void testFindLocalArtifacts_currentDirectory() {
     // Current working directory of linkage-monitor should have one linkage monitor artifact
     ImmutableMap<String, String> localArtifacts =
         LinkageMonitor.findLocalArtifacts(system, session, Paths.get("."));
@@ -245,7 +232,7 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void testFindLocalArtifacts_parentDirectory() throws ModelBuildingException {
+  public void testFindLocalArtifacts_RootDirectory() {
     // Root of cloud-opensource-java has more than 10 pom.xml files
     ImmutableMap<String, String> localArtifacts =
         LinkageMonitor.findLocalArtifacts(system, session, Paths.get(".."));
