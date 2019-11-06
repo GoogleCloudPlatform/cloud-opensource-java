@@ -353,7 +353,7 @@ public final class RepositoryUtility {
   }
 
   /** Returns the highest version for {@code groupId:artifactId} in {@code repositorySystem}. */
-  public static String findHighestVersion(
+  static String findHighestVersion(
       RepositorySystem repositorySystem,
       RepositorySystemSession session,
       String groupId,
