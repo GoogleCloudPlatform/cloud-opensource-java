@@ -180,10 +180,18 @@ public class LinkageChecker {
 
     // GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that only exists in
     // special JDK. https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929
-    if (symbolProblem.getSymbol().getClassName().startsWith("jdk.vm.ci")
+    String problematicClassName = symbolProblem.getSymbol().getClassName();
+    if (problematicClassName.startsWith("jdk.vm.ci")
         && (sourceClassName.startsWith("com.oracle.svm")
             || sourceClassName.startsWith("com.oracle.graal")
             || sourceClassName.startsWith("org.graalvm"))) {
+      return false;
+    }
+
+    // Mockito's MockMethodDispatcher uses special class loader to load MockMethodDispatcher.raw
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/407
+    if (problematicClassName.equals("org.mockito.internal.creation.bytebuddy.MockMethodDispatcher")
+        && sourceClassName.startsWith("org.mockito.internal.creation.bytebuddy")) {
       return false;
     }
 
