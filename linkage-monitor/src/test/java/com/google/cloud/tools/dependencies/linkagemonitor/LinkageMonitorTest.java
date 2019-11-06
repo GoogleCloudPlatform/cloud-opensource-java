@@ -29,7 +29,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
-
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.cloud.tools.opensource.classpath.ErrorType;
@@ -44,17 +43,24 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.building.ModelBuildingException;
+import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
@@ -64,24 +70,38 @@ import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public class LinkageMonitorTest {
   private RepositorySystem system;
   private RepositorySystem spySystem;
-  private RepositorySystemSession session;
+  private Path localEmptyRepositoryPath;
+  private DefaultRepositorySystemSession session;
   private GenericVersionScheme versionScheme = new GenericVersionScheme();
 
   @Before
-  public void setup() {
+  public void setup() throws IOException {
     system = RepositoryUtility.newRepositorySystem();
 
     // If possible, spy object should be avoided. But Maven is tightly coupled with RepositorySystem
     // and thus normal mock objects on RepositorySystem would make the test even complicated.
     // https://static.javadoc.io/org.mockito/mockito-core/3.0.0/org/mockito/Mockito.html#spy-T-
     spySystem = spy(system);
-    session = RepositoryUtility.newSession(system);
+
+    // This session uses an empty directory as Maven local repository so that the test result
+    // is not affected by other Maven artifacts installed locally.
+    session = MavenRepositorySystemUtils.newSession();
+    localEmptyRepositoryPath = Files.createTempDirectory("LinkageMonitorTest").toAbsolutePath();
+    LocalRepository localRepository = new LocalRepository(localEmptyRepositoryPath.toString());
+    session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
+    session.setReadOnly();
+  }
+
+  @After
+  public void cleanup() throws IOException {
+    MoreFiles.deleteRecursively(localEmptyRepositoryPath, RecursiveDeleteOption.ALLOW_INSECURE);
   }
 
   private ArtifactResult resolveArtifact(String coordinates) throws ArtifactResolutionException {
@@ -97,6 +117,7 @@ public class LinkageMonitorTest {
     Bom snapshotBom =
         LinkageMonitor.copyWithSnapshot(
             system,
+            session,
             new Bom(
                 "com.google.guava:guava-bom:27.1-android",
                 ImmutableList.of(new DefaultArtifact("com.google.guava:guava:27.1-android"))));
@@ -110,6 +131,7 @@ public class LinkageMonitorTest {
     Bom snapshotBom =
         LinkageMonitor.copyWithSnapshot(
             system,
+            session,
             new Bom(
                 "com.google.cloud:libraries-bom:pom:2.2.1",
                 ImmutableList.of(new DefaultArtifact("com.google.guava:guava:27.1-android"))));
@@ -120,7 +142,7 @@ public class LinkageMonitorTest {
   public void testBomSnapshot()
       throws VersionRangeResolutionException, MavenRepositoryException,
           InvalidVersionSpecificationException, ModelBuildingException, ArtifactResolutionException,
-          ArtifactDescriptorException {
+          ArtifactDescriptorException, IOException {
     VersionRangeResult protobufSnapshotVersionResult =
         new VersionRangeResult(new VersionRangeRequest());
 
@@ -130,7 +152,7 @@ public class LinkageMonitorTest {
             versionScheme.parseVersion("3.7.0"),
             versionScheme.parseVersion("3.8.0-SNAPSHOT")));
 
-    // invocation for protobuf-java
+    // invocation for protobuf-java to return 3.8.0-SNAPSHOT
     doReturn(protobufSnapshotVersionResult)
         .when(spySystem)
         .resolveVersionRange(
@@ -150,7 +172,7 @@ public class LinkageMonitorTest {
             argThat(request -> "protobuf-java".equals(request.getArtifact().getArtifactId())));
 
     Bom bom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:1.2.0");
-    Bom snapshotBom = LinkageMonitor.copyWithSnapshot(spySystem, bom);
+    Bom snapshotBom = LinkageMonitor.copyWithSnapshot(spySystem, session, bom);
 
     assertWithMessage(
             "The first element of the SNAPSHOT BOM should be the same as the original BOM")
