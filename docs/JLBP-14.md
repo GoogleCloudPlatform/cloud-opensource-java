@@ -37,6 +37,25 @@ A single version range such as `<version>[2.3]</version>` is even stricter,
 requiring version 2.3 and no other. If two `dependency` elements in the
 graph have non-overlapping version ranges, the build fails.
 
+Some projects such as gRPC specify single element version ranges to 
+cause the build to fail early when multiple versions are mixed. For example, 
+`io.grpc:grpc-alts:1.25.0` depends on exactly `io.grpc:grpc-core:1.25.0`:
+
+```
+<dependency>
+  <groupId>io.grpc</groupId>
+  <artifactId>grpc-core</artifactId>
+  <version>[1.25.0]</version>
+</dependency>
+```
+
+`io.grpc:grpc-alts:1.25.0` and `io.grpc:grpc-alts:1.23.0` cannot appear in 
+the classpath at the same time. If a dependency tree contains both
+`io.grpc:grpc-alts:1.25.0` and `io.grpc:grpc-alts:1.23.0`, the build fails, and the developer must fix the conflict before they can proceed.
+OpenCensus did not do this, and as a result there have been several problems
+when different versions of different OpenCensus artifacts did not work with each other. This technique is more helpful for libraries that are changing 
+rapidly than for more stable libraries.
+
 Even if all hard requirements can be satisfied, version ranges override
 the normal Maven algorithm for selecting among different versions of the
 same artifact. They pin the dependency tree to that version or versions,
