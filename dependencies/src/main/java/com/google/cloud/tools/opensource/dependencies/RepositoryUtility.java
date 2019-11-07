@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -353,7 +354,8 @@ public final class RepositoryUtility {
   }
 
   /** Returns the highest version for {@code groupId:artifactId} in {@code repositorySystem}. */
-  public static String findHighestVersion(
+  @VisibleForTesting
+  static String findHighestVersion(
       RepositorySystem repositorySystem,
       RepositorySystemSession session,
       String groupId,

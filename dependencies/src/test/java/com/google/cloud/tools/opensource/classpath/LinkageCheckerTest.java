@@ -911,4 +911,24 @@ public class LinkageCheckerTest {
         .that(linkageChecker.findSymbolProblems().keySet())
         .isEmpty();
   }
+
+  @Test
+  public void testFindSymbolProblems_shouldSuppressMockitoMockMethodDispatcher()
+      throws RepositoryException, IOException {
+    // Mockito's MockMethodDispatcher class file has ".raw" extension so that the class is only
+    // loaded by Mockito's special class loader.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/407
+    ImmutableList<Path> jars = resolvePaths("org.mockito:mockito-core:2.23.4");
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    SymbolProblem unexpectedProblem =
+        new SymbolProblem(
+            new ClassSymbol("org.mockito.internal.creation.bytebuddy.MockMethodDispatcher"),
+            ErrorType.CLASS_NOT_FOUND,
+            null);
+
+    Truth.assertWithMessage("Mockito's MockMethodDispatcher should not be reported")
+        .that(linkageChecker.findSymbolProblems().keySet())
+        .doesNotContain(unexpectedProblem);
+  }
 }
