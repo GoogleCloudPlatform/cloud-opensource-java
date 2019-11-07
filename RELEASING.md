@@ -15,7 +15,7 @@ boms/cloud-oss-bom/RELEASING.md) is not part of this document.
 
 Create a PR for the release, and get it approved.
 
-Detailed procedure: [Cloud Tools for Java Development Practices](
+Detailed procedure: [Cloud Tools for Java Development Practices: Releasing](
 https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md?cl=head)
 
 ## Rapid builds
