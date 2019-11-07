@@ -237,6 +237,10 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           helper.getComponent(ProjectDependenciesResolver.class);
       DefaultRepositorySystemSession fullDependencyResolutionSession =
           new DefaultRepositorySystemSession(session);
+
+      // Clear artifact cache. Certain artifacts in the cache have dependencies without
+      // ${os.detected.classifier} interpolated:
+      // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/925
       fullDependencyResolutionSession.setCache(new DefaultRepositoryCache());
 
       // For netty-handler referencing its dependencies with ${os.detected.classifier}
