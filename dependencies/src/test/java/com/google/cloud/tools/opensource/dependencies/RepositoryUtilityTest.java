@@ -16,11 +16,14 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static com.google.common.truth.Correspondence.transforming;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.io.File;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -34,7 +37,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class RepositoryUtilityTest {
-
+ 
   @Test
   public void testFindLocalRepository() {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
@@ -57,16 +60,24 @@ public class RepositoryUtilityTest {
   }
 
   @Test
-  public void testReadBom_path() throws MavenRepositoryException {
-    Path pomFile = Paths.get("..", "boms", "cloud-oss-bom", "pom.xml");
-    
-    Bom bom = RepositoryUtility.readBom(pomFile);
-    
-    ImmutableList<Artifact> artifacts = bom.getManagedDependencies();
-    Assert.assertEquals(209, artifacts.size());
-    String coordinates = bom.getCoordinates();
-    Assert.assertTrue(coordinates.startsWith("com.google.cloud:libraries-bom:"));
-    Assert.assertTrue(coordinates.endsWith("-SNAPSHOT"));
+  public void testReadBom_path()
+      throws MavenRepositoryException, ArtifactDescriptorException, URISyntaxException {
+    Path pomFile = absolutePathOfResource("libraries-bom-2.7.0.pom");
+    Bom bomFromFile = RepositoryUtility.readBom(pomFile);
+    ImmutableList<Artifact> artifactsFromFile = bomFromFile.getManagedDependencies();
+
+    // Compare the result with readBom(String coordinates)
+    String expectedBomCoordinates = "com.google.cloud:libraries-bom:2.7.0";
+    Bom expectedBom = RepositoryUtility.readBom(expectedBomCoordinates);
+    ImmutableList<Artifact> expectedArtifacts = expectedBom.getManagedDependencies();
+
+    Truth.assertThat(bomFromFile.getCoordinates()).isEqualTo(expectedBomCoordinates);
+    Truth.assertThat(artifactsFromFile)
+        .comparingElementsUsing(
+            transforming(
+                Artifacts::toCoordinates, Artifacts::toCoordinates, "has Maven coordinates"))
+        .containsExactlyElementsIn(expectedArtifacts)
+        .inOrder();
   }
 
   @Test
@@ -74,7 +85,9 @@ public class RepositoryUtilityTest {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     ImmutableList<String> versions =
         RepositoryUtility.findVersions(system, "com.google.cloud", "libraries-bom");
-    Truth.assertThat(versions).containsAtLeast("1.1.0", "1.1.1", "1.2.0", "2.0.0").inOrder();
+    Truth.assertThat(versions)
+        .containsAtLeast("1.1.0", "1.1.1", "1.2.0", "2.0.0", "2.4.0", "2.5.0", "2.6.0")
+        .inOrder();
   }
 
   @Test

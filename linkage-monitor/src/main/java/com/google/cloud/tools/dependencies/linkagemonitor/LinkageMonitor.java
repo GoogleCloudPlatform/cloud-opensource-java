@@ -20,22 +20,29 @@ import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.C
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
+import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.common.io.MoreFiles;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.Map;
 import java.util.Set;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.model.DependencyManagement;
@@ -64,9 +71,14 @@ import org.eclipse.aether.resolution.ArtifactResult;
  * BOM (bill-of-materials).
  */
 public class LinkageMonitor {
+  private static final DefaultModelBuilder modelBuilder =
+      new DefaultModelBuilderFactory().newInstance();
 
   // Finding latest version requires metadata from remote repository
   private final RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
+  private final RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
+  private final ImmutableMap<String, String> localArtifacts =
+      findLocalArtifacts(repositorySystem, session, Paths.get(".").toAbsolutePath());
 
   public static void main(String[] arguments)
       throws RepositoryException, IOException, LinkageMonitorException, MavenRepositoryException,
@@ -83,6 +95,50 @@ public class LinkageMonitor {
     new LinkageMonitor().run(coordinatesElements.get(0), coordinatesElements.get(1));
   }
 
+  /**
+   * Returns a map from versionless coordinates to version for all pom.xml found in {@code
+   * projectDirectory}.
+   */
+  @VisibleForTesting
+  static ImmutableMap<String, String> findLocalArtifacts(
+      RepositorySystem repositorySystem, RepositorySystemSession session, Path projectDirectory) {
+    ImmutableMap.Builder<String, String> artifactToVersion = ImmutableMap.builder();
+    Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectDirectory);
+    for (Path path : paths) {
+      if (!path.getFileName().endsWith("pom.xml")) {
+        continue;
+      }
+      ModelBuildingRequest modelRequest = new DefaultModelBuildingRequest();
+      modelRequest.setValidationLevel(ModelBuildingRequest.VALIDATION_LEVEL_MINIMAL);
+      modelRequest.setProcessPlugins(false);
+      modelRequest.setTwoPhaseBuilding(false);
+      modelRequest.setPomFile(path.toFile());
+      modelRequest.setModelResolver(
+          new ProjectModelResolver(
+              session,
+              null,
+              repositorySystem,
+              new DefaultRemoteRepositoryManager(),
+              ImmutableList.of(CENTRAL), // Needed when parent pom is not locally available
+              null,
+              null));
+      // Profile activation needs JDK version through system properties
+      // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/923
+      modelRequest.setSystemProperties(System.getProperties());
+
+      try {
+        ModelBuildingResult modelBuildingResult = modelBuilder.build(modelRequest);
+        Model model = modelBuildingResult.getEffectiveModel();
+        artifactToVersion.put(model.getGroupId() + ":" + model.getArtifactId(), model.getVersion());
+      } catch (ModelBuildingException ex) {
+        // When there's a pom.xml file that is not (indirectly) referenced by the root pom.xml,
+        // Maven may fail to build the model. Such pom.xml can be ignored.
+        System.out.println("Ignoring bad model: " + path);
+      }
+    }
+    return artifactToVersion.build();
+  }
+
   private void run(String groupId, String artifactId)
       throws RepositoryException, IOException, LinkageMonitorException, MavenRepositoryException,
           ModelBuildingException {
@@ -92,7 +148,7 @@ public class LinkageMonitor {
     Bom baseline = RepositoryUtility.readBom(latestBomCoordinates);
     ImmutableSet<SymbolProblem> problemsInBaseline =
         LinkageChecker.create(baseline).findSymbolProblems().keySet();
-    Bom snapshot = copyWithSnapshot(repositorySystem, baseline);
+    Bom snapshot = copyWithSnapshot(repositorySystem, session, baseline, localArtifacts);
 
     // Comparing coordinates because DefaultArtifact does not override equals
     ImmutableList<String> baselineCoordinates = coordinatesList(baseline.getManagedDependencies());
@@ -104,8 +160,14 @@ public class LinkageMonitor {
       return;
     }
 
+    ImmutableList<Artifact> snapshotManagedDependencies = snapshot.getManagedDependencies();
+    LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
+        ClassPathBuilder.artifactsToDependencyPaths(snapshotManagedDependencies);
+    ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
+    List<Path> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
+
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems =
-        LinkageChecker.create(snapshot).findSymbolProblems();
+        LinkageChecker.create(classpath, ImmutableSet.copyOf(entryPointJars)).findSymbolProblems();
     ImmutableSet<SymbolProblem> problemsInSnapshot = snapshotSymbolProblems.keySet();
 
     if (problemsInBaseline.equals(problemsInSnapshot)) {
@@ -120,7 +182,8 @@ public class LinkageMonitor {
     }
     Set<SymbolProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newProblems.isEmpty()) {
-      System.err.println(messageForNewErrors(snapshotSymbolProblems, problemsInBaseline));
+      System.err.println(
+          messageForNewErrors(snapshotSymbolProblems, problemsInBaseline, jarToDependencyPaths));
       int errorSize = newProblems.size();
       throw new LinkageMonitorException(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
@@ -141,11 +204,13 @@ public class LinkageMonitor {
   @VisibleForTesting
   static String messageForNewErrors(
       ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems,
-      Set<SymbolProblem> baselineProblems) {
+      Set<SymbolProblem> baselineProblems,
+      Multimap<Path, DependencyPath> jarToDependencyPaths) {
     Set<SymbolProblem> newProblems =
         Sets.difference(snapshotSymbolProblems.keySet(), baselineProblems);
     StringBuilder message =
         new StringBuilder("Newly introduced problem" + (newProblems.size() > 1 ? "s" : "") + ":\n");
+    ImmutableSet.Builder<Path> problematicJars = ImmutableSet.builder();
     for (SymbolProblem problem : newProblems) {
       message.append(problem + "\n");
       for (ClassFile classFile : snapshotSymbolProblems.get(problem)) {
@@ -153,8 +218,17 @@ public class LinkageMonitor {
             String.format(
                 "  referenced from %s (%s)\n",
                 classFile.getClassName(), classFile.getJar().getFileName()));
+        problematicJars.add(classFile.getJar());
       }
     }
+
+    for (Path problematicJar : problematicJars.build()) {
+      message.append(problematicJar.getFileName() + " is at:\n");
+      for (DependencyPath dependencyPath : jarToDependencyPaths.get(problematicJar)) {
+        message.append("  " + dependencyPath + "\n");
+      }
+    }
+
     return message.toString();
   }
 
@@ -182,8 +256,11 @@ public class LinkageMonitor {
    */
   @VisibleForTesting
   static Model buildModelWithSnapshotBom(
-      RepositorySystem repositorySystem, RepositorySystemSession session, String bomCoordinates)
-      throws ModelBuildingException, ArtifactResolutionException, MavenRepositoryException {
+      RepositorySystem repositorySystem,
+      RepositorySystemSession session,
+      String bomCoordinates,
+      Map<String, String> localArtifacts)
+      throws ModelBuildingException, ArtifactResolutionException {
 
     // BOM Coordinates might not have extension.
     String[] elements = bomCoordinates.split(":");
@@ -220,7 +297,6 @@ public class LinkageMonitor {
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/923
     modelRequest.setSystemProperties(System.getProperties());
 
-    DefaultModelBuilder modelBuilder = new DefaultModelBuilderFactory().newInstance();
     // Phase 1 done. Now variables are interpolated.
     ModelBuildingResult resultPhase1 = modelBuilder.build(modelRequest);
     DependencyManagement dependencyManagement =
@@ -229,9 +305,11 @@ public class LinkageMonitor {
     for (org.apache.maven.model.Dependency dependency : dependencyManagement.getDependencies()) {
       // Replaces the versions of imported BOMs
       if ("import".equals(dependency.getScope())) {
-        findSnapshotVersion(
-                repositorySystem, session, dependency.getGroupId(), dependency.getArtifactId())
-            .ifPresent(dependency::setVersion);
+        String version =
+            localArtifacts.getOrDefault(
+                dependency.getGroupId() + ":" + dependency.getArtifactId(),
+                dependency.getVersion());
+        dependency.setVersion(version);
       }
     }
 
@@ -245,12 +323,16 @@ public class LinkageMonitor {
    * snapshot versions.
    */
   @VisibleForTesting
-  static Bom copyWithSnapshot(RepositorySystem repositorySystem, Bom bom)
-      throws MavenRepositoryException, ModelBuildingException, ArtifactResolutionException {
+  static Bom copyWithSnapshot(
+      RepositorySystem repositorySystem,
+      RepositorySystemSession session,
+      Bom bom,
+      Map<String, String> localArtifacts)
+      throws ModelBuildingException, ArtifactResolutionException {
     ImmutableList.Builder<Artifact> managedDependencies = ImmutableList.builder();
-    RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
 
-    Model model = buildModelWithSnapshotBom(repositorySystem, session, bom.getCoordinates());
+    Model model =
+        buildModelWithSnapshotBom(repositorySystem, session, bom.getCoordinates(), localArtifacts);
 
     ArtifactTypeRegistry registry = session.getArtifactTypeRegistry();
     ImmutableList<Artifact> newManagedDependencies =
@@ -262,37 +344,13 @@ public class LinkageMonitor {
       if (RepositoryUtility.shouldSkipBomMember(managedDependency)) {
         continue;
       }
-      managedDependencies.add(
-          findSnapshotVersion(repositorySystem, session, managedDependency)
-              .map(managedDependency::setVersion)
-              .orElse(managedDependency));
+      String version =
+          localArtifacts.getOrDefault(
+              managedDependency.getGroupId() + ":" + managedDependency.getArtifactId(),
+              managedDependency.getVersion());
+      managedDependencies.add(managedDependency.setVersion(version));
     }
     // "-SNAPSHOT" suffix for coordinate to distinguish easily.
     return new Bom(bom.getCoordinates() + "-SNAPSHOT", managedDependencies.build());
-  }
-
-  private static Optional<String> findSnapshotVersion(
-      RepositorySystem repositorySystem, RepositorySystemSession session, Artifact artifact)
-      throws MavenRepositoryException {
-    return findSnapshotVersion(
-        repositorySystem, session, artifact.getGroupId(), artifact.getArtifactId());
-  }
-
-  /**
-   * Returns {@code Optional} describing the highest snapshot version if such version is available
-   * in {@code repositorySystem}; otherwise an empty {@code Optional}.
-   */
-  private static Optional<String> findSnapshotVersion(
-      RepositorySystem repositorySystem,
-      RepositorySystemSession session,
-      String groupId,
-      String artifactId)
-      throws MavenRepositoryException {
-    String version =
-        RepositoryUtility.findHighestVersion(repositorySystem, session, groupId, artifactId);
-    if (version.contains("-SNAPSHOT")) {
-      return Optional.of(version);
-    }
-    return Optional.empty();
   }
 }

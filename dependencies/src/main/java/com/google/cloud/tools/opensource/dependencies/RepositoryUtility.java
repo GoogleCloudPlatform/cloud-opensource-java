@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -353,7 +354,8 @@ public final class RepositoryUtility {
   }
 
   /** Returns the highest version for {@code groupId:artifactId} in {@code repositorySystem}. */
-  public static String findHighestVersion(
+  @VisibleForTesting
+  static String findHighestVersion(
       RepositorySystem repositorySystem,
       RepositorySystemSession session,
       String groupId,
@@ -366,11 +368,14 @@ public final class RepositoryUtility {
 
   /**
    * Returns list of versions available for {@code groupId:artifactId} in {@code repositorySystem}.
+   * The returned list is in ascending order with regard to {@link
+   * org.eclipse.aether.util.version.GenericVersionScheme}; the highest version comes at last.
    */
   public static ImmutableList<String> findVersions(
       RepositorySystem repositorySystem, String groupId, String artifactId)
       throws MavenRepositoryException {
     RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
+    // getVersions returns a list in ascending order
     return findVersionRange(repositorySystem, session, groupId, artifactId).getVersions().stream()
         .map(version -> version.toString())
         .collect(toImmutableList());
