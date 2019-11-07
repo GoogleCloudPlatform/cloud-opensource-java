@@ -7,13 +7,16 @@ run `prepare_release.sh` with `dependencies` argument:
 $ cd cloud-opensource-java
 $ git checkout master
 $ git pull
-$ ./script/prepare_release.sh dependencies 1.0.0
+$ ./scripts/prepare_release.sh dependencies 1.0.0
 ```
 
 Note: Google Cloud Libraries BOM release procedure [boms/cloud-oss-bom/RELEASING.md](
 boms/cloud-oss-bom/RELEASING.md) is not part of this document.
 
 Create a PR for the release, and get it approved.
+
+Detailed procedure: [Cloud Tools for Java Development Practices](
+https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md?cl=head)
 
 ## Rapid builds
 

@@ -11,6 +11,9 @@ $ ../../scripts/prepare_release.sh bom <release version> [<post-release-version>
 
 Create a PR for the release, and get it approved.
 
+Detailed procedure: [Cloud Tools for Java Development Practices](
+https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md?cl=head)
+
 ## Rapid build
 
 Rapid project is [cloud-java-tools-cloud-opensource-java-bom-kokoro-release](
