@@ -1,5 +1,8 @@
 # Linkage Checker Enforcer Rule
 
+Linkage Checker Enforcer Rule verifies that the transitive dependency tree of `pom.xml` does not have
+any [linkage errors](https://jlbp.dev/glossary.html#linkage-error).
+
 User documentation: [Linkage Checker Enforcer Rule](
 https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Enforcer-Rule)
 
