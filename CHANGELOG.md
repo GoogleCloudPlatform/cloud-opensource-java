@@ -1,6 +1,6 @@
 # Linkage Checker Enforcer Rule Change Log
 
 ## 1.0.1
-* The enforcer rule now works with artifacts having `${os.detect.classifier}` in their dependencies.
-  When such artifacts were resolved without [os-maven-plugin](https://github.com/trustin/os-maven-plugin)
-  and cached in Maven, the enforcer rule could not resolve the dependency tree.
+* Fixed a bug where the enforcer rule could not resolve artifacts having `${os.detect.classifier}`
+  in their dependencies. The values are usually set by [os-maven-plugin](
+  https://github.com/trustin/os-maven-plugin). Now the enforcer rule works without the plugin.
