@@ -51,9 +51,15 @@ cause the build to fail early when multiple versions are mixed. For example,
 `io.grpc:grpc-alts:1.25.0` and `io.grpc:grpc-core:1.23.0` cannot appear in 
 the classpath at the same time. If dependency mediation selects both
 `io.grpc:grpc-alts:1.25.0` and `io.grpc:grpc-core:1.23.0`, the build fails; and the developer must fix the conflict before they can proceed.
+
+Rapidly changing, pre-1.0 projects with unstable APIs can use hard
+requirements such as such as `<version>[0.24.0]</version>` for
+intraproject dependencies to ensure their modules all work together. 
 OpenCensus did not do this, and as a result there have been several problems
-when different versions of different OpenCensus artifacts did not work with each other. This technique is more helpful for libraries that are changing 
-rapidly than for more stable libraries.
+when different versions of different OpenCensus artifacts that 
+did not work with each other appeared in other projects' 
+classpath at the same time. It is at best a stopgap measure that should be
+discarded once the API stabilizes.
 
 Even if all hard requirements can be satisfied, version ranges override
 the normal Maven algorithm for selecting among different versions of the
@@ -61,5 +67,5 @@ same artifact. They pin the dependency tree to that version or versions,
 even when other artifacts in the classpath specify newer compatible versions
 that include important bug and security fixes.
 
-See https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification
+See [Dependency Version Requirement Specification](https://maven.apache.org/pom.html#Dependency_Version_Requirement_Specification)
 for more information.
