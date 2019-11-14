@@ -133,7 +133,7 @@ public class LinkageMonitor {
       } catch (ModelBuildingException ex) {
         // When there's a pom.xml file that is not (indirectly) referenced by the root pom.xml,
         // Maven may fail to build the model. Such pom.xml can be ignored.
-        System.out.println("Ignoring bad model: " + path);
+        System.out.println("Ignoring bad model: " + path + ": " + ex.getMessage());
       }
     }
     return artifactToVersion.build();
