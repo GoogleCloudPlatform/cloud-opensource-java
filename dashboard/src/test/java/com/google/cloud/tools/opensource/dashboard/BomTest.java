@@ -57,6 +57,11 @@ public class BomTest {
   private static void assertReachable(String url) throws IOException {
     HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
     connection.setRequestMethod("HEAD");
-    Assert.assertEquals("Could not reach " + url, 200, connection.getResponseCode());
+    try {
+      Assert.assertEquals(
+          "Could not reach " + url, HttpURLConnection.HTTP_OK, connection.getResponseCode());
+    } catch (IOException ex) {
+      Assert.fail("Could not reach " + url + "\n" + ex.getMessage());
+    }
   }
 }
