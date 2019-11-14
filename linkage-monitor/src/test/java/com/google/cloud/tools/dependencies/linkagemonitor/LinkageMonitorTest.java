@@ -225,7 +225,8 @@ public class LinkageMonitorTest {
   public void testFindLocalArtifacts() {
     // Current working directory of linkage-monitor should have one linkage monitor artifact
     ImmutableMap<String, String> localArtifacts =
-        LinkageMonitor.findLocalArtifacts(system, session, Paths.get("src/test/resources/testproject"));
+        LinkageMonitor.findLocalArtifacts(
+            system, session, Paths.get("src/test/resources/testproject"));
 
     Truth.assertThat(localArtifacts).hasSize(2);
     Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:test-project");
