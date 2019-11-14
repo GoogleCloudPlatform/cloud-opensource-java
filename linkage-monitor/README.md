@@ -2,7 +2,7 @@
 
 Linkage Monitor works as a presubmit check in a GitHub repository to prevent open source libraries
 in the Google Cloud Java orbit (GAX, google-http-java-client, gRPC, etc.) from releasing versions
-that would introduce new [linkage errors](
+that introduce new [linkage errors](
 https://jlbp.dev/glossary.html#types-of-conflicts-and-compatibility).
 
 User documentation: [Linkage Monitor](
