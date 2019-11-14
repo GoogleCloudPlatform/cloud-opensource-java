@@ -198,7 +198,7 @@ public class LinkageMonitorTest {
             ImmutableMap.of("com.google.cloud:google-cloud-bom", "0.106.0-alpha"));
     List<Dependency> dependencies = model.getDependencyManagement().getDependencies();
 
-    // Google-cloud-bom:0.106.0 has new artifacts such as google-cloud-gameservices
+    // google-cloud-bom:0.106.0 has new artifacts such as google-cloud-gameservices
     assertEquals(224, dependencies.size());
 
     // google-cloud-bom:0.106.0-alpha has gax:1.48.0
