@@ -134,9 +134,9 @@ public class LinkageMonitor {
         Model model = modelBuildingResult.getEffectiveModel();
         artifactToVersion.put(model.getGroupId() + ":" + model.getArtifactId(), model.getVersion());
       } catch (ModelBuildingException ex) {
-        // When there's a pom.xml file that is not (indirectly) referenced by the root pom.xml,
-        // Maven may fail to build the model. Such pom.xml can be ignored.
-        logger.warning("Ignoring bad model: " + path + ": " + ex.getMessage());
+        // Maven may fail to build pom.xml files found in irrelevant directories, such as "target"
+        // and "test" directories of the project. Such failures can be ignored.
+        logger.info("Ignoring bad model: " + path + ": " + ex.getMessage());
       }
     }
     return artifactToVersion.build();
