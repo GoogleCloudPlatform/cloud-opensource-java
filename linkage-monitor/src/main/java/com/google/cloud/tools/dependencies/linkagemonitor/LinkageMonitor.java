@@ -44,6 +44,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.Model;
@@ -71,6 +72,8 @@ import org.eclipse.aether.resolution.ArtifactResult;
  * BOM (bill-of-materials).
  */
 public class LinkageMonitor {
+  private static final Logger logger = Logger.getLogger(LinkageMonitor.class.getName());
+
   private static final DefaultModelBuilder modelBuilder =
       new DefaultModelBuilderFactory().newInstance();
 
@@ -84,7 +87,7 @@ public class LinkageMonitor {
       throws RepositoryException, IOException, LinkageMonitorException, MavenRepositoryException,
           ModelBuildingException {
     if (arguments.length < 1 || arguments[0].split(":").length != 2) {
-      System.err.println(
+      logger.severe(
           "Please specify BOM coordinates without version. Example:"
               + " com.google.cloud:libraries-bom");
       System.exit(1);
@@ -131,9 +134,9 @@ public class LinkageMonitor {
         Model model = modelBuildingResult.getEffectiveModel();
         artifactToVersion.put(model.getGroupId() + ":" + model.getArtifactId(), model.getVersion());
       } catch (ModelBuildingException ex) {
-        // When there's a pom.xml file that is not (indirectly) referenced by the root pom.xml,
-        // Maven may fail to build the model. Such pom.xml can be ignored.
-        System.out.println("Ignoring bad model: " + path);
+        // Maven may fail to build pom.xml files found in irrelevant directories, such as "target"
+        // and "test" directories of the project. Such failures can be ignored.
+        logger.info("Ignoring bad model: " + path + ": " + ex.getMessage());
       }
     }
     return artifactToVersion.build();
@@ -144,7 +147,7 @@ public class LinkageMonitor {
           ModelBuildingException {
     String latestBomCoordinates =
         RepositoryUtility.findLatestCoordinates(repositorySystem, groupId, artifactId);
-    System.out.println("BOM Coordinates: " + latestBomCoordinates);
+    logger.info("BOM Coordinates: " + latestBomCoordinates);
     Bom baseline = RepositoryUtility.readBom(latestBomCoordinates);
     ImmutableSet<SymbolProblem> problemsInBaseline =
         LinkageChecker.create(baseline).findSymbolProblems().keySet();
@@ -154,7 +157,7 @@ public class LinkageMonitor {
     ImmutableList<String> baselineCoordinates = coordinatesList(baseline.getManagedDependencies());
     ImmutableList<String> snapshotCoordinates = coordinatesList(snapshot.getManagedDependencies());
     if (baselineCoordinates.equals(snapshotCoordinates)) {
-      System.out.println(
+      logger.info(
           "Could not find SNAPSHOT versions for the artifacts in the BOM. "
               + "Not running comparison.");
       return;
@@ -171,25 +174,25 @@ public class LinkageMonitor {
     ImmutableSet<SymbolProblem> problemsInSnapshot = snapshotSymbolProblems.keySet();
 
     if (problemsInBaseline.equals(problemsInSnapshot)) {
-      System.out.println(
+      logger.info(
           "Snapshot versions have the same " + problemsInBaseline.size() + " errors as baseline");
       return;
     }
 
     Set<SymbolProblem> fixedProblems = Sets.difference(problemsInBaseline, problemsInSnapshot);
     if (!fixedProblems.isEmpty()) {
-      System.out.println(messageForFixedErrors(fixedProblems));
+      logger.info(messageForFixedErrors(fixedProblems));
     }
     Set<SymbolProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newProblems.isEmpty()) {
-      System.err.println(
+      logger.severe(
           messageForNewErrors(snapshotSymbolProblems, problemsInBaseline, jarToDependencyPaths));
       int errorSize = newProblems.size();
       throw new LinkageMonitorException(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
     } else {
       // No new symbol problems introduced by snapshot BOM. Returning success.
-      System.out.println("No new problem found");
+      logger.info("No new problem found");
     }
   }
 
