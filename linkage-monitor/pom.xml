@@ -52,7 +52,7 @@
     <connection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git</connection>
     <developerConnection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git
     </developerConnection>
-    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/linkage-monitor</url>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/linkage-monitor</url>
     <tag>HEAD</tag>
   </scm>
 
