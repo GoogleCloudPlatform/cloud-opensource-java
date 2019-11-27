@@ -950,7 +950,8 @@ public class LinkageCheckerTest {
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
 
-    SymbolProblem expectedProblem =
+    // The two missing methods should be reported separately
+    SymbolProblem expectedProblemOnNeedsCredentials =
         new SymbolProblem(
             new MethodSymbol(
                 "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
@@ -959,8 +960,19 @@ public class LinkageCheckerTest {
                 false),
             ErrorType.ABSTRACT_METHOD,
             new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"));
-    Truth.assertThat(symbolProblems.keySet()).contains(expectedProblem);
-    Truth.assertThat(symbolProblems.get(expectedProblem))
+    SymbolProblem expectedProblemOnWithCredentials =
+        new SymbolProblem(
+            new MethodSymbol(
+                "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
+                "withCredentials",
+                "(Lcom/google/auth/Credentials;)Lcom/google/api/gax/rpc/TransportChannelProvider;",
+                false),
+            ErrorType.ABSTRACT_METHOD,
+            new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"));
+    Truth.assertThat(symbolProblems.keySet()).contains(expectedProblemOnNeedsCredentials);
+    Truth.assertThat(symbolProblems.keySet()).contains(expectedProblemOnWithCredentials);
+
+    Truth.assertThat(symbolProblems.get(expectedProblemOnNeedsCredentials))
         .contains((new ClassFile(gax1_48, "com.google.api.gax.rpc.TransportChannelProvider")));
   }
 
