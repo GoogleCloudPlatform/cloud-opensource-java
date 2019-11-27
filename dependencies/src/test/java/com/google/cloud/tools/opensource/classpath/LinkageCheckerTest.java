@@ -950,7 +950,7 @@ public class LinkageCheckerTest {
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
 
-    // The two missing methods should be reported separately
+    // The two unimplemented methods should be reported separately
     SymbolProblem expectedProblemOnNeedsCredentials =
         new SymbolProblem(
             new MethodSymbol(
