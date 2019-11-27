@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.logging.Logger;
+import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
@@ -131,8 +132,14 @@ public class LinkageChecker {
           if (!classDumper
               .classesDefinedInJar(classFile.getJar())
               .contains(classSymbol.getClassName())) {
-            findSymbolProblem(classFile, classSymbol)
-                .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
+
+            if (classSymbol instanceof InterfaceSymbol) {
+              findInterfaceProblem(classFile, (InterfaceSymbol) classSymbol)
+                  .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
+            } else {
+              findSymbolProblem(classFile, classSymbol)
+                  .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
+            }
           }
         });
 
@@ -279,6 +286,63 @@ public class LinkageChecker {
       ClassSymbol classSymbol = new ClassSymbol(symbol.getClassName());
       return Optional.of(new SymbolProblem(classSymbol, ErrorType.CLASS_NOT_FOUND, null));
     }
+  }
+
+  /**
+   * Returns an {@code Optional} describing the linkage error for the interface if the methods of
+   * the interface are not implemented in the referencing class. Such unimplemented methods manifest
+   * as {@link AbstractMethodError} in runtime.
+   */
+  private Optional<SymbolProblem> findInterfaceProblem(
+      ClassFile classFile, InterfaceSymbol interfaceSymbol) {
+    String interfaceName = interfaceSymbol.getClassName();
+    if (classDumper.isSystemClass(interfaceName)) {
+      return Optional.empty();
+    }
+
+    JavaClass implementingClass;
+    JavaClass interfaceDefinition;
+    try {
+      implementingClass = classDumper.loadJavaClass(classFile.getClassName());
+      if (implementingClass.isAbstract()) {
+        // Abstract class does not need to implement methods in an interface.
+        return Optional.empty();
+      }
+      interfaceDefinition = classDumper.loadJavaClass(interfaceName);
+    } catch (ClassNotFoundException ex) {
+      // Missing classes are reported by findSymbolProblem method
+      return Optional.empty();
+    }
+
+    for (Method interfaceMethod : interfaceDefinition.getMethods()) {
+      Iterable<JavaClass> typesToCheck = Iterables.concat(getClassHierarchy(implementingClass));
+
+      Code code = interfaceMethod.getCode();
+      if (code != null) {
+        // This interface method has default implementation. Subclass does not have to implement it.
+        continue;
+      }
+      String interfaceMethodName = interfaceMethod.getName();
+      String interfaceMethodDescriptor = interfaceMethod.getSignature();
+      boolean methodFound = false;
+      for (JavaClass javaClass : typesToCheck) {
+        for (Method method : javaClass.getMethods()) {
+          if (method.getName().equals(interfaceMethodName)
+              && method.getSignature().equals(interfaceMethodDescriptor)) {
+            methodFound = true;
+            break;
+          }
+        }
+      }
+      if (!methodFound) {
+        return Optional.of(
+            new SymbolProblem(
+                new ClassSymbol(interfaceName),
+                ErrorType.INCOMPATIBLE_CLASS_CHANGE,
+                new ClassFile(classDumper.findClassLocation(interfaceName), interfaceName)));
+      }
+    }
+    return Optional.empty();
   }
 
   /**

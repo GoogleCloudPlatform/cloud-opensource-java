@@ -907,8 +907,10 @@ public class LinkageCheckerTest {
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
 
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
     Truth.assertWithMessage("Missing classes from jdk.vm.ci should not be reported")
-        .that(linkageChecker.findSymbolProblems().keySet())
+        .that(symbolProblems.keySet())
         .isEmpty();
   }
 
@@ -930,5 +932,51 @@ public class LinkageCheckerTest {
     Truth.assertWithMessage("Mockito's MockMethodDispatcher should not be reported")
         .that(linkageChecker.findSymbolProblems().keySet())
         .doesNotContain(unexpectedProblem);
+  }
+
+  @Test
+  public void testFindSymbolProblems_unimplementedInterfaceMethods()
+      throws IOException, URISyntaxException {
+    // Caller: com.google.api.gax.rpc.ClientContext (probably com.google.api:gax:1.48.0)
+    // Callee: public final class InstantiatingGrpcChannelProvider implements
+    // TransportChannelProvider gax-grpc:1.38.0
+    // This InstantiatingGrpcChannelProvider does not have needsCredentials
+
+    Path gax1_48 = absolutePathOfResource("testdata/gax-1.48.1.jar");
+    Path gaxGrpc1_38 = absolutePathOfResource("testdata/gax-grpc-1.38.0.jar");
+    ImmutableList<Path> jars = ImmutableList.of(gaxGrpc1_38, gax1_48);
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    SymbolProblem expectedProblem =
+        new SymbolProblem(
+            new ClassSymbol("com.google.api.gax.rpc.TransportChannelProvider"),
+            ErrorType.INCOMPATIBLE_CLASS_CHANGE,
+            new ClassFile(gax1_48, "com.google.api.gax.rpc.TransportChannelProvider"));
+
+    Truth.assertThat(symbolProblems.keySet()).contains(expectedProblem);
+  }
+
+  @Test
+  public void testFindSymbolProblems_defaultInterfaceMethods()
+      throws IOException, RepositoryException {
+    ImmutableList<Path> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    // com.oracle.svm.core.LibCHelperDirectives does not implement methods in CContext$Directives
+    // interface. But CContext$Directives should not be reported because it has default
+    // implementation for its methods
+    String unexpectedClass = "org.graalvm.nativeimage.c.CContext$Directives";
+    assertFalse(
+        symbolProblems.keySet().stream()
+            .anyMatch(
+                problem -> problem.getSymbol().getClassName().equals(unexpectedClass)));
   }
 }
