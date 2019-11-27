@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.logging.Logger;
+import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
