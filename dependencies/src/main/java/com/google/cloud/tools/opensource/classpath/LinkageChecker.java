@@ -288,9 +288,9 @@ public class LinkageChecker {
   }
 
   /**
-   * Returns an {@code Optional} describing the linkage error for the interface if the methods of
-   * the interface are not implemented in the referencing class. Such unimplemented methods manifest
-   * as {@link AbstractMethodError} in runtime.
+   * Returns an {@code Optional} describing the linkage error for the interface if any methods of
+   * the interface are not implemented in the referencing {@code classFile}. Such unimplemented
+   * methods manifest as {@link AbstractMethodError} in runtime.
    */
   private Optional<SymbolProblem> findInterfaceProblem(
       ClassFile classFile, InterfaceSymbol interfaceSymbol) {
