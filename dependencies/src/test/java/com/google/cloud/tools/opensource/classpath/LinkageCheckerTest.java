@@ -952,11 +952,16 @@ public class LinkageCheckerTest {
 
     SymbolProblem expectedProblem =
         new SymbolProblem(
-            new ClassSymbol("com.google.api.gax.rpc.TransportChannelProvider"),
-            ErrorType.INCOMPATIBLE_CLASS_CHANGE,
-            new ClassFile(gax1_48, "com.google.api.gax.rpc.TransportChannelProvider"));
-
+            new MethodSymbol(
+                "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
+                "needsCredentials",
+                "()Z",
+                false),
+            ErrorType.ABSTRACT_METHOD,
+            new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"));
     Truth.assertThat(symbolProblems.keySet()).contains(expectedProblem);
+    Truth.assertThat(symbolProblems.get(expectedProblem))
+        .contains((new ClassFile(gax1_48, "com.google.api.gax.rpc.TransportChannelProvider")));
   }
 
   @Test
