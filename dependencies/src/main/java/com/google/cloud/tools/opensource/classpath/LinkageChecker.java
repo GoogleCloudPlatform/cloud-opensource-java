@@ -299,47 +299,44 @@ public class LinkageChecker {
       return Optional.empty();
     }
 
-    JavaClass implementingClass;
-    JavaClass interfaceDefinition;
     try {
-      implementingClass = classDumper.loadJavaClass(classFile.getClassName());
+      JavaClass implementingClass = classDumper.loadJavaClass(classFile.getClassName());
       if (implementingClass.isAbstract()) {
         // Abstract class does not need to implement methods in an interface.
         return Optional.empty();
       }
-      interfaceDefinition = classDumper.loadJavaClass(interfaceName);
-    } catch (ClassNotFoundException ex) {
-      // Missing classes are reported by findSymbolProblem method
-      return Optional.empty();
-    }
+      JavaClass interfaceDefinition = classDumper.loadJavaClass(interfaceName);
+      for (Method interfaceMethod : interfaceDefinition.getMethods()) {
+        if (interfaceMethod.getCode() != null) {
+          // This interface method has default implementation. Subclass does not have to implement
+          // it.
+          continue;
+        }
+        String interfaceMethodName = interfaceMethod.getName();
+        String interfaceMethodDescriptor = interfaceMethod.getSignature();
+        boolean methodFound = false;
 
-    for (Method interfaceMethod : interfaceDefinition.getMethods()) {
-      if (interfaceMethod.getCode() != null) {
-        // This interface method has default implementation. Subclass does not have to implement it.
-        continue;
-      }
-      String interfaceMethodName = interfaceMethod.getName();
-      String interfaceMethodDescriptor = interfaceMethod.getSignature();
-      boolean methodFound = false;
-
-      Iterable<JavaClass> typesToCheck = Iterables.concat(getClassHierarchy(implementingClass));
-      for (JavaClass javaClass : typesToCheck) {
-        for (Method method : javaClass.getMethods()) {
-          if (method.getName().equals(interfaceMethodName)
-              && method.getSignature().equals(interfaceMethodDescriptor)) {
-            methodFound = true;
-            break;
+        Iterable<JavaClass> typesToCheck = Iterables.concat(getClassHierarchy(implementingClass));
+        for (JavaClass javaClass : typesToCheck) {
+          for (Method method : javaClass.getMethods()) {
+            if (method.getName().equals(interfaceMethodName)
+                && method.getSignature().equals(interfaceMethodDescriptor)) {
+              methodFound = true;
+              break;
+            }
           }
         }
+        if (!methodFound) {
+          return Optional.of(
+              new SymbolProblem(
+                  new ClassSymbol(interfaceName),
+                  // AbstractMethodError is a subclass of IncompatibleClassChangeError
+                  ErrorType.INCOMPATIBLE_CLASS_CHANGE,
+                  new ClassFile(classDumper.findClassLocation(interfaceName), interfaceName)));
+        }
       }
-      if (!methodFound) {
-        return Optional.of(
-            new SymbolProblem(
-                new ClassSymbol(interfaceName),
-                // AbstractMethodError is a subclass of IncompatibleClassChangeError
-                ErrorType.INCOMPATIBLE_CLASS_CHANGE,
-                new ClassFile(classDumper.findClassLocation(interfaceName), interfaceName)));
-      }
+    } catch (ClassNotFoundException ex) {
+      // Missing classes are reported by findSymbolProblem method.
     }
     return Optional.empty();
   }
