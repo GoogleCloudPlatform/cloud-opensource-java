@@ -975,9 +975,9 @@ public class LinkageCheckerTest {
         linkageChecker.findSymbolProblems();
 
     // com.oracle.svm.core.LibCHelperDirectives does not implement some methods in
-    // CContext$Directives interface. But CContext$Directives should not be reported as error
-    // because it has default implementation for the methods.
-    String unexpectedClass = "org.graalvm.nativeimage.c.CContext$Directives";
+    // CContext$Directives interface. But this should not be reported as an error because the
+    // interface has default implementation for the methods.
+    String unexpectedClass = "com.oracle.svm.core.LibCHelperDirectives";
     assertFalse(
         symbolProblems.keySet().stream()
             .anyMatch(problem -> problem.getSymbol().getClassName().equals(unexpectedClass)));
