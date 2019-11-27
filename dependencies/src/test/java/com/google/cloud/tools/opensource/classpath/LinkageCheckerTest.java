@@ -969,9 +969,9 @@ public class LinkageCheckerTest {
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
 
-    // com.oracle.svm.core.LibCHelperDirectives does not implement somemethods in
-    // CContext$Directives interface. But CContext$Directives should not be reported because it has
-    // default implementation for its methods.
+    // com.oracle.svm.core.LibCHelperDirectives does not implement some methods in
+    // CContext$Directives interface. But CContext$Directives should not be reported as error
+    // because it has default implementation for the methods.
     String unexpectedClass = "org.graalvm.nativeimage.c.CContext$Directives";
     assertFalse(
         symbolProblems.keySet().stream()
