@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.logging.Logger;
-import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
@@ -315,16 +314,15 @@ public class LinkageChecker {
     }
 
     for (Method interfaceMethod : interfaceDefinition.getMethods()) {
-      Iterable<JavaClass> typesToCheck = Iterables.concat(getClassHierarchy(implementingClass));
-
-      Code code = interfaceMethod.getCode();
-      if (code != null) {
+      if (interfaceMethod.getCode() != null) {
         // This interface method has default implementation. Subclass does not have to implement it.
         continue;
       }
       String interfaceMethodName = interfaceMethod.getName();
       String interfaceMethodDescriptor = interfaceMethod.getSignature();
       boolean methodFound = false;
+
+      Iterable<JavaClass> typesToCheck = Iterables.concat(getClassHierarchy(implementingClass));
       for (JavaClass javaClass : typesToCheck) {
         for (Method method : javaClass.getMethods()) {
           if (method.getName().equals(interfaceMethodName)

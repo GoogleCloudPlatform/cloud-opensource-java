@@ -976,7 +976,6 @@ public class LinkageCheckerTest {
     String unexpectedClass = "org.graalvm.nativeimage.c.CContext$Directives";
     assertFalse(
         symbolProblems.keySet().stream()
-            .anyMatch(
-                problem -> problem.getSymbol().getClassName().equals(unexpectedClass)));
+            .anyMatch(problem -> problem.getSymbol().getClassName().equals(unexpectedClass)));
   }
 }
