@@ -336,6 +336,7 @@ public class LinkageChecker {
         return Optional.of(
             new SymbolProblem(
                 new ClassSymbol(interfaceName),
+                // AbstractMethodError is a subclass of IncompatibleClassChangeError
                 ErrorType.INCOMPATIBLE_CLASS_CHANGE,
                 new ClassFile(classDumper.findClassLocation(interfaceName), interfaceName)));
       }

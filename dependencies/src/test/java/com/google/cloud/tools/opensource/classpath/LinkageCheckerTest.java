@@ -937,10 +937,9 @@ public class LinkageCheckerTest {
   @Test
   public void testFindSymbolProblems_unimplementedInterfaceMethods()
       throws IOException, URISyntaxException {
-    // Caller: com.google.api.gax.rpc.ClientContext (probably com.google.api:gax:1.48.0)
-    // Callee: public final class InstantiatingGrpcChannelProvider implements
-    // TransportChannelProvider gax-grpc:1.38.0
-    // This InstantiatingGrpcChannelProvider does not have needsCredentials
+    // Gax-grpc:1:38's InstantiatingGrpcChannelProvider does not have needsCredentials method of
+    // gax:1.48's TransportChannelProvider. This incompatibility manifests as AbstractMethodError
+    // when com.google.api.gax.rpc.ClientContext calls the method.
 
     Path gax1_48 = absolutePathOfResource("testdata/gax-1.48.1.jar");
     Path gaxGrpc1_38 = absolutePathOfResource("testdata/gax-grpc-1.38.0.jar");
@@ -970,9 +969,9 @@ public class LinkageCheckerTest {
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
 
-    // com.oracle.svm.core.LibCHelperDirectives does not implement methods in CContext$Directives
-    // interface. But CContext$Directives should not be reported because it has default
-    // implementation for its methods
+    // com.oracle.svm.core.LibCHelperDirectives does not implement somemethods in
+    // CContext$Directives interface. But CContext$Directives should not be reported because it has
+    // default implementation for its methods.
     String unexpectedClass = "org.graalvm.nativeimage.c.CContext$Directives";
     assertFalse(
         symbolProblems.keySet().stream()
