@@ -907,8 +907,10 @@ public class LinkageCheckerTest {
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
 
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
     Truth.assertWithMessage("Missing classes from jdk.vm.ci should not be reported")
-        .that(linkageChecker.findSymbolProblems().keySet())
+        .that(symbolProblems.keySet())
         .isEmpty();
   }
 
@@ -930,5 +932,66 @@ public class LinkageCheckerTest {
     Truth.assertWithMessage("Mockito's MockMethodDispatcher should not be reported")
         .that(linkageChecker.findSymbolProblems().keySet())
         .doesNotContain(unexpectedProblem);
+  }
+
+  @Test
+  public void testFindSymbolProblems_unimplementedInterfaceMethods()
+      throws IOException, URISyntaxException {
+    // Gax-grpc:1:38's InstantiatingGrpcChannelProvider does not have needsCredentials method of
+    // gax:1.48's TransportChannelProvider. This incompatibility manifests as AbstractMethodError
+    // when com.google.api.gax.rpc.ClientContext calls the method.
+
+    Path gax1_48 = absolutePathOfResource("testdata/gax-1.48.1.jar");
+    Path gaxGrpc1_38 = absolutePathOfResource("testdata/gax-grpc-1.38.0.jar");
+    ImmutableList<Path> jars = ImmutableList.of(gaxGrpc1_38, gax1_48);
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    // The two unimplemented methods should be reported separately
+    SymbolProblem expectedProblemOnNeedsCredentials =
+        new SymbolProblem(
+            new MethodSymbol(
+                "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
+                "needsCredentials",
+                "()Z",
+                false),
+            ErrorType.ABSTRACT_METHOD,
+            new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"));
+    SymbolProblem expectedProblemOnWithCredentials =
+        new SymbolProblem(
+            new MethodSymbol(
+                "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
+                "withCredentials",
+                "(Lcom/google/auth/Credentials;)Lcom/google/api/gax/rpc/TransportChannelProvider;",
+                false),
+            ErrorType.ABSTRACT_METHOD,
+            new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"));
+    Truth.assertThat(symbolProblems.keySet()).contains(expectedProblemOnNeedsCredentials);
+    Truth.assertThat(symbolProblems.keySet()).contains(expectedProblemOnWithCredentials);
+
+    Truth.assertThat(symbolProblems.get(expectedProblemOnNeedsCredentials))
+        .contains((new ClassFile(gax1_48, "com.google.api.gax.rpc.TransportChannelProvider")));
+  }
+
+  @Test
+  public void testFindSymbolProblems_defaultInterfaceMethods()
+      throws IOException, RepositoryException {
+    ImmutableList<Path> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    // com.oracle.svm.core.LibCHelperDirectives does not implement some methods in
+    // CContext$Directives interface. But this should not be reported as an error because the
+    // interface has default implementation for the methods.
+    String unexpectedClass = "com.oracle.svm.core.LibCHelperDirectives";
+    assertFalse(
+        symbolProblems.keySet().stream()
+            .anyMatch(problem -> problem.getSymbol().getClassName().equals(unexpectedClass)));
   }
 }
