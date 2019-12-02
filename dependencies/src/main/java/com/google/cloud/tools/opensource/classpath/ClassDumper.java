@@ -121,6 +121,7 @@ class ClassDumper {
     return extensionClassLoader.loadClass(className);
   }
 
+  /** Returns true if {@code className} is available in the system class loader. */
   boolean isSystemClass(String className) {
     try {
       if (className.startsWith("[")) {
@@ -211,6 +212,10 @@ class ClassDumper {
         default:
           break;
       }
+    }
+
+    for (String interfaceName : javaClass.getInterfaceNames()) {
+      builder.addClassReference(source, new InterfaceSymbol(interfaceName));
     }
 
     return builder;
