@@ -131,8 +131,22 @@ public class LinkageChecker {
           if (!classDumper
               .classesDefinedInJar(classFile.getJar())
               .contains(classSymbol.getClassName())) {
-            findSymbolProblem(classFile, classSymbol)
-                .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
+
+            if (classSymbol instanceof InterfaceSymbol) {
+              ImmutableList<SymbolProblem> problems =
+                  findInterfaceProblems(classFile, (InterfaceSymbol) classSymbol);
+              if (!problems.isEmpty()) {
+                String interfaceName = classSymbol.getClassName();
+                Path interfaceLocation = classDumper.findClassLocation(interfaceName);
+                ClassFile interfaceClassFile = new ClassFile(interfaceLocation, interfaceName);
+                for (SymbolProblem problem : problems) {
+                  problemToClass.put(problem, interfaceClassFile);
+                }
+              }
+            } else {
+              findSymbolProblem(classFile, classSymbol)
+                  .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
+            }
           }
         });
 
@@ -279,6 +293,59 @@ public class LinkageChecker {
       ClassSymbol classSymbol = new ClassSymbol(symbol.getClassName());
       return Optional.of(new SymbolProblem(classSymbol, ErrorType.CLASS_NOT_FOUND, null));
     }
+  }
+
+  /**
+   * Returns the linkage errors for unimplemented methods in {@code classFile}. Such unimplemented
+   * methods manifest as {@link AbstractMethodError} in runtime.
+   */
+  private ImmutableList<SymbolProblem> findInterfaceProblems(
+      ClassFile classFile, InterfaceSymbol interfaceSymbol) {
+    String interfaceName = interfaceSymbol.getClassName();
+    if (classDumper.isSystemClass(interfaceName)) {
+      return ImmutableList.of();
+    }
+
+    ImmutableList.Builder<SymbolProblem> builder = ImmutableList.builder();
+    try {
+      JavaClass implementingClass = classDumper.loadJavaClass(classFile.getClassName());
+      if (implementingClass.isAbstract()) {
+        // Abstract class does not need to implement methods in an interface.
+        return ImmutableList.of();
+      }
+      JavaClass interfaceDefinition = classDumper.loadJavaClass(interfaceName);
+      for (Method interfaceMethod : interfaceDefinition.getMethods()) {
+        if (interfaceMethod.getCode() != null) {
+          // This interface method has default implementation. Subclass does not have to implement
+          // it.
+          continue;
+        }
+        String interfaceMethodName = interfaceMethod.getName();
+        String interfaceMethodDescriptor = interfaceMethod.getSignature();
+        boolean methodFound = false;
+
+        Iterable<JavaClass> typesToCheck = Iterables.concat(getClassHierarchy(implementingClass));
+        for (JavaClass javaClass : typesToCheck) {
+          for (Method method : javaClass.getMethods()) {
+            if (method.getName().equals(interfaceMethodName)
+                && method.getSignature().equals(interfaceMethodDescriptor)) {
+              methodFound = true;
+              break;
+            }
+          }
+        }
+        if (!methodFound) {
+          MethodSymbol missingMethodOnClass =
+              new MethodSymbol(
+                  classFile.getClassName(), interfaceMethodName, interfaceMethodDescriptor, false);
+          builder.add(
+              new SymbolProblem(missingMethodOnClass, ErrorType.ABSTRACT_METHOD, classFile));
+        }
+      }
+    } catch (ClassNotFoundException ex) {
+      // Missing classes are reported by findSymbolProblem method.
+    }
+    return builder.build();
   }
 
   /**

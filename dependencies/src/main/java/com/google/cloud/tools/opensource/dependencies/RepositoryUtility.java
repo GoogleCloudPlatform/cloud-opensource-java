@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Logger;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.execution.DefaultMavenExecutionRequest;
@@ -201,18 +202,25 @@ public final class RepositoryUtility {
             .setJSR250Lifecycle(true)
             .setName("linkage-checker");
     try {
-    PlexusContainer container = new DefaultPlexusContainer(containerConfiguration);
+      PlexusContainer container = new DefaultPlexusContainer(containerConfiguration);
 
-    MavenExecutionRequest mavenExecutionRequest = new DefaultMavenExecutionRequest();
-    ProjectBuildingRequest projectBuildingRequest =
-        mavenExecutionRequest.getProjectBuildingRequest();
+      MavenExecutionRequest mavenExecutionRequest = new DefaultMavenExecutionRequest();
+      ProjectBuildingRequest projectBuildingRequest =
+          mavenExecutionRequest.getProjectBuildingRequest();
 
-    projectBuildingRequest.setRepositorySession(session);
+      projectBuildingRequest.setRepositorySession(session);
 
-    ProjectBuilder projectBuilder = container.lookup(ProjectBuilder.class);
-    ProjectBuildingResult projectBuildingResult =
-        projectBuilder.build(pomFile.toFile(), projectBuildingRequest);
-    return projectBuildingResult.getProject();
+      // Profile activation needs properties such as JDK version
+      Properties properties = new Properties(); // allowing duplicate entries
+      properties.putAll(projectBuildingRequest.getSystemProperties());
+      properties.putAll(DependencyGraphBuilder.detectOsProperties());
+      properties.putAll(System.getProperties());
+      projectBuildingRequest.setSystemProperties(properties);
+
+      ProjectBuilder projectBuilder = container.lookup(ProjectBuilder.class);
+      ProjectBuildingResult projectBuildingResult =
+          projectBuilder.build(pomFile.toFile(), projectBuildingRequest);
+      return projectBuildingResult.getProject();
     } catch (PlexusContainerException | ComponentLookupException | ProjectBuildingException ex) {
       throw new MavenRepositoryException(ex);
     }

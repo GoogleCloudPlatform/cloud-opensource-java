@@ -37,6 +37,12 @@ public enum ErrorType {
   INCOMPATIBLE_CLASS_CHANGE("has changed incompatibly"),
 
   /**
+   * The referenced method is not implemented in the class but the class is declared to implement
+   * the method. Such unimplemented methods manifest as {@link AbstractMethodError} in runtime.
+   */
+  ABSTRACT_METHOD("is not implemented in the class"),
+
+  /**
    * The target class of the symbol reference is inaccessible to the source class.
    *
    * <p>If the source class is in a different package, the class or one of its enclosing types is
