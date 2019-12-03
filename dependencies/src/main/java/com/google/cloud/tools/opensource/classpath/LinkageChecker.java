@@ -145,6 +145,10 @@ public class LinkageChecker {
                 }
               }
             } else {
+              if (classSymbol instanceof SuperClassSymbol) {
+                ImmutableList<SymbolProblem> problems =
+                    findAbstractParentProblems(classFile, (SuperClassSymbol) classSymbol);
+              }
               findSymbolProblem(classFile, classSymbol)
                   .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
             }
@@ -545,5 +549,56 @@ public class LinkageChecker {
       }
     }
     return Optional.empty();
+  }
+
+  private ImmutableList<SymbolProblem> findAbstractParentProblems(ClassFile classFile, SuperClassSymbol superClassSymbol) {
+    ImmutableList.Builder<SymbolProblem> builder = ImmutableList.builder();
+    String superClassName = superClassSymbol.getClassName();
+    if (classDumper.isSystemClass(superClassName)) {
+      return ImmutableList.of();
+    }
+
+    try {
+      JavaClass implementingClass = classDumper.loadJavaClass(classFile.getClassName());
+      if (implementingClass.isAbstract()) {
+        return ImmutableList.of();
+      }
+
+      JavaClass superClass = classDumper.loadJavaClass(superClassName);
+      if (! superClass.isAbstract()) {
+        return ImmutableList.of();
+      }
+
+      for (Method abstractMethod : implementingClass.getMethods()) {
+        if (abstractMethod.getCode() != null) {
+          // This abstract method has implementation. Subclass does not have to implement it.
+          continue;
+        }
+        String abstractMethodName = abstractMethod.getName();
+        String abstractMethodDescriptor = abstractMethod.getSignature();
+        boolean methodFound = false;
+
+        Iterable<JavaClass> typesToCheck = Iterables.concat(getClassHierarchy(implementingClass));
+        for (JavaClass javaClass : typesToCheck) {
+          for (Method method : javaClass.getMethods()) {
+            if (method.getName().equals(abstractMethodName)
+                && method.getSignature().equals(abstractMethodDescriptor)) {
+              methodFound = true;
+              break;
+            }
+          }
+        }
+        if (!methodFound) {
+          MethodSymbol missingMethodOnClass =
+              new MethodSymbol(
+                  classFile.getClassName(), abstractMethodName, abstractMethodDescriptor, false);
+          builder.add(
+              new SymbolProblem(missingMethodOnClass, ErrorType.ABSTRACT_METHOD, classFile));
+        }
+      }
+    } catch (ClassNotFoundException ex) {
+      // Missing classes are reported by findSymbolProblem method.
+    }
+    return builder.build();
   }
 }
