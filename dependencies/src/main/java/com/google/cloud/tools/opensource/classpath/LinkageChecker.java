@@ -148,6 +148,14 @@ public class LinkageChecker {
               if (classSymbol instanceof SuperClassSymbol) {
                 ImmutableList<SymbolProblem> problems =
                     findAbstractParentProblems(classFile, (SuperClassSymbol) classSymbol);
+                if (!problems.isEmpty()) {
+                  String superClassName = classSymbol.getClassName();
+                  Path superClassLocation = classDumper.findClassLocation(superClassName);
+                  ClassFile superClassFile = new ClassFile(superClassLocation, superClassName);
+                  for (SymbolProblem problem : problems) {
+                    problemToClass.put(problem, superClassFile);
+                  }
+                }
               }
               findSymbolProblem(classFile, classSymbol)
                   .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
