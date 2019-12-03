@@ -36,8 +36,9 @@ A single version range such as `<version>[2.3]</version>` is even stricter,
 requiring version 2.3 and no other. If two `dependency` elements in the
 graph have non-overlapping version ranges, the build fails.
 
-Some projects such as gRPC specify single element version ranges to 
-cause the build to fail early when multiple versions are mixed. For example, 
+Some multimodule  projects such as gRPC specify single element version ranges
+to cause the build to fail early when multiple versions of *intraproject*
+dependencies are mixed. For example, 
 `io.grpc:grpc-alts:1.25.0` depends on exactly `io.grpc:grpc-core:1.25.0`:
 
 ```
@@ -50,16 +51,21 @@ cause the build to fail early when multiple versions are mixed. For example,
 
 `io.grpc:grpc-alts:1.25.0` and `io.grpc:grpc-core:1.23.0` cannot appear in 
 the classpath at the same time. If dependency mediation selects both
-`io.grpc:grpc-alts:1.25.0` and `io.grpc:grpc-core:1.23.0`, the build fails; and the developer must fix the conflict before they can proceed.
+`io.grpc:grpc-alts:1.25.0` and `io.grpc:grpc-core:1.23.0`, the build fails; and the developer must fix the conflict before they can proceed. This still
+adds friction for developers who depend on multiple versions of
+different modules, especially if they only depend on the different 
+versions through several layers of transitive dependencies. It can be 
+necessary when different modules are tightly coupled to each other,
+but it is not ideal.
 
-Rapidly changing, pre-1.0 projects with unstable APIs can use hard
-requirements such as such as `<version>[0.24.0]</version>` for
-intraproject dependencies to ensure their modules all work together. 
+Rapidly changing, pre-1.0 projects with unstable APIs have a greater 
+need for hard requirements such as `<version>[0.24.0]</version>` 
+to ensure their modules all work together. 
 OpenCensus did not do this, and as a result there have been several problems
 when different versions of different OpenCensus artifacts that 
 did not work with each other appeared in other projects' 
-classpath at the same time. It is at best a stopgap measure that should be
-discarded once the API stabilizes.
+classpath at the same time. In the best case, hard requirements are
+a stopgap measure that can be discarded once the API stabilizes.
 
 Even if all hard requirements can be satisfied, version ranges override
 the normal Maven algorithm for selecting among different versions of the
