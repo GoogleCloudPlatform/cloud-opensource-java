@@ -991,9 +991,12 @@ public class LinkageCheckerTest {
     // CContext$Directives interface. But this should not be reported as an error because the
     // interface has default implementation for the methods.
     String unexpectedClass = "com.oracle.svm.core.LibCHelperDirectives";
-    assertFalse(
-        symbolProblems.keySet().stream()
-            .anyMatch(problem -> problem.getSymbol().getClassName().equals(unexpectedClass)));
+    Truth.assertThat(symbolProblems.keySet())
+        .comparingElementsUsing(
+            Correspondence.transforming(
+                (SymbolProblem problem) -> problem.getSymbol().getClassName(),
+                "has symbol problem on class"))
+        .doesNotContain(unexpectedClass);
   }
 
   @Test
@@ -1045,7 +1048,7 @@ public class LinkageCheckerTest {
 
     // com.oracle.svm.core.genscavenge.PinnedAllocatorImpl extends an abstract class
     // com.oracle.svm.core.heap.PinnedAllocator. The superclass has native methods, such as
-    // newInstance. These native methods should not be reported as unimplemented methods.
+    // "newInstance". These native methods should not be reported as unimplemented methods.
     String unexpectedClass = "com.oracle.svm.core.genscavenge.PinnedAllocatorImpl";
     Truth.assertThat(symbolProblems.keySet())
         .comparingElementsUsing(
