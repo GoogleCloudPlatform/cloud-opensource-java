@@ -51,7 +51,7 @@ dependencies are mixed. For example,
 
 `io.grpc:grpc-alts:1.25.0` and `io.grpc:grpc-core:1.23.0` cannot appear in 
 the classpath at the same time. If dependency mediation selects both
-`io.grpc:grpc-alts:1.25.0` and `io.grpc:grpc-core:1.23.0`, the build fails; and the developer must fix the conflict before they can proceed. This still
+`io.grpc:grpc-alts:1.25.0` and `io.grpc:grpc-core:1.23.0`, the build fails, and the developer must fix the conflict before they can proceed. This still
 adds friction for developers who depend on multiple versions of
 different modules, especially if they only depend on the different 
 versions through several layers of transitive dependencies. It can be 
