@@ -1002,7 +1002,7 @@ public class LinkageCheckerTest {
   @Test
   public void testFindSymbolProblems_unimplementedAbstractMethod()
       throws RepositoryException, IOException {
-    // Non-abstract NioEventLoopGroup class extends NioEventLoopGroup.
+    // Non-abstract NioEventLoopGroup class extends MultithreadEventLoopGroup.
     // Abstract MultithreadEventLoopGroup class extends MultithreadEventExecutorGroup
     // Abstract MultithreadEventExecutorGroup class has abstract newChild method.
     // Netty version discrepancy between 4.0 and 4.1 causes AbstractMethodError.
