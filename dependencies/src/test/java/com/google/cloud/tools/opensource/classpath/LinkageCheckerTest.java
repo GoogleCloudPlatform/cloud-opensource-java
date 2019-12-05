@@ -50,6 +50,11 @@ import org.junit.Test;
 
 public class LinkageCheckerTest {
 
+  private static final Correspondence<SymbolProblem, String> HAS_SYMBOL_IN_CLASS =
+      Correspondence.transforming(
+          (SymbolProblem problem) -> problem.getSymbol().getClassName(),
+          "has symbol in class with name");
+
   private Path guavaPath;
   private Path firestorePath;
 
@@ -992,10 +997,7 @@ public class LinkageCheckerTest {
     // interface has default implementation for the methods.
     String unexpectedClass = "com.oracle.svm.core.LibCHelperDirectives";
     Truth.assertThat(symbolProblems.keySet())
-        .comparingElementsUsing(
-            Correspondence.transforming(
-                (SymbolProblem problem) -> problem.getSymbol().getClassName(),
-                "has symbol problem on class"))
+        .comparingElementsUsing(HAS_SYMBOL_IN_CLASS)
         .doesNotContain(unexpectedClass);
   }
 
@@ -1021,7 +1023,7 @@ public class LinkageCheckerTest {
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
 
-    MethodSymbol expectedMethodSymbolError =
+    MethodSymbol expectedMethodSymbol =
         new MethodSymbol(
             "io.netty.channel.nio.NioEventLoopGroup",
             "newChild",
@@ -1029,11 +1031,8 @@ public class LinkageCheckerTest {
             false);
 
     Truth.assertThat(symbolProblems.keySet())
-        .comparingElementsUsing(
-            Correspondence.transforming(
-                (SymbolProblem problem) -> problem.getSymbol(),
-                "has symbol problem with method symbol"))
-        .contains(expectedMethodSymbolError);
+        .comparingElementsUsing(Correspondence.transforming(SymbolProblem::getSymbol, "has symbol"))
+        .contains(expectedMethodSymbol);
   }
 
   @Test
@@ -1051,10 +1050,7 @@ public class LinkageCheckerTest {
     // "newInstance". These native methods should not be reported as unimplemented methods.
     String unexpectedClass = "com.oracle.svm.core.genscavenge.PinnedAllocatorImpl";
     Truth.assertThat(symbolProblems.keySet())
-        .comparingElementsUsing(
-            Correspondence.transforming(
-                (SymbolProblem problem) -> problem.getSymbol().getClassName(),
-                "has symbol problem on class"))
+        .comparingElementsUsing(HAS_SYMBOL_IN_CLASS)
         .doesNotContain(unexpectedClass);
   }
 }

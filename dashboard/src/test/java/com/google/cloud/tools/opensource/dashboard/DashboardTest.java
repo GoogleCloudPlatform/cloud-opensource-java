@@ -56,9 +56,7 @@ import org.junit.Test;
 public class DashboardTest {
 
   private static final Correspondence<Node, String> NODE_VALUES =
-      Correspondence.from((node, expected) ->
-          trimAndCollapseWhiteSpace(node.getValue())
-          .equals(expected), "has value equal to");
+      Correspondence.transforming(node -> trimAndCollapseWhiteSpace(node.getValue()), "has value");
 
   private static String trimAndCollapseWhiteSpace(String value) {
     return CharMatcher.whitespace().trimAndCollapseFrom(value, ' ');
