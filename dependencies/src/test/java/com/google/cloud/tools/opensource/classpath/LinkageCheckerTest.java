@@ -50,11 +50,11 @@ import org.junit.Test;
 
 public class LinkageCheckerTest {
 
-  private static final Correspondence<SymbolProblem, String> HAS_SYMBOL_IN_CLASS = Correspondence
-      .transforming(
-      (SymbolProblem problem) -> problem.getSymbol().getClassName(),
-      "has symbol in class with name");
-  
+  private static final Correspondence<SymbolProblem, String> HAS_SYMBOL_IN_CLASS =
+      Correspondence.transforming(
+          (SymbolProblem problem) -> problem.getSymbol().getClassName(),
+          "has symbol in class with name");
+
   private Path guavaPath;
   private Path firestorePath;
 
@@ -997,8 +997,7 @@ public class LinkageCheckerTest {
     // interface has default implementation for the methods.
     String unexpectedClass = "com.oracle.svm.core.LibCHelperDirectives";
     Truth.assertThat(symbolProblems.keySet())
-        .comparingElementsUsing(
-            HAS_SYMBOL_IN_CLASS)
+        .comparingElementsUsing(HAS_SYMBOL_IN_CLASS)
         .doesNotContain(unexpectedClass);
   }
 
@@ -1032,9 +1031,7 @@ public class LinkageCheckerTest {
             false);
 
     Truth.assertThat(symbolProblems.keySet())
-        .comparingElementsUsing(
-            Correspondence.transforming(
-                SymbolProblem::getSymbol, "has symbol"))
+        .comparingElementsUsing(Correspondence.transforming(SymbolProblem::getSymbol, "has symbol"))
         .contains(expectedMethodSymbol);
   }
 
@@ -1053,8 +1050,7 @@ public class LinkageCheckerTest {
     // "newInstance". These native methods should not be reported as unimplemented methods.
     String unexpectedClass = "com.oracle.svm.core.genscavenge.PinnedAllocatorImpl";
     Truth.assertThat(symbolProblems.keySet())
-        .comparingElementsUsing(
-            HAS_SYMBOL_IN_CLASS)
+        .comparingElementsUsing(HAS_SYMBOL_IN_CLASS)
         .doesNotContain(unexpectedClass);
   }
 }
