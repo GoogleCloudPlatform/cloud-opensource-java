@@ -50,6 +50,11 @@ import org.junit.Test;
 
 public class LinkageCheckerTest {
 
+  private static final Correspondence<SymbolProblem, String> HAS_SYMBOL_PROBLEM_ON_CLASS = Correspondence
+      .transforming(
+      (SymbolProblem problem) -> problem.getSymbol().getClassName(),
+      "has symbol in class with name");
+  
   private Path guavaPath;
   private Path firestorePath;
 
@@ -993,9 +998,7 @@ public class LinkageCheckerTest {
     String unexpectedClass = "com.oracle.svm.core.LibCHelperDirectives";
     Truth.assertThat(symbolProblems.keySet())
         .comparingElementsUsing(
-            Correspondence.transforming(
-                (SymbolProblem problem) -> problem.getSymbol().getClassName(),
-                "has symbol problem on class"))
+            HAS_SYMBOL_PROBLEM_ON_CLASS)
         .doesNotContain(unexpectedClass);
   }
 
@@ -1021,7 +1024,7 @@ public class LinkageCheckerTest {
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
 
-    MethodSymbol expectedMethodSymbolError =
+    MethodSymbol expectedMethodSymbol =
         new MethodSymbol(
             "io.netty.channel.nio.NioEventLoopGroup",
             "newChild",
@@ -1031,9 +1034,8 @@ public class LinkageCheckerTest {
     Truth.assertThat(symbolProblems.keySet())
         .comparingElementsUsing(
             Correspondence.transforming(
-                (SymbolProblem problem) -> problem.getSymbol(),
-                "has symbol problem with method symbol"))
-        .contains(expectedMethodSymbolError);
+                SymbolProblem::getSymbol, "has symbol"))
+        .contains(expectedMethodSymbol);
   }
 
   @Test
@@ -1052,9 +1054,7 @@ public class LinkageCheckerTest {
     String unexpectedClass = "com.oracle.svm.core.genscavenge.PinnedAllocatorImpl";
     Truth.assertThat(symbolProblems.keySet())
         .comparingElementsUsing(
-            Correspondence.transforming(
-                (SymbolProblem problem) -> problem.getSymbol().getClassName(),
-                "has symbol problem on class"))
+            HAS_SYMBOL_PROBLEM_ON_CLASS)
         .doesNotContain(unexpectedClass);
   }
 }
