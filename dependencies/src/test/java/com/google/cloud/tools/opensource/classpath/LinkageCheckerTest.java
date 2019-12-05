@@ -50,7 +50,7 @@ import org.junit.Test;
 
 public class LinkageCheckerTest {
 
-  private static final Correspondence<SymbolProblem, String> HAS_SYMBOL_PROBLEM_ON_CLASS = Correspondence
+  private static final Correspondence<SymbolProblem, String> HAS_SYMBOL_IN_CLASS = Correspondence
       .transforming(
       (SymbolProblem problem) -> problem.getSymbol().getClassName(),
       "has symbol in class with name");
@@ -998,7 +998,7 @@ public class LinkageCheckerTest {
     String unexpectedClass = "com.oracle.svm.core.LibCHelperDirectives";
     Truth.assertThat(symbolProblems.keySet())
         .comparingElementsUsing(
-            HAS_SYMBOL_PROBLEM_ON_CLASS)
+            HAS_SYMBOL_IN_CLASS)
         .doesNotContain(unexpectedClass);
   }
 
@@ -1054,7 +1054,7 @@ public class LinkageCheckerTest {
     String unexpectedClass = "com.oracle.svm.core.genscavenge.PinnedAllocatorImpl";
     Truth.assertThat(symbolProblems.keySet())
         .comparingElementsUsing(
-            HAS_SYMBOL_PROBLEM_ON_CLASS)
+            HAS_SYMBOL_IN_CLASS)
         .doesNotContain(unexpectedClass);
   }
 }
