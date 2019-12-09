@@ -31,3 +31,10 @@ Run the following Rapid release pipelines:
 The release pipelines can run concurrently. For example, you don't have to wait for
 `dependencies-parent` pipeline before initiating `dependencies` pipeline. They use different
 GCS buckets.
+
+## Update the document
+
+Update the version element of `linkage-checker-enforcer-rules` dependency in the usage section of the wiki:
+https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Enforcer-Rule
+
+
