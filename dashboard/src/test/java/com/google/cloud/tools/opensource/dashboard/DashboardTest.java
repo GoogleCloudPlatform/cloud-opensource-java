@@ -221,7 +221,7 @@ public class DashboardTest {
 
     Node dependencyPathMessageOnSource = dependencyPaths.get(dependencyPaths.size() - 1);
     Assert.assertEquals(
-        "The following paths contains guava-27.1-android.jar:",
+        "The following paths contain guava-27.1-android.jar:",
         trimAndCollapseWhiteSpace(dependencyPathMessageOnSource.getValue()));
     int dependencyPathListSize =
         details.query("//ul[@class='linkage-check-dependency-paths']/li").size();

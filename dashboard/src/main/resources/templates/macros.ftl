@@ -56,7 +56,7 @@
 <#macro showDependencyPath dependencyPathRootCauses jarToDependencyPaths jar>
   <#assign dependencyPaths = jarToDependencyPaths.get(jar) />
   <p class="linkage-check-dependency-paths">
-    The following ${plural(dependencyPaths?size, "path", "paths")}  contains ${jar.getFileName()?html}:
+    The following ${plural(dependencyPaths?size, "path contains", "paths contain")} ${jar.getFileName()?html}:
   </p>
 
   <#if dependencyPathRootCauses[jar]?? >
