@@ -24,7 +24,14 @@
     causing linkage errors referenced from
     ${pluralize(referenceCount, "source class", "source classes")}.
   </p>
+  <#assign jarsInProblem = {} >
   <#list problemsToClasses as symbolProblem, sourceClasses>
+    <#if (symbolProblem.getContainingClass())?? >
+      <!-- Freemarker's hash requires the key to be string.
+      https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys -->
+      <#assign jarsInProblem = jarsInProblem
+        + { symbolProblem.getContainingClass().getJar().toString() :  symbolProblem.getContainingClass().getJar() } >
+    </#if>
     <p class="jar-linkage-report-cause">${symbolProblem?html}, referenced from ${
       pluralize(sourceClasses?size, "class", "classes")?html}
       <button onclick="toggleSourceClassListVisibility(this)"
@@ -52,6 +59,19 @@
         </#list>
     </ul>
   </#if>
+
+  <#list jarsInProblem?values as jarInProblem>
+    <#if dependencyPathRootCauses[jarInProblem]??>
+      <p class="linkage-check-dependency-paths">${dependencyPathRootCauses[jarInProblem]?html}</p>
+    <#else>
+      <ul class="linkage-check-dependency-paths">
+        <#list jarToDependencyPaths.get(jarInProblem) as dependencyPath >
+          <li>${dependencyPath}</li>
+        </#list>
+      </ul>
+    </#if>
+  </#list>
+
 </#macro>
 
 <#macro formatDependencyNode currentNode parent>
