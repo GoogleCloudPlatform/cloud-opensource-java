@@ -51,8 +51,8 @@ public class MaximumLinkageErrorsTest {
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> oldProblems =
         LinkageChecker.create(baseline).findSymbolProblems();
-    ImmutableSetMultimap<SymbolProblem, ClassFile> currentProblems =
-        LinkageChecker.create(bom).findSymbolProblems();
+    LinkageChecker checker = LinkageChecker.create(bom);
+    ImmutableSetMultimap<SymbolProblem, ClassFile> currentProblems = checker.findSymbolProblems();
 
     // This only tests for newly missing methods, not new references to
     // previously missing methods.
