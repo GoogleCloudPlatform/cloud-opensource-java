@@ -213,12 +213,16 @@ public class DashboardTest {
         .isEqualTo(
             "106 target classes causing linkage errors referenced from 516 source classes.");
 
-    Nodes dependencyPaths = details.query(
-        "//p[@class='linkage-check-dependency-paths'][position()=last()]");
-    Node dependencyPathMessage = dependencyPaths.get(0);
+    Nodes dependencyPaths = details.query("//p[@class='linkage-check-dependency-paths']");
+    Node dependencyPathMessageOnProblem = dependencyPaths.get(dependencyPaths.size() - 2);
     Assert.assertEquals(
-        "The following paths to the jar file from the BOM are found in the dependency tree:",
-        trimAndCollapseWhiteSpace(dependencyPathMessage.getValue()));
+        "The following path contains guava-jdk5-17.0.jar:",
+        trimAndCollapseWhiteSpace(dependencyPathMessageOnProblem.getValue()));
+
+    Node dependencyPathMessageOnSource = dependencyPaths.get(dependencyPaths.size() - 1);
+    Assert.assertEquals(
+        "The following paths contain guava-27.1-android.jar:",
+        trimAndCollapseWhiteSpace(dependencyPathMessageOnSource.getValue()));
     int dependencyPathListSize =
         details.query("//ul[@class='linkage-check-dependency-paths']/li").size();
     Truth.assertWithMessage("The dashboard should not show repetitive dependency paths")
