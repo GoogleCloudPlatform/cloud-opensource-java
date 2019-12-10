@@ -152,8 +152,9 @@ final class LinkageCheckerArguments {
         Option.builder("r")
             .longOpt("report-only-reachable")
             .hasArg(false)
-            .desc("Report only reachable linkage errors from the classes in the specified BOM or " +
-            "Maven artifacts")
+            .desc(
+                "Report only reachable linkage errors from the classes in the specified BOM or "
+                    + "Maven artifacts")
             .build();
     options.addOption(reportOnlyReachable);
 

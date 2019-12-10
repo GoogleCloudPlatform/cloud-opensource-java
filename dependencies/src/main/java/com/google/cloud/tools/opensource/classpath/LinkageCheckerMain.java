@@ -55,9 +55,10 @@ class LinkageCheckerMain {
 
     if (linkageCheckerArguments.getReportOnlyReachable()) {
       ClassReferenceGraph graph = linkageChecker.getClassReferenceGraph();
-      symbolProblems = ImmutableSetMultimap.copyOf(
-          Multimaps.filterValues(symbolProblems,
-              classFile -> graph.isReachable(classFile.getClassName())));
+      symbolProblems =
+          ImmutableSetMultimap.copyOf(
+              Multimaps.filterValues(
+                  symbolProblems, classFile -> graph.isReachable(classFile.getClassName())));
     }
 
     System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
