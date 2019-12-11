@@ -125,17 +125,28 @@ public class DependencyGraphBuilder {
       List<DependencyNode> dependencyNodes, boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
 
+    ImmutableList.Builder<Dependency> dependenciesBuilder = ImmutableList.builder();
+    for (DependencyNode dependencyNode : dependencyNodes) {
+      Dependency dependency = dependencyNode.getDependency();
+      if (dependency == null) {
+        // Root DependencyNode has null dependency field.
+        dependenciesBuilder.add(new Dependency(dependencyNode.getArtifact(), "compile"));
+      } else {
+        // The dependency field carries exclusions
+        dependenciesBuilder.add(dependency.setScope("compile"));
+      }
+    }
+    ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
+
     // The cache key includes exclusion elements of Maven artifacts
     Map<Dependency, DependencyNode> cache =
         includeProvidedScope ? cacheWithProvidedScope : cacheWithoutProvidedScope;
-    Dependency cacheKey = null;
-    if (dependencyNodes.size() == 1) {
-      // Cache is only needed for a single artifact resolution. A call with multiple dependencyNodes
-      // will not come again in our usage.
-      cacheKey = dependencyNodes.get(0).getDependency();
-      if (cache.containsKey(cacheKey)) {
-        return cache.get(cacheKey);
-      }
+    // cacheKey is null when there's no need to use cache. Cache is only needed for a single
+    // artifact's dependency resolution. A call with multiple dependencyNodes will not come again
+    // in our usage.
+    Dependency cacheKey = dependencyList.size() == 1 ? dependencyList.get(0) : null;
+    if (cacheKey != null && cache.containsKey(cacheKey)) {
+      return cache.get(cacheKey);
     }
 
     RepositorySystemSession session =
@@ -144,17 +155,6 @@ public class DependencyGraphBuilder {
             : RepositoryUtility.newSession(system);
 
     CollectRequest collectRequest = new CollectRequest();
-
-    ImmutableList.Builder<Dependency> dependenciesBuilder = ImmutableList.builder();
-    for (DependencyNode dependencyNode : dependencyNodes) {
-      Dependency dependency = dependencyNode.getDependency();
-      if (dependency != null) {
-        dependenciesBuilder.add(dependency.setScope("compile"));
-      } else {
-        dependenciesBuilder.add(new Dependency(dependencyNode.getArtifact(), "compile"));
-      }
-    }
-    ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
     if (dependencyList.size() == 1) {
       // With setRoot, the result includes dependencies with `optional:true` or `provided`
       collectRequest.setRoot(dependencyList.get(0));
