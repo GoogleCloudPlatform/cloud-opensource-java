@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import com.google.common.truth.Correspondence;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +26,7 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 
 /**

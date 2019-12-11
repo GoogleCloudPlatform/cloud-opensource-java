@@ -61,7 +61,7 @@ public class DependencyGraphBuilder {
     detectOsProperties().forEach(System::setProperty);
   }
 
-  // caching cuts time by about a factor of 4.
+  // caching cuts time by about a factor of 4. Dependency class's equality includes exclusions.
   private static final Map<Dependency, DependencyNode> cacheWithProvidedScope = new HashMap<>();
   private static final Map<Dependency, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
 
@@ -130,6 +130,8 @@ public class DependencyGraphBuilder {
         includeProvidedScope ? cacheWithProvidedScope : cacheWithoutProvidedScope;
     Dependency cacheKey = null;
     if (dependencyNodes.size() == 1) {
+      // Cache is only needed for a single artifact resolution. A call with multiple dependencyNodes
+      // will not come again in our usage.
       cacheKey = dependencyNodes.get(0).getDependency();
       if (cache.containsKey(cacheKey)) {
         return cache.get(cacheKey);
