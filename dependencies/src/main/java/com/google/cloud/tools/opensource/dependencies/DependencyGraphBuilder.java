@@ -311,7 +311,6 @@ public class DependencyGraphBuilder {
         graph.addPath(path);
 
         if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
-          Artifact dependencyNodeArtifact = dependencyNode.getArtifact();
           try {
             boolean includeProvidedScope =
                 graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
