@@ -130,17 +130,17 @@ public class DependencyGraphBuilderTest {
   public void testSetDetectedOsSystemProperties_grpcProtobufExclusion() throws RepositoryException {
     // Grpc-protobuf depends on grpc-protobuf-lite with protobuf-lite exclusion.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1056
-    Artifact nettyArtifact = new DefaultArtifact("io.grpc:grpc-protobuf:1.25.0");
+    Artifact grpcProtobuf = new DefaultArtifact("io.grpc:grpc-protobuf:1.25.0");
 
     DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
-            ImmutableList.of(nettyArtifact));
+        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(ImmutableList.of(grpcProtobuf));
 
+    Correspondence<DependencyPath, String> pathToArtifactKey =
+        Correspondence.transforming(
+            dependencyPath -> Artifacts.makeKey(dependencyPath.getLeaf()),
+            "has a leaf with groupID and artifactID");
     Truth.assertThat(dependencyGraph.list())
-        .comparingElementsUsing(
-            Correspondence.<DependencyPath, String>transforming(
-                dependencyPath -> Artifacts.makeKey(dependencyPath.getLeaf()),
-                "has a leaf with groupID and artifactID"))
+        .comparingElementsUsing(pathToArtifactKey)
         .doesNotContain("com.google.protobuf:protobuf-lite");
   }
 }
