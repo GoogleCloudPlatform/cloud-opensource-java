@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -63,8 +62,8 @@ public class DependencyGraphBuilder {
   }
 
   // caching cuts time by about a factor of 4.
-  private static final Map<String, DependencyNode> cacheWithProvidedScope = new HashMap<>();
-  private static final Map<String, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
+  private static final Map<Dependency, DependencyNode> cacheWithProvidedScope = new HashMap<>();
+  private static final Map<Dependency, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
 
   public static ImmutableMap<String, String> detectOsProperties() {
     // System properties to select Netty dependencies through os-maven-plugin
@@ -126,15 +125,15 @@ public class DependencyGraphBuilder {
       List<DependencyNode> dependencyNodes, boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
 
-    Map<String, DependencyNode> cache =
+    // The cache key includes exclusion elements of Maven artifacts
+    Map<Dependency, DependencyNode> cache =
         includeProvidedScope ? cacheWithProvidedScope : cacheWithoutProvidedScope;
-    String cacheKey =
-        dependencyNodes.stream()
-            .map(DependencyNode::getArtifact)
-            .map(Artifacts::toCoordinates)
-            .collect(Collectors.joining(","));
-    if (cache.containsKey(cacheKey)) {
-      return cache.get(cacheKey);
+    Dependency cacheKey = null;
+    if (dependencyNodes.size() == 1) {
+      cacheKey = dependencyNodes.get(0).getDependency();
+      if (cache.containsKey(cacheKey)) {
+        return cache.get(cacheKey);
+      }
     }
 
     RepositorySystemSession session =
@@ -144,17 +143,16 @@ public class DependencyGraphBuilder {
 
     CollectRequest collectRequest = new CollectRequest();
 
-    ImmutableList<Dependency> dependencyList =
-        dependencyNodes.stream()
-            .map(
-                dependencyNode -> {
-                  Dependency dependency = dependencyNode.getDependency();
-                  if (dependency != null) {
-                    return dependency;
-                  }
-                  return new Dependency(dependencyNode.getArtifact(), "compile");
-                })
-            .collect(toImmutableList());
+    ImmutableList.Builder<Dependency> dependenciesBuilder = ImmutableList.builder();
+    for (DependencyNode dependencyNode : dependencyNodes) {
+      Dependency dependency = dependencyNode.getDependency();
+      if (dependency != null) {
+        dependenciesBuilder.add(dependency.setScope("compile"));
+      } else {
+        dependenciesBuilder.add(new Dependency(dependencyNode.getArtifact(), "compile"));
+      }
+    }
+    ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
     if (dependencyList.size() == 1) {
       // With setRoot, the result includes dependencies with `optional:true` or `provided`
       collectRequest.setRoot(dependencyList.get(0));
@@ -172,7 +170,9 @@ public class DependencyGraphBuilder {
     // This might be able to speed up by using collectDependencies here instead
     system.resolveDependencies(session, dependencyRequest);
 
-    cache.put(cacheKey, node);
+    if (cacheKey != null) {
+      cache.put(cacheKey, node);
+    }
 
     return node;
   }

@@ -60,7 +60,7 @@ public class DependencyGraphBuilderTest {
 
     // This method should find Guava multiple times.
     int guavaCount = countGuava(graph);
-    Assert.assertEquals(31, guavaCount);
+    Assert.assertEquals(30, guavaCount);
   }
 
   private static int countGuava(DependencyGraph graph) {
