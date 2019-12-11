@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -123,5 +124,23 @@ public class DependencyGraphBuilderTest {
     // Without system properties "os.detected.arch" and "os.detected.name", this would fail.
     List<Artifact> artifacts = DependencyGraphBuilder.getDirectDependencies(nettyArtifact);
     Truth.assertThat(artifacts).isNotEmpty();
+  }
+
+  @Test
+  public void testSetDetectedOsSystemProperties_grpcProtobufExclusion() throws RepositoryException {
+    // Grpc-protobuf depends on grpc-protobuf-lite with protobuf-lite exclusion.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1056
+    Artifact nettyArtifact = new DefaultArtifact("io.grpc:grpc-protobuf:1.25.0");
+
+    DependencyGraph dependencyGraph =
+        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
+            ImmutableList.of(nettyArtifact));
+
+    Truth.assertThat(dependencyGraph.list())
+        .comparingElementsUsing(
+            Correspondence.<DependencyPath, String>transforming(
+                dependencyPath -> Artifacts.makeKey(dependencyPath.getLeaf()),
+                "dependency path with its leaf's groupID and artifactID"))
+        .doesNotContain("com.google.protobuf:protobuf-lite");
   }
 }

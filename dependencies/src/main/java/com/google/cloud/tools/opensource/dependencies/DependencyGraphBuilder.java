@@ -38,6 +38,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.ArtifactResult;
@@ -108,26 +109,30 @@ public class DependencyGraphBuilder {
     }
   }
 
-  private static DependencyNode resolveCompileTimeDependencies(Artifact rootDependencyArtifact)
+  private static DependencyNode resolveCompileTimeDependencies(
+      DependencyNode rootDependencyArtifact)
       throws DependencyCollectionException, DependencyResolutionException {
     return resolveCompileTimeDependencies(rootDependencyArtifact, false);
   }
 
   private static DependencyNode resolveCompileTimeDependencies(
-      Artifact rootDependencyArtifact, boolean includeProvidedScope)
+      DependencyNode rootDependencyArtifact, boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
     return resolveCompileTimeDependencies(
         ImmutableList.of(rootDependencyArtifact), includeProvidedScope);
   }
 
   private static DependencyNode resolveCompileTimeDependencies(
-      List<Artifact> dependencyArtifacts, boolean includeProvidedScope)
+      List<DependencyNode> dependencyNodes, boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
 
     Map<String, DependencyNode> cache =
         includeProvidedScope ? cacheWithProvidedScope : cacheWithoutProvidedScope;
     String cacheKey =
-        dependencyArtifacts.stream().map(Artifacts::toCoordinates).collect(Collectors.joining(","));
+        dependencyNodes.stream()
+            .map(DependencyNode::getArtifact)
+            .map(Artifacts::toCoordinates)
+            .collect(Collectors.joining(","));
     if (cache.containsKey(cacheKey)) {
       return cache.get(cacheKey);
     }
@@ -140,9 +145,15 @@ public class DependencyGraphBuilder {
     CollectRequest collectRequest = new CollectRequest();
 
     ImmutableList<Dependency> dependencyList =
-        dependencyArtifacts
-            .stream()
-            .map(artifact -> new Dependency(artifact, "compile"))
+        dependencyNodes.stream()
+            .map(
+                dependencyNode -> {
+                  Dependency dependency = dependencyNode.getDependency();
+                  if (dependency != null) {
+                    return dependency;
+                  }
+                  return new Dependency(dependencyNode.getArtifact(), "compile");
+                })
             .collect(toImmutableList());
     if (dependencyList.size() == 1) {
       // With setRoot, the result includes dependencies with `optional:true` or `provided`
@@ -171,7 +182,7 @@ public class DependencyGraphBuilder {
 
     List<Artifact> result = new ArrayList<>();
 
-    DependencyNode node = resolveCompileTimeDependencies(artifact);
+    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact));
     for (DependencyNode child : node.getChildren()) {
       result.add(child.getArtifact());
     }
@@ -188,7 +199,9 @@ public class DependencyGraphBuilder {
    */
   public static DependencyGraph getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
       throws RepositoryException {
-    DependencyNode node = resolveCompileTimeDependencies(artifacts, true);
+    ImmutableList<DependencyNode> dependencyNodes =
+        artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
+    DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, true);
     return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
   }
 
@@ -200,7 +213,7 @@ public class DependencyGraphBuilder {
       throws RepositoryException {
 
     // root node
-    DependencyNode node = resolveCompileTimeDependencies(artifact);
+    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact));
     return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY);
   }
 
@@ -212,7 +225,7 @@ public class DependencyGraphBuilder {
   public static DependencyGraph getTransitiveDependencies(Artifact artifact)
       throws RepositoryException {
     // root node
-    DependencyNode node = resolveCompileTimeDependencies(artifact);
+    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact));
     return levelOrder(node);
   }
 
@@ -302,8 +315,7 @@ public class DependencyGraphBuilder {
           try {
             boolean includeProvidedScope =
                 graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
-            dependencyNode =
-                resolveCompileTimeDependencies(dependencyNodeArtifact, includeProvidedScope);
+            dependencyNode = resolveCompileTimeDependencies(dependencyNode, includeProvidedScope);
           } catch (DependencyResolutionException resolutionException) {
             // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0
             // has a transitive dependency to org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not
