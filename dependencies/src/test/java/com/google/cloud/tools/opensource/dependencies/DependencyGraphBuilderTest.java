@@ -140,7 +140,7 @@ public class DependencyGraphBuilderTest {
         .comparingElementsUsing(
             Correspondence.<DependencyPath, String>transforming(
                 dependencyPath -> Artifacts.makeKey(dependencyPath.getLeaf()),
-                "dependency path with its leaf's groupID and artifactID"))
+                "has a leaf with groupID and artifactID"))
         .doesNotContain("com.google.protobuf:protobuf-lite");
   }
 }
