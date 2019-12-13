@@ -630,9 +630,9 @@ public class DashboardMain {
   private static String summaryMessage(
       int dependencyPathCount, List<String> coordinates, DependencyPath examplePath) {
     StringBuilder messageBuilder = new StringBuilder();
-    messageBuilder.append("Artifacts '");
+    messageBuilder.append("Dependency path '");
     messageBuilder.append(Joiner.on(" > ").join(coordinates));
-    messageBuilder.append("' exist in all " + dependencyPathCount + " dependency paths. ");
+    messageBuilder.append("' exists in all " + dependencyPathCount + " dependency paths. ");
     messageBuilder.append("Example path: ");
     messageBuilder.append(examplePath);
     return messageBuilder.toString();

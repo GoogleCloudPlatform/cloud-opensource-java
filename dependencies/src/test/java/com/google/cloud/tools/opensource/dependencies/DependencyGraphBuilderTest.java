@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,7 +60,7 @@ public class DependencyGraphBuilderTest {
 
     // This method should find Guava multiple times.
     int guavaCount = countGuava(graph);
-    Assert.assertEquals(31, guavaCount);
+    Assert.assertEquals(30, guavaCount);
   }
 
   private static int countGuava(DependencyGraph graph) {
@@ -123,5 +124,23 @@ public class DependencyGraphBuilderTest {
     // Without system properties "os.detected.arch" and "os.detected.name", this would fail.
     List<Artifact> artifacts = DependencyGraphBuilder.getDirectDependencies(nettyArtifact);
     Truth.assertThat(artifacts).isNotEmpty();
+  }
+
+  @Test
+  public void testSetDetectedOsSystemProperties_grpcProtobufExclusion() throws RepositoryException {
+    // Grpc-protobuf depends on grpc-protobuf-lite with protobuf-lite exclusion.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1056
+    Artifact grpcProtobuf = new DefaultArtifact("io.grpc:grpc-protobuf:1.25.0");
+
+    DependencyGraph dependencyGraph =
+        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(ImmutableList.of(grpcProtobuf));
+
+    Correspondence<DependencyPath, String> pathToArtifactKey =
+        Correspondence.transforming(
+            dependencyPath -> Artifacts.makeKey(dependencyPath.getLeaf()),
+            "has a leaf with groupID and artifactID");
+    Truth.assertThat(dependencyGraph.list())
+        .comparingElementsUsing(pathToArtifactKey)
+        .doesNotContain("com.google.protobuf:protobuf-lite");
   }
 }

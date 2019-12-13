@@ -65,7 +65,7 @@ public final class SymbolProblem {
    * method returns the outer class.
    */
   @Nullable
-  ClassFile getContainingClass() {
+  public ClassFile getContainingClass() {
     return containingClass;
   }
 

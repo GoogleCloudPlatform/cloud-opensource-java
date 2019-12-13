@@ -160,4 +160,20 @@ public class LinkageCheckerArgumentsTest {
 
     Truth.assertThat(parsedArguments.getExtraMavenRepositoryUrls()).hasSize(2);
   }
+
+  @Test
+  public void testReadCommandLine_reportOnlyReachableOff() throws ParseException {
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine("-j", "dummy.jar");
+
+    Truth.assertThat(parsedArguments.getReportOnlyReachable()).isFalse();
+  }
+
+  @Test
+  public void testReadCommandLine_reportOnlyReachableOn() throws ParseException {
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine("-j", "dummy.jar", "-r");
+
+    Truth.assertThat(parsedArguments.getReportOnlyReachable()).isTrue();
+  }
 }
