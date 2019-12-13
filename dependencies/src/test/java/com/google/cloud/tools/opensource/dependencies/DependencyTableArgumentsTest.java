@@ -17,6 +17,8 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.cloud.tools.opensource.dependencies.DependencyTableArguments.readCommandLine;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.google.common.truth.Truth;
 import org.apache.commons.cli.ParseException;
@@ -26,37 +28,46 @@ public class DependencyTableArgumentsTest {
 
   @Test
   public void testParsingBOMs() throws ParseException {
-    DependencyTableArguments arguments = readCommandLine("-b",
-        "com.google.cloud:libraries-bom:2.0.0,com.google.cloud:libraries-bom:3.0.0");
+    DependencyTableArguments arguments =
+        readCommandLine(
+            "-b", "com.google.cloud:libraries-bom:2.0.0,com.google.cloud:libraries-bom:3.0.0");
 
     Truth.assertThat(arguments.getBomCoordinates())
-        .containsExactly("com.google.cloud:libraries-bom:2.0.0",
-            "com.google.cloud:libraries-bom:3.0.0");
+        .containsExactly(
+            "com.google.cloud:libraries-bom:2.0.0", "com.google.cloud:libraries-bom:3.0.0");
   }
 
   @Test
   public void testParsingArtifacts() throws ParseException {
-    DependencyTableArguments arguments = readCommandLine("-a",
-        "com.foo:bar:1.0.0,com.foo:bar:2.0.0");
+    DependencyTableArguments arguments =
+        readCommandLine("-a", "com.foo:bar:1.0.0,com.foo:bar:2.0.0");
 
     Truth.assertThat(arguments.getArtifactCoordinates())
-        .containsExactly("com.foo:bar:1.0.0",
-            "com.foo:bar:2.0.0");
+        .containsExactly("com.foo:bar:1.0.0", "com.foo:bar:2.0.0");
   }
-
 
   @Test
   public void testParsingBomsAndArtifacts() throws ParseException {
-    DependencyTableArguments arguments = readCommandLine("-a",
-        "com.foo:bar:1.0.0,com.foo:bar:2.0.0", "-b",
-        "com.google.cloud:libraries-bom:2.0.0,com.google.cloud:libraries-bom:3.0.0");
+    DependencyTableArguments arguments =
+        readCommandLine(
+            "-a",
+            "com.foo:bar:1.0.0,com.foo:bar:2.0.0",
+            "-b",
+            "com.google.cloud:libraries-bom:2.0.0,com.google.cloud:libraries-bom:3.0.0");
 
     Truth.assertThat(arguments.getArtifactCoordinates())
-        .containsExactly("com.foo:bar:1.0.0",
-            "com.foo:bar:2.0.0");
+        .containsExactly("com.foo:bar:1.0.0", "com.foo:bar:2.0.0");
     Truth.assertThat(arguments.getArtifactCoordinates())
-        .containsExactly("com.foo:bar:1.0.0",
-            "com.foo:bar:2.0.0");
+        .containsExactly("com.foo:bar:1.0.0", "com.foo:bar:2.0.0");
   }
 
+  @Test
+  public void testParsingEmpty() {
+    try {
+      readCommandLine();
+      fail();
+    } catch (ParseException ex) {
+      assertEquals("One of BOMs and artifacts must be specified.", ex.getMessage());
+    }
+  }
 }

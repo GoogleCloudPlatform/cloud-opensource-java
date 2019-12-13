@@ -16,8 +16,94 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-class DependencyTable {
+import static com.google.common.collect.ImmutableList.toImmutableList;
 
-  public static void main(String[] args) {
+import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Table;
+import java.util.List;
+import org.apache.commons.cli.ParseException;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+
+/**
+ * Tool to show a table of dependencies of Maven artifacts and BOMs. The input artifacts and BOMs
+ * make columns while the dependencies' groupID and artifactID make rows. The output is in JIRA
+ * table format.
+ */
+final class DependencyTable {
+
+  public static void main(String[] args) throws ParseException, RepositoryException {
+    DependencyTableArguments arguments = DependencyTableArguments.readCommandLine(args);
+
+    ImmutableList<String> artifactCoordinates = arguments.getArtifactCoordinates();
+
+    ImmutableList<String> bomCoordinates = arguments.getBomCoordinates();
+
+    ImmutableSet.Builder<String> artifactKeys = ImmutableSet.builder();
+
+    // RowKey: GroupID and ArtifactID of a dependency
+    // ColumnKey: Artifact or BOM coordinates
+    // Value: version
+    Table<String, String, String> dependencyTable = HashBasedTable.create();
+    for (String coordinates : artifactCoordinates) {
+      DefaultArtifact rootArtifact = new DefaultArtifact(coordinates);
+      List<DependencyPath> dependencyPaths =
+          ClassPathBuilder.artifactsToDependencyPaths(ImmutableList.of(rootArtifact)).values();
+      ImmutableList<Artifact> dependencies =
+          dependencyPaths.stream().map(DependencyPath::getLeaf).collect(toImmutableList());
+
+      dependencies.forEach(
+          artifact -> {
+            String row = Artifacts.makeKey(artifact);
+            artifactKeys.add(row);
+            dependencyTable.put(row, coordinates, artifact.getVersion());
+          });
+    }
+
+    for (String coordinates : bomCoordinates) {
+      ImmutableList<Artifact> managedDependencies =
+          RepositoryUtility.readBom(coordinates).getManagedDependencies();
+
+      managedDependencies.forEach(
+          artifact -> {
+            String row = Artifacts.makeKey(artifact);
+            artifactKeys.add(row);
+            dependencyTable.put(row, coordinates, artifact.getVersion());
+          });
+    }
+
+    List<String> sortedRowKeys = Ordering.natural().sortedCopy(artifactKeys.build());
+
+    System.out.println(
+        formatAsJira(
+            dependencyTable, sortedRowKeys, Iterables.concat(artifactCoordinates, bomCoordinates)));
+  }
+
+  static String formatAsJira(
+      Table<String, String, String> table, Iterable<String> rowKeys, Iterable<String> columnKeys) {
+    StringBuilder output = new StringBuilder();
+    // Column headers
+    output.append("|| ||"); // The first upper-right cell is empty
+    for (String columnKey : columnKeys) {
+      output.append(columnKey).append("||");
+    }
+    output.append("\n");
+
+    for (String rowKey : rowKeys) {
+      output.append('|').append(rowKey).append('|');
+      for (String coordinates : columnKeys) {
+        String version = table.get(rowKey, coordinates);
+        output.append(version != null ? version : " ").append('|');
+      }
+      output.append("\n");
+    }
+
+    return output.toString();
   }
 }

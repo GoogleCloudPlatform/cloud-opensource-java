@@ -22,7 +22,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
@@ -45,14 +44,22 @@ final class DependencyTableArguments {
     return artifactCoordinates;
   }
 
-  private DependencyTableArguments(CommandLine commandLine) {
+  private DependencyTableArguments(CommandLine commandLine) throws ParseException {
     this.commandLine = commandLine;
 
-    this.bomCoordinates = commandLine.hasOption("b") ?
-        ImmutableList.copyOf(commandLine.getOptionValues("b")) : ImmutableList.of();
+    this.bomCoordinates =
+        commandLine.hasOption("b")
+            ? ImmutableList.copyOf(commandLine.getOptionValues("b"))
+            : ImmutableList.of();
 
-    this.artifactCoordinates = commandLine.hasOption("a") ?
-        ImmutableList.copyOf(commandLine.getOptionValues("a")) : ImmutableList.of();
+    this.artifactCoordinates =
+        commandLine.hasOption("a")
+            ? ImmutableList.copyOf(commandLine.getOptionValues("a"))
+            : ImmutableList.of();
+
+    if (bomCoordinates.isEmpty() && artifactCoordinates.isEmpty()) {
+      throw new ParseException("One of BOMs and artifacts must be specified.");
+    }
   }
 
   static DependencyTableArguments readCommandLine(String... arguments) throws ParseException {
@@ -74,7 +81,9 @@ final class DependencyTableArguments {
             .longOpt("boms")
             .hasArgs()
             .valueSeparator(',')
-            .desc("BOMs to check their managed dependencies, specified by its Maven coordinates "+"(separator ',')")
+            .desc(
+                "BOMs to check their managed dependencies, specified by its Maven coordinates "
+                    + "(separator ',')")
             .build();
     options.addOption(bomOption);
 
@@ -83,11 +92,12 @@ final class DependencyTableArguments {
             .longOpt("artifacts")
             .hasArgs()
             .valueSeparator(',')
-            .desc("Maven artifacts to check its dependencies, specified by its Maven coordinates "+"(separator ',')")
+            .desc(
+                "Maven artifacts to check its dependencies, specified by its Maven coordinates "
+                    + "(separator ',')")
             .build();
 
     options.addOption(artifactOption);
     return options;
   }
-
 }
