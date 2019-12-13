@@ -65,7 +65,7 @@ public class DependencyTableArgumentsTest {
   public void testParsingEmpty() {
     try {
       readCommandLine();
-      fail();
+      fail("The parser should reject an empty argument list");
     } catch (ParseException ex) {
       assertEquals("One of BOMs and artifacts must be specified.", ex.getMessage());
     }
