@@ -29,12 +29,13 @@ public class DependencyTableTest {
   @Test
   public void testFormatTableInJira() throws ParseException {
     // JIRA table formatting guide:
-    // https://issues.apache.org/jira/secure/WikiRendererHelpAction.jspa?section=tables
+    // https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=tables
 
+    // The top-left and bottom right are empty.
     String expected =
         "|| ||col1||col2||\n"
             + "|row1|V1|V2|\n"
-            + "|row2|V3| |\n"; // The top-left and botton right are empty.
+            + "|row2|V3| |\n";
 
     Table<String, String, String> table = HashBasedTable.create();
     table.put("row1", "col1", "V1");
