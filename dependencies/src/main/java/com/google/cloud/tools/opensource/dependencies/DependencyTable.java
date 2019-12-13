@@ -32,10 +32,13 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
- * Tool to show a table of dependencies of Maven artifacts and BOMs. The input artifacts and BOMs
- * make columns while the dependencies' groupID and artifactID make rows. The cell contains the
- * version of corresponding Maven artifact for the column and row. The output is in JIRA
- * table format.
+ * Tool to show a table of dependencies of Maven artifacts and BOMs.
+ *
+ * <ul>
+ *   <li>Columns: Maven artifacts and BOMs specified in input</li>
+ *   <li>Rows: the groupID and artifactID of the dependencies</li>
+ *   <li>Cells: the version of corresponding dependencies for the column</li>
+ * </ul>
  */
 final class DependencyTable {
 
