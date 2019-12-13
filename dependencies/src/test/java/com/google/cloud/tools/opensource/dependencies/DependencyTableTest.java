@@ -28,7 +28,7 @@ public class DependencyTableTest {
 
   @Test
   public void testFormatTableInJira() throws ParseException {
-    // Example table data from JIRA help page
+    // JIRA table formatting guide:
     // https://issues.apache.org/jira/secure/WikiRendererHelpAction.jspa?section=tables
 
     String expected =
