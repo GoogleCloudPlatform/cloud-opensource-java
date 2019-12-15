@@ -198,7 +198,7 @@ public class LinkageMonitorTest {
             ImmutableMap.of("com.google.cloud:google-cloud-bom", "0.106.0-alpha"));
     List<Dependency> dependencies = model.getDependencyManagement().getDependencies();
 
-    // Google-cloud-bom:0.106.0 has new artifacts such as google-cloud-gameservices
+    // google-cloud-bom:0.106.0 has new artifacts such as google-cloud-gameservices
     assertEquals(224, dependencies.size());
 
     // google-cloud-bom:0.106.0-alpha has gax:1.48.0
@@ -222,25 +222,14 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void testFindLocalArtifacts_currentDirectory() {
+  public void testFindLocalArtifacts() {
     // Current working directory of linkage-monitor should have one linkage monitor artifact
     ImmutableMap<String, String> localArtifacts =
-        LinkageMonitor.findLocalArtifacts(system, session, Paths.get("."));
+        LinkageMonitor.findLocalArtifacts(
+            system, session, Paths.get("src/test/resources/testproject"));
 
-    Truth.assertThat(localArtifacts).hasSize(1);
-    Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:linkage-monitor");
-  }
-
-  @Test
-  public void testFindLocalArtifacts_RootDirectory() {
-    // Root of cloud-opensource-java has more than 10 pom.xml files
-    ImmutableMap<String, String> localArtifacts =
-        LinkageMonitor.findLocalArtifacts(system, session, Paths.get(".."));
-    Truth.assertThat(localArtifacts.size()).isGreaterThan(10);
-
-    Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:linkage-monitor");
-    Truth.assertThat(localArtifacts)
-        .containsAtLeast(
-            "com.google.cloud.tools.opensource:no-such-method-error-example", "1.0-SNAPSHOT");
+    Truth.assertThat(localArtifacts).hasSize(2);
+    Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:test-project");
+    Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:test-subproject");
   }
 }

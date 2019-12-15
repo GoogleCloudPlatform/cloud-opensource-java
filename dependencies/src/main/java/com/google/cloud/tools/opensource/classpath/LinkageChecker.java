@@ -33,10 +33,12 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
 import java.util.logging.Logger;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
@@ -128,11 +130,37 @@ public class LinkageChecker {
         classToSymbols.getClassToClassSymbols();
     classToClassSymbols.forEach(
         (classFile, classSymbol) -> {
+          if (classSymbol instanceof SuperClassSymbol) {
+            ImmutableList<SymbolProblem> problems =
+                findAbstractParentProblems(classFile, (SuperClassSymbol) classSymbol);
+            if (!problems.isEmpty()) {
+              String superClassName = classSymbol.getClassName();
+              Path superClassLocation = classDumper.findClassLocation(superClassName);
+              ClassFile superClassFile = new ClassFile(superClassLocation, superClassName);
+              for (SymbolProblem problem : problems) {
+                problemToClass.put(problem, superClassFile);
+              }
+            }
+          }
           if (!classDumper
               .classesDefinedInJar(classFile.getJar())
               .contains(classSymbol.getClassName())) {
-            findSymbolProblem(classFile, classSymbol)
-                .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
+
+            if (classSymbol instanceof InterfaceSymbol) {
+              ImmutableList<SymbolProblem> problems =
+                  findInterfaceProblems(classFile, (InterfaceSymbol) classSymbol);
+              if (!problems.isEmpty()) {
+                String interfaceName = classSymbol.getClassName();
+                Path interfaceLocation = classDumper.findClassLocation(interfaceName);
+                ClassFile interfaceClassFile = new ClassFile(interfaceLocation, interfaceName);
+                for (SymbolProblem problem : problems) {
+                  problemToClass.put(problem, interfaceClassFile);
+                }
+              }
+            } else {
+              findSymbolProblem(classFile, classSymbol)
+                  .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
+            }
           }
         });
 
@@ -279,6 +307,59 @@ public class LinkageChecker {
       ClassSymbol classSymbol = new ClassSymbol(symbol.getClassName());
       return Optional.of(new SymbolProblem(classSymbol, ErrorType.CLASS_NOT_FOUND, null));
     }
+  }
+
+  /**
+   * Returns the linkage errors for unimplemented methods in {@code classFile}. Such unimplemented
+   * methods manifest as {@link AbstractMethodError} in runtime.
+   */
+  private ImmutableList<SymbolProblem> findInterfaceProblems(
+      ClassFile classFile, InterfaceSymbol interfaceSymbol) {
+    String interfaceName = interfaceSymbol.getClassName();
+    if (classDumper.isSystemClass(interfaceName)) {
+      return ImmutableList.of();
+    }
+
+    ImmutableList.Builder<SymbolProblem> builder = ImmutableList.builder();
+    try {
+      JavaClass implementingClass = classDumper.loadJavaClass(classFile.getClassName());
+      if (implementingClass.isAbstract()) {
+        // Abstract class does not need to implement methods in an interface.
+        return ImmutableList.of();
+      }
+      JavaClass interfaceDefinition = classDumper.loadJavaClass(interfaceName);
+      for (Method interfaceMethod : interfaceDefinition.getMethods()) {
+        if (interfaceMethod.getCode() != null) {
+          // This interface method has default implementation. Subclass does not have to implement
+          // it.
+          continue;
+        }
+        String interfaceMethodName = interfaceMethod.getName();
+        String interfaceMethodDescriptor = interfaceMethod.getSignature();
+        boolean methodFound = false;
+
+        Iterable<JavaClass> typesToCheck = Iterables.concat(getClassHierarchy(implementingClass));
+        for (JavaClass javaClass : typesToCheck) {
+          for (Method method : javaClass.getMethods()) {
+            if (method.getName().equals(interfaceMethodName)
+                && method.getSignature().equals(interfaceMethodDescriptor)) {
+              methodFound = true;
+              break;
+            }
+          }
+        }
+        if (!methodFound) {
+          MethodSymbol missingMethodOnClass =
+              new MethodSymbol(
+                  classFile.getClassName(), interfaceMethodName, interfaceMethodDescriptor, false);
+          builder.add(
+              new SymbolProblem(missingMethodOnClass, ErrorType.ABSTRACT_METHOD, classFile));
+        }
+      }
+    } catch (ClassNotFoundException ex) {
+      // Missing classes are reported by findSymbolProblem method.
+    }
+    return builder.build();
   }
 
   /**
@@ -477,5 +558,58 @@ public class LinkageChecker {
       }
     }
     return Optional.empty();
+  }
+
+  private ImmutableList<SymbolProblem> findAbstractParentProblems(
+      ClassFile classFile, SuperClassSymbol superClassSymbol) {
+    ImmutableList.Builder<SymbolProblem> builder = ImmutableList.builder();
+    String superClassName = superClassSymbol.getClassName();
+    if (classDumper.isSystemClass(superClassName)) {
+      return ImmutableList.of();
+    }
+
+    try {
+      String className = classFile.getClassName();
+      JavaClass implementingClass = classDumper.loadJavaClass(className);
+      if (implementingClass.isAbstract()) {
+        return ImmutableList.of();
+      }
+
+      JavaClass superClass = classDumper.loadJavaClass(superClassName);
+      if (!superClass.isAbstract()) {
+        return ImmutableList.of();
+      }
+
+      JavaClass abstractClass = superClass;
+
+      // Equality of BCEL's Method class is on its name and descriptor field
+      Set<Method> implementedMethods = new HashSet<>();
+      implementedMethods.addAll(ImmutableList.copyOf(implementingClass.getMethods()));
+
+      while (abstractClass.isAbstract()) {
+        for (Method abstractMethod : abstractClass.getMethods()) {
+          if (!abstractMethod.isAbstract()) {
+            // This abstract method has implementation. Subclass does not have to implement it.
+            implementedMethods.add(abstractMethod);
+            continue;
+          }
+          if (implementedMethods.contains(abstractMethod)) {
+            continue;
+          }
+          String unimplementedMethodName = abstractMethod.getName();
+          String unimplementedMethodDescriptor = abstractMethod.getSignature();
+
+          MethodSymbol missingMethodOnClass =
+              new MethodSymbol(
+                  className, unimplementedMethodName, unimplementedMethodDescriptor, false);
+          builder.add(
+              new SymbolProblem(missingMethodOnClass, ErrorType.ABSTRACT_METHOD, classFile));
+        }
+        abstractClass = abstractClass.getSuperClass();
+      }
+    } catch (ClassNotFoundException ex) {
+      // Missing classes are reported by findSymbolProblem method.
+    }
+    return builder.build();
   }
 }

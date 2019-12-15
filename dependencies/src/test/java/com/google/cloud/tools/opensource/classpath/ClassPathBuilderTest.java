@@ -201,48 +201,4 @@ public class ClassPathBuilderTest {
     List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(jamonApiArtifact));
     Truth.assertThat(paths).isNotEmpty();
   }
-
-  @Test
-  public void testArtifactToClasspath_reportAggregatedRepositoryException()
-      throws RepositoryException {
-    // jamon has transitive dependency to jmxtools, which does not exist in Maven central
-    Artifact jamonApiArtifact = new DefaultArtifact("com.jamonapi:jamon:2.81");
-    try {
-      ClassPathBuilder.artifactsToClasspath(ImmutableList.of(jamonApiArtifact));
-      Assert.fail();
-    } catch (AggregatedRepositoryException ex) {
-      Assert.assertEquals(
-          "com.google.cloud.tools.opensource.dependencies.AggregatedRepositoryException: "
-              + ex.getMessage(),
-          ex.toString());
-      Assert.assertEquals("There were failure(s) in dependency resolution\n"
-          + "com.jamonapi:jamon:jar:2.81 (compile) / log4j:log4j:jar:1.2.15 (provided) /"
-          + " javax.jms:jms:jar:1.1 (compile): org.eclipse.aether.resolution.DependencyResolutionException: "
-          + "The following artifacts could not be resolved: javax.jms:jms:jar:1.1, "
-          + "com.sun.jdmk:jmxtools:jar:1.2.1, com.sun.jmx:jmxri:jar:1.2.1: "
-          + "Could not transfer artifact javax.jms:jms:jar:1.1 from/to java.net "
-          + "(https://maven-repository.dev.java.net/nonav/repository): "
-          + "Cannot access https://maven-repository.dev.java.net/nonav/repository with type "
-          + "legacy using the available connector factories: BasicRepositoryConnectorFactory\n"
-          + "com.jamonapi:jamon:jar:2.81 (compile) / log4j:log4j:jar:1.2.15 (provided) / "
-          + "com.sun.jdmk:jmxtools:jar:1.2.1 (compile): "
-          + "org.eclipse.aether.resolution.DependencyResolutionException: "
-          + "The following artifacts could not be resolved: javax.jms:jms:jar:1.1, "
-          + "com.sun.jdmk:jmxtools:jar:1.2.1, com.sun.jmx:jmxri:jar:1.2.1: Could not transfer "
-          + "artifact javax.jms:jms:jar:1.1 from/to java.net "
-          + "(https://maven-repository.dev.java.net/nonav/repository): "
-          + "Cannot access https://maven-repository.dev.java.net/nonav/repository with "
-          + "type legacy using the available connector factories: BasicRepositoryConnectorFactory\n"
-          + "com.jamonapi:jamon:jar:2.81 (compile) / log4j:log4j:jar:1.2.15 (provided) / "
-          + "com.sun.jmx:jmxri:jar:1.2.1 (compile):"
-          + " org.eclipse.aether.resolution.DependencyResolutionException: "
-          + "The following artifacts could not be resolved: javax.jms:jms:jar:1.1, "
-          + "com.sun.jdmk:jmxtools:jar:1.2.1, com.sun.jmx:jmxri:jar:1.2.1: Could not transfer "
-          + "artifact javax.jms:jms:jar:1.1 from/to java.net "
-          + "(https://maven-repository.dev.java.net/nonav/repository): Cannot access "
-          + "https://maven-repository.dev.java.net/nonav/repository with type legacy using "
-          + "the available connector factories: BasicRepositoryConnectorFactory\n",
-          ex.getMessage());
-    }
-  }
 }

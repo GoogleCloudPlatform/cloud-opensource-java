@@ -24,7 +24,14 @@
     causing linkage errors referenced from
     ${pluralize(referenceCount, "source class", "source classes")}.
   </p>
+  <#assign jarsInProblem = {} >
   <#list problemsToClasses as symbolProblem, sourceClasses>
+    <#if (symbolProblem.getContainingClass())?? >
+      <!-- Freemarker's hash requires its keys to be string.
+      https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys -->
+      <#assign jarsInProblem = jarsInProblem
+        + { symbolProblem.getContainingClass().getJar().toString() :  symbolProblem.getContainingClass().getJar() } >
+    </#if>
     <p class="jar-linkage-report-cause">${symbolProblem?html}, referenced from ${
       pluralize(sourceClasses?size, "class", "classes")?html}
       <button onclick="toggleSourceClassListVisibility(this)"
@@ -39,15 +46,25 @@
       </#list>
     </ul>
   </#list>
+  <#list jarsInProblem?values as jarInProblem>
+    <@showDependencyPath dependencyPathRootCauses jarToDependencyPaths jarInProblem />
+  </#list>
+  <@showDependencyPath dependencyPathRootCauses jarToDependencyPaths jar />
+
+</#macro>
+
+<#macro showDependencyPath dependencyPathRootCauses jarToDependencyPaths jar>
+  <#assign dependencyPaths = jarToDependencyPaths.get(jar) />
   <p class="linkage-check-dependency-paths">
-    The following paths to the jar file from the BOM are found in the dependency tree:
+    The following ${plural(dependencyPaths?size, "path contains", "paths contain")} ${jar.getFileName()?html}:
   </p>
+
   <#if dependencyPathRootCauses[jar]?? >
     <p class="linkage-check-dependency-paths">${dependencyPathRootCauses[jar]?html}
     </p>
   <#else>
     <ul class="linkage-check-dependency-paths">
-        <#list jarToDependencyPaths.get(jar) as dependencyPath >
+        <#list dependencyPaths as dependencyPath >
           <li>${dependencyPath}</li>
         </#list>
     </ul>

@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
@@ -48,6 +49,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class LinkageCheckerTest {
+
+  private static final Correspondence<SymbolProblem, String> HAS_SYMBOL_IN_CLASS =
+      Correspondence.transforming(
+          (SymbolProblem problem) -> problem.getSymbol().getClassName(),
+          "has symbol in class with name");
 
   private Path guavaPath;
   private Path firestorePath;
@@ -907,8 +913,10 @@ public class LinkageCheckerTest {
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
 
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
     Truth.assertWithMessage("Missing classes from jdk.vm.ci should not be reported")
-        .that(linkageChecker.findSymbolProblems().keySet())
+        .that(symbolProblems.keySet())
         .isEmpty();
   }
 
@@ -930,5 +938,119 @@ public class LinkageCheckerTest {
     Truth.assertWithMessage("Mockito's MockMethodDispatcher should not be reported")
         .that(linkageChecker.findSymbolProblems().keySet())
         .doesNotContain(unexpectedProblem);
+  }
+
+  @Test
+  public void testFindSymbolProblems_unimplementedInterfaceMethods()
+      throws IOException, URISyntaxException {
+    // Gax-grpc:1:38's InstantiatingGrpcChannelProvider does not have needsCredentials method of
+    // gax:1.48's TransportChannelProvider. This incompatibility manifests as AbstractMethodError
+    // when com.google.api.gax.rpc.ClientContext calls the method.
+
+    Path gax1_48 = absolutePathOfResource("testdata/gax-1.48.1.jar");
+    Path gaxGrpc1_38 = absolutePathOfResource("testdata/gax-grpc-1.38.0.jar");
+    ImmutableList<Path> jars = ImmutableList.of(gaxGrpc1_38, gax1_48);
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    // The two unimplemented methods should be reported separately
+    SymbolProblem expectedProblemOnNeedsCredentials =
+        new SymbolProblem(
+            new MethodSymbol(
+                "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
+                "needsCredentials",
+                "()Z",
+                false),
+            ErrorType.ABSTRACT_METHOD,
+            new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"));
+    SymbolProblem expectedProblemOnWithCredentials =
+        new SymbolProblem(
+            new MethodSymbol(
+                "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
+                "withCredentials",
+                "(Lcom/google/auth/Credentials;)Lcom/google/api/gax/rpc/TransportChannelProvider;",
+                false),
+            ErrorType.ABSTRACT_METHOD,
+            new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"));
+    Truth.assertThat(symbolProblems.keySet()).contains(expectedProblemOnNeedsCredentials);
+    Truth.assertThat(symbolProblems.keySet()).contains(expectedProblemOnWithCredentials);
+
+    Truth.assertThat(symbolProblems.get(expectedProblemOnNeedsCredentials))
+        .contains((new ClassFile(gax1_48, "com.google.api.gax.rpc.TransportChannelProvider")));
+  }
+
+  @Test
+  public void testFindSymbolProblems_defaultInterfaceMethods()
+      throws IOException, RepositoryException {
+    ImmutableList<Path> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    // com.oracle.svm.core.LibCHelperDirectives does not implement some methods in
+    // CContext$Directives interface. But this should not be reported as an error because the
+    // interface has default implementation for the methods.
+    String unexpectedClass = "com.oracle.svm.core.LibCHelperDirectives";
+    Truth.assertThat(symbolProblems.keySet())
+        .comparingElementsUsing(HAS_SYMBOL_IN_CLASS)
+        .doesNotContain(unexpectedClass);
+  }
+
+  @Test
+  public void testFindSymbolProblems_unimplementedAbstractMethod()
+      throws RepositoryException, IOException {
+    // Non-abstract NioEventLoopGroup class extends MultithreadEventLoopGroup.
+    // Abstract MultithreadEventLoopGroup class extends MultithreadEventExecutorGroup
+    // Abstract MultithreadEventExecutorGroup class has abstract newChild method.
+    // Netty version discrepancy between 4.0 and 4.1 causes AbstractMethodError.
+    // https://github.com/netty/netty/issues/7675
+    ImmutableList<Path> nettyTransportJars4_0 =
+        resolvePaths("io.netty:netty-transport:jar:4.0.37.Final");
+    ImmutableList<Path> nettyCommonJars4_1 = resolvePaths("io.netty:netty-common:jar:4.1.16.Final");
+
+    ImmutableList<Path> jars =
+        ImmutableList.<Path>builder()
+            .addAll(nettyCommonJars4_1)
+            .addAll(nettyTransportJars4_0)
+            .build();
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    MethodSymbol expectedMethodSymbol =
+        new MethodSymbol(
+            "io.netty.channel.nio.NioEventLoopGroup",
+            "newChild",
+            "(Ljava/util/concurrent/Executor;[Ljava/lang/Object;)Lio/netty/util/concurrent/EventExecutor;",
+            false);
+
+    Truth.assertThat(symbolProblems.keySet())
+        .comparingElementsUsing(Correspondence.transforming(SymbolProblem::getSymbol, "has symbol"))
+        .contains(expectedMethodSymbol);
+  }
+
+  @Test
+  public void testFindSymbolProblems_nativeMethodsOnAbstractClass()
+      throws IOException, RepositoryException {
+    ImmutableList<Path> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    // com.oracle.svm.core.genscavenge.PinnedAllocatorImpl extends an abstract class
+    // com.oracle.svm.core.heap.PinnedAllocator. The superclass has native methods, such as
+    // "newInstance". These native methods should not be reported as unimplemented methods.
+    String unexpectedClass = "com.oracle.svm.core.genscavenge.PinnedAllocatorImpl";
+    Truth.assertThat(symbolProblems.keySet())
+        .comparingElementsUsing(HAS_SYMBOL_IN_CLASS)
+        .doesNotContain(unexpectedClass);
   }
 }

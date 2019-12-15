@@ -6,14 +6,14 @@
   <parent>
     <groupId>com.google.cloud.tools</groupId>
     <artifactId>dependencies-parent</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>1.1.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>linkage-checker-enforcer-rules</artifactId>
 
   <name>Linkage Checker Enforcer Rule</name>
   <description>Maven Enforcer rule for verifying that a project does not have linkage errors</description>
-  <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/enforcer-rules</url>
+  <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Enforcer-Rule</url>
   <organization>
     <name>Google LLC.</name>
     <url>https://www.google.com</url>
@@ -36,7 +36,7 @@
     <connection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git</connection>
     <developerConnection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git
     </developerConnection>
-    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/enforcer-rules</url>
+    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/enforcer-rules</url>
     <tag>HEAD</tag>
   </scm>
 
