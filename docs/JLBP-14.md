@@ -1,4 +1,4 @@
-# [JLBP-14] Specify a single, soft version of each dependency
+# [JLBP-14] Specify a single, overridable version of each dependency
 
 Give the version of each dependency as a single value such as `2.3`
 instead of a range such as `[2.3,2.9]`, `[2.3,)`, or even `[2.3]`.
