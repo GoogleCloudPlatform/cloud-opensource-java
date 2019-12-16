@@ -1,7 +1,7 @@
 [![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
 
 This project explores common infrastructure and best practices for open source
-Java projects for the Google Cloud Platform.
+Java projects for the Google Cloud Platform (GCP).
 
 # Google Cloud Platform Java Dependency Dashboard
 
@@ -23,9 +23,9 @@ detects [linkage errors](
 ./library-best-practices/glossary.md#types-of-conflicts-and-compatibility) in
 the current project.
 
-# Google Libraries BOM
+# GCP Libraries BOM
 
-[Google Libraries BOM](https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM) is a Bill-of-Materials (BOM) that
+The [GCP Libraries BOM](https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM) is a Bill-of-Materials (BOM) that
 provides consistent versions of Google Cloud Java libraries that work together
 without linkage errors.
 
