@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Multimaps;
 import java.io.IOException;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
@@ -51,6 +52,14 @@ class LinkageCheckerMain {
         linkageCheckerArguments.getEntryPointJars());
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
+
+    if (linkageCheckerArguments.getReportOnlyReachable()) {
+      ClassReferenceGraph graph = linkageChecker.getClassReferenceGraph();
+      symbolProblems =
+          ImmutableSetMultimap.copyOf(
+              Multimaps.filterValues(
+                  symbolProblems, classFile -> graph.isReachable(classFile.getClassName())));
+    }
 
     System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
   }

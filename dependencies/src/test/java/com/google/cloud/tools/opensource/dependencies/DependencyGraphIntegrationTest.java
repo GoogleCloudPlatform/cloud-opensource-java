@@ -16,18 +16,16 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.truth.Correspondence;
+import com.google.common.truth.Truth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.google.common.truth.Truth;
 
 /**
  *  Tests against actual artifacts in Maven central.
@@ -42,34 +40,33 @@ public class DependencyGraphIntegrationTest {
 
     DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(core);
     List<Update> updates = graph.findUpdates();
-    List<String> strings = updates.stream().map(e -> e.toString()).collect(Collectors.toList());
 
-    // ordering not working yet
-    // TODO get order working
-    Truth.assertThat(strings).containsExactly("com.google.guava:guava:20.0 needs to "
-        + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
-        "com.google.http-client:google-http-client:1.23.0 needs to "
-        + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
-        "com.google.api:api-common:1.6.0 needs to "
-        + "upgrade com.google.code.findbugs:jsr305:3.0.0 to 3.0.2",
-        "com.google.api.grpc:proto-google-common-protos:1.12.0 needs to "
-        + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
-        "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
-        + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
-        "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
-        + "upgrade com.google.api.grpc:proto-google-common-protos:1.11.0 to 1.12.0",
-        "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
-        + "upgrade com.google.api:api-common:1.5.0 to 1.6.0",
-        "com.google.api:api-common:1.6.0 needs to "
-        + "upgrade com.google.guava:guava:19.0 to 20.0",
-        "com.google.auth:google-auth-library-oauth2-http:0.9.1 needs to "
-        + "upgrade com.google.guava:guava:19.0 to 20.0",
-        "com.google.protobuf:protobuf-java-util:3.6.0 needs to "
-        + "upgrade com.google.guava:guava:19.0 to 20.0",
-        "com.google.auth:google-auth-library-oauth2-http:0.9.1 needs to "
-        + "upgrade com.google.http-client:google-http-client:1.19.0 to 1.23.0",
-        "com.google.http-client:google-http-client-jackson2:1.19.0 needs to "
-        + "upgrade com.google.http-client:google-http-client:1.19.0 to 1.23.0");
+    Truth.assertThat(updates)
+        .comparingElementsUsing(Correspondence.transforming(Update::toString, "has message"))
+        .containsExactly(
+            "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
+                + "upgrade com.google.api.grpc:proto-google-common-protos:1.11.0 to 1.12.0",
+            "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
+                + "upgrade com.google.api:api-common:1.5.0 to 1.6.0",
+            "com.google.guava:guava:20.0 needs to "
+                + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
+            "com.google.api:api-common:1.6.0 needs to "
+                + "upgrade com.google.code.findbugs:jsr305:3.0.0 to 3.0.2",
+            "com.google.api:api-common:1.6.0 needs to "
+                + "upgrade com.google.guava:guava:19.0 to 20.0",
+            "com.google.protobuf:protobuf-java-util:3.6.0 needs to "
+                + "upgrade com.google.guava:guava:19.0 to 20.0",
+            "com.google.auth:google-auth-library-oauth2-http:0.9.1 needs to "
+                + "upgrade com.google.guava:guava:19.0 to 20.0",
+            "com.google.auth:google-auth-library-oauth2-http:0.9.1 needs to "
+                + "upgrade com.google.http-client:google-http-client:1.19.0 to 1.23.0",
+            "com.google.http-client:google-http-client-jackson2:1.19.0 needs to "
+                + "upgrade com.google.http-client:google-http-client:1.19.0 to 1.23.0",
+            "com.google.api.grpc:proto-google-common-protos:1.12.0 needs to "
+                + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
+            "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
+                + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0")
+        .inOrder();
   }
 
   // Beam has a more complex dependency graph that hits some corner cases.
