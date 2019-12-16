@@ -62,6 +62,7 @@ final class LinkageCheckerArguments {
   private ImmutableList<Artifact> cachedArtifacts;
   private final ImmutableList<String> extraMavenRepositoryUrls;
   private final boolean addMavenCentral;
+  private final boolean reportOnlyReachable;
 
   private LinkageCheckerArguments(CommandLine commandLine) {
     this.commandLine = checkNotNull(commandLine);
@@ -74,6 +75,7 @@ final class LinkageCheckerArguments {
     extraMavenRepositoryUrls.forEach(RepositoryUtility::mavenRepositoryFromUrl);
 
     this.addMavenCentral = !commandLine.hasOption("nm");
+    this.reportOnlyReachable = commandLine.hasOption("-r");
   }
 
   static LinkageCheckerArguments readCommandLine(String... arguments) throws ParseException {
@@ -146,6 +148,16 @@ final class LinkageCheckerArguments {
             .build();
     options.addOption(noMavenCentralOption);
 
+    Option reportOnlyReachable =
+        Option.builder("r")
+            .longOpt("report-only-reachable")
+            .hasArg(false)
+            .desc(
+                "Report only reachable linkage errors from the classes in the specified BOM or "
+                    + "Maven artifacts")
+            .build();
+    options.addOption(reportOnlyReachable);
+
     options.addOptionGroup(inputGroup);
     return options;
   }
@@ -216,5 +228,9 @@ final class LinkageCheckerArguments {
 
   boolean getAddMavenCentral() {
     return addMavenCentral;
+  }
+
+  boolean getReportOnlyReachable() {
+    return reportOnlyReachable;
   }
 }

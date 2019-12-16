@@ -56,9 +56,7 @@ import org.junit.Test;
 public class DashboardTest {
 
   private static final Correspondence<Node, String> NODE_VALUES =
-      Correspondence.from((node, expected) ->
-          trimAndCollapseWhiteSpace(node.getValue())
-          .equals(expected), "has value equal to");
+      Correspondence.transforming(node -> trimAndCollapseWhiteSpace(node.getValue()), "has value");
 
   private static String trimAndCollapseWhiteSpace(String value) {
     return CharMatcher.whitespace().trimAndCollapseFrom(value, ' ');
@@ -215,17 +213,32 @@ public class DashboardTest {
         .isEqualTo(
             "106 target classes causing linkage errors referenced from 516 source classes.");
 
-    Nodes dependencyPaths = details.query(
-        "//p[@class='linkage-check-dependency-paths'][position()=last()]");
-    Node dependencyPathMessage = dependencyPaths.get(0);
+    Nodes dependencyPaths = details.query("//p[@class='linkage-check-dependency-paths']");
+    Node dependencyPathMessageOnProblem = dependencyPaths.get(dependencyPaths.size() - 4);
     Assert.assertEquals(
-        "The following paths to the jar file from the BOM are found in the dependency tree:",
-        trimAndCollapseWhiteSpace(dependencyPathMessage.getValue()));
+        "The following paths contain guava-jdk5-13.0.jar:",
+        trimAndCollapseWhiteSpace(dependencyPathMessageOnProblem.getValue()));
+
+    Node dependencyPathMessageOnSource = dependencyPaths.get(dependencyPaths.size() - 3);
+    Assert.assertEquals(
+        "The following paths contain guava-27.1-android.jar:",
+        trimAndCollapseWhiteSpace(dependencyPathMessageOnSource.getValue()));
     int dependencyPathListSize =
         details.query("//ul[@class='linkage-check-dependency-paths']/li").size();
+
+    Nodes nodesWithPathsSummary = details.query("//p[@class='linkage-check-dependency-paths']");
     Truth.assertWithMessage("The dashboard should not show repetitive dependency paths")
-        .that(dependencyPathListSize)
-        .isLessThan(100);
+        .that(nodesWithPathsSummary)
+        .comparingElementsUsing(
+            Correspondence.<Node, String>transforming(
+                node -> trimAndCollapseWhiteSpace(node.getValue()), "has text"))
+        .contains(
+            "Dependency path 'commons-logging:commons-logging > javax.servlet:servlet-api' exists"
+                + " in all 1337 dependency paths. Example path:"
+                + " com.google.http-client:google-http-client:1.29.1 (compile) /"
+                + " org.apache.httpcomponents:httpclient:4.5.5 (compile) /"
+                + " commons-logging:commons-logging:1.2 (compile) / javax.servlet:servlet-api:2.3"
+                + " (provided, optional)");
   }
 
   @Test

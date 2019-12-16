@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
@@ -48,6 +49,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class LinkageCheckerTest {
+
+  private static final Correspondence<SymbolProblem, String> HAS_SYMBOL_IN_CLASS =
+      Correspondence.transforming(
+          (SymbolProblem problem) -> problem.getSymbol().getClassName(),
+          "has symbol in class with name");
 
   private Path guavaPath;
   private Path firestorePath;
@@ -990,8 +996,61 @@ public class LinkageCheckerTest {
     // CContext$Directives interface. But this should not be reported as an error because the
     // interface has default implementation for the methods.
     String unexpectedClass = "com.oracle.svm.core.LibCHelperDirectives";
-    assertFalse(
-        symbolProblems.keySet().stream()
-            .anyMatch(problem -> problem.getSymbol().getClassName().equals(unexpectedClass)));
+    Truth.assertThat(symbolProblems.keySet())
+        .comparingElementsUsing(HAS_SYMBOL_IN_CLASS)
+        .doesNotContain(unexpectedClass);
+  }
+
+  @Test
+  public void testFindSymbolProblems_unimplementedAbstractMethod()
+      throws RepositoryException, IOException {
+    // Non-abstract NioEventLoopGroup class extends MultithreadEventLoopGroup.
+    // Abstract MultithreadEventLoopGroup class extends MultithreadEventExecutorGroup
+    // Abstract MultithreadEventExecutorGroup class has abstract newChild method.
+    // Netty version discrepancy between 4.0 and 4.1 causes AbstractMethodError.
+    // https://github.com/netty/netty/issues/7675
+    ImmutableList<Path> nettyTransportJars4_0 =
+        resolvePaths("io.netty:netty-transport:jar:4.0.37.Final");
+    ImmutableList<Path> nettyCommonJars4_1 = resolvePaths("io.netty:netty-common:jar:4.1.16.Final");
+
+    ImmutableList<Path> jars =
+        ImmutableList.<Path>builder()
+            .addAll(nettyCommonJars4_1)
+            .addAll(nettyTransportJars4_0)
+            .build();
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    MethodSymbol expectedMethodSymbol =
+        new MethodSymbol(
+            "io.netty.channel.nio.NioEventLoopGroup",
+            "newChild",
+            "(Ljava/util/concurrent/Executor;[Ljava/lang/Object;)Lio/netty/util/concurrent/EventExecutor;",
+            false);
+
+    Truth.assertThat(symbolProblems.keySet())
+        .comparingElementsUsing(Correspondence.transforming(SymbolProblem::getSymbol, "has symbol"))
+        .contains(expectedMethodSymbol);
+  }
+
+  @Test
+  public void testFindSymbolProblems_nativeMethodsOnAbstractClass()
+      throws IOException, RepositoryException {
+    ImmutableList<Path> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    // com.oracle.svm.core.genscavenge.PinnedAllocatorImpl extends an abstract class
+    // com.oracle.svm.core.heap.PinnedAllocator. The superclass has native methods, such as
+    // "newInstance". These native methods should not be reported as unimplemented methods.
+    String unexpectedClass = "com.oracle.svm.core.genscavenge.PinnedAllocatorImpl";
+    Truth.assertThat(symbolProblems.keySet())
+        .comparingElementsUsing(HAS_SYMBOL_IN_CLASS)
+        .doesNotContain(unexpectedClass);
   }
 }
