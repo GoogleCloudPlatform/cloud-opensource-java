@@ -49,6 +49,7 @@
     <io.grpc.version>1.25.0</io.grpc.version>
     <protobuf.version>3.11.1</protobuf.version>
     <http.version>1.33.0</http.version>
+    <gax.version>1.52.0</gax.version>
   </properties>
 
   <distributionManagement>
@@ -197,6 +198,17 @@
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bom</artifactId>
         <version>${google.cloud.java.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      
+      <!-- TODO why does this fail if we move it before google-cloud-bom? -->
+      <!-- is upper bounds reading in reverse order? -->
+      <!-- GAX from https://github.com/googleapis/gax-java -->
+      <dependency>
+        <groupId>com.google.api</groupId>
+        <artifactId>gax-bom</artifactId>
+        <version>${gax.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
