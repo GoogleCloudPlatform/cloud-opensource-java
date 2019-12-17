@@ -216,6 +216,13 @@ public class LinkageMonitor {
     ImmutableSet.Builder<Path> problematicJars = ImmutableSet.builder();
     for (SymbolProblem problem : newProblems) {
       message.append(problem + "\n");
+
+      // This is null for ClassNotFound error.
+      ClassFile containingClass = problem.getContainingClass();
+      if (containingClass != null) {
+        problematicJars.add(containingClass.getJar());
+      }
+
       for (ClassFile classFile : snapshotSymbolProblems.get(problem)) {
         message.append(
             String.format(
