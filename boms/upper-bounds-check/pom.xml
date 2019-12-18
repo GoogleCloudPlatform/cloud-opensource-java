@@ -51,7 +51,8 @@
   </dependencyManagement>
 
   <!-- TODO is there a way to run this test directly on the BOM instead of
-    on a pom.xml that imports the BOM? -->
+    on a pom.xml that imports the BOM? Perhaps by constructing a pom.xml
+    that lists everything in the BOM? -->
   <dependencies>
     <dependency>
       <groupId>com.google.cloud</groupId>
@@ -68,7 +69,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.0.0-M2</version>
+        <version>3.0.0-M3</version>
         <executions>
           <execution>
             <id>enforce</id>
