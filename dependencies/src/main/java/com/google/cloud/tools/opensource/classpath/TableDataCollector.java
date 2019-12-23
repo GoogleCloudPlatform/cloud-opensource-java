@@ -85,16 +85,8 @@ public class TableDataCollector {
 
   private void runTableCheck(List<String> rowKeys, List<String> columnKeys)
       throws RepositoryException, IOException {
-    int totalCellCount = 0;
+    int totalCellCount = rowKeys.size() * columnKeys.size();
     int count = 0;
-
-    for (String rowKey : rowKeys) {
-      for (String columnKey : columnKeys) {
-        if (!areSameArtifactInDifferentVersion(rowKey, columnKey)) {
-          totalCellCount++;
-        }
-      }
-    }
 
     for (String rowKey : rowKeys) {
       for (String columnKey : columnKeys) {
@@ -159,7 +151,7 @@ public class TableDataCollector {
   }
 
   public static Path pairFilePath(String coordinates1, String coordinates2) {
-    return Paths.get("target/").resolve(pairFileName(coordinates1, coordinates2));
+    return Paths.get("linkage-check-cache").resolve(pairFileName(coordinates1, coordinates2));
   }
 
   public static Path pairFileName(String coordinates1, String coordinates2) {
