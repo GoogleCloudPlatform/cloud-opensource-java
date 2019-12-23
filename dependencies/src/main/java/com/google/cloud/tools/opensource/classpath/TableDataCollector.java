@@ -12,6 +12,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
@@ -28,7 +31,11 @@ public class TableDataCollector {
 
   SymbolProblemSerializer serializer = new SymbolProblemSerializer();
 
+  AtomicLong totalFinishedCheckCount = new AtomicLong(0);
 
+
+  // com.google.api:gax-grpc:[1.38.0,]
+  // com.google.api:gax:[1.38.0,]
   public static void main(String[] arguments) throws Exception {
     TableDataCollector tableDataCollector = new TableDataCollector();
 
@@ -86,17 +93,26 @@ public class TableDataCollector {
   private void runTableCheck(List<String> rowKeys, List<String> columnKeys)
       throws RepositoryException, IOException {
     int totalCellCount = rowKeys.size() * columnKeys.size();
-    int count = 0;
+
+    ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(18);
 
     for (String rowKey : rowKeys) {
       for (String columnKey : columnKeys) {
-        checkPair(rowKey, columnKey);
-        count++;
-        logger.info(
-            String.format("Finished %s x %s (%d/%d)", rowKey, columnKey, count, totalCellCount));
+
+        executor.submit(() -> {
+          try {
+            checkPair(rowKey, columnKey);
+            logger.info(
+                String.format("Finished %s x %s (%d/%d)", rowKey, columnKey, totalFinishedCheckCount.incrementAndGet(), totalCellCount));
+          } catch (Exception ex) {
+            throw new RuntimeException("Could not process " + rowKey + " x " + columnKey, ex);
+          }
+        });
       }
     }
   }
+
+
 
 
   private void checkPair(String coordinates1, String coordinates2)
