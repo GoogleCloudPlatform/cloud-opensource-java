@@ -28,7 +28,7 @@ import java.util.Objects;
  * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.1">Java
  *     Virtual Machine Specification: The Run-Time Constant Pool</a>
  */
-abstract class Symbol {
+public abstract class Symbol {
   private final String className;
 
   Symbol(String className) {
@@ -42,7 +42,7 @@ abstract class Symbol {
    * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-13.html#jls-13.1">Java
    *     Language Specification: 13.1. The Form of a Binary</a>
    */
-  String getClassName() {
+  public String getClassName() {
     return className;
   }
 

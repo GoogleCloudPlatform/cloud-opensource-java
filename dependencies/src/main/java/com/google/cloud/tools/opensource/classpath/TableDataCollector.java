@@ -1,0 +1,170 @@
+package com.google.cloud.tools.opensource.classpath;
+
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.LinkedListMultimap;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.logging.Logger;
+import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.resolution.VersionRangeRequest;
+import org.eclipse.aether.resolution.VersionRangeResolutionException;
+import org.eclipse.aether.resolution.VersionRangeResult;
+
+public class TableDataCollector {
+
+  private static final Logger logger = Logger.getLogger(TableDataCollector.class.getName());
+
+  SymbolProblemSerializer serializer = new SymbolProblemSerializer();
+
+
+  public static void main(String[] arguments) throws Exception {
+    TableDataCollector tableDataCollector = new TableDataCollector();
+
+    ImmutableList<String> coordinates = generateCoordinatesFromArguments(arguments);
+    tableDataCollector.runTableCrossCheck(coordinates);
+  }
+
+
+  static ImmutableList<String> generateCoordinatesFromArguments(String[] arguments) {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    for (String argument : arguments) {
+      String[] split = argument.split(":");
+      if (split.length != 3) {
+        throw new IllegalArgumentException(
+            "Element of arguments must be <groupId>:<artifactId>:[X,]");
+      }
+      String groupId = split[0];
+      String artifactId = split[1];
+      String versionRange = split[2];
+      ImmutableList<String> coordinates = artifactCoordinatesFromVersionRange(groupId, artifactId,
+          versionRange);
+      builder.addAll(coordinates);
+    }
+    return builder.build();
+  }
+
+  static ImmutableList<String> artifactCoordinatesFromVersionRange(String groupId,
+      String artifactId, String versionRange) {
+    RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility
+        .newSession(repositorySystem);
+
+    Artifact artifactWithVersionRange = new DefaultArtifact(groupId, artifactId, null,
+        versionRange);
+    VersionRangeRequest request =
+        new VersionRangeRequest(
+            artifactWithVersionRange, ImmutableList.of(RepositoryUtility.CENTRAL), null);
+
+    try {
+      VersionRangeResult versionRangeResult = repositorySystem
+          .resolveVersionRange(session, request);
+      return versionRangeResult.getVersions().stream()
+          .map(x -> String.format("%s:%s:%s", groupId, artifactId, x))
+          .collect(toImmutableList());
+    } catch (VersionRangeResolutionException ex) {
+      throw new RuntimeException(ex);
+    }
+  }
+
+  private void runTableCrossCheck(List<String> coordinates)
+      throws RepositoryException, IOException {
+    runTableCheck(coordinates, coordinates);
+  }
+
+  private void runTableCheck(List<String> rowKeys, List<String> columnKeys)
+      throws RepositoryException, IOException {
+    int totalCellCount = 0;
+    int count = 0;
+
+    for (String rowKey : rowKeys) {
+      for (String columnKey : columnKeys) {
+        if (!areSameArtifactInDifferentVersion(rowKey, columnKey)) {
+          totalCellCount++;
+        }
+      }
+    }
+
+    for (String rowKey : rowKeys) {
+      for (String columnKey : columnKeys) {
+        checkPair(rowKey, columnKey);
+        count++;
+        logger.info(
+            String.format("Finished %s x %s (%d/%d)", rowKey, columnKey, count, totalCellCount));
+      }
+    }
+  }
+
+
+  private void checkPair(String coordinates1, String coordinates2)
+      throws RepositoryException, IOException {
+
+    Path output = pairFilePath(coordinates1, coordinates2);
+
+    if (output.toFile().exists()) {
+      logger.fine("Already exists: " + output);
+      return;
+    }
+
+    if (areSameArtifactInDifferentVersion(coordinates1, coordinates2)) {
+      return;
+    }
+
+    runLinkageCheckOnPair(coordinates1, coordinates2, output);
+  }
+
+  private static boolean areSameArtifactInDifferentVersion(String coordinates1,
+      String coordinates2) {
+    Artifact artifact1 = new DefaultArtifact(coordinates1);
+    Artifact artifact2 = new DefaultArtifact(coordinates2);
+
+    if (artifact1.getVersion().equals(artifact2.getVersion())) {
+      return false;
+    }
+    if (artifact1.getArtifactId().equals(artifact2.getArtifactId())
+        && artifact2.getGroupId().equals(artifact2.getGroupId())) {
+      return true;
+    }
+    return false;
+  }
+
+
+  private void runLinkageCheckOnPair(String coordinates1, String coordinates2, Path output)
+      throws RepositoryException, IOException {
+
+    List<Artifact> artifacts = ImmutableList.of(
+        new DefaultArtifact(coordinates1),
+        new DefaultArtifact(coordinates2));
+
+    LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
+        ClassPathBuilder.artifactsToDependencyPaths(artifacts, true);
+    ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
+    List<Path> entryPointJars = classpath.subList(0, artifacts.size());
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        LinkageChecker.create(classpath, ImmutableSet.copyOf(entryPointJars)).findSymbolProblems();
+
+    serializer.serialize(symbolProblems, jarToDependencyPaths, output);
+  }
+
+  public static Path pairFilePath(String coordinates1, String coordinates2) {
+    return Paths.get("target/").resolve(pairFileName(coordinates1, coordinates2));
+  }
+
+  public static Path pairFileName(String coordinates1, String coordinates2) {
+    return Paths
+        .get(coordinates1.replace(':', '_') + "___" + coordinates2.replace(':', '_') + ".json");
+  }
+
+}

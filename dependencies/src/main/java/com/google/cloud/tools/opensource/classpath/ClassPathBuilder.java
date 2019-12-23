@@ -75,7 +75,7 @@ public class ClassPathBuilder {
    * @throws RepositoryException when there is a problem retrieving jar files
    */
   public static LinkedListMultimap<Path, DependencyPath> artifactsToDependencyPaths(
-      List<Artifact> artifacts) throws RepositoryException {
+      List<Artifact> artifacts, boolean table) throws RepositoryException {
 
     LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
     if (artifacts.isEmpty()) {
@@ -83,7 +83,8 @@ public class ClassPathBuilder {
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(artifacts);
+        table ? DependencyGraphBuilder.getTableLinkageCheckDependencyGraph(artifacts) :
+            DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(artifacts);
     List<DependencyPath> dependencyPaths = dependencyGraph.list();
 
     // To remove duplicates on (groupId:artifactId) for dependency mediation
@@ -116,6 +117,11 @@ public class ClassPathBuilder {
       multimap.put(jarAbsolutePath, dependencyPath);
     }
     return multimap;
+  }
+
+  public static LinkedListMultimap<Path, DependencyPath> artifactsToDependencyPaths(
+      List<Artifact> artifacts) throws RepositoryException {
+    return artifactsToDependencyPaths(artifacts, false);
   }
 
 }

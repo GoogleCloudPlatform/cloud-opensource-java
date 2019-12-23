@@ -207,6 +207,14 @@ public class DependencyGraphBuilder {
     return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
   }
 
+  public static DependencyGraph getTableLinkageCheckDependencyGraph(List<Artifact> artifacts)
+      throws RepositoryException {
+    ImmutableList<DependencyNode> dependencyNodes =
+        artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
+    DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, false);
+    return levelOrder(node, GraphTraversalOption.NONE);
+  }
+
   /**
    * Finds the full compile time, transitive dependency graph including duplicates and conflicting
    * versions.
