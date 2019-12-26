@@ -25,11 +25,6 @@ final public class LinkageCheckResult {
   public LinkageCheckResult(List<Artifact> classPathArtifacts,
       Multimap<SymbolProblem, ClassFile> symbolProblems) {
     ImmutableList<SymbolProblem> keys = ImmutableList.copyOf(symbolProblems.keySet());
-    SymbolProblem p1 = keys.get(keys.size() - 2);
-    SymbolProblem p2 = keys.get(keys.size() - 1);
-    if (p1.equals(p2)) {
-      System.out.println("equals");
-    }
     this.symbolProblems = Maps.uniqueIndex(keys, SymbolProblem::toString);
 
     ImmutableListMultimap.Builder<String, ClassFile> builder = ImmutableListMultimap.builder();

@@ -10,14 +10,14 @@ import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.serializable.LinkageCheckResult;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.collection.UnsolvableVersionConflictException;
 
 public class SymbolProblemSerializer {
 
@@ -27,6 +27,22 @@ public class SymbolProblemSerializer {
     mapper = new ObjectMapper();
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new Jdk8Module());
+
+  }
+
+  public void serialize(Exception exception, Path output) throws IOException {
+    String errorMessage = exception.getMessage();
+    if (exception.getCause() != null && exception
+        .getCause() instanceof UnsolvableVersionConflictException) {
+      errorMessage = exception.getCause().getMessage();
+    }
+
+    mapper.writeValue(output.toFile(), ImmutableMap.of("error", errorMessage));
+  }
+
+  public void validate(Path output) throws IOException {
+    Object linkageCheckResult = mapper
+        .readValue(output.toFile(), Object.class);
 
   }
 

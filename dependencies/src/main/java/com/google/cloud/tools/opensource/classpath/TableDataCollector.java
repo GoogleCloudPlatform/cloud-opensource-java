@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 import org.eclipse.aether.RepositoryException;
@@ -21,6 +22,7 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.collection.UnsolvableVersionConflictException;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
@@ -32,6 +34,7 @@ public class TableDataCollector {
   SymbolProblemSerializer serializer = new SymbolProblemSerializer();
 
   AtomicLong totalFinishedCheckCount = new AtomicLong(0);
+  AtomicLong totalFailedCheckCount = new AtomicLong(0);
 
 
   // com.google.api:gax-grpc:[1.38.0,]
@@ -78,6 +81,7 @@ public class TableDataCollector {
       VersionRangeResult versionRangeResult = repositorySystem
           .resolveVersionRange(session, request);
       return versionRangeResult.getVersions().stream()
+          .filter(version -> !version.toString().toLowerCase().contains("rc"))
           .map(x -> String.format("%s:%s:%s", groupId, artifactId, x))
           .collect(toImmutableList());
     } catch (VersionRangeResolutionException ex) {
@@ -86,12 +90,12 @@ public class TableDataCollector {
   }
 
   private void runTableCrossCheck(List<String> coordinates)
-      throws RepositoryException, IOException {
+      throws InterruptedException {
     runTableCheck(coordinates, coordinates);
   }
 
   private void runTableCheck(List<String> rowKeys, List<String> columnKeys)
-      throws RepositoryException, IOException {
+      throws InterruptedException {
     int totalCellCount = rowKeys.size() * columnKeys.size();
 
     ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(18);
@@ -105,24 +109,42 @@ public class TableDataCollector {
             logger.info(
                 String.format("Finished %s x %s (%d/%d)", rowKey, columnKey, totalFinishedCheckCount.incrementAndGet(), totalCellCount));
           } catch (Exception ex) {
+            logger.warning(
+                String.format("Failed to process %s x %s: %s", rowKey, columnKey, ex.getMessage()));
+            totalFailedCheckCount.incrementAndGet();
             throw new RuntimeException("Could not process " + rowKey + " x " + columnKey, ex);
           }
         });
       }
     }
+
+    executor.shutdown();
+    if (!executor.awaitTermination(100, TimeUnit.HOURS)) {
+      logger.severe("Waited but not finished in the time limit");
+      executor.shutdownNow();
+      if (!executor.awaitTermination(1, TimeUnit.MINUTES)) {
+        logger.severe("Waited another second but not finished in the time limit");
+      }
+    }
+    logger.info(
+        "Finished " + totalFinishedCheckCount.get() + " tasks. Failures: " + totalFailedCheckCount
+            .get() + " tasks");
   }
 
-
-
-
   private void checkPair(String coordinates1, String coordinates2)
-      throws RepositoryException, IOException {
+      throws IOException {
 
     Path output = pairFilePath(coordinates1, coordinates2);
 
     if (output.toFile().exists()) {
-      logger.fine("Already exists: " + output);
-      return;
+
+      try {
+        serializer.validate(output);
+        logger.fine("Already exists: " + output);
+        return;
+      } catch (Exception ex) {
+        logger.warning("ex: "+ ex.getMessage());
+      }
     }
 
     if (areSameArtifactInDifferentVersion(coordinates1, coordinates2)) {
@@ -149,16 +171,22 @@ public class TableDataCollector {
 
 
   private void runLinkageCheckOnPair(String coordinates1, String coordinates2, Path output)
-      throws RepositoryException, IOException {
+      throws IOException {
 
     List<Artifact> artifacts = ImmutableList.of(
         new DefaultArtifact(coordinates1),
         new DefaultArtifact(coordinates2));
 
-    LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        ClassPathBuilder.artifactsToDependencyPaths(artifacts, true);
+    LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths;
+    try {
+      jarToDependencyPaths =
+          ClassPathBuilder.artifactsToDependencyPaths(artifacts, true);
+    } catch (RepositoryException ex) {
+      serializer.serialize(ex, output);
+      return;
+    }
     ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
-    List<Path> entryPointJars = classpath.subList(0, artifacts.size());
+    List<Path> entryPointJars = classpath.subList(0, Math.min(artifacts.size(), classpath.size()));
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         LinkageChecker.create(classpath, ImmutableSet.copyOf(entryPointJars)).findSymbolProblems();
