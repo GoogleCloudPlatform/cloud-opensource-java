@@ -129,6 +129,7 @@ public class TableDataCollector {
     logger.info(
         "Finished " + totalFinishedCheckCount.get() + " tasks. Failures: " + totalFailedCheckCount
             .get() + " tasks");
+    logger.info("Row keys: "+rowKeys);
   }
 
   private void checkPair(String coordinates1, String coordinates2)
