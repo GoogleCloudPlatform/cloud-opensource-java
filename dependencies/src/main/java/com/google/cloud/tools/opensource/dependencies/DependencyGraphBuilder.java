@@ -108,6 +108,13 @@ public class DependencyGraphBuilder {
     }
   }
 
+  private static List<Dependency> managedDependencies = ImmutableList.of();
+
+  public static void configureManagedDependencies(List<Artifact> artifacts) {
+    managedDependencies = artifacts.stream().map(artifact -> new Dependency(artifact, "compile"))
+        .collect(toImmutableList());
+  }
+
   private static DependencyNode resolveCompileTimeDependencies(
       DependencyNode rootDependencyArtifact)
       throws DependencyCollectionException, DependencyResolutionException {
@@ -161,6 +168,8 @@ public class DependencyGraphBuilder {
     } else {
       collectRequest.setDependencies(dependencyList);
     }
+    collectRequest.setManagedDependencies(managedDependencies);
+
     RepositoryUtility.addRepositoriesToRequest(collectRequest);
     CollectResult collectResult = system.collectDependencies(session, collectRequest);
     DependencyNode node = collectResult.getRoot();

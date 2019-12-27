@@ -2,6 +2,9 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
@@ -22,7 +25,8 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.collection.UnsolvableVersionConflictException;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
@@ -36,14 +40,26 @@ public class TableDataCollector {
   AtomicLong totalFinishedCheckCount = new AtomicLong(0);
   AtomicLong totalFailedCheckCount = new AtomicLong(0);
 
+  private static String bomCoordinates = null;
 
   // com.google.api:gax-grpc:[1.38.0,]
   // com.google.api:gax:[1.38.0,]
   public static void main(String[] arguments) throws Exception {
     TableDataCollector tableDataCollector = new TableDataCollector();
 
-    ImmutableList<String> coordinates = generateCoordinatesFromArguments(arguments);
-    tableDataCollector.runTableCrossCheck(coordinates);
+    if (arguments[0].contains("libraries-bom")) {
+      bomCoordinates = arguments[0];
+    }
+    if (bomCoordinates != null) {
+      Bom bom = RepositoryUtility.readBom(bomCoordinates);
+      ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
+      DependencyGraphBuilder.configureManagedDependencies(managedDependencies);
+      ImmutableList<String> coordinates = managedDependencies.stream().map(Artifacts::toCoordinates).collect(toImmutableList());
+      tableDataCollector.runTableCrossCheck(coordinates);
+    } else {
+      ImmutableList<String> coordinates = generateCoordinatesFromArguments(arguments);
+      tableDataCollector.runTableCrossCheck(coordinates);
+    }
   }
 
 
@@ -196,7 +212,14 @@ public class TableDataCollector {
   }
 
   public static Path pairFilePath(String coordinates1, String coordinates2) {
-    return Paths.get("linkage-check-cache").resolve(pairFileName(coordinates1, coordinates2));
+    if (bomCoordinates != null) {
+      String bomPath = bomCoordinates.replace(':', '_');
+      Path bomDirectory = Paths.get("linkage-check-cache").resolve(bomPath);
+      bomDirectory.toFile().mkdirs();
+      return bomDirectory.resolve(pairFileName(coordinates1, coordinates2));
+    } else {
+      return Paths.get("linkage-check-cache").resolve(pairFileName(coordinates1, coordinates2));
+    }
   }
 
   public static Path pairFileName(String coordinates1, String coordinates2) {

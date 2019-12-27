@@ -1,3 +1,12 @@
+let bomPathElement = '';
+let bomCoordinates = '';
+const searchParams = new URLSearchParams(window.location.search);
+
+if (searchParams.has('bom')) {
+  bomCoordinates = searchParams.get('bom');
+  bomPathElement = bomCoordinates.replace(/\:/g, '_') + '/';
+}
+
 const prepareTable = async () => {
   console.log("preparing table");
 
@@ -11,7 +20,7 @@ const prepareTable = async () => {
 
   const columnHeaderElement = $('<tr>');
   tableElement.append(columnHeaderElement);
-  const dummyColumnHeader = $('<th>');
+  const dummyColumnHeader = $('<th rowspan="2" colspan="2">');
   columnHeaderElement.append(dummyColumnHeader);
 
   const inherentLinkageErrors = new Map();
@@ -54,8 +63,6 @@ const prepareTable = async () => {
 
   const versionHeaderElement = $('<tr>');
   tableElement.append(versionHeaderElement);
-  const dummyColumnHeaderInVersion = $('<th>');
-  versionHeaderElement.append(dummyColumnHeaderInVersion);
   for (let i = 0; i < artifacts.length; ++i) {
     const artifact1 = artifacts[i];
     const columnHeader = $('<th>');
@@ -63,18 +70,33 @@ const prepareTable = async () => {
 
     columnHeader.text(elems[2]); // version
     versionHeaderElement.append(columnHeader);
+
+    columnHeader.append(createCheckbox(artifact1));
   }
 
+  groupId = '';
+  artifactId = '';
+  let rowHeaderGA;
   for (let i = 0; i < artifacts.length; ++i) {
     const artifact1 = artifacts[i];
 
     const tableRowElement = $('<tr>');
     tableElement.append(tableRowElement);
 
-    const rowHeader = $('<th>');
-    rowHeader.text(artifact1);
-    tableRowElement.append(rowHeader);
+    const elems = artifact1.split(':');
+    if (groupId === elems[0] && artifactId === elems[1]) {
+      const existingRowSpan = parseInt(rowHeaderGA.attr('rowSpan'), 10);
+      rowHeaderGA.attr('rowSpan', 1 + existingRowSpan);
+    } else {
+      rowHeaderGA = $('<th rowSpan="1">').text(elems[0] + ':' + elems[1]);
+      tableRowElement.append(rowHeaderGA);
+      groupId = elems[0];
+      artifactId = elems[1];
+    }
+    const rowHeaderVersion = $('<th>').text(elems[2]);
+    tableRowElement.append(rowHeaderVersion);
 
+    rowHeaderVersion.append(createCheckbox(artifact1));
 
     for (let j = 0; j < artifacts.length; ++j) {
       const artifact2 = artifacts[j];
@@ -82,14 +104,22 @@ const prepareTable = async () => {
       const tableCellElement = $('<td>');
       tableRowElement.append(tableCellElement);
       tableCellElement.url = "cell.html?artifact1=" + artifact1 + "&artifact2=" + artifact2;
+      if (bomPathElement) {
+        tableCellElement.url += '&bom=' + bomCoordinates;
+      }
       tableCellElement.attr('title', artifact1 + " - " + artifact2);
+      tableCellElement.addClass("artifact-row-" + artifact1.replace(/[\:\.]/g, '_'));
+      tableCellElement.addClass("artifact-col-" + artifact2.replace(/[\:\.]/g, '_'));
 
       if (areSameArtifactDifferentVersion(artifact1, artifact2)) {
         tableCellElement.text("N/A");
         continue;
       }
+      if (artifact1 === artifact2) {
+        tableCellElement.addClass('artifact-same');
+      }
       if (artifact1 === artifact2 && linkageCheckFailures.get(artifact1)) {
-        tableCellElement.text("error");
+        tableCellElement.text("error1");
         continue;
       }
 
@@ -109,9 +139,56 @@ const prepareTable = async () => {
           fillTableCellError(tableCellElement, textStatus);
         }
       });
-
     }
   }
+};
+
+const createCheckbox = (artifactCoordinates) => {
+  const elems = artifactCoordinates.split(':');
+  const classFriendlyCoordinates = artifactCoordinates.replace(/[\:\.]/g, '_');
+  const groupName = elems[0] + '_' + elems[1];
+  const groupQuery = "input:checkbox[name='" + groupName + "']";
+  const checkbox = $('<input type="checkbox" class="artifact-checkbox" name="'+ groupName +'"/>');
+  checkbox.data('coordinates', artifactCoordinates);
+  checkbox.on('click', (event) => {
+    const element = $(event.currentTarget);
+    if (element.is(":checked")) {
+      $('.artifact-col-' + classFriendlyCoordinates).addClass('artifact-col-selected');
+      $('.artifact-row-' + classFriendlyCoordinates).addClass('artifact-row-selected');
+
+      // Mark other checkbox
+      const sameArtifactGroup = $(groupQuery);
+      sameArtifactGroup.each((index, inputElement) => {
+        const element = $(inputElement);
+        const otherCoordinates = element.data('coordinates');
+        const checked = otherCoordinates === artifactCoordinates;
+        element.prop("checked", checked);
+        if (!checked) {
+          const classFriendlyOtherCoordinates = otherCoordinates.replace(/[\:\.]/g, '_');
+          $('.artifact-col-' + classFriendlyOtherCoordinates).removeClass('artifact-col-selected');
+          $('.artifact-row-' + classFriendlyOtherCoordinates).removeClass('artifact-row-selected');
+          $('.artifact-col-' + classFriendlyOtherCoordinates).addClass('artifact-col-unselected');
+          $('.artifact-row-' + classFriendlyOtherCoordinates).addClass('artifact-row-unselected');
+        }
+      });
+    } else {
+
+      const sameArtifactGroup = $(groupQuery);
+      sameArtifactGroup.each((index, inputElement) => {
+        const element = $(inputElement);
+        const otherCoordinates = element.data('coordinates');
+        if (artifactCoordinates === otherCoordinates) {
+          $(inputElement).prop('checked', false);
+        }
+        const classFriendlyOtherCoordinates = otherCoordinates.replace(/[\:\.]/g, '_');
+        $('.artifact-col-' + classFriendlyOtherCoordinates).removeClass('artifact-col-unselected');
+        $('.artifact-row-' + classFriendlyOtherCoordinates).removeClass('artifact-row-unselected');
+      });
+      $('.artifact-col-' + classFriendlyCoordinates).removeClass('artifact-col-selected');
+      $('.artifact-row-' + classFriendlyCoordinates).removeClass('artifact-row-selected');
+    }
+  });
+  return checkbox;
 };
 
 const areSameArtifactDifferentVersion = (artifact1, artifact2) => {
@@ -149,7 +226,7 @@ const prepareCell = async () => {
   }
   
   const symbolProblems = linkageCheckResult.symbolProblems;
-
+  const references = linkageCheckResult.references;
 
   const listElement = $('#symbol-problems');
 
@@ -157,9 +234,17 @@ const prepareCell = async () => {
     if (problems1.has(problem) || problems2.has(problem)) {
       return;
     }
+    const listItem = $('<li>').text(problem);
     listElement.append(
-        $('<li>').text(problem)
+        listItem
     );
+    const referencingClasses = references[problem];
+    const referencingClassElement = $('<ul>');
+    listItem.append(referencingClassElement);
+    referencingClasses.forEach(item => {
+      const line = item.className + " (" +  item.coordinates +")";
+      referencingClassElement.append($('<li>').text(line));
+    });
   });
 
   $('#artifact1 .artifact-name').text(artifact1);
@@ -179,6 +264,11 @@ const prepareCell = async () => {
         $('<li>').text(problem)
     );
   });
+
+  const classPathList = $('#class-path');
+  linkageCheckResult.classPathArtifacts.forEach(item => {
+    classPathList.append($('<li>').text(item));
+  })
 };
 
 const fetchSymbolProblems = async (artifact) => {
@@ -188,7 +278,9 @@ const fetchSymbolProblems = async (artifact) => {
 };
 
 const pairToFile = (artifact1, artifact2) => {
+
   const pairFileName = 'linkage-check-cache/'
+      + bomPathElement
       + artifact1.replace(/\:/g, '_')
       + '___'
       + artifact2.replace(/\:/g, '_')
@@ -200,7 +292,8 @@ const fillTableCell = (tableCellElement, linkageCheckResult, inherentLinkageErro
   let nonInherentCount = 0;
   const anchor = $('<a>');
   if (linkageCheckResult.error) {
-    anchor.text("error");
+    anchor.text("error1");
+    tableCellElement.addClass('has-error');
   } else {
     if (artifact1 === artifact2) {
       anchor.text("(" + inherentLinkageErrors.size + ")");
@@ -212,6 +305,9 @@ const fillTableCell = (tableCellElement, linkageCheckResult, inherentLinkageErro
         nonInherentCount++;
       });
       anchor.text(nonInherentCount);
+      if (nonInherentCount > 0 && artifact1 !== artifact2) {
+        tableCellElement.addClass('has-error');
+      }
     }
   }
 
