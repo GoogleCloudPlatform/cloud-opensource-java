@@ -151,7 +151,7 @@ public class TableDataCollector {
   private void checkPair(String coordinates1, String coordinates2)
       throws IOException {
 
-    Path output = pairFilePath(coordinates1, coordinates2);
+    Path output = pairFilePath(coordinates1, coordinates2, bomCoordinates);
 
     if (output.toFile().exists()) {
 
@@ -171,7 +171,7 @@ public class TableDataCollector {
     runLinkageCheckOnPair(coordinates1, coordinates2, output);
   }
 
-  private static boolean areSameArtifactInDifferentVersion(String coordinates1,
+  static boolean areSameArtifactInDifferentVersion(String coordinates1,
       String coordinates2) {
     Artifact artifact1 = new DefaultArtifact(coordinates1);
     Artifact artifact2 = new DefaultArtifact(coordinates2);
@@ -211,7 +211,7 @@ public class TableDataCollector {
     serializer.serialize(symbolProblems, jarToDependencyPaths, output);
   }
 
-  public static Path pairFilePath(String coordinates1, String coordinates2) {
+  public static Path pairFilePath(String coordinates1, String coordinates2, String bomCoordinates) {
     if (bomCoordinates != null) {
       String bomPath = bomCoordinates.replace(':', '_');
       Path bomDirectory = Paths.get("linkage-check-cache").resolve(bomPath);

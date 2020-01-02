@@ -18,6 +18,8 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.cloud.tools.opensource.serializable.SymbolDeserializer;
 import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
@@ -28,6 +30,7 @@ import java.util.Objects;
  * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.1">Java
  *     Virtual Machine Specification: The Run-Time Constant Pool</a>
  */
+@JsonDeserialize(using = SymbolDeserializer.class)
 public abstract class Symbol {
   private final String className;
 

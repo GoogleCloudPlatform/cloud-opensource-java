@@ -7,7 +7,102 @@ if (searchParams.has('bom')) {
   bomPathElement = bomCoordinates.replace(/\:/g, '_') + '/';
 }
 
-const prepareTable = async () => {
+const initializeTable = async () => {
+  if (bomCoordinates) {
+    prepareTableForBom();
+  } else {
+    prepareTableFromParam();
+  }
+};
+
+const prepareTableForBom = async() => {
+  const tableData = await $.getJSON('linkage-check-cache/' + bomCoordinates.replace(/\:/g, '_')
+  + '/table.json');
+
+  const keySet = new Set();
+  Object.keys(tableData).forEach(k => {
+    const elems = k.split('___');
+    keySet.add(elems[0]);
+  });
+  const keys = Array.from(keySet);
+  keys.sort();
+  const artifacts = keys;
+
+  const tableElement = $('#dependency-table tbody');
+
+  const columnHeaderElement = $('<tr>');
+  tableElement.append(columnHeaderElement);
+  const dummyColumnHeader = $('<th rowspan="2" colspan="2">');
+  columnHeaderElement.append(dummyColumnHeader);
+
+  let columnHeaderGA = $('<th>'); // GroupId and ArtifactId
+  for (let i = 0; i < artifacts.length; ++i) {
+    const artifact1 = artifacts[i];
+    const elems = artifact1.split(':');
+    columnHeaderGA = $('<th>');
+    columnHeaderGA.html(elems[0] + '<br>' + elems[1]);
+    columnHeaderElement.append(columnHeaderGA);
+    columnHeaderGA.attr('colspan', 1);
+  }
+
+  const versionHeaderElement = $('<tr>');
+  tableElement.append(versionHeaderElement);
+  for (let i = 0; i < artifacts.length; ++i) {
+    const artifact1 = artifacts[i];
+    const columnHeader = $('<th>');
+    const elems = artifact1.split(':');
+
+    columnHeader.text(elems[2]); // version
+    versionHeaderElement.append(columnHeader);
+
+    columnHeader.append(createCheckbox(artifact1));
+  }
+
+  groupId = '';
+  artifactId = '';
+  let rowHeaderGA;
+  for (let i = 0; i < artifacts.length; ++i) {
+    const artifact1 = artifacts[i];
+
+    const tableRowElement = $('<tr>');
+    tableElement.append(tableRowElement);
+
+    const elems = artifact1.split(':');
+    rowHeaderGA = $('<th rowSpan="1">').text(elems[0] + ':' + elems[1]);
+    tableRowElement.append(rowHeaderGA);
+    const rowHeaderVersion = $('<th>').text(elems[2]);
+    tableRowElement.append(rowHeaderVersion);
+
+    rowHeaderVersion.append(createCheckbox(artifact1));
+
+    for (let j = 0; j < artifacts.length; ++j) {
+      const artifact2 = artifacts[j];
+
+      const tableCellElement = $('<td>');
+      tableRowElement.append(tableCellElement);
+      tableCellElement.url = "cell.html?artifact1=" + artifact1 + "&artifact2=" + artifact2;
+      if (bomPathElement) {
+        tableCellElement.url += '&bom=' + bomCoordinates;
+      }
+      tableCellElement.attr('title', artifact1 + " - " + artifact2);
+      tableCellElement.addClass("artifact-row-" + artifact1.replace(/[\:\.]/g, '_'));
+      tableCellElement.addClass("artifact-col-" + artifact2.replace(/[\:\.]/g, '_'));
+
+      if (areSameArtifactDifferentVersion(artifact1, artifact2)) {
+        tableCellElement.text("N/A");
+        continue;
+      }
+      if (artifact1 === artifact2) {
+        tableCellElement.addClass('artifact-same');
+      }
+
+      let cellValue = tableData[artifact1 + '___' + artifact2];
+      fillTableCellValue(tableCellElement, cellValue, artifact1, artifact2);
+    }
+  }
+};
+
+const prepareTableFromParam = async () => {
   console.log("preparing table");
 
   const searchParams = new URLSearchParams(window.location.search);
@@ -15,6 +110,11 @@ const prepareTable = async () => {
   const artifactsParam = searchParams.get('artifacts');
 
   const artifacts = artifactsParam.split(",");
+
+  prepareTable(artifacts);
+};
+
+const prepareTable = async (artifacts) => {
 
   const tableElement = $('#dependency-table tbody');
 
@@ -142,6 +242,8 @@ const prepareTable = async () => {
     }
   }
 };
+
+
 
 const createCheckbox = (artifactCoordinates) => {
   const elems = artifactCoordinates.split(':');
@@ -318,6 +420,22 @@ const fillTableCell = (tableCellElement, linkageCheckResult, inherentLinkageErro
 
   anchor.attr('href', tableCellElement.url);
   tableCellElement.append(anchor);
+  console.log("Finished " + artifact1 + artifact2);
+};
+
+const fillTableCellValue = (tableCellElement, value, artifact1, artifact2) => {
+  const anchor = $('<a>');
+  anchor.attr('href', tableCellElement.url);
+  tableCellElement.append(anchor);
+  if (artifact1 === artifact2) {
+    anchor.text("(" + value + ")");
+    tableCellElement.addClass('has-error');
+  } else {
+    anchor.text(value);
+    if (value != 0) {
+      tableCellElement.addClass('has-error');
+    }
+  }
 };
 
 const fillTableCellError = (tableCellElement, textStatus) => {

@@ -16,6 +16,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.UnsolvableVersionConflictException;
 
@@ -27,7 +28,6 @@ public class SymbolProblemSerializer {
     mapper = new ObjectMapper();
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new Jdk8Module());
-
   }
 
   public void serialize(Exception exception, Path output) throws IOException {
@@ -43,7 +43,6 @@ public class SymbolProblemSerializer {
   public void validate(Path output) throws IOException {
     Object linkageCheckResult = mapper
         .readValue(output.toFile(), Object.class);
-
   }
 
   public void serialize(ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems,
@@ -80,6 +79,12 @@ public class SymbolProblemSerializer {
     mapper.writeValue(output.toFile(), result);
   }
 
+  public LinkageCheckResult deserialize(Path input) throws IOException {
+    LinkageCheckResult result = mapper
+        .readValue(input.toFile(), LinkageCheckResult.class);
+    return result;
+  }
+
   private static com.google.cloud.tools.opensource.serializable.ClassFile convert(ClassFile classFile, Multimap<Path, DependencyPath> jarToDependencyPaths) {
     if (classFile == null) {
       return null;
@@ -94,6 +99,10 @@ public class SymbolProblemSerializer {
     String coordinates = Artifacts.toCoordinates(artifact);
     return new com.google.cloud.tools.opensource.serializable.ClassFile(
         coordinates, classFile.getClassName());
+  }
+
+  public void serialize(Map<String, Object> data, Path output) throws IOException {
+    mapper.writeValue(output.toFile(), data);
   }
 
 }

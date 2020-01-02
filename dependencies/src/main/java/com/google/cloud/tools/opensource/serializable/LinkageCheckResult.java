@@ -2,6 +2,9 @@ package com.google.cloud.tools.opensource.serializable;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -20,7 +23,18 @@ final public class LinkageCheckResult {
 
   final ImmutableListMultimap<String, ClassFile> references;
 
+  @JsonIgnore
   final ZonedDateTime timestamp;
+
+  @JsonCreator
+  public LinkageCheckResult(@JsonProperty("classPathArtifacts") ImmutableList<String> classPathArtifacts,
+      @JsonProperty("symbolProblems")  ImmutableMap<String, SymbolProblem> symbolProblems,
+      @JsonProperty("references") ImmutableListMultimap<String, ClassFile> references) {
+    this.classPathArtifacts = classPathArtifacts;
+    this.symbolProblems = symbolProblems;
+    this.references = references;
+    this.timestamp = null;
+  }
 
   public LinkageCheckResult(List<Artifact> classPathArtifacts,
       Multimap<SymbolProblem, ClassFile> symbolProblems) {

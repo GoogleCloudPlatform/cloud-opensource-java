@@ -18,6 +18,8 @@ package com.google.cloud.tools.opensource.serializable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.cloud.tools.opensource.classpath.ErrorType;
 import com.google.cloud.tools.opensource.classpath.Symbol;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -38,7 +40,8 @@ public final class SymbolProblem {
   private final Symbol symbol;
   private final ClassFile containingClass;
 
-  public SymbolProblem(Symbol symbol, ErrorType errorType, @Nullable ClassFile containingClass) {
+  @JsonCreator
+  public SymbolProblem(@JsonProperty("symbol")  Symbol symbol, @JsonProperty("errorType") ErrorType errorType, @JsonProperty("containingClass") @Nullable ClassFile containingClass) {
     checkNotNull(symbol);
 
     // After finding symbol problem, there is no need to have SuperClassSymbol over ClassSymbol.

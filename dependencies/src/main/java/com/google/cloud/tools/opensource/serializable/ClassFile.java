@@ -2,6 +2,8 @@ package com.google.cloud.tools.opensource.serializable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
@@ -10,7 +12,8 @@ public final class ClassFile {
   private final String coordinates;
   private final String className;
 
-  public ClassFile(String coordinates, String className) {
+  @JsonCreator
+  public ClassFile(@JsonProperty("coordinates") String coordinates, @JsonProperty("className") String className) {
     this.coordinates = checkNotNull(coordinates);
     this.className = checkNotNull(className);
   }
