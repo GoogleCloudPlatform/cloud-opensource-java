@@ -216,7 +216,11 @@ const prepareCell = async () => {
   const problems2 = await fetchSymbolProblems(artifact2);
 
   const header = $('#artifact-pair');
-  header.text(artifact1 + " x " + artifact2);
+  if (artifact1 !== artifact2) {
+    header.text("Linkage Error on " + artifact1 + " x " + artifact2);
+  } else {
+    header.text("Linkage Error on " + artifact1);
+  }
 
   const linkageCheckResult = await $.getJSON(pairFileName);
 
@@ -256,14 +260,15 @@ const prepareCell = async () => {
     );
   });
 
-
-  $('#artifact2 .artifact-name').text(artifact2);
-  const listElement2 = $('#artifact2 .problem-list');
-  problems2.forEach(problem => {
-    listElement2.append(
-        $('<li>').text(problem)
-    );
-  });
+  if (artifact1 !== artifact2) {
+    $('#artifact2 .artifact-name').text(artifact2);
+    const listElement2 = $('#artifact2 .problem-list');
+    problems2.forEach(problem => {
+      listElement2.append(
+          $('<li>').text(problem)
+      );
+    });
+  }
 
   const classPathList = $('#class-path');
   linkageCheckResult.classPathArtifacts.forEach(item => {
