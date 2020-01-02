@@ -372,10 +372,21 @@ const prepareCell = async () => {
     });
   }
 
-  const classPathList = $('#class-path');
+  fillClassPathListWithResult($('#class-path'), linkageCheckResult);
+  fillClassPathList($('#artifact1-class-path'), artifact1);
+  fillClassPathList($('#artifact2-class-path'), artifact2);
+};
+
+const fillClassPathList = async (listElement, artifact) => {
+  const pairFileName = pairToFile(artifact, artifact);
+  const linkageCheckResult = await $.getJSON(pairFileName);
+  fillClassPathListWithResult(listElement, linkageCheckResult);
+};
+
+const fillClassPathListWithResult = (listElement, linkageCheckResult) => {
   linkageCheckResult.classPathArtifacts.forEach(item => {
-    classPathList.append($('<li>').text(item));
-  })
+    listElement.append($('<li>').text(item));
+  });
 };
 
 const fetchSymbolProblems = async (artifact) => {
