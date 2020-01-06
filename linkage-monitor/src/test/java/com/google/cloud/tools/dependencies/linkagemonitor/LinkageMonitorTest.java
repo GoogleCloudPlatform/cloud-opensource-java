@@ -104,35 +104,44 @@ public class LinkageMonitorTest {
               "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
               false),
           ErrorType.SYMBOL_NOT_FOUND,
-          new ClassFile(Paths.get("aaa", "bbb-1.2.3.jar"), "java.lang.Object"));
+          new ClassFile(Paths.get("foo", "b-1.0.0.jar"), "java.lang.Object"));
 
   @Test
   public void generateMessageForNewError() {
     Set<SymbolProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
-    Path jar = Paths.get("aaa", "ccc-1.2.3.jar");
+    Path jarA = Paths.get("foo", "a-1.2.3.jar");
+    Path jarB = Paths.get("foo", "b-1.0.0.jar");
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotProblems =
         ImmutableSetMultimap.of(
             classNotFoundProblem, // This is in baseline. It should not be printed
-            new ClassFile(jar, "com.abc.AAA"),
+            new ClassFile(jarA, "com.abc.AAA"),
             methodNotFoundProblem,
-            new ClassFile(jar, "com.abc.AAA"),
+            new ClassFile(jarA, "com.abc.AAA"),
             methodNotFoundProblem,
-            new ClassFile(jar, "com.abc.BBB"));
+            new ClassFile(jarA, "com.abc.BBB"));
 
-    DependencyPath dependencyPath = new DependencyPath();
-    dependencyPath.add(new DefaultArtifact("foo:bar:1.0.0"), "provided", false);
-    dependencyPath.add(new DefaultArtifact("aaa:ccc:1.2.3"), "compile", true);
+    DependencyPath dependencyPathToA = new DependencyPath();
+    dependencyPathToA.add(new DefaultArtifact("foo:bar:1.0.0"), "provided", false);
+    dependencyPathToA.add(new DefaultArtifact("foo:a:1.2.3"), "compile", true);
+    DependencyPath dependencyPathToB = new DependencyPath();
+    dependencyPathToB.add(new DefaultArtifact("foo:b:1.2.3"), "compile", true);
+
     String message =
         LinkageMonitor.messageForNewErrors(
-            snapshotProblems, baselineProblems, ImmutableListMultimap.of(jar, dependencyPath));
+            snapshotProblems,
+            baselineProblems,
+            ImmutableListMultimap.of(jarA, dependencyPathToA, jarB, dependencyPathToB));
     assertEquals(
         "Newly introduced problem:\n"
-            + "(bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils's method"
+            + "(b-1.0.0.jar) io.grpc.protobuf.ProtoUtils's method"
             + " marshaller(com.google.protobuf.Message arg1) is not found\n"
-            + "  referenced from com.abc.AAA (ccc-1.2.3.jar)\n"
-            + "  referenced from com.abc.BBB (ccc-1.2.3.jar)\n"
-            + "ccc-1.2.3.jar is at:\n"
-            + "  foo:bar:1.0.0 (provided) / aaa:ccc:1.2.3 (compile, optional)\n",
+            + "  referenced from com.abc.AAA (a-1.2.3.jar)\n"
+            + "  referenced from com.abc.BBB (a-1.2.3.jar)\n"
+            + "\n"
+            + "b-1.0.0.jar is at:\n"
+            + "  foo:b:1.2.3 (compile, optional)\n"
+            + "a-1.2.3.jar is at:\n"
+            + "  foo:bar:1.0.0 (provided) / foo:a:1.2.3 (compile, optional)\n",
         message);
   }
 
@@ -144,7 +153,7 @@ public class LinkageMonitorTest {
     assertEquals(
         "The following problems in the baseline no longer appear in the snapshot:\n"
             + "  Class java.lang.Integer is not found\n"
-            + "  (bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils's method "
+            + "  (b-1.0.0.jar) io.grpc.protobuf.ProtoUtils's method "
             + "marshaller(com.google.protobuf.Message arg1) is not found\n",
         message);
   }
