@@ -109,9 +109,22 @@ const prepareTableFromParam = async () => {
 
   const artifactsParam = searchParams.get('artifacts');
 
-  const artifacts = artifactsParam.split(",");
+  const artifacts = normalizeArtifactParam(artifactsParam);
 
   prepareTable(artifacts);
+};
+
+const normalizeArtifactParam = (artifactsParam) => {
+  const artifactIds = artifactsParam.split(",");
+  const artifacts = [];
+  artifactIds.forEach(coordinates => {
+    const elems = coordinates.split(':');
+    const versions = elems[2].split('|');
+    versions.forEach(version => {
+      artifacts.push(elems[0] + ':' + elems[1] + ':' + version);
+    });
+  });
+  return artifacts;
 };
 
 const prepareTable = async (artifacts) => {
