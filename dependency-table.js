@@ -392,6 +392,10 @@ const fillClassPathListWithResult = (listElement, linkageCheckResult) => {
 const fetchSymbolProblems = async (artifact) => {
   const pairFileName = pairToFile(artifact, artifact);
   const linkageCheckResult = await $.getJSON(pairFileName);
+  if (linkageCheckResult.error) {
+    $('#linkage-check-failure').text(linkageCheckResult.error);
+    return;
+  }
   return new Set(Object.keys(linkageCheckResult.symbolProblems));
 };
 
@@ -408,7 +412,7 @@ const pairToFile = (artifact1, artifact2) => {
 
 const fillTableCell = (tableCellElement, linkageCheckResult, inherentLinkageErrors, artifact1, artifact2) => {
   let nonInherentCount = 0;
-  const anchor = $('<a>');
+  const anchor = $('<a target="_blank">');
   if (linkageCheckResult.error) {
     anchor.text("error1");
     tableCellElement.addClass('has-error');
@@ -435,7 +439,7 @@ const fillTableCell = (tableCellElement, linkageCheckResult, inherentLinkageErro
 };
 
 const fillTableCellValue = (tableCellElement, value, artifact1, artifact2) => {
-  const anchor = $('<a>');
+  const anchor = $('<a target="_blank">');
   anchor.attr('href', tableCellElement.url);
   tableCellElement.append(anchor);
   if (artifact1 === artifact2) {
