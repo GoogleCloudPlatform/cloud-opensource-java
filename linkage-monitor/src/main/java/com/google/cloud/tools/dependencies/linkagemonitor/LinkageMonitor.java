@@ -232,6 +232,7 @@ public class LinkageMonitor {
       }
     }
 
+    message.append("\n");
     for (Path problematicJar : problematicJars.build()) {
       message.append(problematicJar.getFileName() + " is at:\n");
       for (DependencyPath dependencyPath : jarToDependencyPaths.get(problematicJar)) {
