@@ -35,6 +35,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -69,6 +70,7 @@ import org.apache.bcel.util.ClassPath;
  * in them, through the input class path for a linkage check.
  */
 class ClassDumper {
+  private static final Logger logger = Logger.getLogger(ClassDumper.class.getName());
 
   private final ImmutableList<Path> inputClassPath;
   private final FixedSizeClassPathRepository classRepository;
@@ -395,7 +397,16 @@ class ClassDumper {
         javaClasses.add(javaClass);
       } catch (ClassNotFoundException ex) {
         // We couldn't find the class in the jar file where we found it.
-        throw new IOException("Corrupt jar file " + jar + "; could not load " + classFileName, ex);
+        Throwable cause = ex.getCause();
+        if (cause != null && cause instanceof IOException) {
+          // Skip unexpected files (such as a lock file) included in JAR file
+          // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1048 was caused
+          // by an IOException
+          logger.warning("Corrupt jar file " + jar + "; could not load " + classFileName);
+        } else {
+          throw new IOException(
+              "Corrupt jar file " + jar + "; could not load " + classFileName, ex);
+        }
       } catch (ClassFormatException ex) {
         // We couldn't load the class from the jar file where we found it.
         throw new IOException(
