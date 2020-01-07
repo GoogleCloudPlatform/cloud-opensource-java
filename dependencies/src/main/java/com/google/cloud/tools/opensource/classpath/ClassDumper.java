@@ -385,6 +385,9 @@ class ClassDumper {
    */
   private ImmutableSet<JavaClass> listClasses(Path jar) throws IOException {
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
+
+    ImmutableList.Builder<String> corruptedClassFileNames = ImmutableList.builder();
+
     for (String classFileName : listClassFileNames(jar)) {
       if (classFileName.startsWith("META-INF.versions.")) {
         // Linkage Checker does not support multi-release JAR (for Java 9+) yet
@@ -402,7 +405,7 @@ class ClassDumper {
           // Skip unexpected files (such as a lock file) included in JAR file
           // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1048 was caused
           // by an IOException
-          logger.warning("Corrupt jar file " + jar + "; could not load " + classFileName);
+          corruptedClassFileNames.add(classFileName);
         } else {
           throw new IOException(
               "Corrupt jar file " + jar + "; could not load " + classFileName, ex);
@@ -419,6 +422,14 @@ class ClassDumper {
             ex);
       }
     }
+
+    ImmutableList<String> corruptedFiles = corruptedClassFileNames.build();
+    int corruptedFileCount = corruptedFiles.size();
+    if (corruptedFileCount > 0) {
+      logger.warning("Corrupt jar file " + jar + "; could not load " + corruptedFiles.get(0)
+      + (corruptedFileCount > 1 ? " and other " + (corruptedFileCount -1) + " files" : ""));
+    }
+
     return javaClasses.build();
   }
 
