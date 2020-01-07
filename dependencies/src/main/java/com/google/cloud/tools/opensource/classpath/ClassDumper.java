@@ -401,16 +401,6 @@ class ClassDumper {
       } catch (ClassNotFoundException ex) {
         // We couldn't find the class in the jar file where we found it.
         corruptedClassFileNames.add(classFileName);
-      } catch (ClassFormatException ex) {
-        // We couldn't load the class from the jar file where we found it.
-        throw new IOException(
-            "Corrupt jar file "
-                + jar
-                + "; could not load "
-                + classFileName
-                + "; "
-                + ex.getMessage(),
-            ex);
       }
     }
 
