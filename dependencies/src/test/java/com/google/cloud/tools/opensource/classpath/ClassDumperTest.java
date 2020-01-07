@@ -375,9 +375,17 @@ public class ClassDumperTest {
     Artifact kinesisClient = new DefaultArtifact("com.amazonaws:amazon-kinesis-client:1.13.0");
     List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(kinesisClient));
     ClassDumper classDumper = ClassDumper.create(paths);
+    Path kinesisJar = paths.get(0);
 
     // This should not raise IOException
     SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
     assertNotNull(symbolReferences);
+
+    Truth.assertWithMessage("Invalid files should not stop loading valid class files")
+        .that(symbolReferences.getClassToClassSymbols().keySet())
+        .comparingElementsUsing(
+            Correspondence.transforming(
+                (ClassFile classFile) -> classFile.getJar(), "is in the JAR file"))
+        .contains(kinesisJar);
   }
 }

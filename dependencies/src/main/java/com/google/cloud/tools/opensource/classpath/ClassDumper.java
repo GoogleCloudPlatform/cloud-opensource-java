@@ -149,24 +149,19 @@ class ClassDumper {
   /**
    * Returns a map from classes to the symbol references they contain.
    */
-  SymbolReferenceMaps findSymbolReferences() {
+  SymbolReferenceMaps findSymbolReferences() throws IOException {
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
 
     for (Path jar : inputClassPath) {
-      try {
-        for (JavaClass javaClass : listClasses(jar)) {
-          if (!isCompatibleClassFileVersion(javaClass)) {
-            continue;
-          }
-          String className = javaClass.getClassName();
-          // In listClasses(jar), ClassPathRepository creates JavaClass through the first JAR file
-          // that contains the class. It may be different from "jar" for an overlapping class.
-          ClassFile source = new ClassFile(findClassLocation(className), className);
-          builder.addAll(findSymbolReferences(source, javaClass));
+      for (JavaClass javaClass : listClasses(jar)) {
+        if (!isCompatibleClassFileVersion(javaClass)) {
+          continue;
         }
-      } catch (IOException ex) {
-        // For example, when a JAR file contains an unexpected lock file
-        logger.warning("Skipped JAR file " + jar + ": " + ex.getMessage());
+        String className = javaClass.getClassName();
+        // In listClasses(jar), ClassPathRepository creates JavaClass through the first JAR file
+        // that contains the class. It may be different from "jar" for an overlapping class.
+        ClassFile source = new ClassFile(findClassLocation(className), className);
+        builder.addAll(findSymbolReferences(source, javaClass));
       }
     }
 
@@ -390,6 +385,9 @@ class ClassDumper {
    */
   private ImmutableSet<JavaClass> listClasses(Path jar) throws IOException {
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
+
+    ImmutableList.Builder<String> corruptedClassFileNames = ImmutableList.builder();
+
     for (String classFileName : listClassFileNames(jar)) {
       if (classFileName.startsWith("META-INF.versions.")) {
         // Linkage Checker does not support multi-release JAR (for Java 9+) yet
@@ -402,7 +400,7 @@ class ClassDumper {
         javaClasses.add(javaClass);
       } catch (ClassNotFoundException ex) {
         // We couldn't find the class in the jar file where we found it.
-        throw new IOException("Corrupt jar file " + jar + "; could not load " + classFileName, ex);
+        corruptedClassFileNames.add(classFileName);
       } catch (ClassFormatException ex) {
         // We couldn't load the class from the jar file where we found it.
         throw new IOException(
@@ -414,6 +412,19 @@ class ClassDumper {
                 + ex.getMessage(),
             ex);
       }
+    }
+
+    ImmutableList<String> corruptedFiles = corruptedClassFileNames.build();
+    int corruptedFileCount = corruptedFiles.size();
+    if (corruptedFileCount > 0) {
+      logger.warning(
+          "Corrupt files in "
+              + jar
+              + "; could not load "
+              + corruptedFiles.get(0)
+              + (corruptedFileCount > 1
+                  ? " and other " + (corruptedFileCount - 1) + " files"
+                  : ""));
     }
     return javaClasses.build();
   }
