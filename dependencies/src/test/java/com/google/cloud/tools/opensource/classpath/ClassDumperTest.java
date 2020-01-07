@@ -379,7 +379,6 @@ public class ClassDumperTest {
 
     // This should not raise IOException
     SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
-    assertNotNull(symbolReferences);
 
     Truth.assertWithMessage("Invalid files should not stop loading valid class files")
         .that(symbolReferences.getClassToClassSymbols().keySet())
