@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static org.junit.Assert.assertNotNull;
 
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
@@ -313,7 +314,8 @@ public class ClassDumperTest {
             ImmutableList.of(absolutePathOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
 
     try {
-      classDumper.isUnusedClassSymbolReference("org.conscrypt.Conscrypt", new ClassSymbol("dummy.NoSuchClass"));
+      classDumper.isUnusedClassSymbolReference(
+          "org.conscrypt.Conscrypt", new ClassSymbol("dummy.NoSuchClass"));
 
       Assert.fail("It should throw VerifyException when it cannot find a class symbol reference");
     } catch (VerifyException ex) {
@@ -363,5 +365,26 @@ public class ClassDumperTest {
         .doesNotContain(
             new ClassFile(
                 sisuGuicePath, "com.google.inject.internal.InjectorImpl$BindingsMultimap"));
+  }
+
+  @Test
+  public void testListClasses_unexpectedNonClassFile() throws RepositoryException, IOException {
+    // com.amazonaws:amazon-kinesis-client:1.13.0 contains an unexpected lock file
+    // /unison/com/e007f77498fd27177e2ea931a06dcf50/unison/tmp/amazonaws/services/kinesis/leases/impl/LeaseTaker.class
+    // https://github.com/awslabs/amazon-kinesis-client/issues/654
+    Artifact kinesisClient = new DefaultArtifact("com.amazonaws:amazon-kinesis-client:1.13.0");
+    List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(kinesisClient));
+    ClassDumper classDumper = ClassDumper.create(paths);
+    Path kinesisJar = paths.get(0);
+
+    // This should not raise IOException
+    SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
+
+    Truth.assertWithMessage("Invalid files should not stop loading valid class files")
+        .that(symbolReferences.getClassToClassSymbols().keySet())
+        .comparingElementsUsing(
+            Correspondence.transforming(
+                (ClassFile classFile) -> classFile.getJar(), "is in the JAR file"))
+        .contains(kinesisJar);
   }
 }
