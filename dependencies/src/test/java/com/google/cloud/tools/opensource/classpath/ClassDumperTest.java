@@ -17,7 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
 
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
@@ -386,5 +386,23 @@ public class ClassDumperTest {
             Correspondence.transforming(
                 (ClassFile classFile) -> classFile.getJar(), "is in the JAR file"))
         .contains(kinesisJar);
+  }
+
+  @Test
+  public void testCatchesLinkageError_absentOuterClass() throws RepositoryException, IOException {
+    // Curator-client has shaded com.google.common.reflect.TypeToken$Bounds but it does not contain
+    // the outer class com.google.common.reflect.TypeToken.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1092
+    Artifact curatorClient = new DefaultArtifact("org.apache.curator:curator-client:4.2.0");
+    List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(curatorClient));
+
+    Path curatorClientJar = paths.get(0);
+    ClassDumper classDumper = ClassDumper.create(ImmutableList.of(curatorClientJar));
+
+    // The outer class (TypeToken) does not exist in the class path.
+    String innerClass = "org.apache.curator.shaded.com.google.common.reflect.TypeToken$Bounds";
+
+    // This should not raise an exception
+    assertFalse(classDumper.catchesLinkageError(innerClass));
   }
 }
