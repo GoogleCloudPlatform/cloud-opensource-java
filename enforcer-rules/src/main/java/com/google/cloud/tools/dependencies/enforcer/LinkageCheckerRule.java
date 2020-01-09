@@ -294,7 +294,6 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       if (cause instanceof ArtifactTransferException) {
         ArtifactTransferException artifactException = (ArtifactTransferException) cause;
         Artifact artifact = artifactException.getArtifact();
-        String pathsToArtifact = findPaths(dependencyGraph, artifact);
         List<DependencyNode> firstArtifactPath =
             Iterables.getFirst(findArtifactPaths(dependencyGraph, artifact), ImmutableList.of());
         if (firstArtifactPath.isEmpty()) {
@@ -352,17 +351,6 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     } catch (RepositoryException ex) {
       throw new EnforcerRuleException("Failed to collect dependency " + ex.getMessage(), ex);
     }
-  }
-
-  private static String findPaths(DependencyNode root, Artifact artifact) {
-    ImmutableList<List<DependencyNode>> dependencyPaths = findArtifactPaths(root, artifact);
-
-    ImmutableList<String> paths =
-        dependencyPaths.stream()
-            .map(path -> Joiner.on(" > ").join(path))
-            .collect(toImmutableList());
-    // Joining one or more paths from root to the artifact
-    return Joiner.on("\n").join(paths);
   }
 
   private static ImmutableList<List<DependencyNode>> findArtifactPaths(
