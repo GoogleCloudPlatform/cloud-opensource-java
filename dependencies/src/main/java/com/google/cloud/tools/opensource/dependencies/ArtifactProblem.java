@@ -90,7 +90,7 @@ public final class ArtifactProblem {
   }
 
   private enum Type {
-    /** When the JAR file of the artifact contains one or more invalid class files. */
+    /** When the JAR file of the artifact contains invalid class files. */
     INVALID_CLASS_FILE,
     /** When the artifact is unresolvable. */
     UNRESOLVABLE_ARTIFACT,
