@@ -20,6 +20,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
+import java.util.stream.IntStream;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -47,13 +48,20 @@ public class TableDataCollector {
   public static void main(String[] arguments) throws Exception {
     TableDataCollector tableDataCollector = new TableDataCollector();
 
-    if (arguments[0].contains("libraries-bom")) {
+    if (arguments[0].contains("-bom")) {
       bomCoordinates = arguments[0];
-    }
-    if (bomCoordinates != null) {
       Bom bom = RepositoryUtility.readBom(bomCoordinates);
       ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
       DependencyGraphBuilder.configureManagedDependencies(managedDependencies);
+      int s = arguments.length;
+      final String[] array = arguments;
+      arguments = IntStream.range(1, s)
+          .mapToObj(i -> array[i])
+          .toArray(String[]::new);
+    }
+    if (bomCoordinates.contains("libraries-bom")) {
+      Bom bom = RepositoryUtility.readBom(bomCoordinates);
+      ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
       ImmutableList<String> coordinates = managedDependencies.stream().map(Artifacts::toCoordinates).collect(toImmutableList());
       tableDataCollector.runTableCrossCheck(coordinates);
     } else {

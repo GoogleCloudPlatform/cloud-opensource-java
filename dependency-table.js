@@ -8,10 +8,12 @@ if (searchParams.has('bom')) {
 }
 
 const initializeTable = async () => {
-  if (bomCoordinates) {
+  if (searchParams.has('artifacts')) {
+    prepareTableFromParam();
+  } else if (bomCoordinates) {
     prepareTableForBom();
   } else {
-    prepareTableFromParam();
+    alert("Select artifacts or BOM.")
   }
 };
 
@@ -55,7 +57,7 @@ const prepareTableForBom = async() => {
     columnHeader.text(elems[2]); // version
     versionHeaderElement.append(columnHeader);
 
-    columnHeader.append(createCheckbox(artifact1));
+    // columnHeader.append(createCheckbox(artifact1));
   }
 
   groupId = '';
@@ -73,7 +75,7 @@ const prepareTableForBom = async() => {
     const rowHeaderVersion = $('<th>').text(elems[2]);
     tableRowElement.append(rowHeaderVersion);
 
-    rowHeaderVersion.append(createCheckbox(artifact1));
+    // rowHeaderVersion.append(createCheckbox(artifact1));
 
     for (let j = 0; j < artifacts.length; ++j) {
       const artifact2 = artifacts[j];
@@ -184,7 +186,7 @@ const prepareTable = async (artifacts) => {
     columnHeader.text(elems[2]); // version
     versionHeaderElement.append(columnHeader);
 
-    columnHeader.append(createCheckbox(artifact1));
+    // columnHeader.append(createCheckbox(artifact1));
   }
 
   groupId = '';
@@ -209,7 +211,7 @@ const prepareTable = async (artifacts) => {
     const rowHeaderVersion = $('<th>').text(elems[2]);
     tableRowElement.append(rowHeaderVersion);
 
-    rowHeaderVersion.append(createCheckbox(artifact1));
+    // rowHeaderVersion.append(createCheckbox(artifact1));
 
     for (let j = 0; j < artifacts.length; ++j) {
       const artifact2 = artifacts[j];
