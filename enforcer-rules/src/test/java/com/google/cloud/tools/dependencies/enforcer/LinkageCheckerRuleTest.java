@@ -464,10 +464,10 @@ public class LinkageCheckerRuleTest {
       verify(mockLog)
           .warn(
               "aopalliance:aopalliance:jar:1.0 was not resolved. "
-              + "Dependency path: [com.google.guava:guava:jar:28.0-android, "
-              + "org.apache.maven:maven-core:jar:3.5.2 (compile), "
-              + "com.google.inject:guice:jar:no_aop:4.0 (compile), "
-              + "aopalliance:aopalliance:jar:1.0 (compile)]");
+                  + "Dependency path: [com.google.guava:guava:jar:28.0-android, "
+                  + "org.apache.maven:maven-core:jar:3.5.2 (compile), "
+                  + "com.google.inject:guice:jar:no_aop:4.0 (compile), "
+                  + "aopalliance:aopalliance:jar:1.0 (compile)]");
     }
   }
 

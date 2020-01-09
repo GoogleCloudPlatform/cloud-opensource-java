@@ -27,39 +27,23 @@ import org.eclipse.aether.graph.DependencyNode;
 /** Problem in a Maven artifact. */
 public final class ArtifactProblem {
 
+  /** The Maven artifact that has the problem. */
   private final Artifact artifact;
 
-  private final ImmutableList<DependencyNode> dependencyPath;
-
+  /** The type of the problem in the artifact. */
   private final Type type;
 
+  /**
+   * The dependency path to the artifact from the root of the dependency tree. An empty list if the
+   * path is unknown.
+   */
+  private final ImmutableList<DependencyNode> dependencyPath;
+
+  /**
+   * The list of invalid class files if type is {@link Type#INVALID_CLASS_FILE}; otherwise an empty
+   * list.
+   */
   private final ImmutableList<String> classFileNames;
-
-  /** The artifact that has the problem. */
-  private Artifact getArtifact() {
-    return artifact;
-  }
-
-  /**
-   * Returns the dependency path to the artifact in the root of the dependency tree. An empty list
-   * if dependency path is unknown.
-   */
-  private ImmutableList<DependencyNode> getDependencyPath() {
-    return dependencyPath;
-  }
-
-  /** Returns the type of the problem in the artifact. */
-  private Type getType() {
-    return type;
-  }
-
-  /**
-   * Returns the list of invalid class files if type is {@link Type#INVALID_CLASS_FILE}; otherwise
-   * an empty list.
-   */
-  private ImmutableList<String> getClassFileNames() {
-    return classFileNames;
-  }
 
   /**
    * Returns the problem describing the artifact at the leaf of {@code dependencyPath} is not
@@ -106,7 +90,9 @@ public final class ArtifactProblem {
   }
 
   private enum Type {
+    /** When the JAR file of the artifact contains one or more invalid class files. */
     INVALID_CLASS_FILE,
+    /** When the artifact is unresolvable. */
     UNRESOLVABLE_ARTIFACT,
   }
 
