@@ -25,6 +25,7 @@ import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.dependencies.ArtifactProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.FilteringZipDependencySelector;
@@ -38,6 +39,7 @@ import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +62,6 @@ import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluatio
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.eclipse.aether.DefaultRepositoryCache;
 import org.eclipse.aether.DefaultRepositorySystemSession;
-import org.eclipse.aether.RepositoryCache;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -90,6 +91,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    * DependencySection#DEPENDENCIES}.
    */
   private DependencySection dependencySection = DependencySection.DEPENDENCIES;
+
+  private List<ArtifactProblem> artifactProblems = new ArrayList<>();
 
   /**
    * Set to true to suppress linkage errors unreachable from the classes in the direct dependencies.
@@ -225,6 +228,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       }
     } catch (ExpressionEvaluationException ex) {
       throw new EnforcerRuleException("Unable to lookup an expression " + ex.getMessage(), ex);
+    } finally {
+      // Always show artifact problems. But these should not be the cause of failing the rule.
+      for (ArtifactProblem problem : artifactProblems) {
+        logger.warn(problem.toString());
+      }
     }
   }
 
@@ -289,25 +297,13 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         String pathsToArtifact = findPaths(dependencyGraph, artifact);
         List<DependencyNode> firstArtifactPath =
             Iterables.getFirst(findArtifactPaths(dependencyGraph, artifact), ImmutableList.of());
-        if (DependencyGraphBuilder.requiredDependency(firstArtifactPath)) {
-          logger.error("Could not find artifact " + artifact);
-          if (pathsToArtifact.isEmpty()) {
-            // On certain conditions, Maven throws ArtifactDescriptorException even when the
-            // (transformed) dependency graph does not contain the problematic artifact any more.
-            // https://issues.apache.org/jira/browse/MNG-6732
-            logger.error(
-                "The transformed dependency graph does not contain the missing artifact");
-          } else {
-            logger.error("Paths to the missing artifact: " + pathsToArtifact);
-          }
-          throw new EnforcerRuleException(
-              "Unable to build a dependency graph: " + resolutionException.getMessage(),
-              resolutionException);
+        if (firstArtifactPath.isEmpty()) {
+          // On certain conditions, Maven throws ArtifactDescriptorException even when the
+          // (transformed) dependency graph does not contain the problematic artifact any more.
+          // https://issues.apache.org/jira/browse/MNG-6732
+          artifactProblems.add(ArtifactProblem.unresolvableArtifactUnknownDependencyPath(artifact));
         } else {
-          logger.warn(
-              "There was missing artifact at "
-                  + pathsToArtifact
-                  + ". Continuing with partial dependency graph.");
+          artifactProblems.add(ArtifactProblem.unresolvableArtifact(firstArtifactPath));
         }
         break;
       }

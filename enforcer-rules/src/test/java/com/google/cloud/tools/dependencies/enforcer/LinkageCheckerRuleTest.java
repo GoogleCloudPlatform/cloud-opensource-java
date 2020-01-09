@@ -462,11 +462,12 @@ public class LinkageCheckerRuleTest {
       fail("The rule should throw EnforcerRuleException upon dependency resolution exception");
     } catch (EnforcerRuleException e) {
       verify(mockLog)
-          .error(
-              "Paths to the missing artifact: com.google.guava:guava:jar:28.0-android > "
-                  + "org.apache.maven:maven-core:jar:3.5.2 (compile) > "
-                  + "com.google.inject:guice:jar:no_aop:4.0 (compile) > "
-                  + "aopalliance:aopalliance:jar:1.0 (compile)");
+          .warn(
+              "aopalliance:aopalliance:jar:1.0 was not resolved. "
+              + "Dependency path: [com.google.guava:guava:jar:28.0-android, "
+              + "org.apache.maven:maven-core:jar:3.5.2 (compile), "
+              + "com.google.inject:guice:jar:no_aop:4.0 (compile), "
+              + "aopalliance:aopalliance:jar:1.0 (compile)]");
     }
   }
 
@@ -517,7 +518,7 @@ public class LinkageCheckerRuleTest {
 
   @Test
   public void testArtifactTransferError_missingArtifactNotInGraph()
-      throws URISyntaxException, DependencyResolutionException {
+      throws URISyntaxException, DependencyResolutionException, EnforcerRuleException {
     // Creating a dummy tree
     //   com.google.foo:project
     //     +- com.google.foo:child1 (provided)
@@ -550,13 +551,9 @@ public class LinkageCheckerRuleTest {
 
     when(mockProjectDependenciesResolver.resolve(any())).thenThrow(exception);
 
-    try {
-      rule.execute(mockRuleHelper);
-      fail("The rule should throw EnforcerRuleException upon DependencyResolutionException");
-    } catch (EnforcerRuleException ex) {
-      verify(mockLog)
-          .error("The transformed dependency graph does not contain the missing artifact");
-    }
+    rule.execute(mockRuleHelper);
+    verify(mockLog)
+        .warn("xerces:xerces-impl:jar:2.6.2 was not resolved. Dependency path is unknown.");
   }
 
   @Test
