@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.cloud.tools.opensource.classpath;
+package com.google.cloud.tools.opensource.dependencies;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-import com.google.cloud.tools.opensource.dependencies.ArtifactProblem;
 import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -25,18 +25,18 @@ import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.DependencyNode;
 import org.junit.Test;
 
-public class ArtifactProblemTest {
+public class InvalidClassFileProblemTest {
   private Artifact artifactA = new DefaultArtifact("foo:a:1.0.0");
   private DependencyNode nodeA = new DefaultDependencyNode(artifactA);
   private Artifact artifactB = new DefaultArtifact("foo:b:1.0.0");
   private DependencyNode nodeB = new DefaultDependencyNode(artifactA);
-  private Artifact artifactC = new DefaultArtifact("foo:b:1.0.0");
+  private Artifact artifactC = new DefaultArtifact("foo:c:1.0.0");
   private DependencyNode nodeC = new DefaultDependencyNode(artifactA);
 
   @Test
   public void testToString_oneInvalidClassFileInArtifact() {
-    ArtifactProblem problemOneClass =
-        ArtifactProblem.invalidClassFileInArtifact(
+    InvalidClassFileProblem problemOneClass =
+        new InvalidClassFileProblem(
             ImmutableList.of(nodeA, nodeB, nodeC), ImmutableList.of("foo.bar.Class"));
 
     assertEquals(
@@ -47,8 +47,8 @@ public class ArtifactProblemTest {
 
   @Test
   public void testToString_invalidClassFilesInArtifact() {
-    ArtifactProblem problemTwoClasses =
-        ArtifactProblem.invalidClassFileInArtifact(
+    InvalidClassFileProblem problemTwoClasses =
+        new InvalidClassFileProblem(
             ImmutableList.of(nodeA, nodeB, nodeC),
             ImmutableList.of("foo.bar.Class1", "foo.bar.Class2"));
 
@@ -59,21 +59,14 @@ public class ArtifactProblemTest {
   }
 
   @Test
-  public void testToString_unresolvableArtifactWithoutDependencyPath() {
-    ArtifactProblem problem = ArtifactProblem.unresolvableArtifactUnknownDependencyPath(artifactA);
-
-    assertEquals(
-        "foo:a:jar:1.0.0 was not resolved. Dependency path is unknown.", problem.toString());
-  }
-
-  @Test
-  public void testToString_unresolvableArtifact() {
-    ArtifactProblem problem =
-        ArtifactProblem.unresolvableArtifact(ImmutableList.of(nodeA, nodeB, nodeC));
-
-    assertEquals(
-        "foo:a:jar:1.0.0 was not resolved. Dependency path: [foo:a:jar:1.0.0, "
-            + "foo:a:jar:1.0.0, foo:a:jar:1.0.0]",
-        problem.toString());
+  public void testInvalidInput_emptyClassFileNames() {
+    try {
+      new InvalidClassFileProblem(
+          ImmutableList.of(nodeA, nodeB, nodeC),
+          ImmutableList.of());
+      fail("The constructor should invalidate empty classFileNames");
+    } catch (IllegalArgumentException ex) {
+      // pass
+    }
   }
 }

@@ -30,8 +30,8 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.FilteringZipDependencySelector;
 import com.google.cloud.tools.opensource.dependencies.NonTestDependencySelector;
+import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -229,8 +229,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     } catch (ExpressionEvaluationException ex) {
       throw new EnforcerRuleException("Unable to lookup an expression " + ex.getMessage(), ex);
     } finally {
-      // Always show artifact problems. But these should not be the cause of failing the rule.
       for (ArtifactProblem problem : artifactProblems) {
+        // This is warn because having an unresolvable Maven artifact should not cause build
+        // failures as long as there is no linkage errors.
         logger.warn(problem.toString());
       }
     }
@@ -300,9 +301,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           // On certain conditions, Maven throws ArtifactDescriptorException even when the
           // (transformed) dependency graph does not contain the problematic artifact any more.
           // https://issues.apache.org/jira/browse/MNG-6732
-          artifactProblems.add(ArtifactProblem.unresolvableArtifactUnknownDependencyPath(artifact));
+          artifactProblems.add(new UnresolvableArtifactProblem(artifact));
         } else {
-          artifactProblems.add(ArtifactProblem.unresolvableArtifact(firstArtifactPath));
+          artifactProblems.add(new UnresolvableArtifactProblem(firstArtifactPath));
         }
         break;
       }
