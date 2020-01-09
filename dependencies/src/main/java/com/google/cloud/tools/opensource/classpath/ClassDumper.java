@@ -541,7 +541,13 @@ class ClassDumper {
 
       String outerClassName = outerClassName(sourceJavaClass);
       if (outerClassName != null) {
-        return catchesLinkageError(outerClassName);
+        try {
+          return catchesLinkageError(outerClassName);
+        } catch (ClassFormatException ex) {
+          // When the outer class of an inner class does not exist in the class path, we cannot
+          // say that the classes catch linkage errors.
+          return false;
+        }
       } else {
         // The source class does not have a method that catches NoClassDefFoundError
         return false;
