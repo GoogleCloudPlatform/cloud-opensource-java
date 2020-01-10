@@ -22,16 +22,17 @@ import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.DefaultDependencyNode;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.junit.Test;
 
 public class InvalidClassFileProblemTest {
   private Artifact artifactA = new DefaultArtifact("foo:a:1.0.0");
-  private DependencyNode nodeA = new DefaultDependencyNode(artifactA);
+  private DependencyNode nodeA = new DefaultDependencyNode(new Dependency(artifactA, "compile"));
   private Artifact artifactB = new DefaultArtifact("foo:b:1.0.0");
-  private DependencyNode nodeB = new DefaultDependencyNode(artifactA);
+  private DependencyNode nodeB = new DefaultDependencyNode(new Dependency(artifactB, "provided"));
   private Artifact artifactC = new DefaultArtifact("foo:c:1.0.0");
-  private DependencyNode nodeC = new DefaultDependencyNode(artifactA);
+  private DependencyNode nodeC = new DefaultDependencyNode(new Dependency(artifactC, "runtime"));
 
   @Test
   public void testToString_oneInvalidClassFileInArtifact() {
@@ -40,8 +41,9 @@ public class InvalidClassFileProblemTest {
             ImmutableList.of(nodeA, nodeB, nodeC), ImmutableList.of("foo.bar.Class"));
 
     assertEquals(
-        "foo:a:jar:1.0.0 contains an invalid class file foo.bar.Class. "
-            + "Dependency path: [foo:a:jar:1.0.0, foo:a:jar:1.0.0, foo:a:jar:1.0.0]",
+        "foo:c:jar:1.0.0 contains an invalid class file foo.bar.Class. "
+            + "Dependency path: "
+            + "foo:a:jar:1.0.0 (compile) > foo:b:jar:1.0.0 (provided) > foo:c:jar:1.0.0 (runtime)",
         problemOneClass.toString());
   }
 
@@ -53,17 +55,16 @@ public class InvalidClassFileProblemTest {
             ImmutableList.of("foo.bar.Class1", "foo.bar.Class2"));
 
     assertEquals(
-        "foo:a:jar:1.0.0 contains 2 invalid class files (example: foo.bar.Class1). "
-            + "Dependency path: [foo:a:jar:1.0.0, foo:a:jar:1.0.0, foo:a:jar:1.0.0]",
+        "foo:c:jar:1.0.0 contains 2 invalid class files (example: foo.bar.Class1). "
+            + "Dependency path: "
+            + "foo:a:jar:1.0.0 (compile) > foo:b:jar:1.0.0 (provided) > foo:c:jar:1.0.0 (runtime)",
         problemTwoClasses.toString());
   }
 
   @Test
   public void testInvalidInput_emptyClassFileNames() {
     try {
-      new InvalidClassFileProblem(
-          ImmutableList.of(nodeA, nodeB, nodeC),
-          ImmutableList.of());
+      new InvalidClassFileProblem(ImmutableList.of(nodeA, nodeB, nodeC), ImmutableList.of());
       fail("The constructor should invalidate empty classFileNames");
     } catch (IllegalArgumentException ex) {
       // pass

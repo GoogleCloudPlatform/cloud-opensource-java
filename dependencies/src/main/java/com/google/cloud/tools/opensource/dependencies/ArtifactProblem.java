@@ -17,6 +17,7 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
@@ -37,5 +38,9 @@ public abstract class ArtifactProblem {
   protected ArtifactProblem(Artifact artifact, List<DependencyNode> dependencyPath) {
     this.artifact = checkNotNull(artifact);
     this.dependencyPath = ImmutableList.copyOf(dependencyPath);
+  }
+
+  protected String getPath() {
+    return Joiner.on(" > ").join(dependencyPath);
   }
 }

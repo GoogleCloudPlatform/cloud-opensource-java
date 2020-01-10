@@ -21,16 +21,17 @@ import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.DefaultDependencyNode;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.junit.Test;
 
 public class UnresolvableArtifactProblemTest {
   private Artifact artifactA = new DefaultArtifact("foo:a:1.0.0");
-  private DependencyNode nodeA = new DefaultDependencyNode(artifactA);
+  private DependencyNode nodeA = new DefaultDependencyNode(new Dependency(artifactA, "compile"));
   private Artifact artifactB = new DefaultArtifact("foo:b:1.0.0");
-  private DependencyNode nodeB = new DefaultDependencyNode(artifactA);
+  private DependencyNode nodeB = new DefaultDependencyNode(new Dependency(artifactB, "provided"));
   private Artifact artifactC = new DefaultArtifact("foo:c:1.0.0");
-  private DependencyNode nodeC = new DefaultDependencyNode(artifactA);
+  private DependencyNode nodeC = new DefaultDependencyNode(new Dependency(artifactC, "runtime"));
 
   @Test
   public void testToString_unresolvableArtifactWithoutDependencyPath() {
@@ -46,8 +47,8 @@ public class UnresolvableArtifactProblemTest {
         new UnresolvableArtifactProblem(ImmutableList.of(nodeA, nodeB, nodeC));
 
     assertEquals(
-        "foo:a:jar:1.0.0 was not resolved. Dependency path: [foo:a:jar:1.0.0, "
-            + "foo:a:jar:1.0.0, foo:a:jar:1.0.0]",
+        "foo:c:jar:1.0.0 was not resolved. Dependency path: "
+            + "foo:a:jar:1.0.0 (compile) > foo:b:jar:1.0.0 (provided) > foo:c:jar:1.0.0 (runtime)",
         problem.toString());
   }
 }

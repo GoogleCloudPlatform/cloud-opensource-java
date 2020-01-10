@@ -46,7 +46,7 @@ public final class UnresolvableArtifactProblem extends ArtifactProblem {
     if (dependencyPath.isEmpty()) {
       return artifact + " was not resolved. Dependency path is unknown.";
     } else {
-      return artifact + " was not resolved. Dependency path: " + dependencyPath;
+      return artifact + " was not resolved. Dependency path: " + getPath();
     }
   }
 }

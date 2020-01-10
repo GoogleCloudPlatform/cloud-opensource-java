@@ -44,6 +44,6 @@ public final class InvalidClassFileProblem extends ArtifactProblem {
       classFileDescription =
           classFileCount + " invalid class files (example: " + classFileNames.get(0) + ").";
     }
-    return artifact + " contains " + classFileDescription + " Dependency path: " + dependencyPath;
+    return artifact + " contains " + classFileDescription + " Dependency path: " + getPath();
   }
 }
