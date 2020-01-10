@@ -57,6 +57,8 @@ public class DependencyGraphBuilder {
   private static final CharMatcher LOWER_ALPHA_NUMERIC =
       CharMatcher.inRange('a', 'z').or(CharMatcher.inRange('0', '9'));
 
+  private final List<UnresolvableArtifactProblem> artifactProblems = new ArrayList<>();
+
   static {
     detectOsProperties().forEach(System::setProperty);
   }
@@ -106,6 +108,11 @@ public class DependencyGraphBuilder {
       default:
         return "x86_32";
     }
+  }
+
+  /** Returns unresolved artifact problems encountered during constructing a dependency graph. */
+  public ImmutableList<UnresolvableArtifactProblem> getArtifactProblems() {
+    return ImmutableList.copyOf(artifactProblems);
   }
 
   private DependencyNode resolveCompileTimeDependencies(DependencyNode rootDependencyArtifact)
@@ -238,7 +245,7 @@ public class DependencyGraphBuilder {
     }
   }
 
-  private DependencyGraph levelOrder(DependencyNode node) throws AggregatedRepositoryException {
+  private DependencyGraph levelOrder(DependencyNode node) {
     return levelOrder(node, GraphTraversalOption.NONE);
   }
 
@@ -262,13 +269,9 @@ public class DependencyGraphBuilder {
    * @param firstNode node to start traversal
    * @param graphTraversalOption option to recursively resolve the dependency to build complete
    *     dependency tree, with or without dependencies of provided scope
-   * @throws AggregatedRepositoryException when there are one ore more problems due to {@link
-   *     DependencyCollectionException} or {@link DependencyResolutionException}. This happens only
-   *     when graphTraversalOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
    */
   private DependencyGraph levelOrder(
-      DependencyNode firstNode, GraphTraversalOption graphTraversalOption)
-      throws AggregatedRepositoryException {
+      DependencyNode firstNode, GraphTraversalOption graphTraversalOption) {
 
     DependencyGraph graph = new DependencyGraph();
 
@@ -290,21 +293,24 @@ public class DependencyGraphBuilder {
                   parentNode.getArtifact(),
                   parentNode.getDependency().getScope(),
                   parentNode.getDependency().getOptional()));
-      if (dependencyNode.getArtifact() != null) {
+      Artifact artifact = dependencyNode.getArtifact();
+      if (artifact != null) {
         // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
         // set to null
-        path.add(
-            dependencyNode.getArtifact(),
-            dependencyNode.getDependency().getScope(),
-            dependencyNode.getDependency().getOptional());
-        if (resolveFullDependency && parentNodes.contains(dependencyNode)) {
-          logger.severe(
-              "Infinite recursion resolving "
-                  + dependencyNode
-                  + ". Likely cycle in "
-                  + parentNodes);
+
+        // If there's a dependency node with the same groupId and artifactId, Maven will not pick
+        // up the dependency.
+        boolean parentHasSameKey =
+            parentNodes.stream()
+                .map(node -> Artifacts.makeKey(node.getArtifact()))
+                .anyMatch(key -> key.equals(Artifacts.makeKey(artifact)));
+        if (parentHasSameKey) {
           continue;
         }
+        path.add(
+            artifact,
+            dependencyNode.getDependency().getScope(),
+            dependencyNode.getDependency().getOptional());
         parentNodes.push(dependencyNode);
         graph.addPath(path);
 
@@ -325,17 +331,13 @@ public class DependencyGraphBuilder {
               DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
               ExceptionAndPath failure =
                   ExceptionAndPath.create(parentNodes, failedDependencyNode, resolutionException);
-              if (requiredDependency(failure.getPath())) {
-                resolutionFailures.add(failure);
-              }
+              artifactProblems.add(new UnresolvableArtifactProblem(failure.getPath()));
             }
           } catch (DependencyCollectionException collectionException) {
             DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
             ExceptionAndPath failure =
                 ExceptionAndPath.create(parentNodes, failedDependencyNode, collectionException);
-            if (requiredDependency(failure.getPath())) {
-              resolutionFailures.add(failure);
-            }
+            artifactProblems.add(new UnresolvableArtifactProblem(failure.getPath()));
           }
         }
       }
@@ -346,29 +348,6 @@ public class DependencyGraphBuilder {
       }
     }
 
-    if (!resolutionFailures.isEmpty()) {
-      throw new AggregatedRepositoryException(resolutionFailures);
-    }
-
     return graph;
-  }
-
-  /**
-   * Returns true if {@code dependencyPath} does not contain {@code optional} dependency and the
-   * path does not contain {@code scope:provided} dependency.
-   */
-  public static boolean requiredDependency(List<DependencyNode> dependencyPath) {
-    boolean hasOptional =
-        dependencyPath.stream()
-            .filter(node -> node.getDependency() != null) // Root node does not have dependency
-            .anyMatch(node -> node.getDependency().isOptional());
-    if (!hasOptional) {
-      return true;
-    }
-    boolean hasProvided =
-        dependencyPath.stream()
-            .filter(node -> node.getDependency() != null)
-            .anyMatch(node -> "provided".equals(node.getDependency().getScope()));
-    return !hasProvided;
   }
 }

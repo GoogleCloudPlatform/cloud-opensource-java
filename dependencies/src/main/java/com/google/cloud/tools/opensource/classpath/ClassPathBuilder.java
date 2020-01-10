@@ -20,6 +20,7 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Maps;
@@ -120,4 +121,8 @@ public final class ClassPathBuilder {
     return multimap;
   }
 
+  /** Returns unresolved artifact problems encountered during constructing the class path. */
+  ImmutableList<UnresolvableArtifactProblem> getArtifactProblems() {
+    return dependencyGraphBuilder.getArtifactProblems();
+  }
 }

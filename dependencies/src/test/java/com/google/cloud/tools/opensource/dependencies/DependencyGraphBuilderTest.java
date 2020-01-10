@@ -27,6 +27,7 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class DependencyGraphBuilderTest {
@@ -143,5 +144,40 @@ public class DependencyGraphBuilderTest {
     Truth.assertThat(dependencyGraph.list())
         .comparingElementsUsing(pathToArtifactKey)
         .doesNotContain("com.google.protobuf:protobuf-lite");
+  }
+
+  @Test
+  public void testGetDirectDependencies_respectExclusions() throws RepositoryException {
+    // hibernate-core declares jboss-jacc-api_JDK4 dependency excluding jboss-servlet-api_3.0.
+    // jboss-jacc-api_JDK4 depends on jboss-servlet-api_3.0:1.0-SNAPSHOT, which is unavailable.
+    // DependencyGraphBuilder should respect the exclusion and should not try to download
+    // jboss-servlet-api_3.0:1.0-SNAPSHOT.
+    Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
+
+    DependencyGraph dependencyGraph =
+        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
+            ImmutableList.of(hibernateCore));
+
+    ImmutableList<UnresolvableArtifactProblem> problems =
+        dependencyGraphBuilder.getArtifactProblems();
+    for (UnresolvableArtifactProblem problem : problems) {
+      Truth.assertThat(problem.toString()).doesNotContain("jboss-servlet-api_3.0");
+    }
+  }
+
+  @Test
+  @Ignore
+  public void testGetDirectDependencies_beamZetaSql() throws RepositoryException {
+    Artifact beamZetaSql =
+        new DefaultArtifact("org.apache.beam:beam-sdks-java-extensions-sql-zetasql:2.17.0");
+
+    DependencyGraph dependencyGraph =
+        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(ImmutableList.of(beamZetaSql));
+
+    ImmutableList<UnresolvableArtifactProblem> problems =
+        dependencyGraphBuilder.getArtifactProblems();
+    for (UnresolvableArtifactProblem problem : problems) {
+      Truth.assertThat(problem.toString()).doesNotContain("jboss-servlet-api_3.0");
+    }
   }
 }
