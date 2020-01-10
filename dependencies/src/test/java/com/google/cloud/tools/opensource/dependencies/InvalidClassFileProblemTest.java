@@ -68,6 +68,7 @@ public class InvalidClassFileProblemTest {
       fail("The constructor should invalidate empty classFileNames");
     } catch (IllegalArgumentException ex) {
       // pass
+      assertEquals("ClassFileNames cannot be empty", ex.getMessage());
     }
   }
 }

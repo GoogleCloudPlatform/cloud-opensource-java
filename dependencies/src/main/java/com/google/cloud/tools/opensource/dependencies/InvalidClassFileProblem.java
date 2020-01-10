@@ -29,7 +29,7 @@ public final class InvalidClassFileProblem extends ArtifactProblem {
 
   InvalidClassFileProblem(List<DependencyNode> dependencyPath, List<String> classFileNames) {
     super(dependencyPath.get(dependencyPath.size() - 1).getArtifact(), dependencyPath);
-    checkArgument(!classFileNames.isEmpty(), "ClassFileNames should not be empty");
+    checkArgument(!classFileNames.isEmpty(), "ClassFileNames cannot be empty");
     this.classFileNames = ImmutableList.copyOf(classFileNames);
   }
 
