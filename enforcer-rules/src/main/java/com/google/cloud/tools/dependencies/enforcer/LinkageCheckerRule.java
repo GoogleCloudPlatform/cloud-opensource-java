@@ -92,7 +92,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    */
   private DependencySection dependencySection = DependencySection.DEPENDENCIES;
 
-  private List<ArtifactProblem> artifactProblems = new ArrayList<>();
+  private final List<ArtifactProblem> artifactProblems = new ArrayList<>();
 
   /**
    * Set to true to suppress linkage errors unreachable from the classes in the direct dependencies.
