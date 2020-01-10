@@ -25,17 +25,18 @@ import org.eclipse.aether.graph.DependencyNode;
 public final class UnresolvableArtifactProblem extends ArtifactProblem {
 
   /**
-   * Maven cannot resolve {@code artifact} in a dependency tree.
+   * Problem when Maven cannot resolve {@code artifact} in a dependency tree.
    *
-   * <p>Prefer {@link #UnresolvableArtifactProblem(List)} when the dependency path to the artifact,
-   * because it gives a more detailed error message.
+   * <p>Prefer {@link #UnresolvableArtifactProblem(List)} when the dependency path to the artifact
+   * is available, because it gives a more detailed error message.
    */
   public UnresolvableArtifactProblem(Artifact artifact) {
     super(artifact, ImmutableList.of());
   }
 
   /**
-   * Maven cannot resolve the artifact at the leaf of {@code dependencyPath} in a dependency tree.
+   * Problem when Maven cannot resolve the artifact at the leaf of {@code dependencyPath} in a
+   * dependency tree.
    */
   public UnresolvableArtifactProblem(List<DependencyNode> dependencyPath) {
     super(dependencyPath.get(dependencyPath.size() - 1).getArtifact(), dependencyPath);
