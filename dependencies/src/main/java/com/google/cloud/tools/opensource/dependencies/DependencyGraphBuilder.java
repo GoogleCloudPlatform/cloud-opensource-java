@@ -294,21 +294,28 @@ public class DependencyGraphBuilder {
                   parentNode.getArtifact(),
                   parentNode.getDependency().getScope(),
                   parentNode.getDependency().getOptional()));
-      if (dependencyNode.getArtifact() != null) {
+      Artifact artifact = dependencyNode.getArtifact();
+      if (artifact != null) {
         // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
         // set to null
-        path.add(
-            dependencyNode.getArtifact(),
-            dependencyNode.getDependency().getScope(),
-            dependencyNode.getDependency().getOptional());
-        if (resolveFullDependency && parentNodes.contains(dependencyNode)) {
-          logger.severe(
-              "Infinite recursion resolving "
-                  + dependencyNode
-                  + ". Likely cycle in "
-                  + parentNodes);
+
+        // When there's a parent dependency node with the same groupId and artifactId as
+        // the dependency, Maven will not pick up the dependency. For example, if there's a
+        // dependency path "g1:a1:2.0 / ... / g1:a1:1.0" (the leftmost node as root), then Maven's
+        // dependency mediation always picks up g1:a1:2.0 over g1:a1:1.0.
+        String groupIdAndArtifactId = Artifacts.makeKey(artifact);
+        boolean parentHasSameKey =
+            parentNodes.stream()
+                .map(node -> Artifacts.makeKey(node.getArtifact()))
+                .anyMatch(key -> key.equals(groupIdAndArtifactId));
+        if (parentHasSameKey) {
           continue;
         }
+
+        path.add(
+            artifact,
+            dependencyNode.getDependency().getScope(),
+            dependencyNode.getDependency().getOptional());
         parentNodes.push(dependencyNode);
         graph.addPath(path);
 
