@@ -104,7 +104,7 @@ public class LinkageCheckerArgumentsTest {
     // Spring-asm is used here because it does not have complex dependencies
     Artifact artifact = new DefaultArtifact("androidx.lifecycle:lifecycle-common-java8:2.0.0");
 
-    List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(artifact));
+    List<Path> paths = new ClassPathBuilder().artifactsToClasspath(ImmutableList.of(artifact));
     Truth.assertThat(paths).isNotEmpty();
   }
 

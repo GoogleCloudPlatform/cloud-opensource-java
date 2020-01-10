@@ -62,8 +62,8 @@ public class DependencyGraphBuilder {
   }
 
   // caching cuts time by about a factor of 4. Dependency class's equality includes exclusions.
-  private static final Map<Dependency, DependencyNode> cacheWithProvidedScope = new HashMap<>();
-  private static final Map<Dependency, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
+  private static Map<Dependency, DependencyNode> cacheWithProvidedScope = new HashMap<>();
+  private static Map<Dependency, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
 
   public static ImmutableMap<String, String> detectOsProperties() {
     // System properties to select Netty dependencies through os-maven-plugin
@@ -108,20 +108,19 @@ public class DependencyGraphBuilder {
     }
   }
 
-  private static DependencyNode resolveCompileTimeDependencies(
-      DependencyNode rootDependencyArtifact)
+  private DependencyNode resolveCompileTimeDependencies(DependencyNode rootDependencyArtifact)
       throws DependencyCollectionException, DependencyResolutionException {
     return resolveCompileTimeDependencies(rootDependencyArtifact, false);
   }
 
-  private static DependencyNode resolveCompileTimeDependencies(
+  private DependencyNode resolveCompileTimeDependencies(
       DependencyNode rootDependencyArtifact, boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
     return resolveCompileTimeDependencies(
         ImmutableList.of(rootDependencyArtifact), includeProvidedScope);
   }
 
-  private static DependencyNode resolveCompileTimeDependencies(
+  private DependencyNode resolveCompileTimeDependencies(
       List<DependencyNode> dependencyNodes, boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
 
@@ -180,7 +179,7 @@ public class DependencyGraphBuilder {
   }
 
   /** Returns the non-transitive compile time dependencies of an artifact. */
-  public static List<Artifact> getDirectDependencies(Artifact artifact) throws RepositoryException {
+  public List<Artifact> getDirectDependencies(Artifact artifact) throws RepositoryException {
 
     List<Artifact> result = new ArrayList<>();
 
@@ -199,7 +198,7 @@ public class DependencyGraphBuilder {
    * @return dependency graph representing the tree of Maven artifacts
    * @throws RepositoryException when there is a problem in resolving or collecting dependency
    */
-  public static DependencyGraph getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
+  public DependencyGraph getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
       throws RepositoryException {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
@@ -211,8 +210,7 @@ public class DependencyGraphBuilder {
    * Finds the full compile time, transitive dependency graph including duplicates and conflicting
    * versions.
    */
-  public static DependencyGraph getCompleteDependencies(Artifact artifact)
-      throws RepositoryException {
+  public DependencyGraph getCompleteDependencies(Artifact artifact) throws RepositoryException {
 
     // root node
     DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact));
@@ -224,8 +222,7 @@ public class DependencyGraphBuilder {
    * and conflicting versions. That is, this resolves conflicting versions by picking the first
    * version seen. This is how Maven normally operates.
    */
-  public static DependencyGraph getTransitiveDependencies(Artifact artifact)
-      throws RepositoryException {
+  public DependencyGraph getTransitiveDependencies(Artifact artifact) throws RepositoryException {
     // root node
     DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact));
     return levelOrder(node);
@@ -241,8 +238,7 @@ public class DependencyGraphBuilder {
     }
   }
 
-  private static DependencyGraph levelOrder(DependencyNode node)
-      throws AggregatedRepositoryException {
+  private DependencyGraph levelOrder(DependencyNode node) throws AggregatedRepositoryException {
     return levelOrder(node, GraphTraversalOption.NONE);
   }
 
@@ -270,7 +266,7 @@ public class DependencyGraphBuilder {
    *     DependencyCollectionException} or {@link DependencyResolutionException}. This happens only
    *     when graphTraversalOption is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED.
    */
-  private static DependencyGraph levelOrder(
+  private DependencyGraph levelOrder(
       DependencyNode firstNode, GraphTraversalOption graphTraversalOption)
       throws AggregatedRepositoryException {
 

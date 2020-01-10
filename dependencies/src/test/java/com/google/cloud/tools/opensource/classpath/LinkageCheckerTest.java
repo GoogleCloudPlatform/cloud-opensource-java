@@ -55,12 +55,16 @@ public class LinkageCheckerTest {
           (SymbolProblem problem) -> problem.getSymbol().getClassName(),
           "has symbol in class with name");
 
+  private static DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
+
   private Path guavaPath;
   private Path firestorePath;
 
+  private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
+
   private static ImmutableList<Path> resolvePaths(String coordinates) throws RepositoryException {
     DependencyGraph dependencies =
-        DependencyGraphBuilder.getTransitiveDependencies(new DefaultArtifact(coordinates));
+        dependencyGraphBuilder.getTransitiveDependencies(new DefaultArtifact(coordinates));
     ImmutableList<Path> jars =
         dependencies.list().stream()
             .map(path -> path.getLeaf().getFile().toPath())
@@ -233,7 +237,7 @@ public class LinkageCheckerTest {
   public void testFindSymbolProblem_protectedConstructorFromAnonymousClass()
       throws IOException, RepositoryException {
     List<Path> paths =
-        ClassPathBuilder.artifactsToClasspath(
+        classPathBuilder.artifactsToClasspath(
             ImmutableList.of(new DefaultArtifact("junit:junit:4.12")));
     // junit has dependency on hamcrest-core
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
@@ -413,7 +417,7 @@ public class LinkageCheckerTest {
     // cglib 2.2 does not work with asm 4. Stackoverflow post explaining VerifyError:
     // https://stackoverflow.com/questions/21059019/cglib-is-causing-a-java-lang-verifyerror-during-query-generation-in-intuit-partn
     List<Path> paths =
-        ClassPathBuilder.artifactsToClasspath(
+        classPathBuilder.artifactsToClasspath(
             ImmutableList.of(
                 new DefaultArtifact("cglib:cglib:2.2_beta1"),
                 new DefaultArtifact("org.ow2.asm:asm:4.2")));
@@ -750,7 +754,7 @@ public class LinkageCheckerTest {
     // SLF4J classes catch NoClassDefFoundError to detect the availability of logger backends
     // the tool should not show errors for such classes.
     List<Path> paths =
-        ClassPathBuilder.artifactsToClasspath(
+        classPathBuilder.artifactsToClasspath(
             ImmutableList.of(new DefaultArtifact("org.slf4j:slf4j-api:jar:1.7.21")));
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
@@ -766,7 +770,7 @@ public class LinkageCheckerTest {
     // org.eclipse.sisu.inject.Implementations catches LinkageError to detect the availability of
     // implementation for dependency injection. The tool should not show errors for such classes.
     List<Path> paths =
-        ClassPathBuilder.artifactsToClasspath(
+        classPathBuilder.artifactsToClasspath(
             ImmutableList.of(
                 new DefaultArtifact("org.eclipse.sisu:org.eclipse.sisu.inject:0.3.3")));
 
@@ -787,10 +791,10 @@ public class LinkageCheckerTest {
     // org.slf4j.MDC catches NoSuchMethodError to detect the availability of
     // implementation for logging backend. The tool should not show errors for such classes.
     DependencyGraph slf4jGraph =
-        DependencyGraphBuilder.getTransitiveDependencies(
+        dependencyGraphBuilder.getTransitiveDependencies(
             new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"));
     DependencyGraph logbackGraph =
-        DependencyGraphBuilder.getTransitiveDependencies(
+        dependencyGraphBuilder.getTransitiveDependencies(
             new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"));
 
     Path slf4jJar = slf4jGraph.list().get(0).getLeaf().getFile().toPath();
@@ -841,7 +845,7 @@ public class LinkageCheckerTest {
     // LinkageChecker.findLinkageErrors was not handling the case properly.
     // These two jar files are transitive dependencies of the artifacts below.
     List<Path> paths =
-        ClassPathBuilder.artifactsToClasspath(
+        classPathBuilder.artifactsToClasspath(
             ImmutableList.of(
                 new DefaultArtifact("io.grpc:grpc-alts:jar:1.18.0"),
                 new DefaultArtifact("com.google.cloud:google-cloud-nio:jar:0.81.0-alpha")));

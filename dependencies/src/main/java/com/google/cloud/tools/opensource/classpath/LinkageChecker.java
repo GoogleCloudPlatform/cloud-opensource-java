@@ -89,8 +89,9 @@ public class LinkageChecker {
     // duplicate code from DashboardMain follows. We need to refactor to extract this.
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
+    ClassPathBuilder classPathBuilder = new ClassPathBuilder();
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
+        classPathBuilder.artifactsToDependencyPaths(managedDependencies);
     // LinkedListMultimap preserves the key order
     ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
 

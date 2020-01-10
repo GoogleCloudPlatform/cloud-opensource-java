@@ -39,7 +39,9 @@ import org.eclipse.aether.artifact.Artifact;
  *     href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies">
  *     Maven: Introduction to the Dependency Mechanism</a>
  */
-public class ClassPathBuilder {
+public final class ClassPathBuilder {
+
+  private final DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
 
   /**
    * Finds jar file paths for Maven artifacts and their transitive dependencies, using Maven's
@@ -49,7 +51,7 @@ public class ClassPathBuilder {
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem retrieving jar files
    */
-  public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
+  public ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
       throws RepositoryException {
 
     // LinkedListMultimap keeps the key order as they were first added to the multimap
@@ -74,7 +76,7 @@ public class ClassPathBuilder {
    * @return an ordered map of absolute paths of jar files to one or more Maven dependency paths
    * @throws RepositoryException when there is a problem retrieving jar files
    */
-  public static LinkedListMultimap<Path, DependencyPath> artifactsToDependencyPaths(
+  public LinkedListMultimap<Path, DependencyPath> artifactsToDependencyPaths(
       List<Artifact> artifacts) throws RepositoryException {
 
     LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
@@ -83,7 +85,7 @@ public class ClassPathBuilder {
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(artifacts);
+        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(artifacts);
     List<DependencyPath> dependencyPaths = dependencyGraph.list();
 
     // To remove duplicates on (groupId:artifactId) for dependency mediation

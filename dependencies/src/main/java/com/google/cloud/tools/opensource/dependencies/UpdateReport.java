@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import java.util.List;
-
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
@@ -40,9 +39,9 @@ class UpdateReport {
     
     try {
       DefaultArtifact artifact = new DefaultArtifact(args[0]);
-      
-      DependencyGraph graph =
-          DependencyGraphBuilder.getCompleteDependencies(artifact);
+
+      DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
+      DependencyGraph graph = dependencyGraphBuilder.getCompleteDependencies(artifact);
       List<Update> updates = graph.findUpdates();
       
       if (updates.isEmpty()) {

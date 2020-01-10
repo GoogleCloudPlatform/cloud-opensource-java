@@ -63,6 +63,7 @@ final class LinkageCheckerArguments {
   private final ImmutableList<String> extraMavenRepositoryUrls;
   private final boolean addMavenCentral;
   private final boolean reportOnlyReachable;
+  private final ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
   private LinkageCheckerArguments(CommandLine commandLine) {
     this.commandLine = checkNotNull(commandLine);
@@ -196,7 +197,7 @@ final class LinkageCheckerArguments {
 
     if (commandLine.hasOption("b") || commandLine.hasOption("a")) {
       List<Artifact> artifacts = getArtifacts();
-      cachedInputClasspath = ClassPathBuilder.artifactsToClasspath(artifacts);
+      cachedInputClasspath = classPathBuilder.artifactsToClasspath(artifacts);
     } else {
       // b, a, or j is specified in OptionGroup
       String[] jarFiles = commandLine.getOptionValues("j");

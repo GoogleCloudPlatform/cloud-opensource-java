@@ -36,9 +36,11 @@ public class DependencyGraphBuilderTest {
   private DefaultArtifact guava =
       new DefaultArtifact("com.google.guava:guava:25.1-jre");
 
+  private DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
+
   @Test
   public void testGetTransitiveDependencies() throws RepositoryException {
-    DependencyGraph graph = DependencyGraphBuilder.getTransitiveDependencies(datastore);
+    DependencyGraph graph = dependencyGraphBuilder.getTransitiveDependencies(datastore);
     List<DependencyPath> list = graph.list();
 
     Assert.assertTrue(list.size() > 10);
@@ -50,7 +52,7 @@ public class DependencyGraphBuilderTest {
 
   @Test
   public void testGetCompleteDependencies() throws RepositoryException {
-    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(datastore);
+    DependencyGraph graph = dependencyGraphBuilder.getCompleteDependencies(datastore);
     List<DependencyPath> paths = graph.list();
     Assert.assertTrue(paths.size() > 10);
 
@@ -75,8 +77,7 @@ public class DependencyGraphBuilderTest {
 
   @Test
   public void testGetDirectDependencies() throws RepositoryException {
-    List<Artifact> artifacts =
-        DependencyGraphBuilder.getDirectDependencies(guava);
+    List<Artifact> artifacts = dependencyGraphBuilder.getDirectDependencies(guava);
     List<String> coordinates = new ArrayList<>();
     for (Artifact artifact : artifacts) {
       coordinates.add(artifact.toString());
@@ -92,7 +93,7 @@ public class DependencyGraphBuilderTest {
 
     // This should not raise DependencyResolutionException
     DependencyGraph completeDependencies =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(ImmutableList.of(log4j2));
+        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(ImmutableList.of(log4j2));
     Truth.assertThat(completeDependencies.list()).isNotEmpty();
   }
 
@@ -100,7 +101,7 @@ public class DependencyGraphBuilderTest {
   public void testGetStaticLinkageCheckDependencyGraph_multipleArtifacts()
       throws RepositoryException {
     DependencyGraph graph =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
+        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
             Arrays.asList(datastore, guava));
 
     List<DependencyPath> list = graph.list();
@@ -122,7 +123,7 @@ public class DependencyGraphBuilderTest {
     Artifact nettyArtifact = new DefaultArtifact("io.netty:netty-all:4.1.31.Final");
 
     // Without system properties "os.detected.arch" and "os.detected.name", this would fail.
-    List<Artifact> artifacts = DependencyGraphBuilder.getDirectDependencies(nettyArtifact);
+    List<Artifact> artifacts = dependencyGraphBuilder.getDirectDependencies(nettyArtifact);
     Truth.assertThat(artifacts).isNotEmpty();
   }
 
@@ -133,7 +134,7 @@ public class DependencyGraphBuilderTest {
     Artifact grpcProtobuf = new DefaultArtifact("io.grpc:grpc-protobuf:1.25.0");
 
     DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(ImmutableList.of(grpcProtobuf));
+        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(ImmutableList.of(grpcProtobuf));
 
     Correspondence<DependencyPath, String> pathToArtifactKey =
         Correspondence.transforming(
