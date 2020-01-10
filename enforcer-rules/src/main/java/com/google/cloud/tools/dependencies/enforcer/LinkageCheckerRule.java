@@ -230,7 +230,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       throw new EnforcerRuleException("Unable to lookup an expression " + ex.getMessage(), ex);
     } finally {
       for (ArtifactProblem problem : artifactProblems) {
-        // This is warn because having an unresolvable Maven artifact should not cause build
+        // This is not error because having an unresolvable Maven artifact should not cause build
         // failures as long as there is no linkage errors.
         logger.warn(problem.toString());
       }
