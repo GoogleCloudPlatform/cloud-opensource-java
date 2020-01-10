@@ -298,15 +298,19 @@ public class DependencyGraphBuilder {
         // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
         // set to null
 
-        // If there's a dependency node with the same groupId and artifactId, Maven will not pick
-        // up the dependency.
+        // When there's a parent dependency node with the same groupId and artifactId as
+        // the dependency, Maven will not pick up the dependency. For example, if there's a
+        // dependency path "g1:a1:2.0 / ... / g1:a1:1.0" (the leftmost node as root), then Maven's
+        // dependency mediation always picks up g1:a1:2.0 over g1:a1:1.0.
+        String groupIdAndArtifactId = Artifacts.makeKey(artifact);
         boolean parentHasSameKey =
             parentNodes.stream()
                 .map(node -> Artifacts.makeKey(node.getArtifact()))
-                .anyMatch(key -> key.equals(Artifacts.makeKey(artifact)));
+                .anyMatch(key -> key.equals(groupIdAndArtifactId));
         if (parentHasSameKey) {
           continue;
         }
+
         path.add(
             artifact,
             dependencyNode.getDependency().getScope(),
