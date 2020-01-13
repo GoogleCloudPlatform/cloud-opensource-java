@@ -69,8 +69,8 @@ public final class DependencyGraphBuilder {
   }
 
   // caching cuts time by about a factor of 4. Dependency class's equality includes exclusions.
-  private static Map<Dependency, DependencyNode> cacheWithProvidedScope = new HashMap<>();
-  private static Map<Dependency, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
+  private final Map<Dependency, DependencyNode> cacheWithProvidedScope = new HashMap<>();
+  private final Map<Dependency, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
 
   public static ImmutableMap<String, String> detectOsProperties() {
     // System properties to select Netty dependencies through os-maven-plugin
