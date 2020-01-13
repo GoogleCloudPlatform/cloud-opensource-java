@@ -90,8 +90,6 @@ public final class RepositoryUtility {
   public static final RemoteRepository CENTRAL =
       new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
 
-  private static ImmutableList<RemoteRepository> mavenRepositories = ImmutableList.of(CENTRAL);
-
   // DefaultTransporterProvider.newTransporter checks these transporters
   private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
       ImmutableSet.of("file", "http", "https");
@@ -287,13 +285,6 @@ public final class RepositoryUtility {
     }
 
     return false;
-  }
-
-  /** Adds {@link #mavenRepositories} to {@code collectRequest}. */
-  public static void addRepositoriesToRequest(CollectRequest collectRequest) {
-    for (RemoteRepository repository : mavenRepositories) {
-      collectRequest.addRepository(repository);
-    }
   }
 
   /**
