@@ -31,7 +31,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class DependencyGraphBuilderTest {

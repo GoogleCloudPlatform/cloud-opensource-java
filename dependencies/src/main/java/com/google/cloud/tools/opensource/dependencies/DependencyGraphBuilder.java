@@ -51,7 +51,7 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
  * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact
  * Resolver</a> (formerly known as Eclipse Aether).
  */
-public class DependencyGraphBuilder {
+public final class DependencyGraphBuilder {
 
   private static final Logger logger = Logger.getLogger(DependencyGraphBuilder.class.getName());
 
