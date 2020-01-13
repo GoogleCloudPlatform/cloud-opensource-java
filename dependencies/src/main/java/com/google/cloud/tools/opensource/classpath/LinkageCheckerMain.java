@@ -16,13 +16,15 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimaps;
 import java.io.IOException;
+import java.nio.file.Path;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 
 /**
  * A tool to find linkage errors for a class path.
@@ -44,12 +46,21 @@ class LinkageCheckerMain {
     LinkageCheckerArguments linkageCheckerArguments =
         LinkageCheckerArguments.readCommandLine(arguments);
 
-    RepositoryUtility.setRepositories(linkageCheckerArguments.getExtraMavenRepositoryUrls(),
-        linkageCheckerArguments.getAddMavenCentral());
+    DependencyGraphBuilder dependencyGraphBuilder =
+        new DependencyGraphBuilder(
+            linkageCheckerArguments.getExtraMavenRepositoryUrls(),
+            linkageCheckerArguments.getAddMavenCentral());
 
-    LinkageChecker linkageChecker = LinkageChecker.create(
-        linkageCheckerArguments.getInputClasspath(),
-        linkageCheckerArguments.getEntryPointJars());
+    ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
+    ImmutableList<Path> inputClassPath =
+        classPathBuilder.artifactsToClasspath(linkageCheckerArguments.getArtifacts());
+    if (inputClassPath.isEmpty()) {
+      // In case JAR files are specified in the argument
+      inputClassPath = linkageCheckerArguments.getInputClasspath();
+    }
+
+    LinkageChecker linkageChecker =
+        LinkageChecker.create(inputClassPath, linkageCheckerArguments.getEntryPointJars());
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
 

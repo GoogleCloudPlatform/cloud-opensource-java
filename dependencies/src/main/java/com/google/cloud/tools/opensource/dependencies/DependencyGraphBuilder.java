@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.CENTRAL;
+import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.mavenRepositoryFromUrl;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.CharMatcher;
@@ -40,6 +42,7 @@ import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
@@ -58,6 +61,8 @@ public class DependencyGraphBuilder {
       CharMatcher.inRange('a', 'z').or(CharMatcher.inRange('0', '9'));
 
   private final List<UnresolvableArtifactProblem> artifactProblems = new ArrayList<>();
+
+  private final ImmutableList<RemoteRepository> repositories;
 
   static {
     detectOsProperties().forEach(System::setProperty);
@@ -108,6 +113,25 @@ public class DependencyGraphBuilder {
       default:
         return "x86_32";
     }
+  }
+
+  /**
+   * Sets {@link #repositories} to search for dependencies.
+   *
+   * @param addMavenCentral if true, add Maven Central to the end of the repository list
+   * @throws IllegalArgumentException if a URL is malformed or not having an allowed scheme
+   */
+  public DependencyGraphBuilder(Iterable<String> mavenRepositoryUrls, boolean addMavenCentral) {
+    ImmutableList.Builder<RemoteRepository> repositoryListBuilder = ImmutableList.builder();
+    for (String mavenRepositoryUrl : mavenRepositoryUrls) {
+      RemoteRepository repository = mavenRepositoryFromUrl(mavenRepositoryUrl);
+      repositoryListBuilder.add(repository);
+    }
+
+    if (addMavenCentral) {
+      repositoryListBuilder.add(CENTRAL);
+    }
+    this.repositories = repositoryListBuilder.build();
   }
 
   /** Returns unresolved artifact problems encountered during constructing a dependency graph. */
@@ -167,7 +191,9 @@ public class DependencyGraphBuilder {
     } else {
       collectRequest.setDependencies(dependencyList);
     }
-    RepositoryUtility.addRepositoriesToRequest(collectRequest);
+    for (RemoteRepository repository : repositories) {
+      collectRequest.addRepository(repository);
+    }
     CollectResult collectResult = system.collectDependencies(session, collectRequest);
     DependencyNode node = collectResult.getRoot();
 

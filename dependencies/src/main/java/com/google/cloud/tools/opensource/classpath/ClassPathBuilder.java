@@ -21,6 +21,7 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Maps;
@@ -42,7 +43,16 @@ import org.eclipse.aether.artifact.Artifact;
  */
 public final class ClassPathBuilder {
 
-  private final DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
+  private final DependencyGraphBuilder dependencyGraphBuilder;
+
+  @VisibleForTesting
+  ClassPathBuilder() {
+    this(new DependencyGraphBuilder());
+  }
+
+  ClassPathBuilder(DependencyGraphBuilder dependencyGraphBuilder) {
+    this.dependencyGraphBuilder = dependencyGraphBuilder;
+  }
 
   /**
    * Finds jar file paths for Maven artifacts and their transitive dependencies, using Maven's

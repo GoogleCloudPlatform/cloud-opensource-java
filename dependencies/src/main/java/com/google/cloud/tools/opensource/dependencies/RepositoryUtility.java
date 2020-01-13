@@ -289,27 +289,6 @@ public final class RepositoryUtility {
     return false;
   }
 
-  /**
-   * Sets {@link #mavenRepositories} to search for dependencies.
-   *
-   * @param addMavenCentral if true, add Maven Central to the end of the repository list
-   * @throws IllegalArgumentException if a URL is malformed or not having an allowed scheme
-   */
-  public static void setRepositories(
-      Iterable<String> mavenRepositoryUrls, boolean addMavenCentral) {
-    ImmutableList.Builder<RemoteRepository> repositoryListBuilder = ImmutableList.builder();
-    for (String mavenRepositoryUrl : mavenRepositoryUrls) {
-      RemoteRepository repository = mavenRepositoryFromUrl(mavenRepositoryUrl);
-      repositoryListBuilder.add(repository);
-    }
-
-    if (addMavenCentral) {
-      repositoryListBuilder.add(CENTRAL);
-    }
-
-    mavenRepositories = repositoryListBuilder.build();
-  }
-
   /** Adds {@link #mavenRepositories} to {@code collectRequest}. */
   public static void addRepositoriesToRequest(CollectRequest collectRequest) {
     for (RemoteRepository repository : mavenRepositories) {
