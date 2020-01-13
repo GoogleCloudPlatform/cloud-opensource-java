@@ -89,8 +89,8 @@ public class DashboardMain {
 
   private static final Configuration freemarkerConfiguration = configureFreemarker();
 
-  private static DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
-  private static ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
+  private static final DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
+  private static final ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
 
   /**
    * Generates a code hygiene dashboard for a BOM. This tool takes a path to pom.xml of the BOM as
