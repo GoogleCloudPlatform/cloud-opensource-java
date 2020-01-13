@@ -1,5 +1,7 @@
 {
   "extends": [
     "config:base"
-  ]
+  ],
+  "ignorePaths": ["example-problems/**"],
+  "semanticCommits": true
 }
