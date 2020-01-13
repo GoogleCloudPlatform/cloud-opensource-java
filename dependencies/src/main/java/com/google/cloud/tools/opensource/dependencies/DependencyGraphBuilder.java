@@ -62,8 +62,6 @@ public class DependencyGraphBuilder {
 
   private final List<UnresolvableArtifactProblem> artifactProblems = new ArrayList<>();
 
-  private final ImmutableList<RemoteRepository> repositories;
-
   static {
     detectOsProperties().forEach(System::setProperty);
   }
