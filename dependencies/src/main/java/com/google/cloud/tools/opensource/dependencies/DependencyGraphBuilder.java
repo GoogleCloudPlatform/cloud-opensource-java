@@ -116,8 +116,7 @@ public class DependencyGraphBuilder {
   }
 
   /**
-   * Sets {@link #repositories} to search for dependencies.
-   *
+   * @param mavenRepositoryUrls Maven repository URLs to search for dependencies
    * @param addMavenCentral if true, add Maven Central to the end of the repository list
    * @throws IllegalArgumentException if a URL is malformed or not having an allowed scheme
    */
