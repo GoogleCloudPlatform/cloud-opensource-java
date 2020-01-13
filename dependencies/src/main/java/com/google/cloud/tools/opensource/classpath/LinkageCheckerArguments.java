@@ -171,7 +171,10 @@ final class LinkageCheckerArguments {
 
     if (commandLine.hasOption("b")) {
       String bomCoordinates = commandLine.getOptionValue("b");
-      return cachedArtifacts = RepositoryUtility.readBom(bomCoordinates).getManagedDependencies();
+
+      return cachedArtifacts =
+          RepositoryUtility.readBom(bomCoordinates, getMavenRepositoryUrls())
+              .getManagedDependencies();
     } else if (commandLine.hasOption("a")) {
       // option 'a'
       String[] mavenCoordinatesOption = commandLine.getOptionValues("a");
@@ -223,8 +226,13 @@ final class LinkageCheckerArguments {
     }
   }
 
-  ImmutableList<String> getExtraMavenRepositoryUrls() {
-    return extraMavenRepositoryUrls;
+  ImmutableList<String> getMavenRepositoryUrls() {
+    ImmutableList.Builder<String> repositories = ImmutableList.builder();
+    repositories.addAll(extraMavenRepositoryUrls);
+    if (addMavenCentral) {
+      repositories.add(RepositoryUtility.CENTRAL.getUrl());
+    }
+    return repositories.build();
   }
 
   boolean getAddMavenCentral() {

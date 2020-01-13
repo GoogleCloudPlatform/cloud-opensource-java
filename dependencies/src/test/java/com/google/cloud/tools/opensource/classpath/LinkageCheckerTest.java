@@ -676,7 +676,8 @@ public class LinkageCheckerTest {
     } catch (RepositoryException ex) {
       Truth.assertThat(ex.getMessage())
           .startsWith(
-              "Could not find artifact org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 in central");
+              "Could not find artifact org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 in "
+                  + " (http://repo1.maven.org/maven2/)");
     }
   }
 

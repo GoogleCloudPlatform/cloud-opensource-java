@@ -21,7 +21,6 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Maps;
@@ -45,12 +44,11 @@ public final class ClassPathBuilder {
 
   private final DependencyGraphBuilder dependencyGraphBuilder;
 
-  @VisibleForTesting
-  ClassPathBuilder() {
+  public ClassPathBuilder() {
     this(new DependencyGraphBuilder());
   }
 
-  ClassPathBuilder(DependencyGraphBuilder dependencyGraphBuilder) {
+  public ClassPathBuilder(DependencyGraphBuilder dependencyGraphBuilder) {
     this.dependencyGraphBuilder = dependencyGraphBuilder;
   }
 

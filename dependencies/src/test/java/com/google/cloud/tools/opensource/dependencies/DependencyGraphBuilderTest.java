@@ -16,6 +16,9 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
@@ -26,6 +29,7 @@ import java.util.List;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -178,6 +182,42 @@ public class DependencyGraphBuilderTest {
         dependencyGraphBuilder.getArtifactProblems();
     for (UnresolvableArtifactProblem problem : problems) {
       Truth.assertThat(problem.toString()).doesNotContain("jboss-servlet-api_3.0");
+    }
+  }
+
+  @Test
+  public void testConfigureAdditionalMavenRepositories_addingGoogleAndroidRepository()
+      throws RepositoryException {
+    // Previously this test was using https://repo.spring.io/milestone and artifact
+    // org.springframework:spring-asm:3.1.0.RC2 but the repository was not stable.
+    DependencyGraphBuilder graphBuilder =
+        new DependencyGraphBuilder(ImmutableList.of("https://dl.google.com/dl/android/maven2"));
+
+    // This artifact does not exist in Maven central, but it is in Android repository
+    Artifact artifact = new DefaultArtifact("androidx.lifecycle:lifecycle-common-java8:2.0.0");
+
+    DependencyGraph graph = graphBuilder.getCompleteDependencies(artifact);
+    assertNotNull(graph);
+  }
+
+  @Test
+  public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral()
+      throws RepositoryException {
+    boolean addMavenCentral = false;
+    DependencyGraphBuilder graphBuilder =
+        new DependencyGraphBuilder(ImmutableList.of("https://dl.google.com/dl/android/maven2"));
+
+    // This artifact does not exist in Android's repository
+    Artifact artifact = new DefaultArtifact("com.google.guava:guava:28.2-jre");
+
+    try {
+      graphBuilder.getCompleteDependencies(artifact);
+      fail("The dependency resolution should fail if Maven Central is not used");
+    } catch (DependencyResolutionException ex) {
+      Truth.assertThat(ex.getMessage())
+          .startsWith(
+              "Could not find artifact com.google.guava:guava:jar:28.2-jre in "
+                  + " (https://dl.google.com/dl/android/maven2)");
     }
   }
 }

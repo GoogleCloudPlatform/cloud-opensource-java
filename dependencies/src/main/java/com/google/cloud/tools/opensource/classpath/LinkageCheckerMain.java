@@ -18,13 +18,14 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimaps;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
-
+import org.eclipse.aether.artifact.Artifact;
 
 /**
  * A tool to find linkage errors for a class path.
@@ -47,20 +48,19 @@ class LinkageCheckerMain {
         LinkageCheckerArguments.readCommandLine(arguments);
 
     DependencyGraphBuilder dependencyGraphBuilder =
-        new DependencyGraphBuilder(
-            linkageCheckerArguments.getExtraMavenRepositoryUrls(),
-            linkageCheckerArguments.getAddMavenCentral());
+        new DependencyGraphBuilder(linkageCheckerArguments.getMavenRepositoryUrls());
 
     ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
-    ImmutableList<Path> inputClassPath =
-        classPathBuilder.artifactsToClasspath(linkageCheckerArguments.getArtifacts());
-    if (inputClassPath.isEmpty()) {
-      // In case JAR files are specified in the argument
-      inputClassPath = linkageCheckerArguments.getInputClasspath();
-    }
+    ImmutableList<Artifact> artifacts = linkageCheckerArguments.getArtifacts();
 
-    LinkageChecker linkageChecker =
-        LinkageChecker.create(inputClassPath, linkageCheckerArguments.getEntryPointJars());
+    // When JAR files are specified in the argument, artifacts are empty.
+    ImmutableList<Path> inputClassPath =
+        artifacts.isEmpty()
+            ? linkageCheckerArguments.getInputClasspath()
+            : classPathBuilder.artifactsToClasspath(artifacts);
+
+    ImmutableSet<Path> entryPointJars = linkageCheckerArguments.getEntryPointJars();
+    LinkageChecker linkageChecker = LinkageChecker.create(inputClassPath, entryPointJars);
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
 

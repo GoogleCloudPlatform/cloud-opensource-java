@@ -89,6 +89,9 @@ public class DashboardMain {
 
   private static final Configuration freemarkerConfiguration = configureFreemarker();
 
+  private static DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
+  private static ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
+
   /**
    * Generates a code hygiene dashboard for a BOM. This tool takes a path to pom.xml of the BOM as
    * an argument or Maven coordinates to a BOM.
@@ -179,7 +182,7 @@ public class DashboardMain {
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
+        classPathBuilder.artifactsToDependencyPaths(managedDependencies);
     // LinkedListMultimap preserves the key order
     ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
 
@@ -336,12 +339,12 @@ public class DashboardMain {
     for (Artifact artifact : artifacts) {
       try {
         DependencyGraph completeDependencies =
-            DependencyGraphBuilder.getCompleteDependencies(artifact);
+            dependencyGraphBuilder.getCompleteDependencies(artifact);
         globalDependencies.add(completeDependencies);
 
         // picks versions according to Maven rules
         DependencyGraph transitiveDependencies =
-            DependencyGraphBuilder.getTransitiveDependencies(artifact);
+            dependencyGraphBuilder.getTransitiveDependencies(artifact);
 
         ArtifactInfo info = new ArtifactInfo(completeDependencies, transitiveDependencies);
         infoMap.put(artifact, info);

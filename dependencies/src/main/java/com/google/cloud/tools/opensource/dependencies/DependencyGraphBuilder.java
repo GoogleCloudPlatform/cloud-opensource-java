@@ -115,20 +115,19 @@ public class DependencyGraphBuilder {
     }
   }
 
+  public DependencyGraphBuilder() {
+    this(ImmutableList.of(CENTRAL.getUrl()));
+  }
+
   /**
    * @param mavenRepositoryUrls Maven repository URLs to search for dependencies
-   * @param addMavenCentral if true, add Maven Central to the end of the repository list
    * @throws IllegalArgumentException if a URL is malformed or not having an allowed scheme
    */
-  public DependencyGraphBuilder(Iterable<String> mavenRepositoryUrls, boolean addMavenCentral) {
+  public DependencyGraphBuilder(Iterable<String> mavenRepositoryUrls) {
     ImmutableList.Builder<RemoteRepository> repositoryListBuilder = ImmutableList.builder();
     for (String mavenRepositoryUrl : mavenRepositoryUrls) {
       RemoteRepository repository = mavenRepositoryFromUrl(mavenRepositoryUrl);
       repositoryListBuilder.add(repository);
-    }
-
-    if (addMavenCentral) {
-      repositoryListBuilder.add(CENTRAL);
     }
     this.repositories = repositoryListBuilder.build();
   }
