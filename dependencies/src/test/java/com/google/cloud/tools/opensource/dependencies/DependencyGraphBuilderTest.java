@@ -170,22 +170,6 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  @Ignore
-  public void testGetDirectDependencies_beamZetaSql() throws RepositoryException {
-    Artifact beamZetaSql =
-        new DefaultArtifact("org.apache.beam:beam-sdks-java-extensions-sql-zetasql:2.17.0");
-
-    DependencyGraph dependencyGraph =
-        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(ImmutableList.of(beamZetaSql));
-
-    ImmutableList<UnresolvableArtifactProblem> problems =
-        dependencyGraphBuilder.getArtifactProblems();
-    for (UnresolvableArtifactProblem problem : problems) {
-      Truth.assertThat(problem.toString()).doesNotContain("jboss-servlet-api_3.0");
-    }
-  }
-
-  @Test
   public void testConfigureAdditionalMavenRepositories_addingGoogleAndroidRepository()
       throws RepositoryException {
     // Previously this test was using https://repo.spring.io/milestone and artifact
