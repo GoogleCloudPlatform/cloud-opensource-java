@@ -1,7 +1,7 @@
 # Linkage Checker Enforcer Rule Change Log
 
 ## 1.1.1
-* The enforcer rule prints unresolved dependencies rather than failing
+* The enforcer rule prints unresolved dependencies
 
 ## 1.1.0
 * The enforcer rule detects unimplemented methods in interfaces and abstract classes
