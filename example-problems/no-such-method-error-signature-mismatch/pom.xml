@@ -25,7 +25,7 @@
     <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-core</artifactId>
-      <version>1.17.1</version>
+      <version>1.26.0</version>
     </dependency>
   </dependencies>
 
