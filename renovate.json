@@ -7,7 +7,6 @@
   "semanticCommits": true,
   "packageRules": [
     {
-      "managers": ["maven"],
       "packagePatterns": [
         "^com.google.guava:"
       ],
