@@ -4,5 +4,14 @@
   ],
   "ignorePaths": ["example-problems/**"],
   "separateMajorMinor": false,
-  "semanticCommits": true
+  "semanticCommits": true,
+  "packageRules": [
+    {
+      "managers": ["maven"],
+      "packagePatterns": [
+        "^com.google.guava:"
+      ],
+      "versionScheme": "docker"
+    }
+  ]
 }
