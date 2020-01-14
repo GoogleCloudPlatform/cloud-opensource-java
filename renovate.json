@@ -3,5 +3,6 @@
     "config:base"
   ],
   "ignorePaths": ["example-problems/**"],
+  "separateMajorMinor": false,
   "semanticCommits": true
 }
