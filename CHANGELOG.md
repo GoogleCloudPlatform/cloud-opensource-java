@@ -1,5 +1,8 @@
 # Linkage Checker Enforcer Rule Change Log
 
+## 1.1.1
+* The enforcer rule prints unresolved dependencies rather than failing
+
 ## 1.1.0
 * The enforcer rule detects unimplemented methods in interfaces and abstract classes
 * Fixed wrong URL and SCM section in pom.xml
