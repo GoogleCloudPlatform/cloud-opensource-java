@@ -25,7 +25,8 @@
     {
       "packagePatterns": [
         "^com.google.cloud:libraries-bom",
-        "^com.google.cloud:dependencies",
+        "^com.google.cloud.tools:dependencies",
+        "^com.google.cloud.tools:linkage",
         "^com.google.cloud.tools.opensource"
       ],
       "enabled": false
