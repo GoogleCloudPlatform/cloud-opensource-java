@@ -117,7 +117,7 @@ public final class DependencyGraphBuilder {
 
   /**
    * @param mavenRepositoryUrls Maven repository URLs to search for dependencies
-   * @throws IllegalArgumentException if a URL is malformed or not having an allowed scheme
+   * @throws IllegalArgumentException if a URL is malformed or does not have an allowed scheme
    */
   public DependencyGraphBuilder(Iterable<String> mavenRepositoryUrls) {
     ImmutableList.Builder<RemoteRepository> repositoryListBuilder = ImmutableList.builder();
