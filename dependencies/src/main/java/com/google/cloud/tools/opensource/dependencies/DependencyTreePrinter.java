@@ -41,7 +41,8 @@ class DependencyTreePrinter {
   private static void printDependencyTree(String coordinates) throws RepositoryException {
     DefaultArtifact rootArtifact = new DefaultArtifact(coordinates);
     DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
-    DependencyGraph dependencyGraph = dependencyGraphBuilder.getCompleteDependencies(rootArtifact);
+    DependencyGraph dependencyGraph =
+        dependencyGraphBuilder.getCompleteDependencies(rootArtifact).getDependencyGraph();
     System.out.println("Dependencies for " + coordinates);
     System.out.println(formatDependencyPaths(dependencyGraph.list()));
   }

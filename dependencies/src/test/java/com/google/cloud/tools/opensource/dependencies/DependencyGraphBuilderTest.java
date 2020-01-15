@@ -44,7 +44,8 @@ public class DependencyGraphBuilderTest {
 
   @Test
   public void testGetTransitiveDependencies() throws RepositoryException {
-    DependencyGraph graph = dependencyGraphBuilder.getTransitiveDependencies(datastore);
+    DependencyGraph graph =
+        dependencyGraphBuilder.getTransitiveDependencies(datastore).getDependencyGraph();
     List<DependencyPath> list = graph.list();
 
     Assert.assertTrue(list.size() > 10);
@@ -56,7 +57,8 @@ public class DependencyGraphBuilderTest {
 
   @Test
   public void testGetCompleteDependencies() throws RepositoryException {
-    DependencyGraph graph = dependencyGraphBuilder.getCompleteDependencies(datastore);
+    DependencyGraph graph =
+        dependencyGraphBuilder.getCompleteDependencies(datastore).getDependencyGraph();
     List<DependencyPath> paths = graph.list();
     Assert.assertTrue(paths.size() > 10);
 
@@ -97,7 +99,9 @@ public class DependencyGraphBuilderTest {
 
     // This should not raise DependencyResolutionException
     DependencyGraph completeDependencies =
-        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(ImmutableList.of(log4j2));
+        dependencyGraphBuilder
+            .getStaticLinkageCheckDependencyGraph(ImmutableList.of(log4j2))
+            .getDependencyGraph();
     Truth.assertThat(completeDependencies.list()).isNotEmpty();
   }
 
@@ -105,8 +109,9 @@ public class DependencyGraphBuilderTest {
   public void testGetStaticLinkageCheckDependencyGraph_multipleArtifacts()
       throws RepositoryException {
     DependencyGraph graph =
-        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
-            Arrays.asList(datastore, guava));
+        dependencyGraphBuilder
+            .getStaticLinkageCheckDependencyGraph(Arrays.asList(datastore, guava))
+            .getDependencyGraph();
 
     List<DependencyPath> list = graph.list();
     Assert.assertTrue(list.size() > 10);
@@ -138,7 +143,9 @@ public class DependencyGraphBuilderTest {
     Artifact grpcProtobuf = new DefaultArtifact("io.grpc:grpc-protobuf:1.25.0");
 
     DependencyGraph dependencyGraph =
-        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(ImmutableList.of(grpcProtobuf));
+        dependencyGraphBuilder
+            .getStaticLinkageCheckDependencyGraph(ImmutableList.of(grpcProtobuf))
+            .getDependencyGraph();
 
     Correspondence<DependencyPath, String> pathToArtifactKey =
         Correspondence.transforming(
@@ -157,12 +164,11 @@ public class DependencyGraphBuilderTest {
     // jboss-servlet-api_3.0:1.0-SNAPSHOT.
     Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
 
-    DependencyGraph dependencyGraph =
+    DependencyGraphResult result =
         dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
             ImmutableList.of(hibernateCore));
 
-    ImmutableList<UnresolvableArtifactProblem> problems =
-        dependencyGraphBuilder.getArtifactProblems();
+    ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
     for (UnresolvableArtifactProblem problem : problems) {
       Truth.assertThat(problem.toString()).doesNotContain("jboss-servlet-api_3.0");
     }
@@ -179,8 +185,9 @@ public class DependencyGraphBuilderTest {
     // This artifact does not exist in Maven central, but it is in Android repository
     Artifact artifact = new DefaultArtifact("androidx.lifecycle:lifecycle-common-java8:2.0.0");
 
-    DependencyGraph graph = graphBuilder.getCompleteDependencies(artifact);
-    assertNotNull(graph);
+    // This should not raise an exception
+    DependencyGraphResult graph = graphBuilder.getCompleteDependencies(artifact);
+    assertNotNull(graph.getDependencyGraph());
   }
 
   @Test

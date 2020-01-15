@@ -17,10 +17,9 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphResult;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Maps;
@@ -93,9 +92,9 @@ public final class ClassPathBuilder {
       return multimap;
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
-    DependencyGraph dependencyGraph =
+    DependencyGraphResult result =
         dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(artifacts);
-    List<DependencyPath> dependencyPaths = dependencyGraph.list();
+    List<DependencyPath> dependencyPaths = result.getDependencyGraph().list();
 
     // To remove duplicates on (groupId:artifactId) for dependency mediation
     Map<String, String> keyToFirstArtifactVersion = Maps.newHashMap();
@@ -127,10 +126,5 @@ public final class ClassPathBuilder {
       multimap.put(jarAbsolutePath, dependencyPath);
     }
     return multimap;
-  }
-
-  /** Returns unresolved artifact problems encountered during constructing the class path. */
-  ImmutableList<UnresolvableArtifactProblem> getArtifactProblems() {
-    return dependencyGraphBuilder.getArtifactProblems();
   }
 }

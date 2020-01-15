@@ -64,7 +64,9 @@ public class LinkageCheckerTest {
 
   private static ImmutableList<Path> resolvePaths(String coordinates) throws RepositoryException {
     DependencyGraph dependencies =
-        dependencyGraphBuilder.getTransitiveDependencies(new DefaultArtifact(coordinates));
+        dependencyGraphBuilder
+            .getTransitiveDependencies(new DefaultArtifact(coordinates))
+            .getDependencyGraph();
     ImmutableList<Path> jars =
         dependencies.list().stream()
             .map(path -> path.getLeaf().getFile().toPath())
@@ -792,11 +794,13 @@ public class LinkageCheckerTest {
     // org.slf4j.MDC catches NoSuchMethodError to detect the availability of
     // implementation for logging backend. The tool should not show errors for such classes.
     DependencyGraph slf4jGraph =
-        dependencyGraphBuilder.getTransitiveDependencies(
-            new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"));
+        dependencyGraphBuilder
+            .getTransitiveDependencies(new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"))
+            .getDependencyGraph();
     DependencyGraph logbackGraph =
-        dependencyGraphBuilder.getTransitiveDependencies(
-            new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"));
+        dependencyGraphBuilder
+            .getTransitiveDependencies(new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"))
+            .getDependencyGraph();
 
     Path slf4jJar = slf4jGraph.list().get(0).getLeaf().getFile().toPath();
     Path log4jJar = logbackGraph.list().get(0).getLeaf().getFile().toPath();

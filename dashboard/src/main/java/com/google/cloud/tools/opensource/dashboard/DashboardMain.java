@@ -27,6 +27,7 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphResult;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
@@ -90,7 +91,8 @@ public class DashboardMain {
   private static final Configuration freemarkerConfiguration = configureFreemarker();
 
   private static final DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
-  private static final ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
+  private static final ClassPathBuilder classPathBuilder =
+      new ClassPathBuilder(dependencyGraphBuilder);
 
   /**
    * Generates a code hygiene dashboard for a BOM. This tool takes a path to pom.xml of the BOM as
@@ -338,13 +340,15 @@ public class DashboardMain {
 
     for (Artifact artifact : artifacts) {
       try {
-        DependencyGraph completeDependencies =
+        DependencyGraphResult completeDependencyResult =
             dependencyGraphBuilder.getCompleteDependencies(artifact);
+        DependencyGraph completeDependencies = completeDependencyResult.getDependencyGraph();
         globalDependencies.add(completeDependencies);
 
         // picks versions according to Maven rules
-        DependencyGraph transitiveDependencies =
+        DependencyGraphResult transitiveDependencyResult =
             dependencyGraphBuilder.getTransitiveDependencies(artifact);
+        DependencyGraph transitiveDependencies = transitiveDependencyResult.getDependencyGraph();
 
         ArtifactInfo info = new ArtifactInfo(completeDependencies, transitiveDependencies);
         infoMap.put(artifact, info);
