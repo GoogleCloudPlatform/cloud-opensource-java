@@ -32,6 +32,14 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.6.0</version>
+        <configuration>
+          <mainClass>io.grpc.internal.App</mainClass>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
         <version>3.0.0-M3</version>
@@ -53,19 +61,13 @@
             <configuration>
               <rules>
                 <LinkageCheckerRule
-                  implementation="com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule"/>
+                  implementation="com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule">
+                  <reportOnlyReachable>true</reportOnlyReachable>
+                </LinkageCheckerRule>
               </rules>
             </configuration>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.6.0</version>
-        <configuration>
-          <mainClass>io.grpc.internal.App</mainClass>
-        </configuration>
       </plugin>
     </plugins>
   </build>
