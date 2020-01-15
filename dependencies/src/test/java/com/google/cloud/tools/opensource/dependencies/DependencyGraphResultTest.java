@@ -23,9 +23,6 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.graph.DefaultDependencyNode;
-import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
 import org.junit.Test;
 
 public class DependencyGraphResultTest {

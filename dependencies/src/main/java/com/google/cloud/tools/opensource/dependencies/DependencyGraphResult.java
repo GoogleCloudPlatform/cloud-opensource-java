@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableList;
 
 /** Result of dependency graph building with {@link UnresolvableArtifactProblem}s if any. */
-final public class DependencyGraphResult {
+public final class DependencyGraphResult {
 
   private final DependencyGraph dependencyGraph;
   private final ImmutableList<UnresolvableArtifactProblem> artifactProblems;
@@ -36,9 +36,7 @@ final public class DependencyGraphResult {
     return dependencyGraph;
   }
 
-  /**
-   * Returns problems encountered while constructing the dependency graph.
-   */
+  /** Returns problems encountered while constructing the dependency graph. */
   ImmutableList<UnresolvableArtifactProblem> getArtifactProblems() {
     return artifactProblems;
   }
