@@ -40,7 +40,8 @@ public class DependencyGraphIntegrationTest {
     DefaultArtifact core =
         new DefaultArtifact("com.google.cloud:google-cloud-core:1.37.1");
 
-    DependencyGraph graph = dependencyGraphBuilder.getCompleteDependencies(core);
+    DependencyGraph graph =
+        dependencyGraphBuilder.getCompleteDependencies(core).getDependencyGraph();
     List<Update> updates = graph.findUpdates();
 
     Truth.assertThat(updates)
@@ -81,7 +82,8 @@ public class DependencyGraphIntegrationTest {
 
     DefaultArtifact beam =
         new DefaultArtifact("org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.5.0");
-    DependencyGraph graph = dependencyGraphBuilder.getCompleteDependencies(beam);
+    DependencyGraph graph =
+        dependencyGraphBuilder.getCompleteDependencies(beam).getDependencyGraph();
 
     // should not throw
     graph.findUpdates();
@@ -93,7 +95,8 @@ public class DependencyGraphIntegrationTest {
 
     DefaultArtifact jaxen =
         new DefaultArtifact("jaxen:jaxen:1.1.6");
-    DependencyGraph graph = dependencyGraphBuilder.getCompleteDependencies(jaxen);
+    DependencyGraph graph =
+        dependencyGraphBuilder.getCompleteDependencies(jaxen).getDependencyGraph();
 
     List<Update> updates = graph.findUpdates();
     Truth.assertThat(updates).hasSize(3);
@@ -109,8 +112,10 @@ public class DependencyGraphIntegrationTest {
   public void testGrpcAuth() throws RepositoryException {
 
     DefaultArtifact grpc = new DefaultArtifact("io.grpc:grpc-auth:1.15.0");
-    DependencyGraph completeDependencies = dependencyGraphBuilder.getCompleteDependencies(grpc);
-    DependencyGraph transitiveDependencies = dependencyGraphBuilder.getTransitiveDependencies(grpc);
+    DependencyGraph completeDependencies =
+        dependencyGraphBuilder.getCompleteDependencies(grpc).getDependencyGraph();
+    DependencyGraph transitiveDependencies =
+        dependencyGraphBuilder.getTransitiveDependencies(grpc).getDependencyGraph();
 
     Map<String, String> complete = completeDependencies.getHighestVersionMap();
     Map<String, String> transitive =
@@ -127,7 +132,8 @@ public class DependencyGraphIntegrationTest {
   @Test
   public void testFindConflicts_cloudLanguage() throws RepositoryException {
     DefaultArtifact artifact = new DefaultArtifact("com.google.cloud:google-cloud-language:1.37.1");
-    DependencyGraph graph = dependencyGraphBuilder.getCompleteDependencies(artifact);
+    DependencyGraph graph =
+        dependencyGraphBuilder.getCompleteDependencies(artifact).getDependencyGraph();
     List<DependencyPath> conflicts = graph.findConflicts();
     List<String> leaves = new ArrayList<>();
     for (DependencyPath path : conflicts) {

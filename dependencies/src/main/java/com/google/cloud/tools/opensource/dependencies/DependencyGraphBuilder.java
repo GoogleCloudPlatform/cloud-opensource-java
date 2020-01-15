@@ -31,7 +31,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
-import java.util.logging.Logger;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -53,15 +52,12 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
  */
 public final class DependencyGraphBuilder {
 
-  private static final Logger logger = Logger.getLogger(DependencyGraphBuilder.class.getName());
-
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
   private static final CharMatcher LOWER_ALPHA_NUMERIC =
       CharMatcher.inRange('a', 'z').or(CharMatcher.inRange('0', '9'));
 
-  private final List<UnresolvableArtifactProblem> artifactProblems = new ArrayList<>();
-
+  /** Maven Repositories to use when resolving dependencies. */
   private final ImmutableList<RemoteRepository> repositories;
 
   static {
@@ -121,7 +117,7 @@ public final class DependencyGraphBuilder {
 
   /**
    * @param mavenRepositoryUrls Maven repository URLs to search for dependencies
-   * @throws IllegalArgumentException if a URL is malformed or not having an allowed scheme
+   * @throws IllegalArgumentException if a URL is malformed or does not have an allowed scheme
    */
   public DependencyGraphBuilder(Iterable<String> mavenRepositoryUrls) {
     ImmutableList.Builder<RemoteRepository> repositoryListBuilder = ImmutableList.builder();
@@ -130,11 +126,6 @@ public final class DependencyGraphBuilder {
       repositoryListBuilder.add(repository);
     }
     this.repositories = repositoryListBuilder.build();
-  }
-
-  /** Returns unresolved artifact problems encountered during constructing a dependency graph. */
-  public ImmutableList<UnresolvableArtifactProblem> getArtifactProblems() {
-    return ImmutableList.copyOf(artifactProblems);
   }
 
   private DependencyNode resolveCompileTimeDependencies(DependencyNode rootDependencyArtifact)
@@ -229,7 +220,7 @@ public final class DependencyGraphBuilder {
    * @return dependency graph representing the tree of Maven artifacts
    * @throws RepositoryException when there is a problem in resolving or collecting dependency
    */
-  public DependencyGraph getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
+  public DependencyGraphResult getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
       throws RepositoryException {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
@@ -241,7 +232,8 @@ public final class DependencyGraphBuilder {
    * Finds the full compile time, transitive dependency graph including duplicates and conflicting
    * versions.
    */
-  public DependencyGraph getCompleteDependencies(Artifact artifact) throws RepositoryException {
+  public DependencyGraphResult getCompleteDependencies(Artifact artifact)
+      throws RepositoryException {
 
     // root node
     DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact));
@@ -253,7 +245,8 @@ public final class DependencyGraphBuilder {
    * and conflicting versions. That is, this resolves conflicting versions by picking the first
    * version seen. This is how Maven normally operates.
    */
-  public DependencyGraph getTransitiveDependencies(Artifact artifact) throws RepositoryException {
+  public DependencyGraphResult getTransitiveDependencies(Artifact artifact)
+      throws RepositoryException {
     // root node
     DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact));
     return levelOrder(node);
@@ -269,7 +262,7 @@ public final class DependencyGraphBuilder {
     }
   }
 
-  private DependencyGraph levelOrder(DependencyNode node) {
+  private DependencyGraphResult levelOrder(DependencyNode node) {
     return levelOrder(node, GraphTraversalOption.NONE);
   }
 
@@ -294,7 +287,7 @@ public final class DependencyGraphBuilder {
    * @param graphTraversalOption option to recursively resolve the dependency to build complete
    *     dependency tree, with or without dependencies of provided scope
    */
-  private DependencyGraph levelOrder(
+  private DependencyGraphResult levelOrder(
       DependencyNode firstNode, GraphTraversalOption graphTraversalOption) {
 
     DependencyGraph graph = new DependencyGraph();
@@ -303,8 +296,7 @@ public final class DependencyGraphBuilder {
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
-    // Records failures rather than throwing immediately.
-    List<ExceptionAndPath> resolutionFailures = new ArrayList<>();
+    ImmutableList.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableList.builder();
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
@@ -376,6 +368,6 @@ public final class DependencyGraphBuilder {
       }
     }
 
-    return graph;
+    return new DependencyGraphResult(graph, artifactProblems.build());
   }
 }

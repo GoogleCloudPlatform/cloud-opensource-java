@@ -122,7 +122,7 @@ public class DashboardUnavailableArtifactTest {
     ArtifactResults errorArtifactResult = new ArtifactResults(invalidArtifact);
     errorArtifactResult.setExceptionMessage(
         "Could not find artifact io.grpc:nonexistent:jar:1.15.0 in central"
-            + " (http://repo1.maven.org/maven2/)");
+            + " (https://repo1.maven.org/maven2/)");
     List<ArtifactResults> table = new ArrayList<>();
     table.add(validArtifactResult);
     table.add(errorArtifactResult);
