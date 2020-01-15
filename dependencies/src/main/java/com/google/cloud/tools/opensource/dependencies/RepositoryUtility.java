@@ -88,7 +88,7 @@ public final class RepositoryUtility {
   private static final Logger logger = Logger.getLogger(RepositoryUtility.class.getName());
   
   public static final RemoteRepository CENTRAL =
-      new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
+      new RemoteRepository.Builder("central", "default", "https://repo1.maven.org/maven2/").build();
 
   private static ImmutableList<RemoteRepository> mavenRepositories = ImmutableList.of(CENTRAL);
 
