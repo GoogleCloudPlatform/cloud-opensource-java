@@ -10,7 +10,7 @@ Config included in a DNS record][1].
 
 ## How to run
 
-Run `mvn exec:java` to reproduce the issue.
+Run `mvn compile exec:java` to reproduce the issue.
 
 ```
 no-such-method-error-signature-mismatch$ mvn compile exec:java
