@@ -1,5 +1,8 @@
 # Linkage Checker Enforcer Rule Change Log
 
+## 1.1.2
+* Fixed Maven Central URL to use HTTPS
+
 ## 1.1.1
 * The enforcer rule prints unresolved dependencies.
 
