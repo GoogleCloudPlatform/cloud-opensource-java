@@ -347,7 +347,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
               .map(Dependency::getArtifact)
               .filter(artifact -> !shouldSkipBomMember(artifact))
               .collect(toImmutableList());
-      return classPathBuilder.artifactsToClasspath(artifacts);
+      return classPathBuilder.resolveClassPath(artifacts);
     } catch (RepositoryException ex) {
       throw new EnforcerRuleException("Failed to collect dependency " + ex.getMessage(), ex);
     }

@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.cloud.tools.opensource.classpath.LinkageCheckerTest.resolvePaths;
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
 import static org.junit.Assert.assertFalse;
 
@@ -37,8 +38,6 @@ import java.util.Set;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -197,8 +196,7 @@ public class ClassDumperTest {
   @Test
   public void testMapJarToClasses_classWithDollars()
       throws IOException, RepositoryException {
-    Artifact grpcArtifact = new DefaultArtifact("com.google.code.gson:gson:2.6.2");
-    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(grpcArtifact));
+    List<Path> paths = resolvePaths("com.google.code.gson:gson:2.6.2");
     Path gsonJar = paths.get(0);
 
     ImmutableSetMultimap<Path, String> pathToClasses =
@@ -336,8 +334,7 @@ public class ClassDumperTest {
       throws IOException, RepositoryException {
     // org.graalvm.libgraal.LibGraal class has different implementations between Java 8 and 11 via
     // Multi-release JAR of this artifact.
-    Artifact grpcArtifact = new DefaultArtifact("org.graalvm.compiler:compiler:19.0.0");
-    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(grpcArtifact));
+    List<Path> paths = resolvePaths("org.graalvm.compiler:compiler:19.0.0");
 
     ClassDumper classDumper = ClassDumper.create(paths);
     classDumper.findSymbolReferences();
@@ -352,9 +349,8 @@ public class ClassDumperTest {
   public void testFindSymbolReferences_overLappingClass() throws IOException, RepositoryException {
     // Both artifacts contain com.google.inject.internal.InjectorImpl$BindingsMultimap. The one from
     // sisu-guice should not appear in symbol references because guice supersedes in the class path.
-    Artifact guice = new DefaultArtifact("com.google.inject:guice:3.0");
-    Artifact sisuGuice = new DefaultArtifact("org.sonatype.sisu:sisu-guice:3.2.6");
-    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(guice, sisuGuice));
+    List<Path> paths =
+        resolvePaths("com.google.inject:guice:3.0", "org.sonatype.sisu:sisu-guice:3.2.6");
     Path sisuGuicePath = paths.get(1);
 
     ClassDumper classDumper = ClassDumper.create(paths);
@@ -374,8 +370,7 @@ public class ClassDumperTest {
     // com.amazonaws:amazon-kinesis-client:1.13.0 contains an unexpected lock file
     // /unison/com/e007f77498fd27177e2ea931a06dcf50/unison/tmp/amazonaws/services/kinesis/leases/impl/LeaseTaker.class
     // https://github.com/awslabs/amazon-kinesis-client/issues/654
-    Artifact kinesisClient = new DefaultArtifact("com.amazonaws:amazon-kinesis-client:1.13.0");
-    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(kinesisClient));
+    List<Path> paths = resolvePaths("com.amazonaws:amazon-kinesis-client:1.13.0");
     ClassDumper classDumper = ClassDumper.create(paths);
     Path kinesisJar = paths.get(0);
 
@@ -395,8 +390,7 @@ public class ClassDumperTest {
     // Curator-client has shaded com.google.common.reflect.TypeToken$Bounds but it does not contain
     // the outer class com.google.common.reflect.TypeToken.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1092
-    Artifact curatorClient = new DefaultArtifact("org.apache.curator:curator-client:4.2.0");
-    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(curatorClient));
+    List<Path> paths = resolvePaths("org.apache.curator:curator-client:4.2.0");
 
     Path curatorClientJar = paths.get(0);
     ClassDumper classDumper = ClassDumper.create(ImmutableList.of(curatorClientJar));

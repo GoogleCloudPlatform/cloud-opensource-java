@@ -20,10 +20,11 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
@@ -48,10 +49,10 @@ public class ClassPathBuilderTest {
   private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
   @Test
-  public void testArtifactsToPaths_removingDuplicates() throws RepositoryException {
+  public void testResolve_removingDuplicates() throws RepositoryException {
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
     ListMultimap<Path, DependencyPath> multimap =
-        classPathBuilder.artifactsToDependencyPaths(ImmutableList.of(grpcArtifact));
+        classPathBuilder.resolve(ImmutableList.of(grpcArtifact)).getDependencyPaths();
 
     Set<Path> paths = multimap.keySet();
     long jsr305Count = paths.stream().filter(path -> path.toString().contains("jsr305-")).count();
@@ -77,8 +78,8 @@ public class ClassPathBuilderTest {
         RepositoryUtility.readBom("com.google.cloud:google-cloud-bom:0.81.0-alpha")
         .getManagedDependencies();
 
-    LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        classPathBuilder.artifactsToDependencyPaths(managedDependencies);
+    ImmutableListMultimap<Path, DependencyPath> jarToDependencyPaths =
+        classPathBuilder.resolve(managedDependencies).getDependencyPaths();
 
     ImmutableList<Path> paths = ImmutableList.copyOf(jarToDependencyPaths.keySet());
     
@@ -90,13 +91,13 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testArtifactsToPaths() throws RepositoryException {
+  public void testResolve() throws RepositoryException {
 
-    Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
-    ListMultimap<Path, DependencyPath> multimap =
-        classPathBuilder.artifactsToDependencyPaths(ImmutableList.of(grpcArtifact));
+    Artifact grpcAuth = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
+    ImmutableListMultimap<Path, DependencyPath> dependencyPaths =
+        classPathBuilder.resolve(ImmutableList.of(grpcAuth)).getDependencyPaths();
 
-    Set<Path> paths = multimap.keySet();
+    Set<Path> paths = dependencyPaths.keySet();
 
     Truth.assertThat(paths)
         .comparingElementsUsing(PATH_FILE_NAMES)
@@ -109,9 +110,9 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testCoordinateToClasspath_validCoordinate() throws RepositoryException {
-    Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
-    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(grpcArtifact));
+  public void testresolveClassPath_validCoordinate() throws RepositoryException {
+    Artifact grpcAuth = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
+    List<Path> paths = classPathBuilder.resolveClassPath(ImmutableList.of(grpcAuth));
 
     Truth.assertThat(paths)
         .comparingElementsUsing(PATH_FILE_NAMES)
@@ -127,18 +128,18 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testCoordinateToClasspath_optionalDependency() throws RepositoryException {
-    Artifact bigTableArtifact =
+  public void testResolveClassPath_optionalDependency() throws RepositoryException {
+    Artifact bigTable =
         new DefaultArtifact("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
-    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(bigTableArtifact));
+    List<Path> paths = classPathBuilder.resolveClassPath(ImmutableList.of(bigTable));
     Truth.assertThat(paths).comparingElementsUsing(PATH_FILE_NAMES).contains("log4j-1.2.12.jar");
   }
 
   @Test
-  public void testCoordinateToClasspath_invalidCoordinate() {
+  public void testResolveClassPath_invalidCoordinate() {
     Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nosuchartifact:1.2.3");
     try {
-      classPathBuilder.artifactsToClasspath(ImmutableList.of(nonExistentArtifact));
+      classPathBuilder.resolveClassPath(ImmutableList.of(nonExistentArtifact));
       Assert.fail("Invalid Maven coodinate should raise RepositoryException");
     } catch (RepositoryException ex) {
       Truth.assertThat(ex.getMessage())
@@ -147,17 +148,17 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testCoordinateToClasspath_emptyInput() throws RepositoryException {
-    List<Path> jars = classPathBuilder.artifactsToClasspath(ImmutableList.of());
+  public void testResolveClassPath_emptyInput() throws RepositoryException {
+    List<Path> jars = classPathBuilder.resolveClassPath(ImmutableList.of());
     Truth.assertThat(jars).isEmpty();
   }
 
   @Test
   public void testFindInvalidReferences_selfReferenceFromAbstractClassToInterface()
       throws RepositoryException, IOException {
-    Artifact bigTableArtifact =
+    Artifact bigTable =
         new DefaultArtifact("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
-    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(bigTableArtifact));
+    List<Path> paths = classPathBuilder.resolveClassPath(ImmutableList.of(bigTable));
     Path httpClientJar =
         paths
             .stream()
@@ -194,10 +195,23 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testArtifactToClasspath_notToGenerateRepositoryException()
-      throws RepositoryException {
-    Artifact jamonApiArtifact = new DefaultArtifact("com.google.guava:guava-gwt:jar:20.0");
-    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(jamonApiArtifact));
+  public void testResolveClasspath_notToGenerateRepositoryException() throws RepositoryException {
+    Artifact guavaGwt = new DefaultArtifact("com.google.guava:guava-gwt:jar:20.0");
+    List<Path> paths = classPathBuilder.resolveClassPath(ImmutableList.of(guavaGwt));
     Truth.assertThat(paths).isNotEmpty();
+  }
+
+  @Test
+  public void testResolve_artifactProblems() throws RepositoryException {
+    // In the full dependency tree of hibernate-core, xerces-impl:2.6.2 and xml-apis:2.6.2 are not
+    // available in Maven Central.
+    Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
+    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(hibernateCore));
+
+    ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
+
+    Truth.assertThat(artifactProblems).hasSize(2);
+    assertEquals(artifactProblems.get(0).getArtifact().toString(), "xerces:xerces-impl:jar:2.6.2");
+    assertEquals(artifactProblems.get(1).getArtifact().toString(), "xml-apis:xml-apis:jar:2.6.2");
   }
 }

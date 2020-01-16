@@ -21,6 +21,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
+import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -34,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.MoreFiles;
@@ -164,9 +164,8 @@ public class LinkageMonitor {
     }
 
     ImmutableList<Artifact> snapshotManagedDependencies = snapshot.getManagedDependencies();
-    LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        (new ClassPathBuilder()).artifactsToDependencyPaths(snapshotManagedDependencies);
-    ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
+    ClassPathResult classPathResult = (new ClassPathBuilder()).resolve(snapshotManagedDependencies);
+    ImmutableList<Path> classpath = classPathResult.getClassPath();
     List<Path> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems =
@@ -186,7 +185,8 @@ public class LinkageMonitor {
     Set<SymbolProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newProblems.isEmpty()) {
       logger.severe(
-          messageForNewErrors(snapshotSymbolProblems, problemsInBaseline, jarToDependencyPaths));
+          messageForNewErrors(
+              snapshotSymbolProblems, problemsInBaseline, classPathResult.getDependencyPaths()));
       int errorSize = newProblems.size();
       throw new LinkageMonitorException(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));

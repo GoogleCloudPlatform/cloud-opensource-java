@@ -21,6 +21,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
+import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -38,12 +39,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
@@ -183,8 +184,9 @@ public class DashboardMain {
 
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
-    LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        classPathBuilder.artifactsToDependencyPaths(managedDependencies);
+    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies);
+    ImmutableListMultimap<Path, DependencyPath> jarToDependencyPaths =
+        classPathResult.getDependencyPaths();
     // LinkedListMultimap preserves the key order
     ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
 
@@ -211,7 +213,7 @@ public class DashboardMain {
   private static Path generateHtml(
       Bom bom,
       ArtifactCache cache,
-      LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths,
+      ImmutableListMultimap<Path, DependencyPath> jarToDependencyPaths,
       ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems)
       throws IOException, TemplateException, URISyntaxException {
 

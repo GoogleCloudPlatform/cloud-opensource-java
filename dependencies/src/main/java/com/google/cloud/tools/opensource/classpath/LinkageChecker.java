@@ -19,14 +19,12 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHierarchy;
 
 import com.google.cloud.tools.opensource.dependencies.Bom;
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import java.io.IOException;
@@ -90,10 +88,8 @@ public class LinkageChecker {
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
     ClassPathBuilder classPathBuilder = new ClassPathBuilder();
-    LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        classPathBuilder.artifactsToDependencyPaths(managedDependencies);
-    // LinkedListMultimap preserves the key order
-    ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
+    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies);
+    ImmutableList<Path> classpath = classPathResult.getClassPath();
 
     // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
     List<Path> artifactJarsInBom = classpath.subList(0, managedDependencies.size());

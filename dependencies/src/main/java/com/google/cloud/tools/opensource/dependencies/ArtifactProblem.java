@@ -27,13 +27,8 @@ import org.eclipse.aether.graph.DependencyNode;
 /** Problem in a Maven artifact in a dependency tree. */
 public abstract class ArtifactProblem {
 
-  /** The Maven artifact that has the problem. */
   protected final Artifact artifact;
 
-  /**
-   * The dependency path to the artifact from the root of the dependency tree. An empty list if the
-   * path is unknown.
-   */
   protected final ImmutableList<DependencyNode> dependencyPath;
 
   protected ArtifactProblem(Artifact artifact, List<DependencyNode> dependencyPath) {
@@ -41,7 +36,16 @@ public abstract class ArtifactProblem {
     this.dependencyPath = ImmutableList.copyOf(dependencyPath);
   }
 
+  /**
+   * Returns the dependency path to the artifact from the root of the dependency tree. An empty list
+   * if the path is unknown.
+   */
   protected String getPath() {
     return Joiner.on(" > ").join(dependencyPath);
+  }
+
+  /** Returns the Maven artifact that has the problem. */
+  public Artifact getArtifact() {
+    return artifact;
   }
 }
