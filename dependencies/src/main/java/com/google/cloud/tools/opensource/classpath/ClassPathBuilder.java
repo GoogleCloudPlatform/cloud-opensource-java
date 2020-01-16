@@ -52,23 +52,10 @@ public final class ClassPathBuilder {
   }
 
   /**
-   * Finds jar file paths for Maven artifacts and their transitive dependencies, using Maven's
-   * dependency mediation strategy.
-   *
-   * @param artifacts Maven artifacts to check
-   * @return list of absolute paths to jar files
-   * @throws RepositoryException when there is a problem retrieving jar files
-   */
-  public ImmutableList<Path> resolveClassPath(List<Artifact> artifacts) throws RepositoryException {
-    ClassPathResult result = resolve(artifacts);
-    return result.getClassPath();
-  }
-
-  /**
-   * Finds jar file paths and dependency paths for Maven artifacts and their transitive
-   * dependencies. When there are multiple versions of an artifact in the dependency tree, the
-   * closest to the root in breadth-first order is picked up. This 'pick closest' strategy follows
-   * Maven's dependency mediation.
+   * Finds jar file paths and dependency paths for Maven artifacts and their transitive dependencies
+   * to build a list of JAR files (class path). When there are multiple versions of an artifact in
+   * the dependency tree, the closest to the root in breadth-first order is picked up. This 'pick
+   * closest' strategy follows Maven's dependency mediation.
    *
    * @param artifacts Maven artifacts to check. They are treated as the root of the dependency tree.
    * @throws RepositoryException when there is a problem retrieving jar files

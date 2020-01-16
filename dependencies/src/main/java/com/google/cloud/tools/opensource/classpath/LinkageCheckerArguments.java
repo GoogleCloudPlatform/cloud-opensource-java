@@ -200,7 +200,7 @@ final class LinkageCheckerArguments {
 
     if (commandLine.hasOption("b") || commandLine.hasOption("a")) {
       List<Artifact> artifacts = getArtifacts();
-      cachedInputClasspath = classPathBuilder.resolveClassPath(artifacts);
+      cachedInputClasspath = classPathBuilder.resolve(artifacts).getClassPath();
     } else {
       // b, a, or j is specified in OptionGroup
       String[] jarFiles = commandLine.getOptionValues("j");

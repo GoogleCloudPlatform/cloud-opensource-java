@@ -48,6 +48,12 @@ public class ClassPathBuilderTest {
 
   private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
+  private ImmutableList<Path> resolveClassPath(String coordinates) throws RepositoryException {
+    Artifact artifact = new DefaultArtifact(coordinates);
+    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(artifact));
+    return result.getClassPath();
+  }
+
   @Test
   public void testResolve_removingDuplicates() throws RepositoryException {
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
@@ -111,8 +117,7 @@ public class ClassPathBuilderTest {
 
   @Test
   public void testresolveClassPath_validCoordinate() throws RepositoryException {
-    Artifact grpcAuth = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
-    List<Path> paths = classPathBuilder.resolveClassPath(ImmutableList.of(grpcAuth));
+    List<Path> paths = resolveClassPath("io.grpc:grpc-auth:1.15.1");
 
     Truth.assertThat(paths)
         .comparingElementsUsing(PATH_FILE_NAMES)
@@ -129,9 +134,7 @@ public class ClassPathBuilderTest {
 
   @Test
   public void testResolveClassPath_optionalDependency() throws RepositoryException {
-    Artifact bigTable =
-        new DefaultArtifact("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
-    List<Path> paths = classPathBuilder.resolveClassPath(ImmutableList.of(bigTable));
+    List<Path> paths = resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
     Truth.assertThat(paths).comparingElementsUsing(PATH_FILE_NAMES).contains("log4j-1.2.12.jar");
   }
 
@@ -139,7 +142,7 @@ public class ClassPathBuilderTest {
   public void testResolveClassPath_invalidCoordinate() {
     Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nosuchartifact:1.2.3");
     try {
-      classPathBuilder.resolveClassPath(ImmutableList.of(nonExistentArtifact));
+      classPathBuilder.resolve(ImmutableList.of(nonExistentArtifact));
       Assert.fail("Invalid Maven coodinate should raise RepositoryException");
     } catch (RepositoryException ex) {
       Truth.assertThat(ex.getMessage())
@@ -148,17 +151,15 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolveClassPath_emptyInput() throws RepositoryException {
-    List<Path> jars = classPathBuilder.resolveClassPath(ImmutableList.of());
+  public void testResolve_emptyInput() throws RepositoryException {
+    List<Path> jars = classPathBuilder.resolve(ImmutableList.of()).getClassPath();
     Truth.assertThat(jars).isEmpty();
   }
 
   @Test
   public void testFindInvalidReferences_selfReferenceFromAbstractClassToInterface()
       throws RepositoryException, IOException {
-    Artifact bigTable =
-        new DefaultArtifact("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
-    List<Path> paths = classPathBuilder.resolveClassPath(ImmutableList.of(bigTable));
+    List<Path> paths = resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
     Path httpClientJar =
         paths
             .stream()
@@ -196,8 +197,7 @@ public class ClassPathBuilderTest {
 
   @Test
   public void testResolveClasspath_notToGenerateRepositoryException() throws RepositoryException {
-    Artifact guavaGwt = new DefaultArtifact("com.google.guava:guava-gwt:jar:20.0");
-    List<Path> paths = classPathBuilder.resolveClassPath(ImmutableList.of(guavaGwt));
+    List<Path> paths = resolveClassPath("com.google.guava:guava-gwt:jar:20.0");
     Truth.assertThat(paths).isNotEmpty();
   }
 

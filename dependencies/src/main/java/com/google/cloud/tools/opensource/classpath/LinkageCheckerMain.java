@@ -84,9 +84,7 @@ class LinkageCheckerMain {
 
     if (!artifactProblems.isEmpty()) {
       System.out.println("\n");
-      for (ArtifactProblem artifactProblem : artifactProblems) {
-        System.out.println(artifactProblem);
-      }
+      System.out.println(ArtifactProblem.formatProblems(artifactProblems));
     }
   }
 }
