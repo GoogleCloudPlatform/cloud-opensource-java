@@ -16,13 +16,16 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimaps;
 import java.io.IOException;
+import java.nio.file.Path;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
-
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import org.eclipse.aether.artifact.Artifact;
 
 /**
  * A tool to find linkage errors for a class path.
@@ -44,12 +47,20 @@ class LinkageCheckerMain {
     LinkageCheckerArguments linkageCheckerArguments =
         LinkageCheckerArguments.readCommandLine(arguments);
 
-    RepositoryUtility.setRepositories(linkageCheckerArguments.getExtraMavenRepositoryUrls(),
-        linkageCheckerArguments.getAddMavenCentral());
+    DependencyGraphBuilder dependencyGraphBuilder =
+        new DependencyGraphBuilder(linkageCheckerArguments.getMavenRepositoryUrls());
 
-    LinkageChecker linkageChecker = LinkageChecker.create(
-        linkageCheckerArguments.getInputClasspath(),
-        linkageCheckerArguments.getEntryPointJars());
+    ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
+    ImmutableList<Artifact> artifacts = linkageCheckerArguments.getArtifacts();
+
+    // When JAR files are specified in the argument, artifacts are empty.
+    ImmutableList<Path> inputClassPath =
+        artifacts.isEmpty()
+            ? linkageCheckerArguments.getInputClasspath()
+            : classPathBuilder.artifactsToClasspath(artifacts);
+
+    ImmutableSet<Path> entryPointJars = linkageCheckerArguments.getEntryPointJars();
+    LinkageChecker linkageChecker = LinkageChecker.create(inputClassPath, entryPointJars);
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
 

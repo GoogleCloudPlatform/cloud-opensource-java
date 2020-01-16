@@ -165,7 +165,7 @@ public class LinkageMonitor {
 
     ImmutableList<Artifact> snapshotManagedDependencies = snapshot.getManagedDependencies();
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        ClassPathBuilder.artifactsToDependencyPaths(snapshotManagedDependencies);
+        (new ClassPathBuilder()).artifactsToDependencyPaths(snapshotManagedDependencies);
     ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
     List<Path> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 
