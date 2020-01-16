@@ -43,7 +43,7 @@ You can add `requireUpperBoundDeps` to your build like this:
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.0.0-M2</version>
+        <version>3.0.0-M3</version>
         <executions>
           <execution>
             <id>enforce</id>
@@ -73,15 +73,15 @@ that library to versions from different releases. Using a BOM fixes
 this problem because a BOM dictates consistent versions for all
 artifacts from a library.
 
-You can use a BOM like this—this example is for `google-cloud-bom`:
+You can use a BOM like this—this example is for `libraries-bom`:
 
 ```
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-bom</artifactId>
-        <version>0.81.0-alpha</version>
+        <artifactId>libraries-bom</artifactId>
+        <version>3.4.0</version>
         <type>pom</type>
         <scope>import</scope>
        </dependency>
@@ -99,14 +99,10 @@ You can use a BOM like this—this example is for `google-cloud-bom`:
 In this example, since the BOM manages library versions, the
 version of the google-cloud-storage artifact is omitted.
 
-See the "Choosing BOMs" section below if you need to import more than one BOM.
-
 ### Gradle
 
 Gradle selects the highest version of any given dependency in the
 dependency tree.
-
-#### Import BOMs to ensure your dependencies are consistent
 
 When a library publishes multiple artifacts, using different versions
 for different artifacts may cause dependency conflicts. To fix this
@@ -123,55 +119,6 @@ you are using at least Gradle 4.6. To do this:
 For an example, see [gax-java#690](https://github.com/googleapis/gax-java/pull/690/files).
 
 See the "Choosing BOMs" section below if you need to import more than one BOM.
-
-## Choosing BOMs
-
-By default, import the highest-level BOM that your project
-depends on. For example, if you depend on both `grpc-java` and
-`google-cloud-java`, then use `google-cloud-bom` (since `google-cloud-java`
-depends on `grpc-java`). This generally provides you the versions of everything
-you need, because the transitive dependencies of that library should
-all be compatible as well.
-
-However, if your project independently pulls in transitive
-dependencies at different versions, you may also need to specify
-lower-level BOMs to ensure compatibility, since each BOM only controls
-the versions of the library that generates it. Since the GCP Java
-libraries follow [semver](https://semver.org/), you should be able to pick the highest
-version in your dependency tree for any particular library, as long as
-your dependency tree agrees on the same major version. Here is the
-process to follow for each library that has BOM support:
-
-1. Identify the highest version seen for any artifact produced by that library
-  a. For example, if you see `com.google.api:gax:1.34.0` and
-     `com.google.api:gax-grpc:1.42.0`, then use version 1.42.0
-2. Import the BOM corresponding to that library using the highest version you see
-  a. For the example above, use `com.google.api:gax-bom:1.42.0`
-3. Repeat as long as there are other libraries with BOM support where
-   you see multiple versions of the library's artifacts
-
-Note that there will not necessarily be a BOM available at the version
-you need. See the BOM reference section below for the first
-available version of each BOM.
-
-## BOM reference
-
-None of the GCP open source Java libraries were initially released
-with BOMs - they were added later to provide better consistency for
-users. The following table shows the first version that each library
-published a BOM for, and the BOM artifact name.
-
-| library | BOM artifact | First available version |
-| --- | --- | --- |
-| guava | com.google.guava:guava-bom | 27.1-jre/27.1-android (08-Mar-2019) |
-| protobuf | com.google.protobuf:protobuf-bom | 3.7.0 (06-Mar-2019) |
-| grpc-java | io.grpc:grpc-bom | 1.19.0 (27-Feb-2019) |
-| gax-java | com.google.api:gax-bom | 1.34.0 (19-Oct-2018) |
-| google-http-java-client | com.google.http-client:google-http-client-bom | 1.27.0 (09-Nov-2018) |
-| google-oauth-java-client | com.google.oauth-client:google-oauth-client-bom | 1.27.0 (10-Nov-2018) |
-| google-api-java-client | com.google.api-client:google-api-client-bom | 1.27.0 (12-Nov-2018) |
-| google-cloud-java | com.google.cloud:google-cloud-bom | 0.32.0-alpha (11-Dec-2017)  |
-| beam | org.apache.beam:beam-sdks-java-bom | 2.10.0 (06-Feb-2019) |
 
 ## Intrinsic conflicts
 
@@ -201,10 +148,3 @@ library ecosystem:
 - Each library follows semantic versioning. This means that once a
   library reaches a 1.x version, features and APIs can be added in minor/patch
   releases but not removed within a major version.
-
-This combination of characteristics means that you can generally avoid
-dependency conflicts by doing the following:
-
-1. Use the highest version of each dependency
-2. Import a BOM for each library whose artifacts need to use a
-  consistent version.
