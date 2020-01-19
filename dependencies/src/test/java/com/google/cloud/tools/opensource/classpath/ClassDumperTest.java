@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static org.junit.Assert.assertFalse;
 
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
@@ -57,6 +58,8 @@ public class ClassDumperTest {
           (actual, expected) -> actual.getClassName().equals(expected), "has class name equal to");
 
   private InputStream classFileInputStream;
+
+  private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
   @Before
   public void setup() {
@@ -195,7 +198,7 @@ public class ClassDumperTest {
   public void testMapJarToClasses_classWithDollars()
       throws IOException, RepositoryException {
     Artifact grpcArtifact = new DefaultArtifact("com.google.code.gson:gson:2.6.2");
-    List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(grpcArtifact));
+    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(grpcArtifact));
     Path gsonJar = paths.get(0);
 
     ImmutableSetMultimap<Path, String> pathToClasses =
@@ -313,7 +316,8 @@ public class ClassDumperTest {
             ImmutableList.of(absolutePathOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
 
     try {
-      classDumper.isUnusedClassSymbolReference("org.conscrypt.Conscrypt", new ClassSymbol("dummy.NoSuchClass"));
+      classDumper.isUnusedClassSymbolReference(
+          "org.conscrypt.Conscrypt", new ClassSymbol("dummy.NoSuchClass"));
 
       Assert.fail("It should throw VerifyException when it cannot find a class symbol reference");
     } catch (VerifyException ex) {
@@ -333,7 +337,7 @@ public class ClassDumperTest {
     // org.graalvm.libgraal.LibGraal class has different implementations between Java 8 and 11 via
     // Multi-release JAR of this artifact.
     Artifact grpcArtifact = new DefaultArtifact("org.graalvm.compiler:compiler:19.0.0");
-    List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(grpcArtifact));
+    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(grpcArtifact));
 
     ClassDumper classDumper = ClassDumper.create(paths);
     classDumper.findSymbolReferences();
@@ -350,7 +354,7 @@ public class ClassDumperTest {
     // sisu-guice should not appear in symbol references because guice supersedes in the class path.
     Artifact guice = new DefaultArtifact("com.google.inject:guice:3.0");
     Artifact sisuGuice = new DefaultArtifact("org.sonatype.sisu:sisu-guice:3.2.6");
-    List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(guice, sisuGuice));
+    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(guice, sisuGuice));
     Path sisuGuicePath = paths.get(1);
 
     ClassDumper classDumper = ClassDumper.create(paths);
@@ -363,5 +367,44 @@ public class ClassDumperTest {
         .doesNotContain(
             new ClassFile(
                 sisuGuicePath, "com.google.inject.internal.InjectorImpl$BindingsMultimap"));
+  }
+
+  @Test
+  public void testListClasses_unexpectedNonClassFile() throws RepositoryException, IOException {
+    // com.amazonaws:amazon-kinesis-client:1.13.0 contains an unexpected lock file
+    // /unison/com/e007f77498fd27177e2ea931a06dcf50/unison/tmp/amazonaws/services/kinesis/leases/impl/LeaseTaker.class
+    // https://github.com/awslabs/amazon-kinesis-client/issues/654
+    Artifact kinesisClient = new DefaultArtifact("com.amazonaws:amazon-kinesis-client:1.13.0");
+    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(kinesisClient));
+    ClassDumper classDumper = ClassDumper.create(paths);
+    Path kinesisJar = paths.get(0);
+
+    // This should not raise IOException
+    SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
+
+    Truth.assertWithMessage("Invalid files should not stop loading valid class files")
+        .that(symbolReferences.getClassToClassSymbols().keySet())
+        .comparingElementsUsing(
+            Correspondence.transforming(
+                (ClassFile classFile) -> classFile.getJar(), "is in the JAR file"))
+        .contains(kinesisJar);
+  }
+
+  @Test
+  public void testCatchesLinkageError_absentOuterClass() throws RepositoryException, IOException {
+    // Curator-client has shaded com.google.common.reflect.TypeToken$Bounds but it does not contain
+    // the outer class com.google.common.reflect.TypeToken.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1092
+    Artifact curatorClient = new DefaultArtifact("org.apache.curator:curator-client:4.2.0");
+    List<Path> paths = classPathBuilder.artifactsToClasspath(ImmutableList.of(curatorClient));
+
+    Path curatorClientJar = paths.get(0);
+    ClassDumper classDumper = ClassDumper.create(ImmutableList.of(curatorClientJar));
+
+    // The outer class (TypeToken) does not exist in the class path.
+    String innerClass = "org.apache.curator.shaded.com.google.common.reflect.TypeToken$Bounds";
+
+    // This should not raise an exception
+    assertFalse(classDumper.catchesLinkageError(innerClass));
   }
 }

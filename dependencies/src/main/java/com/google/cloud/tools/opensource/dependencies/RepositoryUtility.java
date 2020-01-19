@@ -58,7 +58,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
@@ -88,9 +87,7 @@ public final class RepositoryUtility {
   private static final Logger logger = Logger.getLogger(RepositoryUtility.class.getName());
   
   public static final RemoteRepository CENTRAL =
-      new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
-
-  private static ImmutableList<RemoteRepository> mavenRepositories = ImmutableList.of(CENTRAL);
+      new RemoteRepository.Builder("central", "default", "https://repo1.maven.org/maven2/").build();
 
   // DefaultTransporterProvider.newTransporter checks these transporters
   private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
@@ -225,12 +222,21 @@ public final class RepositoryUtility {
       throw new MavenRepositoryException(ex);
     }
   }
-  
+
   /**
-   * Parse the dependencyManagement section of an artifact and return the
-   * artifacts included there.
+   * Parse the dependencyManagement section of an artifact and return the artifacts included there.
    */
   public static Bom readBom(String coordinates) throws ArtifactDescriptorException {
+    return readBom(coordinates, ImmutableList.of(CENTRAL.getUrl()));
+  }
+
+  /**
+   * Parse the dependencyManagement section of an artifact and return the artifacts included there.
+   *
+   * @param mavenRepositoryUrls URLs of Maven repositories when resolving the BOM coordinates
+   */
+  public static Bom readBom(String coordinates, List<String> mavenRepositoryUrls)
+      throws ArtifactDescriptorException {
     Artifact artifact = new DefaultArtifact(coordinates);
 
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
@@ -238,9 +244,10 @@ public final class RepositoryUtility {
 
     ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
 
-    for (RemoteRepository repository : mavenRepositories) {
-      request.addRepository(repository);
+    for (String repositoryUrl : mavenRepositoryUrls) {
+      request.addRepository(mavenRepositoryFromUrl(repositoryUrl));
     }
+
     request.setArtifact(artifact);
 
     ArtifactDescriptorResult resolved = system.readArtifactDescriptor(session, request);
@@ -287,34 +294,6 @@ public final class RepositoryUtility {
     }
 
     return false;
-  }
-
-  /**
-   * Sets {@link #mavenRepositories} to search for dependencies.
-   *
-   * @param addMavenCentral if true, add Maven Central to the end of the repository list
-   * @throws IllegalArgumentException if a URL is malformed or not having an allowed scheme
-   */
-  public static void setRepositories(
-      Iterable<String> mavenRepositoryUrls, boolean addMavenCentral) {
-    ImmutableList.Builder<RemoteRepository> repositoryListBuilder = ImmutableList.builder();
-    for (String mavenRepositoryUrl : mavenRepositoryUrls) {
-      RemoteRepository repository = mavenRepositoryFromUrl(mavenRepositoryUrl);
-      repositoryListBuilder.add(repository);
-    }
-
-    if (addMavenCentral) {
-      repositoryListBuilder.add(CENTRAL);
-    }
-
-    mavenRepositories = repositoryListBuilder.build();
-  }
-
-  /** Adds {@link #mavenRepositories} to {@code collectRequest}. */
-  public static void addRepositoriesToRequest(CollectRequest collectRequest) {
-    for (RemoteRepository repository : mavenRepositories) {
-      collectRequest.addRepository(repository);
-    }
   }
 
   /**

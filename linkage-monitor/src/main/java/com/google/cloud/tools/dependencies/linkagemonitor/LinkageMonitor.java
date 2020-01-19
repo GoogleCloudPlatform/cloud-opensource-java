@@ -165,7 +165,7 @@ public class LinkageMonitor {
 
     ImmutableList<Artifact> snapshotManagedDependencies = snapshot.getManagedDependencies();
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        ClassPathBuilder.artifactsToDependencyPaths(snapshotManagedDependencies);
+        (new ClassPathBuilder()).artifactsToDependencyPaths(snapshotManagedDependencies);
     ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
     List<Path> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 
@@ -216,6 +216,13 @@ public class LinkageMonitor {
     ImmutableSet.Builder<Path> problematicJars = ImmutableSet.builder();
     for (SymbolProblem problem : newProblems) {
       message.append(problem + "\n");
+
+      // This is null for ClassNotFound error.
+      ClassFile containingClass = problem.getContainingClass();
+      if (containingClass != null) {
+        problematicJars.add(containingClass.getJar());
+      }
+
       for (ClassFile classFile : snapshotSymbolProblems.get(problem)) {
         message.append(
             String.format(
@@ -225,6 +232,7 @@ public class LinkageMonitor {
       }
     }
 
+    message.append("\n");
     for (Path problematicJar : problematicJars.build()) {
       message.append(problematicJar.getFileName() + " is at:\n");
       for (DependencyPath dependencyPath : jarToDependencyPaths.get(problematicJar)) {

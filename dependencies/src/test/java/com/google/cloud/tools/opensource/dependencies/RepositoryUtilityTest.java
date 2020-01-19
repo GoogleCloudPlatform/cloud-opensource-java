@@ -18,6 +18,8 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
 import static com.google.common.truth.Correspondence.transforming;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
@@ -57,6 +59,19 @@ public class RepositoryUtilityTest {
     // the answer won't change.
     Assert.assertEquals(134, managedDependencies.size());
     Assert.assertEquals("com.google.cloud:google-cloud-bom:0.61.0-alpha", bom.getCoordinates());
+  }
+
+  @Test
+  public void testReadBom_coordinates_invalidRepository() throws ArtifactDescriptorException {
+    // This version is so old that it's very unlikely we have in Maven local cache but it exists in
+    // Maven central.
+    String coordinates = "com.google.cloud:google-cloud-bom:pom:0.32.0-alpha";
+    try {
+      RepositoryUtility.readBom(coordinates, ImmutableList.of("http://nonexistent.example.com"));
+      fail("readBom should not access Maven Central when it's not in the repository list.");
+    } catch (ArtifactDescriptorException ex) {
+      assertEquals("Failed to read artifact descriptor for " + coordinates, ex.getMessage());
+    }
   }
 
   @Test

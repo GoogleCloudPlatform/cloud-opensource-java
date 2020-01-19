@@ -16,6 +16,9 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
@@ -26,6 +29,7 @@ import java.util.List;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,9 +40,12 @@ public class DependencyGraphBuilderTest {
   private DefaultArtifact guava =
       new DefaultArtifact("com.google.guava:guava:25.1-jre");
 
+  private DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
+
   @Test
   public void testGetTransitiveDependencies() throws RepositoryException {
-    DependencyGraph graph = DependencyGraphBuilder.getTransitiveDependencies(datastore);
+    DependencyGraph graph =
+        dependencyGraphBuilder.getTransitiveDependencies(datastore).getDependencyGraph();
     List<DependencyPath> list = graph.list();
 
     Assert.assertTrue(list.size() > 10);
@@ -50,7 +57,8 @@ public class DependencyGraphBuilderTest {
 
   @Test
   public void testGetCompleteDependencies() throws RepositoryException {
-    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(datastore);
+    DependencyGraph graph =
+        dependencyGraphBuilder.getCompleteDependencies(datastore).getDependencyGraph();
     List<DependencyPath> paths = graph.list();
     Assert.assertTrue(paths.size() > 10);
 
@@ -75,8 +83,7 @@ public class DependencyGraphBuilderTest {
 
   @Test
   public void testGetDirectDependencies() throws RepositoryException {
-    List<Artifact> artifacts =
-        DependencyGraphBuilder.getDirectDependencies(guava);
+    List<Artifact> artifacts = dependencyGraphBuilder.getDirectDependencies(guava);
     List<String> coordinates = new ArrayList<>();
     for (Artifact artifact : artifacts) {
       coordinates.add(artifact.toString());
@@ -92,7 +99,9 @@ public class DependencyGraphBuilderTest {
 
     // This should not raise DependencyResolutionException
     DependencyGraph completeDependencies =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(ImmutableList.of(log4j2));
+        dependencyGraphBuilder
+            .getStaticLinkageCheckDependencyGraph(ImmutableList.of(log4j2))
+            .getDependencyGraph();
     Truth.assertThat(completeDependencies.list()).isNotEmpty();
   }
 
@@ -100,8 +109,9 @@ public class DependencyGraphBuilderTest {
   public void testGetStaticLinkageCheckDependencyGraph_multipleArtifacts()
       throws RepositoryException {
     DependencyGraph graph =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
-            Arrays.asList(datastore, guava));
+        dependencyGraphBuilder
+            .getStaticLinkageCheckDependencyGraph(Arrays.asList(datastore, guava))
+            .getDependencyGraph();
 
     List<DependencyPath> list = graph.list();
     Assert.assertTrue(list.size() > 10);
@@ -122,7 +132,7 @@ public class DependencyGraphBuilderTest {
     Artifact nettyArtifact = new DefaultArtifact("io.netty:netty-all:4.1.31.Final");
 
     // Without system properties "os.detected.arch" and "os.detected.name", this would fail.
-    List<Artifact> artifacts = DependencyGraphBuilder.getDirectDependencies(nettyArtifact);
+    List<Artifact> artifacts = dependencyGraphBuilder.getDirectDependencies(nettyArtifact);
     Truth.assertThat(artifacts).isNotEmpty();
   }
 
@@ -133,7 +143,9 @@ public class DependencyGraphBuilderTest {
     Artifact grpcProtobuf = new DefaultArtifact("io.grpc:grpc-protobuf:1.25.0");
 
     DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(ImmutableList.of(grpcProtobuf));
+        dependencyGraphBuilder
+            .getStaticLinkageCheckDependencyGraph(ImmutableList.of(grpcProtobuf))
+            .getDependencyGraph();
 
     Correspondence<DependencyPath, String> pathToArtifactKey =
         Correspondence.transforming(
@@ -142,5 +154,60 @@ public class DependencyGraphBuilderTest {
     Truth.assertThat(dependencyGraph.list())
         .comparingElementsUsing(pathToArtifactKey)
         .doesNotContain("com.google.protobuf:protobuf-lite");
+  }
+
+  @Test
+  public void testGetDirectDependencies_respectExclusions() throws RepositoryException {
+    // hibernate-core declares jboss-jacc-api_JDK4 dependency excluding jboss-servlet-api_3.0.
+    // jboss-jacc-api_JDK4 depends on jboss-servlet-api_3.0:1.0-SNAPSHOT, which is unavailable.
+    // DependencyGraphBuilder should respect the exclusion and should not try to download
+    // jboss-servlet-api_3.0:1.0-SNAPSHOT.
+    Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
+
+    DependencyGraphResult result =
+        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
+            ImmutableList.of(hibernateCore));
+
+    ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
+    for (UnresolvableArtifactProblem problem : problems) {
+      Truth.assertThat(problem.toString()).doesNotContain("jboss-servlet-api_3.0");
+    }
+  }
+
+  @Test
+  public void testConfigureAdditionalMavenRepositories_addingGoogleAndroidRepository()
+      throws RepositoryException {
+    // Previously this test was using https://repo.spring.io/milestone and artifact
+    // org.springframework:spring-asm:3.1.0.RC2 but the repository was not stable.
+    DependencyGraphBuilder graphBuilder =
+        new DependencyGraphBuilder(ImmutableList.of("https://dl.google.com/dl/android/maven2"));
+
+    // This artifact does not exist in Maven central, but it is in Android repository
+    Artifact artifact = new DefaultArtifact("androidx.lifecycle:lifecycle-common-java8:2.0.0");
+
+    // This should not raise an exception
+    DependencyGraphResult graph = graphBuilder.getCompleteDependencies(artifact);
+    assertNotNull(graph.getDependencyGraph());
+  }
+
+  @Test
+  public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral()
+      throws RepositoryException {
+    boolean addMavenCentral = false;
+    DependencyGraphBuilder graphBuilder =
+        new DependencyGraphBuilder(ImmutableList.of("https://dl.google.com/dl/android/maven2"));
+
+    // This artifact does not exist in Android's repository
+    Artifact artifact = new DefaultArtifact("com.google.guava:guava:28.2-jre");
+
+    try {
+      graphBuilder.getCompleteDependencies(artifact);
+      fail("The dependency resolution should fail if Maven Central is not used");
+    } catch (DependencyResolutionException ex) {
+      Truth.assertThat(ex.getMessage())
+          .startsWith(
+              "Could not find artifact com.google.guava:guava:jar:28.2-jre in "
+                  + " (https://dl.google.com/dl/android/maven2)");
+    }
   }
 }
