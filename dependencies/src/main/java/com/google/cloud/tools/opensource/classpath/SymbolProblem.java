@@ -23,8 +23,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
- * A missing or incompatible symbol. This constitutes the cause of a linkage error (without the
- * source class).
+ * A missing or incompatible symbol that causes a linkage error.
  *
  * @see <a
  *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#linkage-error">
@@ -57,12 +56,10 @@ public final class SymbolProblem {
   }
 
   /**
-   * Returns the referenced class that contains the symbol. Null when the target class is not found
-   * in the class path (this is the case if the errorType is {@code CLASS_NOT_FOUND} for top-level
-   * classes).
-   *
-   * <p>In case of a nested class is missing while its outer class is found in the class path, this
-   * method returns the outer class.
+   * Returns the class that references the symbol. If the symbol is a method or a field,
+   * then this is the class where the symbol was expected to be found.
+   * If the symbol is an inner class, this is the outer class that was expected 
+   * to contain the inner class. If the symbol is an outer class, this is null.
    */
   @Nullable
   public ClassFile getContainingClass() {
