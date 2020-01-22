@@ -54,7 +54,8 @@ public class ClassDumperTest {
 
   private static final Correspondence<Symbol, String> SYMBOL_TARGET_CLASS_NAME =
       Correspondence.from(
-          (actual, expected) -> actual.getClassBinaryName().equals(expected), "has class name equal to");
+          (actual, expected) -> actual.getClassBinaryName().equals(expected),
+          "has class name equal to");
 
   private InputStream classFileInputStream;
 

@@ -39,9 +39,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
@@ -185,10 +183,8 @@ public class DashboardMain {
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
     ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies);
-    ImmutableListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        classPathResult.getDependencyPaths();
     // LinkedListMultimap preserves the key order
-    ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
+    ImmutableList<Path> classpath = classPathResult.getClassPath();
 
     // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
     List<Path> artifactJarsInBom = classpath.subList(0, managedDependencies.size());
@@ -200,7 +196,7 @@ public class DashboardMain {
         linkageChecker.findSymbolProblems();
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
-    Path output = generateHtml(bom, cache, jarToDependencyPaths, symbolProblems);
+    Path output = generateHtml(bom, cache, classPathResult, symbolProblems);
 
     return output;
   }
@@ -213,7 +209,7 @@ public class DashboardMain {
   private static Path generateHtml(
       Bom bom,
       ArtifactCache cache,
-      ImmutableListMultimap<Path, DependencyPath> jarToDependencyPaths,
+      ClassPathResult classPathResult,
       ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems)
       throws IOException, TemplateException, URISyntaxException {
 
@@ -232,7 +228,7 @@ public class DashboardMain {
 
     List<ArtifactResults> table =
         generateReports(
-            freemarkerConfiguration, output, cache, symbolProblemTable, jarToDependencyPaths, bom);
+            freemarkerConfiguration, output, cache, symbolProblemTable, classPathResult, bom);
 
     generateDashboard(
         freemarkerConfiguration,
@@ -240,7 +236,7 @@ public class DashboardMain {
         table,
         cache.getGlobalDependencies(),
         symbolProblemTable,
-        jarToDependencyPaths,
+        classPathResult,
         bom);
 
     return output;
@@ -269,13 +265,14 @@ public class DashboardMain {
    * dependency tree of the BOM members.
    */
   private static ImmutableSetMultimap<String, Path> bomMemberToJars(
-      ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
+      ClassPathResult classPathResult) {
     ImmutableSetMultimap.Builder<String, Path> bomMemberToJars = ImmutableSetMultimap.builder();
-    jarToDependencyPaths.forEach(
-        (path, dependencyPath) -> {
-          Artifact artifact = dependencyPath.get(0);
-          bomMemberToJars.put(Artifacts.toCoordinates(artifact), path);
-        });
+    for (Path path : classPathResult.getClassPath()) {
+      for (DependencyPath dependencyPath : classPathResult.getDependencyPaths(path)) {
+        Artifact artifact = dependencyPath.get(0);
+        bomMemberToJars.put(Artifacts.toCoordinates(artifact), path);
+      }
+    }
 
     return bomMemberToJars.build();
   }
@@ -286,10 +283,10 @@ public class DashboardMain {
       Path output,
       ArtifactCache cache,
       ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
-      ListMultimap<Path, DependencyPath> jarToDependencyPaths,
+      ClassPathResult classPathResult,
       Bom bom) {
 
-    ImmutableSetMultimap<String, Path> bomMemberToJars = bomMemberToJars(jarToDependencyPaths);
+    ImmutableSetMultimap<String, Path> bomMemberToJars = bomMemberToJars(classPathResult);
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();
@@ -315,7 +312,7 @@ public class DashboardMain {
                   entry.getValue(),
                   cache.getGlobalDependencies(),
                   ImmutableMap.copyOf(relevantSymbolProblemTable),
-                  jarToDependencyPaths,
+                  classPathResult,
                   bom);
           table.add(results);
         }
@@ -374,7 +371,7 @@ public class DashboardMain {
       ArtifactInfo artifactInfo,
       List<DependencyGraph> globalDependencies,
       ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
-      ListMultimap<Path, DependencyPath> jarToDependencyPaths,
+      ClassPathResult classPathResult,
       Bom bom)
       throws IOException, TemplateException {
 
@@ -410,13 +407,6 @@ public class DashboardMain {
           DependencyTreeFormatter.buildDependencyPathTree(dependencyPaths);
       Template report = configuration.getTemplate("/templates/component.ftl");
 
-      // Jar to DependencyPaths which start with the artifact for this report
-      ImmutableMultimap<Path, DependencyPath> jarToDependencyPathsForArtifact =
-          ImmutableMultimap.copyOf(Multimaps.filterValues(
-              jarToDependencyPaths,
-              dependencyPath -> coordinates
-                  .equals(Artifacts.toCoordinates(dependencyPath.get(0)))));
-
       Map<String, Object> templateData = new HashMap<>();
       templateData.put("artifact", artifact);
       templateData.put("updates", convergenceIssues);
@@ -426,7 +416,7 @@ public class DashboardMain {
       templateData.put("dependencyTree", dependencyTree);
       templateData.put("dependencyRootNode", Iterables.getFirst(dependencyTree.values(), null));
       templateData.put("symbolProblems", symbolProblemTable);
-      templateData.put("jarToDependencyPaths", jarToDependencyPathsForArtifact);
+      templateData.put("classPathResult", classPathResult);
       templateData.put("totalLinkageErrorCount", totalLinkageErrorCount);
       templateData.put("coordinates", bom.getCoordinates());
       report.process(templateData, out);
@@ -497,7 +487,7 @@ public class DashboardMain {
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
       ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
-      ListMultimap<Path, DependencyPath> jarToDependencyPaths,
+      ClassPathResult classPathResult,
       Bom bom)
       throws IOException, TemplateException {
 
@@ -508,8 +498,8 @@ public class DashboardMain {
     templateData.put("lastUpdated", LocalDateTime.now());
     templateData.put("latestArtifacts", latestArtifacts);
     templateData.put("symbolProblems", symbolProblemTable);
-    templateData.put("jarToDependencyPaths", jarToDependencyPaths);
-    templateData.put("dependencyPathRootCauses", findRootCauses(jarToDependencyPaths));
+    templateData.put("classPathResult", classPathResult);
+    templateData.put("dependencyPathRootCauses", findRootCauses(classPathResult));
     templateData.put("coordinates", bom.getCoordinates());
 
     // Accessing static methods from Freemarker template
@@ -587,17 +577,16 @@ public class DashboardMain {
    *
    * <p>Using this summary in the BOM dashboard avoids repetitive items in the {@link
    * DependencyPath} list that share the same root problem caused by widely-used libraries, for
-   * example, {@code commons-logging:commons-logging}, {@code com.google.http-client:google-http-client}
-   * and {@code log4j:log4j}.
+   * example, {@code commons-logging:commons-logging}, {@code
+   * com.google.http-client:google-http-client} and {@code log4j:log4j}.
    */
-  private static ImmutableMap<String, String> findRootCauses(
-      ListMultimap<Path, DependencyPath> jarToDependencyPaths) {
+  private static ImmutableMap<String, String> findRootCauses(ClassPathResult classPathResult) {
     // Freemarker is not good at handling non-string key. Path object in .ftl is automatically
     // converted to String. https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
-    for (Path jar : jarToDependencyPaths.keySet()) {
-      List<DependencyPath> dependencyPaths = jarToDependencyPaths.get(jar);
+    for (Path jar : classPathResult.getClassPath()) {
+      List<DependencyPath> dependencyPaths = classPathResult.getDependencyPaths(jar);
 
       ImmutableList<String> commonVersionlessArtifacts =
           commonVersionlessArtifacts(dependencyPaths);

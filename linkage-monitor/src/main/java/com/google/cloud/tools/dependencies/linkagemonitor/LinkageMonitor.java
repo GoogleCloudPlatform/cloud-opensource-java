@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.MoreFiles;
 import java.io.IOException;
@@ -185,8 +184,7 @@ public class LinkageMonitor {
     Set<SymbolProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newProblems.isEmpty()) {
       logger.severe(
-          messageForNewErrors(
-              snapshotSymbolProblems, problemsInBaseline, classPathResult.getDependencyPaths()));
+          messageForNewErrors(snapshotSymbolProblems, problemsInBaseline, classPathResult));
       int errorSize = newProblems.size();
       throw new LinkageMonitorException(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
@@ -208,7 +206,7 @@ public class LinkageMonitor {
   static String messageForNewErrors(
       ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems,
       Set<SymbolProblem> baselineProblems,
-      Multimap<Path, DependencyPath> jarToDependencyPaths) {
+      ClassPathResult classPathResult) {
     Set<SymbolProblem> newProblems =
         Sets.difference(snapshotSymbolProblems.keySet(), baselineProblems);
     StringBuilder message =
@@ -235,7 +233,7 @@ public class LinkageMonitor {
     message.append("\n");
     for (Path problematicJar : problematicJars.build()) {
       message.append(problematicJar.getFileName() + " is at:\n");
-      for (DependencyPath dependencyPath : jarToDependencyPaths.get(problematicJar)) {
+      for (DependencyPath dependencyPath : classPathResult.getDependencyPaths(problematicJar)) {
         message.append("  " + dependencyPath + "\n");
       }
     }

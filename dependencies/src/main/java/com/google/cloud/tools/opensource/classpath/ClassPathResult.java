@@ -21,17 +21,30 @@ import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProble
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
 import java.nio.file.Path;
 
 /** Result of class path resolution with {@link UnresolvableArtifactProblem}s if any. */
 public final class ClassPathResult {
 
   private final ImmutableList<Path> classPath;
+
+  /**
+   * An ordered map of absolute paths of JAR files to one or more Maven dependency paths.
+   *
+   * <p>The keys of the returned map represent jar files of {@code artifacts} and their transitive
+   * dependencies. The return value of {@link LinkedListMultimap#keySet()} preserves key iteration
+   * order.
+   *
+   * <p>The values of the returned map for a key (jar file) represent the different Maven dependency
+   * paths from {@code artifacts} to the Maven artifact of the jar file.
+   */
   private final ImmutableListMultimap<Path, DependencyPath> dependencyPaths;
+
   private final ImmutableList<UnresolvableArtifactProblem> artifactProblems;
 
-  ClassPathResult(
-      LinkedListMultimap<Path, DependencyPath> dependencyPaths,
+  public ClassPathResult(
+      Multimap<Path, DependencyPath> dependencyPaths,
       Iterable<UnresolvableArtifactProblem> artifactProblems) {
     this.dependencyPaths = ImmutableListMultimap.copyOf(dependencyPaths);
     this.classPath = ImmutableList.copyOf(dependencyPaths.keySet());
@@ -45,17 +58,11 @@ public final class ClassPathResult {
   }
 
   /**
-   * Returns an ordered map of absolute paths of JAR files to one or more Maven dependency paths.
-   *
-   * <p>The keys of the returned map represent jar files of {@code artifacts} and their transitive
-   * dependencies. The return value of {@link LinkedListMultimap#keySet()} preserves key iteration
-   * order.
-   *
-   * <p>The values of the returned map for a key (jar file) represent the different Maven dependency
-   * paths from {@code artifacts} to the Maven artifact of the jar file.
+   * Returns the dependency path to the JAR file. An empty list if the JAR file is not in the class
+   * path.
    */
-  public ImmutableListMultimap<Path, DependencyPath> getDependencyPaths() {
-    return dependencyPaths;
+  public ImmutableList<DependencyPath> getDependencyPaths(Path jar) {
+    return dependencyPaths.get(jar);
   }
 
   /** Returns problems encountered while constructing the dependency graph. */

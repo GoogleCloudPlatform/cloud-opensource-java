@@ -18,14 +18,11 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
@@ -33,7 +30,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -57,10 +53,9 @@ public class ClassPathBuilderTest {
   @Test
   public void testResolve_removingDuplicates() throws RepositoryException {
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
-    ListMultimap<Path, DependencyPath> multimap =
-        classPathBuilder.resolve(ImmutableList.of(grpcArtifact)).getDependencyPaths();
+    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(grpcArtifact));
 
-    Set<Path> paths = multimap.keySet();
+    ImmutableList<Path> paths = result.getClassPath();
     long jsr305Count = paths.stream().filter(path -> path.toString().contains("jsr305-")).count();
     Truth.assertWithMessage("There should not be duplicated versions for jsr305")
         .that(jsr305Count)
@@ -71,7 +66,7 @@ public class ClassPathBuilderTest {
     Truth8.assertThat(opencensusApiPathFound).isPresent();
     Path opencensusApiPath = opencensusApiPathFound.get();
     Truth.assertWithMessage("Opencensus API should have multiple dependency paths")
-        .that(multimap.get(opencensusApiPath).size())
+        .that(result.getDependencyPaths(opencensusApiPath).size())
         .isGreaterThan(1);
   }
 
@@ -84,11 +79,10 @@ public class ClassPathBuilderTest {
         RepositoryUtility.readBom("com.google.cloud:google-cloud-bom:0.81.0-alpha")
         .getManagedDependencies();
 
-    ImmutableListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        classPathBuilder.resolve(managedDependencies).getDependencyPaths();
+    ImmutableList<Path> classPath = classPathBuilder.resolve(managedDependencies).getClassPath();
 
-    ImmutableList<Path> paths = ImmutableList.copyOf(jarToDependencyPaths.keySet());
-    
+    ImmutableList<Path> paths = ImmutableList.copyOf(classPath);
+
     Truth.assertThat(paths.get(0).getFileName().toString()).isEqualTo(
         "api-common-1.7.0.jar"); // first element in the BOM
     int bomSize = managedDependencies.size();
@@ -100,10 +94,8 @@ public class ClassPathBuilderTest {
   public void testResolve() throws RepositoryException {
 
     Artifact grpcAuth = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
-    ImmutableListMultimap<Path, DependencyPath> dependencyPaths =
-        classPathBuilder.resolve(ImmutableList.of(grpcAuth)).getDependencyPaths();
 
-    Set<Path> paths = dependencyPaths.keySet();
+    ImmutableList<Path> paths = classPathBuilder.resolve(ImmutableList.of(grpcAuth)).getClassPath();
 
     Truth.assertThat(paths)
         .comparingElementsUsing(PATH_FILE_NAMES)

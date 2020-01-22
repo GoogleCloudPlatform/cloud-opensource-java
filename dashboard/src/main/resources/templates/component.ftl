@@ -140,7 +140,7 @@
 
     <p id="linkage-errors-total">${totalLinkageErrorCount} linkage error(s)</p>
     <#list symbolProblems as jar, problemsToClasses>
-      <@formatJarLinkageReport jar problemsToClasses jarToDependencyPaths {} />
+      <@formatJarLinkageReport jar problemsToClasses classPathResult {} />
     </#list>
 
     <h2>Dependencies</h2>
