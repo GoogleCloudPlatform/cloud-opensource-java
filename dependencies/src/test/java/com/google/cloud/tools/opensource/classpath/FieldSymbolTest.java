@@ -28,7 +28,7 @@ public class FieldSymbolTest {
   @Test
   public void testFieldSymbolCreation() {
     FieldSymbol fieldSymbol = new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I");
-    assertEquals("java.lang.Integer", fieldSymbol.getClassName());
+    assertEquals("java.lang.Integer", fieldSymbol.getClassBinaryName());
     assertEquals("MAX_VALUE", fieldSymbol.getName());
     assertEquals("I", fieldSymbol.getDescriptor());
   }

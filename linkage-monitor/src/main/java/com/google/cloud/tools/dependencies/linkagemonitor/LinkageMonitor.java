@@ -165,7 +165,7 @@ public class LinkageMonitor {
 
     ImmutableList<Artifact> snapshotManagedDependencies = snapshot.getManagedDependencies();
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        ClassPathBuilder.artifactsToDependencyPaths(snapshotManagedDependencies);
+        (new ClassPathBuilder()).artifactsToDependencyPaths(snapshotManagedDependencies);
     ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
     List<Path> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 
@@ -227,7 +227,7 @@ public class LinkageMonitor {
         message.append(
             String.format(
                 "  referenced from %s (%s)\n",
-                classFile.getClassName(), classFile.getJar().getFileName()));
+                classFile.getBinaryName(), classFile.getJar().getFileName()));
         problematicJars.add(classFile.getJar());
       }
     }

@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import java.util.List;
-
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -42,9 +41,9 @@ class DirectReport {
     System.out.println();
     
     Artifact input = new DefaultArtifact(args[0]);
-    List<Artifact> dependencies =
-        DependencyGraphBuilder.getDirectDependencies(input);
-    
+    DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
+    List<Artifact> dependencies = dependencyGraphBuilder.getDirectDependencies(input);
+
     for (Artifact artifact : dependencies) {
       System.out.println("  <dependency>");
       System.out.println("    <groupId>" + artifact.getGroupId() + "</groupId>");

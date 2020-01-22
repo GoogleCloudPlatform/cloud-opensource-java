@@ -104,6 +104,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    */
   private boolean reportOnlyReachable = false;
 
+  private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
+
   @VisibleForTesting
   void setDependencySection(DependencySection dependencySection) {
     this.dependencySection = dependencySection;
@@ -194,7 +196,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
           symbolProblems =
               symbolProblems.entries().stream()
-                  .filter(entry -> classReferenceGraph.isReachable(entry.getValue().getClassName()))
+                  .filter(entry -> classReferenceGraph.isReachable(entry.getValue().getBinaryName()))
                   .collect(
                       ImmutableSetMultimap.toImmutableSetMultimap(Entry::getKey, Entry::getValue));
         }
@@ -279,9 +281,6 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
   /**
    * Returns class path built from partial dependency graph of {@code resolutionException}.
-   *
-   * @throws EnforcerRuleException when {@code resolutionException} is invalidated by {@link
-   *     DependencyGraphBuilder#requiredDependency(List)}
    */
   private ImmutableList<Path> buildClasspathFromException(
       DependencyResolutionException resolutionException) throws EnforcerRuleException {
@@ -348,7 +347,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
               .map(Dependency::getArtifact)
               .filter(artifact -> !shouldSkipBomMember(artifact))
               .collect(toImmutableList());
-      return ClassPathBuilder.artifactsToClasspath(artifacts);
+      return classPathBuilder.artifactsToClasspath(artifacts);
     } catch (RepositoryException ex) {
       throw new EnforcerRuleException("Failed to collect dependency " + ex.getMessage(), ex);
     }

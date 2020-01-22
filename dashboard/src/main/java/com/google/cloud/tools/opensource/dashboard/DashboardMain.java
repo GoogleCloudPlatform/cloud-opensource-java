@@ -27,6 +27,7 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphResult;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
@@ -88,6 +89,10 @@ public class DashboardMain {
   public static final String TEST_NAME_DEPENDENCY_CONVERGENCE = "Dependency Convergence";
 
   private static final Configuration freemarkerConfiguration = configureFreemarker();
+
+  private static final DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
+  private static final ClassPathBuilder classPathBuilder =
+      new ClassPathBuilder(dependencyGraphBuilder);
 
   /**
    * Generates a code hygiene dashboard for a BOM. This tool takes a path to pom.xml of the BOM as
@@ -179,7 +184,7 @@ public class DashboardMain {
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
     LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        ClassPathBuilder.artifactsToDependencyPaths(managedDependencies);
+        classPathBuilder.artifactsToDependencyPaths(managedDependencies);
     // LinkedListMultimap preserves the key order
     ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
 
@@ -335,13 +340,15 @@ public class DashboardMain {
 
     for (Artifact artifact : artifacts) {
       try {
-        DependencyGraph completeDependencies =
-            DependencyGraphBuilder.getCompleteDependencies(artifact);
+        DependencyGraphResult completeDependencyResult =
+            dependencyGraphBuilder.getCompleteDependencies(artifact);
+        DependencyGraph completeDependencies = completeDependencyResult.getDependencyGraph();
         globalDependencies.add(completeDependencies);
 
         // picks versions according to Maven rules
-        DependencyGraph transitiveDependencies =
-            DependencyGraphBuilder.getTransitiveDependencies(artifact);
+        DependencyGraphResult transitiveDependencyResult =
+            dependencyGraphBuilder.getTransitiveDependencies(artifact);
+        DependencyGraph transitiveDependencies = transitiveDependencyResult.getDependencyGraph();
 
         ArtifactInfo info = new ArtifactInfo(completeDependencies, transitiveDependencies);
         infoMap.put(artifact, info);
@@ -478,7 +485,7 @@ public class DashboardMain {
             entries ->
                 ImmutableSetMultimap.copyOf(
                     Multimaps.transformValues(
-                        ImmutableSetMultimap.copyOf(entries), ClassFile::getClassName))));
+                        ImmutableSetMultimap.copyOf(entries), ClassFile::getBinaryName))));
   }
 
   @VisibleForTesting

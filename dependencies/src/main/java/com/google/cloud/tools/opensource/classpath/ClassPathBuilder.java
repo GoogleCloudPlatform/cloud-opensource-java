@@ -17,8 +17,8 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphResult;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
@@ -39,7 +39,17 @@ import org.eclipse.aether.artifact.Artifact;
  *     href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies">
  *     Maven: Introduction to the Dependency Mechanism</a>
  */
-public class ClassPathBuilder {
+public final class ClassPathBuilder {
+
+  private final DependencyGraphBuilder dependencyGraphBuilder;
+
+  public ClassPathBuilder() {
+    this(new DependencyGraphBuilder());
+  }
+
+  public ClassPathBuilder(DependencyGraphBuilder dependencyGraphBuilder) {
+    this.dependencyGraphBuilder = dependencyGraphBuilder;
+  }
 
   /**
    * Finds jar file paths for Maven artifacts and their transitive dependencies, using Maven's
@@ -49,7 +59,7 @@ public class ClassPathBuilder {
    * @return list of absolute paths to jar files
    * @throws RepositoryException when there is a problem retrieving jar files
    */
-  public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
+  public ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
       throws RepositoryException {
 
     // LinkedListMultimap keeps the key order as they were first added to the multimap
@@ -74,7 +84,7 @@ public class ClassPathBuilder {
    * @return an ordered map of absolute paths of jar files to one or more Maven dependency paths
    * @throws RepositoryException when there is a problem retrieving jar files
    */
-  public static LinkedListMultimap<Path, DependencyPath> artifactsToDependencyPaths(
+  public LinkedListMultimap<Path, DependencyPath> artifactsToDependencyPaths(
       List<Artifact> artifacts) throws RepositoryException {
 
     LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
@@ -82,9 +92,9 @@ public class ClassPathBuilder {
       return multimap;
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
-    DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(artifacts);
-    List<DependencyPath> dependencyPaths = dependencyGraph.list();
+    DependencyGraphResult result =
+        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(artifacts);
+    List<DependencyPath> dependencyPaths = result.getDependencyGraph().list();
 
     // To remove duplicates on (groupId:artifactId) for dependency mediation
     Map<String, String> keyToFirstArtifactVersion = Maps.newHashMap();
@@ -117,5 +127,4 @@ public class ClassPathBuilder {
     }
     return multimap;
   }
-
 }
