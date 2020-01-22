@@ -29,7 +29,7 @@ public class MethodSymbolTest {
   public void testMethodSymbolCreation() {
     MethodSymbol methodSymbol =
         new MethodSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z", false);
-    assertEquals("java.lang.Object", methodSymbol.getClassName());
+    assertEquals("java.lang.Object", methodSymbol.getClassBinaryName());
     assertEquals("equals", methodSymbol.getName());
     assertEquals("(Ljava/lang/Object;)Z", methodSymbol.getDescriptor());
   }

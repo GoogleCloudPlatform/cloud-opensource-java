@@ -28,7 +28,7 @@ public class SuperClassSymbolTest {
   @Test
   public void testClassSymbolCreation() {
     SuperClassSymbol classSymbol = new SuperClassSymbol("java.lang.Object");
-    assertEquals("java.lang.Object", classSymbol.getClassName());
+    assertEquals("java.lang.Object", classSymbol.getClassBinaryName());
   }
 
   @Test
