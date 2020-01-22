@@ -41,7 +41,7 @@ public final class SymbolProblem {
 
     // After finding symbol problem, there is no need to have SuperClassSymbol over ClassSymbol.
     this.symbol =
-        symbol instanceof SuperClassSymbol ? new ClassSymbol(symbol.getClassName()) : symbol;
+        symbol instanceof SuperClassSymbol ? new ClassSymbol(symbol.getClassBinaryName()) : symbol;
     this.errorType = checkNotNull(errorType);
     this.containingClass = containingClass;
   }
@@ -112,7 +112,7 @@ public final class SymbolProblem {
                       problem, referenceCount, referenceCount > 1 ? "s" : ""));
               classFiles.forEach(
                   classFile -> {
-                    output.append("    " + classFile.getClassName());
+                    output.append("    " + classFile.getBinaryName());
                     output.append(" (" + classFile.getJar().getFileName() + ")\n");
                   });
             });

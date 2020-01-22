@@ -54,7 +54,7 @@ public class LinkageCheckerTest {
 
   private static final Correspondence<SymbolProblem, String> HAS_SYMBOL_IN_CLASS =
       Correspondence.transforming(
-          (SymbolProblem problem) -> problem.getSymbol().getClassName(),
+          (SymbolProblem problem) -> problem.getSymbol().getClassBinaryName(),
           "has symbol in class with name");
 
   private static DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
@@ -129,7 +129,7 @@ public class LinkageCheckerTest {
     // Array's clone is available in Java runtime and thus should not be reported as linkage error
     long arraySymbolProblemCount =
         linkageChecker.findSymbolProblems().keys().stream()
-            .filter(problem -> problem.getSymbol().getClassName().startsWith("["))
+            .filter(problem -> problem.getSymbol().getClassBinaryName().startsWith("["))
             .count();
     assertEquals(0, arraySymbolProblemCount);
   }
@@ -390,7 +390,7 @@ public class LinkageCheckerTest {
 
     // There should be an error reported for the reference
     Truth8.assertThat(problemFound).isPresent();
-    assertEquals(guavaClass, problemFound.get().getSymbol().getClassName());
+    assertEquals(guavaClass, problemFound.get().getSymbol().getClassBinaryName());
   }
 
   @Test
@@ -524,7 +524,7 @@ public class LinkageCheckerTest {
             new ClassFile(paths.get(0), "com.google.firestore.v1beta1.FirestoreGrpc"),
             new ClassSymbol(nonExistentClassName));
     assertSame(ErrorType.CLASS_NOT_FOUND, problemFound.get().getErrorType());
-    assertEquals(nonExistentClassName, problemFound.get().getSymbol().getClassName());
+    assertEquals(nonExistentClassName, problemFound.get().getSymbol().getClassBinaryName());
   }
 
   @Test
@@ -588,7 +588,7 @@ public class LinkageCheckerTest {
 
     long innerClassCount =
         symbolProblems.values().stream()
-            .map(ClassFile::getClassName)
+            .map(ClassFile::getBinaryName)
             .filter(className -> className.contains("$"))
             .count();
     assertEquals(0L, innerClassCount);
@@ -898,7 +898,7 @@ public class LinkageCheckerTest {
                 problem ->
                     problem
                         .getSymbol()
-                        .getClassName()
+                        .getClassBinaryName()
                         .equals("com.oracle.graal.pointsto.meta.AnalysisType")));
     assertFalse(
         "GraalVM's NodeSourcePosition, whose superclass is missing, should not be reported",
@@ -907,7 +907,7 @@ public class LinkageCheckerTest {
                 problem ->
                     problem
                         .getSymbol()
-                        .getClassName()
+                        .getClassBinaryName()
                         .equals("org.graalvm.compiler.graph.NodeSourcePosition")));
   }
 

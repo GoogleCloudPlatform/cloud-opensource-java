@@ -21,11 +21,14 @@ import org.eclipse.aether.artifact.Artifact;
 /**
  * Common utilities for operating on {@code org.eclipse.aether.artifact.Artifact} objects.
  */
-public class Artifacts {
+public final class Artifacts {
+  
+  private Artifacts() {
+  }
 
   /**
-   * Returns the artifact's Maven coordinates in the form groupId:artifactId:version.
-   * Repo and packaging are not included.
+   * Returns the artifact's Maven coordinates in the form groupId:artifactId:version. Repo and
+   * packaging are not included.
    */
   public static String toCoordinates(Artifact artifact) {
     return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion();

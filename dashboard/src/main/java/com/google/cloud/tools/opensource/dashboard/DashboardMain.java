@@ -487,7 +487,7 @@ public class DashboardMain {
             entries ->
                 ImmutableSetMultimap.copyOf(
                     Multimaps.transformValues(
-                        ImmutableSetMultimap.copyOf(entries), ClassFile::getClassName))));
+                        ImmutableSetMultimap.copyOf(entries), ClassFile::getBinaryName))));
   }
 
   @VisibleForTesting

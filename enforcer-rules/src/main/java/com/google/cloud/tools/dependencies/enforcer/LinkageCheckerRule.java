@@ -196,7 +196,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
           symbolProblems =
               symbolProblems.entries().stream()
-                  .filter(entry -> classReferenceGraph.isReachable(entry.getValue().getClassName()))
+                  .filter(entry -> classReferenceGraph.isReachable(entry.getValue().getBinaryName()))
                   .collect(
                       ImmutableSetMultimap.toImmutableSetMultimap(Entry::getKey, Entry::getValue));
         }
