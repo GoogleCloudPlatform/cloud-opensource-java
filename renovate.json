@@ -4,8 +4,7 @@
   ],
   "ignorePaths": [
     "example-problems/**",
-    "boms/cloud-oss-bom/pom.xml",
-    "boms/convergence-check/pom.xml"
+    "boms/**"
   ],
   "separateMajorMinor": false,
   "semanticCommits": true,
