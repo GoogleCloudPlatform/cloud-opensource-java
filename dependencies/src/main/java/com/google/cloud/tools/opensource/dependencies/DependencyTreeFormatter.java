@@ -34,8 +34,8 @@ public class DependencyTreeFormatter {
    */
   static String formatDependencyPaths(List<DependencyPath> dependencyPaths) {
     StringBuilder stringBuilder = new StringBuilder();
-    // While Maven dependencies are resolved in level-order, printing text representing a tree
-    // requires traversing the items in pre-order
+    // While Maven dependencies are resolved in level-order, printing a tree
+    // requires traversing the items in pre-order.
     ListMultimap<DependencyPath, DependencyPath> tree = buildDependencyPathTree(dependencyPaths);
     // Empty dependency path is to retrieve children of root node
     formatDependencyPathTree(stringBuilder, tree, new DependencyPath());
@@ -60,16 +60,13 @@ public class DependencyTreeFormatter {
   }
 
   /**
-   * Builds ListMultimap that represents a Maven dependency tree of parent-children relationship.
+   * Returns a ListMultimap that represents a Maven dependency tree.
    * Each node in the tree has a corresponding key in the ListMultimap. The value associated with
-   * that key is a list of the children of the node. The root node is available at the first
+   * that key is a list of the children of the node. The root node is the first
    * element in {@code listMultimap.values()}.
    *
    * @param dependencyPaths dependency path instances without assuming any order
-   * @return ListMultimap representing a Maven dependency tree of parent-children relationship. Each
-   *     node in the tree has a corresponding key in the ListMultimap and the children of the node
-   *     are the values for the key in the map. The {@link DependencyPath} representing the root
-   *     Maven artifact is available at the first element in {@code listMultimap.values()}.
+   * @return ListMultimap representing a Maven dependency tree.
    */
   public static ListMultimap<DependencyPath, DependencyPath> buildDependencyPathTree(
       Collection<DependencyPath> dependencyPaths) {

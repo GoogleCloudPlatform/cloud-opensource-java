@@ -46,12 +46,12 @@ public final class DependencyPath {
     return path.size();
   }
 
-  /** Returns the artifact in the leaf (the furthest node from the node) of the path. */
+  /** Returns the artifact in the leaf (the furthest node from the root) of the path. */
   public Artifact getLeaf() {
     return path.get(size() - 1).getArtifact();
   }
 
-  /** Returns the list of artifact in the path. */
+  /** Returns the list of artifacts in the path. */
   public ImmutableList<Artifact> getArtifacts() {
     return path.stream().map(Node::getArtifact).collect(toImmutableList());
   }
