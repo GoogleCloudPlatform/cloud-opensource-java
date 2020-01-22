@@ -28,7 +28,7 @@ public class ClassInJarTest {
   @Test
   public void testCreation() {
     ClassFile classInJar = new ClassFile(Paths.get("foo", "bar.jar"), "com.test.Foo");
-    assertEquals("com.test.Foo", classInJar.getClassName());
+    assertEquals("com.test.Foo", classInJar.getBinaryName());
     assertEquals(Paths.get("foo", "bar.jar"), classInJar.getJar());
   }
 

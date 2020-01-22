@@ -24,6 +24,6 @@ public class ClassSymbol extends Symbol {
 
   @Override
   public String toString() {
-    return "Class " + getClassName();
+    return "Class " + getClassBinaryName();
   }
 }
