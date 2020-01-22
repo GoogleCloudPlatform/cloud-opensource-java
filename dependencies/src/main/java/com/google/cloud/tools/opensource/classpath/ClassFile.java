@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import java.nio.file.Path;
@@ -44,15 +45,14 @@ public final class ClassFile {
   /**
    * Returns the binary name of the class as defined by the 
    * <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-13.html#jls-13.1">Java
-   * Language Specification</a> and
-   * found in the .class files.
+   * Language Specification</a> and found in the .class file.
    */
   public String getBinaryName() {
     return binaryName;
   }
 
   /**
-   * Returns the outer class class if this class is an inner class.
+   * Returns the outer class if this class is an inner class.
    * Otherwise returns the instance itself.
    */
   ClassFile topLevelClassFile() {
