@@ -69,7 +69,7 @@ class LinkageCheckerMain {
       symbolProblems =
           ImmutableSetMultimap.copyOf(
               Multimaps.filterValues(
-                  symbolProblems, classFile -> graph.isReachable(classFile.getClassName())));
+                  symbolProblems, classFile -> graph.isReachable(classFile.getBinaryName())));
     }
 
     System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));

@@ -28,7 +28,7 @@ public class ClassSymbolTest {
   @Test
   public void testClassSymbolCreation() {
     ClassSymbol classSymbol = new ClassSymbol("java.lang.Object");
-    assertEquals("java.lang.Object", classSymbol.getClassName());
+    assertEquals("java.lang.Object", classSymbol.getClassBinaryName());
   }
 
   @Test
