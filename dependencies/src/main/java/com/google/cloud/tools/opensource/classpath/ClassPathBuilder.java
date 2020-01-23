@@ -52,44 +52,19 @@ public final class ClassPathBuilder {
   }
 
   /**
-   * Finds jar file paths for Maven artifacts and their transitive dependencies, using Maven's
-   * dependency mediation strategy.
-   *
-   * @param artifacts Maven artifacts to check
-   * @return list of absolute paths to jar files
-   * @throws RepositoryException when there is a problem retrieving jar files
-   */
-  public ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
-      throws RepositoryException {
-
-    // LinkedListMultimap keeps the key order as they were first added to the multimap
-    LinkedListMultimap<Path, DependencyPath> multimap = artifactsToDependencyPaths(artifacts);
-    return ImmutableList.copyOf(multimap.keySet());
-  }
-
-  /**
-   * Finds jar file paths and dependency paths for Maven artifacts and their transitive
-   * dependencies. When there are multiple versions of an artifact in the dependency tree, the
-   * closest to the root in breadth-first order is picked up. This 'pick closest' strategy follows
-   * Maven's dependency mediation.
-   *
-   * <p>The keys of the returned map represent jar files of {@code artifacts} and their transitive
-   * dependencies. The return value of {@link LinkedListMultimap#keySet()} preserves key iteration
-   * order.
-   *
-   * <p>The values of the returned map for a key (jar file) represent the different Maven dependency
-   * paths from {@code artifacts} to the Maven artifact of the jar file.
+   * Finds jar file paths and dependency paths for Maven artifacts and their transitive dependencies
+   * to build a list of JAR files (class path). When there are multiple versions of an artifact in
+   * the dependency tree, the closest to the root in breadth-first order is picked up. This 'pick
+   * closest' strategy follows Maven's dependency mediation.
    *
    * @param artifacts Maven artifacts to check. They are treated as the root of the dependency tree.
-   * @return an ordered map of absolute paths of jar files to one or more Maven dependency paths
    * @throws RepositoryException when there is a problem retrieving jar files
    */
-  public LinkedListMultimap<Path, DependencyPath> artifactsToDependencyPaths(
-      List<Artifact> artifacts) throws RepositoryException {
+  public ClassPathResult resolve(List<Artifact> artifacts) throws RepositoryException {
 
     LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
     if (artifacts.isEmpty()) {
-      return multimap;
+      return new ClassPathResult(multimap, ImmutableList.of());
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraphResult result =
@@ -125,6 +100,6 @@ public final class ClassPathBuilder {
       // the artifact of the same version is encountered, adds the dependency path to `multimap`.
       multimap.put(jarAbsolutePath, dependencyPath);
     }
-    return multimap;
+    return new ClassPathResult(multimap, result.getArtifactProblems());
   }
 }

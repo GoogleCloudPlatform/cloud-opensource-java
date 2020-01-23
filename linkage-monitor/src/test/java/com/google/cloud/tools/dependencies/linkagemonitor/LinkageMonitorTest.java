@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
+import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.cloud.tools.opensource.classpath.ErrorType;
 import com.google.cloud.tools.opensource.classpath.MethodSymbol;
@@ -130,7 +131,9 @@ public class LinkageMonitorTest {
         LinkageMonitor.messageForNewErrors(
             snapshotProblems,
             baselineProblems,
-            ImmutableListMultimap.of(jarA, dependencyPathToA, jarB, dependencyPathToB));
+            new ClassPathResult(
+                ImmutableListMultimap.of(jarA, dependencyPathToA, jarB, dependencyPathToB),
+                ImmutableList.of()));
     assertEquals(
         "Newly introduced problem:\n"
             + "(b-1.0.0.jar) io.grpc.protobuf.ProtoUtils's method"

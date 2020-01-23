@@ -8,7 +8,7 @@
   <#return plural?string(pluralNoun, singularNoun)>
 </#function>
 
-<#macro formatJarLinkageReport jar problemsWithClass jarToDependencyPaths dependencyPathRootCauses>
+<#macro formatJarLinkageReport jar problemsWithClass classPathResult dependencyPathRootCauses>
   <!-- problemsWithClass: ImmutableSetMultimap<SymbolProblem, String> converted to
     ImmutableMap<SymbolProblem, Collection<String>> to get key and set of values in Freemarker -->
   <#assign problemsToClasses = problemsWithClass.asMap() />
@@ -47,14 +47,14 @@
     </ul>
   </#list>
   <#list jarsInProblem?values as jarInProblem>
-    <@showDependencyPath dependencyPathRootCauses jarToDependencyPaths jarInProblem />
+    <@showDependencyPath dependencyPathRootCauses classPathResult jarInProblem />
   </#list>
-  <@showDependencyPath dependencyPathRootCauses jarToDependencyPaths jar />
+  <@showDependencyPath dependencyPathRootCauses classPathResult jar />
 
 </#macro>
 
-<#macro showDependencyPath dependencyPathRootCauses jarToDependencyPaths jar>
-  <#assign dependencyPaths = jarToDependencyPaths.get(jar) />
+<#macro showDependencyPath dependencyPathRootCauses classPathResult jar>
+  <#assign dependencyPaths = classPathResult.getDependencyPaths(jar) />
   <p class="linkage-check-dependency-paths">
     The following ${plural(dependencyPaths?size, "path contains", "paths contain")} ${jar.getFileName()?html}:
   </p>
