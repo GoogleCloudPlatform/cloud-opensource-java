@@ -402,4 +402,19 @@ public class ClassDumperTest {
     // This should not raise an exception
     assertFalse(classDumper.catchesLinkageError(innerClass));
   }
+
+  @Test
+  public void testFindSymbolReferences_catchClassFormatException()
+      throws RepositoryException, IOException {
+    List<Path> paths = resolvePaths("com.ibm.icu:icu4j:2.6.1");
+    ClassDumper classDumper = ClassDumper.create(paths);
+
+    // This should not throw ClassFormatException
+    SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
+    Truth.assertThat(symbolReferences.getClassToClassSymbols().keySet())
+        .comparingElementsUsing(
+            Correspondence.transforming(
+                (ClassFile classFile) -> classFile.getBinaryName(), "has class name"))
+        .contains("com.ibm.icu.util.DateRule");
+  }
 }
