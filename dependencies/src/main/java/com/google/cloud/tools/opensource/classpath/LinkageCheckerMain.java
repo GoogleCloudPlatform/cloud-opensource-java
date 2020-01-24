@@ -59,10 +59,11 @@ class LinkageCheckerMain {
     // When JAR files are specified in the argument, artifacts are empty.
     ImmutableList<Path> inputClassPath;
     List<ArtifactProblem> artifactProblems = new ArrayList<>();
+    ClassPathResult classPathResult = null;
     if (artifacts.isEmpty()) {
       inputClassPath = linkageCheckerArguments.getInputClasspath();
     } else {
-      ClassPathResult classPathResult = classPathBuilder.resolve(artifacts);
+      classPathResult = classPathBuilder.resolve(artifacts);
       inputClassPath = classPathResult.getClassPath();
       artifactProblems.addAll(classPathResult.getArtifactProblems());
     }
@@ -81,6 +82,21 @@ class LinkageCheckerMain {
     }
 
     System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
+
+    ImmutableSet.Builder<Path> problematicJars = ImmutableSet.builder();
+    for (SymbolProblem symbolProblem : symbolProblems.keySet()) {
+      ClassFile containingClass = symbolProblem.getContainingClass();
+      if (containingClass != null) {
+        problematicJars.add(containingClass.getJar());
+      }
+      for (ClassFile classFile : symbolProblems.get(symbolProblem)) {
+        problematicJars.add(classFile.getJar());
+      }
+    }
+
+    if (classPathResult != null && !symbolProblems.isEmpty()) {
+      System.out.println(classPathResult.formatDependencyPaths(problematicJars.build()));
+    }
 
     if (!artifactProblems.isEmpty()) {
       System.out.println("\n");
