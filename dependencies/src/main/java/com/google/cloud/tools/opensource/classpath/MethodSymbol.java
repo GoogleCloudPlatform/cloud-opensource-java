@@ -52,7 +52,7 @@ public final class MethodSymbol extends Symbol {
     return descriptor;
   }
 
-  /** Returns true if {@link #getClassName()} is an interface. */
+  /** Returns true if {@link #getClassBinaryName()} is an interface. */
   boolean isInterfaceMethod() {
     return isInterfaceMethod;
   }
@@ -84,6 +84,6 @@ public final class MethodSymbol extends Symbol {
     // https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.4.2
     String signaturePlusReturnType = Utility.methodSignatureToString(descriptor, name, "");
     String signature = signaturePlusReturnType.substring(signaturePlusReturnType.indexOf(' ') + 1);
-    return (isInterfaceMethod ? "Interface " : "") + getClassName() + "'s method " + signature;
+    return (isInterfaceMethod ? "Interface " : "") + getClassBinaryName() + "'s method " + signature;
   }
 }

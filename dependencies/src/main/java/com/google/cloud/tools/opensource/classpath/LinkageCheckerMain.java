@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.ArtifactProblem;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -23,6 +24,8 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimaps;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -54,10 +57,15 @@ class LinkageCheckerMain {
     ImmutableList<Artifact> artifacts = linkageCheckerArguments.getArtifacts();
 
     // When JAR files are specified in the argument, artifacts are empty.
-    ImmutableList<Path> inputClassPath =
-        artifacts.isEmpty()
-            ? linkageCheckerArguments.getInputClasspath()
-            : classPathBuilder.artifactsToClasspath(artifacts);
+    ImmutableList<Path> inputClassPath;
+    List<ArtifactProblem> artifactProblems = new ArrayList<>();
+    if (artifacts.isEmpty()) {
+      inputClassPath = linkageCheckerArguments.getInputClasspath();
+    } else {
+      ClassPathResult classPathResult = classPathBuilder.resolve(artifacts);
+      inputClassPath = classPathResult.getClassPath();
+      artifactProblems.addAll(classPathResult.getArtifactProblems());
+    }
 
     ImmutableSet<Path> entryPointJars = linkageCheckerArguments.getEntryPointJars();
     LinkageChecker linkageChecker = LinkageChecker.create(inputClassPath, entryPointJars);
@@ -69,10 +77,14 @@ class LinkageCheckerMain {
       symbolProblems =
           ImmutableSetMultimap.copyOf(
               Multimaps.filterValues(
-                  symbolProblems, classFile -> graph.isReachable(classFile.getClassName())));
+                  symbolProblems, classFile -> graph.isReachable(classFile.getBinaryName())));
     }
 
     System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
-  }
 
+    if (!artifactProblems.isEmpty()) {
+      System.out.println("\n");
+      System.out.println(ArtifactProblem.formatProblems(artifactProblems));
+    }
+  }
 }

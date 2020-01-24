@@ -196,7 +196,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
           symbolProblems =
               symbolProblems.entries().stream()
-                  .filter(entry -> classReferenceGraph.isReachable(entry.getValue().getClassName()))
+                  .filter(entry -> classReferenceGraph.isReachable(entry.getValue().getBinaryName()))
                   .collect(
                       ImmutableSetMultimap.toImmutableSetMultimap(Entry::getKey, Entry::getValue));
         }
@@ -347,7 +347,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
               .map(Dependency::getArtifact)
               .filter(artifact -> !shouldSkipBomMember(artifact))
               .collect(toImmutableList());
-      return classPathBuilder.artifactsToClasspath(artifacts);
+      return classPathBuilder.resolve(artifacts).getClassPath();
     } catch (RepositoryException ex) {
       throw new EnforcerRuleException("Failed to collect dependency " + ex.getMessage(), ex);
     }
