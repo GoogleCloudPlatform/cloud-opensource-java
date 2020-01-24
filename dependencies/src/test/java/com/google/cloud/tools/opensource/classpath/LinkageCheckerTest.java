@@ -37,12 +37,14 @@ import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
 import org.junit.Before;
@@ -52,7 +54,7 @@ public class LinkageCheckerTest {
 
   private static final Correspondence<SymbolProblem, String> HAS_SYMBOL_IN_CLASS =
       Correspondence.transforming(
-          (SymbolProblem problem) -> problem.getSymbol().getClassName(),
+          (SymbolProblem problem) -> problem.getSymbol().getClassBinaryName(),
           "has symbol in class with name");
 
   private static DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
@@ -62,7 +64,17 @@ public class LinkageCheckerTest {
 
   private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
-  private static ImmutableList<Path> resolvePaths(String coordinates) throws RepositoryException {
+  /** Returns JAR files resolved for the full dependency tree of {@code coordinates}. */
+  static ImmutableList<Path> resolvePaths(String... coordinates) throws RepositoryException {
+    ImmutableList<Artifact> artifacts =
+        Arrays.stream(coordinates).map(DefaultArtifact::new).collect(toImmutableList());
+    ClassPathResult result = (new ClassPathBuilder()).resolve(artifacts);
+    return result.getClassPath();
+  }
+
+  /** Returns JAR files resolved for the transitive dependencies of {@code coordinates}. */
+  private ImmutableList<Path> resolveTransitiveDependencyPaths(String coordinates)
+      throws RepositoryException {
     DependencyGraph dependencies =
         dependencyGraphBuilder
             .getTransitiveDependencies(new DefaultArtifact(coordinates))
@@ -117,7 +129,7 @@ public class LinkageCheckerTest {
     // Array's clone is available in Java runtime and thus should not be reported as linkage error
     long arraySymbolProblemCount =
         linkageChecker.findSymbolProblems().keys().stream()
-            .filter(problem -> problem.getSymbol().getClassName().startsWith("["))
+            .filter(problem -> problem.getSymbol().getClassBinaryName().startsWith("["))
             .count();
     assertEquals(0, arraySymbolProblemCount);
   }
@@ -238,9 +250,7 @@ public class LinkageCheckerTest {
   @Test
   public void testFindSymbolProblem_protectedConstructorFromAnonymousClass()
       throws IOException, RepositoryException {
-    List<Path> paths =
-        classPathBuilder.artifactsToClasspath(
-            ImmutableList.of(new DefaultArtifact("junit:junit:4.12")));
+    List<Path> paths = resolvePaths("junit:junit:4.12");
     // junit has dependency on hamcrest-core
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
@@ -380,7 +390,7 @@ public class LinkageCheckerTest {
 
     // There should be an error reported for the reference
     Truth8.assertThat(problemFound).isPresent();
-    assertEquals(guavaClass, problemFound.get().getSymbol().getClassName());
+    assertEquals(guavaClass, problemFound.get().getSymbol().getClassBinaryName());
   }
 
   @Test
@@ -418,11 +428,7 @@ public class LinkageCheckerTest {
       throws RepositoryException, IOException {
     // cglib 2.2 does not work with asm 4. Stackoverflow post explaining VerifyError:
     // https://stackoverflow.com/questions/21059019/cglib-is-causing-a-java-lang-verifyerror-during-query-generation-in-intuit-partn
-    List<Path> paths =
-        classPathBuilder.artifactsToClasspath(
-            ImmutableList.of(
-                new DefaultArtifact("cglib:cglib:2.2_beta1"),
-                new DefaultArtifact("org.ow2.asm:asm:4.2")));
+    List<Path> paths = resolvePaths("cglib:cglib:2.2_beta1", "org.ow2.asm:asm:4.2");
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
@@ -518,7 +524,7 @@ public class LinkageCheckerTest {
             new ClassFile(paths.get(0), "com.google.firestore.v1beta1.FirestoreGrpc"),
             new ClassSymbol(nonExistentClassName));
     assertSame(ErrorType.CLASS_NOT_FOUND, problemFound.get().getErrorType());
-    assertEquals(nonExistentClassName, problemFound.get().getSymbol().getClassName());
+    assertEquals(nonExistentClassName, problemFound.get().getSymbol().getClassBinaryName());
   }
 
   @Test
@@ -582,7 +588,7 @@ public class LinkageCheckerTest {
 
     long innerClassCount =
         symbolProblems.values().stream()
-            .map(ClassFile::getClassName)
+            .map(ClassFile::getBinaryName)
             .filter(className -> className.contains("$"))
             .count();
     assertEquals(0L, innerClassCount);
@@ -756,9 +762,7 @@ public class LinkageCheckerTest {
       throws RepositoryException, IOException {
     // SLF4J classes catch NoClassDefFoundError to detect the availability of logger backends
     // the tool should not show errors for such classes.
-    List<Path> paths =
-        classPathBuilder.artifactsToClasspath(
-            ImmutableList.of(new DefaultArtifact("org.slf4j:slf4j-api:jar:1.7.21")));
+    List<Path> paths = resolvePaths("org.slf4j:slf4j-api:jar:1.7.21");
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
@@ -772,10 +776,7 @@ public class LinkageCheckerTest {
   public void testFindSymbolProblems_catchesLinkageError() throws RepositoryException, IOException {
     // org.eclipse.sisu.inject.Implementations catches LinkageError to detect the availability of
     // implementation for dependency injection. The tool should not show errors for such classes.
-    List<Path> paths =
-        classPathBuilder.artifactsToClasspath(
-            ImmutableList.of(
-                new DefaultArtifact("org.eclipse.sisu:org.eclipse.sisu.inject:0.3.3")));
+    List<Path> paths = resolvePaths("org.eclipse.sisu:org.eclipse.sisu.inject:0.3.3");
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
@@ -850,10 +851,8 @@ public class LinkageCheckerTest {
     // LinkageChecker.findLinkageErrors was not handling the case properly.
     // These two jar files are transitive dependencies of the artifacts below.
     List<Path> paths =
-        classPathBuilder.artifactsToClasspath(
-            ImmutableList.of(
-                new DefaultArtifact("io.grpc:grpc-alts:jar:1.18.0"),
-                new DefaultArtifact("com.google.cloud:google-cloud-nio:jar:0.81.0-alpha")));
+        resolvePaths(
+            "io.grpc:grpc-alts:jar:1.18.0", "com.google.cloud:google-cloud-nio:jar:0.81.0-alpha");
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
@@ -870,7 +869,8 @@ public class LinkageCheckerTest {
     // Reactor-core's Traces is known to catch Throwable to detect availability of Java 9+ classes.
     // Linkage Checker does not need to report it.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/816
-    ImmutableList<Path> jars = resolvePaths("io.projectreactor:reactor-core:3.2.11.RELEASE");
+    ImmutableList<Path> jars =
+        resolveTransitiveDependencyPaths("io.projectreactor:reactor-core:3.2.11.RELEASE");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
     ImmutableSetMultimap<ClassFile, SymbolProblem> problems = linkageChecker.findSymbolProblems()
@@ -898,7 +898,7 @@ public class LinkageCheckerTest {
                 problem ->
                     problem
                         .getSymbol()
-                        .getClassName()
+                        .getClassBinaryName()
                         .equals("com.oracle.graal.pointsto.meta.AnalysisType")));
     assertFalse(
         "GraalVM's NodeSourcePosition, whose superclass is missing, should not be reported",
@@ -907,7 +907,7 @@ public class LinkageCheckerTest {
                 problem ->
                     problem
                         .getSymbol()
-                        .getClassName()
+                        .getClassBinaryName()
                         .equals("org.graalvm.compiler.graph.NodeSourcePosition")));
   }
 

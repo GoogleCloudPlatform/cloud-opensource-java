@@ -67,6 +67,6 @@ final class FieldSymbol extends Symbol {
 
   @Override
   public String toString() {
-    return getClassName() + "'s field " + name;
+    return getClassBinaryName() + "'s field " + name;
   }
 }

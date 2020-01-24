@@ -196,7 +196,7 @@ class ClassDumper {
           ConstantClass constantClass = (ConstantClass) constant;
           ClassSymbol classSymbol = makeSymbol(constantClass, constantPool, javaClass);
           // skip array class because it is provided by runtime
-          if (classSymbol.getClassName().startsWith("[")) {
+          if (classSymbol.getClassBinaryName().startsWith("[")) {
             break;
           }
           builder.addClassReference(source, classSymbol);
@@ -398,8 +398,8 @@ class ClassDumper {
       try {
         JavaClass javaClass = classRepository.loadClass(classFileName);
         javaClasses.add(javaClass);
-      } catch (ClassNotFoundException ex) {
-        // We couldn't find the class in the jar file where we found it.
+      } catch (ClassNotFoundException | ClassFormatException ex) {
+        // We couldn't read the class in the JAR file where we found it.
         corruptedClassFileNames.add(classFileName);
       }
     }
@@ -499,7 +499,7 @@ class ClassDumper {
       if (constantTag == Const.CONSTANT_Class) {
         ConstantClass constantClass = (ConstantClass) constant;
         ClassSymbol classSymbol = makeSymbol(constantClass, sourceConstantPool, sourceJavaClass);
-        if (targetClassName.equals(classSymbol.getClassName())) {
+        if (targetClassName.equals(classSymbol.getClassBinaryName())) {
           constantPoolIndicesForTarget.add(poolIndex);
         }
       }
@@ -617,7 +617,7 @@ class ClassDumper {
       return false;
     }
 
-    String targetClassName = classSymbol.getClassName();
+    String targetClassName = classSymbol.getClassBinaryName();
 
     try {
       JavaClass sourceJavaClass = loadJavaClass(sourceClassName);

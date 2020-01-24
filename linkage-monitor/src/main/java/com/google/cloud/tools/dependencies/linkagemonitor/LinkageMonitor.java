@@ -21,6 +21,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
+import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -34,8 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.MoreFiles;
 import java.io.IOException;
@@ -164,9 +163,8 @@ public class LinkageMonitor {
     }
 
     ImmutableList<Artifact> snapshotManagedDependencies = snapshot.getManagedDependencies();
-    LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        (new ClassPathBuilder()).artifactsToDependencyPaths(snapshotManagedDependencies);
-    ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
+    ClassPathResult classPathResult = (new ClassPathBuilder()).resolve(snapshotManagedDependencies);
+    ImmutableList<Path> classpath = classPathResult.getClassPath();
     List<Path> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems =
@@ -186,7 +184,7 @@ public class LinkageMonitor {
     Set<SymbolProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newProblems.isEmpty()) {
       logger.severe(
-          messageForNewErrors(snapshotSymbolProblems, problemsInBaseline, jarToDependencyPaths));
+          messageForNewErrors(snapshotSymbolProblems, problemsInBaseline, classPathResult));
       int errorSize = newProblems.size();
       throw new LinkageMonitorException(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
@@ -208,7 +206,7 @@ public class LinkageMonitor {
   static String messageForNewErrors(
       ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems,
       Set<SymbolProblem> baselineProblems,
-      Multimap<Path, DependencyPath> jarToDependencyPaths) {
+      ClassPathResult classPathResult) {
     Set<SymbolProblem> newProblems =
         Sets.difference(snapshotSymbolProblems.keySet(), baselineProblems);
     StringBuilder message =
@@ -227,7 +225,7 @@ public class LinkageMonitor {
         message.append(
             String.format(
                 "  referenced from %s (%s)\n",
-                classFile.getClassName(), classFile.getJar().getFileName()));
+                classFile.getBinaryName(), classFile.getJar().getFileName()));
         problematicJars.add(classFile.getJar());
       }
     }
@@ -235,7 +233,7 @@ public class LinkageMonitor {
     message.append("\n");
     for (Path problematicJar : problematicJars.build()) {
       message.append(problematicJar.getFileName() + " is at:\n");
-      for (DependencyPath dependencyPath : jarToDependencyPaths.get(problematicJar)) {
+      for (DependencyPath dependencyPath : classPathResult.getDependencyPaths(problematicJar)) {
         message.append("  " + dependencyPath + "\n");
       }
     }
