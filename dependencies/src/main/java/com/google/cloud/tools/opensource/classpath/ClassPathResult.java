@@ -86,7 +86,7 @@ public final class ClassPathResult {
       if (otherCount == 1) {
         message.append("  and 1 dependency path.\n");
       } else if (otherCount > 1) {
-        message.append("  and other " + otherCount + " dependency paths.\n");
+        message.append("  and " + otherCount + " other dependency paths.\n");
       }
     }
     return message.toString();

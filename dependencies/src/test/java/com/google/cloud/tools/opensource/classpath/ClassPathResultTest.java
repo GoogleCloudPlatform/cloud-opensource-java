@@ -107,7 +107,7 @@ public class ClassPathResultTest {
     String actual = classPathResult.formatDependencyPaths(ImmutableList.of(jarA));
 
     assertEquals(
-        "a.jar is at:\n" + "  com.google:a:1 (compile)\n" + "  and other 2 dependency paths.\n",
+        "a.jar is at:\n" + "  com.google:a:1 (compile)\n" + "  and 2 other dependency paths.\n",
         actual);
   }
 
