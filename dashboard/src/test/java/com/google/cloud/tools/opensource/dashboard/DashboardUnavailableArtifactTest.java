@@ -16,9 +16,11 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.io.MoreFiles;
@@ -46,7 +48,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
 
 public class DashboardUnavailableArtifactTest {
 
@@ -86,7 +87,7 @@ public class DashboardUnavailableArtifactTest {
             outputDirectory,
             cache,
             ImmutableMap.of(),
-            LinkedListMultimap.create(),
+            new ClassPathResult(LinkedListMultimap.create(), ImmutableList.of()),
             bom);
 
     Assert.assertEquals(
@@ -133,7 +134,7 @@ public class DashboardUnavailableArtifactTest {
         table,
         null,
         ImmutableMap.of(),
-        LinkedListMultimap.create(),
+        new ClassPathResult(LinkedListMultimap.create(), ImmutableList.of()),
         bom);
 
     Path generatedHtml = outputDirectory.resolve("artifact_details.html");

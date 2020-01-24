@@ -398,8 +398,8 @@ class ClassDumper {
       try {
         JavaClass javaClass = classRepository.loadClass(classFileName);
         javaClasses.add(javaClass);
-      } catch (ClassNotFoundException ex) {
-        // We couldn't find the class in the jar file where we found it.
+      } catch (ClassNotFoundException | ClassFormatException ex) {
+        // We couldn't read the class in the JAR file where we found it.
         corruptedClassFileNames.add(classFileName);
       }
     }
