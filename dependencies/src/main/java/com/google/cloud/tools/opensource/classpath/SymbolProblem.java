@@ -16,8 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -34,13 +34,14 @@ public final class SymbolProblem {
   private final Symbol symbol;
   private final ClassFile containingClass;
 
+  @VisibleForTesting
   public SymbolProblem(Symbol symbol, ErrorType errorType, @Nullable ClassFile containingClass) {
-    checkNotNull(symbol);
+    Preconditions.checkNotNull(symbol);
 
     // After finding symbol problem, there is no need to have SuperClassSymbol over ClassSymbol.
     this.symbol =
         symbol instanceof SuperClassSymbol ? new ClassSymbol(symbol.getClassName()) : symbol;
-    this.errorType = checkNotNull(errorType);
+    this.errorType = Preconditions.checkNotNull(errorType);
     this.containingClass = containingClass;
   }
 
@@ -55,8 +56,8 @@ public final class SymbolProblem {
   }
 
   /**
-   * Returns the class that references the symbol. If the symbol is a method or a field,
-   * then this is the class where the symbol was expected to be found.
+   * Returns the class that is expected to contain the symbol. If the symbol is a method
+   * or a field, then this is the class where the symbol was expected to be found.
    * If the symbol is an inner class, this is the outer class that was expected 
    * to contain the inner class. If the symbol is an outer class, this is null.
    */
