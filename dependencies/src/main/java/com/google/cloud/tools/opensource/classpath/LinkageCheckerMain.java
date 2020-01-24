@@ -59,10 +59,14 @@ class LinkageCheckerMain {
     // When JAR files are specified in the argument, artifacts are empty.
     ImmutableList<Path> inputClassPath;
     List<ArtifactProblem> artifactProblems = new ArrayList<>();
+    ClassPathResult classPathResult = null;
     if (artifacts.isEmpty()) {
+      // When JAR files are passed as arguments, classPathResult is null, because there is no need
+      // to resolve Maven dependencies.
       inputClassPath = linkageCheckerArguments.getInputClasspath();
     } else {
-      ClassPathResult classPathResult = classPathBuilder.resolve(artifacts);
+      // When Maven artifacts (or a BOM) are passed as arguments, resolve the dependency tree.
+      classPathResult = classPathBuilder.resolve(artifacts);
       inputClassPath = classPathResult.getClassPath();
       artifactProblems.addAll(classPathResult.getArtifactProblems());
     }
@@ -81,6 +85,20 @@ class LinkageCheckerMain {
     }
 
     System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
+
+    if (classPathResult != null && !symbolProblems.isEmpty()) {
+      ImmutableSet.Builder<Path> problematicJars = ImmutableSet.builder();
+      for (SymbolProblem symbolProblem : symbolProblems.keySet()) {
+        ClassFile containingClass = symbolProblem.getContainingClass();
+        if (containingClass != null) {
+          problematicJars.add(containingClass.getJar());
+        }
+        for (ClassFile classFile : symbolProblems.get(symbolProblem)) {
+          problematicJars.add(classFile.getJar());
+        }
+      }
+      System.out.println(classPathResult.formatDependencyPaths(problematicJars.build()));
+    }
 
     if (!artifactProblems.isEmpty()) {
       System.out.println("\n");
