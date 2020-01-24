@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
 /**
  * A missing or incompatible symbol that causes a linkage error.
  *
- * @see <a href="https://jlbp.dev/glossary.html#linkage-error?">
+ * @see <a href="https://jlbp.dev/glossary.html#linkage-error">
  *     Java Dependency Glossary: Linkage Error</a>
  */
 public final class SymbolProblem {
