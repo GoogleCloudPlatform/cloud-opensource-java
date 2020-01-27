@@ -18,6 +18,7 @@ package com.google.cloud.tools.dependencies.linkagemonitor;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.maven.model.building.ModelSource;
 import org.apache.maven.model.resolution.ModelResolver;
@@ -29,12 +30,15 @@ import org.eclipse.aether.RequestTrace;
 import org.eclipse.aether.impl.RemoteRepositoryManager;
 import org.eclipse.aether.repository.RemoteRepository;
 
-import java.util.List;
-
 /**
- * POM Resolver that substitutes the version of a POM specified in {@code versionSubstitution} map.
- * {@code VersionSubstitution}'s keys are versionless coordinates ({@code groupId:artifactId}) and
- * the values are the version to use when resolving the corresponding artifacts.
+ * Model resolver that substitutes the version of a POM specified in {@code versionSubstitution}
+ * map. {@code VersionSubstitution}'s keys are versionless coordinates ({@code groupId:artifactId})
+ * and the values are the version to use when resolving the corresponding artifacts.
+ *
+ * <p>For example, when {@code versionSubstitution} contains a key-value pair of {@code
+ * "com.google.guava:guava-bom" → "25.1-android"}, {@link VersionSubstitutingModelResolver}
+ * substitutes the version of model building requests that has {@code groupId:com.google.guava} and
+ * {@code artifactId:guava-bom} with {@code 25.1-android}.
  */
 class VersionSubstitutingModelResolver extends ProjectModelResolver {
 
