@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
@@ -68,5 +70,25 @@ public final class ClassPathResult {
   /** Returns problems encountered while constructing the dependency graph. */
   ImmutableList<UnresolvableArtifactProblem> getArtifactProblems() {
     return artifactProblems;
+  }
+
+  /** Returns text describing dependency paths to {@code jars} in the dependency tree. */
+  public String formatDependencyPaths(Iterable<Path> jars) {
+    StringBuilder message = new StringBuilder();
+    for (Path jar : jars) {
+      ImmutableList<DependencyPath> dependencyPaths = getDependencyPaths(jar);
+      checkArgument(dependencyPaths.size() >= 1, "%s is not in the class path", jar);
+
+      message.append(jar.getFileName() + " is at:\n");
+
+      int otherCount = dependencyPaths.size() - 1;
+      message.append("  " + dependencyPaths.get(0) + "\n");
+      if (otherCount == 1) {
+        message.append("  and 1 dependency path.\n");
+      } else if (otherCount > 1) {
+        message.append("  and " + otherCount + " other dependency paths.\n");
+      }
+    }
+    return message.toString();
   }
 }

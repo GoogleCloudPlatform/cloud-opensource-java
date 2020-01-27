@@ -26,7 +26,6 @@ import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
@@ -231,12 +230,7 @@ public class LinkageMonitor {
     }
 
     message.append("\n");
-    for (Path problematicJar : problematicJars.build()) {
-      message.append(problematicJar.getFileName() + " is at:\n");
-      for (DependencyPath dependencyPath : classPathResult.getDependencyPaths(problematicJar)) {
-        message.append("  " + dependencyPath + "\n");
-      }
-    }
+    message.append(classPathResult.formatDependencyPaths(problematicJars.build()));
 
     return message.toString();
   }
