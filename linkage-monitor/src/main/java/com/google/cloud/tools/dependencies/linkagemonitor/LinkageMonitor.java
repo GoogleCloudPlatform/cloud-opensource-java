@@ -288,14 +288,13 @@ public class LinkageMonitor {
     modelRequest.setTwoPhaseBuilding(true); // This forces the builder stop after phase 1
     modelRequest.setPomFile(bomResult.getArtifact().getFile());
     modelRequest.setModelResolver(
-        new ProjectModelResolver(
+        new VersionSubstitutingModelResolver(
             session,
             null,
             repositorySystem,
             new DefaultRemoteRepositoryManager(),
             ImmutableList.of(CENTRAL), // Needed when parent pom is not locally available
-            null,
-            null));
+            localArtifacts));
     // Profile activation needs JDK version through system properties
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/923
     modelRequest.setSystemProperties(System.getProperties());
