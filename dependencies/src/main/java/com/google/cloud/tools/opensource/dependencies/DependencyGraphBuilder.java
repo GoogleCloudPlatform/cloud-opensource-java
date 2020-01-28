@@ -26,10 +26,12 @@ import com.google.common.collect.ImmutableMap;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.Stack;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
@@ -298,6 +300,7 @@ public final class DependencyGraphBuilder {
 
     ImmutableList.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableList.builder();
 
+    Set<String> visitedVersionlessCoordinates = new HashSet<>();
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
       DependencyNode dependencyNode = item.dependencyNode;
@@ -362,9 +365,13 @@ public final class DependencyGraphBuilder {
         }
       }
       for (DependencyNode child : dependencyNode.getChildren()) {
-        @SuppressWarnings("unchecked")
-        Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
-        queue.add(new LevelOrderQueueItem(child, clone));
+        Artifact childArtifact = child.getArtifact();
+        String versionlessCoordinates = Artifacts.makeKey(childArtifact);
+        if (visitedVersionlessCoordinates.add(versionlessCoordinates)) {
+          @SuppressWarnings("unchecked")
+          Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
+          queue.add(new LevelOrderQueueItem(child, clone));
+        }
       }
     }
 
