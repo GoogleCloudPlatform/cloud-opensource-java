@@ -28,6 +28,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Lists;
@@ -1061,5 +1062,23 @@ public class LinkageCheckerTest {
     Truth.assertThat(symbolProblems.keySet())
         .comparingElementsUsing(HAS_SYMBOL_IN_CLASS)
         .doesNotContain(unexpectedClass);
+  }
+
+  @Test
+  public void testFindSymbolProblems_shadowedAbstractClass()
+      throws IOException, RepositoryException {
+    ImmutableList<Path> jars =
+        resolvePaths(
+            "org.jboss.weld:weld-osgi-bundle:1.1.0.Final",
+            "com.google.guava:guava:25.1-jre");
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableMultiset<SymbolProblem> problems = linkageChecker.findSymbolProblems().keys();
+    System.out.println(problems);
+    Truth.assertThat(problems).comparingElementsUsing(
+        Correspondence.transforming((SymbolProblem problem) -> problem.getSymbol().getClassBinaryName(),
+            "has problem on class")
+        ).doesNotContain("com.google.common.collect.EmptyImmutableMultiset");
   }
 }
