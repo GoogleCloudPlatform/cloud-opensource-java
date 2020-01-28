@@ -1069,16 +1069,16 @@ public class LinkageCheckerTest {
       throws IOException, RepositoryException {
     ImmutableList<Path> jars =
         resolvePaths(
-            "org.jboss.weld:weld-osgi-bundle:1.1.0.Final",
-            "com.google.guava:guava:25.1-jre");
+            "com.google.guava:guava:25.1-jre", "org.jboss.weld:weld-osgi-bundle:1.1.0.Final");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
 
     ImmutableMultiset<SymbolProblem> problems = linkageChecker.findSymbolProblems().keys();
-    System.out.println(problems);
-    Truth.assertThat(problems).comparingElementsUsing(
-        Correspondence.transforming((SymbolProblem problem) -> problem.getSymbol().getClassBinaryName(),
-            "has problem on class")
-        ).doesNotContain("com.google.common.collect.EmptyImmutableMultiset");
+    Truth.assertThat(problems)
+        .comparingElementsUsing(
+            Correspondence.transforming(
+                (SymbolProblem problem) -> problem.getSymbol().getClassBinaryName(),
+                "has problem on class"))
+        .doesNotContain("com.google.common.collect.EmptyImmutableMultiset");
   }
 }
