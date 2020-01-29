@@ -364,10 +364,17 @@ public final class DependencyGraphBuilder {
           }
         }
       }
+
+      // If false, the resulting tree does not have duplicate artifacts with regard to
+      // groupId:artifactId. This behavior is an optimization for Linkage Checker.
+      boolean allowDuplicateNodeInTree =
+          graphTraversalOption != GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
       for (DependencyNode child : dependencyNode.getChildren()) {
         Artifact childArtifact = child.getArtifact();
         String versionlessCoordinates = Artifacts.makeKey(childArtifact);
-        if (visitedVersionlessCoordinates.add(versionlessCoordinates)) {
+
+        // If allowDuplicateNodeInTree is false, add child only if this it has not been visited yet.
+        if (allowDuplicateNodeInTree || visitedVersionlessCoordinates.add(versionlessCoordinates)) {
           @SuppressWarnings("unchecked")
           Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
           queue.add(new LevelOrderQueueItem(child, clone));
