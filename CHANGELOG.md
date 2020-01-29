@@ -1,5 +1,9 @@
 # Linkage Checker Enforcer Rule Change Log
 
+## 1.1.3
+* Fixed a bug of Linkage Checker failure upon unavailable artifacts
+* LinkageCheckerMain shows dependency paths to Maven artifacts that have linkage errors.
+
 ## 1.1.2
 * Fixed Maven Central URL to use HTTPS
 
