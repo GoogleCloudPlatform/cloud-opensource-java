@@ -6,7 +6,7 @@ annotations if they live in a stable library, as outlined in
 used, they can cause problems when there are surface breakages (which is allowed
 per the rules of unstable functionality, explained in [JLBP-3](JLBP-3.md)). If
 such breakages can cause widespread pain, the unstable features can become
-"common-law GA." Promote widely-used unstable libraries and features to 1.0 
+de facto GA. Promote widely-used unstable libraries and features to 1.0 
 and commit to thier APIs, even if the functionality is not complete.
 Stability is not about completeness but about guarantees not to break
 users' code frequently.
