@@ -106,17 +106,15 @@ public class LinkageMonitor {
     ImmutableMap.Builder<String, String> artifactToVersion = ImmutableMap.builder();
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectDirectory);
 
-    PATHS_LOOP:
     for (Path path : paths) {
       if (!path.getFileName().endsWith("pom.xml")) {
         continue;
       }
-      for (Path pathElement : path) {
-        String name = pathElement.toString();
-        if (name.equals("build") || name.equals("target")) {
-          // Exclude Gradle's build directory and Maven's target directory.
-          continue PATHS_LOOP;
-        }
+
+      ImmutableSet<Path> elements = ImmutableSet.copyOf(path);
+      if (elements.contains(Paths.get("build")) || elements.contains(Paths.get("target"))) {
+        // Exclude Gradle's build directory and Maven's target directory.
+        continue;
       }
 
       ModelBuildingRequest modelRequest = new DefaultModelBuildingRequest();
