@@ -21,6 +21,9 @@ set -e # fail if any of command fails
 # Install artifacts to local Maven repository. The command depends on build system of the project.
 mvn install -DskipTests
 
+# For Gradle,
+# ./gradlew build publishToMavenLocal -x test
+
 # Get uber JAR unless it's installed already
 curl https://storage.googleapis.com/.../linkage-monitor-latest-all-deps.jar 
 java -jar linkage-monitor-X.Y.Z-all-deps.jar com.google.cloud:libraries-bom
