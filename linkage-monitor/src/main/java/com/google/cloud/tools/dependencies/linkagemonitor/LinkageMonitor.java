@@ -105,10 +105,20 @@ public class LinkageMonitor {
       RepositorySystem repositorySystem, RepositorySystemSession session, Path projectDirectory) {
     ImmutableMap.Builder<String, String> artifactToVersion = ImmutableMap.builder();
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectDirectory);
+
+    PATHS_LOOP:
     for (Path path : paths) {
       if (!path.getFileName().endsWith("pom.xml")) {
         continue;
       }
+      for (Path pathElement : path) {
+        String name = pathElement.toString();
+        if (name.equals("build") || name.equals("target")) {
+          // Exclude Gradle's build directory and Maven's target directory.
+          continue PATHS_LOOP;
+        }
+      }
+
       ModelBuildingRequest modelRequest = new DefaultModelBuildingRequest();
       modelRequest.setValidationLevel(ModelBuildingRequest.VALIDATION_LEVEL_MINIMAL);
       modelRequest.setProcessPlugins(false);
