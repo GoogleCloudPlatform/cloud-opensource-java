@@ -10,8 +10,10 @@ out promptly.
 There are several tools that make upgrading dependencies easier by performing much of the grunt work:
 
 * The [Versions Maven Plugin](https://www.mojohaus.org/versions-maven-plugin/)
-* [Renovabot](https://renovate.whitesourcesoftware.com/) notices when a new version of a dependency is released and files a PR against your Github repository.
-* [Dependabot](https://dependabot.com/)
+  can inform you of new versions of dependencies and plugins or rewrite a
+  pom.xml to use the new versions.
+* [Renovabot](https://renovate.whitesourcesoftware.com/) notices when a new version of a dependency is released and files a pull request against your Github repository.
+* Github's [Dependabot](https://dependabot.com/) creates pull requests to address security advisories and dependency upgrades.
 
 These tools all assume that the new versions are compatible with the older versions. In cases where they're not fully compatible a depdency upgrade can still require manual attention to rewrite and update affected code. However these tools do remove much of the pain from small updates.
 
