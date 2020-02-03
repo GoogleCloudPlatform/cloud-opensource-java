@@ -93,11 +93,15 @@ public class LinkageMonitor {
     String bomCoordinates = arguments[0];
     List<String> coordinatesElements = Splitter.on(':').splitToList(bomCoordinates);
 
-    try {
-      new LinkageMonitor().run(coordinatesElements.get(0), coordinatesElements.get(1));
-    } catch (LinkageMonitorException ex) {
-      logger.severe(ex.getMessage());
+    Set<SymbolProblem> newSymbolProblems =
+        new LinkageMonitor().run(coordinatesElements.get(0), coordinatesElements.get(1));
+    int errorSize = newSymbolProblems.size();
+    if (errorSize > 0) {
+      logger.severe(
+          String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
       System.exit(1); // notify CI tools of the failure
+    } else {
+      logger.info("No new problem found");
     }
   }
 
@@ -145,9 +149,13 @@ public class LinkageMonitor {
     return artifactToVersion.build();
   }
 
-  private void run(String groupId, String artifactId)
-      throws RepositoryException, IOException, LinkageMonitorException, MavenRepositoryException,
-          ModelBuildingException {
+  /**
+   * Returns new problems in the BOM specified by {@code groupId} and {@code artifactId}. This
+   * method compares the latest release of the BOM and its snapshot version which uses artifacts in
+   * {@link #localArtifacts}.
+   */
+  private ImmutableSet<SymbolProblem> run(String groupId, String artifactId)
+      throws RepositoryException, IOException, MavenRepositoryException, ModelBuildingException {
     String latestBomCoordinates =
         RepositoryUtility.findLatestCoordinates(repositorySystem, groupId, artifactId);
     logger.info("BOM Coordinates: " + latestBomCoordinates);
@@ -163,7 +171,7 @@ public class LinkageMonitor {
       logger.info(
           "Could not find SNAPSHOT versions for the artifacts in the BOM. "
               + "Not running comparison.");
-      return;
+      return ImmutableSet.of();
     }
 
     ImmutableList<Artifact> snapshotManagedDependencies = snapshot.getManagedDependencies();
@@ -178,24 +186,20 @@ public class LinkageMonitor {
     if (problemsInBaseline.equals(problemsInSnapshot)) {
       logger.info(
           "Snapshot versions have the same " + problemsInBaseline.size() + " errors as baseline");
-      return;
+      return ImmutableSet.of();
     }
 
     Set<SymbolProblem> fixedProblems = Sets.difference(problemsInBaseline, problemsInSnapshot);
     if (!fixedProblems.isEmpty()) {
       logger.info(messageForFixedErrors(fixedProblems));
     }
+
     Set<SymbolProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newProblems.isEmpty()) {
       logger.severe(
           messageForNewErrors(snapshotSymbolProblems, problemsInBaseline, classPathResult));
-      int errorSize = newProblems.size();
-      throw new LinkageMonitorException(
-          String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
-    } else {
-      // No new symbol problems introduced by snapshot BOM. Returning success.
-      logger.info("No new problem found");
     }
+    return ImmutableSet.copyOf(newProblems);
   }
 
   private static ImmutableList<String> coordinatesList(List<Artifact> artifacts) {
