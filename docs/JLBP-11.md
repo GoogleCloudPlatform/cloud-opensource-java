@@ -15,7 +15,10 @@ There are several tools that make upgrading dependencies easier by performing mu
 * [Renovate](https://renovate.whitesourcesoftware.com/) notices when a new version of a dependency is released and files a pull or merge request to update your repository.
 * GitHub's [Dependabot](https://dependabot.com/) creates pull requests to address security advisories and dependency upgrades.
 
-These tools assume that the new versions are compatible with the older versions. In cases where they're not fully compatible, a dependency upgrade can still require manual attention to rewrite and update affected code. However these tools do remove much of the pain from small updates.
+These tools assume that the new versions are compatible with the older versions.
+In cases where they're not fully compatible, a dependency upgrade can still require
+manual attention to rewrite and update affected code. However these tools do remove
+much of the pain from small updates.
 
 If your library does not have the investment necessary to keep up to date with
 dependencies, advise consumers to move to a library that is kept more up to
