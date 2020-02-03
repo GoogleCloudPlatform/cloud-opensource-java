@@ -82,8 +82,7 @@ public class LinkageMonitor {
       findLocalArtifacts(repositorySystem, session, Paths.get(".").toAbsolutePath());
 
   public static void main(String[] arguments)
-      throws RepositoryException, IOException, LinkageMonitorException, MavenRepositoryException,
-          ModelBuildingException {
+      throws RepositoryException, IOException, MavenRepositoryException, ModelBuildingException {
     if (arguments.length < 1 || arguments[0].split(":").length != 2) {
       logger.severe(
           "Please specify BOM coordinates without version. Example:"
