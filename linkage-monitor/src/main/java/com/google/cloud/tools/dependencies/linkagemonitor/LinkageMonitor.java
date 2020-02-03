@@ -93,7 +93,12 @@ public class LinkageMonitor {
     String bomCoordinates = arguments[0];
     List<String> coordinatesElements = Splitter.on(':').splitToList(bomCoordinates);
 
-    new LinkageMonitor().run(coordinatesElements.get(0), coordinatesElements.get(1));
+    try {
+      new LinkageMonitor().run(coordinatesElements.get(0), coordinatesElements.get(1));
+    } catch (LinkageMonitorException ex) {
+      logger.severe(ex.getMessage());
+      System.exit(1); // notify CI tools of the failure
+    }
   }
 
   /**
