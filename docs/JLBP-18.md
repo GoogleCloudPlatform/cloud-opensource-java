@@ -26,7 +26,11 @@ There are a number of problems with shading:
   of some constants.
 - It is easy to accidentally fail to relocate classes or other files, resulting in
   an artifact that overlaps classes and files with the original dependency
-  (creating the situation described in [JLBP-5](JLBP-5.md) ).
+  (creating the situation described in [JLBP-5](JLBP-5.md)).
+- Shading violates many closed source licenses. If the license contains
+  language such as "You must not reverse engineer, decompile, disassemble,
+  modify, or translate the Software", you should consult an attorney before 
+  shading. Shading is compatible with open source licenses.
 
 For these reasons, shading should be used sparingly, especially for libraries
 consumed by other libraries (because of the snowball effect).
