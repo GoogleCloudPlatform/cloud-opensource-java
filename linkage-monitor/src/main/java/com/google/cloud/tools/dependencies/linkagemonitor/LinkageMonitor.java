@@ -30,6 +30,7 @@ import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -112,6 +113,8 @@ public class LinkageMonitor {
   static ImmutableMap<String, String> findLocalArtifacts(
       RepositorySystem repositorySystem, RepositorySystemSession session, Path projectDirectory) {
     ImmutableMap.Builder<String, String> artifactToVersion = ImmutableMap.builder();
+
+    // Relative paths to the files in the project
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectDirectory);
 
     for (Path path : paths) {
@@ -119,6 +122,9 @@ public class LinkageMonitor {
         continue;
       }
 
+      Verify.verify(
+          !path.isAbsolute(),
+          "The path element check should not depend on directory name outside the project");
       ImmutableSet<Path> elements = ImmutableSet.copyOf(path);
       if (elements.contains(Paths.get("build")) || elements.contains(Paths.get("target"))) {
         // Exclude Gradle's build directory and Maven's target directory.
