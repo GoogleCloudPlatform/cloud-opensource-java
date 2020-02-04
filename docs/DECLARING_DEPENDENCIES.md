@@ -12,12 +12,8 @@ These recommendations apply to the following libraries:
 - [guava](https://github.com/google/guava)
 - [protobuf](https://github.com/protocolbuffers/protobuf)
 - [grpc-java](https://github.com/grpc/grpc-java)
-- [gax-java](https://github.com/googleapis/gax-java)
 - [google-http-java-client](https://github.com/googleapis/google-http-java-client)
-- [google-oauth-java-client](https://github.com/googleapis/google-oauth-java-client)
-- [google-api-java-client](https://github.com/googleapis/google-api-java-client)
 - [google-cloud-java](https://github.com/googleapis/google-cloud-java)
-- [beam](https://github.com/apache/beam)
 
 ## Ensuring Compatibility
 
