@@ -1,4 +1,4 @@
-# Declaring Dependencies on Google Java Libraries
+# Declaring Dependencies on Google Cloud Java Libraries
 
 Google maintains a number of open source Java libraries that make it
 easier to use services in Google Cloud Platform (GCP). Additionally
@@ -13,7 +13,56 @@ These recommendations apply to the following libraries:
 - [protobuf](https://github.com/protocolbuffers/protobuf)
 - [grpc-java](https://github.com/grpc/grpc-java)
 - [google-http-java-client](https://github.com/googleapis/google-http-java-client)
-- [google-cloud-java](https://github.com/googleapis/google-cloud-java)
+- [BigQuery](https://github.com/googleapis/java-bigquery) 
+- [Cloud AutoML](https://github.com/googleapis/java-automl)
+- [Cloud Bigtable](https://github.com/googleapis/java-bigtable) 
+- [Cloud Build](https://github.com/googleapis/java-cloudbuild) 
+- [Cloud Datastore](https://github.com/googleapis/java-datastore)
+- [Cloud Data Loss Prevention](https://github.com/googleapis/java-dlp)
+- [Cloud Firestore](https://github.com/googleapis/java-firestore)
+- [Cloud KMS](https://github.com/googleapis/java-kms)
+- [Cloud Natural Language](https://github.com/googleapis/java-language)
+- [Cloud Pub/Sub](https://github.com/googleapis/java-pubsub)
+- [Cloud Scheduler](https://github.com/googleapis/java-scheduler)
+- [Cloud Spanner](https://github.com/googleapis/java-spanner)
+- [Cloud Speech](https://github.com/googleapis/java-speech)
+- [Cloud Storage](https://github.com/googleapis/java-storage)
+- [Cloud Translation](https://github.com/googleapis/java-translate)
+- [Cloud Tasks](https://github.com/googleapis/java-tasks)
+- [Cloud Text-to-Speech](https://github.com/googleapis/java-texttospeech)
+- [Cloud Video Intelligence](https://github.com/googleapis/java-video-intelligence)
+- [Cloud Vision](https://github.com/googleapis/java-vision)
+- [Stackdriver Logging](https://github.com/googleapis/java-logging)
+- [Stackdriver Monitoring](https://github.com/googleapis/java-monitoring)
+- [Stackdriver Trace](https://github.com/googleapis/java-trace)
+- [BigQuery Data Transfer](https://github.com/googleapis/java-bigquerydatatransfer)
+- [BigQuery Storage](https://github.com/googleapis/java-bigquerystorage)
+- [Cloud Asset](https://github.com/googleapis/java-asset)
+- [Cloud Billing Budgets](https://github.com/googleapis/java-billingbudgets)
+- [Cloud Container Analysis](https://github.com/googleapis/java-containeranalysis)
+- [Cloud Dataproc](https://github.com/googleapis/java-dataproc)
+- [Cloud Data Catalog](https://github.com/googleapis/java-datacatalog)
+- [Cloud Data Labeling](https://github.com/googleapis/java-datalabeling)
+- [Cloud IAM Service Account Credentials API](https://github.com/googleapis/java-iamcredentials)
+- [Cloud IoT Core](https://github.com/googleapis/java-iot)
+- [Cloud Memorystore for Redis](https://github.com/googleapis/java-redis)
+- [Cloud OS Login](https://github.com/googleapis/java-os-login)
+- [Cloud Phishing Protection](https://github.com/googleapis/java-phishingprotection)
+- [Cloud Recommender](https://github.com/googleapis/java-recommender)
+- [Cloud Secret Manager](https://github.com/googleapis/java-secretmanager)
+- [Cloud Security Center](https://github.com/googleapis/java-securitycenter)
+- [Cloud Security Scanner](https://github.com/googleapis/java-websecurityscanner)
+- [Cloud Talent Solution](https://github.com/googleapis/java-talent)
+- [Cloud Web Risk](https://github.com/googleapis/java-webrisk)
+- [Dialogflow](https://github.com/googleapis/java-dialogflow)
+- [Kubernetes Engine](https://github.com/googleapis/java-container)
+- [reCAPTCHA Enterprise](https://github.com/googleapis/java-recaptchaenterprise)
+- [Stackdriver Error Reporting](https://github.com/googleapis/java-errorreporting)
+- [Cloud Compute](https://github.com/googleapis/java-compute)
+- [Cloud DNS](https://github.com/googleapis/java-dns)
+- [Cloud Logging via Logback](https://github.com/googleapis/java-logging-logback)
+- [Cloud Resource Manager](https://github.com/googleapis/java-resourcemanager)
+- [Cloud Storage via NIO](https://github.com/googleapis/java-storage-nio)
 
 ## Ensuring Compatibility
 
@@ -107,7 +156,7 @@ you are using at least Gradle 4.6. To do this:
 
 - Turn on BOM support:
   - If you are using Gradle 4.x:
-    - Add the following to your `settings.gradle`: `enableFeaturePreview('IMPROVED_POM_SUPPORT')`
+   
   - If you are using Gradle 5.x or higher, BOM support is on by default.
 - Add a dependency on the BOM for the library you depend on
 - Remove the version from the dependency declarations of the artifacts in that library
