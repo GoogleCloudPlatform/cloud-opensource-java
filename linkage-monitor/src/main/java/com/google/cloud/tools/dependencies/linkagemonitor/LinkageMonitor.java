@@ -113,8 +113,6 @@ public class LinkageMonitor {
   static ImmutableMap<String, String> findLocalArtifacts(
       RepositorySystem repositorySystem, RepositorySystemSession session, Path projectDirectory) {
     ImmutableMap.Builder<String, String> artifactToVersion = ImmutableMap.builder();
-
-    // Relative paths to the files in the project
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectDirectory);
 
     for (Path path : paths) {
@@ -122,9 +120,12 @@ public class LinkageMonitor {
         continue;
       }
 
-      Verify.verify(
-          !path.isAbsolute(),
-          "The path element check should not depend on directory name outside the project");
+      if (path.isAbsolute()) {
+        // As of Guava 28, MoreFiles.fileTraverser returns relative paths. Just in case it changes the behavior,
+        // converting absolute paths to relative paths.
+        path = path.relativize(Paths.get(".").toAbsolutePath());
+      }
+      // This path element check should not depend on directory name outside the project
       ImmutableSet<Path> elements = ImmutableSet.copyOf(path);
       if (elements.contains(Paths.get("build")) || elements.contains(Paths.get("target"))) {
         // Exclude Gradle's build directory and Maven's target directory, which would contain irrelevant pom.xml such as
