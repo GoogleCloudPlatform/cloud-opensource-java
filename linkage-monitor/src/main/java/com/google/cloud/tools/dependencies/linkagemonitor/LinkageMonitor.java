@@ -121,9 +121,8 @@ public class LinkageMonitor {
       }
 
       if (path.isAbsolute()) {
-        // As of Guava 28, MoreFiles.fileTraverser returns relative paths. Just in case it changes the behavior,
-        // converting absolute paths to relative paths.
-        path = path.relativize(Paths.get(".").toAbsolutePath());
+        // relative path from project directory
+        path = projectDirectory.relativize(path);
       }
       // This path element check should not depend on directory name outside the project
       ImmutableSet<Path> elements = ImmutableSet.copyOf(path);
