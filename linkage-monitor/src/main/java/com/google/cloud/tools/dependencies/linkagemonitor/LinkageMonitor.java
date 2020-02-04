@@ -127,7 +127,8 @@ public class LinkageMonitor {
           "The path element check should not depend on directory name outside the project");
       ImmutableSet<Path> elements = ImmutableSet.copyOf(path);
       if (elements.contains(Paths.get("build")) || elements.contains(Paths.get("target"))) {
-        // Exclude Gradle's build directory and Maven's target directory.
+        // Exclude Gradle's build directory and Maven's target directory, which would contain irrelevant pom.xml such as
+        // gax/build/tmp/expandedArchives/(... omit ...)/META-INF/maven/org.jacoco/org.jacoco.agent/pom.xml
         continue;
       }
 
