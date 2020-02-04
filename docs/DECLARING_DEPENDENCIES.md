@@ -70,10 +70,10 @@ that client code does not usually depend on directly. However if you do import
 any of these, use  `com.google.cloud:libraries-bom` to specify their versions
 too:
 
-- GAX
-- Google Auth Library
-- Google API Client
-- Grafeas
+- [GAX Google API Extensions for Java](https://github.com/googleapis/gax-java)
+- [Google Auth Library](https://github.com/googleapis/google-auth-library-java)
+- [Google API Client Library for Java](https://github.com/googleapis/google-api-java-client)
+- [Grafeas Artifact Metadata API](https://github.com/grafeas/grafeas)
 
 ## Ensuring Compatibility
 
