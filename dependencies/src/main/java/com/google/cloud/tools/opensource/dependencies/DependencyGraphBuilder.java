@@ -202,7 +202,6 @@ public final class DependencyGraphBuilder {
 
   /** Returns the non-transitive compile time dependencies of an artifact. */
   List<DependencyNode> getDirectDependencies(Artifact artifact) throws RepositoryException {
-
     List<DependencyNode> result = new ArrayList<>();
 
     DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact));
