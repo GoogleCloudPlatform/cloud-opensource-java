@@ -4,8 +4,9 @@ Google maintains a number of open source Java libraries that make it
 easier to use services in Google Cloud Platform (GCP). Additionally
 Google maintains several foundational libraries that can be used for
 very general purposes, which the GCP libraries also depend on. This
-document explains how to use bills of materials (BOMs) and other
-strategies to avoid dependency conflicts in these libraries.
+document explains how to use the `com.google.cloud:libraries-bom`
+Bill of Materials and other strategies to avoid dependency conflicts in
+these libraries.
 
 These recommendations apply to the following libraries:
 
@@ -63,6 +64,16 @@ These recommendations apply to the following libraries:
 - [Cloud Logging via Logback](https://github.com/googleapis/java-logging-logback)
 - [Cloud Resource Manager](https://github.com/googleapis/java-resourcemanager)
 - [Cloud Storage via NIO](https://github.com/googleapis/java-storage-nio)
+
+`com.google.cloud:libraries-bom` also covers several other libraries
+that client code does not usually depend on directly. However if you do import
+any of these, use  `com.google.cloud:libraries-bom` to specify their versions
+too:
+
+- GAX
+- Google Auth Library
+- Google API Client
+- Grafeas
 
 ## Ensuring Compatibility
 
@@ -126,7 +137,7 @@ You can use a BOM like this—this example is for `libraries-bom`:
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>libraries-bom</artifactId>
-        <version>3.4.0</version>
+        <version>3.5.0</version>
         <type>pom</type>
         <scope>import</scope>
        </dependency>
