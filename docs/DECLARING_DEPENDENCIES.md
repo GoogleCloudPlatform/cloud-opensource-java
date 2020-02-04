@@ -114,8 +114,6 @@ you are using at least Gradle 4.6. To do this:
 
 For an example, see [gax-java#690](https://github.com/googleapis/gax-java/pull/690/files).
 
-See the "Choosing BOMs" section below if you need to import more than one BOM.
-
 ## Intrinsic conflicts
 
 It is possible for GCP open source Java libraries to have conflicts
