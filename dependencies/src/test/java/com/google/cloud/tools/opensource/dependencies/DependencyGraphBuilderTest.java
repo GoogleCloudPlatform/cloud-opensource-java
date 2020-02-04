@@ -85,11 +85,11 @@ public class DependencyGraphBuilderTest {
 
   @Test
   public void testGetDirectDependencies() throws RepositoryException {
-    List<DependencyNode> artifacts =
+    List<DependencyNode> nodes =
         dependencyGraphBuilder.getDirectDependencies(new Dependency(guava, ""));
     List<String> coordinates = new ArrayList<>();
-    for (DependencyNode artifact : artifacts) {
-      coordinates.add(artifact.getArtifact().toString());
+    for (DependencyNode node : nodes) {
+      coordinates.add(node.getArtifact().toString());
     }
 
     Truth.assertThat(coordinates).contains("com.google.code.findbugs:jsr305:jar:3.0.2");
@@ -135,9 +135,9 @@ public class DependencyGraphBuilderTest {
     Artifact nettyArtifact = new DefaultArtifact("io.netty:netty-all:4.1.31.Final");
 
     // Without system properties "os.detected.arch" and "os.detected.name", this would fail.
-    List<DependencyNode> artifacts = dependencyGraphBuilder.getDirectDependencies(
+    List<DependencyNode> nodes = dependencyGraphBuilder.getDirectDependencies(
         new Dependency(nettyArtifact, ""));
-    Truth.assertThat(artifacts).isNotEmpty();
+    Truth.assertThat(nodes).isNotEmpty();
   }
 
   @Test
@@ -197,7 +197,6 @@ public class DependencyGraphBuilderTest {
   @Test
   public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral()
       throws RepositoryException {
-    boolean addMavenCentral = false;
     DependencyGraphBuilder graphBuilder =
         new DependencyGraphBuilder(ImmutableList.of("https://dl.google.com/dl/android/maven2"));
 
