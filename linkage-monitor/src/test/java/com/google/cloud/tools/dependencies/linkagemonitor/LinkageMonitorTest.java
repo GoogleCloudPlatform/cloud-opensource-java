@@ -250,13 +250,14 @@ public class LinkageMonitorTest {
     Path relativePath = Paths.get("src/test/resources/testproject");
     Path absolutePath = relativePath.toAbsolutePath();
     ImmutableMap<String, String> localArtifactsFromAbsolutePath =
-            LinkageMonitor.findLocalArtifacts(
-                    system, session, absolutePath);
+        LinkageMonitor.findLocalArtifacts(system, session, absolutePath);
 
     ImmutableMap<String, String> localArtifactsFromRelativePath =
-            LinkageMonitor.findLocalArtifacts(
-                    system, session, relativePath);
+        LinkageMonitor.findLocalArtifacts(system, session, relativePath);
 
-    assertEquals(localArtifactsFromRelativePath, localArtifactsFromAbsolutePath);
+    assertEquals(
+        "findLocalArtifacts should behave the same for relative and absolute paths",
+        localArtifactsFromRelativePath,
+        localArtifactsFromAbsolutePath);
   }
 }
