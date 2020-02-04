@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import java.util.List;
-
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
@@ -33,10 +32,11 @@ class DependencyLister {
     
     try {
       DefaultArtifact artifact = new DefaultArtifact(args[0]);
-    
+
+      DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
       DependencyGraph graph =
-          DependencyGraphBuilder.getCompleteDependencies(artifact);
-      
+          dependencyGraphBuilder.getCompleteDependencies(artifact).getDependencyGraph();
+
       List<DependencyPath> paths = graph.list();
       for (DependencyPath path : paths) { 
         System.out.println(path);

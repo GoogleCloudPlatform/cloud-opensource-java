@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -28,11 +29,12 @@ import java.util.Objects;
  */
 public final class ClassFile {
   private final Path jar;
-  private final String className;
+  private final String binaryName;
 
+  @VisibleForTesting
   public ClassFile(Path jar, String className) {
     this.jar = checkNotNull(jar);
-    this.className = checkNotNull(className);
+    this.binaryName = checkNotNull(className);
   }
 
   /** Returns the path to the JAR file containing the class. */
@@ -40,17 +42,21 @@ public final class ClassFile {
     return jar;
   }
 
-  /** Returns class name (binary name as in {@link Symbol#getClassName()}) */
-  public String getClassName() {
-    return className;
+  /**
+   * Returns the binary name of the class as defined by the 
+   * <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-13.html#jls-13.1">Java
+   * Language Specification</a> and found in the .class file.
+   */
+  public String getBinaryName() {
+    return binaryName;
   }
 
   /**
-   * Returns {@link ClassFile} with top level class if this class is an inner class by checking "$"
-   * character; otherwise the instance itself.
+   * Returns the outer class if this class is an inner class.
+   * Otherwise returns the instance itself.
    */
-  public ClassFile topLevelClassFile() {
-    return className.contains("$") ? new ClassFile(jar, className.split("\\$")[0]) : this;
+  ClassFile topLevelClassFile() {
+    return binaryName.contains("$") ? new ClassFile(jar, binaryName.split("\\$")[0]) : this;
   }
 
   @Override
@@ -62,19 +68,19 @@ public final class ClassFile {
       return false;
     }
     ClassFile that = (ClassFile) other;
-    return Objects.equals(jar, that.jar) && Objects.equals(className, that.className);
+    return Objects.equals(jar, that.jar) && Objects.equals(binaryName, that.binaryName);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(jar, className);
+    return Objects.hash(jar, binaryName);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("jar", jar)
-        .add("className", className)
+        .add("className", binaryName)
         .toString();
   }
 }

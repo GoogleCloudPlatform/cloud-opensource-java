@@ -16,18 +16,16 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
- * A missing or incompatible symbol. This constitutes the cause of a linkage error (without the
- * source class).
+ * A missing or incompatible symbol that causes a linkage error.
  *
- * @see <a
- *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/library-best-practices/glossary.md#linkage-error">
+ * @see <a href="https://jlbp.dev/glossary.html#linkage-error">
  *     Java Dependency Glossary: Linkage Error</a>
  */
 public final class SymbolProblem {
@@ -36,13 +34,14 @@ public final class SymbolProblem {
   private final Symbol symbol;
   private final ClassFile containingClass;
 
+  @VisibleForTesting
   public SymbolProblem(Symbol symbol, ErrorType errorType, @Nullable ClassFile containingClass) {
-    checkNotNull(symbol);
+    Preconditions.checkNotNull(symbol);
 
     // After finding symbol problem, there is no need to have SuperClassSymbol over ClassSymbol.
     this.symbol =
-        symbol instanceof SuperClassSymbol ? new ClassSymbol(symbol.getClassName()) : symbol;
-    this.errorType = checkNotNull(errorType);
+        symbol instanceof SuperClassSymbol ? new ClassSymbol(symbol.getClassBinaryName()) : symbol;
+    this.errorType = Preconditions.checkNotNull(errorType);
     this.containingClass = containingClass;
   }
 
@@ -57,12 +56,10 @@ public final class SymbolProblem {
   }
 
   /**
-   * Returns the referenced class that contains the symbol. Null when the target class is not found
-   * in the class path (this is the case if the errorType is {@code CLASS_NOT_FOUND} for top-level
-   * classes).
-   *
-   * <p>In case of a nested class is missing while its outer class is found in the class path, this
-   * method returns the outer class.
+   * Returns the class that is expected to contain the symbol. If the symbol is a method
+   * or a field, then this is the class where the symbol was expected to be found.
+   * If the symbol is an inner class, this is the outer class that was expected 
+   * to contain the inner class. If the symbol is an outer class, this is null.
    */
   @Nullable
   public ClassFile getContainingClass() {
@@ -112,7 +109,7 @@ public final class SymbolProblem {
                       problem, referenceCount, referenceCount > 1 ? "s" : ""));
               classFiles.forEach(
                   classFile -> {
-                    output.append("    " + classFile.getClassName());
+                    output.append("    " + classFile.getBinaryName());
                     output.append(" (" + classFile.getJar().getFileName() + ")\n");
                   });
             });

@@ -35,6 +35,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Attribute;
@@ -69,6 +70,7 @@ import org.apache.bcel.util.ClassPath;
  * in them, through the input class path for a linkage check.
  */
 class ClassDumper {
+  private static final Logger logger = Logger.getLogger(ClassDumper.class.getName());
 
   private final ImmutableList<Path> inputClassPath;
   private final FixedSizeClassPathRepository classRepository;
@@ -194,7 +196,7 @@ class ClassDumper {
           ConstantClass constantClass = (ConstantClass) constant;
           ClassSymbol classSymbol = makeSymbol(constantClass, constantPool, javaClass);
           // skip array class because it is provided by runtime
-          if (classSymbol.getClassName().startsWith("[")) {
+          if (classSymbol.getClassBinaryName().startsWith("[")) {
             break;
           }
           builder.addClassReference(source, classSymbol);
@@ -383,6 +385,9 @@ class ClassDumper {
    */
   private ImmutableSet<JavaClass> listClasses(Path jar) throws IOException {
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
+
+    ImmutableList.Builder<String> corruptedClassFileNames = ImmutableList.builder();
+
     for (String classFileName : listClassFileNames(jar)) {
       if (classFileName.startsWith("META-INF.versions.")) {
         // Linkage Checker does not support multi-release JAR (for Java 9+) yet
@@ -393,20 +398,23 @@ class ClassDumper {
       try {
         JavaClass javaClass = classRepository.loadClass(classFileName);
         javaClasses.add(javaClass);
-      } catch (ClassNotFoundException ex) {
-        // We couldn't find the class in the jar file where we found it.
-        throw new IOException("Corrupt jar file " + jar + "; could not load " + classFileName, ex);
-      } catch (ClassFormatException ex) {
-        // We couldn't load the class from the jar file where we found it.
-        throw new IOException(
-            "Corrupt jar file "
-                + jar
-                + "; could not load "
-                + classFileName
-                + "; "
-                + ex.getMessage(),
-            ex);
+      } catch (ClassNotFoundException | ClassFormatException ex) {
+        // We couldn't read the class in the JAR file where we found it.
+        corruptedClassFileNames.add(classFileName);
       }
+    }
+
+    ImmutableList<String> corruptedFiles = corruptedClassFileNames.build();
+    int corruptedFileCount = corruptedFiles.size();
+    if (corruptedFileCount > 0) {
+      logger.warning(
+          "Corrupt files in "
+              + jar
+              + "; could not load "
+              + corruptedFiles.get(0)
+              + (corruptedFileCount > 1
+                  ? " and other " + (corruptedFileCount - 1) + " files"
+                  : ""));
     }
     return javaClasses.build();
   }
@@ -491,7 +499,7 @@ class ClassDumper {
       if (constantTag == Const.CONSTANT_Class) {
         ConstantClass constantClass = (ConstantClass) constant;
         ClassSymbol classSymbol = makeSymbol(constantClass, sourceConstantPool, sourceJavaClass);
-        if (targetClassName.equals(classSymbol.getClassName())) {
+        if (targetClassName.equals(classSymbol.getClassBinaryName())) {
           constantPoolIndicesForTarget.add(poolIndex);
         }
       }
@@ -533,7 +541,13 @@ class ClassDumper {
 
       String outerClassName = outerClassName(sourceJavaClass);
       if (outerClassName != null) {
-        return catchesLinkageError(outerClassName);
+        try {
+          return catchesLinkageError(outerClassName);
+        } catch (ClassFormatException ex) {
+          // When the outer class of an inner class does not exist in the class path, we cannot
+          // say that the classes catch linkage errors.
+          return false;
+        }
       } else {
         // The source class does not have a method that catches NoClassDefFoundError
         return false;
@@ -603,7 +617,7 @@ class ClassDumper {
       return false;
     }
 
-    String targetClassName = classSymbol.getClassName();
+    String targetClassName = classSymbol.getClassBinaryName();
 
     try {
       JavaClass sourceJavaClass = loadJavaClass(sourceClassName);

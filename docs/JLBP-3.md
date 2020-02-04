@@ -1,6 +1,9 @@
 # [JLBP-3] Use Semantic Versioning
 
-Definition of semantic versioning (SemVer): https://semver.org
+Semantic versioning is a convention in which "version numbers and the way they
+change convey meaning about the underlying code and what has been modified from one 
+version to the next." It has a [detailed specification](https://semver.org)
+that lays out a number of rules designed to align with common practice. 
 
 - For the purpose of semantic versioning, the stable surface of a library
   serves as its public API.

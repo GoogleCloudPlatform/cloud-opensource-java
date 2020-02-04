@@ -63,6 +63,7 @@ final class LinkageCheckerArguments {
   private final ImmutableList<String> extraMavenRepositoryUrls;
   private final boolean addMavenCentral;
   private final boolean reportOnlyReachable;
+  private final ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
   private LinkageCheckerArguments(CommandLine commandLine) {
     this.commandLine = checkNotNull(commandLine);
@@ -170,7 +171,10 @@ final class LinkageCheckerArguments {
 
     if (commandLine.hasOption("b")) {
       String bomCoordinates = commandLine.getOptionValue("b");
-      return cachedArtifacts = RepositoryUtility.readBom(bomCoordinates).getManagedDependencies();
+
+      return cachedArtifacts =
+          RepositoryUtility.readBom(bomCoordinates, getMavenRepositoryUrls())
+              .getManagedDependencies();
     } else if (commandLine.hasOption("a")) {
       // option 'a'
       String[] mavenCoordinatesOption = commandLine.getOptionValues("a");
@@ -196,7 +200,7 @@ final class LinkageCheckerArguments {
 
     if (commandLine.hasOption("b") || commandLine.hasOption("a")) {
       List<Artifact> artifacts = getArtifacts();
-      cachedInputClasspath = ClassPathBuilder.artifactsToClasspath(artifacts);
+      cachedInputClasspath = classPathBuilder.resolve(artifacts).getClassPath();
     } else {
       // b, a, or j is specified in OptionGroup
       String[] jarFiles = commandLine.getOptionValues("j");
@@ -222,8 +226,13 @@ final class LinkageCheckerArguments {
     }
   }
 
-  ImmutableList<String> getExtraMavenRepositoryUrls() {
-    return extraMavenRepositoryUrls;
+  ImmutableList<String> getMavenRepositoryUrls() {
+    ImmutableList.Builder<String> repositories = ImmutableList.builder();
+    repositories.addAll(extraMavenRepositoryUrls);
+    if (addMavenCentral) {
+      repositories.add(RepositoryUtility.CENTRAL.getUrl());
+    }
+    return repositories.build();
   }
 
   boolean getAddMavenCentral() {
