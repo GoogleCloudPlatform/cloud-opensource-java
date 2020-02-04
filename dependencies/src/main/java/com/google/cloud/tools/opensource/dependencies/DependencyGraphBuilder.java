@@ -128,16 +128,16 @@ public final class DependencyGraphBuilder {
     this.repositories = repositoryListBuilder.build();
   }
 
-  private DependencyNode resolveCompileTimeDependencies(DependencyNode rootDependencyArtifact)
+  private DependencyNode resolveCompileTimeDependencies(DependencyNode root)
       throws DependencyCollectionException, DependencyResolutionException {
-    return resolveCompileTimeDependencies(rootDependencyArtifact, false);
+    return resolveCompileTimeDependencies(root, false);
   }
 
   private DependencyNode resolveCompileTimeDependencies(
-      DependencyNode rootDependencyArtifact, boolean includeProvidedScope)
+      DependencyNode root, boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
     return resolveCompileTimeDependencies(
-        ImmutableList.of(rootDependencyArtifact), includeProvidedScope);
+        ImmutableList.of(root), includeProvidedScope);
   }
 
   private DependencyNode resolveCompileTimeDependencies(
@@ -201,7 +201,7 @@ public final class DependencyGraphBuilder {
   }
 
   /** Returns the non-transitive compile time dependencies of an artifact. */
-  public List<Artifact> getDirectDependencies(Artifact artifact) throws RepositoryException {
+  List<Artifact> getDirectDependencies(Artifact artifact) throws RepositoryException {
 
     List<Artifact> result = new ArrayList<>();
 
