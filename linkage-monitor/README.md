@@ -18,7 +18,7 @@ Example presubmit build script:
 
 ```
 set -e # fail if any of command fails
-# Install artifacts to local Maven repository. The command depends on build system of the project.
+# Install artifacts in the local Maven repository. The command depends on build system of the project.
 mvn install -DskipTests
 
 # For Gradle,
