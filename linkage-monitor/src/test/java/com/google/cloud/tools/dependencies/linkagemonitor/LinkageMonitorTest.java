@@ -247,13 +247,16 @@ public class LinkageMonitorTest {
 
   @Test
   public void testFindLocalArtifacts_absolutePath() {
-    Path absolutePath = Paths.get("src/test/resources/testproject").toAbsolutePath();
-    ImmutableMap<String, String> localArtifacts =
+    Path relativePath = Paths.get("src/test/resources/testproject");
+    Path absolutePath = relativePath.toAbsolutePath();
+    ImmutableMap<String, String> localArtifactsFromAbsolutePath =
             LinkageMonitor.findLocalArtifacts(
                     system, session, absolutePath);
 
-    Truth.assertThat(localArtifacts).hasSize(2);
-    Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:test-project");
-    Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:test-subproject");
+    ImmutableMap<String, String> localArtifactsFromRelativePath =
+            LinkageMonitor.findLocalArtifacts(
+                    system, session, relativePath);
+
+    assertEquals(localArtifactsFromRelativePath, localArtifactsFromAbsolutePath);
   }
 }
