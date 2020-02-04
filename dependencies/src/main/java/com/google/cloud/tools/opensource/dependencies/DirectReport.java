@@ -20,6 +20,7 @@ import java.util.List;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
 class DirectReport {
@@ -43,7 +44,8 @@ class DirectReport {
     
     Artifact input = new DefaultArtifact(args[0]);
     DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
-    List<DependencyNode> dependencies = dependencyGraphBuilder.getDirectDependencies(input);
+    List<DependencyNode> dependencies = dependencyGraphBuilder.getDirectDependencies(
+        new Dependency(input, ""));
 
     for (DependencyNode node : dependencies) {
       Artifact artifact = node.getArtifact();

@@ -29,6 +29,7 @@ import java.util.List;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
@@ -84,7 +85,8 @@ public class DependencyGraphBuilderTest {
 
   @Test
   public void testGetDirectDependencies() throws RepositoryException {
-    List<DependencyNode> artifacts = dependencyGraphBuilder.getDirectDependencies(guava);
+    List<DependencyNode> artifacts =
+        dependencyGraphBuilder.getDirectDependencies(new Dependency(guava, ""));
     List<String> coordinates = new ArrayList<>();
     for (DependencyNode artifact : artifacts) {
       coordinates.add(artifact.getArtifact().toString());
@@ -133,7 +135,8 @@ public class DependencyGraphBuilderTest {
     Artifact nettyArtifact = new DefaultArtifact("io.netty:netty-all:4.1.31.Final");
 
     // Without system properties "os.detected.arch" and "os.detected.name", this would fail.
-    List<DependencyNode> artifacts = dependencyGraphBuilder.getDirectDependencies(nettyArtifact);
+    List<DependencyNode> artifacts = dependencyGraphBuilder.getDirectDependencies(
+        new Dependency(nettyArtifact, ""));
     Truth.assertThat(artifacts).isNotEmpty();
   }
 
