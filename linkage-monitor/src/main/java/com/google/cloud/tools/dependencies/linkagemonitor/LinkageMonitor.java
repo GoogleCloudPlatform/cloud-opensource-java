@@ -30,7 +30,6 @@ import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -120,13 +119,9 @@ public class LinkageMonitor {
         continue;
       }
 
-      if (path.isAbsolute()) {
-        // As of Guava 28, MoreFiles.fileTraverser returns relative paths. Just in case it changes the behavior,
-        // converting absolute paths to relative paths.
-        path = path.relativize(Paths.get(".").toAbsolutePath());
-      }
       // This path element check should not depend on directory name outside the project
-      ImmutableSet<Path> elements = ImmutableSet.copyOf(path);
+      Path relativePath = path.isAbsolute() ? projectDirectory.relativize(path) : path;
+      ImmutableSet<Path> elements = ImmutableSet.copyOf(relativePath);
       if (elements.contains(Paths.get("build")) || elements.contains(Paths.get("target"))) {
         // Exclude Gradle's build directory and Maven's target directory, which would contain irrelevant pom.xml such as
         // gax/build/tmp/expandedArchives/(... omit ...)/META-INF/maven/org.jacoco/org.jacoco.agent/pom.xml
