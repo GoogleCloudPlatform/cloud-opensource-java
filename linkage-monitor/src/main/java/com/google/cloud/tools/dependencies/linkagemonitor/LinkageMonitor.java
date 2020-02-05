@@ -29,6 +29,7 @@ import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -179,8 +180,9 @@ public class LinkageMonitor {
     ImmutableList<String> snapshotCoordinates = coordinatesList(snapshot.getManagedDependencies());
     if (baselineCoordinates.equals(snapshotCoordinates)) {
       logger.info(
-          "Could not find SNAPSHOT versions for the artifacts in the BOM. "
-              + "Not running comparison.");
+          "Snapshot is same as baseline. Not running comparison.");
+      logger.info(
+          "Baseline coordinates: " + Joiner.on(";").join(baselineCoordinates));
       return ImmutableSet.of();
     }
 
