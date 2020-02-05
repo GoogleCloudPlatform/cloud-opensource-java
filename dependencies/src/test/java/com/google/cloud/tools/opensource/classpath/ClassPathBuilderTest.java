@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
@@ -205,5 +206,12 @@ public class ClassPathBuilderTest {
     Truth.assertThat(artifactProblems).hasSize(2);
     assertEquals(artifactProblems.get(0).getArtifact().toString(), "xerces:xerces-impl:jar:2.6.2");
     assertEquals(artifactProblems.get(1).getArtifact().toString(), "xml-apis:xml-apis:jar:2.6.2");
+  }
+
+  @Test
+  public void testZetaSqlSlowness() throws RepositoryException {
+    Artifact hibernateCore = new DefaultArtifact("org.apache.beam:beam-sdks-java-extensions-sql-zetasql:2.19.0");
+    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(hibernateCore));
+    assertNotNull(result);
   }
 }
