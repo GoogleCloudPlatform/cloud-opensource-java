@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -52,23 +53,23 @@ public class DependencyGraphBuilderTest {
 
     // This method should find Guava exactly once.
     int guavaCount = countGuava(graph);
-    Assert.assertEquals(1, guavaCount);
+    assertEquals(1, guavaCount);
   }
 
   @Test
   public void testGetCompleteDependencies() throws RepositoryException {
     DependencyGraph graph =
-        dependencyGraphBuilder.getCompleteDependencies(datastore).getDependencyGraph();
+        dependencyGraphBuilder.getFullDependencies(datastore).getDependencyGraph();
     List<DependencyPath> paths = graph.list();
     Assert.assertTrue(paths.size() > 10);
 
     // verify we didn't double count anything
     HashSet<DependencyPath> noDups = new HashSet<>(paths);
-    Assert.assertEquals(paths.size(), noDups.size());
+    assertEquals(paths.size(), noDups.size());
 
     // This method should find Guava multiple times.
     int guavaCount = countGuava(graph);
-    Assert.assertEquals(30, guavaCount);
+    assertEquals(29, guavaCount);
   }
 
   private static int countGuava(DependencyGraph graph) {
@@ -100,7 +101,7 @@ public class DependencyGraphBuilderTest {
     // This should not raise DependencyResolutionException
     DependencyGraph completeDependencies =
         dependencyGraphBuilder
-            .getStaticLinkageCheckDependencyGraph(ImmutableList.of(log4j2))
+            .getFullDependencies(log4j2)
             .getDependencyGraph();
     Truth.assertThat(completeDependencies.list()).isNotEmpty();
   }
@@ -110,18 +111,18 @@ public class DependencyGraphBuilderTest {
       throws RepositoryException {
     DependencyGraph graph =
         dependencyGraphBuilder
-            .getStaticLinkageCheckDependencyGraph(Arrays.asList(datastore, guava))
+            .getFullDependencies(datastore, guava)
             .getDependencyGraph();
 
     List<DependencyPath> list = graph.list();
     Assert.assertTrue(list.size() > 10);
     DependencyPath firstElement = list.get(0);
-    Assert.assertEquals(
+    assertEquals(
         "Level-order should pick up datastore as first element in the list",
         "google-cloud-datastore",
         firstElement.getLeaf().getArtifactId());
     DependencyPath secondElement = list.get(1);
-    Assert.assertEquals(
+    assertEquals(
         "Level-order should pick up guava before the dependencies of the two",
         "guava",
         secondElement.getLeaf().getArtifactId());
@@ -144,7 +145,7 @@ public class DependencyGraphBuilderTest {
 
     DependencyGraph dependencyGraph =
         dependencyGraphBuilder
-            .getStaticLinkageCheckDependencyGraph(ImmutableList.of(grpcProtobuf))
+            .getFullDependencies(grpcProtobuf)
             .getDependencyGraph();
 
     Correspondence<DependencyPath, String> pathToArtifactKey =
@@ -165,8 +166,7 @@ public class DependencyGraphBuilderTest {
     Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
 
     DependencyGraphResult result =
-        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
-            ImmutableList.of(hibernateCore));
+        dependencyGraphBuilder.getFullDependencies(hibernateCore);
 
     ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
     for (UnresolvableArtifactProblem problem : problems) {
@@ -186,7 +186,7 @@ public class DependencyGraphBuilderTest {
     Artifact artifact = new DefaultArtifact("androidx.lifecycle:lifecycle-common-java8:2.0.0");
 
     // This should not raise an exception
-    DependencyGraphResult graph = graphBuilder.getCompleteDependencies(artifact);
+    DependencyGraphResult graph = graphBuilder.getFullDependencies(ImmutableList.of(artifact));
     assertNotNull(graph.getDependencyGraph());
   }
 
@@ -197,17 +197,14 @@ public class DependencyGraphBuilderTest {
     DependencyGraphBuilder graphBuilder =
         new DependencyGraphBuilder(ImmutableList.of("https://dl.google.com/dl/android/maven2"));
 
-    // This artifact does not exist in Android's repository
-    Artifact artifact = new DefaultArtifact("com.google.guava:guava:28.2-jre");
+    // This artifact does not exist in Android's repository. Version 10.0 is unlikely to be in
+    // Maven local repository (because of other projects)
+    Artifact artifact = new DefaultArtifact("com.google:foo-bar:1.0.0");
 
-    try {
-      graphBuilder.getCompleteDependencies(artifact);
-      fail("The dependency resolution should fail if Maven Central is not used");
-    } catch (DependencyResolutionException ex) {
-      Truth.assertThat(ex.getMessage())
-          .startsWith(
-              "Could not find artifact com.google.guava:guava:jar:28.2-jre in "
-                  + " (https://dl.google.com/dl/android/maven2)");
-    }
+    DependencyGraphResult result = graphBuilder.getFullDependencies(artifact);
+    ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
+    Truth.assertThat(problems).hasSize(1);
+    UnresolvableArtifactProblem unresolvableArtifactProblem = problems.get(0);
+    assertEquals("com.google:foo-bar:jar:1.0.0", unresolvableArtifactProblem.getArtifact().toString());
   }
 }

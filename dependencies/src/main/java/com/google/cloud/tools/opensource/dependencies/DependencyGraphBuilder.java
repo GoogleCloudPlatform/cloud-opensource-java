@@ -42,9 +42,11 @@ import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
+import org.eclipse.aether.resolution.DependencyResult;
 
 /**
  * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact
@@ -63,10 +65,6 @@ public final class DependencyGraphBuilder {
   static {
     detectOsProperties().forEach(System::setProperty);
   }
-
-  // caching cuts time by about a factor of 4. Dependency class's equality includes exclusions.
-  private final Map<Dependency, DependencyNode> cacheWithProvidedScope = new HashMap<>();
-  private final Map<Dependency, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
 
   public static ImmutableMap<String, String> detectOsProperties() {
     // System properties to select Netty dependencies through os-maven-plugin
@@ -130,18 +128,17 @@ public final class DependencyGraphBuilder {
 
   private DependencyNode resolveCompileTimeDependencies(DependencyNode root)
       throws DependencyCollectionException, DependencyResolutionException {
-    return resolveCompileTimeDependencies(root, false);
+    return resolveCompileTimeDependencies(root, GraphTraversalOption.FULL_DEPENDENCY);
   }
 
   private DependencyNode resolveCompileTimeDependencies(
-      DependencyNode root, boolean includeProvidedScope)
+      DependencyNode root, GraphTraversalOption traversalOption)
       throws DependencyCollectionException, DependencyResolutionException {
-    return resolveCompileTimeDependencies(
-        ImmutableList.of(root), includeProvidedScope);
+    return resolveCompileTimeDependencies(ImmutableList.of(root), traversalOption);
   }
 
   private DependencyNode resolveCompileTimeDependencies(
-      List<DependencyNode> dependencyNodes, boolean includeProvidedScope)
+      List<DependencyNode> dependencyNodes, GraphTraversalOption traversalOption)
       throws DependencyCollectionException, DependencyResolutionException {
 
     ImmutableList.Builder<Dependency> dependenciesBuilder = ImmutableList.builder();
@@ -157,20 +154,10 @@ public final class DependencyGraphBuilder {
     }
     ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
 
-    // The cache key includes exclusion elements of Maven artifacts
-    Map<Dependency, DependencyNode> cache =
-        includeProvidedScope ? cacheWithProvidedScope : cacheWithoutProvidedScope;
-    // cacheKey is null when there's no need to use cache. Cache is only needed for a single
-    // artifact's dependency resolution. A call with multiple dependencyNodes will not come again
-    // in our usage.
-    Dependency cacheKey = dependencyList.size() == 1 ? dependencyList.get(0) : null;
-    if (cacheKey != null && cache.containsKey(cacheKey)) {
-      return cache.get(cacheKey);
-    }
-
+    boolean fullDependency = traversalOption == GraphTraversalOption.FULL_DEPENDENCY;
     RepositorySystemSession session =
-        includeProvidedScope
-            ? RepositoryUtility.newSessionWithProvidedScope(system)
+        fullDependency
+            ? RepositoryUtility.newSessionWithFullDependency(system)
             : RepositoryUtility.newSession(system);
 
     CollectRequest collectRequest = new CollectRequest();
@@ -191,11 +178,8 @@ public final class DependencyGraphBuilder {
     dependencyRequest.setCollectRequest(collectRequest);
 
     // This might be able to speed up by using collectDependencies here instead
-    system.resolveDependencies(session, dependencyRequest);
 
-    if (cacheKey != null) {
-      cache.put(cacheKey, node);
-    }
+   system.resolveDependencies(session, dependencyRequest);
 
     return node;
   }
@@ -205,7 +189,8 @@ public final class DependencyGraphBuilder {
 
     List<Artifact> result = new ArrayList<>();
 
-    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact));
+    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact),
+        GraphTraversalOption.NONE);
     for (DependencyNode child : node.getChildren()) {
       result.add(child.getArtifact());
     }
@@ -214,30 +199,49 @@ public final class DependencyGraphBuilder {
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
-   * versions, and dependencies with 'provided' scope.
+   * versions.
    *
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
    * @throws RepositoryException when there is a problem resolving or collecting dependencies
    */
-  public DependencyGraphResult getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
+  public DependencyGraphResult getFullDependencies(List<Artifact> artifacts)
       throws RepositoryException {
-    ImmutableList<DependencyNode> dependencyNodes =
-        artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
-    DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, true);
-    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
+    return getDependencies(artifacts, GraphTraversalOption.FULL_DEPENDENCY);
   }
 
-  /**
-   * Finds the full compile time, transitive dependency graph including duplicates and conflicting
-   * versions.
-   */
-  public DependencyGraphResult getCompleteDependencies(Artifact artifact)
+  public DependencyGraphResult getFullDependencies(Artifact... artifacts)
       throws RepositoryException {
+    return getDependencies(ImmutableList.copyOf(artifacts), GraphTraversalOption.FULL_DEPENDENCY);
+  }
 
-    // root node
-    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact));
-    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY);
+  public DependencyGraphResult getDependencies(List<Artifact> artifacts, GraphTraversalOption traversalOption)
+      throws DependencyCollectionException {
+    ImmutableList<DependencyNode> dependencyNodes =
+        artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
+
+    ImmutableList.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableList.builder();
+
+    DependencyNode node;
+    try {
+      node =
+          resolveCompileTimeDependencies(
+              dependencyNodes, traversalOption);
+    } catch (DependencyResolutionException ex) {
+      DependencyResult result = ex.getResult();
+      node = result.getRoot();
+      Throwable cause = ex.getCause();
+      for (ArtifactResult artifactResult: result.getArtifactResults()) {
+        List<Exception> exceptions = artifactResult.getExceptions();
+        if (exceptions.isEmpty()) {
+          continue;
+        }
+        Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
+        artifactProblems.add(new UnresolvableArtifactProblem(requestedArtifact));
+      }
+    }
+    DependencyGraph graph = levelOrder(node);
+    return new DependencyGraphResult(graph, artifactProblems.build());
   }
 
   /**
@@ -247,9 +251,7 @@ public final class DependencyGraphBuilder {
    */
   public DependencyGraphResult getTransitiveDependencies(Artifact artifact)
       throws RepositoryException {
-    // root node
-    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact));
-    return levelOrder(node);
+    return getDependencies(ImmutableList.of(artifact), GraphTraversalOption.NONE);
   }
 
   private static final class LevelOrderQueueItem {
@@ -262,18 +264,9 @@ public final class DependencyGraphBuilder {
     }
   }
 
-  private DependencyGraphResult levelOrder(DependencyNode node) {
-    return levelOrder(node, GraphTraversalOption.NONE);
-  }
-
   private enum GraphTraversalOption {
     NONE,
-    FULL_DEPENDENCY,
-    FULL_DEPENDENCY_WITH_PROVIDED;
-
-    private boolean resolveFullDependencies() {
-      return this == FULL_DEPENDENCY || this == FULL_DEPENDENCY_WITH_PROVIDED;
-    }
+    FULL_DEPENDENCY;
   }
 
   /**
@@ -284,19 +277,13 @@ public final class DependencyGraphBuilder {
    * just follows the given dependency tree starting with firstNode.
    *
    * @param firstNode node to start traversal
-   * @param graphTraversalOption option to recursively resolve the dependency to build complete
-   *     dependency tree, with or without dependencies of provided scope
    */
-  private DependencyGraphResult levelOrder(
-      DependencyNode firstNode, GraphTraversalOption graphTraversalOption) {
+  private DependencyGraph levelOrder(DependencyNode firstNode) {
 
     DependencyGraph graph = new DependencyGraph();
 
-    boolean resolveFullDependency = graphTraversalOption.resolveFullDependencies();
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
-
-    ImmutableList.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableList.builder();
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
@@ -333,33 +320,6 @@ public final class DependencyGraphBuilder {
             dependencyNode.getDependency().getOptional());
         parentNodes.push(dependencyNode);
         graph.addPath(path);
-
-        if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
-          try {
-            boolean includeProvidedScope =
-                graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
-            dependencyNode = resolveCompileTimeDependencies(dependencyNode, includeProvidedScope);
-          } catch (DependencyResolutionException resolutionException) {
-            // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0
-            // has a transitive dependency to org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not
-            // found in Maven central)
-            for (ArtifactResult artifactResult :
-                resolutionException.getResult().getArtifactResults()) {
-              if (artifactResult.getExceptions().isEmpty()) {
-                continue;
-              }
-              DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
-              ExceptionAndPath failure =
-                  ExceptionAndPath.create(parentNodes, failedDependencyNode, resolutionException);
-              artifactProblems.add(new UnresolvableArtifactProblem(failure.getPath()));
-            }
-          } catch (DependencyCollectionException collectionException) {
-            DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
-            ExceptionAndPath failure =
-                ExceptionAndPath.create(parentNodes, failedDependencyNode, collectionException);
-            artifactProblems.add(new UnresolvableArtifactProblem(failure.getPath()));
-          }
-        }
       }
       for (DependencyNode child : dependencyNode.getChildren()) {
         @SuppressWarnings("unchecked")
@@ -368,6 +328,6 @@ public final class DependencyGraphBuilder {
       }
     }
 
-    return new DependencyGraphResult(graph, artifactProblems.build());
+    return graph;
   }
 }

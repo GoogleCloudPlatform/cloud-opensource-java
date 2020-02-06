@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter.formatDependencyPaths;
 
+import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
@@ -41,8 +42,8 @@ class DependencyTreePrinter {
   private static void printDependencyTree(String coordinates) throws RepositoryException {
     DefaultArtifact rootArtifact = new DefaultArtifact(coordinates);
     DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
-    DependencyGraph dependencyGraph =
-        dependencyGraphBuilder.getCompleteDependencies(rootArtifact).getDependencyGraph();
+    DependencyGraph dependencyGraph;
+    dependencyGraph = dependencyGraphBuilder.getFullDependencies(rootArtifact).getDependencyGraph();
     System.out.println("Dependencies for " + coordinates);
     System.out.println(formatDependencyPaths(dependencyGraph.list()));
   }

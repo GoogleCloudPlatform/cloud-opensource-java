@@ -68,7 +68,7 @@ public final class ClassPathBuilder {
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraphResult result =
-        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(artifacts);
+        dependencyGraphBuilder.getFullDependencies(artifacts);
     List<DependencyPath> dependencyPaths = result.getDependencyGraph().list();
 
     // To remove duplicates on (groupId:artifactId) for dependency mediation

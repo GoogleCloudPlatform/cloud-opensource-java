@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -42,7 +43,7 @@ class UpdateReport {
 
       DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
       DependencyGraph graph =
-          dependencyGraphBuilder.getCompleteDependencies(artifact).getDependencyGraph();
+          dependencyGraphBuilder.getFullDependencies(artifact).getDependencyGraph();
       List<Update> updates = graph.findUpdates();
       
       if (updates.isEmpty()) {

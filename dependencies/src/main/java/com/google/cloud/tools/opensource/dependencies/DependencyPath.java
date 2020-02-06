@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
 import org.eclipse.aether.artifact.Artifact;
 
 /**
@@ -38,7 +37,7 @@ public final class DependencyPath {
 
   @VisibleForTesting
   public void add(Artifact artifact, String scope, Boolean optional) {
-    path.add(new Node(artifact, scope, optional));
+    path.add(new Node(artifact, scope, optional != null && optional));
   }
 
   /** Returns the length of the path. */
