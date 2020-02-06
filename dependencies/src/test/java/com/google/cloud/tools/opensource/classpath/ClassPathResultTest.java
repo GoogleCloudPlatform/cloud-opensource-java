@@ -43,16 +43,16 @@ public class ClassPathResultTest {
 
   @Before
   public void setup() {
-    dependencyPath_A.add(new Dependency(artifactA, "compile", false));
+    dependencyPath_A.add(new Dependency(artifactA, "compile"));
 
-    dependencyPath_B.add(new Dependency(artifactB, "compile", false));
+    dependencyPath_B.add(new Dependency(artifactB, "compile"));
 
-    dependencyPath_B_A.add(new Dependency(artifactB, "compile", false));
-    dependencyPath_B_A.add(new Dependency(artifactA, "compile", false));
+    dependencyPath_B_A.add(new Dependency(artifactB, "compile"));
+    dependencyPath_B_A.add(new Dependency(artifactA, "compile"));
 
-    dependencyPath_A_B_A.add(new Dependency(artifactA, "compile", false));
-    dependencyPath_A_B_A.add(new Dependency(artifactB, "compile", false));
-    dependencyPath_A_B_A.add(new Dependency(artifactA, "compile", false));
+    dependencyPath_A_B_A.add(new Dependency(artifactA, "compile"));
+    dependencyPath_A_B_A.add(new Dependency(artifactB, "compile"));
+    dependencyPath_A_B_A.add(new Dependency(artifactA, "compile"));
   }
 
   @Test

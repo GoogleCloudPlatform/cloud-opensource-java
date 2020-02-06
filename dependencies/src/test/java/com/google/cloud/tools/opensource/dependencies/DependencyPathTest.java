@@ -32,17 +32,17 @@ public class DependencyPathTest {
   public void testSize() {
     DependencyPath path = new DependencyPath();
     Assert.assertEquals(0, path.size());
-    path.add(new Dependency(foo, "compile", false));
+    path.add(new Dependency(foo, "compile"));
     Assert.assertEquals(1, path.size());
-    path.add(new Dependency(bar, "compile", false));
+    path.add(new Dependency(bar, "compile"));
     Assert.assertEquals(2, path.size());
   }
   
   @Test
   public void testGetNode() {
     DependencyPath path = new DependencyPath();
-    path.add(new Dependency(foo, "compile", false));
-    path.add(new Dependency(bar, "compile", false));
+    path.add(new Dependency(foo, "compile"));
+    path.add(new Dependency(bar, "compile"));
     Assert.assertEquals(foo, path.get(0));
     Assert.assertEquals(bar, path.get(1));
   }
@@ -63,13 +63,13 @@ public class DependencyPathTest {
     DependencyPath path3 = new DependencyPath();
     DependencyPath path4 = new DependencyPath();
 
-    path1.add(new Dependency(foo, "compile", false));
-    path1.add(new Dependency(bar, "compile", false));
-    path2.add(new Dependency(foo, "compile", false));
-    path2.add(new Dependency(bar, "compile", false));
-    path3.add(new Dependency(bar, "compile", false));
-    path3.add(new Dependency(foo, "compile", false));
-    path4.add(new Dependency(foo, "compile", false));
+    path1.add(new Dependency(foo, "compile"));
+    path1.add(new Dependency(bar, "compile"));
+    path2.add(new Dependency(foo, "compile"));
+    path2.add(new Dependency(bar, "compile"));
+    path3.add(new Dependency(bar, "compile"));
+    path3.add(new Dependency(foo, "compile"));
+    path4.add(new Dependency(foo, "compile"));
 
     new EqualsTester()
         .addEqualityGroup(path1, path2)

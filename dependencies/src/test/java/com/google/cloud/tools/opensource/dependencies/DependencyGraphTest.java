@@ -52,19 +52,19 @@ public class DependencyGraphTest {
     // particular, there can be a path to a leaf without including all
     // the subpaths of that path.
 
-    path1.add(new Dependency(foo, "compile", false));
-    path2.add(new Dependency(foo, "compile", false));
-    path2.add(new Dependency(bar, "compile", false));
-    path3.add(new Dependency(foo, "compile", false));
-    path3.add(new Dependency(baz1, "compile", false));
-    path4.add(new Dependency(foo, "compile", false));
-    path4.add(new Dependency(bar, "compile", false));
-    path4.add(new Dependency(baz2, "compile", false));
-    path5.add(new Dependency(foo, "compile", false));
-    path5.add(new Dependency(bat1, "compile", false));
-    path5.add(new Dependency(baz1, "compile", false)); // 2 paths to baz1
-    path6.add(new Dependency(foo, "compile", false));
-    path6.add(new Dependency(bat1, "compile", false));
+    path1.add(new Dependency(foo, "compile"));
+    path2.add(new Dependency(foo, "compile"));
+    path2.add(new Dependency(bar, "compile"));
+    path3.add(new Dependency(foo, "compile"));
+    path3.add(new Dependency(baz1, "compile"));
+    path4.add(new Dependency(foo, "compile"));
+    path4.add(new Dependency(bar, "compile"));
+    path4.add(new Dependency(baz2, "compile"));
+    path5.add(new Dependency(foo, "compile"));
+    path5.add(new Dependency(bat1, "compile"));
+    path5.add(new Dependency(baz1, "compile")); // 2 paths to baz1
+    path6.add(new Dependency(foo, "compile"));
+    path6.add(new Dependency(bat1, "compile"));
 
     graph.addPath(path1);
     graph.addPath(path2);
