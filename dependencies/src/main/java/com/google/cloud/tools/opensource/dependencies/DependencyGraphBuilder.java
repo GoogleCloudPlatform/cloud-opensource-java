@@ -304,11 +304,7 @@ public final class DependencyGraphBuilder {
       DependencyPath path = new DependencyPath();
       Stack<DependencyNode> parentNodes = item.parentNodes;
       parentNodes.forEach(
-          parentNode ->
-              path.add(
-                  parentNode.getArtifact(),
-                  parentNode.getDependency().getScope(),
-                  parentNode.getDependency().getOptional()));
+          parentNode -> path.add(parentNode.getDependency()));
       Artifact artifact = dependencyNode.getArtifact();
       if (artifact != null) {
         // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
@@ -327,10 +323,7 @@ public final class DependencyGraphBuilder {
           continue;
         }
 
-        path.add(
-            artifact,
-            dependencyNode.getDependency().getScope(),
-            dependencyNode.getDependency().getOptional());
+        path.add(dependencyNode.getDependency());
         parentNodes.push(dependencyNode);
         graph.addPath(path);
 

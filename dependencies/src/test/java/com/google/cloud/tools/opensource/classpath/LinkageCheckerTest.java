@@ -62,8 +62,6 @@ public class LinkageCheckerTest {
   private Path guavaPath;
   private Path firestorePath;
 
-  private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
-
   /** Returns JAR files resolved for the full dependency tree of {@code coordinates}. */
   static ImmutableList<Path> resolvePaths(String... coordinates) throws RepositoryException {
     ImmutableList<Artifact> artifacts =
