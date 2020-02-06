@@ -232,11 +232,9 @@ public final class DependencyGraphBuilder {
    * Finds the full compile time, transitive dependency graph including duplicates and conflicting
    * versions.
    */
-  public DependencyGraphResult buildCompleteGraph(Artifact dependency)
+  public DependencyGraphResult buildCompleteGraph(Dependency dependency)
       throws RepositoryException {
 
-    // root node
-    // todo this should depend on the scope of the dependency
     DefaultDependencyNode root = new DefaultDependencyNode(dependency);
     DependencyNode node = resolveCompileTimeDependencies(root);
     return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY);
@@ -247,10 +245,10 @@ public final class DependencyGraphBuilder {
    * and conflicting versions. That is, this resolves conflicting versions by picking the first
    * version seen. This is how Maven normally operates.
    */
-  public DependencyGraphResult buildGraph(Artifact artifact)
+  public DependencyGraphResult buildGraph(Dependency dependency)
       throws RepositoryException {
     // root node
-    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact));
+    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(dependency));
     return levelOrder(node);
   }
 
