@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -25,20 +24,20 @@ import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
+import java.util.stream.Collectors;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.Dependency;
 
 /**
- * Path from the root to a node in a dependency tree, where a node is {@link Artifact} with scope
- * and optional flag.
+ * Path from the root to a node in a dependency tree, where a node is a dependency.
  */
 public final class DependencyPath {
 
-  private List<Node> path = new ArrayList<>();
+  private List<Dependency> path = new ArrayList<>();
 
   @VisibleForTesting
   public void add(Artifact artifact, String scope, Boolean optional) {
-    path.add(new Node(artifact, scope, optional));
+    path.add(new Dependency(artifact, scope, optional));
   }
 
   /** Returns the length of the path. */
@@ -53,7 +52,7 @@ public final class DependencyPath {
 
   /** Returns the list of artifact in the path. */
   public ImmutableList<Artifact> getArtifacts() {
-    return path.stream().map(Node::getArtifact).collect(toImmutableList());
+    return path.stream().map(Dependency::getArtifact).collect(toImmutableList());
   }
 
   /**
@@ -66,7 +65,16 @@ public final class DependencyPath {
 
   @Override
   public String toString() {
-    return Joiner.on(" / ").join(path);
+    List<String> formatted =
+        path.stream().map(DependencyPath::formatDependency).collect(Collectors.toList());
+    return Joiner.on(" / ").join(formatted);
+  }
+  
+  private static String formatDependency(Dependency dependency) {
+    String scopeAndOptional =
+        dependency.getScope() + (dependency.getOptional() ? ", optional" : "");
+    String coordinates = Artifacts.toCoordinates(dependency.getArtifact());
+    return String.format("%s (%s)", coordinates, scopeAndOptional);
   }
   
   @Override
@@ -81,8 +89,8 @@ public final class DependencyPath {
     }
     
     for (int i = 0; i < path.size(); i++) {
-      Node thisNode = path.get(i);
-      Node otherNode = other.path.get(i);
+      Dependency thisNode = path.get(i);
+      Dependency otherNode = other.path.get(i);
       if (!artifactsEqual(thisNode.getArtifact(), otherNode.getArtifact())) {
         return false; 
       }
@@ -112,7 +120,7 @@ public final class DependencyPath {
   @Override
   public int hashCode() {
     int hashCode = 31;
-    for (Node node : path) {
+    for (Dependency node : path) {
       Artifact artifact = node.getArtifact();
       hashCode =
           37 * hashCode
@@ -120,61 +128,10 @@ public final class DependencyPath {
                   artifact.getGroupId(),
                   artifact.getArtifactId(),
                   artifact.getVersion(),
-                  node.scope,
-                  node.optional);
+                  node.getScope(),
+                  node.getOptional());
     }
     return hashCode;
-  }
-
-  /** Node in a dependency tree, holding scope and optional flag. */
-  private static class Node {
-    private Artifact artifact;
-    private String scope;
-    private boolean optional;
-
-    private Node(Artifact artifact, String scope, boolean optional) {
-      this.artifact = checkNotNull(artifact);
-      this.scope = checkNotNull(scope);
-      this.optional = optional;
-    }
-
-    private Artifact getArtifact() {
-      return artifact;
-    }
-
-    private String getScope() {
-      return scope;
-    }
-
-    private boolean isOptional() {
-      return optional;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      if (this == other) {
-        return true;
-      }
-      if (!(other instanceof Node)) {
-        return false;
-      }
-      Node that = (Node) other;
-      return optional == that.optional
-          && artifact.equals(that.artifact)
-          && scope.equals(that.scope);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(artifact, scope, optional);
-    }
-
-    @Override
-    public String toString() {
-      String scopeAndOptional = scope + (optional ? ", optional" : "");
-      String coordinates = Artifacts.toCoordinates(artifact);
-      return String.format("%s (%s)", coordinates, scopeAndOptional);
-    }
   }
 
 }
