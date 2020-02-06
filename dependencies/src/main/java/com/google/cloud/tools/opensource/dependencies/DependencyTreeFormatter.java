@@ -29,7 +29,7 @@ public class DependencyTreeFormatter {
    * Formats dependencies as a tree in a similar way to {@code mvn dependency:tree}.
    *
    * @param dependencyPaths dependency paths from @{@link
-   *     DependencyGraphBuilder#getCompleteDependencies(Artifact)}. Each element must have its
+   *     DependencyGraphBuilder#getCompleteGraph(Artifact)}. Each element must have its
    *     parent in the list, except the ones at the root.
    */
   static String formatDependencyPaths(List<DependencyPath> dependencyPaths) {

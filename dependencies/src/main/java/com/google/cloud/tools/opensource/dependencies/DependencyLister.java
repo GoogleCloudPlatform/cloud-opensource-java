@@ -35,7 +35,7 @@ class DependencyLister {
 
       DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
       DependencyGraph graph =
-          dependencyGraphBuilder.getCompleteDependencies(artifact).getDependencyGraph();
+          dependencyGraphBuilder.getCompleteGraph(artifact).getDependencyGraph();
 
       List<DependencyPath> paths = graph.list();
       for (DependencyPath path : paths) { 

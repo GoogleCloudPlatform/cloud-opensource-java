@@ -232,11 +232,13 @@ public final class DependencyGraphBuilder {
    * Finds the full compile time, transitive dependency graph including duplicates and conflicting
    * versions.
    */
-  public DependencyGraphResult getCompleteDependencies(Artifact artifact)
+  public DependencyGraphResult getCompleteGraph(Artifact dependency)
       throws RepositoryException {
 
     // root node
-    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact));
+    // todo this should depend on the scope of the dependency
+    DefaultDependencyNode root = new DefaultDependencyNode(dependency);
+    DependencyNode node = resolveCompileTimeDependencies(root);
     return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY);
   }
 

@@ -340,7 +340,7 @@ public class DashboardMain {
     for (Artifact artifact : artifacts) {
       try {
         DependencyGraphResult completeDependencyResult =
-            dependencyGraphBuilder.getCompleteDependencies(artifact);
+            dependencyGraphBuilder.getCompleteGraph(artifact);
         DependencyGraph completeDependencies = completeDependencyResult.getDependencyGraph();
         globalDependencies.add(completeDependencies);
 
