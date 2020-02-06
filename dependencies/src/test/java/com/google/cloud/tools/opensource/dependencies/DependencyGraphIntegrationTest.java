@@ -99,10 +99,10 @@ public class DependencyGraphIntegrationTest {
         dependencyGraphBuilder.getFullDependencies(jaxen).getDependencyGraph();
 
     List<Update> updates = graph.findUpdates();
-    Truth.assertThat(updates).hasSize(3);
+    Truth.assertThat(updates).hasSize(6);
 
     List<DependencyPath> conflicts = graph.findConflicts();
-    Truth.assertThat(conflicts).hasSize(5);
+    Truth.assertThat(conflicts).hasSize(10);
 
     Map<String, String> versions = graph.getHighestVersionMap();
     Assert.assertEquals("2.6.2", versions.get("xerces:xercesImpl"));
