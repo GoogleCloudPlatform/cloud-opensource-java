@@ -29,8 +29,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 
 /**
- * Path from the root to a node in a dependency tree, where a node is 
- * an {@link Artifact} with scope and optional flag.
+ * Path from the root to a node in a dependency tree, where a node is a dependency.
  */
 public final class DependencyPath {
 
