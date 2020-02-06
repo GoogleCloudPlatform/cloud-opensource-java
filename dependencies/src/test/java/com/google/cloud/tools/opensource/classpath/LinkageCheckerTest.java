@@ -77,7 +77,7 @@ public class LinkageCheckerTest {
       throws RepositoryException {
     DependencyGraph dependencies =
         dependencyGraphBuilder
-            .getTransitiveDependencies(new DefaultArtifact(coordinates))
+            .buildGraph(new DefaultArtifact(coordinates))
             .getDependencyGraph();
     ImmutableList<Path> jars =
         dependencies.list().stream()
@@ -796,11 +796,11 @@ public class LinkageCheckerTest {
     // implementation for logging backend. The tool should not show errors for such classes.
     DependencyGraph slf4jGraph =
         dependencyGraphBuilder
-            .getTransitiveDependencies(new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"))
+            .buildGraph(new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"))
             .getDependencyGraph();
     DependencyGraph logbackGraph =
         dependencyGraphBuilder
-            .getTransitiveDependencies(new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"))
+            .buildGraph(new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"))
             .getDependencyGraph();
 
     Path slf4jJar = slf4jGraph.list().get(0).getLeaf().getFile().toPath();

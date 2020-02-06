@@ -42,7 +42,7 @@ class DependencyTreePrinter {
     DefaultArtifact rootArtifact = new DefaultArtifact(coordinates);
     DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
     DependencyGraph dependencyGraph =
-        dependencyGraphBuilder.getCompleteGraph(rootArtifact).getDependencyGraph();
+        dependencyGraphBuilder.buildCompleteGraph(rootArtifact).getDependencyGraph();
     System.out.println("Dependencies for " + coordinates);
     System.out.println(formatDependencyPaths(dependencyGraph.list()));
   }

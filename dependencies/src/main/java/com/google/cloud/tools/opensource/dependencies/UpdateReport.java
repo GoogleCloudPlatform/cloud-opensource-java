@@ -42,7 +42,7 @@ class UpdateReport {
 
       DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
       DependencyGraph graph =
-          dependencyGraphBuilder.getCompleteGraph(artifact).getDependencyGraph();
+          dependencyGraphBuilder.buildCompleteGraph(artifact).getDependencyGraph();
       List<Update> updates = graph.findUpdates();
       
       if (updates.isEmpty()) {

@@ -340,13 +340,13 @@ public class DashboardMain {
     for (Artifact artifact : artifacts) {
       try {
         DependencyGraphResult completeDependencyResult =
-            dependencyGraphBuilder.getCompleteGraph(artifact);
+            dependencyGraphBuilder.buildCompleteGraph(artifact);
         DependencyGraph completeDependencies = completeDependencyResult.getDependencyGraph();
         globalDependencies.add(completeDependencies);
 
         // picks versions according to Maven rules
         DependencyGraphResult transitiveDependencyResult =
-            dependencyGraphBuilder.getTransitiveDependencies(artifact);
+            dependencyGraphBuilder.buildGraph(artifact);
         DependencyGraph transitiveDependencies = transitiveDependencyResult.getDependencyGraph();
 
         ArtifactInfo info = new ArtifactInfo(completeDependencies, transitiveDependencies);
