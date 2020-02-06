@@ -79,6 +79,7 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.Dependency;
 
 public class DashboardMain {
 
@@ -340,13 +341,13 @@ public class DashboardMain {
     for (Artifact artifact : artifacts) {
       try {
         DependencyGraphResult completeDependencyResult =
-            dependencyGraphBuilder.getCompleteDependencies(artifact);
+            dependencyGraphBuilder.buildCompleteGraph(new Dependency(artifact, "compile"));
         DependencyGraph completeDependencies = completeDependencyResult.getDependencyGraph();
         globalDependencies.add(completeDependencies);
 
         // picks versions according to Maven rules
         DependencyGraphResult transitiveDependencyResult =
-            dependencyGraphBuilder.getTransitiveDependencies(artifact);
+            dependencyGraphBuilder.buildGraph(new Dependency(artifact, "compile"));
         DependencyGraph transitiveDependencies = transitiveDependencyResult.getDependencyGraph();
 
         ArtifactInfo info = new ArtifactInfo(completeDependencies, transitiveDependencies);

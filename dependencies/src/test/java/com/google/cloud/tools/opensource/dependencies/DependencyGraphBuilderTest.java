@@ -47,7 +47,7 @@ public class DependencyGraphBuilderTest {
   @Test
   public void testGetTransitiveDependencies() throws RepositoryException {
     DependencyGraph graph =
-        dependencyGraphBuilder.getTransitiveDependencies(datastore).getDependencyGraph();
+        dependencyGraphBuilder.buildGraph(new Dependency(datastore, "compile")).getDependencyGraph();
     List<DependencyPath> list = graph.list();
 
     Assert.assertTrue(list.size() > 10);
@@ -60,7 +60,7 @@ public class DependencyGraphBuilderTest {
   @Test
   public void testGetCompleteDependencies() throws RepositoryException {
     DependencyGraph graph =
-        dependencyGraphBuilder.getCompleteDependencies(datastore).getDependencyGraph();
+        dependencyGraphBuilder.buildCompleteGraph(new Dependency(datastore, "compile")).getDependencyGraph();
     List<DependencyPath> paths = graph.list();
     Assert.assertTrue(paths.size() > 10);
 
@@ -190,7 +190,7 @@ public class DependencyGraphBuilderTest {
     Artifact artifact = new DefaultArtifact("androidx.lifecycle:lifecycle-common-java8:2.0.0");
 
     // This should not raise an exception
-    DependencyGraphResult graph = graphBuilder.getCompleteDependencies(artifact);
+    DependencyGraphResult graph = graphBuilder.buildCompleteGraph(new Dependency(artifact, "compile"));
     assertNotNull(graph.getDependencyGraph());
   }
 
@@ -204,7 +204,7 @@ public class DependencyGraphBuilderTest {
     Artifact artifact = new DefaultArtifact("com.google.guava:guava:28.2-jre");
 
     try {
-      graphBuilder.getCompleteDependencies(artifact);
+      graphBuilder.buildCompleteGraph(new Dependency(artifact, "compile"));
       fail("The dependency resolution should fail if Maven Central is not used");
     } catch (DependencyResolutionException ex) {
       Truth.assertThat(ex.getMessage())
