@@ -36,8 +36,8 @@ public final class DependencyPath {
   private List<Dependency> path = new ArrayList<>();
 
   @VisibleForTesting
-  public void add(Artifact artifact, String scope, Boolean optional) {
-    path.add(new Dependency(artifact, scope, optional));
+  public void add(Dependency dependency) {
+    path.add(dependency);
   }
 
   /** Returns the length of the path. */
