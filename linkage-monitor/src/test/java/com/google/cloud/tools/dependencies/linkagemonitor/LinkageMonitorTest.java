@@ -121,18 +121,24 @@ public class LinkageMonitorTest {
             methodNotFoundProblem,
             new ClassFile(jarA, "com.abc.BBB"));
 
-    DependencyPath dependencyPathToA = new DependencyPath();
-    dependencyPathToA.add(new DefaultArtifact("foo:bar:1.0.0"), "provided", false);
-    dependencyPathToA.add(new DefaultArtifact("foo:a:1.2.3"), "compile", true);
-    DependencyPath dependencyPathToB = new DependencyPath();
-    dependencyPathToB.add(new DefaultArtifact("foo:b:1.2.3"), "compile", true);
+    DependencyPath pathToA = new DependencyPath();
+    pathToA.add(
+        new org.eclipse.aether.graph.Dependency(
+            new DefaultArtifact("foo:bar:1.0.0"), "provided", false));
+    pathToA.add(
+        new org.eclipse.aether.graph.Dependency(
+            new DefaultArtifact("foo:a:1.2.3"), "compile", true));
+    DependencyPath pathToB = new DependencyPath();
+    pathToB.add(
+        new org.eclipse.aether.graph.Dependency(
+            new DefaultArtifact("foo:b:1.2.3"), "compile", true));
 
     String message =
         LinkageMonitor.messageForNewErrors(
             snapshotProblems,
             baselineProblems,
             new ClassPathResult(
-                ImmutableListMultimap.of(jarA, dependencyPathToA, jarB, dependencyPathToB),
+                ImmutableListMultimap.of(jarA, pathToA, jarB, pathToB),
                 ImmutableList.of()));
     assertEquals(
         "Newly introduced problem:\n"
