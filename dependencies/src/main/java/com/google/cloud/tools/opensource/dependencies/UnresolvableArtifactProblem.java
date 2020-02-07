@@ -48,7 +48,7 @@ public final class UnresolvableArtifactProblem extends ArtifactProblem {
    * dependency tree.
    * 
    * @param artifact dependency that can't be found
-   * @param path to the unfound artifact, not including the unfound artifact
+   * @param path to the unfound artifact
    */
   public UnresolvableArtifactProblem(Artifact artifact, Collection<DependencyNode> path) {
     super(artifact, path);
