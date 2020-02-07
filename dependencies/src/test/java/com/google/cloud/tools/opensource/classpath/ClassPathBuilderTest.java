@@ -203,8 +203,7 @@ public class ClassPathBuilderTest {
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
 
     Truth.assertThat(artifactProblems).hasSize(2);
-    UnresolvableArtifactProblem firstProblem = artifactProblems.get(0);
-    assertEquals("xerces:xerces-impl:jar:2.6.2", firstProblem.getArtifact().toString());
+    assertEquals("xerces:xerces-impl:jar:2.6.2", artifactProblems.get(0).getArtifact().toString());
     assertEquals("xml-apis:xml-apis:jar:2.6.2", artifactProblems.get(1).getArtifact().toString());
   }
 }
