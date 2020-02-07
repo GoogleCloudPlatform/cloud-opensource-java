@@ -237,7 +237,7 @@ public final class DependencyGraphBuilder {
 
     DefaultDependencyNode root = new DefaultDependencyNode(dependency);
     DependencyNode node = resolveCompileTimeDependencies(root);
-    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY);
+    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
   }
 
   /**
@@ -268,12 +268,7 @@ public final class DependencyGraphBuilder {
 
   private enum GraphTraversalOption {
     NONE,
-    FULL_DEPENDENCY,
     FULL_DEPENDENCY_WITH_PROVIDED;
-
-    private boolean resolveFullDependencies() {
-      return this == FULL_DEPENDENCY || this == FULL_DEPENDENCY_WITH_PROVIDED;
-    }
   }
 
   /**
@@ -292,7 +287,7 @@ public final class DependencyGraphBuilder {
 
     DependencyGraph graph = new DependencyGraph();
 
-    boolean resolveFullDependency = graphTraversalOption.resolveFullDependencies();
+    boolean resolveFullDependency = graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
