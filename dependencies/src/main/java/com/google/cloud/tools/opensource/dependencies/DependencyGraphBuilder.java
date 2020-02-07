@@ -339,16 +339,12 @@ public final class DependencyGraphBuilder {
             for (ArtifactResult artifactResult :
                 resolutionException.getResult().getArtifactResults()) {
               if (artifactResult.getArtifact() == null) {
-                DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
-                artifactProblems.add(
-                    new UnresolvableArtifactProblem(failedDependencyNode.getArtifact(), parentNodes));
+                artifactProblems.add(new UnresolvableArtifactProblem(parentNodes));
 
               }
             }
           } catch (DependencyCollectionException collectionException) {
-            DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
-            artifactProblems.add(
-                new UnresolvableArtifactProblem(failedDependencyNode.getArtifact(), parentNodes));
+            artifactProblems.add(new UnresolvableArtifactProblem(parentNodes));
           }
         }
       }
