@@ -67,8 +67,7 @@ public final class ClassPathBuilder {
       return new ClassPathResult(multimap, ImmutableList.of());
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
-    DependencyGraphResult result =
-        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(artifacts);
+    DependencyGraphResult result = dependencyGraphBuilder.buildCompleteGraph(artifacts);
     List<DependencyPath> dependencyPaths = result.getDependencyGraph().list();
 
     // To remove duplicates on (groupId:artifactId) for dependency mediation

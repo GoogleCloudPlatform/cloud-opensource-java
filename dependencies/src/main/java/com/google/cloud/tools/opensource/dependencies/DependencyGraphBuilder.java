@@ -128,20 +128,14 @@ public final class DependencyGraphBuilder {
     this.repositories = repositoryListBuilder.build();
   }
 
-  private DependencyNode resolveCompileTimeDependencies(DependencyNode root)
+  private DependencyNode resolveCompileTimeDependencies(
+      DependencyNode root, boolean fullDependencyResolution)
       throws DependencyCollectionException, DependencyResolutionException {
-    return resolveCompileTimeDependencies(root, false);
+    return resolveCompileTimeDependencies(ImmutableList.of(root), fullDependencyResolution);
   }
 
   private DependencyNode resolveCompileTimeDependencies(
-      DependencyNode root, boolean includeProvidedScope)
-      throws DependencyCollectionException, DependencyResolutionException {
-    return resolveCompileTimeDependencies(
-        ImmutableList.of(root), includeProvidedScope);
-  }
-
-  private DependencyNode resolveCompileTimeDependencies(
-      List<DependencyNode> dependencyNodes, boolean includeProvidedScope)
+      List<DependencyNode> dependencyNodes, boolean fullDependencyResolution)
       throws DependencyCollectionException, DependencyResolutionException {
 
     ImmutableList.Builder<Dependency> dependenciesBuilder = ImmutableList.builder();
@@ -159,7 +153,7 @@ public final class DependencyGraphBuilder {
 
     // The cache key includes exclusion elements of Maven artifacts
     Map<Dependency, DependencyNode> cache =
-        includeProvidedScope ? cacheWithProvidedScope : cacheWithoutProvidedScope;
+        fullDependencyResolution ? cacheWithProvidedScope : cacheWithoutProvidedScope;
     // cacheKey is null when there's no need to use cache. Cache is only needed for a single
     // artifact's dependency resolution. A call with multiple dependencyNodes will not come again
     // in our usage.
@@ -169,7 +163,7 @@ public final class DependencyGraphBuilder {
     }
 
     RepositorySystemSession session =
-        includeProvidedScope
+        fullDependencyResolution
             ? RepositoryUtility.newSessionWithFullDependencies(system)
             : RepositoryUtility.newSession(system);
 
@@ -205,7 +199,8 @@ public final class DependencyGraphBuilder {
 
     List<DependencyNode> result = new ArrayList<>();
 
-    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(dependency));
+    DependencyNode node =
+        resolveCompileTimeDependencies(new DefaultDependencyNode(dependency), false);
     for (DependencyNode child : node.getChildren()) {
       result.add(child);
     }
@@ -214,13 +209,13 @@ public final class DependencyGraphBuilder {
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
-   * versions, and dependencies with 'provided' scope.
+   * versions.
    *
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
    * @throws RepositoryException when there is a problem resolving or collecting dependencies
    */
-  public DependencyGraphResult getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
+  public DependencyGraphResult buildCompleteGraph(List<Artifact> artifacts)
       throws RepositoryException {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
@@ -236,7 +231,7 @@ public final class DependencyGraphBuilder {
       throws RepositoryException {
 
     DefaultDependencyNode root = new DefaultDependencyNode(dependency);
-    DependencyNode node = resolveCompileTimeDependencies(root);
+    DependencyNode node = resolveCompileTimeDependencies(root, false);
     return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY);
   }
 
@@ -248,7 +243,8 @@ public final class DependencyGraphBuilder {
   public DependencyGraphResult buildGraph(Dependency dependency)
       throws RepositoryException {
     // root node
-    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(dependency));
+    DependencyNode node =
+        resolveCompileTimeDependencies(new DefaultDependencyNode(dependency), false);
     return levelOrder(node);
   }
 

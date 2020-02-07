@@ -125,9 +125,7 @@ public class DependencyGraphBuilderTest {
 
     // This should not raise DependencyResolutionException
     DependencyGraph completeDependencies =
-        dependencyGraphBuilder
-            .getStaticLinkageCheckDependencyGraph(ImmutableList.of(log4j2))
-            .getDependencyGraph();
+        dependencyGraphBuilder.buildCompleteGraph(ImmutableList.of(log4j2)).getDependencyGraph();
     Truth.assertThat(completeDependencies.list()).isNotEmpty();
   }
 
@@ -136,7 +134,7 @@ public class DependencyGraphBuilderTest {
       throws RepositoryException {
     DependencyGraph graph =
         dependencyGraphBuilder
-            .getStaticLinkageCheckDependencyGraph(Arrays.asList(datastore, guava))
+            .buildCompleteGraph(Arrays.asList(datastore, guava))
             .getDependencyGraph();
 
     List<DependencyPath> list = graph.list();
@@ -171,7 +169,7 @@ public class DependencyGraphBuilderTest {
 
     DependencyGraph dependencyGraph =
         dependencyGraphBuilder
-            .getStaticLinkageCheckDependencyGraph(ImmutableList.of(grpcProtobuf))
+            .buildCompleteGraph(ImmutableList.of(grpcProtobuf))
             .getDependencyGraph();
 
     Correspondence<DependencyPath, String> pathToArtifactKey =
@@ -192,8 +190,7 @@ public class DependencyGraphBuilderTest {
     Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
 
     DependencyGraphResult result =
-        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
-            ImmutableList.of(hibernateCore));
+        dependencyGraphBuilder.buildCompleteGraph(ImmutableList.of(hibernateCore));
 
     ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
     for (UnresolvableArtifactProblem problem : problems) {
