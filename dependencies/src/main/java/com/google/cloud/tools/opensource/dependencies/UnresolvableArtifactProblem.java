@@ -42,7 +42,7 @@ public final class UnresolvableArtifactProblem extends ArtifactProblem {
    * dependency tree.
    * 
    * @param artifact the unavailable artifact
-   * @param path to the unavailable artifact
+   * @param dependencyPath to the unavailable artifact
    */
   public UnresolvableArtifactProblem(Artifact artifact, List<DependencyNode> dependencyPath) {
     super(artifact, dependencyPath);
