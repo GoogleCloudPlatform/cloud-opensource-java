@@ -152,7 +152,7 @@ public class DependencyGraphIntegrationTest {
   }
 
   @Test
-  public void testAlts() throws RepositoryException {
+  public void testAlts_exclusionElements() throws RepositoryException {
     DefaultArtifact artifact = new DefaultArtifact("io.grpc:grpc-alts:jar:1.27.0");
     DependencyGraph graph =
         dependencyGraphBuilder.getFullDependencies(artifact).getDependencyGraph();
@@ -162,10 +162,9 @@ public class DependencyGraphIntegrationTest {
       if (s.contains("io.grpc:grpc-alts:1.27.0 (compile) / com.google.auth:google-auth-library-oauth2-http:0.19.0 (compile) "
           + "/ com.google.http-client:google-http-client:1.33.0 (compile) / io.opencensus:opencensus-contrib-http-util:0.24.0 (compile) "
           + "/ com.google.guava:guava:jar:26.0-android")) {
-        return;
+        fail("It should respect the exclusion elements by grpc-alts for google-auth-library-oauth2-http");
       }
     }
-    fail("Could not find guava under opencensus-contrib-http-util");
   }
 
 }
