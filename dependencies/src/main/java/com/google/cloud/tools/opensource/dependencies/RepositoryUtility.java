@@ -156,6 +156,9 @@ public final class RepositoryUtility {
         )
     );
 
+    // No dependency management
+    session.setDependencyManager(null);
+
     session.setReadOnly();
     return session;
   }

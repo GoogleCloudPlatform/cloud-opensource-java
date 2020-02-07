@@ -230,7 +230,6 @@ public final class DependencyGraphBuilder {
     } catch (DependencyResolutionException ex) {
       DependencyResult result = ex.getResult();
       node = result.getRoot();
-      Throwable cause = ex.getCause();
       for (ArtifactResult artifactResult: result.getArtifactResults()) {
         List<Exception> exceptions = artifactResult.getExceptions();
         if (exceptions.isEmpty()) {
