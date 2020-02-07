@@ -170,7 +170,7 @@ public final class DependencyGraphBuilder {
 
     RepositorySystemSession session =
         includeProvidedScope
-            ? RepositoryUtility.newSessionWithProvidedScope(system)
+            ? RepositoryUtility.newSessionWithFullDependencies(system)
             : RepositoryUtility.newSession(system);
 
     CollectRequest collectRequest = new CollectRequest();
@@ -225,7 +225,7 @@ public final class DependencyGraphBuilder {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
     DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, true);
-    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
+    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY);
   }
 
   /**
@@ -237,7 +237,7 @@ public final class DependencyGraphBuilder {
 
     DefaultDependencyNode root = new DefaultDependencyNode(dependency);
     DependencyNode node = resolveCompileTimeDependencies(root);
-    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
+    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY);
   }
 
   /**
@@ -268,7 +268,7 @@ public final class DependencyGraphBuilder {
 
   private enum GraphTraversalOption {
     NONE,
-    FULL_DEPENDENCY_WITH_PROVIDED;
+    FULL_DEPENDENCY;
   }
 
   /**
@@ -287,7 +287,7 @@ public final class DependencyGraphBuilder {
 
     DependencyGraph graph = new DependencyGraph();
 
-    boolean resolveFullDependency = graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
+    boolean resolveFullDependency = graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY;
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
@@ -325,7 +325,7 @@ public final class DependencyGraphBuilder {
         if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
           try {
             boolean includeProvidedScope =
-                graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
+                graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY;
             dependencyNode = resolveCompileTimeDependencies(dependencyNode, includeProvidedScope);
           } catch (DependencyResolutionException resolutionException) {
             // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0

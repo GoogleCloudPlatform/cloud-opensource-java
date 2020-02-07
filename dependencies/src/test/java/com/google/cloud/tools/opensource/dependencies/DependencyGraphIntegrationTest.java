@@ -42,7 +42,9 @@ public class DependencyGraphIntegrationTest {
         new DefaultArtifact("com.google.cloud:google-cloud-core:1.37.1");
 
     DependencyGraph graph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(core, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildCompleteGraph(new Dependency(core, "compile"))
+            .getDependencyGraph();
     List<Update> updates = graph.findUpdates();
 
     Truth.assertThat(updates)
@@ -88,7 +90,9 @@ public class DependencyGraphIntegrationTest {
     DefaultArtifact beam =
         new DefaultArtifact("org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.5.0");
     DependencyGraph graph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(beam, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildCompleteGraph(new Dependency(beam, "compile"))
+            .getDependencyGraph();
 
     // should not throw
     graph.findUpdates();
@@ -101,7 +105,9 @@ public class DependencyGraphIntegrationTest {
     DefaultArtifact jaxen =
         new DefaultArtifact("jaxen:jaxen:1.1.6");
     DependencyGraph graph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(jaxen, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildCompleteGraph(new Dependency(jaxen, "compile"))
+            .getDependencyGraph();
 
     System.out.println(DependencyTreeFormatter.formatDependencyPaths(graph.list()));
 
@@ -120,7 +126,9 @@ public class DependencyGraphIntegrationTest {
 
     DefaultArtifact grpc = new DefaultArtifact("io.grpc:grpc-auth:1.15.0");
     DependencyGraph completeDependencies =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(grpc, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildCompleteGraph(new Dependency(grpc, "compile"))
+            .getDependencyGraph();
     DependencyGraph transitiveDependencies =
         dependencyGraphBuilder.buildGraph(new Dependency(grpc, "compile")).getDependencyGraph();
 
@@ -140,7 +148,9 @@ public class DependencyGraphIntegrationTest {
   public void testFindConflicts_cloudLanguage() throws RepositoryException {
     DefaultArtifact artifact = new DefaultArtifact("com.google.cloud:google-cloud-language:1.37.1");
     DependencyGraph graph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(artifact, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildCompleteGraph(new Dependency(artifact, "compile"))
+            .getDependencyGraph();
     List<DependencyPath> conflicts = graph.findConflicts();
     List<String> leaves = new ArrayList<>();
     for (DependencyPath path : conflicts) {

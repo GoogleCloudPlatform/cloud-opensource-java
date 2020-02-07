@@ -131,7 +131,7 @@ public final class RepositoryUtility {
    * RepositoryUtility#newSession(RepositorySystem)}, with its dependency selector to include
    * dependencies with 'provided' scope.
    */
-  static RepositorySystemSession newSessionWithProvidedScope(RepositorySystem system) {
+  static RepositorySystemSession newSessionWithFullDependencies(RepositorySystem system) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
 
     // This combination of DependencySelector comes from the default specified in

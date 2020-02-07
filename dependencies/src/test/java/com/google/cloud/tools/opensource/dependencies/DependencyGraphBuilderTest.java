@@ -42,15 +42,16 @@ public class DependencyGraphBuilderTest {
       new DefaultArtifact("com.google.cloud:google-cloud-datastore:1.37.1");
   private DefaultArtifact guava =
       new DefaultArtifact("com.google.guava:guava:25.1-jre");
-  private DefaultArtifact jaxen =
-      new DefaultArtifact("jaxen:jaxen:jar:1.1.6");
+  private DefaultArtifact jaxen = new DefaultArtifact("jaxen:jaxen:jar:1.1.6");
 
   private DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
 
   @Test
   public void testGetTransitiveDependencies() throws RepositoryException {
     DependencyGraph graph =
-        dependencyGraphBuilder.buildGraph(new Dependency(datastore, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildGraph(new Dependency(datastore, "compile"))
+            .getDependencyGraph();
     List<DependencyPath> list = graph.list();
 
     Assert.assertTrue(list.size() > 10);
@@ -63,7 +64,9 @@ public class DependencyGraphBuilderTest {
   @Test
   public void testBuildCompleteGraph_graphShouldHaveDuplicates() throws RepositoryException {
     DependencyGraph graph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(datastore, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildCompleteGraph(new Dependency(datastore, "compile"))
+            .getDependencyGraph();
     List<DependencyPath> paths = graph.list();
     Assert.assertTrue(paths.size() > 10);
 
@@ -81,12 +84,16 @@ public class DependencyGraphBuilderTest {
     // Jaxen:1.1.6 has 5 direct dependencies (3 optional and 2 provided).
     // https://search.maven.org/artifact/jaxen/jaxen/1.1.6/bundle
     DependencyGraph graph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(jaxen, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildCompleteGraph(new Dependency(jaxen, "compile"))
+            .getDependencyGraph();
 
     // Direct dependencies have path length 2
-    ImmutableList<DependencyPath> directDependencies = graph.list().stream().filter(path -> path.size() == 2)
-        .collect(toImmutableList());
-    Truth.assertWithMessage("jaxen:1.1.6 should have 5 direct dependencies").that(directDependencies).hasSize(5);
+    ImmutableList<DependencyPath> directDependencies =
+        graph.list().stream().filter(path -> path.size() == 2).collect(toImmutableList());
+    Truth.assertWithMessage("jaxen:1.1.6 should have 5 direct dependencies")
+        .that(directDependencies)
+        .hasSize(5);
   }
 
   private static int countGuava(DependencyGraph graph) {
@@ -206,7 +213,8 @@ public class DependencyGraphBuilderTest {
     Artifact artifact = new DefaultArtifact("androidx.lifecycle:lifecycle-common-java8:2.0.0");
 
     // This should not raise an exception
-    DependencyGraphResult graph = graphBuilder.buildCompleteGraph(new Dependency(artifact, "compile"));
+    DependencyGraphResult graph =
+        graphBuilder.buildCompleteGraph(new Dependency(artifact, "compile"));
     assertNotNull(graph.getDependencyGraph());
   }
 
