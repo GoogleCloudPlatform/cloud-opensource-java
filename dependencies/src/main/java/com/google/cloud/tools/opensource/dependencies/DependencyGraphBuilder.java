@@ -340,16 +340,22 @@ public final class DependencyGraphBuilder {
                 resolutionException.getResult().getArtifactResults()) {
               if (artifactResult.getArtifact() == null) {
                 DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
-                ExceptionAndPath failure =
-                    ExceptionAndPath.create(parentNodes, failedDependencyNode, resolutionException);
-                artifactProblems.add(new UnresolvableArtifactProblem(failure.getPath()));
+                ImmutableList<DependencyNode> failure =
+                    ImmutableList.<DependencyNode>builder()
+                .addAll(parentNodes)
+                .add(failedDependencyNode)
+                .build();
+                artifactProblems.add(new UnresolvableArtifactProblem(failure));
               }
             }
           } catch (DependencyCollectionException collectionException) {
             DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
-            ExceptionAndPath failure =
-                ExceptionAndPath.create(parentNodes, failedDependencyNode, collectionException);
-            artifactProblems.add(new UnresolvableArtifactProblem(failure.getPath()));
+            ImmutableList<DependencyNode> failure =
+                ImmutableList.<DependencyNode>builder()
+            .addAll(parentNodes)
+            .add(failedDependencyNode)
+            .build();
+            artifactProblems.add(new UnresolvableArtifactProblem(failure));
           }
         }
       }
