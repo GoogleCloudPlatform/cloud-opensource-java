@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -47,7 +48,9 @@ public class DependencyGraphBuilderTest {
   @Test
   public void testGetTransitiveDependencies() throws RepositoryException {
     DependencyGraph graph =
-        dependencyGraphBuilder.buildGraph(new Dependency(datastore, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildGraph(new Dependency(datastore, "compile"))
+            .getDependencyGraph();
     List<DependencyPath> list = graph.list();
 
     Assert.assertTrue(list.size() > 10);
@@ -60,7 +63,9 @@ public class DependencyGraphBuilderTest {
   @Test
   public void testGetCompleteDependencies() throws RepositoryException {
     DependencyGraph graph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(datastore, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildCompleteGraph(new Dependency(datastore, "compile"))
+            .getDependencyGraph();
     List<DependencyPath> paths = graph.list();
     Assert.assertTrue(paths.size() > 10);
 
@@ -179,6 +184,33 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
+  public void testGetStaticLinkageCheckDependencyGraph_artifactProblems()
+      throws RepositoryException {
+    // In the full dependency tree of hibernate-core, xerces-impl:2.6.2 and xml-apis:2.6.2 are not
+    // available in Maven Central.
+    Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
+
+    DependencyGraphResult result =
+        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
+            ImmutableList.of(hibernateCore));
+
+    ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
+
+    Truth.assertThat(artifactProblems).hasSize(2);
+    UnresolvableArtifactProblem firstProblem = artifactProblems.get(0);
+    assertEquals("xerces:xerces-impl:jar:2.6.2", firstProblem.getArtifact().toString());
+
+    assertEquals(
+        "The problem should explain the dependency path to the unavailable artifact, "
+            + "including scope and optional flag",
+        "xerces:xerces-impl:jar:2.6.2 was not resolved. "
+            + "Dependency path: org.hibernate:hibernate-core:jar:3.5.1-Final (compile) "
+            + "> cglib:cglib:jar:2.2 (compile?) > ant:ant:jar:1.6.2 (compile?) "
+            + "> xerces:xerces-impl:jar:2.6.2 (compile?)",
+        firstProblem.toString());
+  }
+
+  @Test
   public void testConfigureAdditionalMavenRepositories_addingGoogleAndroidRepository()
       throws RepositoryException {
     // Previously this test was using https://repo.spring.io/milestone and artifact
@@ -190,7 +222,8 @@ public class DependencyGraphBuilderTest {
     Artifact artifact = new DefaultArtifact("androidx.lifecycle:lifecycle-common-java8:2.0.0");
 
     // This should not raise an exception
-    DependencyGraphResult graph = graphBuilder.buildCompleteGraph(new Dependency(artifact, "compile"));
+    DependencyGraphResult graph =
+        graphBuilder.buildCompleteGraph(new Dependency(artifact, "compile"));
     assertNotNull(graph.getDependencyGraph());
   }
 

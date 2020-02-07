@@ -206,13 +206,5 @@ public class ClassPathBuilderTest {
     UnresolvableArtifactProblem firstProblem = artifactProblems.get(0);
     assertEquals("xerces:xerces-impl:jar:2.6.2", firstProblem.getArtifact().toString());
     assertEquals("xml-apis:xml-apis:jar:2.6.2", artifactProblems.get(1).getArtifact().toString());
-
-    assertEquals(
-        "The problem should explain the dependency path to the unavailable artifact",
-        "xerces:xerces-impl:jar:2.6.2 was not resolved. "
-            + "Dependency path: org.hibernate:hibernate-core:jar:3.5.1-Final (compile) "
-            + "> cglib:cglib:jar:2.2 (compile?) > ant:ant:jar:1.6.2 (compile?) "
-            + "> xerces:xerces-impl:jar:2.6.2 (compile?)",
-        firstProblem.toString());
   }
 }
