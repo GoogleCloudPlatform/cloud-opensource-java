@@ -35,19 +35,6 @@ public final class UnresolvableArtifactProblem extends ArtifactProblem {
   public UnresolvableArtifactProblem(Artifact artifact) {
     super(artifact, ImmutableList.of());
   }
-
-
-  /**
-   * Problem when Maven cannot resolve the artifact at the leaf of {@code dependencyPath} in a
-   * dependency tree.
-   * 
-   * @param artifact the unavailable artifact
-   * @param dependencyPath to the unavailable artifact
-   */
-  public UnresolvableArtifactProblem(Artifact artifact, List<DependencyNode> dependencyPath) {
-    super(artifact, dependencyPath);
-  }
-  
   
   /**
    * Problem when Maven cannot resolve the artifact at the leaf of {@code dependencyPath} in a
