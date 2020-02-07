@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.collect.ImmutableList;
+import java.util.Collection;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
@@ -41,6 +42,18 @@ public final class UnresolvableArtifactProblem extends ArtifactProblem {
   public UnresolvableArtifactProblem(List<DependencyNode> dependencyPath) {
     super(dependencyPath.get(dependencyPath.size() - 1).getArtifact(), dependencyPath);
   }
+  
+  /**
+   * Problem when Maven cannot resolve the artifact at the leaf of {@code dependencyPath} in a
+   * dependency tree.
+   * 
+   * @param artifact dependency that can't be found
+   * @param path to the unfound artifact, not including the unfound artifact
+   */
+  public UnresolvableArtifactProblem(Artifact artifact, Collection<DependencyNode> path) {
+    super(artifact, path);
+  }
+
 
   @Override
   public String toString() {
