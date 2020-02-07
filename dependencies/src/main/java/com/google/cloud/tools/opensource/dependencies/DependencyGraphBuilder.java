@@ -338,13 +338,12 @@ public final class DependencyGraphBuilder {
             // found in Maven central)
             for (ArtifactResult artifactResult :
                 resolutionException.getResult().getArtifactResults()) {
-              if (artifactResult.getExceptions().isEmpty()) {
-                continue;
+              if (!artifactResult.getExceptions().isEmpty()) {
+                DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
+                ExceptionAndPath failure =
+                    ExceptionAndPath.create(parentNodes, failedDependencyNode, resolutionException);
+                artifactProblems.add(new UnresolvableArtifactProblem(failure.getPath()));
               }
-              DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
-              ExceptionAndPath failure =
-                  ExceptionAndPath.create(parentNodes, failedDependencyNode, resolutionException);
-              artifactProblems.add(new UnresolvableArtifactProblem(failure.getPath()));
             }
           } catch (DependencyCollectionException collectionException) {
             DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
