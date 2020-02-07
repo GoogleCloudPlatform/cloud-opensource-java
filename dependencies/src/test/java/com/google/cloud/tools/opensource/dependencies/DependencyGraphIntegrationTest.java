@@ -16,12 +16,15 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static org.junit.Assert.fail;
+
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Assert;
@@ -146,6 +149,23 @@ public class DependencyGraphIntegrationTest {
         "com.google.api.grpc:proto-google-common-protos:1.0.0",
         "com.google.api.grpc:proto-google-common-protos:1.11.0",
         "com.google.api.grpc:proto-google-common-protos:1.12.0");
+  }
+
+  @Test
+  public void testAlts() throws RepositoryException {
+    DefaultArtifact artifact = new DefaultArtifact("io.grpc:grpc-alts:jar:1.27.0");
+    DependencyGraph graph =
+        dependencyGraphBuilder.getFullDependencies(artifact).getDependencyGraph();
+    List<String> list = graph.list().stream().map(p -> p.toString())
+        .collect(Collectors.toList());
+    for (String s : list) {
+      if (s.contains("io.grpc:grpc-alts:1.27.0 (compile) / com.google.auth:google-auth-library-oauth2-http:0.19.0 (compile) "
+          + "/ com.google.http-client:google-http-client:1.33.0 (compile) / io.opencensus:opencensus-contrib-http-util:0.24.0 (compile) "
+          + "/ com.google.guava:guava:jar:26.0-android")) {
+        return;
+      }
+    }
+    fail("Could not find guava under opencensus-contrib-http-util");
   }
 
 }
