@@ -341,9 +341,12 @@ public final class DependencyGraphBuilder {
               if (artifactResult.getArtifact() == null) {
                 DependencyNode failedDependencyNode =
                     artifactResult.getRequest().getDependencyNode();
+                
+                List<DependencyNode> fullPath = makeFullPath(parentNodes, failedDependencyNode);
+                
                 artifactProblems.add(
                     new UnresolvableArtifactProblem(
-                        failedDependencyNode.getArtifact(), parentNodes));
+                        failedDependencyNode.getArtifact(), fullPath));
               }
             }
           } catch (DependencyCollectionException collectionException) {
@@ -351,6 +354,7 @@ public final class DependencyGraphBuilder {
           }
         }
       }
+      
       for (DependencyNode child : dependencyNode.getChildren()) {
         @SuppressWarnings("unchecked")
         Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
@@ -359,5 +363,13 @@ public final class DependencyGraphBuilder {
     }
 
     return new DependencyGraphResult(graph, artifactProblems.build());
+  }
+
+  private static List<DependencyNode> makeFullPath(
+      Stack<DependencyNode> parentNodes, DependencyNode failedDependencyNode) {
+    List<DependencyNode> fullPath = new ArrayList<>();
+    fullPath.addAll(parentNodes);
+    fullPath.add(failedDependencyNode);
+    return fullPath;
   }
 }

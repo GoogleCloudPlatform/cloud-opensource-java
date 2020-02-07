@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
-import java.util.Collection;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
@@ -36,6 +35,8 @@ public abstract class ArtifactProblem {
 
   protected final ImmutableList<DependencyNode> dependencyPath;
 
+  // todo since the artifact is the last element in the list, there's really no
+  // reason to pass the artifact here. 
   protected ArtifactProblem(Artifact artifact, List<DependencyNode> dependencyPath) {
     this.artifact = checkNotNull(artifact);
     this.dependencyPath = ImmutableList.copyOf(dependencyPath);
