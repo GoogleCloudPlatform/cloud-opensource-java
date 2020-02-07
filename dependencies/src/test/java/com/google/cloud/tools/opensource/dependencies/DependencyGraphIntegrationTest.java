@@ -54,6 +54,8 @@ public class DependencyGraphIntegrationTest {
                 + "upgrade com.google.api:api-common:1.5.0 to 1.6.0",
             "com.google.guava:guava:20.0 needs to "
                 + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
+            "com.google.guava:guava-jdk5:17.0 needs to "
+                + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
             "com.google.api:api-common:1.6.0 needs to "
                 + "upgrade com.google.code.findbugs:jsr305:3.0.0 to 3.0.2",
             "com.google.api:api-common:1.6.0 needs to "
@@ -69,7 +71,9 @@ public class DependencyGraphIntegrationTest {
             "com.google.api.grpc:proto-google-common-protos:1.12.0 needs to "
                 + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
             "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
-                + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0")
+                + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
+            "org.apache.httpcomponents:httpclient:4.0.1 needs to "
+                + "upgrade commons-codec:commons-codec:1.3 to 1.6")
         .inOrder();
   }
 
@@ -99,11 +103,13 @@ public class DependencyGraphIntegrationTest {
     DependencyGraph graph =
         dependencyGraphBuilder.buildCompleteGraph(new Dependency(jaxen, "compile")).getDependencyGraph();
 
+    System.out.println(DependencyTreeFormatter.formatDependencyPaths(graph.list()));
+
     List<Update> updates = graph.findUpdates();
-    Truth.assertThat(updates).hasSize(3);
+    Truth.assertThat(updates).hasSize(6);
 
     List<DependencyPath> conflicts = graph.findConflicts();
-    Truth.assertThat(conflicts).hasSize(5);
+    Truth.assertThat(conflicts).hasSize(10);
 
     Map<String, String> versions = graph.getHighestVersionMap();
     Assert.assertEquals("2.6.2", versions.get("xerces:xercesImpl"));

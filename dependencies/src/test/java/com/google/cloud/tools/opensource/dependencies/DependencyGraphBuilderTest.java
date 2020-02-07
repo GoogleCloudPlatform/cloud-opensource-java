@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -41,6 +42,8 @@ public class DependencyGraphBuilderTest {
       new DefaultArtifact("com.google.cloud:google-cloud-datastore:1.37.1");
   private DefaultArtifact guava =
       new DefaultArtifact("com.google.guava:guava:25.1-jre");
+  private DefaultArtifact jaxen =
+      new DefaultArtifact("jaxen:jaxen:jar:1.1.6");
 
   private DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
 
@@ -58,7 +61,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testGetCompleteDependencies() throws RepositoryException {
+  public void testBuildCompleteGraph_graphShouldHaveDuplicates() throws RepositoryException {
     DependencyGraph graph =
         dependencyGraphBuilder.buildCompleteGraph(new Dependency(datastore, "compile")).getDependencyGraph();
     List<DependencyPath> paths = graph.list();
@@ -71,6 +74,19 @@ public class DependencyGraphBuilderTest {
     // This method should find Guava multiple times.
     int guavaCount = countGuava(graph);
     Assert.assertEquals(30, guavaCount);
+  }
+
+  @Test
+  public void testBuildCompleteGraph_directProvidedDependencies() throws RepositoryException {
+    // Jaxen:1.1.6 has 5 direct dependencies (3 optional and 2 provided).
+    // https://search.maven.org/artifact/jaxen/jaxen/1.1.6/bundle
+    DependencyGraph graph =
+        dependencyGraphBuilder.buildCompleteGraph(new Dependency(jaxen, "compile")).getDependencyGraph();
+
+    // Direct dependencies have path length 2
+    ImmutableList<DependencyPath> directDependencies = graph.list().stream().filter(path -> path.size() == 2)
+        .collect(toImmutableList());
+    Truth.assertWithMessage("jaxen:1.1.6 should have 5 direct dependencies").that(directDependencies).hasSize(5);
   }
 
   private static int countGuava(DependencyGraph graph) {
