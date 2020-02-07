@@ -29,6 +29,8 @@ public final class UnresolvableArtifactProblem extends ArtifactProblem {
    *
    * <p>Prefer {@link #UnresolvableArtifactProblem(List)} when the dependency path to the artifact
    * is available, because it gives a more detailed error message.
+   * 
+   * @param artifact the unavailable artifact
    */
   public UnresolvableArtifactProblem(Artifact artifact) {
     super(artifact, ImmutableList.of());
@@ -39,6 +41,7 @@ public final class UnresolvableArtifactProblem extends ArtifactProblem {
    * Problem when Maven cannot resolve the artifact at the leaf of {@code dependencyPath} in a
    * dependency tree.
    * 
+   * @param artifact the unavailable artifact
    * @param path to the unavailable artifact
    */
   public UnresolvableArtifactProblem(Artifact artifact, List<DependencyNode> dependencyPath) {
@@ -50,7 +53,7 @@ public final class UnresolvableArtifactProblem extends ArtifactProblem {
    * Problem when Maven cannot resolve the artifact at the leaf of {@code dependencyPath} in a
    * dependency tree.
    * 
-   * @param path to the unavailable artifact
+   * @param dependencyPath to the unavailable artifact
    */
   public UnresolvableArtifactProblem(List<DependencyNode> dependencyPath) {
     super(dependencyPath.get(dependencyPath.size() - 1).getArtifact(), dependencyPath);
