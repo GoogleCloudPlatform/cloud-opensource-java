@@ -65,8 +65,7 @@ public final class DependencyGraphBuilder {
   }
 
   // caching cuts time by about a factor of 4. Dependency class's equality includes exclusions.
-  private final Map<Dependency, DependencyNode> cacheWithProvidedScope = new HashMap<>();
-  private final Map<Dependency, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
+  private final Map<Dependency, DependencyNode> cache = new HashMap<>();
 
   public static ImmutableMap<String, String> detectOsProperties() {
     // System properties to select Netty dependencies through os-maven-plugin
@@ -152,8 +151,6 @@ public final class DependencyGraphBuilder {
     ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
 
     // The cache key includes exclusion elements of Maven artifacts
-    Map<Dependency, DependencyNode> cache =
-        fullDependencyResolution ? cacheWithProvidedScope : cacheWithoutProvidedScope;
     // cacheKey is null when there's no need to use cache. Cache is only needed for a single
     // artifact's dependency resolution. A call with multiple dependencyNodes will not come again
     // in our usage.
@@ -263,7 +260,30 @@ public final class DependencyGraphBuilder {
   }
 
   private enum GraphTraversalOption {
+    /**
+     * The resulting graph is the same graph as Maven's default behavior produces.
+     *
+     * @see <a
+     *     href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html">Maven:
+     *     Introduction to the Dependency Mechanism</a>
+     */
     NONE,
+
+    /**
+     * The resulting graph is a full dependency graph, where each dependency node has its
+     * dependencies as children, including {@code optional} and {@code provided}-scoped
+     * dependencies.
+     *
+     * <p>Test scope is not included. This tool is intended to check runtime class paths.
+     *
+     * <p>Exclusion elements on a dependency have effect on the applied dependency and its subtree.
+     * This would generate a similar class path as Maven would produce when Java developers declares
+     * a dependency on the artifact at the root of the resulting graph.
+     *
+     * @see <a
+     *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Dependency-Graph-Design">Dependency
+     *     Graph Design</a>
+     */
     FULL_DEPENDENCY;
   }
 

@@ -109,8 +109,6 @@ public class DependencyGraphIntegrationTest {
             .buildCompleteGraph(new Dependency(jaxen, "compile"))
             .getDependencyGraph();
 
-    System.out.println(DependencyTreeFormatter.formatDependencyPaths(graph.list()));
-
     List<Update> updates = graph.findUpdates();
     Truth.assertThat(updates).hasSize(6);
 
