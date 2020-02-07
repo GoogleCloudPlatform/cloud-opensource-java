@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -244,6 +245,51 @@ public class DependencyGraphBuilderTest {
           .startsWith(
               "Could not find artifact com.google.guava:guava:jar:28.2-jre in "
                   + " (https://dl.google.com/dl/android/maven2)");
+    }
+  }
+
+  @Test
+  public void testGetStaticLinkageCheckDependencyGraph_exclusionElements()
+      throws RepositoryException {
+    DefaultArtifact artifact = new DefaultArtifact("io.grpc:grpc-alts:jar:1.27.0");
+    DependencyGraph graph =
+        dependencyGraphBuilder
+            .getStaticLinkageCheckDependencyGraph(ImmutableList.of(artifact))
+            .getDependencyGraph();
+    List<String> list = graph.list().stream().map(p -> p.toString()).collect(Collectors.toList());
+    for (String s : list) {
+      if (s.contains(
+          "io.grpc:grpc-alts:1.27.0 (compile) /"
+              + " com.google.auth:google-auth-library-oauth2-http:0.19.0 (compile) /"
+              + " com.google.http-client:google-http-client:1.33.0 (compile) /"
+              + " io.opencensus:opencensus-contrib-http-util:0.24.0 (compile) /"
+              + " com.google.guava:guava:26.0-android (compile)")) {
+        fail(
+            "It should respect the exclusion elements by grpc-alts for"
+                + " google-auth-library-oauth2-http");
+      }
+    }
+  }
+
+  @Test
+  public void testBuildCompleteGraph_exclusionElements() throws RepositoryException {
+    DefaultArtifact artifact = new DefaultArtifact("io.grpc:grpc-alts:jar:1.27.0");
+    DependencyGraph graph =
+        dependencyGraphBuilder
+            .buildCompleteGraph(new Dependency(artifact, "compile"))
+            .getDependencyGraph();
+    List<String> list = graph.list().stream().map(p -> p.toString()).collect(Collectors.toList());
+    for (String s : list) {
+      if (s.contains(
+          "io.grpc:grpc-alts:1.27.0 (compile) /"
+              + " com.google.auth:google-auth-library-oauth2-http:0.19.0 (compile) /"
+              + " com.google.http-client:google-http-client:1.33.0 (compile) /"
+              + " io.opencensus:opencensus-contrib-http-util:0.24.0 (compile) /"
+              + " com.google.guava:guava:26.0-android (compile)")) {
+        fail(
+            "It should respect the exclusion elements by grpc-alts for"
+                + " google-auth-library-oauth2-http");
+      }
     }
   }
 }

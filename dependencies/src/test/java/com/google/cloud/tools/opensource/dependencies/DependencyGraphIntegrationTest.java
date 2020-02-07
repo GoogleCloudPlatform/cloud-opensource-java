@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import static org.junit.Assert.fail;
 
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
@@ -24,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
@@ -45,7 +43,9 @@ public class DependencyGraphIntegrationTest {
         new DefaultArtifact("com.google.cloud:google-cloud-core:1.37.1");
 
     DependencyGraph graph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(core, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildCompleteGraph(new Dependency(core, "compile"))
+            .getDependencyGraph();
     List<Update> updates = graph.findUpdates();
 
     Truth.assertThat(updates)
@@ -87,7 +87,9 @@ public class DependencyGraphIntegrationTest {
     DefaultArtifact beam =
         new DefaultArtifact("org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.5.0");
     DependencyGraph graph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(beam, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildCompleteGraph(new Dependency(beam, "compile"))
+            .getDependencyGraph();
 
     // should not throw
     graph.findUpdates();
@@ -100,7 +102,9 @@ public class DependencyGraphIntegrationTest {
     DefaultArtifact jaxen =
         new DefaultArtifact("jaxen:jaxen:1.1.6");
     DependencyGraph graph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(jaxen, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildCompleteGraph(new Dependency(jaxen, "compile"))
+            .getDependencyGraph();
 
     List<Update> updates = graph.findUpdates();
     Truth.assertThat(updates).hasSize(3);
@@ -117,7 +121,9 @@ public class DependencyGraphIntegrationTest {
 
     DefaultArtifact grpc = new DefaultArtifact("io.grpc:grpc-auth:1.15.0");
     DependencyGraph completeDependencies =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(grpc, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildCompleteGraph(new Dependency(grpc, "compile"))
+            .getDependencyGraph();
     DependencyGraph transitiveDependencies =
         dependencyGraphBuilder.buildGraph(new Dependency(grpc, "compile")).getDependencyGraph();
 
@@ -137,7 +143,9 @@ public class DependencyGraphIntegrationTest {
   public void testFindConflicts_cloudLanguage() throws RepositoryException {
     DefaultArtifact artifact = new DefaultArtifact("com.google.cloud:google-cloud-language:1.37.1");
     DependencyGraph graph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(artifact, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildCompleteGraph(new Dependency(artifact, "compile"))
+            .getDependencyGraph();
     List<DependencyPath> conflicts = graph.findConflicts();
     List<String> leaves = new ArrayList<>();
     for (DependencyPath path : conflicts) {
@@ -149,21 +157,4 @@ public class DependencyGraphIntegrationTest {
         "com.google.api.grpc:proto-google-common-protos:1.11.0",
         "com.google.api.grpc:proto-google-common-protos:1.12.0");
   }
-
-  @Test
-  public void testAlts_exclusionElements() throws RepositoryException {
-    DefaultArtifact artifact = new DefaultArtifact("io.grpc:grpc-alts:jar:1.27.0");
-    DependencyGraph graph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(artifact, "compile")).getDependencyGraph();
-    List<String> list = graph.list().stream().map(p -> p.toString())
-        .collect(Collectors.toList());
-    for (String s : list) {
-      if (s.contains("io.grpc:grpc-alts:1.27.0 (compile) / com.google.auth:google-auth-library-oauth2-http:0.19.0 (compile) "
-          + "/ com.google.http-client:google-http-client:1.33.0 (compile) / io.opencensus:opencensus-contrib-http-util:0.24.0 (compile) "
-          + "/ com.google.guava:guava:jar:26.0-android")) {
-        fail("It should respect the exclusion elements by grpc-alts for google-auth-library-oauth2-http");
-      }
-    }
-  }
-
 }
