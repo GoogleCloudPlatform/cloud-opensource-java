@@ -344,9 +344,7 @@ public final class DependencyGraphBuilder {
                 
                 List<DependencyNode> fullPath = makeFullPath(parentNodes, failedDependencyNode);
                 
-                artifactProblems.add(
-                    new UnresolvableArtifactProblem(
-                        failedDependencyNode.getArtifact(), fullPath));
+                artifactProblems.add(new UnresolvableArtifactProblem(fullPath));
               }
             }
           } catch (DependencyCollectionException collectionException) {
