@@ -25,12 +25,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Stack;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -254,9 +254,9 @@ public final class DependencyGraphBuilder {
 
   private static final class LevelOrderQueueItem {
     final DependencyNode dependencyNode;
-    final Stack<DependencyNode> parentNodes;
+    final Deque<DependencyNode> parentNodes;
 
-    LevelOrderQueueItem(DependencyNode dependencyNode, Stack<DependencyNode> parentNodes) {
+    LevelOrderQueueItem(DependencyNode dependencyNode, Deque<DependencyNode> parentNodes) {
       this.dependencyNode = dependencyNode;
       this.parentNodes = parentNodes;
     }
@@ -294,7 +294,7 @@ public final class DependencyGraphBuilder {
 
     boolean resolveFullDependency = graphTraversalOption.resolveFullDependencies();
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
-    queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
+    queue.add(new LevelOrderQueueItem(firstNode, new ArrayDeque<>()));
 
     ImmutableList.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableList.builder();
 
@@ -302,7 +302,7 @@ public final class DependencyGraphBuilder {
       LevelOrderQueueItem item = queue.poll();
       DependencyNode dependencyNode = item.dependencyNode;
       DependencyPath path = new DependencyPath();
-      Stack<DependencyNode> parentNodes = item.parentNodes;
+      Deque<DependencyNode> parentNodes = item.parentNodes;
       parentNodes.forEach(
           parentNode -> path.add(parentNode.getDependency()));
       Artifact artifact = dependencyNode.getArtifact();
@@ -348,14 +348,13 @@ public final class DependencyGraphBuilder {
               }
             }
           } catch (DependencyCollectionException collectionException) {
-            artifactProblems.add(new UnresolvableArtifactProblem(parentNodes));
+            artifactProblems.add(new UnresolvableArtifactProblem(new ArrayList<>(parentNodes)));
           }
         }
       }
       
       for (DependencyNode child : dependencyNode.getChildren()) {
-        @SuppressWarnings("unchecked")
-        Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
+        Deque<DependencyNode> clone = new ArrayDeque<>(parentNodes);
         queue.add(new LevelOrderQueueItem(child, clone));
       }
     }
@@ -364,7 +363,7 @@ public final class DependencyGraphBuilder {
   }
 
   private static List<DependencyNode> makeFullPath(
-      Stack<DependencyNode> parentNodes, DependencyNode failedDependencyNode) {
+      Deque<DependencyNode> parentNodes, DependencyNode failedDependencyNode) {
     List<DependencyNode> fullPath = new ArrayList<>();
     fullPath.addAll(parentNodes);
     fullPath.add(failedDependencyNode);
