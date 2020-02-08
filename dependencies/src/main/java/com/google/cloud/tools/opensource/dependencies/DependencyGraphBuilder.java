@@ -339,20 +339,20 @@ public final class DependencyGraphBuilder {
             for (ArtifactResult artifactResult :
                 resolutionException.getResult().getArtifactResults()) {
               if (artifactResult.getArtifact() == null) {
-                DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
-                ExceptionAndPath failure =
-                    ExceptionAndPath.create(parentNodes, failedDependencyNode, resolutionException);
-                artifactProblems.add(new UnresolvableArtifactProblem(failure.getPath()));
+                DependencyNode failedDependencyNode =
+                    artifactResult.getRequest().getDependencyNode();
+                
+                List<DependencyNode> fullPath = makeFullPath(parentNodes, failedDependencyNode);
+                
+                artifactProblems.add(new UnresolvableArtifactProblem(fullPath));
               }
             }
           } catch (DependencyCollectionException collectionException) {
-            DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
-            ExceptionAndPath failure =
-                ExceptionAndPath.create(parentNodes, failedDependencyNode, collectionException);
-            artifactProblems.add(new UnresolvableArtifactProblem(failure.getPath()));
+            artifactProblems.add(new UnresolvableArtifactProblem(parentNodes));
           }
         }
       }
+      
       for (DependencyNode child : dependencyNode.getChildren()) {
         @SuppressWarnings("unchecked")
         Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
@@ -361,5 +361,13 @@ public final class DependencyGraphBuilder {
     }
 
     return new DependencyGraphResult(graph, artifactProblems.build());
+  }
+
+  private static List<DependencyNode> makeFullPath(
+      Stack<DependencyNode> parentNodes, DependencyNode failedDependencyNode) {
+    List<DependencyNode> fullPath = new ArrayList<>();
+    fullPath.addAll(parentNodes);
+    fullPath.add(failedDependencyNode);
+    return fullPath;
   }
 }
