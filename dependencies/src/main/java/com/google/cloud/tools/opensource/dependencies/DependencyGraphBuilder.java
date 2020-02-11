@@ -186,7 +186,8 @@ public final class DependencyGraphBuilder {
     DependencyRequest dependencyRequest = new DependencyRequest();
     dependencyRequest.setCollectRequest(collectRequest);
 
-    // resolveDependencies: collectDependencies (build tree) + resolveDependencies (download JARs)
+    // resolveDependencies equals to calling both collectDependencies (build dependency tree) and
+    // resolveArtifacts (download JAR files).
     DependencyResult dependencyResult = system.resolveDependencies(session, dependencyRequest);
     DependencyNode node = dependencyResult.getRoot();
 
