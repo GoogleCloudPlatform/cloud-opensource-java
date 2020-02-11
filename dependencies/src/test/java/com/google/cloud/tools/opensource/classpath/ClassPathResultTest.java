@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.Dependency;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -42,16 +43,16 @@ public class ClassPathResultTest {
 
   @Before
   public void setup() {
-    dependencyPath_A.add(artifactA, "compile", false);
+    dependencyPath_A.add(new Dependency(artifactA, "compile"));
 
-    dependencyPath_B.add(artifactB, "compile", false);
+    dependencyPath_B.add(new Dependency(artifactB, "compile"));
 
-    dependencyPath_B_A.add(artifactB, "compile", false);
-    dependencyPath_B_A.add(artifactA, "compile", false);
+    dependencyPath_B_A.add(new Dependency(artifactB, "compile"));
+    dependencyPath_B_A.add(new Dependency(artifactA, "compile"));
 
-    dependencyPath_A_B_A.add(artifactA, "compile", false);
-    dependencyPath_A_B_A.add(artifactB, "compile", false);
-    dependencyPath_A_B_A.add(artifactA, "compile", false);
+    dependencyPath_A_B_A.add(new Dependency(artifactA, "compile"));
+    dependencyPath_A_B_A.add(new Dependency(artifactB, "compile"));
+    dependencyPath_A_B_A.add(new Dependency(artifactA, "compile"));
   }
 
   @Test

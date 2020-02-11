@@ -35,6 +35,8 @@ public abstract class ArtifactProblem {
 
   protected final ImmutableList<DependencyNode> dependencyPath;
 
+  // todo since the artifact is the last element in the list, there's really no
+  // reason to pass the artifact here. 
   protected ArtifactProblem(Artifact artifact, List<DependencyNode> dependencyPath) {
     this.artifact = checkNotNull(artifact);
     this.dependencyPath = ImmutableList.copyOf(dependencyPath);

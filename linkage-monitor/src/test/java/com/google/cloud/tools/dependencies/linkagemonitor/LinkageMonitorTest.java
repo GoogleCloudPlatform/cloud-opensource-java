@@ -121,18 +121,24 @@ public class LinkageMonitorTest {
             methodNotFoundProblem,
             new ClassFile(jarA, "com.abc.BBB"));
 
-    DependencyPath dependencyPathToA = new DependencyPath();
-    dependencyPathToA.add(new DefaultArtifact("foo:bar:1.0.0"), "provided", false);
-    dependencyPathToA.add(new DefaultArtifact("foo:a:1.2.3"), "compile", true);
-    DependencyPath dependencyPathToB = new DependencyPath();
-    dependencyPathToB.add(new DefaultArtifact("foo:b:1.2.3"), "compile", true);
+    DependencyPath pathToA = new DependencyPath();
+    pathToA.add(
+        new org.eclipse.aether.graph.Dependency(
+            new DefaultArtifact("foo:bar:1.0.0"), "provided", false));
+    pathToA.add(
+        new org.eclipse.aether.graph.Dependency(
+            new DefaultArtifact("foo:a:1.2.3"), "compile", true));
+    DependencyPath pathToB = new DependencyPath();
+    pathToB.add(
+        new org.eclipse.aether.graph.Dependency(
+            new DefaultArtifact("foo:b:1.2.3"), "compile", true));
 
     String message =
         LinkageMonitor.messageForNewErrors(
             snapshotProblems,
             baselineProblems,
             new ClassPathResult(
-                ImmutableListMultimap.of(jarA, dependencyPathToA, jarB, dependencyPathToB),
+                ImmutableListMultimap.of(jarA, pathToA, jarB, pathToB),
                 ImmutableList.of()));
     assertEquals(
         "Newly introduced problem:\n"
@@ -235,13 +241,29 @@ public class LinkageMonitorTest {
 
   @Test
   public void testFindLocalArtifacts() {
-    // Current working directory of linkage-monitor should have one linkage monitor artifact
     ImmutableMap<String, String> localArtifacts =
         LinkageMonitor.findLocalArtifacts(
             system, session, Paths.get("src/test/resources/testproject"));
 
+    // This should not include project under "build" directory
     Truth.assertThat(localArtifacts).hasSize(2);
     Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:test-project");
     Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:test-subproject");
+  }
+
+  @Test
+  public void testFindLocalArtifacts_absolutePath() {
+    Path relativePath = Paths.get("src/test/resources/testproject");
+    Path absolutePath = relativePath.toAbsolutePath();
+    ImmutableMap<String, String> localArtifactsFromAbsolutePath =
+        LinkageMonitor.findLocalArtifacts(system, session, absolutePath);
+
+    ImmutableMap<String, String> localArtifactsFromRelativePath =
+        LinkageMonitor.findLocalArtifacts(system, session, relativePath);
+
+    assertEquals(
+        "findLocalArtifacts should behave the same for relative and absolute paths",
+        localArtifactsFromRelativePath,
+        localArtifactsFromAbsolutePath);
   }
 }

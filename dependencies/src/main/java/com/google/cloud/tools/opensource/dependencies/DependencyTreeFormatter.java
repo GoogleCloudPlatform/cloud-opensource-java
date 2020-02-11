@@ -22,6 +22,7 @@ import com.google.common.collect.ListMultimap;
 import java.util.Collection;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.Dependency;
 
 /** Formats Maven artifact dependency tree. */
 public class DependencyTreeFormatter {
@@ -29,7 +30,7 @@ public class DependencyTreeFormatter {
    * Formats dependencies as a tree in a similar way to {@code mvn dependency:tree}.
    *
    * @param dependencyPaths dependency paths from @{@link
-   *     DependencyGraphBuilder#getCompleteDependencies(Artifact)}. Each element must have its
+   *     DependencyGraphBuilder#buildCompleteGraph(Artifact)}. Each element must have its
    *     parent in the list, except the ones at the root.
    */
   static String formatDependencyPaths(List<DependencyPath> dependencyPaths) {
@@ -81,7 +82,7 @@ public class DependencyTreeFormatter {
       DependencyPath parentDependencyPath = new DependencyPath();
       parentArtifactPath.forEach(
           parentArtifactPathNode ->
-              parentDependencyPath.add(parentArtifactPathNode, "compile", false));
+              parentDependencyPath.add(new Dependency(parentArtifactPathNode, "compile", false)));
       // Relying on DependencyPath's equality
       tree.put(parentDependencyPath, dependencyPath);
     }

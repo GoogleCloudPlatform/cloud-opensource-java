@@ -36,7 +36,6 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
@@ -45,6 +44,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
+import org.eclipse.aether.resolution.DependencyResult;
 
 /**
  * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact
@@ -128,16 +128,16 @@ public final class DependencyGraphBuilder {
     this.repositories = repositoryListBuilder.build();
   }
 
-  private DependencyNode resolveCompileTimeDependencies(DependencyNode rootDependencyArtifact)
+  private DependencyNode resolveCompileTimeDependencies(DependencyNode root)
       throws DependencyCollectionException, DependencyResolutionException {
-    return resolveCompileTimeDependencies(rootDependencyArtifact, false);
+    return resolveCompileTimeDependencies(root, false);
   }
 
   private DependencyNode resolveCompileTimeDependencies(
-      DependencyNode rootDependencyArtifact, boolean includeProvidedScope)
+      DependencyNode root, boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
     return resolveCompileTimeDependencies(
-        ImmutableList.of(rootDependencyArtifact), includeProvidedScope);
+        ImmutableList.of(root), includeProvidedScope);
   }
 
   private DependencyNode resolveCompileTimeDependencies(
@@ -183,15 +183,13 @@ public final class DependencyGraphBuilder {
     for (RemoteRepository repository : repositories) {
       collectRequest.addRepository(repository);
     }
-    CollectResult collectResult = system.collectDependencies(session, collectRequest);
-    DependencyNode node = collectResult.getRoot();
-
     DependencyRequest dependencyRequest = new DependencyRequest();
-    dependencyRequest.setRoot(node);
     dependencyRequest.setCollectRequest(collectRequest);
 
-    // This might be able to speed up by using collectDependencies here instead
-    system.resolveDependencies(session, dependencyRequest);
+    // resolveDependencies equals to calling both collectDependencies (build dependency tree) and
+    // resolveArtifacts (download JAR files).
+    DependencyResult dependencyResult = system.resolveDependencies(session, dependencyRequest);
+    DependencyNode node = dependencyResult.getRoot();
 
     if (cacheKey != null) {
       cache.put(cacheKey, node);
@@ -200,14 +198,14 @@ public final class DependencyGraphBuilder {
     return node;
   }
 
-  /** Returns the non-transitive compile time dependencies of an artifact. */
-  public List<Artifact> getDirectDependencies(Artifact artifact) throws RepositoryException {
+  /** Returns the non-transitive compile time dependencies of a dependency. */
+  List<DependencyNode> getDirectDependencies(Dependency dependency) throws RepositoryException {
 
-    List<Artifact> result = new ArrayList<>();
+    List<DependencyNode> result = new ArrayList<>();
 
-    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact));
+    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(dependency));
     for (DependencyNode child : node.getChildren()) {
-      result.add(child.getArtifact());
+      result.add(child);
     }
     return result;
   }
@@ -232,11 +230,11 @@ public final class DependencyGraphBuilder {
    * Finds the full compile time, transitive dependency graph including duplicates and conflicting
    * versions.
    */
-  public DependencyGraphResult getCompleteDependencies(Artifact artifact)
+  public DependencyGraphResult buildCompleteGraph(Dependency dependency)
       throws RepositoryException {
 
-    // root node
-    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact));
+    DefaultDependencyNode root = new DefaultDependencyNode(dependency);
+    DependencyNode node = resolveCompileTimeDependencies(root);
     return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY);
   }
 
@@ -245,10 +243,10 @@ public final class DependencyGraphBuilder {
    * and conflicting versions. That is, this resolves conflicting versions by picking the first
    * version seen. This is how Maven normally operates.
    */
-  public DependencyGraphResult getTransitiveDependencies(Artifact artifact)
+  public DependencyGraphResult buildGraph(Dependency dependency)
       throws RepositoryException {
     // root node
-    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(artifact));
+    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(dependency));
     return levelOrder(node);
   }
 
@@ -304,11 +302,7 @@ public final class DependencyGraphBuilder {
       DependencyPath path = new DependencyPath();
       Stack<DependencyNode> parentNodes = item.parentNodes;
       parentNodes.forEach(
-          parentNode ->
-              path.add(
-                  parentNode.getArtifact(),
-                  parentNode.getDependency().getScope(),
-                  parentNode.getDependency().getOptional()));
+          parentNode -> path.add(parentNode.getDependency()));
       Artifact artifact = dependencyNode.getArtifact();
       if (artifact != null) {
         // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
@@ -327,10 +321,7 @@ public final class DependencyGraphBuilder {
           continue;
         }
 
-        path.add(
-            artifact,
-            dependencyNode.getDependency().getScope(),
-            dependencyNode.getDependency().getOptional());
+        path.add(dependencyNode.getDependency());
         parentNodes.push(dependencyNode);
         graph.addPath(path);
 
@@ -345,22 +336,21 @@ public final class DependencyGraphBuilder {
             // found in Maven central)
             for (ArtifactResult artifactResult :
                 resolutionException.getResult().getArtifactResults()) {
-              if (artifactResult.getExceptions().isEmpty()) {
-                continue;
+              if (artifactResult.getArtifact() == null) {
+                DependencyNode failedDependencyNode =
+                    artifactResult.getRequest().getDependencyNode();
+                
+                List<DependencyNode> fullPath = makeFullPath(parentNodes, failedDependencyNode);
+                
+                artifactProblems.add(new UnresolvableArtifactProblem(fullPath));
               }
-              DependencyNode failedDependencyNode = artifactResult.getRequest().getDependencyNode();
-              ExceptionAndPath failure =
-                  ExceptionAndPath.create(parentNodes, failedDependencyNode, resolutionException);
-              artifactProblems.add(new UnresolvableArtifactProblem(failure.getPath()));
             }
           } catch (DependencyCollectionException collectionException) {
-            DependencyNode failedDependencyNode = collectionException.getResult().getRoot();
-            ExceptionAndPath failure =
-                ExceptionAndPath.create(parentNodes, failedDependencyNode, collectionException);
-            artifactProblems.add(new UnresolvableArtifactProblem(failure.getPath()));
+            artifactProblems.add(new UnresolvableArtifactProblem(parentNodes));
           }
         }
       }
+      
       for (DependencyNode child : dependencyNode.getChildren()) {
         @SuppressWarnings("unchecked")
         Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
@@ -369,5 +359,13 @@ public final class DependencyGraphBuilder {
     }
 
     return new DependencyGraphResult(graph, artifactProblems.build());
+  }
+
+  private static List<DependencyNode> makeFullPath(
+      Stack<DependencyNode> parentNodes, DependencyNode failedDependencyNode) {
+    List<DependencyNode> fullPath = new ArrayList<>();
+    fullPath.addAll(parentNodes);
+    fullPath.add(failedDependencyNode);
+    return fullPath;
   }
 }

@@ -29,6 +29,7 @@ import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -113,10 +114,21 @@ public class LinkageMonitor {
       RepositorySystem repositorySystem, RepositorySystemSession session, Path projectDirectory) {
     ImmutableMap.Builder<String, String> artifactToVersion = ImmutableMap.builder();
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectDirectory);
+
     for (Path path : paths) {
       if (!path.getFileName().endsWith("pom.xml")) {
         continue;
       }
+
+      // This path element check should not depend on directory name outside the project
+      Path relativePath = path.isAbsolute() ? projectDirectory.relativize(path) : path;
+      ImmutableSet<Path> elements = ImmutableSet.copyOf(relativePath);
+      if (elements.contains(Paths.get("build")) || elements.contains(Paths.get("target"))) {
+        // Exclude Gradle's build directory and Maven's target directory, which would contain irrelevant pom.xml such as
+        // gax/build/tmp/expandedArchives/(... omit ...)/META-INF/maven/org.jacoco/org.jacoco.agent/pom.xml
+        continue;
+      }
+
       ModelBuildingRequest modelRequest = new DefaultModelBuildingRequest();
       modelRequest.setValidationLevel(ModelBuildingRequest.VALIDATION_LEVEL_MINIMAL);
       modelRequest.setProcessPlugins(false);
@@ -168,8 +180,9 @@ public class LinkageMonitor {
     ImmutableList<String> snapshotCoordinates = coordinatesList(snapshot.getManagedDependencies());
     if (baselineCoordinates.equals(snapshotCoordinates)) {
       logger.info(
-          "Could not find SNAPSHOT versions for the artifacts in the BOM. "
-              + "Not running comparison.");
+          "Snapshot is same as baseline. Not running comparison.");
+      logger.info(
+          "Baseline coordinates: " + Joiner.on(";").join(baselineCoordinates));
       return ImmutableSet.of();
     }
 
