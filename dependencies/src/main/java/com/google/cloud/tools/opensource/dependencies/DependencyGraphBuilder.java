@@ -36,7 +36,6 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.collection.CollectResult;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
@@ -45,6 +44,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
+import org.eclipse.aether.resolution.DependencyResult;
 
 /**
  * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact
@@ -183,15 +183,13 @@ public final class DependencyGraphBuilder {
     for (RemoteRepository repository : repositories) {
       collectRequest.addRepository(repository);
     }
-    CollectResult collectResult = system.collectDependencies(session, collectRequest);
-    DependencyNode node = collectResult.getRoot();
-
     DependencyRequest dependencyRequest = new DependencyRequest();
-    dependencyRequest.setRoot(node);
     dependencyRequest.setCollectRequest(collectRequest);
 
-    // This might be able to speed up by using collectDependencies here instead
-    system.resolveDependencies(session, dependencyRequest);
+    // resolveDependencies equals to calling both collectDependencies (build dependency tree) and
+    // resolveArtifacts (download JAR files).
+    DependencyResult dependencyResult = system.resolveDependencies(session, dependencyRequest);
+    DependencyNode node = dependencyResult.getRoot();
 
     if (cacheKey != null) {
       cache.put(cacheKey, node);
