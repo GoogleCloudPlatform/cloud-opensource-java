@@ -92,11 +92,17 @@ public class ArtifactProblemTest {
     UnresolvableArtifactProblem problemACopy =
         new UnresolvableArtifactProblem(ImmutableList.of(nodeACopy));
 
+    DependencyNode nodeAWithProvidedScope =
+        new DefaultDependencyNode(new Dependency(artifactACopy, "provided"));
+    UnresolvableArtifactProblem problemAWithProvidedScope =
+        new UnresolvableArtifactProblem(ImmutableList.of(nodeAWithProvidedScope));
+
     UnresolvableArtifactProblem problemB = new UnresolvableArtifactProblem(ImmutableList.of(nodeB));
 
     new EqualsTester()
         .addEqualityGroup(problemA, problemACopy)
         .addEqualityGroup(problemB)
+        .addEqualityGroup(problemAWithProvidedScope)
         .testEquals();
   }
 }
