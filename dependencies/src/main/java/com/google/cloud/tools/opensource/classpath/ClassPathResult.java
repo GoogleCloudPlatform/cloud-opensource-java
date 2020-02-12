@@ -52,7 +52,6 @@ public final class ClassPathResult {
     this.classPath = ImmutableList.copyOf(dependencyPaths.keySet());
     this.artifactProblems = ImmutableList.copyOf(artifactProblems);
   }
-  ;
 
   /** Returns the list of absolute paths to JAR files of resolved Maven artifacts. */
   public ImmutableList<Path> getClassPath() {

@@ -30,7 +30,7 @@ public final class DependencyGraphResult {
       DependencyGraph dependencyGraph, Iterable<UnresolvableArtifactProblem> artifactProblems) {
     this.dependencyGraph = checkNotNull(dependencyGraph);
     this.artifactProblems = ImmutableList.copyOf(artifactProblems);
-  };
+  }
 
   public DependencyGraph getDependencyGraph() {
     return dependencyGraph;
