@@ -242,14 +242,15 @@ public final class DependencyGraphBuilder {
         traversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
     DependencyNode node;
     ImmutableSet.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableSet.builder();
+
     try {
       node = resolveDependencyGraph(dependencyNodes, includeProvidedScope);
     } catch (DependencyResolutionException ex) {
       DependencyResult result = ex.getResult();
       node = result.getRoot();
       for (ArtifactResult artifactResult : result.getArtifactResults()) {
-        List<Exception> exceptions = artifactResult.getExceptions();
-        if (exceptions.isEmpty()) {
+        Artifact resolvedArtifact = artifactResult.getArtifact();
+        if (resolvedArtifact != null) {
           continue;
         }
         Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
@@ -258,7 +259,9 @@ public final class DependencyGraphBuilder {
     }
 
     DependencyGraphResult result = levelOrder(node, traversalOption);
+    // Duplicate problems found in resolveDependencyGraph and levelOrder are removed by ImmutableSet
     artifactProblems.addAll(result.getArtifactProblems());
+
     return new DependencyGraphResult(result.getDependencyGraph(), artifactProblems.build());
   }
 
