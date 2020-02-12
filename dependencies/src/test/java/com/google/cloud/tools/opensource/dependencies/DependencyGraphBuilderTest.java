@@ -108,17 +108,17 @@ public class DependencyGraphBuilderTest {
     // This should not raise DependencyResolutionException
     DependencyGraph completeDependencies =
         dependencyGraphBuilder
-            .getStaticLinkageCheckDependencyGraph(ImmutableList.of(log4j2))
+            .buildLinkageCheckDependencyGraph(ImmutableList.of(log4j2))
             .getDependencyGraph();
     Truth.assertThat(completeDependencies.list()).isNotEmpty();
   }
 
   @Test
-  public void testGetStaticLinkageCheckDependencyGraph_multipleArtifacts()
+  public void testBuildLinkageCheckDependencyGraph_multipleArtifacts()
       throws RepositoryException {
     DependencyGraph graph =
         dependencyGraphBuilder
-            .getStaticLinkageCheckDependencyGraph(Arrays.asList(datastore, guava))
+            .buildLinkageCheckDependencyGraph(Arrays.asList(datastore, guava))
             .getDependencyGraph();
 
     List<DependencyPath> list = graph.list();
@@ -153,7 +153,7 @@ public class DependencyGraphBuilderTest {
 
     DependencyGraph dependencyGraph =
         dependencyGraphBuilder
-            .getStaticLinkageCheckDependencyGraph(ImmutableList.of(grpcProtobuf))
+            .buildLinkageCheckDependencyGraph(ImmutableList.of(grpcProtobuf))
             .getDependencyGraph();
 
     Correspondence<DependencyPath, String> pathToArtifactKey =
@@ -174,7 +174,7 @@ public class DependencyGraphBuilderTest {
     Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
 
     DependencyGraphResult result =
-        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
+        dependencyGraphBuilder.buildLinkageCheckDependencyGraph(
             ImmutableList.of(hibernateCore));
 
     ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
@@ -184,14 +184,14 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testGetStaticLinkageCheckDependencyGraph_artifactProblems()
+  public void testBuildLinkageCheckDependencyGraph_artifactProblems()
       throws RepositoryException {
     // In the full dependency tree of hibernate-core, xerces-impl:2.6.2 and xml-apis:2.6.2 are not
     // available in Maven Central.
     Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
 
     DependencyGraphResult result =
-        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
+        dependencyGraphBuilder.buildLinkageCheckDependencyGraph(
             ImmutableList.of(hibernateCore));
 
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();

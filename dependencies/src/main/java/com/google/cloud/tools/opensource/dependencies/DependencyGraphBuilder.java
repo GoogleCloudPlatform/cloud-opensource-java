@@ -128,19 +128,7 @@ public final class DependencyGraphBuilder {
     this.repositories = repositoryListBuilder.build();
   }
 
-  private DependencyNode resolveCompileTimeDependencies(DependencyNode root)
-      throws DependencyCollectionException, DependencyResolutionException {
-    return resolveCompileTimeDependencies(root, false);
-  }
-
-  private DependencyNode resolveCompileTimeDependencies(
-      DependencyNode root, boolean includeProvidedScope)
-      throws DependencyCollectionException, DependencyResolutionException {
-    return resolveCompileTimeDependencies(
-        ImmutableList.of(root), includeProvidedScope);
-  }
-
-  private DependencyNode resolveCompileTimeDependencies(
+  private DependencyNode resolveDependencyGraph(
       List<DependencyNode> dependencyNodes, boolean includeProvidedScope)
       throws DependencyCollectionException, DependencyResolutionException {
 
@@ -203,7 +191,7 @@ public final class DependencyGraphBuilder {
 
     List<DependencyNode> result = new ArrayList<>();
 
-    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(dependency));
+    DependencyNode node = resolveDependencyGraph(ImmutableList.of(new DefaultDependencyNode(dependency)), false);
     for (DependencyNode child : node.getChildren()) {
       result.add(child);
     }
@@ -218,11 +206,11 @@ public final class DependencyGraphBuilder {
    * @return dependency graph representing the tree of Maven artifacts
    * @throws RepositoryException when there is a problem resolving or collecting dependencies
    */
-  public DependencyGraphResult getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
+  public DependencyGraphResult buildLinkageCheckDependencyGraph(List<Artifact> artifacts)
       throws RepositoryException {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
-    DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, true);
+    DependencyNode node = resolveDependencyGraph(dependencyNodes, true);
     return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
   }
 
@@ -234,7 +222,7 @@ public final class DependencyGraphBuilder {
       throws RepositoryException {
 
     DefaultDependencyNode root = new DefaultDependencyNode(dependency);
-    DependencyNode node = resolveCompileTimeDependencies(root);
+    DependencyNode node = resolveDependencyGraph(ImmutableList.of(root), false);
     return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY);
   }
 
@@ -246,7 +234,7 @@ public final class DependencyGraphBuilder {
   public DependencyGraphResult buildGraph(Dependency dependency)
       throws RepositoryException {
     // root node
-    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(dependency));
+    DependencyNode node = resolveDependencyGraph(ImmutableList.of(new DefaultDependencyNode(dependency)), false);
     return levelOrder(node);
   }
 
@@ -329,7 +317,7 @@ public final class DependencyGraphBuilder {
           try {
             boolean includeProvidedScope =
                 graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
-            dependencyNode = resolveCompileTimeDependencies(dependencyNode, includeProvidedScope);
+            dependencyNode = resolveDependencyGraph(ImmutableList.of(dependencyNode), includeProvidedScope);
           } catch (DependencyResolutionException resolutionException) {
             // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0
             // has a transitive dependency to org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not
