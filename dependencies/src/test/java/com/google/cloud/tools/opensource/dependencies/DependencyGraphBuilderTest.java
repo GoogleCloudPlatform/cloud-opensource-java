@@ -114,8 +114,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testBuildLinkageCheckDependencyGraph_multipleArtifacts()
-      throws RepositoryException {
+  public void testBuildLinkageCheckDependencyGraph_multipleArtifacts() throws RepositoryException {
     DependencyGraph graph =
         dependencyGraphBuilder
             .buildLinkageCheckDependencyGraph(Arrays.asList(datastore, guava))
@@ -174,8 +173,7 @@ public class DependencyGraphBuilderTest {
     Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
 
     DependencyGraphResult result =
-        dependencyGraphBuilder.buildLinkageCheckDependencyGraph(
-            ImmutableList.of(hibernateCore));
+        dependencyGraphBuilder.buildLinkageCheckDependencyGraph(ImmutableList.of(hibernateCore));
 
     ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
     for (UnresolvableArtifactProblem problem : problems) {
@@ -184,15 +182,13 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testBuildLinkageCheckDependencyGraph_artifactProblems()
-      throws RepositoryException {
+  public void testBuildLinkageCheckDependencyGraph_artifactProblems() throws RepositoryException {
     // In the full dependency tree of hibernate-core, xerces-impl:2.6.2 and xml-apis:2.6.2 are not
     // available in Maven Central.
     Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
 
     DependencyGraphResult result =
-        dependencyGraphBuilder.buildLinkageCheckDependencyGraph(
-            ImmutableList.of(hibernateCore));
+        dependencyGraphBuilder.buildLinkageCheckDependencyGraph(ImmutableList.of(hibernateCore));
 
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
 
@@ -243,5 +239,21 @@ public class DependencyGraphBuilderTest {
               "Could not find artifact com.google.guava:guava:jar:28.2-jre in "
                   + " (https://dl.google.com/dl/android/maven2)");
     }
+  }
+
+  @Test
+  public void testBuildLinkageCheckDependencyGraph_catchRootException() throws RepositoryException {
+    // This should not throw exception
+    DependencyGraphResult result =
+        dependencyGraphBuilder.buildLinkageCheckDependencyGraph(
+            ImmutableList.of(new DefaultArtifact("ant:ant:jar:1.6.2")));
+    ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
+    Truth.assertThat(problems)
+        .comparingElementsUsing(
+            Correspondence.transforming(
+                (UnresolvableArtifactProblem problem) ->
+                    Artifacts.toCoordinates(problem.getArtifact()),
+                "has artifact"))
+        .containsAtLeast("xerces:xerces-impl:2.6.2", "xml-apis:xml-apis:2.6.2");
   }
 }

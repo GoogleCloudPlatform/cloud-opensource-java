@@ -191,7 +191,8 @@ public final class DependencyGraphBuilder {
 
     List<DependencyNode> result = new ArrayList<>();
 
-    DependencyNode node = resolveDependencyGraph(ImmutableList.of(new DefaultDependencyNode(dependency)), false);
+    DependencyNode node =
+        resolveDependencyGraph(ImmutableList.of(new DefaultDependencyNode(dependency)), false);
     for (DependencyNode child : node.getChildren()) {
       result.add(child);
     }
@@ -234,7 +235,8 @@ public final class DependencyGraphBuilder {
   public DependencyGraphResult buildGraph(Dependency dependency)
       throws RepositoryException {
     // root node
-    DependencyNode node = resolveDependencyGraph(ImmutableList.of(new DefaultDependencyNode(dependency)), false);
+    DependencyNode node =
+        resolveDependencyGraph(ImmutableList.of(new DefaultDependencyNode(dependency)), false);
     return levelOrder(node);
   }
 
@@ -317,7 +319,8 @@ public final class DependencyGraphBuilder {
           try {
             boolean includeProvidedScope =
                 graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
-            dependencyNode = resolveDependencyGraph(ImmutableList.of(dependencyNode), includeProvidedScope);
+            dependencyNode =
+                resolveDependencyGraph(ImmutableList.of(dependencyNode), includeProvidedScope);
           } catch (DependencyResolutionException resolutionException) {
             // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0
             // has a transitive dependency to org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not
