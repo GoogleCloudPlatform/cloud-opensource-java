@@ -339,23 +339,18 @@ public class DashboardMain {
     List<DependencyGraph> globalDependencies = new ArrayList<>();
 
     for (Artifact artifact : artifacts) {
-      try {
-        DependencyGraphResult completeDependencyResult =
-            dependencyGraphBuilder.buildCompleteGraph(new Dependency(artifact, "compile"));
-        DependencyGraph completeDependencies = completeDependencyResult.getDependencyGraph();
-        globalDependencies.add(completeDependencies);
+      DependencyGraphResult completeDependencyResult =
+          dependencyGraphBuilder.buildCompleteGraph(new Dependency(artifact, "compile"));
+      DependencyGraph completeDependencies = completeDependencyResult.getDependencyGraph();
+      globalDependencies.add(completeDependencies);
 
-        // picks versions according to Maven rules
-        DependencyGraphResult transitiveDependencyResult =
-            dependencyGraphBuilder.buildGraph(new Dependency(artifact, "compile"));
-        DependencyGraph transitiveDependencies = transitiveDependencyResult.getDependencyGraph();
+      // picks versions according to Maven rules
+      DependencyGraphResult transitiveDependencyResult =
+          dependencyGraphBuilder.buildGraph(new Dependency(artifact, "compile"));
+      DependencyGraph transitiveDependencies = transitiveDependencyResult.getDependencyGraph();
 
-        ArtifactInfo info = new ArtifactInfo(completeDependencies, transitiveDependencies);
-        infoMap.put(artifact, info);
-      } catch (RepositoryException ex) {
-        ArtifactInfo info = new ArtifactInfo(ex);
-        infoMap.put(artifact, info);
-      }
+      ArtifactInfo info = new ArtifactInfo(completeDependencies, transitiveDependencies);
+      infoMap.put(artifact, info);
     }
 
     ArtifactCache cache = new ArtifactCache();
