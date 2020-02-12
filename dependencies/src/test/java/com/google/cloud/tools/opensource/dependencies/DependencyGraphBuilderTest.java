@@ -248,8 +248,25 @@ public class DependencyGraphBuilderTest {
             ImmutableList.of(new DefaultArtifact("ant:ant:jar:1.6.2")));
 
     ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
+
     Truth.assertThat(problems)
         .comparingElementsUsing(problemOnArtifact)
         .containsAtLeast("xerces:xerces-impl:2.6.2", "xml-apis:xml-apis:2.6.2");
+
+    Truth.assertThat(problems).hasSize(4);
+    Truth.assertThat(problems)
+        .comparingElementsUsing(
+            Correspondence.transforming(UnresolvableArtifactProblem::toString, "has description"))
+        .containsExactly(
+            "xerces:xerces-impl:jar:2.6.2 was not resolved. Dependency path: ant:ant:jar:1.6.2"
+                + " (compile) > xerces:xerces-impl:jar:2.6.2 (compile?)",
+            "xml-apis:xml-apis:jar:2.6.2 was not resolved. Dependency path: ant:ant:jar:1.6.2"
+                + " (compile) > xml-apis:xml-apis:jar:2.6.2 (compile?)",
+            "xerces:xerces-impl:jar:2.6.2 was not resolved. Dependency path: ant:ant:jar:1.6.2"
+                + " (compile) > xerces:xerces-impl:jar:2.6.2 (compile?) >"
+                + " xerces:xerces-impl:jar:2.6.2 (compile?)",
+            "xml-apis:xml-apis:jar:2.6.2 was not resolved. Dependency path: ant:ant:jar:1.6.2"
+                + " (compile) > xml-apis:xml-apis:jar:2.6.2 (compile?) >"
+                + " xml-apis:xml-apis:jar:2.6.2 (compile?)");
   }
 }

@@ -23,6 +23,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -239,7 +240,7 @@ public final class DependencyGraphBuilder {
     boolean includeProvidedScope =
         traversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
     DependencyNode node;
-    ImmutableList.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableList.builder();
+    ImmutableSet.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableSet.builder();
     try {
       node = resolveDependencyGraph(dependencyNodes, includeProvidedScope);
     } catch (DependencyResolutionException ex) {
@@ -260,10 +261,18 @@ public final class DependencyGraphBuilder {
     return new DependencyGraphResult(result.getDependencyGraph(), artifactProblems.build());
   }
 
-  private static UnresolvableArtifactProblem createUnresolvableArtifactProblem(
-      DependencyNode node, Artifact artifact) {
-    ImmutableList<List<DependencyNode>> paths = findArtifactPaths(node, artifact);
+  /**
+   * Returns a problem describing that {@code artifact} is unresolvable in the {@code
+   * dependencyGraph}.
+   */
+  public static UnresolvableArtifactProblem createUnresolvableArtifactProblem(
+      DependencyNode dependencyGraph, Artifact artifact) {
+    ImmutableList<List<DependencyNode>> paths = findArtifactPaths(dependencyGraph, artifact);
     if (paths.isEmpty()) {
+      // On certain conditions, Maven throws ArtifactDescriptorException even when the
+      // (transformed) dependency dependencyGraph does not contain the problematic artifact any
+      // more.
+      // https://issues.apache.org/jira/browse/MNG-6732
       return new UnresolvableArtifactProblem(artifact);
     } else {
       return new UnresolvableArtifactProblem(paths.get(0));

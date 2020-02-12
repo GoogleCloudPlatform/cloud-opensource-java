@@ -26,16 +26,13 @@ import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.ArtifactProblem;
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.FilteringZipDependencySelector;
 import com.google.cloud.tools.opensource.dependencies.NonTestDependencySelector;
-import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -67,12 +64,10 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
-import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
 
 /** Linkage Checker Maven Enforcer Rule. */
 public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
@@ -294,16 +289,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       if (cause instanceof ArtifactTransferException) {
         ArtifactTransferException artifactException = (ArtifactTransferException) cause;
         Artifact artifact = artifactException.getArtifact();
-        List<DependencyNode> firstArtifactPath =
-            Iterables.getFirst(findArtifactPaths(dependencyGraph, artifact), ImmutableList.of());
-        if (firstArtifactPath.isEmpty()) {
-          // On certain conditions, Maven throws ArtifactDescriptorException even when the
-          // (transformed) dependency graph does not contain the problematic artifact any more.
-          // https://issues.apache.org/jira/browse/MNG-6732
-          artifactProblems.add(new UnresolvableArtifactProblem(artifact));
-        } else {
-          artifactProblems.add(new UnresolvableArtifactProblem(firstArtifactPath));
-        }
+        artifactProblems.add(
+            DependencyGraphBuilder.createUnresolvableArtifactProblem(dependencyGraph, artifact));
         break;
       }
     }
@@ -351,15 +338,5 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     } catch (RepositoryException ex) {
       throw new EnforcerRuleException("Failed to collect dependency " + ex.getMessage(), ex);
     }
-  }
-
-  private static ImmutableList<List<DependencyNode>> findArtifactPaths(
-      DependencyNode root, Artifact artifact) {
-    String coordinates = Artifacts.toCoordinates(artifact);
-    DependencyFilter filter =
-        (node, parents) -> Artifacts.toCoordinates(node.getArtifact()).equals(coordinates);
-    PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(filter);
-    root.accept(visitor);
-    return ImmutableList.copyOf(visitor.getPaths());
   }
 }

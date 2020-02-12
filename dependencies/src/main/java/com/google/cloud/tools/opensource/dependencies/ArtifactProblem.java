@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Verify.verify;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -25,7 +26,9 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import java.util.List;
+import java.util.Objects;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
 /** Problem in a Maven artifact in a dependency tree. */
@@ -77,5 +80,40 @@ public abstract class ArtifactProblem {
       output.append("\n");
     }
     return output.toString();
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) return true;
+    if (other == null || getClass() != other.getClass()) return false;
+    ArtifactProblem otherProblem = (ArtifactProblem) other;
+    return Objects.equals(artifact, otherProblem.artifact)
+        && sameDependencyPath(dependencyPath, otherProblem.dependencyPath);
+  }
+
+  private static boolean sameDependencyPath(
+      ImmutableList<DependencyNode> listA, ImmutableList<DependencyNode> listB) {
+    int size = listA.size();
+    if (listB.size() != size) {
+      return false;
+    }
+
+    for (int i = 0; i < size; i++) {
+      DependencyNode nodeA = listA.get(i);
+      DependencyNode nodeB = listB.get(i);
+      Dependency dependencyA = nodeA.getDependency();
+      Dependency dependencyB = nodeB.getDependency();
+      if (!Objects.equals(dependencyA, dependencyB)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    ImmutableList<Dependency> dependencyList =
+        dependencyPath.stream().map(DependencyNode::getDependency).collect(toImmutableList());
+    return Objects.hash(artifact, dependencyList);
   }
 }
