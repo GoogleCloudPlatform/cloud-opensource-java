@@ -208,7 +208,6 @@ public final class DependencyGraphBuilder {
    *
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
-   * @throws RepositoryException when there is a problem resolving or collecting dependencies
    */
   public DependencyGraphResult buildLinkageCheckDependencyGraph(List<Artifact> artifacts) {
     ImmutableList<DependencyNode> dependencyNodes =
