@@ -84,8 +84,13 @@ public abstract class ArtifactProblem {
 
   @Override
   public boolean equals(Object other) {
-    if (this == other) return true;
-    if (other == null || getClass() != other.getClass()) return false;
+    if (this == other) {
+      return true;
+    }
+    if (other == null || getClass() != other.getClass()) {
+      return false;
+    }
+
     ArtifactProblem otherProblem = (ArtifactProblem) other;
     return Objects.equals(artifact, otherProblem.artifact)
         && sameDependencyPath(dependencyPath, otherProblem.dependencyPath);

@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.dependencies;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.testing.EqualsTester;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.DefaultDependencyNode;
@@ -80,5 +81,22 @@ public class ArtifactProblemTest {
         "foo:a:jar:1.0.0 was not resolved. Dependency path: foo:a:jar:1.0.0 (compile)\n"
             + "foo:b:jar:1.0.0 was not resolved. Dependency path: foo:b:jar:1.0.0 (provided)\n",
         actual);
+  }
+
+  @Test
+  public void testEquality() {
+    UnresolvableArtifactProblem problemA = new UnresolvableArtifactProblem(ImmutableList.of(nodeA));
+
+    Artifact artifactACopy = new DefaultArtifact("foo:a:1.0.0");
+    DependencyNode nodeACopy = new DefaultDependencyNode(new Dependency(artifactACopy, "compile"));
+    UnresolvableArtifactProblem problemACopy =
+        new UnresolvableArtifactProblem(ImmutableList.of(nodeACopy));
+
+    UnresolvableArtifactProblem problemB = new UnresolvableArtifactProblem(ImmutableList.of(nodeB));
+
+    new EqualsTester()
+        .addEqualityGroup(problemA, problemACopy)
+        .addEqualityGroup(problemB)
+        .testEquals();
   }
 }
