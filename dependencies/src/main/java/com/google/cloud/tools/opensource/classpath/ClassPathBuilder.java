@@ -23,6 +23,8 @@ import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Maps;
+
+import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -76,7 +78,12 @@ public final class ClassPathBuilder {
 
     for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();
-      Path jarAbsolutePath = artifact.getFile().toPath().toAbsolutePath();
+      File file = artifact.getFile();
+      if (file == null) {
+        // When artifact was not downloaded, it's recorded in result.getArtifactProblems().
+        continue;
+      }
+      Path jarAbsolutePath = file.toPath().toAbsolutePath();
       if (!jarAbsolutePath.toString().endsWith(".jar")) {
         continue;
       }
