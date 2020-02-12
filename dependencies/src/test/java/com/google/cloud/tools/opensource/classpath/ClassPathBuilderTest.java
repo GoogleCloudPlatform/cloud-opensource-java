@@ -33,7 +33,6 @@ import java.util.Optional;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class ClassPathBuilderTest {
@@ -131,15 +130,15 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolveClassPath_invalidCoordinate() {
+  public void testResolveClassPath_invalidCoordinate() throws RepositoryException {
     Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nosuchartifact:1.2.3");
-    try {
-      classPathBuilder.resolve(ImmutableList.of(nonExistentArtifact));
-      Assert.fail("Invalid Maven coodinate should raise RepositoryException");
-    } catch (RepositoryException ex) {
-      Truth.assertThat(ex.getMessage())
-          .contains("Could not find artifact io.grpc:nosuchartifact:jar:1.2.3");
-    }
+    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(nonExistentArtifact));
+    ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
+    Truth.assertThat(artifactProblems).hasSize(1);
+    assertEquals(
+        "io.grpc:nosuchartifact:jar:1.2.3 was not resolved. Dependency path:"
+            + " io.grpc:nosuchartifact:jar:1.2.3 (compile)",
+        artifactProblems.get(0).toString());
   }
 
   @Test

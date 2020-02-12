@@ -75,7 +75,8 @@ public class LinkageCheckerTest {
   private ImmutableList<Path> resolveTransitiveDependencyPaths(String coordinates)
       throws RepositoryException {
     DependencyGraph dependencies =
-        dependencyGraphBuilder.buildGraph(new Dependency(new DefaultArtifact(coordinates), "compile"))
+        dependencyGraphBuilder
+            .buildGraph(new Dependency(new DefaultArtifact(coordinates), "compile"))
             .getDependencyGraph();
     ImmutableList<Path> jars =
         dependencies.list().stream()
@@ -681,8 +682,7 @@ public class LinkageCheckerTest {
           "Because the unavailable dependency is not optional, it should throw an exception");
     } catch (RepositoryException ex) {
       Truth.assertThat(ex.getMessage())
-          .startsWith(
-              "Unresolved artifacts: org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4");
+          .startsWith("Unresolved artifacts: org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4");
     }
   }
 
@@ -792,10 +792,15 @@ public class LinkageCheckerTest {
     // org.slf4j.MDC catches NoSuchMethodError to detect the availability of
     // implementation for logging backend. The tool should not show errors for such classes.
     DependencyGraph slf4jGraph =
-        dependencyGraphBuilder.buildGraph(new Dependency(new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"), "compile"))
+        dependencyGraphBuilder
+            .buildGraph(
+                new Dependency(new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"), "compile"))
             .getDependencyGraph();
     DependencyGraph logbackGraph =
-        dependencyGraphBuilder.buildGraph(new Dependency(new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"), "compile"))
+        dependencyGraphBuilder
+            .buildGraph(
+                new Dependency(
+                    new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"), "compile"))
             .getDependencyGraph();
 
     Path slf4jJar = slf4jGraph.list().get(0).getLeaf().getFile().toPath();

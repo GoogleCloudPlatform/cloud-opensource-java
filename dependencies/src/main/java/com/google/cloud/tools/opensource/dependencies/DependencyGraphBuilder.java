@@ -24,6 +24,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -283,7 +284,9 @@ public final class DependencyGraphBuilder {
       DependencyNode root, Artifact artifact) {
     String coordinates = Artifacts.toCoordinates(artifact);
     DependencyFilter filter =
-        (node, parents) -> Artifacts.toCoordinates(node.getArtifact()).equals(coordinates);
+        (node, parents) ->
+            node.getArtifact() != null
+                && Artifacts.toCoordinates(node.getArtifact()).equals(coordinates);
     PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(filter);
     root.accept(visitor);
     return ImmutableList.copyOf(visitor.getPaths());
@@ -399,7 +402,14 @@ public final class DependencyGraphBuilder {
       Stack<DependencyNode> parentNodes, DependencyNode failedDependencyNode) {
     List<DependencyNode> fullPath = new ArrayList<>();
     fullPath.addAll(parentNodes);
-    fullPath.add(failedDependencyNode);
+
+    DependencyNode lastParent = Iterables.getLast(parentNodes);
+
+    // Duplicate happens when root artifact is unavailable
+    if (!lastParent.getDependency().equals(failedDependencyNode.getDependency())) {
+      // Add child only when it's not duplicate
+      fullPath.add(failedDependencyNode);
+    }
     return fullPath;
   }
 }

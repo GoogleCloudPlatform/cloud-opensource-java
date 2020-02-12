@@ -23,7 +23,6 @@ import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Maps;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
