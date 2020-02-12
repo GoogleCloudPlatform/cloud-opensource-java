@@ -247,6 +247,7 @@ public class DependencyGraphBuilderTest {
     DependencyGraphResult result =
         dependencyGraphBuilder.buildLinkageCheckDependencyGraph(
             ImmutableList.of(new DefaultArtifact("ant:ant:jar:1.6.2")));
+
     ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
     Truth.assertThat(problems)
         .comparingElementsUsing(

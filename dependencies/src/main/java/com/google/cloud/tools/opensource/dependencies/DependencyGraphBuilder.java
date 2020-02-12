@@ -237,7 +237,7 @@ public final class DependencyGraphBuilder {
     // root node
     DependencyNode node =
         resolveDependencyGraph(ImmutableList.of(new DefaultDependencyNode(dependency)), false);
-    return levelOrder(node);
+    return levelOrder(node, GraphTraversalOption.NONE);
   }
 
   private static final class LevelOrderQueueItem {
@@ -248,10 +248,6 @@ public final class DependencyGraphBuilder {
       this.dependencyNode = dependencyNode;
       this.parentNodes = parentNodes;
     }
-  }
-
-  private DependencyGraphResult levelOrder(DependencyNode node) {
-    return levelOrder(node, GraphTraversalOption.NONE);
   }
 
   private enum GraphTraversalOption {
