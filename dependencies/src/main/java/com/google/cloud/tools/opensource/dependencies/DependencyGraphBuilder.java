@@ -36,15 +36,16 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
+import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
 
 /**
  * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact
@@ -130,7 +131,7 @@ public final class DependencyGraphBuilder {
 
   private DependencyNode resolveDependencyGraph(
       List<DependencyNode> dependencyNodes, boolean includeProvidedScope)
-      throws DependencyCollectionException, DependencyResolutionException {
+      throws DependencyResolutionException {
 
     ImmutableList.Builder<Dependency> dependenciesBuilder = ImmutableList.builder();
     for (DependencyNode dependencyNode : dependencyNodes) {
@@ -207,24 +208,20 @@ public final class DependencyGraphBuilder {
    * @return dependency graph representing the tree of Maven artifacts
    * @throws RepositoryException when there is a problem resolving or collecting dependencies
    */
-  public DependencyGraphResult buildLinkageCheckDependencyGraph(List<Artifact> artifacts)
-      throws RepositoryException {
+  public DependencyGraphResult buildLinkageCheckDependencyGraph(List<Artifact> artifacts) {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
-    DependencyNode node = resolveDependencyGraph(dependencyNodes, true);
-    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
+    return buildDependencyGraph(
+        dependencyNodes, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
   }
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates and conflicting
    * versions.
    */
-  public DependencyGraphResult buildCompleteGraph(Dependency dependency)
-      throws RepositoryException {
-
+  public DependencyGraphResult buildCompleteGraph(Dependency dependency) {
     DefaultDependencyNode root = new DefaultDependencyNode(dependency);
-    DependencyNode node = resolveDependencyGraph(ImmutableList.of(root), false);
-    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY);
+    return buildDependencyGraph(ImmutableList.of(root), GraphTraversalOption.FULL_DEPENDENCY);
   }
 
   /**
@@ -232,12 +229,55 @@ public final class DependencyGraphBuilder {
    * and conflicting versions. That is, this resolves conflicting versions by picking the first
    * version seen. This is how Maven normally operates.
    */
-  public DependencyGraphResult buildGraph(Dependency dependency)
-      throws RepositoryException {
-    // root node
-    DependencyNode node =
-        resolveDependencyGraph(ImmutableList.of(new DefaultDependencyNode(dependency)), false);
-    return levelOrder(node, GraphTraversalOption.NONE);
+  public DependencyGraphResult buildGraph(Dependency dependency) {
+    return buildDependencyGraph(
+        ImmutableList.of(new DefaultDependencyNode(dependency)), GraphTraversalOption.NONE);
+  }
+
+  private DependencyGraphResult buildDependencyGraph(
+      List<DependencyNode> dependencyNodes, GraphTraversalOption traversalOption) {
+    boolean includeProvidedScope =
+        traversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
+    DependencyNode node;
+    ImmutableList.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableList.builder();
+    try {
+      node = resolveDependencyGraph(dependencyNodes, includeProvidedScope);
+    } catch (DependencyResolutionException ex) {
+      DependencyResult result = ex.getResult();
+      node = result.getRoot();
+      for (ArtifactResult artifactResult : result.getArtifactResults()) {
+        List<Exception> exceptions = artifactResult.getExceptions();
+        if (exceptions.isEmpty()) {
+          continue;
+        }
+        Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
+        artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
+      }
+    }
+
+    DependencyGraphResult result = levelOrder(node, traversalOption);
+    artifactProblems.addAll(result.getArtifactProblems());
+    return new DependencyGraphResult(result.getDependencyGraph(), artifactProblems.build());
+  }
+
+  private static UnresolvableArtifactProblem createUnresolvableArtifactProblem(
+      DependencyNode node, Artifact artifact) {
+    ImmutableList<List<DependencyNode>> paths = findArtifactPaths(node, artifact);
+    if (paths.isEmpty()) {
+      return new UnresolvableArtifactProblem(artifact);
+    } else {
+      return new UnresolvableArtifactProblem(paths.get(0));
+    }
+  }
+
+  private static ImmutableList<List<DependencyNode>> findArtifactPaths(
+      DependencyNode root, Artifact artifact) {
+    String coordinates = Artifacts.toCoordinates(artifact);
+    DependencyFilter filter =
+        (node, parents) -> Artifacts.toCoordinates(node.getArtifact()).equals(coordinates);
+    PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(filter);
+    root.accept(visitor);
+    return ImmutableList.copyOf(visitor.getPaths());
   }
 
   private static final class LevelOrderQueueItem {
@@ -332,8 +372,6 @@ public final class DependencyGraphBuilder {
                 artifactProblems.add(new UnresolvableArtifactProblem(fullPath));
               }
             }
-          } catch (DependencyCollectionException collectionException) {
-            artifactProblems.add(new UnresolvableArtifactProblem(parentNodes));
           }
         }
       }

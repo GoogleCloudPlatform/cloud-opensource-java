@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
@@ -32,7 +31,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -44,6 +42,11 @@ public class DependencyGraphBuilderTest {
       new DefaultArtifact("com.google.guava:guava:25.1-jre");
 
   private DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
+
+  private Correspondence<UnresolvableArtifactProblem, String> problemOnArtifact =
+      Correspondence.transforming(
+          (UnresolvableArtifactProblem problem) -> Artifacts.toCoordinates(problem.getArtifact()),
+          "has artifact");
 
   @Test
   public void testGetTransitiveDependencies() throws RepositoryException {
@@ -230,15 +233,11 @@ public class DependencyGraphBuilderTest {
     // This artifact does not exist in Android's repository
     Artifact artifact = new DefaultArtifact("com.google.guava:guava:28.2-jre");
 
-    try {
-      graphBuilder.buildCompleteGraph(new Dependency(artifact, "compile"));
-      fail("The dependency resolution should fail if Maven Central is not used");
-    } catch (DependencyResolutionException ex) {
-      Truth.assertThat(ex.getMessage())
-          .startsWith(
-              "Could not find artifact com.google.guava:guava:jar:28.2-jre in "
-                  + " (https://dl.google.com/dl/android/maven2)");
-    }
+    DependencyGraphResult result =
+        graphBuilder.buildCompleteGraph(new Dependency(artifact, "compile"));
+    Truth.assertThat(result.getArtifactProblems())
+        .comparingElementsUsing(problemOnArtifact)
+        .contains("com.google.guava:guava:28.2-jre");
   }
 
   @Test
@@ -250,11 +249,7 @@ public class DependencyGraphBuilderTest {
 
     ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
     Truth.assertThat(problems)
-        .comparingElementsUsing(
-            Correspondence.transforming(
-                (UnresolvableArtifactProblem problem) ->
-                    Artifacts.toCoordinates(problem.getArtifact()),
-                "has artifact"))
+        .comparingElementsUsing(problemOnArtifact)
         .containsAtLeast("xerces:xerces-impl:2.6.2", "xml-apis:xml-apis:2.6.2");
   }
 }
