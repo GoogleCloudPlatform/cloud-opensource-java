@@ -169,8 +169,7 @@ public class DashboardMain {
 
   @VisibleForTesting
   static Path generate(Path bomFile)
-      throws IOException, TemplateException, RepositoryException, URISyntaxException,
-      MavenRepositoryException {
+      throws IOException, TemplateException, URISyntaxException, MavenRepositoryException {
     checkArgument(Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
     checkArgument(Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
     Path output = generate(RepositoryUtility.readBom(bomFile));
@@ -178,8 +177,7 @@ public class DashboardMain {
     return output;
   }
 
-  private static Path generate(Bom bom)
-      throws IOException, TemplateException, RepositoryException, URISyntaxException {
+  private static Path generate(Bom bom) throws IOException, TemplateException, URISyntaxException {
 
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 

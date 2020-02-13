@@ -42,7 +42,6 @@ import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
-import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 
 /** A tool to find linkage errors in a class path. */
@@ -83,7 +82,7 @@ public class LinkageChecker {
     return new LinkageChecker(dumper, jars, symbolReferenceMaps, classReferenceGraph);
   }
 
-  public static LinkageChecker create(Bom bom) throws RepositoryException, IOException {
+  public static LinkageChecker create(Bom bom) throws IOException {
     // duplicate code from DashboardMain follows. We need to refactor to extract this.
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 

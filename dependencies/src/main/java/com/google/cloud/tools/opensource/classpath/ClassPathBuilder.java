@@ -27,7 +27,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
@@ -59,9 +58,8 @@ public final class ClassPathBuilder {
    * closest' strategy follows Maven's dependency mediation.
    *
    * @param artifacts Maven artifacts to check. They are treated as the root of the dependency tree.
-   * @throws RepositoryException when there is a problem retrieving jar files
    */
-  public ClassPathResult resolve(List<Artifact> artifacts) throws RepositoryException {
+  public ClassPathResult resolve(List<Artifact> artifacts) {
 
     LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
     if (artifacts.isEmpty()) {

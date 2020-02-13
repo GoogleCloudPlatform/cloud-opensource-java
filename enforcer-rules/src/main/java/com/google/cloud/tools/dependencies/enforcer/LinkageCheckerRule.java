@@ -22,6 +22,7 @@ import static org.apache.maven.enforcer.rule.api.EnforcerLevel.WARN;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
+import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
@@ -29,6 +30,7 @@ import com.google.cloud.tools.opensource.dependencies.ArtifactProblem;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.FilteringZipDependencySelector;
 import com.google.cloud.tools.opensource.dependencies.NonTestDependencySelector;
+import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -59,7 +61,6 @@ import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluatio
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.eclipse.aether.DefaultRepositoryCache;
 import org.eclipse.aether.DefaultRepositorySystemSession;
-import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
@@ -327,16 +328,18 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       throws EnforcerRuleException {
 
     ArtifactTypeRegistry artifactTypeRegistry = repositorySystemSession.getArtifactTypeRegistry();
-    try {
-      ImmutableList<Artifact> artifacts =
-          bomProject.getDependencyManagement().getDependencies().stream()
-              .map(dependency -> RepositoryUtils.toDependency(dependency, artifactTypeRegistry))
-              .map(Dependency::getArtifact)
-              .filter(artifact -> !shouldSkipBomMember(artifact))
-              .collect(toImmutableList());
-      return classPathBuilder.resolve(artifacts).getClassPath();
-    } catch (RepositoryException ex) {
-      throw new EnforcerRuleException("Failed to collect dependency " + ex.getMessage(), ex);
+    ImmutableList<Artifact> artifacts =
+        bomProject.getDependencyManagement().getDependencies().stream()
+            .map(dependency -> RepositoryUtils.toDependency(dependency, artifactTypeRegistry))
+            .map(Dependency::getArtifact)
+            .filter(artifact -> !shouldSkipBomMember(artifact))
+            .collect(toImmutableList());
+
+    ClassPathResult result = classPathBuilder.resolve(artifacts);
+    ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
+    if (!artifactProblems.isEmpty()) {
+      throw new EnforcerRuleException("Failed to collect dependency: " + artifactProblems);
     }
+    return result.getClassPath();
   }
 }
