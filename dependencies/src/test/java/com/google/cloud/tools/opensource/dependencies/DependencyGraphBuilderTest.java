@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
@@ -32,7 +31,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -44,6 +42,11 @@ public class DependencyGraphBuilderTest {
       new DefaultArtifact("com.google.guava:guava:25.1-jre");
 
   private DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
+
+  private Correspondence<UnresolvableArtifactProblem, String> problemOnArtifact =
+      Correspondence.transforming(
+          (UnresolvableArtifactProblem problem) -> Artifacts.toCoordinates(problem.getArtifact()),
+          "has artifact");
 
   @Test
   public void testGetTransitiveDependencies() throws RepositoryException {
@@ -114,8 +117,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testGetStaticLinkageCheckDependencyGraph_multipleArtifacts()
-      throws RepositoryException {
+  public void testGetStaticLinkageCheckDependencyGraph_multipleArtifacts() {
     DependencyGraph graph =
         dependencyGraphBuilder
             .getStaticLinkageCheckDependencyGraph(Arrays.asList(datastore, guava))
@@ -184,8 +186,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testGetStaticLinkageCheckDependencyGraph_artifactProblems()
-      throws RepositoryException {
+  public void testGetStaticLinkageCheckDependencyGraph_artifactProblems() {
     // In the full dependency tree of hibernate-core, xerces-impl:2.6.2 and xml-apis:2.6.2 are not
     // available in Maven Central.
     Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
@@ -234,14 +235,34 @@ public class DependencyGraphBuilderTest {
     // This artifact does not exist in Android's repository
     Artifact artifact = new DefaultArtifact("com.google.guava:guava:28.2-jre");
 
-    try {
-      graphBuilder.buildCompleteGraph(new Dependency(artifact, "compile"));
-      fail("The dependency resolution should fail if Maven Central is not used");
-    } catch (DependencyResolutionException ex) {
-      Truth.assertThat(ex.getMessage())
-          .startsWith(
-              "Could not find artifact com.google.guava:guava:jar:28.2-jre in "
-                  + " (https://dl.google.com/dl/android/maven2)");
-    }
+    DependencyGraphResult result =
+        graphBuilder.buildCompleteGraph(new Dependency(artifact, "compile"));
+    Truth.assertThat(result.getArtifactProblems())
+        .comparingElementsUsing(problemOnArtifact)
+        .contains("com.google.guava:guava:28.2-jre");
+  }
+
+  @Test
+  public void testBuildLinkageCheckDependencyGraph_catchRootException() throws RepositoryException {
+    // This should not throw exception
+    DependencyGraphResult result =
+        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
+            ImmutableList.of(new DefaultArtifact("ant:ant:jar:1.6.2")));
+
+    ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
+
+    Truth.assertThat(problems)
+        .comparingElementsUsing(problemOnArtifact)
+        .containsAtLeast("xerces:xerces-impl:2.6.2", "xml-apis:xml-apis:2.6.2");
+
+    Truth.assertThat(problems).hasSize(2);
+    Truth.assertThat(problems)
+        .comparingElementsUsing(
+            Correspondence.transforming(UnresolvableArtifactProblem::toString, "has description"))
+        .containsExactly(
+            "xerces:xerces-impl:jar:2.6.2 was not resolved. Dependency path: ant:ant:jar:1.6.2"
+                + " (compile) > xerces:xerces-impl:jar:2.6.2 (compile?)",
+            "xml-apis:xml-apis:jar:2.6.2 was not resolved. Dependency path: ant:ant:jar:1.6.2"
+                + " (compile) > xml-apis:xml-apis:jar:2.6.2 (compile?)");
   }
 }

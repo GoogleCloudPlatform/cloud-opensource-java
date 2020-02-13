@@ -23,6 +23,8 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,15 +38,16 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
+import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
 
 /**
  * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact
@@ -129,20 +132,19 @@ public final class DependencyGraphBuilder {
   }
 
   private DependencyNode resolveCompileTimeDependencies(DependencyNode root)
-      throws DependencyCollectionException, DependencyResolutionException {
+      throws DependencyResolutionException {
     return resolveCompileTimeDependencies(root, false);
   }
 
   private DependencyNode resolveCompileTimeDependencies(
-      DependencyNode root, boolean includeProvidedScope)
-      throws DependencyCollectionException, DependencyResolutionException {
+      DependencyNode root, boolean includeProvidedScope) throws DependencyResolutionException {
     return resolveCompileTimeDependencies(
         ImmutableList.of(root), includeProvidedScope);
   }
 
   private DependencyNode resolveCompileTimeDependencies(
       List<DependencyNode> dependencyNodes, boolean includeProvidedScope)
-      throws DependencyCollectionException, DependencyResolutionException {
+      throws DependencyResolutionException {
 
     ImmutableList.Builder<Dependency> dependenciesBuilder = ImmutableList.builder();
     for (DependencyNode dependencyNode : dependencyNodes) {
@@ -216,26 +218,21 @@ public final class DependencyGraphBuilder {
    *
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
-   * @throws RepositoryException when there is a problem resolving or collecting dependencies
    */
-  public DependencyGraphResult getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts)
-      throws RepositoryException {
+  public DependencyGraphResult getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts) {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
-    DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, true);
-    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
+    return buildDependencyGraph(
+        dependencyNodes, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
   }
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates and conflicting
    * versions.
    */
-  public DependencyGraphResult buildCompleteGraph(Dependency dependency)
-      throws RepositoryException {
-
+  public DependencyGraphResult buildCompleteGraph(Dependency dependency) {
     DefaultDependencyNode root = new DefaultDependencyNode(dependency);
-    DependencyNode node = resolveCompileTimeDependencies(root);
-    return levelOrder(node, GraphTraversalOption.FULL_DEPENDENCY);
+    return buildDependencyGraph(ImmutableList.of(root), GraphTraversalOption.FULL_DEPENDENCY);
   }
 
   /**
@@ -243,11 +240,68 @@ public final class DependencyGraphBuilder {
    * and conflicting versions. That is, this resolves conflicting versions by picking the first
    * version seen. This is how Maven normally operates.
    */
-  public DependencyGraphResult buildGraph(Dependency dependency)
-      throws RepositoryException {
-    // root node
-    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(dependency));
-    return levelOrder(node);
+  public DependencyGraphResult buildGraph(Dependency dependency) {
+    return buildDependencyGraph(
+        ImmutableList.of(new DefaultDependencyNode(dependency)), GraphTraversalOption.NONE);
+  }
+
+  private DependencyGraphResult buildDependencyGraph(
+      List<DependencyNode> dependencyNodes, GraphTraversalOption traversalOption) {
+    boolean includeProvidedScope =
+        traversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
+    DependencyNode node;
+    ImmutableSet.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableSet.builder();
+
+    try {
+      node = resolveCompileTimeDependencies(dependencyNodes, includeProvidedScope);
+    } catch (DependencyResolutionException ex) {
+      DependencyResult result = ex.getResult();
+      node = result.getRoot();
+      for (ArtifactResult artifactResult : result.getArtifactResults()) {
+        Artifact resolvedArtifact = artifactResult.getArtifact();
+        if (resolvedArtifact != null) {
+          continue;
+        }
+        Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
+        artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
+      }
+    }
+
+    DependencyGraphResult result = levelOrder(node, traversalOption);
+    // Duplicate problems found in resolveDependencyGraph and levelOrder are removed by ImmutableSet
+    artifactProblems.addAll(result.getArtifactProblems());
+
+    return new DependencyGraphResult(result.getDependencyGraph(), artifactProblems.build());
+  }
+
+  /**
+   * Returns a problem describing that {@code artifact} is unresolvable in the {@code
+   * dependencyGraph}.
+   */
+  public static UnresolvableArtifactProblem createUnresolvableArtifactProblem(
+      DependencyNode dependencyGraph, Artifact artifact) {
+    ImmutableList<List<DependencyNode>> paths = findArtifactPaths(dependencyGraph, artifact);
+    if (paths.isEmpty()) {
+      // On certain conditions, Maven throws ArtifactDescriptorException even when the
+      // (transformed) dependency dependencyGraph does not contain the problematic artifact any
+      // more.
+      // https://issues.apache.org/jira/browse/MNG-6732
+      return new UnresolvableArtifactProblem(artifact);
+    } else {
+      return new UnresolvableArtifactProblem(paths.get(0));
+    }
+  }
+
+  private static ImmutableList<List<DependencyNode>> findArtifactPaths(
+      DependencyNode root, Artifact artifact) {
+    String coordinates = Artifacts.toCoordinates(artifact);
+    DependencyFilter filter =
+        (node, parents) ->
+            node.getArtifact() != null // artifact is null at a root dummy node.
+                && Artifacts.toCoordinates(node.getArtifact()).equals(coordinates);
+    PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(filter);
+    root.accept(visitor);
+    return ImmutableList.copyOf(visitor.getPaths());
   }
 
   private static final class LevelOrderQueueItem {
@@ -345,8 +399,6 @@ public final class DependencyGraphBuilder {
                 artifactProblems.add(new UnresolvableArtifactProblem(fullPath));
               }
             }
-          } catch (DependencyCollectionException collectionException) {
-            artifactProblems.add(new UnresolvableArtifactProblem(parentNodes));
           }
         }
       }
@@ -365,7 +417,16 @@ public final class DependencyGraphBuilder {
       Stack<DependencyNode> parentNodes, DependencyNode failedDependencyNode) {
     List<DependencyNode> fullPath = new ArrayList<>();
     fullPath.addAll(parentNodes);
-    fullPath.add(failedDependencyNode);
+
+    DependencyNode lastParent = Iterables.getLast(parentNodes);
+
+    // Duplicate happens when root artifact is unavailable. For example:
+    // xerces:xerces-impl:jar:2.6.2 was not resolved. Dependency path: ant:ant:jar:1.6.2 (compile)
+    //   > xerces:xerces-impl:jar:2.6.2 (compile?) > xerces:xerces-impl:jar:2.6.2 (compile?)
+    if (!lastParent.getDependency().equals(failedDependencyNode.getDependency())) {
+      // Add child only when it's not duplicate
+      fullPath.add(failedDependencyNode);
+    }
     return fullPath;
   }
 }
