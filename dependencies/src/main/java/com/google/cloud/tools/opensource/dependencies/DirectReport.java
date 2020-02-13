@@ -16,12 +16,10 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import java.util.List;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
 
 class DirectReport {
 
@@ -44,11 +42,14 @@ class DirectReport {
     
     Artifact input = new DefaultArtifact(args[0]);
     DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
-    List<DependencyNode> dependencies = dependencyGraphBuilder.getDirectDependencies(
-        new Dependency(input, ""));
+    DependencyGraphResult dependencyGraphResult =
+        dependencyGraphBuilder.buildGraph(new Dependency(input, ""));
 
-    for (DependencyNode node : dependencies) {
-      Artifact artifact = node.getArtifact();
+    for (DependencyPath dependencyPath : dependencyGraphResult.getDependencyGraph().list()) {
+      if (dependencyPath.size() != 2) {
+        continue;
+      }
+      Artifact artifact = dependencyPath.getLeaf();
       System.out.println("  <dependency>");
       System.out.println("    <groupId>" + artifact.getGroupId() + "</groupId>");
       System.out.println("    <artifactId>" + artifact.getArtifactId() + "</artifactId>");

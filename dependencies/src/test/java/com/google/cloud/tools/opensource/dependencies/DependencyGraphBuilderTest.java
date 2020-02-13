@@ -22,7 +22,6 @@ import static org.junit.Assert.assertNotNull;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -30,7 +29,6 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyNode;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -92,18 +90,6 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testGetDirectDependencies() throws RepositoryException {
-    List<DependencyNode> nodes =
-        dependencyGraphBuilder.getDirectDependencies(new Dependency(guava, ""));
-    List<String> coordinates = new ArrayList<>();
-    for (DependencyNode node : nodes) {
-      coordinates.add(node.getArtifact().toString());
-    }
-
-    Truth.assertThat(coordinates).contains("com.google.code.findbugs:jsr305:jar:3.0.2");
-  }
-
-  @Test
   public void testGetDirectDependencies_nonExistentZipDependency() throws RepositoryException {
     // This artifact depends on log4j-api-java9 (type:zip), which does not exist in Maven central.
     DefaultArtifact log4j2 = new DefaultArtifact("org.apache.logging.log4j:log4j-api:2.11.1");
@@ -138,13 +124,15 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testSetDetectedOsSystemProperties_netty4Dependency() throws RepositoryException {
+  public void testSetDetectedOsSystemProperties_netty4Dependency() {
     Artifact nettyArtifact = new DefaultArtifact("io.netty:netty-all:4.1.31.Final");
 
     // Without system properties "os.detected.arch" and "os.detected.name", this would fail.
-    List<DependencyNode> nodes = dependencyGraphBuilder.getDirectDependencies(
-        new Dependency(nettyArtifact, ""));
-    Truth.assertThat(nodes).isNotEmpty();
+    DependencyGraphResult dependencyGraphResult =
+        dependencyGraphBuilder.buildGraph(new Dependency(nettyArtifact, ""));
+
+    Truth.assertThat(dependencyGraphResult.getArtifactProblems()).isEmpty();
+    Truth.assertThat(dependencyGraphResult.getDependencyGraph().list()).isNotEmpty();
   }
 
   @Test
