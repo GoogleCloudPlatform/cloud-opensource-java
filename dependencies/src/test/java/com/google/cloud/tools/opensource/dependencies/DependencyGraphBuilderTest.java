@@ -90,23 +90,23 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testGetDirectDependencies_nonExistentZipDependency() throws RepositoryException {
+  public void testBuildLinkageCheckDependencyGraph_nonExistentZipDependency() throws RepositoryException {
     // This artifact depends on log4j-api-java9 (type:zip), which does not exist in Maven central.
     DefaultArtifact log4j2 = new DefaultArtifact("org.apache.logging.log4j:log4j-api:2.11.1");
 
     // This should not raise DependencyResolutionException
     DependencyGraph completeDependencies =
         dependencyGraphBuilder
-            .getStaticLinkageCheckDependencyGraph(ImmutableList.of(log4j2))
+            .buildLinkageCheckDependencyGraph(ImmutableList.of(log4j2))
             .getDependencyGraph();
     Truth.assertThat(completeDependencies.list()).isNotEmpty();
   }
 
   @Test
-  public void testGetStaticLinkageCheckDependencyGraph_multipleArtifacts() {
+  public void testBuildLinkageCheckDependencyGraph_multipleArtifacts() {
     DependencyGraph graph =
         dependencyGraphBuilder
-            .getStaticLinkageCheckDependencyGraph(Arrays.asList(datastore, guava))
+            .buildLinkageCheckDependencyGraph(Arrays.asList(datastore, guava))
             .getDependencyGraph();
 
     List<DependencyPath> list = graph.list();
@@ -136,14 +136,14 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testSetDetectedOsSystemProperties_grpcProtobufExclusion() throws RepositoryException {
+  public void testBuildLinkageCheckDependencyGraph_grpcProtobufExclusion() throws RepositoryException {
     // Grpc-protobuf depends on grpc-protobuf-lite with protobuf-lite exclusion.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1056
     Artifact grpcProtobuf = new DefaultArtifact("io.grpc:grpc-protobuf:1.25.0");
 
     DependencyGraph dependencyGraph =
         dependencyGraphBuilder
-            .getStaticLinkageCheckDependencyGraph(ImmutableList.of(grpcProtobuf))
+            .buildLinkageCheckDependencyGraph(ImmutableList.of(grpcProtobuf))
             .getDependencyGraph();
 
     Correspondence<DependencyPath, String> pathToArtifactKey =
@@ -156,7 +156,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testGetDirectDependencies_respectExclusions() throws RepositoryException {
+  public void testBuildLinkageCheckDependencyGraph_respectExclusions() throws RepositoryException {
     // hibernate-core declares jboss-jacc-api_JDK4 dependency excluding jboss-servlet-api_3.0.
     // jboss-jacc-api_JDK4 depends on jboss-servlet-api_3.0:1.0-SNAPSHOT, which is unavailable.
     // DependencyGraphBuilder should respect the exclusion and should not try to download
@@ -164,7 +164,7 @@ public class DependencyGraphBuilderTest {
     Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
 
     DependencyGraphResult result =
-        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
+        dependencyGraphBuilder.buildLinkageCheckDependencyGraph(
             ImmutableList.of(hibernateCore));
 
     ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
@@ -174,13 +174,13 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testGetStaticLinkageCheckDependencyGraph_artifactProblems() {
+  public void testBuildLinkageCheckDependencyGraph_artifactProblems() {
     // In the full dependency tree of hibernate-core, xerces-impl:2.6.2 and xml-apis:2.6.2 are not
     // available in Maven Central.
     Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
 
     DependencyGraphResult result =
-        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
+        dependencyGraphBuilder.buildLinkageCheckDependencyGraph(
             ImmutableList.of(hibernateCore));
 
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
@@ -234,7 +234,7 @@ public class DependencyGraphBuilderTest {
   public void testBuildLinkageCheckDependencyGraph_catchRootException() throws RepositoryException {
     // This should not throw exception
     DependencyGraphResult result =
-        dependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(
+        dependencyGraphBuilder.buildLinkageCheckDependencyGraph(
             ImmutableList.of(new DefaultArtifact("ant:ant:jar:1.6.2")));
 
     ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();

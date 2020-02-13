@@ -195,7 +195,7 @@ public final class DependencyGraphBuilder {
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
    */
-  public DependencyGraphResult getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts) {
+  public DependencyGraphResult buildLinkageCheckDependencyGraph(List<Artifact> artifacts) {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
     return buildDependencyGraph(
