@@ -50,7 +50,7 @@ public class VersionSubstitutingModelResolverTest {
   private final RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
   private final RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
   private final DefaultRemoteRepositoryManager remoteRepositoryManager =
-      new DefaultRemoteRepositoryManager();;
+      new DefaultRemoteRepositoryManager();
 
   private final Correspondence<Dependency, String> dependencyToCoordinates =
       Correspondence.transforming(

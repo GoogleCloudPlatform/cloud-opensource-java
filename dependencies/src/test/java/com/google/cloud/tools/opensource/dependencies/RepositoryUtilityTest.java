@@ -62,9 +62,9 @@ public class RepositoryUtilityTest {
   }
 
   @Test
-  public void testReadBom_coordinates_invalidRepository() throws ArtifactDescriptorException {
-    // This version is so old that it's very unlikely we have in Maven local cache but it exists in
-    // Maven central.
+  public void testReadBom_coordinates_invalidRepository() {
+    // This version is so old that it's very unlikely we have it in the Maven local cache,
+    // but it exists in Maven central.
     String coordinates = "com.google.cloud:google-cloud-bom:pom:0.32.0-alpha";
     try {
       RepositoryUtility.readBom(coordinates, ImmutableList.of("http://nonexistent.example.com"));
