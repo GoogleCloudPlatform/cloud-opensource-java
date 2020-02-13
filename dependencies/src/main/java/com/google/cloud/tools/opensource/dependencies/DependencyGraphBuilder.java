@@ -131,7 +131,18 @@ public final class DependencyGraphBuilder {
     this.repositories = repositoryListBuilder.build();
   }
 
-  private DependencyNode resolveDependencyGraph(
+  private DependencyNode resolveCompileTimeDependencies(DependencyNode root)
+      throws DependencyResolutionException {
+    return resolveCompileTimeDependencies(root, false);
+  }
+
+  private DependencyNode resolveCompileTimeDependencies(
+      DependencyNode root, boolean includeProvidedScope) throws DependencyResolutionException {
+    return resolveCompileTimeDependencies(
+        ImmutableList.of(root), includeProvidedScope);
+  }
+
+  private DependencyNode resolveCompileTimeDependencies(
       List<DependencyNode> dependencyNodes, boolean includeProvidedScope)
       throws DependencyResolutionException {
 
@@ -194,8 +205,7 @@ public final class DependencyGraphBuilder {
 
     List<DependencyNode> result = new ArrayList<>();
 
-    DependencyNode node =
-        resolveDependencyGraph(ImmutableList.of(new DefaultDependencyNode(dependency)), false);
+    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(dependency));
     for (DependencyNode child : node.getChildren()) {
       result.add(child);
     }
@@ -209,7 +219,7 @@ public final class DependencyGraphBuilder {
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
    */
-  public DependencyGraphResult buildLinkageCheckDependencyGraph(List<Artifact> artifacts) {
+  public DependencyGraphResult getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts) {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
     return buildDependencyGraph(
@@ -243,7 +253,7 @@ public final class DependencyGraphBuilder {
     ImmutableSet.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableSet.builder();
 
     try {
-      node = resolveDependencyGraph(dependencyNodes, includeProvidedScope);
+      node = resolveCompileTimeDependencies(dependencyNodes, includeProvidedScope);
     } catch (DependencyResolutionException ex) {
       DependencyResult result = ex.getResult();
       node = result.getRoot();
@@ -287,7 +297,7 @@ public final class DependencyGraphBuilder {
     String coordinates = Artifacts.toCoordinates(artifact);
     DependencyFilter filter =
         (node, parents) ->
-            node.getArtifact() != null
+            node.getArtifact() != null // artifact is null at a root dummy node.
                 && Artifacts.toCoordinates(node.getArtifact()).equals(coordinates);
     PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(filter);
     root.accept(visitor);
@@ -302,6 +312,10 @@ public final class DependencyGraphBuilder {
       this.dependencyNode = dependencyNode;
       this.parentNodes = parentNodes;
     }
+  }
+
+  private DependencyGraphResult levelOrder(DependencyNode node) {
+    return levelOrder(node, GraphTraversalOption.NONE);
   }
 
   private enum GraphTraversalOption {
@@ -369,8 +383,7 @@ public final class DependencyGraphBuilder {
           try {
             boolean includeProvidedScope =
                 graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
-            dependencyNode =
-                resolveDependencyGraph(ImmutableList.of(dependencyNode), includeProvidedScope);
+            dependencyNode = resolveCompileTimeDependencies(dependencyNode, includeProvidedScope);
           } catch (DependencyResolutionException resolutionException) {
             // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0
             // has a transitive dependency to org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not
@@ -407,7 +420,9 @@ public final class DependencyGraphBuilder {
 
     DependencyNode lastParent = Iterables.getLast(parentNodes);
 
-    // Duplicate happens when root artifact is unavailable
+    // Duplicate happens when root artifact is unavailable. For example:
+    // xerces:xerces-impl:jar:2.6.2 was not resolved. Dependency path: ant:ant:jar:1.6.2 (compile)
+    //   > xerces:xerces-impl:jar:2.6.2 (compile?) > xerces:xerces-impl:jar:2.6.2 (compile?)
     if (!lastParent.getDependency().equals(failedDependencyNode.getDependency())) {
       // Add child only when it's not duplicate
       fullPath.add(failedDependencyNode);
