@@ -1,12 +1,14 @@
 # [JLBP-14] Specify a single, overridable version of each dependency
 
-Give the version of each dependency as a single value such as `2.3`
-instead of a range such as `[2.3,2.9]`, `[2.3,)`, or even `[2.3]`.
+Give the version of each dependency as a single value such as `2.3`.
+Do not use a Maven range such as `[2.3,2.9]`, `[2.3,)`, or even `[2.3]`.
+Do not use a Gradle dynamic version such as
+`com.google.api-client:google-api-client:+`.
 
-When a pom.xml specifies a range instead of a
-single version for any particular dependency, builds at different points
-in time can see different versions of that dependency 
-which can cause builds to be non-reproducible and can break your product unexpectedly. Builds of the same code with the same compiler at different
+When a build system specifies a range instead of a
+single version for a dependency, builds at different points
+in time can see different versions of that dependency.
+This causes builds to be non-reproducible and can break your product unexpectedly. Builds of the same code with the same compiler at different
 times can produce different artifacts with different behavior.
 
 Version ranges can pull in incomplete releases that break the
