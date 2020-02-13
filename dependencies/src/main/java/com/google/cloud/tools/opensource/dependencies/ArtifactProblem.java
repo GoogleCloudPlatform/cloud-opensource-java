@@ -93,11 +93,11 @@ public abstract class ArtifactProblem {
 
     ArtifactProblem otherProblem = (ArtifactProblem) other;
     return Objects.equals(artifact, otherProblem.artifact)
-        && sameDependencyPath(dependencyPath, otherProblem.dependencyPath);
+        && equalsOnDependencies(dependencyPath, otherProblem.dependencyPath);
   }
 
-  private static boolean sameDependencyPath(
-      ImmutableList<DependencyNode> listA, ImmutableList<DependencyNode> listB) {
+  private static boolean equalsOnDependencies(
+      List<DependencyNode> listA, List<DependencyNode> listB) {
     int size = listA.size();
     if (listB.size() != size) {
       return false;
