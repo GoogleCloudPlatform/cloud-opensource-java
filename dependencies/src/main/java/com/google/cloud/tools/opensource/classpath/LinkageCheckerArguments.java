@@ -206,7 +206,7 @@ final class LinkageCheckerArguments {
       ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
       if (!artifactProblems.isEmpty()) {
         throw new RepositoryException(
-            "Unresolved artifacts: " + Joiner.on(",").join(artifactProblems));
+            "Unresolved artifacts: " + Joiner.on(", ").join(artifactProblems));
       }
       cachedInputClasspath = result.getClassPath();
     } else {
