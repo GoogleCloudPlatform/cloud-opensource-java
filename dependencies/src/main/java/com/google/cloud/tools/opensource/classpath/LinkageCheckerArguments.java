@@ -20,6 +20,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -200,7 +202,13 @@ final class LinkageCheckerArguments {
 
     if (commandLine.hasOption("b") || commandLine.hasOption("a")) {
       List<Artifact> artifacts = getArtifacts();
-      cachedInputClasspath = classPathBuilder.resolve(artifacts).getClassPath();
+      ClassPathResult result = classPathBuilder.resolve(artifacts);
+      ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
+      if (!artifactProblems.isEmpty()) {
+        throw new RepositoryException(
+            "Unresolved artifacts: " + Joiner.on(", ").join(artifactProblems));
+      }
+      cachedInputClasspath = result.getClassPath();
     } else {
       // b, a, or j is specified in OptionGroup
       String[] jarFiles = commandLine.getOptionValues("j");

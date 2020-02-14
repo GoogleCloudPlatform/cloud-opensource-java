@@ -129,9 +129,9 @@ public final class RepositoryUtility {
   /**
    * Opens a new Maven repository session in the same way as {@link
    * RepositoryUtility#newSession(RepositorySystem)}, with its dependency selector to include
-   * dependencies with 'provided' scope.
+   * dependencies with 'provided' scope and optional dependencies.
    */
-  static RepositorySystemSession newSessionWithProvidedScope(RepositorySystem system) {
+  static RepositorySystemSession newSessionForFullDependency(RepositorySystem system) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
 
     // This combination of DependencySelector comes from the default specified in

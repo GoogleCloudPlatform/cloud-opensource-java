@@ -64,7 +64,7 @@ public class LinkageCheckerTest {
   private Path firestorePath;
 
   /** Returns JAR files resolved for the full dependency tree of {@code coordinates}. */
-  static ImmutableList<Path> resolvePaths(String... coordinates) throws RepositoryException {
+  static ImmutableList<Path> resolvePaths(String... coordinates) {
     ImmutableList<Artifact> artifacts =
         Arrays.stream(coordinates).map(DefaultArtifact::new).collect(toImmutableList());
     ClassPathResult result = (new ClassPathBuilder()).resolve(artifacts);
@@ -72,10 +72,10 @@ public class LinkageCheckerTest {
   }
 
   /** Returns JAR files resolved for the transitive dependencies of {@code coordinates}. */
-  private ImmutableList<Path> resolveTransitiveDependencyPaths(String coordinates)
-      throws RepositoryException {
+  private ImmutableList<Path> resolveTransitiveDependencyPaths(String coordinates) {
     DependencyGraph dependencies =
-        dependencyGraphBuilder.buildGraph(new Dependency(new DefaultArtifact(coordinates), "compile"))
+        dependencyGraphBuilder
+            .buildMavenDependencyGraph(new Dependency(new DefaultArtifact(coordinates), "compile"))
             .getDependencyGraph();
     ImmutableList<Path> jars =
         dependencies.list().stream()
@@ -681,9 +681,7 @@ public class LinkageCheckerTest {
           "Because the unavailable dependency is not optional, it should throw an exception");
     } catch (RepositoryException ex) {
       Truth.assertThat(ex.getMessage())
-          .startsWith(
-              "Could not find artifact org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 in "
-                  + " (https://repo1.maven.org/maven2/)");
+          .startsWith("Unresolved artifacts: org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4");
     }
   }
 
@@ -756,8 +754,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblems_catchesNoClassDefFoundError()
-      throws RepositoryException, IOException {
+  public void testFindSymbolProblems_catchesNoClassDefFoundError() throws IOException {
     // SLF4J classes catch NoClassDefFoundError to detect the availability of logger backends
     // the tool should not show errors for such classes.
     List<Path> paths = resolvePaths("org.slf4j:slf4j-api:jar:1.7.21");
@@ -771,7 +768,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblems_catchesLinkageError() throws RepositoryException, IOException {
+  public void testFindSymbolProblems_catchesLinkageError() throws IOException {
     // org.eclipse.sisu.inject.Implementations catches LinkageError to detect the availability of
     // implementation for dependency injection. The tool should not show errors for such classes.
     List<Path> paths = resolvePaths("org.eclipse.sisu:org.eclipse.sisu.inject:0.3.3");
@@ -788,15 +785,19 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblems_catchesNoSuchMethodError()
-      throws RepositoryException, IOException {
+  public void testFindSymbolProblems_catchesNoSuchMethodError() throws IOException {
     // org.slf4j.MDC catches NoSuchMethodError to detect the availability of
     // implementation for logging backend. The tool should not show errors for such classes.
     DependencyGraph slf4jGraph =
-        dependencyGraphBuilder.buildGraph(new Dependency(new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"), "compile"))
+        dependencyGraphBuilder
+            .buildMavenDependencyGraph(
+                new Dependency(new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"), "compile"))
             .getDependencyGraph();
     DependencyGraph logbackGraph =
-        dependencyGraphBuilder.buildGraph(new Dependency(new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"), "compile"))
+        dependencyGraphBuilder
+            .buildMavenDependencyGraph(
+                new Dependency(
+                    new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"), "compile"))
             .getDependencyGraph();
 
     Path slf4jJar = slf4jGraph.list().get(0).getLeaf().getFile().toPath();
@@ -840,8 +841,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblems_shouldNotFailOnDuplicateClass()
-      throws RepositoryException, IOException {
+  public void testFindSymbolProblems_shouldNotFailOnDuplicateClass() throws IOException {
     // There was an issue (#495) where com.google.api.client.http.apache.ApacheHttpRequest is in
     // both google-http-client-1.19.0.jar and google-http-client-apache-2.0.0.jar.
     // LinkageChecker.findLinkageErrors was not handling the case properly.
@@ -858,10 +858,8 @@ public class LinkageCheckerTest {
     assertNotNull(symbolProblems);
   }
 
-
   @Test
-  public void testFindSymbolProblems_shouldNotDetectWhitelistedClass()
-      throws RepositoryException, IOException {
+  public void testFindSymbolProblems_shouldNotDetectWhitelistedClass() throws IOException {
     // Reactor-core's Traces is known to catch Throwable to detect availability of Java 9+ classes.
     // Linkage Checker does not need to report it.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/816
@@ -876,8 +874,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblems_shouldDetectMissingParentClass()
-      throws RepositoryException, IOException {
+  public void testFindSymbolProblems_shouldDetectMissingParentClass() throws IOException {
     // There was a false positive of missing class problem of
     // com.oracle.graal.pointsto.meta.AnalysisType (in com.oracle.substratevm:svm:19.0.0). The class
     // was in the class path but its parent class was missing.
@@ -908,8 +905,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblems_shouldSuppressJvmCIPackage()
-      throws RepositoryException, IOException {
+  public void testFindSymbolProblems_shouldSuppressJvmCIPackage() throws IOException {
     // There was a false positive of missing class problem of
     // com.oracle.graal.pointsto.meta.AnalysisType (in com.oracle.substratevm:svm:19.0.0). The class
     // was in the class path but its parent class was missing.
@@ -927,7 +923,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindSymbolProblems_shouldSuppressMockitoMockMethodDispatcher()
-      throws RepositoryException, IOException {
+      throws IOException {
     // Mockito's MockMethodDispatcher class file has ".raw" extension so that the class is only
     // loaded by Mockito's special class loader.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/407
@@ -988,8 +984,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblems_defaultInterfaceMethods()
-      throws IOException, RepositoryException {
+  public void testFindSymbolProblems_defaultInterfaceMethods() throws IOException {
     ImmutableList<Path> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
@@ -1007,8 +1002,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblems_unimplementedAbstractMethod()
-      throws RepositoryException, IOException {
+  public void testFindSymbolProblems_unimplementedAbstractMethod() throws IOException {
     // Non-abstract NioEventLoopGroup class extends MultithreadEventLoopGroup.
     // Abstract MultithreadEventLoopGroup class extends MultithreadEventExecutorGroup
     // Abstract MultithreadEventExecutorGroup class has abstract newChild method.
@@ -1041,8 +1035,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblems_nativeMethodsOnAbstractClass()
-      throws IOException, RepositoryException {
+  public void testFindSymbolProblems_nativeMethodsOnAbstractClass() throws IOException {
     ImmutableList<Path> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);

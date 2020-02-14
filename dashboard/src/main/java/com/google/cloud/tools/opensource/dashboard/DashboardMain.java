@@ -169,8 +169,7 @@ public class DashboardMain {
 
   @VisibleForTesting
   static Path generate(Path bomFile)
-      throws IOException, TemplateException, RepositoryException, URISyntaxException,
-      MavenRepositoryException {
+      throws IOException, TemplateException, URISyntaxException, MavenRepositoryException {
     checkArgument(Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
     checkArgument(Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
     Path output = generate(RepositoryUtility.readBom(bomFile));
@@ -178,8 +177,7 @@ public class DashboardMain {
     return output;
   }
 
-  private static Path generate(Bom bom)
-      throws IOException, TemplateException, RepositoryException, URISyntaxException {
+  private static Path generate(Bom bom) throws IOException, TemplateException, URISyntaxException {
 
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
@@ -339,23 +337,18 @@ public class DashboardMain {
     List<DependencyGraph> globalDependencies = new ArrayList<>();
 
     for (Artifact artifact : artifacts) {
-      try {
-        DependencyGraphResult completeDependencyResult =
-            dependencyGraphBuilder.buildCompleteGraph(new Dependency(artifact, "compile"));
-        DependencyGraph completeDependencies = completeDependencyResult.getDependencyGraph();
-        globalDependencies.add(completeDependencies);
+      DependencyGraphResult completeDependencyResult =
+          dependencyGraphBuilder.buildFullDependencyGraph(ImmutableList.of(artifact));
+      DependencyGraph completeDependencies = completeDependencyResult.getDependencyGraph();
+      globalDependencies.add(completeDependencies);
 
-        // picks versions according to Maven rules
-        DependencyGraphResult transitiveDependencyResult =
-            dependencyGraphBuilder.buildGraph(new Dependency(artifact, "compile"));
-        DependencyGraph transitiveDependencies = transitiveDependencyResult.getDependencyGraph();
+      // picks versions according to Maven rules
+      DependencyGraphResult transitiveDependencyResult =
+          dependencyGraphBuilder.buildMavenDependencyGraph(new Dependency(artifact, "compile"));
+      DependencyGraph transitiveDependencies = transitiveDependencyResult.getDependencyGraph();
 
-        ArtifactInfo info = new ArtifactInfo(completeDependencies, transitiveDependencies);
-        infoMap.put(artifact, info);
-      } catch (RepositoryException ex) {
-        ArtifactInfo info = new ArtifactInfo(ex);
-        infoMap.put(artifact, info);
-      }
+      ArtifactInfo info = new ArtifactInfo(completeDependencies, transitiveDependencies);
+      infoMap.put(artifact, info);
     }
 
     ArtifactCache cache = new ArtifactCache();

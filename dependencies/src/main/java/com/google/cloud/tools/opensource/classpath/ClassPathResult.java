@@ -67,7 +67,7 @@ public final class ClassPathResult {
   }
 
   /** Returns problems encountered while constructing the dependency graph. */
-  ImmutableList<UnresolvableArtifactProblem> getArtifactProblems() {
+  public ImmutableList<UnresolvableArtifactProblem> getArtifactProblems() {
     return artifactProblems;
   }
 
