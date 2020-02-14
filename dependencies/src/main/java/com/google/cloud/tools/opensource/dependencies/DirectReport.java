@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.dependencies;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.graph.Dependency;
 
 class DirectReport {
 
@@ -43,7 +42,7 @@ class DirectReport {
     Artifact input = new DefaultArtifact(args[0]);
     DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
     DependencyGraphResult dependencyGraphResult =
-        dependencyGraphBuilder.buildMavenDependencyGraph(new Dependency(input, ""));
+        dependencyGraphBuilder.buildMavenDependencyGraph(input);
 
     for (DependencyPath dependencyPath : dependencyGraphResult.getDependencyGraph().list()) {
       if (dependencyPath.size() != 2) {

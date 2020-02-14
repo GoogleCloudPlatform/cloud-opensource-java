@@ -52,7 +52,7 @@ import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
  * This class builds dependency graphs for Maven artifacts. The nodes in the graph are Maven
  * artifacts and its edges are dependencies from an artifact to another.
  *
- * <p>{@link #buildMavenDependencyGraph(Dependency)} builds a normal Maven dependency graph. This
+ * <p>{@link #buildMavenDependencyGraph(Artifact)} builds a normal Maven dependency graph. This
  * graph has the following attributes:
  *
  * <ul>
@@ -228,9 +228,10 @@ public final class DependencyGraphBuilder {
    * conflicting versions. That is, this resolves conflicting versions by picking the first version
    * seen. This is how Maven normally operates.
    */
-  public DependencyGraphResult buildMavenDependencyGraph(Dependency dependency) {
+  public DependencyGraphResult buildMavenDependencyGraph(Artifact artifact) {
+    Dependency rootDependency = new Dependency(artifact, "compile");
     return buildDependencyGraph(
-        ImmutableList.of(new DefaultDependencyNode(dependency)), GraphTraversalOption.MAVEN);
+        ImmutableList.of(new DefaultDependencyNode(rootDependency)), GraphTraversalOption.MAVEN);
   }
 
   private DependencyGraphResult buildDependencyGraph(
