@@ -18,9 +18,9 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter.formatDependencyPaths;
 
+import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.graph.Dependency;
 
 /** Prints the dependency tree of Maven artifacts. */
 class DependencyTreePrinter {
@@ -43,7 +43,9 @@ class DependencyTreePrinter {
     DefaultArtifact rootArtifact = new DefaultArtifact(coordinates);
     DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
     DependencyGraph dependencyGraph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(rootArtifact, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildFullDependencyGraph(ImmutableList.of(rootArtifact))
+            .getDependencyGraph();
     System.out.println("Dependencies for " + coordinates);
     System.out.println(formatDependencyPaths(dependencyGraph.list()));
   }
