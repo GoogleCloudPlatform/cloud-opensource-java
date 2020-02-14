@@ -66,8 +66,8 @@ import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
  *   <li>It does not contain transitive optional dependencies.
  * </ul>
  *
- * <p>{@link #buildFullDependencyGraph(List)} builds a full dependency graph. This dependency graph
- * has the following attributes:
+ * <p>{@link #buildFullDependencyGraph(List)} builds a full dependency graph. This graph has the
+ * following attributes:
  *
  * <ul>
  *   <li>The same artifact, which have the same group:artifact:version, appears in different nodes
