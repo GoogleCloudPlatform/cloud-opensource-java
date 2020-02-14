@@ -147,14 +147,12 @@ public final class DependencyGraphBuilder {
     ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
 
     // The cache key includes exclusion elements of Maven artifacts
-    Map<Dependency, DependencyNode> cache = fullDependencies ? cacheForFullDependency : null;
     // cacheKey is null when there's no need to use cache. Cache is only needed for a single
     // artifact's dependency resolution. A call with multiple dependencyNodes will not come again
     // in our usage.
-    Dependency cacheKey =
-        (cache != null && dependencyList.size() == 1) ? dependencyList.get(0) : null;
-    if (cacheKey != null && cache.containsKey(cacheKey)) {
-      return cache.get(cacheKey);
+    Dependency cacheKey = dependencyList.size() == 1 ? dependencyList.get(0) : null;
+    if (cacheKey != null && cacheForFullDependency.containsKey(cacheKey)) {
+      return cacheForFullDependency.get(cacheKey);
     }
 
     RepositorySystemSession session =
@@ -181,7 +179,7 @@ public final class DependencyGraphBuilder {
     DependencyNode node = dependencyResult.getRoot();
 
     if (cacheKey != null) {
-      cache.put(cacheKey, node);
+      cacheForFullDependency.put(cacheKey, node);
     }
 
     return node;
@@ -285,8 +283,8 @@ public final class DependencyGraphBuilder {
      *
      * <ul>
      *   <li>It contains at most one node for the same groupId and artifactId.
-     *   <li>It does not contain transitive provided-scope dependencies
-     *   <li>It does not contain transitive optional dependencies
+     *   <li>It does not contain transitive provided-scope dependencies.
+     *   <li>It does not contain transitive optional dependencies.
      * </ul>
      */
     NONE,
@@ -296,8 +294,8 @@ public final class DependencyGraphBuilder {
      *
      * <ul>
      *   <li>It may contain different dependency nodes for the same groupId and artifactId.
-     *   <li>It may contain transitive provided-scope dependencies
-     *   <li>It may contain transitive optional dependencies
+     *   <li>It may contain transitive provided-scope dependencies.
+     *   <li>It may contain transitive optional dependencies.
      * </ul>
      */
     FULL_DEPENDENCY;

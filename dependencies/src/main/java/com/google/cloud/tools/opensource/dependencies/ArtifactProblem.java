@@ -120,7 +120,7 @@ public abstract class ArtifactProblem {
     ImmutableList<Dependency> dependencyList =
         dependencyPath.stream()
             .map(DependencyNode::getDependency)
-            .filter(Objects::nonNull)
+            .filter(Objects::nonNull) // root may not have a dependency
             .collect(toImmutableList());
     return Objects.hash(artifact, dependencyList);
   }
