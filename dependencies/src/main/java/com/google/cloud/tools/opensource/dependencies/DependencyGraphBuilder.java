@@ -195,22 +195,22 @@ public final class DependencyGraphBuilder {
   public DependencyGraphResult buildFullDependencyGraph(List<Artifact> artifacts) {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
-    return buildDependencyGraph(dependencyNodes, GraphTraversalOption.FULL_DEPENDENCY);
+    return buildDependencyGraph(dependencyNodes, GraphTraversalOption.FULL);
   }
 
   /**
-   * Finds the complete transitive dependency graph as seen by Maven. It does not include duplicates
-   * and conflicting versions. That is, this resolves conflicting versions by picking the first
-   * version seen. This is how Maven normally operates.
+   * Builds the transitive dependency graph as seen by Maven. It does not include duplicates and
+   * conflicting versions. That is, this resolves conflicting versions by picking the first version
+   * seen. This is how Maven normally operates.
    */
   public DependencyGraphResult buildMavenDependencyGraph(Dependency dependency) {
     return buildDependencyGraph(
-        ImmutableList.of(new DefaultDependencyNode(dependency)), GraphTraversalOption.NONE);
+        ImmutableList.of(new DefaultDependencyNode(dependency)), GraphTraversalOption.MAVEN);
   }
 
   private DependencyGraphResult buildDependencyGraph(
       List<DependencyNode> dependencyNodes, GraphTraversalOption traversalOption) {
-    boolean fullDependency = traversalOption == GraphTraversalOption.FULL_DEPENDENCY;
+    boolean fullDependency = traversalOption == GraphTraversalOption.FULL;
     DependencyNode node;
     ImmutableSet.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableSet.builder();
 
@@ -278,27 +278,34 @@ public final class DependencyGraphBuilder {
 
   private enum GraphTraversalOption {
     /**
-     * Option for the default dependency graph by Maven. This dependency graph has the following
-     * attributes:
+     * Normal Maven dependency graph. This dependency graph has the following attributes:
      *
      * <ul>
-     *   <li>It contains at most one node for the same groupId and artifactId.
+     *   <li>It contains at most one node for the same groupId and artifactId. (dependency
+     *       mediation)
+     *   <li>The scope of a dependency affects the scope of its children's dependencies.
      *   <li>It does not contain transitive provided-scope dependencies.
      *   <li>It does not contain transitive optional dependencies.
      * </ul>
+     *
+     * @see <a
+     *     href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html"
+     *     >Maven: Introduction to the Dependency Mechanism</a>
      */
-    NONE,
+    MAVEN,
 
     /**
-     * Option for the full dependency graph. This dependency graph has the following attributes:
+     * The full dependency graph. This dependency graph has the following attributes:
      *
      * <ul>
-     *   <li>It may contain different dependency nodes for the same groupId and artifactId.
-     *   <li>It may contain transitive provided-scope dependencies.
-     *   <li>It may contain transitive optional dependencies.
+     *   <li>The same artifact, which have the same group:artifact:version, appears in different
+     *       nodes in the graph.
+     *   <li>The scope of a dependency does not affect the scope of its children's dependencies.
+     *   <li>It contains transitive provided-scope dependencies.
+     *   <li>It contains transitive optional dependencies.
      * </ul>
      */
-    FULL_DEPENDENCY;
+    FULL;
   }
 
   /**
@@ -317,7 +324,7 @@ public final class DependencyGraphBuilder {
 
     DependencyGraph graph = new DependencyGraph();
 
-    boolean resolveFullDependency = graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY;
+    boolean resolveFullDependency = graphTraversalOption == GraphTraversalOption.FULL;
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
