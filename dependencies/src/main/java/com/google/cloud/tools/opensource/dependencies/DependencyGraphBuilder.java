@@ -33,7 +33,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
-import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -131,17 +130,6 @@ public final class DependencyGraphBuilder {
     this.repositories = repositoryListBuilder.build();
   }
 
-  private DependencyNode resolveCompileTimeDependencies(DependencyNode root)
-      throws DependencyResolutionException {
-    return resolveCompileTimeDependencies(root, false);
-  }
-
-  private DependencyNode resolveCompileTimeDependencies(
-      DependencyNode root, boolean includeProvidedScope) throws DependencyResolutionException {
-    return resolveCompileTimeDependencies(
-        ImmutableList.of(root), includeProvidedScope);
-  }
-
   private DependencyNode resolveCompileTimeDependencies(
       List<DependencyNode> dependencyNodes, boolean includeProvidedScope)
       throws DependencyResolutionException {
@@ -200,18 +188,6 @@ public final class DependencyGraphBuilder {
     return node;
   }
 
-  /** Returns the non-transitive compile time dependencies of a dependency. */
-  List<DependencyNode> getDirectDependencies(Dependency dependency) throws RepositoryException {
-
-    List<DependencyNode> result = new ArrayList<>();
-
-    DependencyNode node = resolveCompileTimeDependencies(new DefaultDependencyNode(dependency));
-    for (DependencyNode child : node.getChildren()) {
-      result.add(child);
-    }
-    return result;
-  }
-
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
    * versions, and dependencies with 'provided' scope.
@@ -219,7 +195,7 @@ public final class DependencyGraphBuilder {
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
    */
-  public DependencyGraphResult getStaticLinkageCheckDependencyGraph(List<Artifact> artifacts) {
+  public DependencyGraphResult buildLinkageCheckDependencyGraph(List<Artifact> artifacts) {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
     return buildDependencyGraph(
@@ -314,10 +290,6 @@ public final class DependencyGraphBuilder {
     }
   }
 
-  private DependencyGraphResult levelOrder(DependencyNode node) {
-    return levelOrder(node, GraphTraversalOption.NONE);
-  }
-
   private enum GraphTraversalOption {
     NONE,
     FULL_DEPENDENCY,
@@ -383,7 +355,9 @@ public final class DependencyGraphBuilder {
           try {
             boolean includeProvidedScope =
                 graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
-            dependencyNode = resolveCompileTimeDependencies(dependencyNode, includeProvidedScope);
+            dependencyNode =
+                resolveCompileTimeDependencies(
+                    ImmutableList.of(dependencyNode), includeProvidedScope);
           } catch (DependencyResolutionException resolutionException) {
             // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0
             // has a transitive dependency to org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not
