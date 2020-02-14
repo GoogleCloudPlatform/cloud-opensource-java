@@ -305,17 +305,7 @@ public final class DependencyGraphBuilder {
     /** Normal Maven dependency graph */
     MAVEN,
 
-    /**
-     * The full dependency graph. This dependency graph has the following attributes:
-     *
-     * <ul>
-     *   <li>The same artifact, which have the same group:artifact:version, appears in different
-     *       nodes in the graph.
-     *   <li>The scope of a dependency does not affect the scope of its children's dependencies.
-     *   <li>It contains transitive provided-scope dependencies.
-     *   <li>It contains transitive optional dependencies.
-     * </ul>
-     */
+    /** The full dependency graph */
     FULL;
   }
 
