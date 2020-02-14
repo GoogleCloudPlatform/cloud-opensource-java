@@ -49,8 +49,33 @@ import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
 
 /**
- * Based on the <a href="https://maven.apache.org/resolver/index.html">Apache Maven Artifact
- * Resolver</a> (formerly known as Eclipse Aether).
+ * This class builds dependency graphs for Maven artifacts. The nodes in the graph are Maven
+ * artifacts and its edges are dependencies from an artifact to another.
+ *
+ * <p>{@link #buildMavenDependencyGraph(Dependency)} builds a normal Maven dependency graph. This
+ * graph has the following attributes:
+ *
+ * <ul>
+ *   <li>It contains at most one node for the same groupId and artifactId. (<a
+ *       href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies">dependency
+ *       mediation</a>)
+ *   <li>The scope of a dependency affects the scope of its children's dependencies as per <a
+ *       href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Scope">Maven:
+ *       Dependency Scope</a>
+ *   <li>It does not contain transitive provided-scope dependencies.
+ *   <li>It does not contain transitive optional dependencies.
+ * </ul>
+ *
+ * <p>{@link #buildFullDependencyGraph(List)} builds a full dependency graph. This dependency graph
+ * has the following attributes:
+ *
+ * <ul>
+ *   <li>The same artifact, which have the same group:artifact:version, appears in different nodes
+ *       in the graph.
+ *   <li>The scope of a dependency does not affect the scope of its children's dependencies.
+ *   <li>It contains transitive provided-scope dependencies.
+ *   <li>It contains transitive optional dependencies.
+ * </ul>
  */
 public final class DependencyGraphBuilder {
 
@@ -277,21 +302,7 @@ public final class DependencyGraphBuilder {
   }
 
   private enum GraphTraversalOption {
-    /**
-     * Normal Maven dependency graph. This dependency graph has the following attributes:
-     *
-     * <ul>
-     *   <li>It contains at most one node for the same groupId and artifactId. (dependency
-     *       mediation)
-     *   <li>The scope of a dependency affects the scope of its children's dependencies.
-     *   <li>It does not contain transitive provided-scope dependencies.
-     *   <li>It does not contain transitive optional dependencies.
-     * </ul>
-     *
-     * @see <a
-     *     href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html"
-     *     >Maven: Introduction to the Dependency Mechanism</a>
-     */
+    /** Normal Maven dependency graph */
     MAVEN,
 
     /**
