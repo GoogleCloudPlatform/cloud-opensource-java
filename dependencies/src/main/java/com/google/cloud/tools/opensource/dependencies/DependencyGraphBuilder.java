@@ -67,8 +67,7 @@ public final class DependencyGraphBuilder {
   }
 
   // caching cuts time by about a factor of 4. Dependency class's equality includes exclusions.
-  private final Map<Dependency, DependencyNode> cacheWithProvidedScope = new HashMap<>();
-  private final Map<Dependency, DependencyNode> cacheWithoutProvidedScope = new HashMap<>();
+  private final Map<Dependency, DependencyNode> cacheForFullDependency = new HashMap<>();
 
   public static ImmutableMap<String, String> detectOsProperties() {
     // System properties to select Netty dependencies through os-maven-plugin
@@ -131,7 +130,7 @@ public final class DependencyGraphBuilder {
   }
 
   private DependencyNode resolveCompileTimeDependencies(
-      List<DependencyNode> dependencyNodes, boolean includeProvidedScope)
+      List<DependencyNode> dependencyNodes, boolean fullDependencies)
       throws DependencyResolutionException {
 
     ImmutableList.Builder<Dependency> dependenciesBuilder = ImmutableList.builder();
@@ -148,19 +147,19 @@ public final class DependencyGraphBuilder {
     ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
 
     // The cache key includes exclusion elements of Maven artifacts
-    Map<Dependency, DependencyNode> cache =
-        includeProvidedScope ? cacheWithProvidedScope : cacheWithoutProvidedScope;
+    Map<Dependency, DependencyNode> cache = fullDependencies ? cacheForFullDependency : null;
     // cacheKey is null when there's no need to use cache. Cache is only needed for a single
     // artifact's dependency resolution. A call with multiple dependencyNodes will not come again
     // in our usage.
-    Dependency cacheKey = dependencyList.size() == 1 ? dependencyList.get(0) : null;
+    Dependency cacheKey =
+        (cache != null && dependencyList.size() == 1) ? dependencyList.get(0) : null;
     if (cacheKey != null && cache.containsKey(cacheKey)) {
       return cache.get(cacheKey);
     }
 
     RepositorySystemSession session =
-        includeProvidedScope
-            ? RepositoryUtility.newSessionWithProvidedScope(system)
+        fullDependencies
+            ? RepositoryUtility.newSessionForFullDependency(system)
             : RepositoryUtility.newSession(system);
 
     CollectRequest collectRequest = new CollectRequest();
@@ -195,20 +194,10 @@ public final class DependencyGraphBuilder {
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
    */
-  public DependencyGraphResult buildLinkageCheckDependencyGraph(List<Artifact> artifacts) {
+  public DependencyGraphResult buildFullDependencyGraph(List<Artifact> artifacts) {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
-    return buildDependencyGraph(
-        dependencyNodes, GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED);
-  }
-
-  /**
-   * Finds the full compile time, transitive dependency graph including duplicates and conflicting
-   * versions.
-   */
-  public DependencyGraphResult buildCompleteGraph(Dependency dependency) {
-    DefaultDependencyNode root = new DefaultDependencyNode(dependency);
-    return buildDependencyGraph(ImmutableList.of(root), GraphTraversalOption.FULL_DEPENDENCY);
+    return buildDependencyGraph(dependencyNodes, GraphTraversalOption.FULL_DEPENDENCY);
   }
 
   /**
@@ -216,20 +205,19 @@ public final class DependencyGraphBuilder {
    * and conflicting versions. That is, this resolves conflicting versions by picking the first
    * version seen. This is how Maven normally operates.
    */
-  public DependencyGraphResult buildGraph(Dependency dependency) {
+  public DependencyGraphResult buildMavenDependencyGraph(Dependency dependency) {
     return buildDependencyGraph(
         ImmutableList.of(new DefaultDependencyNode(dependency)), GraphTraversalOption.NONE);
   }
 
   private DependencyGraphResult buildDependencyGraph(
       List<DependencyNode> dependencyNodes, GraphTraversalOption traversalOption) {
-    boolean includeProvidedScope =
-        traversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
+    boolean fullDependency = traversalOption == GraphTraversalOption.FULL_DEPENDENCY;
     DependencyNode node;
     ImmutableSet.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableSet.builder();
 
     try {
-      node = resolveCompileTimeDependencies(dependencyNodes, includeProvidedScope);
+      node = resolveCompileTimeDependencies(dependencyNodes, fullDependency);
     } catch (DependencyResolutionException ex) {
       DependencyResult result = ex.getResult();
       node = result.getRoot();
@@ -291,13 +279,28 @@ public final class DependencyGraphBuilder {
   }
 
   private enum GraphTraversalOption {
+    /**
+     * Option for the default dependency graph by Maven. This dependency graph has the following
+     * attributes:
+     *
+     * <ul>
+     *   <li>It contains at most one node for the same groupId and artifactId.
+     *   <li>It does not contain transitive provided-scope dependencies
+     *   <li>It does not contain transitive optional dependencies
+     * </ul>
+     */
     NONE,
-    FULL_DEPENDENCY,
-    FULL_DEPENDENCY_WITH_PROVIDED;
 
-    private boolean resolveFullDependencies() {
-      return this == FULL_DEPENDENCY || this == FULL_DEPENDENCY_WITH_PROVIDED;
-    }
+    /**
+     * Option for the full dependency graph. This dependency graph has the following attributes:
+     *
+     * <ul>
+     *   <li>It may contain different dependency nodes for the same groupId and artifactId.
+     *   <li>It may contain transitive provided-scope dependencies
+     *   <li>It may contain transitive optional dependencies
+     * </ul>
+     */
+    FULL_DEPENDENCY;
   }
 
   /**
@@ -316,7 +319,7 @@ public final class DependencyGraphBuilder {
 
     DependencyGraph graph = new DependencyGraph();
 
-    boolean resolveFullDependency = graphTraversalOption.resolveFullDependencies();
+    boolean resolveFullDependency = graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY;
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
@@ -353,11 +356,9 @@ public final class DependencyGraphBuilder {
 
         if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
           try {
-            boolean includeProvidedScope =
-                graphTraversalOption == GraphTraversalOption.FULL_DEPENDENCY_WITH_PROVIDED;
             dependencyNode =
                 resolveCompileTimeDependencies(
-                    ImmutableList.of(dependencyNode), includeProvidedScope);
+                    ImmutableList.of(dependencyNode), resolveFullDependency);
           } catch (DependencyResolutionException resolutionException) {
             // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0
             // has a transitive dependency to org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not

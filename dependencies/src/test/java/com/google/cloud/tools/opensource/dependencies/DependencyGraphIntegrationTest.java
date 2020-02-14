@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.util.ArrayList;
@@ -42,9 +43,12 @@ public class DependencyGraphIntegrationTest {
         new DefaultArtifact("com.google.cloud:google-cloud-core:1.37.1");
 
     DependencyGraph graph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(core, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildFullDependencyGraph(ImmutableList.of(core))
+            .getDependencyGraph();
     List<Update> updates = graph.findUpdates();
 
+    // Order of updates are not important
     Truth.assertThat(updates)
         .comparingElementsUsing(Correspondence.transforming(Update::toString, "has message"))
         .containsExactly(
@@ -69,8 +73,11 @@ public class DependencyGraphIntegrationTest {
             "com.google.api.grpc:proto-google-common-protos:1.12.0 needs to "
                 + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
             "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
-                + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0")
-        .inOrder();
+                + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
+            "com.google.guava:guava-jdk5:17.0 needs to "
+                + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
+            "org.apache.httpcomponents:httpclient:4.0.1 needs to "
+                + "upgrade commons-codec:commons-codec:1.3 to 1.6");
   }
 
   // Beam has a more complex dependency graph that hits some corner cases.
@@ -84,7 +91,9 @@ public class DependencyGraphIntegrationTest {
     DefaultArtifact beam =
         new DefaultArtifact("org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.5.0");
     DependencyGraph graph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(beam, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildFullDependencyGraph(ImmutableList.of(beam))
+            .getDependencyGraph();
 
     // should not throw
     graph.findUpdates();
@@ -97,13 +106,15 @@ public class DependencyGraphIntegrationTest {
     DefaultArtifact jaxen =
         new DefaultArtifact("jaxen:jaxen:1.1.6");
     DependencyGraph graph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(jaxen, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildFullDependencyGraph(ImmutableList.of(jaxen))
+            .getDependencyGraph();
 
     List<Update> updates = graph.findUpdates();
-    Truth.assertThat(updates).hasSize(3);
+    Truth.assertThat(updates).hasSize(6);
 
     List<DependencyPath> conflicts = graph.findConflicts();
-    Truth.assertThat(conflicts).hasSize(5);
+    Truth.assertThat(conflicts).hasSize(10);
 
     Map<String, String> versions = graph.getHighestVersionMap();
     Assert.assertEquals("2.6.2", versions.get("xerces:xercesImpl"));
@@ -114,9 +125,13 @@ public class DependencyGraphIntegrationTest {
 
     DefaultArtifact grpc = new DefaultArtifact("io.grpc:grpc-auth:1.15.0");
     DependencyGraph completeDependencies =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(grpc, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildFullDependencyGraph(ImmutableList.of(grpc))
+            .getDependencyGraph();
     DependencyGraph transitiveDependencies =
-        dependencyGraphBuilder.buildGraph(new Dependency(grpc, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildMavenDependencyGraph(new Dependency(grpc, "compile"))
+            .getDependencyGraph();
 
     Map<String, String> complete = completeDependencies.getHighestVersionMap();
     Map<String, String> transitive =
@@ -134,7 +149,9 @@ public class DependencyGraphIntegrationTest {
   public void testFindConflicts_cloudLanguage() throws RepositoryException {
     DefaultArtifact artifact = new DefaultArtifact("com.google.cloud:google-cloud-language:1.37.1");
     DependencyGraph graph =
-        dependencyGraphBuilder.buildCompleteGraph(new Dependency(artifact, "compile")).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildFullDependencyGraph(ImmutableList.of(artifact))
+            .getDependencyGraph();
     List<DependencyPath> conflicts = graph.findConflicts();
     List<String> leaves = new ArrayList<>();
     for (DependencyPath path : conflicts) {

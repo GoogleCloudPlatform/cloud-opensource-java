@@ -118,7 +118,10 @@ public abstract class ArtifactProblem {
   @Override
   public int hashCode() {
     ImmutableList<Dependency> dependencyList =
-        dependencyPath.stream().map(DependencyNode::getDependency).collect(toImmutableList());
+        dependencyPath.stream()
+            .map(DependencyNode::getDependency)
+            .filter(Objects::nonNull)
+            .collect(toImmutableList());
     return Objects.hash(artifact, dependencyList);
   }
 }

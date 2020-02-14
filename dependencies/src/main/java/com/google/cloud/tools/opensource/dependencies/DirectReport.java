@@ -43,7 +43,7 @@ class DirectReport {
     Artifact input = new DefaultArtifact(args[0]);
     DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
     DependencyGraphResult dependencyGraphResult =
-        dependencyGraphBuilder.buildGraph(new Dependency(input, ""));
+        dependencyGraphBuilder.buildMavenDependencyGraph(new Dependency(input, ""));
 
     for (DependencyPath dependencyPath : dependencyGraphResult.getDependencyGraph().list()) {
       if (dependencyPath.size() != 2) {
