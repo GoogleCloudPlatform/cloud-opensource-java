@@ -4,7 +4,7 @@ When a library B in Java depends on another library A through the Maven
 repository system, library B needs two identifiers to find classes in library A:
 
 1. The Maven coordinates of library A, following the form
-   `${groupId}:${artifactId}:${version}`; for example
+   `group_ID:artifact_ID:version`; for example
    `com.google.guava:guava:26.0-jre`. The Maven coordinates are used to pull the
    library's jar from Maven Central. For each pair of group ID and artifact ID
    (hereafter referenced as "Maven ID"), the user's build system (for example
