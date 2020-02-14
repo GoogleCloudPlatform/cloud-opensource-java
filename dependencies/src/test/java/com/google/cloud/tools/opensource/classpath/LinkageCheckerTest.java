@@ -75,7 +75,7 @@ public class LinkageCheckerTest {
   private ImmutableList<Path> resolveTransitiveDependencyPaths(String coordinates) {
     DependencyGraph dependencies =
         dependencyGraphBuilder
-            .buildGraph(new Dependency(new DefaultArtifact(coordinates), "compile"))
+            .buildMavenDependencyGraph(new Dependency(new DefaultArtifact(coordinates), "compile"))
             .getDependencyGraph();
     ImmutableList<Path> jars =
         dependencies.list().stream()
@@ -790,12 +790,12 @@ public class LinkageCheckerTest {
     // implementation for logging backend. The tool should not show errors for such classes.
     DependencyGraph slf4jGraph =
         dependencyGraphBuilder
-            .buildGraph(
+            .buildMavenDependencyGraph(
                 new Dependency(new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"), "compile"))
             .getDependencyGraph();
     DependencyGraph logbackGraph =
         dependencyGraphBuilder
-            .buildGraph(
+            .buildMavenDependencyGraph(
                 new Dependency(
                     new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"), "compile"))
             .getDependencyGraph();
