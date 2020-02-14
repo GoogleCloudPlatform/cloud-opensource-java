@@ -49,14 +49,13 @@ import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
 
 /**
- * This class builds dependency graphs for Maven artifacts. The nodes in the graph are Maven
- * artifacts and its edges are dependencies from an artifact to another.
+ * This class builds dependency graphs for Maven artifacts.
  *
- * <p>{@link #buildMavenDependencyGraph(Artifact)} builds a normal Maven dependency graph. This
- * graph has the following attributes:
+ * <p>A Maven dependency graph is the tree you see in {@code mvn dependency:tree} output. This graph
+ * has the following attributes:
  *
  * <ul>
- *   <li>It contains at most one node for the same groupId and artifactId. (<a
+ *   <li>It contains at most one node for the same group ID and artifact ID. (<a
  *       href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies">dependency
  *       mediation</a>)
  *   <li>The scope of a dependency affects the scope of its children's dependencies as per <a
@@ -66,15 +65,15 @@ import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
  *   <li>It does not contain transitive optional dependencies.
  * </ul>
  *
- * <p>{@link #buildFullDependencyGraph(List)} builds a full dependency graph. This graph has the
- * following attributes:
+ * <p>A full dependency graph is a dependency tree where each node's dependencies are fully resolved
+ * recursively. This graph has the following attributes:
  *
  * <ul>
- *   <li>The same artifact, which have the same group:artifact:version, appears in different nodes
- *       in the graph.
+ *   <li>The same artifact, which has the same group:artifact:version, appears in different nodes in
+ *       the graph.
  *   <li>The scope of a dependency does not affect the scope of its children's dependencies.
- *   <li>It contains transitive provided-scope dependencies.
- *   <li>It contains transitive optional dependencies.
+ *   <li>Provided-scope and optional dependencies are not treated differently than any other
+ *       dependency.
  * </ul>
  */
 public final class DependencyGraphBuilder {
@@ -228,10 +227,9 @@ public final class DependencyGraphBuilder {
    * conflicting versions. That is, this resolves conflicting versions by picking the first version
    * seen. This is how Maven normally operates.
    */
-  public DependencyGraphResult buildMavenDependencyGraph(Artifact artifact) {
-    Dependency rootDependency = new Dependency(artifact, "compile");
+  public DependencyGraphResult buildMavenDependencyGraph(Dependency dependency) {
     return buildDependencyGraph(
-        ImmutableList.of(new DefaultDependencyNode(rootDependency)), GraphTraversalOption.MAVEN);
+        ImmutableList.of(new DefaultDependencyNode(dependency)), GraphTraversalOption.MAVEN);
   }
 
   private DependencyGraphResult buildDependencyGraph(

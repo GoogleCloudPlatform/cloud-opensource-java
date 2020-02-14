@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.Dependency;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -128,7 +129,9 @@ public class DependencyGraphIntegrationTest {
             .buildFullDependencyGraph(ImmutableList.of(grpc))
             .getDependencyGraph();
     DependencyGraph transitiveDependencies =
-        dependencyGraphBuilder.buildMavenDependencyGraph(grpc).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildMavenDependencyGraph(new Dependency(grpc, "compile"))
+            .getDependencyGraph();
 
     Map<String, String> complete = completeDependencies.getHighestVersionMap();
     Map<String, String> transitive =

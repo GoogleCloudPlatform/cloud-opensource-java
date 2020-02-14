@@ -46,6 +46,7 @@ import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.Dependency;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -74,7 +75,7 @@ public class LinkageCheckerTest {
   private ImmutableList<Path> resolveTransitiveDependencyPaths(String coordinates) {
     DependencyGraph dependencies =
         dependencyGraphBuilder
-            .buildMavenDependencyGraph(new DefaultArtifact(coordinates))
+            .buildMavenDependencyGraph(new Dependency(new DefaultArtifact(coordinates), "compile"))
             .getDependencyGraph();
     ImmutableList<Path> jars =
         dependencies.list().stream()
@@ -789,11 +790,14 @@ public class LinkageCheckerTest {
     // implementation for logging backend. The tool should not show errors for such classes.
     DependencyGraph slf4jGraph =
         dependencyGraphBuilder
-            .buildMavenDependencyGraph(new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"))
+            .buildMavenDependencyGraph(
+                new Dependency(new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"), "compile"))
             .getDependencyGraph();
     DependencyGraph logbackGraph =
         dependencyGraphBuilder
-            .buildMavenDependencyGraph(new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"))
+            .buildMavenDependencyGraph(
+                new Dependency(
+                    new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"), "compile"))
             .getDependencyGraph();
 
     Path slf4jJar = slf4jGraph.list().get(0).getLeaf().getFile().toPath();

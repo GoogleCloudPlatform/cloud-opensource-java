@@ -28,6 +28,7 @@ import java.util.List;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.Dependency;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -48,7 +49,9 @@ public class DependencyGraphBuilderTest {
   @Test
   public void testGetTransitiveDependencies() throws RepositoryException {
     DependencyGraph graph =
-        dependencyGraphBuilder.buildMavenDependencyGraph(datastore).getDependencyGraph();
+        dependencyGraphBuilder
+            .buildMavenDependencyGraph(new Dependency(datastore, "compile"))
+            .getDependencyGraph();
     List<DependencyPath> list = graph.list();
 
     Assert.assertTrue(list.size() > 10);
@@ -126,7 +129,7 @@ public class DependencyGraphBuilderTest {
 
     // Without system properties "os.detected.arch" and "os.detected.name", this would fail.
     DependencyGraphResult dependencyGraphResult =
-        dependencyGraphBuilder.buildMavenDependencyGraph(nettyArtifact);
+        dependencyGraphBuilder.buildMavenDependencyGraph(new Dependency(nettyArtifact, ""));
 
     Truth.assertThat(dependencyGraphResult.getArtifactProblems()).isEmpty();
     Truth.assertThat(dependencyGraphResult.getDependencyGraph().list()).isNotEmpty();
