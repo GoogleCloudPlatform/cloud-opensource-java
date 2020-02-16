@@ -1,4 +1,4 @@
-# [JLBP-13] Quickly remove references to deprecated features in dependencies
+# [JLBP-13] Remove references to deprecated features in dependencies
 
 The earlier you remove usages of external deprecated functionality, the
 more versions of your product will work with your dependency once the
