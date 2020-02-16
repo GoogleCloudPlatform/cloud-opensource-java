@@ -1,9 +1,13 @@
-# [JLBP-16] Ensure upper version alignment of dependencies for consumers
+# [JLBP-16] Ensure upper version alignment of dependencies
 
 For multi-module projects, this best practice assumes you have already applied
 [JLBP-15](JLBP-15.md), so that your project has a BOM.
 
-Upper version alignment is defined in the [glossary](glossary.md).
+Upper version alignment means that when more than one version of a dependency
+is present in a module's dependency tree, the build system selects
+the highest version. Upper version alignment ensures that when packages are
+upgraded to higher versions which don’t make any breaking changes,
+there are no new linkage conflicts.
 
 ## Achieving upper version alignment
 
@@ -11,17 +15,23 @@ Upper version alignment increases the likelihood that consumers' build systems
 select the right versions of direct and transitive dependencies, reducing the
 number of conflicts.
 
-As noted in the definition, to fix a version misalignment caused by a shorter
-path to a version of a dependency that is not the upper bound in the
-dependency tree, a direct dependency needs to be added so that Maven consumers
-select the correct version.
+Gradle selects the highest version automatically. Maven, however, selects
+the version it encounters first when traversing the dependency tree, 
+regardless of version. 
 
-See the details specific to each build system in the following sections.
+To fix a version misalignment caused by a shorter
+path to a lower version of a dependency, you can either:
 
-## Maven
+1. Update the dependency on the lower version to the upper bound.
+   This usually requires submitting a patch to another project 
+   and waiting for it to release. 
+   
+2. Add a direct dependency on the misaligned dependency to your 
+   own project, even though your project does not directly 
+   import any of that dependency's classes. 
 
-Use `requireUpperBoundDeps` enforcement to ensure that you are using the
-highest version of each dependency in your dependency tree.
+The `requireUpperBoundDeps` enforcer rule check verifies that
+a project uses the highest version of each dependency in your dependency tree.
 
 To ensure that dependencies between modules in the project are consistent,
 the parent POM should import the library's own BOM into its
@@ -65,9 +75,3 @@ is shorter, leading Maven to select it instead of the wrong version.
 
 Have each module POM inherit from the parent POM of the library so that the
 parent's `<dependencyManagement>` section is used.
-
-## Gradle
-
-Declare variables defining dependency versions in a shared `ext` section in
-the root `build.gradle` file, and use those variables in any place declaring a
-dependency.
