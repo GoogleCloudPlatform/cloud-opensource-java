@@ -55,12 +55,11 @@
 <a name="version-alignment"></a>
 <a name="upper-version-alignment"></a>
 - **Version alignment**: Said of the dependency tree of a Maven module. This
-  means that for any dependency of a module in that module's dependency tree,
-  all major Java build systems select the same version of that dependency.
+  means that all major Java build systems select the same version of each dependency
+  in the module's dependency tree.
   - Major build systems currently include Maven and Gradle.
-  - Direct (first-order) dependencies comply with this rule in
-    all major build systems, so the real concern is transitive (second-order and
-    higher) dependencies.
+  - Direct dependencies comply with this rule in
+    all major build systems, so the real concern is transitive dependencies.
   - Version alignment does not guarantee linkage compatibility.
   - Sub-type: **Upper version alignment**: Version alignment where the version
     that is selected is the highest version in the dependency tree.
