@@ -37,7 +37,9 @@ public final class DependencyPath {
 
   @VisibleForTesting
   public void add(Dependency dependency) {
-    path.add(dependency);
+    // null optional is translated to false
+    boolean isOptional = dependency.getOptional() != null && dependency.getOptional();
+    path.add(dependency.setOptional(isOptional));
   }
 
   /** Returns the length of the path. */
@@ -61,6 +63,18 @@ public final class DependencyPath {
    */
   public Artifact get(int i) {
     return path.get(i).getArtifact();
+  }
+
+  /**
+   * Returns dependency path of the parent node of the leaf. Empty dependency node if the leaf does
+   * not have parent or {@link #path} is empty.
+   */
+  DependencyPath getParent() {
+    DependencyPath parent = new DependencyPath();
+    for (int i = 0; i < path.size() - 1; ++i) {
+      parent.add(path.get(i));
+    }
+    return parent;
   }
 
   @Override
