@@ -54,7 +54,7 @@ public class DependencyPathTest {
     path.add(new Dependency(bar, "provided"));
     path.add(new Dependency(foo, "compile"));
 
-    DependencyPath parent = path.getParent();
+    DependencyPath parent = path.getParentPath();
 
     DependencyPath expected = new DependencyPath();
     expected.add(new Dependency(foo, "compile", false));
@@ -67,7 +67,7 @@ public class DependencyPathTest {
   public void testGetParent_empty() {
     DependencyPath path = new DependencyPath();
 
-    DependencyPath parent = path.getParent();
+    DependencyPath parent = path.getParentPath();
 
     Assert.assertEquals(new DependencyPath(), parent);
   }
@@ -77,7 +77,7 @@ public class DependencyPathTest {
     DependencyPath path = new DependencyPath();
     path.add(new Dependency(foo, "compile", false));
 
-    DependencyPath parent = path.getParent();
+    DependencyPath parent = path.getParentPath();
 
     Assert.assertEquals(new DependencyPath(), parent);
   }

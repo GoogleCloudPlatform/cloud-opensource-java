@@ -74,7 +74,7 @@ public class DependencyTreeFormatter {
     // LinkedListMultimap preserves insertion order for values
     ListMultimap<DependencyPath, DependencyPath> tree = LinkedListMultimap.create();
     for (DependencyPath dependencyPath : dependencyPaths) {
-      DependencyPath parentDependencyPath = dependencyPath.getParent();
+      DependencyPath parentDependencyPath = dependencyPath.getParentPath();
       // Relying on DependencyPath's equality
       tree.put(parentDependencyPath, dependencyPath);
     }

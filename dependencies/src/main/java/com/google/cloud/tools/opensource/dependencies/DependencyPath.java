@@ -69,7 +69,7 @@ public final class DependencyPath {
    * Returns dependency path of the parent node of the leaf. Empty dependency node if the leaf does
    * not have parent or {@link #path} is empty.
    */
-  DependencyPath getParent() {
+  DependencyPath getParentPath() {
     DependencyPath parent = new DependencyPath();
     for (int i = 0; i < path.size() - 1; i++) {
       parent.add(path.get(i));
