@@ -98,7 +98,7 @@ like this:
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>libraries-bom</artifactId>
-        <version>4.0.0</version>
+        <version>4.1.0</version>
         <type>pom</type>
         <scope>import</scope>
        </dependency>
@@ -173,7 +173,15 @@ you are using at least Gradle 4.6. To do this:
 - Add a dependency on the BOM for the library you depend on
 - Remove the version from the dependency declarations of the artifacts in that library
 
-For an example, see [gax-java#690](https://github.com/googleapis/gax-java/pull/690/files).
+```
+dependencies {
+  api platform('com.google.cloud:libraries-bom:4.1.0')
+  api 'com.google.cloud:google-cloud-storage'
+  api 'com.google.guava:guava'
+}
+```
+
+For more details, refer to [Gradle: Importing Maven BOMs](https://docs.gradle.org/current/userguide/platforms.html#sub:bom_import).
 
 ## Intrinsic conflicts
 
