@@ -71,7 +71,7 @@ public final class DependencyPath {
    */
   DependencyPath getParent() {
     DependencyPath parent = new DependencyPath();
-    for (int i = 0; i < path.size() - 1; ++i) {
+    for (int i = 0; i < path.size() - 1; i++) {
       parent.add(path.get(i));
     }
     return parent;
