@@ -181,7 +181,8 @@ dependencies {
 }
 ```
 
-For more details, refer to [Gradle: Importing Maven BOMs](https://docs.gradle.org/current/userguide/platforms.html#sub:bom_import).
+For more details, refer to [Gradle: Importing Maven BOMs](
+https://docs.gradle.org/current/userguide/platforms.html#sub:bom_import) documentation.
 
 ## Intrinsic conflicts
 
