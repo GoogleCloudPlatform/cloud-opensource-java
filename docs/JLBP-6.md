@@ -70,8 +70,8 @@ Consider the following renaming scenario:
 
 Given this scenario, here are the possible combinations of renamings:
 
-- **Don't rename Java package**:
-  - **Case 1: Don't rename Maven ID**. This approach can result in diamond
+- **Keep Java package**:
+  - **Case 1: Keep Maven ID**. This approach can result in diamond
     dependency conflicts because different branches of a dependency tree can
     depend on different major versions, and the build system (Maven or Gradle)
     will only choose one of them to use. Users are forced to change their code
@@ -86,7 +86,7 @@ Given this scenario, here are the possible combinations of renamings:
     and can be a compile-time error in Java 9 and later. **NEVER DO THIS**.
 
 - **Rename Java package**:
-  - **Case 3: Don't rename Maven ID**. The classes from `g1:a1:1.0.0` and
+  - **Case 3: Keep Maven ID**. The classes from `g1:a1:1.0.0` and
     `g1:a1:2.0.0` could technically be used together, but since they share the
     Maven group ID and artifact ID, only one jar can be pulled in.
     Users must change their code to add references to the new version.
@@ -156,18 +156,18 @@ is to the decision.
 Examples in open source
 -----------------------
 
-**Case 1**
+**Case 1 (Keep same Java package and Maven ID)**
 - Guava
 - Hibernate
 - Joda Time
 
-**Case 2**
+**Case 2 (Keep same Java package, rename Maven ID)**
 - `guava` vs `guava-jdk5`
   - This technically wasn't a new major version, but it is an example of case 2
     that has caused a lot of problems.
 - `javax.servlet:javax.servlet-api:3.1.0` vs  `javax.servlet:servlet-api:2.5`
 
-**Case 4**
+**Case 4 (Rename both Java package and Maven ID)**
 - Square has [established this approach as a policy for its Java libraries](http://jakewharton.com/java-interoperability-policy-for-major-version-updates/)
   (examples include OkHttp and Retrofit).
   - OkHttp (com.squareup.okhttp -> com.squareup.okhttp3)
@@ -176,5 +176,5 @@ Examples in open source
 - JDOM (org.jdom -> org.jdom2)
 - jdeferred (org.jdeferred -> org.jdeferred2)
 
-**Case 5**
+**Case 5 (Bundle old and new in the existing Maven ID)**
 - JUnit (junit.framework (versions 1.x-3.x) -> org.junit (version 4))
