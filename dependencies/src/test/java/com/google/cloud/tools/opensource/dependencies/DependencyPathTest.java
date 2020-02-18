@@ -48,7 +48,7 @@ public class DependencyPathTest {
   }
 
   @Test
-  public void testGetParent() {
+  public void testGetParentPath() {
     DependencyPath path = new DependencyPath();
     path.add(new Dependency(foo, "compile", false));
     path.add(new Dependency(bar, "provided"));
@@ -64,7 +64,7 @@ public class DependencyPathTest {
   }
 
   @Test
-  public void testGetParent_empty() {
+  public void testGetParentPath_empty() {
     DependencyPath path = new DependencyPath();
 
     DependencyPath parent = path.getParentPath();
@@ -73,7 +73,7 @@ public class DependencyPathTest {
   }
 
   @Test
-  public void testGetParent_oneElement() {
+  public void testGetParentPath_oneElement() {
     DependencyPath path = new DependencyPath();
     path.add(new Dependency(foo, "compile", false));
 
