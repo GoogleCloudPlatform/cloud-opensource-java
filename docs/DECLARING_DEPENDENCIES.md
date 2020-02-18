@@ -174,7 +174,7 @@ you are using at least Gradle 4.6. To do this:
 
 ```
 dependencies {
-  api platform('com.google.cloud:libraries-bom:4.1.0')
+  api enforcedPlatform('com.google.cloud:libraries-bom:4.1.0')
   api 'com.google.cloud:google-cloud-storage'
 }
 ```
