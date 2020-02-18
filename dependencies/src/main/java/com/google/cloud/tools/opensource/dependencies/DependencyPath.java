@@ -71,8 +71,8 @@ public final class DependencyPath {
   }
   
   private static String formatDependency(Dependency dependency) {
-    String scopeAndOptional =
-        dependency.getScope() + (dependency.getOptional() ? ", optional" : "");
+    boolean isOptional = dependency.getOptional() != null && dependency.getOptional();
+    String scopeAndOptional = dependency.getScope() + (isOptional ? ", optional" : "");
     String coordinates = Artifacts.toCoordinates(dependency.getArtifact());
     return String.format("%s (%s)", coordinates, scopeAndOptional);
   }
@@ -87,7 +87,12 @@ public final class DependencyPath {
     if (other.path.size() != path.size()) {
       return false;
     }
-    
+
+    if (other.path.size() == 2 && other.path.get(0).getArtifact().getArtifactId().equals("protobuf-java-util") && other.path.get(1).getArtifact().getArtifactId().equals("guava")
+    && this.path.get(0).getArtifact().getArtifactId().equals("protobuf-java-util") && this.path.get(1).getArtifact().getArtifactId().equals("guava")) {
+      System.out.println("debugging");
+    }
+
     for (int i = 0; i < path.size(); i++) {
       Dependency thisNode = path.get(i);
       Dependency otherNode = other.path.get(i);
@@ -131,6 +136,11 @@ public final class DependencyPath {
                   node.getScope(),
                   node.getOptional());
     }
+
+    if (this.path.size() == 2 && this.path.get(0).getArtifact().getArtifactId().equals("protobuf-java-util") && this.path.get(1).getArtifact().getArtifactId().equals("guava")) {
+      System.out.println("debugging. Hashcode:" + hashCode);
+    }
+
     return hashCode;
   }
 

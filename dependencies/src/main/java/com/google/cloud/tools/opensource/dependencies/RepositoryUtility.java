@@ -76,8 +76,9 @@ import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
-import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
 import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
+import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
+import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner;
 
 /**
  * Aether initialization.
@@ -127,25 +128,32 @@ public final class RepositoryUtility {
   }
 
   /**
-   * Opens a new Maven repository session in the same way as {@link
-   * RepositoryUtility#newSession(RepositorySystem)}, with its dependency selector to include
-   * dependencies with 'provided' scope and optional dependencies.
+   * Open a new Maven repository session for full dependency graph resolution.
+   *
+   * @see {@link DependencyGraphBuilder}
    */
   static RepositorySystemSession newSessionForFullDependency(RepositorySystem system) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
 
     // This combination of DependencySelector comes from the default specified in
     // `MavenRepositorySystemUtils.newSession`.
-    // LinkageChecker needs to include 'provided' scope.
+    // LinkageChecker needs to include 'provided'-scope and optional dependencies.
     DependencySelector dependencySelector =
         new AndDependencySelector(
             // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
             // false positive in LinkageChecker.
             new ScopeDependencySelector("test"),
-            new OptionalDependencySelector(),
             new ExclusionDependencySelector(),
             new FilteringZipDependencySelector());
     session.setDependencySelector(dependencySelector);
+
+    session.setDependencyGraphTransformer(
+        new ChainedDependencyGraphTransformer(
+            new CycleBreakerGraphTransformer(), new JavaDependencyContextRefiner()));
+
+    // No dependency management
+    session.setDependencyManager(null);
+
     session.setReadOnly();
 
     return session;

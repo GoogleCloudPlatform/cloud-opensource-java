@@ -83,7 +83,7 @@ public class DashboardTest {
     unstable = parseOutputFile("unstable_artifacts.html");
   }
 
-  @AfterClass
+  // @AfterClass
   public static void cleanUp() {
     try {
       // Mac's APFS fails with InsecureRecursiveDeleteException without ALLOW_INSECURE.
