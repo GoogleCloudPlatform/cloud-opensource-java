@@ -70,7 +70,7 @@ Consider the following renaming scenario:
 
 Given this scenario, here are the possible combinations of renamings:
 
-- **Keep Java package**:
+- **Keep Java package name**:
   - **Case 1: Keep Maven ID**. This approach can result in diamond
     dependency conflicts because different branches of a dependency tree can
     depend on different major versions, and the build system (Maven or Gradle)
@@ -156,18 +156,18 @@ is to the decision.
 Examples in open source
 -----------------------
 
-**Case 1 (Keep same Java package and Maven ID)**
+**Case 1 - Keep Java package name and Maven ID**
 - Guava
 - Hibernate
 - Joda Time
 
-**Case 2 (Keep same Java package, rename Maven ID)**
+**Case 2 - Keep Java package name, rename Maven ID**
 - `guava` vs `guava-jdk5`
   - This technically wasn't a new major version, but it is an example of case 2
     that has caused a lot of problems.
 - `javax.servlet:javax.servlet-api:3.1.0` vs  `javax.servlet:servlet-api:2.5`
 
-**Case 4 (Rename both Java package and Maven ID)**
+**Case 4 - Rename both Java package and Maven ID**
 - Square has [established this approach as a policy for its Java libraries](http://jakewharton.com/java-interoperability-policy-for-major-version-updates/)
   (examples include OkHttp and Retrofit).
   - OkHttp (com.squareup.okhttp -> com.squareup.okhttp3)
@@ -176,5 +176,5 @@ Examples in open source
 - JDOM (org.jdom -> org.jdom2)
 - jdeferred (org.jdeferred -> org.jdeferred2)
 
-**Case 5 (Bundle old and new in the existing Maven ID)**
+**Case 5 - Bundle old and new in the existing Maven ID**
 - JUnit (junit.framework (versions 1.x-3.x) -> org.junit (version 4))
