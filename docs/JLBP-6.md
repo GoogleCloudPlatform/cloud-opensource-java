@@ -176,5 +176,5 @@ Examples in open source
 - JDOM (org.jdom -> org.jdom2)
 - jdeferred (org.jdeferred -> org.jdeferred2)
 
-**Case 5 - Bundle old and new in the existing Maven ID**
+**Case 5 - Bundle old and new packages in the existing Maven ID**
 - JUnit (junit.framework (versions 1.x-3.x) -> org.junit (version 4))
