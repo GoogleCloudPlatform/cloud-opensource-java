@@ -185,6 +185,55 @@ https://docs.gradle.org/current/userguide/platforms.html#sub:bom_import).
 For Gradle 4 example, refer to [Gradle 4.6 Release Notes: BOM import](
 https://docs.gradle.org/4.6/release-notes.html#bom-import).
 
+## Guava Versions "-jre" or "-android"
+
+Google's Guava release contains two flavors of artifacts:
+"-jre" and "-android" versions.
+The one with "-jre" (such as `com.google.guava:guava:28.2-jre`) is
+for Java 8 runtime that supports lambda functions and streams.
+The other flavor with "-android" suffix (such as `com.google.guava:guava:28.2-android`)
+is for Java 7 runtime.
+
+Google Cloud Platform Libraries BOM contains Guava with "-android" flavor
+to ensure that the BOM works in the old Java version.
+However, this means the version of Guava in the BOM does not have some
+methods that are intended for Java 8 lambda functions, such as
+`ImmutableList.toImmutableList()`.
+
+If your project and libraries are intended to run Java 8 and requiring Guava's
+lambda/stream support, you may want to explicitly set Guava version with "-jre" suffix.
+
+In Maven,
+
+```
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>28.2-jre</version>  <!-- "-jre" for Java 8 or higher -->
+      </dependency>
+    </dependencies>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>libraries-bom</artifactId>
+        ...
+  </dependencyManagement>
+```
+
+In Gradle,
+
+```
+dependencies {
+  constraints {
+    api 'com.google.guava:guava:28.2-jre' // "-jre" for Java 8 or higher
+  }
+  api platform('com.google.cloud:libraries-bom:4.1.0')
+  ...
+}
+```
+
 ## Intrinsic conflicts
 
 It is possible for GCP open source Java libraries to have *intrinsic conflicts*
