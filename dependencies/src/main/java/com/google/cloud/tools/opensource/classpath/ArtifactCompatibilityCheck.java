@@ -65,7 +65,8 @@ class ArtifactCompatibilityCheck {
           linkageChecker.findSymbolProblems();
 
       symbolProblems = filterReachable(symbolProblems, linkageChecker);
-      System.out.println(coordinates + " intrinsic problems ('problem x source' pairs): " + symbolProblems.size());
+      System.out.println(
+          coordinates + " intrinsic problems ('problem x source' pairs): " + symbolProblems.size());
       intrinsicErrors.addAll(symbolProblems.entries());
     }
 
@@ -75,10 +76,10 @@ class ArtifactCompatibilityCheck {
         canaryProjectChecker.findSymbolProblems();
     canaryProjectErrors = filterReachable(canaryProjectErrors, canaryProjectChecker);
 
-    ImmutableSetMultimap<SymbolProblem, ClassFile> canaryOnlyErrors = ImmutableSetMultimap
-        .copyOf(
-            Multimaps.filterEntries(canaryProjectErrors,
-                entry -> !intrinsicErrors.contains(entry)));
+    ImmutableSetMultimap<SymbolProblem, ClassFile> canaryOnlyErrors =
+        ImmutableSetMultimap.copyOf(
+            Multimaps.filterEntries(
+                canaryProjectErrors, entry -> !intrinsicErrors.contains(entry)));
 
     for (SymbolProblem symbolProblem : canaryOnlyErrors.keySet()) {
       ImmutableSet<ClassFile> sourceClasses = canaryOnlyErrors.get(symbolProblem);
@@ -91,13 +92,11 @@ class ArtifactCompatibilityCheck {
   }
 
   static ImmutableSetMultimap<SymbolProblem, ClassFile> filterReachable(
-      ImmutableSetMultimap<SymbolProblem, ClassFile> problems,
-      LinkageChecker linkageChecker
-  ) {
+      ImmutableSetMultimap<SymbolProblem, ClassFile> problems, LinkageChecker linkageChecker) {
     ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
     return ImmutableSetMultimap.copyOf(
-        Multimaps.filterValues(problems,
-        classFile -> classReferenceGraph.isReachable(classFile.getBinaryName())));
+        Multimaps.filterValues(
+            problems, classFile -> classReferenceGraph.isReachable(classFile.getBinaryName())));
   }
 
   /**
