@@ -91,7 +91,7 @@ class ArtifactCompatibilityCheck {
     }
   }
 
-  static ImmutableSetMultimap<SymbolProblem, ClassFile> filterReachable(
+  private static ImmutableSetMultimap<SymbolProblem, ClassFile> filterReachable(
       ImmutableSetMultimap<SymbolProblem, ClassFile> problems, LinkageChecker linkageChecker) {
     ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
     return ImmutableSetMultimap.copyOf(
@@ -103,7 +103,7 @@ class ArtifactCompatibilityCheck {
    * Returns a linkage checker that analyzes the class path generated from {@code artifacts} and
    * their dependencies.
    */
-  static LinkageChecker linkageCheckerOf(List<Artifact> artifacts) throws IOException {
+  private static LinkageChecker linkageCheckerOf(List<Artifact> artifacts) throws IOException {
     ClassPathBuilder classPathBuilder = new ClassPathBuilder();
     ClassPathResult classPathResult = classPathBuilder.resolve(artifacts);
 
