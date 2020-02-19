@@ -49,14 +49,23 @@ class ArtifactCompatibilityCheck {
 
     for (String coordinates : arguments) {
       Artifact artifact = new DefaultArtifact(coordinates);
-      artifacts.add(artifact);
-      LinkageChecker linkageChecker = linkagecheckerFor(artifact);
+
+      LinkageChecker linkageChecker;
+      if (artifact.getExtension().equals("pom")) {
+        Bom bom = RepositoryUtility.readBom(artifact.toString());
+        ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
+        artifacts.addAll(managedDependencies);
+        linkageChecker = linkageCheckerOf(managedDependencies);
+      } else {
+        artifacts.add(artifact);
+        linkageChecker = linkageCheckerOf(ImmutableList.of(artifact));
+      }
 
       ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
           linkageChecker.findSymbolProblems();
 
       symbolProblems = filterReachable(symbolProblems, linkageChecker);
-      System.out.println(coordinates + " intrinsic problems (problem x source pairs): " + symbolProblems.size());
+      System.out.println(coordinates + " intrinsic problems ('problem x source' pairs): " + symbolProblems.size());
       intrinsicErrors.addAll(symbolProblems.entries());
     }
 
@@ -78,23 +87,6 @@ class ArtifactCompatibilityCheck {
       for (ClassFile sourceClass : sourceClasses) {
         System.out.println("    " + sourceClass);
       }
-    }
-  }
-
-  /**
-   * Returns a linkage checker for {@code artifact}. If the artifact is a BOM (extension "pom"),
-   * then it creates the linkage checker for the class path generated from the artifacts in {@code
-   * dependencyManagement} section; otherwise the linkage checker for the class path from the
-   * artifact and its {@code dependencies} section.
-   */
-  static LinkageChecker linkagecheckerFor(Artifact artifact)
-      throws IOException, ArtifactDescriptorException {
-    if (artifact.getExtension().equals("pom")) {
-      Bom bom = RepositoryUtility.readBom(artifact.toString());
-      ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
-      return linkageCheckerOf(managedDependencies);
-    } else {
-      return linkageCheckerOf(ImmutableList.of(artifact));
     }
   }
 
