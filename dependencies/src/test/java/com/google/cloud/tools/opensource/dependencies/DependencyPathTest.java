@@ -55,7 +55,16 @@ public class DependencyPathTest {
     Assert.assertEquals(
         "com.google:foo:1 (test) / com.google:bar:1 (compile, optional)", path.toString());
   }
-  
+
+  @Test
+  public void testToString_nullOptionalFlag() {
+    DependencyPath path = new DependencyPath();
+    path.add(new Dependency(foo, "test", false));
+    path.add(new Dependency(bar, "compile", null));
+    Assert.assertEquals(
+            "com.google:foo:1 (test) / com.google:bar:1 (compile, null)", path.toString());
+  }
+
   @Test
   public void testEquals() {
     DependencyPath path1 = new DependencyPath();
