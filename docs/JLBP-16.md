@@ -15,9 +15,10 @@ Upper version alignment increases the likelihood that consumers' build systems
 select the right versions of direct and transitive dependencies, reducing the
 number of conflicts.
 
-Gradle selects the highest version automatically. Maven, however, selects
-the version it encounters first when traversing the dependency tree, 
-regardless of version. 
+Gradle always chooses the highest version it finds in the dependency graph,
+regardless of where it occurs. Maven, however, selects
+the version it encounters first when traversing the dependency graph
+in level order, regardless of version. 
 
 To fix a version misalignment caused by a shorter
 path to a lower version of a dependency, you can either:
@@ -26,11 +27,11 @@ path to a lower version of a dependency, you can either:
    This usually requires submitting a patch to another project 
    and waiting for it to release. 
    
-2. Add a direct dependency on the misaligned dependency to your 
-   own project, even though your project does not directly 
+2. Add the newer version of the dependency to the `dependencyManagement` 
+   section of your project, even though it does not directly 
    import any of that dependency's classes. 
 
-The `requireUpperBoundDeps` enforcer rule check verifies that
+The `requireUpperBoundDeps` enforcer rule verifies that
 a project uses the highest version of each dependency in your dependency tree.
 
 To ensure that dependencies between modules in the project are consistent,
