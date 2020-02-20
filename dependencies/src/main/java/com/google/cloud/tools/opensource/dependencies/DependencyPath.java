@@ -69,10 +69,22 @@ public final class DependencyPath {
         path.stream().map(DependencyPath::formatDependency).collect(Collectors.toList());
     return Joiner.on(" / ").join(formatted);
   }
+
+  private static String optionalFlag(Boolean optionalFlag) {
+    if (optionalFlag == null) {
+      return "null";
+    }
+    if (optionalFlag) {
+      return "optional";
+    } else {
+      return "";
+    }
+  }
   
   private static String formatDependency(Dependency dependency) {
+    String optionalPart = optionalFlag(dependency.getOptional());
     String scopeAndOptional =
-        dependency.getScope() + (dependency.getOptional() ? ", optional" : "");
+        dependency.getScope() + (optionalPart.equals("") ? "" : ", " + optionalPart);
     String coordinates = Artifacts.toCoordinates(dependency.getArtifact());
     return String.format("%s (%s)", coordinates, scopeAndOptional);
   }
