@@ -26,10 +26,10 @@ import org.eclipse.aether.collection.DependencyGraphTransformer;
 import org.eclipse.aether.graph.DependencyNode;
 
 /**
- * Transforms a dependency graph so that it will not contain cycle.
+ * Transforms a dependency graph so that it will not contain cycles.
  *
  * <p>A cycle in a dependency graph is a situation where a path to a node from the root contains the
- * same node.
+ * same node. For example, jaxen 1.1-beta-6 is known to have cycle with dom4j 1.6.1.
  */
 final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
 
