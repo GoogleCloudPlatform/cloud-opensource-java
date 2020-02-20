@@ -73,4 +73,24 @@ public class DependencyTreeFormatterTest {
         "The dependency should be output as tree with indentation",
         expectedTreeOutput, actualTreeOutput);
   }
+
+  @Test
+  public void testDependencyTree_scopeAndOptionalFlag() {
+    List<DependencyPath> dependencyPathList = new ArrayList<>();
+
+    DependencyPath path1 = new DependencyPath();
+    path1.add(new Dependency(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", true));
+    dependencyPathList.add(path1);
+
+    DependencyPath path2 = new DependencyPath();
+    path2.add(new Dependency(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", true));
+    path2.add(
+        new Dependency(new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"), "provided", false));
+    dependencyPathList.add(path2);
+
+    String actualTreeOutput = DependencyTreeFormatter.formatDependencyPaths(dependencyPathList);
+    String expectedTreeOutput =
+        "  io.grpc:grpc-auth:jar:1.15.0\n" + "    io.grpc:grpc-core:jar:1.15.0\n";
+    Assert.assertEquals(expectedTreeOutput, actualTreeOutput);
+  }
 }
