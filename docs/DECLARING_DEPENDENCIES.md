@@ -98,7 +98,7 @@ like this:
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>libraries-bom</artifactId>
-        <version>4.0.0</version>
+        <version>4.1.0</version>
         <type>pom</type>
         <scope>import</scope>
        </dependency>
@@ -166,14 +166,24 @@ problem, you can import a BOM to force consistent versions, as long as
 you are using at least Gradle 4.6. To do this:
 
 - Turn on BOM support:
-  - If you are using Gradle 4.x, add 
-    `enableFeaturePreview('IMPROVED_POM_SUPPORT')` to `settings.gradle`. 
-   
   - If you are using Gradle 5.x or higher, BOM support is on by default.
+  - If you are using Gradle 4.6 or higher, add 
+    `enableFeaturePreview('IMPROVED_POM_SUPPORT')` to `settings.gradle`.
 - Add a dependency on the BOM for the library you depend on
 - Remove the version from the dependency declarations of the artifacts in that library
 
-For an example, see [gax-java#690](https://github.com/googleapis/gax-java/pull/690/files).
+```
+dependencies {
+  api enforcedPlatform('com.google.cloud:libraries-bom:4.1.0')
+  api 'com.google.cloud:google-cloud-storage'
+}
+```
+
+For more details for Gradle 5.x or higher, refer to [Gradle: Importing Maven BOMs](
+https://docs.gradle.org/current/userguide/platforms.html#sub:bom_import).
+
+For Gradle 4 example, refer to [Gradle 4.6 Release Notes: BOM import](
+https://docs.gradle.org/4.6/release-notes.html#bom-import).
 
 ## Intrinsic conflicts
 

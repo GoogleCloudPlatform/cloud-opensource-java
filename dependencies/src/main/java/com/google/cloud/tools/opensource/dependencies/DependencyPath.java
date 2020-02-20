@@ -63,16 +63,27 @@ public final class DependencyPath {
     return path.get(i).getArtifact();
   }
 
+  /**
+   * Returns the dependency path of the parent node of the leaf. Empty dependency path if the leaf
+   * does not have a parent or {@link #path} is empty.
+   */
+  DependencyPath getParentPath() {
+    DependencyPath parent = new DependencyPath();
+    for (int i = 0; i < path.size() - 1; i++) {
+      parent.add(path.get(i));
+    }
+    return parent;
+  }
+
   @Override
   public String toString() {
     List<String> formatted =
         path.stream().map(DependencyPath::formatDependency).collect(Collectors.toList());
     return Joiner.on(" / ").join(formatted);
   }
-  
+
   private static String formatDependency(Dependency dependency) {
-    boolean isOptional = dependency.getOptional() != null && dependency.getOptional();
-    String scopeAndOptional = dependency.getScope() + (isOptional ? ", optional" : "");
+    String scopeAndOptional = dependency.getScope() + (dependency.isOptional() ? ", optional" : "");
     String coordinates = Artifacts.toCoordinates(dependency.getArtifact());
     return String.format("%s (%s)", coordinates, scopeAndOptional);
   }
@@ -86,11 +97,6 @@ public final class DependencyPath {
     
     if (other.path.size() != path.size()) {
       return false;
-    }
-
-    if (other.path.size() == 2 && other.path.get(0).getArtifact().getArtifactId().equals("protobuf-java-util") && other.path.get(1).getArtifact().getArtifactId().equals("guava")
-    && this.path.get(0).getArtifact().getArtifactId().equals("protobuf-java-util") && this.path.get(1).getArtifact().getArtifactId().equals("guava")) {
-      System.out.println("debugging");
     }
 
     for (int i = 0; i < path.size(); i++) {
@@ -134,13 +140,8 @@ public final class DependencyPath {
                   artifact.getArtifactId(),
                   artifact.getVersion(),
                   node.getScope(),
-                  node.getOptional());
+                  node.isOptional());
     }
-
-    if (this.path.size() == 2 && this.path.get(0).getArtifact().getArtifactId().equals("protobuf-java-util") && this.path.get(1).getArtifact().getArtifactId().equals("guava")) {
-      System.out.println("debugging. Hashcode:" + hashCode);
-    }
-
     return hashCode;
   }
 
