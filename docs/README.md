@@ -13,9 +13,10 @@ made. We have found that following these rules results in higher quality
 Java libraries with fewer dependency conflicts and other kinds of problems. The
 list is open-ended, so new ones may be added from time to time.
 
-- [Glossary](glossary.md): Terms used in the best practices and other places in
-  cloud-opensource-java.
+## Introductory material
+- [What is a diamond dependency conflict?](what-is-a-diamond-dependency-conflict.md)
 
+## Best practices
 - [JLBP-1](JLBP-1.md): Minimize dependencies
 - [JLBP-2](JLBP-2.md): Minimize API surface
 - [JLBP-3](JLBP-3.md): Use semantic versioning
@@ -39,3 +40,7 @@ list is open-ended, so new ones may be added from time to time.
 - [JLBP-18](JLBP-18.md): Only shade dependencies as a last resort
 - [JLBP-19](JLBP-19.md): Place each package in only one module
 - [JLBP-20](JLBP-20.md): Give each jar a module name
+
+## Reference
+- [Glossary](glossary.md): Terms used in the best practices and other places in
+  cloud-opensource-java.
