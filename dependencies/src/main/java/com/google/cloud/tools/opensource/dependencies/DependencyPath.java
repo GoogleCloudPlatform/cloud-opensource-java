@@ -69,10 +69,9 @@ public final class DependencyPath {
         path.stream().map(DependencyPath::formatDependency).collect(Collectors.toList());
     return Joiner.on(" / ").join(formatted);
   }
-  
+
   private static String formatDependency(Dependency dependency) {
-    String scopeAndOptional =
-        dependency.getScope() + (dependency.getOptional() ? ", optional" : "");
+    String scopeAndOptional = dependency.getScope() + (dependency.isOptional() ? ", optional" : "");
     String coordinates = Artifacts.toCoordinates(dependency.getArtifact());
     return String.format("%s (%s)", coordinates, scopeAndOptional);
   }
@@ -129,7 +128,7 @@ public final class DependencyPath {
                   artifact.getArtifactId(),
                   artifact.getVersion(),
                   node.getScope(),
-                  node.getOptional());
+                  node.isOptional());
     }
     return hashCode;
   }
