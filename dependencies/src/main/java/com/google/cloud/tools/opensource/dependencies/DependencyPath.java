@@ -64,7 +64,7 @@ public final class DependencyPath {
   }
 
   /**
-   * Returns the dependency path of the parent node of the leaf. Empty dependency node if the leaf
+   * Returns the dependency path of the parent node of the leaf. Empty dependency path if the leaf
    * does not have a parent or {@link #path} is empty.
    */
   DependencyPath getParentPath() {
