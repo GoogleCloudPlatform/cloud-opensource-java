@@ -70,20 +70,8 @@ public final class DependencyPath {
     return Joiner.on(" / ").join(formatted);
   }
 
-  private static String formatOptionalFlag(Boolean optionalFlag) {
-    if (optionalFlag == null) {
-      return "null";
-    } else if (optionalFlag) {
-      return "optional";
-    } else {
-      return "";
-    }
-  }
-  
   private static String formatDependency(Dependency dependency) {
-    String optionalPart = formatOptionalFlag(dependency.getOptional());
-    String scopeAndOptional =
-        dependency.getScope() + (optionalPart.isEmpty() ? "" : ", " + optionalPart);
+    String scopeAndOptional = dependency.getScope() + (dependency.isOptional() ? ", optional" : "");
     String coordinates = Artifacts.toCoordinates(dependency.getArtifact());
     return String.format("%s (%s)", coordinates, scopeAndOptional);
   }
@@ -140,7 +128,7 @@ public final class DependencyPath {
                   artifact.getArtifactId(),
                   artifact.getVersion(),
                   node.getScope(),
-                  node.getOptional());
+                  node.isOptional());
     }
     return hashCode;
   }
