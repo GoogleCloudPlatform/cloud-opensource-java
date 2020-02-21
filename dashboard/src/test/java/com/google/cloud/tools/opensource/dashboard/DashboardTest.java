@@ -333,7 +333,8 @@ public class DashboardTest {
     Document document = parseOutputFile(
         "com.google.api.grpc_grpc-google-common-protos_1.14.0.html");
 
-    // com.google.api.grpc:grpc-google-common-protos:1.14.0 selects the highest version of all dependencies.
+    // com.google.api.grpc:grpc-google-common-protos:1.14.0 selects the highest version of all
+    // dependencies.
     Nodes greens = document.query("//h3[@style='color: green']");
     Assert.assertEquals(1, greens.size());
 

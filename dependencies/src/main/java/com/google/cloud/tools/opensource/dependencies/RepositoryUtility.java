@@ -108,7 +108,8 @@ public final class RepositoryUtility {
     return locator.getService(RepositorySystem.class);
   }
 
-  private static DefaultRepositorySystemSession createDefaultRepositorySystemSession(
+  @VisibleForTesting
+  static DefaultRepositorySystemSession createDefaultRepositorySystemSession(
       RepositorySystem system) {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
     LocalRepository localRepository = new LocalRepository(findLocalRepository().getAbsolutePath());
@@ -147,11 +148,16 @@ public final class RepositoryUtility {
             new FilteringZipDependencySelector());
     session.setDependencySelector(dependencySelector);
 
+    // By default, Maven's MavenRepositorySystemUtils.newSession() returns a session with
+    // ChainedDependencyGraphTransformer(ConflictResolver(...), JavaDependencyContextRefiner()).
+    // Because the full dependency graph does not resolve conflicts of versions, this session does
+    // not use ConflictResolver.
     session.setDependencyGraphTransformer(
         new ChainedDependencyGraphTransformer(
-            new CycleBreakerGraphTransformer(), new JavaDependencyContextRefiner()));
+            new CycleBreakerGraphTransformer(), // Avoids StackOverflowError
+            new JavaDependencyContextRefiner()));
 
-    // No dependency management
+    // No dependency management in the full dependency graph
     session.setDependencyManager(null);
 
     session.setReadOnly();

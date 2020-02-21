@@ -254,9 +254,7 @@ public class DependencyGraphBuilderTest {
   @Test
   public void testAlts_exclusionElements() throws RepositoryException {
     Correspondence<DependencyPath, String> dependencyPathToString =
-        Correspondence.transforming(
-                DependencyPath::toString,
-            "has string representation");
+        Correspondence.transforming(DependencyPath::toString, "has string representation");
 
     DefaultArtifact artifact = new DefaultArtifact("io.grpc:grpc-alts:jar:1.27.0");
     DependencyGraph graph =
