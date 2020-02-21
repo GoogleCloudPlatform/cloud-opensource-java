@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -47,7 +48,8 @@ public class CycleBreakerGraphTransformerTest {
 
     // dom4j:1.6.1 is known to have a cycle
     CollectRequest collectRequest = new CollectRequest();
-    collectRequest.setRoot(new Dependency(new DefaultArtifact("dom4j:dom4j:jar:1.6.1"), "compile"));
+    collectRequest.setRepositories(ImmutableList.of(RepositoryUtility.CENTRAL));
+    collectRequest.setRoot(new Dependency(new DefaultArtifact("dom4j:dom4j:1.6.1"), "compile"));
     DependencyRequest request = new DependencyRequest(collectRequest, null);
 
     // This should not raise StackOverflowError
