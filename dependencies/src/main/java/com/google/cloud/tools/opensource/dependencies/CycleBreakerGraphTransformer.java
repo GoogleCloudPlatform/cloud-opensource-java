@@ -42,7 +42,8 @@ final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
     return dependencyNode;
   }
 
-  private static void removeCycle(DependencyNode parent, DependencyNode node, Set<Artifact> ancestors) {
+  private static void removeCycle(
+      DependencyNode parent, DependencyNode node, Set<Artifact> ancestors) {
     Artifact artifact = node.getArtifact();
 
     if (ancestors.contains(artifact)) { // Set (rather than List) gives O(1) lookup here
