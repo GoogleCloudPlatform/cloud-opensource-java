@@ -42,25 +42,26 @@ final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
     return dependencyNode;
   }
 
-  private void removeCycle(DependencyNode parent, DependencyNode node, Set<Artifact> parents) {
+  private static void removeCycle(DependencyNode parent, DependencyNode node, Set<Artifact> ancestors) {
     Artifact artifact = node.getArtifact();
-    if (parents.contains(artifact)) {
-      // parent is not null when parents is not empty
+
+    if (ancestors.contains(artifact)) { // Set (rather than List) gives O(1) lookup here
+      // parent is not null when ancestors is not empty
       removeChildFromParent(parent, node);
       return;
     }
 
-    parents.add(artifact);
+    ancestors.add(artifact);
     for (DependencyNode child : node.getChildren()) {
-      removeCycle(node, child, parents);
+      removeCycle(node, child, ancestors);
     }
-    parents.remove(artifact);
+    ancestors.remove(artifact);
   }
 
-  private void removeChildFromParent(DependencyNode parent, DependencyNode node) {
+  private static void removeChildFromParent(DependencyNode child, DependencyNode parent) {
     ImmutableList<DependencyNode> children =
         parent.getChildren().stream()
-            .filter(child -> child != node)
+            .filter(node -> node != child)
             .collect(ImmutableList.toImmutableList());
     parent.setChildren(children);
   }
