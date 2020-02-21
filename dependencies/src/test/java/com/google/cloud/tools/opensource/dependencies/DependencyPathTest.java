@@ -46,7 +46,42 @@ public class DependencyPathTest {
     Assert.assertEquals(foo, path.get(0));
     Assert.assertEquals(bar, path.get(1));
   }
-  
+
+  @Test
+  public void testGetParentPath() {
+    DependencyPath path = new DependencyPath();
+    path.add(new Dependency(foo, "compile", false));
+    path.add(new Dependency(bar, "provided"));
+    path.add(new Dependency(foo, "compile"));
+
+    DependencyPath parent = path.getParentPath();
+
+    DependencyPath expected = new DependencyPath();
+    expected.add(new Dependency(foo, "compile", false));
+    expected.add(new Dependency(bar, "provided"));
+
+    Assert.assertEquals(expected, parent);
+  }
+
+  @Test
+  public void testGetParentPath_empty() {
+    DependencyPath path = new DependencyPath();
+
+    DependencyPath parent = path.getParentPath();
+
+    Assert.assertEquals(new DependencyPath(), parent);
+  }
+
+  @Test
+  public void testGetParentPath_oneElement() {
+    DependencyPath path = new DependencyPath();
+    path.add(new Dependency(foo, "compile", false));
+
+    DependencyPath parent = path.getParentPath();
+
+    Assert.assertEquals(new DependencyPath(), parent);
+  }
+
   @Test
   public void testToString() {
     DependencyPath path = new DependencyPath();
