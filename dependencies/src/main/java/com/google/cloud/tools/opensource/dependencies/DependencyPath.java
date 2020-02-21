@@ -63,16 +63,27 @@ public final class DependencyPath {
     return path.get(i).getArtifact();
   }
 
+  /**
+   * Returns the dependency path of the parent node of the leaf. Empty dependency path if the leaf
+   * does not have a parent or {@link #path} is empty.
+   */
+  DependencyPath getParentPath() {
+    DependencyPath parent = new DependencyPath();
+    for (int i = 0; i < path.size() - 1; i++) {
+      parent.add(path.get(i));
+    }
+    return parent;
+  }
+
   @Override
   public String toString() {
     List<String> formatted =
         path.stream().map(DependencyPath::formatDependency).collect(Collectors.toList());
     return Joiner.on(" / ").join(formatted);
   }
-  
+
   private static String formatDependency(Dependency dependency) {
-    String scopeAndOptional =
-        dependency.getScope() + (dependency.getOptional() ? ", optional" : "");
+    String scopeAndOptional = dependency.getScope() + (dependency.isOptional() ? ", optional" : "");
     String coordinates = Artifacts.toCoordinates(dependency.getArtifact());
     return String.format("%s (%s)", coordinates, scopeAndOptional);
   }
@@ -129,7 +140,7 @@ public final class DependencyPath {
                   artifact.getArtifactId(),
                   artifact.getVersion(),
                   node.getScope(),
-                  node.getOptional());
+                  node.isOptional());
     }
     return hashCode;
   }
