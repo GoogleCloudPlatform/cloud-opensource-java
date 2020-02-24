@@ -66,8 +66,8 @@ class LinkageCheckerMain {
       inputClassPath = linkageCheckerArguments.getInputClasspath();
     } else {
       // When Maven artifacts (or a BOM) are passed as arguments, resolve the dependency tree.
-      classPathResult = classPathBuilder.resolve(artifacts);
-      inputClassPath = classPathResult.getClassPath();
+      inputClassPath = linkageCheckerArguments.getInputClasspath();
+      classPathResult = linkageCheckerArguments.getClassPathResult();
       artifactProblems.addAll(classPathResult.getArtifactProblems());
     }
 

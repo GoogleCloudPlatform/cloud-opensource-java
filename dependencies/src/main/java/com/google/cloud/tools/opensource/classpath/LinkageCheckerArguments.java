@@ -20,8 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -60,7 +58,7 @@ final class LinkageCheckerArguments {
   private static final HelpFormatter helpFormatter = new HelpFormatter();
 
   private final CommandLine commandLine;
-  private ImmutableList<Path> cachedInputClasspath;
+  private ClassPathResult classPathResult;
   private ImmutableList<Artifact> cachedArtifacts;
   private final ImmutableList<String> extraMavenRepositoryUrls;
   private final boolean addMavenCentral;
@@ -191,33 +189,34 @@ final class LinkageCheckerArguments {
   }
 
   /**
+   * Returns class path result for a BOM or Maven artifacts resolution. Null if the input is a list
+   * of JAR files.
+   */
+  ClassPathResult getClassPathResult() {
+    return classPathResult;
+  }
+
+  /**
    * Returns a list of absolute paths to jar files for the option. The list includes dependencies if
    * BOM or Maven coordinates are specified in the option.
    */
   ImmutableList<Path> getInputClasspath() throws RepositoryException {
-    if (cachedInputClasspath != null) {
+    if (classPathResult != null) {
       // Avoid unnecessary dependency resolution, which Cloud OSS BOM takes around 4 seconds
-      return cachedInputClasspath;
+      return classPathResult.getClassPath();
     }
 
     if (commandLine.hasOption("b") || commandLine.hasOption("a")) {
       List<Artifact> artifacts = getArtifacts();
-      ClassPathResult result = classPathBuilder.resolve(artifacts);
-      ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
-      if (!artifactProblems.isEmpty()) {
-        throw new RepositoryException(
-            "Unresolved artifacts: " + Joiner.on(", ").join(artifactProblems));
-      }
-      cachedInputClasspath = result.getClassPath();
+      classPathResult = classPathBuilder.resolve(artifacts);
+      return classPathResult.getClassPath();
     } else {
       // b, a, or j is specified in OptionGroup
       String[] jarFiles = commandLine.getOptionValues("j");
-      cachedInputClasspath =
-          Arrays.stream(jarFiles)
-              .map(name -> Paths.get(name).toAbsolutePath())
-              .collect(toImmutableList());
+      return Arrays.stream(jarFiles)
+          .map(name -> Paths.get(name).toAbsolutePath())
+          .collect(toImmutableList());
     }
-    return cachedInputClasspath;
   }
 
   /** Returns a set of jar files that hold entry point classes. */

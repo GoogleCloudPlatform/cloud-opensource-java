@@ -16,7 +16,9 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
+import java.nio.file.Path;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.junit.Assert;
@@ -115,5 +117,16 @@ public class LinkageCheckerArgumentsTest {
         LinkageCheckerArguments.readCommandLine("-j", "dummy.jar", "-r");
 
     Truth.assertThat(parsedArguments.getReportOnlyReachable()).isTrue();
+  }
+
+  @Test
+  public void testGetInputClasspath_shouldNotThrowException()
+      throws ParseException, RepositoryException {
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine("-a", "ant:ant:1.6.2");
+
+    // This should not raise an exception
+    ImmutableList<Path> inputClasspath = parsedArguments.getInputClasspath();
+    Assert.assertEquals("ant-1.6.2.jar", inputClasspath.get(0).getFileName().toString());
   }
 }
