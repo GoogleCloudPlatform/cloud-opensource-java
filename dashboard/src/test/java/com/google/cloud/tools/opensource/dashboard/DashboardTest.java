@@ -332,10 +332,14 @@ public class DashboardTest {
   public void testComponent_failure() throws IOException, ParsingException {
     Document document = parseOutputFile(
         "com.google.api.grpc_grpc-google-common-protos_1.14.0.html");
+
+    // com.google.api.grpc:grpc-google-common-protos:1.14.0 selects the highest version of all
+    // dependencies.
     Nodes greens = document.query("//h3[@style='color: green']");
-    Assert.assertEquals(0, greens.size());
+    Assert.assertEquals(1, greens.size());
+
     Nodes reds = document.query("//h3[@style='color: red']");
-    Assert.assertEquals(3, reds.size());
+    Assert.assertEquals(2, reds.size());
     Nodes presDependencyMediation =
         document.query("//pre[@class='suggested-dependency-mediation']");
     Assert.assertTrue(
@@ -398,8 +402,16 @@ public class DashboardTest {
     // Case 2: Dependency needs to be updated
     Nodes globalUpperBoundDependencyUpgradeNodes =
         document.query("//li[@class='global-upper-bound-dependency-upgrade']");
-    Truth.assertThat(globalUpperBoundDependencyUpgradeNodes.size()).isEqualTo(2);
-    String dependencyUpgradeMessage = globalUpperBoundDependencyUpgradeNodes.get(0).getValue();
+
+    // The artifact report should contain the following 6 global upper bound dependency upgrades:
+    //   Upgrade com.google.code.findbugs:jsr305:jar:1.3.9 to version "3.0.2"
+    //   Upgrade com.google.errorprone:error_prone_annotations:jar:2.0.2 to version "2.3.2"
+    //   Upgrade com.google.guava:guava:jar:19.0 to version "27.1-android"
+    //   Upgrade com.google.j2objc:j2objc-annotations:jar:0.1 to version "1.1"
+    //   Upgrade com.google.protobuf:protobuf-java:jar:3.6.1 to version "3.7.1"
+    //   Upgrade org.codehaus.mojo:animal-sniffer-annotations:jar:1.14 to version "1.17"
+    Truth.assertThat(globalUpperBoundDependencyUpgradeNodes.size()).isEqualTo(6);
+    String dependencyUpgradeMessage = globalUpperBoundDependencyUpgradeNodes.get(2).getValue();
     Truth.assertThat(dependencyUpgradeMessage).contains(
         "Upgrade com.google.guava:guava:jar:19.0 to version \"27.1-android\"");
   }

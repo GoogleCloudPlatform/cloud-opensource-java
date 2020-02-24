@@ -98,7 +98,7 @@ public final class DependencyPath {
     if (other.path.size() != path.size()) {
       return false;
     }
-    
+
     for (int i = 0; i < path.size(); i++) {
       Dependency thisNode = path.get(i);
       Dependency otherNode = other.path.get(i);
