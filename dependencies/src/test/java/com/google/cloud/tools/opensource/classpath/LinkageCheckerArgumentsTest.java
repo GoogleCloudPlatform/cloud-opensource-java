@@ -120,6 +120,37 @@ public class LinkageCheckerArgumentsTest {
   }
 
   @Test
+  public void testGetClassPathResult_jarFiles() throws ParseException, RepositoryException {
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine("-j", "dummy.jar", "-r");
+
+    parsedArguments.getInputClasspath();
+
+    // There's no Maven dependency resolution for list of JAR files
+    Assert.assertNull(parsedArguments.getClassPathResult());
+  }
+
+  @Test
+  public void testGetClassPathResult_mavenArtifacts() throws ParseException, RepositoryException {
+    LinkageCheckerArguments parsedArgumentsForArtifact =
+        LinkageCheckerArguments.readCommandLine("-a", "ant:ant:1.6.2");
+
+    parsedArgumentsForArtifact.getInputClasspath();
+
+    Assert.assertNotNull(parsedArgumentsForArtifact.getClassPathResult());
+  }
+
+  @Test
+  public void testGetClassPathResult_bom() throws ParseException, RepositoryException {
+    LinkageCheckerArguments parsedArgumentsForArtifact =
+        LinkageCheckerArguments.readCommandLine("-b", "com.google.cloud:libraries-bom:1.0.0");
+
+    parsedArgumentsForArtifact.getInputClasspath();
+
+    Assert.assertNotNull(parsedArgumentsForArtifact.getClassPathResult());
+  }
+
+  @Test
   public void testGetInputClasspath_shouldNotThrowException()
       throws ParseException, RepositoryException {
     LinkageCheckerArguments parsedArguments =
