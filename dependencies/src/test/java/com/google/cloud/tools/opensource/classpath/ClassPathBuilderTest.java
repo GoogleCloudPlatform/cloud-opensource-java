@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
@@ -214,7 +215,9 @@ public class ClassPathBuilderTest {
     //       junit:junit:jar:3.8.1 (compile)
     //         org.hamcrest:hamcrest-core:jar:1.1 (compile)
     Artifact beamZetaSqlExtensions = new DefaultArtifact("junit:junit:jar:4.10");
+
     // This should not throw StackOverflowError
     ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(beamZetaSqlExtensions));
+    assertNotNull(result);
   }
 }
