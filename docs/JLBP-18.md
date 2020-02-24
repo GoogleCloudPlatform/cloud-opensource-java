@@ -31,6 +31,8 @@ There are a number of problems with shading:
   language such as "You must not reverse engineer, decompile, disassemble,
   modify, or translate the Software", you should consult an attorney before 
   shading. Shading is compatible with open source licenses.
+- Shading breaks code browsing and debugging in many IDEs. Eclipse, for example,
+  cannot locate the original source code for a shaded class.
 
 For these reasons, shading should be used sparingly, especially for libraries
 consumed by other libraries (because of the snowball effect).
