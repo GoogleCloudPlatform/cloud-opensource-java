@@ -63,6 +63,7 @@ public class LinkageCheckerTest {
 
   private Path guavaPath;
   private Path firestorePath;
+  private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
   /** Returns JAR files resolved for the full dependency tree of {@code coordinates}. */
   static ImmutableList<Path> resolvePaths(String... coordinates) {
@@ -600,7 +601,9 @@ public class LinkageCheckerTest {
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("-b", bomCoordinates);
-    ImmutableList<Path> inputClasspath = parsedArguments.getInputClasspath();
+    ImmutableList<Path> inputClasspath =
+        classPathBuilder.resolve(parsedArguments.getArtifacts()).getClassPath();
+
     Truth.assertThat(inputClasspath).isNotEmpty();
 
     List<String> names =
@@ -630,7 +633,8 @@ public class LinkageCheckerTest {
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("--artifacts", mavenCoordinates);
-    List<Path> inputClasspath = parsedArguments.getInputClasspath();
+    List<Path> inputClasspath =
+        classPathBuilder.resolve(parsedArguments.getArtifacts()).getClassPath();
 
     Truth.assertWithMessage(
             "The first 2 items in the classpath should be the 2 artifacts in the input")
@@ -659,7 +663,8 @@ public class LinkageCheckerTest {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("--artifacts", "com.google.guava:guava-gwt:20.0");
 
-    ImmutableList<Path> inputClasspath = parsedArguments.getInputClasspath();
+    ImmutableList<Path> inputClasspath =
+        classPathBuilder.resolve(parsedArguments.getArtifacts()).getClassPath();
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
@@ -676,31 +681,14 @@ public class LinkageCheckerTest {
         LinkageCheckerArguments.readCommandLine(
             "--artifacts", "org.apache.tomcat:tomcat-jasper:8.0.9");
 
-    parsedArguments.getInputClasspath();
-
-    ClassPathResult classPathResult = parsedArguments.getClassPathResult();
-    assertNotNull(classPathResult);
     ImmutableList<UnresolvableArtifactProblem> artifactProblems =
-        classPathResult.getArtifactProblems();
+        classPathBuilder.resolve(parsedArguments.getArtifacts()).getArtifactProblems();
     Truth.assertThat(artifactProblems)
         .comparingElementsUsing(
             Correspondence.transforming(
                 (UnresolvableArtifactProblem problem) -> problem.getArtifact().toString(),
                 "problem with Maven coordinate"))
         .contains("org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4");
-  }
-
-  @Test
-  public void testGenerateInputClasspath_jarFileList()
-      throws RepositoryException, ParseException {
-
-    LinkageCheckerArguments parsedArguments =
-        LinkageCheckerArguments.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
-    List<Path> inputClasspath = parsedArguments.getInputClasspath();
-
-    Truth.assertThat(inputClasspath)
-        .comparingElementsUsing(PATH_FILE_NAMES)
-        .containsExactly("foo.jar", "bar.jar", "baz.jar");
   }
 
   @Test

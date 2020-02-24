@@ -16,9 +16,11 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.cloud.tools.opensource.classpath.ClassPathBuilderTest.PATH_FILE_NAMES;
+
 import com.google.common.truth.Truth;
 import java.nio.file.Path;
+import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.junit.Assert;
@@ -59,11 +61,39 @@ public class LinkageCheckerArgumentsTest {
   }
 
   @Test
-  public void testReadCommandLine_multipleJars() throws ParseException, RepositoryException {
+  public void testReadCommandLine_multipleJars() throws ParseException {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine(
             "-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar");
-    Truth.assertThat(parsedArguments.getInputClasspath()).hasSize(3);
+
+    Truth.assertThat(parsedArguments.getJarFiles()).hasSize(3);
+  }
+
+  @Test
+  public void testgetJarFiles_jarFileList() throws ParseException {
+
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
+    List<Path> inputClasspath = parsedArguments.getJarFiles();
+
+    Truth.assertThat(inputClasspath)
+        .comparingElementsUsing(PATH_FILE_NAMES)
+        .containsExactly("foo.jar", "bar.jar", "baz.jar");
+  }
+
+  @Test
+  public void testgetJarFiles_invalidOption() throws ParseException {
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine(
+            "--artifacts", "com.google.guava:guava:26.0,io.grpc:grpc-core:1.17.1");
+
+    try {
+      parsedArguments.getJarFiles();
+      Assert.fail();
+    } catch (IllegalArgumentException ex) {
+      // pass
+      Assert.assertEquals("The arguments must have option 'j' to list JAR files", ex.getMessage());
+    }
   }
 
   @Test
@@ -117,47 +147,5 @@ public class LinkageCheckerArgumentsTest {
         LinkageCheckerArguments.readCommandLine("-j", "dummy.jar", "-r");
 
     Truth.assertThat(parsedArguments.getReportOnlyReachable()).isTrue();
-  }
-
-  @Test
-  public void testGetClassPathResult_jarFiles() throws ParseException, RepositoryException {
-    LinkageCheckerArguments parsedArguments =
-        LinkageCheckerArguments.readCommandLine("-j", "dummy.jar", "-r");
-
-    parsedArguments.getInputClasspath();
-
-    // There's no Maven dependency resolution for list of JAR files
-    Assert.assertNull(parsedArguments.getClassPathResult());
-  }
-
-  @Test
-  public void testGetClassPathResult_mavenArtifacts() throws ParseException, RepositoryException {
-    LinkageCheckerArguments parsedArgumentsForArtifact =
-        LinkageCheckerArguments.readCommandLine("-a", "ant:ant:1.6.2");
-
-    parsedArgumentsForArtifact.getInputClasspath();
-
-    Assert.assertNotNull(parsedArgumentsForArtifact.getClassPathResult());
-  }
-
-  @Test
-  public void testGetClassPathResult_bom() throws ParseException, RepositoryException {
-    LinkageCheckerArguments parsedArgumentsForArtifact =
-        LinkageCheckerArguments.readCommandLine("-b", "com.google.cloud:libraries-bom:1.0.0");
-
-    parsedArgumentsForArtifact.getInputClasspath();
-
-    Assert.assertNotNull(parsedArgumentsForArtifact.getClassPathResult());
-  }
-
-  @Test
-  public void testGetInputClasspath_shouldNotThrowException()
-      throws ParseException, RepositoryException {
-    LinkageCheckerArguments parsedArguments =
-        LinkageCheckerArguments.readCommandLine("-a", "ant:ant:1.6.2");
-
-    // This should not raise an exception
-    ImmutableList<Path> inputClasspath = parsedArguments.getInputClasspath();
-    Assert.assertEquals("ant-1.6.2.jar", inputClasspath.get(0).getFileName().toString());
   }
 }
