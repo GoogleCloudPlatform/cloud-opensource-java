@@ -25,7 +25,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import com.google.cloud.tools.opensource.dependencies.ArtifactProblem;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
@@ -686,7 +685,7 @@ public class LinkageCheckerTest {
     Truth.assertThat(artifactProblems)
         .comparingElementsUsing(
             Correspondence.transforming(
-                (ArtifactProblem problem) -> problem.getArtifact().toString(),
+                (UnresolvableArtifactProblem problem) -> problem.getArtifact().toString(),
                 "problem with Maven coordinate"))
         .contains("org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4");
   }
