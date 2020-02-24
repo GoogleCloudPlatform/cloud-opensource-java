@@ -16,7 +16,11 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.cloud.tools.opensource.classpath.ClassPathBuilderTest.PATH_FILE_NAMES;
+
 import com.google.common.truth.Truth;
+import java.nio.file.Path;
+import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.junit.Assert;
@@ -57,11 +61,41 @@ public class LinkageCheckerArgumentsTest {
   }
 
   @Test
-  public void testReadCommandLine_multipleJars() throws ParseException, RepositoryException {
+  public void testReadCommandLine_multipleJars() throws ParseException {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine(
             "-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar");
-    Truth.assertThat(parsedArguments.getInputClasspath()).hasSize(3);
+
+    Truth.assertThat(parsedArguments.getJarFiles())
+        .comparingElementsUsing(PATH_FILE_NAMES)
+        .containsExactly("A.jar", "B.jar", "C.jar");
+  }
+
+  @Test
+  public void testGetJarFiles_jarFileList() throws ParseException {
+
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
+    List<Path> inputClasspath = parsedArguments.getJarFiles();
+
+    Truth.assertThat(inputClasspath)
+        .comparingElementsUsing(PATH_FILE_NAMES)
+        .containsExactly("foo.jar", "bar.jar", "baz.jar");
+  }
+
+  @Test
+  public void testGetJarFiles_invalidOption() throws ParseException {
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine(
+            "--artifacts", "com.google.guava:guava:26.0,io.grpc:grpc-core:1.17.1");
+
+    try {
+      parsedArguments.getJarFiles();
+      Assert.fail();
+    } catch (IllegalArgumentException ex) {
+      // pass
+      Assert.assertEquals("The arguments must have option 'j' to list JAR files", ex.getMessage());
+    }
   }
 
   @Test
