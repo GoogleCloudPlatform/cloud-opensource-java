@@ -253,11 +253,8 @@ public final class DependencyGraphBuilder {
       }
     }
 
-    DependencyGraphResult result = levelOrder(node, traversalOption);
-    // Duplicate problems found in resolveDependencyGraph and levelOrder are removed by ImmutableSet
-    artifactProblems.addAll(result.getArtifactProblems());
-
-    return new DependencyGraphResult(result.getDependencyGraph(), artifactProblems.build());
+    DependencyGraph graph = levelOrder(node);
+    return new DependencyGraphResult(graph, artifactProblems.build());
   }
 
   /**
@@ -316,15 +313,11 @@ public final class DependencyGraphBuilder {
    * just follows the given dependency tree starting with firstNode.
    *
    * @param firstNode node to start traversal
-   * @param graphTraversalOption option to recursively resolve the dependency to build complete
-   *     dependency tree, with or without dependencies of provided scope
    */
-  private DependencyGraphResult levelOrder(
-      DependencyNode firstNode, GraphTraversalOption graphTraversalOption) {
+  private DependencyGraph levelOrder(DependencyNode firstNode) {
 
     DependencyGraph graph = new DependencyGraph();
 
-    boolean resolveFullDependency = graphTraversalOption == GraphTraversalOption.FULL;
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
@@ -358,29 +351,6 @@ public final class DependencyGraphBuilder {
         path.add(dependencyNode.getDependency());
         parentNodes.push(dependencyNode);
         graph.addPath(path);
-
-        if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
-          try {
-            dependencyNode =
-                resolveCompileTimeDependencies(
-                    ImmutableList.of(dependencyNode), resolveFullDependency);
-          } catch (DependencyResolutionException resolutionException) {
-            // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0
-            // has a transitive dependency to org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not
-            // found in Maven central)
-            for (ArtifactResult artifactResult :
-                resolutionException.getResult().getArtifactResults()) {
-              if (artifactResult.getArtifact() == null) {
-                DependencyNode failedDependencyNode =
-                    artifactResult.getRequest().getDependencyNode();
-                
-                List<DependencyNode> fullPath = makeFullPath(parentNodes, failedDependencyNode);
-                
-                artifactProblems.add(new UnresolvableArtifactProblem(fullPath));
-              }
-            }
-          }
-        }
       }
       
       for (DependencyNode child : dependencyNode.getChildren()) {
@@ -390,7 +360,7 @@ public final class DependencyGraphBuilder {
       }
     }
 
-    return new DependencyGraphResult(graph, artifactProblems.build());
+    return graph;
   }
 
   private static List<DependencyNode> makeFullPath(

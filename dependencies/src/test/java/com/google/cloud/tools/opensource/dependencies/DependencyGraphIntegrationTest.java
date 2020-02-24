@@ -74,8 +74,6 @@ public class DependencyGraphIntegrationTest {
                 + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
             "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
                 + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
-            "com.google.guava:guava-jdk5:17.0 needs to "
-                + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
             "org.apache.httpcomponents:httpclient:4.0.1 needs to "
                 + "upgrade commons-codec:commons-codec:1.3 to 1.6");
   }
