@@ -25,8 +25,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import com.google.cloud.tools.opensource.dependencies.ArtifactProblem;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -666,8 +668,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testGenerateInputClasspathFromLinkageCheckOption_failOnMissingDependency()
-      throws ParseException {
+  public void testGenerateInputClasspathFromLinkageCheckOption_recordMissingDependency()
+      throws ParseException, RepositoryException {
     // tomcat-jasper has missing dependency (not optional):
     //   org.apache.tomcat:tomcat-jasper:jar:8.0.9
     //     org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not found in Maven central)
@@ -675,14 +677,18 @@ public class LinkageCheckerTest {
         LinkageCheckerArguments.readCommandLine(
             "--artifacts", "org.apache.tomcat:tomcat-jasper:8.0.9");
 
-    try {
-      parsedArguments.getInputClasspath();
-      Assert.fail(
-          "Because the unavailable dependency is not optional, it should throw an exception");
-    } catch (RepositoryException ex) {
-      Truth.assertThat(ex.getMessage())
-          .startsWith("Unresolved artifacts: org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4");
-    }
+    parsedArguments.getInputClasspath();
+
+    ClassPathResult classPathResult = parsedArguments.getClassPathResult();
+    assertNotNull(classPathResult);
+    ImmutableList<UnresolvableArtifactProblem> artifactProblems =
+        classPathResult.getArtifactProblems();
+    Truth.assertThat(artifactProblems)
+        .comparingElementsUsing(
+            Correspondence.transforming(
+                (ArtifactProblem problem) -> problem.getArtifact().toString(),
+                "problem with Maven coordinate"))
+        .contains("org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4");
   }
 
   @Test
