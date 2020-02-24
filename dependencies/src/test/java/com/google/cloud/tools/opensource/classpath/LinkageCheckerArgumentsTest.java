@@ -66,11 +66,13 @@ public class LinkageCheckerArgumentsTest {
         LinkageCheckerArguments.readCommandLine(
             "-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar");
 
-    Truth.assertThat(parsedArguments.getJarFiles()).hasSize(3);
+    Truth.assertThat(parsedArguments.getJarFiles())
+        .comparingElementsUsing(PATH_FILE_NAMES)
+        .containsExactly("A.jar", "B.jar", "C.jar");
   }
 
   @Test
-  public void testgetJarFiles_jarFileList() throws ParseException {
+  public void testGetJarFiles_jarFileList() throws ParseException {
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
@@ -82,7 +84,7 @@ public class LinkageCheckerArgumentsTest {
   }
 
   @Test
-  public void testgetJarFiles_invalidOption() throws ParseException {
+  public void testGetJarFiles_invalidOption() throws ParseException {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine(
             "--artifacts", "com.google.guava:guava:26.0,io.grpc:grpc-core:1.17.1");
