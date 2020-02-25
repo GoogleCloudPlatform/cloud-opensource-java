@@ -333,13 +333,13 @@ public class DashboardTest {
     Document document = parseOutputFile(
         "com.google.api.grpc_grpc-google-common-protos_1.14.0.html");
 
-    // com.google.api.grpc:grpc-google-common-protos:1.14.0 selects the highest version of all
-    // dependencies.
+    // com.google.api.grpc:grpc-google-common-protos:1.14.0 has no green section
     Nodes greens = document.query("//h3[@style='color: green']");
-    Assert.assertEquals(1, greens.size());
+    Assert.assertEquals(0, greens.size());
 
+    // "Global Upper Bounds Fixes", "Upper Bounds Fixes", and "Suggested Dependency Updates" are red
     Nodes reds = document.query("//h3[@style='color: red']");
-    Assert.assertEquals(2, reds.size());
+    Assert.assertEquals(3, reds.size());
     Nodes presDependencyMediation =
         document.query("//pre[@class='suggested-dependency-mediation']");
     Assert.assertTrue(
