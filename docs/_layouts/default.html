@@ -1,43 +1,42 @@
 <!DOCTYPE html>
-<html lang="en-US">
-  <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    {% seo %}
-    <link rel="stylesheet" href="{{ "/assets/css/style.css" | relative_url }}">
-    <link rel="shortcut icon" type="image/png" href="favicon.png">
-    {% if site.google_analytics and jekyll.environment == 'production'  %}
-    <script>
-      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-      ga('create', '{{ site.google_analytics }}', 'auto');
-      ga('send', 'pageview');
-    </script>
-    {% endif %}
-  </head>
+<html lang="{{ site.lang | default: 'en-US' }}" class="glue-flexbox">
+  {% include jlbp-head-tag.html %}
+  <!-- prettier-ignore -->
   <body>
-    <div class="cloud-logo">
-      <img src="/assets/images/Cloud_Logo_Nav.svg"
-         alt="Google Cloud" width="139px" height="21.5px">
+    {% include jlbp-header.html %}
+    <div class="glue-page">
+      {% if page.bare %}
+      {{ content }}
+      {% else %}
+      <main role="main" id="page-content">
+        {% include jlbp-nav.html %}
+        <section id="jump-content">
+          <aside id="jlbp-sidebar" class="docs-component-sidebar">
+            <section id="jlbp-toc" class="docs-component-sidebar-toc">
+              {% include toc.html html=content h_min=2 h_max=3 %}
+            </section>
+            <section class="docs-component-sidebar-actions">
+              <ul>
+                <li><a href="{{ site.github.repository_url }}/issues/">File Bug</a></li>
+                <li><a href="{{ site.github.repository_url }}/blob/master/docs/{{ page.path }}">View source</a></li>
+                <li><a href="{{ site.github.repository_url }}/edit/master/docs/{{ page.path }}">Edit this page</a></li>
+              </ul>
+            </section>
+          </aside>
+          <section id="jlbp-main" class="docs-component-main">
+            <!-- For some unknown reason, the page content ends up covered by
+                 the header if the following element is not present. -->
+            <li class="glue-breadcrumbs__item"></li>
+            {% if page.jlbp %}
+            <h4 class="jlbp-number">[{{ page.jlbp.id }}]</h4>
+            {% endif %}
+            {{ content }}
+            {% include jlbp-footer.html %}
+          </section>
+        </section>
+      </main>
+      {% endif %}
     </div>
-    {{ content }}
-
-  <hr>
-
-  <footer>
-    {% if site.google_analytics %}
-    <p>This site uses cookies from Google to deliver its services and to analyze traffic. <a href='https://policies.google.com/technologies/cookies'>Learn more</a></p>
-    <p><a href='https://policies.google.com/privacy'>Privacy</a></p>
-    {% endif %}
-    <p>
-      <a class="view-on-github"
-         href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/docs">
-        View on GitHub</a>
-    </p>
-    <p>Copyright 2019 Google LLC</p>
-  </footer>
+    {% include jlbp-closing-scripts.html %}
   </body>
 </html>
