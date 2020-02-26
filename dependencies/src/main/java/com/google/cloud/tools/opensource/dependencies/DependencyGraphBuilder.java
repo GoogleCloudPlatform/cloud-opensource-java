@@ -297,7 +297,7 @@ public final class DependencyGraphBuilder {
     DependencyGraph graph = new DependencyGraph();
 
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
-    queue.add(new LevelOrderQueueItem(firstNode, new ArrayDeque<>()));
+      queue.add(new LevelOrderQueueItem(firstNode, new ArrayDeque<>()));
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
