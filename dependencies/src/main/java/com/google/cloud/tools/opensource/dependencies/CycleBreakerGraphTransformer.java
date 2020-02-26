@@ -43,20 +43,27 @@ final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
   }
 
   private static void removeCycle(
-      DependencyNode parent, DependencyNode node, Set<Artifact> ancestors) {
+      DependencyNode parent, DependencyNode node, Set<String> ancestorKeys) {
     Artifact artifact = node.getArtifact();
 
-    if (ancestors.contains(artifact)) { // Set (rather than List) gives O(1) lookup here
+    // Optimization to prune dependency node that has the same artifactId and groupId as one of
+    // ancestors.
+    String artifactIdGroupId = artifact != null ? Artifacts.makeKey(artifact) : null;
+    if (ancestorKeys.contains(artifactIdGroupId)) { // Set (rather than List) gives O(1) lookup here
       // parent is not null when ancestors is not empty
       removeChildFromParent(node, parent);
       return;
     }
 
-    ancestors.add(artifact);
-    for (DependencyNode child : node.getChildren()) {
-      removeCycle(node, child, ancestors);
+    if (artifactIdGroupId != null) {
+      ancestorKeys.add(artifactIdGroupId);
     }
-    ancestors.remove(artifact);
+    for (DependencyNode child : node.getChildren()) {
+      removeCycle(node, child, ancestorKeys);
+    }
+    if (artifactIdGroupId != null) {
+      ancestorKeys.remove(artifactIdGroupId);
+    }
   }
 
   private static void removeChildFromParent(DependencyNode child, DependencyNode parent) {

@@ -298,9 +298,13 @@ public final class DependencyGraphBuilder {
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new ArrayDeque<>()));
 
+    int counter = 0;
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
+      counter++;
+
       DependencyNode dependencyNode = item.dependencyNode;
+
       DependencyPath path = new DependencyPath();
       ArrayDeque<DependencyNode> parentNodes = item.parentNodes;
       parentNodes.forEach(
@@ -327,7 +331,10 @@ public final class DependencyGraphBuilder {
         parentNodes.add(dependencyNode);
         graph.addPath(path);
       }
-      
+
+      if (counter % 100000 == 0) {
+        System.out.println("Counter: " + counter);
+      }
       for (DependencyNode child : dependencyNode.getChildren()) {
         ArrayDeque<DependencyNode> clone = parentNodes.clone();
         queue.add(new LevelOrderQueueItem(child, clone));
