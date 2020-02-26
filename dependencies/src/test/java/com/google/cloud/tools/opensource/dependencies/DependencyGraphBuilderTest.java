@@ -74,9 +74,9 @@ public class DependencyGraphBuilderTest {
     HashSet<DependencyPath> noDups = new HashSet<>(paths);
     Assert.assertEquals(paths.size(), noDups.size());
 
-    // This method should find Guava multiple times.
+    // This method should find Guava multiple times, respecting exclusion elements
     int guavaCount = countGuava(graph);
-    Assert.assertEquals(30, guavaCount);
+    Assert.assertEquals(29, guavaCount);
   }
 
   private static int countGuava(DependencyGraph graph) {
@@ -249,5 +249,35 @@ public class DependencyGraphBuilderTest {
                 + " (compile) > xerces:xerces-impl:jar:2.6.2 (compile?)",
             "xml-apis:xml-apis:jar:2.6.2 was not resolved. Dependency path: ant:ant:jar:1.6.2"
                 + " (compile) > xml-apis:xml-apis:jar:2.6.2 (compile?)");
+  }
+
+  @Test
+  public void testAlts_exclusionElements() throws RepositoryException {
+    Correspondence<DependencyPath, String> dependencyPathToString =
+        Correspondence.transforming(DependencyPath::toString, "has string representation");
+
+    DefaultArtifact artifact = new DefaultArtifact("io.grpc:grpc-alts:jar:1.27.0");
+    DependencyGraph graph =
+        dependencyGraphBuilder
+            .buildFullDependencyGraph(ImmutableList.of(artifact))
+            .getDependencyGraph();
+    List<DependencyPath> dependencyPaths = graph.list();
+
+    String expectedDependencyPathForOpencensusContribHttpUtil =
+        "io.grpc:grpc-alts:1.27.0 (compile) " // this has exclusion of Guava
+            + "/ com.google.auth:google-auth-library-oauth2-http:0.19.0 (compile) "
+            + "/ com.google.http-client:google-http-client:1.33.0 (compile) "
+            + "/ io.opencensus:opencensus-contrib-http-util:0.24.0 (compile)";
+
+    Truth.assertThat(dependencyPaths)
+        .comparingElementsUsing(dependencyPathToString)
+        .contains(expectedDependencyPathForOpencensusContribHttpUtil);
+
+    String unexpectedDependencyPathForGuava =
+        expectedDependencyPathForOpencensusContribHttpUtil
+            + " / com.google.guava:guava:jar:26.0-android (compile)";
+    Truth.assertThat(dependencyPaths)
+        .comparingElementsUsing(dependencyPathToString)
+        .doesNotContain(unexpectedDependencyPathForGuava);
   }
 }

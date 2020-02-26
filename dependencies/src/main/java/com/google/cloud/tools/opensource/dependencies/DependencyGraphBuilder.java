@@ -27,10 +27,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 import org.eclipse.aether.RepositorySystem;
@@ -89,9 +87,6 @@ public final class DependencyGraphBuilder {
   static {
     detectOsProperties().forEach(System::setProperty);
   }
-
-  // caching cuts time by about a factor of 4. Dependency class's equality includes exclusions.
-  private final Map<Dependency, DependencyNode> cacheForFullDependency = new HashMap<>();
 
   public static ImmutableMap<String, String> detectOsProperties() {
     // System properties to select Netty dependencies through os-maven-plugin
@@ -170,15 +165,6 @@ public final class DependencyGraphBuilder {
     }
     ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
 
-    // The cache key includes exclusion elements of Maven artifacts
-    // cacheKey is null when there's no need to use cache. Cache is only needed for a single
-    // artifact's dependency resolution. A call with multiple dependencyNodes will not come again
-    // in our usage.
-    Dependency cacheKey = dependencyList.size() == 1 ? dependencyList.get(0) : null;
-    if (cacheKey != null && cacheForFullDependency.containsKey(cacheKey)) {
-      return cacheForFullDependency.get(cacheKey);
-    }
-
     RepositorySystemSession session =
         fullDependencies
             ? RepositoryUtility.newSessionForFullDependency(system)
@@ -200,13 +186,7 @@ public final class DependencyGraphBuilder {
     // resolveDependencies equals to calling both collectDependencies (build dependency tree) and
     // resolveArtifacts (download JAR files).
     DependencyResult dependencyResult = system.resolveDependencies(session, dependencyRequest);
-    DependencyNode node = dependencyResult.getRoot();
-
-    if (cacheKey != null) {
-      cacheForFullDependency.put(cacheKey, node);
-    }
-
-    return node;
+    return dependencyResult.getRoot();
   }
 
   /**
@@ -253,11 +233,8 @@ public final class DependencyGraphBuilder {
       }
     }
 
-    DependencyGraphResult result = levelOrder(node, traversalOption);
-    // Duplicate problems found in resolveDependencyGraph and levelOrder are removed by ImmutableSet
-    artifactProblems.addAll(result.getArtifactProblems());
-
-    return new DependencyGraphResult(result.getDependencyGraph(), artifactProblems.build());
+    DependencyGraph graph = levelOrder(node);
+    return new DependencyGraphResult(graph, artifactProblems.build());
   }
 
   /**
@@ -316,15 +293,11 @@ public final class DependencyGraphBuilder {
    * just follows the given dependency tree starting with firstNode.
    *
    * @param firstNode node to start traversal
-   * @param graphTraversalOption option to recursively resolve the dependency to build complete
-   *     dependency tree, with or without dependencies of provided scope
    */
-  private DependencyGraphResult levelOrder(
-      DependencyNode firstNode, GraphTraversalOption graphTraversalOption) {
+  private DependencyGraph levelOrder(DependencyNode firstNode) {
 
     DependencyGraph graph = new DependencyGraph();
 
-    boolean resolveFullDependency = graphTraversalOption == GraphTraversalOption.FULL;
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
@@ -358,29 +331,6 @@ public final class DependencyGraphBuilder {
         path.add(dependencyNode.getDependency());
         parentNodes.push(dependencyNode);
         graph.addPath(path);
-
-        if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
-          try {
-            dependencyNode =
-                resolveCompileTimeDependencies(
-                    ImmutableList.of(dependencyNode), resolveFullDependency);
-          } catch (DependencyResolutionException resolutionException) {
-            // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0
-            // has a transitive dependency to org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not
-            // found in Maven central)
-            for (ArtifactResult artifactResult :
-                resolutionException.getResult().getArtifactResults()) {
-              if (artifactResult.getArtifact() == null) {
-                DependencyNode failedDependencyNode =
-                    artifactResult.getRequest().getDependencyNode();
-                
-                List<DependencyNode> fullPath = makeFullPath(parentNodes, failedDependencyNode);
-                
-                artifactProblems.add(new UnresolvableArtifactProblem(fullPath));
-              }
-            }
-          }
-        }
       }
       
       for (DependencyNode child : dependencyNode.getChildren()) {
@@ -390,7 +340,7 @@ public final class DependencyGraphBuilder {
       }
     }
 
-    return new DependencyGraphResult(graph, artifactProblems.build());
+    return graph;
   }
 
   private static List<DependencyNode> makeFullPath(
