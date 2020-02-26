@@ -1,5 +1,8 @@
 # Linkage Checker Enforcer Rule Change Log
 
+## 1.1.4
+* Linkage Checker resolves class paths in more efficient manner.
+
 ## 1.1.3
 * Linkage Checker now reports missing artifacts.
 * Linkage Checker shows dependency paths to Maven artifacts that have linkage errors.
