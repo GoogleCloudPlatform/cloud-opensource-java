@@ -24,9 +24,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Queue;
@@ -301,8 +299,6 @@ public final class DependencyGraphBuilder {
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
 
-    ImmutableList.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableList.builder();
-
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
       DependencyNode dependencyNode = item.dependencyNode;
@@ -343,20 +339,4 @@ public final class DependencyGraphBuilder {
     return graph;
   }
 
-  private static List<DependencyNode> makeFullPath(
-      Stack<DependencyNode> parentNodes, DependencyNode failedDependencyNode) {
-    List<DependencyNode> fullPath = new ArrayList<>();
-    fullPath.addAll(parentNodes);
-
-    DependencyNode lastParent = Iterables.getLast(parentNodes);
-
-    // Duplicate happens when root artifact is unavailable. For example:
-    // xerces:xerces-impl:jar:2.6.2 was not resolved. Dependency path: ant:ant:jar:1.6.2 (compile)
-    //   > xerces:xerces-impl:jar:2.6.2 (compile?) > xerces:xerces-impl:jar:2.6.2 (compile?)
-    if (!lastParent.getDependency().equals(failedDependencyNode.getDependency())) {
-      // Add child only when it's not duplicate
-      fullPath.add(failedDependencyNode);
-    }
-    return fullPath;
-  }
 }
