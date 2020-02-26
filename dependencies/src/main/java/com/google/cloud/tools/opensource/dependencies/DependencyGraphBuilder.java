@@ -27,10 +27,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Stack;
 import org.eclipse.aether.RepositorySystem;
@@ -89,9 +87,6 @@ public final class DependencyGraphBuilder {
   static {
     detectOsProperties().forEach(System::setProperty);
   }
-
-  // caching cuts time by about a factor of 4. Dependency class's equality includes exclusions.
-  private final Map<Dependency, DependencyNode> cacheForFullDependency = new HashMap<>();
 
   public static ImmutableMap<String, String> detectOsProperties() {
     // System properties to select Netty dependencies through os-maven-plugin
@@ -170,15 +165,6 @@ public final class DependencyGraphBuilder {
     }
     ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
 
-    // The cache key includes exclusion elements of Maven artifacts
-    // cacheKey is null when there's no need to use cache. Cache is only needed for a single
-    // artifact's dependency resolution. A call with multiple dependencyNodes will not come again
-    // in our usage.
-    Dependency cacheKey = dependencyList.size() == 1 ? dependencyList.get(0) : null;
-    if (cacheKey != null && cacheForFullDependency.containsKey(cacheKey)) {
-      return cacheForFullDependency.get(cacheKey);
-    }
-
     RepositorySystemSession session =
         fullDependencies
             ? RepositoryUtility.newSessionForFullDependency(system)
@@ -200,13 +186,7 @@ public final class DependencyGraphBuilder {
     // resolveDependencies equals to calling both collectDependencies (build dependency tree) and
     // resolveArtifacts (download JAR files).
     DependencyResult dependencyResult = system.resolveDependencies(session, dependencyRequest);
-    DependencyNode node = dependencyResult.getRoot();
-
-    if (cacheKey != null) {
-      cacheForFullDependency.put(cacheKey, node);
-    }
-
-    return node;
+    return dependencyResult.getRoot();
   }
 
   /**
