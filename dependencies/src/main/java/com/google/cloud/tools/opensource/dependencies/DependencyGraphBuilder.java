@@ -325,7 +325,7 @@ public final class DependencyGraphBuilder {
         }
 
         path.add(dependencyNode.getDependency());
-        parentNodes.push(dependencyNode);
+        parentNodes.add(dependencyNode);
         graph.addPath(path);
       }
       
