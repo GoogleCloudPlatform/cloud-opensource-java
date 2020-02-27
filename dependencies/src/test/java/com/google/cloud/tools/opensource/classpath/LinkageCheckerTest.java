@@ -248,8 +248,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblem_protectedConstructorFromAnonymousClass()
-      throws IOException, RepositoryException {
+  public void testFindSymbolProblem_protectedConstructorFromAnonymousClass() throws IOException {
     List<Path> paths = resolvePaths("junit:junit:4.12");
     // junit has dependency on hamcrest-core
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
@@ -424,8 +423,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblem_invalidMethodOverriding()
-      throws RepositoryException, IOException {
+  public void testFindSymbolProblem_invalidMethodOverriding() throws IOException {
     // cglib 2.2 does not work with asm 4. Stackoverflow post explaining VerifyError:
     // https://stackoverflow.com/questions/21059019/cglib-is-causing-a-java-lang-verifyerror-during-query-generation-in-intuit-partn
     List<Path> paths = resolvePaths("cglib:cglib:2.2_beta1", "org.ow2.asm:asm:4.2");
