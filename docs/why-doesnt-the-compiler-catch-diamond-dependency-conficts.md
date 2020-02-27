@@ -81,3 +81,6 @@ This behavior of Java makes diamond dependency conflicts particularly
 pernicious. Theoretically, we should be able to tell that our program will fail
 before we even run it, but Java does not tell us.
 
+If you want to understand how version resolution works in Maven and Gradle,
+proceed to the next article,
+[How does version resolution work in Maven and Gradle?](how-does-version-resolution-work-in-maven-and-gradle.md).

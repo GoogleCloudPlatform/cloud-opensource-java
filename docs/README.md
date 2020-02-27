@@ -41,5 +41,6 @@ list is open-ended, so new ones may be added from time to time.
 ## Introductory material and reference
 - [What is a diamond dependency conflict?](what-is-a-diamond-dependency-conflict.md)
 - [Why doesn't the compiler catch diamond dependency conflicts?](why-doesnt-the-compiler-catch-diamond-dependency-conficts.md)
+- [How does version resolution work in Maven and Gradle?](how-does-version-resolution-work-in-maven-and-gradle.md)
 - [Glossary](glossary.md): Terms used in the best practices and other places in
   cloud-opensource-java.
