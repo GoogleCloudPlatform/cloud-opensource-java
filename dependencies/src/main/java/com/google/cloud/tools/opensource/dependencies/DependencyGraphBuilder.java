@@ -28,7 +28,6 @@ import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Locale;
 import java.util.Queue;
-import java.util.Stack;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -267,9 +266,9 @@ public final class DependencyGraphBuilder {
 
   private static final class LevelOrderQueueItem {
     final DependencyNode dependencyNode;
-    final Stack<DependencyNode> parentNodes;
+    final ArrayDeque<DependencyNode> parentNodes;
 
-    LevelOrderQueueItem(DependencyNode dependencyNode, Stack<DependencyNode> parentNodes) {
+    LevelOrderQueueItem(DependencyNode dependencyNode, ArrayDeque<DependencyNode> parentNodes) {
       this.dependencyNode = dependencyNode;
       this.parentNodes = parentNodes;
     }
@@ -297,13 +296,13 @@ public final class DependencyGraphBuilder {
     DependencyGraph graph = new DependencyGraph();
 
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
-    queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
+    queue.add(new LevelOrderQueueItem(firstNode, new ArrayDeque<>()));
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
       DependencyNode dependencyNode = item.dependencyNode;
       DependencyPath path = new DependencyPath();
-      Stack<DependencyNode> parentNodes = item.parentNodes;
+      ArrayDeque<DependencyNode> parentNodes = item.parentNodes;
       parentNodes.forEach(
           parentNode -> path.add(parentNode.getDependency()));
       Artifact artifact = dependencyNode.getArtifact();
@@ -325,13 +324,12 @@ public final class DependencyGraphBuilder {
         }
 
         path.add(dependencyNode.getDependency());
-        parentNodes.push(dependencyNode);
+        parentNodes.add(dependencyNode);
         graph.addPath(path);
       }
       
       for (DependencyNode child : dependencyNode.getChildren()) {
-        @SuppressWarnings("unchecked")
-        Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
+        ArrayDeque<DependencyNode> clone = parentNodes.clone();
         queue.add(new LevelOrderQueueItem(child, clone));
       }
     }
