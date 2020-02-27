@@ -28,7 +28,6 @@ import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Locale;
 import java.util.Queue;
-import java.util.Stack;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -297,7 +296,7 @@ public final class DependencyGraphBuilder {
     DependencyGraph graph = new DependencyGraph();
 
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
-      queue.add(new LevelOrderQueueItem(firstNode, new ArrayDeque<>()));
+    queue.add(new LevelOrderQueueItem(firstNode, new ArrayDeque<>()));
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
