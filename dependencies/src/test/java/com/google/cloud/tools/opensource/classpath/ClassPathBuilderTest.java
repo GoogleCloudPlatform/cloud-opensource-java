@@ -223,7 +223,8 @@ public class ClassPathBuilderTest {
 
   @Test
   public void testBeamHCatalogOutOfMemoryError() {
-    Artifact hibernateCore = new DefaultArtifact("org.apache.beam:beam-sdks-java-io-hcatalog:2.19.0");
+    Artifact hibernateCore =
+        new DefaultArtifact("org.apache.beam:beam-sdks-java-io-hcatalog:2.19.0");
     ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(hibernateCore));
     assertNotNull(result);
   }
