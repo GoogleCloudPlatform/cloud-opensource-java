@@ -33,18 +33,6 @@
       <!-- CTA-->
       <div class="glue-header__container glue-header__container--cta">
         <div class="glue-header__cta">
-        <div class="glue-sitesearch">
-          <form method="GET" action="{{ '/search/' | relative_url }}">
-          <label for="q">Search this site</label>
-          <input class="glue-sitesearch__input" type="text" name="q" id="q"
-            placeholder="Search JLBPs">
-          <button type="submit" class="glue-button glue-sitesearch__submit" title="Submit">
-            <svg role="img" class="glue-icon glue-icon--24px">
-            <use xlink:href="/assets/images/glue-icons.svg#search"></use>
-            </svg>
-          </button>
-          </form>
-        </div>
         <a href={{ site.github.repository_url }} class="glue-button glue-button--high-emphasis">
           <img src={{ '/assets/images/github.png' | relative_url }} class="github-logo">
           View on GitHub

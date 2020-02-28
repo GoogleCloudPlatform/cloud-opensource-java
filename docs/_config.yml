@@ -3,6 +3,3 @@ title: Google Best Practices for Java Libraries
 google_analytics: UA-43239122-3
 github:
   repository_url: https://github.com/GoogleCloudPlatform/cloud-opensource-java
-tipue_search:
-  include:
-    pages: true
