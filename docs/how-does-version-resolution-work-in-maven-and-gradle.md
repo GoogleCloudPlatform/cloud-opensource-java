@@ -113,5 +113,5 @@ fixes. Solving those problems will be the topic of another article.
 
 For more details on each build system, see their respective documentation:
 
-- **Maven**: (Introduction to the Dependency Mechanism)[http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html]
-- **Gradle**: (Understanding dependency resolution)[https://docs.gradle.org/current/userguide/dependency_resolution.html]
+- **Maven**: [Introduction to the Dependency Mechanism](http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html)
+- **Gradle**: [Understanding dependency resolution](https://docs.gradle.org/current/userguide/dependency_resolution.html)
