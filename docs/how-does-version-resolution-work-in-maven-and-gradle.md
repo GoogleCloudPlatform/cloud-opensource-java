@@ -6,21 +6,20 @@ dependencies. Unfortunately, the two most popular build systems in open source
 (Maven and Gradle) use different version resolution algorithms. They also use
 different names for the concept: Maven calls the process *dependency mediation*,
 while Gradle calls the process *version conflict resolution*. In this article,
-we will use the term *version resolution*.
-
-No matter which you choose, you are likely to have direct or indirect
-dependencies that use the other one, so you need to understand how both work.
+we will use the term *version resolution*. No matter which you choose, you are
+likely to have direct or indirect dependencies that use the other one, so you
+need to understand how both work.
 
 Before we look at Maven and Gradle specifically, we need to understand what
 happens in the version resolution process. The input of this process is a
 dependency graph which reflects the dependencies as specified by each library in
-the graph, which we call an unresolved dependency graph. In such a graph, there
+the graph, which we call an *unresolved dependency graph*. In such a graph, there
 can be multiple versions of each library. The version resolution process walks
 the unresolved dependency graph and decides which version to use for every
 library encountered. Whether or not the build tool produces a graph as an output
 of this resolution, it is useful to think of this output in terms of a new
-graph. We call the graph representation of this output a resolved dependency
-graph. Here is a visual representation of the process:
+graph. We call the graph representation of this output a *resolved dependency
+graph*. Here is a visual representation of the process:
 
 <img src="assets/images/ddc-resolution-00.png">
 
