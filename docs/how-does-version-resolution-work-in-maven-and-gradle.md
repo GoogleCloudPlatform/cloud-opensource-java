@@ -6,9 +6,13 @@ dependencies. Unfortunately, the two most popular build systems in open source
 (Maven and Gradle) use different version resolution algorithms. They also use
 different names for the concept: Maven calls the process *dependency mediation*,
 while Gradle calls the process *version conflict resolution*. In this article,
-we will use the term *version resolution*. No matter which you choose, you are
-likely to have direct or indirect dependencies that use the other one, so you
-need to understand how both work.
+we will use the term *version resolution*, omitting the word "conflict" so that
+the process it not confused with program-breaking conflicts that we discuss
+elsewhere. No matter which build system you choose, you are likely to have
+direct or indirect dependencies that use the other one, so you need to
+understand how both work. Note: Our focus is on build systems based on the Maven
+repository system, so we ignore other build environments like Eclipse and Ant
+that work differently.
 
 Before we look at Maven and Gradle specifically, we need to understand what
 happens in the version resolution process. The input of this process is a
