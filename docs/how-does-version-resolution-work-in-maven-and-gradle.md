@@ -71,8 +71,8 @@ breadth-first traversal. Looking at the same example we used first for Gradle:
 <img src="assets/images/ddc-resolution-06.png">
 
 As you can see if you compare the resolved graphs, Maven makes the opposite
-choice of Gradle in this circumstance. Let's look at the second example, where
-the root has both a direct and indirect dependency on the same library:
+choice. Let's look at the second example, where the root has both a direct and
+indirect dependency on the same library:
 
 <img src="assets/images/ddc-resolution-07.png">
 
@@ -80,9 +80,14 @@ In this case, Maven chooses A:10.0 because it is only 1 hop away from the root
 instead of 2 hops (A:10.1). In this case, Maven also makes the opposite choice
 of Gradle.
 
-So where can the mixture of these two build systems cause a problem? The
-resolved dependency graph can experience conflicts when the two build systems
-come to different decisions for a particular subgraph of a dependency graph.
+## Interaction between Maven and Gradle
+
+Every time a library is built, its build system performs version resolution for
+its entire dependency graph. Since the libraries in that dependency graph also
+perform their own version resolution, the versions selected can be different,
+especially when a consumer uses a different build system than its dependencies.
+Sometimes, the version selected by the consumer can be incompatible with the
+version selected by the dependency when the dependency is built by itself.
 
 Let's look at an example, starting with Gradle example 2, where library D
 depends on A:10.0 and C:30.0 (and thus indirectly A:10.1). Let's also say that C
@@ -90,25 +95,23 @@ depends on a feature added into 10.1. This means that if 10.0 is selected as the
 resolved version, then C will fail at runtime. From library D's perspective,
 this is fine, since Gradle chooses version 10.1.
 
-Let's add a new library (let's call it library E) which uses Maven as its build
-system, and which adds D as a dependency. When E is built, Maven will resolve
-the whole dependency graph, including D's subgraph, even though Gradle resolved
-the subgraph of D for itself when D was originally built. When Maven performs
-its version resolution, it chooses a different version of A (10.0) than Gradle
-did (10.1), which breaks C. This happens even though D works perfectly fine
-internally.
+Suppose we add a new library E which uses Maven as its build system, and which
+adds D as a dependency. When E is built, Maven resolves the whole dependency
+graph, including D's subgraph, even though Gradle resolved the subgraph of D for
+itself when D was originally built. When Maven performs its version resolution,
+it chooses a different version of A (10.0) than Gradle did (10.1), which breaks
+C. This happens even though D works perfectly fine internally.
 
 <img src="assets/images/ddc-resolution-08.png">
 
-As a consequence, the author of library E might file a bug against library D
-because it seems to have a bug. The author of library D would argue that there
-is no bug from their perspective. From their narrow perspectives they are both
-right. From the ecosystem perspective, the author of library D unfortunately
-needs to adapt their dependencies so that they don't cause problems for Maven
-consumers (even though they may have sworn off Maven and use Gradle
-exclusively). In this case, they have an easy fix - they can upgrade the direct
-dependency of D on A:10.0 to A:10.1, so that both build systems make the same
-version resolution decisions, and everyone can be happy.
+As a consequence, the author of library E might file a bug against library
+D. The author of library D would argue that there is no bug. From their narrow
+perspectives they are both right. From the ecosystem perspective, the author of
+library D unfortunately needs to adapt their dependencies so they don't cause
+problems for Maven consumers (even though they may have sworn off Maven and use
+Gradle exclusively). In this case, they have an easy fix - they can upgrade the
+direct dependency of D on A:10.0 to A:10.1, so that both build systems select
+the same versions, and everyone can be happy.
 
 <img src="assets/images/ddc-resolution-09.png">
 
