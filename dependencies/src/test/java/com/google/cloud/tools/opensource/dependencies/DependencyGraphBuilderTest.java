@@ -25,7 +25,6 @@ import com.google.common.truth.Truth;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
@@ -47,7 +46,7 @@ public class DependencyGraphBuilderTest {
           "has artifact");
 
   @Test
-  public void testGetTransitiveDependencies() throws RepositoryException {
+  public void testGetTransitiveDependencies() {
     DependencyGraph graph =
         dependencyGraphBuilder
             .buildMavenDependencyGraph(new Dependency(datastore, "compile"))
@@ -62,7 +61,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testGetCompleteDependencies() throws RepositoryException {
+  public void testGetCompleteDependencies() {
     DependencyGraph graph =
         dependencyGraphBuilder
             .buildFullDependencyGraph(ImmutableList.of(datastore))
@@ -90,7 +89,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testBuildLinkageCheckDependencyGraph_nonExistentZipDependency() throws RepositoryException {
+  public void testBuildLinkageCheckDependencyGraph_nonExistentZipDependency() {
     // This artifact depends on log4j-api-java9 (type:zip), which does not exist in Maven central.
     DefaultArtifact log4j2 = new DefaultArtifact("org.apache.logging.log4j:log4j-api:2.11.1");
 
@@ -136,7 +135,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testBuildLinkageCheckDependencyGraph_grpcProtobufExclusion() throws RepositoryException {
+  public void testBuildLinkageCheckDependencyGraph_grpcProtobufExclusion() {
     // Grpc-protobuf depends on grpc-protobuf-lite with protobuf-lite exclusion.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1056
     Artifact grpcProtobuf = new DefaultArtifact("io.grpc:grpc-protobuf:1.25.0");
@@ -156,7 +155,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testBuildLinkageCheckDependencyGraph_respectExclusions() throws RepositoryException {
+  public void testBuildLinkageCheckDependencyGraph_respectExclusions() {
     // hibernate-core declares jboss-jacc-api_JDK4 dependency excluding jboss-servlet-api_3.0.
     // jboss-jacc-api_JDK4 depends on jboss-servlet-api_3.0:1.0-SNAPSHOT, which is unavailable.
     // DependencyGraphBuilder should respect the exclusion and should not try to download
@@ -196,8 +195,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testConfigureAdditionalMavenRepositories_addingGoogleAndroidRepository()
-      throws RepositoryException {
+  public void testConfigureAdditionalMavenRepositories_addingGoogleAndroidRepository() {
     // Previously this test was using https://repo.spring.io/milestone and artifact
     // org.springframework:spring-asm:3.1.0.RC2 but the repository was not stable.
     DependencyGraphBuilder graphBuilder =
@@ -212,8 +210,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral()
-      throws RepositoryException {
+  public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral() {
     DependencyGraphBuilder graphBuilder =
         new DependencyGraphBuilder(ImmutableList.of("https://dl.google.com/dl/android/maven2"));
 
@@ -228,7 +225,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testBuildLinkageCheckDependencyGraph_catchRootException() throws RepositoryException {
+  public void testBuildLinkageCheckDependencyGraph_catchRootException() {
     // This should not throw exception
     DependencyGraphResult result =
         dependencyGraphBuilder.buildFullDependencyGraph(
@@ -252,7 +249,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testAlts_exclusionElements() throws RepositoryException {
+  public void testAlts_exclusionElements() {
     Correspondence<DependencyPath, String> dependencyPathToString =
         Correspondence.transforming(DependencyPath::toString, "has string representation");
 

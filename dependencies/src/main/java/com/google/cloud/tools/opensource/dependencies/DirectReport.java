@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
@@ -29,7 +28,7 @@ class DirectReport {
    * made at head but not published to Maven central, or dependencies
    * that have been updated but not yet incorporated in the tree.
    */
-  public static void main(String[] args) throws RepositoryException {
+  public static void main(String[] args) {
     
     if (args.length != 1 || !args[0].contains(":")) {
       System.err.println("Usage: java " + DirectReport.class.getCanonicalName()
