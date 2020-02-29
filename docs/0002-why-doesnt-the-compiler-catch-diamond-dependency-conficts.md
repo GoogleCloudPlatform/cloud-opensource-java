@@ -1,5 +1,5 @@
 ---
-article: true
+concepts: true
 permalink: /why-doesnt-the-compiler-catch-diamond-dependency-conficts
 ---
 # Why doesn't the compiler catch diamond dependency conflicts?

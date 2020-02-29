@@ -1,5 +1,5 @@
 ---
-article: true
+concepts: true
 permalink: /what-is-a-diamond-dependency-conflict
 ---
 # What is a diamond dependency conflict?

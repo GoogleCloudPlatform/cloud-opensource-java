@@ -1,9 +1,9 @@
 ---
-permalink: /article-index
+permalink: /concepts-index
 exclude_from_search: true
 ---
-# Article index
+# Concepts index
 
-{% for p in site.pages %}{% if p.article -%}
+{% for p in site.pages %}{% if p.concepts -%}
 - [{{ p.title}}]({{ p.url | relative_url }})
 {% endif %}{% endfor -%}
