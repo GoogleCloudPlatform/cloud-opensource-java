@@ -2,23 +2,21 @@ package com.google.cloud.tools.opensource.classpath;
 
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.google.common.annotations.VisibleForTesting;
 
-class LinkageErrorPackageMatcher implements SymbolProblemMatcher {
+class LinkageErrorClassNameMatcher implements SymbolProblemMatcher {
 
   @JacksonXmlProperty(localName = "name")
   private String className;
 
   // For Xml parsing
-  private LinkageErrorPackageMatcher() {}
+  private LinkageErrorClassNameMatcher() {}
 
-  @VisibleForTesting
-  LinkageErrorPackageMatcher(String className) {
+  LinkageErrorClassNameMatcher(String className) {
     this.className = className;
   }
 
   @Override
   public boolean match(SymbolProblem problem, ClassFile sourceClass) {
-    return true;
+    return sourceClass.getBinaryName().equals(className);
   }
 }
