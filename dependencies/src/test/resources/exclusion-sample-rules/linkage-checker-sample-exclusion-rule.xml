@@ -1,0 +1,25 @@
+<LinkageCheckerFilter>
+  <LinkageError>
+    <Source>
+      <Class name="reactor.core.publisher.Traces" />
+    </Source>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="jdk.vm.ci" />
+    </Target>
+    <Source>
+      <Package name="com.oracle.svm" />
+      <Package name="com.oracle.graal" />
+      <Package name="org.graalvm" />
+    </Source>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Class name="org.mockito.internal.creation.bytebuddy.MockMethodDispatcher" />
+    </Target>
+    <Source>
+      <Package name="org.mockito.internal.creation.bytebuddy" />
+    </Source>
+  </LinkageError>
+</LinkageCheckerFilter>
