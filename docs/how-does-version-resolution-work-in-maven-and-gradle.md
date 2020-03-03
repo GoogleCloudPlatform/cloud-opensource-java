@@ -73,7 +73,7 @@ in Gradle example 1:
 <img src="assets/images/ddc-resolution-06.png" alt="Maven example 1">
 
 As you can see by comparing the resolved graphs, Maven makes the opposite
-choice. Now consider at the second example, where the root has both a direct and
+choice. Now consider the second example, where the root has both a direct and
 indirect dependency on the same library:
 
 <img src="assets/images/ddc-resolution-07.png" alt="Maven example 2">
@@ -103,21 +103,21 @@ on A:10.0 and C:30.0 (and thus indirectly A:10.1). Assume C depends on a feature
 added into 10.1. This means that if 10.0 is selected, C fails at runtime. From
 library D's perspective, this is fine, since Gradle chooses version 10.1.
 
-Suppose we add a new library E which uses Maven as its build system, and which
-adds D as a dependency. When E is built, Maven resolves the whole dependency
-graph, including D's subgraph, even though Gradle resolved the subgraph of D for
-when D was originally built. When Maven performs its version resolution,
-it chooses a different version of A (10.0) than Gradle did (10.1), which breaks
-C. This happens even though D works perfectly fine internally.
+Suppose a new library E uses Maven as its build system and has a dependency on
+D. When E is built, Maven resolves the whole dependency graph, including D's
+subgraph, even though Gradle resolved the subgraph of D for when D was
+originally built. When Maven performs its version resolution, it chooses a
+different version of A (10.0) than Gradle did (10.1), which breaks C. This
+happens even though D works perfectly fine internally.
 
-<img src="assets/images/ddc-resolution-08.png" alt="Gradle and maven disagreement">
+<img src="assets/images/ddc-resolution-08.png" alt="Gradle and Maven disagreement">
 
 As a consequence, the author of library E might file a bug against library
 D. The author of library D would argue that there is no bug. From their individual
 perspectives, are both right. From the ecosystem perspective, the author of
 library D unfortunately needs to adapt its dependencies so they don't cause
 problems for Maven consumers (even though they may have sworn off Maven and use
-Gradle exclusively). In this case, they have an easy fix - they can upgrade the
+Gradle exclusively). In this case, they have an easy fix – they can upgrade the
 direct dependency of D on A:10.0 to A:10.1, so that both build systems select
 the same version, and everyone is happy.
 
