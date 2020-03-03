@@ -97,7 +97,8 @@ public class VersionSubstitutingModelResolverTest {
         result.getEffectiveModel().getDependencyManagement();
 
     Truth.assertWithMessage(
-            "Google-cloud-bom's google-auth-library part should be substituted for a different version.")
+            "Google-cloud-bom's google-auth-library part should be substituted for a different"
+                + " version.")
         .that(dependencyManagement.getDependencies())
         .comparingElementsUsing(dependencyToCoordinates)
         .contains("com.google.auth:google-auth-library-credentials:0.18.0");

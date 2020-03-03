@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-/** Matcher for SymbolProblems. */
-interface SymbolProblemMatcher {
-  boolean match(SymbolProblem problem, ClassFile sourceClass);
+/** Matchers for the targets of linkage errors. */
+interface SymbolProblemTargetMatcher {
+  boolean match(Symbol symbol);
 }

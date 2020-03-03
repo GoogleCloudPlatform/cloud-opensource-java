@@ -16,7 +16,24 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-/** Matcher for SymbolProblems. */
-interface SymbolProblemMatcher {
-  boolean match(SymbolProblem problem, ClassFile sourceClass);
+import static com.google.common.base.Preconditions.checkNotNull;
+
+/** Matches if the */
+class PackageMatcher implements SymbolProblemTargetMatcher, SymbolProblemSourceMatcher {
+
+  private final String packageName;
+
+  PackageMatcher(String packageName) {
+    this.packageName = checkNotNull(packageName);
+  }
+
+  @Override
+  public boolean match(Symbol problem) {
+    return problem.getClassBinaryName().startsWith(packageName);
+  }
+
+  @Override
+  public boolean match(ClassFile source) {
+    return source.getBinaryName().startsWith(packageName);
+  }
 }

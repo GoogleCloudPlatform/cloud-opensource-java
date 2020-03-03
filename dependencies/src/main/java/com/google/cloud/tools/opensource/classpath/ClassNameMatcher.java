@@ -16,7 +16,22 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-/** Matcher for SymbolProblems. */
-interface SymbolProblemMatcher {
-  boolean match(SymbolProblem problem, ClassFile sourceClass);
+/** Matcher for class names. */
+class ClassNameMatcher implements SymbolProblemTargetMatcher, SymbolProblemSourceMatcher {
+
+  private String className;
+
+  ClassNameMatcher(String className) {
+    this.className = className;
+  }
+
+  @Override
+  public boolean match(Symbol symbol) {
+    return symbol.getClassBinaryName().equals(className);
+  }
+
+  @Override
+  public boolean match(ClassFile sourceClass) {
+    return sourceClass.getBinaryName().equals(className);
+  }
 }
