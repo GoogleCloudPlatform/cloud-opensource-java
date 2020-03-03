@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.maven.model.building.ModelSource;
+import org.apache.maven.model.building.ModelSource2;
 import org.apache.maven.model.resolution.ModelResolver;
 import org.apache.maven.model.resolution.UnresolvableModelException;
 import org.apache.maven.project.ProjectModelResolver;
@@ -68,16 +68,16 @@ class VersionSubstitutingModelResolver extends ProjectModelResolver {
   }
 
   /**
-   * Returns model source for {@code groupId:artifactId:version}. The version is substituted if
-   * {@link #versionSubstitution} contains the versionless coordinates ({@code groupId:artifactId})
-   * in its keys.
+   * Returns a file model source for {@code groupId:artifactId:version}.
+   * The version is substituted if {@link #versionSubstitution} contains the
+   * versionless coordinates ({@code groupId:artifactId}) in its keys.
    */
   @Override
-  public ModelSource resolveModel(String groupId, String artifactId, String version)
+  public ModelSource2 resolveModel(String groupId, String artifactId, String version)
       throws UnresolvableModelException {
     String versionlessCoordinates = groupId + ":" + artifactId;
     String versionToResolve = versionSubstitution.getOrDefault(versionlessCoordinates, version);
-    return super.resolveModel(groupId, artifactId, versionToResolve);
+    return (ModelSource2) super.resolveModel(groupId, artifactId, versionToResolve);
   }
 
   @Override
