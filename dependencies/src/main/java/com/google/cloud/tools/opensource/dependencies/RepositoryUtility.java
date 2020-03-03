@@ -224,7 +224,7 @@ public final class RepositoryUtility {
       // Profile activation needs properties such as JDK version
       Properties properties = new Properties(); // allowing duplicate entries
       properties.putAll(projectBuildingRequest.getSystemProperties());
-      properties.putAll(DependencyGraphBuilder.detectOsProperties());
+      properties.putAll(OsProperties.detectOsProperties());
       properties.putAll(System.getProperties());
       projectBuildingRequest.setSystemProperties(properties);
 
