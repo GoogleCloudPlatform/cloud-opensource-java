@@ -303,9 +303,9 @@ public final class RepositoryUtility {
     }
 
     // TODO remove this hack once we get these out of google-cloud-java's BOM
- /*   if (BOM_SKIP_ARTIFACT_IDS.contains(artifact.getArtifactId())) {
+    if (BOM_SKIP_ARTIFACT_IDS.contains(artifact.getArtifactId())) {
       return true;
-    }*/
+    }
 
     return false;
   }
