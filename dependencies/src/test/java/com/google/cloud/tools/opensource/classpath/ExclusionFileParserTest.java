@@ -101,6 +101,49 @@ public class ExclusionFileParserTest {
   }
 
   @Test
+  public void testParse_targetPackage()
+      throws URISyntaxException, IOException, ParserConfigurationException, SAXException {
+    Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/target-package.xml");
+
+    ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
+    Truth.assertThat(matchers).hasSize(1);
+    LinkageErrorMatcher matcher = matchers.get(0);
+
+    SymbolProblem symbolProblemToMatch =
+        new SymbolProblem(
+            new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
+            ErrorType.INACCESSIBLE_MEMBER,
+            new ClassFile(Paths.get("dummy.jar"), "com.google.Foo"));
+    boolean result =
+        matcher.match(
+            symbolProblemToMatch,
+            new ClassFile(Paths.get("dummy.jar"), "reactor.core.publisher.Traces"));
+    assertTrue(result);
+  }
+
+  @Test
+  public void testParse_targetPackage_subpackage()
+      throws URISyntaxException, IOException, ParserConfigurationException, SAXException {
+    Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/target-package.xml");
+
+    ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
+    Truth.assertThat(matchers).hasSize(1);
+    LinkageErrorMatcher matcher = matchers.get(0);
+
+    // Package "com.google" should match "com.google.cloud.Foo"
+    SymbolProblem symbolProblemToMatch =
+        new SymbolProblem(
+            new MethodSymbol("com.google.cloud.Foo", "methodA", "()Ljava.lang.String;", false),
+            ErrorType.INACCESSIBLE_MEMBER,
+            new ClassFile(Paths.get("dummy.jar"), "com.cloud.google.Foo"));
+    boolean result =
+        matcher.match(
+            symbolProblemToMatch,
+            new ClassFile(Paths.get("dummy.jar"), "reactor.core.publisher.Traces"));
+    assertTrue(result);
+  }
+
+  @Test
   public void testParse_sourceAndTarget_match()
       throws URISyntaxException, IOException, ParserConfigurationException, SAXException {
     Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/source-and-target.xml");

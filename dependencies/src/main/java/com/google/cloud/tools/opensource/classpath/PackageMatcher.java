@@ -18,7 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/** Matches if the */
+/** Matcher on package of classes. */
 class PackageMatcher implements SymbolProblemTargetMatcher, SymbolProblemSourceMatcher {
 
   private final String packageName;

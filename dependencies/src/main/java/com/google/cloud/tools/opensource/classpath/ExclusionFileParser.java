@@ -93,7 +93,7 @@ class ExclusionFileParser {
           stack.push(targetMatcher);
           break;
         case "Package":
-          PackageMatcher packageMatcher = new PackageMatcher(null);
+          PackageMatcher packageMatcher = new PackageMatcher(attributes.getValue("name"));
           addMatcherToTop(packageMatcher);
           break;
         case "Class":
