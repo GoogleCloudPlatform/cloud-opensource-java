@@ -209,7 +209,7 @@ public class LinkageCheckerRuleTest {
     Map<String, String> propertiesUsedInSession =
         argumentCaptor.getValue().getRepositorySession().getSystemProperties();
     Truth.assertWithMessage(
-            "RepositorySystemSession should have variables such as os.detected.classifier")
+            "RepositorySystemSession should have variables such as os.detected.arch")
         .that(propertiesUsedInSession)
         .containsAtLeastEntriesIn(OsProperties.detectOsProperties());
     // There was a problem in resolving profiles because original properties were missing (#817)
