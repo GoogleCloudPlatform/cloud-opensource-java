@@ -1,3 +1,7 @@
+---
+concepts: true
+permalink: /what-is-a-diamond-dependency-conflict
+---
 # What is a diamond dependency conflict?
 
 A diamond dependency conflict is a scenario where two or more
@@ -62,4 +66,4 @@ state of compatibility.
 
 If you want to understand diamond dependency conflicts more deeply, proceed to
 the next article,
-[Why doesn't the compiler catch diamond dependency conflicts?](why-doesnt-the-compiler-catch-diamond-dependency-conficts.md).
+[Why doesn't the compiler catch diamond dependency conflicts?](0002-why-doesnt-the-compiler-catch-diamond-dependency-conficts.md).

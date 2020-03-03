@@ -1,3 +1,6 @@
+---
+permalink: /glossary
+---
 # Java Dependency Glossary
 
 - **Class path**: an ordered list of jar files, zip files, and directories, each of which
