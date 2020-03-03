@@ -31,7 +31,6 @@ import org.apache.maven.model.building.DefaultModelBuildingRequest;
 import org.apache.maven.model.building.ModelBuildingException;
 import org.apache.maven.model.building.ModelBuildingRequest;
 import org.apache.maven.model.building.ModelBuildingResult;
-import org.apache.maven.model.building.ModelSource;
 import org.apache.maven.model.resolution.ModelResolver;
 import org.apache.maven.model.resolution.UnresolvableModelException;
 import org.eclipse.aether.RepositorySystem;
@@ -121,7 +120,7 @@ public class VersionSubstitutingModelResolverTest {
     Truth.assertThat(copiedResolver).isInstanceOf(VersionSubstitutingModelResolver.class);
 
     // request for guava:20.0 is replaced with 25.1-jre
-    ModelSource guavaModelSource = copiedResolver.resolveModel("com.google.guava", "guava", "20.0");
-    Truth.assertThat(guavaModelSource.getLocation()).contains("guava-25.1-jre.pom");
+    Truth.assertThat(copiedResolver.resolveModel(
+        "com.google.guava", "guava", "20.0").getLocation()).contains("guava-25.1-jre.pom");
   }
 }
