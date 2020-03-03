@@ -17,11 +17,11 @@
 package com.google.cloud.tools.opensource.classpath;
 
 /** Matcher for class names. */
-class ClassNameMatcher implements SymbolProblemTargetMatcher, SymbolProblemSourceMatcher {
+class ClassMatcher implements SymbolProblemTargetMatcher, SymbolProblemSourceMatcher {
 
   private String className;
 
-  ClassNameMatcher(String className) {
+  ClassMatcher(String className) {
     this.className = className;
   }
 

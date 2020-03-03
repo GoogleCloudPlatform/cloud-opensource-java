@@ -16,14 +16,13 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-/**
- * Matcher for linkage errors. A linkage error has source class file and target symbol. This matcher
- * holds at least one matcher for them.
- */
+/** Matcher for linkage errors. A linkage error has a target symbol and a source class file. */
 class LinkageErrorMatcher implements SymbolProblemMatcher {
 
+  /** Matcher for the source class of the linkage error */
   private SourceMatcher sourceMatcher;
 
+  /** Matcher for the target symbol of the linkage error */
   private TargetMatcher targetMatcher;
 
   void setSourceMatcher(SourceMatcher sourceMatcher) {

@@ -28,7 +28,38 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-/** Parser for Linkage Checker exclusion files. */
+/**
+ * Parser for Linkage Checker exclusion files.
+ *
+ * <p>The exclusion file for Linkage Checker is an XML file. Its top-level element is
+ * LinkageCheckerFilter. The XML file contains the following structure:
+ *
+ * <ul>
+ *   <li>A LinkageCheckerFilter element has zero or more LinkageError elements.
+ *   <li>A LinkageError element has at least one of Target element and Source element.
+ *   <li>A Target element has Package, Class, Method, and Field elements. A Source element has
+ *       Artifact, Package, and Class elements.
+ *   <li>Method and Field elements have “className” attribute.
+ * </ul>
+ *
+ * <p>Each type of the element works as a corresponding matcher, such as LinkageErrorMatcher for a
+ * LinkageError element and SourceMatcher for Source element. Given a linkage error, they work as
+ * below:
+ *
+ * <ul>
+ *   <li>A LinkageErrorMatcher matches when all of its child elements match the linkage error.
+ *   <li>A SourceMatcher matches a linkage error when the source class of the error matches one of
+ *       its child elements.
+ *   <li>A TargetMatcher matches a linkage error when the target symbol (class, method, or field) of
+ *       the error matches one of its child elements.
+ *   <li>A PackageMatcher matches the classes that have Java package specified by its name field.
+ *       Prefix to specify child packages.
+ *   <li>A ClassMatcher matches the class specified by its name attribute. ArtifactMatcher,
+ *       PackageMatcher, and ClassMatcher also match methods and fields on their matching classes.
+ *   <li>A MethodMatcher matches method symbol specified by className and name attribute.
+ *   <li>A FieldMatcher matches field symbol specified by className and name attribute.
+ * </ul>
+ */
 class ExclusionFileParser {
 
   static ImmutableList<LinkageErrorMatcher> parse(Path exclusionFile)
@@ -100,8 +131,8 @@ class ExclusionFileParser {
             throw new SAXException("Class element should have name attribute");
           }
           className = attributes.getValue("name");
-          ClassNameMatcher classNameMatcher = new ClassNameMatcher(className);
-          addMatcherToTop(classNameMatcher);
+          ClassMatcher classMatcher = new ClassMatcher(className);
+          addMatcherToTop(classMatcher);
           break;
         case "Method":
           className = attributes.getValue("className");
