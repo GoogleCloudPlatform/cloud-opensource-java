@@ -18,7 +18,12 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/** Matcher on package of classes. */
+/**
+ * Matcher on the classes of a package and its subpackages.
+ *
+ * <p>For example, {@code PackageMatcher("com.google")} matches {@code com.google.Foo} class as well
+ * as {@code com.google.cloud.Bar}.
+ */
 class PackageMatcher implements SymbolProblemTargetMatcher, SymbolProblemSourceMatcher {
 
   private final String packageName;

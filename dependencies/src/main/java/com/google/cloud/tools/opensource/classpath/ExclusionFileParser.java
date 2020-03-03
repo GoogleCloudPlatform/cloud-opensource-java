@@ -104,8 +104,6 @@ class ExclusionFileParser {
     public void startElement(
         String namespaceURI, String localName, String qName, Attributes attributes)
         throws SAXException {
-      SymbolProblemMatcher matcher;
-      String className;
       switch (localName) {
         case "LinkageCheckerFilter":
           break;
@@ -127,21 +125,20 @@ class ExclusionFileParser {
           addMatcherToTop(packageMatcher);
           break;
         case "Class":
-          if (attributes.getLength() != 1) {
-            throw new SAXException("Class element should have name attribute");
-          }
-          className = attributes.getValue("name");
-          ClassMatcher classMatcher = new ClassMatcher(className);
+          String classNameOnClass = attributes.getValue("name");
+          ClassMatcher classMatcher = new ClassMatcher(classNameOnClass);
           addMatcherToTop(classMatcher);
           break;
         case "Method":
-          className = attributes.getValue("className");
-          MethodMatcher methodMatcher = new MethodMatcher(className, attributes.getValue("name"));
+          String classNameOnMethod = attributes.getValue("className");
+          MethodMatcher methodMatcher =
+              new MethodMatcher(classNameOnMethod, attributes.getValue("name"));
           addMatcherToTop(methodMatcher);
           break;
         case "Field":
-          className = attributes.getValue("className");
-          FieldMatcher fieldMatcher = new FieldMatcher(className, attributes.getValue("name"));
+          String classNameOnField = attributes.getValue("className");
+          FieldMatcher fieldMatcher =
+              new FieldMatcher(classNameOnField, attributes.getValue("name"));
           addMatcherToTop(fieldMatcher);
           break;
         default:

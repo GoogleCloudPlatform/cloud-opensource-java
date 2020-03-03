@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-/** Matcher for class names. */
+/** Matcher on class names. */
 class ClassMatcher implements SymbolProblemTargetMatcher, SymbolProblemSourceMatcher {
 
   private String className;
