@@ -15,22 +15,6 @@
 // This file contains JavaScript-applied rules that can be applied
 // to documentation sites using this Jekyll theme generally.
 $.when($.ready).then(() => {
-  // Make callouts for notes, warnings, etc. work.
-  for (let callout of ['Important', 'Note', 'TL;DR', 'Warning']) {
-    $(`p strong:contains(${callout}:)`)
-      .parent()
-      .addClass(callout.replace(';', '').toLowerCase());
-  }
-
-  // Make "spec terms" (must, should, may, must not, should not) that
-  // are bold-faced be further emphasized.
-  for (let directive of ['may', 'must', 'must not', 'should', 'should not']) {
-    $('strong')
-      .filter((i, el) => $(el).text() === directive)
-      .addClass('spec-directive')
-      .addClass(`spec-${directive.split(' ')[0]}`);
-  }
-
   // Control the maximum height of the nav sidebar.
   $(window)
     .on('resize', () => {

@@ -1,18 +1,6 @@
 @import 'colors';
 
-strong.spec-directive {
-  &.spec-must {
-    color: $glue-red-700;
-  }
-
-  &.spec-should {
-    color: #f57c00;
-  }
-
-  &.spec-may {
-    color: $glue-green-700;
-  }
-}
+// Highlighting for code blocks (generated using triple backticks in markdown)
 
 .highlighter-rouge {
   background: transparent;

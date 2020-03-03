@@ -35,35 +35,6 @@ body .glue-header.glue-header--single .glue-header__bar {
   }
 }
 
-.glue-sitesearch {
-  label {
-    display: none;
-  }
-
-  @media (max-width: 1023px) {
-    display: none;
-  }
-
-  @media (max-width: 1200px) {
-    .glue-sitesearch__input {
-      width: 150px;
-    }
-  }
-
-  .glue-button.glue-sitesearch__submit {
-    background: transparent;
-    border: 0px;
-    border-radius: 0%;
-    min-width: 36px;
-
-    svg {
-      display: block;
-      max-width: 24px;
-      width: 24px;
-    }
-  }
-}
-
 .h-c-header__cta-li form.h-c-sitesearch {
   padding-right: 20px;
 }
