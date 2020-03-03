@@ -8,7 +8,7 @@ the algorithms of these two build systems work and how they interact with each
 other. No matter which build system you choose, you are likely to have direct or
 indirect dependencies that use the other one, so you need to understand how both
 work. To limit the scope, we ignore other build environments like Eclipse and
-Ant that are not based on the Maven repository system and that work differently.
+Ant that are not based on the Maven repository system.
 
 Maven and Gradle use different names for the process of selecting dependency
 versions: Maven calls the process *dependency mediation*, while Gradle calls the
