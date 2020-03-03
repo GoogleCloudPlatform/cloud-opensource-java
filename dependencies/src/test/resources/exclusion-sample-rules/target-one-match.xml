@@ -1,0 +1,12 @@
+<LinkageCheckerFilter>
+  <LinkageError>
+    <Target>
+      <Method className="com.google.Foo" name="methodA" />
+      <Field className="com.google.Foo" name="fieldA" />
+    </Target>
+    <Source>
+      <Class name="com.google.SourceA" />
+      <Class name="com.google.SourceB" />
+    </Source>
+  </LinkageError>
+</LinkageCheckerFilter>

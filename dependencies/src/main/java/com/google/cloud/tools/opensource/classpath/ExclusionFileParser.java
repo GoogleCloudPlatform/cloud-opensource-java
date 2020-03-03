@@ -17,30 +17,29 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 /** Parser for Linkage Checker exclusion files. */
 class ExclusionFileParser {
 
   static ImmutableList<LinkageErrorMatcher> parse(Path exclusionFile)
-      throws ParserConfigurationException, SAXException, IOException {
-    SAXParserFactory spf = SAXParserFactory.newInstance();
-    spf.setNamespaceAware(true);
-    SAXParser saxParser = spf.newSAXParser();
+      throws SAXException, IOException {
 
-    XMLReader xmlReader = saxParser.getXMLReader();
+    XMLReader xmlReader = XMLReaderFactory.createXMLReader();
     LinkageErrorMatcherHandler handler = new LinkageErrorMatcherHandler();
     xmlReader.setContentHandler(handler);
-    xmlReader.parse("file://" + exclusionFile);
+
+    InputSource inputSource = new InputSource(new FileInputStream(exclusionFile.toFile()));
+    xmlReader.parse(inputSource);
     return handler.getMatchers();
   }
 
