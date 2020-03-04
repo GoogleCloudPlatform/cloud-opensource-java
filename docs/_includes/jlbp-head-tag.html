@@ -1,9 +1,8 @@
 <head>
   <title>
-    {%- if site.url contains '0.0.0.0' %}[DEV] {% endif -%}
-    {%- if page.jlbp %}{{ page.jlbp.id }}: {% endif %}{{ page.title -}}
+    {%- if page.jlbp %}[{{ page.jlbp.id }}]: {% endif %}{{ page.title -}}
   </title>
-  <meta charset='utf-8'>
+  <meta charset='UTF-8'>
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width,maximum-scale=2">
   <link href="//fonts.googleapis.com/css?family=Roboto:100,300,400,500,700|Google+Sans:400,500|Product+Sans:400&amp;lang=en" rel="stylesheet"></link>

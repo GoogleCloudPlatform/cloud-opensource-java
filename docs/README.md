@@ -2,7 +2,6 @@
 page:
   title: Google Best Practices for Java Libraries
 permalink: /
-exclude_from_search: true
 ---
 
 # Google Best Practices for Java Libraries
