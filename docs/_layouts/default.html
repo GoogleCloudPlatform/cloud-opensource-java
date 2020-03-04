@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en-US">
   <head>
+    <title>
+      {%- if page.jlbp %}[{{ page.jlbp.id }}] {% endif %}{{ page.title -}}
+    </title>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -23,6 +26,9 @@
       <img src="/assets/images/Cloud_Logo_Nav.svg"
          alt="Google Cloud" width="139px" height="21.5px">
     </div>
+    {% if page.jlbp %}
+    <h4>[{{ page.jlbp.id }}]</h4>
+    {% endif %}
     {{ content }}
 
   <hr>
