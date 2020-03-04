@@ -66,112 +66,11 @@ class ExclusionFileParser {
       throws SAXException, IOException {
 
     XMLReader xmlReader = XMLReaderFactory.createXMLReader();
-    LinkageErrorMatcherHandler handler = new LinkageErrorMatcherHandler();
+    ExclusionFileHandler handler = new ExclusionFileHandler();
     xmlReader.setContentHandler(handler);
 
     InputSource inputSource = new InputSource(new FileInputStream(exclusionFile.toFile()));
     xmlReader.parse(inputSource);
     return handler.getMatchers();
-  }
-
-  private static class LinkageErrorMatcherHandler extends DefaultHandler {
-
-    private ArrayDeque<SymbolProblemMatcher> stack = new ArrayDeque<>();
-    private ImmutableList.Builder<LinkageErrorMatcher> matchers;
-
-    ImmutableList<LinkageErrorMatcher> getMatchers() {
-      return matchers.build();
-    }
-
-    @Override
-    public void startDocument() {
-      matchers = ImmutableList.builder();
-    }
-
-    private void addMatcherToTop(Object child) throws SAXException {
-      SymbolProblemMatcher parent = stack.peek();
-      if (parent instanceof SourceMatcher && child instanceof SymbolProblemSourceMatcher) {
-        ((SourceMatcher) parent).addMatcher((SymbolProblemSourceMatcher) child);
-      } else if (parent instanceof TargetMatcher && child instanceof SymbolProblemTargetMatcher) {
-        ((TargetMatcher) parent).addMatcher((SymbolProblemTargetMatcher) child);
-      } else {
-        throw new SAXException(
-            "Unexpected parent-child relationship. Parent:" + parent + ", child:" + child);
-      }
-    }
-
-    @Override
-    public void startElement(
-        String namespaceURI, String localName, String qName, Attributes attributes)
-        throws SAXException {
-      switch (localName) {
-        case "LinkageCheckerFilter":
-          break;
-        case "LinkageError":
-          stack.push(new LinkageErrorMatcher());
-          break;
-        case "Source":
-          SourceMatcher sourceMatcher = new SourceMatcher();
-          ((LinkageErrorMatcher) stack.peek()).setSourceMatcher(sourceMatcher);
-          stack.push(sourceMatcher);
-          break;
-        case "Target":
-          TargetMatcher targetMatcher = new TargetMatcher();
-          ((LinkageErrorMatcher) stack.peek()).setTargetMatcher(targetMatcher);
-          stack.push(targetMatcher);
-          break;
-        case "Package":
-          PackageMatcher packageMatcher = new PackageMatcher(attributes.getValue("name"));
-          addMatcherToTop(packageMatcher);
-          break;
-        case "Class":
-          String classNameOnClass = attributes.getValue("name");
-          ClassMatcher classMatcher = new ClassMatcher(classNameOnClass);
-          addMatcherToTop(classMatcher);
-          break;
-        case "Method":
-          String classNameOnMethod = attributes.getValue("className");
-          MethodMatcher methodMatcher =
-              new MethodMatcher(classNameOnMethod, attributes.getValue("name"));
-          addMatcherToTop(methodMatcher);
-          break;
-        case "Field":
-          String classNameOnField = attributes.getValue("className");
-          FieldMatcher fieldMatcher =
-              new FieldMatcher(classNameOnField, attributes.getValue("name"));
-          addMatcherToTop(fieldMatcher);
-          break;
-        default:
-          throw new SAXException("Unknown tag " + localName);
-      }
-    }
-
-    @Override
-    public void endElement(String uri, String localName, String qName) throws SAXException {
-      SymbolProblemMatcher poppedMatcher;
-      switch (localName) {
-        case "Source":
-        case "Target":
-          poppedMatcher = stack.pop();
-          if (!(poppedMatcher instanceof TargetMatcher)
-              && !(poppedMatcher instanceof SourceMatcher)) {
-            throw new SAXException("Unexpected matcher in stack");
-          }
-          break;
-        case "LinkageError":
-          poppedMatcher = stack.pop();
-          if (!(poppedMatcher instanceof LinkageErrorMatcher)) {
-            throw new SAXException("Unexpected stack status after reading LinkageError element");
-          }
-          matchers.add((LinkageErrorMatcher) poppedMatcher);
-      }
-    }
-
-    @Override
-    public void endDocument() throws SAXException {
-      if (stack.size() != 0) {
-        throw new SAXException("Unexpected elements in stack");
-      }
-    }
   }
 }
