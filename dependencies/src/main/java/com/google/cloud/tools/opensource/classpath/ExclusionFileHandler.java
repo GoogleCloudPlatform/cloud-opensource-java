@@ -52,6 +52,9 @@ class ExclusionFileHandler extends DefaultHandler {
   public void startElement(
       String namespaceURI, String localName, String qName, Attributes attributes)
       throws SAXException {
+    if (!namespaceURI.isEmpty()) {
+      throw new SAXException("The exclusion rule does not support XML namespace");
+    }
     switch (localName) {
       case "LinkageCheckerFilter":
         break;
@@ -85,8 +88,7 @@ class ExclusionFileHandler extends DefaultHandler {
         break;
       case "Field":
         String classNameOnField = attributes.getValue("className");
-        FieldMatcher fieldMatcher =
-            new FieldMatcher(classNameOnField, attributes.getValue("name"));
+        FieldMatcher fieldMatcher = new FieldMatcher(classNameOnField, attributes.getValue("name"));
         addMatcherToTop(fieldMatcher);
         break;
       default:
@@ -97,6 +99,9 @@ class ExclusionFileHandler extends DefaultHandler {
   @Override
   public void endElement(String uri, String localName, String qName) throws SAXException {
     SymbolProblemMatcher poppedMatcher;
+    if (!uri.isEmpty()) {
+      throw new SAXException("The exclusion rule does not support XML namespace");
+    }
     switch (localName) {
       case "Source":
       case "Target":

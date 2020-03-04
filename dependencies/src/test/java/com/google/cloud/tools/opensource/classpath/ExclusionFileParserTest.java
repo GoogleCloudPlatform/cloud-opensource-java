@@ -138,6 +138,28 @@ public class ExclusionFileParserTest {
   }
 
   @Test
+  public void testParse_targetPackage_unmatch()
+      throws URISyntaxException, IOException, SAXException {
+    Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/target-package.xml");
+
+    ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
+    Truth.assertThat(matchers).hasSize(1);
+    LinkageErrorMatcher matcher = matchers.get(0);
+
+    // Package com.googler is not a subpackage of com.google.
+    SymbolProblem symbolProblemToMatch =
+        new SymbolProblem(
+            new MethodSymbol("com.googler.Foo", "methodA", "()Ljava.lang.String;", false),
+            ErrorType.INACCESSIBLE_MEMBER,
+            new ClassFile(Paths.get("dummy.jar"), "com.googler.Foo"));
+    boolean result =
+        matcher.match(
+            symbolProblemToMatch,
+            new ClassFile(Paths.get("dummy.jar"), "reactor.core.publisher.Traces"));
+    assertFalse(result);
+  }
+
+  @Test
   public void testParse_oneMatch() throws URISyntaxException, IOException, SAXException {
     // LinkageErrorMatcher(Target: [methodA, fieldA], Source: [SourceA, SourceB]) should match
     // a linkage error from Source B to symbol fieldA.
