@@ -23,4 +23,14 @@ $.when($.ready).then(() => {
       });
     })
     .resize();
+
+  $('h1').addClass('glue-headline').addClass('glue-has-top-margin');
+  $('h2').addClass('glue-headline').addClass('glue-has-top-margin');
+  $('h3').addClass('glue-headline').addClass('glue-has-top-margin');
+  $('h4').addClass('glue-headline').addClass('glue-has-top-margin');
+
+  $('h1').addClass('glue-headline--headline-2').addClass('glue-has-bottom-margin');
+  $('h2').addClass('glue-headline--headline-3').addClass('glue-has-bottom-margin');
+  $('h3').addClass('glue-headline--headline-4').addClass('glue-has-bottom-margin');
+  $('h4').addClass('glue-headline--headline-5');
 });
