@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -219,5 +220,17 @@ public class ExclusionFileParserTest {
             symbolProblemToMatch,
             new ClassFile(Paths.get("dummy.jar"), "com.google.Bar")); // No match
     assertFalse(result);
+  }
+
+  @Test
+  public void testParse_namespaceException() throws URISyntaxException, IOException, SAXException {
+    Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/target-with-namespace.xml");
+    try {
+      ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
+      fail();
+    } catch (SAXException ex) {
+      // pass
+      assertEquals("The exclusion rule does not support XML namespace", ex.getMessage());
+    }
   }
 }

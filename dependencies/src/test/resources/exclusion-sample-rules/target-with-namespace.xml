@@ -1,0 +1,7 @@
+<LinkageCheckerFilter xmlns:foo="http://exmaple.com/foo">
+  <LinkageError>
+    <Target>
+      <foo:Class name="reactor.core.publisher.Traces" />
+    </Target>
+  </LinkageError>
+</LinkageCheckerFilter>
