@@ -20,13 +20,10 @@ import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.C
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.mavenRepositoryFromUrl;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayDeque;
 import java.util.List;
-import java.util.Locale;
 import java.util.Queue;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -75,57 +72,11 @@ public final class DependencyGraphBuilder {
 
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
-  private static final CharMatcher LOWER_ALPHA_NUMERIC =
-      CharMatcher.inRange('a', 'z').or(CharMatcher.inRange('0', '9'));
-
   /** Maven Repositories to use when resolving dependencies. */
   private final ImmutableList<RemoteRepository> repositories;
 
   static {
-    detectOsProperties().forEach(System::setProperty);
-  }
-
-  public static ImmutableMap<String, String> detectOsProperties() {
-    // System properties to select Netty dependencies through os-maven-plugin
-    // Definition of the properties: https://github.com/trustin/os-maven-plugin
-    String osDetectedName = osDetectedName();
-    String osDetectedArch = osDetectedArch();
-    return ImmutableMap.of(
-        "os.detected.name",
-        osDetectedName,
-        "os.detected.arch",
-        osDetectedArch,
-        "os.detected.classifier",
-        osDetectedName + "-" + osDetectedArch);
-  }
-
-  private static String osDetectedName() {
-    String osNameNormalized =
-        LOWER_ALPHA_NUMERIC.retainFrom(System.getProperty("os.name").toLowerCase(Locale.ENGLISH));
-
-    if (osNameNormalized.startsWith("macosx") || osNameNormalized.startsWith("osx")) {
-      return "osx";
-    } else if (osNameNormalized.startsWith("windows")) {
-      return "windows";
-    }
-    // Since we only load the dependency graph, not actually use the
-    // dependency, it doesn't matter a great deal which one we pick.
-    return "linux";
-  }
-
-  private static String osDetectedArch() {
-    String osArchNormalized =
-        LOWER_ALPHA_NUMERIC.retainFrom(System.getProperty("os.arch").toLowerCase(Locale.ENGLISH));
-    switch (osArchNormalized) {
-      case "x8664":
-      case "amd64":
-      case "ia32e":
-      case "em64t":
-      case "x64":
-        return "x86_64";
-      default:
-        return "x86_32";
-    }
+    OsProperties.detectOsProperties().forEach(System::setProperty);
   }
 
   public DependencyGraphBuilder() {
