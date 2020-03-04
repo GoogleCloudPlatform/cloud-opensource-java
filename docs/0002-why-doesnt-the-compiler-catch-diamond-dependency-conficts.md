@@ -86,4 +86,4 @@ before we even run it, but Java does not tell us.
 
 If you want to understand how version resolution works in Maven and Gradle,
 proceed to the next article,
-[How does version resolution work in Maven and Gradle?](how-does-version-resolution-work-in-maven-and-gradle.md).
+[How does version resolution work in Maven and Gradle?](0003-how-does-version-resolution-work-in-maven-and-gradle.md).
