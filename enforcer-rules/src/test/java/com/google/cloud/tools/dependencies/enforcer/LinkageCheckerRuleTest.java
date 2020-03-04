@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule.DependencySection;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.OsProperties;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.graph.Traverser;
@@ -211,7 +211,7 @@ public class LinkageCheckerRuleTest {
     Truth.assertWithMessage(
             "RepositorySystemSession should have variables such as os.detected.classifier")
         .that(propertiesUsedInSession)
-        .containsAtLeastEntriesIn(DependencyGraphBuilder.detectOsProperties());
+        .containsAtLeastEntriesIn(OsProperties.detectOsProperties());
     // There was a problem in resolving profiles because original properties were missing (#817)
     Truth.assertWithMessage("RepositorySystemSession should have original properties")
         .that(propertiesUsedInSession)

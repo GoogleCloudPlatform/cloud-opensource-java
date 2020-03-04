@@ -1,3 +1,7 @@
+---
+concepts: true
+permalink: /how-does-version-resolution-work-in-maven-and-gradle
+---
 # How does version resolution work in Maven and Gradle?
 
 The build system that you choose for building your Java code determines which

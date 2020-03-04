@@ -1,9 +1,12 @@
+---
+concepts: true
+permalink: /why-doesnt-the-compiler-catch-diamond-dependency-conficts
+---
 # Why doesn't the compiler catch diamond dependency conflicts?
 
-When first introduced to the problem of [diamond dependency
-conflicts](what-is-a-diamond-dependency-conflict.md), many people ask: "Why
-doesn't the compiler catch it?" To explain why, we need to dive into how the
-Java build process works.
+When first introduced to the problem of [diamond dependency conflicts](0001-what-is-a-diamond-dependency-conflict.md),
+many people ask: "Why doesn't the compiler catch it?" To explain why, we need
+to dive into how the Java build process works.
 
 When `javac` compiles a program, it verifies that every class, variable, or
 other type of symbol referenced by the code can be found somewhere. Let's look
