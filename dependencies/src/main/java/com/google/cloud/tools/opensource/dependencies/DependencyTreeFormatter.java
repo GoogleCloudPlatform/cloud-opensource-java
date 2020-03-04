@@ -21,8 +21,6 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import java.util.Collection;
 import java.util.List;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.graph.Dependency;
 
 /** Formats Maven artifact dependency tree. */
 public class DependencyTreeFormatter {
@@ -76,13 +74,8 @@ public class DependencyTreeFormatter {
     // LinkedListMultimap preserves insertion order for values
     ListMultimap<DependencyPath, DependencyPath> tree = LinkedListMultimap.create();
     for (DependencyPath dependencyPath : dependencyPaths) {
-      List<Artifact> artifactPath = dependencyPath.getArtifacts();
-      List<Artifact> parentArtifactPath = artifactPath.subList(0, artifactPath.size() - 1);
-      DependencyPath parentDependencyPath = new DependencyPath();
-      parentArtifactPath.forEach(
-          parentArtifactPathNode ->
-              parentDependencyPath.add(new Dependency(parentArtifactPathNode, "compile", false)));
       // Relying on DependencyPath's equality
+      DependencyPath parentDependencyPath = dependencyPath.getParentPath();
       tree.put(parentDependencyPath, dependencyPath);
     }
     return tree;

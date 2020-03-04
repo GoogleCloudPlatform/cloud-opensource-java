@@ -332,8 +332,12 @@ public class DashboardTest {
   public void testComponent_failure() throws IOException, ParsingException {
     Document document = parseOutputFile(
         "com.google.api.grpc_grpc-google-common-protos_1.14.0.html");
+
+    // com.google.api.grpc:grpc-google-common-protos:1.14.0 has no green section
     Nodes greens = document.query("//h3[@style='color: green']");
     Assert.assertEquals(0, greens.size());
+
+    // "Global Upper Bounds Fixes", "Upper Bounds Fixes", and "Suggested Dependency Updates" are red
     Nodes reds = document.query("//h3[@style='color: red']");
     Assert.assertEquals(3, reds.size());
     Nodes presDependencyMediation =
@@ -398,6 +402,10 @@ public class DashboardTest {
     // Case 2: Dependency needs to be updated
     Nodes globalUpperBoundDependencyUpgradeNodes =
         document.query("//li[@class='global-upper-bound-dependency-upgrade']");
+
+    // The artifact report should contain the following 6 global upper bound dependency upgrades:
+    //   Upgrade com.google.guava:guava:jar:19.0 to version "27.1-android"
+    //   Upgrade com.google.protobuf:protobuf-java:jar:3.6.1 to version "3.7.1"
     Truth.assertThat(globalUpperBoundDependencyUpgradeNodes.size()).isEqualTo(2);
     String dependencyUpgradeMessage = globalUpperBoundDependencyUpgradeNodes.get(0).getValue();
     Truth.assertThat(dependencyUpgradeMessage).contains(

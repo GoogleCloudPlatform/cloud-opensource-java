@@ -60,3 +60,6 @@ dependency conflicts either don't occur or are very rare. All of the
 libraries in the ecosystem must follow the rules to maintain this
 state of compatibility.
 
+If you want to understand diamond dependency conflicts more deeply, proceed to
+the next article,
+[Why doesn't the compiler catch diamond dependency conflicts?](why-doesnt-the-compiler-catch-diamond-dependency-conficts.md).

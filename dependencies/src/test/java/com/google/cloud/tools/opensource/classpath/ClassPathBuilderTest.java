@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
@@ -202,5 +203,21 @@ public class ClassPathBuilderTest {
     Truth.assertThat(artifactProblems).hasSize(2);
     assertEquals("xerces:xerces-impl:jar:2.6.2", artifactProblems.get(0).getArtifact().toString());
     assertEquals("xml-apis:xml-apis:jar:2.6.2", artifactProblems.get(1).getArtifact().toString());
+  }
+
+  @Test
+  public void testResolve_shouldNotRaiseStackOverflowErrorOnJUnit() {
+    // There was StackOverflowError beam-sdks-java-extensions-sql-zetasql:jar:2.19.0, which was
+    // caused by a cycle of the following artifacts:
+    // junit:junit:jar:4.10 (compile?)
+    //   org.hamcrest:hamcrest-core:jar:1.1 (compile)
+    //     jmock:jmock:jar:1.1.0 (provided)
+    //       junit:junit:jar:3.8.1 (compile)
+    //         org.hamcrest:hamcrest-core:jar:1.1 (compile)
+    Artifact beamZetaSqlExtensions = new DefaultArtifact("junit:junit:jar:4.10");
+
+    // This should not throw StackOverflowError
+    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(beamZetaSqlExtensions));
+    assertNotNull(result);
   }
 }

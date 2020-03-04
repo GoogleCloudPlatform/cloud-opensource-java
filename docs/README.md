@@ -13,9 +13,7 @@ made. We have found that following these rules results in higher quality
 Java libraries with fewer dependency conflicts and other kinds of problems. The
 list is open-ended, so new ones may be added from time to time.
 
-- [Glossary](glossary.md): Terms used in the best practices and other places in
-  cloud-opensource-java.
-
+## Best practices
 - [JLBP-1](JLBP-1.md): Minimize dependencies
 - [JLBP-2](JLBP-2.md): Minimize API surface
 - [JLBP-3](JLBP-3.md): Use semantic versioning
@@ -27,7 +25,7 @@ list is open-ended, so new ones may be added from time to time.
 - [JLBP-8](JLBP-8.md): Advance widely used functionality to a stable version
 - [JLBP-9](JLBP-9.md): Support the minimum Java version of your consumers
 - [JLBP-10](JLBP-10.md): Maintain API stability as long as needed for consumers
-- [JLBP-11](JLBP-11.md): Stay up to date with compatible dependencies
+- [JLBP-11](JLBP-11.md): Keep dependencies up to date
 - [JLBP-12](JLBP-12.md): Make level of support and API stability clear
 - [JLBP-13](JLBP-13.md): Quickly remove references to deprecated features in
    dependencies
@@ -39,3 +37,9 @@ list is open-ended, so new ones may be added from time to time.
 - [JLBP-18](JLBP-18.md): Only shade dependencies as a last resort
 - [JLBP-19](JLBP-19.md): Place each package in only one module
 - [JLBP-20](JLBP-20.md): Give each jar a module name
+
+## Introductory material and reference
+- [What is a diamond dependency conflict?](what-is-a-diamond-dependency-conflict.md)
+- [Why doesn't the compiler catch diamond dependency conflicts?](why-doesnt-the-compiler-catch-diamond-dependency-conficts.md)
+- [Glossary](glossary.md): Terms used in the best practices and other places in
+  cloud-opensource-java.

@@ -30,6 +30,7 @@ import com.google.cloud.tools.opensource.dependencies.ArtifactProblem;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.FilteringZipDependencySelector;
 import com.google.cloud.tools.opensource.dependencies.NonTestDependencySelector;
+import com.google.cloud.tools.opensource.dependencies.OsProperties;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -253,7 +254,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       // For netty-handler referencing its dependencies with ${os.detected.classifier}
       Map<String, String> properties = new HashMap<>(); // allowing duplicate entries
       properties.putAll(fullDependencyResolutionSession.getSystemProperties());
-      properties.putAll(DependencyGraphBuilder.detectOsProperties());
+      properties.putAll(OsProperties.detectOsProperties());
       fullDependencyResolutionSession.setSystemProperties(properties);
 
       fullDependencyResolutionSession.setDependencySelector(

@@ -20,19 +20,11 @@ import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.C
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.mavenRepositoryFromUrl;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Queue;
-import java.util.Stack;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -80,60 +72,11 @@ public final class DependencyGraphBuilder {
 
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
-  private static final CharMatcher LOWER_ALPHA_NUMERIC =
-      CharMatcher.inRange('a', 'z').or(CharMatcher.inRange('0', '9'));
-
   /** Maven Repositories to use when resolving dependencies. */
   private final ImmutableList<RemoteRepository> repositories;
 
   static {
-    detectOsProperties().forEach(System::setProperty);
-  }
-
-  // caching cuts time by about a factor of 4. Dependency class's equality includes exclusions.
-  private final Map<Dependency, DependencyNode> cacheForFullDependency = new HashMap<>();
-
-  public static ImmutableMap<String, String> detectOsProperties() {
-    // System properties to select Netty dependencies through os-maven-plugin
-    // Definition of the properties: https://github.com/trustin/os-maven-plugin
-    String osDetectedName = osDetectedName();
-    String osDetectedArch = osDetectedArch();
-    return ImmutableMap.of(
-        "os.detected.name",
-        osDetectedName,
-        "os.detected.arch",
-        osDetectedArch,
-        "os.detected.classifier",
-        osDetectedName + "-" + osDetectedArch);
-  }
-
-  private static String osDetectedName() {
-    String osNameNormalized =
-        LOWER_ALPHA_NUMERIC.retainFrom(System.getProperty("os.name").toLowerCase(Locale.ENGLISH));
-
-    if (osNameNormalized.startsWith("macosx") || osNameNormalized.startsWith("osx")) {
-      return "osx";
-    } else if (osNameNormalized.startsWith("windows")) {
-      return "windows";
-    }
-    // Since we only load the dependency graph, not actually use the
-    // dependency, it doesn't matter a great deal which one we pick.
-    return "linux";
-  }
-
-  private static String osDetectedArch() {
-    String osArchNormalized =
-        LOWER_ALPHA_NUMERIC.retainFrom(System.getProperty("os.arch").toLowerCase(Locale.ENGLISH));
-    switch (osArchNormalized) {
-      case "x8664":
-      case "amd64":
-      case "ia32e":
-      case "em64t":
-      case "x64":
-        return "x86_64";
-      default:
-        return "x86_32";
-    }
+    OsProperties.detectOsProperties().forEach(System::setProperty);
   }
 
   public DependencyGraphBuilder() {
@@ -170,15 +113,6 @@ public final class DependencyGraphBuilder {
     }
     ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
 
-    // The cache key includes exclusion elements of Maven artifacts
-    // cacheKey is null when there's no need to use cache. Cache is only needed for a single
-    // artifact's dependency resolution. A call with multiple dependencyNodes will not come again
-    // in our usage.
-    Dependency cacheKey = dependencyList.size() == 1 ? dependencyList.get(0) : null;
-    if (cacheKey != null && cacheForFullDependency.containsKey(cacheKey)) {
-      return cacheForFullDependency.get(cacheKey);
-    }
-
     RepositorySystemSession session =
         fullDependencies
             ? RepositoryUtility.newSessionForFullDependency(system)
@@ -200,13 +134,7 @@ public final class DependencyGraphBuilder {
     // resolveDependencies equals to calling both collectDependencies (build dependency tree) and
     // resolveArtifacts (download JAR files).
     DependencyResult dependencyResult = system.resolveDependencies(session, dependencyRequest);
-    DependencyNode node = dependencyResult.getRoot();
-
-    if (cacheKey != null) {
-      cacheForFullDependency.put(cacheKey, node);
-    }
-
-    return node;
+    return dependencyResult.getRoot();
   }
 
   /**
@@ -253,11 +181,8 @@ public final class DependencyGraphBuilder {
       }
     }
 
-    DependencyGraphResult result = levelOrder(node, traversalOption);
-    // Duplicate problems found in resolveDependencyGraph and levelOrder are removed by ImmutableSet
-    artifactProblems.addAll(result.getArtifactProblems());
-
-    return new DependencyGraphResult(result.getDependencyGraph(), artifactProblems.build());
+    DependencyGraph graph = levelOrder(node);
+    return new DependencyGraphResult(graph, artifactProblems.build());
   }
 
   /**
@@ -292,9 +217,9 @@ public final class DependencyGraphBuilder {
 
   private static final class LevelOrderQueueItem {
     final DependencyNode dependencyNode;
-    final Stack<DependencyNode> parentNodes;
+    final ArrayDeque<DependencyNode> parentNodes;
 
-    LevelOrderQueueItem(DependencyNode dependencyNode, Stack<DependencyNode> parentNodes) {
+    LevelOrderQueueItem(DependencyNode dependencyNode, ArrayDeque<DependencyNode> parentNodes) {
       this.dependencyNode = dependencyNode;
       this.parentNodes = parentNodes;
     }
@@ -316,25 +241,19 @@ public final class DependencyGraphBuilder {
    * just follows the given dependency tree starting with firstNode.
    *
    * @param firstNode node to start traversal
-   * @param graphTraversalOption option to recursively resolve the dependency to build complete
-   *     dependency tree, with or without dependencies of provided scope
    */
-  private DependencyGraphResult levelOrder(
-      DependencyNode firstNode, GraphTraversalOption graphTraversalOption) {
+  private DependencyGraph levelOrder(DependencyNode firstNode) {
 
     DependencyGraph graph = new DependencyGraph();
 
-    boolean resolveFullDependency = graphTraversalOption == GraphTraversalOption.FULL;
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
-    queue.add(new LevelOrderQueueItem(firstNode, new Stack<>()));
-
-    ImmutableList.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableList.builder();
+    queue.add(new LevelOrderQueueItem(firstNode, new ArrayDeque<>()));
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
       DependencyNode dependencyNode = item.dependencyNode;
       DependencyPath path = new DependencyPath();
-      Stack<DependencyNode> parentNodes = item.parentNodes;
+      ArrayDeque<DependencyNode> parentNodes = item.parentNodes;
       parentNodes.forEach(
           parentNode -> path.add(parentNode.getDependency()));
       Artifact artifact = dependencyNode.getArtifact();
@@ -356,57 +275,17 @@ public final class DependencyGraphBuilder {
         }
 
         path.add(dependencyNode.getDependency());
-        parentNodes.push(dependencyNode);
+        parentNodes.add(dependencyNode);
         graph.addPath(path);
-
-        if (resolveFullDependency && !"system".equals(dependencyNode.getDependency().getScope())) {
-          try {
-            dependencyNode =
-                resolveCompileTimeDependencies(
-                    ImmutableList.of(dependencyNode), resolveFullDependency);
-          } catch (DependencyResolutionException resolutionException) {
-            // A dependency may be unavailable. For example, com.google.guava:guava-gwt:jar:20.0
-            // has a transitive dependency to org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not
-            // found in Maven central)
-            for (ArtifactResult artifactResult :
-                resolutionException.getResult().getArtifactResults()) {
-              if (artifactResult.getArtifact() == null) {
-                DependencyNode failedDependencyNode =
-                    artifactResult.getRequest().getDependencyNode();
-                
-                List<DependencyNode> fullPath = makeFullPath(parentNodes, failedDependencyNode);
-                
-                artifactProblems.add(new UnresolvableArtifactProblem(fullPath));
-              }
-            }
-          }
-        }
       }
       
       for (DependencyNode child : dependencyNode.getChildren()) {
-        @SuppressWarnings("unchecked")
-        Stack<DependencyNode> clone = (Stack<DependencyNode>) parentNodes.clone();
+        ArrayDeque<DependencyNode> clone = parentNodes.clone();
         queue.add(new LevelOrderQueueItem(child, clone));
       }
     }
 
-    return new DependencyGraphResult(graph, artifactProblems.build());
+    return graph;
   }
 
-  private static List<DependencyNode> makeFullPath(
-      Stack<DependencyNode> parentNodes, DependencyNode failedDependencyNode) {
-    List<DependencyNode> fullPath = new ArrayList<>();
-    fullPath.addAll(parentNodes);
-
-    DependencyNode lastParent = Iterables.getLast(parentNodes);
-
-    // Duplicate happens when root artifact is unavailable. For example:
-    // xerces:xerces-impl:jar:2.6.2 was not resolved. Dependency path: ant:ant:jar:1.6.2 (compile)
-    //   > xerces:xerces-impl:jar:2.6.2 (compile?) > xerces:xerces-impl:jar:2.6.2 (compile?)
-    if (!lastParent.getDependency().equals(failedDependencyNode.getDependency())) {
-      // Add child only when it's not duplicate
-      fullPath.add(failedDependencyNode);
-    }
-    return fullPath;
-  }
 }
