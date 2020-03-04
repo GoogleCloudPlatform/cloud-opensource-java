@@ -1,6 +1,5 @@
 ---
 permalink: /concepts-index
-exclude_from_search: true
 ---
 # Concepts index
 
