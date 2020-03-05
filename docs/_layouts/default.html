@@ -8,10 +8,10 @@
       {% if page.bare %}
       {{ content }}
       {% else %}
-      <div role="main" id="page-content">
+      <div id="page-content">
         {% include jlbp-nav.html %}
         {% include jlbp-sidebar.html %}
-        <main id="jlbp-main" class="docs-component-main">
+        <main role="main" id="jlbp-main" class="docs-component-main">
           <!-- For some unknown reason, the page content ends up covered by
                the header if the following element is not present. -->
           <li class="glue-breadcrumbs__item"></li>
