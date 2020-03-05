@@ -8,8 +8,8 @@
       {% if page.bare %}
       {{ content }}
       {% else %}
+      {% include jlbp-nav.html %}
       <main role="main" id="page-content">
-        {% include jlbp-nav.html %}
         <section id="jump-content">
           <aside id="jlbp-sidebar" class="docs-component-sidebar">
             <section id="jlbp-toc" class="docs-component-sidebar-toc">

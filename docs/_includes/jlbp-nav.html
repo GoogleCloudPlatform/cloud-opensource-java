@@ -9,9 +9,13 @@
     </li>
     {% endif %}{% endfor -%}
     <li class="nav-item nav-item-header">Concepts</li>
-    <li class="nav-item{% if page.url == '/concepts-index' %} nav-item-active{% endif %}">
-      <a href="/concepts-index">Concepts index</a>
+    {% for p in site.pages %}{% if p.concepts -%}
+    <li class="nav-item{% if p.url == page.url %} nav-item-active{% endif %}">
+      <a href="{{ p.url | relative_url }}">
+        {{ p.title }}
+      </a>
     </li>
+    {% endif %}{% endfor -%}
     <li class="nav-item nav-item-header">Reference</li>
     <li class="nav-item{% if page.url == '/glossary' %} nav-item-active{% endif %}">
       <a href="/glossary">Glossary</a>
