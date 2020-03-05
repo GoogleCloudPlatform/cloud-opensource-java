@@ -8,32 +8,20 @@
       {% if page.bare %}
       {{ content }}
       {% else %}
-      {% include jlbp-nav.html %}
-      <main role="main" id="page-content">
-        <section id="jump-content">
-          <aside id="jlbp-sidebar" class="docs-component-sidebar">
-            <section id="jlbp-toc" class="docs-component-sidebar-toc">
-              {% include toc.html html=content h_min=2 h_max=3 %}
-            </section>
-            <section class="docs-component-sidebar-actions">
-              <ul>
-                <li><a href="{{ site.github.repository_url }}/issues/">File Bug</a></li>
-                <li><a href="{{ site.github.repository_url }}/blob/master/docs/{{ page.path }}">View page on GitHub</a></li>
-              </ul>
-            </section>
-          </aside>
-          <section id="jlbp-main" class="docs-component-main">
-            <!-- For some unknown reason, the page content ends up covered by
-                 the header if the following element is not present. -->
-            <li class="glue-breadcrumbs__item"></li>
-            {% if page.jlbp %}
-            <h4 class="jlbp-number">[{{ page.jlbp.id }}]</h4>
-            {% endif %}
-            {{ content }}
-            {% include jlbp-footer.html %}
-          </section>
-        </section>
-      </main>
+      <div role="main" id="page-content">
+        {% include jlbp-nav.html %}
+        {% include jlbp-sidebar.html %}
+        <main id="jlbp-main" class="docs-component-main">
+          <!-- For some unknown reason, the page content ends up covered by
+               the header if the following element is not present. -->
+          <li class="glue-breadcrumbs__item"></li>
+          {% if page.jlbp %}
+          <h4 class="jlbp-number">[{{ page.jlbp.id }}]</h4>
+          {% endif %}
+          {{ content }}
+          {% include jlbp-footer.html %}
+        </main>
+      </div>
       {% endif %}
     </div>
     {% include jlbp-closing-scripts.html %}
