@@ -22,9 +22,19 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+/**
+ * Handler for Linkage Checker exclusion XML files.
+ *
+ * <p>An instance of this class can process one document and cannot be reused for other documents.
+ */
 class ExclusionFileHandler extends DefaultHandler {
 
+  /**
+   * Stack to hold the ancestors of the XML element in {@link #startElement(String, String, String,
+   * Attributes)}.
+   */
   private ArrayDeque<SymbolProblemMatcher> stack = new ArrayDeque<>();
+
   private ImmutableList.Builder<LinkageErrorMatcher> matchers;
 
   ImmutableList<LinkageErrorMatcher> getMatchers() {
@@ -33,15 +43,18 @@ class ExclusionFileHandler extends DefaultHandler {
 
   @Override
   public void startDocument() {
+    if (matchers != null) {
+      throw new IllegalStateException("This handler started reading document already");
+    }
     matchers = ImmutableList.builder();
   }
 
   private void addMatcherToTop(Object child) throws SAXException {
     SymbolProblemMatcher parent = stack.peek();
     if (parent instanceof SourceMatcher && child instanceof SymbolProblemSourceMatcher) {
-      ((SourceMatcher) parent).addMatcher((SymbolProblemSourceMatcher) child);
+      ((SourceMatcher) parent).setMatcher((SymbolProblemSourceMatcher) child);
     } else if (parent instanceof TargetMatcher && child instanceof SymbolProblemTargetMatcher) {
-      ((TargetMatcher) parent).addMatcher((SymbolProblemTargetMatcher) child);
+      ((TargetMatcher) parent).setMatcher((SymbolProblemTargetMatcher) child);
     } else {
       throw new SAXException(
           "Unexpected parent-child relationship. Parent:" + parent + ", child:" + child);

@@ -161,26 +161,6 @@ public class ExclusionFileParserTest {
   }
 
   @Test
-  public void testParse_oneMatch() throws URISyntaxException, IOException, SAXException {
-    // LinkageErrorMatcher(Target: [methodA, fieldA], Source: [SourceA, SourceB]) should match
-    // a linkage error from Source B to symbol fieldA.
-    Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/target-one-match.xml");
-    ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
-    Truth.assertThat(matchers).hasSize(1);
-    SymbolProblem symbolProblemToMatch =
-        new SymbolProblem(
-            new FieldSymbol("com.google.Foo", "fieldA", "Ljava.lang.String;"),
-            ErrorType.INACCESSIBLE_MEMBER,
-            new ClassFile(Paths.get("dummy.jar"), "com.google.Foo"));
-    boolean result =
-        matchers
-            .get(0)
-            .match(
-                symbolProblemToMatch, new ClassFile(Paths.get("dummy.jar"), "com.google.SourceB"));
-    assertTrue(result);
-  }
-
-  @Test
   public void testParse_sourceAndTarget_match()
       throws URISyntaxException, IOException, SAXException {
     Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/source-and-target.xml");

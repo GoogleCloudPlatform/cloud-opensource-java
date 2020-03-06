@@ -16,26 +16,18 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /** Matcher on the target symbol of linkage errors. */
 class TargetMatcher implements SymbolProblemMatcher {
 
-  private List<SymbolProblemTargetMatcher> matchers = new ArrayList<>();
+  private SymbolProblemTargetMatcher matcher;
 
-  void addMatcher(SymbolProblemTargetMatcher matcher) {
-    matchers.add(matcher);
+  void setMatcher(SymbolProblemTargetMatcher matcher) {
+    this.matcher = matcher;
   }
 
   @Override
   public boolean match(SymbolProblem problem, ClassFile sourceClass) {
-    // If one of child matches, return true
-    for (SymbolProblemTargetMatcher matcher : matchers) {
-      if (matcher.match(problem.getSymbol())) {
-        return true;
-      }
-    }
-    return false;
+    return matcher.match(problem.getSymbol());
   }
 }

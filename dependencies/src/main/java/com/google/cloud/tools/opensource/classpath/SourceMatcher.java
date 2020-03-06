@@ -16,26 +16,18 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /** Matcher on the source class file of linkage errors. */
 class SourceMatcher implements SymbolProblemMatcher {
 
-  private List<SymbolProblemSourceMatcher> matchers = new ArrayList<>();
+  private SymbolProblemSourceMatcher matcher;
 
-  void addMatcher(SymbolProblemSourceMatcher matcher) {
-    matchers.add(matcher);
+  void setMatcher(SymbolProblemSourceMatcher matcher) {
+    this.matcher = matcher;
   }
 
   @Override
   public boolean match(SymbolProblem problem, ClassFile sourceClass) {
-    // If one of child matches, return true
-    for (SymbolProblemSourceMatcher matcher : matchers) {
-      if (matcher.match(sourceClass)) {
-        return true;
-      }
-    }
-    return false;
+    return matcher.match(sourceClass);
   }
 }
