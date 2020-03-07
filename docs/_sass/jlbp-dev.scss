@@ -51,7 +51,7 @@ nav.docs-component-nav {
   }
 
   nav.docs-component-nav {
-    background-color: $glue-grey-100;
+    background-color: $glue-grey-50;
     display: block;
     float: left;
     margin-right: 40px;
@@ -105,7 +105,7 @@ nav.docs-component-nav {
         }
 
         &.nav-item-active a {
-          color: $glue-blue-600;
+          color: $glue-blue-700;
         }
 
         &.nav-item-header {
