@@ -49,12 +49,12 @@ class ExclusionFileHandler extends DefaultHandler {
     matchers = ImmutableList.builder();
   }
 
-  private void addMatcherToTop(Object child) throws SAXException {
+  private void addMatcherToTop(SymbolProblemTargetMatcher child) throws SAXException {
     SymbolProblemMatcher parent = stack.peek();
     if (parent instanceof SourceMatcher && child instanceof SymbolProblemSourceMatcher) {
       ((SourceMatcher) parent).setMatcher((SymbolProblemSourceMatcher) child);
-    } else if (parent instanceof TargetMatcher && child instanceof SymbolProblemTargetMatcher) {
-      ((TargetMatcher) parent).setMatcher((SymbolProblemTargetMatcher) child);
+    } else if (parent instanceof TargetMatcher) {
+      ((TargetMatcher) parent).setMatcher(child);
     } else {
       throw new SAXException(
           "Unexpected parent-child relationship. Parent:" + parent + ", child:" + child);
