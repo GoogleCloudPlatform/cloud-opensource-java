@@ -1,0 +1,10 @@
+<LinkageCheckerFilter>
+  <LinkageError>
+    <Source>
+      <Class name="reactor.core.publisher.Traces" />
+    </Source>
+    <Target>
+      <Method className="com.google.Foo" name="methodA" />
+    </Target>
+  </LinkageError>
+</LinkageCheckerFilter>
