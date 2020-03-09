@@ -24,12 +24,10 @@ import javax.annotation.Nullable;
 class LinkageErrorMatcher implements SymbolProblemMatcher {
 
   /** Matcher for the source class of the linkage error. Null if no Source element. */
-  @Nullable
-  private SourceMatcher sourceMatcher;
+  @Nullable private SourceMatcher sourceMatcher;
 
   /** Matcher for the target symbol of the linkage error. Null if no Target element. */
-  @Nullable
-  private TargetMatcher targetMatcher;
+  @Nullable private TargetMatcher targetMatcher;
 
   void setSourceMatcher(SourceMatcher sourceMatcher) {
     this.sourceMatcher = checkNotNull(sourceMatcher);
@@ -40,7 +38,8 @@ class LinkageErrorMatcher implements SymbolProblemMatcher {
   }
 
   /**
-   * Returns true if all non-null {@link #sourceMatcher} and {@link #targetMatcher} match.
+   * Returns true if {@link #sourceMatcher} matches if present and {@link #targetMatcher} matches if
+   * present.
    */
   @Override
   public boolean match(SymbolProblem problem, ClassFile sourceClass) {
