@@ -16,26 +16,31 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import javax.annotation.Nullable;
+
 /** Matcher for linkage errors. A linkage error has a target symbol and a source class file. */
 class LinkageErrorMatcher implements SymbolProblemMatcher {
 
-  /** Matcher for the source class of the linkage error */
+  /** Matcher for the source class of the linkage error. Null if no Source element. */
+  @Nullable
   private SourceMatcher sourceMatcher;
 
-  /** Matcher for the target symbol of the linkage error */
+  /** Matcher for the target symbol of the linkage error. Null if no Target element. */
+  @Nullable
   private TargetMatcher targetMatcher;
 
   void setSourceMatcher(SourceMatcher sourceMatcher) {
-    this.sourceMatcher = sourceMatcher;
+    this.sourceMatcher = checkNotNull(sourceMatcher);
   }
 
   void setTargetMatcher(TargetMatcher targetMatcher) {
-    this.targetMatcher = targetMatcher;
+    this.targetMatcher = checkNotNull(targetMatcher);
   }
 
   /**
-   * Returns true if all of non-null matchers of {@link #sourceMatcher} and {@link #targetMatcher}
-   * match.
+   * Returns true if all non-null {@link #sourceMatcher} and {@link #targetMatcher} match.
    */
   @Override
   public boolean match(SymbolProblem problem, ClassFile sourceClass) {
