@@ -29,9 +29,12 @@ import org.xml.sax.helpers.DefaultHandler;
 class ExclusionFileHandler extends DefaultHandler {
 
   private ImmutableList.Builder<LinkageErrorMatcher> matchers;
-  private LinkageErrorMatcher latestLinkageErrorMatcher;
-  // Either SourceMatcher or TargetMatcher
-  private SymbolProblemMatcher latestSymbolProblemMatcher;
+
+  /** LinkageError element that this handler is currently processing. */
+  private LinkageErrorMatcher linkageErrorMatcher;
+
+  /** Source or Target element that this handler is currently processing. */
+  private SymbolProblemMatcher symbolProblemMatcher;
 
   ImmutableList<LinkageErrorMatcher> getMatchers() {
     return matchers.build();
@@ -57,42 +60,36 @@ class ExclusionFileHandler extends DefaultHandler {
       case "LinkageCheckerFilter":
         break;
       case "LinkageError":
-        latestLinkageErrorMatcher = new LinkageErrorMatcher();
-        matchers.add(latestLinkageErrorMatcher);
+        linkageErrorMatcher = new LinkageErrorMatcher();
+        matchers.add(linkageErrorMatcher);
         break;
       case "Source":
         SourceMatcher sourceMatcher = new SourceMatcher();
-        latestLinkageErrorMatcher.setSourceMatcher(sourceMatcher);
-        latestSymbolProblemMatcher = sourceMatcher;
+        linkageErrorMatcher.setSourceMatcher(sourceMatcher);
+        symbolProblemMatcher = sourceMatcher;
         break;
       case "Target":
         TargetMatcher targetMatcher = new TargetMatcher();
-        latestLinkageErrorMatcher.setTargetMatcher(targetMatcher);
-        latestSymbolProblemMatcher = targetMatcher;
+        linkageErrorMatcher.setTargetMatcher(targetMatcher);
+        symbolProblemMatcher = targetMatcher;
         break;
       case "Package":
-        latestSymbolProblemMatcher.addChild(new PackageMatcher(attributes.getValue("name")));
+        symbolProblemMatcher.addChild(new PackageMatcher(attributes.getValue("name")));
         break;
       case "Class":
         String classNameOnClass = attributes.getValue("name");
-        latestSymbolProblemMatcher.addChild(new ClassMatcher(classNameOnClass));
+        symbolProblemMatcher.addChild(new ClassMatcher(classNameOnClass));
         break;
       case "Method":
         String classNameOnMethod = attributes.getValue("className");
         MethodMatcher methodMatcher =
             new MethodMatcher(classNameOnMethod, attributes.getValue("name"));
-        if (!(latestSymbolProblemMatcher instanceof TargetMatcher)) {
-          throw new SAXException("Unexpected parent-child relationship.");
-        }
-        latestSymbolProblemMatcher.addChild(methodMatcher);
+        symbolProblemMatcher.addChild(methodMatcher);
         break;
       case "Field":
         String classNameOnField = attributes.getValue("className");
         FieldMatcher fieldMatcher = new FieldMatcher(classNameOnField, attributes.getValue("name"));
-        if (!(latestSymbolProblemMatcher instanceof TargetMatcher)) {
-          throw new SAXException("Unexpected parent-child relationship.");
-        }
-        latestSymbolProblemMatcher.addChild(fieldMatcher);
+        symbolProblemMatcher.addChild(fieldMatcher);
         break;
       default:
         throw new SAXException("Unknown tag " + localName);

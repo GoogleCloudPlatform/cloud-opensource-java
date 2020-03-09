@@ -46,17 +46,6 @@ public class ExclusionFileParserTest {
   }
 
   @Test
-  public void testParse_sourceMethod() throws URISyntaxException, IOException {
-    Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/source-method.xml");
-    try {
-      ExclusionFileParser.parse(exclusionFile);
-      fail();
-    } catch (SAXException ex) {
-      Truth.assertThat(ex.getMessage()).startsWith("Unexpected parent-child relationship.");
-    }
-  }
-
-  @Test
   public void testParse_targetField() throws URISyntaxException, IOException, SAXException {
     Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/target-field.xml");
 
