@@ -6,17 +6,6 @@
   }
 }
 
-.github-logo {
-  width: 1em;
-  height: 1em;
-  margin-right: 10px;
-  margin-top: -2px;
-}
-
-.glue-button img.github-logo {
-  display: inline;
-}
-
 body .glue-header.glue-header--single .glue-header__bar {
   box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3),
     0 1px 3px 1px rgba(60, 64, 67, 0.15);
@@ -29,16 +18,8 @@ body .glue-header.glue-header--single .glue-header__bar {
     &.glue-header__bar--mobile {
       height: 64px;
       min-height: 64px;
-
-      .glue-header__cta {
-        display: none;
-      }
     }
   }
-}
-
-.h-c-header__cta-li form.h-c-sitesearch {
-  padding-right: 20px;
 }
 
 nav.docs-component-nav {
@@ -125,6 +106,8 @@ nav.docs-component-nav {
 }
 
 #jlbp-nav {
+  top: 80px;
+
   .nav-item {
     span.jlbp-number {
       display: inline-block;

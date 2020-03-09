@@ -12,9 +12,6 @@
         {% include jlbp-nav.html %}
         {% include jlbp-sidebar.html %}
         <main role="main" id="jlbp-main" class="docs-component-main">
-          <!-- For some unknown reason, the page content ends up covered by
-               the header if the following element is not present. -->
-          <li class="glue-breadcrumbs__item"></li>
           {% if page.jlbp %}
           <h4 class="jlbp-number">[{{ page.jlbp.id }}]</h4>
           {% endif %}
