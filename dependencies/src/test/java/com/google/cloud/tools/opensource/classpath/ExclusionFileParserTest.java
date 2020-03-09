@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -30,6 +29,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 public class ExclusionFileParserTest {
 
@@ -192,15 +192,44 @@ public class ExclusionFileParserTest {
   }
 
   @Test
-  public void testParse_namespaceException() throws URISyntaxException, IOException, SAXException {
+  public void testParse_namespaceException() throws URISyntaxException, SAXException, IOException {
     Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/target-with-namespace.xml");
     try {
       ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
       fail();
-    } catch (SAXException ex) {
+    } catch (SAXParseException ex) {
       // pass
-      assertEquals(
-          "unrecognized element: foo:Class in namespace http://exmaple.com/foo", ex.getMessage());
+      Truth.assertThat(ex.getMessage())
+          .contains(
+              "element \"foo:Class\" not allowed anywhere; expected element \"Class\", \"Field\", "
+                  + "\"Method\" or \"Package\"");
+    }
+  }
+
+  @Test
+  public void testParse_sourceMethod() throws URISyntaxException, SAXException, IOException {
+    Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/source-method.xml");
+    try {
+      ExclusionFileParser.parse(exclusionFile);
+      fail();
+    } catch (SAXParseException ex) {
+      Truth.assertThat(ex.getMessage())
+          .contains(
+              "element \"Method\" not allowed here; expected element \"Class\" or \"Package\"");
+    }
+  }
+
+  @Test
+  public void testParse_duplicateSourceElements()
+      throws URISyntaxException, IOException, SAXException {
+    Path exclusionFile =
+        absolutePathOfResource("exclusion-sample-rules/duplicate-source-element.xml");
+    try {
+      ExclusionFileParser.parse(exclusionFile);
+      fail();
+    } catch (SAXParseException ex) {
+      Truth.assertThat(ex.getMessage())
+          .contains("element \"Source\" not allowed here; expected the element end-tag");
     }
   }
 }

@@ -1,0 +1,56 @@
+<element name="LinkageCheckerFilter" xmlns="http://relaxng.org/ns/structure/1.0">
+  <zeroOrMore>
+    <element name="LinkageError">
+      <interleave>
+        <optional>
+          <element name="Target">
+            <choice>
+              <element name="Package">
+                <attribute name="name">
+                  <text/>
+                </attribute>
+              </element>
+              <element name="Class">
+                <attribute name="name">
+                  <text/>
+                </attribute>
+              </element>
+              <element name="Method">
+                <attribute name="name">
+                  <text/>
+                </attribute>
+                <attribute name="className">
+                  <text/>
+                </attribute>
+              </element>
+              <element name="Field">
+                <attribute name="name">
+                  <text/>
+                </attribute>
+                <attribute name="className">
+                  <text/>
+                </attribute>
+              </element>
+            </choice>
+          </element>
+        </optional>
+        <optional>
+        <element name="Source">
+            <choice>
+              <element name="Package">
+                <attribute name="name">
+                  <text/>
+                </attribute>
+              </element>
+              <element name="Class">
+                <attribute name="name">
+                  <text/>
+                </attribute>
+              </element>
+            </choice>
+          </element>
+        </optional>
+      </interleave>
+    </element>
+  </zeroOrMore>
+</element>

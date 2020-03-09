@@ -1,0 +1,7 @@
+<LinkageCheckerFilter>
+  <LinkageError>
+    <Source>
+      <Method className="com.google.Foo" name="methodA" />
+    </Source>
+  </LinkageError>
+</LinkageCheckerFilter>

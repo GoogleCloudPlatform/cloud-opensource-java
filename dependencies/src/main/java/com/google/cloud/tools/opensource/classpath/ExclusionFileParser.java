@@ -17,8 +17,14 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
+import com.thaiopensource.util.SinglePropertyMap;
+import com.thaiopensource.validate.ValidateProperty;
+import com.thaiopensource.validate.ValidationDriver;
+import com.thaiopensource.xml.sax.DraconianErrorHandler;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -62,11 +68,25 @@ class ExclusionFileParser {
   static ImmutableList<LinkageErrorMatcher> parse(Path exclusionFile)
       throws SAXException, IOException {
 
+    // DraconianErrorHandler throws SAXException upon invalid structure
+    ValidationDriver validationDriver =
+        new ValidationDriver(
+            SinglePropertyMap.newInstance(
+                ValidateProperty.ERROR_HANDLER, new DraconianErrorHandler()));
+    InputStream schema =
+        ExclusionFileParser.class
+            .getClassLoader()
+            .getResourceAsStream("linkage-checker-exclusion-relax-ng.xml");
+    InputSource schemaSource = new InputSource(schema);
+    validationDriver.loadSchema(schemaSource);
+    File exclusion = exclusionFile.toFile();
+    validationDriver.validate(ValidationDriver.fileInputSource(exclusion));
+
     XMLReader xmlReader = XMLReaderFactory.createXMLReader();
     ExclusionFileHandler handler = new ExclusionFileHandler();
     xmlReader.setContentHandler(handler);
 
-    InputSource inputSource = new InputSource(new FileInputStream(exclusionFile.toFile()));
+    InputSource inputSource = new InputSource(new FileInputStream(exclusion));
     xmlReader.parse(inputSource);
     return handler.getMatchers();
   }
