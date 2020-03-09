@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-
 /** Matcher on the target symbol of linkage errors. */
 class TargetMatcher implements SymbolProblemMatcher {
 

@@ -49,9 +49,7 @@ class ExclusionFileHandler extends DefaultHandler {
     matchers = ImmutableList.builder();
   }
 
-  /**
-   * Adds {@code child} to the parent matcher that is at the top of the {@link #stack}.
-   */
+  /** Adds {@code child} to the parent matcher that is at the top of the {@link #stack}. */
   private void addMatcherToParent(SymbolProblemTargetMatcher child) throws SAXException {
     SymbolProblemMatcher parent = stack.peek();
     if (parent instanceof SourceMatcher && child instanceof SymbolProblemSourceMatcher) {
@@ -66,10 +64,11 @@ class ExclusionFileHandler extends DefaultHandler {
 
   @Override
   public void startElement(
-      String namespaceURI, String localName, String qName, Attributes attributes)
+      String namespaceUri, String localName, String qualifiedName, Attributes attributes)
       throws SAXException {
-    if (!namespaceURI.isEmpty()) {
-      throw new SAXException("The exclusion rule does not support XML namespace");
+    if (!namespaceUri.isEmpty()) {
+      throw new SAXException(
+          "unrecognized element: " + qualifiedName + " in namespace " + namespaceUri);
     }
     switch (localName) {
       case "LinkageCheckerFilter":
@@ -113,10 +112,10 @@ class ExclusionFileHandler extends DefaultHandler {
   }
 
   @Override
-  public void endElement(String uri, String localName, String qName) throws SAXException {
+  public void endElement(String uri, String localName, String qualifiedName) throws SAXException {
     SymbolProblemMatcher poppedMatcher;
     if (!uri.isEmpty()) {
-      throw new SAXException("The exclusion rule does not support XML namespace");
+      throw new SAXException("unrecognized element: " + qualifiedName + " in namespace " + uri);
     }
     switch (localName) {
       case "Source":

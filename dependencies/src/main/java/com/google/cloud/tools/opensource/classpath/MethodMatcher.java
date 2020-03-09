@@ -21,8 +21,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /** Matcher on method symbols. */
 class MethodMatcher implements SymbolProblemTargetMatcher {
 
-  private String className;
-  private String methodName;
+  private final String className;
+  private final String methodName;
 
   MethodMatcher(String className, String methodName) {
     this.className = checkNotNull(className);

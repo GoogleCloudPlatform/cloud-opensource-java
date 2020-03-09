@@ -19,7 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 /** Matcher on class names. */
 class ClassMatcher implements SymbolProblemTargetMatcher, SymbolProblemSourceMatcher {
 
-  private String className;
+  private final String className;
 
   ClassMatcher(String className) {
     this.className = className;
