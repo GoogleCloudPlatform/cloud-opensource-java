@@ -49,7 +49,10 @@ class ExclusionFileHandler extends DefaultHandler {
     matchers = ImmutableList.builder();
   }
 
-  private void addMatcherToTop(SymbolProblemTargetMatcher child) throws SAXException {
+  /**
+   * Adds {@code child} to the parent matcher that is at the top of the {@link #stack}.
+   */
+  private void addMatcherToParent(SymbolProblemTargetMatcher child) throws SAXException {
     SymbolProblemMatcher parent = stack.peek();
     if (parent instanceof SourceMatcher && child instanceof SymbolProblemSourceMatcher) {
       ((SourceMatcher) parent).setMatcher((SymbolProblemSourceMatcher) child);
@@ -86,23 +89,23 @@ class ExclusionFileHandler extends DefaultHandler {
         break;
       case "Package":
         PackageMatcher packageMatcher = new PackageMatcher(attributes.getValue("name"));
-        addMatcherToTop(packageMatcher);
+        addMatcherToParent(packageMatcher);
         break;
       case "Class":
         String classNameOnClass = attributes.getValue("name");
         ClassMatcher classMatcher = new ClassMatcher(classNameOnClass);
-        addMatcherToTop(classMatcher);
+        addMatcherToParent(classMatcher);
         break;
       case "Method":
         String classNameOnMethod = attributes.getValue("className");
         MethodMatcher methodMatcher =
             new MethodMatcher(classNameOnMethod, attributes.getValue("name"));
-        addMatcherToTop(methodMatcher);
+        addMatcherToParent(methodMatcher);
         break;
       case "Field":
         String classNameOnField = attributes.getValue("className");
         FieldMatcher fieldMatcher = new FieldMatcher(classNameOnField, attributes.getValue("name"));
-        addMatcherToTop(fieldMatcher);
+        addMatcherToParent(fieldMatcher);
         break;
       default:
         throw new SAXException("Unknown tag " + localName);
