@@ -210,7 +210,8 @@ public class ExclusionFileParserTest {
       fail();
     } catch (SAXException ex) {
       // pass
-      assertEquals("The exclusion rule does not support XML namespace", ex.getMessage());
+      assertEquals(
+          "unrecognized element: foo:Class in namespace http://exmaple.com/foo", ex.getMessage());
     }
   }
 }

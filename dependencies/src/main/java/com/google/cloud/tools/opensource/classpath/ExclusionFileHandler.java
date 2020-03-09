@@ -112,10 +112,12 @@ class ExclusionFileHandler extends DefaultHandler {
   }
 
   @Override
-  public void endElement(String uri, String localName, String qualifiedName) throws SAXException {
+  public void endElement(String namespaceUri, String localName, String qualifiedName)
+      throws SAXException {
     SymbolProblemMatcher poppedMatcher;
-    if (!uri.isEmpty()) {
-      throw new SAXException("unrecognized element: " + qualifiedName + " in namespace " + uri);
+    if (!namespaceUri.isEmpty()) {
+      throw new SAXException(
+          "unrecognized element: " + qualifiedName + " in namespace " + namespaceUri);
     }
     switch (localName) {
       case "Source":
