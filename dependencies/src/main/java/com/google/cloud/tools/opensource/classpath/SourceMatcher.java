@@ -21,8 +21,9 @@ class SourceMatcher implements SymbolProblemMatcher {
 
   private SymbolProblemSourceMatcher matcher;
 
-  void setMatcher(SymbolProblemSourceMatcher matcher) {
-    this.matcher = matcher;
+  @Override
+  public void addChild(SymbolProblemTargetMatcher child) {
+    this.matcher = (SymbolProblemSourceMatcher) child;
   }
 
   @Override

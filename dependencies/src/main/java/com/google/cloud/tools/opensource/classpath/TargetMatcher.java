@@ -21,8 +21,9 @@ class TargetMatcher implements SymbolProblemMatcher {
 
   private SymbolProblemTargetMatcher matcher;
 
-  void setMatcher(SymbolProblemTargetMatcher matcher) {
-    this.matcher = matcher;
+  @Override
+  public void addChild(SymbolProblemTargetMatcher child) {
+    this.matcher = child;
   }
 
   @Override
