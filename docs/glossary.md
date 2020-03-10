@@ -1,9 +1,12 @@
+---
+permalink: /glossary
+---
 # Java Dependency Glossary
 
 - **Class path**: an ordered list of jar files, zip files, and directories, each of which
   contains Java class files.
   A [class loader](https://docs.oracle.com/javase/7/docs/api/java/lang/ClassLoader.html)
-  typically transforms the fully package qualified name of a Java class
+  transforms the fully package qualified name of a Java class
   into a file name and then searches for a class file with that name in a class path.
   
   When more than one entry in a class path contains a class file with the same name,

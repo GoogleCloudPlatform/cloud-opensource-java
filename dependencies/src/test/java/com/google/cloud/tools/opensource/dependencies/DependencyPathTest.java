@@ -16,12 +16,12 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.testing.EqualsTester;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
 import org.junit.Assert;
 import org.junit.Test;
-import com.google.common.testing.EqualsTester;
 
 public class DependencyPathTest {
 
@@ -46,7 +46,42 @@ public class DependencyPathTest {
     Assert.assertEquals(foo, path.get(0));
     Assert.assertEquals(bar, path.get(1));
   }
-  
+
+  @Test
+  public void testGetParentPath() {
+    DependencyPath path = new DependencyPath();
+    path.add(new Dependency(foo, "compile", false));
+    path.add(new Dependency(bar, "provided"));
+    path.add(new Dependency(foo, "compile"));
+
+    DependencyPath parent = path.getParentPath();
+
+    DependencyPath expected = new DependencyPath();
+    expected.add(new Dependency(foo, "compile", false));
+    expected.add(new Dependency(bar, "provided"));
+
+    Assert.assertEquals(expected, parent);
+  }
+
+  @Test
+  public void testGetParentPath_empty() {
+    DependencyPath path = new DependencyPath();
+
+    DependencyPath parent = path.getParentPath();
+
+    Assert.assertEquals(new DependencyPath(), parent);
+  }
+
+  @Test
+  public void testGetParentPath_oneElement() {
+    DependencyPath path = new DependencyPath();
+    path.add(new Dependency(foo, "compile", false));
+
+    DependencyPath parent = path.getParentPath();
+
+    Assert.assertEquals(new DependencyPath(), parent);
+  }
+
   @Test
   public void testToString() {
     DependencyPath path = new DependencyPath();
@@ -55,7 +90,15 @@ public class DependencyPathTest {
     Assert.assertEquals(
         "com.google:foo:1 (test) / com.google:bar:1 (compile, optional)", path.toString());
   }
-  
+
+  @Test
+  public void testToString_nullOptionalFlag() {
+    DependencyPath path = new DependencyPath();
+    path.add(new Dependency(foo, "test", false));
+    path.add(new Dependency(bar, "compile", null));
+    Assert.assertEquals("com.google:foo:1 (test) / com.google:bar:1 (compile)", path.toString());
+  }
+
   @Test
   public void testEquals() {
     DependencyPath path1 = new DependencyPath();
@@ -78,4 +121,17 @@ public class DependencyPathTest {
         .testEquals();
   }
 
+  @Test
+  public void testEquals_nullOptional() {
+    DependencyPath path1 = new DependencyPath();
+    DependencyPath path2 = new DependencyPath();
+
+    path1.add(new Dependency(foo, "compile"));
+    path1.add(new Dependency(bar, "compile"));
+
+    path2.add(new Dependency(foo, "compile"));
+    path2.add(new Dependency(bar, "compile", null));
+
+    new EqualsTester().addEqualityGroup(path1, path2).testEquals();
+  }
 }

@@ -1,0 +1,7 @@
+<LinkageCheckerFilter>
+  <LinkageError>
+    <Target>
+      <Package name="com.google" />
+    </Target>
+  </LinkageError>
+</LinkageCheckerFilter>

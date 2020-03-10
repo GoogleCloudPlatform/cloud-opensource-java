@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -62,6 +63,7 @@ public class LinkageCheckerTest {
 
   private Path guavaPath;
   private Path firestorePath;
+  private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
   /** Returns JAR files resolved for the full dependency tree of {@code coordinates}. */
   static ImmutableList<Path> resolvePaths(String... coordinates) {
@@ -246,8 +248,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblem_protectedConstructorFromAnonymousClass()
-      throws IOException, RepositoryException {
+  public void testFindSymbolProblem_protectedConstructorFromAnonymousClass() throws IOException {
     List<Path> paths = resolvePaths("junit:junit:4.12");
     // junit has dependency on hamcrest-core
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
@@ -422,8 +423,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblem_invalidMethodOverriding()
-      throws RepositoryException, IOException {
+  public void testFindSymbolProblem_invalidMethodOverriding() throws IOException {
     // cglib 2.2 does not work with asm 4. Stackoverflow post explaining VerifyError:
     // https://stackoverflow.com/questions/21059019/cglib-is-causing-a-java-lang-verifyerror-during-query-generation-in-intuit-partn
     List<Path> paths = resolvePaths("cglib:cglib:2.2_beta1", "org.ow2.asm:asm:4.2");
@@ -599,7 +599,9 @@ public class LinkageCheckerTest {
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("-b", bomCoordinates);
-    ImmutableList<Path> inputClasspath = parsedArguments.getInputClasspath();
+    ImmutableList<Path> inputClasspath =
+        classPathBuilder.resolve(parsedArguments.getArtifacts()).getClassPath();
+
     Truth.assertThat(inputClasspath).isNotEmpty();
 
     List<String> names =
@@ -629,7 +631,8 @@ public class LinkageCheckerTest {
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("--artifacts", mavenCoordinates);
-    List<Path> inputClasspath = parsedArguments.getInputClasspath();
+    List<Path> inputClasspath =
+        classPathBuilder.resolve(parsedArguments.getArtifacts()).getClassPath();
 
     Truth.assertWithMessage(
             "The first 2 items in the classpath should be the 2 artifacts in the input")
@@ -658,7 +661,8 @@ public class LinkageCheckerTest {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("--artifacts", "com.google.guava:guava-gwt:20.0");
 
-    ImmutableList<Path> inputClasspath = parsedArguments.getInputClasspath();
+    ImmutableList<Path> inputClasspath =
+        classPathBuilder.resolve(parsedArguments.getArtifacts()).getClassPath();
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
@@ -666,8 +670,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testGenerateInputClasspathFromLinkageCheckOption_failOnMissingDependency()
-      throws ParseException {
+  public void testGenerateInputClasspathFromLinkageCheckOption_recordMissingDependency()
+      throws ParseException, RepositoryException {
     // tomcat-jasper has missing dependency (not optional):
     //   org.apache.tomcat:tomcat-jasper:jar:8.0.9
     //     org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not found in Maven central)
@@ -675,27 +679,14 @@ public class LinkageCheckerTest {
         LinkageCheckerArguments.readCommandLine(
             "--artifacts", "org.apache.tomcat:tomcat-jasper:8.0.9");
 
-    try {
-      parsedArguments.getInputClasspath();
-      Assert.fail(
-          "Because the unavailable dependency is not optional, it should throw an exception");
-    } catch (RepositoryException ex) {
-      Truth.assertThat(ex.getMessage())
-          .startsWith("Unresolved artifacts: org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4");
-    }
-  }
-
-  @Test
-  public void testGenerateInputClasspath_jarFileList()
-      throws RepositoryException, ParseException {
-
-    LinkageCheckerArguments parsedArguments =
-        LinkageCheckerArguments.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
-    List<Path> inputClasspath = parsedArguments.getInputClasspath();
-
-    Truth.assertThat(inputClasspath)
-        .comparingElementsUsing(PATH_FILE_NAMES)
-        .containsExactly("foo.jar", "bar.jar", "baz.jar");
+    ImmutableList<UnresolvableArtifactProblem> artifactProblems =
+        classPathBuilder.resolve(parsedArguments.getArtifacts()).getArtifactProblems();
+    Truth.assertThat(artifactProblems)
+        .comparingElementsUsing(
+            Correspondence.transforming(
+                (UnresolvableArtifactProblem problem) -> problem.getArtifact().toString(),
+                "problem with Maven coordinate"))
+        .contains("org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4");
   }
 
   @Test

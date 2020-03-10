@@ -25,7 +25,6 @@ import com.google.common.truth.Truth;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
@@ -47,7 +46,7 @@ public class DependencyGraphBuilderTest {
           "has artifact");
 
   @Test
-  public void testGetTransitiveDependencies() throws RepositoryException {
+  public void testGetTransitiveDependencies() {
     DependencyGraph graph =
         dependencyGraphBuilder
             .buildMavenDependencyGraph(new Dependency(datastore, "compile"))
@@ -62,7 +61,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testGetCompleteDependencies() throws RepositoryException {
+  public void testGetCompleteDependencies() {
     DependencyGraph graph =
         dependencyGraphBuilder
             .buildFullDependencyGraph(ImmutableList.of(datastore))
@@ -74,9 +73,9 @@ public class DependencyGraphBuilderTest {
     HashSet<DependencyPath> noDups = new HashSet<>(paths);
     Assert.assertEquals(paths.size(), noDups.size());
 
-    // This method should find Guava multiple times.
+    // This method should find Guava multiple times, respecting exclusion elements
     int guavaCount = countGuava(graph);
-    Assert.assertEquals(30, guavaCount);
+    Assert.assertEquals(29, guavaCount);
   }
 
   private static int countGuava(DependencyGraph graph) {
@@ -90,7 +89,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testBuildLinkageCheckDependencyGraph_nonExistentZipDependency() throws RepositoryException {
+  public void testBuildLinkageCheckDependencyGraph_nonExistentZipDependency() {
     // This artifact depends on log4j-api-java9 (type:zip), which does not exist in Maven central.
     DefaultArtifact log4j2 = new DefaultArtifact("org.apache.logging.log4j:log4j-api:2.11.1");
 
@@ -136,7 +135,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testBuildLinkageCheckDependencyGraph_grpcProtobufExclusion() throws RepositoryException {
+  public void testBuildLinkageCheckDependencyGraph_grpcProtobufExclusion() {
     // Grpc-protobuf depends on grpc-protobuf-lite with protobuf-lite exclusion.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1056
     Artifact grpcProtobuf = new DefaultArtifact("io.grpc:grpc-protobuf:1.25.0");
@@ -156,7 +155,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testBuildLinkageCheckDependencyGraph_respectExclusions() throws RepositoryException {
+  public void testBuildLinkageCheckDependencyGraph_respectExclusions() {
     // hibernate-core declares jboss-jacc-api_JDK4 dependency excluding jboss-servlet-api_3.0.
     // jboss-jacc-api_JDK4 depends on jboss-servlet-api_3.0:1.0-SNAPSHOT, which is unavailable.
     // DependencyGraphBuilder should respect the exclusion and should not try to download
@@ -196,8 +195,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testConfigureAdditionalMavenRepositories_addingGoogleAndroidRepository()
-      throws RepositoryException {
+  public void testConfigureAdditionalMavenRepositories_addingGoogleAndroidRepository() {
     // Previously this test was using https://repo.spring.io/milestone and artifact
     // org.springframework:spring-asm:3.1.0.RC2 but the repository was not stable.
     DependencyGraphBuilder graphBuilder =
@@ -212,8 +210,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral()
-      throws RepositoryException {
+  public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral() {
     DependencyGraphBuilder graphBuilder =
         new DependencyGraphBuilder(ImmutableList.of("https://dl.google.com/dl/android/maven2"));
 
@@ -228,7 +225,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testBuildLinkageCheckDependencyGraph_catchRootException() throws RepositoryException {
+  public void testBuildLinkageCheckDependencyGraph_catchRootException() {
     // This should not throw exception
     DependencyGraphResult result =
         dependencyGraphBuilder.buildFullDependencyGraph(
@@ -249,5 +246,35 @@ public class DependencyGraphBuilderTest {
                 + " (compile) > xerces:xerces-impl:jar:2.6.2 (compile?)",
             "xml-apis:xml-apis:jar:2.6.2 was not resolved. Dependency path: ant:ant:jar:1.6.2"
                 + " (compile) > xml-apis:xml-apis:jar:2.6.2 (compile?)");
+  }
+
+  @Test
+  public void testAlts_exclusionElements() {
+    Correspondence<DependencyPath, String> dependencyPathToString =
+        Correspondence.transforming(DependencyPath::toString, "has string representation");
+
+    DefaultArtifact artifact = new DefaultArtifact("io.grpc:grpc-alts:jar:1.27.0");
+    DependencyGraph graph =
+        dependencyGraphBuilder
+            .buildFullDependencyGraph(ImmutableList.of(artifact))
+            .getDependencyGraph();
+    List<DependencyPath> dependencyPaths = graph.list();
+
+    String expectedDependencyPathForOpencensusContribHttpUtil =
+        "io.grpc:grpc-alts:1.27.0 (compile) " // this has exclusion of Guava
+            + "/ com.google.auth:google-auth-library-oauth2-http:0.19.0 (compile) "
+            + "/ com.google.http-client:google-http-client:1.33.0 (compile) "
+            + "/ io.opencensus:opencensus-contrib-http-util:0.24.0 (compile)";
+
+    Truth.assertThat(dependencyPaths)
+        .comparingElementsUsing(dependencyPathToString)
+        .contains(expectedDependencyPathForOpencensusContribHttpUtil);
+
+    String unexpectedDependencyPathForGuava =
+        expectedDependencyPathForOpencensusContribHttpUtil
+            + " / com.google.guava:guava:jar:26.0-android (compile)";
+    Truth.assertThat(dependencyPaths)
+        .comparingElementsUsing(dependencyPathToString)
+        .doesNotContain(unexpectedDependencyPathForGuava);
   }
 }

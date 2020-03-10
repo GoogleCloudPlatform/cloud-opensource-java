@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.Set;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
-import org.eclipse.aether.RepositoryException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -58,8 +57,6 @@ public class ClassDumperTest {
           "has class name equal to");
 
   private InputStream classFileInputStream;
-
-  private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
   @Before
   public void setup() {
@@ -195,8 +192,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testMapJarToClasses_classWithDollars()
-      throws IOException, RepositoryException {
+  public void testMapJarToClasses_classWithDollars() throws IOException {
     List<Path> paths = resolvePaths("com.google.code.gson:gson:2.6.2");
     Path gsonJar = paths.get(0);
 
@@ -331,8 +327,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testIsUnusedClassSymbolReference_multiReleaseJar()
-      throws IOException, RepositoryException {
+  public void testIsUnusedClassSymbolReference_multiReleaseJar() throws IOException {
     // org.graalvm.libgraal.LibGraal class has different implementations between Java 8 and 11 via
     // Multi-release JAR of this artifact.
     List<Path> paths = resolvePaths("org.graalvm.compiler:compiler:19.0.0");
@@ -347,7 +342,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testFindSymbolReferences_overLappingClass() throws IOException, RepositoryException {
+  public void testFindSymbolReferences_overLappingClass() throws IOException {
     // Both artifacts contain com.google.inject.internal.InjectorImpl$BindingsMultimap. The one from
     // sisu-guice should not appear in symbol references because guice supersedes in the class path.
     List<Path> paths =
@@ -367,7 +362,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testListClasses_unexpectedNonClassFile() throws RepositoryException, IOException {
+  public void testListClasses_unexpectedNonClassFile() throws IOException {
     // com.amazonaws:amazon-kinesis-client:1.13.0 contains an unexpected lock file
     // /unison/com/e007f77498fd27177e2ea931a06dcf50/unison/tmp/amazonaws/services/kinesis/leases/impl/LeaseTaker.class
     // https://github.com/awslabs/amazon-kinesis-client/issues/654
@@ -387,7 +382,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testCatchesLinkageError_absentOuterClass() throws RepositoryException, IOException {
+  public void testCatchesLinkageError_absentOuterClass() throws IOException {
     // Curator-client has shaded com.google.common.reflect.TypeToken$Bounds but it does not contain
     // the outer class com.google.common.reflect.TypeToken.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1092
@@ -404,8 +399,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testFindSymbolReferences_catchClassFormatException()
-      throws RepositoryException, IOException {
+  public void testFindSymbolReferences_catchClassFormatException() throws IOException {
     List<Path> paths = resolvePaths("com.ibm.icu:icu4j:2.6.1");
     ClassDumper classDumper = ClassDumper.create(paths);
 
