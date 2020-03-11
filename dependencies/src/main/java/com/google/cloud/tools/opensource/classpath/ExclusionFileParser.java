@@ -17,9 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
-import com.thaiopensource.util.SinglePropertyMap;
-import com.thaiopensource.validate.ValidateProperty;
-import com.thaiopensource.validate.ValidationDriver;
 import com.thaiopensource.xml.sax.DraconianErrorHandler;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +29,6 @@ import org.iso_relax.verifier.VerifierFactory;
 import org.iso_relax.verifier.VerifierFilter;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
@@ -44,8 +40,8 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * <ul>
  *   <li>A LinkageCheckerFilter element has zero or more LinkageError elements.
  *   <li>A LinkageError element has at least one of Target element and Source element.
- *   <li>A Target element has a Package, Class, Method, or Field element. A Source element has
- *       an Artifact, Package, or Class element.
+ *   <li>A Target element has a Package, Class, Method, or Field element. A Source element has an
+ *       Artifact, Package, or Class element.
  *   <li>Method and Field elements have “className” attribute.
  * </ul>
  *
@@ -72,14 +68,19 @@ class ExclusionFileParser {
   static ImmutableList<LinkageErrorMatcher> parse(Path exclusionFile)
       throws SAXException, IOException, VerifierConfigurationException {
 
-    VerifierFactory factory = VerifierFactory.newInstance("http://relaxng.org/ns/structure/0.9");
-    Schema schema = factory.compileSchema(Files.newInputStream(exclusionFile));
+    // Validate and parse XML files in one pass using Jing validator as a filter.
+    // http://iso-relax.sourceforge.net/JARV/JARV.html#use_42
+    VerifierFactory factory = VerifierFactory.newInstance("http://relaxng.org/ns/structure/1.0");
+    InputStream linkageCheckerSchema =
+        ExclusionFileParser.class
+            .getClassLoader()
+            .getResourceAsStream("linkage-checker-exclusion-relax-ng.xml");
+    Schema schema = factory.compileSchema(linkageCheckerSchema);
     Verifier verifier = schema.newVerifier();
-
+    // DraconianErrorHandler throws SAXException upon invalid structure
+    verifier.setErrorHandler(new DraconianErrorHandler());
     VerifierFilter filter = verifier.getVerifierFilter();
-
-    XMLReader xmlReader = XMLReaderFactory.createXMLReader();
-    filter.setParent(xmlReader);
+    filter.setParent(XMLReaderFactory.createXMLReader());
 
     ExclusionFileHandler handler = new ExclusionFileHandler();
     filter.setContentHandler(handler);
