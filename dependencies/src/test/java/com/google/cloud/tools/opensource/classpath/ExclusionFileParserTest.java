@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -199,10 +200,11 @@ public class ExclusionFileParserTest {
       fail();
     } catch (SAXParseException expected) {
       // pass
-      Truth.assertThat(expected.getMessage())
-          .contains(
-              "element \"foo:Class\" not allowed anywhere; expected element \"Class\", \"Field\", "
-                  + "\"Method\" or \"Package\"");
+      assertEquals(
+          "element \"foo:Class\" not allowed anywhere; expected element \"Class\", \"Field\", "
+              + "\"Method\" or \"Package\"",
+          expected.getMessage());
+      assertEquals(4, expected.getLineNumber());
     }
   }
 
@@ -213,9 +215,10 @@ public class ExclusionFileParserTest {
       ExclusionFileParser.parse(exclusionFile);
       fail();
     } catch (SAXParseException expected) {
-      Truth.assertThat(expected.getMessage())
-          .contains(
-              "element \"Method\" not allowed here; expected element \"Class\" or \"Package\"");
+      assertEquals(
+          "element \"Method\" not allowed here; expected element \"Class\" or \"Package\"",
+          expected.getMessage());
+      assertEquals(4, expected.getLineNumber());
     }
   }
 
@@ -228,8 +231,10 @@ public class ExclusionFileParserTest {
       ExclusionFileParser.parse(exclusionFile);
       fail();
     } catch (SAXParseException expected) {
-      Truth.assertThat(expected.getMessage())
-          .contains("element \"Source\" not allowed here; expected the element end-tag");
+      assertEquals(
+          "element \"Source\" not allowed here; expected the element end-tag",
+          expected.getMessage());
+      assertEquals(9, expected.getLineNumber());
     }
   }
 }
