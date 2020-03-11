@@ -68,19 +68,8 @@ class ExclusionFileParser {
   static ImmutableList<LinkageErrorMatcher> parse(Path exclusionFile)
       throws SAXException, IOException {
 
-    // DraconianErrorHandler throws SAXException upon invalid structure
-    ValidationDriver validationDriver =
-        new ValidationDriver(
-            SinglePropertyMap.newInstance(
-                ValidateProperty.ERROR_HANDLER, new DraconianErrorHandler()));
-    InputStream schema =
-        ExclusionFileParser.class
-            .getClassLoader()
-            .getResourceAsStream("linkage-checker-exclusion-relax-ng.xml");
-    InputSource schemaSource = new InputSource(schema);
-    validationDriver.loadSchema(schemaSource);
     File exclusion = exclusionFile.toFile();
-    validationDriver.validate(ValidationDriver.fileInputSource(exclusion));
+    validate(exclusion);
 
     XMLReader xmlReader = XMLReaderFactory.createXMLReader();
     ExclusionFileHandler handler = new ExclusionFileHandler();
@@ -89,5 +78,19 @@ class ExclusionFileParser {
     InputSource inputSource = new InputSource(new FileInputStream(exclusion));
     xmlReader.parse(inputSource);
     return handler.getMatchers();
+  }
+
+  private static void validate(File file) throws IOException, SAXException {
+    ValidationDriver validationDriver =
+        new ValidationDriver(
+            SinglePropertyMap.newInstance(
+                // DraconianErrorHandler throws SAXException upon invalid structure
+                ValidateProperty.ERROR_HANDLER, new DraconianErrorHandler()));
+    InputStream schema =
+        ExclusionFileParser.class
+            .getClassLoader()
+            .getResourceAsStream("linkage-checker-exclusion-relax-ng.xml");
+    validationDriver.loadSchema(new InputSource(schema));
+    validationDriver.validate(ValidationDriver.fileInputSource(file));
   }
 }

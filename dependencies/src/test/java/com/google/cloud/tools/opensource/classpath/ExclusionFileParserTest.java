@@ -197,9 +197,9 @@ public class ExclusionFileParserTest {
     try {
       ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
       fail();
-    } catch (SAXParseException ex) {
+    } catch (SAXParseException expected) {
       // pass
-      Truth.assertThat(ex.getMessage())
+      Truth.assertThat(expected.getMessage())
           .contains(
               "element \"foo:Class\" not allowed anywhere; expected element \"Class\", \"Field\", "
                   + "\"Method\" or \"Package\"");
@@ -212,8 +212,8 @@ public class ExclusionFileParserTest {
     try {
       ExclusionFileParser.parse(exclusionFile);
       fail();
-    } catch (SAXParseException ex) {
-      Truth.assertThat(ex.getMessage())
+    } catch (SAXParseException expected) {
+      Truth.assertThat(expected.getMessage())
           .contains(
               "element \"Method\" not allowed here; expected element \"Class\" or \"Package\"");
     }
@@ -227,8 +227,8 @@ public class ExclusionFileParserTest {
     try {
       ExclusionFileParser.parse(exclusionFile);
       fail();
-    } catch (SAXParseException ex) {
-      Truth.assertThat(ex.getMessage())
+    } catch (SAXParseException expected) {
+      Truth.assertThat(expected.getMessage())
           .contains("element \"Source\" not allowed here; expected the element end-tag");
     }
   }
