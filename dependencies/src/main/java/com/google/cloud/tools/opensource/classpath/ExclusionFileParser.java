@@ -69,7 +69,7 @@ class ExclusionFileParser {
   static ImmutableList<LinkageErrorMatcher> parse(Path exclusionFile)
       throws SAXException, IOException, VerifierConfigurationException {
 
-    XMLReader reader = createParser();
+    XMLReader reader = createXmlReader();
 
     ExclusionFileHandler handler = new ExclusionFileHandler();
     reader.setContentHandler(handler);
@@ -81,7 +81,7 @@ class ExclusionFileParser {
     return handler.getMatchers();
   }
 
-  private static XMLReader createParser()
+  private static XMLReader createXmlReader()
       throws SAXException, IOException, VerifierConfigurationException {
     // Validate and parse XML files in one pass using Jing validator as a filter.
     // http://iso-relax.sourceforge.net/JARV/JARV.html#use_42
