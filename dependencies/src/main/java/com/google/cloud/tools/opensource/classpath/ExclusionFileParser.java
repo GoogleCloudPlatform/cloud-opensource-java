@@ -29,6 +29,7 @@ import org.iso_relax.verifier.VerifierFactory;
 import org.iso_relax.verifier.VerifierFilter;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
@@ -68,6 +69,20 @@ class ExclusionFileParser {
   static ImmutableList<LinkageErrorMatcher> parse(Path exclusionFile)
       throws SAXException, IOException, VerifierConfigurationException {
 
+    XMLReader reader = createParser();
+
+    ExclusionFileHandler handler = new ExclusionFileHandler();
+    reader.setContentHandler(handler);
+
+    InputSource inputSource = new InputSource(Files.newInputStream(exclusionFile));
+    inputSource.setSystemId(exclusionFile.toUri().toString());
+    reader.parse(inputSource);
+
+    return handler.getMatchers();
+  }
+
+  private static XMLReader createParser()
+      throws SAXException, IOException, VerifierConfigurationException {
     // Validate and parse XML files in one pass using Jing validator as a filter.
     // http://iso-relax.sourceforge.net/JARV/JARV.html#use_42
     VerifierFactory factory = VerifierFactory.newInstance("http://relaxng.org/ns/structure/1.0");
@@ -77,17 +92,11 @@ class ExclusionFileParser {
             .getResourceAsStream("linkage-checker-exclusion-relax-ng.xml");
     Schema schema = factory.compileSchema(linkageCheckerSchema);
     Verifier verifier = schema.newVerifier();
+
     // DraconianErrorHandler throws SAXException upon invalid structure
     verifier.setErrorHandler(new DraconianErrorHandler());
     VerifierFilter filter = verifier.getVerifierFilter();
     filter.setParent(XMLReaderFactory.createXMLReader());
-
-    ExclusionFileHandler handler = new ExclusionFileHandler();
-    filter.setContentHandler(handler);
-
-    InputSource inputSource = new InputSource(Files.newInputStream(exclusionFile));
-    inputSource.setSystemId(exclusionFile.toUri().toString());
-    filter.parse(inputSource);
-    return handler.getMatchers();
+    return filter;
   }
 }
