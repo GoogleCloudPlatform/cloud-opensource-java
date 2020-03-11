@@ -1,0 +1,71 @@
+<!--
+  ~ Copyright 2020 Google LLC.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<element name="LinkageCheckerFilter" xmlns="http://relaxng.org/ns/structure/1.0">
+  <zeroOrMore>
+    <element name="LinkageError">
+      <interleave>
+        <optional>
+          <element name="Target">
+            <choice>
+              <element name="Package">
+                <attribute name="name">
+                  <text/>
+                </attribute>
+              </element>
+              <element name="Class">
+                <attribute name="name">
+                  <text/>
+                </attribute>
+              </element>
+              <element name="Method">
+                <attribute name="name">
+                  <text/>
+                </attribute>
+                <attribute name="className">
+                  <text/>
+                </attribute>
+              </element>
+              <element name="Field">
+                <attribute name="name">
+                  <text/>
+                </attribute>
+                <attribute name="className">
+                  <text/>
+                </attribute>
+              </element>
+            </choice>
+          </element>
+        </optional>
+        <optional>
+          <element name="Source">
+            <choice>
+              <element name="Package">
+                <attribute name="name">
+                  <text/>
+                </attribute>
+              </element>
+              <element name="Class">
+                <attribute name="name">
+                  <text/>
+                </attribute>
+              </element>
+            </choice>
+          </element>
+        </optional>
+      </interleave>
+    </element>
+  </zeroOrMore>
+</element>
