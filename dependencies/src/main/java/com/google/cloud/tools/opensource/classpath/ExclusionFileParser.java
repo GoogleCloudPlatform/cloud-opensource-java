@@ -25,6 +25,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.iso_relax.verifier.Schema;
+import org.iso_relax.verifier.Verifier;
+import org.iso_relax.verifier.VerifierConfigurationException;
+import org.iso_relax.verifier.VerifierFactory;
+import org.iso_relax.verifier.VerifierFilter;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -65,31 +70,23 @@ import org.xml.sax.helpers.XMLReaderFactory;
 class ExclusionFileParser {
 
   static ImmutableList<LinkageErrorMatcher> parse(Path exclusionFile)
-      throws SAXException, IOException {
+      throws SAXException, IOException, VerifierConfigurationException {
 
-    validate(exclusionFile);
+    VerifierFactory factory = VerifierFactory.newInstance("http://relaxng.org/ns/structure/0.9");
+    Schema schema = factory.compileSchema(Files.newInputStream(exclusionFile));
+    Verifier verifier = schema.newVerifier();
+
+    VerifierFilter filter = verifier.getVerifierFilter();
 
     XMLReader xmlReader = XMLReaderFactory.createXMLReader();
+    filter.setParent(xmlReader);
+
     ExclusionFileHandler handler = new ExclusionFileHandler();
-    xmlReader.setContentHandler(handler);
+    filter.setContentHandler(handler);
 
     InputSource inputSource = new InputSource(Files.newInputStream(exclusionFile));
     inputSource.setSystemId(exclusionFile.toUri().toString());
-    xmlReader.parse(inputSource);
+    filter.parse(inputSource);
     return handler.getMatchers();
-  }
-
-  private static void validate(Path exclusionFile) throws IOException, SAXException {
-    ValidationDriver validationDriver =
-        new ValidationDriver(
-            SinglePropertyMap.newInstance(
-                // DraconianErrorHandler throws SAXException upon invalid structure
-                ValidateProperty.ERROR_HANDLER, new DraconianErrorHandler()));
-    InputStream schema =
-        ExclusionFileParser.class
-            .getClassLoader()
-            .getResourceAsStream("linkage-checker-exclusion-relax-ng.xml");
-    validationDriver.loadSchema(new InputSource(schema));
-    validationDriver.validate(ValidationDriver.fileInputSource(exclusionFile.toFile()));
   }
 }

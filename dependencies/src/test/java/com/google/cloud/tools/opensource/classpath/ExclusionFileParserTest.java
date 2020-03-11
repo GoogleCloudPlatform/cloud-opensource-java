@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.iso_relax.verifier.VerifierConfigurationException;
 import org.junit.Test;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -35,7 +36,8 @@ import org.xml.sax.SAXParseException;
 public class ExclusionFileParserTest {
 
   @Test
-  public void testParse_sourceClass() throws URISyntaxException, IOException, SAXException {
+  public void testParse_sourceClass()
+      throws URISyntaxException, IOException, SAXException, VerifierConfigurationException {
     Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/source-class.xml");
 
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
@@ -47,7 +49,7 @@ public class ExclusionFileParserTest {
   }
 
   @Test
-  public void testParse_targetField() throws URISyntaxException, IOException, SAXException {
+  public void testParse_targetField() throws URISyntaxException, IOException, SAXException, VerifierConfigurationException {
     Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/target-field.xml");
 
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
@@ -67,7 +69,7 @@ public class ExclusionFileParserTest {
   }
 
   @Test
-  public void testParse_targetMethod() throws URISyntaxException, IOException, SAXException {
+  public void testParse_targetMethod() throws URISyntaxException, IOException, SAXException, VerifierConfigurationException {
     Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/target-method.xml");
 
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
@@ -87,7 +89,7 @@ public class ExclusionFileParserTest {
   }
 
   @Test
-  public void testParse_targetPackage() throws URISyntaxException, IOException, SAXException {
+  public void testParse_targetPackage() throws URISyntaxException, IOException, SAXException , VerifierConfigurationException{
     Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/target-package.xml");
 
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
@@ -108,7 +110,7 @@ public class ExclusionFileParserTest {
 
   @Test
   public void testParse_targetPackage_subpackage()
-      throws URISyntaxException, IOException, SAXException {
+      throws URISyntaxException, IOException, SAXException, VerifierConfigurationException {
     Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/target-package.xml");
 
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
@@ -130,7 +132,7 @@ public class ExclusionFileParserTest {
 
   @Test
   public void testParse_targetPackage_unmatch()
-      throws URISyntaxException, IOException, SAXException {
+      throws URISyntaxException, IOException, SAXException , VerifierConfigurationException{
     Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/target-package.xml");
 
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
@@ -152,7 +154,7 @@ public class ExclusionFileParserTest {
 
   @Test
   public void testParse_sourceAndTarget_match()
-      throws URISyntaxException, IOException, SAXException {
+      throws URISyntaxException, IOException, SAXException, VerifierConfigurationException {
     Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/source-and-target.xml");
 
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
@@ -173,7 +175,7 @@ public class ExclusionFileParserTest {
 
   @Test
   public void testParse_sourceAndTarget_unmatch()
-      throws URISyntaxException, IOException, SAXException {
+      throws URISyntaxException, IOException, SAXException, VerifierConfigurationException {
     Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/source-and-target.xml");
 
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
@@ -193,7 +195,7 @@ public class ExclusionFileParserTest {
   }
 
   @Test
-  public void testParse_namespaceException() throws URISyntaxException, SAXException, IOException {
+  public void testParse_namespaceException() throws URISyntaxException, SAXException, IOException, VerifierConfigurationException {
     Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/target-with-namespace.xml");
     try {
       ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
@@ -209,7 +211,7 @@ public class ExclusionFileParserTest {
   }
 
   @Test
-  public void testParse_sourceMethod() throws URISyntaxException, SAXException, IOException {
+  public void testParse_sourceMethod() throws URISyntaxException, SAXException, IOException , VerifierConfigurationException{
     Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/source-method.xml");
     try {
       ExclusionFileParser.parse(exclusionFile);
@@ -223,7 +225,7 @@ public class ExclusionFileParserTest {
   }
 
   @Test
-  public void testParse_exceptionSystemId() throws URISyntaxException, SAXException, IOException {
+  public void testParse_exceptionSystemId() throws URISyntaxException, SAXException, IOException, VerifierConfigurationException {
     String resourceName = "exclusion-sample-rules/source-method.xml";
     Path exclusionFile = absolutePathOfResource(resourceName);
     try {
@@ -240,7 +242,7 @@ public class ExclusionFileParserTest {
 
   @Test
   public void testParse_duplicateSourceElements()
-      throws URISyntaxException, IOException, SAXException {
+      throws URISyntaxException, IOException, SAXException , VerifierConfigurationException{
     String resourceName = "exclusion-sample-rules/duplicate-source-element.xml";
     Path exclusionFile = absolutePathOfResource(resourceName);
     try {
