@@ -38,8 +38,8 @@ class ArtifactPairCompatibilityCheck {
         if (arguments.length != 2) {
             System.out.println(
                     "Please specify 2 coordinates. One for the artifact and the second for a BOM.\n"
-                            + "For example: org.apache.beam:beam-runners-google-cloud-dataflow-java:2.19.0"
-                            + " com.google.cloud:libraries-bom:pom:4.1.0");
+                            + "For example: org.apache.beam:beam-runners-google-cloud-dataflow-java:2.21.0-SNAPSHOT"
+                            + " com.google.cloud:libraries-bom:pom:4.2.0");
             System.exit(1);
         }
 
