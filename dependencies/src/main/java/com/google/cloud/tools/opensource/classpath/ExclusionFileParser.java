@@ -21,10 +21,9 @@ import com.thaiopensource.util.SinglePropertyMap;
 import com.thaiopensource.validate.ValidateProperty;
 import com.thaiopensource.validate.ValidationDriver;
 import com.thaiopensource.xml.sax.DraconianErrorHandler;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -51,10 +50,10 @@ import org.xml.sax.helpers.XMLReaderFactory;
  *
  * <ul>
  *   <li>A LinkageErrorMatcher matches when all of its child elements match the linkage error.
- *   <li>A SourceMatcher matches a linkage error when the source class of the error matches one of
- *       its child elements.
+ *   <li>A SourceMatcher matches a linkage error when the source class of the error matches its
+ *       child elements.
  *   <li>A TargetMatcher matches a linkage error when the target symbol (class, method, or field) of
- *       the error matches one of its child elements.
+ *       the error matches its child elements.
  *   <li>A PackageMatcher matches the classes that have Java package specified by its name field.
  *       Prefix to specify child packages.
  *   <li>A ClassMatcher matches the class specified by its name attribute. ArtifactMatcher,
@@ -68,19 +67,19 @@ class ExclusionFileParser {
   static ImmutableList<LinkageErrorMatcher> parse(Path exclusionFile)
       throws SAXException, IOException {
 
-    File exclusion = exclusionFile.toFile();
-    validate(exclusion);
+    validate(exclusionFile);
 
     XMLReader xmlReader = XMLReaderFactory.createXMLReader();
     ExclusionFileHandler handler = new ExclusionFileHandler();
     xmlReader.setContentHandler(handler);
 
-    InputSource inputSource = new InputSource(new FileInputStream(exclusion));
+    InputSource inputSource = new InputSource(Files.newInputStream(exclusionFile));
+    inputSource.setSystemId(exclusionFile.toUri().toString());
     xmlReader.parse(inputSource);
     return handler.getMatchers();
   }
 
-  private static void validate(File file) throws IOException, SAXException {
+  private static void validate(Path exclusionFile) throws IOException, SAXException {
     ValidationDriver validationDriver =
         new ValidationDriver(
             SinglePropertyMap.newInstance(
@@ -91,6 +90,6 @@ class ExclusionFileParser {
             .getClassLoader()
             .getResourceAsStream("linkage-checker-exclusion-relax-ng.xml");
     validationDriver.loadSchema(new InputSource(schema));
-    validationDriver.validate(ValidationDriver.fileInputSource(file));
+    validationDriver.validate(ValidationDriver.fileInputSource(exclusionFile.toFile()));
   }
 }

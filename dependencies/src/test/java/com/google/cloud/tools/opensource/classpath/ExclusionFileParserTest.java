@@ -223,10 +223,26 @@ public class ExclusionFileParserTest {
   }
 
   @Test
+  public void testParse_exceptionSystemId() throws URISyntaxException, SAXException, IOException {
+    String resourceName = "exclusion-sample-rules/source-method.xml";
+    Path exclusionFile = absolutePathOfResource(resourceName);
+    try {
+      ExclusionFileParser.parse(exclusionFile);
+      fail();
+    } catch (SAXParseException expected) {
+      assertEquals(4, expected.getLineNumber());
+      Truth.assertThat(expected.getSystemId()).endsWith(resourceName);
+      String systemId = expected.getSystemId();
+      Truth.assertThat(systemId).startsWith("file:");
+      Truth.assertThat(systemId).endsWith(resourceName);
+    }
+  }
+
+  @Test
   public void testParse_duplicateSourceElements()
       throws URISyntaxException, IOException, SAXException {
-    Path exclusionFile =
-        absolutePathOfResource("exclusion-sample-rules/duplicate-source-element.xml");
+    String resourceName = "exclusion-sample-rules/duplicate-source-element.xml";
+    Path exclusionFile = absolutePathOfResource(resourceName);
     try {
       ExclusionFileParser.parse(exclusionFile);
       fail();
