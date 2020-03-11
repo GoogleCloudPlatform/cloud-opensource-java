@@ -39,8 +39,8 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * <ul>
  *   <li>A LinkageCheckerFilter element has zero or more LinkageError elements.
  *   <li>A LinkageError element has at least one of Target element and Source element.
- *   <li>A Target element has Package, Class, Method, and Field elements. A Source element has
- *       Artifact, Package, and Class elements.
+ *   <li>A Target element has a Package, Class, Method, or Field element. A Source element has
+ *       an Artifact, Package, or Class element.
  *   <li>Method and Field elements have “className” attribute.
  * </ul>
  *
@@ -51,9 +51,9 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * <ul>
  *   <li>A LinkageErrorMatcher matches when all of its child elements match the linkage error.
  *   <li>A SourceMatcher matches a linkage error when the source class of the error matches its
- *       child elements.
+ *       child element.
  *   <li>A TargetMatcher matches a linkage error when the target symbol (class, method, or field) of
- *       the error matches its child elements.
+ *       the error matches its child element.
  *   <li>A PackageMatcher matches the classes that have Java package specified by its name field.
  *       Prefix to specify child packages.
  *   <li>A ClassMatcher matches the class specified by its name attribute. ArtifactMatcher,
