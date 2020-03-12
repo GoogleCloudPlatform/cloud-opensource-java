@@ -28,7 +28,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -44,8 +43,6 @@ import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.eclipse.aether.artifact.Artifact;
-import org.iso_relax.verifier.VerifierConfigurationException;
-import org.xml.sax.SAXException;
 
 /** A tool to find linkage errors in a class path. */
 public class LinkageChecker {
@@ -61,7 +58,7 @@ public class LinkageChecker {
   private final ImmutableList<Path> jars;
   private final SymbolReferenceMaps classToSymbols;
   private final ClassReferenceGraph classReferenceGraph;
-  private final ImmutableList<LinkageErrorMatcher> exclusionMatchers;
+  private final ExcludedErrors excludedErrors;
 
   @VisibleForTesting
   SymbolReferenceMaps getClassToSymbols() {
@@ -83,10 +80,8 @@ public class LinkageChecker {
     ClassReferenceGraph classReferenceGraph =
         ClassReferenceGraph.create(symbolReferenceMaps, ImmutableSet.copyOf(entryPoints));
 
-    ImmutableList<LinkageErrorMatcher> exclusionMatchers = readExclusionMatchers();
-
     return new LinkageChecker(
-        dumper, jars, symbolReferenceMaps, classReferenceGraph, exclusionMatchers);
+        dumper, jars, symbolReferenceMaps, classReferenceGraph, ExcludedErrors.create());
   }
 
   public static LinkageChecker create(Bom bom) throws IOException {
@@ -107,7 +102,7 @@ public class LinkageChecker {
   @VisibleForTesting
   LinkageChecker cloneWith(SymbolReferenceMaps newSymbolMaps) {
     return new LinkageChecker(
-        classDumper, jars, newSymbolMaps, classReferenceGraph, exclusionMatchers);
+        classDumper, jars, newSymbolMaps, classReferenceGraph, excludedErrors);
   }
 
   private LinkageChecker(
@@ -115,12 +110,12 @@ public class LinkageChecker {
       List<Path> jars,
       SymbolReferenceMaps symbolReferenceMaps,
       ClassReferenceGraph classReferenceGraph,
-      ImmutableList<LinkageErrorMatcher> exclusionMatchers) {
+      ExcludedErrors excludedErrors) {
     this.classDumper = Preconditions.checkNotNull(classDumper);
     this.jars = ImmutableList.copyOf(jars);
     this.classReferenceGraph = Preconditions.checkNotNull(classReferenceGraph);
     this.classToSymbols = Preconditions.checkNotNull(symbolReferenceMaps);
-    this.exclusionMatchers = Preconditions.checkNotNull(exclusionMatchers);
+    this.excludedErrors = Preconditions.checkNotNull(excludedErrors);
   }
 
   /**
@@ -200,38 +195,14 @@ public class LinkageChecker {
     return ImmutableSetMultimap.copyOf(filteredMap);
   }
 
-  private static ImmutableList<LinkageErrorMatcher> readExclusionMatchers() throws IOException {
-    ImmutableList.Builder<LinkageErrorMatcher> exclusionMatchers = ImmutableList.builder();
-
-    try {
-      URL defaultRuleUrl =
-          LinkageChecker.class
-              .getClassLoader()
-              .getResource("linkage-checker-exclusion-default.xml");
-      ImmutableList<LinkageErrorMatcher> defaultMatchers =
-          ExclusionFileParser.parse(defaultRuleUrl);
-      exclusionMatchers.addAll(defaultMatchers);
-    } catch (SAXException | VerifierConfigurationException ex) {
-      throw new IOException("Could not read default exclusion rule", ex);
-    }
-
-    return exclusionMatchers.build();
-  }
-
   /**
    * Returns true if the linkage error {@code entry} should be reported. False if it should be
    * suppressed.
    */
   private boolean problemFilter(Map.Entry<SymbolProblem, ClassFile> entry) {
-    ClassFile sourceClass = entry.getValue();
     SymbolProblem symbolProblem = entry.getKey();
-
-    for (LinkageErrorMatcher matcher : exclusionMatchers) {
-      if (matcher.match(symbolProblem, sourceClass)) {
-        return false;
-      }
-    }
-    return true;
+    ClassFile sourceClass = entry.getValue();
+    return !excludedErrors.contains(symbolProblem, sourceClass);
   }
 
   /**

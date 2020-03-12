@@ -1,6 +1,7 @@
 <LinkageCheckerFilter>
   <!-- reactor-core's Traces catches Throwable to detect classes available in
-    Java 9+.
+    Java 9+. As Linkage Checker targets Java 8, it ignores these errors to avoid
+    false positives.
     https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/816 -->
   <LinkageError>
     <Source>
@@ -9,7 +10,8 @@
   </LinkageError>
 
   <!-- GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that
-    only exists in special JDK.
+    only exists in special JDK. As Linkage Checker does not use GraalVM, it
+    ignores the errors to avoid false positives.
     https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929 -->
   <LinkageError>
     <Target>
@@ -37,7 +39,8 @@
   </LinkageError>
 
   <!-- Mockito's MockMethodDispatcher uses special class loader to load
-    MockMethodDispatcher.raw
+    MockMethodDispatcher.raw. As Linkage Checker does not use the class loader,
+    it ignores the missing class errors to avoid false positives.
     https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/407 -->
   <LinkageError>
     <Target>
