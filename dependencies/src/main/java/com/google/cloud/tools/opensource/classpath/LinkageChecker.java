@@ -28,9 +28,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import java.io.IOException;
-import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -205,13 +204,11 @@ public class LinkageChecker {
     ImmutableList.Builder<LinkageErrorMatcher> exclusionMatchers = ImmutableList.builder();
 
     try {
-      Path defaultRulePath =
-          Paths.get(ClassLoader.getSystemResource("linkage-checker-exclusion-default.xml").toURI())
-              .toAbsolutePath();
+      URL defaultRuleUrl = ClassLoader.getSystemResource("linkage-checker-exclusion-default.xml");
       ImmutableList<LinkageErrorMatcher> defaultMatchers =
-          ExclusionFileParser.parse(defaultRulePath);
+          ExclusionFileParser.parse(defaultRuleUrl);
       exclusionMatchers.addAll(defaultMatchers);
-    } catch (URISyntaxException | SAXException | VerifierConfigurationException ex) {
+    } catch (SAXException | VerifierConfigurationException ex) {
       throw new IOException("Could not read default exclusion rule", ex);
     }
 
