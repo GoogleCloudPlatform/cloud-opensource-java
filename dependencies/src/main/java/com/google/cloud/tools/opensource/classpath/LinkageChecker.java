@@ -204,7 +204,10 @@ public class LinkageChecker {
     ImmutableList.Builder<LinkageErrorMatcher> exclusionMatchers = ImmutableList.builder();
 
     try {
-      URL defaultRuleUrl = ClassLoader.getSystemResource("linkage-checker-exclusion-default.xml");
+      URL defaultRuleUrl =
+          LinkageChecker.class
+              .getClassLoader()
+              .getResource("linkage-checker-exclusion-default.xml");
       ImmutableList<LinkageErrorMatcher> defaultMatchers =
           ExclusionFileParser.parse(defaultRuleUrl);
       exclusionMatchers.addAll(defaultMatchers);
