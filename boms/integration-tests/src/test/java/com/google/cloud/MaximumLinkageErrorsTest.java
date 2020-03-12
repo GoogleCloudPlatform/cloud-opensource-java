@@ -39,7 +39,7 @@ import org.junit.Test;
 public class MaximumLinkageErrorsTest {
 
   @Test
-  public void testMaximumLinkageErrors()
+  public void testForNewLinkageErrors()
       throws IOException, MavenRepositoryException, RepositoryException {
     // Not using RepositoryUtility.findLatestCoordinates, which may return a snapshot version
     String version = findLatestNonSnapshotVersion();
@@ -64,7 +64,7 @@ public class MaximumLinkageErrorsTest {
     if (!newProblems.isEmpty()) {
       message.append("Newly introduced problems:\n");
       for (SymbolProblem problem : newProblems) {
-        message.append(problem + "\n");
+        message.append(problem + " referenced from " + currentProblems.get(problem) + "\n");
       }
       Assert.fail(message.toString());
     }
