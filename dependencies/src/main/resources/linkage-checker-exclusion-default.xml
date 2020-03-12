@@ -10,8 +10,8 @@
   </LinkageError>
 
   <!-- GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that
-    only exists in special JDK. As Linkage Checker does not use GraalVM, it
-    ignores the errors to avoid false positives.
+    only exists in special JDK. These missing classes are false positives, because
+    the code is only invoked when running in a GraalVM.
     https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929 -->
   <LinkageError>
     <Target>
@@ -39,8 +39,10 @@
   </LinkageError>
 
   <!-- Mockito's MockMethodDispatcher uses special class loader to load
-    MockMethodDispatcher.raw. As Linkage Checker does not use the class loader,
-    it ignores the missing class errors to avoid false positives.
+    MockMethodDispatcher.raw. The class file with "raw" suffix is in mockito-core JAR file.
+    As long as developers use Mockito through a normal usage, there should not be
+    a problem. As Linkage Checker does not use the special class loader, it ignores the missing
+    class errors to avoid false positives.
     https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/407 -->
   <LinkageError>
     <Target>
