@@ -28,7 +28,9 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -43,6 +45,8 @@ import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.eclipse.aether.artifact.Artifact;
+import org.iso_relax.verifier.VerifierConfigurationException;
+import org.xml.sax.SAXException;
 
 /** A tool to find linkage errors in a class path. */
 public class LinkageChecker {
@@ -58,6 +62,7 @@ public class LinkageChecker {
   private final ImmutableList<Path> jars;
   private final SymbolReferenceMaps classToSymbols;
   private final ClassReferenceGraph classReferenceGraph;
+  private final ImmutableList<LinkageErrorMatcher> exclusionMatchers;
 
   @VisibleForTesting
   SymbolReferenceMaps getClassToSymbols() {
@@ -79,7 +84,10 @@ public class LinkageChecker {
     ClassReferenceGraph classReferenceGraph =
         ClassReferenceGraph.create(symbolReferenceMaps, ImmutableSet.copyOf(entryPoints));
 
-    return new LinkageChecker(dumper, jars, symbolReferenceMaps, classReferenceGraph);
+    ImmutableList<LinkageErrorMatcher> exclusionMatchers = readExclusionMatchers();
+
+    return new LinkageChecker(
+        dumper, jars, symbolReferenceMaps, classReferenceGraph, exclusionMatchers);
   }
 
   public static LinkageChecker create(Bom bom) throws IOException {
@@ -99,18 +107,21 @@ public class LinkageChecker {
 
   @VisibleForTesting
   LinkageChecker cloneWith(SymbolReferenceMaps newSymbolMaps) {
-    return new LinkageChecker(classDumper, jars, newSymbolMaps, classReferenceGraph);
+    return new LinkageChecker(
+        classDumper, jars, newSymbolMaps, classReferenceGraph, exclusionMatchers);
   }
 
   private LinkageChecker(
       ClassDumper classDumper,
       List<Path> jars,
       SymbolReferenceMaps symbolReferenceMaps,
-      ClassReferenceGraph classReferenceGraph) {
+      ClassReferenceGraph classReferenceGraph,
+      ImmutableList<LinkageErrorMatcher> exclusionMatchers) {
     this.classDumper = Preconditions.checkNotNull(classDumper);
     this.jars = ImmutableList.copyOf(jars);
     this.classReferenceGraph = Preconditions.checkNotNull(classReferenceGraph);
     this.classToSymbols = Preconditions.checkNotNull(symbolReferenceMaps);
+    this.exclusionMatchers = Preconditions.checkNotNull(exclusionMatchers);
   }
 
   /**
@@ -186,39 +197,40 @@ public class LinkageChecker {
 
     // Filter classes in whitelist
     SetMultimap<SymbolProblem, ClassFile> filteredMap =
-        Multimaps.filterEntries(problemToClass.build(), LinkageChecker::problemFilter);
+        Multimaps.filterEntries(problemToClass.build(), this::problemFilter);
     return ImmutableSetMultimap.copyOf(filteredMap);
+  }
+
+  private static ImmutableList<LinkageErrorMatcher> readExclusionMatchers() throws IOException {
+    ImmutableList.Builder<LinkageErrorMatcher> exclusionMatchers = ImmutableList.builder();
+
+    try {
+      Path defaultRulePath =
+          Paths.get(ClassLoader.getSystemResource("linkage-checker-exclusion-default.xml").toURI())
+              .toAbsolutePath();
+      ImmutableList<LinkageErrorMatcher> defaultMatchers =
+          ExclusionFileParser.parse(defaultRulePath);
+      exclusionMatchers.addAll(defaultMatchers);
+    } catch (URISyntaxException | SAXException | VerifierConfigurationException ex) {
+      throw new IOException("Could not read default exclusion rule", ex);
+    }
+
+    return exclusionMatchers.build();
   }
 
   /**
    * Returns true if the linkage error {@code entry} should be reported. False if it should be
    * suppressed.
    */
-  private static boolean problemFilter(Map.Entry<SymbolProblem, ClassFile> entry) {
-    ClassFile classFile = entry.getValue();
+  private boolean problemFilter(Map.Entry<SymbolProblem, ClassFile> entry) {
+    ClassFile sourceClass = entry.getValue();
     SymbolProblem symbolProblem = entry.getKey();
-    String sourceClassName = classFile.getBinaryName();
-    if (SOURCE_CLASSES_TO_SUPPRESS.contains(sourceClassName)) {
-      return false;
-    }
 
-    // GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that only exists in
-    // special JDK. https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929
-    String problematicClassName = symbolProblem.getSymbol().getClassBinaryName();
-    if (problematicClassName.startsWith("jdk.vm.ci")
-        && (sourceClassName.startsWith("com.oracle.svm")
-            || sourceClassName.startsWith("com.oracle.graal")
-            || sourceClassName.startsWith("org.graalvm"))) {
-      return false;
+    for (LinkageErrorMatcher matcher : exclusionMatchers) {
+      if (matcher.match(symbolProblem, sourceClass)) {
+        return false;
+      }
     }
-
-    // Mockito's MockMethodDispatcher uses special class loader to load MockMethodDispatcher.raw
-    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/407
-    if (problematicClassName.equals("org.mockito.internal.creation.bytebuddy.MockMethodDispatcher")
-        && sourceClassName.startsWith("org.mockito.internal.creation.bytebuddy")) {
-      return false;
-    }
-
     return true;
   }
 

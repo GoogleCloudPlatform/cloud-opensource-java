@@ -1,0 +1,50 @@
+<LinkageCheckerFilter>
+  <!-- reactor-core's Traces catches Throwable to detect classes available in
+    Java 9+.
+    https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/816 -->
+  <LinkageError>
+    <Source>
+      <Package name="reactor.core.publisher.Traces" />
+    </Source>
+  </LinkageError>
+
+  <!-- GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that
+    only exists in special JDK.
+    https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929 -->
+  <LinkageError>
+    <Target>
+      <Package name="jdk.vm.ci" />
+    </Target>
+    <Source>
+      <Package name="com.oracle.svm" />
+    </Source>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="jdk.vm.ci" />
+    </Target>
+    <Source>
+      <Package name="com.oracle.graal" />
+    </Source>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="jdk.vm.ci" />
+    </Target>
+    <Source>
+      <Package name="org.graalvm" />
+    </Source>
+  </LinkageError>
+
+  <!-- Mockito's MockMethodDispatcher uses special class loader to load
+    MockMethodDispatcher.raw
+    https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/407 -->
+  <LinkageError>
+    <Target>
+      <Class name="org.mockito.internal.creation.bytebuddy.MockMethodDispatcher" />
+    </Target>
+    <Source>
+      <Package name="org.mockito.internal.creation.bytebuddy" />
+    </Source>
+  </LinkageError>
+</LinkageCheckerFilter>
