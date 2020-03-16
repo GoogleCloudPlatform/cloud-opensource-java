@@ -257,7 +257,7 @@ public class ExclusionFileParserTest {
     } catch (SAXParseException expected) {
       assertEquals(
           "element \"Source\" not allowed here; "
-          + "expected the element end-tag or element \"Reason\"",
+              + "expected the element end-tag or element \"Reason\"",
           expected.getMessage());
       assertEquals(9, expected.getLineNumber());
     }
