@@ -256,9 +256,21 @@ public class ExclusionFileParserTest {
       fail();
     } catch (SAXParseException expected) {
       assertEquals(
-          "element \"Source\" not allowed here; expected the element end-tag",
+          "element \"Source\" not allowed here; "
+          + "expected the element end-tag or element \"Reason\"",
           expected.getMessage());
       assertEquals(9, expected.getLineNumber());
     }
+  }
+
+  @Test
+  public void testParse_reasonElement()
+      throws URISyntaxException, IOException, SAXException, VerifierConfigurationException {
+    String resourceName = "exclusion-sample-rules/reason.xml";
+    Path exclusionFile = absolutePathOfResource(resourceName);
+
+    // Should not raise exception
+    ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
+    Truth.assertThat(matchers).hasSize(1);
   }
 }
