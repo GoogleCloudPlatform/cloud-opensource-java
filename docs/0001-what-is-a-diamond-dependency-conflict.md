@@ -11,43 +11,44 @@ references contain all of the features that the consumers
 expect. Consequently, it is not possible to select a set of versions
 that form a working program.
 
-A visual representation may help clarify the idea. Let's use an
-example that starts with three libraries: A, B, and D, each at version 1.
+Let's use an example that starts with three libraries: A, B, and D, each at version 1. A:1 depends on B:1 which depends on D:1.
 In the beginning, everyone is happy.
 
-<img src="assets/images/ddc-00.png">
+<img src="assets/images/ddc-00.png" alt="">
 
 Now D introduces version 2, which adds some features but also removes
 some features (which we call a breaking change). This doesn't create a
-problem for the existing library versions.
+problem for the existing library versions because nothing depends on it.
 
-<img src="assets/images/ddc-01.png">
+<img src="assets/images/ddc-01.png" alt="">
 
 C comes along and decides to depend on version 2 of D because it's the
 latest and greatest. Everything is still ok at this point.
+A:1 still depends on B:1 which depends on D:1.
+C depends on D:2. 
 
-<img src="assets/images/ddc-02.png">
+<img src="assets/images/ddc-02.png" alt="">
 
 Now A wants to add a dependency on C. This creates a diamond
 dependency conflict. B:1 can only work with D:1, while C:1 can only
 work with D:2, so no matter which version of D you choose, the program
 will blow up.
 
-<img src="assets/images/ddc-03.png">
+<img src="assets/images/ddc-03.png" alt="">
 
-If we choose D:2, then B blows up:
+If we choose D:2, then B blows up.
 
-<img src="assets/images/ddc-04.png">
+<img src="assets/images/ddc-04.png" alt="">
 
-If we choose D:1, then C blows up:
+If we choose D:1, then C blows up.
 
-<img src="assets/images/ddc-05.png">
+<img src="assets/images/ddc-05.png" alt="">
 
 In order to move the ecosystem forward, B needs to create a new
 version 2, which is compatible with D:2. Then, A can form a successful
 diamond.
 
-<img src="assets/images/ddc-06.png">
+<img src="assets/images/ddc-06.png" alt="A:2 depends on B:2 and C:1. B:2 and C:1 both depend on D:2.">
 
 Diamond dependency conflicts are particularly difficult to solve
 because the changes required to solve them can't be made by either the
