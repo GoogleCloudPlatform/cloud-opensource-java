@@ -65,6 +65,11 @@
             </choice>
           </element>
         </optional>
+        <optional>
+          <element name="Reason">
+            <text/>
+          </element>
+        </optional>
       </interleave>
     </element>
   </zeroOrMore>

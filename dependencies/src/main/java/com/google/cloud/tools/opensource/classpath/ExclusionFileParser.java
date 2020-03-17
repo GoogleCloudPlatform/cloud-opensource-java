@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.thaiopensource.xml.sax.DraconianErrorHandler;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.iso_relax.verifier.Schema;
@@ -69,13 +70,29 @@ class ExclusionFileParser {
   static ImmutableList<LinkageErrorMatcher> parse(Path exclusionFile)
       throws SAXException, IOException, VerifierConfigurationException {
 
+    InputSource inputSource = new InputSource(Files.newInputStream(exclusionFile));
+    inputSource.setSystemId(exclusionFile.toUri().toString());
+
+    return parse(inputSource);
+  }
+
+  static ImmutableList<LinkageErrorMatcher> parse(URL exclusionFile)
+      throws SAXException, IOException, VerifierConfigurationException {
+
+    InputSource inputSource = new InputSource(exclusionFile.openStream());
+    inputSource.setSystemId(exclusionFile.toString());
+
+    return parse(inputSource);
+  }
+
+  private static ImmutableList<LinkageErrorMatcher> parse(InputSource inputSource)
+      throws SAXException, IOException, VerifierConfigurationException {
+
     XMLReader reader = createXmlReader();
 
     ExclusionFileHandler handler = new ExclusionFileHandler();
     reader.setContentHandler(handler);
 
-    InputSource inputSource = new InputSource(Files.newInputStream(exclusionFile));
-    inputSource.setSystemId(exclusionFile.toUri().toString());
     reader.parse(inputSource);
 
     return handler.getMatchers();
