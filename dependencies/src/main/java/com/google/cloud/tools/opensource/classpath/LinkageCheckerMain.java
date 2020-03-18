@@ -49,7 +49,7 @@ class LinkageCheckerMain {
       LinkageCheckerArguments linkageCheckerArguments =
           LinkageCheckerArguments.readCommandLine(arguments);
       
-      if (linkageCheckerArguments.needsHelp()) {
+      if (linkageCheckerArguments.needsHelp() || arguments.length == 0) {
         linkageCheckerArguments.printHelp();
       }
 
