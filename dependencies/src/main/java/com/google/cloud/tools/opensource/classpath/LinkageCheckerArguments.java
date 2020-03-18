@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
@@ -27,6 +26,7 @@ import java.util.Arrays;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
@@ -52,15 +52,18 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 final class LinkageCheckerArguments {
 
   private static final Options options = configureOptions();
+  private static final HelpFormatter helpFormatter = new HelpFormatter();
 
   private final CommandLine commandLine;
-  private ImmutableList<Artifact> cachedArtifacts;
   private final ImmutableList<String> extraMavenRepositoryUrls;
   private final boolean addMavenCentral;
   private final boolean reportOnlyReachable;
+  private final boolean help;
 
+  private ImmutableList<Artifact> cachedArtifacts;
+  
   private LinkageCheckerArguments(CommandLine commandLine) {
-    this.commandLine = checkNotNull(commandLine);
+    this.commandLine = commandLine;
     this.extraMavenRepositoryUrls =
         commandLine.hasOption("m")
             ? ImmutableList.copyOf(commandLine.getOptionValues("m"))
@@ -70,7 +73,8 @@ final class LinkageCheckerArguments {
     extraMavenRepositoryUrls.forEach(RepositoryUtility::mavenRepositoryFromUrl);
 
     this.addMavenCentral = !commandLine.hasOption("nm");
-    this.reportOnlyReachable = commandLine.hasOption("-r");
+    this.reportOnlyReachable = commandLine.hasOption("r");
+    this.help = commandLine.hasOption("h");
   }
 
   static LinkageCheckerArguments readCommandLine(String... arguments) throws ParseException {
@@ -79,9 +83,10 @@ final class LinkageCheckerArguments {
     CommandLineParser parser = new DefaultParser();
 
     try {
-      return new LinkageCheckerArguments(parser.parse(options, arguments));
+      CommandLine commandLine = parser.parse(options, arguments);
+      return new LinkageCheckerArguments(commandLine);
     } catch (IllegalArgumentException ex) {
-      throw new ParseException("Invalid URL syntax in Maven repository URL");
+      throw new ParseException("Invalid URL syntax in Maven repository URL" + ex.getMessage());
     }
   }
 
@@ -89,13 +94,12 @@ final class LinkageCheckerArguments {
     Options options = new Options();
 
     OptionGroup inputGroup = new OptionGroup();
-    inputGroup.setRequired(true);
 
     Option bomOption =
         Option.builder("b")
             .longOpt("bom")
             .hasArg()
-            .desc("BOM specified by its Maven coordinates")
+            .desc("Maven coordinates for a BOM")
             .build();
     inputGroup.addOption(bomOption);
 
@@ -105,7 +109,7 @@ final class LinkageCheckerArguments {
             .hasArgs()
             .valueSeparator(',')
             .desc(
-                "Maven coordinates for Maven artifacts (separated by ',')")
+                "Maven coordinates for artifacts (separated by ',')")
             .build();
     inputGroup.addOption(artifactOption);
 
@@ -150,6 +154,14 @@ final class LinkageCheckerArguments {
             .build();
     options.addOption(reportOnlyReachable);
 
+    Option help =
+        Option.builder("h")
+            .longOpt("help")
+            .hasArg(false)
+            .desc("Show usage instructions")
+            .build();
+    options.addOption(help);
+    
     options.addOptionGroup(inputGroup);
     return options;
   }
@@ -202,5 +214,18 @@ final class LinkageCheckerArguments {
 
   boolean getReportOnlyReachable() {
     return reportOnlyReachable;
+  }
+
+  boolean needsHelp() {
+    return this.help;
+  }
+
+  void printHelp() {
+    helpFormatter.printHelp(
+        "java com.google.cloud.tools.opensource.classpath.LinkageChecker", options);
+  }
+
+  boolean hasInput() {
+    return commandLine.hasOption("b") || commandLine.hasOption("a") || commandLine.hasOption("j");
   }
 }
