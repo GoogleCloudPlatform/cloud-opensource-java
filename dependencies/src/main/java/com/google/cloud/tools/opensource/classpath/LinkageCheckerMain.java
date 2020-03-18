@@ -36,8 +36,8 @@ import org.eclipse.aether.artifact.Artifact;
 class LinkageCheckerMain {
 
   /**
-   * Given Maven coordinates or list of the jar files as file names in filesystem, outputs the
-   * report of linkage check.
+   * Forms a classpath from Maven coordinates or a list of jar files
+   * and reports linkage errors in that classpath.
    *
    * @throws IOException when there is a problem reading a jar file
    * @throws RepositoryException when there is a problem resolving the Maven coordinates to jar
