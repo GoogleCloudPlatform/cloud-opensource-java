@@ -211,17 +211,17 @@ public class DependencyGraphBuilderTest {
 
   @Test
   public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral() {
-    DependencyGraphBuilder graphBuilder =
+    DependencyGraphBuilder graphBuilder = 
         new DependencyGraphBuilder(ImmutableList.of("https://dl.google.com/dl/android/maven2"));
 
     // This artifact does not exist in Android's repository
-    Artifact artifact = new DefaultArtifact("com.google.guava:guava:28.2-jre");
+    Artifact artifact = new DefaultArtifact("com.google.guava:guava:15.0-rc1");
 
     DependencyGraphResult result =
         graphBuilder.buildFullDependencyGraph(ImmutableList.of(artifact));
     Truth.assertThat(result.getArtifactProblems())
         .comparingElementsUsing(problemOnArtifact)
-        .contains("com.google.guava:guava:28.2-jre");
+        .contains("com.google.guava:guava:15.0-rc1");
   }
 
   @Test
