@@ -202,7 +202,7 @@ public class ExclusionFileParserTest {
       throws URISyntaxException, SAXException, IOException, VerifierConfigurationException {
     Path exclusionFile = absolutePathOfResource("exclusion-sample-rules/target-with-namespace.xml");
     try {
-      ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
+      ExclusionFileParser.parse(exclusionFile);
       fail();
     } catch (SAXParseException expected) {
       // pass
