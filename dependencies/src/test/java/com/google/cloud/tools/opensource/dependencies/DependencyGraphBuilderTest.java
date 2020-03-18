@@ -212,7 +212,7 @@ public class DependencyGraphBuilderTest {
   @Test
   public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral() {
     DependencyGraphBuilder graphBuilder = 
-      new DependencyGraphBuilder(ImmutableList.of("https://dl.google.com/dl/android/maven2"));
+        new DependencyGraphBuilder(ImmutableList.of("https://dl.google.com/dl/android/maven2"));
 
     // This artifact does not exist in Android's repository
     Artifact artifact = new DefaultArtifact("com.google.guava:guava:15.0-rc1");
