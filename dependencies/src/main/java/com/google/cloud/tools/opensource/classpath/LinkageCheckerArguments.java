@@ -27,7 +27,6 @@ import java.util.Arrays;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
@@ -53,7 +52,6 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 final class LinkageCheckerArguments {
 
   private static final Options options = configureOptions();
-  private static final HelpFormatter helpFormatter = new HelpFormatter();
 
   private final CommandLine commandLine;
   private ImmutableList<Artifact> cachedArtifacts;
@@ -84,9 +82,6 @@ final class LinkageCheckerArguments {
       return new LinkageCheckerArguments(parser.parse(options, arguments));
     } catch (IllegalArgumentException ex) {
       throw new ParseException("Invalid URL syntax in Maven repository URL");
-    } catch (ParseException ex) {
-      helpFormatter.printHelp("LinkageChecker", options);
-      throw ex;
     }
   }
 
@@ -100,7 +95,7 @@ final class LinkageCheckerArguments {
         Option.builder("b")
             .longOpt("bom")
             .hasArg()
-            .desc("BOM to generate a class path, specified by its Maven coordinates")
+            .desc("BOM specified by its Maven coordinates")
             .build();
     inputGroup.addOption(bomOption);
 
@@ -110,7 +105,7 @@ final class LinkageCheckerArguments {
             .hasArgs()
             .valueSeparator(',')
             .desc(
-                "Maven coordinates for Maven artifacts (separated by ',') to generate a class path")
+                "Maven coordinates for Maven artifacts (separated by ',')")
             .build();
     inputGroup.addOption(artifactOption);
 
@@ -119,7 +114,7 @@ final class LinkageCheckerArguments {
             .longOpt("jars")
             .hasArgs()
             .valueSeparator(',')
-            .desc("Jar files (separated by ',') to generate a class path")
+            .desc("Jar files (separated by ',')")
             .build();
     inputGroup.addOption(jarOption);
 
@@ -203,10 +198,6 @@ final class LinkageCheckerArguments {
       repositories.add(RepositoryUtility.CENTRAL.getUrl());
     }
     return repositories.build();
-  }
-
-  boolean getAddMavenCentral() {
-    return addMavenCentral;
   }
 
   boolean getReportOnlyReachable() {
