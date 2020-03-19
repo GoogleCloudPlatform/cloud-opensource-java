@@ -16,12 +16,39 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+
 import com.google.common.testing.EqualsTester;
 import java.nio.file.Paths;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Test;
 
 public class AnnotatedJarTest {
+
+  @Test
+  public void testGetters() {
+    AnnotatedJar jar = new AnnotatedJar(Paths.get("foo"), new DefaultArtifact("com.foo:bar:1.0.0"));
+    assertEquals(Paths.get("foo"), jar.getJar());
+    assertEquals(new DefaultArtifact("com.foo:bar:1.0.0"), jar.getArtifact());
+  }
+
+  @Test
+  public void testNullArtifact() {
+    AnnotatedJar jar = new AnnotatedJar(Paths.get("foo"));
+    assertNull(jar.getArtifact());
+  }
+
+  @Test
+  public void testNullJar() {
+    try {
+      new AnnotatedJar(null, new DefaultArtifact("com.foo:bar:1.0.0"));
+      fail("AnnotatedJar should invalidate null jar file");
+    } catch (NullPointerException expected) {
+      // pass
+    }
+  }
 
   @Test
   public void testEquals() {

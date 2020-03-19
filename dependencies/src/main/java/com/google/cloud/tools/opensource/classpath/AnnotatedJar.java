@@ -39,15 +39,15 @@ final class AnnotatedJar {
   }
 
   /**
-   * The Maven artifact that holds the JAR file, if the JAR is downloaded for a Maven artifact.
-   * {@code Null} if the JAR file is not from a Maven artifact.
+   * Returns the Maven artifact that holds the JAR file, if the JAR is downloaded for a Maven
+   * artifact. {@code Null} if the JAR file is not from a Maven artifact.
    */
   @Nullable
   Artifact getArtifact() {
     return artifact;
   }
 
-  /** Path to the JAR file. */
+  /** Returns path to the JAR file. */
   Path getJar() {
     return jar;
   }
