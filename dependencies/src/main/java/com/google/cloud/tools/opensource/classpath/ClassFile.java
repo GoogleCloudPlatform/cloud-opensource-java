@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
-import java.nio.file.Path;
 import java.util.Objects;
 
 /**
@@ -28,17 +27,17 @@ import java.util.Objects;
  * class implementation in a class path.
  */
 public final class ClassFile {
-  private final Path jar;
+  private final AnnotatedJar jar;
   private final String binaryName;
 
   @VisibleForTesting
-  public ClassFile(Path jar, String className) {
+  public ClassFile(AnnotatedJar jar, String className) {
     this.jar = checkNotNull(jar);
     this.binaryName = checkNotNull(className);
   }
 
   /** Returns the path to the JAR file containing the class. */
-  public Path getJar() {
+  public AnnotatedJar getJar() {
     return jar;
   }
 

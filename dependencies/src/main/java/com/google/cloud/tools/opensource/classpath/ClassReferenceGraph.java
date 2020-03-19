@@ -22,7 +22,6 @@ import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.google.common.graph.Traverser;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Set;
 
 /**
@@ -47,11 +46,12 @@ public class ClassReferenceGraph {
   private final ImmutableSet<String> reachableClasses;
 
   static ClassReferenceGraph create(
-      SymbolReferenceMaps symbolReferenceMaps, Set<Path> entryPointJars) throws IOException {
+      SymbolReferenceMaps symbolReferenceMaps, Set<AnnotatedJar> entryPointJars)
+      throws IOException {
 
     ImmutableSet.Builder<String> entryPointClassBuilder = ImmutableSet.builder();
-    for (Path jar : entryPointJars) {
-      for (String className : ClassDumper.listClassFileNames(jar)) {
+    for (AnnotatedJar jar : entryPointJars) {
+      for (String className : ClassDumper.listClassFileNames(jar.getJar())) {
         entryPointClassBuilder.add(className);
       }
     }

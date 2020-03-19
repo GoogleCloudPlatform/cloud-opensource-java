@@ -72,23 +72,26 @@ import org.apache.bcel.util.ClassPath;
 class ClassDumper {
   private static final Logger logger = Logger.getLogger(ClassDumper.class.getName());
 
-  private final ImmutableList<Path> inputClassPath;
+  private final ImmutableList<AnnotatedJar> inputClassPath;
   private final FixedSizeClassPathRepository classRepository;
   private final ClassLoader extensionClassLoader;
-  private final ImmutableSetMultimap<Path, String> jarFileToClassFileNames;
-  private final ImmutableListMultimap<String, Path> classFileNameToJarFiles;
+  private final ImmutableSetMultimap<AnnotatedJar, String> jarFileToClassFileNames;
+  private final ImmutableListMultimap<String, AnnotatedJar> classFileNameToJarFiles;
 
-  private static FixedSizeClassPathRepository createClassRepository(List<Path> paths) {
-    ClassPath classPath = new LinkageCheckClassPath(paths);
+  private static FixedSizeClassPathRepository createClassRepository(List<AnnotatedJar> paths) {
+    ClassPath classPath =
+        new LinkageCheckClassPath(
+            paths.stream().map(AnnotatedJar::getJar).collect(toImmutableList()));
     return new FixedSizeClassPathRepository(classPath);
   }
 
-  static ClassDumper create(List<Path> jarPaths) throws IOException {
+  static ClassDumper create(List<AnnotatedJar> jarPaths) throws IOException {
     ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
     ClassLoader extensionClassLoader = systemClassLoader.getParent();
 
     ImmutableList<Path> unreadableFiles =
         jarPaths.stream()
+            .map(AnnotatedJar::getJar)
             .filter(jar -> !Files.isRegularFile(jar) || !Files.isReadable(jar))
             .collect(toImmutableList());
     checkArgument(
@@ -98,9 +101,9 @@ class ClassDumper {
   }
 
   private ClassDumper(
-      List<Path> inputClassPath,
+      List<AnnotatedJar> inputClassPath,
       ClassLoader extensionClassLoader,
-      ImmutableSetMultimap<Path, String> jarToClasses) {
+      ImmutableSetMultimap<AnnotatedJar, String> jarToClasses) {
     this.inputClassPath = ImmutableList.copyOf(inputClassPath);
     this.classRepository = createClassRepository(inputClassPath);
     this.extensionClassLoader = extensionClassLoader;
@@ -142,7 +145,7 @@ class ClassDumper {
    *
    * @param jarPath absolute path to the jar file
    */
-  ImmutableSet<String> classesDefinedInJar(Path jarPath) {
+  ImmutableSet<String> classesDefinedInJar(AnnotatedJar jarPath) {
     return jarFileToClassFileNames.get(jarPath);
   }
 
@@ -152,8 +155,8 @@ class ClassDumper {
   SymbolReferenceMaps findSymbolReferences() throws IOException {
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
 
-    for (Path jar : inputClassPath) {
-      for (JavaClass javaClass : listClasses(jar)) {
+    for (AnnotatedJar jar : inputClassPath) {
+      for (JavaClass javaClass : listClasses(jar.getJar())) {
         if (!isCompatibleClassFileVersion(javaClass)) {
           continue;
         }
@@ -323,14 +326,14 @@ class ClassDumper {
    * Returns the first jar file {@link Path} defining the class. Null if the location is unknown.
    */
   @Nullable
-  Path findClassLocation(String className) {
+  AnnotatedJar findClassLocation(String className) {
     // Initially this method used classLoader.loadClass().getProtectionDomain().getCodeSource().
     // However, it required the superclass of a target class to be loadable too; otherwise
     // ClassNotFoundException was raised. It was inconvenient because we only wanted to know the
     // location of the target class, and sometimes the superclass is unavailable.
-    Path path = Iterables.getFirst(classFileNameToJarFiles.get(className), null);
-    if (path != null) {
-      return path;
+    AnnotatedJar jar = Iterables.getFirst(classFileNameToJarFiles.get(className), null);
+    if (jar != null) {
+      return jar;
     }
 
     // Some classes have framework-specific prefix such as "WEB-INF.classes.AppWidgetset" in its
@@ -348,11 +351,12 @@ class ClassDumper {
    * @param jars absolute paths to jar files
    */
   @VisibleForTesting
-  static ImmutableSetMultimap<Path, String> mapJarToClassFileNames(List<Path> jars)
+  static ImmutableSetMultimap<AnnotatedJar, String> mapJarToClassFileNames(List<AnnotatedJar> jars)
       throws IOException {
-    ImmutableSetMultimap.Builder<Path, String> pathToClasses = ImmutableSetMultimap.builder();
-    for (Path jar : jars) {
-      for (String classFileName : listClassFileNames(jar)) {
+    ImmutableSetMultimap.Builder<AnnotatedJar, String> pathToClasses =
+        ImmutableSetMultimap.builder();
+    for (AnnotatedJar jar : jars) {
+      for (String classFileName : listClassFileNames(jar.getJar())) {
         pathToClasses.put(jar, classFileName);
       }
     }

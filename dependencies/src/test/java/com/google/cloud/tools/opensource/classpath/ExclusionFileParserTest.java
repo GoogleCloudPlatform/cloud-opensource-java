@@ -44,7 +44,10 @@ public class ExclusionFileParserTest {
     Truth.assertThat(matchers).hasSize(1);
     LinkageErrorMatcher matcher = matchers.get(0);
     boolean result =
-        matcher.match(null, new ClassFile(Paths.get("dummy.jar"), "reactor.core.publisher.Traces"));
+        matcher.match(
+            null,
+            new ClassFile(
+                new AnnotatedJar(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"));
     assertTrue(result);
   }
 
@@ -59,13 +62,14 @@ public class ExclusionFileParserTest {
         new SymbolProblem(
             new FieldSymbol("com.google.Foo", "fieldA", "Ljava.lang.String;"),
             ErrorType.INACCESSIBLE_MEMBER,
-            new ClassFile(Paths.get("dummy.jar"), "com.google.Foo"));
+            new ClassFile(new AnnotatedJar(Paths.get("dummy.jar")), "com.google.Foo"));
     boolean result =
         matchers
             .get(0)
             .match(
                 symbolProblemToMatch,
-                new ClassFile(Paths.get("dummy.jar"), "reactor.core.publisher.Traces"));
+                new ClassFile(
+                    new AnnotatedJar(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"));
     assertTrue(result);
   }
 
@@ -82,11 +86,12 @@ public class ExclusionFileParserTest {
         new SymbolProblem(
             new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
             ErrorType.INACCESSIBLE_MEMBER,
-            new ClassFile(Paths.get("dummy.jar"), "com.google.Foo"));
+            new ClassFile(new AnnotatedJar(Paths.get("dummy.jar")), "com.google.Foo"));
     boolean result =
         matcher.match(
             symbolProblemToMatch,
-            new ClassFile(Paths.get("dummy.jar"), "reactor.core.publisher.Traces"));
+            new ClassFile(
+                new AnnotatedJar(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"));
     assertTrue(result);
   }
 
@@ -103,11 +108,12 @@ public class ExclusionFileParserTest {
         new SymbolProblem(
             new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
             ErrorType.INACCESSIBLE_MEMBER,
-            new ClassFile(Paths.get("dummy.jar"), "com.google.Foo"));
+            new ClassFile(new AnnotatedJar(Paths.get("dummy.jar")), "com.google.Foo"));
     boolean result =
         matcher.match(
             symbolProblemToMatch,
-            new ClassFile(Paths.get("dummy.jar"), "reactor.core.publisher.Traces"));
+            new ClassFile(
+                new AnnotatedJar(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"));
     assertTrue(result);
   }
 
@@ -125,11 +131,12 @@ public class ExclusionFileParserTest {
         new SymbolProblem(
             new MethodSymbol("com.google.cloud.Foo", "methodA", "()Ljava.lang.String;", false),
             ErrorType.INACCESSIBLE_MEMBER,
-            new ClassFile(Paths.get("dummy.jar"), "com.cloud.google.Foo"));
+            new ClassFile(new AnnotatedJar(Paths.get("dummy.jar")), "com.cloud.google.Foo"));
     boolean result =
         matcher.match(
             symbolProblemToMatch,
-            new ClassFile(Paths.get("dummy.jar"), "reactor.core.publisher.Traces"));
+            new ClassFile(
+                new AnnotatedJar(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"));
     assertTrue(result);
   }
 
@@ -147,11 +154,12 @@ public class ExclusionFileParserTest {
         new SymbolProblem(
             new MethodSymbol("com.googler.Foo", "methodA", "()Ljava.lang.String;", false),
             ErrorType.INACCESSIBLE_MEMBER,
-            new ClassFile(Paths.get("dummy.jar"), "com.googler.Foo"));
+            new ClassFile(new AnnotatedJar(Paths.get("dummy.jar")), "com.googler.Foo"));
     boolean result =
         matcher.match(
             symbolProblemToMatch,
-            new ClassFile(Paths.get("dummy.jar"), "reactor.core.publisher.Traces"));
+            new ClassFile(
+                new AnnotatedJar(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"));
     assertFalse(result);
   }
 
@@ -168,11 +176,12 @@ public class ExclusionFileParserTest {
         new SymbolProblem(
             new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
             ErrorType.INACCESSIBLE_MEMBER,
-            new ClassFile(Paths.get("dummy.jar"), "com.google.Foo"));
+            new ClassFile(new AnnotatedJar(Paths.get("dummy.jar")), "com.google.Foo"));
     boolean result =
         matcher.match(
             symbolProblemToMatch,
-            new ClassFile(Paths.get("dummy.jar"), "reactor.core.publisher.Traces"));
+            new ClassFile(
+                new AnnotatedJar(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"));
     assertTrue(result);
   }
 
@@ -189,11 +198,11 @@ public class ExclusionFileParserTest {
         new SymbolProblem(
             new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
             ErrorType.INACCESSIBLE_MEMBER,
-            new ClassFile(Paths.get("dummy.jar"), "com.google.Foo"));
+            new ClassFile(new AnnotatedJar(Paths.get("dummy.jar")), "com.google.Foo"));
     boolean result =
         matcher.match(
             symbolProblemToMatch,
-            new ClassFile(Paths.get("dummy.jar"), "com.google.Bar")); // No match
+            new ClassFile(new AnnotatedJar(Paths.get("dummy.jar")), "com.google.Bar")); // No match
     assertFalse(result);
   }
 

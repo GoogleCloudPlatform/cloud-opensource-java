@@ -34,11 +34,11 @@ public class SymbolProblemTest {
         new SymbolProblem(
             new ClassSymbol("java.lang.Integer"),
             ErrorType.CLASS_NOT_FOUND,
-            new ClassFile(Paths.get("foo", "bar.jar"), "java.lang.Object"));
+            new ClassFile(new AnnotatedJar(Paths.get("foo", "bar.jar")), "java.lang.Object"));
     assertSame(ErrorType.CLASS_NOT_FOUND, symbolProblem.getErrorType());
     assertEquals(new ClassSymbol("java.lang.Integer"), symbolProblem.getSymbol());
     assertEquals(
-        new ClassFile(Paths.get("foo", "bar.jar"), "java.lang.Object"),
+        new ClassFile(new AnnotatedJar(Paths.get("foo", "bar.jar")), "java.lang.Object"),
         symbolProblem.getContainingClass());
   }
 
@@ -56,26 +56,26 @@ public class SymbolProblemTest {
             new SymbolProblem(
                 new ClassSymbol("java.lang.Integer"),
                 ErrorType.CLASS_NOT_FOUND,
-                new ClassFile(Paths.get("foo", "bar.jar"), "java.lang.Object")),
+                new ClassFile(new AnnotatedJar(Paths.get("foo", "bar.jar")), "java.lang.Object")),
             new SymbolProblem(
                 new ClassSymbol("java.lang.Integer"),
                 ErrorType.CLASS_NOT_FOUND,
-                new ClassFile(Paths.get("foo", "bar.jar"), "java.lang.Object")))
+                new ClassFile(new AnnotatedJar(Paths.get("foo", "bar.jar")), "java.lang.Object")))
         .addEqualityGroup(
             new SymbolProblem(
                 new ClassSymbol("java.lang.Long"),
                 ErrorType.CLASS_NOT_FOUND,
-                new ClassFile(Paths.get("foo", "bar.jar"), "java.lang.Object")))
+                new ClassFile(new AnnotatedJar(Paths.get("foo", "bar.jar")), "java.lang.Object")))
         .addEqualityGroup(
             new SymbolProblem(
                 new ClassSymbol("java.lang.Integer"),
                 ErrorType.CLASS_NOT_FOUND,
-                new ClassFile(Paths.get("abc", "bar.jar"), "java.lang.Object")))
+                new ClassFile(new AnnotatedJar(Paths.get("abc", "bar.jar")), "java.lang.Object")))
         .addEqualityGroup(
             new SymbolProblem(
                 new ClassSymbol("java.lang.Integer"),
                 ErrorType.CLASS_NOT_FOUND,
-                new ClassFile(Paths.get("foo", "bar.jar"), "java.lang.Long")))
+                new ClassFile(new AnnotatedJar(Paths.get("foo", "bar.jar")), "java.lang.Long")))
         .addEqualityGroup(
             new SymbolProblem(
                 new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null))
@@ -92,7 +92,7 @@ public class SymbolProblemTest {
                 "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
                 false),
             ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(Paths.get("aaa", "bbb-1.2.3.jar"), "java.lang.Object"));
+            new ClassFile(new AnnotatedJar(Paths.get("aaa", "bbb-1.2.3.jar")), "java.lang.Object"));
 
     SymbolProblem classSymbolProblem =
         new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
@@ -101,10 +101,12 @@ public class SymbolProblemTest {
         new SymbolProblem(
             new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"),
             ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(Paths.get("ccc-1.2.3.jar"), "java.lang.Integer"));
+            new ClassFile(new AnnotatedJar(Paths.get("ccc-1.2.3.jar")), "java.lang.Integer"));
 
-    ClassFile source1 = new ClassFile(Paths.get("foo", "foo.jar"), "java.lang.Object");
-    ClassFile source2 = new ClassFile(Paths.get("bar", "bar.jar"), "java.lang.Integer");
+    ClassFile source1 =
+        new ClassFile(new AnnotatedJar(Paths.get("foo", "foo.jar")), "java.lang.Object");
+    ClassFile source2 =
+        new ClassFile(new AnnotatedJar(Paths.get("bar", "bar.jar")), "java.lang.Integer");
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         ImmutableSetMultimap.of(

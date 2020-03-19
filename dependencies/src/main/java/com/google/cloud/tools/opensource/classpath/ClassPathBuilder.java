@@ -61,7 +61,7 @@ public final class ClassPathBuilder {
    */
   public ClassPathResult resolve(List<Artifact> artifacts) {
 
-    LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
+    LinkedListMultimap<AnnotatedJar, DependencyPath> multimap = LinkedListMultimap.create();
     if (artifacts.isEmpty()) {
       return new ClassPathResult(multimap, ImmutableList.of());
     }
@@ -101,7 +101,7 @@ public final class ClassPathBuilder {
 
       // When finding the key (groupId:artifactId) first time, or additional dependency path to
       // the artifact of the same version is encountered, adds the dependency path to `multimap`.
-      multimap.put(jarAbsolutePath, dependencyPath);
+      multimap.put(new AnnotatedJar(jarAbsolutePath, artifact), dependencyPath);
     }
     return new ClassPathResult(multimap, result.getArtifactProblems());
   }

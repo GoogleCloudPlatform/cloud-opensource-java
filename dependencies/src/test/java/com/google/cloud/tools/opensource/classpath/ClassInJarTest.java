@@ -27,7 +27,8 @@ import org.junit.Test;
 public class ClassInJarTest {
   @Test
   public void testCreation() {
-    ClassFile classInJar = new ClassFile(Paths.get("foo", "bar.jar"), "com.test.Foo");
+    ClassFile classInJar =
+        new ClassFile(new AnnotatedJar(Paths.get("foo", "bar.jar")), "com.test.Foo");
     assertEquals("com.test.Foo", classInJar.getBinaryName());
     assertEquals(Paths.get("foo", "bar.jar"), classInJar.getJar());
   }
@@ -41,10 +42,11 @@ public class ClassInJarTest {
   public void testEquality() {
     new EqualsTester()
         .addEqualityGroup(
-            new ClassFile(Paths.get("foo", "bar.jar"), "com.test.Foo"),
-            new ClassFile(Paths.get("foo", "bar.jar"), "com.test.Foo"))
-        .addEqualityGroup(new ClassFile(Paths.get("abc", "bar.jar"), "com.test.Foo"))
-        .addEqualityGroup(new ClassFile(Paths.get("foo", "bar.jar"), "abc.Boo"))
+            new ClassFile(new AnnotatedJar(Paths.get("foo", "bar.jar")), "com.test.Foo"),
+            new ClassFile(new AnnotatedJar(Paths.get("foo", "bar.jar")), "com.test.Foo"))
+        .addEqualityGroup(
+            new ClassFile(new AnnotatedJar(Paths.get("abc", "bar.jar")), "com.test.Foo"))
+        .addEqualityGroup(new ClassFile(new AnnotatedJar(Paths.get("foo", "bar.jar")), "abc.Boo"))
         .testEquals();
   }
 }

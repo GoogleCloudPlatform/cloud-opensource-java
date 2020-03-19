@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.cloud.tools.opensource.dependencies.ArtifactProblem;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.common.collect.ImmutableList;
@@ -23,7 +25,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimaps;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.cli.ParseException;
@@ -56,19 +57,23 @@ class LinkageCheckerMain {
       if (linkageCheckerArguments.hasInput()) { 
         // This is non-empty if a BOM or artifacts are specified in the argument
         ImmutableList<Artifact> artifacts = linkageCheckerArguments.getArtifacts();
-    
+
         // When JAR files are specified in the argument, artifacts are empty.
-        ImmutableList<Path> inputClassPath;
-        ImmutableSet<Path> entryPointJars;
+        ImmutableList<AnnotatedJar> inputClassPath;
+        ImmutableSet<AnnotatedJar> entryPointJars;
         List<ArtifactProblem> artifactProblems = new ArrayList<>();
         // classPathResult is kept null if JAR files are specified in the argument
         ClassPathResult classPathResult = null;
     
         // FIXME the if here isn't reachable
         if (artifacts.isEmpty()) {
-          // When JAR files are passed as arguments, classPathResult is null, because there is no need
+          // When JAR files are passed as arguments, classPathResult is null, because there is no
+          // need
           // to resolve Maven dependencies.
-          inputClassPath = linkageCheckerArguments.getJarFiles();
+          inputClassPath =
+              linkageCheckerArguments.getJarFiles().stream()
+                  .map(jar -> new AnnotatedJar(jar, null))
+                  .collect(toImmutableList());
           entryPointJars = ImmutableSet.copyOf(inputClassPath);
         } else {
           // When a BOM or Maven artifacts are passed as arguments, resolve the dependencies.
@@ -96,7 +101,7 @@ class LinkageCheckerMain {
         System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
     
         if (classPathResult != null && !symbolProblems.isEmpty()) {
-          ImmutableSet.Builder<Path> problematicJars = ImmutableSet.builder();
+          ImmutableSet.Builder<AnnotatedJar> problematicJars = ImmutableSet.builder();
           for (SymbolProblem symbolProblem : symbolProblems.keySet()) {
             ClassFile containingClass = symbolProblem.getContainingClass();
             if (containingClass != null) {

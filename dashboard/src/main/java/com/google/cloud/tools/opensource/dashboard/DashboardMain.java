@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.dashboard;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.cloud.tools.opensource.classpath.AnnotatedJar;
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
@@ -42,6 +43,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSetMultimap.Builder;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
@@ -263,10 +265,10 @@ public class DashboardMain {
    * Returns mapping from the Maven coordinates of BOM members to jar files that are in the
    * dependency tree of the BOM members.
    */
-  private static ImmutableSetMultimap<String, Path> bomMemberToJars(
+  private static ImmutableSetMultimap<String, AnnotatedJar> bomMemberToJars(
       ClassPathResult classPathResult) {
-    ImmutableSetMultimap.Builder<String, Path> bomMemberToJars = ImmutableSetMultimap.builder();
-    for (Path path : classPathResult.getClassPath()) {
+    Builder<String, AnnotatedJar> bomMemberToJars = ImmutableSetMultimap.builder();
+    for (AnnotatedJar path : classPathResult.getClassPath()) {
       for (DependencyPath dependencyPath : classPathResult.getDependencyPaths(path)) {
         Artifact artifact = dependencyPath.get(0);
         bomMemberToJars.put(Artifacts.toCoordinates(artifact), path);
@@ -285,7 +287,7 @@ public class DashboardMain {
       ClassPathResult classPathResult,
       Bom bom) {
 
-    ImmutableSetMultimap<String, Path> bomMemberToJars = bomMemberToJars(classPathResult);
+    ImmutableSetMultimap<String, AnnotatedJar> bomMemberToJars = bomMemberToJars(classPathResult);
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();
@@ -298,7 +300,7 @@ public class DashboardMain {
           table.add(unavailable);
         } else {
           Artifact artifact = entry.getKey();
-          ImmutableSet<Path> jarsInDependencyTree =
+          ImmutableSet<AnnotatedJar> jarsInDependencyTree =
               bomMemberToJars.get(Artifacts.toCoordinates(artifact));
           Map<Path, ImmutableSetMultimap<SymbolProblem, String>> relevantSymbolProblemTable =
               Maps.filterKeys(symbolProblemTable, jarsInDependencyTree::contains);
@@ -579,7 +581,7 @@ public class DashboardMain {
     // converted to String. https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
-    for (Path jar : classPathResult.getClassPath()) {
+    for (AnnotatedJar jar : classPathResult.getClassPath()) {
       List<DependencyPath> dependencyPaths = classPathResult.getDependencyPaths(jar);
 
       ImmutableList<String> commonVersionlessArtifacts =

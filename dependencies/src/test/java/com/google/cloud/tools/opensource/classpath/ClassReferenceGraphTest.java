@@ -16,13 +16,12 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static com.google.cloud.tools.opensource.classpath.TestHelper.annotatedJarOfResource;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import org.junit.Test;
 
 public class ClassReferenceGraphTest {
@@ -32,7 +31,7 @@ public class ClassReferenceGraphTest {
 
   private static ClassReferenceGraph createExampleGraph() throws URISyntaxException, IOException {
 
-    Path jar = absolutePathOfResource(GRPC_CLOUD_FIRESTORE_JAR);
+    AnnotatedJar jar = annotatedJarOfResource(GRPC_CLOUD_FIRESTORE_JAR);
 
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
     builder.addClassReference(
@@ -44,7 +43,7 @@ public class ClassReferenceGraphTest {
     return ClassReferenceGraph.create(
         builder.build(),
         // This jar file contains com.google.firestore.v1beta1.FirestoreGrpc
-        ImmutableSet.of(absolutePathOfResource(GRPC_CLOUD_FIRESTORE_JAR)));
+        ImmutableSet.of(annotatedJarOfResource(GRPC_CLOUD_FIRESTORE_JAR)));
   }
 
   @Test

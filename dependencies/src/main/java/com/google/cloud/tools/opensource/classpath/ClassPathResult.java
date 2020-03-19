@@ -24,12 +24,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
-import java.nio.file.Path;
 
 /** Result of class path resolution with {@link UnresolvableArtifactProblem}s if any. */
 public final class ClassPathResult {
 
-  private final ImmutableList<Path> classPath;
+  private final ImmutableList<AnnotatedJar> classPath;
 
   /**
    * An ordered map of absolute paths of JAR files to one or more Maven dependency paths.
@@ -41,12 +40,12 @@ public final class ClassPathResult {
    * <p>The values of the returned map for a key (jar file) represent the different Maven dependency
    * paths from {@code artifacts} to the Maven artifact of the jar file.
    */
-  private final ImmutableListMultimap<Path, DependencyPath> dependencyPaths;
+  private final ImmutableListMultimap<AnnotatedJar, DependencyPath> dependencyPaths;
 
   private final ImmutableList<UnresolvableArtifactProblem> artifactProblems;
 
   public ClassPathResult(
-      Multimap<Path, DependencyPath> dependencyPaths,
+      Multimap<AnnotatedJar, DependencyPath> dependencyPaths,
       Iterable<UnresolvableArtifactProblem> artifactProblems) {
     this.dependencyPaths = ImmutableListMultimap.copyOf(dependencyPaths);
     this.classPath = ImmutableList.copyOf(dependencyPaths.keySet());
@@ -54,7 +53,7 @@ public final class ClassPathResult {
   }
 
   /** Returns the list of absolute paths to JAR files of resolved Maven artifacts. */
-  public ImmutableList<Path> getClassPath() {
+  public ImmutableList<AnnotatedJar> getClassPath() {
     return classPath;
   }
 
@@ -62,7 +61,7 @@ public final class ClassPathResult {
    * Returns the dependency path to the JAR file. An empty list if the JAR file is not in the class
    * path.
    */
-  public ImmutableList<DependencyPath> getDependencyPaths(Path jar) {
+  public ImmutableList<DependencyPath> getDependencyPaths(AnnotatedJar jar) {
     return dependencyPaths.get(jar);
   }
 
@@ -72,13 +71,13 @@ public final class ClassPathResult {
   }
 
   /** Returns text describing dependency paths to {@code jars} in the dependency tree. */
-  public String formatDependencyPaths(Iterable<Path> jars) {
+  public String formatDependencyPaths(Iterable<AnnotatedJar> jars) {
     StringBuilder message = new StringBuilder();
-    for (Path jar : jars) {
+    for (AnnotatedJar jar : jars) {
       ImmutableList<DependencyPath> dependencyPaths = getDependencyPaths(jar);
       checkArgument(dependencyPaths.size() >= 1, "%s is not in the class path", jar);
 
-      message.append(jar.getFileName() + " is at:\n");
+      message.append(jar.getJar().getFileName() + " is at:\n");
 
       int otherCount = dependencyPaths.size() - 1;
       message.append("  " + dependencyPaths.get(0) + "\n");
