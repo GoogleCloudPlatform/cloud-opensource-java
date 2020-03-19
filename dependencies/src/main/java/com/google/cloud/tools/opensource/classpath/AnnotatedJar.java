@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.nio.file.Path;
@@ -24,9 +23,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import org.eclipse.aether.artifact.Artifact;
 
-/**
- * JAR file annotated with an optional Maven artifact.
- */
+/** JAR file annotated with an optional Maven artifact. */
 final class AnnotatedJar {
   private Path jar;
 
@@ -50,9 +47,7 @@ final class AnnotatedJar {
     return artifact;
   }
 
-  /**
-   * Path to the JAR file.
-   */
+  /** Path to the JAR file. */
   Path getJar() {
     return jar;
   }
@@ -66,8 +61,7 @@ final class AnnotatedJar {
       return false;
     }
     AnnotatedJar that = (AnnotatedJar) other;
-    return Objects.equals(jar, that.jar) &&
-        Objects.equals(artifact, that.artifact);
+    return Objects.equals(jar, that.jar) && Objects.equals(artifact, that.artifact);
   }
 
   @Override

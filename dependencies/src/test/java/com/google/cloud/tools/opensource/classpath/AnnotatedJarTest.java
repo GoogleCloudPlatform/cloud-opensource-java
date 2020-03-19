@@ -17,8 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.testing.EqualsTester;
-import com.google.common.testing.NullPointerTester;
-import com.google.common.testing.NullPointerTester.Visibility;
 import java.nio.file.Paths;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Test;
@@ -32,12 +30,10 @@ public class AnnotatedJarTest {
             new AnnotatedJar(Paths.get("foo"), new DefaultArtifact("com.foo:bar:1.0.0")),
             new AnnotatedJar(Paths.get("foo"), new DefaultArtifact("com.foo:bar:1.0.0")))
         .addEqualityGroup(
-            new AnnotatedJar(Paths.get("foo"), null),
-            new AnnotatedJar(Paths.get("foo"), null))
+            new AnnotatedJar(Paths.get("foo"), null), new AnnotatedJar(Paths.get("foo"), null))
         .addEqualityGroup(
             new AnnotatedJar(Paths.get("foo", "bar"), null),
             new AnnotatedJar(Paths.get("foo", "bar"), null))
         .testEquals();
   }
-
 }
