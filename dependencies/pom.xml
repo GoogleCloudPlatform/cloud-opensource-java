@@ -120,4 +120,26 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <skip>false</skip>
+          <mainClass>com.google.cloud.tools.opensource.classpath.LinkageCheckerMain</mainClass>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  
 </project>
