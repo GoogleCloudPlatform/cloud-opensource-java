@@ -1042,4 +1042,35 @@ public class LinkageCheckerTest {
         .comparingElementsUsing(HAS_SYMBOL_IN_CLASS)
         .doesNotContain(unexpectedClass);
   }
+
+  @Test
+  public void testFindSymbolProblems_classesCatchingClassNotFoundException() throws IOException {
+    // BlockHound is a tool to detect blocking method calls in nonblocking frameworks.
+    // In our BOM dashboard, it appears in dependency path io.grpc:grpc-netty:1.28.0 (compile)
+    //   / io.netty:netty-codec-http2:4.1.45.Final (compile)
+    //   / io.netty:netty-common:4.1.45.Final (compile)
+    //   / io.projectreactor.tools:blockhound:1.0.1.RELEASE (compile, optional)
+    ImmutableList<Path> jars = resolvePaths("io.projectreactor.tools:blockhound:1.0.1.RELEASE");
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    // BlockHound integrates with Reactor and RxJava if their classes are available in class path by
+    // checking ClassNotFoundException. Therefore LinkageMonitor should not report the references to
+    // missing classes from the integration classes.
+    ImmutableList<String> unexpectedClasses =
+        ImmutableList.of(
+            "reactor.blockhound.integration.RxJava2Integration",
+            "reactor.blockhound.integration.ReactorIntegration");
+
+    for (String unexpectedSourceClass : unexpectedClasses) {
+      Truth.assertThat(symbolProblems.values())
+          .comparingElementsUsing(
+              Correspondence.transforming(
+                  (ClassFile sourceClass) -> sourceClass.getBinaryName(), "has source class name"))
+          .doesNotContain(unexpectedSourceClass);
+    }
+  }
 }
