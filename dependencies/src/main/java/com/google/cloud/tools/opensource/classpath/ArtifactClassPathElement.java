@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import org.eclipse.aether.artifact.Artifact;
 
 /** Maven artifact in a class path. */
@@ -23,6 +25,7 @@ class ArtifactClassPathElement implements ClassPathElement {
   private Artifact artifact;
 
   ArtifactClassPathElement(Artifact artifact) {
+    checkNotNull(artifact.getFile());
     this.artifact = artifact;
   }
 
