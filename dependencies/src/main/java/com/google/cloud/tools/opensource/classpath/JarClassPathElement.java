@@ -20,7 +20,7 @@ import java.nio.file.Path;
 
 /** JAR file in a class path. */
 class JarClassPathElement implements ClassPathElement {
-  Path jar;
+  private Path jar;
 
   JarClassPathElement(Path jar) {
     this.jar = jar;

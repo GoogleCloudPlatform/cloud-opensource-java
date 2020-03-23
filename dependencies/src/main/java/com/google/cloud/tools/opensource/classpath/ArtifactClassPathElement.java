@@ -20,7 +20,7 @@ import org.eclipse.aether.artifact.Artifact;
 
 /** Maven artifact in a class path. */
 class ArtifactClassPathElement implements ClassPathElement {
-  Artifact artifact;
+  private Artifact artifact;
 
   ArtifactClassPathElement(Artifact artifact) {
     this.artifact = artifact;
@@ -29,5 +29,9 @@ class ArtifactClassPathElement implements ClassPathElement {
   @Override
   public String getClassPath() {
     return artifact.getFile().getAbsolutePath();
+  }
+
+  Artifact getArtifact() {
+    return artifact;
   }
 }
