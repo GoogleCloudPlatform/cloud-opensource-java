@@ -99,6 +99,8 @@ You can use a BOM like this—this example is for `google-cloud-bom`:
 In this example, since the BOM manages library versions, the
 version of the google-cloud-storage artifact is omitted.
 
+See the "Choosing BOMs" section below if you need to import more than one BOM.
+
 ### Gradle
 
 Gradle selects the highest version of any given dependency in the
@@ -149,8 +151,7 @@ process to follow for each library that has BOM support:
    you see multiple versions of the library's artifacts
 
 Note that there will not necessarily be a BOM available at the version
-you need. See the BOM reference section below for the first
-available version of each BOM.
+you need.
 
 ## Intrinsic conflicts
 
