@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import com.google.common.testing.EqualsTester;
 import java.nio.file.Path;
@@ -31,6 +32,7 @@ public class ClassPathEntryTest {
     Path jar = Paths.get("foo.jar");
     ClassPathEntry entry = new ClassPathEntry(jar);
     assertEquals(jar.toAbsolutePath().toString(), entry.getPath());
+    assertNull(entry.getArtifact());
   }
 
   @Test

@@ -29,6 +29,7 @@ class ArtifactClassPathEntry extends ClassPathEntry {
     this.artifact = artifact;
   }
 
+  @Override
   Artifact getArtifact() {
     return artifact;
   }

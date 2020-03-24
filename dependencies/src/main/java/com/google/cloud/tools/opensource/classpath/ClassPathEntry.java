@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.nio.file.Path;
 import java.util.Objects;
+import org.eclipse.aether.artifact.Artifact;
 
 /** JAR file entry in a class path. */
 class ClassPathEntry {
@@ -32,6 +33,14 @@ class ClassPathEntry {
   /** Returns a path of the entry. */
   String getPath() {
     return jar.toAbsolutePath().toString();
+  }
+
+  /**
+   * Returns Maven artifact associated for the JAR file. If the JAR file does not have an artifact,
+   * {@code null}.
+   */
+  Artifact getArtifact() {
+    return null;
   }
 
   @Override
