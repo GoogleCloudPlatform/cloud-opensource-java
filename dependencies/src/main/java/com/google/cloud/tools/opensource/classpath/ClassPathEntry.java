@@ -16,9 +16,43 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-/** An entry in Java class path. */
-interface ClassPathEntry {
+import static com.google.common.base.Preconditions.checkNotNull;
 
-  /** Returns a class path of the entry. */
-  String getClassPath();
+import java.nio.file.Path;
+import java.util.Objects;
+
+/** JAR file entry in a class path. */
+class ClassPathEntry {
+  private Path jar;
+
+  ClassPathEntry(Path jar) {
+    this.jar = checkNotNull(jar);
+  }
+
+  /** Returns a path of the entry. */
+  String getPath() {
+    return jar.toAbsolutePath().toString();
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) {
+      return true;
+    }
+    if (other == null || getClass() != other.getClass()) {
+      return false;
+    }
+    ClassPathEntry that = (ClassPathEntry) other;
+    return Objects.equals(jar, that.jar);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(jar);
+  }
+
+  @Override
+  public String toString() {
+    return "JAR(" + jar + ")";
+  }
 }

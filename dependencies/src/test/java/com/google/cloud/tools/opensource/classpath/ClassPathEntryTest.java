@@ -24,13 +24,13 @@ import java.nio.file.Paths;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Test;
 
-public class JarClassPathEntryTest {
+public class ClassPathEntryTest {
 
   @Test
   public void testCreation() {
     Path jar = Paths.get("foo.jar");
-    ClassPathEntry entry = new JarClassPathEntry(jar);
-    assertEquals(jar.toAbsolutePath().toString(), entry.getClassPath());
+    ClassPathEntry entry = new ClassPathEntry(jar);
+    assertEquals(jar.toAbsolutePath().toString(), entry.getPath());
   }
 
   @Test
@@ -38,8 +38,8 @@ public class JarClassPathEntryTest {
     Path jar1 = Paths.get("1.jar");
     Path jar2 = Paths.get("2.jar");
     new EqualsTester()
-        .addEqualityGroup(new JarClassPathEntry(jar1), new JarClassPathEntry(jar1))
-        .addEqualityGroup(new JarClassPathEntry(jar2), new JarClassPathEntry(jar2))
+        .addEqualityGroup(new ClassPathEntry(jar1), new ClassPathEntry(jar1))
+        .addEqualityGroup(new ClassPathEntry(jar2), new ClassPathEntry(jar2))
         .addEqualityGroup(
             new ArtifactClassPathEntry(
                 new DefaultArtifact(null, null, null, null, null, null, jar1.toFile())))
@@ -49,7 +49,7 @@ public class JarClassPathEntryTest {
   @Test
   public void testToString() {
     Path fooJar = Paths.get("foo.jar");
-    ClassPathEntry entry = new JarClassPathEntry(fooJar);
+    ClassPathEntry entry = new ClassPathEntry(fooJar);
     assertEquals("JAR(foo.jar)", entry.toString());
   }
 }

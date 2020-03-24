@@ -16,23 +16,17 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Objects;
 import org.eclipse.aether.artifact.Artifact;
 
 /** Maven artifact entry in a class path. */
-class ArtifactClassPathEntry implements ClassPathEntry {
+class ArtifactClassPathEntry extends ClassPathEntry {
   private Artifact artifact;
 
   ArtifactClassPathEntry(Artifact artifact) {
-    checkNotNull(artifact.getFile());
+    super(artifact.getFile().toPath());
     this.artifact = artifact;
-  }
-
-  @Override
-  public String getClassPath() {
-    return artifact.getFile().getAbsolutePath();
   }
 
   Artifact getArtifact() {

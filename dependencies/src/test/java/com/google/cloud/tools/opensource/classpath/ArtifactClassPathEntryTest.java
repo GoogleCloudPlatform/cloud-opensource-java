@@ -38,7 +38,7 @@ public class ArtifactClassPathEntryTest {
   public void testCreation() {
     Path jar = Paths.get("foo.jar");
     ArtifactClassPathEntry entry = new ArtifactClassPathEntry(fooArtifact);
-    assertEquals(jar.toAbsolutePath().toString(), entry.getClassPath());
+    assertEquals(jar.toAbsolutePath().toString(), entry.getPath());
 
     assertEquals(fooArtifact, entry.getArtifact());
   }
@@ -52,7 +52,7 @@ public class ArtifactClassPathEntryTest {
                 new DefaultArtifact(
                     "com.google", "foo", null, "jar", "0.0.1", null, fooJar.toFile())))
         .addEqualityGroup(new ArtifactClassPathEntry(barArtifact))
-        .addEqualityGroup(new JarClassPathEntry(fooJar))
+        .addEqualityGroup(new ClassPathEntry(fooJar))
         .testEquals();
   }
 
