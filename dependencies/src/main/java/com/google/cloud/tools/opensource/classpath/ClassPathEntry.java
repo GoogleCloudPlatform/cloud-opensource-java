@@ -16,9 +16,9 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-/** An element in a Java class path. */
-interface ClassPathElement {
+/** An entry in Java class path. */
+interface ClassPathEntry {
 
-  /** Returns a class path. */
+  /** Returns a class path of the entry. */
   String getClassPath();
 }

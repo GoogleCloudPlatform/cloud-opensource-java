@@ -17,17 +17,40 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import java.nio.file.Path;
+import java.util.Objects;
 
-/** JAR file in a class path. */
-class JarClassPathElement implements ClassPathElement {
+/** JAR file entry in a class path. */
+class JarClassPathEntry implements ClassPathEntry {
   private Path jar;
 
-  JarClassPathElement(Path jar) {
+  JarClassPathEntry(Path jar) {
     this.jar = jar;
   }
 
   @Override
   public String getClassPath() {
     return jar.toAbsolutePath().toString();
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) {
+      return true;
+    }
+    if (other == null || getClass() != other.getClass()) {
+      return false;
+    }
+    JarClassPathEntry that = (JarClassPathEntry) other;
+    return Objects.equals(jar, that.jar);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(jar);
+  }
+
+  @Override
+  public String toString() {
+    return "JAR(" + jar + ")";
   }
 }

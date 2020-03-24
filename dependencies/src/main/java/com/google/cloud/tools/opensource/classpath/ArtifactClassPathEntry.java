@@ -18,13 +18,14 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Objects;
 import org.eclipse.aether.artifact.Artifact;
 
-/** Maven artifact in a class path. */
-class ArtifactClassPathElement implements ClassPathElement {
+/** Maven artifact entry in a class path. */
+class ArtifactClassPathEntry implements ClassPathEntry {
   private Artifact artifact;
 
-  ArtifactClassPathElement(Artifact artifact) {
+  ArtifactClassPathEntry(Artifact artifact) {
     checkNotNull(artifact.getFile());
     this.artifact = artifact;
   }
@@ -36,5 +37,29 @@ class ArtifactClassPathElement implements ClassPathElement {
 
   Artifact getArtifact() {
     return artifact;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ArtifactClassPathEntry that = (ArtifactClassPathEntry) o;
+
+    // DefaultArtifact checks equality of
+    return Objects.equals(artifact, that.artifact);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(artifact);
+  }
+
+  @Override
+  public String toString() {
+    return "Artifact(" + artifact + ")";
   }
 }
