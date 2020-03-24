@@ -48,16 +48,12 @@ import org.eclipse.aether.artifact.Artifact;
 public class LinkageChecker {
 
   private static final Logger logger = Logger.getLogger(LinkageChecker.class.getName());
-
-  private static final ImmutableSet<String> SOURCE_CLASSES_TO_SUPPRESS = ImmutableSet.of(
-      // reactor-core's Traces catches Throwable to detect classes available in Java 9+ (#816)
-      "reactor.core.publisher.Traces"
-  );
-
+  
   private final ClassDumper classDumper;
   private final ImmutableList<Path> jars;
   private final SymbolReferenceMaps classToSymbols;
   private final ClassReferenceGraph classReferenceGraph;
+  private final ExcludedErrors excludedErrors;
 
   @VisibleForTesting
   SymbolReferenceMaps getClassToSymbols() {
@@ -79,7 +75,8 @@ public class LinkageChecker {
     ClassReferenceGraph classReferenceGraph =
         ClassReferenceGraph.create(symbolReferenceMaps, ImmutableSet.copyOf(entryPoints));
 
-    return new LinkageChecker(dumper, jars, symbolReferenceMaps, classReferenceGraph);
+    return new LinkageChecker(
+        dumper, jars, symbolReferenceMaps, classReferenceGraph, ExcludedErrors.create());
   }
 
   public static LinkageChecker create(Bom bom) throws IOException {
@@ -99,18 +96,21 @@ public class LinkageChecker {
 
   @VisibleForTesting
   LinkageChecker cloneWith(SymbolReferenceMaps newSymbolMaps) {
-    return new LinkageChecker(classDumper, jars, newSymbolMaps, classReferenceGraph);
+    return new LinkageChecker(
+        classDumper, jars, newSymbolMaps, classReferenceGraph, excludedErrors);
   }
 
   private LinkageChecker(
       ClassDumper classDumper,
       List<Path> jars,
       SymbolReferenceMaps symbolReferenceMaps,
-      ClassReferenceGraph classReferenceGraph) {
+      ClassReferenceGraph classReferenceGraph,
+      ExcludedErrors excludedErrors) {
     this.classDumper = Preconditions.checkNotNull(classDumper);
     this.jars = ImmutableList.copyOf(jars);
     this.classReferenceGraph = Preconditions.checkNotNull(classReferenceGraph);
     this.classToSymbols = Preconditions.checkNotNull(symbolReferenceMaps);
+    this.excludedErrors = Preconditions.checkNotNull(excludedErrors);
   }
 
   /**
@@ -186,7 +186,7 @@ public class LinkageChecker {
 
     // Filter classes in whitelist
     SetMultimap<SymbolProblem, ClassFile> filteredMap =
-        Multimaps.filterEntries(problemToClass.build(), LinkageChecker::problemFilter);
+        Multimaps.filterEntries(problemToClass.build(), this::problemFilter);
     return ImmutableSetMultimap.copyOf(filteredMap);
   }
 
@@ -194,32 +194,10 @@ public class LinkageChecker {
    * Returns true if the linkage error {@code entry} should be reported. False if it should be
    * suppressed.
    */
-  private static boolean problemFilter(Map.Entry<SymbolProblem, ClassFile> entry) {
-    ClassFile classFile = entry.getValue();
+  private boolean problemFilter(Map.Entry<SymbolProblem, ClassFile> entry) {
     SymbolProblem symbolProblem = entry.getKey();
-    String sourceClassName = classFile.getBinaryName();
-    if (SOURCE_CLASSES_TO_SUPPRESS.contains(sourceClassName)) {
-      return false;
-    }
-
-    // GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that only exists in
-    // special JDK. https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929
-    String problematicClassName = symbolProblem.getSymbol().getClassBinaryName();
-    if (problematicClassName.startsWith("jdk.vm.ci")
-        && (sourceClassName.startsWith("com.oracle.svm")
-            || sourceClassName.startsWith("com.oracle.graal")
-            || sourceClassName.startsWith("org.graalvm"))) {
-      return false;
-    }
-
-    // Mockito's MockMethodDispatcher uses special class loader to load MockMethodDispatcher.raw
-    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/407
-    if (problematicClassName.equals("org.mockito.internal.creation.bytebuddy.MockMethodDispatcher")
-        && sourceClassName.startsWith("org.mockito.internal.creation.bytebuddy")) {
-      return false;
-    }
-
-    return true;
+    ClassFile sourceClass = entry.getValue();
+    return !excludedErrors.contains(symbolProblem, sourceClass);
   }
 
   /**

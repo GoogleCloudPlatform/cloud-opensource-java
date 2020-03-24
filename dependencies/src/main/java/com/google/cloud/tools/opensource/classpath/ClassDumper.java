@@ -512,7 +512,8 @@ class ClassDumper {
       ImmutableSet.of(
           LinkageError.class.getName(),
           NoClassDefFoundError.class.getName(),
-          NoSuchMethodError.class.getName());
+          NoSuchMethodError.class.getName(),
+          ClassNotFoundException.class.getName());
 
   /**
    * Returns true if {@code sourceClassName} has a method that has an exception handler for {@link
