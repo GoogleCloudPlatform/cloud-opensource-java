@@ -22,17 +22,35 @@ import java.nio.file.Path;
 import java.util.Objects;
 import org.eclipse.aether.artifact.Artifact;
 
-/** JAR file entry in a class path. */
+/** An entry in a class path. */
 class ClassPathEntry {
+
   private Path jar;
 
+  private Artifact artifact;
+
+  /**
+   * An entry for a JAR file without association with a Maven artifact.
+   */
   ClassPathEntry(Path jar) {
     this.jar = checkNotNull(jar);
   }
 
+  /**
+   * An entry for JAR file from a Maven artifact.
+   */
+  ClassPathEntry(Artifact artifact) {
+    checkNotNull(artifact.getFile());
+    this.artifact = artifact;
+  }
+
   /** Returns a path of the entry. */
   String getPath() {
-    return jar.toAbsolutePath().toString();
+    if (artifact != null) {
+      return artifact.getFile().toString();
+    } else {
+      return jar.toString();
+    }
   }
 
   /**
@@ -40,7 +58,7 @@ class ClassPathEntry {
    * {@code null}.
    */
   Artifact getArtifact() {
-    return null;
+    return artifact;
   }
 
   @Override
@@ -52,16 +70,21 @@ class ClassPathEntry {
       return false;
     }
     ClassPathEntry that = (ClassPathEntry) other;
-    return Objects.equals(jar, that.jar);
+    return Objects.equals(jar, that.jar)
+    && Objects.equals(artifact, that.artifact);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(jar);
+    return Objects.hash(jar, artifact);
   }
 
   @Override
   public String toString() {
-    return "JAR(" + jar + ")";
+    if (artifact != null) {
+      return "Artifact(" + artifact + ")";
+    } else {
+      return "JAR(" + jar + ")";
+    }
   }
 }

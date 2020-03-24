@@ -18,21 +18,36 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import com.google.common.testing.EqualsTester;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Test;
 
 public class ClassPathEntryTest {
+  Path fooJar = Paths.get("foo.jar");
+  Path barJar = Paths.get("bar.jar");
+  private Artifact fooArtifact =
+      new DefaultArtifact("com.google", "foo", null, "jar", "0.0.1", null, fooJar.toFile());
+  private Artifact barArtifact =
+      new DefaultArtifact("com.google", "bar", null, "jar", "0.0.1", null, barJar.toFile());
 
   @Test
-  public void testCreation() {
+  public void testCreationJar() {
     Path jar = Paths.get("foo.jar");
     ClassPathEntry entry = new ClassPathEntry(jar);
-    assertEquals(jar.toAbsolutePath().toString(), entry.getPath());
+    assertEquals(jar.toString(), entry.getPath());
     assertNull(entry.getArtifact());
+  }
+
+  @Test
+  public void testCreationArtifact() {
+    ClassPathEntry entry = new ClassPathEntry(fooArtifact);
+    assertEquals(fooJar.toString(), entry.getPath());
+    assertEquals(entry.getArtifact(), fooArtifact);
   }
 
   @Test
@@ -42,16 +57,36 @@ public class ClassPathEntryTest {
     new EqualsTester()
         .addEqualityGroup(new ClassPathEntry(jar1), new ClassPathEntry(jar1))
         .addEqualityGroup(new ClassPathEntry(jar2), new ClassPathEntry(jar2))
+        .addEqualityGroup(new ClassPathEntry(fooArtifact), new ClassPathEntry(fooArtifact))
+        .addEqualityGroup(fooArtifact)
+        .addEqualityGroup(barArtifact)
         .addEqualityGroup(
-            new ArtifactClassPathEntry(
+            new ClassPathEntry(
                 new DefaultArtifact(null, null, null, null, null, null, jar1.toFile())))
         .testEquals();
   }
 
   @Test
-  public void testToString() {
+  public void testToStringJar() {
     Path fooJar = Paths.get("foo.jar");
     ClassPathEntry entry = new ClassPathEntry(fooJar);
     assertEquals("JAR(foo.jar)", entry.toString());
   }
+  @Test
+  public void testToStringArtifact() {
+    ClassPathEntry entry = new ClassPathEntry(fooArtifact);
+    assertEquals("Artifact(com.google:foo:jar:0.0.1)", entry.toString());
+  }
+
+  @Test
+  public void testFilePresenceRequirement() {
+    Artifact artifactWithoutFile = new DefaultArtifact("com.google:foo:jar:1.0.0");
+    try {
+      new ClassPathEntry(artifactWithoutFile);
+      fail();
+    } catch (NullPointerException expected) {
+      // pass
+    }
+  }
+
 }
