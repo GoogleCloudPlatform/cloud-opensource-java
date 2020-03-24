@@ -58,8 +58,7 @@ public class ClassPathEntryTest {
         .addEqualityGroup(new ClassPathEntry(jar1), new ClassPathEntry(jar1))
         .addEqualityGroup(new ClassPathEntry(jar2), new ClassPathEntry(jar2))
         .addEqualityGroup(new ClassPathEntry(fooArtifact), new ClassPathEntry(fooArtifact))
-        .addEqualityGroup(fooArtifact)
-        .addEqualityGroup(barArtifact)
+        .addEqualityGroup(new ClassPathEntry(barArtifact), new ClassPathEntry(barArtifact))
         .addEqualityGroup(
             new ClassPathEntry(
                 new DefaultArtifact(null, null, null, null, null, null, jar1.toFile())))
@@ -72,6 +71,7 @@ public class ClassPathEntryTest {
     ClassPathEntry entry = new ClassPathEntry(fooJar);
     assertEquals("JAR(foo.jar)", entry.toString());
   }
+
   @Test
   public void testToStringArtifact() {
     ClassPathEntry entry = new ClassPathEntry(fooArtifact);
@@ -88,5 +88,4 @@ public class ClassPathEntryTest {
       // pass
     }
   }
-
 }

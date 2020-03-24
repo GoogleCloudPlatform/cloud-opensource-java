@@ -23,28 +23,23 @@ import java.util.Objects;
 import org.eclipse.aether.artifact.Artifact;
 
 /** An entry in a class path. */
-class ClassPathEntry {
+final class ClassPathEntry {
 
   private Path jar;
-
   private Artifact artifact;
 
-  /**
-   * An entry for a JAR file without association with a Maven artifact.
-   */
+  /** An entry for a JAR file without association with a Maven artifact. */
   ClassPathEntry(Path jar) {
     this.jar = checkNotNull(jar);
   }
 
-  /**
-   * An entry for JAR file from a Maven artifact.
-   */
+  /** An entry for a Maven artifact. */
   ClassPathEntry(Artifact artifact) {
     checkNotNull(artifact.getFile());
     this.artifact = artifact;
   }
 
-  /** Returns a path of the entry. */
+  /** Returns the path of the entry. */
   String getPath() {
     if (artifact != null) {
       return artifact.getFile().toString();
@@ -70,8 +65,7 @@ class ClassPathEntry {
       return false;
     }
     ClassPathEntry that = (ClassPathEntry) other;
-    return Objects.equals(jar, that.jar)
-    && Objects.equals(artifact, that.artifact);
+    return Objects.equals(jar, that.jar) && Objects.equals(artifact, that.artifact);
   }
 
   @Override
