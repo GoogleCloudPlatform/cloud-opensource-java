@@ -135,7 +135,14 @@
         </executions>
         <configuration>
           <skip>false</skip>
-          <mainClass>com.google.cloud.tools.opensource.classpath.LinkageCheckerMain</mainClass>
+          <executable>java</executable>
+          <arguments>
+            <argument>-classpath</argument>
+            <classpath/>
+            <argument>com.google.cloud.tools.opensource.classpath.LinkageCheckerMain</argument>
+            <argument>-a</argument>
+            <argument>org.apache.beam:beam-sdks-java-io-hcatalog:2.19.0</argument>
+          </arguments>
         </configuration>
       </plugin>
     </plugins>

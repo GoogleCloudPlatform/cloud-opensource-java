@@ -19,16 +19,22 @@ package com.google.cloud.tools.opensource.dependencies;
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.CENTRAL;
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.mavenRepositoryFromUrl;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.collection.CollectResult;
+import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyFilter;
@@ -96,12 +102,24 @@ public final class DependencyGraphBuilder {
     this.repositories = repositoryListBuilder.build();
   }
 
+  
+  private Set<DependencyNode> test = new HashSet<>();
+  
+  // TODO should full and nonfull be two methods? 
   private DependencyNode resolveCompileTimeDependencies(
-      List<DependencyNode> dependencyNodes, boolean fullDependencies)
-      throws DependencyResolutionException {
-
+      List<DependencyNode> dependencyNodes, boolean fullDependencies) 
+          throws DependencyCollectionException, DependencyResolutionException
+      {    
+    
     ImmutableList.Builder<Dependency> dependenciesBuilder = ImmutableList.builder();
     for (DependencyNode dependencyNode : dependencyNodes) {
+      
+      if (test.contains(dependencyNode)) {
+        throw new RuntimeException("double lookup " + dependencyNode);
+      } else {
+        test.add(dependencyNode);
+      }
+
       Dependency dependency = dependencyNode.getDependency();
       if (dependency == null) {
         // Root DependencyNode has null dependency field.
@@ -131,6 +149,7 @@ public final class DependencyGraphBuilder {
     DependencyRequest dependencyRequest = new DependencyRequest();
     dependencyRequest.setCollectRequest(collectRequest);
 
+    system.collectDependencies(session, collectRequest);
     // resolveDependencies equals to calling both collectDependencies (build dependency tree) and
     // resolveArtifacts (download JAR files).
     DependencyResult dependencyResult = system.resolveDependencies(session, dependencyRequest);
@@ -166,19 +185,28 @@ public final class DependencyGraphBuilder {
     DependencyNode node;
     ImmutableSet.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableSet.builder();
 
+    Set<Artifact> missing = new HashSet<>();
+    
     try {
       node = resolveCompileTimeDependencies(dependencyNodes, fullDependency);
     } catch (DependencyResolutionException ex) {
+      ex.printStackTrace();
       DependencyResult result = ex.getResult();
       node = result.getRoot();
       for (ArtifactResult artifactResult : result.getArtifactResults()) {
         Artifact resolvedArtifact = artifactResult.getArtifact();
-        if (resolvedArtifact != null) {
-          continue;
+        if (resolvedArtifact == null) {
+         Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
+         if (!missing.contains(requestedArtifact)) {
+           artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
+           missing.add(requestedArtifact);
+         }
         }
-        Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
-        artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
       }
+    } catch (DependencyCollectionException ex) {
+      ex.printStackTrace();
+      CollectResult result = ex.getResult();
+      node = result.getRoot();
     }
 
     DependencyGraph graph = levelOrder(node);
@@ -203,8 +231,20 @@ public final class DependencyGraphBuilder {
     }
   }
 
+  private static Map<DependencyNode, Artifact> cache = new HashMap<>();
+  
   private static ImmutableList<List<DependencyNode>> findArtifactPaths(
       DependencyNode root, Artifact artifact) {
+    
+    System.err.println("Finding paths from " + root + " to " + artifact);
+    
+    Artifact cached = cache.get(root);
+    if (artifact.equals(cached)) {
+      throw new RuntimeException("Looking up " + root + " to " + artifact + " twice");
+    } else {
+      cache.put(root, artifact);
+    }
+    
     String coordinates = Artifacts.toCoordinates(artifact);
     DependencyFilter filter =
         (node, parents) ->
@@ -212,7 +252,13 @@ public final class DependencyGraphBuilder {
                 && Artifacts.toCoordinates(node.getArtifact()).equals(coordinates);
     PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(filter);
     root.accept(visitor);
-    return ImmutableList.copyOf(visitor.getPaths());
+    
+    List<List<DependencyNode>> parts = visitor.getPaths();
+    for (List<DependencyNode> paths : parts) {
+      System.err.println(Joiner.on(" > ").join(paths));
+    }
+    
+    return ImmutableList.copyOf(parts);
   }
 
   private static final class LevelOrderQueueItem {
