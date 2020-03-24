@@ -43,7 +43,7 @@ You can add `requireUpperBoundDeps` to your build like this:
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.0.0-M2</version>
+        <version>3.0.0-M3</version>
         <executions>
           <execution>
             <id>enforce</id>
@@ -98,8 +98,6 @@ You can use a BOM like this—this example is for `google-cloud-bom`:
 
 In this example, since the BOM manages library versions, the
 version of the google-cloud-storage artifact is omitted.
-
-See the "Choosing BOMs" section below if you need to import more than one BOM.
 
 ### Gradle
 
