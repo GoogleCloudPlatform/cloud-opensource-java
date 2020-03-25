@@ -49,7 +49,7 @@ final class ClassPathEntry {
   }
 
   /**
-   * Returns Maven artifact associated for the JAR file. If the JAR file does not have an artifact,
+   * Returns Maven artifact associated with the JAR file. If the JAR file does not have an artifact,
    * {@code null}.
    */
   Artifact getArtifact() {
