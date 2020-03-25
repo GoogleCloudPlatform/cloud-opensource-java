@@ -106,13 +106,13 @@ public class LinkageMonitorTest {
               "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
               false),
           ErrorType.SYMBOL_NOT_FOUND,
-          new ClassFile(Paths.get("foo", "b-1.0.0.jar"), "java.lang.Object"));
+          new ClassFile(new ClassPathEntry(Paths.get("foo", "b-1.0.0.jar")), "java.lang.Object"));
 
   @Test
   public void generateMessageForNewError() {
     Set<SymbolProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
-    ClassPathEntry jarA = Paths.get("foo", "a-1.2.3.jar");
-    ClassPathEntry jarB = Paths.get("foo", "b-1.0.0.jar");
+    ClassPathEntry jarA = new ClassPathEntry(Paths.get("foo", "a-1.2.3.jar"));
+    ClassPathEntry jarB = new ClassPathEntry(Paths.get("foo", "b-1.0.0.jar"));
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotProblems =
         ImmutableSetMultimap.of(
             classNotFoundProblem, // This is in baseline. It should not be printed

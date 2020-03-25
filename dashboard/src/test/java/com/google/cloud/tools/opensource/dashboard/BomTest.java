@@ -16,12 +16,12 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
@@ -30,7 +30,7 @@ import org.junit.Test;
 
 public class BomTest {
 
-  private static final ClassPathEntry CLOUD_OSS_BOM_PATH =
+  private static final Path CLOUD_OSS_BOM_PATH =
       Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();
 
   @Test

@@ -29,7 +29,7 @@ public final class ClassPathEntry {
   private Artifact artifact;
 
   /** An entry for a JAR file without association with a Maven artifact. */
-  ClassPathEntry(Path jar) {
+  public ClassPathEntry(Path jar) {
     this.jar = checkNotNull(jar);
   }
 

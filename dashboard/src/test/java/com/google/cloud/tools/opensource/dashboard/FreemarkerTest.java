@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.cloud.tools.opensource.classpath.ErrorType;
@@ -56,7 +57,8 @@ public class FreemarkerTest {
 
   private static Path outputDirectory;
   private Builder builder = new Builder();
-  static ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable;
+  static ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>>
+      symbolProblemTable;
 
   @BeforeClass
   public static void setUp() throws IOException {
@@ -66,7 +68,8 @@ public class FreemarkerTest {
         ImmutableSetMultimap.of(
             new SymbolProblem(new ClassSymbol("com.foo.Bar"), ErrorType.CLASS_NOT_FOUND, null),
             "abc.def.G");
-    symbolProblemTable = ImmutableMap.of(Paths.get("foo", "bar-1.2.3.jar"), dummyProblems);
+    symbolProblemTable =
+        ImmutableMap.of(new ClassPathEntry(Paths.get("foo", "bar-1.2.3.jar")), dummyProblems);
   }
 
   @AfterClass

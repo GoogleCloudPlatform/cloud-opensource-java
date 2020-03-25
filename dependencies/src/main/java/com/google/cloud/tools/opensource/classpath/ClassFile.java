@@ -36,7 +36,7 @@ public final class ClassFile {
     this.binaryName = checkNotNull(className);
   }
 
-  /** Returns the path to the JAR file containing the class. */
+  /** Returns the class path entry containing the class. */
   public ClassPathEntry getClassPathEntry() {
     return classPathEntry;
   }
