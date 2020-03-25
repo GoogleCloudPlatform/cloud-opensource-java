@@ -96,7 +96,7 @@ public class ClassPathBuilderTest {
     Truth.assertThat(classPath)
         .comparingElementsUsing(COORDINATES)
         .containsAtLeast(
-            "io.grpc:grpc-auth:1.15.1", "com.google.auth:google-auth-library-credentials:0.11.0");
+            "io.grpc:grpc-auth:1.15.1", "com.google.auth:google-auth-library-credentials:0.9.0");
     classPath.forEach(
         path ->
             Truth.assertWithMessage("Every returned path should be an absolute path")
@@ -106,18 +106,18 @@ public class ClassPathBuilderTest {
 
   @Test
   public void testresolveClassPath_validCoordinate() {
-    List<ClassPathEntry> paths = resolveClassPath("io.grpc:grpc-auth:1.15.1");
+    List<ClassPathEntry> entries = resolveClassPath("io.grpc:grpc-auth:1.15.1");
 
-    Truth.assertThat(paths)
+    Truth.assertThat(entries)
         .comparingElementsUsing(COORDINATES)
         .contains("io.grpc:grpc-auth:1.15.1");
-    Truth.assertThat(paths)
+    Truth.assertThat(entries)
         .comparingElementsUsing(COORDINATES)
-        .contains("com.google.auth:google-auth-library-credentials:0.11.0");
-    paths.forEach(
-        path ->
+        .contains("com.google.auth:google-auth-library-credentials:0.9.0");
+    entries.forEach(
+        entry ->
             Truth.assertWithMessage("Every returned path should be an absolute path")
-                .that(Paths.get(path.getPath()).isAbsolute())
+                .that(Paths.get(entry.getPath()).isAbsolute())
                 .isTrue());
   }
 
@@ -125,7 +125,7 @@ public class ClassPathBuilderTest {
   public void testResolveClassPath_optionalDependency() {
     List<ClassPathEntry> paths =
         resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
-    Truth.assertThat(paths).comparingElementsUsing(COORDINATES).contains("log4j:log4j:jar:1.2.12");
+    Truth.assertThat(paths).comparingElementsUsing(COORDINATES).contains("log4j:log4j:1.2.12");
   }
 
   @Test
