@@ -57,4 +57,17 @@
       https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/407
     </Reason>
   </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="com.sun.jna" />
+    </Target>
+    <Source>
+      <Package name="reactor.blockhound.shaded.net.bytebuddy.agent.VirtualMachine" />
+    </Source>
+    <Reason>
+      BlockHound's shades ByteBuddy's VirtualMachine class. The class uses Java Native Access (JNA)
+      when the class is available by catching ClassNotFoundException. Therefore the invalid
+      references should not cause linkage errors at runtime.
+    </Reason>
+  </LinkageError>
 </LinkageCheckerFilter>

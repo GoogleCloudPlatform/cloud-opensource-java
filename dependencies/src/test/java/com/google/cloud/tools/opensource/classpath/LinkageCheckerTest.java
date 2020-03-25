@@ -1044,7 +1044,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblems_classesCatchingClassNotFoundException() throws IOException {
+  public void testFindSymbolProblems_blockHoundClasses() throws IOException {
     // BlockHound is a tool to detect blocking method calls in nonblocking frameworks.
     // In our BOM dashboard, it appears in dependency path io.grpc:grpc-netty:1.28.0 (compile)
     //   / io.netty:netty-codec-http2:4.1.45.Final (compile)
@@ -1062,8 +1062,11 @@ public class LinkageCheckerTest {
     // missing classes from the integration classes.
     ImmutableList<String> unexpectedClasses =
         ImmutableList.of(
+            // The following two catch ClassNotFoundException
             "reactor.blockhound.integration.RxJava2Integration",
-            "reactor.blockhound.integration.ReactorIntegration");
+            "reactor.blockhound.integration.ReactorIntegration",
+            // This class is in exclusion rule
+            "reactor.blockhound.shaded.net.bytebuddy.agent.VirtualMachine");
 
     for (String unexpectedSourceClass : unexpectedClasses) {
       Truth.assertThat(symbolProblems.values())
