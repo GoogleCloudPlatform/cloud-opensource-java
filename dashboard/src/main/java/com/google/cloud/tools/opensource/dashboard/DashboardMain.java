@@ -170,7 +170,7 @@ public class DashboardMain {
   }
 
   @VisibleForTesting
-  static Path generate(ClassPathEntry bomFile)
+  static Path generate(Path bomFile)
       throws IOException, TemplateException, URISyntaxException, MavenRepositoryException {
     checkArgument(Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
     checkArgument(Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
@@ -224,7 +224,7 @@ public class DashboardMain {
     copyResource(output, "css/dashboard.css");
     copyResource(output, "js/dashboard.js");
 
-    ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable =
+    ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable =
         indexByJar(symbolProblems);
 
     List<ArtifactResults> table =
@@ -283,7 +283,7 @@ public class DashboardMain {
       Configuration configuration,
       Path output,
       ArtifactCache cache,
-      ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
+      ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
       ClassPathResult classPathResult,
       Bom bom) {
 
@@ -302,8 +302,9 @@ public class DashboardMain {
           Artifact artifact = entry.getKey();
           ImmutableSet<ClassPathEntry> jarsInDependencyTree =
               bomMemberToJars.get(Artifacts.toCoordinates(artifact));
-          Map<Path, ImmutableSetMultimap<SymbolProblem, String>> relevantSymbolProblemTable =
-              Maps.filterKeys(symbolProblemTable, jarsInDependencyTree::contains);
+          Map<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>>
+              relevantSymbolProblemTable =
+                  Maps.filterKeys(symbolProblemTable, jarsInDependencyTree::contains);
 
           ArtifactResults results =
               generateArtifactReport(
@@ -366,7 +367,7 @@ public class DashboardMain {
       Artifact artifact,
       ArtifactInfo artifactInfo,
       List<DependencyGraph> globalDependencies,
-      ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
+      ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
       ClassPathResult classPathResult,
       Bom bom)
       throws IOException, TemplateException {
@@ -461,10 +462,10 @@ public class DashboardMain {
    * are not null means that {@code JarX} has {@code SymbolProblemY} and that {@code JarX} contains
    * {@code classes} which reference {@code SymbolProblemY.getSymbol()}.
    */
-  private static ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> indexByJar(
-      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems) {
+  private static ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>>
+      indexByJar(ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems) {
 
-    ImmutableMap<Path, Collection<Entry<SymbolProblem, ClassFile>>> jarMap =
+    ImmutableMap<ClassPathEntry, Collection<Entry<SymbolProblem, ClassFile>>> jarMap =
         Multimaps.index(symbolProblems.entries(), entry -> entry.getValue().getClassPathEntry())
             .asMap();
 
@@ -483,7 +484,7 @@ public class DashboardMain {
       Path output,
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
-      ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
+      ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
       ClassPathResult classPathResult,
       Bom bom)
       throws IOException, TemplateException {

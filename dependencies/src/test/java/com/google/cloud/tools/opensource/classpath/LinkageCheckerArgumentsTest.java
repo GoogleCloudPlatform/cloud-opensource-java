@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.nio.file.Paths;

@@ -39,7 +39,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -306,18 +305,18 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
   private ImmutableList<ClassPathEntry> buildClasspath(DependencyResolutionResult result)
       throws EnforcerRuleException {
-    ImmutableList.Builder<Path> builder = ImmutableList.builder();
+    ImmutableList.Builder<ClassPathEntry> builder = ImmutableList.builder();
 
     // The root node must have the project's JAR file
     File rootFile = result.getDependencyGraph().getArtifact().getFile();
     if (rootFile == null) {
       throw new EnforcerRuleException("The root project artifact is not associated with a file.");
     }
-    builder.add(rootFile.toPath());
+    builder.add(new ClassPathEntry(result.getDependencyGraph().getArtifact()));
     // The rest are the dependencies
     for (Dependency dependency : result.getResolvedDependencies()) {
       // Resolved dependencies are guaranteed to have file.
-      builder.add(dependency.getArtifact().getFile().toPath());
+      builder.add(new ClassPathEntry(dependency.getArtifact()));
     }
     return builder.build();
   }

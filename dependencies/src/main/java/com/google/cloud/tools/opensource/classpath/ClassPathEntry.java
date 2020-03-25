@@ -23,7 +23,7 @@ import java.util.Objects;
 import org.eclipse.aether.artifact.Artifact;
 
 /** An entry in a class path. */
-final class ClassPathEntry {
+public final class ClassPathEntry {
 
   private Path jar;
   private Artifact artifact;
@@ -34,7 +34,7 @@ final class ClassPathEntry {
   }
 
   /** An entry for a Maven artifact. */
-  ClassPathEntry(Artifact artifact) {
+  public ClassPathEntry(Artifact artifact) {
     checkNotNull(artifact.getFile());
     this.artifact = artifact;
   }

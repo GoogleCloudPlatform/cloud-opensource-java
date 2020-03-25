@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
-import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.annotation.Nullable;
 import org.apache.commons.cli.CommandLine;
@@ -63,7 +63,7 @@ final class DashboardArguments {
 
   /** Returns an absolute path to pom.xml file of a BOM. Null if file is not specified. */
   @Nullable
-  ClassPathEntry getBomFile() {
+  Path getBomFile() {
     if (!commandLine.hasOption('f')) {
       return null;
     }

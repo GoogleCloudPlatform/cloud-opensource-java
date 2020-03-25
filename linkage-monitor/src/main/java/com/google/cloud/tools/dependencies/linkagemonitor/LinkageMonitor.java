@@ -247,7 +247,7 @@ public class LinkageMonitor {
         message.append(
             String.format(
                 "  referenced from %s (%s)\n",
-                classFile.getBinaryName(), classFile.getClassPathEntry().getFileName()));
+                classFile.getBinaryName(), classFile.getClassPathEntry()));
         problematicJars.add(classFile.getClassPathEntry());
       }
     }
