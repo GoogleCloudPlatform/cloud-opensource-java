@@ -143,14 +143,14 @@ public class LinkageMonitorTest {
                 ImmutableList.of()));
     assertEquals(
         "Newly introduced problem:\n"
-            + "(b-1.0.0.jar) io.grpc.protobuf.ProtoUtils's method"
+            + "(JAR(foo/b-1.0.0.jar)) io.grpc.protobuf.ProtoUtils's method"
             + " marshaller(com.google.protobuf.Message arg1) is not found\n"
-            + "  referenced from com.abc.AAA (a-1.2.3.jar)\n"
-            + "  referenced from com.abc.BBB (a-1.2.3.jar)\n"
+            + "  referenced from com.abc.AAA (JAR(foo/a-1.2.3.jar))\n"
+            + "  referenced from com.abc.BBB (JAR(foo/a-1.2.3.jar))\n"
             + "\n"
-            + "b-1.0.0.jar is at:\n"
+            + "JAR(foo/b-1.0.0.jar) is at:\n"
             + "  foo:b:1.2.3 (compile, optional)\n"
-            + "a-1.2.3.jar is at:\n"
+            + "JAR(foo/a-1.2.3.jar) is at:\n"
             + "  foo:bar:1.0.0 (provided) / foo:a:1.2.3 (compile, optional)\n",
         message);
   }
@@ -163,7 +163,7 @@ public class LinkageMonitorTest {
     assertEquals(
         "The following problems in the baseline no longer appear in the snapshot:\n"
             + "  Class java.lang.Integer is not found\n"
-            + "  (b-1.0.0.jar) io.grpc.protobuf.ProtoUtils's method "
+            + "  (JAR(foo/b-1.0.0.jar)) io.grpc.protobuf.ProtoUtils's method "
             + "marshaller(com.google.protobuf.Message arg1) is not found\n",
         message);
   }
