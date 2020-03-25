@@ -66,9 +66,8 @@
     </Source>
     <Reason>
       BlockHound shades ByteBuddy's VirtualMachine class. The class uses Java Native Access (JNA)
-      only when the com.sun.jna package is available by catching ClassNotFoundException. Therefore
-      the invalid references from the VirtualMachine class to JNA classes do not cause linkage
-      errors at runtime.
+      only when the com.sun.jna package is available. Therefore the invalid references from the
+      VirtualMachine class to JNA classes do not cause linkage errors at runtime.
       https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1296
     </Reason>
   </LinkageError>
