@@ -18,6 +18,7 @@
 package com.google.cloud;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
+import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
@@ -46,7 +47,7 @@ public class MaximumLinkageErrorsTest {
     String baselineCoordinates = "com.google.cloud:libraries-bom:" + version;
     Bom baseline = RepositoryUtility.readBom(baselineCoordinates);
 
-    Path bomFile = Paths.get("../cloud-oss-bom/pom.xml");
+    ClassPathEntry bomFile = Paths.get("../cloud-oss-bom/pom.xml");
     Bom bom = RepositoryUtility.readBom(bomFile);
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> oldProblems =

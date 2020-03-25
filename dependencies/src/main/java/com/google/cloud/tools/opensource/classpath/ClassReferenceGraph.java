@@ -47,10 +47,10 @@ public class ClassReferenceGraph {
   private final ImmutableSet<String> reachableClasses;
 
   static ClassReferenceGraph create(
-      SymbolReferenceMaps symbolReferenceMaps, Set<Path> entryPointJars) throws IOException {
+      SymbolReferenceMaps symbolReferenceMaps, Set<ClassPathEntry> entryPointJars) throws IOException {
 
     ImmutableSet.Builder<String> entryPointClassBuilder = ImmutableSet.builder();
-    for (Path jar : entryPointJars) {
+    for (ClassPathEntry jar : entryPointJars) {
       for (String className : ClassDumper.listClassFileNames(jar)) {
         entryPointClassBuilder.add(className);
       }

@@ -29,4 +29,8 @@ public class TestHelper {
   public static Path absolutePathOfResource(String resourceName) throws URISyntaxException {
     return Paths.get(ClassLoader.getSystemResource(resourceName).toURI()).toAbsolutePath();
   }
+
+  public static ClassPathEntry classPathEntryOfResource(String resourceName) throws URISyntaxException {
+    return new ClassPathEntry(absolutePathOfResource(resourceName));
+  }
 }

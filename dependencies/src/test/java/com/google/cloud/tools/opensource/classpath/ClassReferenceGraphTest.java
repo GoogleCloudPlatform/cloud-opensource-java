@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static com.google.cloud.tools.opensource.classpath.TestHelper.classPathEntryOfResource;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Truth;
@@ -32,19 +33,19 @@ public class ClassReferenceGraphTest {
 
   private static ClassReferenceGraph createExampleGraph() throws URISyntaxException, IOException {
 
-    Path jar = absolutePathOfResource(GRPC_CLOUD_FIRESTORE_JAR);
+    ClassPathEntry firestoreJar = classPathEntryOfResource(GRPC_CLOUD_FIRESTORE_JAR);
 
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
     builder.addClassReference(
-        new ClassFile(jar, "com.google.firestore.v1beta1.FirestoreGrpc"),
+        new ClassFile(firestoreJar, "com.google.firestore.v1beta1.FirestoreGrpc"),
         new ClassSymbol("ClassA"));
-    builder.addClassReference(new ClassFile(jar, "ClassA"), new ClassSymbol("ClassB"));
-    builder.addClassReference(new ClassFile(jar, "ClassC"), new ClassSymbol("ClassD"));
+    builder.addClassReference(new ClassFile(firestoreJar, "ClassA"), new ClassSymbol("ClassB"));
+    builder.addClassReference(new ClassFile(firestoreJar, "ClassC"), new ClassSymbol("ClassD"));
 
     return ClassReferenceGraph.create(
         builder.build(),
         // This jar file contains com.google.firestore.v1beta1.FirestoreGrpc
-        ImmutableSet.of(absolutePathOfResource(GRPC_CLOUD_FIRESTORE_JAR)));
+        ImmutableSet.of(classPathEntryOfResource(GRPC_CLOUD_FIRESTORE_JAR)));
   }
 
   @Test

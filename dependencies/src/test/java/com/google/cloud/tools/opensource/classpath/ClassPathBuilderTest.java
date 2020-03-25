@@ -29,6 +29,7 @@ import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import org.eclipse.aether.RepositoryException;
@@ -44,7 +45,7 @@ public class ClassPathBuilderTest {
 
   private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
-  private ImmutableList<Path> resolveClassPath(String coordinates) {
+  private ImmutableList<ClassPathEntry> resolveClassPath(String coordinates) {
     Artifact artifact = new DefaultArtifact(coordinates);
     ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(artifact));
     return result.getClassPath();
@@ -55,16 +56,16 @@ public class ClassPathBuilderTest {
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
     ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(grpcArtifact));
 
-    ImmutableList<Path> paths = result.getClassPath();
+    ImmutableList<ClassPathEntry> paths = result.getClassPath();
     long jsr305Count = paths.stream().filter(path -> path.toString().contains("jsr305-")).count();
     Truth.assertWithMessage("There should not be duplicated versions for jsr305")
         .that(jsr305Count)
         .isEqualTo(1);
 
-    Optional<Path> opencensusApiPathFound =
+    Optional<ClassPathEntry> opencensusApiPathFound =
         paths.stream().filter(path -> path.toString().contains("opencensus-api-")).findFirst();
     Truth8.assertThat(opencensusApiPathFound).isPresent();
-    Path opencensusApiPath = opencensusApiPathFound.get();
+    ClassPathEntry opencensusApiPath = opencensusApiPathFound.get();
     Truth.assertWithMessage("Opencensus API should have multiple dependency paths")
         .that(result.getDependencyPaths(opencensusApiPath).size())
         .isGreaterThan(1);
@@ -77,15 +78,15 @@ public class ClassPathBuilderTest {
         RepositoryUtility.readBom("com.google.cloud:google-cloud-bom:0.81.0-alpha")
         .getManagedDependencies();
 
-    ImmutableList<Path> classPath = classPathBuilder.resolve(managedDependencies).getClassPath();
+    ImmutableList<ClassPathEntry> classPath = classPathBuilder.resolve(managedDependencies).getClassPath();
 
-    ImmutableList<Path> paths = ImmutableList.copyOf(classPath);
+    ImmutableList<ClassPathEntry> entries = ImmutableList.copyOf(classPath);
 
-    Truth.assertThat(paths.get(0).getFileName().toString()).isEqualTo(
-        "api-common-1.7.0.jar"); // first element in the BOM
+    Truth.assertThat(entries.get(0).toString()).isEqualTo(
+        "JAR(api-common-1.7.0.jar)"); // first element in the BOM
     int bomSize = managedDependencies.size();
-    String lastFileName = paths.get(bomSize - 1).getFileName().toString();
-    Truth.assertThat(lastFileName).isEqualTo("gax-httpjson-0.57.0.jar"); // last element in BOM
+    String lastFileName = entries.get(bomSize - 1).toString();
+    Truth.assertThat(lastFileName).isEqualTo("JAR(gax-httpjson-0.57.0.jar)"); // last element in BOM
   }
 
   @Test
@@ -93,21 +94,21 @@ public class ClassPathBuilderTest {
 
     Artifact grpcAuth = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
 
-    ImmutableList<Path> paths = classPathBuilder.resolve(ImmutableList.of(grpcAuth)).getClassPath();
+    ImmutableList<ClassPathEntry> classPath = classPathBuilder.resolve(ImmutableList.of(grpcAuth)).getClassPath();
 
-    Truth.assertThat(paths)
+    Truth.assertThat(classPath)
         .comparingElementsUsing(PATH_FILE_NAMES)
         .containsAtLeast("grpc-auth-1.15.1.jar", "google-auth-library-credentials-0.9.0.jar");
-    paths.forEach(
+    classPath.forEach(
         path ->
             Truth.assertWithMessage("Every returned path should be an absolute path")
-                .that(path.isAbsolute())
+                .that(Paths.get(path.getPath()).isAbsolute())
                 .isTrue());
   }
 
   @Test
   public void testresolveClassPath_validCoordinate() {
-    List<Path> paths = resolveClassPath("io.grpc:grpc-auth:1.15.1");
+    List<ClassPathEntry> paths = resolveClassPath("io.grpc:grpc-auth:1.15.1");
 
     Truth.assertThat(paths)
         .comparingElementsUsing(PATH_FILE_NAMES)
@@ -118,13 +119,13 @@ public class ClassPathBuilderTest {
     paths.forEach(
         path ->
             Truth.assertWithMessage("Every returned path should be an absolute path")
-                .that(path.isAbsolute())
+                .that(Paths.get(path.getPath()).isAbsolute())
                 .isTrue());
   }
 
   @Test
   public void testResolveClassPath_optionalDependency() {
-    List<Path> paths = resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
+    List<ClassPathEntry> paths = resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
     Truth.assertThat(paths).comparingElementsUsing(PATH_FILE_NAMES).contains("log4j-1.2.12.jar");
   }
 
@@ -142,18 +143,18 @@ public class ClassPathBuilderTest {
 
   @Test
   public void testResolve_emptyInput() {
-    List<Path> jars = classPathBuilder.resolve(ImmutableList.of()).getClassPath();
+    List<ClassPathEntry> jars = classPathBuilder.resolve(ImmutableList.of()).getClassPath();
     Truth.assertThat(jars).isEmpty();
   }
 
   @Test
   public void testFindInvalidReferences_selfReferenceFromAbstractClassToInterface()
       throws IOException {
-    List<Path> paths = resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
-    Path httpClientJar =
+    List<ClassPathEntry> paths = resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
+    ClassPathEntry httpClientJar =
         paths
             .stream()
-            .filter(path -> "httpclient-4.5.3.jar".equals(path.getFileName().toString()))
+            .filter(path -> path.getPath().contains("httpclient-4.5.3.jar"))
             .findFirst()
             .get();
     LinkageChecker linkageChecker = LinkageChecker.create(paths, ImmutableSet.copyOf(paths));
@@ -181,13 +182,13 @@ public class ClassPathBuilderTest {
         "Method references within the same jar file should not be reported",
         0,
         symbolProblems.values().stream()
-            .filter(classFile -> httpClientJar.equals(classFile.getJar()))
+            .filter(classFile -> httpClientJar.equals(classFile.getClassPathEntry()))
             .count());
   }
 
   @Test
   public void testResolveClasspath_notToGenerateRepositoryException() {
-    List<Path> paths = resolveClassPath("com.google.guava:guava-gwt:jar:20.0");
+    List<ClassPathEntry> paths = resolveClassPath("com.google.guava:guava-gwt:jar:20.0");
     Truth.assertThat(paths).isNotEmpty();
   }
 

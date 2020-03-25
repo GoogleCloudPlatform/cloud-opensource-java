@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSetMultimap.Builder;
 import com.google.common.collect.Iterables;
 import com.google.common.graph.Traverser;
 import com.google.common.reflect.ClassPath.ClassInfo;
@@ -34,6 +35,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -72,40 +74,42 @@ import org.apache.bcel.util.ClassPath;
 class ClassDumper {
   private static final Logger logger = Logger.getLogger(ClassDumper.class.getName());
 
-  private final ImmutableList<Path> inputClassPath;
+  private final ImmutableList<ClassPathEntry> inputClassPath;
   private final FixedSizeClassPathRepository classRepository;
   private final ClassLoader extensionClassLoader;
-  private final ImmutableSetMultimap<Path, String> jarFileToClassFileNames;
-  private final ImmutableListMultimap<String, Path> classFileNameToJarFiles;
+  private final ImmutableSetMultimap<ClassPathEntry, String> classPathEntryToClassFileNames;
+  private final ImmutableListMultimap<String, ClassPathEntry> classFileNameToClassPathEntry;
 
-  private static FixedSizeClassPathRepository createClassRepository(List<Path> paths) {
-    ClassPath classPath = new LinkageCheckClassPath(paths);
+  private static FixedSizeClassPathRepository createClassRepository(List<ClassPathEntry> entries) {
+    ClassPath classPath = new LinkageCheckClassPath(entries);
     return new FixedSizeClassPathRepository(classPath);
   }
 
-  static ClassDumper create(List<Path> jarPaths) throws IOException {
+  static ClassDumper create(List<ClassPathEntry> entries) throws IOException {
     ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
     ClassLoader extensionClassLoader = systemClassLoader.getParent();
 
     ImmutableList<Path> unreadableFiles =
-        jarPaths.stream()
+        entries.stream()
+            .map(ClassPathEntry::getPath)
+            .map(Paths::get)
             .filter(jar -> !Files.isRegularFile(jar) || !Files.isReadable(jar))
             .collect(toImmutableList());
     checkArgument(
         unreadableFiles.isEmpty(), "Some jar files are not readable: %s", unreadableFiles);
 
-    return new ClassDumper(jarPaths, extensionClassLoader, mapJarToClassFileNames(jarPaths));
+    return new ClassDumper(entries, extensionClassLoader, mapJarToClassFileNames(entries));
   }
 
   private ClassDumper(
-      List<Path> inputClassPath,
+      List<ClassPathEntry> inputClassPath,
       ClassLoader extensionClassLoader,
-      ImmutableSetMultimap<Path, String> jarToClasses) {
+      ImmutableSetMultimap<ClassPathEntry, String> jarToClasses) {
     this.inputClassPath = ImmutableList.copyOf(inputClassPath);
     this.classRepository = createClassRepository(inputClassPath);
     this.extensionClassLoader = extensionClassLoader;
-    this.jarFileToClassFileNames = ImmutableSetMultimap.copyOf(jarToClasses);
-    this.classFileNameToJarFiles = ImmutableListMultimap.copyOf(jarToClasses.inverse());
+    this.classPathEntryToClassFileNames = ImmutableSetMultimap.copyOf(jarToClasses);
+    this.classFileNameToClassPathEntry = ImmutableListMultimap.copyOf(jarToClasses.inverse());
   }
 
   /**
@@ -142,8 +146,8 @@ class ClassDumper {
    *
    * @param jarPath absolute path to the jar file
    */
-  ImmutableSet<String> classesDefinedInJar(Path jarPath) {
-    return jarFileToClassFileNames.get(jarPath);
+  ImmutableSet<String> classesDefinedInJar(ClassPathEntry jarPath) {
+    return classPathEntryToClassFileNames.get(jarPath);
   }
 
   /**
@@ -152,7 +156,7 @@ class ClassDumper {
   SymbolReferenceMaps findSymbolReferences() throws IOException {
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
 
-    for (Path jar : inputClassPath) {
+    for (ClassPathEntry jar : inputClassPath) {
       for (JavaClass javaClass : listClasses(jar)) {
         if (!isCompatibleClassFileVersion(javaClass)) {
           continue;
@@ -323,14 +327,14 @@ class ClassDumper {
    * Returns the first jar file {@link Path} defining the class. Null if the location is unknown.
    */
   @Nullable
-  Path findClassLocation(String className) {
+  ClassPathEntry findClassLocation(String className) {
     // Initially this method used classLoader.loadClass().getProtectionDomain().getCodeSource().
     // However, it required the superclass of a target class to be loadable too; otherwise
     // ClassNotFoundException was raised. It was inconvenient because we only wanted to know the
     // location of the target class, and sometimes the superclass is unavailable.
-    Path path = Iterables.getFirst(classFileNameToJarFiles.get(className), null);
-    if (path != null) {
-      return path;
+    ClassPathEntry entry = Iterables.getFirst(classFileNameToClassPathEntry.get(className), null);
+    if (entry != null) {
+      return entry;
     }
 
     // Some classes have framework-specific prefix such as "WEB-INF.classes.AppWidgetset" in its
@@ -339,19 +343,20 @@ class ClassDumper {
     if (specialLocation == null) {
       return null;
     }
-    return Iterables.getFirst(classFileNameToJarFiles.get(specialLocation), null);
+    return Iterables.getFirst(classFileNameToClassPathEntry.get(specialLocation), null);
   }
 
   /**
-   * Returns mapping from jar files to class file names they contain.
+   * Returns mapping from class path entries to class file names they contain.
    *
    * @param jars absolute paths to jar files
    */
   @VisibleForTesting
-  static ImmutableSetMultimap<Path, String> mapJarToClassFileNames(List<Path> jars)
+  static ImmutableSetMultimap<ClassPathEntry, String> mapJarToClassFileNames(
+      List<ClassPathEntry> jars)
       throws IOException {
-    ImmutableSetMultimap.Builder<Path, String> pathToClasses = ImmutableSetMultimap.builder();
-    for (Path jar : jars) {
+    Builder<ClassPathEntry, String> pathToClasses = ImmutableSetMultimap.builder();
+    for (ClassPathEntry jar : jars) {
       for (String classFileName : listClassFileNames(jar)) {
         pathToClasses.put(jar, classFileName);
       }
@@ -365,8 +370,8 @@ class ClassDumper {
    * Usually the class name and class file name are the same. However a class file name may have a
    * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
    */
-  static ImmutableSet<String> listClassFileNames(Path jar) throws IOException {
-    URL jarUrl = jar.toUri().toURL();
+  static ImmutableSet<String> listClassFileNames(ClassPathEntry entry) throws IOException {
+    URL jarUrl = Paths.get(entry.getPath()).toUri().toURL();
     // Setting parent as null because we don't want other classes than this jar file
     URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[] {jarUrl}, null);
 
@@ -383,7 +388,7 @@ class ClassDumper {
    * Returns a set of {@link JavaClass}es which have entries in the {@code jar} through {@link
    * #classRepository}.
    */
-  private ImmutableSet<JavaClass> listClasses(Path jar) throws IOException {
+  private ImmutableSet<JavaClass> listClasses(ClassPathEntry jar) throws IOException {
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
 
     ImmutableList.Builder<String> corruptedClassFileNames = ImmutableList.builder();

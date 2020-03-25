@@ -76,7 +76,7 @@ public class LinkageCheckerArgumentsTest {
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
-    List<Path> inputClasspath = parsedArguments.getJarFiles();
+    List<ClassPathEntry> inputClasspath = parsedArguments.getJarFiles();
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)

@@ -22,6 +22,7 @@ import static org.apache.maven.enforcer.rule.api.EnforcerLevel.WARN;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
+import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
@@ -165,7 +166,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         }
       }
 
-      ImmutableList<Path> classpath =
+      ImmutableList<ClassPathEntry> classpath =
           readingDependencyManagementSection
               ? findBomClasspath(project, repositorySystemSession)
               : findProjectClasspath(project, repositorySystemSession, helper);
@@ -179,7 +180,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       long projectDependencyCount = project.getDependencies().stream()
                   .filter(dependency -> !"test".equals(dependency.getScope()))
                   .count();
-      List<Path> entryPoints = classpath.subList(0, (int) projectDependencyCount + 1);
+      List<ClassPathEntry> entryPoints = classpath.subList(0, (int) projectDependencyCount + 1);
 
       try {
 
@@ -237,7 +238,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   /** Builds a class path for {@code mavenProject}. */
-  private ImmutableList<Path> findProjectClasspath(
+  private ImmutableList<ClassPathEntry> findProjectClasspath(
       MavenProject mavenProject, RepositorySystemSession session, EnforcerRuleHelper helper)
       throws EnforcerRuleException {
     try {
@@ -279,7 +280,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   /**
    * Returns class path built from partial dependency graph of {@code resolutionException}.
    */
-  private ImmutableList<Path> buildClasspathFromException(
+  private ImmutableList<ClassPathEntry> buildClasspathFromException(
       DependencyResolutionException resolutionException) throws EnforcerRuleException {
     DependencyResolutionResult result = resolutionException.getResult();
 
@@ -305,7 +306,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     }
   }
 
-  private ImmutableList<Path> buildClasspath(DependencyResolutionResult result)
+  private ImmutableList<ClassPathEntry> buildClasspath(DependencyResolutionResult result)
       throws EnforcerRuleException {
     ImmutableList.Builder<Path> builder = ImmutableList.builder();
 
@@ -324,7 +325,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   /** Builds a class path for {@code bomProject}. */
-  private ImmutableList<Path> findBomClasspath(
+  private ImmutableList<ClassPathEntry> findBomClasspath(
       MavenProject bomProject, RepositorySystemSession repositorySystemSession)
       throws EnforcerRuleException {
 

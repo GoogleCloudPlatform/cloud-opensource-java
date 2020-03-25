@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
+import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.cloud.tools.opensource.classpath.ErrorType;
@@ -110,8 +111,8 @@ public class LinkageMonitorTest {
   @Test
   public void generateMessageForNewError() {
     Set<SymbolProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
-    Path jarA = Paths.get("foo", "a-1.2.3.jar");
-    Path jarB = Paths.get("foo", "b-1.0.0.jar");
+    ClassPathEntry jarA = Paths.get("foo", "a-1.2.3.jar");
+    ClassPathEntry jarB = Paths.get("foo", "b-1.0.0.jar");
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotProblems =
         ImmutableSetMultimap.of(
             classNotFoundProblem, // This is in baseline. It should not be printed

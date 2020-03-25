@@ -20,10 +20,10 @@ import com.google.cloud.tools.opensource.dependencies.ArtifactProblem;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimaps;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.cli.ParseException;
@@ -58,8 +58,8 @@ class LinkageCheckerMain {
         ImmutableList<Artifact> artifacts = linkageCheckerArguments.getArtifacts();
     
         // When JAR files are specified in the argument, artifacts are empty.
-        ImmutableList<Path> inputClassPath;
-        ImmutableSet<Path> entryPointJars;
+        ImmutableList<ClassPathEntry> inputClassPath;
+        ImmutableSet<ClassPathEntry> entryPointJars;
         List<ArtifactProblem> artifactProblems = new ArrayList<>();
         // classPathResult is kept null if JAR files are specified in the argument
         ClassPathResult classPathResult = null;
@@ -96,14 +96,14 @@ class LinkageCheckerMain {
         System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
     
         if (classPathResult != null && !symbolProblems.isEmpty()) {
-          ImmutableSet.Builder<Path> problematicJars = ImmutableSet.builder();
+          Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
           for (SymbolProblem symbolProblem : symbolProblems.keySet()) {
             ClassFile containingClass = symbolProblem.getContainingClass();
             if (containingClass != null) {
-              problematicJars.add(containingClass.getJar());
+              problematicJars.add(containingClass.getClassPathEntry());
             }
             for (ClassFile classFile : symbolProblems.get(symbolProblem)) {
-              problematicJars.add(classFile.getJar());
+              problematicJars.add(classFile.getClassPathEntry());
             }
           }
           System.out.println(classPathResult.formatDependencyPaths(problematicJars.build()));

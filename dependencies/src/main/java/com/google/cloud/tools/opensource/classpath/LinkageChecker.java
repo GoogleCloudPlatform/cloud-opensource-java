@@ -28,7 +28,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -50,7 +49,7 @@ public class LinkageChecker {
   private static final Logger logger = Logger.getLogger(LinkageChecker.class.getName());
   
   private final ClassDumper classDumper;
-  private final ImmutableList<Path> jars;
+  private final ImmutableList<ClassPathEntry> jars;
   private final SymbolReferenceMaps classToSymbols;
   private final ClassReferenceGraph classReferenceGraph;
   private final ExcludedErrors excludedErrors;
@@ -64,19 +63,20 @@ public class LinkageChecker {
     return classReferenceGraph;
   }
 
-  public static LinkageChecker create(List<Path> jars, Iterable<Path> entryPoints)
+  public static LinkageChecker create(
+      List<ClassPathEntry> entries, Iterable<ClassPathEntry> entryPoints)
       throws IOException {
     Preconditions.checkArgument(
-        !jars.isEmpty(),
+        !entries.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
-    ClassDumper dumper = ClassDumper.create(jars);
+    ClassDumper dumper = ClassDumper.create(entries);
     SymbolReferenceMaps symbolReferenceMaps = dumper.findSymbolReferences();
 
     ClassReferenceGraph classReferenceGraph =
         ClassReferenceGraph.create(symbolReferenceMaps, ImmutableSet.copyOf(entryPoints));
 
     return new LinkageChecker(
-        dumper, jars, symbolReferenceMaps, classReferenceGraph, ExcludedErrors.create());
+        dumper, entries, symbolReferenceMaps, classReferenceGraph, ExcludedErrors.create());
   }
 
   public static LinkageChecker create(Bom bom) throws IOException {
@@ -85,11 +85,11 @@ public class LinkageChecker {
 
     ClassPathBuilder classPathBuilder = new ClassPathBuilder();
     ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies);
-    ImmutableList<Path> classpath = classPathResult.getClassPath();
+    ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
 
     // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
-    List<Path> artifactJarsInBom = classpath.subList(0, managedDependencies.size());
-    ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInBom);
+    List<ClassPathEntry> artifactJarsInBom = classpath.subList(0, managedDependencies.size());
+    ImmutableSet<ClassPathEntry> entryPoints = ImmutableSet.copyOf(artifactJarsInBom);
 
     return LinkageChecker.create(classpath, entryPoints);
   }
@@ -102,7 +102,7 @@ public class LinkageChecker {
 
   private LinkageChecker(
       ClassDumper classDumper,
-      List<Path> jars,
+      List<ClassPathEntry> jars,
       SymbolReferenceMaps symbolReferenceMaps,
       ClassReferenceGraph classReferenceGraph,
       ExcludedErrors excludedErrors) {
@@ -131,7 +131,7 @@ public class LinkageChecker {
                 findAbstractParentProblems(classFile, (SuperClassSymbol) classSymbol);
             if (!problems.isEmpty()) {
               String superClassName = classSymbol.getClassBinaryName();
-              Path superClassLocation = classDumper.findClassLocation(superClassName);
+              ClassPathEntry superClassLocation = classDumper.findClassLocation(superClassName);
               ClassFile superClassFile = new ClassFile(superClassLocation, superClassName);
               for (SymbolProblem problem : problems) {
                 problemToClass.put(problem, superClassFile);
@@ -139,7 +139,7 @@ public class LinkageChecker {
             }
           }
           if (!classDumper
-              .classesDefinedInJar(classFile.getJar())
+              .classesDefinedInJar(classFile.getClassPathEntry())
               .contains(classSymbol.getClassBinaryName())) {
 
             if (classSymbol instanceof InterfaceSymbol) {
@@ -147,7 +147,7 @@ public class LinkageChecker {
                   findInterfaceProblems(classFile, (InterfaceSymbol) classSymbol);
               if (!problems.isEmpty()) {
                 String interfaceName = classSymbol.getClassBinaryName();
-                Path interfaceLocation = classDumper.findClassLocation(interfaceName);
+                ClassPathEntry interfaceLocation = classDumper.findClassLocation(interfaceName);
                 ClassFile interfaceClassFile = new ClassFile(interfaceLocation, interfaceName);
                 for (SymbolProblem problem : problems) {
                   problemToClass.put(problem, interfaceClassFile);
@@ -165,7 +165,7 @@ public class LinkageChecker {
     classToMethodSymbols.forEach(
         (classFile, methodSymbol) -> {
           if (!classDumper
-              .classesDefinedInJar(classFile.getJar())
+              .classesDefinedInJar(classFile.getClassPathEntry())
               .contains(methodSymbol.getClassBinaryName())) {
             findSymbolProblem(classFile, methodSymbol)
                 .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
@@ -177,7 +177,7 @@ public class LinkageChecker {
     classToFieldSymbols.forEach(
         (classFile, fieldSymbol) -> {
           if (!classDumper
-              .classesDefinedInJar(classFile.getJar())
+              .classesDefinedInJar(classFile.getClassPathEntry())
               .contains(fieldSymbol.getClassBinaryName())) {
             findSymbolProblem(classFile, fieldSymbol)
                 .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
@@ -223,7 +223,7 @@ public class LinkageChecker {
 
     try {
       JavaClass targetJavaClass = classDumper.loadJavaClass(targetClassName);
-      Path classFileLocation = classDumper.findClassLocation(targetClassName);
+      ClassPathEntry classFileLocation = classDumper.findClassLocation(targetClassName);
       ClassFile containingClassFile =
           classFileLocation == null ? null : new ClassFile(classFileLocation, targetClassName);
 
@@ -349,7 +349,7 @@ public class LinkageChecker {
     String fieldName = symbol.getName();
     try {
       JavaClass targetJavaClass = classDumper.loadJavaClass(targetClassName);
-      Path classFileLocation = classDumper.findClassLocation(targetClassName);
+      ClassPathEntry classFileLocation = classDumper.findClassLocation(targetClassName);
       ClassFile containingClassFile =
           classFileLocation == null ? null : new ClassFile(classFileLocation, targetClassName);
 
@@ -437,7 +437,7 @@ public class LinkageChecker {
 
     try {
       JavaClass targetClass = classDumper.loadJavaClass(targetClassName);
-      Path classFileLocation = classDumper.findClassLocation(targetClassName);
+      ClassPathEntry classFileLocation = classDumper.findClassLocation(targetClassName);
       ClassFile containingClassFile =
           classFileLocation == null ? null : new ClassFile(classFileLocation, targetClassName);
 

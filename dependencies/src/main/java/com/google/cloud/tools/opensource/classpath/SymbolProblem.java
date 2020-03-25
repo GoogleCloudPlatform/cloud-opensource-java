@@ -89,7 +89,7 @@ public final class SymbolProblem {
   public final String toString() {
     String jarInfo =
         containingClass != null
-            ? String.format("(%s) ", containingClass.getJar().getFileName())
+            ? String.format("(%s) ", containingClass.getClassPathEntry())
             : "";
     return jarInfo + getErrorType().getMessage(symbol.toString());
   }
@@ -110,7 +110,7 @@ public final class SymbolProblem {
               classFiles.forEach(
                   classFile -> {
                     output.append("    " + classFile.getBinaryName());
-                    output.append(" (" + classFile.getJar().getFileName() + ")\n");
+                    output.append(" (" + classFile.getClassPathEntry() + ")\n");
                   });
             });
 

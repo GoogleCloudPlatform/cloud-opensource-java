@@ -17,7 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.ClassPathBuilderTest.PATH_FILE_NAMES;
-import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static com.google.cloud.tools.opensource.classpath.TestHelper.classPathEntryOfResource;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -61,12 +61,12 @@ public class LinkageCheckerTest {
 
   private static DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
 
-  private Path guavaPath;
-  private Path firestorePath;
+  private ClassPathEntry guavaJar;
+  private ClassPathEntry firestoreJar;
   private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
   /** Returns JAR files resolved for the full dependency tree of {@code coordinates}. */
-  static ImmutableList<Path> resolvePaths(String... coordinates) {
+  static ImmutableList<ClassPathEntry> resolvePaths(String... coordinates) {
     ImmutableList<Artifact> artifacts =
         Arrays.stream(coordinates).map(DefaultArtifact::new).collect(toImmutableList());
     ClassPathResult result = (new ClassPathBuilder()).resolve(artifacts);
@@ -74,29 +74,30 @@ public class LinkageCheckerTest {
   }
 
   /** Returns JAR files resolved for the transitive dependencies of {@code coordinates}. */
-  private ImmutableList<Path> resolveTransitiveDependencyPaths(String coordinates) {
+  private ImmutableList<ClassPathEntry> resolveTransitiveDependencyPaths(String coordinates) {
     DependencyGraph dependencies =
         dependencyGraphBuilder
             .buildMavenDependencyGraph(new Dependency(new DefaultArtifact(coordinates), "compile"))
             .getDependencyGraph();
-    ImmutableList<Path> jars =
+    ImmutableList<ClassPathEntry> classPath =
         dependencies.list().stream()
             .map(path -> path.getLeaf().getFile().toPath())
+            .map(ClassPathEntry::new)
             .collect(toImmutableList());
-    return jars;
+    return classPath;
   }
 
   @Before
   public void setup() throws URISyntaxException {
-    guavaPath = absolutePathOfResource("testdata/guava-23.5-jre.jar");
-    firestorePath =
-        absolutePathOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar");
+    guavaJar = classPathEntryOfResource("testdata/guava-23.5-jre.jar");
+    firestoreJar =
+        classPathEntryOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar");
   }
 
   @Test
   public void testScannedSymbols() throws IOException {
-    Path guavaAbsolutePath = guavaPath;
-    List<Path> paths = ImmutableList.of(guavaAbsolutePath);
+    ClassPathEntry guavaAbsolutePath = guavaJar;
+    List<ClassPathEntry> paths = ImmutableList.of(guavaAbsolutePath);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     SymbolReferenceMaps classToSymbols = linkageChecker.getClassToSymbols();
@@ -123,7 +124,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindInvalidReferences_arrayCloneMethod() throws IOException {
-    List<Path> paths = ImmutableList.of(guavaPath);
+    List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     // Array's clone is available in Java runtime and thus should not be reported as linkage error
@@ -136,7 +137,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindInvalidReferences_constructorInAbstractClass() throws IOException {
-    List<Path> paths = ImmutableList.of(guavaPath);
+    List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
@@ -157,7 +158,7 @@ public class LinkageCheckerTest {
   @Test
   public void testCheckLinkageErrorMissingInterfaceMethodAt_interfaceAndClassSeparation()
       throws IOException {
-    List<Path> paths = ImmutableList.of(guavaPath);
+    List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     // ImmutableList is an abstract class, but setting isInterfaceMethod = true to get an error
@@ -180,7 +181,7 @@ public class LinkageCheckerTest {
   @Test
   public void testCheckLinkageErrorMissingMethodAt_interfaceAndClassSeparation()
       throws IOException {
-    List<Path> paths = ImmutableList.of(guavaPath);
+    List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     // ClassToInstanceMap is an interface, but setting isInterfaceMethod = false
@@ -201,13 +202,13 @@ public class LinkageCheckerTest {
   @Test
   public void testCheckLinkageErrorMissingInterfaceMethodAt_missingInterfaceMethod()
       throws IOException {
-    List<Path> paths = ImmutableList.of(guavaPath);
+    List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     // There is no such method on ClassToInstanceMap
     Optional<SymbolProblem> problemFound =
         linkageChecker.findSymbolProblem(
-            new ClassFile(guavaPath, "com.google.common.collect.ImmutableList"),
+            new ClassFile(guavaJar, "com.google.common.collect.ImmutableList"),
             new MethodSymbol(
                 "com.google.common.collect.ClassToInstanceMap",
                 "noSuchMethod",
@@ -220,7 +221,7 @@ public class LinkageCheckerTest {
   @Test
   public void testFindInvalidReferences_interfaceNotImplementedAtAbstractClass()
       throws IOException {
-    List<Path> paths = ImmutableList.of(guavaPath);
+    List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     // ImmutableList is an abstract class that implements List, but does not implement get() method
@@ -234,7 +235,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindSymbolProblem_privateConstructor() throws IOException {
-    List<Path> paths = ImmutableList.of(guavaPath);
+    List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     // The constructor of Absent class with zero arguments is marked as private
@@ -249,7 +250,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindSymbolProblem_protectedConstructorFromAnonymousClass() throws IOException {
-    List<Path> paths = resolvePaths("junit:junit:4.12");
+    List<ClassPathEntry> paths = resolvePaths("junit:junit:4.12");
     // junit has dependency on hamcrest-core
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
@@ -267,7 +268,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindSymbolProblem_inaccessibleClass() throws IOException {
-    List<Path> paths = ImmutableList.of(guavaPath);
+    List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     // Absent class is package private
@@ -282,7 +283,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindSymbolProblem_privateStaticMethod() throws IOException {
-    List<Path> paths = ImmutableList.of(guavaPath);
+    List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     Optional<SymbolProblem> problemFound =
@@ -300,7 +301,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindSymbolProblem_methodSymbolMissingClass() throws IOException {
-    List<Path> paths = ImmutableList.of(guavaPath);
+    List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     Optional<SymbolProblem> problemFound =
@@ -319,7 +320,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindSymbolProblem_validField() throws IOException {
-    List<Path> paths = ImmutableList.of(firestorePath);
+    List<ClassPathEntry> paths = ImmutableList.of(firestoreJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     Optional<SymbolProblem> problemFound =
@@ -335,8 +336,8 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindSymbolProblem_nonExistentField() throws IOException {
-    Path firestoreJar = firestorePath;
-    List<Path> paths = ImmutableList.of(firestoreJar);
+    ClassPathEntry firestoreJar = this.firestoreJar;
+    List<ClassPathEntry> paths = ImmutableList.of(firestoreJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     Optional<SymbolProblem> problemFound =
@@ -350,12 +351,12 @@ public class LinkageCheckerTest {
     Truth8.assertThat(problemFound).isPresent();
     SymbolProblem symbolProblem = problemFound.get();
     assertSame(ErrorType.SYMBOL_NOT_FOUND, symbolProblem.getErrorType());
-    assertEquals(firestoreJar, symbolProblem.getContainingClass().getJar());
+    assertEquals(firestoreJar, symbolProblem.getContainingClass().getClassPathEntry());
   }
 
   @Test
   public void testFindSymbolProblem_fieldSymbolMissingClass() throws IOException {
-    List<Path> paths = ImmutableList.of(guavaPath);
+    List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     Optional<SymbolProblem> problemFound =
@@ -375,7 +376,7 @@ public class LinkageCheckerTest {
   public void testFindSymbolProblem_guavaClassShouldNotBeAddedAutomatically()
       throws IOException, URISyntaxException {
     // The class path does not include Guava.
-    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
+    List<ClassPathEntry> paths = ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     // Guava class should not be found in the class path
@@ -394,7 +395,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindSymbolProblem_validClassInJar() throws IOException {
-    List<Path> paths = ImmutableList.of(firestorePath);
+    List<ClassPathEntry> paths = ImmutableList.of(firestoreJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     // FirestoreGrpc class exists in the jar file
@@ -409,7 +410,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindSymbolProblem_invalidSuperclass() throws IOException {
-    List<Path> paths = ImmutableList.of(firestorePath);
+    List<ClassPathEntry> paths = ImmutableList.of(firestoreJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     Optional<SymbolProblem> problemFound =
@@ -426,7 +427,7 @@ public class LinkageCheckerTest {
   public void testFindSymbolProblem_invalidMethodOverriding() throws IOException {
     // cglib 2.2 does not work with asm 4. Stackoverflow post explaining VerifyError:
     // https://stackoverflow.com/questions/21059019/cglib-is-causing-a-java-lang-verifyerror-during-query-generation-in-intuit-partn
-    List<Path> paths = resolvePaths("cglib:cglib:2.2_beta1", "org.ow2.asm:asm:4.2");
+    List<ClassPathEntry> paths = resolvePaths("cglib:cglib:2.2_beta1", "org.ow2.asm:asm:4.2");
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
@@ -445,7 +446,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindSymbolProblem_privateField() throws IOException, URISyntaxException {
-    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
+    List<ClassPathEntry> paths = ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     Optional<SymbolProblem> problemFound =
@@ -467,7 +468,7 @@ public class LinkageCheckerTest {
   public void testFindSymbolProblem_protectedFieldFromSamePackage() throws IOException {
     String targetClassName = "com.google.common.io.CharSource$CharSequenceCharSource";
 
-    List<Path> paths = ImmutableList.of(guavaPath);
+    List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     Optional<SymbolProblem> problemFoundSamePackage =
@@ -496,7 +497,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindSymbolProblem_protectedFieldFromSubclass() throws IOException {
-    List<Path> paths = ImmutableList.of(guavaPath);
+    List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
     Optional<SymbolProblem> problemFound =
@@ -512,7 +513,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindInvalidClassReferences_nonExistentClass() throws IOException {
-    List<Path> paths = ImmutableList.of(firestorePath);
+    List<ClassPathEntry> paths = ImmutableList.of(firestoreJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     String nonExistentClassName = "io.grpc.MethodDescriptor";
@@ -527,7 +528,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindClassReferences_innerClass() throws IOException {
-    List<Path> paths = ImmutableList.of(firestorePath);
+    List<ClassPathEntry> paths = ImmutableList.of(firestoreJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
@@ -545,8 +546,8 @@ public class LinkageCheckerTest {
   @Test
   public void testFindClassReferences_privateClass() throws IOException, URISyntaxException {
     // The superclass of AbstractApiService$InnerService (Guava's ApiService) is not in the paths
-    Path dummySource = firestorePath;
-    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
+    ClassPathEntry dummySource = firestoreJar;
+    List<ClassPathEntry> paths = ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
@@ -564,16 +565,16 @@ public class LinkageCheckerTest {
 
     Truth.assertWithMessage(
             "When the superclass is unavailable, it should report the location of InnerService")
-        .that(entry.getKey().getContainingClass().getJar().getFileName().toString())
-        .endsWith("api-common-1.7.0.jar");
+        .that(entry.getKey().getContainingClass().getClassPathEntry().toString())
+        .contains("api-common-1.7.0.jar");
   }
 
   @Test
   public void testFindSymbolProblems_shouldStripSourceInnerClasses()
       throws IOException, URISyntaxException {
     // The superclass of AbstractApiService$InnerService (Guava's ApiService) is not in the paths
-    Path dummySource = firestorePath;
-    List<Path> paths = ImmutableList.of(absolutePathOfResource("testdata/api-common-1.7.0.jar"));
+    ClassPathEntry dummySource = firestoreJar;
+    List<ClassPathEntry> paths = ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
@@ -599,13 +600,13 @@ public class LinkageCheckerTest {
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("-b", bomCoordinates);
-    ImmutableList<Path> inputClasspath =
+    ImmutableList<ClassPathEntry> inputClasspath =
         classPathBuilder.resolve(parsedArguments.getArtifacts()).getClassPath();
 
     Truth.assertThat(inputClasspath).isNotEmpty();
 
     List<String> names =
-        inputClasspath.stream().map(x -> x.getFileName().toString()).collect(Collectors.toList());
+        inputClasspath.stream().map(x -> x.toString()).collect(Collectors.toList());
     // The first artifacts
     Truth.assertThat(names).containsAtLeast(
         "api-common-1.7.0.jar",
@@ -613,8 +614,8 @@ public class LinkageCheckerTest {
         "grpc-google-common-protos-1.14.0.jar");
 
     // gax-bom, containing com.google.api:gax:1.42.0, is in the BOM with scope:import
-    for (Path path : inputClasspath) {
-      if (path.getFileName().toString().equals("gax-1.40.0.jar")) {
+    for (ClassPathEntry path : inputClasspath) {
+      if (path.toString().contains("gax-1.40.0.jar")) {
         return;
       }
     }
@@ -631,7 +632,7 @@ public class LinkageCheckerTest {
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("--artifacts", mavenCoordinates);
-    List<Path> inputClasspath =
+    List<ClassPathEntry> inputClasspath =
         classPathBuilder.resolve(parsedArguments.getArtifacts()).getClassPath();
 
     Truth.assertWithMessage(
@@ -661,7 +662,7 @@ public class LinkageCheckerTest {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("--artifacts", "com.google.guava:guava-gwt:20.0");
 
-    ImmutableList<Path> inputClasspath =
+    ImmutableList<ClassPathEntry> inputClasspath =
         classPathBuilder.resolve(parsedArguments.getArtifacts()).getClassPath();
 
     Truth.assertThat(inputClasspath)
@@ -694,17 +695,17 @@ public class LinkageCheckerTest {
 
     // listDocuments method on CollectionReference class is added at version 0.66.0-beta
     // https://github.com/googleapis/google-cloud-java/releases/tag/v0.66.0
-    List<Path> firestoreDependencies =
+    List<ClassPathEntry> firestoreDependencies =
         Lists.newArrayList(
-            absolutePathOfResource("testdata/gax-1.32.0.jar"),
-            absolutePathOfResource("testdata/api-common-1.7.0.jar"),
-            absolutePathOfResource("testdata/google-cloud-core-1.48.0.jar"),
-            absolutePathOfResource("testdata/google-cloud-core-grpc-1.48.0.jar"));
-    List<Path> pathsForJarWithVersion65First =
+            classPathEntryOfResource("testdata/gax-1.32.0.jar"),
+            classPathEntryOfResource("testdata/api-common-1.7.0.jar"),
+            classPathEntryOfResource("testdata/google-cloud-core-1.48.0.jar"),
+            classPathEntryOfResource("testdata/google-cloud-core-grpc-1.48.0.jar"));
+    List<ClassPathEntry> pathsForJarWithVersion65First =
         Lists.newArrayList(
-            absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"),
-            absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"),
-            firestorePath);
+            classPathEntryOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"),
+            classPathEntryOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"),
+            firestoreJar);
     pathsForJarWithVersion65First.addAll(firestoreDependencies);
 
     LinkageChecker linkageChecker65First =
@@ -712,11 +713,11 @@ public class LinkageCheckerTest {
             pathsForJarWithVersion65First,
             ImmutableSet.copyOf(pathsForJarWithVersion65First));
 
-    List<Path> pathsForJarWithVersion66First =
+    List<ClassPathEntry> pathsForJarWithVersion66First =
         Lists.newArrayList(
-            absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"),
-            absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"),
-            firestorePath);
+            classPathEntryOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar"),
+            classPathEntryOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar"),
+            firestoreJar);
     pathsForJarWithVersion66First.addAll(firestoreDependencies);
     LinkageChecker linkageChecker66First =
         LinkageChecker.create(
@@ -725,7 +726,7 @@ public class LinkageCheckerTest {
 
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
 
-    ClassFile source = new ClassFile(firestorePath, "com.google.firestore.v1beta1.FirestoreGrpc");
+    ClassFile source = new ClassFile(firestoreJar, "com.google.firestore.v1beta1.FirestoreGrpc");
 
     builder.addMethodReference(
         source,
@@ -748,7 +749,7 @@ public class LinkageCheckerTest {
   public void testFindSymbolProblems_catchesNoClassDefFoundError() throws IOException {
     // SLF4J classes catch NoClassDefFoundError to detect the availability of logger backends
     // the tool should not show errors for such classes.
-    List<Path> paths = resolvePaths("org.slf4j:slf4j-api:jar:1.7.21");
+    List<ClassPathEntry> paths = resolvePaths("org.slf4j:slf4j-api:jar:1.7.21");
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
@@ -762,14 +763,14 @@ public class LinkageCheckerTest {
   public void testFindSymbolProblems_catchesLinkageError() throws IOException {
     // org.eclipse.sisu.inject.Implementations catches LinkageError to detect the availability of
     // implementation for dependency injection. The tool should not show errors for such classes.
-    List<Path> paths = resolvePaths("org.eclipse.sisu:org.eclipse.sisu.inject:0.3.3");
+    List<ClassPathEntry> paths = resolvePaths("org.eclipse.sisu:org.eclipse.sisu.inject:0.3.3");
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     ImmutableSetMultimap<ClassFile, SymbolProblem> problems =
         linkageChecker.findSymbolProblems().inverse();
 
-    Path sisuJar = paths.get(0);
+    ClassPathEntry sisuJar = paths.get(0);
     Truth.assertThat(
             problems.get(new ClassFile(sisuJar, "org.eclipse.sisu.inject.Implementations")))
         .isEmpty();
@@ -791,9 +792,9 @@ public class LinkageCheckerTest {
                     new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"), "compile"))
             .getDependencyGraph();
 
-    Path slf4jJar = slf4jGraph.list().get(0).getLeaf().getFile().toPath();
-    Path log4jJar = logbackGraph.list().get(0).getLeaf().getFile().toPath();
-    List<Path> paths = ImmutableList.of(slf4jJar, log4jJar);
+    ClassPathEntry slf4jJar = new ClassPathEntry(slf4jGraph.list().get(0).getLeaf().getFile().toPath());
+    ClassPathEntry log4jJar = new ClassPathEntry(logbackGraph.list().get(0).getLeaf().getFile().toPath());
+    List<ClassPathEntry> paths = ImmutableList.of(slf4jJar, log4jJar);
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
@@ -807,7 +808,7 @@ public class LinkageCheckerTest {
   public void testFindSymbolProblems_doesNotCatchNoClassDefFoundError() throws IOException {
     // Checking Firestore jar file without its dependency should have linkage errors
     // Note that FirestoreGrpc.java does not have catch clause of NoClassDefFoundError
-    List<Path> paths = ImmutableList.of(firestorePath);
+    List<ClassPathEntry> paths = ImmutableList.of(firestoreJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
@@ -837,7 +838,7 @@ public class LinkageCheckerTest {
     // both google-http-client-1.19.0.jar and google-http-client-apache-2.0.0.jar.
     // LinkageChecker.findLinkageErrors was not handling the case properly.
     // These two jar files are transitive dependencies of the artifacts below.
-    List<Path> paths =
+    List<ClassPathEntry> paths =
         resolvePaths(
             "io.grpc:grpc-alts:jar:1.18.0", "com.google.cloud:google-cloud-nio:jar:0.81.0-alpha");
 
@@ -854,7 +855,7 @@ public class LinkageCheckerTest {
     // Reactor-core's Traces is known to catch Throwable to detect availability of Java 9+ classes.
     // Linkage Checker does not need to report it.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/816
-    ImmutableList<Path> jars =
+    ImmutableList<ClassPathEntry> jars =
         resolveTransitiveDependencyPaths("io.projectreactor:reactor-core:3.2.11.RELEASE");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
@@ -870,7 +871,7 @@ public class LinkageCheckerTest {
     // com.oracle.graal.pointsto.meta.AnalysisType (in com.oracle.substratevm:svm:19.0.0). The class
     // was in the class path but its parent class was missing.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/933
-    ImmutableList<Path> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
+    ImmutableList<ClassPathEntry> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
     ImmutableSet<SymbolProblem> problems = linkageChecker.findSymbolProblems().keySet();
@@ -901,7 +902,7 @@ public class LinkageCheckerTest {
     // com.oracle.graal.pointsto.meta.AnalysisType (in com.oracle.substratevm:svm:19.0.0). The class
     // was in the class path but its parent class was missing.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/933
-    ImmutableList<Path> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
+    ImmutableList<ClassPathEntry> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
 
@@ -918,7 +919,7 @@ public class LinkageCheckerTest {
     // Mockito's MockMethodDispatcher class file has ".raw" extension so that the class is only
     // loaded by Mockito's special class loader.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/407
-    ImmutableList<Path> jars = resolvePaths("org.mockito:mockito-core:2.23.4");
+    ImmutableList<ClassPathEntry> jars = resolvePaths("org.mockito:mockito-core:2.23.4");
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
 
     SymbolProblem unexpectedProblem =
@@ -939,9 +940,9 @@ public class LinkageCheckerTest {
     // gax:1.48's TransportChannelProvider. This incompatibility manifests as AbstractMethodError
     // when com.google.api.gax.rpc.ClientContext calls the method.
 
-    Path gax1_48 = absolutePathOfResource("testdata/gax-1.48.1.jar");
-    Path gaxGrpc1_38 = absolutePathOfResource("testdata/gax-grpc-1.38.0.jar");
-    ImmutableList<Path> jars = ImmutableList.of(gaxGrpc1_38, gax1_48);
+    ClassPathEntry gax1_48 = classPathEntryOfResource("testdata/gax-1.48.1.jar");
+    ClassPathEntry gaxGrpc1_38 = classPathEntryOfResource("testdata/gax-grpc-1.38.0.jar");
+    ImmutableList<ClassPathEntry> jars = ImmutableList.of(gaxGrpc1_38, gax1_48);
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
 
@@ -976,7 +977,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindSymbolProblems_defaultInterfaceMethods() throws IOException {
-    ImmutableList<Path> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
+    ImmutableList<ClassPathEntry> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
 
@@ -999,12 +1000,12 @@ public class LinkageCheckerTest {
     // Abstract MultithreadEventExecutorGroup class has abstract newChild method.
     // Netty version discrepancy between 4.0 and 4.1 causes AbstractMethodError.
     // https://github.com/netty/netty/issues/7675
-    ImmutableList<Path> nettyTransportJars4_0 =
+    ImmutableList<ClassPathEntry> nettyTransportJars4_0 =
         resolvePaths("io.netty:netty-transport:jar:4.0.37.Final");
-    ImmutableList<Path> nettyCommonJars4_1 = resolvePaths("io.netty:netty-common:jar:4.1.16.Final");
+    ImmutableList<ClassPathEntry> nettyCommonJars4_1 = resolvePaths("io.netty:netty-common:jar:4.1.16.Final");
 
-    ImmutableList<Path> jars =
-        ImmutableList.<Path>builder()
+    ImmutableList<ClassPathEntry> jars =
+        ImmutableList.<ClassPathEntry>builder()
             .addAll(nettyCommonJars4_1)
             .addAll(nettyTransportJars4_0)
             .build();
@@ -1027,7 +1028,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindSymbolProblems_nativeMethodsOnAbstractClass() throws IOException {
-    ImmutableList<Path> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
+    ImmutableList<ClassPathEntry> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
 
@@ -1050,7 +1051,7 @@ public class LinkageCheckerTest {
     //   / io.netty:netty-codec-http2:4.1.45.Final (compile)
     //   / io.netty:netty-common:4.1.45.Final (compile)
     //   / io.projectreactor.tools:blockhound:1.0.1.RELEASE (compile, optional)
-    ImmutableList<Path> jars = resolvePaths("io.projectreactor.tools:blockhound:1.0.1.RELEASE");
+    ImmutableList<ClassPathEntry> jars = resolvePaths("io.projectreactor.tools:blockhound:1.0.1.RELEASE");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
 

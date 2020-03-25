@@ -20,26 +20,25 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
-import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * A locator for a compiled class file of {@code className} in {@code jar} to uniquely locate the
+ * A locator for a compiled class file of {@code className} in {@code classPathEntry} to uniquely locate the
  * class implementation in a class path.
  */
 public final class ClassFile {
-  private final Path jar;
+  private final ClassPathEntry classPathEntry;
   private final String binaryName;
 
   @VisibleForTesting
-  public ClassFile(Path jar, String className) {
-    this.jar = checkNotNull(jar);
+  public ClassFile(ClassPathEntry classPathEntry, String className) {
+    this.classPathEntry = checkNotNull(classPathEntry);
     this.binaryName = checkNotNull(className);
   }
 
   /** Returns the path to the JAR file containing the class. */
-  public Path getJar() {
-    return jar;
+  public ClassPathEntry getClassPathEntry() {
+    return classPathEntry;
   }
 
   /**
@@ -56,7 +55,7 @@ public final class ClassFile {
    * Otherwise returns the instance itself.
    */
   ClassFile topLevelClassFile() {
-    return binaryName.contains("$") ? new ClassFile(jar, binaryName.split("\\$")[0]) : this;
+    return binaryName.contains("$") ? new ClassFile(classPathEntry, binaryName.split("\\$")[0]) : this;
   }
 
   @Override
@@ -68,18 +67,18 @@ public final class ClassFile {
       return false;
     }
     ClassFile that = (ClassFile) other;
-    return Objects.equals(jar, that.jar) && Objects.equals(binaryName, that.binaryName);
+    return Objects.equals(classPathEntry, that.classPathEntry) && Objects.equals(binaryName, that.binaryName);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(jar, binaryName);
+    return Objects.hash(classPathEntry, binaryName);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("jar", jar)
+        .add("jar", classPathEntry)
         .add("className", binaryName)
         .toString();
   }

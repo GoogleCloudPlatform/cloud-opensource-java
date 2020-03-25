@@ -192,11 +192,12 @@ final class LinkageCheckerArguments {
   }
 
   /** Returns a list of absolute paths to files specified in the JAR file option. */
-  ImmutableList<Path> getJarFiles() {
+  ImmutableList<ClassPathEntry> getJarFiles() {
     if (commandLine.hasOption("j")) {
       String[] jarFiles = commandLine.getOptionValues("j");
       return Arrays.stream(jarFiles)
           .map(name -> Paths.get(name).toAbsolutePath())
+          .map(ClassPathEntry::new)
           .collect(toImmutableList());
     } else {
       throw new IllegalArgumentException("The arguments must have option 'j' to list JAR files");

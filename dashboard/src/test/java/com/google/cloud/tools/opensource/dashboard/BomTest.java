@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -31,7 +32,7 @@ import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 
 public class BomTest {
 
-  private static final Path CLOUD_OSS_BOM_PATH =
+  private static final ClassPathEntry CLOUD_OSS_BOM_PATH =
       Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();
 
   @Test
