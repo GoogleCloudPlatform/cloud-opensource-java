@@ -16,9 +16,10 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.TestHelper.PATH_FILE_NAMES;
 
+import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
+import java.nio.file.Paths;
 import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
@@ -66,20 +67,25 @@ public class LinkageCheckerArgumentsTest {
             "-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar");
 
     Truth.assertThat(parsedArguments.getJarFiles())
-        .comparingElementsUsing(PATH_FILE_NAMES)
-        .containsExactly("A.jar", "B.jar", "C.jar");
+        .comparingElementsUsing(
+            Correspondence.transforming(ClassPathEntry::getPath, "has path equals to"))
+        .containsExactly("/foo/bar/A.jar", "/foo/bar/B.jar", "/foo/bar/C.jar");
   }
 
   @Test
-  public void testGetJarFiles_jarFileList() throws ParseException {
+  public void testGetJarFiles_jarFileList_relativePath() throws ParseException {
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
     List<ClassPathEntry> inputClasspath = parsedArguments.getJarFiles();
 
     Truth.assertThat(inputClasspath)
-        .comparingElementsUsing(PATH_FILE_NAMES)
-        .containsExactly("foo.jar", "bar.jar", "baz.jar");
+        .comparingElementsUsing(
+            Correspondence.transforming(ClassPathEntry::getPath, "has path equals to"))
+        .containsExactly(
+            Paths.get("dir1/foo.jar").toAbsolutePath().toString(),
+            Paths.get("dir2/bar.jar").toAbsolutePath().toString(),
+            Paths.get("baz.jar").toAbsolutePath().toString());
   }
 
   @Test
