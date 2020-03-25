@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.ClassPathBuilderTest.PATH_FILE_NAMES;
+import static com.google.cloud.tools.opensource.classpath.TestHelper.COORDINATES;
 import static com.google.cloud.tools.opensource.classpath.TestHelper.classPathEntryOfResource;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.junit.Assert.assertEquals;
@@ -641,9 +641,10 @@ public class LinkageCheckerTest {
     Truth.assertWithMessage(
             "The first 2 items in the classpath should be the 2 artifacts in the input")
         .that(inputClasspath.subList(0, 2))
-        .comparingElementsUsing(PATH_FILE_NAMES)
+        .comparingElementsUsing(COORDINATES)
         .containsExactly(
-            "google-cloud-compute-0.67.0-alpha.jar", "google-cloud-bigtable-0.66.0-alpha.jar")
+            "com.google.cloud:google-cloud-compute:0.67.0-alpha",
+            "com.google.cloud:google-cloud-bigtable:0.66.0-alpha")
         .inOrder();
     Truth.assertWithMessage("The dependencies of the 2 artifacts should also be included")
         .that(inputClasspath.subList(2, inputClasspath.size()))
@@ -669,7 +670,7 @@ public class LinkageCheckerTest {
         classPathBuilder.resolve(parsedArguments.getArtifacts()).getClassPath();
 
     Truth.assertThat(inputClasspath)
-        .comparingElementsUsing(PATH_FILE_NAMES)
+        .comparingElementsUsing(COORDINATES)
         .contains("apache-jsp-8.0.9.M3.jar");
   }
 

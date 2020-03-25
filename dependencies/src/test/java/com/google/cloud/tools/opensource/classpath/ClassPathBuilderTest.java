@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.cloud.tools.opensource.classpath.TestHelper.COORDINATES;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -24,11 +25,9 @@ import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProble
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
@@ -38,11 +37,6 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Test;
 
 public class ClassPathBuilderTest {
-
-  static final Correspondence<Path, String> PATH_FILE_NAMES =
-      Correspondence.from((actual, expected) ->
-          actual.getFileName().toString().equals(expected), "has file name equal to");
-
   private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
   private ImmutableList<ClassPathEntry> resolveClassPath(String coordinates) {
@@ -57,13 +51,13 @@ public class ClassPathBuilderTest {
     ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(grpcArtifact));
 
     ImmutableList<ClassPathEntry> paths = result.getClassPath();
-    long jsr305Count = paths.stream().filter(path -> path.toString().contains("jsr305-")).count();
+    long jsr305Count = paths.stream().filter(path -> path.toString().contains("jsr305")).count();
     Truth.assertWithMessage("There should not be duplicated versions for jsr305")
         .that(jsr305Count)
         .isEqualTo(1);
 
     Optional<ClassPathEntry> opencensusApiPathFound =
-        paths.stream().filter(path -> path.toString().contains("opencensus-api-")).findFirst();
+        paths.stream().filter(path -> path.toString().contains("opencensus-api")).findFirst();
     Truth8.assertThat(opencensusApiPathFound).isPresent();
     ClassPathEntry opencensusApiPath = opencensusApiPathFound.get();
     Truth.assertWithMessage("Opencensus API should have multiple dependency paths")
@@ -84,10 +78,11 @@ public class ClassPathBuilderTest {
     ImmutableList<ClassPathEntry> entries = ImmutableList.copyOf(classPath);
 
     Truth.assertThat(entries.get(0).toString())
-        .isEqualTo("JAR(api-common-1.7.0.jar)"); // first element in the BOM
+        .isEqualTo("Artifact(com.google.api:api-common:jar:1.7.0)"); // first element in the BOM
     int bomSize = managedDependencies.size();
     String lastFileName = entries.get(bomSize - 1).toString();
-    Truth.assertThat(lastFileName).isEqualTo("JAR(gax-httpjson-0.57.0.jar)"); // last element in BOM
+    Truth.assertThat(lastFileName)
+        .isEqualTo("Artifact(com.google.api:gax-httpjson:jar:0.57.0)"); // last element in BOM
   }
 
   @Test
@@ -99,8 +94,9 @@ public class ClassPathBuilderTest {
         classPathBuilder.resolve(ImmutableList.of(grpcAuth)).getClassPath();
 
     Truth.assertThat(classPath)
-        .comparingElementsUsing(PATH_FILE_NAMES)
-        .containsAtLeast("grpc-auth-1.15.1.jar", "google-auth-library-credentials-0.9.0.jar");
+        .comparingElementsUsing(COORDINATES)
+        .containsAtLeast(
+            "io.grpc:grpc-auth:1.15.1", "com.google.auth:google-auth-library-credentials:0.11.0");
     classPath.forEach(
         path ->
             Truth.assertWithMessage("Every returned path should be an absolute path")
@@ -113,11 +109,11 @@ public class ClassPathBuilderTest {
     List<ClassPathEntry> paths = resolveClassPath("io.grpc:grpc-auth:1.15.1");
 
     Truth.assertThat(paths)
-        .comparingElementsUsing(PATH_FILE_NAMES)
-        .contains("grpc-auth-1.15.1.jar");
+        .comparingElementsUsing(COORDINATES)
+        .contains("io.grpc:grpc-auth:1.15.1");
     Truth.assertThat(paths)
-        .comparingElementsUsing(PATH_FILE_NAMES)
-        .contains("google-auth-library-credentials-0.9.0.jar");
+        .comparingElementsUsing(COORDINATES)
+        .contains("com.google.auth:google-auth-library-credentials:0.11.0");
     paths.forEach(
         path ->
             Truth.assertWithMessage("Every returned path should be an absolute path")
@@ -129,7 +125,7 @@ public class ClassPathBuilderTest {
   public void testResolveClassPath_optionalDependency() {
     List<ClassPathEntry> paths =
         resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
-    Truth.assertThat(paths).comparingElementsUsing(PATH_FILE_NAMES).contains("log4j-1.2.12.jar");
+    Truth.assertThat(paths).comparingElementsUsing(COORDINATES).contains("log4j:log4j:jar:1.2.12");
   }
 
   @Test

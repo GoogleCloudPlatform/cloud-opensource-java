@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.ClassPathBuilderTest.PATH_FILE_NAMES;
+import static com.google.cloud.tools.opensource.classpath.TestHelper.PATH_FILE_NAMES;
 
 import com.google.common.truth.Truth;
 import java.util.List;

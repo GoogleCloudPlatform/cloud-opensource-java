@@ -28,17 +28,16 @@ public class ClassFileTest {
   @Test
   public void testCreation() {
     ClassPathEntry entry = new ClassPathEntry(Paths.get("foo", "bar.jar"));
-    ClassFile file =
-        new ClassFile(entry, "com.test.Foo");
+    ClassFile file = new ClassFile(entry, "com.test.Foo");
     assertEquals("com.test.Foo", file.getBinaryName());
     assertEquals(new ClassPathEntry(Paths.get("foo", "bar.jar")), file.getClassPathEntry());
   }
 
   @Test
   public void testNull() {
-    new NullPointerTester().setDefault(ClassPathEntry.class,
-        new ClassPathEntry(Paths.get("foo", "bar.jar"))
-    ).testConstructors(ClassFile.class, Visibility.PACKAGE);
+    new NullPointerTester()
+        .setDefault(ClassPathEntry.class, new ClassPathEntry(Paths.get("foo", "bar.jar")))
+        .testConstructors(ClassFile.class, Visibility.PACKAGE);
   }
 
   @Test
