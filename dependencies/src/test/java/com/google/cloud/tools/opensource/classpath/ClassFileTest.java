@@ -24,18 +24,21 @@ import com.google.common.testing.NullPointerTester.Visibility;
 import java.nio.file.Paths;
 import org.junit.Test;
 
-public class ClassInJarTest {
+public class ClassFileTest {
   @Test
   public void testCreation() {
-    ClassFile classInJar =
-        new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "com.test.Foo");
-    assertEquals("com.test.Foo", classInJar.getBinaryName());
-    assertEquals(Paths.get("foo", "bar.jar"), classInJar.getClassPathEntry());
+    ClassPathEntry entry = new ClassPathEntry(Paths.get("foo", "bar.jar"));
+    ClassFile file =
+        new ClassFile(entry, "com.test.Foo");
+    assertEquals("com.test.Foo", file.getBinaryName());
+    assertEquals(new ClassPathEntry(Paths.get("foo", "bar.jar")), file.getClassPathEntry());
   }
 
   @Test
   public void testNull() {
-    new NullPointerTester().testConstructors(ClassFile.class, Visibility.PACKAGE);
+    new NullPointerTester().setDefault(ClassPathEntry.class,
+        new ClassPathEntry(Paths.get("foo", "bar.jar"))
+    ).testConstructors(ClassFile.class, Visibility.PACKAGE);
   }
 
   @Test
