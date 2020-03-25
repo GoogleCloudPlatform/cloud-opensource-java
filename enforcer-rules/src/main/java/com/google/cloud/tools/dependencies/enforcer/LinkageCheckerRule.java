@@ -277,9 +277,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     }
   }
 
-  /**
-   * Returns class path built from partial dependency graph of {@code resolutionException}.
-   */
+  /** Returns class path built from partial dependency graph of {@code resolutionException}. */
   private ImmutableList<ClassPathEntry> buildClasspathFromException(
       DependencyResolutionException resolutionException) throws EnforcerRuleException {
     DependencyResolutionResult result = resolutionException.getResult();

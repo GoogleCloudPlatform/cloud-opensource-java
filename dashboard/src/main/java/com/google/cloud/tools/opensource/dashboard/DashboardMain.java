@@ -465,7 +465,8 @@ public class DashboardMain {
       ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems) {
 
     ImmutableMap<Path, Collection<Entry<SymbolProblem, ClassFile>>> jarMap =
-        Multimaps.index(symbolProblems.entries(), entry -> entry.getValue().getClassPathEntry()).asMap();
+        Multimaps.index(symbolProblems.entries(), entry -> entry.getValue().getClassPathEntry())
+            .asMap();
 
     return ImmutableMap.copyOf(
         Maps.transformValues(

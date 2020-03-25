@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.LinkageCheckerTest.resolvePaths;
-import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
 import static com.google.cloud.tools.opensource.classpath.TestHelper.classPathEntryOfResource;
 import static org.junit.Assert.assertFalse;
 
@@ -93,8 +92,7 @@ public class ClassDumperTest {
   @Test
   public void testCreationInvalidInput() throws IOException {
     try {
-      ClassDumper.create(ImmutableList.of(
-          new ClassPathEntry(Paths.get("no_such_file"))));
+      ClassDumper.create(ImmutableList.of(new ClassPathEntry(Paths.get("no_such_file"))));
       Assert.fail("Empty path should generate IOException");
     } catch (IllegalArgumentException ex) {
       // pass
@@ -207,8 +205,10 @@ public class ClassDumperTest {
 
   @Test
   public void testFindClassLocation() throws URISyntaxException, IOException {
-    ClassPathEntry firestore65 = classPathEntryOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar");
-    ClassPathEntry firestore66 = classPathEntryOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar");
+    ClassPathEntry firestore65 =
+        classPathEntryOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar");
+    ClassPathEntry firestore66 =
+        classPathEntryOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar");
 
     // This class exists in both jar files
     String grpcClass = "com.google.cloud.firestore.spi.v1beta1.GrpcFirestoreRpc";
@@ -238,7 +238,8 @@ public class ClassDumperTest {
   @Test
   public void testIsSystemClass() throws URISyntaxException, IOException {
     ClassDumper classDumper =
-        ClassDumper.create(ImmutableList.of(classPathEntryOfResource("testdata/guava-23.5-jre.jar")));
+        ClassDumper.create(
+            ImmutableList.of(classPathEntryOfResource("testdata/guava-23.5-jre.jar")));
 
     List<String> javaRuntimeClasses =
         ImmutableList.of(
@@ -265,7 +266,8 @@ public class ClassDumperTest {
       throws IOException, URISyntaxException {
     ClassDumper classDumper =
         ClassDumper.create(
-            ImmutableList.of(classPathEntryOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
+            ImmutableList.of(
+                classPathEntryOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
 
     // See the issue below for the analysis of inlined fields in Conscrypt:
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/301
@@ -281,7 +283,8 @@ public class ClassDumperTest {
       throws IOException, URISyntaxException {
     ClassDumper classDumper =
         ClassDumper.create(
-            ImmutableList.of(classPathEntryOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
+            ImmutableList.of(
+                classPathEntryOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
 
     List<String> usedClassesInConscrypt =
         ImmutableList.of(
@@ -310,7 +313,8 @@ public class ClassDumperTest {
       throws IOException, URISyntaxException {
     ClassDumper classDumper =
         ClassDumper.create(
-            ImmutableList.of(classPathEntryOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
+            ImmutableList.of(
+                classPathEntryOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
 
     try {
       classDumper.isUnusedClassSymbolReference(

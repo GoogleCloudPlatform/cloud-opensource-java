@@ -16,14 +16,12 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
 import static com.google.cloud.tools.opensource.classpath.TestHelper.classPathEntryOfResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.util.Arrays;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.util.ClassPath;

@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.annotation.Nullable;
 import org.apache.commons.cli.CommandLine;

@@ -35,8 +35,7 @@ public class ExcludedErrorsTest {
 
     SymbolProblem symbolProblem = new SymbolProblem(methodSymbol, ErrorType.ABSTRACT_METHOD, null);
 
-    ClassFile sourceClass = new ClassFile(
-        new ClassPathEntry(Paths.get("foo")), "org.graalvm.Foo");
+    ClassFile sourceClass = new ClassFile(new ClassPathEntry(Paths.get("foo")), "org.graalvm.Foo");
     assertTrue(excludedErrors.contains(symbolProblem, sourceClass));
   }
 
@@ -50,8 +49,7 @@ public class ExcludedErrorsTest {
 
     SymbolProblem symbolProblem = new SymbolProblem(methodSymbol, ErrorType.ABSTRACT_METHOD, null);
 
-    ClassFile sourceClass = new ClassFile(
-        new ClassPathEntry(Paths.get("foo")), "org.graalvm.Foo");
+    ClassFile sourceClass = new ClassFile(new ClassPathEntry(Paths.get("foo")), "org.graalvm.Foo");
     assertFalse(excludedErrors.contains(symbolProblem, sourceClass));
   }
 }

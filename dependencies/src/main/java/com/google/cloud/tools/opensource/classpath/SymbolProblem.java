@@ -88,9 +88,7 @@ public final class SymbolProblem {
   @Override
   public final String toString() {
     String jarInfo =
-        containingClass != null
-            ? String.format("(%s) ", containingClass.getClassPathEntry())
-            : "";
+        containingClass != null ? String.format("(%s) ", containingClass.getClassPathEntry()) : "";
     return jarInfo + getErrorType().getMessage(symbol.toString());
   }
 

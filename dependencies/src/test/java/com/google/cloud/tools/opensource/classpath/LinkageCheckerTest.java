@@ -37,7 +37,6 @@ import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -376,7 +375,8 @@ public class LinkageCheckerTest {
   public void testFindSymbolProblem_guavaClassShouldNotBeAddedAutomatically()
       throws IOException, URISyntaxException {
     // The class path does not include Guava.
-    List<ClassPathEntry> paths = ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
+    List<ClassPathEntry> paths =
+        ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     // Guava class should not be found in the class path
@@ -446,7 +446,8 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindSymbolProblem_privateField() throws IOException, URISyntaxException {
-    List<ClassPathEntry> paths = ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
+    List<ClassPathEntry> paths =
+        ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     Optional<SymbolProblem> problemFound =
@@ -547,7 +548,8 @@ public class LinkageCheckerTest {
   public void testFindClassReferences_privateClass() throws IOException, URISyntaxException {
     // The superclass of AbstractApiService$InnerService (Guava's ApiService) is not in the paths
     ClassPathEntry dummySource = firestoreJar;
-    List<ClassPathEntry> paths = ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
+    List<ClassPathEntry> paths =
+        ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
@@ -574,7 +576,8 @@ public class LinkageCheckerTest {
       throws IOException, URISyntaxException {
     // The superclass of AbstractApiService$InnerService (Guava's ApiService) is not in the paths
     ClassPathEntry dummySource = firestoreJar;
-    List<ClassPathEntry> paths = ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
+    List<ClassPathEntry> paths =
+        ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
@@ -792,8 +795,10 @@ public class LinkageCheckerTest {
                     new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"), "compile"))
             .getDependencyGraph();
 
-    ClassPathEntry slf4jJar = new ClassPathEntry(slf4jGraph.list().get(0).getLeaf().getFile().toPath());
-    ClassPathEntry log4jJar = new ClassPathEntry(logbackGraph.list().get(0).getLeaf().getFile().toPath());
+    ClassPathEntry slf4jJar =
+        new ClassPathEntry(slf4jGraph.list().get(0).getLeaf().getFile().toPath());
+    ClassPathEntry log4jJar =
+        new ClassPathEntry(logbackGraph.list().get(0).getLeaf().getFile().toPath());
     List<ClassPathEntry> paths = ImmutableList.of(slf4jJar, log4jJar);
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
@@ -1002,7 +1007,8 @@ public class LinkageCheckerTest {
     // https://github.com/netty/netty/issues/7675
     ImmutableList<ClassPathEntry> nettyTransportJars4_0 =
         resolvePaths("io.netty:netty-transport:jar:4.0.37.Final");
-    ImmutableList<ClassPathEntry> nettyCommonJars4_1 = resolvePaths("io.netty:netty-common:jar:4.1.16.Final");
+    ImmutableList<ClassPathEntry> nettyCommonJars4_1 =
+        resolvePaths("io.netty:netty-common:jar:4.1.16.Final");
 
     ImmutableList<ClassPathEntry> jars =
         ImmutableList.<ClassPathEntry>builder()
@@ -1051,7 +1057,8 @@ public class LinkageCheckerTest {
     //   / io.netty:netty-codec-http2:4.1.45.Final (compile)
     //   / io.netty:netty-common:4.1.45.Final (compile)
     //   / io.projectreactor.tools:blockhound:1.0.1.RELEASE (compile, optional)
-    ImmutableList<ClassPathEntry> jars = resolvePaths("io.projectreactor.tools:blockhound:1.0.1.RELEASE");
+    ImmutableList<ClassPathEntry> jars =
+        resolvePaths("io.projectreactor.tools:blockhound:1.0.1.RELEASE");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
 

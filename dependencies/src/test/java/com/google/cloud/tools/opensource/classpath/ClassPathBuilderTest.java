@@ -78,12 +78,13 @@ public class ClassPathBuilderTest {
         RepositoryUtility.readBom("com.google.cloud:google-cloud-bom:0.81.0-alpha")
         .getManagedDependencies();
 
-    ImmutableList<ClassPathEntry> classPath = classPathBuilder.resolve(managedDependencies).getClassPath();
+    ImmutableList<ClassPathEntry> classPath =
+        classPathBuilder.resolve(managedDependencies).getClassPath();
 
     ImmutableList<ClassPathEntry> entries = ImmutableList.copyOf(classPath);
 
-    Truth.assertThat(entries.get(0).toString()).isEqualTo(
-        "JAR(api-common-1.7.0.jar)"); // first element in the BOM
+    Truth.assertThat(entries.get(0).toString())
+        .isEqualTo("JAR(api-common-1.7.0.jar)"); // first element in the BOM
     int bomSize = managedDependencies.size();
     String lastFileName = entries.get(bomSize - 1).toString();
     Truth.assertThat(lastFileName).isEqualTo("JAR(gax-httpjson-0.57.0.jar)"); // last element in BOM
@@ -94,7 +95,8 @@ public class ClassPathBuilderTest {
 
     Artifact grpcAuth = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
 
-    ImmutableList<ClassPathEntry> classPath = classPathBuilder.resolve(ImmutableList.of(grpcAuth)).getClassPath();
+    ImmutableList<ClassPathEntry> classPath =
+        classPathBuilder.resolve(ImmutableList.of(grpcAuth)).getClassPath();
 
     Truth.assertThat(classPath)
         .comparingElementsUsing(PATH_FILE_NAMES)
@@ -125,7 +127,8 @@ public class ClassPathBuilderTest {
 
   @Test
   public void testResolveClassPath_optionalDependency() {
-    List<ClassPathEntry> paths = resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
+    List<ClassPathEntry> paths =
+        resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
     Truth.assertThat(paths).comparingElementsUsing(PATH_FILE_NAMES).contains("log4j-1.2.12.jar");
   }
 
@@ -150,10 +153,10 @@ public class ClassPathBuilderTest {
   @Test
   public void testFindInvalidReferences_selfReferenceFromAbstractClassToInterface()
       throws IOException {
-    List<ClassPathEntry> paths = resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
+    List<ClassPathEntry> paths =
+        resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
     ClassPathEntry httpClientJar =
-        paths
-            .stream()
+        paths.stream()
             .filter(path -> path.getPath().contains("httpclient-4.5.3.jar"))
             .findFirst()
             .get();

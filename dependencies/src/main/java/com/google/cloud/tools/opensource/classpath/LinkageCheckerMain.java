@@ -56,7 +56,7 @@ class LinkageCheckerMain {
       if (linkageCheckerArguments.hasInput()) { 
         // This is non-empty if a BOM or artifacts are specified in the argument
         ImmutableList<Artifact> artifacts = linkageCheckerArguments.getArtifacts();
-    
+
         // When JAR files are specified in the argument, artifacts are empty.
         ImmutableList<ClassPathEntry> inputClassPath;
         ImmutableSet<ClassPathEntry> entryPointJars;

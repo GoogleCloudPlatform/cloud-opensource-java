@@ -64,8 +64,7 @@ public class LinkageChecker {
   }
 
   public static LinkageChecker create(
-      List<ClassPathEntry> entries, Iterable<ClassPathEntry> entryPoints)
-      throws IOException {
+      List<ClassPathEntry> entries, Iterable<ClassPathEntry> entryPoints) throws IOException {
     Preconditions.checkArgument(
         !entries.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");

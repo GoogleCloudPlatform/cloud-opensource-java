@@ -16,14 +16,12 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
 import static com.google.cloud.tools.opensource.classpath.TestHelper.classPathEntryOfResource;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import org.junit.Test;
 
 public class ClassReferenceGraphTest {

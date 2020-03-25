@@ -23,8 +23,8 @@ import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
 /**
- * A locator for a compiled class file of {@code className} in {@code classPathEntry} to uniquely locate the
- * class implementation in a class path.
+ * A locator for a compiled class file of {@code className} in {@code classPathEntry} to uniquely
+ * locate the class implementation in a class path.
  */
 public final class ClassFile {
   private final ClassPathEntry classPathEntry;
@@ -55,7 +55,9 @@ public final class ClassFile {
    * Otherwise returns the instance itself.
    */
   ClassFile topLevelClassFile() {
-    return binaryName.contains("$") ? new ClassFile(classPathEntry, binaryName.split("\\$")[0]) : this;
+    return binaryName.contains("$")
+        ? new ClassFile(classPathEntry, binaryName.split("\\$")[0])
+        : this;
   }
 
   @Override
@@ -67,7 +69,8 @@ public final class ClassFile {
       return false;
     }
     ClassFile that = (ClassFile) other;
-    return Objects.equals(classPathEntry, that.classPathEntry) && Objects.equals(binaryName, that.binaryName);
+    return Objects.equals(classPathEntry, that.classPathEntry)
+        && Objects.equals(binaryName, that.binaryName);
   }
 
   @Override

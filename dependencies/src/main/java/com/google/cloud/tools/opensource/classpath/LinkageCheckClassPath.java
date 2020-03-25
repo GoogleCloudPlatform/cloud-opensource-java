@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.classpath;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.bcel.util.ClassPath;
@@ -54,7 +53,10 @@ public class LinkageCheckClassPath extends ClassPath {
    * @param entries the elements in the class path
    */
   LinkageCheckClassPath(List<ClassPathEntry> entries) {
-    super(entries.stream().map(ClassPathEntry::getPath).collect(Collectors.joining(File.pathSeparator)));
+    super(
+        entries.stream()
+            .map(ClassPathEntry::getPath)
+            .collect(Collectors.joining(File.pathSeparator)));
     extensionClassLoader = ClassLoader.getSystemClassLoader().getParent();
   }
 
