@@ -120,18 +120,18 @@ public class SymbolProblemTest {
             fieldSymbolProblem,
             source2);
     assertEquals(
-        "(bbb-1.2.3.jar) "
+        "(JAR(aaa/bbb-1.2.3.jar)) "
             + "io.grpc.protobuf.ProtoUtils.marshaller's method "
             + "marshaller(com.google.protobuf.Message arg1) is not found;\n"
             + "  referenced by 1 class file\n"
-            + "    java.lang.Object (foo.jar)\n"
+            + "    java.lang.Object (JAR(foo/foo.jar))\n"
             + "Class java.lang.Integer is not found;\n"
             + "  referenced by 2 class files\n"
-            + "    java.lang.Object (foo.jar)\n"
-            + "    java.lang.Integer (bar.jar)\n"
-            + "(ccc-1.2.3.jar) java.lang.Integer's field MAX_VALUE is not found;\n"
+            + "    java.lang.Object (JAR(foo/foo.jar))\n"
+            + "    java.lang.Integer (JAR(bar/bar.jar))\n"
+            + "(JAR(ccc-1.2.3.jar)) java.lang.Integer's field MAX_VALUE is not found;\n"
             + "  referenced by 1 class file\n"
-            + "    java.lang.Integer (bar.jar)\n",
+            + "    java.lang.Integer (JAR(bar/bar.jar))\n",
         SymbolProblem.formatSymbolProblems(symbolProblems));
   }
 }

@@ -41,13 +41,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -608,21 +606,17 @@ public class LinkageCheckerTest {
 
     Truth.assertThat(inputClasspath).isNotEmpty();
 
-    List<String> names =
-        inputClasspath.stream().map(x -> x.toString()).collect(Collectors.toList());
     // The first artifacts
-    Truth.assertThat(names).containsAtLeast(
-        "api-common-1.7.0.jar",
-        "proto-google-common-protos-1.14.0.jar",
-        "grpc-google-common-protos-1.14.0.jar");
+    Truth.assertThat(inputClasspath)
+        .comparingElementsUsing(COORDINATES)
+        .containsAtLeast(
+            "com.google.api:api-common:1.7.0",
+            "com.google.api.grpc:proto-google-common-protos:1.14.0",
+            "com.google.api.grpc:grpc-google-common-protos:1.14.0");
 
     // gax-bom, containing com.google.api:gax:1.42.0, is in the BOM with scope:import
-    for (ClassPathEntry path : inputClasspath) {
-      if (path.toString().contains("gax-1.40.0.jar")) {
-        return;
-      }
-    }
-    Assert.fail("Import dependency in BOM should be resolved");
+    assertTrue(
+        inputClasspath.stream().anyMatch(entry -> entry.getPath().contains("gax-1.40.0.jar")));
   }
 
 
@@ -671,7 +665,7 @@ public class LinkageCheckerTest {
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(COORDINATES)
-        .contains("apache-jsp-8.0.9.M3.jar");
+        .contains("org.mortbay.jasper:apache-jsp:8.0.9.M3");
   }
 
   @Test
