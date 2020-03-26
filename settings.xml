@@ -19,19 +19,19 @@
     xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
                           https://maven.apache.org/xsd/settings-1.0.0.xsd">
   <mirrors>
-    <!-- Google's Maven Central mirror for Americas
-     https://maven-central.storage.googleapis.com/index.html
-    -->
+    <mirror>
+      <!-- Google's Maven Central mirror for Americas
+       https://maven-central.storage.googleapis.com/index.html
+      -->
+      <id>google-maven-central</id>
+      <name>GCS Maven Central mirror</name>
+      <url>https://maven-central.storage-download.googleapis.com/maven2/</url>
+      <mirrorOf>central</mirrorOf>
+    </mirror>
     <mirror>
       <id>maven-central</id>
       <name>Maven Central</name>
       <url>https://repo1.maven.org/maven2</url>
-      <mirrorOf>central</mirrorOf>
-    </mirror>
-    <mirror>
-      <id>google-maven-central</id>
-      <name>GCS Maven Central mirror</name>
-      <url>https://maven-central.storage-download.googleapis.com/maven2/</url>
       <mirrorOf>central</mirrorOf>
     </mirror>
   </mirrors>
