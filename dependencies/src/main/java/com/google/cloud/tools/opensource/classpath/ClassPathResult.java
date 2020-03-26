@@ -31,14 +31,14 @@ public final class ClassPathResult {
   private final ImmutableList<ClassPathEntry> classPath;
 
   /**
-   * An ordered map of absolute paths of JAR files to one or more Maven dependency paths.
+   * An ordered map from class path elements to one or more Maven dependency paths.
    *
-   * <p>The keys of the returned map represent jar files of {@code artifacts} and their transitive
-   * dependencies. The return value of {@link LinkedListMultimap#keySet()} preserves key iteration
-   * order.
+   * <p>The keys of the returned map represent Maven artifacts in the resolved class path, including
+   * ones in the transitive dependency. The return value of {@link LinkedListMultimap#keySet()}
+   * preserves key iteration order.
    *
-   * <p>The values of the returned map for a key (jar file) represent the different Maven dependency
-   * paths from {@code artifacts} to the Maven artifact of the jar file.
+   * <p>The values of the returned map for a key (class path entry) represent the different Maven
+   * dependency paths from {@code artifacts} to the Maven artifact.
    */
   private final ImmutableListMultimap<ClassPathEntry, DependencyPath> dependencyPaths;
 
@@ -52,17 +52,17 @@ public final class ClassPathResult {
     this.artifactProblems = ImmutableList.copyOf(artifactProblems);
   }
 
-  /** Returns the list of absolute paths to JAR files of resolved Maven artifacts. */
+  /** Returns the resolved class path. */
   public ImmutableList<ClassPathEntry> getClassPath() {
     return classPath;
   }
 
   /**
-   * Returns the dependency path to the JAR file. An empty list if the JAR file is not in the class
-   * path.
+   * Returns the dependency path to the class path entry. An empty list if the entry is not in
+   * the class path.
    */
-  public ImmutableList<DependencyPath> getDependencyPaths(ClassPathEntry jar) {
-    return dependencyPaths.get(jar);
+  public ImmutableList<DependencyPath> getDependencyPaths(ClassPathEntry entry) {
+    return dependencyPaths.get(entry);
   }
 
   /** Returns problems encountered while constructing the dependency graph. */

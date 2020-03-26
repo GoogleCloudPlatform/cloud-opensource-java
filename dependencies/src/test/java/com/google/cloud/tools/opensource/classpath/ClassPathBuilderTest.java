@@ -50,14 +50,14 @@ public class ClassPathBuilderTest {
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
     ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(grpcArtifact));
 
-    ImmutableList<ClassPathEntry> paths = result.getClassPath();
-    long jsr305Count = paths.stream().filter(path -> path.toString().contains("jsr305")).count();
+    ImmutableList<ClassPathEntry> classPath = result.getClassPath();
+    long jsr305Count = classPath.stream().filter(path -> path.toString().contains("jsr305")).count();
     Truth.assertWithMessage("There should not be duplicated versions for jsr305")
         .that(jsr305Count)
         .isEqualTo(1);
 
     Optional<ClassPathEntry> opencensusApiPathFound =
-        paths.stream().filter(path -> path.toString().contains("opencensus-api")).findFirst();
+        classPath.stream().filter(path -> path.toString().contains("opencensus-api")).findFirst();
     Truth8.assertThat(opencensusApiPathFound).isPresent();
     ClassPathEntry opencensusApiPath = opencensusApiPathFound.get();
     Truth.assertWithMessage("Opencensus API should have multiple dependency paths")
@@ -123,9 +123,9 @@ public class ClassPathBuilderTest {
 
   @Test
   public void testResolveClassPath_optionalDependency() {
-    List<ClassPathEntry> paths =
+    List<ClassPathEntry> classPath =
         resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
-    Truth.assertThat(paths).comparingElementsUsing(COORDINATES).contains("log4j:log4j:1.2.12");
+    Truth.assertThat(classPath).comparingElementsUsing(COORDINATES).contains("log4j:log4j:1.2.12");
   }
 
   @Test
@@ -142,21 +142,21 @@ public class ClassPathBuilderTest {
 
   @Test
   public void testResolve_emptyInput() {
-    List<ClassPathEntry> jars = classPathBuilder.resolve(ImmutableList.of()).getClassPath();
-    Truth.assertThat(jars).isEmpty();
+    List<ClassPathEntry> classPath = classPathBuilder.resolve(ImmutableList.of()).getClassPath();
+    Truth.assertThat(classPath).isEmpty();
   }
 
   @Test
   public void testFindInvalidReferences_selfReferenceFromAbstractClassToInterface()
       throws IOException {
-    List<ClassPathEntry> paths =
+    List<ClassPathEntry> classPath =
         resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
     ClassPathEntry httpClientJar =
-        paths.stream()
+        classPath.stream()
             .filter(path -> path.getPath().contains("httpclient-4.5.3.jar"))
             .findFirst()
             .get();
-    LinkageChecker linkageChecker = LinkageChecker.create(paths, ImmutableSet.copyOf(paths));
+    LinkageChecker linkageChecker = LinkageChecker.create(classPath, ImmutableSet.copyOf(classPath));
 
     // httpclient-4.5.3 AbstractVerifier has a method reference of
     // 'void verify(String host, String[] cns, String[] subjectAlts)' to itself and its interface
@@ -187,8 +187,8 @@ public class ClassPathBuilderTest {
 
   @Test
   public void testResolveClasspath_notToGenerateRepositoryException() {
-    List<ClassPathEntry> paths = resolveClassPath("com.google.guava:guava-gwt:jar:20.0");
-    Truth.assertThat(paths).isNotEmpty();
+    List<ClassPathEntry> classPath = resolveClassPath("com.google.guava:guava-gwt:jar:20.0");
+    Truth.assertThat(classPath).isNotEmpty();
   }
 
   @Test
