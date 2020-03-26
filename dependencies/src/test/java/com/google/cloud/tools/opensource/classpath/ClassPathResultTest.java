@@ -63,7 +63,7 @@ public class ClassPathResultTest {
 
     String actual = classPathResult.formatDependencyPaths(ImmutableList.of(jarA));
 
-    assertEquals("JAR(a.jar) is at:\n" + "  com.google:a:1 (compile)\n", actual);
+    assertEquals("a.jar is at:\n" + "  com.google:a:1 (compile)\n", actual);
   }
 
   @Test
@@ -76,9 +76,9 @@ public class ClassPathResultTest {
     String actual = classPathResult.formatDependencyPaths(ImmutableList.of(jarA, jarB));
 
     assertEquals(
-        "JAR(a.jar) is at:\n"
+        "a.jar is at:\n"
             + "  com.google:a:1 (compile)\n"
-            + "JAR(b.jar) is at:\n"
+            + "b.jar is at:\n"
             + "  com.google:b:1 (compile)\n",
         actual);
   }
@@ -93,8 +93,7 @@ public class ClassPathResultTest {
     String actual = classPathResult.formatDependencyPaths(ImmutableList.of(jarA));
 
     assertEquals(
-        "JAR(a.jar) is at:\n" + "  com.google:a:1 (compile)\n" + "  and 1 dependency path.\n",
-        actual);
+        "a.jar is at:\n" + "  com.google:a:1 (compile)\n" + "  and 1 dependency path.\n", actual);
   }
 
   @Test
@@ -108,9 +107,7 @@ public class ClassPathResultTest {
     String actual = classPathResult.formatDependencyPaths(ImmutableList.of(jarA));
 
     assertEquals(
-        "JAR(a.jar) is at:\n"
-            + "  com.google:a:1 (compile)\n"
-            + "  and 2 other dependency paths.\n",
+        "a.jar is at:\n" + "  com.google:a:1 (compile)\n" + "  and 2 other dependency paths.\n",
         actual);
   }
 
@@ -126,7 +123,7 @@ public class ClassPathResultTest {
       fail("The irrelevant JAR file should be invalidated.");
     } catch (IllegalArgumentException ex) {
       // pass
-      assertEquals("JAR(b.jar) is not in the class path", ex.getMessage());
+      assertEquals("b.jar is not in the class path", ex.getMessage());
     }
   }
 }

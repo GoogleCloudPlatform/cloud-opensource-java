@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.testing.EqualsTester;
 import com.google.common.testing.NullPointerTester;
 import com.google.common.testing.NullPointerTester.Visibility;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
 
@@ -84,6 +85,7 @@ public class SymbolProblemTest {
 
   @Test
   public void testFormatSymbolProblems() {
+    Path path = Paths.get("aaa", "bbb-1.2.3.jar");
     SymbolProblem methodSymbolProblem =
         new SymbolProblem(
             new MethodSymbol(
@@ -92,8 +94,7 @@ public class SymbolProblemTest {
                 "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
                 false),
             ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(
-                new ClassPathEntry(Paths.get("aaa", "bbb-1.2.3.jar")), "java.lang.Object"));
+            new ClassFile(new ClassPathEntry(path), "java.lang.Object"));
 
     SymbolProblem classSymbolProblem =
         new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
@@ -102,12 +103,14 @@ public class SymbolProblemTest {
         new SymbolProblem(
             new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"),
             ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(new ClassPathEntry(Paths.get("ccc-1.2.3.jar")), "java.lang.Integer"));
+            new ClassFile(
+                ClassPathEntry.of("com.google:ccc:1.2.3", "ccc-1.2.3.jar"), "java.lang.Integer"));
 
     ClassFile source1 =
-        new ClassFile(new ClassPathEntry(Paths.get("foo", "foo.jar")), "java.lang.Object");
+        new ClassFile(ClassPathEntry.of("com.google:foo:0.0.1", "foo/foo.jar"), "java.lang.Object");
     ClassFile source2 =
-        new ClassFile(new ClassPathEntry(Paths.get("bar", "bar.jar")), "java.lang.Integer");
+        new ClassFile(
+            ClassPathEntry.of("com.google:bar:0.0.1", "bar/bar.jar"), "java.lang.Integer");
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         ImmutableSetMultimap.of(
@@ -120,18 +123,20 @@ public class SymbolProblemTest {
             fieldSymbolProblem,
             source2);
     assertEquals(
-        "(JAR(aaa/bbb-1.2.3.jar)) "
+        "("
+            + path
+            + ") "
             + "io.grpc.protobuf.ProtoUtils.marshaller's method "
             + "marshaller(com.google.protobuf.Message arg1) is not found;\n"
             + "  referenced by 1 class file\n"
-            + "    java.lang.Object (JAR(foo/foo.jar))\n"
+            + "    java.lang.Object (com.google:foo:0.0.1)\n"
             + "Class java.lang.Integer is not found;\n"
             + "  referenced by 2 class files\n"
-            + "    java.lang.Object (JAR(foo/foo.jar))\n"
-            + "    java.lang.Integer (JAR(bar/bar.jar))\n"
-            + "(JAR(ccc-1.2.3.jar)) java.lang.Integer's field MAX_VALUE is not found;\n"
+            + "    java.lang.Object (com.google:foo:0.0.1)\n"
+            + "    java.lang.Integer (com.google:bar:0.0.1)\n"
+            + "(com.google:ccc:1.2.3) java.lang.Integer's field MAX_VALUE is not found;\n"
             + "  referenced by 1 class file\n"
-            + "    java.lang.Integer (JAR(bar/bar.jar))\n",
+            + "    java.lang.Integer (com.google:bar:0.0.1)\n",
         SymbolProblem.formatSymbolProblems(symbolProblems));
   }
 }

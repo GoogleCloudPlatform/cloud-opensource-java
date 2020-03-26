@@ -70,10 +70,10 @@ public final class ClassPathResult {
     return artifactProblems;
   }
 
-  /** Returns text describing dependency paths to {@code jars} in the dependency tree. */
-  public String formatDependencyPaths(Iterable<ClassPathEntry> jars) {
+  /** Returns text describing dependency paths to class path entries in the dependency tree. */
+  public String formatDependencyPaths(Iterable<ClassPathEntry> entries) {
     StringBuilder message = new StringBuilder();
-    for (ClassPathEntry entry : jars) {
+    for (ClassPathEntry entry : entries) {
       ImmutableList<DependencyPath> dependencyPaths = getDependencyPaths(entry);
       checkArgument(dependencyPaths.size() >= 1, "%s is not in the class path", entry);
 

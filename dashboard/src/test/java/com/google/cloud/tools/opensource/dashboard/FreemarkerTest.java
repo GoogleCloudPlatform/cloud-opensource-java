@@ -69,7 +69,8 @@ public class FreemarkerTest {
             new SymbolProblem(new ClassSymbol("com.foo.Bar"), ErrorType.CLASS_NOT_FOUND, null),
             "abc.def.G");
     symbolProblemTable =
-        ImmutableMap.of(new ClassPathEntry(Paths.get("foo", "bar-1.2.3.jar")), dummyProblems);
+        ImmutableMap.of(
+            ClassPathEntry.of("com.google:foo:1.0.0", "foo/bar-1.2.3.jar"), dummyProblems);
   }
 
   @AfterClass

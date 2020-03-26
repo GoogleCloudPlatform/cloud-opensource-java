@@ -141,13 +141,9 @@ class ClassDumper {
     }
   }
 
-  /**
-   * Returns class file names defined in the jar file.
-   *
-   * @param jarPath absolute path to the jar file
-   */
-  ImmutableSet<String> classesDefinedInJar(ClassPathEntry jarPath) {
-    return classPathEntryToClassFileNames.get(jarPath);
+  /** Returns class file names defined in the class path entry. */
+  ImmutableSet<String> classesDefinedInJar(ClassPathEntry entry) {
+    return classPathEntryToClassFileNames.get(entry);
   }
 
   /**
@@ -323,9 +319,7 @@ class ClassDumper {
     return innerClassNames.build();
   }
 
-  /**
-   * Returns the first jar file {@link Path} defining the class. Null if the location is unknown.
-   */
+  /** Returns the first class path entry defining the class. Null if the location is unknown. */
   @Nullable
   ClassPathEntry findClassLocation(String className) {
     // Initially this method used classLoader.loadClass().getProtectionDomain().getCodeSource().
@@ -349,13 +343,13 @@ class ClassDumper {
   /**
    * Returns mapping from class path entries to class file names they contain.
    *
-   * @param jars absolute paths to jar files
+   * @param classPath class path entries in which it finds the class names.
    */
   @VisibleForTesting
   static ImmutableSetMultimap<ClassPathEntry, String> mapJarToClassFileNames(
-      List<ClassPathEntry> jars) throws IOException {
+      List<ClassPathEntry> classPath) throws IOException {
     Builder<ClassPathEntry, String> pathToClasses = ImmutableSetMultimap.builder();
-    for (ClassPathEntry jar : jars) {
+    for (ClassPathEntry jar : classPath) {
       for (String classFileName : listClassFileNames(jar)) {
         pathToClasses.put(jar, classFileName);
       }
@@ -364,7 +358,7 @@ class ClassDumper {
   }
 
   /**
-   * Returns a list of class file names in {@code jar} as in {@link JavaClass#getFileName()}. This
+   * Returns a list of class file names in {@code entry} as in {@link JavaClass#getFileName()}. This
    * class file name is a path ("." as element separator) that locates a class file in a class path.
    * Usually the class name and class file name are the same. However a class file name may have a
    * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
@@ -374,7 +368,7 @@ class ClassDumper {
     // Setting parent as null because we don't want other classes than this jar file
     URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[] {jarUrl}, null);
 
-    // Leveraging Google Guava reflection as BCEL doesn't list classes in a jar file
+    // Leveraging Google Guava reflection as BCEL doesn't have API to list classes in a jar file
     com.google.common.reflect.ClassPath classPath =
         com.google.common.reflect.ClassPath.from(classLoaderFromJar);
 
@@ -384,15 +378,15 @@ class ClassDumper {
   }
 
   /**
-   * Returns a set of {@link JavaClass}es which have entries in the {@code jar} through {@link
+   * Returns a set of {@link JavaClass}es which have entries in the {@code entry} through {@link
    * #classRepository}.
    */
-  private ImmutableSet<JavaClass> listClasses(ClassPathEntry jar) throws IOException {
+  private ImmutableSet<JavaClass> listClasses(ClassPathEntry entry) throws IOException {
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
 
     ImmutableList.Builder<String> corruptedClassFileNames = ImmutableList.builder();
 
-    for (String classFileName : listClassFileNames(jar)) {
+    for (String classFileName : listClassFileNames(entry)) {
       if (classFileName.startsWith("META-INF.versions.")) {
         // Linkage Checker does not support multi-release JAR (for Java 9+) yet
         // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/897
@@ -413,7 +407,7 @@ class ClassDumper {
     if (corruptedFileCount > 0) {
       logger.warning(
           "Corrupt files in "
-              + jar
+              + entry
               + "; could not load "
               + corruptedFiles.get(0)
               + (corruptedFileCount > 1

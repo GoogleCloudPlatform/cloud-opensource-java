@@ -81,7 +81,7 @@ public final class ClassFile {
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("jar", classPathEntry)
+        .add("location", classPathEntry)
         .add("className", binaryName)
         .toString();
   }

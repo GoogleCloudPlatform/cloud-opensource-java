@@ -30,7 +30,8 @@ import java.util.Map;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
- * Utility to build a class path (a list of jar files) through a dependency tree of Maven artifacts.
+ * Utility to build a class path (a list of class path entries) through a dependency tree of Maven
+ * artifacts.
  *
  * @see <a
  *     href="https://docs.oracle.com/javase/8/docs/technotes/tools/unix/classpath.html#sthref15">

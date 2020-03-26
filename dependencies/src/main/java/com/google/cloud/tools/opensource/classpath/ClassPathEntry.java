@@ -18,9 +18,13 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.common.annotations.VisibleForTesting;
+import java.io.File;
 import java.nio.file.Path;
 import java.util.Objects;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 
 /** An entry in a class path. */
 public final class ClassPathEntry {
@@ -29,7 +33,7 @@ public final class ClassPathEntry {
   private Artifact artifact;
 
   /** An entry for a JAR file without association with a Maven artifact. */
-  public ClassPathEntry(Path jar) {
+  ClassPathEntry(Path jar) {
     this.jar = checkNotNull(jar);
   }
 
@@ -76,9 +80,17 @@ public final class ClassPathEntry {
   @Override
   public String toString() {
     if (artifact != null) {
-      return "Artifact(" + artifact + ")";
+      // Group ID, artifact ID and version. No extension such as "jar" or "tar.gz", because Linkage
+      // Checker uses only JAR artifacts.
+      return Artifacts.toCoordinates(artifact);
     } else {
-      return "JAR(" + jar + ")";
+      return jar.toString();
     }
+  }
+
+  @VisibleForTesting
+  public static ClassPathEntry of(String coordinates, String filePath) {
+    Artifact artifact = new DefaultArtifact(coordinates);
+    return new ClassPathEntry(artifact.setFile(new File(filePath)));
   }
 }

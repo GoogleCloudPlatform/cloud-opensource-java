@@ -583,8 +583,8 @@ public class DashboardMain {
     // converted to String. https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
-    for (ClassPathEntry jar : classPathResult.getClassPath()) {
-      List<DependencyPath> dependencyPaths = classPathResult.getDependencyPaths(jar);
+    for (ClassPathEntry entry : classPathResult.getClassPath()) {
+      List<DependencyPath> dependencyPaths = classPathResult.getDependencyPaths(entry);
 
       ImmutableList<String> commonVersionlessArtifacts =
           commonVersionlessArtifacts(dependencyPaths);
@@ -592,7 +592,7 @@ public class DashboardMain {
       if (dependencyPaths.size() > MINIMUM_NUMBER_DEPENDENCY_PATHS
           && commonVersionlessArtifacts.size() > 1) { // The last paths elements are always same
         builder.put(
-            jar.toString(),
+            entry.toString(),
             summaryMessage(
                 dependencyPaths.size(), commonVersionlessArtifacts, dependencyPaths.get(0)));
       }

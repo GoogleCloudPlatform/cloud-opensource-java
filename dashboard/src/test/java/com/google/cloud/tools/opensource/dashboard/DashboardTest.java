@@ -216,12 +216,12 @@ public class DashboardTest {
     Nodes dependencyPaths = details.query("//p[@class='linkage-check-dependency-paths']");
     Node dependencyPathMessageOnProblem = dependencyPaths.get(dependencyPaths.size() - 4);
     Assert.assertEquals(
-        "The following paths contain Artifact(com.google.guava:guava-jdk5:jar:13.0):",
+        "The following paths contain com.google.guava:guava-jdk5:13.0:",
         trimAndCollapseWhiteSpace(dependencyPathMessageOnProblem.getValue()));
 
     Node dependencyPathMessageOnSource = dependencyPaths.get(dependencyPaths.size() - 3);
     Assert.assertEquals(
-        "The following paths contain Artifact(com.google.guava:guava:jar:27.1-android):",
+        "The following paths contain com.google.guava:guava:27.1-android:",
         trimAndCollapseWhiteSpace(dependencyPathMessageOnSource.getValue()));
 
     Nodes nodesWithPathsSummary = details.query("//p[@class='linkage-check-dependency-paths']");

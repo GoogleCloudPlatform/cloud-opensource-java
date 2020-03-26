@@ -78,7 +78,7 @@ public class LinkageCheckerTest {
             .getDependencyGraph();
     ImmutableList<ClassPathEntry> classPath =
         dependencies.list().stream()
-            .map(path -> path.getLeaf().getFile().toPath())
+            .map(path -> path.getLeaf())
             .map(ClassPathEntry::new)
             .collect(toImmutableList());
     return classPath;

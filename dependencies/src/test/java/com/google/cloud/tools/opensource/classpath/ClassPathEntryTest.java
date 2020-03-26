@@ -69,13 +69,13 @@ public class ClassPathEntryTest {
   public void testToStringJar() {
     Path fooJar = Paths.get("foo.jar");
     ClassPathEntry entry = new ClassPathEntry(fooJar);
-    assertEquals("JAR(foo.jar)", entry.toString());
+    assertEquals("foo.jar", entry.toString());
   }
 
   @Test
   public void testToStringArtifact() {
     ClassPathEntry entry = new ClassPathEntry(fooArtifact);
-    assertEquals("Artifact(com.google:foo:jar:0.0.1)", entry.toString());
+    assertEquals("com.google:foo:0.0.1", entry.toString());
   }
 
   @Test

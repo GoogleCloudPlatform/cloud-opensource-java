@@ -78,11 +78,11 @@ public class ClassPathBuilderTest {
     ImmutableList<ClassPathEntry> entries = ImmutableList.copyOf(classPath);
 
     Truth.assertThat(entries.get(0).toString())
-        .isEqualTo("Artifact(com.google.api:api-common:jar:1.7.0)"); // first element in the BOM
+        .isEqualTo("com.google.api:api-common:1.7.0"); // first element in the BOM
     int bomSize = managedDependencies.size();
     String lastFileName = entries.get(bomSize - 1).toString();
     Truth.assertThat(lastFileName)
-        .isEqualTo("Artifact(com.google.api:gax-httpjson:jar:0.57.0)"); // last element in BOM
+        .isEqualTo("com.google.api:gax-httpjson:0.57.0"); // last element in BOM
   }
 
   @Test
