@@ -60,7 +60,7 @@ public class LinkageCheckerArgumentsTest {
   }
 
   @Test
-  public void testReadCommandLine_multipleJars() throws ParseException {
+  public void testReadCommandLine_jarFileList_absolutePath() throws ParseException {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine(
             "-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar");
@@ -68,11 +68,15 @@ public class LinkageCheckerArgumentsTest {
     Truth.assertThat(parsedArguments.getJarFiles())
         .comparingElementsUsing(
             Correspondence.transforming(ClassPathEntry::getPath, "has path equals to"))
-        .containsExactly("/foo/bar/A.jar", "/foo/bar/B.jar", "/foo/bar/C.jar");
+        // Using Path::toString to work in Windows
+        .containsExactly(
+            Paths.get("/foo/bar/A.jar").toString(),
+            Paths.get("/foo/bar/B.jar").toString(),
+            Paths.get("/foo/bar/C.jar").toString());
   }
 
   @Test
-  public void testGetJarFiles_jarFileList_relativePath() throws ParseException {
+  public void testReadCommandLine_jarFileList_relativePath() throws ParseException {
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
