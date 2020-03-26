@@ -28,11 +28,5 @@
       <url>https://maven-central.storage-download.googleapis.com/maven2/</url>
       <mirrorOf>central</mirrorOf>
     </mirror>
-    <mirror>
-      <id>maven-central</id>
-      <name>Maven Central</name>
-      <url>https://repo1.maven.org/maven2</url>
-      <mirrorOf>central</mirrorOf>
-    </mirror>
   </mirrors>
 </settings>
