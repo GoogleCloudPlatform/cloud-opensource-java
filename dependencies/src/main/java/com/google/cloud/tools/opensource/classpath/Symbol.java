@@ -29,10 +29,10 @@ import java.util.Objects;
  *     Virtual Machine Specification: The Run-Time Constant Pool</a>
  */
 abstract class Symbol {
-  private final String className;
+  private final String classBinaryName;
 
   Symbol(String className) {
-    this.className = checkNotNull(className);
+    this.classBinaryName = checkNotNull(className);
   }
 
   /**
@@ -42,8 +42,8 @@ abstract class Symbol {
    * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-13.html#jls-13.1">Java
    *     Language Specification: 13.1. The Form of a Binary</a>
    */
-  String getClassName() {
-    return className;
+  String getClassBinaryName() {
+    return classBinaryName;
   }
 
   @Override
@@ -55,18 +55,18 @@ abstract class Symbol {
       return false;
     }
     Symbol symbol = (Symbol) other;
-    return className.equals(symbol.className);
+    return classBinaryName.equals(symbol.classBinaryName);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(className);
+    return Objects.hash(classBinaryName);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("className", className)
+        .add("className", classBinaryName)
         .toString();
   }
 }

@@ -16,32 +16,38 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import static com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter.formatDependencyPaths;
-
-import org.eclipse.aether.RepositoryException;
+import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
+import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
 /** Prints the dependency tree of Maven artifacts. */
 class DependencyTreePrinter {
+
   public static void main(String[] args) {
     if (args.length < 1) {
       System.err.println("Maven coordinates not provided. E.g., 'io.grpc:grpc-auth:1.19.0'");
       return;
     }
     for (String coordinates : args) {
-      try {
-        printDependencyTree(coordinates);
-      } catch (RepositoryException e) {
-        System.err.println(
-            coordinates + " : Failed to retrieve dependency information:" + e.getMessage());
-      }
+      printDependencyTree(coordinates);
     }
   }
 
-  private static void printDependencyTree(String coordinates) throws RepositoryException {
+  private static void printDependencyTree(String coordinates) {
     DefaultArtifact rootArtifact = new DefaultArtifact(coordinates);
-    DependencyGraph dependencyGraph = DependencyGraphBuilder.getCompleteDependencies(rootArtifact);
+    DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
+    DependencyGraphResult result = dependencyGraphBuilder.buildFullDependencyGraph(
+        ImmutableList.of(rootArtifact));
+    
+    ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
+    for (UnresolvableArtifactProblem problem : problems) {
+      System.out.println(problem);
+    }
+    
+    DependencyGraph dependencyGraph =result.getDependencyGraph();
+    
+    
     System.out.println("Dependencies for " + coordinates);
-    System.out.println(formatDependencyPaths(dependencyGraph.list()));
+    System.out.println(DependencyTreeFormatter.formatDependencyPaths(dependencyGraph.list()));
   }
 }

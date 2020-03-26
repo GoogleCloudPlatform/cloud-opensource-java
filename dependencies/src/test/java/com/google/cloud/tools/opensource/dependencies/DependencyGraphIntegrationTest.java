@@ -16,60 +16,65 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.truth.Correspondence;
+import com.google.common.truth.Truth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.Dependency;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.google.common.truth.Truth;
 
 /**
  *  Tests against actual artifacts in Maven central.
  */
 public class DependencyGraphIntegrationTest {
 
+  private DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
+
   @Test
-  public void testFindUpdates() throws RepositoryException {
+  public void testFindUpdates() {
 
     DefaultArtifact core =
         new DefaultArtifact("com.google.cloud:google-cloud-core:1.37.1");
 
-    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(core);
+    DependencyGraph graph =
+        dependencyGraphBuilder
+            .buildFullDependencyGraph(ImmutableList.of(core))
+            .getDependencyGraph();
     List<Update> updates = graph.findUpdates();
-    List<String> strings = updates.stream().map(e -> e.toString()).collect(Collectors.toList());
 
-    // ordering not working yet
-    // TODO get order working
-    Truth.assertThat(strings).containsExactly("com.google.guava:guava:20.0 needs to "
-        + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
-        "com.google.http-client:google-http-client:1.23.0 needs to "
-        + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
-        "com.google.api:api-common:1.6.0 needs to "
-        + "upgrade com.google.code.findbugs:jsr305:3.0.0 to 3.0.2",
-        "com.google.api.grpc:proto-google-common-protos:1.12.0 needs to "
-        + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
-        "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
-        + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
-        "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
-        + "upgrade com.google.api.grpc:proto-google-common-protos:1.11.0 to 1.12.0",
-        "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
-        + "upgrade com.google.api:api-common:1.5.0 to 1.6.0",
-        "com.google.api:api-common:1.6.0 needs to "
-        + "upgrade com.google.guava:guava:19.0 to 20.0",
-        "com.google.auth:google-auth-library-oauth2-http:0.9.1 needs to "
-        + "upgrade com.google.guava:guava:19.0 to 20.0",
-        "com.google.protobuf:protobuf-java-util:3.6.0 needs to "
-        + "upgrade com.google.guava:guava:19.0 to 20.0",
-        "com.google.auth:google-auth-library-oauth2-http:0.9.1 needs to "
-        + "upgrade com.google.http-client:google-http-client:1.19.0 to 1.23.0",
-        "com.google.http-client:google-http-client-jackson2:1.19.0 needs to "
-        + "upgrade com.google.http-client:google-http-client:1.19.0 to 1.23.0");
+    // Order of updates are not important
+    Truth.assertThat(updates)
+        .comparingElementsUsing(Correspondence.transforming(Update::toString, "has message"))
+        .containsExactly(
+            "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
+                + "upgrade com.google.api.grpc:proto-google-common-protos:1.11.0 to 1.12.0",
+            "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
+                + "upgrade com.google.api:api-common:1.5.0 to 1.6.0",
+            "com.google.guava:guava:20.0 needs to "
+                + "upgrade com.google.code.findbugs:jsr305:1.3.9 to 3.0.2",
+            "com.google.api:api-common:1.6.0 needs to "
+                + "upgrade com.google.code.findbugs:jsr305:3.0.0 to 3.0.2",
+            "com.google.api:api-common:1.6.0 needs to "
+                + "upgrade com.google.guava:guava:19.0 to 20.0",
+            "com.google.protobuf:protobuf-java-util:3.6.0 needs to "
+                + "upgrade com.google.guava:guava:19.0 to 20.0",
+            "com.google.auth:google-auth-library-oauth2-http:0.9.1 needs to "
+                + "upgrade com.google.guava:guava:19.0 to 20.0",
+            "com.google.auth:google-auth-library-oauth2-http:0.9.1 needs to "
+                + "upgrade com.google.http-client:google-http-client:1.19.0 to 1.23.0",
+            "com.google.http-client:google-http-client-jackson2:1.19.0 needs to "
+                + "upgrade com.google.http-client:google-http-client:1.19.0 to 1.23.0",
+            "com.google.api.grpc:proto-google-common-protos:1.12.0 needs to "
+                + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
+            "com.google.api.grpc:proto-google-iam-v1:0.12.0 needs to "
+                + "upgrade com.google.protobuf:protobuf-java:3.5.1 to 3.6.0",
+            "org.apache.httpcomponents:httpclient:4.0.1 needs to "
+                + "upgrade commons-codec:commons-codec:1.3 to 1.6");
   }
 
   // Beam has a more complex dependency graph that hits some corner cases.
@@ -78,11 +83,14 @@ public class DependencyGraphIntegrationTest {
   // This tests verifies that DependencyGraphBuilder sets the os.detected.classifier
   // system property. Take that out and this test will fail while others still pass.
   @Test
-  public void testFindUpdates_beam() throws RepositoryException {
+  public void testFindUpdates_beam() {
 
     DefaultArtifact beam =
         new DefaultArtifact("org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.5.0");
-    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(beam);
+    DependencyGraph graph =
+        dependencyGraphBuilder
+            .buildFullDependencyGraph(ImmutableList.of(beam))
+            .getDependencyGraph();
 
     // should not throw
     graph.findUpdates();
@@ -90,28 +98,37 @@ public class DependencyGraphIntegrationTest {
 
   @Test
   // a non-Google dependency graph that's well understood and thus useful for debugging
-  public void testJaxen() throws RepositoryException {
+  public void testJaxen() {
 
     DefaultArtifact jaxen =
         new DefaultArtifact("jaxen:jaxen:1.1.6");
-    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(jaxen);
+    DependencyGraph graph =
+        dependencyGraphBuilder
+            .buildFullDependencyGraph(ImmutableList.of(jaxen))
+            .getDependencyGraph();
 
     List<Update> updates = graph.findUpdates();
-    Truth.assertThat(updates).hasSize(5);
+    Truth.assertThat(updates).hasSize(6);
 
     List<DependencyPath> conflicts = graph.findConflicts();
-    Truth.assertThat(conflicts).hasSize(34);
+    Truth.assertThat(conflicts).hasSize(10);
 
     Map<String, String> versions = graph.getHighestVersionMap();
     Assert.assertEquals("2.6.2", versions.get("xerces:xercesImpl"));
   }
 
   @Test
-  public void testGrpcAuth() throws RepositoryException {
+  public void testGrpcAuth() {
 
     DefaultArtifact grpc = new DefaultArtifact("io.grpc:grpc-auth:1.15.0");
-    DependencyGraph completeDependencies = DependencyGraphBuilder.getCompleteDependencies(grpc);
-    DependencyGraph transitiveDependencies = DependencyGraphBuilder.getTransitiveDependencies(grpc);
+    DependencyGraph completeDependencies =
+        dependencyGraphBuilder
+            .buildFullDependencyGraph(ImmutableList.of(grpc))
+            .getDependencyGraph();
+    DependencyGraph transitiveDependencies =
+        dependencyGraphBuilder
+            .buildMavenDependencyGraph(new Dependency(grpc, "compile"))
+            .getDependencyGraph();
 
     Map<String, String> complete = completeDependencies.getHighestVersionMap();
     Map<String, String> transitive =
@@ -126,9 +143,12 @@ public class DependencyGraphIntegrationTest {
   }
 
   @Test
-  public void testFindConflicts_cloudLanguage() throws RepositoryException {
+  public void testFindConflicts_cloudLanguage() {
     DefaultArtifact artifact = new DefaultArtifact("com.google.cloud:google-cloud-language:1.37.1");
-    DependencyGraph graph = DependencyGraphBuilder.getCompleteDependencies(artifact);
+    DependencyGraph graph =
+        dependencyGraphBuilder
+            .buildFullDependencyGraph(ImmutableList.of(artifact))
+            .getDependencyGraph();
     List<DependencyPath> conflicts = graph.findConflicts();
     List<String> leaves = new ArrayList<>();
     for (DependencyPath path : conflicts) {

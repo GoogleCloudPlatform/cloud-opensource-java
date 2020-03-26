@@ -16,16 +16,13 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -58,13 +55,15 @@ final class LinkageCheckerArguments {
   private static final HelpFormatter helpFormatter = new HelpFormatter();
 
   private final CommandLine commandLine;
-  private ImmutableList<Path> cachedInputClasspath;
-  private ImmutableList<Artifact> cachedArtifacts;
   private final ImmutableList<String> extraMavenRepositoryUrls;
   private final boolean addMavenCentral;
+  private final boolean reportOnlyReachable;
+  private final boolean help;
 
+  private ImmutableList<Artifact> cachedArtifacts;
+  
   private LinkageCheckerArguments(CommandLine commandLine) {
-    this.commandLine = checkNotNull(commandLine);
+    this.commandLine = commandLine;
     this.extraMavenRepositoryUrls =
         commandLine.hasOption("m")
             ? ImmutableList.copyOf(commandLine.getOptionValues("m"))
@@ -74,6 +73,8 @@ final class LinkageCheckerArguments {
     extraMavenRepositoryUrls.forEach(RepositoryUtility::mavenRepositoryFromUrl);
 
     this.addMavenCentral = !commandLine.hasOption("nm");
+    this.reportOnlyReachable = commandLine.hasOption("r");
+    this.help = commandLine.hasOption("h");
   }
 
   static LinkageCheckerArguments readCommandLine(String... arguments) throws ParseException {
@@ -82,12 +83,10 @@ final class LinkageCheckerArguments {
     CommandLineParser parser = new DefaultParser();
 
     try {
-      return new LinkageCheckerArguments(parser.parse(options, arguments));
+      CommandLine commandLine = parser.parse(options, arguments);
+      return new LinkageCheckerArguments(commandLine);
     } catch (IllegalArgumentException ex) {
-      throw new ParseException("Invalid URL syntax in Maven repository URL");
-    } catch (ParseException ex) {
-      helpFormatter.printHelp("LinkageChecker", options);
-      throw ex;
+      throw new ParseException("Invalid URL syntax in Maven repository URL" + ex.getMessage());
     }
   }
 
@@ -95,13 +94,12 @@ final class LinkageCheckerArguments {
     Options options = new Options();
 
     OptionGroup inputGroup = new OptionGroup();
-    inputGroup.setRequired(true);
 
     Option bomOption =
         Option.builder("b")
             .longOpt("bom")
             .hasArg()
-            .desc("BOM to generate a class path, specified by its Maven coordinates")
+            .desc("Maven coordinates for a BOM")
             .build();
     inputGroup.addOption(bomOption);
 
@@ -111,7 +109,7 @@ final class LinkageCheckerArguments {
             .hasArgs()
             .valueSeparator(',')
             .desc(
-                "Maven coordinates for Maven artifacts (separated by ',') to generate a class path")
+                "Maven coordinates for artifacts (separated by ',')")
             .build();
     inputGroup.addOption(artifactOption);
 
@@ -120,7 +118,7 @@ final class LinkageCheckerArguments {
             .longOpt("jars")
             .hasArgs()
             .valueSeparator(',')
-            .desc("Jar files (separated by ',') to generate a class path")
+            .desc("Jar files (separated by ',')")
             .build();
     inputGroup.addOption(jarOption);
 
@@ -146,6 +144,24 @@ final class LinkageCheckerArguments {
             .build();
     options.addOption(noMavenCentralOption);
 
+    Option reportOnlyReachable =
+        Option.builder("r")
+            .longOpt("report-only-reachable")
+            .hasArg(false)
+            .desc(
+                "Report only reachable linkage errors from the classes in the specified BOM or "
+                    + "Maven artifacts")
+            .build();
+    options.addOption(reportOnlyReachable);
+
+    Option help =
+        Option.builder("h")
+            .longOpt("help")
+            .hasArg(false)
+            .desc("Show usage instructions")
+            .build();
+    options.addOption(help);
+    
     options.addOptionGroup(inputGroup);
     return options;
   }
@@ -158,7 +174,10 @@ final class LinkageCheckerArguments {
 
     if (commandLine.hasOption("b")) {
       String bomCoordinates = commandLine.getOptionValue("b");
-      return cachedArtifacts = RepositoryUtility.readBom(bomCoordinates).getManagedDependencies();
+
+      return cachedArtifacts =
+          RepositoryUtility.readBom(bomCoordinates, getMavenRepositoryUrls())
+              .getManagedDependencies();
     } else if (commandLine.hasOption("a")) {
       // option 'a'
       String[] mavenCoordinatesOption = commandLine.getOptionValues("a");
@@ -172,49 +191,41 @@ final class LinkageCheckerArguments {
     }
   }
 
-  /**
-   * Returns a list of absolute paths to jar files for the option. The list includes dependencies if
-   * BOM or Maven coordinates are specified in the option.
-   */
-  ImmutableList<Path> getInputClasspath() throws RepositoryException {
-    if (cachedInputClasspath != null) {
-      // Avoid unnecessary dependency resolution, which Cloud OSS BOM takes around 4 seconds
-      return cachedInputClasspath;
-    }
-
-    if (commandLine.hasOption("b") || commandLine.hasOption("a")) {
-      List<Artifact> artifacts = getArtifacts();
-      cachedInputClasspath = ClassPathBuilder.artifactsToClasspath(artifacts);
-    } else {
-      // b, a, or j is specified in OptionGroup
+  /** Returns a list of absolute paths to files specified in the JAR file option. */
+  ImmutableList<Path> getJarFiles() {
+    if (commandLine.hasOption("j")) {
       String[] jarFiles = commandLine.getOptionValues("j");
-      cachedInputClasspath =
-          Arrays.stream(jarFiles)
-              .map(name -> Paths.get(name).toAbsolutePath())
-              .collect(toImmutableList());
-    }
-    return cachedInputClasspath;
-  }
-
-  /** Returns a set of jar files that hold entry point classes. */
-  ImmutableSet<Path> getEntryPointJars() throws RepositoryException {
-    if (commandLine.hasOption("a") || commandLine.hasOption('b')) {
-      // For an artifact list (or a BOM), the first elements in inputClasspath are the artifacts
-      // specified the list, followed by their dependencies.
-      int artifactCount = getArtifacts().size();
-      // For Maven artifact list (or a BOM), entry point classes are ones in the list
-      return ImmutableSet.copyOf(getInputClasspath().subList(0, artifactCount));
+      return Arrays.stream(jarFiles)
+          .map(name -> Paths.get(name).toAbsolutePath())
+          .collect(toImmutableList());
     } else {
-      // For list of jar files, entry point classes are all classes in the files
-      return ImmutableSet.copyOf(getInputClasspath());
+      throw new IllegalArgumentException("The arguments must have option 'j' to list JAR files");
     }
   }
 
-  ImmutableList<String> getExtraMavenRepositoryUrls() {
-    return extraMavenRepositoryUrls;
+  ImmutableList<String> getMavenRepositoryUrls() {
+    ImmutableList.Builder<String> repositories = ImmutableList.builder();
+    repositories.addAll(extraMavenRepositoryUrls);
+    if (addMavenCentral) {
+      repositories.add(RepositoryUtility.CENTRAL.getUrl());
+    }
+    return repositories.build();
   }
 
-  boolean getAddMavenCentral() {
-    return addMavenCentral;
+  boolean getReportOnlyReachable() {
+    return reportOnlyReachable;
+  }
+
+  boolean needsHelp() {
+    return this.help;
+  }
+
+  void printHelp() {
+    helpFormatter.printHelp(
+        "java com.google.cloud.tools.opensource.classpath.LinkageChecker", options);
+  }
+
+  boolean hasInput() {
+    return commandLine.hasOption("b") || commandLine.hasOption("a") || commandLine.hasOption("j");
   }
 }

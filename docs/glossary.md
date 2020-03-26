@@ -1,9 +1,12 @@
+---
+permalink: /glossary
+---
 # Java Dependency Glossary
 
 - **Class path**: an ordered list of jar files, zip files, and directories, each of which
   contains Java class files.
   A [class loader](https://docs.oracle.com/javase/7/docs/api/java/lang/ClassLoader.html)
-  typically transforms the fully package qualified name of a Java class
+  transforms the fully package qualified name of a Java class
   into a file name and then searches for a class file with that name in a class path.
   
   When more than one entry in a class path contains a class file with the same name,
@@ -55,12 +58,11 @@
 <a name="version-alignment"></a>
 <a name="upper-version-alignment"></a>
 - **Version alignment**: Said of the dependency tree of a Maven module. This
-  means that for any dependency of a module in that module's dependency tree,
-  all major Java build systems select the same version of that dependency.
+  means that all major Java build systems select the same version of each dependency
+  in the module's dependency tree.
   - Major build systems currently include Maven and Gradle.
-  - Direct (first-order) dependencies comply with this rule in
-    all major build systems, so the real concern is transitive (second-order and
-    higher) dependencies.
+  - Direct dependencies comply with this rule in
+    all major build systems, so the real concern is transitive dependencies.
   - Version alignment does not guarantee linkage compatibility.
   - Sub-type: **Upper version alignment**: Version alignment where the version
     that is selected is the highest version in the dependency tree.

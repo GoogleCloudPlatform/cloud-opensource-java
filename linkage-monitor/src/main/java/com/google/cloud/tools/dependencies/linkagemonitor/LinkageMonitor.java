@@ -21,21 +21,20 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
+import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.MoreFiles;
 import java.io.IOException;
@@ -44,6 +43,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.Model;
@@ -71,6 +71,8 @@ import org.eclipse.aether.resolution.ArtifactResult;
  * BOM (bill-of-materials).
  */
 public class LinkageMonitor {
+  private static final Logger logger = Logger.getLogger(LinkageMonitor.class.getName());
+
   private static final DefaultModelBuilder modelBuilder =
       new DefaultModelBuilderFactory().newInstance();
 
@@ -81,10 +83,9 @@ public class LinkageMonitor {
       findLocalArtifacts(repositorySystem, session, Paths.get(".").toAbsolutePath());
 
   public static void main(String[] arguments)
-      throws RepositoryException, IOException, LinkageMonitorException, MavenRepositoryException,
-          ModelBuildingException {
+      throws RepositoryException, IOException, MavenRepositoryException, ModelBuildingException {
     if (arguments.length < 1 || arguments[0].split(":").length != 2) {
-      System.err.println(
+      logger.severe(
           "Please specify BOM coordinates without version. Example:"
               + " com.google.cloud:libraries-bom");
       System.exit(1);
@@ -92,7 +93,16 @@ public class LinkageMonitor {
     String bomCoordinates = arguments[0];
     List<String> coordinatesElements = Splitter.on(':').splitToList(bomCoordinates);
 
-    new LinkageMonitor().run(coordinatesElements.get(0), coordinatesElements.get(1));
+    Set<SymbolProblem> newSymbolProblems =
+        new LinkageMonitor().run(coordinatesElements.get(0), coordinatesElements.get(1));
+    int errorSize = newSymbolProblems.size();
+    if (errorSize > 0) {
+      logger.severe(
+          String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
+      System.exit(1); // notify CI tools of the failure
+    } else {
+      logger.info("No new problem found");
+    }
   }
 
   /**
@@ -104,10 +114,21 @@ public class LinkageMonitor {
       RepositorySystem repositorySystem, RepositorySystemSession session, Path projectDirectory) {
     ImmutableMap.Builder<String, String> artifactToVersion = ImmutableMap.builder();
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectDirectory);
+
     for (Path path : paths) {
       if (!path.getFileName().endsWith("pom.xml")) {
         continue;
       }
+
+      // This path element check should not depend on directory name outside the project
+      Path relativePath = path.isAbsolute() ? projectDirectory.relativize(path) : path;
+      ImmutableSet<Path> elements = ImmutableSet.copyOf(relativePath);
+      if (elements.contains(Paths.get("build")) || elements.contains(Paths.get("target"))) {
+        // Exclude Gradle's build directory and Maven's target directory, which would contain irrelevant pom.xml such as
+        // gax/build/tmp/expandedArchives/(... omit ...)/META-INF/maven/org.jacoco/org.jacoco.agent/pom.xml
+        continue;
+      }
+
       ModelBuildingRequest modelRequest = new DefaultModelBuildingRequest();
       modelRequest.setValidationLevel(ModelBuildingRequest.VALIDATION_LEVEL_MINIMAL);
       modelRequest.setProcessPlugins(false);
@@ -131,20 +152,24 @@ public class LinkageMonitor {
         Model model = modelBuildingResult.getEffectiveModel();
         artifactToVersion.put(model.getGroupId() + ":" + model.getArtifactId(), model.getVersion());
       } catch (ModelBuildingException ex) {
-        // When there's a pom.xml file that is not (indirectly) referenced by the root pom.xml,
-        // Maven may fail to build the model. Such pom.xml can be ignored.
-        System.out.println("Ignoring bad model: " + path);
+        // Maven may fail to build pom.xml files found in irrelevant directories, such as "target"
+        // and "test" directories of the project. Such failures can be ignored.
+        logger.info("Ignoring bad model: " + path + ": " + ex.getMessage());
       }
     }
     return artifactToVersion.build();
   }
 
-  private void run(String groupId, String artifactId)
-      throws RepositoryException, IOException, LinkageMonitorException, MavenRepositoryException,
-          ModelBuildingException {
+  /**
+   * Returns new problems in the BOM specified by {@code groupId} and {@code artifactId}. This
+   * method compares the latest release of the BOM and its snapshot version which uses artifacts in
+   * {@link #localArtifacts}.
+   */
+  private ImmutableSet<SymbolProblem> run(String groupId, String artifactId)
+      throws RepositoryException, IOException, MavenRepositoryException, ModelBuildingException {
     String latestBomCoordinates =
         RepositoryUtility.findLatestCoordinates(repositorySystem, groupId, artifactId);
-    System.out.println("BOM Coordinates: " + latestBomCoordinates);
+    logger.info("BOM Coordinates: " + latestBomCoordinates);
     Bom baseline = RepositoryUtility.readBom(latestBomCoordinates);
     ImmutableSet<SymbolProblem> problemsInBaseline =
         LinkageChecker.create(baseline).findSymbolProblems().keySet();
@@ -154,16 +179,16 @@ public class LinkageMonitor {
     ImmutableList<String> baselineCoordinates = coordinatesList(baseline.getManagedDependencies());
     ImmutableList<String> snapshotCoordinates = coordinatesList(snapshot.getManagedDependencies());
     if (baselineCoordinates.equals(snapshotCoordinates)) {
-      System.out.println(
-          "Could not find SNAPSHOT versions for the artifacts in the BOM. "
-              + "Not running comparison.");
-      return;
+      logger.info(
+          "Snapshot is same as baseline. Not running comparison.");
+      logger.info(
+          "Baseline coordinates: " + Joiner.on(";").join(baselineCoordinates));
+      return ImmutableSet.of();
     }
 
     ImmutableList<Artifact> snapshotManagedDependencies = snapshot.getManagedDependencies();
-    LinkedListMultimap<Path, DependencyPath> jarToDependencyPaths =
-        ClassPathBuilder.artifactsToDependencyPaths(snapshotManagedDependencies);
-    ImmutableList<Path> classpath = ImmutableList.copyOf(jarToDependencyPaths.keySet());
+    ClassPathResult classPathResult = (new ClassPathBuilder()).resolve(snapshotManagedDependencies);
+    ImmutableList<Path> classpath = classPathResult.getClassPath();
     List<Path> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems =
@@ -171,26 +196,22 @@ public class LinkageMonitor {
     ImmutableSet<SymbolProblem> problemsInSnapshot = snapshotSymbolProblems.keySet();
 
     if (problemsInBaseline.equals(problemsInSnapshot)) {
-      System.out.println(
+      logger.info(
           "Snapshot versions have the same " + problemsInBaseline.size() + " errors as baseline");
-      return;
+      return ImmutableSet.of();
     }
 
     Set<SymbolProblem> fixedProblems = Sets.difference(problemsInBaseline, problemsInSnapshot);
     if (!fixedProblems.isEmpty()) {
-      System.out.println(messageForFixedErrors(fixedProblems));
+      logger.info(messageForFixedErrors(fixedProblems));
     }
+
     Set<SymbolProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newProblems.isEmpty()) {
-      System.err.println(
-          messageForNewErrors(snapshotSymbolProblems, problemsInBaseline, jarToDependencyPaths));
-      int errorSize = newProblems.size();
-      throw new LinkageMonitorException(
-          String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
-    } else {
-      // No new symbol problems introduced by snapshot BOM. Returning success.
-      System.out.println("No new problem found");
+      logger.severe(
+          messageForNewErrors(snapshotSymbolProblems, problemsInBaseline, classPathResult));
     }
+    return ImmutableSet.copyOf(newProblems);
   }
 
   private static ImmutableList<String> coordinatesList(List<Artifact> artifacts) {
@@ -205,7 +226,7 @@ public class LinkageMonitor {
   static String messageForNewErrors(
       ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems,
       Set<SymbolProblem> baselineProblems,
-      Multimap<Path, DependencyPath> jarToDependencyPaths) {
+      ClassPathResult classPathResult) {
     Set<SymbolProblem> newProblems =
         Sets.difference(snapshotSymbolProblems.keySet(), baselineProblems);
     StringBuilder message =
@@ -213,21 +234,24 @@ public class LinkageMonitor {
     ImmutableSet.Builder<Path> problematicJars = ImmutableSet.builder();
     for (SymbolProblem problem : newProblems) {
       message.append(problem + "\n");
+
+      // This is null for ClassNotFound error.
+      ClassFile containingClass = problem.getContainingClass();
+      if (containingClass != null) {
+        problematicJars.add(containingClass.getJar());
+      }
+
       for (ClassFile classFile : snapshotSymbolProblems.get(problem)) {
         message.append(
             String.format(
                 "  referenced from %s (%s)\n",
-                classFile.getClassName(), classFile.getJar().getFileName()));
+                classFile.getBinaryName(), classFile.getJar().getFileName()));
         problematicJars.add(classFile.getJar());
       }
     }
 
-    for (Path problematicJar : problematicJars.build()) {
-      message.append(problematicJar.getFileName() + " is at:\n");
-      for (DependencyPath dependencyPath : jarToDependencyPaths.get(problematicJar)) {
-        message.append("  " + dependencyPath + "\n");
-      }
-    }
+    message.append("\n");
+    message.append(classPathResult.formatDependencyPaths(problematicJars.build()));
 
     return message.toString();
   }
@@ -285,14 +309,13 @@ public class LinkageMonitor {
     modelRequest.setTwoPhaseBuilding(true); // This forces the builder stop after phase 1
     modelRequest.setPomFile(bomResult.getArtifact().getFile());
     modelRequest.setModelResolver(
-        new ProjectModelResolver(
+        new VersionSubstitutingModelResolver(
             session,
             null,
             repositorySystem,
             new DefaultRemoteRepositoryManager(),
             ImmutableList.of(CENTRAL), // Needed when parent pom is not locally available
-            null,
-            null));
+            localArtifacts));
     // Profile activation needs JDK version through system properties
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/923
     modelRequest.setSystemProperties(System.getProperties());

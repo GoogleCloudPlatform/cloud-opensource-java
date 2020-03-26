@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.cloud.tools.dependencies.enforcer.LinkageCheckerRule.DependencySection;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.OsProperties;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.graph.Traverser;
@@ -138,10 +138,10 @@ public class LinkageCheckerRuleTest {
   }
 
   /**
-   * Returns a dependency graph node resolved from {@link Artifact} of {@code coordinates}.
+   * Returns a dependency graph node resolved from {@code coordinates}.
    */
   private DependencyNode createResolvedDependencyGraph(String... coordinates)
-      throws RepositoryException, URISyntaxException {
+      throws RepositoryException {
     CollectRequest collectRequest = new CollectRequest();
     collectRequest.setRootArtifact(dummyArtifactWithFile);
     collectRequest.setRepositories(ImmutableList.of(RepositoryUtility.CENTRAL));
@@ -161,8 +161,7 @@ public class LinkageCheckerRuleTest {
     return dependencyResult.getRoot();
   }
 
-  private void setupMockDependencyResolution(String... coordinates)
-      throws RepositoryException, URISyntaxException {
+  private void setupMockDependencyResolution(String... coordinates) throws RepositoryException {
     DependencyNode rootNode = createResolvedDependencyGraph(coordinates);
     Traverser<DependencyNode> traverser = Traverser.forGraph(node -> node.getChildren());
 
@@ -189,7 +188,7 @@ public class LinkageCheckerRuleTest {
 
   @Test
   public void testExecute_shouldPassGoodProject()
-      throws EnforcerRuleException, RepositoryException, URISyntaxException {
+      throws EnforcerRuleException, RepositoryException {
     // Since Guava 27, it requires com.google.guava:failureaccess artifact in its dependency.
     setupMockDependencyResolution("com.google.guava:guava:27.0.1-jre");
     // This should not raise an EnforcerRuleException
@@ -199,8 +198,7 @@ public class LinkageCheckerRuleTest {
 
   @Test
   public void testExecute_shouldPassGoodProject_sessionProperties()
-      throws EnforcerRuleException, RepositoryException, URISyntaxException,
-          DependencyResolutionException {
+      throws EnforcerRuleException, RepositoryException, DependencyResolutionException {
     setupMockDependencyResolution("com.google.guava:guava:27.0.1-jre");
 
     rule.execute(mockRuleHelper);
@@ -213,7 +211,7 @@ public class LinkageCheckerRuleTest {
     Truth.assertWithMessage(
             "RepositorySystemSession should have variables such as os.detected.classifier")
         .that(propertiesUsedInSession)
-        .containsAtLeastEntriesIn(DependencyGraphBuilder.detectOsProperties());
+        .containsAtLeastEntriesIn(OsProperties.detectOsProperties());
     // There was a problem in resolving profiles because original properties were missing (#817)
     Truth.assertWithMessage("RepositorySystemSession should have original properties")
         .that(propertiesUsedInSession)
@@ -221,7 +219,7 @@ public class LinkageCheckerRuleTest {
   }
 
   @Test
-  public void testExecute_shouldFailForBadProject() throws RepositoryException, URISyntaxException {
+  public void testExecute_shouldFailForBadProject() throws RepositoryException {
     try {
       // This artifact is known to contain classes missing dependencies
       setupMockDependencyResolution("com.google.appengine:appengine-api-1.0-sdk:1.9.64");
@@ -236,8 +234,7 @@ public class LinkageCheckerRuleTest {
   }
 
   @Test
-  public void testExecute_shouldFailForBadProject_reachableErrors()
-      throws RepositoryException, URISyntaxException {
+  public void testExecute_shouldFailForBadProject_reachableErrors() throws RepositoryException {
     try {
       // This pair of artifacts contains linkage errors on grpc-core's use of Verify. Because
       // grpc-core is included in entry point jars, the errors are reachable.
@@ -258,7 +255,7 @@ public class LinkageCheckerRuleTest {
 
   @Test
   public void testExecute_shouldPassForBadProject_levelWarn()
-      throws RepositoryException, EnforcerRuleException, URISyntaxException {
+      throws RepositoryException, EnforcerRuleException {
     // This pair of artifacts contains linkage errors on grpc-core's use of Verify. Because
     // grpc-core is included in entry point jars, the errors are reachable.
     setupMockDependencyResolution(
@@ -272,7 +269,7 @@ public class LinkageCheckerRuleTest {
 
   @Test
   public void testExecute_shouldPassGoodProject_unreachableErrors()
-      throws EnforcerRuleException, RepositoryException, URISyntaxException {
+      throws EnforcerRuleException, RepositoryException {
     // This artifact has transitive dependency on grpc-netty-shaded, which has linkage errors for
     // missing classes. They are all unreachable.
     setupMockDependencyResolution("com.google.cloud:google-cloud-automl:0.81.0-beta");
@@ -408,8 +405,7 @@ public class LinkageCheckerRuleTest {
   }
 
   @Test
-  public void testExecute_shouldFailForBadProjectWithBundlePackaging() throws RepositoryException,
-      URISyntaxException {
+  public void testExecute_shouldFailForBadProjectWithBundlePackaging() throws RepositoryException {
     try {
       // This artifact is known to contain classes missing dependencies
       setupMockDependencyResolution("com.google.appengine:appengine-api-1.0-sdk:1.9.64");
@@ -448,7 +444,7 @@ public class LinkageCheckerRuleTest {
 
   @Test
   public void testArtifactTransferError()
-      throws RepositoryException, URISyntaxException, DependencyResolutionException {
+      throws RepositoryException, DependencyResolutionException {
     DependencyNode graph = createResolvedDependencyGraph("org.apache.maven:maven-core:jar:3.5.2");
     DependencyResolutionResult resolutionResult = mock(DependencyResolutionResult.class);
     when(resolutionResult.getDependencyGraph()).thenReturn(graph);
@@ -460,10 +456,11 @@ public class LinkageCheckerRuleTest {
     try {
       rule.execute(mockRuleHelper);
       fail("The rule should throw EnforcerRuleException upon dependency resolution exception");
-    } catch (EnforcerRuleException e) {
+    } catch (EnforcerRuleException expected) {
       verify(mockLog)
-          .error(
-              "Paths to the missing artifact: com.google.guava:guava:jar:28.0-android > "
+          .warn(
+              "aopalliance:aopalliance:jar:1.0 was not resolved. "
+                  + "Dependency path: com.google.guava:guava:jar:28.0-android > "
                   + "org.apache.maven:maven-core:jar:3.5.2 (compile) > "
                   + "com.google.inject:guice:jar:no_aop:4.0 (compile) > "
                   + "aopalliance:aopalliance:jar:1.0 (compile)");
@@ -517,7 +514,7 @@ public class LinkageCheckerRuleTest {
 
   @Test
   public void testArtifactTransferError_missingArtifactNotInGraph()
-      throws URISyntaxException, DependencyResolutionException {
+      throws URISyntaxException, DependencyResolutionException, EnforcerRuleException {
     // Creating a dummy tree
     //   com.google.foo:project
     //     +- com.google.foo:child1 (provided)
@@ -550,13 +547,9 @@ public class LinkageCheckerRuleTest {
 
     when(mockProjectDependenciesResolver.resolve(any())).thenThrow(exception);
 
-    try {
-      rule.execute(mockRuleHelper);
-      fail("The rule should throw EnforcerRuleException upon DependencyResolutionException");
-    } catch (EnforcerRuleException ex) {
-      verify(mockLog)
-          .error("The transformed dependency graph does not contain the missing artifact");
-    }
+    rule.execute(mockRuleHelper);
+    verify(mockLog)
+        .warn("xerces:xerces-impl:jar:2.6.2 was not resolved. Dependency path is unknown.");
   }
 
   @Test

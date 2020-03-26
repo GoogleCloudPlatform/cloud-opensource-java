@@ -56,9 +56,7 @@ import org.junit.Test;
 public class DashboardTest {
 
   private static final Correspondence<Node, String> NODE_VALUES =
-      Correspondence.from((node, expected) ->
-          trimAndCollapseWhiteSpace(node.getValue())
-          .equals(expected), "has value equal to");
+      Correspondence.transforming(node -> trimAndCollapseWhiteSpace(node.getValue()), "has value");
 
   private static String trimAndCollapseWhiteSpace(String value) {
     return CharMatcher.whitespace().trimAndCollapseFrom(value, ' ');
@@ -213,19 +211,32 @@ public class DashboardTest {
     // appengine-api-sdk, shown as first item in linkage errors, has these errors
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo(
-            "106 target classes causing linkage errors referenced from 516 source classes.");
+            "91 target classes causing linkage errors referenced from 501 source classes.");
 
-    Nodes dependencyPaths = details.query(
-        "//p[@class='linkage-check-dependency-paths'][position()=last()]");
-    Node dependencyPathMessage = dependencyPaths.get(0);
+    Nodes dependencyPaths = details.query("//p[@class='linkage-check-dependency-paths']");
+    Node dependencyPathMessageOnProblem = dependencyPaths.get(dependencyPaths.size() - 4);
     Assert.assertEquals(
-        "The following paths to the jar file from the BOM are found in the dependency tree:",
-        trimAndCollapseWhiteSpace(dependencyPathMessage.getValue()));
-    int dependencyPathListSize =
-        details.query("//ul[@class='linkage-check-dependency-paths']/li").size();
+        "The following paths contain guava-jdk5-13.0.jar:",
+        trimAndCollapseWhiteSpace(dependencyPathMessageOnProblem.getValue()));
+
+    Node dependencyPathMessageOnSource = dependencyPaths.get(dependencyPaths.size() - 3);
+    Assert.assertEquals(
+        "The following paths contain guava-27.1-android.jar:",
+        trimAndCollapseWhiteSpace(dependencyPathMessageOnSource.getValue()));
+
+    Nodes nodesWithPathsSummary = details.query("//p[@class='linkage-check-dependency-paths']");
     Truth.assertWithMessage("The dashboard should not show repetitive dependency paths")
-        .that(dependencyPathListSize)
-        .isLessThan(100);
+        .that(nodesWithPathsSummary)
+        .comparingElementsUsing(
+            Correspondence.<Node, String>transforming(
+                node -> trimAndCollapseWhiteSpace(node.getValue()), "has text"))
+        .contains(
+            "Dependency path 'commons-logging:commons-logging > javax.servlet:servlet-api' exists"
+                + " in all 1337 dependency paths. Example path:"
+                + " com.google.http-client:google-http-client:1.29.1 (compile) /"
+                + " org.apache.httpcomponents:httpclient:4.5.5 (compile) /"
+                + " commons-logging:commons-logging:1.2 (compile) / javax.servlet:servlet-api:2.3"
+                + " (provided, optional)");
   }
 
   @Test
@@ -289,7 +300,7 @@ public class DashboardTest {
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
     Assert.assertEquals(1, reports.size());
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-        .isEqualTo("106 target classes causing linkage errors referenced from 516 source classes.");
+        .isEqualTo("91 target classes causing linkage errors referenced from 501 source classes.");
 
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
     Truth.assertWithMessage(
@@ -321,8 +332,12 @@ public class DashboardTest {
   public void testComponent_failure() throws IOException, ParsingException {
     Document document = parseOutputFile(
         "com.google.api.grpc_grpc-google-common-protos_1.14.0.html");
+
+    // com.google.api.grpc:grpc-google-common-protos:1.14.0 has no green section
     Nodes greens = document.query("//h3[@style='color: green']");
     Assert.assertEquals(0, greens.size());
+
+    // "Global Upper Bounds Fixes", "Upper Bounds Fixes", and "Suggested Dependency Updates" are red
     Nodes reds = document.query("//h3[@style='color: red']");
     Assert.assertEquals(3, reds.size());
     Nodes presDependencyMediation =
@@ -387,6 +402,10 @@ public class DashboardTest {
     // Case 2: Dependency needs to be updated
     Nodes globalUpperBoundDependencyUpgradeNodes =
         document.query("//li[@class='global-upper-bound-dependency-upgrade']");
+
+    // The artifact report should contain the following 6 global upper bound dependency upgrades:
+    //   Upgrade com.google.guava:guava:jar:19.0 to version "27.1-android"
+    //   Upgrade com.google.protobuf:protobuf-java:jar:3.6.1 to version "3.7.1"
     Truth.assertThat(globalUpperBoundDependencyUpgradeNodes.size()).isEqualTo(2);
     String dependencyUpgradeMessage = globalUpperBoundDependencyUpgradeNodes.get(0).getValue();
     Truth.assertThat(dependencyUpgradeMessage).contains(

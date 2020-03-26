@@ -16,14 +16,13 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
-
-import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
 class DependencyLister {
 
-  public static void main(String[] args) throws RepositoryException {
+  public static void main(String[] args) {
 
     if (args.length != 1 || !args[0].contains(":")) {
       System.err.println("Usage: java " + DependencyLister.class.getCanonicalName()
@@ -33,10 +32,13 @@ class DependencyLister {
     
     try {
       DefaultArtifact artifact = new DefaultArtifact(args[0]);
-    
+
+      DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
       DependencyGraph graph =
-          DependencyGraphBuilder.getCompleteDependencies(artifact);
-      
+          dependencyGraphBuilder
+              .buildFullDependencyGraph(ImmutableList.of(artifact))
+              .getDependencyGraph();
+
       List<DependencyPath> paths = graph.list();
       for (DependencyPath path : paths) { 
         System.out.println(path);

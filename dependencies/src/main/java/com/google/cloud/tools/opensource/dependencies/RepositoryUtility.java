@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Logger;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.execution.DefaultMavenExecutionRequest;
@@ -57,7 +58,6 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
@@ -76,8 +76,9 @@ import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
-import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
 import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
+import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
+import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner;
 
 /**
  * Aether initialization.
@@ -87,9 +88,7 @@ public final class RepositoryUtility {
   private static final Logger logger = Logger.getLogger(RepositoryUtility.class.getName());
   
   public static final RemoteRepository CENTRAL =
-      new RemoteRepository.Builder("central", "default", "http://repo1.maven.org/maven2/").build();
-
-  private static ImmutableList<RemoteRepository> mavenRepositories = ImmutableList.of(CENTRAL);
+      new RemoteRepository.Builder("central", "default", "https://repo1.maven.org/maven2/").build();
 
   // DefaultTransporterProvider.newTransporter checks these transporters
   private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
@@ -109,7 +108,8 @@ public final class RepositoryUtility {
     return locator.getService(RepositorySystem.class);
   }
 
-  private static DefaultRepositorySystemSession createDefaultRepositorySystemSession(
+  @VisibleForTesting
+  static DefaultRepositorySystemSession createDefaultRepositorySystemSession(
       RepositorySystem system) {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
     LocalRepository localRepository = new LocalRepository(findLocalRepository().getAbsolutePath());
@@ -129,25 +129,37 @@ public final class RepositoryUtility {
   }
 
   /**
-   * Opens a new Maven repository session in the same way as {@link
-   * RepositoryUtility#newSession(RepositorySystem)}, with its dependency selector to include
-   * dependencies with 'provided' scope.
+   * Open a new Maven repository session for full dependency graph resolution.
+   *
+   * @see {@link DependencyGraphBuilder}
    */
-  static RepositorySystemSession newSessionWithProvidedScope(RepositorySystem system) {
+  static RepositorySystemSession newSessionForFullDependency(RepositorySystem system) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
 
     // This combination of DependencySelector comes from the default specified in
     // `MavenRepositorySystemUtils.newSession`.
-    // LinkageChecker needs to include 'provided' scope.
+    // LinkageChecker needs to include 'provided'-scope and optional dependencies.
     DependencySelector dependencySelector =
         new AndDependencySelector(
             // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
             // false positive in LinkageChecker.
             new ScopeDependencySelector("test"),
-            new OptionalDependencySelector(),
             new ExclusionDependencySelector(),
             new FilteringZipDependencySelector());
     session.setDependencySelector(dependencySelector);
+
+    // By default, Maven's MavenRepositorySystemUtils.newSession() returns a session with
+    // ChainedDependencyGraphTransformer(ConflictResolver(...), JavaDependencyContextRefiner()).
+    // Because the full dependency graph does not resolve conflicts of versions, this session does
+    // not use ConflictResolver.
+    session.setDependencyGraphTransformer(
+        new ChainedDependencyGraphTransformer(
+            new CycleBreakerGraphTransformer(), // Avoids StackOverflowError
+            new JavaDependencyContextRefiner()));
+
+    // No dependency management in the full dependency graph
+    session.setDependencyManager(null);
+
     session.setReadOnly();
 
     return session;
@@ -201,28 +213,44 @@ public final class RepositoryUtility {
             .setJSR250Lifecycle(true)
             .setName("linkage-checker");
     try {
-    PlexusContainer container = new DefaultPlexusContainer(containerConfiguration);
+      PlexusContainer container = new DefaultPlexusContainer(containerConfiguration);
 
-    MavenExecutionRequest mavenExecutionRequest = new DefaultMavenExecutionRequest();
-    ProjectBuildingRequest projectBuildingRequest =
-        mavenExecutionRequest.getProjectBuildingRequest();
+      MavenExecutionRequest mavenExecutionRequest = new DefaultMavenExecutionRequest();
+      ProjectBuildingRequest projectBuildingRequest =
+          mavenExecutionRequest.getProjectBuildingRequest();
 
-    projectBuildingRequest.setRepositorySession(session);
+      projectBuildingRequest.setRepositorySession(session);
 
-    ProjectBuilder projectBuilder = container.lookup(ProjectBuilder.class);
-    ProjectBuildingResult projectBuildingResult =
-        projectBuilder.build(pomFile.toFile(), projectBuildingRequest);
-    return projectBuildingResult.getProject();
+      // Profile activation needs properties such as JDK version
+      Properties properties = new Properties(); // allowing duplicate entries
+      properties.putAll(projectBuildingRequest.getSystemProperties());
+      properties.putAll(OsProperties.detectOsProperties());
+      properties.putAll(System.getProperties());
+      projectBuildingRequest.setSystemProperties(properties);
+
+      ProjectBuilder projectBuilder = container.lookup(ProjectBuilder.class);
+      ProjectBuildingResult projectBuildingResult =
+          projectBuilder.build(pomFile.toFile(), projectBuildingRequest);
+      return projectBuildingResult.getProject();
     } catch (PlexusContainerException | ComponentLookupException | ProjectBuildingException ex) {
       throw new MavenRepositoryException(ex);
     }
   }
-  
+
   /**
-   * Parse the dependencyManagement section of an artifact and return the
-   * artifacts included there.
+   * Parse the dependencyManagement section of an artifact and return the artifacts included there.
    */
   public static Bom readBom(String coordinates) throws ArtifactDescriptorException {
+    return readBom(coordinates, ImmutableList.of(CENTRAL.getUrl()));
+  }
+
+  /**
+   * Parse the dependencyManagement section of an artifact and return the artifacts included there.
+   *
+   * @param mavenRepositoryUrls URLs of Maven repositories when resolving the BOM coordinates
+   */
+  public static Bom readBom(String coordinates, List<String> mavenRepositoryUrls)
+      throws ArtifactDescriptorException {
     Artifact artifact = new DefaultArtifact(coordinates);
 
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
@@ -230,9 +258,10 @@ public final class RepositoryUtility {
 
     ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
 
-    for (RemoteRepository repository : mavenRepositories) {
-      request.addRepository(repository);
+    for (String repositoryUrl : mavenRepositoryUrls) {
+      request.addRepository(mavenRepositoryFromUrl(repositoryUrl));
     }
+
     request.setArtifact(artifact);
 
     ArtifactDescriptorResult resolved = system.readArtifactDescriptor(session, request);
@@ -279,34 +308,6 @@ public final class RepositoryUtility {
     }
 
     return false;
-  }
-
-  /**
-   * Sets {@link #mavenRepositories} to search for dependencies.
-   *
-   * @param addMavenCentral if true, add Maven Central to the end of the repository list
-   * @throws IllegalArgumentException if a URL is malformed or not having an allowed scheme
-   */
-  public static void setRepositories(
-      Iterable<String> mavenRepositoryUrls, boolean addMavenCentral) {
-    ImmutableList.Builder<RemoteRepository> repositoryListBuilder = ImmutableList.builder();
-    for (String mavenRepositoryUrl : mavenRepositoryUrls) {
-      RemoteRepository repository = mavenRepositoryFromUrl(mavenRepositoryUrl);
-      repositoryListBuilder.add(repository);
-    }
-
-    if (addMavenCentral) {
-      repositoryListBuilder.add(CENTRAL);
-    }
-
-    mavenRepositories = repositoryListBuilder.build();
-  }
-
-  /** Adds {@link #mavenRepositories} to {@code collectRequest}. */
-  public static void addRepositoriesToRequest(CollectRequest collectRequest) {
-    for (RemoteRepository repository : mavenRepositories) {
-      collectRequest.addRepository(repository);
-    }
   }
 
   /**

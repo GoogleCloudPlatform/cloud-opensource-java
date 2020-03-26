@@ -59,9 +59,12 @@ public class LinkageCheckClassPath extends ClassPath {
   }
 
   /**
-   * Returns input stream identified by {@code name} and {@code suffix}. This uses either the
+   * Returns an input stream for a resource in the class path. This uses either the
    * extension class loader or the class path specified at the constructor argument, ensuring that
    * the resource is not loaded from the class path of this tool itself.
+   * 
+   * @param name a slash separated relative path such as "java/lang/String"
+   * @param suffix the extension of the file in the classpath such as ".class" or ".xml"
    */
   @Override
   public InputStream getInputStream(String name, String suffix) throws IOException {

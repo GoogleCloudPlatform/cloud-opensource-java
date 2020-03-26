@@ -16,28 +16,17 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
-import com.google.common.collect.ImmutableList;
+import static com.google.cloud.tools.opensource.classpath.ClassPathBuilderTest.PATH_FILE_NAMES;
+
 import com.google.common.truth.Truth;
 import java.nio.file.Path;
 import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
-import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.collection.CollectRequest;
-import org.eclipse.aether.repository.RemoteRepository;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class LinkageCheckerArgumentsTest {
-
-  @After
-  public void cleanup() {
-    // Resets the effect of setRepositories
-    RepositoryUtility.setRepositories(ImmutableList.of(), true);
-  }
 
   @Test
   public void parseCommandLineArguments_shortOptions_bom()
@@ -72,11 +61,41 @@ public class LinkageCheckerArgumentsTest {
   }
 
   @Test
-  public void testReadCommandLine_multipleJars() throws ParseException, RepositoryException {
+  public void testReadCommandLine_multipleJars() throws ParseException {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine(
             "-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar");
-    Truth.assertThat(parsedArguments.getInputClasspath()).hasSize(3);
+
+    Truth.assertThat(parsedArguments.getJarFiles())
+        .comparingElementsUsing(PATH_FILE_NAMES)
+        .containsExactly("A.jar", "B.jar", "C.jar");
+  }
+
+  @Test
+  public void testGetJarFiles_jarFileList() throws ParseException {
+
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
+    List<Path> inputClasspath = parsedArguments.getJarFiles();
+
+    Truth.assertThat(inputClasspath)
+        .comparingElementsUsing(PATH_FILE_NAMES)
+        .containsExactly("foo.jar", "bar.jar", "baz.jar");
+  }
+
+  @Test
+  public void testGetJarFiles_invalidOption() throws ParseException {
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine(
+            "--artifacts", "com.google.guava:guava:26.0,io.grpc:grpc-core:1.17.1");
+
+    try {
+      parsedArguments.getJarFiles();
+      Assert.fail();
+    } catch (IllegalArgumentException ex) {
+      // pass
+      Assert.assertEquals("The arguments must have option 'j' to list JAR files", ex.getMessage());
+    }
   }
 
   @Test
@@ -87,42 +106,6 @@ public class LinkageCheckerArgumentsTest {
     } catch (ParseException ex) {
       Assert.assertEquals("Unrecognized option: -x", ex.getMessage());
     }
-  }
-
-  @Test
-  public void testConfigureAdditionalMavenRepositories_addingGoogleAndroidRepository()
-      throws ParseException, RepositoryException {
-    // Previously this test was using https://repo.spring.io/milestone and artifact
-    // org.springframework:spring-asm:3.1.0.RC2 but the repository was not stable.
-    LinkageCheckerArguments parsedArguments =
-        LinkageCheckerArguments.readCommandLine(
-            "-j", "dummy.jar", "-m", "https://dl.google.com/dl/android/maven2");
-    RepositoryUtility.setRepositories(
-        parsedArguments.getExtraMavenRepositoryUrls(), parsedArguments.getAddMavenCentral());
-
-    // This artifact does not exist in Maven central, but it is in Spring's repository
-    // Spring-asm is used here because it does not have complex dependencies
-    Artifact artifact = new DefaultArtifact("androidx.lifecycle:lifecycle-common-java8:2.0.0");
-
-    List<Path> paths = ClassPathBuilder.artifactsToClasspath(ImmutableList.of(artifact));
-    Truth.assertThat(paths).isNotEmpty();
-  }
-
-  @Test
-  public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral()
-      throws ParseException {
-    LinkageCheckerArguments parsedArguments =
-        LinkageCheckerArguments.readCommandLine(
-            "-j", "dummy.jar", "-m", "https://repo.spring.io/milestone", "--no-maven-central");
-    RepositoryUtility.setRepositories(
-        parsedArguments.getExtraMavenRepositoryUrls(), parsedArguments.getAddMavenCentral());
-
-    CollectRequest collectRequest = new CollectRequest();
-    RepositoryUtility.addRepositoriesToRequest(collectRequest);
-
-    List<RemoteRepository> actualRepositories = collectRequest.getRepositories();
-    Truth.assertThat(actualRepositories).hasSize(1);
-    Truth.assertThat(actualRepositories.get(0).getHost()).isEqualTo("repo.spring.io");
   }
 
   @Test
@@ -143,21 +126,28 @@ public class LinkageCheckerArgumentsTest {
   }
 
   @Test
-  public void testConfigureAdditionalMavenRepositories_fileRepositoryUrl() throws ParseException {
-    LinkageCheckerArguments parsedArguments =
-        LinkageCheckerArguments.readCommandLine("-j", "dummy.jar", "-m", "file:///var/tmp");
-
-    // This method should not raise an exception
-    RepositoryUtility.setRepositories(
-        parsedArguments.getExtraMavenRepositoryUrls(), parsedArguments.getAddMavenCentral());
-  }
-
-  @Test
   public void testReadCommandLine_multipleRepositoriesSeparatedByComma() throws ParseException {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine(
             "-j", "dummy.jar", "-m", "file:///var/tmp,https://repo.spring.io/milestone");
 
-    Truth.assertThat(parsedArguments.getExtraMavenRepositoryUrls()).hasSize(2);
+    // file, Spring, and Maven Central
+    Truth.assertThat(parsedArguments.getMavenRepositoryUrls()).hasSize(3);
+  }
+
+  @Test
+  public void testReadCommandLine_reportOnlyReachableOff() throws ParseException {
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine("-j", "dummy.jar");
+
+    Truth.assertThat(parsedArguments.getReportOnlyReachable()).isFalse();
+  }
+
+  @Test
+  public void testReadCommandLine_reportOnlyReachableOn() throws ParseException {
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine("-j", "dummy.jar", "-r");
+
+    Truth.assertThat(parsedArguments.getReportOnlyReachable()).isTrue();
   }
 }

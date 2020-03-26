@@ -27,34 +27,58 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.Dependency;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 public class LinkageCheckerTest {
 
+  private static final Correspondence<SymbolProblem, String> HAS_SYMBOL_IN_CLASS =
+      Correspondence.transforming(
+          (SymbolProblem problem) -> problem.getSymbol().getClassBinaryName(),
+          "has symbol in class with name");
+
+  private static DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
+
   private Path guavaPath;
   private Path firestorePath;
+  private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
-  private static ImmutableList<Path> resolvePaths(String coordinates) throws RepositoryException {
+  /** Returns JAR files resolved for the full dependency tree of {@code coordinates}. */
+  static ImmutableList<Path> resolvePaths(String... coordinates) {
+    ImmutableList<Artifact> artifacts =
+        Arrays.stream(coordinates).map(DefaultArtifact::new).collect(toImmutableList());
+    ClassPathResult result = (new ClassPathBuilder()).resolve(artifacts);
+    return result.getClassPath();
+  }
+
+  /** Returns JAR files resolved for the transitive dependencies of {@code coordinates}. */
+  private ImmutableList<Path> resolveTransitiveDependencyPaths(String coordinates) {
     DependencyGraph dependencies =
-        DependencyGraphBuilder.getTransitiveDependencies(new DefaultArtifact(coordinates));
+        dependencyGraphBuilder
+            .buildMavenDependencyGraph(new Dependency(new DefaultArtifact(coordinates), "compile"))
+            .getDependencyGraph();
     ImmutableList<Path> jars =
         dependencies.list().stream()
             .map(path -> path.getLeaf().getFile().toPath())
@@ -105,7 +129,7 @@ public class LinkageCheckerTest {
     // Array's clone is available in Java runtime and thus should not be reported as linkage error
     long arraySymbolProblemCount =
         linkageChecker.findSymbolProblems().keys().stream()
-            .filter(problem -> problem.getSymbol().getClassName().startsWith("["))
+            .filter(problem -> problem.getSymbol().getClassBinaryName().startsWith("["))
             .count();
     assertEquals(0, arraySymbolProblemCount);
   }
@@ -224,11 +248,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblem_protectedConstructorFromAnonymousClass()
-      throws IOException, RepositoryException {
-    List<Path> paths =
-        ClassPathBuilder.artifactsToClasspath(
-            ImmutableList.of(new DefaultArtifact("junit:junit:4.12")));
+  public void testFindSymbolProblem_protectedConstructorFromAnonymousClass() throws IOException {
+    List<Path> paths = resolvePaths("junit:junit:4.12");
     // junit has dependency on hamcrest-core
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
@@ -368,7 +389,7 @@ public class LinkageCheckerTest {
 
     // There should be an error reported for the reference
     Truth8.assertThat(problemFound).isPresent();
-    assertEquals(guavaClass, problemFound.get().getSymbol().getClassName());
+    assertEquals(guavaClass, problemFound.get().getSymbol().getClassBinaryName());
   }
 
   @Test
@@ -402,15 +423,10 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblem_invalidMethodOverriding()
-      throws RepositoryException, IOException {
+  public void testFindSymbolProblem_invalidMethodOverriding() throws IOException {
     // cglib 2.2 does not work with asm 4. Stackoverflow post explaining VerifyError:
     // https://stackoverflow.com/questions/21059019/cglib-is-causing-a-java-lang-verifyerror-during-query-generation-in-intuit-partn
-    List<Path> paths =
-        ClassPathBuilder.artifactsToClasspath(
-            ImmutableList.of(
-                new DefaultArtifact("cglib:cglib:2.2_beta1"),
-                new DefaultArtifact("org.ow2.asm:asm:4.2")));
+    List<Path> paths = resolvePaths("cglib:cglib:2.2_beta1", "org.ow2.asm:asm:4.2");
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
@@ -506,7 +522,7 @@ public class LinkageCheckerTest {
             new ClassFile(paths.get(0), "com.google.firestore.v1beta1.FirestoreGrpc"),
             new ClassSymbol(nonExistentClassName));
     assertSame(ErrorType.CLASS_NOT_FOUND, problemFound.get().getErrorType());
-    assertEquals(nonExistentClassName, problemFound.get().getSymbol().getClassName());
+    assertEquals(nonExistentClassName, problemFound.get().getSymbol().getClassBinaryName());
   }
 
   @Test
@@ -570,7 +586,7 @@ public class LinkageCheckerTest {
 
     long innerClassCount =
         symbolProblems.values().stream()
-            .map(ClassFile::getClassName)
+            .map(ClassFile::getBinaryName)
             .filter(className -> className.contains("$"))
             .count();
     assertEquals(0L, innerClassCount);
@@ -583,7 +599,9 @@ public class LinkageCheckerTest {
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("-b", bomCoordinates);
-    ImmutableList<Path> inputClasspath = parsedArguments.getInputClasspath();
+    ImmutableList<Path> inputClasspath =
+        classPathBuilder.resolve(parsedArguments.getArtifacts()).getClassPath();
+
     Truth.assertThat(inputClasspath).isNotEmpty();
 
     List<String> names =
@@ -613,7 +631,8 @@ public class LinkageCheckerTest {
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("--artifacts", mavenCoordinates);
-    List<Path> inputClasspath = parsedArguments.getInputClasspath();
+    List<Path> inputClasspath =
+        classPathBuilder.resolve(parsedArguments.getArtifacts()).getClassPath();
 
     Truth.assertWithMessage(
             "The first 2 items in the classpath should be the 2 artifacts in the input")
@@ -642,7 +661,8 @@ public class LinkageCheckerTest {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("--artifacts", "com.google.guava:guava-gwt:20.0");
 
-    ImmutableList<Path> inputClasspath = parsedArguments.getInputClasspath();
+    ImmutableList<Path> inputClasspath =
+        classPathBuilder.resolve(parsedArguments.getArtifacts()).getClassPath();
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(PATH_FILE_NAMES)
@@ -650,8 +670,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testGenerateInputClasspathFromLinkageCheckOption_failOnMissingDependency()
-      throws ParseException {
+  public void testGenerateInputClasspathFromLinkageCheckOption_recordMissingDependency()
+      throws ParseException, RepositoryException {
     // tomcat-jasper has missing dependency (not optional):
     //   org.apache.tomcat:tomcat-jasper:jar:8.0.9
     //     org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not found in Maven central)
@@ -659,28 +679,14 @@ public class LinkageCheckerTest {
         LinkageCheckerArguments.readCommandLine(
             "--artifacts", "org.apache.tomcat:tomcat-jasper:8.0.9");
 
-    try {
-      parsedArguments.getInputClasspath();
-      Assert.fail(
-          "Because the unavailable dependency is not optional, it should throw an exception");
-    } catch (RepositoryException ex) {
-      Truth.assertThat(ex.getMessage())
-          .startsWith(
-              "Could not find artifact org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 in central");
-    }
-  }
-
-  @Test
-  public void testGenerateInputClasspath_jarFileList()
-      throws RepositoryException, ParseException {
-
-    LinkageCheckerArguments parsedArguments =
-        LinkageCheckerArguments.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
-    List<Path> inputClasspath = parsedArguments.getInputClasspath();
-
-    Truth.assertThat(inputClasspath)
-        .comparingElementsUsing(PATH_FILE_NAMES)
-        .containsExactly("foo.jar", "bar.jar", "baz.jar");
+    ImmutableList<UnresolvableArtifactProblem> artifactProblems =
+        classPathBuilder.resolve(parsedArguments.getArtifacts()).getArtifactProblems();
+    Truth.assertThat(artifactProblems)
+        .comparingElementsUsing(
+            Correspondence.transforming(
+                (UnresolvableArtifactProblem problem) -> problem.getArtifact().toString(),
+                "problem with Maven coordinate"))
+        .contains("org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4");
   }
 
   @Test
@@ -739,13 +745,10 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblems_catchesNoClassDefFoundError()
-      throws RepositoryException, IOException {
+  public void testFindSymbolProblems_catchesNoClassDefFoundError() throws IOException {
     // SLF4J classes catch NoClassDefFoundError to detect the availability of logger backends
     // the tool should not show errors for such classes.
-    List<Path> paths =
-        ClassPathBuilder.artifactsToClasspath(
-            ImmutableList.of(new DefaultArtifact("org.slf4j:slf4j-api:jar:1.7.21")));
+    List<Path> paths = resolvePaths("org.slf4j:slf4j-api:jar:1.7.21");
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
@@ -756,13 +759,10 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblems_catchesLinkageError() throws RepositoryException, IOException {
+  public void testFindSymbolProblems_catchesLinkageError() throws IOException {
     // org.eclipse.sisu.inject.Implementations catches LinkageError to detect the availability of
     // implementation for dependency injection. The tool should not show errors for such classes.
-    List<Path> paths =
-        ClassPathBuilder.artifactsToClasspath(
-            ImmutableList.of(
-                new DefaultArtifact("org.eclipse.sisu:org.eclipse.sisu.inject:0.3.3")));
+    List<Path> paths = resolvePaths("org.eclipse.sisu:org.eclipse.sisu.inject:0.3.3");
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
@@ -776,16 +776,20 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblems_catchesNoSuchMethodError()
-      throws RepositoryException, IOException {
+  public void testFindSymbolProblems_catchesNoSuchMethodError() throws IOException {
     // org.slf4j.MDC catches NoSuchMethodError to detect the availability of
     // implementation for logging backend. The tool should not show errors for such classes.
     DependencyGraph slf4jGraph =
-        DependencyGraphBuilder.getTransitiveDependencies(
-            new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"));
+        dependencyGraphBuilder
+            .buildMavenDependencyGraph(
+                new Dependency(new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"), "compile"))
+            .getDependencyGraph();
     DependencyGraph logbackGraph =
-        DependencyGraphBuilder.getTransitiveDependencies(
-            new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"));
+        dependencyGraphBuilder
+            .buildMavenDependencyGraph(
+                new Dependency(
+                    new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"), "compile"))
+            .getDependencyGraph();
 
     Path slf4jJar = slf4jGraph.list().get(0).getLeaf().getFile().toPath();
     Path log4jJar = logbackGraph.list().get(0).getLeaf().getFile().toPath();
@@ -828,17 +832,14 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblems_shouldNotFailOnDuplicateClass()
-      throws RepositoryException, IOException {
+  public void testFindSymbolProblems_shouldNotFailOnDuplicateClass() throws IOException {
     // There was an issue (#495) where com.google.api.client.http.apache.ApacheHttpRequest is in
     // both google-http-client-1.19.0.jar and google-http-client-apache-2.0.0.jar.
     // LinkageChecker.findLinkageErrors was not handling the case properly.
     // These two jar files are transitive dependencies of the artifacts below.
     List<Path> paths =
-        ClassPathBuilder.artifactsToClasspath(
-            ImmutableList.of(
-                new DefaultArtifact("io.grpc:grpc-alts:jar:1.18.0"),
-                new DefaultArtifact("com.google.cloud:google-cloud-nio:jar:0.81.0-alpha")));
+        resolvePaths(
+            "io.grpc:grpc-alts:jar:1.18.0", "com.google.cloud:google-cloud-nio:jar:0.81.0-alpha");
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
 
@@ -848,14 +849,13 @@ public class LinkageCheckerTest {
     assertNotNull(symbolProblems);
   }
 
-
   @Test
-  public void testFindSymbolProblems_shouldNotDetectWhitelistedClass()
-      throws RepositoryException, IOException {
+  public void testFindSymbolProblems_shouldNotDetectWhitelistedClass() throws IOException {
     // Reactor-core's Traces is known to catch Throwable to detect availability of Java 9+ classes.
     // Linkage Checker does not need to report it.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/816
-    ImmutableList<Path> jars = resolvePaths("io.projectreactor:reactor-core:3.2.11.RELEASE");
+    ImmutableList<Path> jars =
+        resolveTransitiveDependencyPaths("io.projectreactor:reactor-core:3.2.11.RELEASE");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
     ImmutableSetMultimap<ClassFile, SymbolProblem> problems = linkageChecker.findSymbolProblems()
@@ -865,8 +865,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindSymbolProblems_shouldDetectMissingParentClass()
-      throws RepositoryException, IOException {
+  public void testFindSymbolProblems_shouldDetectMissingParentClass() throws IOException {
     // There was a false positive of missing class problem of
     // com.oracle.graal.pointsto.meta.AnalysisType (in com.oracle.substratevm:svm:19.0.0). The class
     // was in the class path but its parent class was missing.
@@ -883,7 +882,7 @@ public class LinkageCheckerTest {
                 problem ->
                     problem
                         .getSymbol()
-                        .getClassName()
+                        .getClassBinaryName()
                         .equals("com.oracle.graal.pointsto.meta.AnalysisType")));
     assertFalse(
         "GraalVM's NodeSourcePosition, whose superclass is missing, should not be reported",
@@ -892,13 +891,12 @@ public class LinkageCheckerTest {
                 problem ->
                     problem
                         .getSymbol()
-                        .getClassName()
+                        .getClassBinaryName()
                         .equals("org.graalvm.compiler.graph.NodeSourcePosition")));
   }
 
   @Test
-  public void testFindSymbolProblems_shouldSuppressJvmCIPackage()
-      throws RepositoryException, IOException {
+  public void testFindSymbolProblems_shouldSuppressJvmCIPackage() throws IOException {
     // There was a false positive of missing class problem of
     // com.oracle.graal.pointsto.meta.AnalysisType (in com.oracle.substratevm:svm:19.0.0). The class
     // was in the class path but its parent class was missing.
@@ -907,14 +905,16 @@ public class LinkageCheckerTest {
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
 
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
     Truth.assertWithMessage("Missing classes from jdk.vm.ci should not be reported")
-        .that(linkageChecker.findSymbolProblems().keySet())
+        .that(symbolProblems.keySet())
         .isEmpty();
   }
 
   @Test
   public void testFindSymbolProblems_shouldSuppressMockitoMockMethodDispatcher()
-      throws RepositoryException, IOException {
+      throws IOException {
     // Mockito's MockMethodDispatcher class file has ".raw" extension so that the class is only
     // loaded by Mockito's special class loader.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/407
@@ -930,5 +930,150 @@ public class LinkageCheckerTest {
     Truth.assertWithMessage("Mockito's MockMethodDispatcher should not be reported")
         .that(linkageChecker.findSymbolProblems().keySet())
         .doesNotContain(unexpectedProblem);
+  }
+
+  @Test
+  public void testFindSymbolProblems_unimplementedInterfaceMethods()
+      throws IOException, URISyntaxException {
+    // Gax-grpc:1:38's InstantiatingGrpcChannelProvider does not have needsCredentials method of
+    // gax:1.48's TransportChannelProvider. This incompatibility manifests as AbstractMethodError
+    // when com.google.api.gax.rpc.ClientContext calls the method.
+
+    Path gax1_48 = absolutePathOfResource("testdata/gax-1.48.1.jar");
+    Path gaxGrpc1_38 = absolutePathOfResource("testdata/gax-grpc-1.38.0.jar");
+    ImmutableList<Path> jars = ImmutableList.of(gaxGrpc1_38, gax1_48);
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    // The two unimplemented methods should be reported separately
+    SymbolProblem expectedProblemOnNeedsCredentials =
+        new SymbolProblem(
+            new MethodSymbol(
+                "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
+                "needsCredentials",
+                "()Z",
+                false),
+            ErrorType.ABSTRACT_METHOD,
+            new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"));
+    SymbolProblem expectedProblemOnWithCredentials =
+        new SymbolProblem(
+            new MethodSymbol(
+                "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
+                "withCredentials",
+                "(Lcom/google/auth/Credentials;)Lcom/google/api/gax/rpc/TransportChannelProvider;",
+                false),
+            ErrorType.ABSTRACT_METHOD,
+            new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"));
+    Truth.assertThat(symbolProblems.keySet()).contains(expectedProblemOnNeedsCredentials);
+    Truth.assertThat(symbolProblems.keySet()).contains(expectedProblemOnWithCredentials);
+
+    Truth.assertThat(symbolProblems.get(expectedProblemOnNeedsCredentials))
+        .contains((new ClassFile(gax1_48, "com.google.api.gax.rpc.TransportChannelProvider")));
+  }
+
+  @Test
+  public void testFindSymbolProblems_defaultInterfaceMethods() throws IOException {
+    ImmutableList<Path> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    // com.oracle.svm.core.LibCHelperDirectives does not implement some methods in
+    // CContext$Directives interface. But this should not be reported as an error because the
+    // interface has default implementation for the methods.
+    String unexpectedClass = "com.oracle.svm.core.LibCHelperDirectives";
+    Truth.assertThat(symbolProblems.keySet())
+        .comparingElementsUsing(HAS_SYMBOL_IN_CLASS)
+        .doesNotContain(unexpectedClass);
+  }
+
+  @Test
+  public void testFindSymbolProblems_unimplementedAbstractMethod() throws IOException {
+    // Non-abstract NioEventLoopGroup class extends MultithreadEventLoopGroup.
+    // Abstract MultithreadEventLoopGroup class extends MultithreadEventExecutorGroup
+    // Abstract MultithreadEventExecutorGroup class has abstract newChild method.
+    // Netty version discrepancy between 4.0 and 4.1 causes AbstractMethodError.
+    // https://github.com/netty/netty/issues/7675
+    ImmutableList<Path> nettyTransportJars4_0 =
+        resolvePaths("io.netty:netty-transport:jar:4.0.37.Final");
+    ImmutableList<Path> nettyCommonJars4_1 = resolvePaths("io.netty:netty-common:jar:4.1.16.Final");
+
+    ImmutableList<Path> jars =
+        ImmutableList.<Path>builder()
+            .addAll(nettyCommonJars4_1)
+            .addAll(nettyTransportJars4_0)
+            .build();
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    MethodSymbol expectedMethodSymbol =
+        new MethodSymbol(
+            "io.netty.channel.nio.NioEventLoopGroup",
+            "newChild",
+            "(Ljava/util/concurrent/Executor;[Ljava/lang/Object;)Lio/netty/util/concurrent/EventExecutor;",
+            false);
+
+    Truth.assertThat(symbolProblems.keySet())
+        .comparingElementsUsing(Correspondence.transforming(SymbolProblem::getSymbol, "has symbol"))
+        .contains(expectedMethodSymbol);
+  }
+
+  @Test
+  public void testFindSymbolProblems_nativeMethodsOnAbstractClass() throws IOException {
+    ImmutableList<Path> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    // com.oracle.svm.core.genscavenge.PinnedAllocatorImpl extends an abstract class
+    // com.oracle.svm.core.heap.PinnedAllocator. The superclass has native methods, such as
+    // "newInstance". These native methods should not be reported as unimplemented methods.
+    String unexpectedClass = "com.oracle.svm.core.genscavenge.PinnedAllocatorImpl";
+    Truth.assertThat(symbolProblems.keySet())
+        .comparingElementsUsing(HAS_SYMBOL_IN_CLASS)
+        .doesNotContain(unexpectedClass);
+  }
+
+  @Test
+  public void testFindSymbolProblems_blockHoundClasses() throws IOException {
+    // BlockHound is a tool to detect blocking method calls in nonblocking frameworks.
+    // In our BOM dashboard, it appears in dependency path io.grpc:grpc-netty:1.28.0 (compile)
+    //   / io.netty:netty-codec-http2:4.1.45.Final (compile)
+    //   / io.netty:netty-common:4.1.45.Final (compile)
+    //   / io.projectreactor.tools:blockhound:1.0.1.RELEASE (compile, optional)
+    ImmutableList<Path> jars = resolvePaths("io.projectreactor.tools:blockhound:1.0.1.RELEASE");
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    // BlockHound integrates with Reactor and RxJava if their classes are available in class path by
+    // checking ClassNotFoundException. Therefore LinkageMonitor should not report the references to
+    // missing classes from the integration classes.
+    ImmutableList<String> unexpectedClasses =
+        ImmutableList.of(
+            // The following two catch ClassNotFoundException
+            "reactor.blockhound.integration.RxJava2Integration",
+            "reactor.blockhound.integration.ReactorIntegration",
+            // This class is in exclusion rule
+            "reactor.blockhound.shaded.net.bytebuddy.agent.VirtualMachine");
+
+    for (String unexpectedSourceClass : unexpectedClasses) {
+      Truth.assertThat(symbolProblems.values())
+          .comparingElementsUsing(
+              Correspondence.transforming(
+                  (ClassFile sourceClass) -> sourceClass.getBinaryName(), "has source class name"))
+          .doesNotContain(unexpectedSourceClass);
+    }
   }
 }

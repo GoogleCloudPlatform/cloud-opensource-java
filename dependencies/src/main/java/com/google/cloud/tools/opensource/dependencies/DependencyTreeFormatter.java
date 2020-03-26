@@ -21,7 +21,6 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import java.util.Collection;
 import java.util.List;
-import org.eclipse.aether.artifact.Artifact;
 
 /** Formats Maven artifact dependency tree. */
 public class DependencyTreeFormatter {
@@ -29,8 +28,7 @@ public class DependencyTreeFormatter {
    * Formats dependencies as a tree in a similar way to {@code mvn dependency:tree}.
    *
    * @param dependencyPaths dependency paths from @{@link
-   *     DependencyGraphBuilder#getCompleteDependencies(Artifact)}. Each element must have its
-   *     parent in the list, except the ones at the root.
+   *     DependencyGraphBuilder#buildFullDependencyGraph(List)} (Dependency)}.
    */
   static String formatDependencyPaths(List<DependencyPath> dependencyPaths) {
     StringBuilder stringBuilder = new StringBuilder();
@@ -76,13 +74,8 @@ public class DependencyTreeFormatter {
     // LinkedListMultimap preserves insertion order for values
     ListMultimap<DependencyPath, DependencyPath> tree = LinkedListMultimap.create();
     for (DependencyPath dependencyPath : dependencyPaths) {
-      List<Artifact> artifactPath = dependencyPath.getArtifacts();
-      List<Artifact> parentArtifactPath = artifactPath.subList(0, artifactPath.size() - 1);
-      DependencyPath parentDependencyPath = new DependencyPath();
-      parentArtifactPath.forEach(
-          parentArtifactPathNode ->
-              parentDependencyPath.add(parentArtifactPathNode, "compile", false));
       // Relying on DependencyPath's equality
+      DependencyPath parentDependencyPath = dependencyPath.getParentPath();
       tree.put(parentDependencyPath, dependencyPath);
     }
     return tree;

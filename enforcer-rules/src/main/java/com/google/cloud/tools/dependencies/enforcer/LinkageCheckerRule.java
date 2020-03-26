@@ -22,22 +22,24 @@ import static org.apache.maven.enforcer.rule.api.EnforcerLevel.WARN;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
+import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.ArtifactProblem;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.FilteringZipDependencySelector;
 import com.google.cloud.tools.opensource.dependencies.NonTestDependencySelector;
+import com.google.cloud.tools.opensource.dependencies.OsProperties;
+import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,18 +62,14 @@ import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluatio
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.eclipse.aether.DefaultRepositoryCache;
 import org.eclipse.aether.DefaultRepositorySystemSession;
-import org.eclipse.aether.RepositoryCache;
-import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
-import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
 
 /** Linkage Checker Maven Enforcer Rule. */
 public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
@@ -91,6 +89,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    */
   private DependencySection dependencySection = DependencySection.DEPENDENCIES;
 
+  private final List<ArtifactProblem> artifactProblems = new ArrayList<>();
+
   /**
    * Set to true to suppress linkage errors unreachable from the classes in the direct dependencies.
    * By default, it's {@code false}.
@@ -100,6 +100,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    *     >Java Dependency Glossary: Class reference graph</a>
    */
   private boolean reportOnlyReachable = false;
+
+  private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
   @VisibleForTesting
   void setDependencySection(DependencySection dependencySection) {
@@ -191,7 +193,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
           symbolProblems =
               symbolProblems.entries().stream()
-                  .filter(entry -> classReferenceGraph.isReachable(entry.getValue().getClassName()))
+                  .filter(entry -> classReferenceGraph.isReachable(entry.getValue().getBinaryName()))
                   .collect(
                       ImmutableSetMultimap.toImmutableSetMultimap(Entry::getKey, Entry::getValue));
         }
@@ -225,6 +227,12 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       }
     } catch (ExpressionEvaluationException ex) {
       throw new EnforcerRuleException("Unable to lookup an expression " + ex.getMessage(), ex);
+    } finally {
+      for (ArtifactProblem problem : artifactProblems) {
+        // This is not error because having an unresolvable Maven artifact should not cause build
+        // failures as long as there is no linkage errors.
+        logger.warn(problem.toString());
+      }
     }
   }
 
@@ -246,7 +254,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       // For netty-handler referencing its dependencies with ${os.detected.classifier}
       Map<String, String> properties = new HashMap<>(); // allowing duplicate entries
       properties.putAll(fullDependencyResolutionSession.getSystemProperties());
-      properties.putAll(DependencyGraphBuilder.detectOsProperties());
+      properties.putAll(OsProperties.detectOsProperties());
       fullDependencyResolutionSession.setSystemProperties(properties);
 
       fullDependencyResolutionSession.setDependencySelector(
@@ -270,9 +278,6 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
   /**
    * Returns class path built from partial dependency graph of {@code resolutionException}.
-   *
-   * @throws EnforcerRuleException when {@code resolutionException} is invalidated by {@link
-   *     DependencyGraphBuilder#requiredDependency(List)}
    */
   private ImmutableList<Path> buildClasspathFromException(
       DependencyResolutionException resolutionException) throws EnforcerRuleException {
@@ -286,29 +291,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       if (cause instanceof ArtifactTransferException) {
         ArtifactTransferException artifactException = (ArtifactTransferException) cause;
         Artifact artifact = artifactException.getArtifact();
-        String pathsToArtifact = findPaths(dependencyGraph, artifact);
-        List<DependencyNode> firstArtifactPath =
-            Iterables.getFirst(findArtifactPaths(dependencyGraph, artifact), ImmutableList.of());
-        if (DependencyGraphBuilder.requiredDependency(firstArtifactPath)) {
-          logger.error("Could not find artifact " + artifact);
-          if (pathsToArtifact.isEmpty()) {
-            // On certain conditions, Maven throws ArtifactDescriptorException even when the
-            // (transformed) dependency graph does not contain the problematic artifact any more.
-            // https://issues.apache.org/jira/browse/MNG-6732
-            logger.error(
-                "The transformed dependency graph does not contain the missing artifact");
-          } else {
-            logger.error("Paths to the missing artifact: " + pathsToArtifact);
-          }
-          throw new EnforcerRuleException(
-              "Unable to build a dependency graph: " + resolutionException.getMessage(),
-              resolutionException);
-        } else {
-          logger.warn(
-              "There was missing artifact at "
-                  + pathsToArtifact
-                  + ". Continuing with partial dependency graph.");
-        }
+        artifactProblems.add(
+            DependencyGraphBuilder.createUnresolvableArtifactProblem(dependencyGraph, artifact));
         break;
       }
     }
@@ -345,37 +329,18 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       throws EnforcerRuleException {
 
     ArtifactTypeRegistry artifactTypeRegistry = repositorySystemSession.getArtifactTypeRegistry();
-    try {
-      ImmutableList<Artifact> artifacts =
-          bomProject.getDependencyManagement().getDependencies().stream()
-              .map(dependency -> RepositoryUtils.toDependency(dependency, artifactTypeRegistry))
-              .map(Dependency::getArtifact)
-              .filter(artifact -> !shouldSkipBomMember(artifact))
-              .collect(toImmutableList());
-      return ClassPathBuilder.artifactsToClasspath(artifacts);
-    } catch (RepositoryException ex) {
-      throw new EnforcerRuleException("Failed to collect dependency " + ex.getMessage(), ex);
-    }
-  }
-
-  private static String findPaths(DependencyNode root, Artifact artifact) {
-    ImmutableList<List<DependencyNode>> dependencyPaths = findArtifactPaths(root, artifact);
-
-    ImmutableList<String> paths =
-        dependencyPaths.stream()
-            .map(path -> Joiner.on(" > ").join(path))
+    ImmutableList<Artifact> artifacts =
+        bomProject.getDependencyManagement().getDependencies().stream()
+            .map(dependency -> RepositoryUtils.toDependency(dependency, artifactTypeRegistry))
+            .map(Dependency::getArtifact)
+            .filter(artifact -> !shouldSkipBomMember(artifact))
             .collect(toImmutableList());
-    // Joining one or more paths from root to the artifact
-    return Joiner.on("\n").join(paths);
-  }
 
-  private static ImmutableList<List<DependencyNode>> findArtifactPaths(
-      DependencyNode root, Artifact artifact) {
-    String coordinates = Artifacts.toCoordinates(artifact);
-    DependencyFilter filter =
-        (node, parents) -> Artifacts.toCoordinates(node.getArtifact()).equals(coordinates);
-    PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(filter);
-    root.accept(visitor);
-    return ImmutableList.copyOf(visitor.getPaths());
+    ClassPathResult result = classPathBuilder.resolve(artifacts);
+    ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
+    if (!artifactProblems.isEmpty()) {
+      throw new EnforcerRuleException("Failed to collect dependency: " + artifactProblems);
+    }
+    return result.getClassPath();
   }
 }

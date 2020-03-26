@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
+import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.cloud.tools.opensource.classpath.ErrorType;
 import com.google.cloud.tools.opensource.classpath.MethodSymbol;
@@ -104,35 +105,52 @@ public class LinkageMonitorTest {
               "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
               false),
           ErrorType.SYMBOL_NOT_FOUND,
-          new ClassFile(Paths.get("aaa", "bbb-1.2.3.jar"), "java.lang.Object"));
+          new ClassFile(Paths.get("foo", "b-1.0.0.jar"), "java.lang.Object"));
 
   @Test
   public void generateMessageForNewError() {
     Set<SymbolProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
-    Path jar = Paths.get("aaa", "ccc-1.2.3.jar");
+    Path jarA = Paths.get("foo", "a-1.2.3.jar");
+    Path jarB = Paths.get("foo", "b-1.0.0.jar");
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotProblems =
         ImmutableSetMultimap.of(
             classNotFoundProblem, // This is in baseline. It should not be printed
-            new ClassFile(jar, "com.abc.AAA"),
+            new ClassFile(jarA, "com.abc.AAA"),
             methodNotFoundProblem,
-            new ClassFile(jar, "com.abc.AAA"),
+            new ClassFile(jarA, "com.abc.AAA"),
             methodNotFoundProblem,
-            new ClassFile(jar, "com.abc.BBB"));
+            new ClassFile(jarA, "com.abc.BBB"));
 
-    DependencyPath dependencyPath = new DependencyPath();
-    dependencyPath.add(new DefaultArtifact("foo:bar:1.0.0"), "provided", false);
-    dependencyPath.add(new DefaultArtifact("aaa:ccc:1.2.3"), "compile", true);
+    DependencyPath pathToA = new DependencyPath();
+    pathToA.add(
+        new org.eclipse.aether.graph.Dependency(
+            new DefaultArtifact("foo:bar:1.0.0"), "provided", false));
+    pathToA.add(
+        new org.eclipse.aether.graph.Dependency(
+            new DefaultArtifact("foo:a:1.2.3"), "compile", true));
+    DependencyPath pathToB = new DependencyPath();
+    pathToB.add(
+        new org.eclipse.aether.graph.Dependency(
+            new DefaultArtifact("foo:b:1.2.3"), "compile", true));
+
     String message =
         LinkageMonitor.messageForNewErrors(
-            snapshotProblems, baselineProblems, ImmutableListMultimap.of(jar, dependencyPath));
+            snapshotProblems,
+            baselineProblems,
+            new ClassPathResult(
+                ImmutableListMultimap.of(jarA, pathToA, jarB, pathToB),
+                ImmutableList.of()));
     assertEquals(
         "Newly introduced problem:\n"
-            + "(bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils's method"
+            + "(b-1.0.0.jar) io.grpc.protobuf.ProtoUtils's method"
             + " marshaller(com.google.protobuf.Message arg1) is not found\n"
-            + "  referenced from com.abc.AAA (ccc-1.2.3.jar)\n"
-            + "  referenced from com.abc.BBB (ccc-1.2.3.jar)\n"
-            + "ccc-1.2.3.jar is at:\n"
-            + "  foo:bar:1.0.0 (provided) / aaa:ccc:1.2.3 (compile, optional)\n",
+            + "  referenced from com.abc.AAA (a-1.2.3.jar)\n"
+            + "  referenced from com.abc.BBB (a-1.2.3.jar)\n"
+            + "\n"
+            + "b-1.0.0.jar is at:\n"
+            + "  foo:b:1.2.3 (compile, optional)\n"
+            + "a-1.2.3.jar is at:\n"
+            + "  foo:bar:1.0.0 (provided) / foo:a:1.2.3 (compile, optional)\n",
         message);
   }
 
@@ -144,7 +162,7 @@ public class LinkageMonitorTest {
     assertEquals(
         "The following problems in the baseline no longer appear in the snapshot:\n"
             + "  Class java.lang.Integer is not found\n"
-            + "  (bbb-1.2.3.jar) io.grpc.protobuf.ProtoUtils's method "
+            + "  (b-1.0.0.jar) io.grpc.protobuf.ProtoUtils's method "
             + "marshaller(com.google.protobuf.Message arg1) is not found\n",
         message);
   }
@@ -198,7 +216,7 @@ public class LinkageMonitorTest {
             ImmutableMap.of("com.google.cloud:google-cloud-bom", "0.106.0-alpha"));
     List<Dependency> dependencies = model.getDependencyManagement().getDependencies();
 
-    // Google-cloud-bom:0.106.0 has new artifacts such as google-cloud-gameservices
+    // google-cloud-bom:0.106.0 has new artifacts such as google-cloud-gameservices
     assertEquals(224, dependencies.size());
 
     // google-cloud-bom:0.106.0-alpha has gax:1.48.0
@@ -222,25 +240,30 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void testFindLocalArtifacts_currentDirectory() {
-    // Current working directory of linkage-monitor should have one linkage monitor artifact
+  public void testFindLocalArtifacts() {
     ImmutableMap<String, String> localArtifacts =
-        LinkageMonitor.findLocalArtifacts(system, session, Paths.get("."));
+        LinkageMonitor.findLocalArtifacts(
+            system, session, Paths.get("src/test/resources/testproject"));
 
-    Truth.assertThat(localArtifacts).hasSize(1);
-    Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:linkage-monitor");
+    // This should not include project under "build" directory
+    Truth.assertThat(localArtifacts).hasSize(2);
+    Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:test-project");
+    Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:test-subproject");
   }
 
   @Test
-  public void testFindLocalArtifacts_RootDirectory() {
-    // Root of cloud-opensource-java has more than 10 pom.xml files
-    ImmutableMap<String, String> localArtifacts =
-        LinkageMonitor.findLocalArtifacts(system, session, Paths.get(".."));
-    Truth.assertThat(localArtifacts.size()).isGreaterThan(10);
+  public void testFindLocalArtifacts_absolutePath() {
+    Path relativePath = Paths.get("src/test/resources/testproject");
+    Path absolutePath = relativePath.toAbsolutePath();
+    ImmutableMap<String, String> localArtifactsFromAbsolutePath =
+        LinkageMonitor.findLocalArtifacts(system, session, absolutePath);
 
-    Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:linkage-monitor");
-    Truth.assertThat(localArtifacts)
-        .containsAtLeast(
-            "com.google.cloud.tools.opensource:no-such-method-error-example", "1.0-SNAPSHOT");
+    ImmutableMap<String, String> localArtifactsFromRelativePath =
+        LinkageMonitor.findLocalArtifacts(system, session, relativePath);
+
+    assertEquals(
+        "findLocalArtifacts should behave the same for relative and absolute paths",
+        localArtifactsFromRelativePath,
+        localArtifactsFromAbsolutePath);
   }
 }

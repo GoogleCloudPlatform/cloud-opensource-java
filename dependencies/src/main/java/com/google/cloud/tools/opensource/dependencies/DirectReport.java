@@ -16,11 +16,9 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import java.util.List;
-
-import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.Dependency;
 
 class DirectReport {
 
@@ -30,7 +28,7 @@ class DirectReport {
    * made at head but not published to Maven central, or dependencies
    * that have been updated but not yet incorporated in the tree.
    */
-  public static void main(String[] args) throws RepositoryException {
+  public static void main(String[] args) {
     
     if (args.length != 1 || !args[0].contains(":")) {
       System.err.println("Usage: java " + DirectReport.class.getCanonicalName()
@@ -42,10 +40,15 @@ class DirectReport {
     System.out.println();
     
     Artifact input = new DefaultArtifact(args[0]);
-    List<Artifact> dependencies =
-        DependencyGraphBuilder.getDirectDependencies(input);
-    
-    for (Artifact artifact : dependencies) {
+    DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
+    DependencyGraphResult dependencyGraphResult =
+        dependencyGraphBuilder.buildMavenDependencyGraph(new Dependency(input, ""));
+
+    for (DependencyPath dependencyPath : dependencyGraphResult.getDependencyGraph().list()) {
+      if (dependencyPath.size() != 2) {
+        continue;
+      }
+      Artifact artifact = dependencyPath.getLeaf();
       System.out.println("  <dependency>");
       System.out.println("    <groupId>" + artifact.getGroupId() + "</groupId>");
       System.out.println("    <artifactId>" + artifact.getArtifactId() + "</artifactId>");

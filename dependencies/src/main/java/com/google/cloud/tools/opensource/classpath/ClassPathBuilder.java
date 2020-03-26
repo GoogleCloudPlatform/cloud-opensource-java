@@ -17,16 +17,16 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphResult;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Maps;
+import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
@@ -39,59 +39,47 @@ import org.eclipse.aether.artifact.Artifact;
  *     href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies">
  *     Maven: Introduction to the Dependency Mechanism</a>
  */
-public class ClassPathBuilder {
+public final class ClassPathBuilder {
 
-  /**
-   * Finds jar file paths for Maven artifacts and their transitive dependencies, using Maven's
-   * dependency mediation strategy.
-   *
-   * @param artifacts Maven artifacts to check
-   * @return list of absolute paths to jar files
-   * @throws RepositoryException when there is a problem retrieving jar files
-   */
-  public static ImmutableList<Path> artifactsToClasspath(List<Artifact> artifacts)
-      throws RepositoryException {
+  private final DependencyGraphBuilder dependencyGraphBuilder;
 
-    // LinkedListMultimap keeps the key order as they were first added to the multimap
-    LinkedListMultimap<Path, DependencyPath> multimap = artifactsToDependencyPaths(artifacts);
-    return ImmutableList.copyOf(multimap.keySet());
+  public ClassPathBuilder() {
+    this(new DependencyGraphBuilder());
+  }
+
+  public ClassPathBuilder(DependencyGraphBuilder dependencyGraphBuilder) {
+    this.dependencyGraphBuilder = dependencyGraphBuilder;
   }
 
   /**
-   * Finds jar file paths and dependency paths for Maven artifacts and their transitive
-   * dependencies. When there are multiple versions of an artifact in the dependency tree, the
-   * closest to the root in breadth-first order is picked up. This 'pick closest' strategy follows
-   * Maven's dependency mediation.
-   *
-   * <p>The keys of the returned map represent jar files of {@code artifacts} and their transitive
-   * dependencies. The return value of {@link LinkedListMultimap#keySet()} preserves key iteration
-   * order.
-   *
-   * <p>The values of the returned map for a key (jar file) represent the different Maven dependency
-   * paths from {@code artifacts} to the Maven artifact of the jar file.
+   * Finds jar file paths and dependency paths for Maven artifacts and their transitive dependencies
+   * to build a list of JAR files (class path). When there are multiple versions of an artifact in
+   * the dependency tree, the closest to the root in breadth-first order is picked up. This 'pick
+   * closest' strategy follows Maven's dependency mediation.
    *
    * @param artifacts Maven artifacts to check. They are treated as the root of the dependency tree.
-   * @return an ordered map of absolute paths of jar files to one or more Maven dependency paths
-   * @throws RepositoryException when there is a problem retrieving jar files
    */
-  public static LinkedListMultimap<Path, DependencyPath> artifactsToDependencyPaths(
-      List<Artifact> artifacts) throws RepositoryException {
+  public ClassPathResult resolve(List<Artifact> artifacts) {
 
     LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
     if (artifacts.isEmpty()) {
-      return multimap;
+      return new ClassPathResult(multimap, ImmutableList.of());
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
-    DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.getStaticLinkageCheckDependencyGraph(artifacts);
-    List<DependencyPath> dependencyPaths = dependencyGraph.list();
+    DependencyGraphResult result = dependencyGraphBuilder.buildFullDependencyGraph(artifacts);
+    List<DependencyPath> dependencyPaths = result.getDependencyGraph().list();
 
     // To remove duplicates on (groupId:artifactId) for dependency mediation
     Map<String, String> keyToFirstArtifactVersion = Maps.newHashMap();
 
     for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();
-      Path jarAbsolutePath = artifact.getFile().toPath().toAbsolutePath();
+      File file = artifact.getFile();
+      if (file == null) {
+        // When artifact was not downloaded, it's recorded in result.getArtifactProblems().
+        continue;
+      }
+      Path jarAbsolutePath = file.toPath().toAbsolutePath();
       if (!jarAbsolutePath.toString().endsWith(".jar")) {
         continue;
       }
@@ -115,7 +103,6 @@ public class ClassPathBuilder {
       // the artifact of the same version is encountered, adds the dependency path to `multimap`.
       multimap.put(jarAbsolutePath, dependencyPath);
     }
-    return multimap;
+    return new ClassPathResult(multimap, result.getArtifactProblems());
   }
-
 }

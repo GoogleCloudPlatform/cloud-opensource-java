@@ -1,0 +1,7 @@
+<LinkageCheckerFilter>
+  <LinkageError>
+    <Source>
+      <Class name="reactor.core.publisher.Traces" />
+    </Source>
+  </LinkageError>
+</LinkageCheckerFilter>

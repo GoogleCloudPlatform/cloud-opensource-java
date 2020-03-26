@@ -16,11 +16,12 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.testing.EqualsTester;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.Dependency;
 import org.junit.Assert;
 import org.junit.Test;
-import com.google.common.testing.EqualsTester;
 
 public class DependencyPathTest {
 
@@ -31,30 +32,73 @@ public class DependencyPathTest {
   public void testSize() {
     DependencyPath path = new DependencyPath();
     Assert.assertEquals(0, path.size());
-    path.add(foo, "compile", false);
+    path.add(new Dependency(foo, "compile"));
     Assert.assertEquals(1, path.size());
-    path.add(bar, "compile", false);
+    path.add(new Dependency(bar, "compile"));
     Assert.assertEquals(2, path.size());
   }
   
   @Test
   public void testGetNode() {
     DependencyPath path = new DependencyPath();
-    path.add(foo, "compile", false);
-    path.add(bar, "compile", false);
+    path.add(new Dependency(foo, "compile"));
+    path.add(new Dependency(bar, "compile"));
     Assert.assertEquals(foo, path.get(0));
     Assert.assertEquals(bar, path.get(1));
   }
-  
+
+  @Test
+  public void testGetParentPath() {
+    DependencyPath path = new DependencyPath();
+    path.add(new Dependency(foo, "compile", false));
+    path.add(new Dependency(bar, "provided"));
+    path.add(new Dependency(foo, "compile"));
+
+    DependencyPath parent = path.getParentPath();
+
+    DependencyPath expected = new DependencyPath();
+    expected.add(new Dependency(foo, "compile", false));
+    expected.add(new Dependency(bar, "provided"));
+
+    Assert.assertEquals(expected, parent);
+  }
+
+  @Test
+  public void testGetParentPath_empty() {
+    DependencyPath path = new DependencyPath();
+
+    DependencyPath parent = path.getParentPath();
+
+    Assert.assertEquals(new DependencyPath(), parent);
+  }
+
+  @Test
+  public void testGetParentPath_oneElement() {
+    DependencyPath path = new DependencyPath();
+    path.add(new Dependency(foo, "compile", false));
+
+    DependencyPath parent = path.getParentPath();
+
+    Assert.assertEquals(new DependencyPath(), parent);
+  }
+
   @Test
   public void testToString() {
     DependencyPath path = new DependencyPath();
-    path.add(foo, "test", false);
-    path.add(bar, "compile", true);
+    path.add(new Dependency(foo, "test", false));
+    path.add(new Dependency(bar, "compile", true));
     Assert.assertEquals(
         "com.google:foo:1 (test) / com.google:bar:1 (compile, optional)", path.toString());
   }
-  
+
+  @Test
+  public void testToString_nullOptionalFlag() {
+    DependencyPath path = new DependencyPath();
+    path.add(new Dependency(foo, "test", false));
+    path.add(new Dependency(bar, "compile", null));
+    Assert.assertEquals("com.google:foo:1 (test) / com.google:bar:1 (compile)", path.toString());
+  }
+
   @Test
   public void testEquals() {
     DependencyPath path1 = new DependencyPath();
@@ -62,13 +106,13 @@ public class DependencyPathTest {
     DependencyPath path3 = new DependencyPath();
     DependencyPath path4 = new DependencyPath();
 
-    path1.add(foo, "compile", false);
-    path1.add(bar, "compile", false);
-    path2.add(foo, "compile", false);
-    path2.add(bar, "compile", false);
-    path3.add(bar, "compile", false);
-    path3.add(foo, "compile", false);
-    path4.add(foo, "compile", false);
+    path1.add(new Dependency(foo, "compile"));
+    path1.add(new Dependency(bar, "compile"));
+    path2.add(new Dependency(foo, "compile"));
+    path2.add(new Dependency(bar, "compile"));
+    path3.add(new Dependency(bar, "compile"));
+    path3.add(new Dependency(foo, "compile"));
+    path4.add(new Dependency(foo, "compile"));
 
     new EqualsTester()
         .addEqualityGroup(path1, path2)
@@ -77,4 +121,17 @@ public class DependencyPathTest {
         .testEquals();
   }
 
+  @Test
+  public void testEquals_nullOptional() {
+    DependencyPath path1 = new DependencyPath();
+    DependencyPath path2 = new DependencyPath();
+
+    path1.add(new Dependency(foo, "compile"));
+    path1.add(new Dependency(bar, "compile"));
+
+    path2.add(new Dependency(foo, "compile"));
+    path2.add(new Dependency(bar, "compile", null));
+
+    new EqualsTester().addEqualityGroup(path1, path2).testEquals();
+  }
 }
