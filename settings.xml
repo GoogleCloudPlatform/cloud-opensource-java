@@ -23,6 +23,12 @@
      https://maven-central.storage.googleapis.com/index.html
     -->
     <mirror>
+      <id>maven-central</id>
+      <name>Maven Central</name>
+      <url>https://repo1.maven.org/maven2</url>
+      <mirrorOf>central</mirrorOf>
+    </mirror>
+    <mirror>
       <id>google-maven-central</id>
       <name>GCS Maven Central mirror</name>
       <url>https://maven-central.storage-download.googleapis.com/maven2/</url>
