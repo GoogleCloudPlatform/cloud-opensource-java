@@ -70,9 +70,9 @@ public class LinkageCheckerArgumentsTest {
             Correspondence.transforming(ClassPathEntry::getPath, "has path equals to"))
         // Using Path::toString to work in Windows
         .containsExactly(
-            Paths.get("/foo/bar/A.jar").toString(),
-            Paths.get("/foo/bar/B.jar").toString(),
-            Paths.get("/foo/bar/C.jar").toString());
+            Paths.get("/foo/bar/A.jar").toAbsolutePath().toString(),
+            Paths.get("/foo/bar/B.jar").toAbsolutePath().toString(),
+            Paths.get("/foo/bar/C.jar").toAbsolutePath().toString());
   }
 
   @Test
