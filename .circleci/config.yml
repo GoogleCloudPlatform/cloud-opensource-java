@@ -38,6 +38,7 @@ jobs:
 
       # run tests!
       - run: |
+          cp settings.xml ~/.m2
           mvn -B -e integration-test
 
       - run:
