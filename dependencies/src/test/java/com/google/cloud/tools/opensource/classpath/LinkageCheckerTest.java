@@ -62,7 +62,7 @@ public class LinkageCheckerTest {
   private ClassPathEntry firestoreJar;
   private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
-  /** Returns JAR files resolved for the full dependency tree of {@code coordinates}. */
+  /** Returns the class path for the full dependency tree of {@code coordinates}. */
   static ImmutableList<ClassPathEntry> resolvePaths(String... coordinates) {
     ImmutableList<Artifact> artifacts =
         Arrays.stream(coordinates).map(DefaultArtifact::new).collect(toImmutableList());
@@ -70,7 +70,7 @@ public class LinkageCheckerTest {
     return result.getClassPath();
   }
 
-  /** Returns JAR files resolved for the transitive dependencies of {@code coordinates}. */
+  /** Returns the class path resolved for the transitive dependencies of {@code coordinates}. */
   private ImmutableList<ClassPathEntry> resolveTransitiveDependencyPaths(String coordinates) {
     DependencyGraph dependencies =
         dependencyGraphBuilder

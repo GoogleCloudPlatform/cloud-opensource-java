@@ -59,7 +59,7 @@ class LinkageCheckerMain {
 
         // When JAR files are specified in the argument, artifacts are empty.
         ImmutableList<ClassPathEntry> inputClassPath;
-        ImmutableSet<ClassPathEntry> entryPointJars;
+        ImmutableSet<ClassPathEntry> entryPoints;
         List<ArtifactProblem> artifactProblems = new ArrayList<>();
         // classPathResult is kept null if JAR files are specified in the argument
         ClassPathResult classPathResult = null;
@@ -69,7 +69,7 @@ class LinkageCheckerMain {
           // When JAR files are passed as arguments, classPathResult is null, because there is no need
           // to resolve Maven dependencies.
           inputClassPath = linkageCheckerArguments.getJarFiles();
-          entryPointJars = ImmutableSet.copyOf(inputClassPath);
+          entryPoints = ImmutableSet.copyOf(inputClassPath);
         } else {
           // When a BOM or Maven artifacts are passed as arguments, resolve the dependencies.
           DependencyGraphBuilder dependencyGraphBuilder =
@@ -78,10 +78,10 @@ class LinkageCheckerMain {
           classPathResult = classPathBuilder.resolve(artifacts);
           inputClassPath = classPathResult.getClassPath();
           artifactProblems.addAll(classPathResult.getArtifactProblems());
-          entryPointJars = ImmutableSet.copyOf(inputClassPath.subList(0, artifacts.size()));
+          entryPoints = ImmutableSet.copyOf(inputClassPath.subList(0, artifacts.size()));
         }
-    
-        LinkageChecker linkageChecker = LinkageChecker.create(inputClassPath, entryPointJars);
+
+        LinkageChecker linkageChecker = LinkageChecker.create(inputClassPath, entryPoints);
         ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
             linkageChecker.findSymbolProblems();
     

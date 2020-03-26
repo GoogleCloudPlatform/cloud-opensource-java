@@ -190,7 +190,10 @@ final class LinkageCheckerArguments {
     }
   }
 
-  /** Returns a list of absolute paths to files specified in the JAR file option. */
+  /**
+   * Returns class path entries for the absolute paths of the files specified in the JAR file
+   * option.
+   */
   ImmutableList<ClassPathEntry> getJarFiles() {
     if (commandLine.hasOption("j")) {
       String[] jarFiles = commandLine.getOptionValues("j");

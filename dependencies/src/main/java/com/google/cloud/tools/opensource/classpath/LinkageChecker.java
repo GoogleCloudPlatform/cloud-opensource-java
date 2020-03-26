@@ -49,7 +49,7 @@ public class LinkageChecker {
   private static final Logger logger = Logger.getLogger(LinkageChecker.class.getName());
   
   private final ClassDumper classDumper;
-  private final ImmutableList<ClassPathEntry> jars;
+  private final ImmutableList<ClassPathEntry> classPath;
   private final SymbolReferenceMaps classToSymbols;
   private final ClassReferenceGraph classReferenceGraph;
   private final ExcludedErrors excludedErrors;
@@ -64,18 +64,18 @@ public class LinkageChecker {
   }
 
   public static LinkageChecker create(
-      List<ClassPathEntry> entries, Iterable<ClassPathEntry> entryPoints) throws IOException {
+      List<ClassPathEntry> classPath, Iterable<ClassPathEntry> entryPoints) throws IOException {
     Preconditions.checkArgument(
-        !entries.isEmpty(),
+        !classPath.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
-    ClassDumper dumper = ClassDumper.create(entries);
+    ClassDumper dumper = ClassDumper.create(classPath);
     SymbolReferenceMaps symbolReferenceMaps = dumper.findSymbolReferences();
 
     ClassReferenceGraph classReferenceGraph =
         ClassReferenceGraph.create(symbolReferenceMaps, ImmutableSet.copyOf(entryPoints));
 
     return new LinkageChecker(
-        dumper, entries, symbolReferenceMaps, classReferenceGraph, ExcludedErrors.create());
+        dumper, classPath, symbolReferenceMaps, classReferenceGraph, ExcludedErrors.create());
   }
 
   public static LinkageChecker create(Bom bom) throws IOException {
@@ -87,8 +87,8 @@ public class LinkageChecker {
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
 
     // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
-    List<ClassPathEntry> artifactJarsInBom = classpath.subList(0, managedDependencies.size());
-    ImmutableSet<ClassPathEntry> entryPoints = ImmutableSet.copyOf(artifactJarsInBom);
+    List<ClassPathEntry> artifactsInBom = classpath.subList(0, managedDependencies.size());
+    ImmutableSet<ClassPathEntry> entryPoints = ImmutableSet.copyOf(artifactsInBom);
 
     return LinkageChecker.create(classpath, entryPoints);
   }
@@ -96,17 +96,17 @@ public class LinkageChecker {
   @VisibleForTesting
   LinkageChecker cloneWith(SymbolReferenceMaps newSymbolMaps) {
     return new LinkageChecker(
-        classDumper, jars, newSymbolMaps, classReferenceGraph, excludedErrors);
+        classDumper, classPath, newSymbolMaps, classReferenceGraph, excludedErrors);
   }
 
   private LinkageChecker(
       ClassDumper classDumper,
-      List<ClassPathEntry> jars,
+      List<ClassPathEntry> classPath,
       SymbolReferenceMaps symbolReferenceMaps,
       ClassReferenceGraph classReferenceGraph,
       ExcludedErrors excludedErrors) {
     this.classDumper = Preconditions.checkNotNull(classDumper);
-    this.jars = ImmutableList.copyOf(jars);
+    this.classPath = ImmutableList.copyOf(classPath);
     this.classReferenceGraph = Preconditions.checkNotNull(classReferenceGraph);
     this.classToSymbols = Preconditions.checkNotNull(symbolReferenceMaps);
     this.excludedErrors = Preconditions.checkNotNull(excludedErrors);

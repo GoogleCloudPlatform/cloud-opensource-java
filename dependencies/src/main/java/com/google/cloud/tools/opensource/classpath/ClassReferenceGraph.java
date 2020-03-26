@@ -46,12 +46,11 @@ public class ClassReferenceGraph {
   private final ImmutableSet<String> reachableClasses;
 
   static ClassReferenceGraph create(
-      SymbolReferenceMaps symbolReferenceMaps, Set<ClassPathEntry> entryPointJars)
-      throws IOException {
+      SymbolReferenceMaps symbolReferenceMaps, Set<ClassPathEntry> entryPoints) throws IOException {
 
     ImmutableSet.Builder<String> entryPointClassBuilder = ImmutableSet.builder();
-    for (ClassPathEntry jar : entryPointJars) {
-      for (String className : ClassDumper.listClassFileNames(jar)) {
+    for (ClassPathEntry entry : entryPoints) {
+      for (String className : ClassDumper.listClassFileNames(entry)) {
         entryPointClassBuilder.add(className);
       }
     }
@@ -79,8 +78,8 @@ public class ClassReferenceGraph {
   }
 
   /**
-   * Returns true if {@code className} is reachable from one of classes in {@code entryPointJars}
-   * in the graph.
+   * Returns true if {@code className} is reachable from one of classes in {@code entryPoints} in
+   * the graph.
    */
   public boolean isReachable(String className) {
     return reachableClasses.contains(className);

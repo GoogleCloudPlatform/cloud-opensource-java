@@ -193,11 +193,11 @@ public class ClassDumperTest {
 
   @Test
   public void testMapJarToClasses_classWithDollars() throws IOException {
-    List<ClassPathEntry> paths = resolvePaths("com.google.code.gson:gson:2.6.2");
-    @org.checkerframework.checker.nullness.qual.Nullable ClassPathEntry gsonJar = paths.get(0);
+    List<ClassPathEntry> classPath = resolvePaths("com.google.code.gson:gson:2.6.2");
+    @org.checkerframework.checker.nullness.qual.Nullable ClassPathEntry gsonJar = classPath.get(0);
 
     ImmutableSetMultimap<ClassPathEntry, String> pathToClasses =
-        ClassDumper.mapJarToClassFileNames(paths.subList(0, 1));
+        ClassDumper.mapJarToClassFileNames(classPath.subList(0, 1));
     ImmutableSet<String> classesInGsonJar = pathToClasses.get(gsonJar);
     // Dollar character ($) is a valid character for a class name, not just for nested ones.
     Truth.assertThat(classesInGsonJar).contains("com.google.gson.internal.$Gson$Preconditions");
@@ -213,13 +213,13 @@ public class ClassDumperTest {
     // This class exists in both jar files
     String grpcClass = "com.google.cloud.firestore.spi.v1beta1.GrpcFirestoreRpc";
 
-    ClassPathEntry jarWith65First =
+    ClassPathEntry pathWith65First =
         ClassDumper.create(ImmutableList.of(firestore65, firestore66)).findClassLocation(grpcClass);
-    Assert.assertEquals(firestore65, jarWith65First);
+    Assert.assertEquals(firestore65, pathWith65First);
 
-    ClassPathEntry jarWith66First =
+    ClassPathEntry pathWith66First =
         ClassDumper.create(ImmutableList.of(firestore66, firestore65)).findClassLocation(grpcClass);
-    Assert.assertEquals(firestore66, jarWith66First);
+    Assert.assertEquals(firestore66, pathWith66First);
   }
 
   @Test
@@ -336,9 +336,9 @@ public class ClassDumperTest {
   public void testIsUnusedClassSymbolReference_multiReleaseJar() throws IOException {
     // org.graalvm.libgraal.LibGraal class has different implementations between Java 8 and 11 via
     // Multi-release JAR of this artifact.
-    List<ClassPathEntry> paths = resolvePaths("org.graalvm.compiler:compiler:19.0.0");
+    List<ClassPathEntry> classPath = resolvePaths("org.graalvm.compiler:compiler:19.0.0");
 
-    ClassDumper classDumper = ClassDumper.create(paths);
+    ClassDumper classDumper = ClassDumper.create(classPath);
     classDumper.findSymbolReferences();
 
     // There was VerifyError when handling multi-release JAR
@@ -351,11 +351,11 @@ public class ClassDumperTest {
   public void testFindSymbolReferences_overLappingClass() throws IOException {
     // Both artifacts contain com.google.inject.internal.InjectorImpl$BindingsMultimap. The one from
     // sisu-guice should not appear in symbol references because guice supersedes in the class path.
-    List<ClassPathEntry> paths =
+    List<ClassPathEntry> classPath =
         resolvePaths("com.google.inject:guice:3.0", "org.sonatype.sisu:sisu-guice:3.2.6");
-    ClassPathEntry sisuGuicePath = paths.get(1);
+    ClassPathEntry sisuGuicePath = classPath.get(1);
 
-    ClassDumper classDumper = ClassDumper.create(paths);
+    ClassDumper classDumper = ClassDumper.create(classPath);
     SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
     ImmutableSetMultimap<ClassSymbol, ClassFile> classReferences =
         symbolReferences.getClassToClassSymbols().inverse();
@@ -372,9 +372,9 @@ public class ClassDumperTest {
     // com.amazonaws:amazon-kinesis-client:1.13.0 contains an unexpected lock file
     // /unison/com/e007f77498fd27177e2ea931a06dcf50/unison/tmp/amazonaws/services/kinesis/leases/impl/LeaseTaker.class
     // https://github.com/awslabs/amazon-kinesis-client/issues/654
-    List<ClassPathEntry> paths = resolvePaths("com.amazonaws:amazon-kinesis-client:1.13.0");
-    ClassDumper classDumper = ClassDumper.create(paths);
-    ClassPathEntry kinesisJar = paths.get(0);
+    List<ClassPathEntry> classPath = resolvePaths("com.amazonaws:amazon-kinesis-client:1.13.0");
+    ClassDumper classDumper = ClassDumper.create(classPath);
+    ClassPathEntry kinesisJar = classPath.get(0);
 
     // This should not raise IOException
     SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
@@ -392,9 +392,9 @@ public class ClassDumperTest {
     // Curator-client has shaded com.google.common.reflect.TypeToken$Bounds but it does not contain
     // the outer class com.google.common.reflect.TypeToken.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1092
-    List<ClassPathEntry> paths = resolvePaths("org.apache.curator:curator-client:4.2.0");
+    List<ClassPathEntry> classPath = resolvePaths("org.apache.curator:curator-client:4.2.0");
 
-    ClassPathEntry curatorClientJar = paths.get(0);
+    ClassPathEntry curatorClientJar = classPath.get(0);
     ClassDumper classDumper = ClassDumper.create(ImmutableList.of(curatorClientJar));
 
     // The outer class (TypeToken) does not exist in the class path.
@@ -406,8 +406,8 @@ public class ClassDumperTest {
 
   @Test
   public void testFindSymbolReferences_catchClassFormatException() throws IOException {
-    List<ClassPathEntry> paths = resolvePaths("com.ibm.icu:icu4j:2.6.1");
-    ClassDumper classDumper = ClassDumper.create(paths);
+    List<ClassPathEntry> classPath = resolvePaths("com.ibm.icu:icu4j:2.6.1");
+    ClassDumper classDumper = ClassDumper.create(classPath);
 
     // This should not throw ClassFormatException
     SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
