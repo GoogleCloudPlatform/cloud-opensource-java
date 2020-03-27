@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import org.apache.bcel.classfile.JavaClass;
 import org.eclipse.aether.artifact.Artifact;

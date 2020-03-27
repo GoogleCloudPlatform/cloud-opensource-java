@@ -19,13 +19,18 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
 import org.iso_relax.verifier.VerifierConfigurationException;
 import org.xml.sax.SAXException;
 
 class ExcludedErrors {
   private final ImmutableList<LinkageErrorMatcher> exclusionMatchers;
 
-  static ExcludedErrors create() throws IOException {
+  /**
+   * Creates exclusion matchers for {@code exclusionFile} with default rules. If {@code
+   * exclusionFile} is {@code null}, then returns default exclusion rules.
+   */
+  static ExcludedErrors create(Path exclusionFile) throws IOException {
     ImmutableList.Builder<LinkageErrorMatcher> exclusionMatchers = ImmutableList.builder();
 
     try {
@@ -36,8 +41,12 @@ class ExcludedErrors {
       ImmutableList<LinkageErrorMatcher> defaultMatchers =
           ExclusionFileParser.parse(defaultRuleUrl);
       exclusionMatchers.addAll(defaultMatchers);
+
+      if (exclusionFile != null) {
+        exclusionMatchers.addAll(ExclusionFileParser.parse(exclusionFile));
+      }
     } catch (SAXException | VerifierConfigurationException ex) {
-      throw new IOException("Could not read default exclusion rule", ex);
+      throw new IOException("Could not read exclusion rule", ex);
     }
 
     return new ExcludedErrors(exclusionMatchers.build());

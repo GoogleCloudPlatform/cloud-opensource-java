@@ -23,12 +23,10 @@ import static org.junit.Assert.assertNotNull;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import org.eclipse.aether.RepositoryException;
@@ -157,7 +155,7 @@ public class ClassPathBuilderTest {
             .filter(path -> path.getJar().toString().contains("httpclient-4.5.3.jar"))
             .findFirst()
             .get();
-    LinkageChecker linkageChecker = LinkageChecker.create(classPath, ImmutableSet.copyOf(classPath));
+    LinkageChecker linkageChecker = LinkageChecker.create(classPath);
 
     // httpclient-4.5.3 AbstractVerifier has a method reference of
     // 'void verify(String host, String[] cns, String[] subjectAlts)' to itself and its interface
