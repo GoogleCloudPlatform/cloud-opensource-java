@@ -192,18 +192,6 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testMapJarToClasses_classWithDollars() throws IOException {
-    List<ClassPathEntry> classPath = resolvePaths("com.google.code.gson:gson:2.6.2");
-    @org.checkerframework.checker.nullness.qual.Nullable ClassPathEntry gsonJar = classPath.get(0);
-
-    ImmutableSetMultimap<ClassPathEntry, String> pathToClasses =
-        ClassDumper.mapJarToClassFileNames(classPath.subList(0, 1));
-    ImmutableSet<String> classesInGsonJar = pathToClasses.get(gsonJar);
-    // Dollar character ($) is a valid character for a class name, not just for nested ones.
-    Truth.assertThat(classesInGsonJar).contains("com.google.gson.internal.$Gson$Preconditions");
-  }
-
-  @Test
   public void testFindClassLocation() throws URISyntaxException, IOException {
     ClassPathEntry firestore65 =
         classPathEntryOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar");

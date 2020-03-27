@@ -40,6 +40,13 @@ public final class ClassPathEntry {
   private Path jar;
   private Artifact artifact;
   private ImmutableSet<String> classFileNames;
+  
+  @VisibleForTesting
+  // TODO this can be inlined. It's only used in tests.
+  public static ClassPathEntry of(String coordinates, String filePath) {
+    Artifact artifact = new DefaultArtifact(coordinates);
+    return new ClassPathEntry(artifact.setFile(new File(filePath)));
+  }
 
   /** An entry for a JAR file without association with a Maven artifact. */
   ClassPathEntry(Path jar) {
@@ -93,12 +100,6 @@ public final class ClassPathEntry {
     }
   }
 
-  @VisibleForTesting
-  public static ClassPathEntry of(String coordinates, String filePath) {
-    Artifact artifact = new DefaultArtifact(coordinates);
-    return new ClassPathEntry(artifact.setFile(new File(filePath)));
-  }
-
   /**
    * Returns a list of class file names in {@link #jar} as in {@link JavaClass#getFileName()}. This
    * class file name is a path ("." as element separator) that locates a class file in a class path.
@@ -107,7 +108,7 @@ public final class ClassPathEntry {
    */
   // Could do this on construction but that makes construction slow and throw an IOException.
   // Is this OK? Or maybe lazy load in getClassFileNames?
-  public void listClassFileNames() throws IOException {
+  public void loadClassFileNames() throws IOException {
     URL jarUrl = getJar().toUri().toURL();
     // Setting parent as null because we don't want other classes than this jar file
     URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[] {jarUrl}, null);

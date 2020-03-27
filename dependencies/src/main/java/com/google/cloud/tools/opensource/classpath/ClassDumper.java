@@ -19,13 +19,10 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ImmutableSetMultimap.Builder;
 import com.google.common.collect.Iterables;
 import com.google.common.graph.Traverser;
 import java.io.IOException;
@@ -92,20 +89,27 @@ class ClassDumper {
         unreadableFiles.isEmpty(), "Some jar files are not readable: %s", unreadableFiles);
 
     for (ClassPathEntry entry : entries) {
-      entry.listClassFileNames();
+      entry.loadClassFileNames();
     }
     
-    return new ClassDumper(entries, extensionClassLoader, mapJarToClassFileNames(entries));
+    return new ClassDumper(entries, extensionClassLoader);
   }
 
   private ClassDumper(
       List<ClassPathEntry> inputClassPath,
-      ClassLoader extensionClassLoader,
-      ImmutableSetMultimap<ClassPathEntry, String> jarToClasses) {
+      ClassLoader extensionClassLoader) {
     this.inputClassPath = ImmutableList.copyOf(inputClassPath);
     this.classRepository = createClassRepository(inputClassPath);
     this.extensionClassLoader = extensionClassLoader;
-    this.classFileNameToClassPathEntry = ImmutableListMultimap.copyOf(jarToClasses.inverse());
+    
+    ImmutableListMultimap.Builder<String, ClassPathEntry> builder = ImmutableListMultimap.builder();
+    for (ClassPathEntry entry : inputClassPath) {
+      for (String className : entry.getClassNames()) {
+        builder.put(className, entry);
+      }
+    }
+    
+    this.classFileNameToClassPathEntry = builder.build();
   }
 
   /**
@@ -329,23 +333,6 @@ class ClassDumper {
       return null;
     }
     return Iterables.getFirst(classFileNameToClassPathEntry.get(specialLocation), null);
-  }
-
-  /**
-   * Returns mapping from class path entries to class file names they contain.
-   *
-   * @param classPath class path entries in which it finds the class names
-   */
-  @VisibleForTesting
-  static ImmutableSetMultimap<ClassPathEntry, String> mapJarToClassFileNames(
-      List<ClassPathEntry> classPath) throws IOException {
-    Builder<ClassPathEntry, String> pathToClasses = ImmutableSetMultimap.builder();
-    for (ClassPathEntry jar : classPath) {
-      for (String classFileName : jar.getClassNames()) {
-        pathToClasses.put(jar, classFileName);
-      }
-    }
-    return pathToClasses.build();
   }
 
   /**

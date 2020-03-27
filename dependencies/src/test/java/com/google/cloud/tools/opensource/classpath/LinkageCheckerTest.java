@@ -574,9 +574,10 @@ public class LinkageCheckerTest {
       throws IOException, URISyntaxException {
     // The superclass of AbstractApiService$InnerService (Guava's ApiService) is not in the paths
     ClassPathEntry dummySource = firestoreJar;
-    List<ClassPathEntry> paths =
+    List<ClassPathEntry> entries =
         ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
-    LinkageChecker linkageChecker = LinkageChecker.create(paths, paths);
+    
+    LinkageChecker linkageChecker = LinkageChecker.create(entries, entries);
 
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
     builder.addClassReference(
@@ -858,6 +859,10 @@ public class LinkageCheckerTest {
     ImmutableList<ClassPathEntry> jars =
         resolveTransitiveDependencyPaths("io.projectreactor:reactor-core:3.2.11.RELEASE");
 
+    for (ClassPathEntry entry : jars) {
+      entry.loadClassFileNames();
+    }
+    
     LinkageChecker linkageChecker = LinkageChecker.create(jars, jars);
     ImmutableSetMultimap<ClassFile, SymbolProblem> problems = linkageChecker.findSymbolProblems()
         .inverse();
