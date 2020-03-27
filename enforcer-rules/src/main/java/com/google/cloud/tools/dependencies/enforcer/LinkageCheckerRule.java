@@ -195,7 +195,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         // TODO LinkageChecker.create and LinkageChecker.findSymbolProblems
         // should not be two separate public methods since we all call
         // findSymbolProblems immediately after create
-        LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints, exclusionFile);
+        LinkageChecker linkageChecker =
+            LinkageChecker.create(classpath, entryPoints, exclusionFile);
         ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
             linkageChecker.findSymbolProblems();
         if (reportOnlyReachable) {
