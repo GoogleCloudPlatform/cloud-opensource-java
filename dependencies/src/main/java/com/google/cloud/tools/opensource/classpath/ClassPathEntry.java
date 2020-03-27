@@ -48,22 +48,18 @@ public final class ClassPathEntry {
 
   /** An entry for a Maven artifact. */
   public ClassPathEntry(Artifact artifact) {
-    checkNotNull(artifact.getFile());
+    this(artifact.getFile().toPath());
     this.artifact = artifact;
   }
 
   /** Returns the path to JAR file. */
   Path getJar() {
-    if (artifact != null) {
-      return artifact.getFile().toPath();
-    } else {
-      return jar;
-    }
+    return jar;
   }
 
   /**
-   * Returns Maven artifact associated with the JAR file. If the JAR file does not have an artifact,
-   * {@code null}.
+   * Returns the Maven artifact associated with the JAR file, or null 
+   * if the JAR file does not have Maven coordinates.
    */
   Artifact getArtifact() {
     return artifact;
