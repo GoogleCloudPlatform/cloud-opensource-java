@@ -85,10 +85,11 @@ public class LinkageCheckerTest {
   }
 
   @Before
-  public void setup() throws URISyntaxException {
+  public void setup() throws URISyntaxException, IOException {
     guavaJar = classPathEntryOfResource("testdata/guava-23.5-jre.jar");
     firestoreJar =
         classPathEntryOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar");
+    firestoreJar.loadClassFileNames();
   }
 
   @Test
