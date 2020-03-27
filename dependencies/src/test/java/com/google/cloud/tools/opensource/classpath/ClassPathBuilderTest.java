@@ -101,7 +101,7 @@ public class ClassPathBuilderTest {
     classPath.forEach(
         path ->
             Truth.assertWithMessage("Every returned path should be an absolute path")
-                .that(Paths.get(path.getPath()).isAbsolute())
+                .that(path.getJar().isAbsolute())
                 .isTrue());
   }
 
@@ -118,7 +118,7 @@ public class ClassPathBuilderTest {
     entries.forEach(
         entry ->
             Truth.assertWithMessage("Every returned path should be an absolute path")
-                .that(Paths.get(entry.getPath()).isAbsolute())
+                .that(entry.getJar().isAbsolute())
                 .isTrue());
   }
 
@@ -154,7 +154,7 @@ public class ClassPathBuilderTest {
         resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
     ClassPathEntry httpClientJar =
         classPath.stream()
-            .filter(path -> path.getPath().contains("httpclient-4.5.3.jar"))
+            .filter(path -> path.getJar().toString().contains("httpclient-4.5.3.jar"))
             .findFirst()
             .get();
     LinkageChecker linkageChecker = LinkageChecker.create(classPath, ImmutableSet.copyOf(classPath));

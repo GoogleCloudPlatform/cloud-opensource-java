@@ -39,14 +39,14 @@ public class ClassPathEntryTest {
   public void testCreationJar() {
     Path jar = Paths.get("foo.jar");
     ClassPathEntry entry = new ClassPathEntry(jar);
-    assertEquals(jar.toString(), entry.getPath());
+    assertEquals(jar, entry.getJar());
     assertNull(entry.getArtifact());
   }
 
   @Test
   public void testCreationArtifact() {
     ClassPathEntry entry = new ClassPathEntry(fooArtifact);
-    assertEquals(fooJar.toString(), entry.getPath());
+    assertEquals(fooJar, entry.getJar());
     assertEquals(entry.getArtifact(), fooArtifact);
   }
 

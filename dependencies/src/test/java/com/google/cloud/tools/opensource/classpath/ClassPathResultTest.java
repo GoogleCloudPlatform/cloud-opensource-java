@@ -143,6 +143,6 @@ public class ClassPathResultTest {
     assertThat(map.keySet()).containsExactly("com.google:a:1", "com.google:b:1");
     assertEquals(1, map.get("com.google:a:1").size());
     UnmodifiableIterator<ClassPathEntry> iterator = map.get("com.google:a:1").iterator();
-    assertEquals(iterator.next().getPath(), "a.jar");
+    assertEquals(Paths.get("a.jar"), iterator.next().getJar());
   }
 }

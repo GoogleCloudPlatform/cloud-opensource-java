@@ -616,7 +616,7 @@ public class LinkageCheckerTest {
 
     // gax-bom, containing com.google.api:gax:1.42.0, is in the BOM with scope:import
     assertTrue(
-        inputClasspath.stream().anyMatch(entry -> entry.getPath().contains("gax-1.40.0.jar")));
+        inputClasspath.stream().anyMatch(entry -> entry.getJar().toString().contains("gax-1.40.0.jar")));
   }
 
 

@@ -87,8 +87,7 @@ class ClassDumper {
 
     ImmutableList<Path> unreadableFiles =
         entries.stream()
-            .map(ClassPathEntry::getPath)
-            .map(Paths::get)
+            .map(ClassPathEntry::getJar)
             .filter(jar -> !Files.isRegularFile(jar) || !Files.isReadable(jar))
             .collect(toImmutableList());
     checkArgument(

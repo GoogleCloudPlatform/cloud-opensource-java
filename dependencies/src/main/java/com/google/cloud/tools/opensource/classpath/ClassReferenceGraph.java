@@ -50,7 +50,7 @@ public class ClassReferenceGraph {
 
     ImmutableSet.Builder<String> entryPointClassBuilder = ImmutableSet.builder();
     for (ClassPathEntry entry : entryPoints) {
-      for (String className : ClassDumper.listClassFileNames(entry)) {
+      for (String className : entry.listClassFileNames()) {
         entryPointClassBuilder.add(className);
       }
     }

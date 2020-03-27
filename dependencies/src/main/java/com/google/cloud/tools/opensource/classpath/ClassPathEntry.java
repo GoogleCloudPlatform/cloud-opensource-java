@@ -37,6 +37,7 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 /** An entry in a class path. */
 public final class ClassPathEntry {
 
+  // Either jar or artifact is non-null.
   private Path jar;
   private Artifact artifact;
 
@@ -51,12 +52,12 @@ public final class ClassPathEntry {
     this.artifact = artifact;
   }
 
-  /** Returns the path of the entry. */
-  String getPath() {
+  /** Returns the path to JAR file. */
+  Path getJar() {
     if (artifact != null) {
-      return artifact.getFile().toString();
+      return artifact.getFile().toPath();
     } else {
-      return jar.toString();
+      return jar;
     }
   }
 
@@ -103,13 +104,13 @@ public final class ClassPathEntry {
   }
 
   /**
-   * Returns a list of class file names in the JAR file as in {@link JavaClass#getFileName()}. This
+   * Returns a list of class file names in {@link #jar} as in {@link JavaClass#getFileName()}. This
    * class file name is a path ("." as element separator) that locates a class file in a class path.
    * Usually the class name and class file name are the same. However a class file name may have a
    * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
    */
   ImmutableSet<String> listClassFileNames() throws IOException {
-    URL jarUrl = Paths.get(getPath()).toUri().toURL();
+    URL jarUrl = getJar().toUri().toURL();
     // Setting parent as null because we don't want other classes than this jar file
     URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[] {jarUrl}, null);
 

@@ -67,12 +67,12 @@ public class LinkageCheckerArgumentsTest {
 
     Truth.assertThat(parsedArguments.getJarFiles())
         .comparingElementsUsing(
-            Correspondence.transforming(ClassPathEntry::getPath, "has path equals to"))
+            Correspondence.transforming(ClassPathEntry::getJar, "has path equals to"))
         // Using Path::toString to work in Windows
         .containsExactly(
-            Paths.get("/foo/bar/A.jar").toAbsolutePath().toString(),
-            Paths.get("/foo/bar/B.jar").toAbsolutePath().toString(),
-            Paths.get("/foo/bar/C.jar").toAbsolutePath().toString());
+            Paths.get("/foo/bar/A.jar").toAbsolutePath(),
+            Paths.get("/foo/bar/B.jar").toAbsolutePath(),
+            Paths.get("/foo/bar/C.jar").toAbsolutePath());
   }
 
   @Test
@@ -84,11 +84,11 @@ public class LinkageCheckerArgumentsTest {
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(
-            Correspondence.transforming(ClassPathEntry::getPath, "has path equals to"))
+            Correspondence.transforming(ClassPathEntry::getJar, "has path equals to"))
         .containsExactly(
-            Paths.get("dir1/foo.jar").toAbsolutePath().toString(),
-            Paths.get("dir2/bar.jar").toAbsolutePath().toString(),
-            Paths.get("baz.jar").toAbsolutePath().toString());
+            Paths.get("dir1/foo.jar").toAbsolutePath(),
+            Paths.get("dir2/bar.jar").toAbsolutePath(),
+            Paths.get("baz.jar").toAbsolutePath());
   }
 
   @Test
