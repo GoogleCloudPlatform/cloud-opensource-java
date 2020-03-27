@@ -123,7 +123,10 @@ public final class ClassPathEntry {
     classFileNames = classPath.getAllClasses().stream().map(ClassInfo::getName).collect(toImmutableSet());
   }
   
-  public ImmutableSet<String> getClassFileNames() {
+  /**
+   * @return the fully qualified names of the classes in this entry's jar file
+   */
+  public ImmutableSet<String> getClassNames() {
     return classFileNames;
   }
 }
