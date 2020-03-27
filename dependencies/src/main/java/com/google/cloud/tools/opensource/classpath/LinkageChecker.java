@@ -73,9 +73,9 @@ public class LinkageChecker {
   /**
    * Returns Linkage Checker for {@code classPath}.
    *
-   * @param classPath List of JAR files to find linkage errrors
-   * @param entryPoints List of JAR files to define entry point classes in reachability.
-   * @param exclusionFile Exclusion file to filter out linkage errors.
+   * @param classPath JAR files to find linkage errors in
+   * @param entryPoints JAR files to define entry point classes in reachability
+   * @param exclusionFile exclusion file to suppress linkage errors
    */
   public static LinkageChecker create(
       List<ClassPathEntry> classPath,

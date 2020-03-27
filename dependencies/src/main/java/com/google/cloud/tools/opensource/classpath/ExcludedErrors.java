@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
+import javax.annotation.Nullable;
 import org.iso_relax.verifier.VerifierConfigurationException;
 import org.xml.sax.SAXException;
 
@@ -30,7 +31,7 @@ class ExcludedErrors {
    * Creates exclusion matchers for {@code exclusionFile} with default rules. If {@code
    * exclusionFile} is {@code null}, then returns default exclusion rules.
    */
-  static ExcludedErrors create(Path exclusionFile) throws IOException {
+  static ExcludedErrors create(@Nullable Path exclusionFile) throws IOException {
     ImmutableList.Builder<LinkageErrorMatcher> exclusionMatchers = ImmutableList.builder();
 
     try {
