@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ImmutableSetMultimap.Builder;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
@@ -261,23 +260,6 @@ public class DashboardMain {
     return configuration;
   }
 
-  /**
-   * Returns mapping from the Maven coordinates of BOM members to jar files that are in the
-   * dependency tree of the BOM members.
-   */
-  private static ImmutableSetMultimap<String, ClassPathEntry> bomMemberToJars(
-      ClassPathResult classPathResult) {
-    Builder<String, ClassPathEntry> bomMemberToJars = ImmutableSetMultimap.builder();
-    for (ClassPathEntry path : classPathResult.getClassPath()) {
-      for (DependencyPath dependencyPath : classPathResult.getDependencyPaths(path)) {
-        Artifact artifact = dependencyPath.get(0);
-        bomMemberToJars.put(Artifacts.toCoordinates(artifact), path);
-      }
-    }
-
-    return bomMemberToJars.build();
-  }
-
   @VisibleForTesting
   static List<ArtifactResults> generateReports(
       Configuration configuration,
@@ -287,7 +269,8 @@ public class DashboardMain {
       ClassPathResult classPathResult,
       Bom bom) {
 
-    ImmutableSetMultimap<String, ClassPathEntry> bomMemberToJars = bomMemberToJars(classPathResult);
+    ImmutableSetMultimap<String, ClassPathEntry> bomMemberToJars =
+        classPathResult.coordinatesToClassPathEntry();
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();

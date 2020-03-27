@@ -51,8 +51,9 @@ public class ClassPathBuilderTest {
     ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(grpcArtifact));
 
     ImmutableList<ClassPathEntry> classPath = result.getClassPath();
-    long jsr305Count = classPath.stream().filter(path -> path.toString().contains("jsr305")).count();
-    Truth.assertWithMessage("There should not be duplicated versions for jsr305")
+    long jsr305Count =
+        classPath.stream().filter(path -> path.toString().contains("jsr305")).count();
+    Truth.assertWithMessage("There should not be duplicated versions of jsr305")
         .that(jsr305Count)
         .isEqualTo(1);
 

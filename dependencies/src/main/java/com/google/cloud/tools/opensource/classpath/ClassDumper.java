@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Verify;
@@ -29,10 +28,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSetMultimap.Builder;
 import com.google.common.collect.Iterables;
 import com.google.common.graph.Traverser;
-import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -141,8 +137,8 @@ class ClassDumper {
     }
   }
 
-  /** Returns class file names defined in the class path entry. */
-  ImmutableSet<String> classesDefinedInJar(ClassPathEntry entry) {
+  /** Returns class file names in the class path entry. */
+  ImmutableSet<String> classNamesInJar(ClassPathEntry entry) {
     return classPathEntryToClassFileNames.get(entry);
   }
 
@@ -319,7 +315,7 @@ class ClassDumper {
     return innerClassNames.build();
   }
 
-  /** Returns the first class path entry defining the class. Null if the location is unknown. */
+  /** Returns the first class path entry containing the class. Null if the location is unknown. */
   @Nullable
   ClassPathEntry findClassLocation(String className) {
     // Initially this method used classLoader.loadClass().getProtectionDomain().getCodeSource().
@@ -343,38 +339,18 @@ class ClassDumper {
   /**
    * Returns mapping from class path entries to class file names they contain.
    *
-   * @param classPath class path entries in which it finds the class names.
+   * @param classPath class path entries in which it finds the class names
    */
   @VisibleForTesting
   static ImmutableSetMultimap<ClassPathEntry, String> mapJarToClassFileNames(
       List<ClassPathEntry> classPath) throws IOException {
     Builder<ClassPathEntry, String> pathToClasses = ImmutableSetMultimap.builder();
     for (ClassPathEntry jar : classPath) {
-      for (String classFileName : listClassFileNames(jar)) {
+      for (String classFileName : jar.listClassFileNames()) {
         pathToClasses.put(jar, classFileName);
       }
     }
     return pathToClasses.build();
-  }
-
-  /**
-   * Returns a list of class file names in {@code entry} as in {@link JavaClass#getFileName()}. This
-   * class file name is a path ("." as element separator) that locates a class file in a class path.
-   * Usually the class name and class file name are the same. However a class file name may have a
-   * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
-   */
-  static ImmutableSet<String> listClassFileNames(ClassPathEntry entry) throws IOException {
-    URL jarUrl = Paths.get(entry.getPath()).toUri().toURL();
-    // Setting parent as null because we don't want other classes than this jar file
-    URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[] {jarUrl}, null);
-
-    // Leveraging Google Guava reflection as BCEL doesn't have API to list classes in a jar file
-    com.google.common.reflect.ClassPath classPath =
-        com.google.common.reflect.ClassPath.from(classLoaderFromJar);
-
-    return classPath.getAllClasses().stream()
-        .map(ClassInfo::getName)
-        .collect(toImmutableSet());
   }
 
   /**
@@ -386,7 +362,7 @@ class ClassDumper {
 
     ImmutableList.Builder<String> corruptedClassFileNames = ImmutableList.builder();
 
-    for (String classFileName : listClassFileNames(entry)) {
+    for (String classFileName : entry.listClassFileNames()) {
       if (classFileName.startsWith("META-INF.versions.")) {
         // Linkage Checker does not support multi-release JAR (for Java 9+) yet
         // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/897

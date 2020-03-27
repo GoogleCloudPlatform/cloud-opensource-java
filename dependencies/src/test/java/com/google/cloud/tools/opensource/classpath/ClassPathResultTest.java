@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -23,6 +24,8 @@ import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.UnmodifiableIterator;
 import java.nio.file.Paths;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -125,5 +128,21 @@ public class ClassPathResultTest {
       // pass
       assertEquals("b.jar is not in the class path", ex.getMessage());
     }
+  }
+
+  @Test
+  public void testCoordinatesToClassPathEntry() {
+    ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
+        ImmutableListMultimap.of(
+            jarA, dependencyPath_A, jarB, dependencyPath_B, jarA, dependencyPath_A_B_A);
+
+    ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
+
+    ImmutableSetMultimap<String, ClassPathEntry> map =
+        classPathResult.coordinatesToClassPathEntry();
+    assertThat(map.keySet()).containsExactly("com.google:a:1", "com.google:b:1");
+    assertEquals(1, map.get("com.google:a:1").size());
+    UnmodifiableIterator<ClassPathEntry> iterator = map.get("com.google:a:1").iterator();
+    assertEquals(iterator.next().getPath(), "a.jar");
   }
 }
