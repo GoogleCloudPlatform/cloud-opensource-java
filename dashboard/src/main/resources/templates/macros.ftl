@@ -8,7 +8,7 @@
   <#return plural?string(pluralNoun, singularNoun)>
 </#function>
 
-<#macro formatJarLinkageReport jar problemsWithClass classPathResult dependencyPathRootCauses>
+<#macro formatJarLinkageReport classPathEntry problemsWithClass classPathResult dependencyPathRootCauses>
   <!-- problemsWithClass: ImmutableSetMultimap<SymbolProblem, String> converted to
     ImmutableMap<SymbolProblem, Collection<String>> to get key and set of values in Freemarker -->
   <#assign problemsToClasses = problemsWithClass.asMap() />
@@ -18,7 +18,7 @@
     <#assign referenceCount += classes?size />
   </#list>
 
-  <h3>${jar.getFileName()?html}</h3>
+  <h3>${classPathEntry?html}</h3>
   <p class="jar-linkage-report">
     ${pluralize(symbolProblemCount, "target class", "target classes")}
     causing linkage errors referenced from
@@ -30,7 +30,7 @@
       <!-- Freemarker's hash requires its keys to be string.
       https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys -->
       <#assign jarsInProblem = jarsInProblem
-        + { symbolProblem.getContainingClass().getJar().toString() :  symbolProblem.getContainingClass().getJar() } >
+        + { symbolProblem.getContainingClass().getClassPathEntry().toString() :  symbolProblem.getContainingClass().getClassPathEntry() } >
     </#if>
     <p class="jar-linkage-report-cause">${symbolProblem?html}, referenced from ${
       pluralize(sourceClasses?size, "class", "classes")?html}
@@ -49,18 +49,18 @@
   <#list jarsInProblem?values as jarInProblem>
     <@showDependencyPath dependencyPathRootCauses classPathResult jarInProblem />
   </#list>
-  <@showDependencyPath dependencyPathRootCauses classPathResult jar />
+  <@showDependencyPath dependencyPathRootCauses classPathResult classPathEntry />
 
 </#macro>
 
-<#macro showDependencyPath dependencyPathRootCauses classPathResult jar>
-  <#assign dependencyPaths = classPathResult.getDependencyPaths(jar) />
+<#macro showDependencyPath dependencyPathRootCauses classPathResult classPathEntry>
+  <#assign dependencyPaths = classPathResult.getDependencyPaths(classPathEntry) />
   <p class="linkage-check-dependency-paths">
-    The following ${plural(dependencyPaths?size, "path contains", "paths contain")} ${jar.getFileName()?html}:
+    The following ${plural(dependencyPaths?size, "path contains", "paths contain")} ${classPathEntry?html}:
   </p>
 
-  <#if dependencyPathRootCauses[jar]?? >
-    <p class="linkage-check-dependency-paths">${dependencyPathRootCauses[jar]?html}
+  <#if dependencyPathRootCauses[classPathEntry]?? >
+    <p class="linkage-check-dependency-paths">${dependencyPathRootCauses[classPathEntry]?html}
     </p>
   <#else>
     <ul class="linkage-check-dependency-paths">

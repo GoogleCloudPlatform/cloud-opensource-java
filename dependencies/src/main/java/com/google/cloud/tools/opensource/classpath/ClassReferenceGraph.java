@@ -22,7 +22,6 @@ import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.google.common.graph.Traverser;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Set;
 
 /**
@@ -47,11 +46,11 @@ public class ClassReferenceGraph {
   private final ImmutableSet<String> reachableClasses;
 
   static ClassReferenceGraph create(
-      SymbolReferenceMaps symbolReferenceMaps, Set<Path> entryPointJars) throws IOException {
+      SymbolReferenceMaps symbolReferenceMaps, Set<ClassPathEntry> entryPoints) throws IOException {
 
     ImmutableSet.Builder<String> entryPointClassBuilder = ImmutableSet.builder();
-    for (Path jar : entryPointJars) {
-      for (String className : ClassDumper.listClassFileNames(jar)) {
+    for (ClassPathEntry entry : entryPoints) {
+      for (String className : entry.listClassFileNames()) {
         entryPointClassBuilder.add(className);
       }
     }
@@ -79,8 +78,8 @@ public class ClassReferenceGraph {
   }
 
   /**
-   * Returns true if {@code className} is reachable from one of classes in {@code entryPointJars}
-   * in the graph.
+   * Returns true if {@code className} is reachable from one of classes in {@code entryPoints} in
+   * the graph.
    */
   public boolean isReachable(String className) {
     return reachableClasses.contains(className);

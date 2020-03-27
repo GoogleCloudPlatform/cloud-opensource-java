@@ -16,10 +16,9 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.ClassPathBuilderTest.PATH_FILE_NAMES;
-
+import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
@@ -61,26 +60,35 @@ public class LinkageCheckerArgumentsTest {
   }
 
   @Test
-  public void testReadCommandLine_multipleJars() throws ParseException {
+  public void testReadCommandLine_jarFileList_absolutePath() throws ParseException {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine(
             "-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar");
 
     Truth.assertThat(parsedArguments.getJarFiles())
-        .comparingElementsUsing(PATH_FILE_NAMES)
-        .containsExactly("A.jar", "B.jar", "C.jar");
+        .comparingElementsUsing(
+            Correspondence.transforming(ClassPathEntry::getJar, "has path equals to"))
+        // Using Path::toString to work in Windows
+        .containsExactly(
+            Paths.get("/foo/bar/A.jar").toAbsolutePath(),
+            Paths.get("/foo/bar/B.jar").toAbsolutePath(),
+            Paths.get("/foo/bar/C.jar").toAbsolutePath());
   }
 
   @Test
-  public void testGetJarFiles_jarFileList() throws ParseException {
+  public void testReadCommandLine_jarFileList_relativePath() throws ParseException {
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
-    List<Path> inputClasspath = parsedArguments.getJarFiles();
+    List<ClassPathEntry> inputClasspath = parsedArguments.getJarFiles();
 
     Truth.assertThat(inputClasspath)
-        .comparingElementsUsing(PATH_FILE_NAMES)
-        .containsExactly("foo.jar", "bar.jar", "baz.jar");
+        .comparingElementsUsing(
+            Correspondence.transforming(ClassPathEntry::getJar, "has path equals to"))
+        .containsExactly(
+            Paths.get("dir1/foo.jar").toAbsolutePath(),
+            Paths.get("dir2/bar.jar").toAbsolutePath(),
+            Paths.get("baz.jar").toAbsolutePath());
   }
 
   @Test

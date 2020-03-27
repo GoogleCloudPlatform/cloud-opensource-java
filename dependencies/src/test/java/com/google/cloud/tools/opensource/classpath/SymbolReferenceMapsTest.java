@@ -26,7 +26,7 @@ import org.junit.Test;
 
 public class SymbolReferenceMapsTest {
   private Path path = Paths.get("foo", "bar.jar");
-  private ClassFile sourceClass = new ClassFile(path, "com.google.Foo");
+  private ClassFile sourceClass = new ClassFile(new ClassPathEntry(path), "com.google.Foo");
   private ClassSymbol classSymbol = new ClassSymbol("java.util.concurrent.TimeoutException");
   private MethodSymbol methodSymbol =
       new MethodSymbol(
@@ -65,7 +65,7 @@ public class SymbolReferenceMapsTest {
     builder2.addMethodReference(sourceClass, methodSymbol);
     builder2.addFieldReference(sourceClass, fieldSymbol);
 
-    ClassFile sourceClass2 = new ClassFile(path, "com.google.Bar");
+    ClassFile sourceClass2 = new ClassFile(new ClassPathEntry(path), "com.google.Bar");
     SymbolReferenceMaps.Builder builder3 = new SymbolReferenceMaps.Builder();
     builder3.addClassReference(sourceClass2, classSymbol);
     builder3.addMethodReference(sourceClass, methodSymbol);
@@ -103,7 +103,7 @@ public class SymbolReferenceMapsTest {
     builder1.addMethodReference(sourceClass, methodSymbol);
     builder1.addFieldReference(sourceClass, fieldSymbol);
 
-    ClassFile sourceClass2 = new ClassFile(path, "com.google.Bar");
+    ClassFile sourceClass2 = new ClassFile(new ClassPathEntry(path), "com.google.Bar");
     builder2.addClassReference(sourceClass2, classSymbol);
     builder2.addMethodReference(sourceClass2, methodSymbol);
     builder2.addFieldReference(sourceClass2, fieldSymbol);

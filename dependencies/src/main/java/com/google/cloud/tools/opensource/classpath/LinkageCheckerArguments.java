@@ -20,7 +20,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import org.apache.commons.cli.CommandLine;
@@ -191,12 +190,16 @@ final class LinkageCheckerArguments {
     }
   }
 
-  /** Returns a list of absolute paths to files specified in the JAR file option. */
-  ImmutableList<Path> getJarFiles() {
+  /**
+   * Returns class path entries for the absolute paths of the files specified in the JAR file
+   * option.
+   */
+  ImmutableList<ClassPathEntry> getJarFiles() {
     if (commandLine.hasOption("j")) {
       String[] jarFiles = commandLine.getOptionValues("j");
       return Arrays.stream(jarFiles)
           .map(name -> Paths.get(name).toAbsolutePath())
+          .map(ClassPathEntry::new)
           .collect(toImmutableList());
     } else {
       throw new IllegalArgumentException("The arguments must have option 'j' to list JAR files");

@@ -30,7 +30,8 @@ import java.util.Map;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
- * Utility to build a class path (a list of jar files) through a dependency tree of Maven artifacts.
+ * Utility to build {@link ClassPathResult} that holds class path (a list of {@link ClassPathEntry})
+ * through a dependency tree of Maven artifacts.
  *
  * @see <a
  *     href="https://docs.oracle.com/javase/8/docs/technotes/tools/unix/classpath.html#sthref15">
@@ -61,7 +62,7 @@ public final class ClassPathBuilder {
    */
   public ClassPathResult resolve(List<Artifact> artifacts) {
 
-    LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
+    LinkedListMultimap<ClassPathEntry, DependencyPath> multimap = LinkedListMultimap.create();
     if (artifacts.isEmpty()) {
       return new ClassPathResult(multimap, ImmutableList.of());
     }
@@ -101,7 +102,7 @@ public final class ClassPathBuilder {
 
       // When finding the key (groupId:artifactId) first time, or additional dependency path to
       // the artifact of the same version is encountered, adds the dependency path to `multimap`.
-      multimap.put(jarAbsolutePath, dependencyPath);
+      multimap.put(new ClassPathEntry(artifact), dependencyPath);
     }
     return new ClassPathResult(multimap, result.getArtifactProblems());
   }

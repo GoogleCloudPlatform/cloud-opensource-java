@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -23,7 +24,8 @@ import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.UnmodifiableIterator;
 import java.nio.file.Paths;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -38,8 +40,8 @@ public class ClassPathResultTest {
   private DependencyPath dependencyPath_B = new DependencyPath();
   private DependencyPath dependencyPath_B_A = new DependencyPath();
   private DependencyPath dependencyPath_A_B_A = new DependencyPath();
-  private Path jarA = Paths.get("a.jar");
-  private Path jarB = Paths.get("b.jar");
+  private ClassPathEntry jarA = new ClassPathEntry(Paths.get("a.jar"));
+  private ClassPathEntry jarB = new ClassPathEntry(Paths.get("b.jar"));
 
   @Before
   public void setup() {
@@ -57,7 +59,7 @@ public class ClassPathResultTest {
 
   @Test
   public void testFormatDependencyPaths_onePath() {
-    ImmutableListMultimap<Path, DependencyPath> tree =
+    ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
         ImmutableListMultimap.of(jarA, dependencyPath_A, jarB, dependencyPath_B);
 
     ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
@@ -69,7 +71,7 @@ public class ClassPathResultTest {
 
   @Test
   public void testFormatDependencyPaths_path_A_B() {
-    ImmutableListMultimap<Path, DependencyPath> tree =
+    ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
         ImmutableListMultimap.of(jarA, dependencyPath_A, jarB, dependencyPath_B);
 
     ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
@@ -86,7 +88,7 @@ public class ClassPathResultTest {
 
   @Test
   public void testFormatDependencyPaths_twoPathsForA() {
-    ImmutableListMultimap<Path, DependencyPath> tree =
+    ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
         ImmutableListMultimap.of(jarA, dependencyPath_A, jarA, dependencyPath_B_A);
 
     ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
@@ -99,7 +101,7 @@ public class ClassPathResultTest {
 
   @Test
   public void testFormatDependencyPaths_threePathsForA() {
-    ImmutableListMultimap<Path, DependencyPath> tree =
+    ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
         ImmutableListMultimap.of(
             jarA, dependencyPath_A, jarA, dependencyPath_B_A, jarA, dependencyPath_A_B_A);
 
@@ -114,7 +116,7 @@ public class ClassPathResultTest {
 
   @Test
   public void testFormatDependencyPaths_irrelevantJar() {
-    ImmutableListMultimap<Path, DependencyPath> tree =
+    ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
         ImmutableListMultimap.of(jarA, dependencyPath_A);
 
     ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
@@ -126,5 +128,21 @@ public class ClassPathResultTest {
       // pass
       assertEquals("b.jar is not in the class path", ex.getMessage());
     }
+  }
+
+  @Test
+  public void testCoordinatesToClassPathEntry() {
+    ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
+        ImmutableListMultimap.of(
+            jarA, dependencyPath_A, jarB, dependencyPath_B, jarA, dependencyPath_A_B_A);
+
+    ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
+
+    ImmutableSetMultimap<String, ClassPathEntry> map =
+        classPathResult.coordinatesToClassPathEntry();
+    assertThat(map.keySet()).containsExactly("com.google:a:1", "com.google:b:1");
+    assertEquals(1, map.get("com.google:a:1").size());
+    UnmodifiableIterator<ClassPathEntry> iterator = map.get("com.google:a:1").iterator();
+    assertEquals(Paths.get("a.jar"), iterator.next().getJar());
   }
 }

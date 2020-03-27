@@ -22,6 +22,7 @@ import static org.apache.maven.enforcer.rule.api.EnforcerLevel.WARN;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
+import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
@@ -38,7 +39,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -165,7 +165,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         }
       }
 
-      ImmutableList<Path> classpath =
+      ImmutableList<ClassPathEntry> classpath =
           readingDependencyManagementSection
               ? findBomClasspath(project, repositorySystemSession)
               : findProjectClasspath(project, repositorySystemSession, helper);
@@ -179,7 +179,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       long projectDependencyCount = project.getDependencies().stream()
                   .filter(dependency -> !"test".equals(dependency.getScope()))
                   .count();
-      List<Path> entryPoints = classpath.subList(0, (int) projectDependencyCount + 1);
+      List<ClassPathEntry> entryPoints = classpath.subList(0, (int) projectDependencyCount + 1);
 
       try {
 
@@ -237,7 +237,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   /** Builds a class path for {@code mavenProject}. */
-  private ImmutableList<Path> findProjectClasspath(
+  private ImmutableList<ClassPathEntry> findProjectClasspath(
       MavenProject mavenProject, RepositorySystemSession session, EnforcerRuleHelper helper)
       throws EnforcerRuleException {
     try {
@@ -276,10 +276,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     }
   }
 
-  /**
-   * Returns class path built from partial dependency graph of {@code resolutionException}.
-   */
-  private ImmutableList<Path> buildClasspathFromException(
+  /** Returns class path built from partial dependency graph of {@code resolutionException}. */
+  private ImmutableList<ClassPathEntry> buildClasspathFromException(
       DependencyResolutionException resolutionException) throws EnforcerRuleException {
     DependencyResolutionResult result = resolutionException.getResult();
 
@@ -305,26 +303,26 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     }
   }
 
-  private ImmutableList<Path> buildClasspath(DependencyResolutionResult result)
+  private ImmutableList<ClassPathEntry> buildClasspath(DependencyResolutionResult result)
       throws EnforcerRuleException {
-    ImmutableList.Builder<Path> builder = ImmutableList.builder();
+    ImmutableList.Builder<ClassPathEntry> builder = ImmutableList.builder();
 
     // The root node must have the project's JAR file
     File rootFile = result.getDependencyGraph().getArtifact().getFile();
     if (rootFile == null) {
       throw new EnforcerRuleException("The root project artifact is not associated with a file.");
     }
-    builder.add(rootFile.toPath());
+    builder.add(new ClassPathEntry(result.getDependencyGraph().getArtifact()));
     // The rest are the dependencies
     for (Dependency dependency : result.getResolvedDependencies()) {
       // Resolved dependencies are guaranteed to have file.
-      builder.add(dependency.getArtifact().getFile().toPath());
+      builder.add(new ClassPathEntry(dependency.getArtifact()));
     }
     return builder.build();
   }
 
   /** Builds a class path for {@code bomProject}. */
-  private ImmutableList<Path> findBomClasspath(
+  private ImmutableList<ClassPathEntry> findBomClasspath(
       MavenProject bomProject, RepositorySystemSession repositorySystemSession)
       throws EnforcerRuleException {
 

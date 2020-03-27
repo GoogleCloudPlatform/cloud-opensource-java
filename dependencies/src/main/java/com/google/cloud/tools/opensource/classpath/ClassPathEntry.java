@@ -17,14 +17,27 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.reflect.ClassPath.ClassInfo;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
+import org.apache.bcel.classfile.JavaClass;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 
 /** An entry in a class path. */
-final class ClassPathEntry {
+public final class ClassPathEntry {
 
+  // Either jar or artifact is non-null.
   private Path jar;
   private Artifact artifact;
 
@@ -34,17 +47,17 @@ final class ClassPathEntry {
   }
 
   /** An entry for a Maven artifact. */
-  ClassPathEntry(Artifact artifact) {
+  public ClassPathEntry(Artifact artifact) {
     checkNotNull(artifact.getFile());
     this.artifact = artifact;
   }
 
-  /** Returns the path of the entry. */
-  String getPath() {
+  /** Returns the path to JAR file. */
+  Path getJar() {
     if (artifact != null) {
-      return artifact.getFile().toString();
+      return artifact.getFile().toPath();
     } else {
-      return jar.toString();
+      return jar;
     }
   }
 
@@ -76,9 +89,35 @@ final class ClassPathEntry {
   @Override
   public String toString() {
     if (artifact != null) {
-      return "Artifact(" + artifact + ")";
+      // Group ID, artifact ID and version. No extension such as "jar" or "tar.gz", because Linkage
+      // Checker uses only JAR artifacts.
+      return Artifacts.toCoordinates(artifact);
     } else {
-      return "JAR(" + jar + ")";
+      return jar.toString();
     }
+  }
+
+  @VisibleForTesting
+  public static ClassPathEntry of(String coordinates, String filePath) {
+    Artifact artifact = new DefaultArtifact(coordinates);
+    return new ClassPathEntry(artifact.setFile(new File(filePath)));
+  }
+
+  /**
+   * Returns a list of class file names in {@link #jar} as in {@link JavaClass#getFileName()}. This
+   * class file name is a path ("." as element separator) that locates a class file in a class path.
+   * Usually the class name and class file name are the same. However a class file name may have a
+   * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
+   */
+  ImmutableSet<String> listClassFileNames() throws IOException {
+    URL jarUrl = getJar().toUri().toURL();
+    // Setting parent as null because we don't want other classes than this jar file
+    URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[] {jarUrl}, null);
+
+    // Leveraging Google Guava reflection as BCEL doesn't have API to list classes in a jar file
+    com.google.common.reflect.ClassPath classPath =
+        com.google.common.reflect.ClassPath.from(classLoaderFromJar);
+
+    return classPath.getAllClasses().stream().map(ClassInfo::getName).collect(toImmutableSet());
   }
 }

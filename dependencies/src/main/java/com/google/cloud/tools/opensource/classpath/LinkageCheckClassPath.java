@@ -51,10 +51,14 @@ public class LinkageCheckClassPath extends ClassPath {
   /**
    * Constructs a classpath for check.
    *
-   * @param paths list of absolute paths for the elements in the class path
+   * @param entries the elements in the class path
    */
-  LinkageCheckClassPath(List<Path> paths) {
-    super(paths.stream().map(Path::toString).collect(Collectors.joining(File.pathSeparator)));
+  LinkageCheckClassPath(List<ClassPathEntry> entries) {
+    super(
+        entries.stream()
+            .map(ClassPathEntry::getJar)
+            .map(Path::toString)
+            .collect(Collectors.joining(File.pathSeparator)));
     extensionClassLoader = ClassLoader.getSystemClassLoader().getParent();
   }
 
