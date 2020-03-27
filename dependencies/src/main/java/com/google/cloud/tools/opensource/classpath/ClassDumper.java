@@ -31,7 +31,6 @@ import com.google.common.graph.Traverser;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -73,7 +72,6 @@ class ClassDumper {
   private final ImmutableList<ClassPathEntry> inputClassPath;
   private final FixedSizeClassPathRepository classRepository;
   private final ClassLoader extensionClassLoader;
-  private final ImmutableSetMultimap<ClassPathEntry, String> classPathEntryToClassFileNames;
   private final ImmutableListMultimap<String, ClassPathEntry> classFileNameToClassPathEntry;
 
   private static FixedSizeClassPathRepository createClassRepository(List<ClassPathEntry> entries) {
@@ -93,6 +91,10 @@ class ClassDumper {
     checkArgument(
         unreadableFiles.isEmpty(), "Some jar files are not readable: %s", unreadableFiles);
 
+    for (ClassPathEntry entry : entries) {
+      entry.listClassFileNames();
+    }
+    
     return new ClassDumper(entries, extensionClassLoader, mapJarToClassFileNames(entries));
   }
 
@@ -103,7 +105,6 @@ class ClassDumper {
     this.inputClassPath = ImmutableList.copyOf(inputClassPath);
     this.classRepository = createClassRepository(inputClassPath);
     this.extensionClassLoader = extensionClassLoader;
-    this.classPathEntryToClassFileNames = ImmutableSetMultimap.copyOf(jarToClasses);
     this.classFileNameToClassPathEntry = ImmutableListMultimap.copyOf(jarToClasses.inverse());
   }
 
@@ -134,11 +135,6 @@ class ClassDumper {
     } catch (ClassNotFoundException ex) {
       return false;
     }
-  }
-
-  /** Returns class file names in the class path entry. */
-  ImmutableSet<String> classNamesInJar(ClassPathEntry entry) {
-    return classPathEntryToClassFileNames.get(entry);
   }
 
   /**

@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import org.apache.bcel.classfile.JavaClass;
 import org.eclipse.aether.artifact.Artifact;
@@ -40,6 +39,7 @@ public final class ClassPathEntry {
   // Either jar or artifact is non-null.
   private Path jar;
   private Artifact artifact;
+  private ImmutableSet<String> classFileNames;
 
   /** An entry for a JAR file without association with a Maven artifact. */
   ClassPathEntry(Path jar) {
@@ -118,6 +118,11 @@ public final class ClassPathEntry {
     com.google.common.reflect.ClassPath classPath =
         com.google.common.reflect.ClassPath.from(classLoaderFromJar);
 
-    return classPath.getAllClasses().stream().map(ClassInfo::getName).collect(toImmutableSet());
+    classFileNames = classPath.getAllClasses().stream().map(ClassInfo::getName).collect(toImmutableSet());
+    return classFileNames;
+  }
+  
+  public ImmutableSet<String> getClassFileNames() {
+    return classFileNames;
   }
 }
