@@ -189,7 +189,10 @@ public class DashboardMain {
     // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
     List<ClassPathEntry> artifactJarsInBom = classpath.subList(0, managedDependencies.size());
     ImmutableSet<ClassPathEntry> entryPoints = ImmutableSet.copyOf(artifactJarsInBom);
-
+    for (ClassPathEntry entry : entryPoints) {
+      entry.listClassFileNames();
+    }
+    
     LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints);
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =

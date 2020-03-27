@@ -109,7 +109,9 @@ public final class ClassPathEntry {
    * Usually the class name and class file name are the same. However a class file name may have a
    * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
    */
-  ImmutableSet<String> listClassFileNames() throws IOException {
+  // Could do this on construction but that makes construction slow and throw an IOException.
+  // Is this OK? Or maybe lazy load in getClassFileNames?
+  public void listClassFileNames() throws IOException {
     URL jarUrl = getJar().toUri().toURL();
     // Setting parent as null because we don't want other classes than this jar file
     URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[] {jarUrl}, null);
@@ -119,7 +121,6 @@ public final class ClassPathEntry {
         com.google.common.reflect.ClassPath.from(classLoaderFromJar);
 
     classFileNames = classPath.getAllClasses().stream().map(ClassInfo::getName).collect(toImmutableSet());
-    return classFileNames;
   }
   
   public ImmutableSet<String> getClassFileNames() {

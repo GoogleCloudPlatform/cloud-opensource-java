@@ -341,7 +341,7 @@ class ClassDumper {
       List<ClassPathEntry> classPath) throws IOException {
     Builder<ClassPathEntry, String> pathToClasses = ImmutableSetMultimap.builder();
     for (ClassPathEntry jar : classPath) {
-      for (String classFileName : jar.listClassFileNames()) {
+      for (String classFileName : jar.getClassFileNames()) {
         pathToClasses.put(jar, classFileName);
       }
     }
@@ -357,7 +357,7 @@ class ClassDumper {
 
     ImmutableList.Builder<String> corruptedClassFileNames = ImmutableList.builder();
 
-    for (String classFileName : entry.listClassFileNames()) {
+    for (String classFileName : entry.getClassFileNames()) {
       if (classFileName.startsWith("META-INF.versions.")) {
         // Linkage Checker does not support multi-release JAR (for Java 9+) yet
         // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/897
