@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.common.truth.Correspondence;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,8 +34,10 @@ public class TestHelper {
   }
 
   public static ClassPathEntry classPathEntryOfResource(String resourceName)
-      throws URISyntaxException {
-    return new ClassPathEntry(absolutePathOfResource(resourceName));
+      throws URISyntaxException, IOException {
+    ClassPathEntry entry = new ClassPathEntry(absolutePathOfResource(resourceName));
+    entry.loadClassFileNames();
+    return entry;
   }
 
   static final Correspondence<Path, String> PATH_FILE_NAMES =

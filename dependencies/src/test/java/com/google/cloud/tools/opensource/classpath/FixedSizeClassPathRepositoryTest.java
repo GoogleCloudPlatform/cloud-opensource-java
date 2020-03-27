@@ -20,7 +20,7 @@ import static com.google.cloud.tools.opensource.classpath.TestHelper.classPathEn
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import org.apache.bcel.classfile.JavaClass;
@@ -32,7 +32,7 @@ public class FixedSizeClassPathRepositoryTest {
   private FixedSizeClassPathRepository repository;
 
   @Before
-  public void setup() throws URISyntaxException {
+  public void setup() throws URISyntaxException, IOException {
     ClassPathEntry path = classPathEntryOfResource("testdata/api-common-1.7.0.jar");
     ClassPath classPath = new LinkageCheckClassPath(Arrays.asList(path));
     repository = new FixedSizeClassPathRepository(classPath, 3);
@@ -67,7 +67,8 @@ public class FixedSizeClassPathRepositoryTest {
   }
 
   @Test
-  public void testBootPrefixedClassFile() throws URISyntaxException, ClassNotFoundException {
+  public void testBootPrefixedClassFile()
+      throws URISyntaxException, ClassNotFoundException, IOException {
     // This JAR file contains com.google.firestore.v1beta1.FirestoreGrpc under BOOT-INF/classes.
     ClassPathEntry path = classPathEntryOfResource("testdata/dummy-boot-inf-prefix.jar");
 
