@@ -36,7 +36,6 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 /** An entry in a class path. */
 public final class ClassPathEntry {
 
-  // Either jar or artifact is non-null.
   private Path jar;
   private Artifact artifact;
   private ImmutableSet<String> classFileNames;
