@@ -125,7 +125,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     DEPENDENCIES
   }
 
-  void setExclusionFile(String exclusionFileLocation) {
+  @VisibleForTesting
+  void setExclusionFilterFile(String exclusionFileLocation) {
     exclusionFile = Paths.get(exclusionFileLocation);
   }
 

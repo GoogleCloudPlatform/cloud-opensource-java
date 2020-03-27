@@ -438,7 +438,7 @@ public class LinkageCheckerRuleTest {
       // This artifact is known to contain classes missing dependencies
       setupMockDependencyResolution("com.google.appengine:appengine-api-1.0-sdk:1.9.64");
       String exclusionFileLocation = Paths.get(ClassLoader.getSystemResource("appengine-exclusion.xml").toURI()).toAbsolutePath().toString();
-      rule.setExclusionFile(exclusionFileLocation);
+      rule.setExclusionFilterFile(exclusionFileLocation);
       rule.execute(mockRuleHelper);
       Assert.fail(
           "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
