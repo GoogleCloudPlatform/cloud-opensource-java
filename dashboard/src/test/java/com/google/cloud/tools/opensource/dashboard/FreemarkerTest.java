@@ -32,6 +32,7 @@ import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Truth;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -55,22 +56,24 @@ import org.junit.Test;
  */
 public class FreemarkerTest {
 
-  private static Path outputDirectory;
-  private Builder builder = new Builder();
-  static ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>>
+  private static Path outputDirectory;  
+  private static ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>>
       symbolProblemTable;
+  
+  private Builder builder = new Builder();
 
   @BeforeClass
   public static void setUp() throws IOException {
     outputDirectory = Files.createDirectories(Paths.get("target", "dashboard"));
 
+    Artifact artifact = new DefaultArtifact("com.google:foo:1.0.0")
+        .setFile(new File("foo/bar-1.2.3.jar"));
+    ClassPathEntry entry = new ClassPathEntry(artifact);
     ImmutableSetMultimap<SymbolProblem, String> dummyProblems =
         ImmutableSetMultimap.of(
             new SymbolProblem(new ClassSymbol("com.foo.Bar"), ErrorType.CLASS_NOT_FOUND, null),
             "abc.def.G");
-    symbolProblemTable =
-        ImmutableMap.of(
-            ClassPathEntry.of("com.google:foo:1.0.0", "foo/bar-1.2.3.jar"), dummyProblems);
+    symbolProblemTable = ImmutableMap.of(entry, dummyProblems);
   }
 
   @AfterClass

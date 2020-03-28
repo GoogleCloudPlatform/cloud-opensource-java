@@ -42,6 +42,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Truth;
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -51,6 +52,7 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.building.ModelBuildingException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
@@ -61,11 +63,28 @@ public class LinkageMonitorTest {
   private RepositorySystem system;
   private RepositorySystemSession session;
 
+  private SymbolProblem classNotFoundProblem =
+      new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
+  private SymbolProblem methodNotFoundProblem;
+
   @Before
   public void setup() {
     system = RepositoryUtility.newRepositorySystem();
-
     session = RepositoryUtility.newSession(system);
+    
+    Artifact artifact = new DefaultArtifact("foo:b:1.0.0")
+        .setFile(new File("foo/b-1.0.0.jar"));
+    ClassPathEntry entry = new ClassPathEntry(artifact);
+    
+    methodNotFoundProblem =
+        new SymbolProblem(
+            new MethodSymbol(
+                "io.grpc.protobuf.ProtoUtils",
+                "marshaller",
+                "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
+                false),
+            ErrorType.SYMBOL_NOT_FOUND,
+            new ClassFile(entry, "java.lang.Object"));
   }
 
   @Test
@@ -96,23 +115,17 @@ public class LinkageMonitorTest {
         .inOrder();
   }
 
-  private final SymbolProblem classNotFoundProblem =
-      new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
-  private final SymbolProblem methodNotFoundProblem =
-      new SymbolProblem(
-          new MethodSymbol(
-              "io.grpc.protobuf.ProtoUtils",
-              "marshaller",
-              "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
-              false),
-          ErrorType.SYMBOL_NOT_FOUND,
-          new ClassFile(ClassPathEntry.of("foo:b:1.0.0", "foo/b-1.0.0.jar"), "java.lang.Object"));
-
   @Test
   public void generateMessageForNewError() {
     Set<SymbolProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
-    ClassPathEntry jarA = ClassPathEntry.of("foo:a:1.2.3", "foo/a-1.2.3.jar");
-    ClassPathEntry jarB = ClassPathEntry.of("foo:b:1.0.0", "foo/b-1.0.0.jar");
+    
+    Artifact artifactA = new DefaultArtifact("foo:a:1.2.3")
+        .setFile(new File("foo/a-1.2.3.jar"));
+    Artifact artifactB = new DefaultArtifact("foo:b:1.0.0")
+        .setFile(new File("foo/b-1.0.0.jar"));
+    
+    ClassPathEntry jarA = new ClassPathEntry(artifactA);
+    ClassPathEntry jarB = new ClassPathEntry(artifactB);
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotProblems =
         ImmutableSetMultimap.of(
             classNotFoundProblem, // This is in baseline. It should not be printed

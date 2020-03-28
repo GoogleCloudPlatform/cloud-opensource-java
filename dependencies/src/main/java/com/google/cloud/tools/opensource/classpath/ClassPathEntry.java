@@ -20,19 +20,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.ClassPath.ClassInfo;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import org.apache.bcel.classfile.JavaClass;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
 
 /** An entry in a class path. */
 public final class ClassPathEntry {
@@ -95,12 +91,6 @@ public final class ClassPathEntry {
     } else {
       return jar.toString();
     }
-  }
-
-  @VisibleForTesting
-  public static ClassPathEntry of(String coordinates, String filePath) {
-    Artifact artifact = new DefaultArtifact(coordinates);
-    return new ClassPathEntry(artifact.setFile(new File(filePath)));
   }
 
   /**
