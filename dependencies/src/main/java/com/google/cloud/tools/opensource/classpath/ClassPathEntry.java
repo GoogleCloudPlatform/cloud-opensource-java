@@ -37,28 +37,27 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 /** An entry in a class path. */
 public final class ClassPathEntry {
 
-  // Either jar or artifact is non-null.
   private Path jar;
   private Artifact artifact;
 
-  /** An entry for a JAR file without association with a Maven artifact. */
+  /** An entry for a JAR file without Maven coordinates. */
   ClassPathEntry(Path jar) {
     this.jar = checkNotNull(jar);
   }
 
-  /** An entry for a Maven artifact. */
+  /** 
+   * An entry for a Maven artifact. 
+   * 
+   * @throws NullPointerException if the artifact does not have a file
+   */
   public ClassPathEntry(Artifact artifact) {
-    checkNotNull(artifact.getFile());
+    this(artifact.getFile().toPath());
     this.artifact = artifact;
   }
 
   /** Returns the path to JAR file. */
   Path getJar() {
-    if (artifact != null) {
-      return artifact.getFile().toPath();
-    } else {
-      return jar;
-    }
+    return jar;
   }
 
   /**
@@ -110,7 +109,7 @@ public final class ClassPathEntry {
    * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
    */
   ImmutableSet<String> listClassFileNames() throws IOException {
-    URL jarUrl = getJar().toUri().toURL();
+    URL jarUrl = jar.toUri().toURL();
     // Setting parent as null because we don't want other classes than this jar file
     URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[] {jarUrl}, null);
 
