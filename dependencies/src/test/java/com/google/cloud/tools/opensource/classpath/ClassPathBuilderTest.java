@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import org.eclipse.aether.RepositoryException;
