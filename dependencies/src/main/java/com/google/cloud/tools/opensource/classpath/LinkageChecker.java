@@ -21,7 +21,6 @@ import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHi
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -566,9 +565,7 @@ public class LinkageChecker {
     return builder.build();
   }
 
-  /**
-   * Builder for {@link LinkageChecker}.
-   */
+  /** Builder for {@link LinkageChecker}. */
   public static class Builder {
     // Either classPath or bom is non-null
     private ImmutableList<ClassPathEntry> classPath;
@@ -615,7 +612,7 @@ public class LinkageChecker {
         entryPoints.addAll(artifactsInBom);
         return create(classpath, entryPoints.build(), excludedErrors);
       } else {
-        Verify.verify(classPath != null);
+        // classPath is not null
         return create(classPath, entryPoints.build(), excludedErrors);
       }
     }
