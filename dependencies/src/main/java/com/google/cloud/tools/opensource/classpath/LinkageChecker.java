@@ -64,10 +64,16 @@ public class LinkageChecker {
     return classReferenceGraph;
   }
 
+  /**
+   * Returns a builder for Linkage Checker of Maven artifacts in {@code bom}.
+   */
   public static Builder builder(Bom bom) {
     return new Builder(bom);
   }
 
+  /**
+   * Returns a builder for Linkage Checker of {@code classPath}.
+   */
   public static Builder builder(Iterable<ClassPathEntry> classPath) {
     return new Builder(classPath);
   }
