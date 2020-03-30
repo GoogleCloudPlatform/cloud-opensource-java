@@ -161,7 +161,7 @@ public class LinkageCheckerArgumentsTest {
   }
 
   @Test
-  public void testReadCommnadLine_exclusionFile() throws ParseException {
+  public void testReadCommandLine_exclusionFile() throws ParseException {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("-j", "dummy.jar", "-e", "foo/exclusion.xml");
     Path exclusionFile = parsedArguments.getExclusionFile();
@@ -169,7 +169,7 @@ public class LinkageCheckerArgumentsTest {
   }
 
   @Test
-  public void testReadCommnadLine_exclusionFile_unspecified() throws ParseException {
+  public void testReadCommandLine_exclusionFile_unspecified() throws ParseException {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("-j", "dummy.jar");
     Assert.assertNull(parsedArguments.getExclusionFile());

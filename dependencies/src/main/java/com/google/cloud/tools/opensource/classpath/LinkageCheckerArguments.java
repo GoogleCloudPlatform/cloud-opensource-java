@@ -164,7 +164,7 @@ final class LinkageCheckerArguments {
 
     Option exclusionFile =
         Option.builder("e")
-            .longOpt("exclude-filter-file")
+            .longOpt("exclusion-file")
             .hasArg(true)
             .desc("Exclusion file to filter out linkage errors based on conditions")
             .build();

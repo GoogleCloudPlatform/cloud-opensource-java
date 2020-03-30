@@ -42,12 +42,16 @@ class ExcludedErrors {
       ImmutableList<LinkageErrorMatcher> defaultMatchers =
           ExclusionFileParser.parse(defaultRuleUrl);
       exclusionMatchers.addAll(defaultMatchers);
+    } catch (SAXException | VerifierConfigurationException ex) {
+      throw new IOException("Could not read default exclusion rule", ex);
+    }
 
+    try {
       if (exclusionFile != null) {
         exclusionMatchers.addAll(ExclusionFileParser.parse(exclusionFile));
       }
     } catch (SAXException | VerifierConfigurationException ex) {
-      throw new IOException("Could not read exclusion rule", ex);
+      throw new IOException("Could not read exclusion rule file " + exclusionFile, ex);
     }
 
     return new ExcludedErrors(exclusionMatchers.build());

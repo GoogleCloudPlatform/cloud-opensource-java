@@ -65,8 +65,7 @@ public class LinkageChecker {
     return classReferenceGraph;
   }
 
-  @VisibleForTesting
-  static LinkageChecker create(List<ClassPathEntry> classPath) throws IOException {
+  public static LinkageChecker create(List<ClassPathEntry> classPath) throws IOException {
     return create(classPath, ImmutableSet.copyOf(classPath), null);
   }
 
@@ -74,7 +73,7 @@ public class LinkageChecker {
    * Returns Linkage Checker for {@code classPath}.
    *
    * @param classPath JAR files to find linkage errors in
-   * @param entryPoints JAR files to define entry point classes in reachability
+   * @param entryPoints JAR files to specify entry point classes in reachability
    * @param exclusionFile exclusion file to suppress linkage errors
    */
   public static LinkageChecker create(
@@ -97,6 +96,10 @@ public class LinkageChecker {
         symbolReferenceMaps,
         classReferenceGraph,
         ExcludedErrors.create(exclusionFile));
+  }
+
+  public static LinkageChecker create(Bom bom) throws IOException {
+    return create(bom, null);
   }
 
   public static LinkageChecker create(Bom bom, Path exclusionFile) throws IOException {
