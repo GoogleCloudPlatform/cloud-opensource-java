@@ -155,7 +155,7 @@ public class ClassPathBuilderTest {
             .filter(path -> path.getJar().toString().contains("httpclient-4.5.3.jar"))
             .findFirst()
             .get();
-    LinkageChecker linkageChecker = LinkageChecker.create(classPath);
+    LinkageChecker linkageChecker = LinkageChecker.builder(classPath).build();
 
     // httpclient-4.5.3 AbstractVerifier has a method reference of
     // 'void verify(String host, String[] cns, String[] subjectAlts)' to itself and its interface

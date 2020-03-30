@@ -190,7 +190,7 @@ public class DashboardMain {
     List<ClassPathEntry> artifactJarsInBom = classpath.subList(0, managedDependencies.size());
     ImmutableSet<ClassPathEntry> entryPoints = ImmutableSet.copyOf(artifactJarsInBom);
 
-    LinkageChecker linkageChecker = LinkageChecker.create(classpath);
+    LinkageChecker linkageChecker = LinkageChecker.builder(classpath).build();
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();

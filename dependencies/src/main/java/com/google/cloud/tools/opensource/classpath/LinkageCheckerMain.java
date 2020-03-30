@@ -82,8 +82,10 @@ class LinkageCheckerMain {
         }
 
         LinkageChecker linkageChecker =
-            LinkageChecker.create(
-                inputClassPath, entryPoints, linkageCheckerArguments.getExclusionFile());
+            LinkageChecker.builder(inputClassPath)
+                .entryPoints(entryPoints)
+                .exclusionFile(linkageCheckerArguments.getExclusionFile())
+                .build();
         ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
             linkageChecker.findSymbolProblems();
     

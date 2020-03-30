@@ -21,6 +21,7 @@ import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHi
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -38,7 +39,6 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
@@ -65,56 +65,12 @@ public class LinkageChecker {
     return classReferenceGraph;
   }
 
-  public static LinkageChecker create(List<ClassPathEntry> classPath) throws IOException {
-    return create(classPath, ImmutableSet.copyOf(classPath), null);
+  public static Builder builder(Bom bom) {
+    return new Builder(bom);
   }
 
-  /**
-   * Returns Linkage Checker for {@code classPath}.
-   *
-   * @param classPath JAR files to find linkage errors in
-   * @param entryPoints JAR files to specify entry point classes in reachability
-   * @param exclusionFile exclusion file to suppress linkage errors
-   */
-  public static LinkageChecker create(
-      List<ClassPathEntry> classPath,
-      Iterable<ClassPathEntry> entryPoints,
-      @Nullable Path exclusionFile)
-      throws IOException {
-    Preconditions.checkArgument(
-        !classPath.isEmpty(),
-        "The linkage classpath is empty. Specify input to supply one or more jar files");
-    ClassDumper dumper = ClassDumper.create(classPath);
-    SymbolReferenceMaps symbolReferenceMaps = dumper.findSymbolReferences();
-
-    ClassReferenceGraph classReferenceGraph =
-        ClassReferenceGraph.create(symbolReferenceMaps, ImmutableSet.copyOf(entryPoints));
-
-    return new LinkageChecker(
-        dumper,
-        classPath,
-        symbolReferenceMaps,
-        classReferenceGraph,
-        ExcludedErrors.create(exclusionFile));
-  }
-
-  public static LinkageChecker create(Bom bom) throws IOException {
-    return create(bom, null);
-  }
-
-  public static LinkageChecker create(Bom bom, Path exclusionFile) throws IOException {
-    // duplicate code from DashboardMain follows. We need to refactor to extract this.
-    ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
-
-    ClassPathBuilder classPathBuilder = new ClassPathBuilder();
-    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies);
-    ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
-
-    // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
-    List<ClassPathEntry> artifactsInBom = classpath.subList(0, managedDependencies.size());
-    ImmutableSet<ClassPathEntry> entryPoints = ImmutableSet.copyOf(artifactsInBom);
-
-    return LinkageChecker.create(classpath, entryPoints, exclusionFile);
+  public static Builder builder(Iterable<ClassPathEntry> classPath) {
+    return new Builder(classPath);
   }
 
   @VisibleForTesting
@@ -608,5 +564,75 @@ public class LinkageChecker {
       // Missing classes are reported by findSymbolProblem method.
     }
     return builder.build();
+  }
+
+  public static class Builder {
+    // Either classPath or bom is non-null
+    private ImmutableList<ClassPathEntry> classPath;
+    private Bom bom;
+
+    private Path exclusionFile;
+    private ImmutableSet.Builder<ClassPathEntry> entryPoints = ImmutableSet.builder();
+
+    /** @param bom BOM to create class path to find linkage errors in */
+    private Builder(Bom bom) {
+      this.bom = Preconditions.checkNotNull(bom);
+    }
+
+    /** @param classPath class path to find linkage errors in */
+    private Builder(Iterable<ClassPathEntry> classPath) {
+      this.classPath = ImmutableList.copyOf(classPath);
+    }
+
+    /** @param entryPoints JAR files to specify entry point classes in reachability */
+    public Builder entryPoints(Iterable<ClassPathEntry> entryPoints) {
+      this.entryPoints.addAll(entryPoints);
+      return this;
+    }
+
+    /** @param exclusionFile exclusion rule suppress linkage errors */
+    public Builder exclusionFile(Path exclusionFile) {
+      this.exclusionFile = exclusionFile;
+      return this;
+    }
+
+    public LinkageChecker build() throws IOException {
+
+      // If exclusionFile is null, then it gets default exclusion rule
+      ExcludedErrors excludedErrors = ExcludedErrors.create(exclusionFile);
+      if (bom != null) {
+        ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
+
+        ClassPathBuilder classPathBuilder = new ClassPathBuilder();
+        ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies);
+        ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
+
+        // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
+        List<ClassPathEntry> artifactsInBom = classpath.subList(0, managedDependencies.size());
+        entryPoints.addAll(artifactsInBom);
+        return create(classpath, entryPoints.build(), excludedErrors);
+      } else {
+        Verify.verify(classPath != null);
+        return create(classPath, entryPoints.build(), excludedErrors);
+      }
+    }
+
+    private static LinkageChecker create(
+        List<ClassPathEntry> classPath,
+        Iterable<ClassPathEntry> entryPoints,
+        ExcludedErrors excludedErrors)
+        throws IOException {
+      Preconditions.checkArgument(
+          !classPath.isEmpty(),
+          "The linkage classpath is empty. Specify input to supply one or more jar files");
+      ClassDumper dumper = ClassDumper.create(classPath);
+      SymbolReferenceMaps symbolReferenceMaps = dumper.findSymbolReferences();
+
+      ClassReferenceGraph classReferenceGraph =
+          ClassReferenceGraph.create(symbolReferenceMaps, ImmutableSet.copyOf(entryPoints));
+
+      return new LinkageChecker(
+          dumper, classPath, symbolReferenceMaps, classReferenceGraph, excludedErrors);
+    }
   }
 }
