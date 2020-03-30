@@ -28,7 +28,7 @@ class ExcludedErrors {
   private final ImmutableList<LinkageErrorMatcher> exclusionMatchers;
 
   /**
-   * Creates exclusion matchers for {@code exclusionFile} with default rules. If {@code
+   * Creates exclusion matchers from {@code exclusionFile} with default rules. If {@code
    * exclusionFile} is {@code null}, then returns default exclusion rules.
    */
   static ExcludedErrors create(@Nullable Path exclusionFile) throws IOException {
