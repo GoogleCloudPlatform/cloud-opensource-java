@@ -432,6 +432,28 @@ public class LinkageCheckerRuleTest {
     }
   }
 
+  @Test
+  public void testExecute_shouldFilterExclusionRule()
+      throws RepositoryException, URISyntaxException {
+    try {
+      // This artifact is known to contain classes missing dependencies
+      setupMockDependencyResolution("com.google.appengine:appengine-api-1.0-sdk:1.9.64");
+      String exclusionFileLocation =
+          Paths.get(ClassLoader.getSystemResource("appengine-exclusion.xml").toURI())
+              .toAbsolutePath()
+              .toString();
+      rule.setExclusionFilterFile(exclusionFileLocation);
+      rule.execute(mockRuleHelper);
+      Assert.fail(
+          "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
+    } catch (EnforcerRuleException ex) {
+      // pass.
+      // The number of errors was 112 in testExecute_shouldFailForBadProjectWithBundlePackaging
+      verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found 93 errors."));
+      assertEquals("Failed while checking class path. See above error report.", ex.getMessage());
+    }
+  }
+
   private DependencyResolutionException createDummyResolutionException(
       Artifact missingArtifact, DependencyResolutionResult resolutionResult) {
     Throwable cause3 = new ArtifactNotFoundException(missingArtifact, null);

@@ -28,6 +28,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -37,6 +38,7 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
@@ -63,8 +65,22 @@ public class LinkageChecker {
     return classReferenceGraph;
   }
 
+  public static LinkageChecker create(List<ClassPathEntry> classPath) throws IOException {
+    return create(classPath, ImmutableSet.copyOf(classPath), null);
+  }
+
+  /**
+   * Returns Linkage Checker for {@code classPath}.
+   *
+   * @param classPath JAR files to find linkage errors in
+   * @param entryPoints JAR files to specify entry point classes in reachability
+   * @param exclusionFile exclusion file to suppress linkage errors
+   */
   public static LinkageChecker create(
-      List<ClassPathEntry> classPath, Iterable<ClassPathEntry> entryPoints) throws IOException {
+      List<ClassPathEntry> classPath,
+      Iterable<ClassPathEntry> entryPoints,
+      @Nullable Path exclusionFile)
+      throws IOException {
     Preconditions.checkArgument(
         !classPath.isEmpty(),
         "The linkage classpath is empty. Specify input to supply one or more jar files");
@@ -75,10 +91,18 @@ public class LinkageChecker {
         ClassReferenceGraph.create(symbolReferenceMaps, ImmutableSet.copyOf(entryPoints));
 
     return new LinkageChecker(
-        dumper, classPath, symbolReferenceMaps, classReferenceGraph, ExcludedErrors.create());
+        dumper,
+        classPath,
+        symbolReferenceMaps,
+        classReferenceGraph,
+        ExcludedErrors.create(exclusionFile));
   }
 
   public static LinkageChecker create(Bom bom) throws IOException {
+    return create(bom, null);
+  }
+
+  public static LinkageChecker create(Bom bom, Path exclusionFile) throws IOException {
     // duplicate code from DashboardMain follows. We need to refactor to extract this.
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
@@ -90,7 +114,7 @@ public class LinkageChecker {
     List<ClassPathEntry> artifactsInBom = classpath.subList(0, managedDependencies.size());
     ImmutableSet<ClassPathEntry> entryPoints = ImmutableSet.copyOf(artifactsInBom);
 
-    return LinkageChecker.create(classpath, entryPoints);
+    return LinkageChecker.create(classpath, entryPoints, exclusionFile);
   }
 
   @VisibleForTesting

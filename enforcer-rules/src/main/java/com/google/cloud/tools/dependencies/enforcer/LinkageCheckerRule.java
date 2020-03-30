@@ -39,6 +39,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -101,6 +103,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    */
   private boolean reportOnlyReachable = false;
 
+  private Path exclusionFile = null;
+
   private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
   @VisibleForTesting
@@ -119,6 +123,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     DEPENDENCY_MANAGEMENT,
     /** To read {@code dependencies} section in pom.xml. This is for library users' projects */
     DEPENDENCIES
+  }
+
+  @VisibleForTesting
+  void setExclusionFilterFile(String exclusionFileLocation) {
+    exclusionFile = Paths.get(exclusionFileLocation);
   }
 
   private Log logger;
@@ -186,7 +195,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         // TODO LinkageChecker.create and LinkageChecker.findSymbolProblems
         // should not be two separate public methods since we all call
         // findSymbolProblems immediately after create
-        LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints);
+        LinkageChecker linkageChecker =
+            LinkageChecker.create(classpath, entryPoints, exclusionFile);
         ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
             linkageChecker.findSymbolProblems();
         if (reportOnlyReachable) {
