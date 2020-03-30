@@ -66,16 +66,16 @@ public class LinkageMonitorTest {
   private SymbolProblem classNotFoundProblem =
       new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
   private SymbolProblem methodNotFoundProblem;
+  
+  private Artifact artifactB = new DefaultArtifact("foo:b:1.0.0")
+      .setFile(new File("foo/b-1.0.0.jar"));
+  private ClassPathEntry jarB = new ClassPathEntry(artifactB);
 
   @Before
   public void setup() {
     system = RepositoryUtility.newRepositorySystem();
     session = RepositoryUtility.newSession(system);
-    
-    Artifact artifact = new DefaultArtifact("foo:b:1.0.0")
-        .setFile(new File("foo/b-1.0.0.jar"));
-    ClassPathEntry entry = new ClassPathEntry(artifact);
-    
+        
     methodNotFoundProblem =
         new SymbolProblem(
             new MethodSymbol(
@@ -84,7 +84,7 @@ public class LinkageMonitorTest {
                 "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
                 false),
             ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(entry, "java.lang.Object"));
+            new ClassFile(jarB, "java.lang.Object"));
   }
 
   @Test
@@ -119,13 +119,9 @@ public class LinkageMonitorTest {
   public void generateMessageForNewError() {
     Set<SymbolProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
     
-    Artifact artifactA = new DefaultArtifact("foo:a:1.2.3")
-        .setFile(new File("foo/a-1.2.3.jar"));
-    Artifact artifactB = new DefaultArtifact("foo:b:1.0.0")
-        .setFile(new File("foo/b-1.0.0.jar"));
-    
+    Artifact artifactA = new DefaultArtifact("foo:a:1.2.3").setFile(new File("foo/a-1.2.3.jar"));
     ClassPathEntry jarA = new ClassPathEntry(artifactA);
-    ClassPathEntry jarB = new ClassPathEntry(artifactB);
+    
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotProblems =
         ImmutableSetMultimap.of(
             classNotFoundProblem, // This is in baseline. It should not be printed
