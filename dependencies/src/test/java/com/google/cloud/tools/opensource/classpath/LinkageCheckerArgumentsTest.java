@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import org.apache.commons.cli.ParseException;
@@ -157,5 +158,20 @@ public class LinkageCheckerArgumentsTest {
         LinkageCheckerArguments.readCommandLine("-j", "dummy.jar", "-r");
 
     Truth.assertThat(parsedArguments.getReportOnlyReachable()).isTrue();
+  }
+
+  @Test
+  public void testReadCommandLine_exclusionFile() throws ParseException {
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine("-j", "dummy.jar", "-e", "foo/exclusion.xml");
+    Path exclusionFile = parsedArguments.getExclusionFile();
+    Assert.assertEquals(Paths.get("foo/exclusion.xml"), exclusionFile);
+  }
+
+  @Test
+  public void testReadCommandLine_exclusionFile_unspecified() throws ParseException {
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine("-j", "dummy.jar");
+    Assert.assertNull(parsedArguments.getExclusionFile());
   }
 }

@@ -174,7 +174,7 @@ public class LinkageMonitor {
     logger.info("BOM Coordinates: " + latestBomCoordinates);
     Bom baseline = RepositoryUtility.readBom(latestBomCoordinates);
     ImmutableSet<SymbolProblem> problemsInBaseline =
-        LinkageChecker.create(baseline).findSymbolProblems().keySet();
+        LinkageChecker.create(baseline, null).findSymbolProblems().keySet();
     Bom snapshot = copyWithSnapshot(repositorySystem, session, baseline, localArtifacts);
 
     // Comparing coordinates because DefaultArtifact does not override equals
@@ -194,7 +194,8 @@ public class LinkageMonitor {
     List<ClassPathEntry> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems =
-        LinkageChecker.create(classpath, ImmutableSet.copyOf(entryPointJars)).findSymbolProblems();
+        LinkageChecker.create(classpath, ImmutableSet.copyOf(entryPointJars), null)
+            .findSymbolProblems();
     ImmutableSet<SymbolProblem> problemsInSnapshot = snapshotSymbolProblems.keySet();
 
     if (problemsInBaseline.equals(problemsInSnapshot)) {
