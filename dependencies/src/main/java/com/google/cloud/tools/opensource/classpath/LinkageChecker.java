@@ -64,16 +64,12 @@ public class LinkageChecker {
     return classReferenceGraph;
   }
 
-  /**
-   * Returns a builder for Linkage Checker of Maven artifacts in {@code bom}.
-   */
+  /** Returns a builder for Linkage Checker of Maven artifacts in {@code bom}. */
   public static Builder builder(Bom bom) {
     return new Builder(bom);
   }
 
-  /**
-   * Returns a builder for Linkage Checker of {@code classPath}.
-   */
+  /** Returns a builder for Linkage Checker of {@code classPath}. */
   public static Builder builder(Iterable<ClassPathEntry> classPath) {
     return new Builder(classPath);
   }
@@ -580,28 +576,39 @@ public class LinkageChecker {
     private Path exclusionFile;
     private ImmutableSet.Builder<ClassPathEntry> entryPoints = ImmutableSet.builder();
 
-    /** @param bom BOM to create class path to find linkage errors in */
+    /**
+     * Builder for {@code bom}.
+     *
+     * @param bom BOM to create class path to find linkage errors in
+     */
     private Builder(Bom bom) {
       this.bom = Preconditions.checkNotNull(bom);
     }
 
-    /** @param classPath class path to find linkage errors in */
+    /**
+     * Builder for {@code classPath}.
+     *
+     * @param classPath class path to find linkage errors in
+     */
     private Builder(Iterable<ClassPathEntry> classPath) {
       this.classPath = ImmutableList.copyOf(classPath);
     }
 
-    /** @param entryPoints JAR files to specify entry point classes in reachability */
+    /** Sets JAR files to specify entry point classes in reachability. */
     public Builder entryPoints(Iterable<ClassPathEntry> entryPoints) {
       this.entryPoints.addAll(entryPoints);
       return this;
     }
 
-    /** @param exclusionFile exclusion rule suppress linkage errors */
+    /** Sets {@code exclusionFile} to suppress linkage errors. */
     public Builder exclusionFile(Path exclusionFile) {
       this.exclusionFile = exclusionFile;
       return this;
     }
 
+    /**
+     * Returns new {@link LinkageChecker} based on the configuration passed to the {@link Builder}.
+     */
     public LinkageChecker build() throws IOException {
 
       // If exclusionFile is null, then it gets default exclusion rule
