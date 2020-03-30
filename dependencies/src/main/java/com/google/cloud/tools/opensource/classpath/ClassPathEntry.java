@@ -47,12 +47,16 @@ public final class ClassPathEntry {
     return new ClassPathEntry(artifact.setFile(new File(filePath)));
   }
 
-  /** An entry for a JAR file without association with a Maven artifact. */
+  /** An entry for a JAR file without Maven coordinates. */
   ClassPathEntry(Path jar) {
     this.jar = checkNotNull(jar);
   }
 
-  /** An entry for a Maven artifact. */
+  /** 
+   * An entry for a Maven artifact. 
+   * 
+   * @throws NullPointerException if the artifact does not have a file
+   */
   public ClassPathEntry(Artifact artifact) {
     this(artifact.getFile().toPath());
     this.artifact = artifact;
@@ -116,7 +120,8 @@ public final class ClassPathEntry {
     com.google.common.reflect.ClassPath classPath =
         com.google.common.reflect.ClassPath.from(classLoaderFromJar);
 
-    classFileNames = classPath.getAllClasses().stream().map(ClassInfo::getName).collect(toImmutableSet());
+    classFileNames =
+        classPath.getAllClasses().stream().map(ClassInfo::getName).collect(toImmutableSet());
   }
   
   /**
