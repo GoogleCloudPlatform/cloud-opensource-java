@@ -88,19 +88,11 @@ public class ClassPathEntryTest {
 
   @Test
   public void testListFileNames() throws IOException, ArtifactResolutionException {
-    RepositorySystem system = RepositoryUtility.newRepositorySystem();
-    RepositorySystemSession session = RepositoryUtility.newSession( system );
-
-    Artifact truth8 = new DefaultArtifact(
-        "com.google.truth.extensions:truth-java8-extension:1.0.1");    
-
-    ArtifactRequest artifactRequest = new ArtifactRequest();
-    artifactRequest.setArtifact( truth8 );
-
-    ArtifactResult artifactResult = system.resolveArtifact( session, artifactRequest);
-    truth8 = artifactResult.getArtifact();
     
-    ClassPathEntry entry = new ClassPathEntry(truth8);
+    // copy into the local repository so we can read the jar file
+    Artifact artifact = resolveArtifact("com.google.truth.extensions:truth-java8-extension:1.0.1");
+    
+    ClassPathEntry entry = new ClassPathEntry(artifact);
     ImmutableSet<String> classFileNames = entry.listClassFileNames();
     Truth.assertThat(classFileNames).containsExactly(
         "com.google.common.truth.IntStreamSubject",
@@ -112,6 +104,18 @@ public class ClassPathEntryTest {
         "com.google.common.truth.PathSubject",
         "com.google.common.truth.Truth8",
         "com.google.common.truth.StreamSubject");
+  }
+
+  private static Artifact resolveArtifact(String coords) throws ArtifactResolutionException {
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
+
+    Artifact artifact = new DefaultArtifact(coords);    
+    ArtifactRequest artifactRequest = new ArtifactRequest();
+    artifactRequest.setArtifact(artifact);
+    ArtifactResult artifactResult = system.resolveArtifact(session, artifactRequest);
+    
+    return artifactResult.getArtifact();
   }
   
   @Test
