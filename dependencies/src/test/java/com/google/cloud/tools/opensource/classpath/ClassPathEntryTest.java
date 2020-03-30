@@ -19,12 +19,20 @@ package com.google.cloud.tools.opensource.classpath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.EqualsTester;
+import com.google.common.truth.Truth;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.resolution.ArtifactRequest;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
+import org.eclipse.aether.resolution.ArtifactResult;
 import org.junit.Test;
 
 public class ClassPathEntryTest {
@@ -78,6 +86,34 @@ public class ClassPathEntryTest {
     assertEquals("com.google:foo:0.0.1", entry.toString());
   }
 
+  @Test
+  public void testListFileNames() throws IOException, ArtifactResolutionException {
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession( system );
+
+    Artifact truth8 = new DefaultArtifact(
+        "com.google.truth.extensions:truth-java8-extension:1.0.1");    
+
+    ArtifactRequest artifactRequest = new ArtifactRequest();
+    artifactRequest.setArtifact( truth8 );
+
+    ArtifactResult artifactResult = system.resolveArtifact( session, artifactRequest);
+    truth8 = artifactResult.getArtifact();
+    
+    ClassPathEntry entry = new ClassPathEntry(truth8);
+    ImmutableSet<String> classFileNames = entry.listClassFileNames();
+    Truth.assertThat(classFileNames).containsExactly(
+        "com.google.common.truth.IntStreamSubject",
+        "com.google.common.truth.LongStreamSubject",
+        "com.google.common.truth.OptionalDoubleSubject",
+        "com.google.common.truth.OptionalSubject",
+        "com.google.common.truth.OptionalIntSubject",
+        "com.google.common.truth.OptionalLongSubject",
+        "com.google.common.truth.PathSubject",
+        "com.google.common.truth.Truth8",
+        "com.google.common.truth.StreamSubject");
+  }
+  
   @Test
   public void testFilePresenceRequirement() {
     Artifact artifactWithoutFile = new DefaultArtifact("com.google:foo:jar:1.0.0");
