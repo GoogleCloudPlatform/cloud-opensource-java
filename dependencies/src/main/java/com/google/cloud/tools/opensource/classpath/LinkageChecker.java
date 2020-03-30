@@ -566,6 +566,9 @@ public class LinkageChecker {
     return builder.build();
   }
 
+  /**
+   * Builder for {@link LinkageChecker}.
+   */
   public static class Builder {
     // Either classPath or bom is non-null
     private ImmutableList<ClassPathEntry> classPath;
