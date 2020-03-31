@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.EqualsTester;
 import com.google.common.truth.Truth;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.eclipse.aether.RepositorySystem;
@@ -88,7 +89,7 @@ public class ClassPathEntryTest {
 
   @Test
   public void testListFileNames() throws IOException, ArtifactResolutionException {
-    
+ 
     // copy into the local repository so we can read the jar file
     Artifact artifact = resolveArtifact("com.google.truth.extensions:truth-java8-extension:1.0.1");
     
@@ -104,6 +105,24 @@ public class ClassPathEntryTest {
         "com.google.common.truth.PathSubject",
         "com.google.common.truth.Truth8",
         "com.google.common.truth.StreamSubject");
+  }
+  
+  @Test
+  public void testListFileNames_innerClasses()
+      throws IOException, ArtifactResolutionException, URISyntaxException {
+
+    ClassPathEntry entry = TestHelper.classPathEntryOfResource(
+        "testdata/conscrypt-openjdk-uber-1.4.2.jar");
+    
+    ImmutableSet<String> classFileNames = entry.listClassFileNames();
+    Truth.assertThat(classFileNames).containsAtLeast(
+        "org.conscrypt.OpenSSLSignature$1",
+        "org.conscrypt.OpenSSLContextImpl$TLSv1",
+        "org.conscrypt.TrustManagerImpl$1",
+        "org.conscrypt.PeerInfoProvider",
+        "org.conscrypt.PeerInfoProvider$1",
+        "org.conscrypt.ExternalSession$Provider",
+        "org.conscrypt.OpenSSLMac");
   }
 
   private static Artifact resolveArtifact(String coords) throws ArtifactResolutionException {
