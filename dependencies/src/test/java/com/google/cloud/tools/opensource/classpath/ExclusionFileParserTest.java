@@ -355,7 +355,7 @@ public class ExclusionFileParserTest {
         matcher.match(
             symbolProblemToMatch,
             new ClassFile(
-                ClassPathEntry.of("com.foo:bar:1", "dummy.jar"), "com.google.Bar")); // No match
+                ClassPathEntry.of("com.foo:bar:1", "dummy.jar"), "com.google.Bar"));
     assertTrue(result);
   }
 
