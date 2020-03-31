@@ -16,13 +16,12 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import javax.annotation.Nullable;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
-/** Matcher on the classes in Maven Artifacts. */
+/** Matcher on the classes in Maven Artifacts on their group ID, artifact ID, and version. */
 class ArtifactMatcher implements SymbolProblemTargetMatcher, SymbolProblemSourceMatcher {
 
   // Group ID, artifact ID, and version
