@@ -217,8 +217,8 @@ public class ExclusionFileParserTest {
     } catch (SAXParseException expected) {
       // pass
       assertEquals(
-          "element \"foo:Class\" not allowed anywhere; expected element \"Class\", \"Field\", "
-              + "\"Method\" or \"Package\"",
+          "element \"foo:Class\" not allowed anywhere; expected element \"Artifact\", "
+              + "\"Class\", \"Field\", \"Method\" or \"Package\"",
           expected.getMessage());
       assertEquals(4, expected.getLineNumber());
     }
@@ -233,7 +233,8 @@ public class ExclusionFileParserTest {
       fail();
     } catch (SAXParseException expected) {
       assertEquals(
-          "element \"Method\" not allowed here; expected element \"Class\" or \"Package\"",
+          "element \"Method\" not allowed here; expected element \"Artifact\", \"Class\" "
+              + "or \"Package\"",
           expected.getMessage());
       assertEquals(4, expected.getLineNumber());
     }
@@ -282,5 +283,108 @@ public class ExclusionFileParserTest {
     // Should not raise exception
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
     Truth.assertThat(matchers).hasSize(1);
+  }
+
+  @Test
+  public void testParse_artifactInSource()
+      throws URISyntaxException, IOException, SAXException, VerifierConfigurationException {
+    String resourceName = "exclusion-sample-rules/source-artifact.xml";
+    Path exclusionFile = absolutePathOfResource(resourceName);
+
+    // Should not raise exception
+    ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
+    Truth.assertThat(matchers).hasSize(1);
+
+    LinkageErrorMatcher matcher = matchers.get(0);
+
+    SymbolProblem symbolProblemToMatch =
+        new SymbolProblem(
+            new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
+            ErrorType.INACCESSIBLE_MEMBER,
+            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"));
+    boolean result =
+        matcher.match(
+            symbolProblemToMatch,
+            new ClassFile(ClassPathEntry.of("com.foo:bar:1.2.3", "dummy.jar"), "com.google.Bar"));
+    assertTrue(result);
+  }
+
+  @Test
+  public void testParse_artifactInSource_noMatch()
+      throws URISyntaxException, IOException, SAXException, VerifierConfigurationException {
+    String resourceName = "exclusion-sample-rules/source-artifact.xml";
+    Path exclusionFile = absolutePathOfResource(resourceName);
+
+    // Should not raise exception
+    ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
+    Truth.assertThat(matchers).hasSize(1);
+
+    LinkageErrorMatcher matcher = matchers.get(0);
+
+    SymbolProblem symbolProblemToMatch =
+        new SymbolProblem(
+            new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
+            ErrorType.INACCESSIBLE_MEMBER,
+            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"));
+    boolean result =
+        matcher.match(
+            symbolProblemToMatch,
+            new ClassFile(
+                ClassPathEntry.of(
+                    "com.foo:bar:1.2.3-RC1", // No match
+                    "dummy.jar"),
+                "com.google.Bar"));
+    assertFalse(result);
+  }
+
+  @Test
+  public void testParse_artifactInTarget()
+      throws URISyntaxException, IOException, SAXException, VerifierConfigurationException {
+    String resourceName = "exclusion-sample-rules/target-artifact.xml";
+    Path exclusionFile = absolutePathOfResource(resourceName);
+
+    // Should not raise exception
+    ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
+    Truth.assertThat(matchers).hasSize(1);
+
+    LinkageErrorMatcher matcher = matchers.get(0);
+
+    SymbolProblem symbolProblemToMatch =
+        new SymbolProblem(
+            new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
+            ErrorType.INACCESSIBLE_MEMBER,
+            new ClassFile(ClassPathEntry.of("com.foo:bar:1.2.3", "dummy.jar"), "com.google.Foo"));
+    boolean result =
+        matcher.match(
+            symbolProblemToMatch,
+            new ClassFile(
+                ClassPathEntry.of("com.foo:bar:1", "dummy.jar"), "com.google.Bar")); // No match
+    assertTrue(result);
+  }
+
+  @Test
+  public void testParse_artifactInTarget_noMatch()
+      throws URISyntaxException, IOException, SAXException, VerifierConfigurationException {
+    String resourceName = "exclusion-sample-rules/target-artifact.xml";
+    Path exclusionFile = absolutePathOfResource(resourceName);
+
+    // Should not raise exception
+    ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
+    Truth.assertThat(matchers).hasSize(1);
+
+    LinkageErrorMatcher matcher = matchers.get(0);
+
+    SymbolProblem symbolProblemToMatch =
+        new SymbolProblem(
+            new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
+            ErrorType.INACCESSIBLE_MEMBER,
+            new ClassFile(
+                new ClassPathEntry(Paths.get("dummy.jar")), // no match
+                "com.google.Foo"));
+    boolean result =
+        matcher.match(
+            symbolProblemToMatch,
+            new ClassFile(ClassPathEntry.of("com.foo:bar:1.2.3", "dummy.jar"), "com.google.Bar"));
+    assertFalse(result);
   }
 }

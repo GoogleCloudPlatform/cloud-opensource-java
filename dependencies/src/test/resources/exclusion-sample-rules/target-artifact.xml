@@ -1,0 +1,7 @@
+<LinkageCheckerFilter>
+  <LinkageError>
+    <Target>
+      <Artifact coordinates="com.foo:bar:jar:1.2.3" />
+    </Target>
+  </LinkageError>
+</LinkageCheckerFilter>

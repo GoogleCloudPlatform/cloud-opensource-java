@@ -20,7 +20,7 @@ package com.google.cloud.tools.opensource.classpath;
 interface SymbolProblemMatcher {
   boolean match(SymbolProblem problem, ClassFile sourceClass);
 
-  default void addChild(SymbolProblemTargetMatcher child) {
+  default void setChild(SymbolProblemTargetMatcher child) {
     throw new IllegalStateException("This element is not supposed to take child element");
   }
 }

@@ -26,8 +26,8 @@ class ClassMatcher implements SymbolProblemTargetMatcher, SymbolProblemSourceMat
   }
 
   @Override
-  public boolean match(Symbol symbol) {
-    return symbol.getClassBinaryName().equals(className);
+  public boolean match(SymbolProblem symbolProblem) {
+    return symbolProblem.getSymbol().getClassBinaryName().equals(className);
   }
 
   @Override

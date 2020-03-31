@@ -33,8 +33,8 @@ class PackageMatcher implements SymbolProblemTargetMatcher, SymbolProblemSourceM
   }
 
   @Override
-  public boolean match(Symbol problem) {
-    return problem.getClassBinaryName().startsWith(packageName + ".");
+  public boolean match(SymbolProblem symbolProblem) {
+    return symbolProblem.getSymbol().getClassBinaryName().startsWith(packageName + ".");
   }
 
   @Override

@@ -73,23 +73,26 @@ class ExclusionFileHandler extends DefaultHandler {
         linkageErrorMatcher.setTargetMatcher(targetMatcher);
         symbolProblemMatcher = targetMatcher;
         break;
+      case "Artifact":
+        symbolProblemMatcher.setChild(new ArtifactMatcher(attributes.getValue("coordinates")));
+        break;
       case "Package":
-        symbolProblemMatcher.addChild(new PackageMatcher(attributes.getValue("name")));
+        symbolProblemMatcher.setChild(new PackageMatcher(attributes.getValue("name")));
         break;
       case "Class":
         String classNameOnClass = attributes.getValue("name");
-        symbolProblemMatcher.addChild(new ClassMatcher(classNameOnClass));
+        symbolProblemMatcher.setChild(new ClassMatcher(classNameOnClass));
         break;
       case "Method":
         String classNameOnMethod = attributes.getValue("className");
         MethodMatcher methodMatcher =
             new MethodMatcher(classNameOnMethod, attributes.getValue("name"));
-        symbolProblemMatcher.addChild(methodMatcher);
+        symbolProblemMatcher.setChild(methodMatcher);
         break;
       case "Field":
         String classNameOnField = attributes.getValue("className");
         FieldMatcher fieldMatcher = new FieldMatcher(classNameOnField, attributes.getValue("name"));
-        symbolProblemMatcher.addChild(fieldMatcher);
+        symbolProblemMatcher.setChild(fieldMatcher);
         break;
       default:
         // Not invalidating unknown tags here. Relax NG schema is responsible for the validation.

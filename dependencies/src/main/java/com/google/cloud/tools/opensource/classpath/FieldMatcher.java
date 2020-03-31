@@ -31,7 +31,8 @@ class FieldMatcher implements SymbolProblemTargetMatcher {
 
   /** Returns true if {@code symbol} is {@link #fieldName} of {@link #className}. */
   @Override
-  public boolean match(Symbol symbol) {
+  public boolean match(SymbolProblem symbolProblem) {
+    Symbol symbol = symbolProblem.getSymbol();
     if (symbol instanceof FieldSymbol) {
       FieldSymbol fieldSymbol = (FieldSymbol) symbol;
       return fieldSymbol.getClassBinaryName().equals(className)

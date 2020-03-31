@@ -31,7 +31,8 @@ class MethodMatcher implements SymbolProblemTargetMatcher {
 
   /** Returns true if {@code symbol} has {@link #methodName} of {@link #className}. */
   @Override
-  public boolean match(Symbol symbol) {
+  public boolean match(SymbolProblem symbolProblem) {
+    Symbol symbol = symbolProblem.getSymbol();
     if (symbol instanceof MethodSymbol) {
       MethodSymbol methodSymbol = (MethodSymbol) symbol;
       return methodSymbol.getClassBinaryName().equals(className)

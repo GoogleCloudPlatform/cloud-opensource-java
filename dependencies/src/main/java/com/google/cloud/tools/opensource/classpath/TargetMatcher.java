@@ -22,12 +22,12 @@ class TargetMatcher implements SymbolProblemMatcher {
   private SymbolProblemTargetMatcher matcher;
 
   @Override
-  public void addChild(SymbolProblemTargetMatcher child) {
+  public void setChild(SymbolProblemTargetMatcher child) {
     this.matcher = child;
   }
 
   @Override
   public boolean match(SymbolProblem problem, ClassFile sourceClass) {
-    return matcher.match(problem.getSymbol());
+    return matcher.match(problem);
   }
 }

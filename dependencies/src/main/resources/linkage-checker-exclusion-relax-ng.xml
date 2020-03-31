@@ -20,6 +20,11 @@
         <optional>
           <element name="Target">
             <choice>
+              <element name="Artifact">
+                <attribute name="coordinates">
+                  <text/>
+                </attribute>
+              </element>
               <element name="Package">
                 <attribute name="name">
                   <text/>
@@ -52,6 +57,11 @@
         <optional>
           <element name="Source">
             <choice>
+              <element name="Artifact">
+                <attribute name="coordinates">
+                  <text/>
+                </attribute>
+              </element>
               <element name="Package">
                 <attribute name="name">
                   <text/>

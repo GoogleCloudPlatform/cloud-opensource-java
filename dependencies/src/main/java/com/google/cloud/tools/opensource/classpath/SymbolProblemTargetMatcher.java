@@ -18,5 +18,5 @@ package com.google.cloud.tools.opensource.classpath;
 
 /** Matchers for the targets of linkage errors. */
 interface SymbolProblemTargetMatcher {
-  boolean match(Symbol symbol);
+  boolean match(SymbolProblem symbolProblem);
 }

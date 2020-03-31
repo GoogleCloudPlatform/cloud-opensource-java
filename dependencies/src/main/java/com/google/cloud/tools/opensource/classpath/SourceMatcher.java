@@ -22,7 +22,7 @@ class SourceMatcher implements SymbolProblemMatcher {
   private SymbolProblemSourceMatcher matcher;
 
   @Override
-  public void addChild(SymbolProblemTargetMatcher child) {
+  public void setChild(SymbolProblemTargetMatcher child) {
     this.matcher = (SymbolProblemSourceMatcher) child;
   }
 
