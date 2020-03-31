@@ -64,12 +64,14 @@ public class LinkageChecker {
     return classReferenceGraph;
   }
 
-  /** Returns a builder for Linkage Checker of Maven artifacts in {@code bom}. */
+  /**
+   * Returns a builder for Linkage Checker to find linkage errors in Maven artifacts in {@code bom}.
+   */
   public static Builder builder(Bom bom) {
     return new Builder(bom);
   }
 
-  /** Returns a builder for Linkage Checker of {@code classPath}. */
+  /** Returns a builder for Linkage Checker to find linkage errors in {@code classPath}. */
   public static Builder builder(Iterable<ClassPathEntry> classPath) {
     return new Builder(classPath);
   }
@@ -577,7 +579,7 @@ public class LinkageChecker {
     private ImmutableSet.Builder<ClassPathEntry> entryPoints = ImmutableSet.builder();
 
     /**
-     * Builder for {@code bom}.
+     * Builder for {@link LinkageChecker} to find linkage errors in {@code bom}.
      *
      * @param bom BOM to create class path to find linkage errors in
      */
@@ -586,7 +588,7 @@ public class LinkageChecker {
     }
 
     /**
-     * Builder for {@code classPath}.
+     * Builder for {@link LinkageChecker} to find linkage errors in {@code classPath}.
      *
      * @param classPath class path to find linkage errors in
      */
