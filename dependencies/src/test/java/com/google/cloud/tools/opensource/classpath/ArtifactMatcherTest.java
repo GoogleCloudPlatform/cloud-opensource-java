@@ -50,7 +50,7 @@ public class ArtifactMatcherTest {
   @Test
   public void testMatchOnCoordinates() {
     ArtifactMatcher matcher = new ArtifactMatcher("foo:bar:1.2.3");
-    // The matcher should not check extension ("jar") or classfier ("no_dep")
+    // The matcher should not check extension ("jar") or classifier ("no_dep")
     assertTrue(
         matcher.match(
             new ClassFile(ClassPathEntry.of("foo:bar:jar:no_dep:1.2.3", "dummy.jar"), "foo.Main")));
