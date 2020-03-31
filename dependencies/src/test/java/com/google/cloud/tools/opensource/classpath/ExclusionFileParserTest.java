@@ -291,7 +291,6 @@ public class ExclusionFileParserTest {
     String resourceName = "exclusion-sample-rules/source-artifact.xml";
     Path exclusionFile = absolutePathOfResource(resourceName);
 
-    // Should not raise exception
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
     Truth.assertThat(matchers).hasSize(1);
 
@@ -315,7 +314,6 @@ public class ExclusionFileParserTest {
     String resourceName = "exclusion-sample-rules/source-artifact.xml";
     Path exclusionFile = absolutePathOfResource(resourceName);
 
-    // Should not raise exception
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
     Truth.assertThat(matchers).hasSize(1);
 
@@ -331,7 +329,7 @@ public class ExclusionFileParserTest {
             symbolProblemToMatch,
             new ClassFile(
                 ClassPathEntry.of(
-                    "com.foo:bar:1.2.3-RC1", // No match
+                    "com.foo:bar:1.2.3-RC1", // No match; different version
                     "dummy.jar"),
                 "com.google.Bar"));
     assertFalse(result);
@@ -343,7 +341,6 @@ public class ExclusionFileParserTest {
     String resourceName = "exclusion-sample-rules/target-artifact.xml";
     Path exclusionFile = absolutePathOfResource(resourceName);
 
-    // Should not raise exception
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
     Truth.assertThat(matchers).hasSize(1);
 
@@ -368,7 +365,6 @@ public class ExclusionFileParserTest {
     String resourceName = "exclusion-sample-rules/target-artifact.xml";
     Path exclusionFile = absolutePathOfResource(resourceName);
 
-    // Should not raise exception
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(exclusionFile);
     Truth.assertThat(matchers).hasSize(1);
 
@@ -379,7 +375,7 @@ public class ExclusionFileParserTest {
             new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
             ErrorType.INACCESSIBLE_MEMBER,
             new ClassFile(
-                new ClassPathEntry(Paths.get("dummy.jar")), // no match
+                new ClassPathEntry(Paths.get("dummy.jar")), // no match; not an artifact
                 "com.google.Foo"));
     boolean result =
         matcher.match(
