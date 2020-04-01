@@ -81,7 +81,9 @@ class LinkageCheckerMain {
           entryPoints = ImmutableSet.copyOf(inputClassPath.subList(0, artifacts.size()));
         }
 
-        LinkageChecker linkageChecker = LinkageChecker.create(inputClassPath, entryPoints);
+        LinkageChecker linkageChecker =
+            LinkageChecker.create(
+                inputClassPath, entryPoints, linkageCheckerArguments.getExclusionFile());
         ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
             linkageChecker.findSymbolProblems();
     

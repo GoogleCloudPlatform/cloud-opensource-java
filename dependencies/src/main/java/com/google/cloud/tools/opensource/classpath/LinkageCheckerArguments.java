@@ -20,6 +20,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import org.apache.commons.cli.CommandLine;
@@ -160,7 +161,15 @@ final class LinkageCheckerArguments {
             .desc("Show usage instructions")
             .build();
     options.addOption(help);
-    
+
+    Option exclusionFile =
+        Option.builder("e")
+            .longOpt("exclusion-file")
+            .hasArg(true)
+            .desc("Exclusion file to filter out linkage errors based on conditions")
+            .build();
+    options.addOption(exclusionFile);
+
     options.addOptionGroup(inputGroup);
     return options;
   }
@@ -230,5 +239,16 @@ final class LinkageCheckerArguments {
 
   boolean hasInput() {
     return commandLine.hasOption("b") || commandLine.hasOption("a") || commandLine.hasOption("j");
+  }
+
+  /**
+   * Returns the path to exclusion file specified in the argument. If the argument is not specified,
+   * {@code null}.
+   */
+  Path getExclusionFile() {
+    if (commandLine.hasOption("e")) {
+      return Paths.get(commandLine.getOptionValue("e"));
+    }
+    return null;
   }
 }

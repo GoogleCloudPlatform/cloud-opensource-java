@@ -27,7 +27,7 @@ public class ExcludedErrorsTest {
 
   @Test
   public void testDefaultRules_contains() throws IOException {
-    ExcludedErrors excludedErrors = ExcludedErrors.create();
+    ExcludedErrors excludedErrors = ExcludedErrors.create(null);
 
     String targetClassName = "jdk.vm.ci.Bar";
     MethodSymbol methodSymbol =
@@ -41,7 +41,7 @@ public class ExcludedErrorsTest {
 
   @Test
   public void testDefaultRules_doesNotContains() throws IOException {
-    ExcludedErrors excludedErrors = ExcludedErrors.create();
+    ExcludedErrors excludedErrors = ExcludedErrors.create(null);
 
     String targetClassName = "com.google.Bar";
     MethodSymbol methodSymbol =

@@ -19,12 +19,21 @@ package com.google.cloud.tools.opensource.classpath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.EqualsTester;
+import com.google.common.truth.Truth;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.resolution.ArtifactRequest;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
+import org.eclipse.aether.resolution.ArtifactResult;
 import org.junit.Test;
 
 public class ClassPathEntryTest {
@@ -78,6 +87,56 @@ public class ClassPathEntryTest {
     assertEquals("com.google:foo:0.0.1", entry.toString());
   }
 
+  @Test
+  public void testListFileNames() throws IOException, ArtifactResolutionException {
+ 
+    // copy into the local repository so we can read the jar file
+    Artifact artifact = resolveArtifact("com.google.truth.extensions:truth-java8-extension:1.0.1");
+    
+    ClassPathEntry entry = new ClassPathEntry(artifact);
+    ImmutableSet<String> classFileNames = entry.listClassFileNames();
+    Truth.assertThat(classFileNames).containsExactly(
+        "com.google.common.truth.IntStreamSubject",
+        "com.google.common.truth.LongStreamSubject",
+        "com.google.common.truth.OptionalDoubleSubject",
+        "com.google.common.truth.OptionalSubject",
+        "com.google.common.truth.OptionalIntSubject",
+        "com.google.common.truth.OptionalLongSubject",
+        "com.google.common.truth.PathSubject",
+        "com.google.common.truth.Truth8",
+        "com.google.common.truth.StreamSubject");
+  }
+  
+  @Test
+  public void testListFileNames_innerClasses()
+      throws IOException, ArtifactResolutionException, URISyntaxException {
+
+    ClassPathEntry entry = TestHelper.classPathEntryOfResource(
+        "testdata/conscrypt-openjdk-uber-1.4.2.jar");
+    
+    ImmutableSet<String> classFileNames = entry.listClassFileNames();
+    Truth.assertThat(classFileNames).containsAtLeast(
+        "org.conscrypt.OpenSSLSignature$1",
+        "org.conscrypt.OpenSSLContextImpl$TLSv1",
+        "org.conscrypt.TrustManagerImpl$1",
+        "org.conscrypt.PeerInfoProvider",
+        "org.conscrypt.PeerInfoProvider$1",
+        "org.conscrypt.ExternalSession$Provider",
+        "org.conscrypt.OpenSSLMac");
+  }
+
+  private static Artifact resolveArtifact(String coords) throws ArtifactResolutionException {
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
+
+    Artifact artifact = new DefaultArtifact(coords);    
+    ArtifactRequest artifactRequest = new ArtifactRequest();
+    artifactRequest.setArtifact(artifact);
+    ArtifactResult artifactResult = system.resolveArtifact(session, artifactRequest);
+    
+    return artifactResult.getArtifact();
+  }
+  
   @Test
   public void testFilePresenceRequirement() {
     Artifact artifactWithoutFile = new DefaultArtifact("com.google:foo:jar:1.0.0");
