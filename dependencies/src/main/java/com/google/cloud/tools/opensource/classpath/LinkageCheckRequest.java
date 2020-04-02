@@ -33,6 +33,9 @@ public class LinkageCheckRequest {
   private final ImmutableSet<ClassPathEntry> entryPoints;
   private boolean reportOnlyReachable;
 
+  /**
+   * Returns class path to find linkage errors in.
+   */
   ImmutableList<ClassPathEntry> getClassPath() {
     return classPath;
   }
