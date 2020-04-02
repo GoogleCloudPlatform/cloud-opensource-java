@@ -43,7 +43,7 @@ public class LinkageCheckRequest {
 
   /**
    * Returns JAR files to specify entry point classes. If the request does not filter errors by
-   * class reachability, returns empty.
+   * class reachability, returns an empty set.
    */
   ImmutableSet<ClassPathEntry> getEntryPoints() {
     return entryPoints;
@@ -55,7 +55,8 @@ public class LinkageCheckRequest {
 
   private LinkageCheckRequest(
       ImmutableList<ClassPathEntry> classPath,
-      ExcludedErrors excludedErrors, boolean reportOnlyReachable,
+      ExcludedErrors excludedErrors,
+      boolean reportOnlyReachable,
       ImmutableSet<ClassPathEntry> entryPoints) {
     this.classPath = classPath;
     this.excludedErrors = excludedErrors;
@@ -83,7 +84,7 @@ public class LinkageCheckRequest {
     private ImmutableSet.Builder<ClassPathEntry> entryPoints = ImmutableSet.builder();
 
     /**
-     * Builder for {@link LinkageChecker} to find linkage errors in {@code bom}.
+     * Builder for {@link LinkageCheckRequest} to find linkage errors in {@code bom}.
      *
      * @param bom BOM to create class path to find linkage errors in
      */
@@ -92,7 +93,7 @@ public class LinkageCheckRequest {
     }
 
     /**
-     * Builder for {@link LinkageChecker} to find linkage errors in {@code classPath}.
+     * Builder for {@link LinkageCheckRequest} to find linkage errors in {@code classPath}.
      *
      * @param classPath class path to find linkage errors in
      */
@@ -131,12 +132,12 @@ public class LinkageCheckRequest {
         // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
         List<ClassPathEntry> artifactsInBom = classpath.subList(0, managedDependencies.size());
         entryPoints.addAll(artifactsInBom);
-        return new LinkageCheckRequest(classpath, excludedErrors, reportOnlyReachable, entryPoints.build()
-        );
+        return new LinkageCheckRequest(
+            classpath, excludedErrors, reportOnlyReachable, entryPoints.build());
       } else {
         // classPath is not null
-        return new LinkageCheckRequest(classPath, excludedErrors, reportOnlyReachable, entryPoints.build()
-        );
+        return new LinkageCheckRequest(
+            classPath, excludedErrors, reportOnlyReachable, entryPoints.build());
       }
     }
   }

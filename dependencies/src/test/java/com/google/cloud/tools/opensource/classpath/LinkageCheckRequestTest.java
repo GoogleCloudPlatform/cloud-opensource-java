@@ -33,10 +33,9 @@ import org.junit.Test;
 public class LinkageCheckRequestTest {
 
   @Test
-  public void testCreation() throws IOException  {
-    LinkageCheckRequest.Builder builder = LinkageCheckRequest.builder(
-        ImmutableList.of(new ClassPathEntry(Paths.get("dummy.jar")))
-    );
+  public void testCreation() throws IOException {
+    LinkageCheckRequest.Builder builder =
+        LinkageCheckRequest.builder(ImmutableList.of(new ClassPathEntry(Paths.get("dummy.jar"))));
     LinkageCheckRequest request = builder.build();
 
     ImmutableList<ClassPathEntry> classPath = request.getClassPath();
@@ -46,22 +45,17 @@ public class LinkageCheckRequestTest {
   }
 
   @Test
-  public void testCreation_reportOnlyReachable() throws IOException  {
-    LinkageCheckRequest.Builder builder = LinkageCheckRequest.builder(
-        ImmutableList.of(new ClassPathEntry(Paths.get("dummy.jar")))
-    );
-    builder.reportOnlyReachable(ImmutableSet.of(
-        new ClassPathEntry(Paths.get("dummy.jar"))
-    ));
+  public void testCreation_reportOnlyReachable() throws IOException {
+    LinkageCheckRequest.Builder builder =
+        LinkageCheckRequest.builder(ImmutableList.of(new ClassPathEntry(Paths.get("dummy.jar"))));
+    builder.reportOnlyReachable(ImmutableSet.of(new ClassPathEntry(Paths.get("dummy.jar"))));
     LinkageCheckRequest request = builder.build();
-
 
     ImmutableSet<ClassPathEntry> entryPoints = request.getEntryPoints();
     Truth.assertThat(entryPoints).hasSize(1);
     assertEquals(Paths.get("dummy.jar"), entryPoints.iterator().next().getJar());
     assertTrue(request.reportOnlyReachable());
   }
-
 
   @Test
   public void testCreation_bom() throws IOException, ArtifactDescriptorException {
@@ -81,5 +75,4 @@ public class LinkageCheckRequestTest {
 
     assertFalse(request.reportOnlyReachable());
   }
-
 }
