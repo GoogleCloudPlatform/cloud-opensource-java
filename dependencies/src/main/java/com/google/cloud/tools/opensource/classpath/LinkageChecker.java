@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHierarchy;
 
-import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -28,22 +27,20 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
-import org.eclipse.aether.artifact.Artifact;
 
 /** A tool to find linkage errors in a class path. */
 public class LinkageChecker {
@@ -65,8 +62,9 @@ public class LinkageChecker {
     return classReferenceGraph;
   }
 
-  public static LinkageChecker create(List<ClassPathEntry> classPath) throws IOException {
-    return create(classPath, ImmutableSet.copyOf(classPath), null);
+  @VisibleForTesting
+  static LinkageChecker create(List<ClassPathEntry> classPath) throws IOException {
+    return create(classPath, ImmutableSet.copyOf(classPath), ExcludedErrors.create(null));
   }
 
   /**
@@ -74,12 +72,12 @@ public class LinkageChecker {
    *
    * @param classPath JAR files to find linkage errors in
    * @param entryPoints JAR files to specify entry point classes in reachability
-   * @param exclusionFile exclusion file to suppress linkage errors
+   * @param excludedErrors exclusion rules to suppress linkage errors
    */
-  public static LinkageChecker create(
+  private static LinkageChecker create(
       List<ClassPathEntry> classPath,
       Iterable<ClassPathEntry> entryPoints,
-      @Nullable Path exclusionFile)
+      ExcludedErrors excludedErrors)
       throws IOException {
     Preconditions.checkArgument(
         !classPath.isEmpty(),
@@ -91,36 +89,25 @@ public class LinkageChecker {
         ClassReferenceGraph.create(symbolReferenceMaps, ImmutableSet.copyOf(entryPoints));
 
     return new LinkageChecker(
-        dumper,
-        classPath,
-        symbolReferenceMaps,
-        classReferenceGraph,
-        ExcludedErrors.create(exclusionFile));
+        dumper, classPath, symbolReferenceMaps, classReferenceGraph, excludedErrors);
   }
 
-  public static LinkageChecker create(Bom bom) throws IOException {
-    return create(bom, null);
-  }
-
-  public static LinkageChecker create(Bom bom, Path exclusionFile) throws IOException {
-    // duplicate code from DashboardMain follows. We need to refactor to extract this.
-    ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
-
-    ClassPathBuilder classPathBuilder = new ClassPathBuilder();
-    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies);
-    ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
-
-    // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
-    List<ClassPathEntry> artifactsInBom = classpath.subList(0, managedDependencies.size());
-    ImmutableSet<ClassPathEntry> entryPoints = ImmutableSet.copyOf(artifactsInBom);
-
-    return LinkageChecker.create(classpath, entryPoints, exclusionFile);
-  }
-
+  /**
+   * Returns LinkageChecker that has artificial class-to-symbol relationship of {@code
+   * newSymbolMaps}.
+   */
   @VisibleForTesting
-  LinkageChecker cloneWith(SymbolReferenceMaps newSymbolMaps) {
+  static LinkageChecker create(List<ClassPathEntry> classPath, SymbolReferenceMaps newSymbolMaps)
+      throws IOException {
+    LinkageChecker linkageChecker =
+        create(classPath, ImmutableSet.copyOf(classPath), ExcludedErrors.create(null));
+
     return new LinkageChecker(
-        classDumper, classPath, newSymbolMaps, classReferenceGraph, excludedErrors);
+        linkageChecker.classDumper,
+        classPath,
+        newSymbolMaps,
+        linkageChecker.classReferenceGraph,
+        linkageChecker.excludedErrors);
   }
 
   private LinkageChecker(
@@ -137,10 +124,32 @@ public class LinkageChecker {
   }
 
   /**
+   * Returns {@link SymbolProblem}s found in {@code request} and referencing classes for each
+   * problem.
+   */
+  public static ImmutableSetMultimap<SymbolProblem, ClassFile> check(LinkageCheckRequest request)
+      throws IOException {
+    LinkageChecker linkageChecker =
+        create(request.getClassPath(), request.getEntryPoints(), request.getExcludedErrors());
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+    if (request.reportOnlyReachable()) {
+      ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
+      symbolProblems =
+          symbolProblems.entries().stream()
+              .filter(entry -> classReferenceGraph.isReachable(entry.getValue().getBinaryName()))
+              .collect(ImmutableSetMultimap.toImmutableSetMultimap(Entry::getKey, Entry::getValue));
+    }
+    return symbolProblems;
+  }
+
+  /**
    * Returns {@link SymbolProblem}s found in the class path and referencing classes for each
    * problem.
    */
-  public ImmutableSetMultimap<SymbolProblem, ClassFile> findSymbolProblems() {
+  @VisibleForTesting
+  ImmutableSetMultimap<SymbolProblem, ClassFile> findSymbolProblems() {
     // Having Problem in key will dedup SymbolProblems
     ImmutableSetMultimap.Builder<SymbolProblem, ClassFile> problemToClass =
         ImmutableSetMultimap.builder();

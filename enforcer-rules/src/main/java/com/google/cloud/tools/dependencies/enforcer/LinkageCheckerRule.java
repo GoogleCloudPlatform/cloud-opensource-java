@@ -24,7 +24,7 @@ import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
-import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
+import com.google.cloud.tools.opensource.classpath.LinkageCheckRequest;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.ArtifactProblem;
@@ -45,7 +45,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
@@ -191,22 +190,15 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       List<ClassPathEntry> entryPoints = classpath.subList(0, (int) projectDependencyCount + 1);
 
       try {
-
-        // TODO LinkageChecker.create and LinkageChecker.findSymbolProblems
-        // should not be two separate public methods since we all call
-        // findSymbolProblems immediately after create
-        LinkageChecker linkageChecker =
-            LinkageChecker.create(classpath, entryPoints, exclusionFile);
-        ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
-            linkageChecker.findSymbolProblems();
+        LinkageCheckRequest.Builder request =
+            LinkageCheckRequest.builder(classpath).exclusionFile(exclusionFile);
         if (reportOnlyReachable) {
-          ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
-          symbolProblems =
-              symbolProblems.entries().stream()
-                  .filter(entry -> classReferenceGraph.isReachable(entry.getValue().getBinaryName()))
-                  .collect(
-                      ImmutableSetMultimap.toImmutableSetMultimap(Entry::getKey, Entry::getValue));
+          request.reportOnlyReachable(entryPoints);
         }
+
+        ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+            LinkageChecker.check(request.build());
+
         // Count unique SymbolProblems
         int errorCount = symbolProblems.keySet().size();
 

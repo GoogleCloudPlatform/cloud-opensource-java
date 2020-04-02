@@ -155,7 +155,6 @@ public class ClassPathBuilderTest {
             .filter(path -> path.getJar().toString().contains("httpclient-4.5.3.jar"))
             .findFirst()
             .get();
-    LinkageChecker linkageChecker = LinkageChecker.create(classPath);
 
     // httpclient-4.5.3 AbstractVerifier has a method reference of
     // 'void verify(String host, String[] cns, String[] subjectAlts)' to itself and its interface
@@ -175,7 +174,7 @@ public class ClassPathBuilderTest {
             new ClassSymbol("org.apache.http.client.entity.GZIPInputStreamFactory"));
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
-        linkageChecker.findSymbolProblems();
+        LinkageChecker.check(LinkageCheckRequest.builder(classPath).build());
     assertEquals(
         "Method references within the same jar file should not be reported",
         0,

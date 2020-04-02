@@ -23,6 +23,7 @@ import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
+import com.google.cloud.tools.opensource.classpath.LinkageCheckRequest;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -174,7 +175,7 @@ public class LinkageMonitor {
     logger.info("BOM Coordinates: " + latestBomCoordinates);
     Bom baseline = RepositoryUtility.readBom(latestBomCoordinates);
     ImmutableSet<SymbolProblem> problemsInBaseline =
-        LinkageChecker.create(baseline, null).findSymbolProblems().keySet();
+        LinkageChecker.check(LinkageCheckRequest.builder(baseline).build()).keySet();
     Bom snapshot = copyWithSnapshot(repositorySystem, session, baseline, localArtifacts);
 
     // Comparing coordinates because DefaultArtifact does not override equals
@@ -193,9 +194,10 @@ public class LinkageMonitor {
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
     List<ClassPathEntry> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 
+    LinkageCheckRequest.Builder request = LinkageCheckRequest.builder(classpath);
+    request.reportOnlyReachable(entryPointJars);
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems =
-        LinkageChecker.create(classpath, ImmutableSet.copyOf(entryPointJars), null)
-            .findSymbolProblems();
+        LinkageChecker.check(request.build());
     ImmutableSet<SymbolProblem> problemsInSnapshot = snapshotSymbolProblems.keySet();
 
     if (problemsInBaseline.equals(problemsInSnapshot)) {

@@ -18,6 +18,7 @@
 package com.google.cloud;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
+import com.google.cloud.tools.opensource.classpath.LinkageCheckRequest;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
@@ -50,9 +51,9 @@ public class MaximumLinkageErrorsTest {
     Bom bom = RepositoryUtility.readBom(bomFile);
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> oldProblems =
-        LinkageChecker.create(baseline).findSymbolProblems();
-    LinkageChecker checker = LinkageChecker.create(bom);
-    ImmutableSetMultimap<SymbolProblem, ClassFile> currentProblems = checker.findSymbolProblems();
+        LinkageChecker.check(LinkageCheckRequest.builder(baseline).build());
+    ImmutableSetMultimap<SymbolProblem, ClassFile> currentProblems =
+        LinkageChecker.check(LinkageCheckRequest.builder(bom).build());
 
     // This only tests for newly missing methods, not new references to
     // previously missing methods.

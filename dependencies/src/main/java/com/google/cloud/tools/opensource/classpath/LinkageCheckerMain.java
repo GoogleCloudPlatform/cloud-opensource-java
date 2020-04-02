@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Multimaps;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,20 +80,15 @@ class LinkageCheckerMain {
           entryPoints = ImmutableSet.copyOf(inputClassPath.subList(0, artifacts.size()));
         }
 
-        LinkageChecker linkageChecker =
-            LinkageChecker.create(
-                inputClassPath, entryPoints, linkageCheckerArguments.getExclusionFile());
-        ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
-            linkageChecker.findSymbolProblems();
-    
+        LinkageCheckRequest.Builder request = LinkageCheckRequest.builder(inputClassPath);
+        request.exclusionFile(linkageCheckerArguments.getExclusionFile());
         if (linkageCheckerArguments.getReportOnlyReachable()) {
-          ClassReferenceGraph graph = linkageChecker.getClassReferenceGraph();
-          symbolProblems =
-              ImmutableSetMultimap.copyOf(
-                  Multimaps.filterValues(
-                      symbolProblems, classFile -> graph.isReachable(classFile.getBinaryName())));
+          request.reportOnlyReachable(entryPoints);
         }
-    
+
+        ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+            LinkageChecker.check(request.build());
+
         System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
     
         if (classPathResult != null && !symbolProblems.isEmpty()) {
