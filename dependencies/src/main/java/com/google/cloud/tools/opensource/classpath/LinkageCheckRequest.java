@@ -31,6 +31,7 @@ public class LinkageCheckRequest {
   private final ImmutableList<ClassPathEntry> classPath;
   private final ExcludedErrors excludedErrors;
   private final ImmutableSet<ClassPathEntry> entryPoints;
+  private boolean reportOnlyReachable;
 
   ImmutableList<ClassPathEntry> getClassPath() {
     return classPath;
@@ -49,16 +50,17 @@ public class LinkageCheckRequest {
   }
 
   boolean reportOnlyReachable() {
-    return !entryPoints.isEmpty();
+    return reportOnlyReachable;
   }
 
   private LinkageCheckRequest(
       ImmutableList<ClassPathEntry> classPath,
-      ImmutableSet<ClassPathEntry> entryPoints,
-      ExcludedErrors excludedErrors) {
+      ExcludedErrors excludedErrors, boolean reportOnlyReachable,
+      ImmutableSet<ClassPathEntry> entryPoints) {
     this.classPath = classPath;
     this.excludedErrors = excludedErrors;
     this.entryPoints = entryPoints;
+    this.reportOnlyReachable = reportOnlyReachable;
   }
 
   public static Builder builder(Bom bom) {
@@ -77,6 +79,7 @@ public class LinkageCheckRequest {
 
     private Path exclusionFile;
 
+    private boolean reportOnlyReachable = false;
     private ImmutableSet.Builder<ClassPathEntry> entryPoints = ImmutableSet.builder();
 
     /**
@@ -99,6 +102,7 @@ public class LinkageCheckRequest {
 
     /** Sets JAR files to specify entry point classes in reachability. */
     public Builder reportOnlyReachable(Iterable<ClassPathEntry> entryPoints) {
+      reportOnlyReachable = true;
       this.entryPoints.addAll(entryPoints);
       return this;
     }
@@ -127,10 +131,12 @@ public class LinkageCheckRequest {
         // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
         List<ClassPathEntry> artifactsInBom = classpath.subList(0, managedDependencies.size());
         entryPoints.addAll(artifactsInBom);
-        return new LinkageCheckRequest(classpath, entryPoints.build(), excludedErrors);
+        return new LinkageCheckRequest(classpath, excludedErrors, reportOnlyReachable, entryPoints.build()
+        );
       } else {
         // classPath is not null
-        return new LinkageCheckRequest(classPath, entryPoints.build(), excludedErrors);
+        return new LinkageCheckRequest(classPath, excludedErrors, reportOnlyReachable, entryPoints.build()
+        );
       }
     }
   }
