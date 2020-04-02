@@ -69,7 +69,7 @@ public class FreemarkerTest {
   }
     
   @Before
-  public static void setUp() throws IOException {
+  public void setUp() throws IOException {
     Artifact artifact = new DefaultArtifact("com.google:foo:1.0.0")
         .setFile(new File("foo/bar-1.2.3.jar"));
     ClassPathEntry entry = new ClassPathEntry(artifact);
