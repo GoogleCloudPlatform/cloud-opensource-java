@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -34,6 +35,7 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class ClassPathEntryTest {
@@ -87,7 +89,6 @@ public class ClassPathEntryTest {
 
   @Test
   public void testListFileNames() throws IOException, ArtifactResolutionException {
- 
     // copy into the local repository so we can read the jar file
     Artifact artifact = resolveArtifact("com.google.truth.extensions:truth-java8-extension:1.0.1");
     
@@ -122,12 +123,26 @@ public class ClassPathEntryTest {
         "org.conscrypt.ExternalSession$Provider",
         "org.conscrypt.OpenSSLMac");
   }
+  
+  @Test
+  public void testListFileNames_noManifest()
+      throws IOException, ArtifactResolutionException, URISyntaxException {
 
-  private static Artifact resolveArtifact(String coords) throws ArtifactResolutionException {
+    ClassPathEntry entry = TestHelper.classPathEntryOfResource(
+        "testdata/conscrypt-openjdk-uber-1.4.2.jar");
+    
+    ImmutableSet<String> classFileNames = entry.listClassFileNames();
+    for (String filename : classFileNames) {
+      Assert.assertFalse(filename.toLowerCase(Locale.ENGLISH).contains("manifest"));
+      Assert.assertFalse(filename.toLowerCase(Locale.ENGLISH).contains("meta"));
+    }  
+  }
+
+  private static Artifact resolveArtifact(String coordinates) throws ArtifactResolutionException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 
-    Artifact artifact = new DefaultArtifact(coords);    
+    Artifact artifact = new DefaultArtifact(coordinates);    
     ArtifactRequest artifactRequest = new ArtifactRequest();
     artifactRequest.setArtifact(artifact);
     ArtifactResult artifactResult = system.resolveArtifact(session, artifactRequest);
@@ -142,7 +157,6 @@ public class ClassPathEntryTest {
       new ClassPathEntry(artifactWithoutFile);
       fail();
     } catch (NullPointerException expected) {
-      // pass
     }
   }
 }
