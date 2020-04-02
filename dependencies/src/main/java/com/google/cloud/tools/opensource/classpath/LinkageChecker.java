@@ -58,10 +58,6 @@ public class LinkageChecker {
     return classToSymbols;
   }
 
-  public ClassReferenceGraph getClassReferenceGraph() {
-    return classReferenceGraph;
-  }
-
   @VisibleForTesting
   static LinkageChecker create(List<ClassPathEntry> classPath) throws IOException {
     return create(classPath, ImmutableSet.copyOf(classPath), ExcludedErrors.create(null));
@@ -135,7 +131,7 @@ public class LinkageChecker {
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
     if (request.reportOnlyReachable()) {
-      ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
+      ClassReferenceGraph classReferenceGraph = linkageChecker.classReferenceGraph;
       symbolProblems =
           symbolProblems.entries().stream()
               .filter(entry -> classReferenceGraph.isReachable(entry.getValue().getBinaryName()))
