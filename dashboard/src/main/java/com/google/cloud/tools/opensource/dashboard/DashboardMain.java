@@ -192,8 +192,8 @@ public class DashboardMain {
     for (ClassPathEntry entry : entryPoints) {
       entry.loadClassFileNames();
     }
-    
-    LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints);
+
+    LinkageChecker linkageChecker = LinkageChecker.create(classpath);
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
