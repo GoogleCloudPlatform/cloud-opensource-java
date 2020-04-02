@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.UnmodifiableIterator;
+import java.io.IOException;
 import java.nio.file.Paths;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -40,11 +41,14 @@ public class ClassPathResultTest {
   private DependencyPath dependencyPath_B = new DependencyPath();
   private DependencyPath dependencyPath_B_A = new DependencyPath();
   private DependencyPath dependencyPath_A_B_A = new DependencyPath();
-  private ClassPathEntry jarA = new ClassPathEntry(Paths.get("a.jar"));
-  private ClassPathEntry jarB = new ClassPathEntry(Paths.get("b.jar"));
+  private ClassPathEntry jarA;
+  private ClassPathEntry jarB;
 
   @Before
-  public void setup() {
+  public void setup() throws IOException {
+    jarA = new ClassPathEntry(Paths.get("a.jar"));
+    jarB = new ClassPathEntry(Paths.get("b.jar"));
+
     dependencyPath_A.add(new Dependency(artifactA, "compile"));
 
     dependencyPath_B.add(new Dependency(artifactB, "compile"));

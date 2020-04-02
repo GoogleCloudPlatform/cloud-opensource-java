@@ -21,12 +21,13 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.testing.EqualsTester;
 import com.google.common.testing.NullPointerTester;
 import com.google.common.testing.NullPointerTester.Visibility;
+import java.io.IOException;
 import java.nio.file.Paths;
 import org.junit.Test;
 
 public class ClassFileTest {
   @Test
-  public void testCreation() {
+  public void testCreation() throws IOException {
     ClassPathEntry entry = new ClassPathEntry(Paths.get("foo", "bar.jar"));
     ClassFile file = new ClassFile(entry, "com.test.Foo");
     assertEquals("com.test.Foo", file.getBinaryName());
@@ -34,14 +35,14 @@ public class ClassFileTest {
   }
 
   @Test
-  public void testNull() {
+  public void testNull() throws IOException {
     new NullPointerTester()
         .setDefault(ClassPathEntry.class, new ClassPathEntry(Paths.get("foo", "bar.jar")))
         .testConstructors(ClassFile.class, Visibility.PACKAGE);
   }
 
   @Test
-  public void testEquality() {
+  public void testEquality() throws IOException {
     new EqualsTester()
         .addEqualityGroup(
             new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "com.test.Foo"),

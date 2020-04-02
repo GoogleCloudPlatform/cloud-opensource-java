@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -63,7 +64,7 @@ public class LinkageCheckerTest {
   private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
   /** Returns the class path for the full dependency tree of {@code coordinates}. */
-  static ImmutableList<ClassPathEntry> resolvePaths(String... coordinates) {
+  static ImmutableList<ClassPathEntry> resolvePaths(String... coordinates) throws IOException {
     ImmutableList<Artifact> artifacts =
         Arrays.stream(coordinates).map(DefaultArtifact::new).collect(toImmutableList());
     ClassPathResult result = (new ClassPathBuilder()).resolve(artifacts);
@@ -71,17 +72,19 @@ public class LinkageCheckerTest {
   }
 
   /** Returns the class path resolved for the transitive dependencies of {@code coordinates}. */
-  private ImmutableList<ClassPathEntry> resolveTransitiveDependencyPaths(String coordinates) {
+  private ImmutableList<ClassPathEntry> resolveTransitiveDependencyPaths(String coordinates)
+      throws IOException {
+    
     DependencyGraph dependencies =
         dependencyGraphBuilder
             .buildMavenDependencyGraph(new Dependency(new DefaultArtifact(coordinates), "compile"))
             .getDependencyGraph();
-    ImmutableList<ClassPathEntry> classPath =
-        dependencies.list().stream()
-            .map(path -> path.getLeaf())
-            .map(ClassPathEntry::new)
-            .collect(toImmutableList());
-    return classPath;
+    
+    ImmutableList.Builder<ClassPathEntry> builder = ImmutableList.builder();
+    for (DependencyPath path : dependencies.list()) {
+      builder.add(new ClassPathEntry(path.getLeaf()));
+    }
+    return builder.build();
   }
 
   @Before
@@ -89,13 +92,11 @@ public class LinkageCheckerTest {
     guavaJar = classPathEntryOfResource("testdata/guava-23.5-jre.jar");
     firestoreJar =
         classPathEntryOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar");
-    firestoreJar.loadClassFileNames();
   }
 
   @Test
   public void testScannedSymbols() throws IOException {
-    ClassPathEntry guavaAbsolutePath = guavaJar;
-    List<ClassPathEntry> paths = ImmutableList.of(guavaAbsolutePath);
+    List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
 
     SymbolReferenceMaps classToSymbols = linkageChecker.getClassToSymbols();
@@ -104,11 +105,11 @@ public class LinkageCheckerTest {
     //   -v com/google/common/util/concurrent/Monitor
     Truth.assertThat(classToSymbols.getClassToClassSymbols())
         .containsEntry(
-            new ClassFile(guavaAbsolutePath, "com.google.common.util.concurrent.Service"),
+            new ClassFile(guavaJar, "com.google.common.util.concurrent.Service"),
             new ClassSymbol("java.util.concurrent.TimeoutException"));
     Truth.assertThat(classToSymbols.getClassToMethodSymbols())
         .containsEntry(
-            new ClassFile(guavaAbsolutePath, "com.google.common.util.concurrent.Monitor"),
+            new ClassFile(guavaJar, "com.google.common.util.concurrent.Monitor"),
             new MethodSymbol(
                 "com.google.common.base.Preconditions",
                 "checkNotNull",
@@ -116,7 +117,7 @@ public class LinkageCheckerTest {
                 false));
     Truth.assertThat(classToSymbols.getClassToFieldSymbols())
         .containsEntry(
-            new ClassFile(guavaAbsolutePath, "com.google.common.util.concurrent.Monitor"),
+            new ClassFile(guavaJar, "com.google.common.util.concurrent.Monitor"),
             new FieldSymbol("com.google.common.util.concurrent.Monitor$Guard", "waiterCount", "I"));
   }
 
@@ -597,7 +598,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testGenerateInputClasspathFromLinkageCheckOption_mavenBom()
-      throws RepositoryException, ParseException {
+      throws RepositoryException, ParseException, IOException {
     String bomCoordinates = "com.google.cloud:google-cloud-bom:0.81.0-alpha";
 
     LinkageCheckerArguments parsedArguments =
@@ -624,7 +625,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testGenerateInputClasspath_mavenCoordinates()
-      throws RepositoryException, ParseException {
+      throws RepositoryException, ParseException, IOException {
     String mavenCoordinates =
         "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha,"
             + "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
@@ -649,7 +650,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testGenerateInputClasspathFromLinkageCheckOption_mavenCoordinates_missingDependency()
-      throws RepositoryException, ParseException {
+      throws RepositoryException, ParseException, IOException {
     // guava-gwt has missing transitive dependency:
     //   com.google.guava:guava-gwt:jar:20.0
     //     com.google.gwt:gwt-dev:jar:2.8.0 (provided)
@@ -672,7 +673,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testGenerateInputClasspathFromLinkageCheckOption_recordMissingDependency()
-      throws ParseException, RepositoryException {
+      throws ParseException, RepositoryException, IOException {
     // tomcat-jasper has missing dependency (not optional):
     //   org.apache.tomcat:tomcat-jasper:jar:8.0.9
     //     org.eclipse.jdt.core.compiler:ecj:jar:4.4RC4 (not found in Maven central)
@@ -853,10 +854,6 @@ public class LinkageCheckerTest {
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/816
     ImmutableList<ClassPathEntry> jars =
         resolveTransitiveDependencyPaths("io.projectreactor:reactor-core:3.2.11.RELEASE");
-
-    for (ClassPathEntry entry : jars) {
-      entry.loadClassFileNames();
-    }
     
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
     ImmutableSetMultimap<ClassFile, SymbolProblem> problems = linkageChecker.findSymbolProblems()

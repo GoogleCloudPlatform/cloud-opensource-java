@@ -87,10 +87,6 @@ class ClassDumper {
             .collect(toImmutableList());
     checkArgument(
         unreadableFiles.isEmpty(), "Some jar files are not readable: %s", unreadableFiles);
-
-    for (ClassPathEntry entry : entries) {
-      entry.loadClassFileNames();
-    }
     
     return new ClassDumper(entries, extensionClassLoader);
   }

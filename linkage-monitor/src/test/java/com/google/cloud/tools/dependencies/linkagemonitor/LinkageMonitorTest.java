@@ -42,6 +42,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Truth;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -58,14 +59,27 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class LinkageMonitorTest {
+  
   private RepositorySystem system;
   private RepositorySystemSession session;
+  private final SymbolProblem classNotFoundProblem =
+      new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
+  private SymbolProblem methodNotFoundProblem;
 
   @Before
-  public void setup() {
+  public void setup() throws IOException {
     system = RepositoryUtility.newRepositorySystem();
-
     session = RepositoryUtility.newSession(system);
+    
+    methodNotFoundProblem =
+        new SymbolProblem(
+            new MethodSymbol(
+                "io.grpc.protobuf.ProtoUtils",
+                "marshaller",
+                "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
+                false),
+            ErrorType.SYMBOL_NOT_FOUND,
+            new ClassFile(ClassPathEntry.of("foo:b:1.0.0", "foo/b-1.0.0.jar"), "java.lang.Object"));
   }
 
   @Test
@@ -96,20 +110,8 @@ public class LinkageMonitorTest {
         .inOrder();
   }
 
-  private final SymbolProblem classNotFoundProblem =
-      new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
-  private final SymbolProblem methodNotFoundProblem =
-      new SymbolProblem(
-          new MethodSymbol(
-              "io.grpc.protobuf.ProtoUtils",
-              "marshaller",
-              "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
-              false),
-          ErrorType.SYMBOL_NOT_FOUND,
-          new ClassFile(ClassPathEntry.of("foo:b:1.0.0", "foo/b-1.0.0.jar"), "java.lang.Object"));
-
   @Test
-  public void generateMessageForNewError() {
+  public void generateMessageForNewError() throws IOException {
     Set<SymbolProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
     ClassPathEntry jarA = ClassPathEntry.of("foo:a:1.2.3", "foo/a-1.2.3.jar");
     ClassPathEntry jarB = ClassPathEntry.of("foo:b:1.0.0", "foo/b-1.0.0.jar");

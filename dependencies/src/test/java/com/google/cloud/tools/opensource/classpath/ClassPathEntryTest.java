@@ -47,7 +47,7 @@ public class ClassPathEntryTest {
       new DefaultArtifact("com.google", "bar", null, "jar", "0.0.1", null, barJar.toFile());
 
   @Test
-  public void testCreationJar() {
+  public void testCreationJar() throws IOException {
     Path jar = Paths.get("foo.jar");
     ClassPathEntry entry = new ClassPathEntry(jar);
     assertEquals(jar, entry.getJar());
@@ -55,14 +55,14 @@ public class ClassPathEntryTest {
   }
 
   @Test
-  public void testCreationArtifact() {
+  public void testCreationArtifact() throws IOException {
     ClassPathEntry entry = new ClassPathEntry(fooArtifact);
     assertEquals(fooJar, entry.getJar());
     assertEquals(entry.getArtifact(), fooArtifact);
   }
 
   @Test
-  public void testEquality() {
+  public void testEquality() throws IOException {
     Path jar1 = Paths.get("1.jar");
     Path jar2 = Paths.get("2.jar");
     new EqualsTester()
@@ -77,14 +77,14 @@ public class ClassPathEntryTest {
   }
 
   @Test
-  public void testToStringJar() {
+  public void testToStringJar() throws IOException {
     Path fooJar = Paths.get("foo.jar");
     ClassPathEntry entry = new ClassPathEntry(fooJar);
     assertEquals("foo.jar", entry.toString());
   }
 
   @Test
-  public void testToStringArtifact() {
+  public void testToStringArtifact() throws IOException {
     ClassPathEntry entry = new ClassPathEntry(fooArtifact);
     assertEquals("com.google:foo:0.0.1", entry.toString());
   }
@@ -95,7 +95,6 @@ public class ClassPathEntryTest {
     Artifact artifact = resolveArtifact("com.google.truth.extensions:truth-java8-extension:1.0.1");
     
     ClassPathEntry entry = new ClassPathEntry(artifact);
-    entry.loadClassFileNames();
     ImmutableSet<String> classFileNames = entry.getClassNames();
     
     
@@ -117,8 +116,6 @@ public class ClassPathEntryTest {
 
     ClassPathEntry entry = TestHelper.classPathEntryOfResource(
         "testdata/conscrypt-openjdk-uber-1.4.2.jar");
-    entry.loadClassFileNames();
-    
     ImmutableSet<String> classFileNames = entry.getClassNames();
     Truth.assertThat(classFileNames).containsAtLeast(
         "org.conscrypt.OpenSSLSignature$1",
@@ -136,8 +133,6 @@ public class ClassPathEntryTest {
 
     ClassPathEntry entry = TestHelper.classPathEntryOfResource(
         "testdata/conscrypt-openjdk-uber-1.4.2.jar");
-    entry.loadClassFileNames();
-    
     ImmutableSet<String> classFileNames = entry.getClassNames();
     for (String filename : classFileNames) {
       Assert.assertFalse(filename.toLowerCase(Locale.ENGLISH).contains("manifest"));
@@ -158,7 +153,7 @@ public class ClassPathEntryTest {
   }
   
   @Test
-  public void testFilePresenceRequirement() {
+  public void testFilePresenceRequirement() throws IOException {
     Artifact artifactWithoutFile = new DefaultArtifact("com.google:foo:jar:1.0.0");
     try {
       new ClassPathEntry(artifactWithoutFile);

@@ -36,7 +36,6 @@ public class TestHelper {
   public static ClassPathEntry classPathEntryOfResource(String resourceName)
       throws URISyntaxException, IOException {
     ClassPathEntry entry = new ClassPathEntry(absolutePathOfResource(resourceName));
-    entry.loadClassFileNames();
     return entry;
   }
 

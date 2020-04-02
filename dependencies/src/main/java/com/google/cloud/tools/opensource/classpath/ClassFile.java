@@ -26,6 +26,7 @@ import java.util.Objects;
  * A locator for a compiled class file of {@code className} in {@code classPathEntry} to uniquely
  * locate the class implementation in a class path.
  */
+// TODO this should be merged into ClassPathEntry 
 public final class ClassFile {
   private final ClassPathEntry classPathEntry;
   private final String binaryName;

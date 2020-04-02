@@ -322,13 +322,17 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     if (rootFile == null) {
       throw new EnforcerRuleException("The root project artifact is not associated with a file.");
     }
-    builder.add(new ClassPathEntry(result.getDependencyGraph().getArtifact()));
-    // The rest are the dependencies
-    for (Dependency dependency : result.getResolvedDependencies()) {
-      // Resolved dependencies are guaranteed to have file.
-      builder.add(new ClassPathEntry(dependency.getArtifact()));
+    try {
+      builder.add(new ClassPathEntry(result.getDependencyGraph().getArtifact()));
+      // The rest are the dependencies
+      for (Dependency dependency : result.getResolvedDependencies()) {
+        // Resolved dependencies are guaranteed to have files.
+        builder.add(new ClassPathEntry(dependency.getArtifact()));
+      }
+      return builder.build();
+    } catch (IOException ex) {
+      throw new EnforcerRuleException("Error reading JAR file", ex);
     }
-    return builder.build();
   }
 
   /** Builds a class path for {@code bomProject}. */
@@ -344,11 +348,15 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
             .filter(artifact -> !shouldSkipBomMember(artifact))
             .collect(toImmutableList());
 
-    ClassPathResult result = classPathBuilder.resolve(artifacts);
-    ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
-    if (!artifactProblems.isEmpty()) {
-      throw new EnforcerRuleException("Failed to collect dependency: " + artifactProblems);
+    try {
+      ClassPathResult result = classPathBuilder.resolve(artifacts);
+      ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
+      if (!artifactProblems.isEmpty()) {
+        throw new EnforcerRuleException("Failed to collect dependency: " + artifactProblems);
+      }
+      return result.getClassPath();
+    } catch (IOException ex) {
+      throw new EnforcerRuleException("Could not read jar file", ex);
     }
-    return result.getClassPath();
   }
 }
