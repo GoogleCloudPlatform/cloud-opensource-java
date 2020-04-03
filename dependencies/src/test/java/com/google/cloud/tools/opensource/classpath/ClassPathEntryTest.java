@@ -39,8 +39,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class ClassPathEntryTest {
-  Path fooJar = Paths.get("foo.jar");
-  Path barJar = Paths.get("bar.jar");
+  private Path fooJar = Paths.get("foo.jar");
+  private Path barJar = Paths.get("bar.jar");
   private Artifact fooArtifact =
       new DefaultArtifact("com.google", "foo", null, "jar", "0.0.1", null, fooJar.toFile());
   private Artifact barArtifact =
@@ -48,9 +48,8 @@ public class ClassPathEntryTest {
 
   @Test
   public void testCreationJar() {
-    Path jar = Paths.get("foo.jar");
-    ClassPathEntry entry = new ClassPathEntry(jar);
-    assertEquals(jar, entry.getJar());
+    ClassPathEntry entry = new ClassPathEntry(fooJar);
+    assertEquals(fooJar, entry.getJar());
     assertNull(entry.getArtifact());
   }
 
@@ -78,7 +77,6 @@ public class ClassPathEntryTest {
 
   @Test
   public void testToStringJar() {
-    Path fooJar = Paths.get("foo.jar");
     ClassPathEntry entry = new ClassPathEntry(fooJar);
     assertEquals("foo.jar", entry.toString());
   }
