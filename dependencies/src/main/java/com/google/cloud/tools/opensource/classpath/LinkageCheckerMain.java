@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimaps;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.cli.ParseException;
@@ -94,9 +95,15 @@ class LinkageCheckerMain {
                   Multimaps.filterValues(
                       symbolProblems, classFile -> graph.isReachable(classFile.getBinaryName())));
         }
+
+        Path writeAsExclusionFile = linkageCheckerArguments.getWriteAsExclusionFile();
+        if (writeAsExclusionFile == null) {
+          System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
+        } else {
+          outputLinkageErrorsAsExclusionFile(writeAsExclusionFile);
+        }
     
-        System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
-    
+
         if (classPathResult != null && !symbolProblems.isEmpty()) {
           Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
           for (SymbolProblem symbolProblem : symbolProblems.keySet()) {
@@ -119,5 +126,9 @@ class LinkageCheckerMain {
     } catch (ParseException ex) {
       System.err.println(ex.getMessage());
     }
+  }
+
+  static void outputLinkageErrorsAsExclusionFile(Path output) throws IOException {
+
   }
 }
