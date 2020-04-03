@@ -53,14 +53,14 @@ public class ClassPathEntryTest {
   }
 
   @Test
-  public void testCreationArtifact() throws IOException {
+  public void testCreationArtifact() {
     ClassPathEntry entry = new ClassPathEntry(fooArtifact);
     assertEquals(fooJar, entry.getJar());
     assertEquals(entry.getArtifact(), fooArtifact);
   }
 
   @Test
-  public void testEquality() throws IOException {
+  public void testEquality() {
     Path jar1 = Paths.get("1.jar");
     Path jar2 = Paths.get("2.jar");
     new EqualsTester()
@@ -75,19 +75,19 @@ public class ClassPathEntryTest {
   }
 
   @Test
-  public void testToStringJar() throws IOException {
+  public void testToStringJar() {
     ClassPathEntry entry = new ClassPathEntry(fooJar);
     assertEquals("foo.jar", entry.toString());
   }
 
   @Test
-  public void testToStringArtifact() throws IOException {
+  public void testToStringArtifact() {
     ClassPathEntry entry = new ClassPathEntry(fooArtifact);
     assertEquals("com.google:foo:0.0.1", entry.toString());
   }
 
   @Test
-  public void testListFileNames() throws IOException, ArtifactResolutionException {
+  public void testGetClassNames() throws IOException, ArtifactResolutionException {
     // copy into the local repository so we can read the jar file
     Artifact artifact = resolveArtifact("com.google.truth.extensions:truth-java8-extension:1.0.1");
     
@@ -108,7 +108,7 @@ public class ClassPathEntryTest {
   }
   
   @Test
-  public void testListFileNames_innerClasses()
+  public void testGetClassNames_innerClasses()
       throws IOException, ArtifactResolutionException, URISyntaxException {
 
     ClassPathEntry entry = TestHelper.classPathEntryOfResource(
@@ -125,7 +125,7 @@ public class ClassPathEntryTest {
   }
   
   @Test
-  public void testListFileNames_noManifest()
+  public void testGetClassNames_noManifest()
       throws IOException, ArtifactResolutionException, URISyntaxException {
 
     ClassPathEntry entry = TestHelper.classPathEntryOfResource(
