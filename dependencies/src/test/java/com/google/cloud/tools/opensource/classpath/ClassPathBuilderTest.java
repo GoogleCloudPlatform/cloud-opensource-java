@@ -37,14 +37,14 @@ import org.junit.Test;
 public class ClassPathBuilderTest {
   private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
-  private ImmutableList<ClassPathEntry> resolveClassPath(String coordinates) throws IOException {
+  private ImmutableList<ClassPathEntry> resolveClassPath(String coordinates) {
     Artifact artifact = new DefaultArtifact(coordinates);
     ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(artifact));
     return result.getClassPath();
   }
 
   @Test
-  public void testResolve_removingDuplicates() throws IOException {
+  public void testResolve_removingDuplicates() {
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
     ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(grpcArtifact));
 
@@ -64,10 +64,9 @@ public class ClassPathBuilderTest {
         .isGreaterThan(1);
   }
 
-  /** Test that BOM members come before the transitive dependencies. 
-   * @throws IOException */
+  /** Test that BOM members come before the transitive dependencies. */
   @Test
-  public void testBomToPaths_firstElementsAreBomMembers() throws RepositoryException, IOException {
+  public void testBomToPaths_firstElementsAreBomMembers() throws RepositoryException {
     List<Artifact> managedDependencies = 
         RepositoryUtility.readBom("com.google.cloud:google-cloud-bom:0.81.0-alpha")
         .getManagedDependencies();
@@ -86,7 +85,7 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolve() throws IOException {
+  public void testResolve() {
 
     Artifact grpcAuth = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
 
@@ -105,7 +104,7 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolveClassPath_validCoordinate() throws IOException {
+  public void testResolveClassPath_validCoordinate() {
     List<ClassPathEntry> entries = resolveClassPath("io.grpc:grpc-auth:1.15.1");
 
     Truth.assertThat(entries)
@@ -122,14 +121,14 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolveClassPath_optionalDependency() throws IOException {
+  public void testResolveClassPath_optionalDependency() {
     List<ClassPathEntry> classPath =
         resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
     Truth.assertThat(classPath).comparingElementsUsing(COORDINATES).contains("log4j:log4j:1.2.12");
   }
 
   @Test
-  public void testResolveClassPath_invalidCoordinate() throws IOException {
+  public void testResolveClassPath_invalidCoordinate() {
     Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nosuchartifact:1.2.3");
     ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(nonExistentArtifact));
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
@@ -141,7 +140,7 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolve_emptyInput() throws IOException {
+  public void testResolve_emptyInput() {
     List<ClassPathEntry> classPath = classPathBuilder.resolve(ImmutableList.of()).getClassPath();
     Truth.assertThat(classPath).isEmpty();
   }
@@ -192,7 +191,7 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolve_artifactProblems() throws IOException {
+  public void testResolve_artifactProblems() {
     // In the full dependency tree of hibernate-core, xerces-impl:2.6.2 and xml-apis:2.6.2 are not
     // available in Maven Central.
     Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
@@ -206,7 +205,7 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolve_shouldNotRaiseStackOverflowErrorOnJUnit() throws IOException {
+  public void testResolve_shouldNotRaiseStackOverflowErrorOnJUnit() {
     // There was StackOverflowError beam-sdks-java-extensions-sql-zetasql:jar:2.19.0, which was
     // caused by a cycle of the following artifacts:
     // junit:junit:jar:4.10 (compile?)

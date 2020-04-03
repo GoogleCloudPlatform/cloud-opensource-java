@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Maps;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -60,9 +59,8 @@ public final class ClassPathBuilder {
    * closest' strategy follows Maven's dependency mediation.
    *
    * @param artifacts Maven artifacts to check. They are treated as the root of the dependency tree.
-   * @throws IOException if a jar file can't be read
    */
-  public ClassPathResult resolve(List<Artifact> artifacts) throws IOException {
+  public ClassPathResult resolve(List<Artifact> artifacts) {
 
     LinkedListMultimap<ClassPathEntry, DependencyPath> multimap = LinkedListMultimap.create();
     if (artifacts.isEmpty()) {
