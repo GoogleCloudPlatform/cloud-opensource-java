@@ -49,22 +49,45 @@ public class ExclusionFileWriterTest {
 
     SymbolProblem classSymbolProblem =
         new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
+
+    SymbolProblem fieldSymbolProblem =
+        new SymbolProblem(
+            new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"),
+            ErrorType.SYMBOL_NOT_FOUND,
+            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "java.lang.Integer"));
+
     ImmutableSetMultimap<SymbolProblem, ClassFile> linkageErrors =
         ImmutableSetMultimap.of(
             methodSymbolProblem,
                 new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source1"),
+            fieldSymbolProblem,
+            new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source2"),
             classSymbolProblem,
-                new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source2"));
+                new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source3"));
     ExclusionFileWriter.write(output, linkageErrors);
 
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(output);
-    Truth.assertThat(matchers).hasSize(2);
+    Truth.assertThat(matchers).hasSize(3);
 
-    LinkageErrorMatcher linkageErrorMatcher = matchers.get(0);
-    boolean match =
-        linkageErrorMatcher.match(
+    LinkageErrorMatcher matcher0 = matchers.get(0);
+    boolean methodMatch =
+        matcher0.match(
             methodSymbolProblem,
             new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source1"));
-    assertTrue(match);
+    assertTrue(methodMatch);
+
+    LinkageErrorMatcher matcher1 = matchers.get(1);
+    boolean fieldMatch =
+        matcher1.match(
+            fieldSymbolProblem,
+            new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source2"));
+    assertTrue(fieldMatch);
+
+    LinkageErrorMatcher matcher2 = matchers.get(2);
+    boolean classMatch =
+        matcher2.match(
+            classSymbolProblem,
+            new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source3"));
+    assertTrue(classMatch);
   }
 }

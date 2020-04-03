@@ -57,8 +57,9 @@ class ExclusionFileWriter {
           XMLOutputFactory.newInstance().createXMLEventWriter(Files.newOutputStream(outputFile));
 
       writer.add(eventFactory.createStartDocument());
+      QName linkageCheckerFilter = QName.valueOf("LinkageCheckerFilter");
       writer.add(
-          eventFactory.createStartElement(QName.valueOf("LinkageCheckerFilter"), null, null));
+          eventFactory.createStartElement(linkageCheckerFilter, null, null));
 
       for (SymbolProblem symbolProblem : linkageErrors.keySet()) {
         for (ClassFile classFile : linkageErrors.get(symbolProblem)) {
@@ -66,7 +67,7 @@ class ExclusionFileWriter {
         }
       }
 
-      writer.add(eventFactory.createEndElement(QName.valueOf("LinkageCheckerFilter"), null));
+      writer.add(eventFactory.createEndElement(linkageCheckerFilter, null));
       writer.add(eventFactory.createEndDocument());
     } finally {
       if (writer != null) {
@@ -78,17 +79,20 @@ class ExclusionFileWriter {
   static void writeXmlEvents(
       XMLEventWriter writer, SymbolProblem symbolProblem, ClassFile classFile)
       throws XMLStreamException {
-    writer.add(eventFactory.createStartElement(QName.valueOf("LinkageError"), null, null));
+    QName linkageErrorTagName = QName.valueOf("LinkageError");
+    writer.add(eventFactory.createStartElement(linkageErrorTagName, null, null));
 
-    writer.add(eventFactory.createStartElement(QName.valueOf("Target"), null, null));
+    QName targetTagName = QName.valueOf("Target");
+    writer.add(eventFactory.createStartElement(targetTagName, null, null));
     writeXmlElement(writer, symbolProblem.getSymbol());
-    writer.add(eventFactory.createEndElement(QName.valueOf("Target"), null));
+    writer.add(eventFactory.createEndElement(targetTagName, null));
 
-    writer.add(eventFactory.createStartElement(QName.valueOf("Source"), null, null));
+    QName sourceTagName = QName.valueOf("Source");
+    writer.add(eventFactory.createStartElement(sourceTagName, null, null));
     writeXmlElement(writer, classFile);
-    writer.add(eventFactory.createEndElement(QName.valueOf("Source"), null));
+    writer.add(eventFactory.createEndElement(sourceTagName, null));
 
-    writer.add(eventFactory.createEndElement(QName.valueOf("LinkageError"), null));
+    writer.add(eventFactory.createEndElement(linkageErrorTagName, null));
   }
 
   private static void writeXmlElement(XMLEventWriter writer, Symbol symbol)
@@ -106,9 +110,10 @@ class ExclusionFileWriter {
       MethodSymbol methodSymbol = (MethodSymbol) symbol;
       Attribute className = eventFactory.createAttribute("className", symbol.getClassBinaryName());
       Attribute methodName = eventFactory.createAttribute("name", methodSymbol.getName());
+      QName methodTagName = QName.valueOf("Method");
       StartElement event =
           eventFactory.createStartElement(
-              QName.valueOf("Method"), ImmutableList.of(className, methodName).iterator(), null);
+              methodTagName, ImmutableList.of(className, methodName).iterator(), null);
       writer.add(event);
 
       writer.add(eventFactory.createEndElement("", null, "Method"));
@@ -117,12 +122,13 @@ class ExclusionFileWriter {
       FieldSymbol fieldSymbol = (FieldSymbol) symbol;
       Attribute className = eventFactory.createAttribute("className", symbol.getClassBinaryName());
       Attribute methodName = eventFactory.createAttribute("name", fieldSymbol.getName());
+      QName fieldTagName = QName.valueOf("Field");
       StartElement event =
           eventFactory.createStartElement(
-              QName.valueOf("Field"), ImmutableList.of(className, methodName).iterator(), null);
+              fieldTagName, ImmutableList.of(className, methodName).iterator(), null);
       writer.add(event);
 
-      writer.add(eventFactory.createEndElement("", null, "Field"));
+      writer.add(eventFactory.createEndElement(fieldTagName, null));
     }
   }
 
