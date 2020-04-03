@@ -58,8 +58,7 @@ class ExclusionFileWriter {
 
       writer.add(eventFactory.createStartDocument());
       QName linkageCheckerFilter = QName.valueOf("LinkageCheckerFilter");
-      writer.add(
-          eventFactory.createStartElement(linkageCheckerFilter, null, null));
+      writer.add(eventFactory.createStartElement(linkageCheckerFilter, null, null));
 
       for (SymbolProblem symbolProblem : linkageErrors.keySet()) {
         for (ClassFile classFile : linkageErrors.get(symbolProblem)) {

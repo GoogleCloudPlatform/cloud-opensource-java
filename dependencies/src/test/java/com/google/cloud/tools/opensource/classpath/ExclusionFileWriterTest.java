@@ -59,11 +59,11 @@ public class ExclusionFileWriterTest {
     ImmutableSetMultimap<SymbolProblem, ClassFile> linkageErrors =
         ImmutableSetMultimap.of(
             methodSymbolProblem,
-                new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source1"),
+            new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source1"),
             fieldSymbolProblem,
             new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source2"),
             classSymbolProblem,
-                new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source3"));
+            new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source3"));
     ExclusionFileWriter.write(output, linkageErrors);
 
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(output);
