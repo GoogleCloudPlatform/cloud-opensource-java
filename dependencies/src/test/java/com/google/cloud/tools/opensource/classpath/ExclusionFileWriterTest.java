@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import javax.xml.stream.XMLStreamException;
 import org.iso_relax.verifier.VerifierConfigurationException;
 import org.junit.Test;
@@ -33,14 +34,27 @@ import org.xml.sax.SAXException;
 public class ExclusionFileWriterTest {
   @Test
   public void testExclusionFileCreation()
-      throws IOException, URISyntaxException, XMLStreamException, VerifierConfigurationException, SAXException {
+      throws IOException, XMLStreamException, VerifierConfigurationException, SAXException {
 
     Path output = Files.createTempFile("output", ".xml");
 
-    ClassPathEntry grpcFirestore = classPathEntryOfResource("testdata/grpc-google-cloud-firestore-v1beta1-0.28.0.jar");
-    LinkageChecker linkageChecker = LinkageChecker.create(ImmutableList.of(grpcFirestore));
-    ImmutableSetMultimap<SymbolProblem, ClassFile> linkageErrors = linkageChecker
-        .findSymbolProblems();
+    SymbolProblem methodSymbolProblem =
+        new SymbolProblem(
+            new MethodSymbol(
+                "io.grpc.protobuf.ProtoUtils.marshaller",
+                "marshaller",
+                "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
+                false),
+            ErrorType.SYMBOL_NOT_FOUND,
+            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "java.lang.Object"));
+
+    SymbolProblem classSymbolProblem =
+        new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
+    ImmutableSetMultimap<SymbolProblem, ClassFile> linkageErrors =
+        ImmutableSetMultimap.of(
+            methodSymbolProblem, new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source1"),
+            classSymbolProblem,  new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source2")
+        );
     ExclusionFileWriter.write(output, linkageErrors);
 
     System.out.println("Output" + output);
