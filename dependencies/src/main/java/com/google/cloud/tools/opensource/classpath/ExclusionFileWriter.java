@@ -18,8 +18,9 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
-import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.xml.namespace.QName;
@@ -29,6 +30,12 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 /** Writer for Linkage Checker exclusion files. */
 class ExclusionFileWriter {
@@ -45,21 +52,15 @@ class ExclusionFileWriter {
 
   /** Writes {@code linkageErrors} as exclusion rules into {@code outputFile}. */
   static void write(Path outputFile, Multimap<SymbolProblem, ClassFile> linkageErrors)
-      throws IOException, XMLStreamException {
+      throws IOException, XMLStreamException, TransformerException {
     XMLEventWriter writer = null;
     try {
-      writer =
-          XMLOutputFactory.newInstance().createXMLEventWriter(Files.newOutputStream(outputFile));
-      IndentingXMLStreamWriter writer1 =  new IndentingXMLStreamWriter(XMLOutputFactory.newInstance().createXMLStreamWriter(Files.newOutputStream(outputFile)));
+      StringWriter buffer = new StringWriter();
+      writer = XMLOutputFactory.newInstance().createXMLEventWriter(buffer);
 
       writer.add(eventFactory.createStartDocument());
-      writer1.writeStartDocument();
 
       writer.add(eventFactory.createStartElement(LINKAGE_CHECKER_FILTER_TAG, null, null));
-      writer1.writeStartElement("LinkageCheckerFilter");
-      writer1.writeEndElement();
-
-
 
       for (SymbolProblem symbolProblem : linkageErrors.keySet()) {
         for (ClassFile classFile : linkageErrors.get(symbolProblem)) {
@@ -69,7 +70,15 @@ class ExclusionFileWriter {
 
       writer.add(eventFactory.createEndElement(LINKAGE_CHECKER_FILTER_TAG, null));
       writer.add(eventFactory.createEndDocument());
-      writer1.writeEndElement();
+
+      Transformer indentTransformer = TransformerFactory.newInstance().newTransformer();
+      indentTransformer.setOutputProperty(OutputKeys.INDENT, "yes");
+      // This does not work.
+      indentTransformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+
+      indentTransformer.transform(
+          new StreamSource(new StringReader(buffer.toString())),
+          new StreamResult(Files.newOutputStream(outputFile)));
     } finally {
       if (writer != null) {
         writer.close();
