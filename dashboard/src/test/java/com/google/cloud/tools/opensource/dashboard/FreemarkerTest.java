@@ -70,7 +70,7 @@ public class FreemarkerTest {
             "abc.def.G");
     symbolProblemTable =
         ImmutableMap.of(
-            ClassPathEntry.of("com.google:foo:1.0.0", "foo/bar-1.2.3.jar"), dummyProblems);
+            new ClassPathEntry("com.google:foo:1.0.0", "foo/bar-1.2.3.jar"), dummyProblems);
   }
 
   @AfterClass

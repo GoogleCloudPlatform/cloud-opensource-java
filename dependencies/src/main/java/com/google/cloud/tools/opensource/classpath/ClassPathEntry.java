@@ -54,6 +54,11 @@ public final class ClassPathEntry {
     this.artifact = artifact;
   }
 
+  /** An entry for Maven artifact with {@code coordinates} and a JAR file at {@code jarFileName}. */
+  public ClassPathEntry(String coordinates, String jarFileName) {
+    this(new DefaultArtifact(coordinates).setFile(new File(jarFileName)));
+  }
+
   /** Returns the path to JAR file. */
   Path getJar() {
     return jar;
@@ -93,12 +98,6 @@ public final class ClassPathEntry {
     } else {
       return jar.toString();
     }
-  }
-
-  @VisibleForTesting
-  public static ClassPathEntry of(String coordinates, String filePath) {
-    Artifact artifact = new DefaultArtifact(coordinates);
-    return new ClassPathEntry(artifact.setFile(new File(filePath)));
   }
 
   /**

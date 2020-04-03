@@ -106,7 +106,7 @@ public class LinkageMonitorTest {
               "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
               false),
           ErrorType.SYMBOL_NOT_FOUND,
-          new ClassFile(ClassPathEntry.of("foo:b:1.0.0", "foo/b-1.0.0.jar"), "java.lang.Object"));
+          new ClassFile(new ClassPathEntry("foo:b:1.0.0", "foo/b-1.0.0.jar"), "java.lang.Object"));
 
   @Test
   public void generateMessageForNewError() {
