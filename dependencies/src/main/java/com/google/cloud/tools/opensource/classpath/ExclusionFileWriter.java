@@ -104,7 +104,7 @@ class ExclusionFileWriter {
               METHOD_TAG, ImmutableList.of(className, methodName).iterator(), null);
       writer.add(event);
 
-      writer.add(eventFactory.createEndElement("", null, "Method"));
+      writer.add(eventFactory.createEndElement(METHOD_TAG, null));
 
     } else if (symbol instanceof FieldSymbol) {
       FieldSymbol fieldSymbol = (FieldSymbol) symbol;
@@ -126,6 +126,6 @@ class ExclusionFileWriter {
 
     writer.add(
         eventFactory.createStartElement(CLASS_TAG, ImmutableList.of(className).iterator(), null));
-    writer.add(eventFactory.createEndElement("", null, "Class"));
+    writer.add(eventFactory.createEndElement(CLASS_TAG, null));
   }
 }
