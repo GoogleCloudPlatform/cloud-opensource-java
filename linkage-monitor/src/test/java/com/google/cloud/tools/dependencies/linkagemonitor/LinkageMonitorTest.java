@@ -64,21 +64,20 @@ public class LinkageMonitorTest {
   
   private RepositorySystem system;
   private RepositorySystemSession session;
-  private final SymbolProblem classNotFoundProblem =
-      new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
-  private SymbolProblem methodNotFoundProblem;
   
   private Artifact artifactB = new DefaultArtifact("foo:b:1.0.0")
       .setFile(new File("foo/b-1.0.0.jar"));
-  private ClassPathEntry jarB;
+  private ClassPathEntry jarB = new ClassPathEntry(artifactB);
+
+  private SymbolProblem classNotFoundProblem =
+      new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
+  private SymbolProblem methodNotFoundProblem;
 
   @Before
   public void setup() throws IOException {
     system = RepositoryUtility.newRepositorySystem();
     session = RepositoryUtility.newSession(system);
 
-    jarB = new ClassPathEntry(artifactB);
-    
     methodNotFoundProblem =
         new SymbolProblem(
             new MethodSymbol(

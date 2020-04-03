@@ -46,11 +46,9 @@ public class ClassPathEntryTest {
   private Artifact barArtifact =
       new DefaultArtifact("com.google", "bar", null, "jar", "0.0.1", null, barJar.toFile());
 
-  @Test
-  public void testCreationJar() throws IOException {
-    Path jar = Paths.get("foo.jar");
-    ClassPathEntry entry = new ClassPathEntry(jar);
-    assertEquals(jar, entry.getJar());
+  public void testCreationJar() {
+    ClassPathEntry entry = new ClassPathEntry(fooJar);
+    assertEquals(fooJar, entry.getJar());
     assertNull(entry.getArtifact());
   }
 
@@ -78,7 +76,6 @@ public class ClassPathEntryTest {
 
   @Test
   public void testToStringJar() throws IOException {
-    Path fooJar = Paths.get("foo.jar");
     ClassPathEntry entry = new ClassPathEntry(fooJar);
     assertEquals("foo.jar", entry.toString());
   }
