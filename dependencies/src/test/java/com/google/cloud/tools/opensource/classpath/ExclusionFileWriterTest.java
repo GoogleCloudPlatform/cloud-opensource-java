@@ -16,13 +16,12 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.TestHelper.classPathEntryOfResource;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Truth;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,7 +40,7 @@ public class ExclusionFileWriterTest {
     SymbolProblem methodSymbolProblem =
         new SymbolProblem(
             new MethodSymbol(
-                "io.grpc.protobuf.ProtoUtils.marshaller",
+                "io.grpc.protobuf.ProtoUtils",
                 "marshaller",
                 "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
                 false),
@@ -52,16 +51,20 @@ public class ExclusionFileWriterTest {
         new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
     ImmutableSetMultimap<SymbolProblem, ClassFile> linkageErrors =
         ImmutableSetMultimap.of(
-            methodSymbolProblem, new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source1"),
-            classSymbolProblem,  new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source2")
-        );
+            methodSymbolProblem,
+                new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source1"),
+            classSymbolProblem,
+                new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source2"));
     ExclusionFileWriter.write(output, linkageErrors);
 
-    System.out.println("Output" + output);
-
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(output);
-    Truth.assertThat(matchers).hasSize(10);
+    Truth.assertThat(matchers).hasSize(2);
 
+    LinkageErrorMatcher linkageErrorMatcher = matchers.get(0);
+    boolean match =
+        linkageErrorMatcher.match(
+            methodSymbolProblem,
+            new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source1"));
+    assertTrue(match);
   }
-
 }

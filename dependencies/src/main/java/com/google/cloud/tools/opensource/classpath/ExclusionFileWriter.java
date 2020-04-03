@@ -25,6 +25,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
+import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLOutputFactory;
@@ -46,7 +47,7 @@ class ExclusionFileWriter {
 
   static final XMLEventFactory eventFactory = XMLEventFactory.newInstance();
 
-  /** Writes {@code linkageErrors} as exclusion rules into to {@code outputFile}. */
+  /** Writes {@code linkageErrors} as exclusion rules into {@code outputFile}. */
   static void write(Path outputFile, Multimap<SymbolProblem, ClassFile> linkageErrors)
       throws IOException, XMLStreamException {
 
@@ -56,7 +57,8 @@ class ExclusionFileWriter {
           XMLOutputFactory.newInstance().createXMLEventWriter(Files.newOutputStream(outputFile));
 
       writer.add(eventFactory.createStartDocument());
-      writer.add(eventFactory.createStartElement("", null, "LinkageCheckerFilter"));
+      writer.add(
+          eventFactory.createStartElement(QName.valueOf("LinkageCheckerFilter"), null, null));
 
       for (SymbolProblem symbolProblem : linkageErrors.keySet()) {
         for (ClassFile classFile : linkageErrors.get(symbolProblem)) {
@@ -64,7 +66,7 @@ class ExclusionFileWriter {
         }
       }
 
-      writer.add(eventFactory.createEndElement("", null, "LinkageCheckerFilter"));
+      writer.add(eventFactory.createEndElement(QName.valueOf("LinkageCheckerFilter"), null));
       writer.add(eventFactory.createEndDocument());
     } finally {
       if (writer != null) {
@@ -73,47 +75,51 @@ class ExclusionFileWriter {
     }
   }
 
-  static void writeXmlEvents(XMLEventWriter writer, SymbolProblem symbolProblem, ClassFile classFile)
+  static void writeXmlEvents(
+      XMLEventWriter writer, SymbolProblem symbolProblem, ClassFile classFile)
       throws XMLStreamException {
-    writer.add(eventFactory.createStartElement("", null, "LinkageError"));
+    writer.add(eventFactory.createStartElement(QName.valueOf("LinkageError"), null, null));
 
-    writer.add(eventFactory.createStartElement("", null, "Target"));
+    writer.add(eventFactory.createStartElement(QName.valueOf("Target"), null, null));
     writeXmlElement(writer, symbolProblem.getSymbol());
-    writer.add(eventFactory.createStartElement("", null, "Target"));
+    writer.add(eventFactory.createEndElement(QName.valueOf("Target"), null));
 
-    writer.add(eventFactory.createStartElement("", null, "Source"));
+    writer.add(eventFactory.createStartElement(QName.valueOf("Source"), null, null));
     writeXmlElement(writer, classFile);
-    writer.add(eventFactory.createEndElement("", null, "Source"));
+    writer.add(eventFactory.createEndElement(QName.valueOf("Source"), null));
 
-    writer.add(eventFactory.createEndElement("", null, "LinkageError"));
+    writer.add(eventFactory.createEndElement(QName.valueOf("LinkageError"), null));
   }
 
   private static void writeXmlElement(XMLEventWriter writer, Symbol symbol)
       throws XMLStreamException {
     if (symbol instanceof ClassSymbol) {
       Attribute className = eventFactory.createAttribute("name", symbol.getClassBinaryName());
-      StartElement event = eventFactory.createStartElement(
-          "", null, "Class", ImmutableList.of(className).iterator(), null);
+      StartElement event =
+          eventFactory.createStartElement(
+              QName.valueOf("Class"), ImmutableList.of(className).iterator(), null);
       writer.add(event);
 
-      writer.add(eventFactory.createEndElement("", null, "Class"));
+      writer.add(eventFactory.createEndElement(QName.valueOf("Class"), null));
 
     } else if (symbol instanceof MethodSymbol) {
-      MethodSymbol methodSymbol= (MethodSymbol) symbol;
+      MethodSymbol methodSymbol = (MethodSymbol) symbol;
       Attribute className = eventFactory.createAttribute("className", symbol.getClassBinaryName());
       Attribute methodName = eventFactory.createAttribute("name", methodSymbol.getName());
-      StartElement event = eventFactory.createStartElement(
-          "", null, "Method", ImmutableList.of(className, methodName).iterator(), null);
+      StartElement event =
+          eventFactory.createStartElement(
+              QName.valueOf("Method"), ImmutableList.of(className, methodName).iterator(), null);
       writer.add(event);
 
       writer.add(eventFactory.createEndElement("", null, "Method"));
 
     } else if (symbol instanceof FieldSymbol) {
-      FieldSymbol fieldSymbol= (FieldSymbol) symbol;
+      FieldSymbol fieldSymbol = (FieldSymbol) symbol;
       Attribute className = eventFactory.createAttribute("className", symbol.getClassBinaryName());
       Attribute methodName = eventFactory.createAttribute("name", fieldSymbol.getName());
-      StartElement event = eventFactory.createStartElement(
-          "", null, "Field", ImmutableList.of(className, methodName).iterator(), null);
+      StartElement event =
+          eventFactory.createStartElement(
+              QName.valueOf("Field"), ImmutableList.of(className, methodName).iterator(), null);
       writer.add(event);
 
       writer.add(eventFactory.createEndElement("", null, "Field"));
