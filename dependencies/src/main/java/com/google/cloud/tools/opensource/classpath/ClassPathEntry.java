@@ -20,10 +20,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.ClassPath.ClassInfo;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -54,9 +52,9 @@ public final class ClassPathEntry {
     this.artifact = artifact;
   }
 
-  /** An entry for Maven artifact with {@code coordinates} and a JAR file at {@code jarFileName}. */
-  public ClassPathEntry(String coordinates, String jarFileName) {
-    this(new DefaultArtifact(coordinates).setFile(new File(jarFileName)));
+  /** An entry for Maven artifact with {@code coordinates} and {@code jarFile}. */
+  public ClassPathEntry(String coordinates, Path jarFile) {
+    this(new DefaultArtifact(coordinates).setFile(jarFile.toFile()));
   }
 
   /** Returns the path to JAR file. */

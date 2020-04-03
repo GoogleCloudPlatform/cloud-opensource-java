@@ -104,13 +104,17 @@ public class SymbolProblemTest {
             new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"),
             ErrorType.SYMBOL_NOT_FOUND,
             new ClassFile(
-                new ClassPathEntry("com.google:ccc:1.2.3", "ccc-1.2.3.jar"), "java.lang.Integer"));
+                new ClassPathEntry("com.google:ccc:1.2.3", Paths.get("ccc-1.2.3.jar")),
+                "java.lang.Integer"));
 
     ClassFile source1 =
-        new ClassFile(ClassPathEntry.of("com.google:foo:0.0.1", "foo/foo.jar"), "java.lang.Object");
+        new ClassFile(
+            new ClassPathEntry("com.google:foo:0.0.1", Paths.get("foo/foo.jar")),
+            "java.lang.Object");
     ClassFile source2 =
         new ClassFile(
-            new ClassPathEntry("com.google:bar:0.0.1", "bar/bar.jar"), "java.lang.Integer");
+            new ClassPathEntry("com.google:bar:0.0.1", Paths.get("bar/bar.jar")),
+            "java.lang.Integer");
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         ImmutableSetMultimap.of(
