@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
+import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,10 +50,16 @@ class ExclusionFileWriter {
     try {
       writer =
           XMLOutputFactory.newInstance().createXMLEventWriter(Files.newOutputStream(outputFile));
+      IndentingXMLStreamWriter writer1 =  new IndentingXMLStreamWriter(XMLOutputFactory.newInstance().createXMLStreamWriter(Files.newOutputStream(outputFile)));
 
       writer.add(eventFactory.createStartDocument());
+      writer1.writeStartDocument();
 
       writer.add(eventFactory.createStartElement(LINKAGE_CHECKER_FILTER_TAG, null, null));
+      writer1.writeStartElement("LinkageCheckerFilter");
+      writer1.writeEndElement();
+
+
 
       for (SymbolProblem symbolProblem : linkageErrors.keySet()) {
         for (ClassFile classFile : linkageErrors.get(symbolProblem)) {
@@ -62,6 +69,7 @@ class ExclusionFileWriter {
 
       writer.add(eventFactory.createEndElement(LINKAGE_CHECKER_FILTER_TAG, null));
       writer.add(eventFactory.createEndDocument());
+      writer1.writeEndElement();
     } finally {
       if (writer != null) {
         writer.close();

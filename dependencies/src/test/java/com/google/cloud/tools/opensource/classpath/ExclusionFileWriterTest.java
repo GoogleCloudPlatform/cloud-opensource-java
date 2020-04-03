@@ -64,6 +64,7 @@ public class ExclusionFileWriterTest {
             new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source2"),
             classSymbolProblem,
             new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source3"));
+
     ExclusionFileWriter.write(output, linkageErrors);
 
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(output);
