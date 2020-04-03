@@ -138,7 +138,7 @@ public class LinkageChecker {
    * Returns {@link SymbolProblem}s found in the class path and referencing classes for each
    * problem.
    * 
-   * @throws IOException 
+   * @throws IOException I/O error reading files in the classpath
    */
   public ImmutableSetMultimap<SymbolProblem, ClassFile> findSymbolProblems() throws IOException {
     // Having Problem in key will dedup SymbolProblems

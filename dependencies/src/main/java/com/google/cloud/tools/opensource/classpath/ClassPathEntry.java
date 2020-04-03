@@ -111,7 +111,8 @@ public final class ClassPathEntry {
   }
   
   /**
-   * @return the fully qualified names of the classes in this entry's jar file
+   * Returns the fully qualified names of the classes in this entry's jar file.
+   * 
    * @throws IOException if the jar file can't be read
    */
   public ImmutableSet<String> getClassNames() throws IOException {

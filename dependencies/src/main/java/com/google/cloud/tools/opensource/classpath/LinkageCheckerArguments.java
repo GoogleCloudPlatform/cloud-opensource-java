@@ -203,9 +203,9 @@ final class LinkageCheckerArguments {
   /**
    * Returns class path entries for the absolute paths of the files specified in the JAR file
    * option.
+   * 
    * @throws IOException if a jar file could not be read
    */
-  // TODO rename to getClassPath
   ImmutableList<ClassPathEntry> getJarFiles() throws IOException {
     if (commandLine.hasOption("j")) {
       String[] jarFiles = commandLine.getOptionValues("j");

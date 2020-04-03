@@ -46,6 +46,7 @@ public class ClassPathEntryTest {
   private Artifact barArtifact =
       new DefaultArtifact("com.google", "bar", null, "jar", "0.0.1", null, barJar.toFile());
 
+  @Test
   public void testCreationJar() {
     ClassPathEntry entry = new ClassPathEntry(fooJar);
     assertEquals(fooJar, entry.getJar());
