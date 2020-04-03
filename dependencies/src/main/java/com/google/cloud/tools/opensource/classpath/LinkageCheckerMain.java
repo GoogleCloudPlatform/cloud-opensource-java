@@ -102,7 +102,6 @@ class LinkageCheckerMain {
         } else {
           outputLinkageErrorsAsExclusionFile(writeAsExclusionFile);
         }
-    
 
         if (classPathResult != null && !symbolProblems.isEmpty()) {
           Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
@@ -128,7 +127,5 @@ class LinkageCheckerMain {
     }
   }
 
-  static void outputLinkageErrorsAsExclusionFile(Path output) throws IOException {
-
-  }
+  static void outputLinkageErrorsAsExclusionFile(Path output) throws IOException {}
 }

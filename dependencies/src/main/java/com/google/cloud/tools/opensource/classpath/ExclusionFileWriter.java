@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.thaiopensource.xml.sax.DraconianErrorHandler;
 import java.io.IOException;
@@ -25,11 +24,13 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Iterator;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.events.XMLEvent;
+import javax.xml.stream.events.Attribute;
+import javax.xml.stream.events.StartElement;
 import org.iso_relax.verifier.Schema;
 import org.iso_relax.verifier.Verifier;
 import org.iso_relax.verifier.VerifierConfigurationException;
@@ -40,43 +41,93 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-/**
- * Writer for Linkage Checker exclusion files.
- */
+/** Writer for Linkage Checker exclusion files. */
 class ExclusionFileWriter {
 
-  static void write(Path output, Multimap<SymbolProblem, ClassFile> linkageErrors)
-      throws IOException, XMLStreamException {
+  static final XMLEventFactory eventFactory = XMLEventFactory.newInstance();
 
-    XMLEventFactory  eventFactory = XMLEventFactory.newInstance();
+  /** Writes {@code linkageErrors} as exclusion rules into to {@code outputFile}. */
+  static void write(Path outputFile, Multimap<SymbolProblem, ClassFile> linkageErrors)
+      throws IOException, XMLStreamException {
 
     XMLEventWriter writer = null;
     try {
-      writer = XMLOutputFactory.newInstance()
-          .createXMLEventWriter(Files.newOutputStream(output));
+      writer =
+          XMLOutputFactory.newInstance().createXMLEventWriter(Files.newOutputStream(outputFile));
 
       writer.add(eventFactory.createStartDocument());
+      writer.add(eventFactory.createStartElement("", null, "LinkageCheckerFilter"));
 
-      for (SymbolProblem symbolProblem : linkageErrors) {
-        for (ClassFile classFile: linkageErrors.get(symbolProblem)) {
-
+      for (SymbolProblem symbolProblem : linkageErrors.keySet()) {
+        for (ClassFile classFile : linkageErrors.get(symbolProblem)) {
+          writeXmlEvents(writer, symbolProblem, classFile);
         }
       }
-      linkageErrors.forEach(((symbolProblem, classFile) ->{
-        XMLEvent linkageError = eventFactory.createStartElement("LinkageError",
-            null, null);
-        writer.add(linkageError);
-      }));
 
+      writer.add(eventFactory.createEndElement("", null, "LinkageCheckerFilter"));
       writer.add(eventFactory.createEndDocument());
-
-    } finally{
+    } finally {
       if (writer != null) {
         writer.close();
       }
     }
+  }
 
+  static void writeXmlEvents(XMLEventWriter writer, SymbolProblem symbolProblem, ClassFile classFile)
+      throws XMLStreamException {
+    writer.add(eventFactory.createStartElement("", null, "LinkageError"));
 
+    writer.add(eventFactory.createStartElement("", null, "Target"));
+    writeXmlElement(writer, symbolProblem.getSymbol());
+    writer.add(eventFactory.createStartElement("", null, "Target"));
+
+    writer.add(eventFactory.createStartElement("", null, "Source"));
+    writeXmlElement(writer, classFile);
+    writer.add(eventFactory.createEndElement("", null, "Source"));
+
+    writer.add(eventFactory.createEndElement("", null, "LinkageError"));
+  }
+
+  private static void writeXmlElement(XMLEventWriter writer, Symbol symbol)
+      throws XMLStreamException {
+    if (symbol instanceof ClassSymbol) {
+      Attribute className = eventFactory.createAttribute("name", symbol.getClassBinaryName());
+      StartElement event = eventFactory.createStartElement(
+          "", null, "Class", ImmutableList.of(className).iterator(), null);
+      writer.add(event);
+
+      writer.add(eventFactory.createEndElement("", null, "Class"));
+
+    } else if (symbol instanceof MethodSymbol) {
+      MethodSymbol methodSymbol= (MethodSymbol) symbol;
+      Attribute className = eventFactory.createAttribute("className", symbol.getClassBinaryName());
+      Attribute methodName = eventFactory.createAttribute("name", methodSymbol.getName());
+      StartElement event = eventFactory.createStartElement(
+          "", null, "Method", ImmutableList.of(className, methodName).iterator(), null);
+      writer.add(event);
+
+      writer.add(eventFactory.createEndElement("", null, "Method"));
+
+    } else if (symbol instanceof FieldSymbol) {
+      FieldSymbol fieldSymbol= (FieldSymbol) symbol;
+      Attribute className = eventFactory.createAttribute("className", symbol.getClassBinaryName());
+      Attribute methodName = eventFactory.createAttribute("name", fieldSymbol.getName());
+      StartElement event = eventFactory.createStartElement(
+          "", null, "Field", ImmutableList.of(className, methodName).iterator(), null);
+      writer.add(event);
+
+      writer.add(eventFactory.createEndElement("", null, "Field"));
+    }
+  }
+
+  private static void writeXmlElement(XMLEventWriter writer, ClassFile classFile)
+      throws XMLStreamException {
+    Attribute className = eventFactory.createAttribute("name", classFile.getBinaryName());
+
+    writer.add(
+        eventFactory.createStartElement(
+            "", null, "Class", ImmutableList.of(className).iterator(), (Iterator) null));
+    writer.add(eventFactory.createEndElement("", null, "Class"));
   }
 
   static ImmutableList<LinkageErrorMatcher> parse(Path exclusionFile)
