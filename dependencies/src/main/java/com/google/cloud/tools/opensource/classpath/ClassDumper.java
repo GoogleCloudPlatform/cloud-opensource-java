@@ -93,7 +93,7 @@ class ClassDumper {
 
   private ClassDumper(
       List<ClassPathEntry> inputClassPath,
-      ClassLoader extensionClassLoader) {
+      ClassLoader extensionClassLoader) throws IOException {
     this.inputClassPath = ImmutableList.copyOf(inputClassPath);
     this.classRepository = createClassRepository(inputClassPath);
     this.extensionClassLoader = extensionClassLoader;

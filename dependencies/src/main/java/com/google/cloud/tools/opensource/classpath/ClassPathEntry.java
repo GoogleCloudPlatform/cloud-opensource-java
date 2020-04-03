@@ -20,10 +20,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.ClassPath.ClassInfo;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -31,7 +29,6 @@ import java.nio.file.Path;
 import java.util.Objects;
 import org.apache.bcel.classfile.JavaClass;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.DefaultArtifact;
 
 /** An entry in a class path. */
 public final class ClassPathEntry {
@@ -39,27 +36,18 @@ public final class ClassPathEntry {
   private Path jar;
   private Artifact artifact;
   private ImmutableSet<String> classFileNames;
-  
-  @VisibleForTesting
-  // TODO this can be inlined. It's only used in tests.
-  public static ClassPathEntry of(String coordinates, String filePath) throws IOException {
-    Artifact artifact = new DefaultArtifact(coordinates);
-    return new ClassPathEntry(artifact.setFile(new File(filePath)));
-  }
 
   /** An entry for a JAR file without Maven coordinates. */
-  ClassPathEntry(Path jar) throws IOException {
+  ClassPathEntry(Path jar) {
     this.jar = checkNotNull(jar);
-    classFileNames = readClassFileNames(jar);
   }
 
   /** 
    * An entry for a Maven artifact. 
    * 
-   * @throws IOException if the artifact's jar file can't be read
    * @throws NullPointerException if the artifact does not have a file
    */
-  public ClassPathEntry(Artifact artifact) throws IOException {
+  public ClassPathEntry(Artifact artifact) {
     this(artifact.getFile().toPath());
     this.artifact = artifact;
   }
@@ -104,13 +92,13 @@ public final class ClassPathEntry {
       return jar.toString();
     }
   }
-  
+
   /**
    * Returns a list of class file names in {@link #jar} as in {@link JavaClass#getFileName()}. This
    * class file name is usually a fully qualified class name. However a class file name may have a
    * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
    */
-  private static ImmutableSet<String> readClassFileNames(Path jar) throws IOException {
+  private ImmutableSet<String> readClassFileNames() throws IOException {
     URL jarUrl = jar.toUri().toURL();
     // Setting parent as null because we don't want other classes than this jar file
     URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[] {jarUrl}, null);
@@ -125,7 +113,12 @@ public final class ClassPathEntry {
   /**
    * @return the fully qualified names of the classes in this entry's jar file
    */
-  public ImmutableSet<String> getClassNames() {
-    return classFileNames;
+  public ImmutableSet<String> getClassNames() throws IOException {
+    synchronized (classFileNames) { 
+      if (classFileNames == null) {
+        readClassFileNames();
+      }
+      return classFileNames;
+    }
   }
 }

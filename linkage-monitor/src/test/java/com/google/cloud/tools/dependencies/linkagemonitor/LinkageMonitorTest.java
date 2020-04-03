@@ -43,6 +43,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Truth;
 import java.io.IOException;
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -52,6 +53,7 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.building.ModelBuildingException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
@@ -65,11 +67,17 @@ public class LinkageMonitorTest {
   private final SymbolProblem classNotFoundProblem =
       new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
   private SymbolProblem methodNotFoundProblem;
+  
+  private Artifact artifactB = new DefaultArtifact("foo:b:1.0.0")
+      .setFile(new File("foo/b-1.0.0.jar"));
+  private ClassPathEntry jarB;
 
   @Before
   public void setup() throws IOException {
     system = RepositoryUtility.newRepositorySystem();
     session = RepositoryUtility.newSession(system);
+
+    jarB = new ClassPathEntry(artifactB);
     
     methodNotFoundProblem =
         new SymbolProblem(
@@ -79,7 +87,7 @@ public class LinkageMonitorTest {
                 "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
                 false),
             ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(ClassPathEntry.of("foo:b:1.0.0", "foo/b-1.0.0.jar"), "java.lang.Object"));
+            new ClassFile(jarB, "java.lang.Object"));
   }
 
   @Test
@@ -113,8 +121,10 @@ public class LinkageMonitorTest {
   @Test
   public void generateMessageForNewError() throws IOException {
     Set<SymbolProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
-    ClassPathEntry jarA = ClassPathEntry.of("foo:a:1.2.3", "foo/a-1.2.3.jar");
-    ClassPathEntry jarB = ClassPathEntry.of("foo:b:1.0.0", "foo/b-1.0.0.jar");
+    
+    Artifact artifactA = new DefaultArtifact("foo:a:1.2.3").setFile(new File("foo/a-1.2.3.jar"));
+    ClassPathEntry jarA = new ClassPathEntry(artifactA);
+    
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotProblems =
         ImmutableSetMultimap.of(
             classNotFoundProblem, // This is in baseline. It should not be printed

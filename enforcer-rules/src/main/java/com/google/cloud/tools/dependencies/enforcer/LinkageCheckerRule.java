@@ -322,17 +322,13 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     if (rootFile == null) {
       throw new EnforcerRuleException("The root project artifact is not associated with a file.");
     }
-    try {
-      builder.add(new ClassPathEntry(result.getDependencyGraph().getArtifact()));
-      // The rest are the dependencies
-      for (Dependency dependency : result.getResolvedDependencies()) {
-        // Resolved dependencies are guaranteed to have files.
-        builder.add(new ClassPathEntry(dependency.getArtifact()));
-      }
-      return builder.build();
-    } catch (IOException ex) {
-      throw new EnforcerRuleException("Error reading JAR file", ex);
+    builder.add(new ClassPathEntry(result.getDependencyGraph().getArtifact()));
+    // The rest are the dependencies
+    for (Dependency dependency : result.getResolvedDependencies()) {
+      // Resolved dependencies are guaranteed to have files.
+      builder.add(new ClassPathEntry(dependency.getArtifact()));
     }
+    return builder.build();
   }
 
   /** Builds a class path for {@code bomProject}. */

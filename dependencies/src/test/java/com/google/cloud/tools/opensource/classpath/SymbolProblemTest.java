@@ -24,8 +24,11 @@ import com.google.common.testing.EqualsTester;
 import com.google.common.testing.NullPointerTester;
 import com.google.common.testing.NullPointerTester.Visibility;
 import java.io.IOException;
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Test;
 
 public class SymbolProblemTest {
@@ -100,18 +103,25 @@ public class SymbolProblemTest {
     SymbolProblem classSymbolProblem =
         new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
 
+    Artifact artifact = new DefaultArtifact("com.google:ccc:1.2.3")
+        .setFile(new File("ccc-1.2.3.jar"));
+    ClassPathEntry entry = new ClassPathEntry(artifact);  
+  
     SymbolProblem fieldSymbolProblem =
         new SymbolProblem(
             new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"),
             ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(
-                ClassPathEntry.of("com.google:ccc:1.2.3", "ccc-1.2.3.jar"), "java.lang.Integer"));
+            new ClassFile(entry, "java.lang.Integer"));
 
-    ClassFile source1 =
-        new ClassFile(ClassPathEntry.of("com.google:foo:0.0.1", "foo/foo.jar"), "java.lang.Object");
-    ClassFile source2 =
-        new ClassFile(
-            ClassPathEntry.of("com.google:bar:0.0.1", "bar/bar.jar"), "java.lang.Integer");
+    Artifact artifact1 = new DefaultArtifact("com.google:foo:0.0.1")
+        .setFile(new File("foo/foo.jar"));
+    ClassPathEntry entry1 = new ClassPathEntry(artifact1);  
+    ClassFile source1 = new ClassFile(entry1, "java.lang.Object");
+
+    Artifact artifact2 = new DefaultArtifact("com.google:bar:0.0.1")
+        .setFile(new File("bar/bar.jar"));
+    ClassPathEntry entry2 = new ClassPathEntry(artifact2);  
+    ClassFile source2 = new ClassFile(entry2, "java.lang.Integer");
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         ImmutableSetMultimap.of(

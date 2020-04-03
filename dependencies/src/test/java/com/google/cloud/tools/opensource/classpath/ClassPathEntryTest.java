@@ -39,8 +39,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class ClassPathEntryTest {
-  Path fooJar = Paths.get("foo.jar");
-  Path barJar = Paths.get("bar.jar");
+  private Path fooJar = Paths.get("foo.jar");
+  private Path barJar = Paths.get("bar.jar");
   private Artifact fooArtifact =
       new DefaultArtifact("com.google", "foo", null, "jar", "0.0.1", null, fooJar.toFile());
   private Artifact barArtifact =
