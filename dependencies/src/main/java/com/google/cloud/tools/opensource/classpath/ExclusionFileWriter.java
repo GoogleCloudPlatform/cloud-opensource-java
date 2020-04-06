@@ -18,9 +18,9 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.xml.namespace.QName;
@@ -55,7 +55,8 @@ class ExclusionFileWriter {
       throws IOException, XMLStreamException, TransformerException {
     XMLEventWriter writer = null;
     try {
-      StringWriter buffer = new StringWriter();
+      ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
       writer = XMLOutputFactory.newInstance().createXMLEventWriter(buffer);
 
       writer.add(eventFactory.createStartDocument());
@@ -71,13 +72,29 @@ class ExclusionFileWriter {
       writer.add(eventFactory.createEndElement(LINKAGE_CHECKER_FILTER_TAG, null));
       writer.add(eventFactory.createEndDocument());
 
-      Transformer indentTransformer = TransformerFactory.newInstance().newTransformer();
+      if (System.getProperty("javax.xml.transform.TransformerFactory") == null) {
+        try {
+          // Prefer Open JDK's default Transformer, rather than the one in net.sf.saxon:Saxon-HE.
+          String openJdkDefaultTransformerClassName =
+              "com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl";
+          Class.forName(openJdkDefaultTransformerClassName);
+          System.setProperty(
+              "javax.xml.transform.TransformerFactory", openJdkDefaultTransformerClassName);
+        } catch (ClassNotFoundException ex) {
+          // If the runtime is not OpenJDK, let Java runtime find available TransformerFactory.
+        }
+      }
+
+      TransformerFactory transformerFactory = TransformerFactory.newInstance();
+      Transformer indentTransformer = transformerFactory.newTransformer();
       indentTransformer.setOutputProperty(OutputKeys.INDENT, "yes");
-      // This does not work.
+      // OpenJDK's default Transformer recognizes this property
       indentTransformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+      // Add new line character after doctype declaration
+      indentTransformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "yes");
 
       indentTransformer.transform(
-          new StreamSource(new StringReader(buffer.toString())),
+          new StreamSource(new ByteArrayInputStream(buffer.toByteArray())),
           new StreamResult(Files.newOutputStream(outputFile)));
     } finally {
       if (writer != null) {
