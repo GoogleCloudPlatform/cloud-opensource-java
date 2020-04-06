@@ -17,10 +17,11 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Test;
@@ -33,11 +34,13 @@ public class DependencyGraphBuilderIntegrationTest {
           "has artifact");
 
   @Test
-  public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral() {
+  public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral()
+      throws IOException {
+
     DependencyGraphBuilder graphBuilder = 
         new DependencyGraphBuilder(ImmutableList.of("https://dl.google.com/dl/android/maven2"));
 
-    File localRepository = Files.createTempDir();
+    File localRepository = Files.createTempDirectory(".m2").toFile();
     localRepository.deleteOnExit();
 
     graphBuilder.setLocalRepository(localRepository.toPath());

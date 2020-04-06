@@ -156,6 +156,8 @@ public final class DependencyGraphBuilder {
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
    * versions, and dependencies with 'provided' scope.
+   * In the event of I/O errors, missing artifacts, and other problems, it can
+   * return an incomplete graph.
    *
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
@@ -170,6 +172,9 @@ public final class DependencyGraphBuilder {
    * Builds the transitive dependency graph as seen by Maven. It does not include duplicates and
    * conflicting versions. That is, this resolves conflicting versions by picking the first version
    * seen. This is how Maven normally operates.
+   * 
+   * In the event of I/O errors, missing artifacts, and other problems, it can
+   * return an incomplete graph.
    */
   public DependencyGraphResult buildMavenDependencyGraph(Dependency dependency) {
     return buildDependencyGraph(
