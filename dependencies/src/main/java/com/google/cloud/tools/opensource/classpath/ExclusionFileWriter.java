@@ -21,6 +21,7 @@ import com.google.common.collect.Multimap;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.xml.namespace.QName;
@@ -93,9 +94,11 @@ class ExclusionFileWriter {
       // Add new line character after doctype declaration
       indentTransformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "yes");
 
-      indentTransformer.transform(
-          new StreamSource(new ByteArrayInputStream(buffer.toByteArray())),
-          new StreamResult(Files.newOutputStream(outputFile)));
+      try (OutputStream outputStream = Files.newOutputStream(outputFile)) {
+        indentTransformer.transform(
+            new StreamSource(new ByteArrayInputStream(buffer.toByteArray())),
+            new StreamResult(outputStream));
+      }
     } finally {
       if (writer != null) {
         writer.close();
