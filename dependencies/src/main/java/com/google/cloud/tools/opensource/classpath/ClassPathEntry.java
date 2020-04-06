@@ -98,7 +98,7 @@ public final class ClassPathEntry {
    * class file name is usually a fully qualified class name. However a class file name may have a
    * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
    */
-  private ImmutableSet<String> readClassFileNames() throws IOException {
+  private void readClassFileNames() throws IOException {
     URL jarUrl = jar.toUri().toURL();
     // Setting parent as null because we don't want other classes than this jar file
     URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[] {jarUrl}, null);
@@ -107,7 +107,7 @@ public final class ClassPathEntry {
     com.google.common.reflect.ClassPath classPath =
         com.google.common.reflect.ClassPath.from(classLoaderFromJar);
 
-    return classPath.getAllClasses().stream().map(ClassInfo::getName).collect(toImmutableSet());
+    classFileNames = classPath.getAllClasses().stream().map(ClassInfo::getName).collect(toImmutableSet());
   }
   
   /**
@@ -115,12 +115,10 @@ public final class ClassPathEntry {
    * 
    * @throws IOException if the jar file can't be read
    */
-  public ImmutableSet<String> getClassNames() throws IOException {
-    synchronized (classFileNames) { 
-      if (classFileNames == null) {
-        readClassFileNames();
-      }
-      return classFileNames;
+  public synchronized ImmutableSet<String> getClassNames() throws IOException {
+    if (classFileNames == null) {
+      readClassFileNames();
     }
+    return classFileNames;
   }
 }
