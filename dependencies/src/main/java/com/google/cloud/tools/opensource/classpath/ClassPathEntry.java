@@ -107,7 +107,8 @@ public final class ClassPathEntry {
     com.google.common.reflect.ClassPath classPath =
         com.google.common.reflect.ClassPath.from(classLoaderFromJar);
 
-    classFileNames = classPath.getAllClasses().stream().map(ClassInfo::getName).collect(toImmutableSet());
+    ImmutableSet<ClassInfo> allClasses = classPath.getAllClasses();
+    classFileNames = allClasses.stream().map(ClassInfo::getName).collect(toImmutableSet());
   }
   
   /**
