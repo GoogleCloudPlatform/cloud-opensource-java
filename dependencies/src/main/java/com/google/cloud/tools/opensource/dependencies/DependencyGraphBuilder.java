@@ -22,9 +22,11 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Queue;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -33,6 +35,7 @@ import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
@@ -74,6 +77,7 @@ public final class DependencyGraphBuilder {
 
   /** Maven Repositories to use when resolving dependencies. */
   private final ImmutableList<RemoteRepository> repositories;
+  private Path localRepository;
 
   static {
     OsProperties.detectOsProperties().forEach(System::setProperty);
@@ -95,7 +99,14 @@ public final class DependencyGraphBuilder {
     }
     this.repositories = repositoryListBuilder.build();
   }
-
+  
+  /**
+   * Enable temporary repositories for tests.
+   */
+  void setLocalRepository(Path localRepository) {
+    this.localRepository = localRepository;
+  }
+  
   private DependencyNode resolveCompileTimeDependencies(
       List<DependencyNode> dependencyNodes, boolean fullDependencies)
       throws DependencyResolutionException {
@@ -113,10 +124,15 @@ public final class DependencyGraphBuilder {
     }
     ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
 
-    RepositorySystemSession session =
+    DefaultRepositorySystemSession session =
         fullDependencies
             ? RepositoryUtility.newSessionForFullDependency(system)
             : RepositoryUtility.newSession(system);
+            
+    if (localRepository != null) {
+      LocalRepository local = new LocalRepository(localRepository.toAbsolutePath().toString());
+      session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, local));
+    }
 
     CollectRequest collectRequest = new CollectRequest();
     if (dependencyList.size() == 1) {
@@ -140,6 +156,8 @@ public final class DependencyGraphBuilder {
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
    * versions, and dependencies with 'provided' scope.
+   * In the event of I/O errors, missing artifacts, and other problems, it can
+   * return an incomplete graph.
    *
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
@@ -154,6 +172,9 @@ public final class DependencyGraphBuilder {
    * Builds the transitive dependency graph as seen by Maven. It does not include duplicates and
    * conflicting versions. That is, this resolves conflicting versions by picking the first version
    * seen. This is how Maven normally operates.
+   * 
+   * In the event of I/O errors, missing artifacts, and other problems, it can
+   * return an incomplete graph.
    */
   public DependencyGraphResult buildMavenDependencyGraph(Dependency dependency) {
     return buildDependencyGraph(
