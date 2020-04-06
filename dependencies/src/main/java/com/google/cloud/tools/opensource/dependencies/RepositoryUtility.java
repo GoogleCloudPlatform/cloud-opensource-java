@@ -122,9 +122,8 @@ public final class RepositoryUtility {
    * customary ~/.m2 directory. If not found, it creates an initially empty repository in
    * a temporary location.
    */
-  public static RepositorySystemSession newSession(RepositorySystem system) {
+  public static DefaultRepositorySystemSession newSession(RepositorySystem system) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
-    session.setReadOnly();
     return session;
   }
 
@@ -133,7 +132,7 @@ public final class RepositoryUtility {
    *
    * @see {@link DependencyGraphBuilder}
    */
-  static RepositorySystemSession newSessionForFullDependency(RepositorySystem system) {
+  static DefaultRepositorySystemSession newSessionForFullDependency(RepositorySystem system) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
 
     // This combination of DependencySelector comes from the default specified in
@@ -160,21 +159,24 @@ public final class RepositoryUtility {
     // No dependency management in the full dependency graph
     session.setDependencyManager(null);
 
-    session.setReadOnly();
-
     return session;
   }
 
   private static File findLocalRepository() {
+    // TODO is there Maven code for this?
     Path home = Paths.get(System.getProperty("user.home"));
     Path localRepo = home.resolve(".m2").resolve("repository");
     if (Files.isDirectory(localRepo)) {
       return localRepo.toFile();
     } else {
-      File temporaryDirectory = com.google.common.io.Files.createTempDir();
-      temporaryDirectory.deleteOnExit();
-      return temporaryDirectory; 
+      return makeTemporaryLocalRepository(); 
    }
+  }
+
+  private static File makeTemporaryLocalRepository() {
+    File temporaryDirectory = com.google.common.io.Files.createTempDir();
+    temporaryDirectory.deleteOnExit();
+    return temporaryDirectory;
   }
 
   // TODO arguably this now belongs in the BOM class
