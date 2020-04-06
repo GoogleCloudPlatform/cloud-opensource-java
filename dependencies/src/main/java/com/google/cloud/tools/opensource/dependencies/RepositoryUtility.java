@@ -24,6 +24,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -112,7 +113,7 @@ public final class RepositoryUtility {
   static DefaultRepositorySystemSession createDefaultRepositorySystemSession(
       RepositorySystem system) {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
-    LocalRepository localRepository = new LocalRepository(findLocalRepository().getAbsolutePath());
+    LocalRepository localRepository = new LocalRepository(findLocalRepository());
     session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
     return session;
   }
@@ -162,21 +163,25 @@ public final class RepositoryUtility {
     return session;
   }
 
-  private static File findLocalRepository() {
+  private static String findLocalRepository() {
     // TODO is there Maven code for this?
     Path home = Paths.get(System.getProperty("user.home"));
     Path localRepo = home.resolve(".m2").resolve("repository");
     if (Files.isDirectory(localRepo)) {
-      return localRepo.toFile();
+      return localRepo.toAbsolutePath().toString();
     } else {
       return makeTemporaryLocalRepository(); 
    }
   }
 
-  private static File makeTemporaryLocalRepository() {
-    File temporaryDirectory = com.google.common.io.Files.createTempDir();
-    temporaryDirectory.deleteOnExit();
-    return temporaryDirectory;
+  private static String makeTemporaryLocalRepository() {
+    try {
+      File temporaryDirectory = Files.createTempDirectory("m2").toFile();
+      temporaryDirectory.deleteOnExit();
+      return temporaryDirectory.getAbsolutePath();
+    } catch (IOException ex) {
+      return null;
+    }
   }
 
   // TODO arguably this now belongs in the BOM class
