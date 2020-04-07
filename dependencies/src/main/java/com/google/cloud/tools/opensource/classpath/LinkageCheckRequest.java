@@ -25,7 +25,12 @@ import java.nio.file.Path;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
 
-/** Request to run Linkage Check. */
+/**
+ * Request to run Linkage Check for {@link #classPath}.
+ *
+ * <p>The check should suppress linkage errors that match {@link #excludedErrors}. When {@link
+ * #reportOnlyReachable}, it also suppress, classes not reachable from {@link #entryPoints}.
+ */
 public class LinkageCheckRequest {
 
   private final ImmutableList<ClassPathEntry> classPath;
@@ -33,9 +38,7 @@ public class LinkageCheckRequest {
   private final ImmutableSet<ClassPathEntry> entryPoints;
   private boolean reportOnlyReachable;
 
-  /**
-   * Returns class path to find linkage errors in.
-   */
+  /** Returns class path to find linkage errors in. */
   ImmutableList<ClassPathEntry> getClassPath() {
     return classPath;
   }
@@ -52,6 +55,7 @@ public class LinkageCheckRequest {
     return entryPoints;
   }
 
+  /** Returns true if the check should suppresses linkage errors from unreachable classes. */
   boolean reportOnlyReachable() {
     return reportOnlyReachable;
   }

@@ -58,11 +58,6 @@ public class LinkageChecker {
     return classToSymbols;
   }
 
-  @VisibleForTesting
-  static LinkageChecker create(List<ClassPathEntry> classPath) throws IOException {
-    return create(classPath, ImmutableSet.copyOf(classPath), ExcludedErrors.create(null));
-  }
-
   /**
    * Returns Linkage Checker for {@code classPath}.
    *
@@ -88,25 +83,8 @@ public class LinkageChecker {
         dumper, classPath, symbolReferenceMaps, classReferenceGraph, excludedErrors);
   }
 
-  /**
-   * Returns LinkageChecker that has artificial class-to-symbol relationship of {@code
-   * newSymbolMaps}.
-   */
   @VisibleForTesting
-  static LinkageChecker create(List<ClassPathEntry> classPath, SymbolReferenceMaps newSymbolMaps)
-      throws IOException {
-    LinkageChecker linkageChecker =
-        create(classPath, ImmutableSet.copyOf(classPath), ExcludedErrors.create(null));
-
-    return new LinkageChecker(
-        linkageChecker.classDumper,
-        classPath,
-        newSymbolMaps,
-        linkageChecker.classReferenceGraph,
-        linkageChecker.excludedErrors);
-  }
-
-  private LinkageChecker(
+  LinkageChecker(
       ClassDumper classDumper,
       List<ClassPathEntry> classPath,
       SymbolReferenceMaps symbolReferenceMaps,

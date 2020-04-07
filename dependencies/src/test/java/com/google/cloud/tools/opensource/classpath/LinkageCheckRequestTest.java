@@ -69,7 +69,7 @@ public class LinkageCheckRequestTest {
     ImmutableList<ClassPathEntry> classPath = request.getClassPath();
     Truth.assertThat(classPath).hasSize(271);
 
-    // This is the Maven artifacts in the BOM
+    // They are the Maven artifacts in the BOM
     ImmutableSet<ClassPathEntry> entryPoints = request.getEntryPoints();
     Truth.assertThat(entryPoints).hasSize(187);
 

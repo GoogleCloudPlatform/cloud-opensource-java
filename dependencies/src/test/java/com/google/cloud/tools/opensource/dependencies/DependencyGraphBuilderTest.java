@@ -211,7 +211,7 @@ public class DependencyGraphBuilderTest {
 
   @Test
   public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral() {
-    DependencyGraphBuilder graphBuilder = 
+    DependencyGraphBuilder graphBuilder =
         new DependencyGraphBuilder(ImmutableList.of("https://dl.google.com/dl/android/maven2"));
 
     // This artifact does not exist in Android's repository
