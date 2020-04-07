@@ -94,9 +94,15 @@ class ExclusionFileWriter {
       // Add new line character after doctype declaration
       indentTransformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "yes");
 
+      byte[] bytes = buffer.toByteArray();
+      System.out.println("bytes length:" + bytes.length);
+      System.out.println("XML input: " + new String(bytes));
+      ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+      System.out.println("InputStream available: " + inputStream.available());
+      StreamSource source = new StreamSource(inputStream);
       try (OutputStream outputStream = Files.newOutputStream(outputFile)) {
         indentTransformer.transform(
-            new StreamSource(new ByteArrayInputStream(buffer.toByteArray())),
+            source,
             new StreamResult(outputStream));
       }
     } finally {
