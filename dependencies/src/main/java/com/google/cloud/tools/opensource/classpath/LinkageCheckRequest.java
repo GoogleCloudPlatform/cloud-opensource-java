@@ -56,7 +56,7 @@ public class LinkageCheckRequest {
     return entryPoints;
   }
 
-  /** Returns true if the check should suppresses linkage errors from unreachable classes. */
+  /** Returns true if the check should suppress linkage errors from unreachable classes. */
   boolean reportOnlyReachable() {
     return reportOnlyReachable;
   }
