@@ -24,6 +24,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -112,7 +113,7 @@ public final class RepositoryUtility {
   static DefaultRepositorySystemSession createDefaultRepositorySystemSession(
       RepositorySystem system) {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
-    LocalRepository localRepository = new LocalRepository(findLocalRepository().getAbsolutePath());
+    LocalRepository localRepository = new LocalRepository(findLocalRepository());
     session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
     return session;
   }
@@ -121,9 +122,8 @@ public final class RepositoryUtility {
    * Opens a new Maven repository session that looks for the local repository in the customary ~/.m2
    * directory. If not found, it creates an initially empty repository in a temporary location.
    */
-  public static RepositorySystemSession newSession(RepositorySystem system) {
+  public static DefaultRepositorySystemSession newSession(RepositorySystem system) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
-    session.setReadOnly();
     return session;
   }
 
@@ -132,7 +132,7 @@ public final class RepositoryUtility {
    *
    * @see {@link DependencyGraphBuilder}
    */
-  static RepositorySystemSession newSessionForFullDependency(RepositorySystem system) {
+  static DefaultRepositorySystemSession newSessionForFullDependency(RepositorySystem system) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
 
     // This combination of DependencySelector comes from the default specified in
@@ -159,20 +159,27 @@ public final class RepositoryUtility {
     // No dependency management in the full dependency graph
     session.setDependencyManager(null);
 
-    session.setReadOnly();
-
     return session;
   }
 
-  private static File findLocalRepository() {
+  private static String findLocalRepository() {
+    // TODO is there Maven code for this?
     Path home = Paths.get(System.getProperty("user.home"));
     Path localRepo = home.resolve(".m2").resolve("repository");
     if (Files.isDirectory(localRepo)) {
-      return localRepo.toFile();
+      return localRepo.toAbsolutePath().toString();
     } else {
-      File temporaryDirectory = com.google.common.io.Files.createTempDir();
+      return makeTemporaryLocalRepository();
+   }
+  }
+
+  private static String makeTemporaryLocalRepository() {
+    try {
+      File temporaryDirectory = Files.createTempDirectory("m2").toFile();
       temporaryDirectory.deleteOnExit();
-      return temporaryDirectory;
+      return temporaryDirectory.getAbsolutePath();
+    } catch (IOException ex) {
+      return null;
     }
   }
 
