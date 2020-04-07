@@ -32,6 +32,7 @@ import java.nio.file.Paths;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.TransformerException;
 import org.iso_relax.verifier.VerifierConfigurationException;
+import org.junit.Before;
 import org.junit.Test;
 import org.xml.sax.SAXException;
 
@@ -64,14 +65,24 @@ public class ExclusionFileWriterTest {
           classSymbolProblem,
           new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source3"));
 
+  private Path output;
+
+  @Before
+  public void setup() throws IOException {
+    output = Files.createTempFile("output", ".xml");
+    output.toFile().deleteOnExit();
+  }
+
   @Test
   public void testExclusionFileCreation()
       throws IOException, XMLStreamException, VerifierConfigurationException, SAXException,
           TransformerException {
-
-    Path output = Files.createTempFile("output", ".xml");
-
-    ExclusionFileWriter.write(output, linkageErrors);
+    try {
+      ExclusionFileWriter.write(output, linkageErrors);
+    } catch (Throwable e) {
+      e.printStackTrace();
+      throw e;
+    }
 
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(output);
     Truth.assertThat(matchers).hasSize(3);
@@ -103,11 +114,7 @@ public class ExclusionFileWriterTest {
       throws IOException, XMLStreamException, VerifierConfigurationException, SAXException,
           TransformerException, URISyntaxException {
 
-    Path output = Files.createTempFile("output", ".xml");
-
     ExclusionFileWriter.write(output, linkageErrors);
-
-    ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(output);
 
     String actual = new String(Files.readAllBytes(output));
 
