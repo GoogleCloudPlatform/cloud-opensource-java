@@ -54,14 +54,13 @@ class ExclusionFileWriter {
   /** Writes {@code linkageErrors} as exclusion rules into {@code outputFile}. */
   static void write(Path outputFile, Multimap<SymbolProblem, ClassFile> linkageErrors)
       throws IOException, XMLStreamException, TransformerException {
+
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     XMLEventWriter writer = null;
     try {
-      ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-
       writer = XMLOutputFactory.newInstance().createXMLEventWriter(buffer);
 
       writer.add(eventFactory.createStartDocument());
-
       writer.add(eventFactory.createStartElement(LINKAGE_CHECKER_FILTER_TAG, null, null));
 
       for (SymbolProblem symbolProblem : linkageErrors.keySet()) {
@@ -85,30 +84,30 @@ class ExclusionFileWriter {
           // If the runtime is not OpenJDK, let Java runtime find available TransformerFactory.
         }
       }
-
-      TransformerFactory transformerFactory = TransformerFactory.newInstance();
-      Transformer indentTransformer = transformerFactory.newTransformer();
-      indentTransformer.setOutputProperty(OutputKeys.INDENT, "yes");
-      // OpenJDK's default Transformer recognizes this property
-      indentTransformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-      // Add new line character after doctype declaration
-      indentTransformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "yes");
-
-      byte[] bytes = buffer.toByteArray();
-      System.out.println("bytes length:" + bytes.length);
-      System.out.println("XML input: " + new String(bytes));
-      ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
-      System.out.println("InputStream available: " + inputStream.available());
-      StreamSource source = new StreamSource(inputStream);
-      try (OutputStream outputStream = Files.newOutputStream(outputFile)) {
-        indentTransformer.transform(
-            source,
-            new StreamResult(outputStream));
-      }
     } finally {
       if (writer != null) {
         writer.close();
       }
+    }
+
+    TransformerFactory transformerFactory = TransformerFactory.newInstance();
+    Transformer indentTransformer = transformerFactory.newTransformer();
+    indentTransformer.setOutputProperty(OutputKeys.INDENT, "yes");
+    // OpenJDK's default Transformer recognizes this property
+    indentTransformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+    // Add new line character after doctype declaration
+    indentTransformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "yes");
+
+    byte[] bytes = buffer.toByteArray();
+    System.out.println("bytes length:" + bytes.length);
+    System.out.println("XML input: " + new String(bytes));
+    ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+    System.out.println("InputStream available: " + inputStream.available());
+    StreamSource source = new StreamSource(inputStream);
+    try (OutputStream outputStream = Files.newOutputStream(outputFile)) {
+      indentTransformer.transform(
+          source,
+          new StreamResult(outputStream));
     }
   }
 
