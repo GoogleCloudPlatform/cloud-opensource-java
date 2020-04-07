@@ -29,7 +29,8 @@ import org.eclipse.aether.artifact.Artifact;
  * Request to run Linkage Check for {@link #classPath}.
  *
  * <p>The check should suppress linkage errors that match {@link #excludedErrors}. When {@link
- * #reportOnlyReachable}, it also suppress, classes not reachable from {@link #entryPoints}.
+ * #reportOnlyReachable}, it should suppress linkage errors on the classes not reachable from {@link
+ * #entryPoints}.
  */
 public class LinkageCheckRequest {
 
