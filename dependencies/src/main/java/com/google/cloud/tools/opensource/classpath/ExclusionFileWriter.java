@@ -21,6 +21,7 @@ import com.google.common.collect.Multimap;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,14 +55,13 @@ class ExclusionFileWriter {
   /** Writes {@code linkageErrors} as exclusion rules into {@code outputFile}. */
   static void write(Path outputFile, Multimap<SymbolProblem, ClassFile> linkageErrors)
       throws IOException, XMLStreamException, TransformerException {
+
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     XMLEventWriter writer = null;
     try {
-      ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-
       writer = XMLOutputFactory.newInstance().createXMLEventWriter(buffer);
 
       writer.add(eventFactory.createStartDocument());
-
       writer.add(eventFactory.createStartElement(LINKAGE_CHECKER_FILTER_TAG, null, null));
 
       for (SymbolProblem symbolProblem : linkageErrors.keySet()) {
@@ -73,37 +73,41 @@ class ExclusionFileWriter {
       writer.add(eventFactory.createEndElement(LINKAGE_CHECKER_FILTER_TAG, null));
       writer.add(eventFactory.createEndDocument());
 
-      if (System.getProperty("javax.xml.transform.TransformerFactory") == null) {
-        try {
-          // Prefer Open JDK's default Transformer, rather than the one in net.sf.saxon:Saxon-HE.
-          String openJdkDefaultTransformerClassName =
-              "com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl";
-          Class.forName(openJdkDefaultTransformerClassName);
-          System.setProperty(
-              "javax.xml.transform.TransformerFactory", openJdkDefaultTransformerClassName);
-        } catch (ClassNotFoundException ex) {
-          // If the runtime is not OpenJDK, let Java runtime find available TransformerFactory.
-        }
-      }
-
-      TransformerFactory transformerFactory = TransformerFactory.newInstance();
-      Transformer indentTransformer = transformerFactory.newTransformer();
-      indentTransformer.setOutputProperty(OutputKeys.INDENT, "yes");
-      // OpenJDK's default Transformer recognizes this property
-      indentTransformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-      // Add new line character after doctype declaration
-      indentTransformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "yes");
-
-      try (OutputStream outputStream = Files.newOutputStream(outputFile)) {
-        indentTransformer.transform(
-            new StreamSource(new ByteArrayInputStream(buffer.toByteArray())),
-            new StreamResult(outputStream));
-      }
     } finally {
       if (writer != null) {
         writer.close();
       }
     }
+
+    try (OutputStream outputStream = Files.newOutputStream(outputFile)) {
+      insertIndent(new ByteArrayInputStream(buffer.toByteArray()), outputStream);
+    }
+  }
+
+  private static void insertIndent(InputStream inputStream, OutputStream outputStream)
+      throws TransformerException {
+    if (System.getProperty("javax.xml.transform.TransformerFactory") == null) {
+      try {
+        // Prefer Open JDK's default Transformer, rather than the one in net.sf.saxon:Saxon-HE.
+        String openJdkDefaultTransformerClassName =
+            "com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl";
+        Class.forName(openJdkDefaultTransformerClassName);
+        System.setProperty(
+            "javax.xml.transform.TransformerFactory", openJdkDefaultTransformerClassName);
+      } catch (ClassNotFoundException ex) {
+        // If the runtime is not OpenJDK, let Java runtime find available TransformerFactory.
+      }
+    }
+
+    TransformerFactory transformerFactory = TransformerFactory.newInstance();
+    Transformer indentTransformer = transformerFactory.newTransformer();
+    indentTransformer.setOutputProperty(OutputKeys.INDENT, "yes");
+    // OpenJDK's default Transformer recognizes this property
+    indentTransformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+    // Add new line character after doctype declaration
+    indentTransformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "yes");
+
+    indentTransformer.transform(new StreamSource(inputStream), new StreamResult(outputStream));
   }
 
   private static void writeXmlEvents(
