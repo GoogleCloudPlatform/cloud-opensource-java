@@ -21,6 +21,7 @@ import com.google.common.collect.Multimap;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -72,21 +73,29 @@ class ExclusionFileWriter {
       writer.add(eventFactory.createEndElement(LINKAGE_CHECKER_FILTER_TAG, null));
       writer.add(eventFactory.createEndDocument());
 
-      if (System.getProperty("javax.xml.transform.TransformerFactory") == null) {
-        try {
-          // Prefer Open JDK's default Transformer, rather than the one in net.sf.saxon:Saxon-HE.
-          String openJdkDefaultTransformerClassName =
-              "com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl";
-          Class.forName(openJdkDefaultTransformerClassName);
-          System.setProperty(
-              "javax.xml.transform.TransformerFactory", openJdkDefaultTransformerClassName);
-        } catch (ClassNotFoundException ex) {
-          // If the runtime is not OpenJDK, let Java runtime find available TransformerFactory.
-        }
-      }
     } finally {
       if (writer != null) {
         writer.close();
+      }
+    }
+
+    try (OutputStream outputStream = Files.newOutputStream(outputFile)) {
+      insertIndent(new ByteArrayInputStream(buffer.toByteArray()), outputStream);
+    }
+  }
+
+  private static void insertIndent(InputStream inputStream, OutputStream outputStream)
+      throws TransformerException {
+    if (System.getProperty("javax.xml.transform.TransformerFactory") == null) {
+      try {
+        // Prefer Open JDK's default Transformer, rather than the one in net.sf.saxon:Saxon-HE.
+        String openJdkDefaultTransformerClassName =
+            "com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl";
+        Class.forName(openJdkDefaultTransformerClassName);
+        System.setProperty(
+            "javax.xml.transform.TransformerFactory", openJdkDefaultTransformerClassName);
+      } catch (ClassNotFoundException ex) {
+        // If the runtime is not OpenJDK, let Java runtime find available TransformerFactory.
       }
     }
 
@@ -98,17 +107,7 @@ class ExclusionFileWriter {
     // Add new line character after doctype declaration
     indentTransformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "yes");
 
-    byte[] bytes = buffer.toByteArray();
-    System.out.println("bytes length:" + bytes.length);
-    System.out.println("XML input: " + new String(bytes));
-    ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
-    System.out.println("InputStream available: " + inputStream.available());
-    StreamSource source = new StreamSource(inputStream);
-    try (OutputStream outputStream = Files.newOutputStream(outputFile)) {
-      indentTransformer.transform(
-          source,
-          new StreamResult(outputStream));
-    }
+    indentTransformer.transform(new StreamSource(inputStream), new StreamResult(outputStream));
   }
 
   private static void writeXmlEvents(

@@ -77,12 +77,8 @@ public class ExclusionFileWriterTest {
   public void testExclusionFileCreation()
       throws IOException, XMLStreamException, VerifierConfigurationException, SAXException,
           TransformerException {
-    try {
-      ExclusionFileWriter.write(output, linkageErrors);
-    } catch (Throwable e) {
-      e.printStackTrace();
-      throw e;
-    }
+
+    ExclusionFileWriter.write(output, linkageErrors);
 
     ImmutableList<LinkageErrorMatcher> matchers = ExclusionFileParser.parse(output);
     Truth.assertThat(matchers).hasSize(3);
@@ -111,8 +107,7 @@ public class ExclusionFileWriterTest {
 
   @Test
   public void testWriteExclusionFile_indent()
-      throws IOException, XMLStreamException, VerifierConfigurationException, SAXException,
-          TransformerException, URISyntaxException {
+      throws IOException, XMLStreamException, TransformerException, URISyntaxException {
 
     ExclusionFileWriter.write(output, linkageErrors);
 
