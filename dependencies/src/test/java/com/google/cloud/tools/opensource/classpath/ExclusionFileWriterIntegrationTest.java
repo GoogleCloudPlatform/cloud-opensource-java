@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -24,7 +23,6 @@ import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.TransformerException;
 import org.eclipse.aether.RepositoryException;
@@ -39,30 +37,25 @@ public class ExclusionFileWriterIntegrationTest {
 
   @Before
   public void setup() throws IOException {
-    // exclusionFile = Files.createTempFile("output", ".xml");
-
-    exclusionFile = Paths.get("/tmp/output.xml").toAbsolutePath();
-
-    // exclusionFile.toFile().deleteOnExit();
+    exclusionFile = Files.createTempFile("exclusion-file", ".xml");
+    exclusionFile.toFile().deleteOnExit();
   }
 
   @Test
   public void testExclusion()
       throws IOException, RepositoryException, TransformerException, XMLStreamException {
 
-    Artifact artifact = new DefaultArtifact("org.apache.beam:beam-runners-google-cloud-dataflow-java:2.19.0");
+    Artifact artifact =
+        new DefaultArtifact("org.apache.beam:beam-runners-google-cloud-dataflow-java:2.19.0");
+
     LinkageCheckerMain.main(
         new String[] {"-a", Artifacts.toCoordinates(artifact), "-w", exclusionFile.toString()});
-
-    System.out.println("Wrote exclusion file at " + exclusionFile);
 
     ClassPathBuilder classPathBuilder = new ClassPathBuilder();
     ClassPathResult classPathResult = classPathBuilder.resolve(ImmutableList.of(artifact));
 
-    LinkageChecker linkagechecker = LinkageChecker.create(
-        classPathResult.getClassPath(),
-        ImmutableList.of(),
-        exclusionFile); // with exclusionFile
+    LinkageChecker linkagechecker =
+        LinkageChecker.create(classPathResult.getClassPath(), ImmutableList.of(), exclusionFile);
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkagechecker.findSymbolProblems();

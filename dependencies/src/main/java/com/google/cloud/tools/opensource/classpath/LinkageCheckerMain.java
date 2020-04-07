@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -40,8 +39,8 @@ import org.eclipse.aether.artifact.Artifact;
 class LinkageCheckerMain {
 
   /**
-   * Forms a classpath from Maven coordinates or a list of jar files
-   * and reports linkage errors in that classpath.
+   * Forms a classpath from Maven coordinates or a list of jar files and reports linkage errors in
+   * that classpath.
    *
    * @throws IOException when there is a problem reading a jar file
    * @throws RepositoryException when there is a problem resolving the Maven coordinates to jar
