@@ -22,11 +22,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.transform.TransformerException;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -44,7 +47,8 @@ class LinkageCheckerMain {
    * @throws RepositoryException when there is a problem resolving the Maven coordinates to jar
    *     files
    */
-  public static void main(String[] arguments) throws IOException, RepositoryException {
+  public static void main(String[] arguments)
+      throws IOException, RepositoryException, TransformerException, XMLStreamException {
 
     try {
       LinkageCheckerArguments linkageCheckerArguments =
@@ -100,7 +104,7 @@ class LinkageCheckerMain {
         if (writeAsExclusionFile == null) {
           System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
         } else {
-          outputLinkageErrorsAsExclusionFile(writeAsExclusionFile);
+          ExclusionFileWriter.write(writeAsExclusionFile, symbolProblems);
         }
 
         if (classPathResult != null && !symbolProblems.isEmpty()) {
@@ -126,6 +130,4 @@ class LinkageCheckerMain {
       System.err.println(ex.getMessage());
     }
   }
-
-  static void outputLinkageErrorsAsExclusionFile(Path output) throws IOException {}
 }
