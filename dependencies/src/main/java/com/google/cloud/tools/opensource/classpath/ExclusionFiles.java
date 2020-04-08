@@ -18,11 +18,13 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
+import com.thaiopensource.xml.sax.DraconianErrorHandler;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.xml.namespace.QName;
@@ -38,11 +40,50 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+import org.iso_relax.verifier.Schema;
+import org.iso_relax.verifier.Verifier;
+import org.iso_relax.verifier.VerifierConfigurationException;
+import org.iso_relax.verifier.VerifierFactory;
+import org.iso_relax.verifier.VerifierFilter;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.XMLReaderFactory;
 
-/** Writer for Linkage Checker exclusion files. */
-class ExclusionFileWriter {
-
-  static final XMLEventFactory eventFactory = XMLEventFactory.newInstance();
+/**
+ * Utility for Linkage Checker exclusion files.
+ *
+ * <p>The exclusion file for Linkage Checker is an XML file. Its top-level element is
+ * LinkageCheckerFilter. The XML file contains the following structure:
+ *
+ * <ul>
+ *   <li>A LinkageCheckerFilter element has zero or more LinkageError elements.
+ *   <li>A LinkageError element has at least one of Target element and Source element.
+ *   <li>A Target element has a Package, Class, Method, or Field element. A Source element has an
+ *       Artifact, Package, or Class element.
+ *   <li>Method and Field elements have “className” attribute.
+ * </ul>
+ *
+ * <p>Each type of the element works as a corresponding matcher, such as LinkageErrorMatcher for a
+ * LinkageError element and SourceMatcher for Source element. Given a linkage error, they work as
+ * below:
+ *
+ * <ul>
+ *   <li>A LinkageErrorMatcher matches when all of its child elements match the linkage error.
+ *   <li>A SourceMatcher matches a linkage error when the source class of the error matches its
+ *       child element.
+ *   <li>A TargetMatcher matches a linkage error when the target symbol (class, method, or field) of
+ *       the error matches its child element.
+ *   <li>A PackageMatcher matches the classes that have Java package specified by its name field.
+ *       Prefix to specify child packages.
+ *   <li>A ClassMatcher matches the class specified by its name attribute. ArtifactMatcher,
+ *       PackageMatcher, and ClassMatcher also match methods and fields on their matching classes.
+ *   <li>A MethodMatcher matches method symbol specified by className and name attribute.
+ *   <li>A FieldMatcher matches field symbol specified by className and name attribute.
+ * </ul>
+ */
+class ExclusionFiles {
+  private static final XMLEventFactory eventFactory = XMLEventFactory.newInstance();
 
   private static final QName LINKAGE_CHECKER_FILTER_TAG = QName.valueOf("LinkageCheckerFilter");
   private static final QName CLASS_TAG = QName.valueOf("Class");
@@ -51,6 +92,56 @@ class ExclusionFileWriter {
   private static final QName SOURCE_TAG = QName.valueOf("Source");
   private static final QName METHOD_TAG = QName.valueOf("Method");
   private static final QName FIELD_TAG = QName.valueOf("Field");
+
+  static ImmutableList<LinkageErrorMatcher> parse(Path exclusionFile)
+      throws SAXException, IOException, VerifierConfigurationException {
+
+    InputSource inputSource = new InputSource(Files.newInputStream(exclusionFile));
+    inputSource.setSystemId(exclusionFile.toUri().toString());
+
+    return parse(inputSource);
+  }
+
+  static ImmutableList<LinkageErrorMatcher> parse(URL exclusionFile)
+      throws SAXException, IOException, VerifierConfigurationException {
+
+    InputSource inputSource = new InputSource(exclusionFile.openStream());
+    inputSource.setSystemId(exclusionFile.toString());
+
+    return parse(inputSource);
+  }
+
+  private static ImmutableList<LinkageErrorMatcher> parse(InputSource inputSource)
+      throws SAXException, IOException, VerifierConfigurationException {
+
+    XMLReader reader = createXmlReader();
+
+    ExclusionFileHandler handler = new ExclusionFileHandler();
+    reader.setContentHandler(handler);
+
+    reader.parse(inputSource);
+
+    return handler.getMatchers();
+  }
+
+  private static XMLReader createXmlReader()
+      throws SAXException, IOException, VerifierConfigurationException {
+    // Validate and parse XML files in one pass using Jing validator as a filter.
+    // http://iso-relax.sourceforge.net/JARV/JARV.html#use_42
+    VerifierFactory factory = VerifierFactory.newInstance("http://relaxng.org/ns/structure/1.0");
+    InputStream linkageCheckerSchema =
+        ExclusionFiles.class
+            .getClassLoader()
+            .getResourceAsStream("linkage-checker-exclusion-relax-ng.xml");
+    Schema schema = factory.compileSchema(linkageCheckerSchema);
+    Verifier verifier = schema.newVerifier();
+
+    // DraconianErrorHandler throws SAXException upon invalid structure
+    verifier.setErrorHandler(new DraconianErrorHandler());
+    VerifierFilter filter = verifier.getVerifierFilter();
+    filter.setParent(XMLReaderFactory.createXMLReader());
+    return filter;
+  }
 
   /** Writes {@code linkageErrors} as exclusion rules into {@code outputFile}. */
   static void write(Path outputFile, Multimap<SymbolProblem, ClassFile> linkageErrors)

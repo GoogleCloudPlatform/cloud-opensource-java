@@ -103,7 +103,7 @@ class LinkageCheckerMain {
         if (writeAsExclusionFile == null) {
           System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
         } else {
-          ExclusionFileWriter.write(writeAsExclusionFile, symbolProblems);
+          ExclusionFiles.write(writeAsExclusionFile, symbolProblems);
         }
 
         if (classPathResult != null && !symbolProblems.isEmpty()) {

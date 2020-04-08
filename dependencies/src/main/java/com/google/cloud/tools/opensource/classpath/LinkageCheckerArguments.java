@@ -171,10 +171,10 @@ final class LinkageCheckerArguments {
     options.addOption(exclusionFile);
 
     Option writeAsExclusionFile =
-        Option.builder("w")
-            .longOpt("write-as-exclusion-file")
+        Option.builder("o")
+            .longOpt("output-linkage-errors-as-exclusion-file")
             .hasArg(true)
-            .desc("Writes linkages errors as exclusion files")
+            .desc("Outputs linkages errors as exclusion files")
             .build();
     options.addOption(writeAsExclusionFile);
 

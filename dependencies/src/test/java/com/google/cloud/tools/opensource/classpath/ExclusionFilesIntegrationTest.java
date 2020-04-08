@@ -31,7 +31,7 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ExclusionFileWriterIntegrationTest {
+public class ExclusionFilesIntegrationTest {
 
   Path exclusionFile;
 
@@ -49,7 +49,7 @@ public class ExclusionFileWriterIntegrationTest {
         new DefaultArtifact("org.apache.beam:beam-runners-google-cloud-dataflow-java:2.19.0");
 
     LinkageCheckerMain.main(
-        new String[] {"-a", Artifacts.toCoordinates(artifact), "-w", exclusionFile.toString()});
+        new String[] {"-a", Artifacts.toCoordinates(artifact), "-o", exclusionFile.toString()});
 
     ClassPathBuilder classPathBuilder = new ClassPathBuilder();
     ClassPathResult classPathResult = classPathBuilder.resolve(ImmutableList.of(artifact));
