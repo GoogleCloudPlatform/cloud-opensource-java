@@ -132,7 +132,7 @@ class ExclusionFiles {
     InputStream linkageCheckerSchema =
         ExclusionFiles.class
             .getClassLoader()
-            .getResourceAsStream("linkage-checker-exclusion-relax-ng.xml");
+            .getResourceAsStream("linkage-checker-exclusion.rng");
     Schema schema = factory.compileSchema(linkageCheckerSchema);
     Verifier verifier = schema.newVerifier();
 
