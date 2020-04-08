@@ -177,18 +177,11 @@ class ExclusionFiles {
 
   private static void insertIndent(InputStream inputStream, OutputStream outputStream)
       throws TransformerException {
-    if (System.getProperty("javax.xml.transform.TransformerFactory") == null) {
-      try {
-        // Prefer Open JDK's default Transformer, rather than the one in net.sf.saxon:Saxon-HE.
-        String openJdkDefaultTransformerClassName =
-            "com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl";
-        Class.forName(openJdkDefaultTransformerClassName);
-        System.setProperty(
-            "javax.xml.transform.TransformerFactory", openJdkDefaultTransformerClassName);
-      } catch (ClassNotFoundException ex) {
-        // If the runtime is not OpenJDK, let Java runtime find available TransformerFactory.
-      }
-    }
+    // Prefer Open JDK's default Transformer, rather than the one in net.sf.saxon:Saxon-HE. The
+    // latter does not recognize "{http://xml.apache.org/xslt}indent-amount" property.
+    System.setProperty(
+        "javax.xml.transform.TransformerFactory",
+        "com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl");
 
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
     Transformer indentTransformer = transformerFactory.newTransformer();
