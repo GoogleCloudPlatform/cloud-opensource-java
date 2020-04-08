@@ -95,7 +95,6 @@ public class ClassPathEntryTest {
     ClassPathEntry entry = new ClassPathEntry(artifact);
     ImmutableSet<String> classFileNames = entry.getClassNames();
     
-    
     Truth.assertThat(classFileNames).containsExactly(
         "com.google.common.truth.IntStreamSubject",
         "com.google.common.truth.LongStreamSubject",
@@ -151,7 +150,7 @@ public class ClassPathEntryTest {
   }
   
   @Test
-  public void testFilePresenceRequirement() throws IOException {
+  public void testFilePresenceRequirement() {
     Artifact artifactWithoutFile = new DefaultArtifact("com.google:foo:jar:1.0.0");
     try {
       new ClassPathEntry(artifactWithoutFile);
