@@ -174,7 +174,7 @@ final class LinkageCheckerArguments {
         Option.builder("o")
             .longOpt("output-exclusion-file")
             .hasArg(true)
-            .desc("Output linkages errors into exclusion file")
+            .desc("Output linkage errors as exclusion rules into the specified file")
             .build();
     options.addOption(writeAsExclusionFile);
 
