@@ -130,9 +130,7 @@ class ExclusionFiles {
     // http://iso-relax.sourceforge.net/JARV/JARV.html#use_42
     VerifierFactory factory = VerifierFactory.newInstance("http://relaxng.org/ns/structure/1.0");
     InputStream linkageCheckerSchema =
-        ExclusionFiles.class
-            .getClassLoader()
-            .getResourceAsStream("linkage-checker-exclusion.rng");
+        ExclusionFiles.class.getClassLoader().getResourceAsStream("linkage-checker-exclusion.rng");
     Schema schema = factory.compileSchema(linkageCheckerSchema);
     Verifier verifier = schema.newVerifier();
 

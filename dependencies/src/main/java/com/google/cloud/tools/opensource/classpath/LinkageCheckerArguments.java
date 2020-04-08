@@ -172,9 +172,9 @@ final class LinkageCheckerArguments {
 
     Option writeAsExclusionFile =
         Option.builder("o")
-            .longOpt("output-linkage-errors-as-exclusion-file")
+            .longOpt("output-exclusion-file")
             .hasArg(true)
-            .desc("Outputs linkages errors as exclusion files")
+            .desc("Output linkages errors into exclusion file")
             .build();
     options.addOption(writeAsExclusionFile);
 
@@ -253,7 +253,7 @@ final class LinkageCheckerArguments {
    * Returns the path to exclusion file specified in the argument. If the argument is not specified,
    * {@code null}.
    */
-  Path getExclusionFile() {
+  Path getInputExclusionFile() {
     if (commandLine.hasOption("e")) {
       return Paths.get(commandLine.getOptionValue("e"));
     }
@@ -264,7 +264,7 @@ final class LinkageCheckerArguments {
    * Returns the path to write linkage errors as exclusion file. If the argument is not specified,
    * {@code null}.
    */
-  Path getWriteAsExclusionFile() {
+  Path getOutputExclusionFile() {
     if (commandLine.hasOption("o")) {
       return Paths.get(commandLine.getOptionValue("o"));
     }

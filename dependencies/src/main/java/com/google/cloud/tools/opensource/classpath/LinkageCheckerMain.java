@@ -87,7 +87,7 @@ class LinkageCheckerMain {
 
         LinkageChecker linkageChecker =
             LinkageChecker.create(
-                inputClassPath, entryPoints, linkageCheckerArguments.getExclusionFile());
+                inputClassPath, entryPoints, linkageCheckerArguments.getInputExclusionFile());
         ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
             linkageChecker.findSymbolProblems();
     
@@ -99,11 +99,12 @@ class LinkageCheckerMain {
                       symbolProblems, classFile -> graph.isReachable(classFile.getBinaryName())));
         }
 
-        Path writeAsExclusionFile = linkageCheckerArguments.getWriteAsExclusionFile();
-        if (writeAsExclusionFile == null) {
-          System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
-        } else {
+        System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
+
+        Path writeAsExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
+        if (writeAsExclusionFile != null) {
           ExclusionFiles.write(writeAsExclusionFile, symbolProblems);
+          System.out.println("Wrote the linkage errors as exclusion file: " + writeAsExclusionFile);
         }
 
         if (classPathResult != null && !symbolProblems.isEmpty()) {
