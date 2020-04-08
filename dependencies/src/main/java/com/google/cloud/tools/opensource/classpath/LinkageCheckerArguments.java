@@ -265,8 +265,8 @@ final class LinkageCheckerArguments {
    * {@code null}.
    */
   Path getWriteAsExclusionFile() {
-    if (commandLine.hasOption("w")) {
-      return Paths.get(commandLine.getOptionValue("w"));
+    if (commandLine.hasOption("o")) {
+      return Paths.get(commandLine.getOptionValue("o"));
     }
     return null;
   }
