@@ -411,7 +411,7 @@ class ClassDumper {
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.10">Java
    *     Virtual Machine Specification: 4.10. Verification of class Files</a>
    */
-  boolean hasValidSuperclass(JavaClass childJavaClass, JavaClass parentJavaClass) {
+  static boolean hasValidSuperclass(JavaClass childJavaClass, JavaClass parentJavaClass) {
     if (parentJavaClass.isFinal()) {
       return false;
     }

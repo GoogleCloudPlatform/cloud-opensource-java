@@ -470,7 +470,7 @@ public class LinkageChecker {
 
       boolean isSubclassReference = symbol instanceof SuperClassSymbol;
       if (isSubclassReference
-          && !classDumper.hasValidSuperclass(
+          && !ClassDumper.hasValidSuperclass(
               classDumper.loadJavaClass(sourceClassName), targetClass)) {
         return Optional.of(
             new SymbolProblem(symbol, ErrorType.INCOMPATIBLE_CLASS_CHANGE, containingClassFile));
