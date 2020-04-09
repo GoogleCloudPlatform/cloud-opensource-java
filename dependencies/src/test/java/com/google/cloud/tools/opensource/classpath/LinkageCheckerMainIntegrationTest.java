@@ -95,4 +95,26 @@ public class LinkageCheckerMainIntegrationTest {
                 + " io.grpc:grpc-netty-shaded:1.13.1 (compile)\n"
                 + "  and 1 dependency path.");
   }
+
+  @Test
+  public void testBom() throws IOException, RepositoryException {
+    LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
+
+    String output = readCapturedStdout();
+
+    // Appengine-api-sdk is known to have invalid references
+    Truth.assertThat(output)
+        .contains(
+            "Class com.google.net.rpc3.client.RpcStubDescriptor is not found;\n"
+                + "  referenced by 21 class files\n"
+                + "    com.google.appengine.api.appidentity.AppIdentityServicePb"
+                + " (com.google.appengine:appengine-api-1.0-sdk:1.9.71)");
+
+    // Show the dependency path to the problematic artifact
+    Truth.assertThat(output)
+        .contains(
+            "com.google.appengine:appengine-api-1.0-sdk:1.9.71 is at:\n"
+                + "  com.google.http-client:google-http-client-appengine:1.29.1 (compile) "
+                + "/ com.google.appengine:appengine-api-1.0-sdk:1.9.71 (provided)");
+  }
 }
