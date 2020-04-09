@@ -45,6 +45,12 @@ public class LinkageCheckerMainIntegrationTest {
     System.setOut(originalStandardOut);
   }
 
+  private String readCapturedStdout() {
+    System.out.flush();
+    String output = new String(capturedOutputStream.toByteArray());
+    return output;
+  }
+
   @Test
   public void testJarFiles() throws IOException, URISyntaxException, RepositoryException {
 
@@ -58,10 +64,9 @@ public class LinkageCheckerMainIntegrationTest {
     // This should not raise Exception
     LinkageCheckerMain.main(new String[] {"-j", jarArgument});
 
-    String output = new String(capturedOutputStream.toByteArray());
 
     // Gax is not in the JAR list
-    Truth.assertThat(output)
+    Truth.assertThat(readCapturedStdout())
         .contains(
             "Class com.google.api.gax.retrying.ResultRetryAlgorithm is not found;\n"
                 + "  referenced by 1 class file\n"
@@ -75,8 +80,7 @@ public class LinkageCheckerMainIntegrationTest {
     LinkageCheckerMain.main(
         new String[] {"-a", "com.google.cloud:google-cloud-firestore:0.65.0-beta"});
 
-    String output = new String(capturedOutputStream.toByteArray());
-
+    String output = readCapturedStdout();
     Truth.assertThat(output)
         .contains(
             "Class com.jcraft.jzlib.JZlib is not found;\n"
