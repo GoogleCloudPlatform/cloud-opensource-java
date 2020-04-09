@@ -1,5 +1,9 @@
 # Linkage Checker Enforcer Rule Change Log
 
+## 1.2.0
+* Linkage Checker takes an exclusion file to filter out known linkage errors
+* Fixed LinkageCheckerMain's incorrect handling of JAR file input
+
 ## 1.1.4
 * Linkage Checker resolves class paths in a more efficient manner.
 
