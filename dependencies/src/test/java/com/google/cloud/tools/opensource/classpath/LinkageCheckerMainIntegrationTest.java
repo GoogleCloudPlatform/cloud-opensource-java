@@ -31,11 +31,12 @@ import org.junit.Test;
 
 public class LinkageCheckerMainIntegrationTest {
 
-  private final ByteArrayOutputStream capturedOutputStream = new ByteArrayOutputStream();
-  private final PrintStream originalStandardOut = System.out;
+  private static final PrintStream originalStandardOut = System.out;
+  private ByteArrayOutputStream capturedOutputStream;
 
   @Before
   public void setup() {
+    capturedOutputStream = new ByteArrayOutputStream();
     System.setOut(new PrintStream(capturedOutputStream));
   }
 
