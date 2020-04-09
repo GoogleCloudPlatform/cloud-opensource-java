@@ -54,7 +54,7 @@ public class LinkageCheckerMainIntegrationTest {
 
     String jarArgument = googleCloudCore + "," + googleCloudFirestore + "," + guava;
 
-    // This should not raise IOException
+    // This should not raise Exception
     LinkageCheckerMain.main(new String[] {"-j", jarArgument});
 
     String output = new String(capturedOutputStream.toByteArray());
@@ -67,5 +67,28 @@ public class LinkageCheckerMainIntegrationTest {
                 + "    com.google.cloud.ExceptionHandler ("
                 + googleCloudCore
                 + ")");
+  }
+
+  @Test
+  public void testArtifacts() throws IOException, URISyntaxException, RepositoryException {
+    LinkageCheckerMain.main(
+        new String[] {"-a", "com.google.cloud:google-cloud-firestore:0.65.0-beta"});
+
+    String output = new String(capturedOutputStream.toByteArray());
+
+    Truth.assertThat(output)
+        .contains(
+            "Class com.jcraft.jzlib.JZlib is not found;\n"
+                + "  referenced by 4 class files\n"
+                + "    io.grpc.netty.shaded.io.netty.handler.codec.spdy.SpdyHeaderBlockJZlibEncoder"
+                + " (io.grpc:grpc-netty-shaded:1.13.1)");
+
+    // Show the dependency path to the problematic artifact
+    Truth.assertThat(output)
+        .contains(
+            "io.grpc:grpc-netty-shaded:1.13.1 is at:\n"
+                + "  com.google.cloud:google-cloud-firestore:0.65.0-beta (compile) /"
+                + " io.grpc:grpc-netty-shaded:1.13.1 (compile)\n"
+                + "  and 1 dependency path.");
   }
 }
