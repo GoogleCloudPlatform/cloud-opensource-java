@@ -64,7 +64,6 @@ public class LinkageCheckerMainIntegrationTest {
     // This should not raise Exception
     LinkageCheckerMain.main(new String[] {"-j", jarArgument});
 
-
     // Gax is not in the JAR list
     Truth.assertThat(readCapturedStdout())
         .contains(
