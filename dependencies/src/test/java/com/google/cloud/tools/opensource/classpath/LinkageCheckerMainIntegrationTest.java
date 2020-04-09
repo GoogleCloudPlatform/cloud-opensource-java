@@ -64,7 +64,8 @@ public class LinkageCheckerMainIntegrationTest {
         .contains(
             "Class com.google.api.gax.retrying.ResultRetryAlgorithm is not found;\n"
                 + "  referenced by 1 class file\n"
-                + "    com.google.cloud.ExceptionHandler (/Users/suztomo/cloud-opensource-java"
-                + "/dependencies/target/test-classes/testdata/google-cloud-core-1.48.0.jar)");
+                + "    com.google.cloud.ExceptionHandler ("
+                + googleCloudCore
+                + ")");
   }
 }
