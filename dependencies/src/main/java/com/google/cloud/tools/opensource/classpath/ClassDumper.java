@@ -88,23 +88,27 @@ class ClassDumper {
     checkArgument(
         unreadableFiles.isEmpty(), "Some jar files are not readable: %s", unreadableFiles);
     
-    return new ClassDumper(entries, extensionClassLoader);
-  }
-
-  private ClassDumper(List<ClassPathEntry> inputClassPath, ClassLoader extensionClassLoader)
-      throws IOException {
-    this.inputClassPath = ImmutableList.copyOf(inputClassPath);
-    this.classRepository = createClassRepository(inputClassPath);
-    this.extensionClassLoader = extensionClassLoader;
-    
     ImmutableListMultimap.Builder<String, ClassPathEntry> builder = ImmutableListMultimap.builder();
-    for (ClassPathEntry entry : inputClassPath) {
+    for (ClassPathEntry entry : entries) {
       for (String className : entry.getClassNames()) {
         builder.put(className, entry);
       }
     }
     
-    this.classFileNameToClassPathEntry = builder.build();
+    ImmutableListMultimap<String, ClassPathEntry> map = builder.build();
+    
+    return new ClassDumper(entries, extensionClassLoader, map);
+  }
+
+  private ClassDumper(
+      List<ClassPathEntry> inputClassPath,
+      ClassLoader extensionClassLoader,
+      ImmutableListMultimap<String, ClassPathEntry> map)
+      throws IOException {
+    this.inputClassPath = ImmutableList.copyOf(inputClassPath);
+    this.classRepository = createClassRepository(inputClassPath);
+    this.extensionClassLoader = extensionClassLoader;
+    this.classFileNameToClassPathEntry = map;
   }
 
   /**
