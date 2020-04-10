@@ -72,10 +72,14 @@ public class LinkageCheckRequest {
     this.reportOnlyReachable = reportOnlyReachable;
   }
 
+  /** Returns a builder for {@link LinkageCheckRequest} to find linkage errors in {@code bom}. */
   public static Builder builder(Bom bom) {
     return new Builder(bom);
   }
 
+  /**
+   * Returns a builder for {@link LinkageCheckRequest} to find linkage errors in {@code classPath}.
+   */
   public static Builder builder(Iterable<ClassPathEntry> classPath) {
     return new Builder(classPath);
   }
