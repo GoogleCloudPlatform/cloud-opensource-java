@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.transform.TransformerException;
 import org.eclipse.aether.RepositoryException;
 import org.junit.After;
 import org.junit.Before;
@@ -52,7 +54,8 @@ public class LinkageCheckerMainIntegrationTest {
   }
 
   @Test
-  public void testJarFiles() throws IOException, URISyntaxException, RepositoryException {
+  public void testJarFiles()
+      throws IOException, URISyntaxException, RepositoryException, TransformerException, XMLStreamException {
 
     Path googleCloudCore = absolutePathOfResource("testdata/google-cloud-core-1.48.0.jar");
     Path googleCloudFirestore =
@@ -75,7 +78,8 @@ public class LinkageCheckerMainIntegrationTest {
   }
 
   @Test
-  public void testArtifacts() throws IOException, URISyntaxException, RepositoryException {
+  public void testArtifacts()
+      throws IOException, URISyntaxException, RepositoryException, TransformerException, XMLStreamException {
     LinkageCheckerMain.main(
         new String[] {"-a", "com.google.cloud:google-cloud-firestore:0.65.0-beta"});
 
@@ -97,7 +101,8 @@ public class LinkageCheckerMainIntegrationTest {
   }
 
   @Test
-  public void testBom() throws IOException, RepositoryException {
+  public void testBom()
+      throws IOException, RepositoryException, TransformerException, XMLStreamException {
     LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
 
     String output = readCapturedStdout();
