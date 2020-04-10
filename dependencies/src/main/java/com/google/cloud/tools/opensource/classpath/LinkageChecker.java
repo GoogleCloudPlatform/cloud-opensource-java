@@ -135,7 +135,7 @@ public class LinkageChecker {
   }
 
   /**
-   * Searches the classpath for linkahe errors.
+   * Searches the classpath for linkage errors.
    * 
    * @return {@link SymbolProblem}s found in the class path and referencing classes
    * @throws IOException I/O error reading files in the classpath
