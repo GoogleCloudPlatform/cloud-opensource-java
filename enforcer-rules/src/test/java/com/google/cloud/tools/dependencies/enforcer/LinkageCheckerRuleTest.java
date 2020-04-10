@@ -87,6 +87,12 @@ public class LinkageCheckerRuleTest {
   private ProjectDependenciesResolver mockProjectDependenciesResolver;
   private DependencyResolutionResult mockDependencyResolutionResult;
 
+  private static String absoluteResourceLocation(String resourceName) throws URISyntaxException {
+    return Paths.get(ClassLoader.getSystemResource(resourceName).toURI())
+        .toAbsolutePath()
+        .toString();
+  }
+
   @Before
   public void setup()
       throws ExpressionEvaluationException, ComponentLookupException,
@@ -250,6 +256,30 @@ public class LinkageCheckerRuleTest {
           .error(ArgumentMatchers.startsWith("Linkage Checker rule found 1 reachable error."));
       assertEquals(
           "Failed while checking class path. See above error report.", ex.getMessage());
+    }
+  }
+
+  @Test
+  public void testExecute_shouldFailForBadProject_reachableErrors_noopExclusionFile()
+      throws RepositoryException, URISyntaxException {
+    try {
+      // This pair of artifacts contains linkage errors on grpc-core's use of Verify. Because
+      // grpc-core is included in entry point jars, the errors are reachable.
+      setupMockDependencyResolution(
+          "com.google.api-client:google-api-client:1.27.0", "io.grpc:grpc-core:1.17.1");
+      rule.setReportOnlyReachable(true);
+
+      // appengine classes are irrelevant to the linkage errors
+      String noopExclusionFileLocation = absoluteResourceLocation("appengine-exclusion.xml");
+      rule.setExclusionFile(noopExclusionFileLocation);
+      rule.execute(mockRuleHelper);
+      Assert.fail(
+          "The rule should raise an EnforcerRuleException for artifacts with reachable errors");
+    } catch (EnforcerRuleException ex) {
+      // pass
+      verify(mockLog)
+          .error(ArgumentMatchers.startsWith("Linkage Checker rule found 1 reachable error."));
+      assertEquals("Failed while checking class path. See above error report.", ex.getMessage());
     }
   }
 
@@ -438,10 +468,7 @@ public class LinkageCheckerRuleTest {
     try {
       // This artifact is known to contain classes missing dependencies
       setupMockDependencyResolution("com.google.appengine:appengine-api-1.0-sdk:1.9.64");
-      String exclusionFileLocation =
-          Paths.get(ClassLoader.getSystemResource("appengine-exclusion.xml").toURI())
-              .toAbsolutePath()
-              .toString();
+      String exclusionFileLocation = absoluteResourceLocation("appengine-exclusion.xml");
       rule.setExclusionFile(exclusionFileLocation);
       rule.execute(mockRuleHelper);
       Assert.fail(
@@ -611,6 +638,33 @@ public class LinkageCheckerRuleTest {
           "To run the check on the compiled class files, the linkage checker enforcer rule should"
               + " be bound to the 'verify' phase. Current phase: validate",
           ex.getMessage());
+    }
+  }
+
+  @Test
+  public void testExecute_shouldFailForBadProject_exclusionFile()
+      throws RepositoryException, URISyntaxException {
+    try {
+      // This pair of artifacts contains linkage errors on grpc-core's use of Verify. Because
+      // grpc-core is included in entry point jars, the errors are reachable.
+      setupMockDependencyResolution(
+          "com.google.api-client:google-api-client:1.27.0", "io.grpc:grpc-core:1.17.1");
+
+      String noopExclusionFileLocation = absoluteResourceLocation("javax-jmx-exclusion.xml");
+      rule.setExclusionFile(noopExclusionFileLocation);
+      rule.execute(mockRuleHelper);
+      Assert.fail(
+          "The rule should raise an EnforcerRuleException for artifacts with reachable errors");
+    } catch (EnforcerRuleException ex) {
+      // pass
+      ArgumentCaptor<String> errorMessageCaptor = ArgumentCaptor.forClass(String.class);
+      verify(mockLog).error(errorMessageCaptor.capture());
+      String errorMessage = errorMessageCaptor.getValue();
+      Truth.assertThat(errorMessage).startsWith("Linkage Checker rule found 4 errors.");
+      // The effect of the exclusion file
+      Truth.assertThat(errorMessage).doesNotContain("javax.jmx");
+
+      assertEquals("Failed while checking class path. See above error report.", ex.getMessage());
     }
   }
 }
