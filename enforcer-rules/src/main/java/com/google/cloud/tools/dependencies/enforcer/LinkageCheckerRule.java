@@ -102,7 +102,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    */
   private boolean reportOnlyReachable = false;
 
-  private Path exclusionFile = null;
+  private String exclusionFile = null;
 
   private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
@@ -125,8 +125,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   @VisibleForTesting
-  void setExclusionFilterFile(String exclusionFileLocation) {
-    exclusionFile = Paths.get(exclusionFileLocation);
+  void setExclusionFile(String exclusionFile) {
+    this.exclusionFile = exclusionFile;
   }
 
   private Log logger;
@@ -190,10 +190,12 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       List<ClassPathEntry> entryPoints = classpath.subList(0, (int) projectDependencyCount + 1);
 
       try {
-        LinkageCheckRequest.Builder request =
-            LinkageCheckRequest.builder(classpath).exclusionFile(exclusionFile);
+        LinkageCheckRequest.Builder request = LinkageCheckRequest.builder(classpath);
         if (reportOnlyReachable) {
           request.reportOnlyReachable(entryPoints);
+        }
+        if (exclusionFile != null) {
+          request.exclusionFile(Paths.get(exclusionFile));
         }
 
         ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
