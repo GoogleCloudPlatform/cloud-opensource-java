@@ -442,7 +442,7 @@ public class LinkageCheckerRuleTest {
           Paths.get(ClassLoader.getSystemResource("appengine-exclusion.xml").toURI())
               .toAbsolutePath()
               .toString();
-      rule.setExclusionFilterFile(exclusionFileLocation);
+      rule.setExclusionFile(exclusionFileLocation);
       rule.execute(mockRuleHelper);
       Assert.fail(
           "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
