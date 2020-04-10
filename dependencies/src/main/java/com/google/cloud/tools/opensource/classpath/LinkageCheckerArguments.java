@@ -174,7 +174,10 @@ final class LinkageCheckerArguments {
     return options;
   }
 
-  /** Returns a list of artifacts specified in the option of BOM or coordinates list. */
+  /**
+   * Returns a list of artifacts specified in the option of BOM or coordinates list. If the argument
+   * is not specified, returns an empty list.
+   */
   ImmutableList<Artifact> getArtifacts() throws RepositoryException {
     if (cachedArtifacts != null) {
       return cachedArtifacts;
@@ -194,8 +197,7 @@ final class LinkageCheckerArguments {
               .map(DefaultArtifact::new)
               .collect(toImmutableList());
     } else {
-      throw new IllegalArgumentException(
-          "The arguments must have option 'a' or 'b' to list Maven artifacts");
+      return ImmutableList.of();
     }
   }
 
