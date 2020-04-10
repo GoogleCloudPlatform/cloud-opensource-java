@@ -17,7 +17,7 @@
 <LinkageCheckerFilter>
   <LinkageError>
     <Source>
-      <Package name="javax.jms" />
+      <Package name="org.apache.commons" />
     </Source>
   </LinkageError>
 </LinkageCheckerFilter>

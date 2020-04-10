@@ -650,7 +650,7 @@ public class LinkageCheckerRuleTest {
       setupMockDependencyResolution(
           "com.google.api-client:google-api-client:1.27.0", "io.grpc:grpc-core:1.17.1");
 
-      String noopExclusionFileLocation = absoluteResourceLocation("javax-jmx-exclusion.xml");
+      String noopExclusionFileLocation = absoluteResourceLocation("apache-commons-exclusion.xml");
       rule.setExclusionFile(noopExclusionFileLocation);
       rule.execute(mockRuleHelper);
       Assert.fail(
@@ -660,9 +660,9 @@ public class LinkageCheckerRuleTest {
       ArgumentCaptor<String> errorMessageCaptor = ArgumentCaptor.forClass(String.class);
       verify(mockLog).error(errorMessageCaptor.capture());
       String errorMessage = errorMessageCaptor.getValue();
-      Truth.assertThat(errorMessage).startsWith("Linkage Checker rule found 4 errors.");
+      Truth.assertThat(errorMessage).startsWith("Linkage Checker rule found 1 error.");
       // The effect of the exclusion file
-      Truth.assertThat(errorMessage).doesNotContain("javax.jmx");
+      Truth.assertThat(errorMessage).doesNotContain("org.apache.commons");
 
       assertEquals("Failed while checking class path. See above error report.", ex.getMessage());
     }
