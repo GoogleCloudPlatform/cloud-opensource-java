@@ -104,7 +104,7 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testresolveClassPath_validCoordinate() {
+  public void testResolveClassPath_validCoordinate() {
     List<ClassPathEntry> entries = resolveClassPath("io.grpc:grpc-auth:1.15.1");
 
     Truth.assertThat(entries)
@@ -185,7 +185,7 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolveClasspath_notToGenerateRepositoryException() {
+  public void testResolveClasspath_notToGenerateRepositoryException() throws IOException {
     List<ClassPathEntry> classPath = resolveClassPath("com.google.guava:guava-gwt:jar:20.0");
     Truth.assertThat(classPath).isNotEmpty();
   }

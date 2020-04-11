@@ -20,13 +20,15 @@ import com.google.common.testing.EqualsTester;
 import com.google.common.testing.NullPointerTester;
 import com.google.common.testing.NullPointerTester.Visibility;
 import com.google.common.truth.Truth;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Before;
 import org.junit.Test;
 
 public class SymbolReferenceMapsTest {
   private Path path = Paths.get("foo", "bar.jar");
-  private ClassFile sourceClass = new ClassFile(new ClassPathEntry(path), "com.google.Foo");
+  private ClassFile sourceClass;
   private ClassSymbol classSymbol = new ClassSymbol("java.util.concurrent.TimeoutException");
   private MethodSymbol methodSymbol =
       new MethodSymbol(
@@ -38,6 +40,11 @@ public class SymbolReferenceMapsTest {
   private FieldSymbol fieldSymbol =
       new FieldSymbol("com.google.common.util.concurrent.Monitor$Guard", "waiterCount", "I");
 
+  @Before 
+  public void setUp() throws IOException {
+    sourceClass = new ClassFile(new ClassPathEntry(path), "com.google.Foo");
+  }
+  
   @Test
   public void testCreation() {
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
@@ -54,7 +61,7 @@ public class SymbolReferenceMapsTest {
   }
 
   @Test
-  public void testEquality() {
+  public void testEquality() throws IOException {
     SymbolReferenceMaps.Builder builder1 = new SymbolReferenceMaps.Builder();
     builder1.addClassReference(sourceClass, classSymbol);
     builder1.addMethodReference(sourceClass, methodSymbol);
@@ -95,7 +102,7 @@ public class SymbolReferenceMapsTest {
   }
 
   @Test
-  public void testAddAll() {
+  public void testAddAll() throws IOException {
     SymbolReferenceMaps.Builder builder1 = new SymbolReferenceMaps.Builder();
     SymbolReferenceMaps.Builder builder2 = new SymbolReferenceMaps.Builder();
 
