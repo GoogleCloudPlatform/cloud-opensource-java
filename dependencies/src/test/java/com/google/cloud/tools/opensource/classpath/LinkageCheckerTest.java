@@ -72,8 +72,8 @@ public class LinkageCheckerTest {
   }
 
   /** Returns the class path resolved for the transitive dependencies of {@code coordinates}. */
-  private ImmutableList<ClassPathEntry> resolveTransitiveDependencyPaths(String coordinates){
-    
+  private ImmutableList<ClassPathEntry> resolveTransitiveDependencyPaths(String coordinates) {
+
     DependencyGraph dependencies =
         dependencyGraphBuilder
             .buildMavenDependencyGraph(new Dependency(new DefaultArtifact(coordinates), "compile"))

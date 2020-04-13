@@ -119,8 +119,9 @@ public final class RepositoryUtility {
   }
 
   /**
-   * Opens a new Maven repository session that looks for the local repository in the customary ~/.m2
-   * directory. If not found, it creates an initially empty repository in a temporary location.
+   * Opens a new Maven repository session that looks for the local repository in the
+   * customary ~/.m2 directory. If not found, it creates an initially empty repository in
+   * a temporary location.
    */
   public static DefaultRepositorySystemSession newSession(RepositorySystem system) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
@@ -169,7 +170,7 @@ public final class RepositoryUtility {
     if (Files.isDirectory(localRepo)) {
       return localRepo.toAbsolutePath().toString();
     } else {
-      return makeTemporaryLocalRepository();
+      return makeTemporaryLocalRepository(); 
    }
   }
 
