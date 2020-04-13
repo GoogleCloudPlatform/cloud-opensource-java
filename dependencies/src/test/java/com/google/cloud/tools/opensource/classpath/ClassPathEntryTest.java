@@ -88,12 +88,13 @@ public class ClassPathEntryTest {
   }
 
   @Test
-  public void testListFileNames() throws IOException, ArtifactResolutionException {
+  public void testGetClassNames() throws IOException, ArtifactResolutionException {
     // copy into the local repository so we can read the jar file
     Artifact artifact = resolveArtifact("com.google.truth.extensions:truth-java8-extension:1.0.1");
     
     ClassPathEntry entry = new ClassPathEntry(artifact);
-    ImmutableSet<String> classFileNames = entry.listClassFileNames();
+    ImmutableSet<String> classFileNames = entry.getClassNames();
+    
     Truth.assertThat(classFileNames).containsExactly(
         "com.google.common.truth.IntStreamSubject",
         "com.google.common.truth.LongStreamSubject",
@@ -107,13 +108,12 @@ public class ClassPathEntryTest {
   }
   
   @Test
-  public void testListFileNames_innerClasses()
+  public void testGetClassNames_innerClasses()
       throws IOException, ArtifactResolutionException, URISyntaxException {
 
     ClassPathEntry entry = TestHelper.classPathEntryOfResource(
         "testdata/conscrypt-openjdk-uber-1.4.2.jar");
-    
-    ImmutableSet<String> classFileNames = entry.listClassFileNames();
+    ImmutableSet<String> classFileNames = entry.getClassNames();
     Truth.assertThat(classFileNames).containsAtLeast(
         "org.conscrypt.OpenSSLSignature$1",
         "org.conscrypt.OpenSSLContextImpl$TLSv1",
@@ -125,13 +125,12 @@ public class ClassPathEntryTest {
   }
   
   @Test
-  public void testListFileNames_noManifest()
+  public void testGetClassNames_noManifest()
       throws IOException, ArtifactResolutionException, URISyntaxException {
 
     ClassPathEntry entry = TestHelper.classPathEntryOfResource(
         "testdata/conscrypt-openjdk-uber-1.4.2.jar");
-    
-    ImmutableSet<String> classFileNames = entry.listClassFileNames();
+    ImmutableSet<String> classFileNames = entry.getClassNames();
     for (String filename : classFileNames) {
       Assert.assertFalse(filename.toLowerCase(Locale.ENGLISH).contains("manifest"));
       Assert.assertFalse(filename.toLowerCase(Locale.ENGLISH).contains("meta"));

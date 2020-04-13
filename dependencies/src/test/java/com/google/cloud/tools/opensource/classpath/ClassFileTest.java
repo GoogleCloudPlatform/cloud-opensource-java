@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import org.junit.Test;
 
 public class ClassFileTest {
+
   @Test
   public void testCreation() {
     ClassPathEntry entry = new ClassPathEntry(Paths.get("foo", "bar.jar"));

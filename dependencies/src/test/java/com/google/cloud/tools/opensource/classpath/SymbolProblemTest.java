@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.testing.EqualsTester;
 import com.google.common.testing.NullPointerTester;
 import com.google.common.testing.NullPointerTester.Visibility;
+import java.io.IOException;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,7 +34,7 @@ import org.junit.Test;
 public class SymbolProblemTest {
 
   @Test
-  public void testCreation() {
+  public void testCreation() throws IOException {
     SymbolProblem symbolProblem =
         new SymbolProblem(
             new ClassSymbol("java.lang.Integer"),
@@ -54,7 +55,7 @@ public class SymbolProblemTest {
   }
 
   @Test
-  public void testEquality() {
+  public void testEquality() throws IOException {
     new EqualsTester()
         .addEqualityGroup(
             new SymbolProblem(
@@ -87,7 +88,7 @@ public class SymbolProblemTest {
   }
 
   @Test
-  public void testFormatSymbolProblems() {
+  public void testFormatSymbolProblems() throws IOException {
     Path path = Paths.get("aaa", "bbb-1.2.3.jar");
     SymbolProblem methodSymbolProblem =
         new SymbolProblem(

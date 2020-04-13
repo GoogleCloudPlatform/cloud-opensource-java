@@ -35,6 +35,7 @@ public final class ClassPathEntry {
 
   private Path jar;
   private Artifact artifact;
+  private ImmutableSet<String> classFileNames;
 
   /** An entry for a JAR file without Maven coordinates. */
   ClassPathEntry(Path jar) {
@@ -57,8 +58,8 @@ public final class ClassPathEntry {
   }
 
   /**
-   * Returns Maven artifact associated with the JAR file. If the JAR file does not have an artifact,
-   * {@code null}.
+   * Returns the Maven artifact associated with the JAR file, or null 
+   * if the JAR file does not have Maven coordinates.
    */
   Artifact getArtifact() {
     return artifact;
@@ -94,11 +95,10 @@ public final class ClassPathEntry {
 
   /**
    * Returns a list of class file names in {@link #jar} as in {@link JavaClass#getFileName()}. This
-   * class file name is a path ("." as element separator) that locates a class file in a class path.
-   * Usually the class name and class file name are the same. However a class file name may have a
+   * class file name is usually a fully qualified class name. However a class file name may have a
    * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
    */
-  ImmutableSet<String> listClassFileNames() throws IOException {
+  private void readClassFileNames() throws IOException {
     URL jarUrl = jar.toUri().toURL();
     // Setting parent as null because we don't want other classes than this jar file
     URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[] {jarUrl}, null);
@@ -107,6 +107,19 @@ public final class ClassPathEntry {
     com.google.common.reflect.ClassPath classPath =
         com.google.common.reflect.ClassPath.from(classLoaderFromJar);
 
-    return classPath.getAllClasses().stream().map(ClassInfo::getName).collect(toImmutableSet());
+    ImmutableSet<ClassInfo> allClasses = classPath.getAllClasses();
+    classFileNames = allClasses.stream().map(ClassInfo::getName).collect(toImmutableSet());
+  }
+  
+  /**
+   * Returns the fully qualified names of the classes in this entry's jar file.
+   * 
+   * @throws IOException if the jar file can't be read
+   */
+  public synchronized ImmutableSet<String> getClassNames() throws IOException {
+    if (classFileNames == null) {
+      readClassFileNames();
+    }
+    return classFileNames;
   }
 }

@@ -19,13 +19,10 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ImmutableSetMultimap.Builder;
 import com.google.common.collect.Iterables;
 import com.google.common.graph.Traverser;
 import java.io.IOException;
@@ -72,7 +69,6 @@ class ClassDumper {
   private final ImmutableList<ClassPathEntry> inputClassPath;
   private final FixedSizeClassPathRepository classRepository;
   private final ClassLoader extensionClassLoader;
-  private final ImmutableSetMultimap<ClassPathEntry, String> classPathEntryToClassFileNames;
   private final ImmutableListMultimap<String, ClassPathEntry> classFileNameToClassPathEntry;
 
   private static FixedSizeClassPathRepository createClassRepository(List<ClassPathEntry> entries) {
@@ -91,19 +87,28 @@ class ClassDumper {
             .collect(toImmutableList());
     checkArgument(
         unreadableFiles.isEmpty(), "Some jar files are not readable: %s", unreadableFiles);
-
-    return new ClassDumper(entries, extensionClassLoader, mapJarToClassFileNames(entries));
+    
+    ImmutableListMultimap.Builder<String, ClassPathEntry> builder = ImmutableListMultimap.builder();
+    for (ClassPathEntry entry : entries) {
+      for (String className : entry.getClassNames()) {
+        builder.put(className, entry);
+      }
+    }
+    
+    ImmutableListMultimap<String, ClassPathEntry> map = builder.build();
+    
+    return new ClassDumper(entries, extensionClassLoader, map);
   }
 
   private ClassDumper(
       List<ClassPathEntry> inputClassPath,
       ClassLoader extensionClassLoader,
-      ImmutableSetMultimap<ClassPathEntry, String> jarToClasses) {
+      ImmutableListMultimap<String, ClassPathEntry> map)
+      throws IOException {
     this.inputClassPath = ImmutableList.copyOf(inputClassPath);
     this.classRepository = createClassRepository(inputClassPath);
     this.extensionClassLoader = extensionClassLoader;
-    this.classPathEntryToClassFileNames = ImmutableSetMultimap.copyOf(jarToClasses);
-    this.classFileNameToClassPathEntry = ImmutableListMultimap.copyOf(jarToClasses.inverse());
+    this.classFileNameToClassPathEntry = map;
   }
 
   /**
@@ -133,11 +138,6 @@ class ClassDumper {
     } catch (ClassNotFoundException ex) {
       return false;
     }
-  }
-
-  /** Returns class file names in the class path entry. */
-  ImmutableSet<String> classNamesInJar(ClassPathEntry entry) {
-    return classPathEntryToClassFileNames.get(entry);
   }
 
   /**
@@ -335,23 +335,6 @@ class ClassDumper {
   }
 
   /**
-   * Returns mapping from class path entries to class file names they contain.
-   *
-   * @param classPath class path entries in which it finds the class names
-   */
-  @VisibleForTesting
-  static ImmutableSetMultimap<ClassPathEntry, String> mapJarToClassFileNames(
-      List<ClassPathEntry> classPath) throws IOException {
-    Builder<ClassPathEntry, String> pathToClasses = ImmutableSetMultimap.builder();
-    for (ClassPathEntry jar : classPath) {
-      for (String classFileName : jar.listClassFileNames()) {
-        pathToClasses.put(jar, classFileName);
-      }
-    }
-    return pathToClasses.build();
-  }
-
-  /**
    * Returns a set of {@link JavaClass}es which have entries in the {@code entry} through {@link
    * #classRepository}.
    */
@@ -360,7 +343,7 @@ class ClassDumper {
 
     ImmutableList.Builder<String> corruptedClassFileNames = ImmutableList.builder();
 
-    for (String classFileName : entry.listClassFileNames()) {
+    for (String classFileName : entry.getClassNames()) {
       if (classFileName.startsWith("META-INF.versions.")) {
         // Linkage Checker does not support multi-release JAR (for Java 9+) yet
         // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/897
@@ -432,7 +415,7 @@ class ClassDumper {
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.10">Java
    *     Virtual Machine Specification: 4.10. Verification of class Files</a>
    */
-  boolean hasValidSuperclass(JavaClass childJavaClass, JavaClass parentJavaClass) {
+  static boolean hasValidSuperclass(JavaClass childJavaClass, JavaClass parentJavaClass) {
     if (parentJavaClass.isFinal()) {
       return false;
     }
