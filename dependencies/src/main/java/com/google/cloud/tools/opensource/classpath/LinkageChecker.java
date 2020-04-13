@@ -81,9 +81,7 @@ public class LinkageChecker {
       Iterable<ClassPathEntry> entryPoints,
       @Nullable Path exclusionFile)
       throws IOException {
-    Preconditions.checkArgument(
-        !classPath.isEmpty(),
-        "The linkage classpath is empty. Specify input to supply one or more jar files");
+    Preconditions.checkArgument(!classPath.isEmpty(), "The linkage classpath is empty.");
     ClassDumper dumper = ClassDumper.create(classPath);
     SymbolReferenceMaps symbolReferenceMaps = dumper.findSymbolReferences();
 
@@ -137,75 +135,81 @@ public class LinkageChecker {
   }
 
   /**
-   * Returns {@link SymbolProblem}s found in the class path and referencing classes for each
-   * problem.
+   * Searches the classpath for linkage errors.
+   * 
+   * @return {@link SymbolProblem}s found in the class path and referencing classes
+   * @throws IOException I/O error reading files in the classpath
    */
-  public ImmutableSetMultimap<SymbolProblem, ClassFile> findSymbolProblems() {
+  public ImmutableSetMultimap<SymbolProblem, ClassFile> findSymbolProblems() throws IOException {
     // Having Problem in key will dedup SymbolProblems
     ImmutableSetMultimap.Builder<SymbolProblem, ClassFile> problemToClass =
         ImmutableSetMultimap.builder();
 
     ImmutableSetMultimap<ClassFile, ClassSymbol> classToClassSymbols =
         classToSymbols.getClassToClassSymbols();
-    classToClassSymbols.forEach(
-        (classFile, classSymbol) -> {
-          if (classSymbol instanceof SuperClassSymbol) {
+    
+    for (ClassFile classFile : classToClassSymbols.keySet()) {
+      ImmutableSet<ClassSymbol> classSymbols = classToClassSymbols.get(classFile);
+      for (ClassSymbol classSymbol : classSymbols) {
+        if (classSymbol instanceof SuperClassSymbol) {
+          ImmutableList<SymbolProblem> problems =
+              findAbstractParentProblems(classFile, (SuperClassSymbol) classSymbol);
+          if (!problems.isEmpty()) {
+            String superClassName = classSymbol.getClassBinaryName();
+            ClassPathEntry superClassLocation = classDumper.findClassLocation(superClassName);
+            ClassFile superClassFile = new ClassFile(superClassLocation, superClassName);
+            for (SymbolProblem problem : problems) {
+              problemToClass.put(problem, superClassFile);
+            }
+          }
+        }
+        if (!classFile.getClassPathEntry().getClassNames()
+            .contains(classSymbol.getClassBinaryName())) {
+
+          if (classSymbol instanceof InterfaceSymbol) {
             ImmutableList<SymbolProblem> problems =
-                findAbstractParentProblems(classFile, (SuperClassSymbol) classSymbol);
+                findInterfaceProblems(classFile, (InterfaceSymbol) classSymbol);
             if (!problems.isEmpty()) {
-              String superClassName = classSymbol.getClassBinaryName();
-              ClassPathEntry superClassLocation = classDumper.findClassLocation(superClassName);
-              ClassFile superClassFile = new ClassFile(superClassLocation, superClassName);
+              String interfaceName = classSymbol.getClassBinaryName();
+              ClassPathEntry interfaceLocation = classDumper.findClassLocation(interfaceName);
+              ClassFile interfaceClassFile = new ClassFile(interfaceLocation, interfaceName);
               for (SymbolProblem problem : problems) {
-                problemToClass.put(problem, superClassFile);
+                problemToClass.put(problem, interfaceClassFile);
               }
             }
-          }
-          if (!classDumper
-              .classNamesInJar(classFile.getClassPathEntry())
-              .contains(classSymbol.getClassBinaryName())) {
-
-            if (classSymbol instanceof InterfaceSymbol) {
-              ImmutableList<SymbolProblem> problems =
-                  findInterfaceProblems(classFile, (InterfaceSymbol) classSymbol);
-              if (!problems.isEmpty()) {
-                String interfaceName = classSymbol.getClassBinaryName();
-                ClassPathEntry interfaceLocation = classDumper.findClassLocation(interfaceName);
-                ClassFile interfaceClassFile = new ClassFile(interfaceLocation, interfaceName);
-                for (SymbolProblem problem : problems) {
-                  problemToClass.put(problem, interfaceClassFile);
-                }
-              }
-            } else {
-              findSymbolProblem(classFile, classSymbol)
-                  .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
-            }
-          }
-        });
-
-    ImmutableSetMultimap<ClassFile, MethodSymbol> classToMethodSymbols =
-        classToSymbols.getClassToMethodSymbols();
-    classToMethodSymbols.forEach(
-        (classFile, methodSymbol) -> {
-          if (!classDumper
-              .classNamesInJar(classFile.getClassPathEntry())
-              .contains(methodSymbol.getClassBinaryName())) {
-            findSymbolProblem(classFile, methodSymbol)
+          } else {
+            findSymbolProblem(classFile, classSymbol)
                 .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
           }
-        });
+        }
+      }    
+    }
+    
+    ImmutableSetMultimap<ClassFile, MethodSymbol> classToMethodSymbols =
+        classToSymbols.getClassToMethodSymbols();
+    for (ClassFile classFile : classToMethodSymbols.keySet()) {
+      ImmutableSet<MethodSymbol> methodSymbols = classToMethodSymbols.get(classFile);
+      for (MethodSymbol methodSymbol : methodSymbols) {
+        if (!classFile.getClassPathEntry().getClassNames()
+            .contains(methodSymbol.getClassBinaryName())) {
+          findSymbolProblem(classFile, methodSymbol)
+              .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
+        }
+      }
+    }
 
     ImmutableSetMultimap<ClassFile, FieldSymbol> classToFieldSymbols =
         classToSymbols.getClassToFieldSymbols();
-    classToFieldSymbols.forEach(
-        (classFile, fieldSymbol) -> {
-          if (!classDumper
-              .classNamesInJar(classFile.getClassPathEntry())
-              .contains(fieldSymbol.getClassBinaryName())) {
-            findSymbolProblem(classFile, fieldSymbol)
-                .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
-          }
-        });
+    for (ClassFile classFile : classToFieldSymbols.keySet()) {
+      ImmutableSet<FieldSymbol> fieldSymbols = classToFieldSymbols.get(classFile);
+      for (FieldSymbol fieldSymbol : fieldSymbols) {
+        if (!classFile.getClassPathEntry().getClassNames()
+            .contains(fieldSymbol.getClassBinaryName())) {
+          findSymbolProblem(classFile, fieldSymbol)
+              .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
+        }
+      }
+    }
 
     // Filter classes in whitelist
     SetMultimap<SymbolProblem, ClassFile> filteredMap =
@@ -466,7 +470,7 @@ public class LinkageChecker {
 
       boolean isSubclassReference = symbol instanceof SuperClassSymbol;
       if (isSubclassReference
-          && !classDumper.hasValidSuperclass(
+          && !ClassDumper.hasValidSuperclass(
               classDumper.loadJavaClass(sourceClassName), targetClass)) {
         return Optional.of(
             new SymbolProblem(symbol, ErrorType.INCOMPATIBLE_CLASS_CHANGE, containingClassFile));

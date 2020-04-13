@@ -42,6 +42,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Truth;
+import java.io.IOException;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -60,22 +61,23 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class LinkageMonitorTest {
+  
   private RepositorySystem system;
   private RepositorySystemSession session;
-
-  private SymbolProblem classNotFoundProblem =
-      new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
-  private SymbolProblem methodNotFoundProblem;
   
   private Artifact artifactB = new DefaultArtifact("foo:b:1.0.0")
       .setFile(new File("foo/b-1.0.0.jar"));
   private ClassPathEntry jarB = new ClassPathEntry(artifactB);
 
+  private SymbolProblem classNotFoundProblem =
+      new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
+  private SymbolProblem methodNotFoundProblem;
+
   @Before
-  public void setup() {
+  public void setup() throws IOException {
     system = RepositoryUtility.newRepositorySystem();
     session = RepositoryUtility.newSession(system);
-        
+
     methodNotFoundProblem =
         new SymbolProblem(
             new MethodSymbol(
@@ -116,7 +118,7 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void generateMessageForNewError() {
+  public void generateMessageForNewError() throws IOException {
     Set<SymbolProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
     
     Artifact artifactA = new DefaultArtifact("foo:a:1.2.3").setFile(new File("foo/a-1.2.3.jar"));

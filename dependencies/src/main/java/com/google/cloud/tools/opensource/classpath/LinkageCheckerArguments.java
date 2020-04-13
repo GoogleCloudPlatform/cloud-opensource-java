@@ -20,6 +20,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -212,14 +213,17 @@ final class LinkageCheckerArguments {
   /**
    * Returns class path entries for the absolute paths of the files specified in the JAR file
    * option.
+   * 
+   * @throws IOException if a jar file could not be read
    */
-  ImmutableList<ClassPathEntry> getJarFiles() {
+  ImmutableList<ClassPathEntry> getJarFiles() throws IOException {
     if (commandLine.hasOption("j")) {
       String[] jarFiles = commandLine.getOptionValues("j");
-      return Arrays.stream(jarFiles)
-          .map(name -> Paths.get(name).toAbsolutePath())
-          .map(ClassPathEntry::new)
-          .collect(toImmutableList());
+      ImmutableList.Builder<ClassPathEntry> builder = ImmutableList.builder();
+      for ( String file : jarFiles) {
+        builder.add(new ClassPathEntry(Paths.get(file).toAbsolutePath()));
+      }
+      return builder.build();
     } else {
       throw new IllegalArgumentException("The arguments must have option 'j' to list JAR files");
     }

@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -61,7 +62,7 @@ public class LinkageCheckerArgumentsTest {
   }
 
   @Test
-  public void testReadCommandLine_jarFileList_absolutePath() throws ParseException {
+  public void testReadCommandLine_jarFileList_absolutePath() throws ParseException, IOException {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine(
             "-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar");
@@ -77,7 +78,7 @@ public class LinkageCheckerArgumentsTest {
   }
 
   @Test
-  public void testReadCommandLine_jarFileList_relativePath() throws ParseException {
+  public void testReadCommandLine_jarFileList_relativePath() throws ParseException, IOException {
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
@@ -93,7 +94,7 @@ public class LinkageCheckerArgumentsTest {
   }
 
   @Test
-  public void testGetJarFiles_invalidOption() throws ParseException {
+  public void testGetJarFiles_invalidOption() throws ParseException, IOException {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine(
             "--artifacts", "com.google.guava:guava:26.0,io.grpc:grpc-core:1.17.1");
