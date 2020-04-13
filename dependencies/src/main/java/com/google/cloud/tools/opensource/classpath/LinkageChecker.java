@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.cloud.tools.opensource.classpath.ClassDumper.getClassHierarchy;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -30,7 +29,6 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -46,54 +44,6 @@ import org.apache.bcel.classfile.Method;
 public class LinkageChecker {
 
   private static final Logger logger = Logger.getLogger(LinkageChecker.class.getName());
-  
-  private final ClassDumper classDumper;
-  private final ImmutableList<ClassPathEntry> classPath;
-  private final SymbolReferenceMaps classToSymbols;
-  private final ClassReferenceGraph classReferenceGraph;
-  private final ExcludedErrors excludedErrors;
-
-  @VisibleForTesting
-  SymbolReferenceMaps getClassToSymbols() {
-    return classToSymbols;
-  }
-
-  /**
-   * Returns Linkage Checker for {@code classPath}.
-   *
-   * @param classPath JAR files to find linkage errors in
-   * @param entryPoints JAR files to specify entry point classes in reachability
-   * @param excludedErrors exclusion rules to suppress linkage errors
-   */
-  private static LinkageChecker create(
-      List<ClassPathEntry> classPath,
-      Iterable<ClassPathEntry> entryPoints,
-      ExcludedErrors excludedErrors)
-      throws IOException {
-    Preconditions.checkArgument(!classPath.isEmpty(), "The linkage classpath is empty.");
-    ClassDumper dumper = ClassDumper.create(classPath);
-    SymbolReferenceMaps symbolReferenceMaps = dumper.findSymbolReferences();
-
-    ClassReferenceGraph classReferenceGraph =
-        ClassReferenceGraph.create(symbolReferenceMaps, ImmutableSet.copyOf(entryPoints));
-
-    return new LinkageChecker(
-        dumper, classPath, symbolReferenceMaps, classReferenceGraph, excludedErrors);
-  }
-
-  @VisibleForTesting
-  LinkageChecker(
-      ClassDumper classDumper,
-      List<ClassPathEntry> classPath,
-      SymbolReferenceMaps symbolReferenceMaps,
-      ClassReferenceGraph classReferenceGraph,
-      ExcludedErrors excludedErrors) {
-    this.classDumper = Preconditions.checkNotNull(classDumper);
-    this.classPath = ImmutableList.copyOf(classPath);
-    this.classReferenceGraph = Preconditions.checkNotNull(classReferenceGraph);
-    this.classToSymbols = Preconditions.checkNotNull(symbolReferenceMaps);
-    this.excludedErrors = Preconditions.checkNotNull(excludedErrors);
-  }
 
   /**
    * Searches the classpath for linkage errors.
@@ -103,13 +53,23 @@ public class LinkageChecker {
    */
   public static ImmutableSetMultimap<SymbolProblem, ClassFile> check(LinkageCheckRequest request)
       throws IOException {
-    LinkageChecker linkageChecker =
-        create(request.getClassPath(), request.getEntryPoints(), request.getExcludedErrors());
+    ImmutableList<ClassPathEntry> classPath = request.getClassPath();
+    ClassDumper classDumper = ClassDumper.create(classPath);
+    SymbolReferenceMaps symbolReferenceMaps = classDumper.findSymbolReferences();
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
-        linkageChecker.findSymbolProblems();
+        findSymbolProblems(classDumper, symbolReferenceMaps);
+
+    ExcludedErrors excludedErrors = request.getExcludedErrors();
+
+    // Filter classes in whitelist
+    SetMultimap<SymbolProblem, ClassFile> filteredMap =
+        Multimaps.filterEntries(symbolProblems, (entry) -> problemFilter(excludedErrors, entry));
+    symbolProblems = ImmutableSetMultimap.copyOf(filteredMap);
+
     if (request.reportOnlyReachable()) {
-      ClassReferenceGraph classReferenceGraph = linkageChecker.classReferenceGraph;
+      ClassReferenceGraph classReferenceGraph =
+          ClassReferenceGraph.create(symbolReferenceMaps, request.getEntryPoints());
       symbolProblems =
           symbolProblems.entries().stream()
               .filter(entry -> classReferenceGraph.isReachable(entry.getValue().getBinaryName()))
@@ -118,8 +78,8 @@ public class LinkageChecker {
     return symbolProblems;
   }
 
-  @VisibleForTesting
-  ImmutableSetMultimap<SymbolProblem, ClassFile> findSymbolProblems() throws IOException {
+  static ImmutableSetMultimap<SymbolProblem, ClassFile> findSymbolProblems(
+      ClassDumper classDumper, SymbolReferenceMaps classToSymbols) throws IOException {
     // Having Problem in key will dedup SymbolProblems
     ImmutableSetMultimap.Builder<SymbolProblem, ClassFile> problemToClass =
         ImmutableSetMultimap.builder();
@@ -132,7 +92,7 @@ public class LinkageChecker {
       for (ClassSymbol classSymbol : classSymbols) {
         if (classSymbol instanceof SuperClassSymbol) {
           ImmutableList<SymbolProblem> problems =
-              findAbstractParentProblems(classFile, (SuperClassSymbol) classSymbol);
+              findAbstractParentProblems(classDumper, classFile, (SuperClassSymbol) classSymbol);
           if (!problems.isEmpty()) {
             String superClassName = classSymbol.getClassBinaryName();
             ClassPathEntry superClassLocation = classDumper.findClassLocation(superClassName);
@@ -147,7 +107,7 @@ public class LinkageChecker {
 
           if (classSymbol instanceof InterfaceSymbol) {
             ImmutableList<SymbolProblem> problems =
-                findInterfaceProblems(classFile, (InterfaceSymbol) classSymbol);
+                findInterfaceProblems(classDumper, classFile, (InterfaceSymbol) classSymbol);
             if (!problems.isEmpty()) {
               String interfaceName = classSymbol.getClassBinaryName();
               ClassPathEntry interfaceLocation = classDumper.findClassLocation(interfaceName);
@@ -157,7 +117,7 @@ public class LinkageChecker {
               }
             }
           } else {
-            findSymbolProblem(classFile, classSymbol)
+            findSymbolProblem(classDumper, classFile, classSymbol)
                 .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
           }
         }
@@ -171,7 +131,7 @@ public class LinkageChecker {
       for (MethodSymbol methodSymbol : methodSymbols) {
         if (!classFile.getClassPathEntry().getClassNames()
             .contains(methodSymbol.getClassBinaryName())) {
-          findSymbolProblem(classFile, methodSymbol)
+          findSymbolProblem(classDumper, classFile, methodSymbol)
               .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
         }
       }
@@ -184,23 +144,21 @@ public class LinkageChecker {
       for (FieldSymbol fieldSymbol : fieldSymbols) {
         if (!classFile.getClassPathEntry().getClassNames()
             .contains(fieldSymbol.getClassBinaryName())) {
-          findSymbolProblem(classFile, fieldSymbol)
+          findSymbolProblem(classDumper, classFile, fieldSymbol)
               .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
         }
       }
     }
 
-    // Filter classes in whitelist
-    SetMultimap<SymbolProblem, ClassFile> filteredMap =
-        Multimaps.filterEntries(problemToClass.build(), this::problemFilter);
-    return ImmutableSetMultimap.copyOf(filteredMap);
+    return problemToClass.build();
   }
 
   /**
    * Returns true if the linkage error {@code entry} should be reported. False if it should be
    * suppressed.
    */
-  private boolean problemFilter(Map.Entry<SymbolProblem, ClassFile> entry) {
+  private static boolean problemFilter(
+      ExcludedErrors excludedErrors, Map.Entry<SymbolProblem, ClassFile> entry) {
     SymbolProblem symbolProblem = entry.getKey();
     ClassFile sourceClass = entry.getValue();
     return !excludedErrors.contains(symbolProblem, sourceClass);
@@ -217,7 +175,8 @@ public class LinkageChecker {
    *     Virtual Machine Specification: 5.4.3.4. Interface Method Resolution</a>
    */
   @VisibleForTesting
-  Optional<SymbolProblem> findSymbolProblem(ClassFile classFile, MethodSymbol symbol) {
+  static Optional<SymbolProblem> findSymbolProblem(
+      ClassDumper classDumper, ClassFile classFile, MethodSymbol symbol) {
     String sourceClassName = classFile.getBinaryName();
     String targetClassName = symbol.getClassBinaryName();
     String methodName = symbol.getName();
@@ -233,7 +192,7 @@ public class LinkageChecker {
       ClassFile containingClassFile =
           classFileLocation == null ? null : new ClassFile(classFileLocation, targetClassName);
 
-      if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
+      if (!isClassAccessibleFrom(classDumper, targetJavaClass, sourceClassName)) {
         return Optional.of(
             new SymbolProblem(symbol, ErrorType.INACCESSIBLE_CLASS, containingClassFile));
       }
@@ -244,7 +203,8 @@ public class LinkageChecker {
       }
 
       // Check the existence of the parent class or interface for the class
-      Optional<SymbolProblem> parentSymbolProblem = findParentSymbolProblem(targetClassName);
+      Optional<SymbolProblem> parentSymbolProblem =
+          findParentSymbolProblem(classDumper, targetClassName);
       if (parentSymbolProblem.isPresent()) {
         return parentSymbolProblem;
       }
@@ -262,7 +222,7 @@ public class LinkageChecker {
         for (Method method : javaClass.getMethods()) {
           if (method.getName().equals(methodName)
               && method.getSignature().equals(symbol.getDescriptor())) {
-            if (!isMemberAccessibleFrom(javaClass, method, sourceClassName)) {
+            if (!isMemberAccessibleFrom(classDumper, javaClass, method, sourceClassName)) {
               return Optional.of(
                   new SymbolProblem(symbol, ErrorType.INACCESSIBLE_MEMBER, containingClassFile));
             }
@@ -293,8 +253,8 @@ public class LinkageChecker {
    * Returns the linkage errors for unimplemented methods in {@code classFile}. Such unimplemented
    * methods manifest as {@link AbstractMethodError} in runtime.
    */
-  private ImmutableList<SymbolProblem> findInterfaceProblems(
-      ClassFile classFile, InterfaceSymbol interfaceSymbol) {
+  private static ImmutableList<SymbolProblem> findInterfaceProblems(
+      ClassDumper classDumper, ClassFile classFile, InterfaceSymbol interfaceSymbol) {
     String interfaceName = interfaceSymbol.getClassBinaryName();
     if (classDumper.isSystemClass(interfaceName)) {
       return ImmutableList.of();
@@ -348,7 +308,8 @@ public class LinkageChecker {
    * Optional}.
    */
   @VisibleForTesting
-  Optional<SymbolProblem> findSymbolProblem(ClassFile classFile, FieldSymbol symbol) {
+  static Optional<SymbolProblem> findSymbolProblem(
+      ClassDumper classDumper, ClassFile classFile, FieldSymbol symbol) {
     String sourceClassName = classFile.getBinaryName();
     String targetClassName = symbol.getClassBinaryName();
 
@@ -359,7 +320,7 @@ public class LinkageChecker {
       ClassFile containingClassFile =
           classFileLocation == null ? null : new ClassFile(classFileLocation, targetClassName);
 
-      if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
+      if (!isClassAccessibleFrom(classDumper, targetJavaClass, sourceClassName)) {
         return Optional.of(
             new SymbolProblem(symbol, ErrorType.INACCESSIBLE_CLASS, containingClassFile));
       }
@@ -367,7 +328,7 @@ public class LinkageChecker {
       for (JavaClass javaClass : getClassHierarchy(targetJavaClass)) {
         for (Field field : javaClass.getFields()) {
           if (field.getName().equals(fieldName)) {
-            if (!isMemberAccessibleFrom(javaClass, field, sourceClassName)) {
+            if (!isMemberAccessibleFrom(classDumper, javaClass, field, sourceClassName)) {
               return Optional.of(
                   new SymbolProblem(symbol, ErrorType.INACCESSIBLE_MEMBER, containingClassFile));
             }
@@ -394,8 +355,11 @@ public class LinkageChecker {
    * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-6.html#jls-6.6.1">JLS 6.6.1
    *     Determining Accessibility</a>
    */
-  private boolean isMemberAccessibleFrom(
-      JavaClass targetClass, FieldOrMethod member, String sourceClassName) {
+  private static boolean isMemberAccessibleFrom(
+      ClassDumper classDumper,
+      JavaClass targetClass,
+      FieldOrMethod member,
+      String sourceClassName) {
     // The order of these if statements for public, protected, and private are in the same order
     // they
     // appear in JLS 6.6.1
@@ -437,7 +401,8 @@ public class LinkageChecker {
    * Optional}.
    */
   @VisibleForTesting
-  Optional<SymbolProblem> findSymbolProblem(ClassFile classFile, ClassSymbol symbol) {
+  static Optional<SymbolProblem> findSymbolProblem(
+      ClassDumper classDumper, ClassFile classFile, ClassSymbol symbol) {
     String sourceClassName = classFile.getBinaryName();
     String targetClassName = symbol.getClassBinaryName();
 
@@ -455,7 +420,7 @@ public class LinkageChecker {
             new SymbolProblem(symbol, ErrorType.INCOMPATIBLE_CLASS_CHANGE, containingClassFile));
       }
 
-      if (!isClassAccessibleFrom(targetClass, sourceClassName)) {
+      if (!isClassAccessibleFrom(classDumper, targetClass, sourceClassName)) {
         return Optional.of(
             new SymbolProblem(symbol, ErrorType.INACCESSIBLE_CLASS, containingClassFile));
       }
@@ -477,7 +442,8 @@ public class LinkageChecker {
    * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-ClassModifier">
    *     JLS 8.1.1. Class Modifiers</a>
    */
-  private boolean isClassAccessibleFrom(JavaClass javaClass, String sourceClassName)
+  private static boolean isClassAccessibleFrom(
+      ClassDumper classDumper, JavaClass javaClass, String sourceClassName)
       throws ClassNotFoundException {
     if (javaClass.isPrivate()) {
       // Nested class can be declared as private. Class reference within same file is allowed to
@@ -495,7 +461,7 @@ public class LinkageChecker {
         // public and package private. Protected is treated same as package private.
         // https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-ClassModifier
         JavaClass enclosingJavaClass = classDumper.loadJavaClass(enclosingClassName);
-        return isClassAccessibleFrom(enclosingJavaClass, sourceClassName);
+        return isClassAccessibleFrom(classDumper, enclosingJavaClass, sourceClassName);
       } else {
         // Top-level class can be declared as public or package private.
         return true;
@@ -510,7 +476,8 @@ public class LinkageChecker {
    * Returns an {@code Optional} describing the symbol problem in the parent classes or interfaces
    * of {@code baseClassName}, if any of them are missing; otherwise an empty {@code Optional}.
    */
-  private Optional<SymbolProblem> findParentSymbolProblem(String baseClassName) {
+  private static Optional<SymbolProblem> findParentSymbolProblem(
+      ClassDumper classDumper, String baseClassName) {
     Queue<String> queue = new ArrayDeque<>();
     queue.add(baseClassName);
     while (!queue.isEmpty()) {
@@ -540,8 +507,8 @@ public class LinkageChecker {
     return Optional.empty();
   }
 
-  private ImmutableList<SymbolProblem> findAbstractParentProblems(
-      ClassFile classFile, SuperClassSymbol superClassSymbol) {
+  private static ImmutableList<SymbolProblem> findAbstractParentProblems(
+      ClassDumper classDumper, ClassFile classFile, SuperClassSymbol superClassSymbol) {
     ImmutableList.Builder<SymbolProblem> builder = ImmutableList.builder();
     String superClassName = superClassSymbol.getClassBinaryName();
     if (classDumper.isSystemClass(superClassName)) {
