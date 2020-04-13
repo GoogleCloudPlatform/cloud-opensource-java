@@ -187,15 +187,7 @@ public class DashboardMain {
     // LinkedListMultimap preserves the key order
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
 
-<<<<<<< HEAD
-    // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
-    List<ClassPathEntry> artifactJarsInBom = classpath.subList(0, managedDependencies.size());
-    ImmutableSet<ClassPathEntry> entryPoints = ImmutableSet.copyOf(artifactJarsInBom);
-
     LinkageCheckRequest.Builder request = LinkageCheckRequest.builder(classpath);
-=======
-    LinkageChecker linkageChecker = LinkageChecker.create(classpath);
->>>>>>> origin/master
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         LinkageChecker.check(request.build());
