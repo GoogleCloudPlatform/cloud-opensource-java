@@ -481,7 +481,9 @@ class ClassDumper {
 
       for (Method method : sourceJavaClass.getMethods()) {
         if (method.getCode() == null) {
-          // No need to check the presence of try-catch clause for methods without code
+          // No need to check the presence of try-catch clause for methods without code. This guard
+          // avoids NullPointerException by BCEL.
+          // https://issues.apache.org/jira/browse/BCEL-336
           continue;
         }
         MethodGen methodGen = new MethodGen(method, sourceClassName, classGen.getConstantPool());
