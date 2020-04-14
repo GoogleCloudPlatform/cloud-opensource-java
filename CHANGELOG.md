@@ -1,7 +1,7 @@
 # Linkage Checker Enforcer Rule Change Log
 
 ## 1.2.1
-* Linkage Checker skips invalid class files missing method body.
+* Linkage Checker properly handles invalid class files missing method body.
 
 ## 1.2.0
 * Linkage Checker takes an [exclusion file](
