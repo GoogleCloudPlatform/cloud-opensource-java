@@ -481,7 +481,7 @@ class ClassDumper {
 
       for (Method method : sourceJavaClass.getMethods()) {
         if (method.getCode() == null) {
-          // If the method doesn't have body, no need to check try-catch clause.
+          // No need to check the presence of try-catch clause for methods without code
           continue;
         }
         MethodGen methodGen = new MethodGen(method, sourceClassName, classGen.getConstantPool());
