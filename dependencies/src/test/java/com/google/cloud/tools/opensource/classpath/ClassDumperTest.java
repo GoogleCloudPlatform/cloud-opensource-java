@@ -414,6 +414,8 @@ public class ClassDumperTest {
     List<ClassPathEntry> classPath = resolvePaths("javax:javaee-api:6.0");
     ClassDumper classDumper = ClassDumper.create(classPath);
 
-    classDumper.catchesLinkageError("javax.mail.internet.MailDateFormat");
+    // This should not raise NullPointerException
+    boolean result = classDumper.catchesLinkageError("javax.mail.internet.MailDateFormat");
+    assertFalse(result);
   }
 }
