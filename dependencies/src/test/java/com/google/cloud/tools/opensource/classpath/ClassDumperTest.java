@@ -405,4 +405,17 @@ public class ClassDumperTest {
                 (ClassFile classFile) -> classFile.getBinaryName(), "has class name"))
         .contains("com.ibm.icu.util.DateRule");
   }
+
+  @Test
+  public void testMethodCodeNull() throws IOException {
+    // catchesLinkageError should not raise an exception for MailDateFormat's constructor's null
+    // code.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1352
+    List<ClassPathEntry> classPath = resolvePaths("javax:javaee-api:6.0");
+    ClassDumper classDumper = ClassDumper.create(classPath);
+
+    // This should not raise NullPointerException
+    boolean result = classDumper.catchesLinkageError("javax.mail.internet.MailDateFormat");
+    assertFalse(result);
+  }
 }
