@@ -39,8 +39,7 @@ class ExcludedErrors {
           LinkageChecker.class
               .getClassLoader()
               .getResource("linkage-checker-exclusion-default.xml");
-      ImmutableList<LinkageErrorMatcher> defaultMatchers =
-          ExclusionFileParser.parse(defaultRuleUrl);
+      ImmutableList<LinkageErrorMatcher> defaultMatchers = ExclusionFiles.parse(defaultRuleUrl);
       exclusionMatchers.addAll(defaultMatchers);
     } catch (SAXException | VerifierConfigurationException ex) {
       throw new IOException("Could not read default exclusion rule", ex);
@@ -48,7 +47,7 @@ class ExcludedErrors {
 
     try {
       if (exclusionFile != null) {
-        exclusionMatchers.addAll(ExclusionFileParser.parse(exclusionFile));
+        exclusionMatchers.addAll(ExclusionFiles.parse(exclusionFile));
       }
     } catch (SAXException | VerifierConfigurationException ex) {
       throw new IOException("Could not read exclusion rule file " + exclusionFile, ex);

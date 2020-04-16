@@ -24,8 +24,11 @@ import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimaps;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.transform.TransformerException;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -36,14 +39,15 @@ import org.eclipse.aether.artifact.Artifact;
 class LinkageCheckerMain {
 
   /**
-   * Forms a classpath from Maven coordinates or a list of jar files
-   * and reports linkage errors in that classpath.
+   * Forms a classpath from Maven coordinates or a list of jar files and reports linkage errors in
+   * that classpath.
    *
    * @throws IOException when there is a problem reading a jar file
    * @throws RepositoryException when there is a problem resolving the Maven coordinates to jar
    *     files
    */
-  public static void main(String[] arguments) throws IOException, RepositoryException {
+  public static void main(String[] arguments)
+      throws IOException, RepositoryException, TransformerException, XMLStreamException {
 
     try {
       LinkageCheckerArguments linkageCheckerArguments =
@@ -82,7 +86,7 @@ class LinkageCheckerMain {
 
         LinkageChecker linkageChecker =
             LinkageChecker.create(
-                inputClassPath, entryPoints, linkageCheckerArguments.getExclusionFile());
+                inputClassPath, entryPoints, linkageCheckerArguments.getInputExclusionFile());
         ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
             linkageChecker.findSymbolProblems();
     
@@ -93,9 +97,15 @@ class LinkageCheckerMain {
                   Multimaps.filterValues(
                       symbolProblems, classFile -> graph.isReachable(classFile.getBinaryName())));
         }
-    
+
         System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
-    
+
+        Path writeAsExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
+        if (writeAsExclusionFile != null) {
+          ExclusionFiles.write(writeAsExclusionFile, symbolProblems);
+          System.out.println("Wrote the linkage errors as exclusion file: " + writeAsExclusionFile);
+        }
+
         if (classPathResult != null && !symbolProblems.isEmpty()) {
           Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
           for (SymbolProblem symbolProblem : symbolProblems.keySet()) {
