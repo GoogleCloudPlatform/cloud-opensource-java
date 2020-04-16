@@ -1,5 +1,8 @@
 # Linkage Checker Enforcer Rule Change Log
 
+## 1.2.1
+* Linkage Checker handles class files containing methods without a body.
+
 ## 1.2.0
 * Linkage Checker takes an [exclusion file](
 https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Exclusion-File)
