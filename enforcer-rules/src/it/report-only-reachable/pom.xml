@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.google.cloud.tools.opensource</groupId>
-  <artifactId>no-such-method-error-example</artifactId>
+  <artifactId>test-report-only-reachable</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <name>no-such-method-error-example</name>
@@ -33,6 +33,7 @@
   </properties>
 
   <dependencies>
+    <!-- These two artifacts have linkage errors that are not reachable -->
     <dependency>
       <groupId>com.google.api-client</groupId>
       <artifactId>google-api-client</artifactId>
@@ -61,7 +62,6 @@
         <executions>
           <execution>
             <id>enforce-linkage-checker</id>
-            <!-- Important! Should run after compile -->
             <phase>verify</phase>
             <goals>
               <goal>enforce</goal>
