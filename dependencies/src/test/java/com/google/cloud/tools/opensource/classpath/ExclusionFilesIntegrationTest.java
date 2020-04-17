@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -43,7 +44,8 @@ public class ExclusionFilesIntegrationTest {
 
   @Test
   public void testExclusion()
-      throws IOException, RepositoryException, TransformerException, XMLStreamException {
+      throws IOException, RepositoryException, TransformerException, XMLStreamException,
+          LinkageCheckResultException {
 
     Artifact artifact =
         new DefaultArtifact("org.apache.beam:beam-runners-google-cloud-dataflow-java:2.19.0");

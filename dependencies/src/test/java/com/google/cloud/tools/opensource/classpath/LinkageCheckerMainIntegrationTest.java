@@ -17,6 +17,8 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.google.common.truth.Truth;
 import java.io.ByteArrayOutputStream;
@@ -64,8 +66,13 @@ public class LinkageCheckerMainIntegrationTest {
 
     String jarArgument = googleCloudCore + "," + googleCloudFirestore + "," + guava;
 
-    // This should not raise Exception
-    LinkageCheckerMain.main(new String[] {"-j", jarArgument});
+    try {
+      LinkageCheckerMain.main(new String[] {"-j", jarArgument});
+      fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
+    } catch (LinkageCheckResultException expected) {
+      // pass
+      assertEquals("Found 369 linkage errors", expected.getMessage());
+    }
 
     // Gax is not in the JAR list
     Truth.assertThat(readCapturedStdout())
@@ -79,9 +86,15 @@ public class LinkageCheckerMainIntegrationTest {
 
   @Test
   public void testArtifacts()
-      throws IOException, URISyntaxException, RepositoryException, TransformerException, XMLStreamException {
-    LinkageCheckerMain.main(
-        new String[] {"-a", "com.google.cloud:google-cloud-firestore:0.65.0-beta"});
+      throws IOException, RepositoryException, TransformerException, XMLStreamException {
+    try {
+      LinkageCheckerMain.main(
+          new String[] {"-a", "com.google.cloud:google-cloud-firestore:0.65.0-beta"});
+      fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
+    } catch (LinkageCheckResultException expected) {
+      // pass
+      assertEquals("Found 69 linkage errors", expected.getMessage());
+    }
 
     String output = readCapturedStdout();
     Truth.assertThat(output)
@@ -103,7 +116,13 @@ public class LinkageCheckerMainIntegrationTest {
   @Test
   public void testBom()
       throws IOException, RepositoryException, TransformerException, XMLStreamException {
-    LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
+    try {
+      LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
+      fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
+    } catch (LinkageCheckResultException expected) {
+      // pass
+      assertEquals("Found 583 linkage errors", expected.getMessage());
+    }
 
     String output = readCapturedStdout();
 
