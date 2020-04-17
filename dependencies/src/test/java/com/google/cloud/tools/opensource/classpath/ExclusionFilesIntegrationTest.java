@@ -43,7 +43,8 @@ public class ExclusionFilesIntegrationTest {
 
   @Test
   public void testExclusion()
-      throws IOException, RepositoryException, TransformerException, XMLStreamException {
+      throws IOException, RepositoryException, TransformerException, XMLStreamException,
+          LinkageCheckResultException {
 
     Artifact artifact =
         new DefaultArtifact("org.apache.beam:beam-runners-google-cloud-dataflow-java:2.19.0");
