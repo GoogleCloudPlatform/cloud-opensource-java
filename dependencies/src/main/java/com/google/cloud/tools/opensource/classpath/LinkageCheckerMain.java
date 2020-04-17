@@ -106,7 +106,9 @@ class LinkageCheckerMain {
           return;
         }
 
-        System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
+        if (!symbolProblems.isEmpty()) {
+          System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
+        }
 
         if (classPathResult != null && !symbolProblems.isEmpty()) {
           Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();

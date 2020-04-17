@@ -30,5 +30,4 @@ final class LinkageCheckResultException extends Exception {
                 ? "1 linkage error"
                 : (linkageErrorCount + " linkage errors")));
   }
-  ;
 }
