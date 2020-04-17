@@ -169,6 +169,8 @@ public class LinkageCheckerMainIntegrationTest {
         });
 
     String output = readCapturedStdout();
-    assertEquals("Wrote the linkage errors as exclusion file: " + exclusionFile + "\n", output);
+    assertEquals(
+        "Wrote the linkage errors as exclusion file: " + exclusionFile + System.lineSeparator(),
+        output);
   }
 }
