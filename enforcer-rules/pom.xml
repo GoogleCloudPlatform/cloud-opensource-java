@@ -136,9 +136,8 @@
         <version>3.2.1</version>
         <configuration>
           <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
-<!--          <settingsFile>src/it/settings.xml</settingsFile> -->
           <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
-          <postBuildHookScript>verify</postBuildHookScript> <!-- no extension required -->
+          <postBuildHookScript>verify</postBuildHookScript>
         </configuration>
         <executions>
           <execution>
