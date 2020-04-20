@@ -17,12 +17,15 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.google.common.truth.Truth;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.TransformerException;
@@ -64,8 +67,12 @@ public class LinkageCheckerMainIntegrationTest {
 
     String jarArgument = googleCloudCore + "," + googleCloudFirestore + "," + guava;
 
-    // This should not raise Exception
-    LinkageCheckerMain.main(new String[] {"-j", jarArgument});
+    try {
+      LinkageCheckerMain.main(new String[] {"-j", jarArgument});
+      fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
+    } catch (LinkageCheckResultException expected) {
+      assertEquals("Found 369 linkage errors", expected.getMessage());
+    }
 
     // Gax is not in the JAR list
     Truth.assertThat(readCapturedStdout())
@@ -79,9 +86,14 @@ public class LinkageCheckerMainIntegrationTest {
 
   @Test
   public void testArtifacts()
-      throws IOException, URISyntaxException, RepositoryException, TransformerException, XMLStreamException {
-    LinkageCheckerMain.main(
-        new String[] {"-a", "com.google.cloud:google-cloud-firestore:0.65.0-beta"});
+      throws IOException, RepositoryException, TransformerException, XMLStreamException {
+    try {
+      LinkageCheckerMain.main(
+          new String[] {"-a", "com.google.cloud:google-cloud-firestore:0.65.0-beta"});
+      fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
+    } catch (LinkageCheckResultException expected) {
+      assertEquals("Found 69 linkage errors", expected.getMessage());
+    }
 
     String output = readCapturedStdout();
     Truth.assertThat(output)
@@ -101,9 +113,25 @@ public class LinkageCheckerMainIntegrationTest {
   }
 
   @Test
+  public void testArtifacts_noError()
+      throws IOException, RepositoryException, TransformerException, XMLStreamException,
+          LinkageCheckResultException {
+    // gax does not have any linkage errors
+    LinkageCheckerMain.main(new String[] {"-a", "com.google.api:gax:1.56.0"});
+
+    String output = readCapturedStdout();
+    Truth.assertThat(output).isEmpty();
+  }
+
+  @Test
   public void testBom()
       throws IOException, RepositoryException, TransformerException, XMLStreamException {
-    LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
+    try {
+      LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
+      fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
+    } catch (LinkageCheckResultException expected) {
+      assertEquals("Found 583 linkage errors", expected.getMessage());
+    }
 
     String output = readCapturedStdout();
 
@@ -121,5 +149,28 @@ public class LinkageCheckerMainIntegrationTest {
             "com.google.appengine:appengine-api-1.0-sdk:1.9.71 is at:\n"
                 + "  com.google.http-client:google-http-client-appengine:1.29.1 (compile) "
                 + "/ com.google.appengine:appengine-api-1.0-sdk:1.9.71 (provided)");
+  }
+
+  @Test
+  public void testWriteLinkageErrorsAsExclusionFile()
+      throws IOException, RepositoryException, TransformerException, XMLStreamException,
+          LinkageCheckResultException {
+    Path exclusionFile = Files.createTempFile("exclusion-file", ".xml");
+    exclusionFile.toFile().deleteOnExit();
+
+    // When --output-exclusion-file is specified, the tool should not return failure (non-zero)
+    // status upon finding linkage errors.
+    LinkageCheckerMain.main(
+        new String[] {
+          "-a",
+          "com.google.cloud:google-cloud-firestore:0.65.0-beta",
+          "-o",
+          exclusionFile.toString()
+        });
+
+    String output = readCapturedStdout();
+    assertEquals(
+        "Wrote the linkage errors as exclusion file: " + exclusionFile + System.lineSeparator(),
+        output);
   }
 }

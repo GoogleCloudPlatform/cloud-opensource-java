@@ -47,7 +47,8 @@ class LinkageCheckerMain {
    *     files
    */
   public static void main(String[] arguments)
-      throws IOException, RepositoryException, TransformerException, XMLStreamException {
+      throws IOException, RepositoryException, TransformerException, XMLStreamException,
+          LinkageCheckResultException {
 
     try {
       LinkageCheckerArguments linkageCheckerArguments =
@@ -98,12 +99,15 @@ class LinkageCheckerMain {
                       symbolProblems, classFile -> graph.isReachable(classFile.getBinaryName())));
         }
 
-        System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
-
         Path writeAsExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
         if (writeAsExclusionFile != null) {
           ExclusionFiles.write(writeAsExclusionFile, symbolProblems);
           System.out.println("Wrote the linkage errors as exclusion file: " + writeAsExclusionFile);
+          return;
+        }
+
+        if (!symbolProblems.isEmpty()) {
+          System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
         }
 
         if (classPathResult != null && !symbolProblems.isEmpty()) {
@@ -123,6 +127,12 @@ class LinkageCheckerMain {
         if (!artifactProblems.isEmpty()) {
           System.out.println("\n");
           System.out.println(ArtifactProblem.formatProblems(artifactProblems));
+        }
+
+        if (!symbolProblems.isEmpty()) {
+          // Throwing an exception is more test-friendly compared with System.exit(1). The latter
+          // abruptly stops test execution.
+          throw new LinkageCheckResultException(symbolProblems.size());
         }
       }
     } catch (ParseException ex) {
