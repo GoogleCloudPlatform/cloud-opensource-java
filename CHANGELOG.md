@@ -1,5 +1,9 @@
 # Linkage Checker Enforcer Rule Change Log
 
+## 1.3.0
+* LinkageCheckerMain has an option (`-o`) to output linkage errors into a file.
+* LinkageCheckerMain throws LinkageCheckResultException if it finds linkage errors.
+
 ## 1.2.1
 * Linkage Checker handles class files containing methods without a body.
 
