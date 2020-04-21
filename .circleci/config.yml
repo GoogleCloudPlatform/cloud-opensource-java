@@ -40,7 +40,7 @@ jobs:
       - run: |
           mkdir -p ~/.m2
           cp settings.xml ~/.m2/
-          mvn -B -e integration-test
+          ./mvnw -B -e integration-test
 
       - run:
           name: Save test results
