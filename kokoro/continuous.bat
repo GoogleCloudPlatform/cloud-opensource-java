@@ -8,8 +8,6 @@ cd github/cloud-opensource-java
 mkdir %USERPROFILE%\.m2
 copy settings.xml %USERPROFILE%\.m2
 
-mvnw.cmd -version
-
 mvnw.cmd -B clean install javadoc:jar
 
 exit /b %ERRORLEVEL%
