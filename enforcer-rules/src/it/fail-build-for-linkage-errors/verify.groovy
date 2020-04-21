@@ -1,6 +1,7 @@
 def buildLog = new File(basedir, "build.log")
 
-assert buildLog.text.contains('''\
+// Windows build contains \r character
+assert buildLog.text.replaceAll("\\r", "").contains('''\
 [ERROR] Linkage Checker rule found 16 errors. Linkage error report:
 Class javax.jms.Connection is not found;
   referenced by 1 class file
