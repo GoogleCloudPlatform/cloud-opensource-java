@@ -3,7 +3,7 @@
 ## 1.3.0
 * LinkageCheckerMain has an option (`-o`) to output linkage errors into a file ([document](
   https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/LinkageCheckerMain#exclusion-files
-  )). This feature is currently alpha; we may change the behavior/format in later release.
+  )). This feature is currently alpha; we may change the behavior/format in later releases.
 * LinkageCheckerMain throws LinkageCheckResultException if it finds linkage errors.
 
 ## 1.2.1
