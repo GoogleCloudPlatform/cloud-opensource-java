@@ -35,7 +35,7 @@ This project is built using _Maven_.
 
 ## Requirements
 
-1. Maven 3.5.0 or later.
+1. Maven 3.6.0 or later.
 
 1. JDK 8
 
