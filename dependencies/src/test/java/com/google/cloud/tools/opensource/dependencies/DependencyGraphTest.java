@@ -37,12 +37,12 @@ public class DependencyGraphTest {
   private Artifact baz1 = new DefaultArtifact("com.google:baz:1");
   private Artifact bat1 = new DefaultArtifact("com.google:bat:1");
   private Artifact baz2 = new DefaultArtifact("com.google:baz:2");
-  private DependencyPath path1 = new DependencyPath();
-  private DependencyPath path2 = new DependencyPath();
-  private DependencyPath path3 = new DependencyPath();
-  private DependencyPath path4 = new DependencyPath();
-  private DependencyPath path5 = new DependencyPath();
-  private DependencyPath path6 = new DependencyPath();
+  private DependencyPath path1 = new DependencyPath(null);
+  private DependencyPath path2 = new DependencyPath(null);
+  private DependencyPath path3 = new DependencyPath(null);
+  private DependencyPath path4 = new DependencyPath(null);
+  private DependencyPath path5 = new DependencyPath(null);
+  private DependencyPath path6 = new DependencyPath(null);
   
   @Before
   public void setUp() {

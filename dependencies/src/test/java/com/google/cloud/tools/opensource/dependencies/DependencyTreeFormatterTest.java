@@ -31,7 +31,7 @@ public class DependencyTreeFormatterTest {
 
     // 4 artifacts as DependencyPath dummy inputs
 
-    DependencyPath path2 = new DependencyPath();
+    DependencyPath path2 = new DependencyPath(null);
     path2.add(
         new Dependency(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", false));
     path2.add(
@@ -40,12 +40,12 @@ public class DependencyTreeFormatterTest {
 
     // dependency1 and dependency2 are intentionally added in wrong order
     // formatDependencyPaths is responsible for sorting the items in the tree
-    DependencyPath path1 = new DependencyPath();
+    DependencyPath path1 = new DependencyPath(null);
     path1.add(
         new Dependency(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", false));
     dependencyPathList.add(path1);
 
-    DependencyPath path3 = new DependencyPath();
+    DependencyPath path3 = new DependencyPath(null);
     path3.add(
         new Dependency(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", false));
     path3.add(
@@ -54,7 +54,7 @@ public class DependencyTreeFormatterTest {
         new Dependency(new DefaultArtifact("io.grpc:grpc-context:jar:1.15.0"), "compile", false));
     dependencyPathList.add(path3);
 
-    DependencyPath path4 = new DependencyPath();
+    DependencyPath path4 = new DependencyPath(null);
     path4.add(
         new Dependency(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", false));
     path4.add(
@@ -78,11 +78,11 @@ public class DependencyTreeFormatterTest {
   public void testDependencyTree_scopeAndOptionalFlag() {
     List<DependencyPath> dependencyPathList = new ArrayList<>();
 
-    DependencyPath path1 = new DependencyPath();
+    DependencyPath path1 = new DependencyPath(null);
     path1.add(new Dependency(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", true));
     dependencyPathList.add(path1);
 
-    DependencyPath path2 = new DependencyPath();
+    DependencyPath path2 = new DependencyPath(null);
     path2.add(new Dependency(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", true));
     path2.add(
         new Dependency(new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"), "provided", false));

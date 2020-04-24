@@ -36,7 +36,7 @@ public class DependencyTreeFormatter {
     // requires traversing the items in pre-order
     ListMultimap<DependencyPath, DependencyPath> tree = buildDependencyPathTree(dependencyPaths);
     // Empty dependency path is to retrieve children of root node
-    formatDependencyPathTree(stringBuilder, tree, new DependencyPath());
+    formatDependencyPathTree(stringBuilder, tree, new DependencyPath(null));
     return stringBuilder.toString();
   }
 

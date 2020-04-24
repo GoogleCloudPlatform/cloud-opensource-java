@@ -37,15 +37,15 @@ import org.junit.Test;
 public class ClassPathResultTest {
   private Artifact artifactA = new DefaultArtifact("com.google:a:1");
   private Artifact artifactB = new DefaultArtifact("com.google:b:1");
-  private DependencyPath dependencyPath_A = new DependencyPath();
-  private DependencyPath dependencyPath_B = new DependencyPath();
-  private DependencyPath dependencyPath_B_A = new DependencyPath();
-  private DependencyPath dependencyPath_A_B_A = new DependencyPath();
+  private DependencyPath dependencyPath_A = new DependencyPath(null);
+  private DependencyPath dependencyPath_B = new DependencyPath(null);
+  private DependencyPath dependencyPath_B_A = new DependencyPath(null);
+  private DependencyPath dependencyPath_A_B_A = new DependencyPath(null);
   private ClassPathEntry jarA = new ClassPathEntry(Paths.get("a.jar"));
   private ClassPathEntry jarB = new ClassPathEntry(Paths.get("b.jar"));;
 
   @Before
-  public void setup() throws IOException {
+  public void setup() {
     dependencyPath_A.add(new Dependency(artifactA, "compile"));
     dependencyPath_B.add(new Dependency(artifactB, "compile"));
 

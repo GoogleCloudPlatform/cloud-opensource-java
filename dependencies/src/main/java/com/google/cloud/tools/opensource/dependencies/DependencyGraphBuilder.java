@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -237,9 +238,9 @@ public final class DependencyGraphBuilder {
 
   private static final class LevelOrderQueueItem {
     final DependencyNode dependencyNode;
-    final ArrayDeque<DependencyNode> parentNodes;
+    final ArrayList<DependencyNode> parentNodes;
 
-    LevelOrderQueueItem(DependencyNode dependencyNode, ArrayDeque<DependencyNode> parentNodes) {
+    LevelOrderQueueItem(DependencyNode dependencyNode, ArrayList<DependencyNode> parentNodes) {
       this.dependencyNode = dependencyNode;
       this.parentNodes = parentNodes;
     }
@@ -262,18 +263,23 @@ public final class DependencyGraphBuilder {
    *
    * @param firstNode node to start traversal
    */
-  private DependencyGraph levelOrder(DependencyNode firstNode) {
+  public static DependencyGraph levelOrder(DependencyNode firstNode) {
 
     DependencyGraph graph = new DependencyGraph();
 
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
-    queue.add(new LevelOrderQueueItem(firstNode, new ArrayDeque<>()));
+    queue.add(new LevelOrderQueueItem(firstNode, new ArrayList<>()));
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
       DependencyNode dependencyNode = item.dependencyNode;
-      DependencyPath path = new DependencyPath();
-      ArrayDeque<DependencyNode> parentNodes = item.parentNodes;
+      ArrayList<DependencyNode> parentNodes = item.parentNodes;
+      DependencyPath path = parentNodes.isEmpty() ?
+          new DependencyPath(dependencyNode.getArtifact())
+          : new DependencyPath(parentNodes.get(0).getArtifact());
+      for (int i=1; i<parentNodes.size(); i++) {
+        path.add(parentNodes.get(i).getDependency());
+      }
       parentNodes.forEach(
           parentNode -> path.add(parentNode.getDependency()));
       Artifact artifact = dependencyNode.getArtifact();
@@ -300,7 +306,7 @@ public final class DependencyGraphBuilder {
       }
       
       for (DependencyNode child : dependencyNode.getChildren()) {
-        ArrayDeque<DependencyNode> clone = parentNodes.clone();
+        ArrayList<DependencyNode> clone = new ArrayList(parentNodes);
         queue.add(new LevelOrderQueueItem(child, clone));
       }
     }
