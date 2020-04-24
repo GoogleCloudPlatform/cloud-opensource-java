@@ -23,6 +23,7 @@
   <groupId>com.google.cloud.tools.opensource</groupId>
   <artifactId>bom-project-no-packaging</artifactId>
   <version>1.0-SNAPSHOT</version>
+  <!-- This project is missing packaging element, which BOM project should have normally -->
 
   <name>bom-project-no-packaging</name>
 
