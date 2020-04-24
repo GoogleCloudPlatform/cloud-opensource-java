@@ -246,7 +246,7 @@ public class DependencyGraphBuilderTest {
     List<DependencyPath> dependencyPaths = graph.list();
 
     String expectedDependencyPathForOpencensusContribHttpUtil =
-        "io.grpc:grpc-alts:1.27.0 (compile) " // this has exclusion of Guava
+        "io.grpc:grpc-alts:jar:1.27.0 " // this has exclusion of Guava
             + "/ com.google.auth:google-auth-library-oauth2-http:0.19.0 (compile) "
             + "/ com.google.http-client:google-http-client:1.33.0 (compile) "
             + "/ io.opencensus:opencensus-contrib-http-util:0.24.0 (compile)";

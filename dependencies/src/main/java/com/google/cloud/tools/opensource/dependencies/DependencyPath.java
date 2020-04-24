@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -46,7 +45,16 @@ public final class DependencyPath {
   }
 
   @VisibleForTesting
-  public void add(Dependency dependency) {
+  public DependencyPath appended(Dependency dependency) {
+    DependencyPath copy = new DependencyPath(root);
+    for (int i = 0; i < path.size(); i++) {
+      copy.add(path.get(i));
+    }
+    copy.add(dependency);
+    return copy;
+  }
+
+  private void add(Dependency dependency) {
     path.add(checkNotNull(dependency));
   }
 
@@ -57,16 +65,31 @@ public final class DependencyPath {
 
   /** Returns the artifact in the leaf (the furthest node from the node) of the path. */
   public Artifact getLeaf() {
-    if (path.size() >= 1) {
-      return path.get(path.size() - 1).getArtifact();
-    } else {
+    if (path.isEmpty()) {
       return root;
+    } else {
+      return path.get(path.size() - 1).getArtifact();
     }
   }
 
   /** Returns the list of artifact in the path. */
   public ImmutableList<Artifact> getArtifacts() {
-    return path.stream().map(Dependency::getArtifact).collect(toImmutableList());
+    ImmutableList.Builder<Artifact> builder = ImmutableList.builder();
+
+    if (root != null) {
+      builder.add(root);
+    }
+    path.stream().map(Dependency::getArtifact).forEach(builder::add);
+    return builder.build();
+  }
+
+  /**
+   * Returns the root of the dependency path. Null if the path is part of dependency tree that does
+   * not have root artifact
+   */
+  @Nullable
+  public Artifact getRoot() {
+    return root;
   }
 
   /**

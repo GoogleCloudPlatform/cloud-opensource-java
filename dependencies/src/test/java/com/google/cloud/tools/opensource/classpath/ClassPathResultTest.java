@@ -26,36 +26,30 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.UnmodifiableIterator;
-import java.io.IOException;
 import java.nio.file.Paths;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
-import org.junit.Before;
 import org.junit.Test;
 
 public class ClassPathResultTest {
   private Artifact artifactA = new DefaultArtifact("com.google:a:1");
   private Artifact artifactB = new DefaultArtifact("com.google:b:1");
-  private DependencyPath dependencyPath_A = new DependencyPath(null);
-  private DependencyPath dependencyPath_B = new DependencyPath(null);
-  private DependencyPath dependencyPath_B_A = new DependencyPath(null);
-  private DependencyPath dependencyPath_A_B_A = new DependencyPath(null);
+  private DependencyPath dependencyPath_A =
+      new DependencyPath(null).appended(new Dependency(artifactA, "compile"));
+  private DependencyPath dependencyPath_B =
+      new DependencyPath(null).appended(new Dependency(artifactB, "compile"));
+  private DependencyPath dependencyPath_B_A =
+      new DependencyPath(null)
+          .appended(new Dependency(artifactB, "compile"))
+          .appended(new Dependency(artifactA, "compile"));
+  private DependencyPath dependencyPath_A_B_A =
+      new DependencyPath(null)
+          .appended(new Dependency(artifactA, "compile"))
+          .appended(new Dependency(artifactB, "compile"))
+          .appended(new Dependency(artifactA, "compile"));
   private ClassPathEntry jarA = new ClassPathEntry(Paths.get("a.jar"));
   private ClassPathEntry jarB = new ClassPathEntry(Paths.get("b.jar"));;
-
-  @Before
-  public void setup() {
-    dependencyPath_A.add(new Dependency(artifactA, "compile"));
-    dependencyPath_B.add(new Dependency(artifactB, "compile"));
-
-    dependencyPath_B_A.add(new Dependency(artifactB, "compile"));
-    dependencyPath_B_A.add(new Dependency(artifactA, "compile"));
-
-    dependencyPath_A_B_A.add(new Dependency(artifactA, "compile"));
-    dependencyPath_A_B_A.add(new Dependency(artifactB, "compile"));
-    dependencyPath_A_B_A.add(new Dependency(artifactA, "compile"));
-  }
 
   @Test
   public void testFormatDependencyPaths_onePath() {

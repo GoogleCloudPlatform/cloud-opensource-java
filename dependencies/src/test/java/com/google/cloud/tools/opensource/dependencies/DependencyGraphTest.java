@@ -16,18 +16,16 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.truth.Truth;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.truth.Truth;
 
 public class DependencyGraphTest {
 
@@ -37,35 +35,36 @@ public class DependencyGraphTest {
   private Artifact baz1 = new DefaultArtifact("com.google:baz:1");
   private Artifact bat1 = new DefaultArtifact("com.google:bat:1");
   private Artifact baz2 = new DefaultArtifact("com.google:baz:2");
-  private DependencyPath path1 = new DependencyPath(null);
-  private DependencyPath path2 = new DependencyPath(null);
-  private DependencyPath path3 = new DependencyPath(null);
-  private DependencyPath path4 = new DependencyPath(null);
-  private DependencyPath path5 = new DependencyPath(null);
-  private DependencyPath path6 = new DependencyPath(null);
-  
+  private DependencyPath path1 = new DependencyPath(null).appended(new Dependency(foo, "compile"));
+  private DependencyPath path2 =
+      new DependencyPath(null)
+          .appended(new Dependency(foo, "compile"))
+          .appended(new Dependency(bar, "compile"));
+  private DependencyPath path3 =
+      new DependencyPath(null)
+          .appended(new Dependency(foo, "compile"))
+          .appended(new Dependency(baz1, "compile"));
+  private DependencyPath path4 =
+      new DependencyPath(null)
+          .appended(new Dependency(foo, "compile"))
+          .appended(new Dependency(bar, "compile"))
+          .appended(new Dependency(baz2, "compile"));
+  private DependencyPath path5 =
+      new DependencyPath(null)
+          .appended(new Dependency(foo, "compile"))
+          .appended(new Dependency(bat1, "compile"))
+          .appended(new Dependency(baz1, "compile")); // 2 paths to baz1
+  private DependencyPath path6 =
+      new DependencyPath(null)
+          .appended(new Dependency(foo, "compile"))
+          .appended(new Dependency(bat1, "compile"));
+
   @Before
   public void setUp() {
-
     // WARNING the way the path is built here does not necessarily meet
     // all the preconditions of a path built from a real artifact. In
     // particular, there can be a path to a leaf without including all
     // the subpaths of that path.
-
-    path1.add(new Dependency(foo, "compile"));
-    path2.add(new Dependency(foo, "compile"));
-    path2.add(new Dependency(bar, "compile"));
-    path3.add(new Dependency(foo, "compile"));
-    path3.add(new Dependency(baz1, "compile"));
-    path4.add(new Dependency(foo, "compile"));
-    path4.add(new Dependency(bar, "compile"));
-    path4.add(new Dependency(baz2, "compile"));
-    path5.add(new Dependency(foo, "compile"));
-    path5.add(new Dependency(bat1, "compile"));
-    path5.add(new Dependency(baz1, "compile")); // 2 paths to baz1
-    path6.add(new Dependency(foo, "compile"));
-    path6.add(new Dependency(bat1, "compile"));
-
     graph.addPath(path1);
     graph.addPath(path2);
     graph.addPath(path3);
