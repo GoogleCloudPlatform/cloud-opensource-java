@@ -107,7 +107,7 @@ public class LinkageCheckerMainIntegrationTest {
     Truth.assertThat(output)
         .contains(
             "io.grpc:grpc-netty-shaded:1.13.1 is at:\n"
-                + "  com.google.cloud:google-cloud-firestore:0.65.0-beta (compile) /"
+                + "  com.google.cloud:google-cloud-firestore:jar:0.65.0-beta /"
                 + " io.grpc:grpc-netty-shaded:1.13.1 (compile)\n"
                 + "  and 1 dependency path.");
   }
