@@ -116,7 +116,9 @@ public final class DependencyPath {
   public String toString() {
     List<String> formatted =
         path.stream().map(DependencyPath::formatDependency).collect(Collectors.toList());
-    return (root != null ? root + " / " : "") + Joiner.on(" / ").join(formatted);
+    return (root != null ? root : "")
+        + ((formatted.isEmpty() || root == null) ? "" : " / ")
+        + Joiner.on(" / ").join(formatted);
   }
 
   private static String formatDependency(Dependency dependency) {
