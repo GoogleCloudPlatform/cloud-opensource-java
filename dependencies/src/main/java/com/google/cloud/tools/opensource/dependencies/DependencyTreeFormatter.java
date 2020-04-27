@@ -45,24 +45,25 @@ public class DependencyTreeFormatter {
     // requires traversing the items in pre-order
     ListMultimap<DependencyPath, DependencyPath> tree = buildDependencyPathTree(dependencyPaths);
     // Empty dependency path is to retrieve children of root node
-    formatDependencyPathTree(stringBuilder, tree, new DependencyPath(rootArtifact));
+    formatDependencyPathTree(stringBuilder, tree, new DependencyPath(rootArtifact), 1);
     return stringBuilder.toString();
   }
 
   private static void formatDependencyPathTree(
       StringBuilder stringBuilder,
       ListMultimap<DependencyPath, DependencyPath> tree,
-      DependencyPath currentNode) {
-    String indentCharacter = "  ";
-    int depth = currentNode.size();
-    if (depth > 0) {
+      DependencyPath currentNode,
+      int depth) {
+    Artifact leaf = currentNode.getLeaf();
+    if (leaf != null) {
       // Nodes at top have one or more depth
-      stringBuilder.append(Strings.repeat(indentCharacter, depth));
-      stringBuilder.append(currentNode.getLeaf());
+      stringBuilder.append(Strings.repeat("  ", depth));
+      stringBuilder.append(leaf);
       stringBuilder.append("\n");
+      depth++;
     }
     for (DependencyPath childPath : tree.get(currentNode)) {
-      formatDependencyPathTree(stringBuilder, tree, childPath);
+      formatDependencyPathTree(stringBuilder, tree, childPath, depth);
     }
   }
 
