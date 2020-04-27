@@ -42,8 +42,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Truth;
-import java.io.IOException;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -133,10 +133,11 @@ public class LinkageMonitorTest {
             methodNotFoundProblem,
             new ClassFile(jarA, "com.abc.BBB"));
 
-    DependencyPath pathToA = new DependencyPath(new DefaultArtifact("foo:bar:1.0.0"))
-    .appended(
-        new org.eclipse.aether.graph.Dependency(
-            new DefaultArtifact("foo:a:1.2.3"), "compile", true));
+    DependencyPath pathToA =
+        new DependencyPath(new DefaultArtifact("foo:bar:1.0.0"))
+            .appended(
+                new org.eclipse.aether.graph.Dependency(
+                    new DefaultArtifact("foo:a:1.2.3"), "compile", true));
     DependencyPath pathToB = new DependencyPath(new DefaultArtifact("foo:b:1.0.0"));
 
     String message =
