@@ -24,9 +24,10 @@ import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProble
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSetMultimap.Builder;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
+import org.eclipse.aether.artifact.Artifact;
 
 /** Result of class path resolution with {@link UnresolvableArtifactProblem}s if any. */
 public final class ClassPathResult {
@@ -93,9 +94,20 @@ public final class ClassPathResult {
     return message.toString();
   }
 
-  /** Returns mapping from the Maven coordinates to class path entries in the dependency tree. */
-  public ImmutableSetMultimap<String, ClassPathEntry> coordinatesToClassPathEntry() {
-    return ImmutableSetMultimap.copyOf(
-        Multimaps.index(classPath, entry -> Artifacts.toCoordinates(entry.getArtifact())));
+  /**
+   * Returns mapping from the Maven coordinates to {@link ClassPathEntry}. The keys are the
+   * coordinates of the direct dependencies of the root nodes in {@link #dependencyPaths}. The
+   * values are all {@link ClassPathEntry}s in the subtree of the key.
+   */
+  public ImmutableSetMultimap<String, ClassPathEntry> coordinatesToClassPathEntriesInSubtree() {
+    Builder<String, ClassPathEntry> coordinatesToEntry = ImmutableSetMultimap.builder();
+    for (ClassPathEntry path : getClassPath()) {
+      for (DependencyPath dependencyPath : getDependencyPaths(path)) {
+        Artifact artifact = dependencyPath.get(1);
+        coordinatesToEntry.put(Artifacts.toCoordinates(artifact), path);
+      }
+    }
+
+    return coordinatesToEntry.build();
   }
 }

@@ -141,7 +141,7 @@ public class ClassPathResultTest {
     ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
 
     ImmutableSetMultimap<String, ClassPathEntry> map =
-        classPathResult.coordinatesToClassPathEntry();
+        classPathResult.coordinatesToClassPathEntriesInSubtree();
 
     assertThat(map.keySet()).containsExactly("com.google:a:1", "com.google:b:1");
     assertEquals(1, map.get("com.google:a:1").size());
