@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
@@ -261,5 +262,34 @@ public class DependencyGraphBuilderTest {
     Truth.assertThat(dependencyPaths)
         .comparingElementsUsing(dependencyPathToString)
         .doesNotContain(unexpectedDependencyPathForGuava);
+  }
+
+  @Test
+  public void testDependencyPathRoot_oneDependency() {
+    DependencyGraphResult result =
+        dependencyGraphBuilder.buildFullDependencyGraph(
+            ImmutableList.of(new DefaultArtifact("com.google.guava:guava:28.1-jre")));
+    DependencyPath firstDependencyPath = result.getDependencyGraph().list().get(0);
+    assertEquals(
+        "com.google.guava:guava:28.1-jre", Artifacts.toCoordinates(firstDependencyPath.getRoot()));
+  }
+
+  @Test
+  public void testDependencyPathRoot_twoDependency() {
+    DependencyGraphResult result =
+        dependencyGraphBuilder.buildFullDependencyGraph(
+            ImmutableList.of(
+                new DefaultArtifact("com.google.guava:guava:28.1-jre"),
+                new DefaultArtifact("com.google.api:gax:1.57.0")));
+
+    List<DependencyPath> paths = result.getDependencyGraph().list();
+
+    // Because it's requesting a tree with multiple artifacts, the root of the tree is null
+    assertNull(paths.get(0).getRoot());
+    assertEquals(
+        "com.google.guava:guava:28.1-jre", Artifacts.toCoordinates(paths.get(0).getLeaf()));
+
+    assertNull(paths.get(1).getRoot());
+    assertEquals("com.google.api:gax:1.57.0", Artifacts.toCoordinates(paths.get(1).getLeaf()));
   }
 }

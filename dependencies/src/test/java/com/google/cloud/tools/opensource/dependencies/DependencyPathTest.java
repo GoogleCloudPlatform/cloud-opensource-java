@@ -59,15 +59,27 @@ public class DependencyPathTest {
     path = path.appended(new Dependency(bar, "compile"));
     Assert.assertEquals(3, path.size());
   }
-  
+
   @Test
-  public void testGetNode() {
+  public void testGetNode_nullRoot() {
     DependencyPath path =
         new DependencyPath(null)
             .appended(new Dependency(foo, "compile"))
             .appended(new Dependency(bar, "compile"));
-    Assert.assertEquals(foo, path.get(0));
-    Assert.assertEquals(bar, path.get(1));
+    Assert.assertNull(path.get(0));
+    Assert.assertEquals(foo, path.get(1));
+    Assert.assertEquals(bar, path.get(2));
+  }
+
+  @Test
+  public void testGetNode() {
+    DependencyPath path =
+        new DependencyPath(new DefaultArtifact("a:b:0.1"))
+            .appended(new Dependency(foo, "compile"))
+            .appended(new Dependency(bar, "compile"));
+    Assert.assertEquals(new DefaultArtifact("a:b:0.1"), path.get(0));
+    Assert.assertEquals(foo, path.get(1));
+    Assert.assertEquals(bar, path.get(2));
   }
 
   @Test
