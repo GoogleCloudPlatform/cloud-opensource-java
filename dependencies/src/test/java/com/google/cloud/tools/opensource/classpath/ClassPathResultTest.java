@@ -33,8 +33,10 @@ import org.eclipse.aether.graph.Dependency;
 import org.junit.Test;
 
 public class ClassPathResultTest {
-  private Artifact artifactA = new DefaultArtifact("com.google:a:1");
-  private Artifact artifactB = new DefaultArtifact("com.google:b:1");
+  private Artifact artifactA =
+      new DefaultArtifact("com.google:a:1").setFile(Paths.get("a.jar").toFile());
+  private Artifact artifactB =
+      new DefaultArtifact("com.google:b:1").setFile(Paths.get("b.jar").toFile());
   private DependencyPath dependencyPath_A =
       new DependencyPath(null).appended(new Dependency(artifactA, "compile"));
   private DependencyPath dependencyPath_B =
@@ -48,8 +50,9 @@ public class ClassPathResultTest {
           .appended(new Dependency(artifactA, "compile"))
           .appended(new Dependency(artifactB, "compile"))
           .appended(new Dependency(artifactA, "compile"));
-  private ClassPathEntry jarA = new ClassPathEntry(Paths.get("a.jar"));
-  private ClassPathEntry jarB = new ClassPathEntry(Paths.get("b.jar"));;
+  private ClassPathEntry jarA = new ClassPathEntry(artifactA);
+  private ClassPathEntry jarB = new ClassPathEntry(artifactB);
+  ;
 
   @Test
   public void testFormatDependencyPaths_onePath() {
@@ -128,12 +131,15 @@ public class ClassPathResultTest {
   public void testCoordinatesToClassPathEntry() {
     ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
         ImmutableListMultimap.of(
-            jarA, dependencyPath_A, jarB, dependencyPath_B, jarA, dependencyPath_A_B_A);
+            jarA, dependencyPath_A,
+            jarB, dependencyPath_B,
+            jarA, dependencyPath_A_B_A);
 
     ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
 
     ImmutableSetMultimap<String, ClassPathEntry> map =
         classPathResult.coordinatesToClassPathEntry();
+
     assertThat(map.keySet()).containsExactly("com.google:a:1", "com.google:b:1");
     assertEquals(1, map.get("com.google:a:1").size());
     UnmodifiableIterator<ClassPathEntry> iterator = map.get("com.google:a:1").iterator();

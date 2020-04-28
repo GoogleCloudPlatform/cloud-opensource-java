@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.apache.maven.project.DependencyResolutionRequest;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 
@@ -104,7 +103,7 @@ public final class DependencyPath {
     if (i == 0) {
       return root;
     }
-    return path.get(i-1).getArtifact();
+    return path.get(i - 1).getArtifact();
   }
 
   /**

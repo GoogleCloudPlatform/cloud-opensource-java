@@ -24,10 +24,9 @@ import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProble
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ImmutableSetMultimap.Builder;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
-import org.eclipse.aether.artifact.Artifact;
+import com.google.common.collect.Multimaps;
 
 /** Result of class path resolution with {@link UnresolvableArtifactProblem}s if any. */
 public final class ClassPathResult {
@@ -94,19 +93,9 @@ public final class ClassPathResult {
     return message.toString();
   }
 
-  /**
-   * Returns mapping from the Maven coordinates to class path entries that are in the dependency
-   * tree.
-   */
+  /** Returns mapping from the Maven coordinates to class path entries in the dependency tree. */
   public ImmutableSetMultimap<String, ClassPathEntry> coordinatesToClassPathEntry() {
-    Builder<String, ClassPathEntry> coordinatesToEntry = ImmutableSetMultimap.builder();
-    for (ClassPathEntry path : getClassPath()) {
-      for (DependencyPath dependencyPath : getDependencyPaths(path)) {
-        Artifact artifact = dependencyPath.get(0);
-        coordinatesToEntry.put(Artifacts.toCoordinates(artifact), path);
-      }
-    }
-
-    return coordinatesToEntry.build();
+    return ImmutableSetMultimap.copyOf(
+        Multimaps.index(classPath, entry -> Artifacts.toCoordinates(entry.getArtifact())));
   }
 }
