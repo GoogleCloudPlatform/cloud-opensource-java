@@ -79,6 +79,17 @@ public class DependencyGraphBuilderTest {
     Assert.assertEquals(29, guavaCount);
   }
 
+  @Test
+  public void testGetCompleteDependencies_protobuf() {
+    DependencyGraph graph =
+        dependencyGraphBuilder
+            .buildFullDependencyGraph(
+                ImmutableList.of(new DefaultArtifact("com.google.protobuf:protobuf-java:3.11.4")))
+            .getDependencyGraph();
+    List<DependencyPath> paths = graph.list();
+    Assert.assertTrue(paths.size() > 1);
+  }
+
   private static int countGuava(DependencyGraph graph) {
     int guavaCount = 0;
     for (DependencyPath path : graph.list()) {

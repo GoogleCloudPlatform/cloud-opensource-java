@@ -87,6 +87,8 @@ public class DependencyTreeFormatter {
     for (DependencyPath dependencyPath : dependencyPaths) {
       // Relying on DependencyPath's equality
       DependencyPath parentDependencyPath = dependencyPath.getParentPath();
+
+      // Path to root has the same path as its parent
       if (!dependencyPath.equals(parentDependencyPath)) {
         tree.put(parentDependencyPath, dependencyPath);
       }
