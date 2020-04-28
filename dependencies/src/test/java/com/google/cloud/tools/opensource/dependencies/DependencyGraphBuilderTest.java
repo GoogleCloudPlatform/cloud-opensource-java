@@ -81,13 +81,15 @@ public class DependencyGraphBuilderTest {
 
   @Test
   public void testGetCompleteDependencies_protobuf() {
+    // protobuf-java has only test dependencies.
+    // https://search.maven.org/artifact/com.google.protobuf/protobuf-java/3.11.4/bundle
     DependencyGraph graph =
         dependencyGraphBuilder
             .buildFullDependencyGraph(
                 ImmutableList.of(new DefaultArtifact("com.google.protobuf:protobuf-java:3.11.4")))
             .getDependencyGraph();
     List<DependencyPath> paths = graph.list();
-    Assert.assertTrue(paths.size() > 1);
+    Truth.assertThat(paths).hasSize(1);
   }
 
   private static int countGuava(DependencyGraph graph) {

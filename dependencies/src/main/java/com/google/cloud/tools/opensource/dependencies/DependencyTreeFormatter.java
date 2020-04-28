@@ -63,6 +63,9 @@ public class DependencyTreeFormatter {
       depth++;
     }
     for (DependencyPath childPath : tree.get(currentNode)) {
+      if (currentNode.equals(childPath)) {
+        continue; // root node's parent is the root itself
+      }
       formatDependencyPathTree(stringBuilder, tree, childPath, depth);
     }
   }
@@ -78,7 +81,8 @@ public class DependencyTreeFormatter {
    *     node in the tree has a corresponding key in the ListMultimap and the children of the node
    *     are the values for the key in the map. The {@link DependencyPath} representing the root
    *     Maven artifact is available via {@code new DependencyPath(rootArtifact)} where {@code
-   *     rootArtifact} is the root of each {@code dependencyPaths}.
+   *     rootArtifact} is the root of each {@code dependencyPaths}. The root node's parent is the
+   *     node itself.
    */
   public static ListMultimap<DependencyPath, DependencyPath> buildDependencyPathTree(
       Collection<DependencyPath> dependencyPaths) {
@@ -89,9 +93,7 @@ public class DependencyTreeFormatter {
       DependencyPath parentDependencyPath = dependencyPath.getParentPath();
 
       // Path to root has the same path as its parent
-      if (!dependencyPath.equals(parentDependencyPath)) {
-        tree.put(parentDependencyPath, dependencyPath);
-      }
+      tree.put(parentDependencyPath, dependencyPath);
     }
     return tree;
   }
