@@ -191,9 +191,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
       // As sorted by level order, the first elements in classpath are the project and its direct
       // non-test dependencies.
-      long projectDependencyCount = project.getDependencies().stream()
-                  .filter(dependency -> !"test".equals(dependency.getScope()))
-                  .count();
+      List<org.apache.maven.model.Dependency> dependencies = project.getDependencies();
+      long projectDependencyCount =
+          dependencies.stream().filter(dependency -> !"test".equals(dependency.getScope())).count();
       List<ClassPathEntry> entryPoints = classPath.subList(0, (int) projectDependencyCount + 1);
 
       try {

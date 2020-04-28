@@ -75,7 +75,7 @@ public final class DependencyPath {
     }
   }
 
-  /** Returns the list of artifact in the path. */
+  /** Returns the list of artifacts in the path, including the root if it's not null. */
   public ImmutableList<Artifact> getArtifacts() {
     ImmutableList.Builder<Artifact> builder = ImmutableList.builder();
 
@@ -86,10 +86,7 @@ public final class DependencyPath {
     return builder.build();
   }
 
-  /**
-   * Returns the root of the dependency path. Null if the path is part of dependency tree that does
-   * not have root artifact
-   */
+  /** Returns the root of the dependency path. */
   @Nullable
   public Artifact getRoot() {
     return root;
@@ -122,9 +119,13 @@ public final class DependencyPath {
   public String toString() {
     List<String> formatted =
         path.stream().map(DependencyPath::formatDependency).collect(Collectors.toList());
-    return (root != null ? root : "")
-        + ((formatted.isEmpty() || root == null) ? "" : " / ")
-        + Joiner.on(" / ").join(formatted);
+    StringBuilder builder = new StringBuilder();
+    if (root != null) {
+      builder.append(root);
+      builder.append(" / ");
+    }
+    builder.append(Joiner.on(" / ").join(formatted));
+    return builder.toString();
   }
 
   private static String formatDependency(Dependency dependency) {
