@@ -122,7 +122,9 @@ public final class DependencyPath {
     StringBuilder builder = new StringBuilder();
     if (root != null) {
       builder.append(root);
-      builder.append(" / ");
+      if (!path.isEmpty()) {
+        builder.append(" / ");
+      }
     }
     builder.append(Joiner.on(" / ").join(formatted));
     return builder.toString();

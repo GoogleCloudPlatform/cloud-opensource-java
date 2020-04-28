@@ -143,6 +143,11 @@ public class DependencyPathTest {
   }
 
   @Test
+  public void testToString_singleElement() {
+    Assert.assertEquals("a:b:jar:1", new DependencyPath(root).toString());
+  }
+
+  @Test
   public void testGetArtifacts() {
     Truth.assertThat(pathRootFooBar.getArtifacts()).containsExactly(root, foo, bar).inOrder();
   }
