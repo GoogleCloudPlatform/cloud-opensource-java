@@ -374,7 +374,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     return result;
   }
 
-  void logDependencyPath(
+  private void logDependencyPath(
       ClassPathResult classPathResult, Multimap<SymbolProblem, ClassFile> symbolProblems) {
     ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
     for (SymbolProblem problem : symbolProblems.keySet()) {
