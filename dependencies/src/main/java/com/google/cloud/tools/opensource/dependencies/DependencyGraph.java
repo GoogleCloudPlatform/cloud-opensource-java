@@ -65,8 +65,12 @@ public class DependencyGraph {
   }
 
   void addPath(DependencyPath path) {
-    graph.add(path);
     Artifact leaf = path.getLeaf();
+    if (leaf == null) {
+      // No need to include a path to null leaf
+      return;
+    }
+    graph.add(path);
     String coordinates = Artifacts.toCoordinates(leaf);
     versions.put(Artifacts.makeKey(leaf), leaf.getVersion());
     paths.put(coordinates, path);

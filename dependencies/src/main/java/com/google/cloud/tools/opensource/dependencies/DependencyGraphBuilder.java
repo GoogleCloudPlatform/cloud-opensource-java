@@ -237,11 +237,13 @@ public final class DependencyGraphBuilder {
 
   private static final class LevelOrderQueueItem {
     final DependencyNode dependencyNode;
-    final ArrayDeque<DependencyNode> parentNodes;
 
-    LevelOrderQueueItem(DependencyNode dependencyNode, ArrayDeque<DependencyNode> parentNodes) {
+    // Null for the first item
+    final DependencyPath parentPath;
+
+    LevelOrderQueueItem(DependencyNode dependencyNode, DependencyPath parentPath) {
       this.dependencyNode = dependencyNode;
-      this.parentNodes = parentNodes;
+      this.parentPath = parentPath;
     }
   }
 
@@ -262,22 +264,20 @@ public final class DependencyGraphBuilder {
    *
    * @param firstNode node to start traversal
    */
-  private DependencyGraph levelOrder(DependencyNode firstNode) {
+  public static DependencyGraph levelOrder(DependencyNode firstNode) {
 
     DependencyGraph graph = new DependencyGraph();
 
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
-    queue.add(new LevelOrderQueueItem(firstNode, new ArrayDeque<>()));
+    queue.add(new LevelOrderQueueItem(firstNode, null));
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
       DependencyNode dependencyNode = item.dependencyNode;
-      DependencyPath path = new DependencyPath();
-      ArrayDeque<DependencyNode> parentNodes = item.parentNodes;
-      parentNodes.forEach(
-          parentNode -> path.add(parentNode.getDependency()));
+
+      DependencyPath parentPath = item.parentPath;
       Artifact artifact = dependencyNode.getArtifact();
-      if (artifact != null) {
+      if (artifact != null && parentPath != null) {
         // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
         // set to null
 
@@ -287,21 +287,23 @@ public final class DependencyGraphBuilder {
         // dependency mediation always picks up g1:a1:2.0 over g1:a1:1.0.
         String groupIdAndArtifactId = Artifacts.makeKey(artifact);
         boolean parentHasSameKey =
-            parentNodes.stream()
-                .map(node -> Artifacts.makeKey(node.getArtifact()))
+            parentPath.getArtifacts().stream()
+                .map(Artifacts::makeKey)
                 .anyMatch(key -> key.equals(groupIdAndArtifactId));
         if (parentHasSameKey) {
           continue;
         }
-
-        path.add(dependencyNode.getDependency());
-        parentNodes.add(dependencyNode);
-        graph.addPath(path);
       }
-      
+
+      // parentPath is null for the first item
+      DependencyPath path =
+          parentPath == null
+              ? new DependencyPath(artifact)
+              : parentPath.append(dependencyNode.getDependency());
+      graph.addPath(path);
+
       for (DependencyNode child : dependencyNode.getChildren()) {
-        ArrayDeque<DependencyNode> clone = parentNodes.clone();
-        queue.add(new LevelOrderQueueItem(child, clone));
+        queue.add(new LevelOrderQueueItem(child, path));
       }
     }
 

@@ -42,8 +42,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Truth;
-import java.io.IOException;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -133,17 +133,12 @@ public class LinkageMonitorTest {
             methodNotFoundProblem,
             new ClassFile(jarA, "com.abc.BBB"));
 
-    DependencyPath pathToA = new DependencyPath();
-    pathToA.add(
-        new org.eclipse.aether.graph.Dependency(
-            new DefaultArtifact("foo:bar:1.0.0"), "provided", false));
-    pathToA.add(
-        new org.eclipse.aether.graph.Dependency(
-            new DefaultArtifact("foo:a:1.2.3"), "compile", true));
-    DependencyPath pathToB = new DependencyPath();
-    pathToB.add(
-        new org.eclipse.aether.graph.Dependency(
-            new DefaultArtifact("foo:b:1.0.0"), "compile", true));
+    DependencyPath pathToA =
+        new DependencyPath(new DefaultArtifact("foo:bar:1.0.0"))
+            .append(
+                new org.eclipse.aether.graph.Dependency(
+                    new DefaultArtifact("foo:a:1.2.3"), "compile", true));
+    DependencyPath pathToB = new DependencyPath(new DefaultArtifact("foo:b:1.0.0"));
 
     String message =
         LinkageMonitor.messageForNewErrors(
@@ -160,9 +155,9 @@ public class LinkageMonitorTest {
             + "  referenced from com.abc.BBB (foo:a:1.2.3)\n"
             + "\n"
             + "foo:b:1.0.0 is at:\n"
-            + "  foo:b:1.0.0 (compile, optional)\n"
+            + "  foo:b:jar:1.0.0\n"
             + "foo:a:1.2.3 is at:\n"
-            + "  foo:bar:1.0.0 (provided) / foo:a:1.2.3 (compile, optional)\n",
+            + "  foo:bar:jar:1.0.0 / foo:a:1.2.3 (compile, optional)\n",
         message);
   }
 

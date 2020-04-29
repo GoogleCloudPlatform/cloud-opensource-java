@@ -95,15 +95,16 @@ public final class ClassPathResult {
   }
 
   /**
-   * Returns mapping from the Maven coordinates to class path entries that are in the dependency
-   * tree.
+   * Returns mapping from the Maven coordinates to {@link ClassPathEntry}. The keys are the
+   * coordinates of the direct dependencies of the root nodes in {@link #dependencyPaths}. The
+   * values are all {@link ClassPathEntry}s in the subtree of the key.
    */
   public ImmutableSetMultimap<String, ClassPathEntry> coordinatesToClassPathEntry() {
     Builder<String, ClassPathEntry> coordinatesToEntry = ImmutableSetMultimap.builder();
-    for (ClassPathEntry path : getClassPath()) {
-      for (DependencyPath dependencyPath : getDependencyPaths(path)) {
-        Artifact artifact = dependencyPath.get(0);
-        coordinatesToEntry.put(Artifacts.toCoordinates(artifact), path);
+    for (ClassPathEntry entry : getClassPath()) {
+      for (DependencyPath dependencyPath : getDependencyPaths(entry)) {
+        Artifact artifact = dependencyPath.get(1);
+        coordinatesToEntry.put(Artifacts.toCoordinates(artifact), entry);
       }
     }
 

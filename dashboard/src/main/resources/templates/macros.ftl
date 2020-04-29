@@ -80,9 +80,11 @@
   <p class="dependency-tree-node" title="${label}">${currentNode.getLeaf()}</p>
   <ul>
     <#list dependencyTree.get(currentNode) as childNode>
-      <li class="dependency-tree-node">
-        <@formatDependencyNode childNode currentNode />
-      </li>
+      <#if currentNode != childNode>
+        <li class="dependency-tree-node">
+            <@formatDependencyNode childNode currentNode />
+        </li>
+      </#if>
     </#list>
   </ul>
 </#macro>

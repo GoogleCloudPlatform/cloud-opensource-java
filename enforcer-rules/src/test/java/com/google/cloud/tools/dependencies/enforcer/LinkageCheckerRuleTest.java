@@ -94,8 +94,7 @@ public class LinkageCheckerRuleTest {
     rule = new LinkageCheckerRule();
     repositorySystem = RepositoryUtility.newRepositorySystem();
     repositorySystemSession = RepositoryUtility.newSession(repositorySystem);
-    // This dummy artifact must be something that exists in a repository
-    dummyArtifactWithFile = createArtifactWithDummyFile("com.google.guava:guava:28.0-android");
+    dummyArtifactWithFile = createArtifactWithDummyFile("a:b:0.1");
     setupMock();
   }
 
@@ -162,6 +161,7 @@ public class LinkageCheckerRuleTest {
   }
 
   private void setupMockDependencyResolution(String... coordinates) throws RepositoryException {
+    // The root node is Maven artifact "a:b:0.1" that has dependencies specified as `coordinates`.
     DependencyNode rootNode = createResolvedDependencyGraph(coordinates);
     Traverser<DependencyNode> traverser = Traverser.forGraph(node -> node.getChildren());
 
@@ -482,7 +482,7 @@ public class LinkageCheckerRuleTest {
       verify(mockLog)
           .warn(
               "aopalliance:aopalliance:jar:1.0 was not resolved. "
-                  + "Dependency path: com.google.guava:guava:jar:28.0-android > "
+                  + "Dependency path: a:b:jar:0.1 > "
                   + "org.apache.maven:maven-core:jar:3.5.2 (compile) > "
                   + "com.google.inject:guice:jar:no_aop:4.0 (compile) > "
                   + "aopalliance:aopalliance:jar:1.0 (compile)");

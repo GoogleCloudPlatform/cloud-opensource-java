@@ -383,6 +383,7 @@ public class DashboardMain {
           DependencyTreeFormatter.buildDependencyPathTree(dependencyPaths);
       Template report = configuration.getTemplate("/templates/component.ftl");
 
+      DependencyPath rootNode = Iterables.getFirst(dependencyTree.values(), null);
       Map<String, Object> templateData = new HashMap<>();
       templateData.put("artifact", artifact);
       templateData.put("updates", convergenceIssues);
@@ -390,7 +391,7 @@ public class DashboardMain {
       templateData.put("globalUpperBoundFailures", globalUpperBoundFailures);
       templateData.put("lastUpdated", LocalDateTime.now());
       templateData.put("dependencyTree", dependencyTree);
-      templateData.put("dependencyRootNode", Iterables.getFirst(dependencyTree.values(), null));
+      templateData.put("dependencyRootNode", rootNode);
       templateData.put("symbolProblems", symbolProblemTable);
       templateData.put("classPathResult", classPathResult);
       templateData.put("totalLinkageErrorCount", totalLinkageErrorCount);
