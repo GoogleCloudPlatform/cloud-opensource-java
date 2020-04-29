@@ -228,12 +228,15 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
               String.format(
                   "Linkage Checker rule found %d %s. Linkage error report:\n%s",
                   errorCount, foundError, SymbolProblem.formatSymbolProblems(symbolProblems));
+          String dependencyPaths =
+              dependencyPathsOfProblematicJars(classPathResult, symbolProblems);
+
           if (getLevel() == WARN) {
             logger.warn(message);
-            logDependencyPath(classPathResult, symbolProblems);
+            logger.warn(dependencyPaths);
           } else {
             logger.error(message);
-            logDependencyPath(classPathResult, symbolProblems);
+            logger.error(dependencyPaths);
             throw new EnforcerRuleException(
                 "Failed while checking class path. See above error report.");
           }
@@ -374,7 +377,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     return result;
   }
 
-  private void logDependencyPath(
+  private String dependencyPathsOfProblematicJars(
       ClassPathResult classPathResult, Multimap<SymbolProblem, ClassFile> symbolProblems) {
     ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
     for (SymbolProblem problem : symbolProblems.keySet()) {
@@ -387,8 +390,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         problematicJars.add(classFile.getClassPathEntry());
       }
     }
-    logger.error(
-        "Problematic artifacts in the dependency tree:\n"
-            + classPathResult.formatDependencyPaths(problematicJars.build()));
+
+    return "Problematic artifacts in the dependency tree:\n"
+            + classPathResult.formatDependencyPaths(problematicJars.build());
   }
 }
