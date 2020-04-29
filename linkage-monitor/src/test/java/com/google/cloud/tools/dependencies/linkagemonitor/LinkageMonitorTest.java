@@ -135,7 +135,7 @@ public class LinkageMonitorTest {
 
     DependencyPath pathToA =
         new DependencyPath(new DefaultArtifact("foo:bar:1.0.0"))
-            .appended(
+            .append(
                 new org.eclipse.aether.graph.Dependency(
                     new DefaultArtifact("foo:a:1.2.3"), "compile", true));
     DependencyPath pathToB = new DependencyPath(new DefaultArtifact("foo:b:1.0.0"));

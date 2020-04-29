@@ -266,7 +266,7 @@ public class DashboardMain {
       Bom bom) {
 
     ImmutableSetMultimap<String, ClassPathEntry> bomMemberToJars =
-        classPathResult.coordinatesToClassPathEntriesInSubtree();
+        classPathResult.coordinatesToClassPathEntry();
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();

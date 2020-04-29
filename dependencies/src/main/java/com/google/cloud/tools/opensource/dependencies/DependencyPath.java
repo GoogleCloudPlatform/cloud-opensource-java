@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -30,10 +29,13 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 
 /**
- * Path from the root to a node in a dependency tree, where the root node is a Maven artifact and
- * non-root nodes are dependencies.
+ * A sequence of Maven artifacts and dependency (scope and optional flag) in between.
  *
- * <p>The root node is null for the dependency trees generated for multiple artifacts by {@link
+ * <p>When this represents a path from the root to a leaf of a dependency tree, the first artifact
+ * in the path is the root of the tree and the last artifact is the leaf. The sequence of
+ * dependencies explains why the leaf is included in the dependency tree.
+ *
+ * <p>The first node is null for the dependency trees generated for multiple artifacts by {@link
  * DependencyGraphBuilder#buildFullDependencyGraph(List)}; otherwise the root node is not null.
  */
 public final class DependencyPath {
@@ -48,7 +50,7 @@ public final class DependencyPath {
   }
 
   @VisibleForTesting
-  public DependencyPath appended(Dependency dependency) {
+  public DependencyPath append(Dependency dependency) {
     DependencyPath copy = new DependencyPath(root);
     for (Dependency value : path) {
       copy.path.add(value);
@@ -57,12 +59,12 @@ public final class DependencyPath {
     return copy;
   }
 
-  /** Returns the length of the path plus the root. */
+  /** Returns the length of the path. */
   public int size() {
-    return path.size() + 1;
+    return path.size() + 1; // including the root
   }
 
-  /** Returns the artifact in the leaf (the furthest node from the node) of the path. */
+  /** Returns the artifact at the end of the path. */
   public Artifact getLeaf() {
     if (path.isEmpty()) {
       return root;
@@ -71,7 +73,7 @@ public final class DependencyPath {
     }
   }
 
-  /** Returns the list of artifacts in the path, including the root if it's not null. */
+  /** Returns the list of artifacts in the path. */
   public ImmutableList<Artifact> getArtifacts() {
     ImmutableList.Builder<Artifact> builder = ImmutableList.builder();
 
@@ -80,12 +82,6 @@ public final class DependencyPath {
     }
     path.stream().map(Dependency::getArtifact).forEach(builder::add);
     return builder.build();
-  }
-
-  /** Returns the root of the dependency path. */
-  @Nullable
-  public Artifact getRoot() {
-    return root;
   }
 
   /**
@@ -100,8 +96,8 @@ public final class DependencyPath {
   }
 
   /**
-   * Returns the dependency path of the parent node of the leaf. Empty dependency path if the leaf
-   * does not have a parent or {@link #path} is empty.
+   * Returns the dependency path of the second to last node in the path. Empty dependency path if
+   * the leaf does not have a parent or {@link #path} is empty.
    */
   DependencyPath getParentPath() {
     DependencyPath parent = new DependencyPath(root);

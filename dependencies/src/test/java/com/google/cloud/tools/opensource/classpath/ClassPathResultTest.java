@@ -38,18 +38,18 @@ public class ClassPathResultTest {
   private Artifact artifactB =
       new DefaultArtifact("com.google:b:1").setFile(Paths.get("b.jar").toFile());
   private DependencyPath dependencyPath_A =
-      new DependencyPath(null).appended(new Dependency(artifactA, "compile"));
+      new DependencyPath(null).append(new Dependency(artifactA, "compile"));
   private DependencyPath dependencyPath_B =
-      new DependencyPath(null).appended(new Dependency(artifactB, "compile"));
+      new DependencyPath(null).append(new Dependency(artifactB, "compile"));
   private DependencyPath dependencyPath_B_A =
       new DependencyPath(null)
-          .appended(new Dependency(artifactB, "compile"))
-          .appended(new Dependency(artifactA, "compile"));
+          .append(new Dependency(artifactB, "compile"))
+          .append(new Dependency(artifactA, "compile"));
   private DependencyPath dependencyPath_A_B_A =
       new DependencyPath(null)
-          .appended(new Dependency(artifactA, "compile"))
-          .appended(new Dependency(artifactB, "compile"))
-          .appended(new Dependency(artifactA, "compile"));
+          .append(new Dependency(artifactA, "compile"))
+          .append(new Dependency(artifactB, "compile"))
+          .append(new Dependency(artifactA, "compile"));
   private ClassPathEntry jarA = new ClassPathEntry(artifactA);
   private ClassPathEntry jarB = new ClassPathEntry(artifactB);
   ;
@@ -141,7 +141,7 @@ public class ClassPathResultTest {
     ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
 
     ImmutableSetMultimap<String, ClassPathEntry> map =
-        classPathResult.coordinatesToClassPathEntriesInSubtree();
+        classPathResult.coordinatesToClassPathEntry();
 
     assertThat(map.keySet()).containsExactly("com.google:a:1", "com.google:b:1");
     assertEquals(1, map.get("com.google:a:1").size());

@@ -284,7 +284,7 @@ public class DependencyGraphBuilderTest {
             ImmutableList.of(new DefaultArtifact("com.google.guava:guava:28.1-jre")));
     DependencyPath firstDependencyPath = result.getDependencyGraph().list().get(0);
     assertEquals(
-        "com.google.guava:guava:28.1-jre", Artifacts.toCoordinates(firstDependencyPath.getRoot()));
+        "com.google.guava:guava:28.1-jre", Artifacts.toCoordinates(firstDependencyPath.get(0)));
   }
 
   @Test
@@ -298,11 +298,11 @@ public class DependencyGraphBuilderTest {
     List<DependencyPath> paths = result.getDependencyGraph().list();
 
     // Because it's requesting a tree with multiple artifacts, the root of the tree is null
-    assertNull(paths.get(0).getRoot());
+    assertNull(paths.get(0).get(0));
     assertEquals(
         "com.google.guava:guava:28.1-jre", Artifacts.toCoordinates(paths.get(0).getLeaf()));
 
-    assertNull(paths.get(1).getRoot());
+    assertNull(paths.get(1).get(0));
     assertEquals("com.google.api:gax:1.57.0", Artifacts.toCoordinates(paths.get(1).getLeaf()));
   }
 }

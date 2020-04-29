@@ -35,29 +35,29 @@ public class DependencyGraphTest {
   private Artifact baz1 = new DefaultArtifact("com.google:baz:1");
   private Artifact bat1 = new DefaultArtifact("com.google:bat:1");
   private Artifact baz2 = new DefaultArtifact("com.google:baz:2");
-  private DependencyPath path1 = new DependencyPath(null).appended(new Dependency(foo, "compile"));
+  private DependencyPath path1 = new DependencyPath(null).append(new Dependency(foo, "compile"));
   private DependencyPath path2 =
       new DependencyPath(null)
-          .appended(new Dependency(foo, "compile"))
-          .appended(new Dependency(bar, "compile"));
+          .append(new Dependency(foo, "compile"))
+          .append(new Dependency(bar, "compile"));
   private DependencyPath path3 =
       new DependencyPath(null)
-          .appended(new Dependency(foo, "compile"))
-          .appended(new Dependency(baz1, "compile"));
+          .append(new Dependency(foo, "compile"))
+          .append(new Dependency(baz1, "compile"));
   private DependencyPath path4 =
       new DependencyPath(null)
-          .appended(new Dependency(foo, "compile"))
-          .appended(new Dependency(bar, "compile"))
-          .appended(new Dependency(baz2, "compile"));
+          .append(new Dependency(foo, "compile"))
+          .append(new Dependency(bar, "compile"))
+          .append(new Dependency(baz2, "compile"));
   private DependencyPath path5 =
       new DependencyPath(null)
-          .appended(new Dependency(foo, "compile"))
-          .appended(new Dependency(bat1, "compile"))
-          .appended(new Dependency(baz1, "compile")); // 2 paths to baz1
+          .append(new Dependency(foo, "compile"))
+          .append(new Dependency(bat1, "compile"))
+          .append(new Dependency(baz1, "compile")); // 2 paths to baz1
   private DependencyPath path6 =
       new DependencyPath(null)
-          .appended(new Dependency(foo, "compile"))
-          .appended(new Dependency(bat1, "compile"));
+          .append(new Dependency(foo, "compile"))
+          .append(new Dependency(bat1, "compile"));
 
   @Before
   public void setUp() {

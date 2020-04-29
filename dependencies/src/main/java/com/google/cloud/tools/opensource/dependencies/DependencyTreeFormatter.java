@@ -36,9 +36,9 @@ public class DependencyTreeFormatter {
    */
   static String formatDependencyPaths(List<DependencyPath> dependencyPaths) {
     DependencyPath firstPath = dependencyPaths.get(0);
-    Artifact rootArtifact = firstPath.getRoot();
+    Artifact rootArtifact = firstPath.get(0);
     checkArgument(
-        dependencyPaths.stream().allMatch(path -> Objects.equals(path.getRoot(), rootArtifact)),
+        dependencyPaths.stream().allMatch(path -> Objects.equals(path.get(0), rootArtifact)),
         "all dependency paths should have the same root");
     StringBuilder stringBuilder = new StringBuilder();
     // While Maven dependencies are resolved in level-order, printing text representing a tree

@@ -299,7 +299,7 @@ public final class DependencyGraphBuilder {
       DependencyPath path =
           parentPath == null
               ? new DependencyPath(artifact)
-              : parentPath.appended(dependencyNode.getDependency());
+              : parentPath.append(dependencyNode.getDependency());
       graph.addPath(path);
 
       for (DependencyNode child : dependencyNode.getChildren()) {

@@ -32,21 +32,21 @@ public class DependencyPathTest {
 
   DependencyPath pathRootFooBar =
       new DependencyPath(root)
-          .appended(new Dependency(foo, "test", false))
-          .appended(new Dependency(bar, "compile", true));
+          .append(new Dependency(foo, "test", false))
+          .append(new Dependency(bar, "compile", true));
 
   DependencyPath pathNullRootFooBar =
       new DependencyPath(null)
-          .appended(new Dependency(foo, "test", false))
-          .appended(new Dependency(bar, "compile", true));
+          .append(new Dependency(foo, "test", false))
+          .append(new Dependency(bar, "compile", true));
 
   @Test
   public void testSize_nullRoot() {
     DependencyPath path = new DependencyPath(null);
     Assert.assertEquals(1, path.size());
-    path = path.appended(new Dependency(foo, "compile"));
+    path = path.append(new Dependency(foo, "compile"));
     Assert.assertEquals(2, path.size());
-    path = path.appended(new Dependency(bar, "compile"));
+    path = path.append(new Dependency(bar, "compile"));
     Assert.assertEquals(3, path.size());
   }
 
@@ -54,9 +54,9 @@ public class DependencyPathTest {
   public void testSize_nonNullRoot() {
     DependencyPath path = new DependencyPath(new DefaultArtifact("a:b:1"));
     Assert.assertEquals(1, path.size());
-    path = path.appended(new Dependency(foo, "compile"));
+    path = path.append(new Dependency(foo, "compile"));
     Assert.assertEquals(2, path.size());
-    path = path.appended(new Dependency(bar, "compile"));
+    path = path.append(new Dependency(bar, "compile"));
     Assert.assertEquals(3, path.size());
   }
 
@@ -64,8 +64,8 @@ public class DependencyPathTest {
   public void testGetNode_nullRoot() {
     DependencyPath path =
         new DependencyPath(null)
-            .appended(new Dependency(foo, "compile"))
-            .appended(new Dependency(bar, "compile"));
+            .append(new Dependency(foo, "compile"))
+            .append(new Dependency(bar, "compile"));
     Assert.assertNull(path.get(0));
     Assert.assertEquals(foo, path.get(1));
     Assert.assertEquals(bar, path.get(2));
@@ -75,8 +75,8 @@ public class DependencyPathTest {
   public void testGetNode() {
     DependencyPath path =
         new DependencyPath(new DefaultArtifact("a:b:0.1"))
-            .appended(new Dependency(foo, "compile"))
-            .appended(new Dependency(bar, "compile"));
+            .append(new Dependency(foo, "compile"))
+            .append(new Dependency(bar, "compile"));
     Assert.assertEquals(new DefaultArtifact("a:b:0.1"), path.get(0));
     Assert.assertEquals(foo, path.get(1));
     Assert.assertEquals(bar, path.get(2));
@@ -86,7 +86,7 @@ public class DependencyPathTest {
   public void testGetParentPath() {
     DependencyPath parent = pathNullRootFooBar.getParentPath();
 
-    DependencyPath expected = new DependencyPath(null).appended(new Dependency(foo, "test", false));
+    DependencyPath expected = new DependencyPath(null).append(new Dependency(foo, "test", false));
 
     Assert.assertEquals(expected, parent);
   }
@@ -95,7 +95,7 @@ public class DependencyPathTest {
   public void testGetParentPath_nonNullRoot() {
     DependencyPath parent = pathRootFooBar.getParentPath();
 
-    DependencyPath expected = new DependencyPath(root).appended(new Dependency(foo, "test", false));
+    DependencyPath expected = new DependencyPath(root).append(new Dependency(foo, "test", false));
 
     Assert.assertEquals(expected, parent);
   }
@@ -121,7 +121,7 @@ public class DependencyPathTest {
   @Test
   public void testGetParentPath_oneElement() {
     DependencyPath path = new DependencyPath(null);
-    path = path.appended(new Dependency(foo, "compile", false));
+    path = path.append(new Dependency(foo, "compile", false));
 
     DependencyPath parent = path.getParentPath();
 
@@ -158,16 +158,11 @@ public class DependencyPathTest {
   }
 
   @Test
-  public void testGetRoot() {
-    Assert.assertEquals(pathRootFooBar.getRoot(), root);
-  }
-
-  @Test
   public void testToString_nullOptionalFlag() {
     DependencyPath path =
         new DependencyPath(null)
-            .appended(new Dependency(foo, "test", false))
-            .appended(new Dependency(bar, "compile", null));
+            .append(new Dependency(foo, "test", false))
+            .append(new Dependency(bar, "compile", null));
     Assert.assertEquals("com.google:foo:1 (test) / com.google:bar:1 (compile)", path.toString());
   }
 
@@ -175,17 +170,17 @@ public class DependencyPathTest {
   public void testEquals() {
     DependencyPath path1 =
         new DependencyPath(null)
-            .appended(new Dependency(foo, "compile"))
-            .appended(new Dependency(bar, "compile"));
+            .append(new Dependency(foo, "compile"))
+            .append(new Dependency(bar, "compile"));
     DependencyPath path2 =
         new DependencyPath(null)
-            .appended(new Dependency(foo, "compile"))
-            .appended(new Dependency(bar, "compile"));
+            .append(new Dependency(foo, "compile"))
+            .append(new Dependency(bar, "compile"));
     DependencyPath path3 =
         new DependencyPath(null)
-            .appended(new Dependency(bar, "compile"))
-            .appended(new Dependency(foo, "compile"));
-    DependencyPath path4 = new DependencyPath(null).appended(new Dependency(foo, "compile"));
+            .append(new Dependency(bar, "compile"))
+            .append(new Dependency(foo, "compile"));
+    DependencyPath path4 = new DependencyPath(null).append(new Dependency(foo, "compile"));
 
     new EqualsTester()
         .addEqualityGroup(path1, path2)
@@ -198,12 +193,12 @@ public class DependencyPathTest {
   public void testEquals_nullOptional() {
     DependencyPath path1 =
         new DependencyPath(null)
-            .appended(new Dependency(foo, "compile"))
-            .appended(new Dependency(bar, "compile"));
+            .append(new Dependency(foo, "compile"))
+            .append(new Dependency(bar, "compile"));
     DependencyPath path2 =
         new DependencyPath(null)
-            .appended(new Dependency(foo, "compile"))
-            .appended(new Dependency(bar, "compile", null));
+            .append(new Dependency(foo, "compile"))
+            .append(new Dependency(bar, "compile", null));
 
     new EqualsTester().addEqualityGroup(path1, path2).testEquals();
   }

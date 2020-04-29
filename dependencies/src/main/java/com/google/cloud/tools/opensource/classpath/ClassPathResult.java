@@ -99,7 +99,7 @@ public final class ClassPathResult {
    * coordinates of the direct dependencies of the root nodes in {@link #dependencyPaths}. The
    * values are all {@link ClassPathEntry}s in the subtree of the key.
    */
-  public ImmutableSetMultimap<String, ClassPathEntry> coordinatesToClassPathEntriesInSubtree() {
+  public ImmutableSetMultimap<String, ClassPathEntry> coordinatesToClassPathEntry() {
     Builder<String, ClassPathEntry> coordinatesToEntry = ImmutableSetMultimap.builder();
     for (ClassPathEntry path : getClassPath()) {
       for (DependencyPath dependencyPath : getDependencyPaths(path)) {
