@@ -392,6 +392,6 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     }
 
     return "Problematic artifacts in the dependency tree:\n"
-            + classPathResult.formatDependencyPaths(problematicJars.build());
+        + classPathResult.formatDependencyPaths(problematicJars.build());
   }
 }
