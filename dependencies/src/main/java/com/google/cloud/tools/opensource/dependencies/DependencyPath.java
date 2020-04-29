@@ -51,14 +51,10 @@ public final class DependencyPath {
   public DependencyPath appended(Dependency dependency) {
     DependencyPath copy = new DependencyPath(root);
     for (Dependency value : path) {
-      copy.add(value);
+      copy.path.add(value);
     }
-    copy.add(dependency);
+    copy.path.add(dependency);
     return copy;
-  }
-
-  private void add(Dependency dependency) {
-    path.add(checkNotNull(dependency));
   }
 
   /** Returns the length of the path plus the root. */
@@ -110,7 +106,7 @@ public final class DependencyPath {
   DependencyPath getParentPath() {
     DependencyPath parent = new DependencyPath(root);
     for (int i = 0; i < path.size() - 1; i++) {
-      parent.add(path.get(i));
+      parent.path.add(path.get(i));
     }
     return parent;
   }
