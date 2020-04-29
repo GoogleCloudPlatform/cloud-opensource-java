@@ -67,7 +67,7 @@ public class DependencyGraph {
   void addPath(DependencyPath path) {
     Artifact leaf = path.getLeaf();
     if (leaf == null) {
-      // No need to include a path to null root
+      // No need to include a path to null leaf
       return;
     }
     graph.add(path);

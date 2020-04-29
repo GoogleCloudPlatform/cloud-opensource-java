@@ -52,9 +52,7 @@ public final class DependencyPath {
   @VisibleForTesting
   public DependencyPath append(Dependency dependency) {
     DependencyPath copy = new DependencyPath(root);
-    for (Dependency value : path) {
-      copy.path.add(value);
-    }
+    copy.path.addAll(path);
     copy.path.add(dependency);
     return copy;
   }

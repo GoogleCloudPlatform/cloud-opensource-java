@@ -101,10 +101,10 @@ public final class ClassPathResult {
    */
   public ImmutableSetMultimap<String, ClassPathEntry> coordinatesToClassPathEntry() {
     Builder<String, ClassPathEntry> coordinatesToEntry = ImmutableSetMultimap.builder();
-    for (ClassPathEntry path : getClassPath()) {
-      for (DependencyPath dependencyPath : getDependencyPaths(path)) {
+    for (ClassPathEntry entry : getClassPath()) {
+      for (DependencyPath dependencyPath : getDependencyPaths(entry)) {
         Artifact artifact = dependencyPath.get(1);
-        coordinatesToEntry.put(Artifacts.toCoordinates(artifact), path);
+        coordinatesToEntry.put(Artifacts.toCoordinates(artifact), entry);
       }
     }
 

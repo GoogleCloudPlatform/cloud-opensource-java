@@ -72,9 +72,9 @@ public class DependencyTreeFormatter {
 
   /**
    * Builds ListMultimap that represents a Maven dependency tree of parent-children relationship.
-   * Each node in the tree has a corresponding key in the ListMultimap. The value associated with
-   * that key is a list of the children of the node. The root node is available at the first element
-   * in {@code listMultimap.values()}.
+   * Each node in the tree has a corresponding key (the path from the root to the node) in the
+   * ListMultimap. The value associated with that key is a list of the children of the node. The
+   * root node is available at the first element in {@code listMultimap.values()}.
    *
    * @param dependencyPaths dependency path instances without assuming any order
    * @return ListMultimap representing a Maven dependency tree of parent-children relationship. Each
