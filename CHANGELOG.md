@@ -1,5 +1,9 @@
 # Linkage Checker Enforcer Rule Change Log
 
+## 1.4.0
+* Linkage Checker enforcer rule shows dependency paths to problematic Maven artifacts.
+* Fixed the enforcer rule's incorrect selection of entry point JARs for reachability analysis
+
 ## 1.3.0
 * LinkageCheckerMain has an option (`-o`) to output linkage errors into a file ([document](
   https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/LinkageCheckerMain#exclusion-files
