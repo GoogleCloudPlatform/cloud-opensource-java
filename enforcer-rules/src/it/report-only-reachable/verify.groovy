@@ -1,4 +1,4 @@
-def buildLog = new File(basedir, "build.log").text.replaceAll("\\r", "")
+def buildLog = new File(basedir, "build.log").text.replaceAll("\\r\\n", "\\n")
 
 assert buildLog.contains('''\
 [ERROR] Linkage Checker rule found 1 reachable error. Linkage error report:

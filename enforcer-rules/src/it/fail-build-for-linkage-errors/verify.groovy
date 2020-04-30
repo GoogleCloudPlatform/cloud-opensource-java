@@ -1,4 +1,4 @@
-def buildLog = new File(basedir, "build.log").text.replaceAll("\\r", "")
+def buildLog = new File(basedir, "build.log").text.replaceAll("\\r\\n", "\\n")
 
 // Windows build contains \r character
 assert buildLog.contains('''\
