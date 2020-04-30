@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -227,10 +228,15 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
               String.format(
                   "Linkage Checker rule found %d %s. Linkage error report:\n%s",
                   errorCount, foundError, SymbolProblem.formatSymbolProblems(symbolProblems));
+          String dependencyPaths =
+              dependencyPathsOfProblematicJars(classPathResult, symbolProblems);
+
           if (getLevel() == WARN) {
             logger.warn(message);
+            logger.warn(dependencyPaths);
           } else {
             logger.error(message);
+            logger.error(dependencyPaths);
             throw new EnforcerRuleException(
                 "Failed while checking class path. See above error report.");
           }
@@ -369,5 +375,23 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       throw new EnforcerRuleException("Failed to collect dependency: " + artifactProblems);
     }
     return result;
+  }
+
+  private String dependencyPathsOfProblematicJars(
+      ClassPathResult classPathResult, Multimap<SymbolProblem, ClassFile> symbolProblems) {
+    ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
+    for (SymbolProblem problem : symbolProblems.keySet()) {
+      ClassFile containingClass = problem.getContainingClass();
+      if (containingClass != null) {
+        problematicJars.add(containingClass.getClassPathEntry());
+      }
+
+      for (ClassFile classFile : symbolProblems.get(problem)) {
+        problematicJars.add(classFile.getClassPathEntry());
+      }
+    }
+
+    return "Problematic artifacts in the dependency tree:\n"
+        + classPathResult.formatDependencyPaths(problematicJars.build());
   }
 }
