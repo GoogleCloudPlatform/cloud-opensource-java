@@ -67,7 +67,8 @@ public class RepositoryUtilityTest {
     // but it exists in Maven central.
     String coordinates = "com.google.cloud:google-cloud-bom:pom:0.32.0-alpha";
     try {
-      RepositoryUtility.readBom(coordinates, ImmutableList.of("http://nonexistent.example.com"));
+      RepositoryUtility.readBom(coordinates, ImmutableList.of(
+          RepositoryUtility.mavenRepositoryFromUrl("http://nonexistent.example.com")));
       fail("readBom should not access Maven Central when it's not in the repository list.");
     } catch (ArtifactDescriptorException ex) {
       assertEquals("Failed to read artifact descriptor for " + coordinates, ex.getMessage());

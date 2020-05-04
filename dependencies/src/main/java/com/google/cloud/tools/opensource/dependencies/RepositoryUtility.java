@@ -91,6 +91,9 @@ public final class RepositoryUtility {
   public static final RemoteRepository CENTRAL =
       new RemoteRepository.Builder("central", "default", "https://repo1.maven.org/maven2/").build();
 
+  public static final RemoteRepository OFFLINE =
+      new RemoteRepository.Builder("offline", "", "file://no-such-file/maven/central").build();
+
   // DefaultTransporterProvider.newTransporter checks these transporters
   private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
       ImmutableSet.of("file", "http", "https");
@@ -248,15 +251,13 @@ public final class RepositoryUtility {
    * Parse the dependencyManagement section of an artifact and return the artifacts included there.
    */
   public static Bom readBom(String coordinates) throws ArtifactDescriptorException {
-    return readBom(coordinates, ImmutableList.of(CENTRAL.getUrl()));
+    return readBom(coordinates, ImmutableList.of(CENTRAL, OFFLINE));
   }
 
   /**
    * Parse the dependencyManagement section of an artifact and return the artifacts included there.
-   *
-   * @param mavenRepositoryUrls URLs of Maven repositories when resolving the BOM coordinates
    */
-  public static Bom readBom(String coordinates, List<String> mavenRepositoryUrls)
+  public static Bom readBom(String coordinates, List<RemoteRepository> remoteRepositories)
       throws ArtifactDescriptorException {
     Artifact artifact = new DefaultArtifact(coordinates);
 
@@ -265,8 +266,8 @@ public final class RepositoryUtility {
 
     ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
 
-    for (String repositoryUrl : mavenRepositoryUrls) {
-      request.addRepository(mavenRepositoryFromUrl(repositoryUrl));
+    for (RemoteRepository repository : remoteRepositories) {
+      request.addRepository(repository);
     }
 
     request.setArtifact(artifact);

@@ -196,7 +196,8 @@ final class LinkageCheckerArguments {
       String bomCoordinates = commandLine.getOptionValue("b");
 
       return cachedArtifacts =
-          RepositoryUtility.readBom(bomCoordinates, getMavenRepositoryUrls())
+          RepositoryUtility.readBom(bomCoordinates, getMavenRepositoryUrls()
+          .stream().map(RepositoryUtility::mavenRepositoryFromUrl).collect(ImmutableList.toImmutableList()))
               .getManagedDependencies();
     } else if (commandLine.hasOption("a")) {
       // option 'a'
