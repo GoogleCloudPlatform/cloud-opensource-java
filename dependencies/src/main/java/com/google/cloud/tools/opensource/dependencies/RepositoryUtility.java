@@ -35,8 +35,15 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
 import org.apache.maven.RepositoryUtils;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.repository.ArtifactRepositoryFactory;
+import org.apache.maven.artifact.repository.DefaultArtifactRepository;
+import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
+import org.apache.maven.bridge.MavenRepositorySystem;
 import org.apache.maven.execution.DefaultMavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionRequest;
+import org.apache.maven.execution.MavenExecutionRequestPopulator;
+import org.apache.maven.internal.aether.DefaultRepositorySystemSessionFactory;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuilder;
@@ -44,6 +51,9 @@ import org.apache.maven.project.ProjectBuildingException;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.ProjectBuildingResult;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
+import org.apache.maven.settings.Mirror;
+import org.apache.maven.settings.Settings;
+import org.apache.maven.settings.io.SettingsReader;
 import org.codehaus.plexus.ContainerConfiguration;
 import org.codehaus.plexus.DefaultContainerConfiguration;
 import org.codehaus.plexus.DefaultPlexusContainer;
@@ -64,6 +74,7 @@ import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
+import org.eclipse.aether.repository.MirrorSelector;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
@@ -92,7 +103,7 @@ public final class RepositoryUtility {
       new RemoteRepository.Builder("central", "default", "https://repo1.maven.org/maven2/").build();
 
   public static final RemoteRepository OFFLINE =
-      new RemoteRepository.Builder("offline", "", "file://no-such-file/maven/central").build();
+      new RemoteRepository.Builder("offline", "default", "file://no-such-file/maven/central").build();
 
   // DefaultTransporterProvider.newTransporter checks these transporters
   private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
@@ -130,6 +141,81 @@ public final class RepositoryUtility {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
     return session;
   }
+
+  /**
+   * Opens a new Maven repository session using the settings.xml file.
+   */
+  public static Bom readBomWithSettings(String coordinates, File settingsFile) {
+
+    ClassWorld classWorld =
+        new ClassWorld("plexus.core", Thread.currentThread().getContextClassLoader());
+    ContainerConfiguration containerConfiguration =
+        new DefaultContainerConfiguration()
+            .setClassWorld(classWorld)
+            .setRealm(classWorld.getClassRealm("plexus.core"))
+            .setClassPathScanning(PlexusConstants.SCANNING_INDEX)
+            .setAutoWiring(true)
+            .setJSR250Lifecycle(true)
+            .setName("repository-utility");
+    try {
+      PlexusContainer container = new DefaultPlexusContainer(containerConfiguration);
+      MavenExecutionRequest mavenRequest = new DefaultMavenExecutionRequest();
+
+
+      MavenRepositorySystem mavenRepositorySystem = container.lookup(MavenRepositorySystem.class);
+
+      // Maven Central
+      ArtifactRepository repo = mavenRepositorySystem.createDefaultRemoteRepository(mavenRequest);
+      mavenRequest.addRemoteRepository(repo);
+
+      // Settings.xml
+      SettingsReader reader = container.lookup(SettingsReader.class);
+      MavenExecutionRequestPopulator requestPopulator = container.lookup(MavenExecutionRequestPopulator.class);
+      mavenRequest.setUserSettingsFile(settingsFile);
+      Settings userSettings = reader.read(settingsFile, null);
+      requestPopulator.populateFromSettings(mavenRequest, userSettings);
+
+      mavenRequest.setLocalRepositoryPath(Paths.get("test_local_repo").toFile());
+
+      org.apache.maven.repository.RepositorySystem repositorySystem = container.lookup(org.apache.maven.repository.RepositorySystem.class);
+      ArtifactRepository localRepo = repositorySystem.createLocalRepository(mavenRequest.getLocalRepositoryPath());
+      mavenRequest.setLocalRepository(localRepo);
+
+      DefaultRepositorySystemSessionFactory repositorySessionFactory = container.lookup(
+          DefaultRepositorySystemSessionFactory.class);
+
+      // This internally calls mavenRepositorySystem.injectMirror(
+      RepositorySystemSession session = repositorySessionFactory.newRepositorySession(mavenRequest);
+
+      ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
+
+      // This is never updated by session. If this is omitted, then readArtifactDescriptor does not
+      // read anything.
+      // request.addRepository(OFFLINE);
+
+      request.setArtifact(new DefaultArtifact(coordinates));
+
+      // This ignored settings.xml file
+      // RepositorySystem aetherRepositorySystem = newRepositorySystem();
+      RepositorySystem aetherRepositorySystem = container.lookup(RepositorySystem.class);
+
+
+      // This has mirror correctly
+      List<Mirror> mirrors = mavenRequest.getMirrors();
+
+      // This has mirrors correctly
+      MirrorSelector mirrorSelector = session.getMirrorSelector();
+
+      // This does not seem to use the mirrors defined in settings.xml
+      ArtifactDescriptorResult resolved = aetherRepositorySystem.readArtifactDescriptor(session, request);
+
+      Bom bom = Bom.create(resolved);
+      return bom;
+    } catch (Exception ex) {
+      throw new RuntimeException("failed to read BOM", ex);
+    }
+  }
+
 
   /**
    * Open a new Maven repository session for full dependency graph resolution.
@@ -273,25 +359,7 @@ public final class RepositoryUtility {
     request.setArtifact(artifact);
 
     ArtifactDescriptorResult resolved = system.readArtifactDescriptor(session, request);
-    List<Exception> exceptions = resolved.getExceptions();
-    if (!exceptions.isEmpty()) {
-      throw new ArtifactDescriptorException(resolved, exceptions.get(0).getMessage());
-    }
-    
-    List<Artifact> managedDependencies = new ArrayList<>();
-    for (Dependency dependency : resolved.getManagedDependencies()) {
-      Artifact managed = dependency.getArtifact();
-      if (shouldSkipBomMember(managed)) {
-        continue;
-      }
-      if (!managedDependencies.contains(managed)) {
-        managedDependencies.add(managed);
-      } else {
-        logger.severe("Duplicate dependency " + dependency);
-      }
-    }
-    
-    Bom bom = new Bom(coordinates, ImmutableList.copyOf(managedDependencies));
+    Bom bom = Bom.create(resolved);
     return bom;
   }
 

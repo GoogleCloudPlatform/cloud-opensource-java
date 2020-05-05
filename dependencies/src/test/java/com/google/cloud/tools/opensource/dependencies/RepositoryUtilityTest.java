@@ -26,6 +26,7 @@ import com.google.common.truth.Truth;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
@@ -54,6 +55,19 @@ public class RepositoryUtilityTest {
   @Test
   public void testReadBom_coordinates() throws ArtifactDescriptorException {
     Bom bom = RepositoryUtility.readBom("com.google.cloud:google-cloud-bom:0.61.0-alpha");
+    List<Artifact> managedDependencies = bom.getManagedDependencies();
+    // Characterization test. As long as the artifact doesn't change (and it shouldn't)
+    // the answer won't change.
+    Assert.assertEquals(134, managedDependencies.size());
+    Assert.assertEquals("com.google.cloud:google-cloud-bom:0.61.0-alpha", bom.getCoordinates());
+  }
+
+  @Test
+  public void testReadBomWithSettings() throws ArtifactDescriptorException {
+    Bom bom =
+        RepositoryUtility.readBomWithSettings(
+            "com.google.cloud:google-cloud-bom:0.61.0-alpha",
+            Paths.get("settings.suztomo.xml").toAbsolutePath().toFile());
     List<Artifact> managedDependencies = bom.getManagedDependencies();
     // Characterization test. As long as the artifact doesn't change (and it shouldn't)
     // the answer won't change.

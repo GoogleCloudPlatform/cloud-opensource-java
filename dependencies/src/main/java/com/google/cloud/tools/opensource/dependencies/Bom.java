@@ -16,10 +16,17 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.shouldSkipBomMember;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.resolution.ArtifactDescriptorException;
+import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 
 public final class Bom {
   
@@ -51,5 +58,29 @@ public final class Bom {
    */
   public String getCoordinates() {
     return coordinates;
+  }
+
+  static Bom create(ArtifactDescriptorResult artifactDescriptorResult) throws ArtifactDescriptorException{
+    List<Exception> exceptions = artifactDescriptorResult.getExceptions();
+    if (!exceptions.isEmpty()) {
+      throw new ArtifactDescriptorException(artifactDescriptorResult, exceptions.get(0).getMessage());
+    }
+
+    List<Artifact> managedDependencies = new ArrayList<>();
+    for (Dependency dependency : artifactDescriptorResult.getManagedDependencies()) {
+      Artifact managed = dependency.getArtifact();
+      if (shouldSkipBomMember(managed)) {
+        continue;
+      }
+      if (!managedDependencies.contains(managed)) {
+        managedDependencies.add(managed);
+      } else {
+        System.err.println("Duplicate dependency " + dependency);
+      }
+    }
+
+    String coordinates = Artifacts.toCoordinates(artifactDescriptorResult.getArtifact());
+    Bom bom = new Bom(coordinates, ImmutableList.copyOf(managedDependencies));
+    return bom;
   }
 }
