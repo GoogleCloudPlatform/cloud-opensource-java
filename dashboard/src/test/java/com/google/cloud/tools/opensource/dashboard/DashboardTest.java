@@ -19,7 +19,7 @@ package com.google.cloud.tools.opensource.dashboard;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
@@ -148,7 +148,7 @@ public class DashboardTest {
   
   @Test
   public void testArtifactDetails() throws IOException, ArtifactDescriptorException {
-    List<Artifact> artifacts = RepositoryUtility.readBom("com.google.cloud:libraries-bom:1.0.0")
+    List<Artifact> artifacts = Bom.readBom("com.google.cloud:libraries-bom:1.0.0")
         .getManagedDependencies();
     Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
 

@@ -20,15 +20,28 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import org.apache.maven.RepositoryUtils;
+import org.apache.maven.model.DependencyManagement;
+import org.apache.maven.project.MavenProject;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactProperties;
+import org.eclipse.aether.artifact.ArtifactTypeRegistry;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.resolution.ArtifactDescriptorException;
+import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
+import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 
 public final class Bom {
   
   private static final ImmutableSet<String> BOM_SKIP_ARTIFACT_IDS =
       ImmutableSet.of("google-cloud-logging-logback", "google-cloud-contrib");
 
-  
   private final ImmutableList<Artifact> artifacts;
   private final String coordinates;
 
@@ -57,6 +70,75 @@ public final class Bom {
    */
   public String getCoordinates() {
     return coordinates;
+  }
+
+  public static Bom readBom(Path pomFile) throws MavenRepositoryException {
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
+  
+    MavenProject mavenProject = RepositoryUtility.createMavenProject(pomFile, session);
+    String coordinates = mavenProject.getGroupId() + ":" + mavenProject.getArtifactId() 
+        + ":" + mavenProject.getVersion();
+    DependencyManagement dependencyManagement = mavenProject.getDependencyManagement();
+    List<org.apache.maven.model.Dependency> dependencies = dependencyManagement.getDependencies();
+  
+    ArtifactTypeRegistry registry = session.getArtifactTypeRegistry();
+    ImmutableList<Artifact> artifacts = dependencies.stream()
+        .map(dependency -> RepositoryUtils.toDependency(dependency, registry))
+        .map(Dependency::getArtifact)
+        .filter(artifact -> !shouldSkipBomMember(artifact))
+        .collect(ImmutableList.toImmutableList());
+    
+    Bom bom = new Bom(coordinates, artifacts);
+    return bom;
+  }
+
+  /**
+   * Parse the dependencyManagement section of an artifact and return the artifacts included there.
+   *
+   * @param mavenRepositoryUrls URLs of Maven repositories to search for BOM members
+   */
+  public static Bom readBom(String coordinates, List<String> mavenRepositoryUrls)
+      throws ArtifactDescriptorException {
+    Artifact artifact = new DefaultArtifact(coordinates);
+  
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
+  
+    ArtifactDescriptorRequest request = new ArtifactDescriptorRequest();
+  
+    for (String repositoryUrl : mavenRepositoryUrls) {
+      request.addRepository(RepositoryUtility.mavenRepositoryFromUrl(repositoryUrl));
+    }
+  
+    request.setArtifact(artifact);
+  
+    ArtifactDescriptorResult resolved = system.readArtifactDescriptor(session, request);
+    List<Exception> exceptions = resolved.getExceptions();
+    if (!exceptions.isEmpty()) {
+      throw new ArtifactDescriptorException(resolved, exceptions.get(0).getMessage());
+    }
+    
+    List<Artifact> managedDependencies = new ArrayList<>();
+    for (Dependency dependency : resolved.getManagedDependencies()) {
+      Artifact managed = dependency.getArtifact();
+      if (shouldSkipBomMember(managed)) {
+        continue;
+      }
+      if (!managedDependencies.contains(managed)) {
+        managedDependencies.add(managed);
+      }
+    }
+    
+    Bom bom = new Bom(coordinates, ImmutableList.copyOf(managedDependencies));
+    return bom;
+  }
+
+  /**
+   * Parse the dependencyManagement section of an artifact and return the artifacts included there.
+   */
+  public static Bom readBom(String coordinates) throws ArtifactDescriptorException {
+    return Bom.readBom(coordinates, ImmutableList.of(RepositoryUtility.CENTRAL.getUrl()));
   }
 
   /** Returns true if the {@code artifact} in BOM should be skipped for checks. */

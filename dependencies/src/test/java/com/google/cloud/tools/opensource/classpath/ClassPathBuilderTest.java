@@ -19,8 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.cloud.tools.opensource.classpath.TestHelper.COORDINATES;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -68,7 +67,7 @@ public class ClassPathBuilderTest {
   @Test
   public void testBomToPaths_firstElementsAreBomMembers() throws RepositoryException {
     List<Artifact> managedDependencies = 
-        RepositoryUtility.readBom("com.google.cloud:google-cloud-bom:0.81.0-alpha")
+        Bom.readBom("com.google.cloud:google-cloud-bom:0.81.0-alpha")
         .getManagedDependencies();
 
     ImmutableList<ClassPathEntry> classPath =
