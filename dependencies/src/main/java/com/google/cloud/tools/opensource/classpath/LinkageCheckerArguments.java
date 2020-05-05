@@ -17,7 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-
+import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -196,7 +196,7 @@ final class LinkageCheckerArguments {
       String bomCoordinates = commandLine.getOptionValue("b");
 
       return cachedArtifacts =
-          RepositoryUtility.readBom(bomCoordinates, getMavenRepositoryUrls())
+          Bom.readBom(bomCoordinates, getMavenRepositoryUrls())
               .getManagedDependencies();
     } else if (commandLine.hasOption("a")) {
       // option 'a'

@@ -172,7 +172,7 @@ public class LinkageMonitor {
     String latestBomCoordinates =
         RepositoryUtility.findLatestCoordinates(repositorySystem, groupId, artifactId);
     logger.info("BOM Coordinates: " + latestBomCoordinates);
-    Bom baseline = RepositoryUtility.readBom(latestBomCoordinates);
+    Bom baseline = Bom.readBom(latestBomCoordinates);
     ImmutableSet<SymbolProblem> problemsInBaseline =
         LinkageChecker.create(baseline, null).findSymbolProblems().keySet();
     Bom snapshot = copyWithSnapshot(repositorySystem, session, baseline, localArtifacts);

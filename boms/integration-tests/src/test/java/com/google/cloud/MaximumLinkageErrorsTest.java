@@ -44,10 +44,10 @@ public class MaximumLinkageErrorsTest {
     // Not using RepositoryUtility.findLatestCoordinates, which may return a snapshot version
     String version = findLatestNonSnapshotVersion();
     String baselineCoordinates = "com.google.cloud:libraries-bom:" + version;
-    Bom baseline = RepositoryUtility.readBom(baselineCoordinates);
+    Bom baseline = Bom.readBom(baselineCoordinates);
 
     Path bomFile = Paths.get("../cloud-oss-bom/pom.xml");
-    Bom bom = RepositoryUtility.readBom(bomFile);
+    Bom bom = Bom.readBom(bomFile);
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> oldProblems =
         LinkageChecker.create(baseline).findSymbolProblems();

@@ -163,7 +163,7 @@ public class DashboardMain {
   @VisibleForTesting
   static Path generate(String bomCoordinates)
       throws IOException, TemplateException, RepositoryException, URISyntaxException {
-    Path output = generate(RepositoryUtility.readBom(bomCoordinates));
+    Path output = generate(Bom.readBom(bomCoordinates));
     System.out.println("Wrote dashboard for " + bomCoordinates + " to " + output);
     return output;
   }
@@ -173,7 +173,7 @@ public class DashboardMain {
       throws IOException, TemplateException, URISyntaxException, MavenRepositoryException {
     checkArgument(Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
     checkArgument(Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
-    Path output = generate(RepositoryUtility.readBom(bomFile));
+    Path output = generate(Bom.readBom(bomFile));
     System.out.println("Wrote dashboard for " + bomFile + " to " + output);
     return output;
   }
