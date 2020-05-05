@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.dependencies.enforcer;
 
-import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.shouldSkipBomMember;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static org.apache.maven.enforcer.rule.api.EnforcerLevel.WARN;
@@ -29,6 +28,7 @@ import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.ArtifactProblem;
+import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -366,7 +366,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         bomProject.getDependencyManagement().getDependencies().stream()
             .map(dependency -> RepositoryUtils.toDependency(dependency, artifactTypeRegistry))
             .map(Dependency::getArtifact)
-            .filter(artifact -> !shouldSkipBomMember(artifact))
+            .filter(artifact -> !Bom.shouldSkipBomMember(artifact))
             .collect(toImmutableList());
 
     ClassPathResult result = classPathBuilder.resolve(artifacts);

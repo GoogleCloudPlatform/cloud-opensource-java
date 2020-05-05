@@ -56,7 +56,6 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.artifact.ArtifactProperties;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.DependencySelector;
@@ -199,7 +198,7 @@ public final class RepositoryUtility {
     ImmutableList<Artifact> artifacts = dependencies.stream()
         .map(dependency -> RepositoryUtils.toDependency(dependency, registry))
         .map(Dependency::getArtifact)
-        .filter(artifact -> !shouldSkipBomMember(artifact))
+        .filter(artifact -> !Bom.shouldSkipBomMember(artifact))
         .collect(toImmutableList());
     
     Bom bom = new Bom(coordinates, artifacts);
@@ -280,7 +279,7 @@ public final class RepositoryUtility {
     List<Artifact> managedDependencies = new ArrayList<>();
     for (Dependency dependency : resolved.getManagedDependencies()) {
       Artifact managed = dependency.getArtifact();
-      if (shouldSkipBomMember(managed)) {
+      if (Bom.shouldSkipBomMember(managed)) {
         continue;
       }
       if (!managedDependencies.contains(managed)) {
@@ -292,29 +291,6 @@ public final class RepositoryUtility {
     
     Bom bom = new Bom(coordinates, ImmutableList.copyOf(managedDependencies));
     return bom;
-  }
-
-  private static final ImmutableSet<String> BOM_SKIP_ARTIFACT_IDS =
-      ImmutableSet.of("google-cloud-logging-logback", "google-cloud-contrib");
-
-  /** Returns true if the {@code artifact} in BOM should be skipped for checks. */
-  public static boolean shouldSkipBomMember(Artifact artifact) {
-    if ("testlib".equals(artifact.getClassifier())) {
-      // we don't report on test libraries
-      return true;
-    }
-
-    String type = artifact.getProperty(ArtifactProperties.TYPE, "jar");
-    if ("test-jar".equals(type)) {
-      return true;
-    }
-
-    // TODO remove this hack once we get these out of google-cloud-java's BOM
-    if (BOM_SKIP_ARTIFACT_IDS.contains(artifact.getArtifactId())) {
-      return true;
-    }
-
-    return false;
   }
 
   /**

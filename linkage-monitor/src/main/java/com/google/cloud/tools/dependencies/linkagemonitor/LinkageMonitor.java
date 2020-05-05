@@ -367,7 +367,7 @@ public class LinkageMonitor {
             .map(Dependency::getArtifact)
             .collect(toImmutableList());
     for (Artifact managedDependency : newManagedDependencies) {
-      if (RepositoryUtility.shouldSkipBomMember(managedDependency)) {
+      if (Bom.shouldSkipBomMember(managedDependency)) {
         continue;
       }
       String version =
