@@ -183,7 +183,6 @@ public class DashboardMain {
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
     ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies);
-    // LinkedListMultimap preserves the key order
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
 
     LinkageChecker linkageChecker = LinkageChecker.create(classpath);
@@ -263,7 +262,7 @@ public class DashboardMain {
       ArtifactCache cache,
       ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
       ClassPathResult classPathResult,
-      Bom bom) {
+      Bom bom) throws TemplateException {
 
     ImmutableSetMultimap<String, ClassPathEntry> bomMemberToJars =
         classPathResult.coordinatesToClassPathEntry();
@@ -302,9 +301,6 @@ public class DashboardMain {
         unavailableTestResult.setExceptionMessage(ex.getMessage());
         // Even when there's a problem generating test result, show the error in the dashboard
         table.add(unavailableTestResult);
-      } catch (TemplateException ex) {
-        // This failure is ours. No need to report it in dashboard for an artifact
-        throw new RuntimeException("Error in template setting in this project", ex);
       }
     }
 

@@ -68,7 +68,7 @@ public class DashboardUnavailableArtifactTest {
   }
 
   @Test
-  public void testDashboardForRepositoryException() {
+  public void testDashboardForRepositoryException() throws TemplateException {
     Configuration configuration = DashboardMain.configureFreemarker();
     Artifact validArtifact = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
     Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nonexistent:jar:1.15.0");
