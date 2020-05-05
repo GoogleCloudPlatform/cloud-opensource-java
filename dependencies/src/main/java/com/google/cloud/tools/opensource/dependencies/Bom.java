@@ -94,7 +94,8 @@ public final class Bom {
   }
 
   /**
-   * Parse the dependencyManagement section of an artifact and return the artifacts included there.
+   * Parses the dependencyManagement section of an artifact and returns
+   * the artifacts included there.
    *
    * @param mavenRepositoryUrls URLs of Maven repositories to search for BOM members
    */
@@ -135,7 +136,8 @@ public final class Bom {
   }
 
   /**
-   * Parse the dependencyManagement section of an artifact and return the artifacts included there.
+   * Parses the dependencyManagement section of an artifact and returns the artifacts
+   * included there.
    */
   public static Bom readBom(String coordinates) throws ArtifactDescriptorException {
     return Bom.readBom(coordinates, ImmutableList.of(RepositoryUtility.CENTRAL.getUrl()));
