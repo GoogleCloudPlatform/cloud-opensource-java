@@ -16,9 +16,10 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.TestHelper.COORDINATES;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
+import com.google.cloud.tools.opensource.classpath.TestHelper;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
@@ -92,7 +93,7 @@ public class ClassPathBuilderTest {
         classPathBuilder.resolve(ImmutableList.of(grpcAuth)).getClassPath();
 
     Truth.assertThat(classPath)
-        .comparingElementsUsing(COORDINATES)
+        .comparingElementsUsing(TestHelper.COORDINATES)
         .containsAtLeast(
             "io.grpc:grpc-auth:1.15.1", "com.google.auth:google-auth-library-credentials:0.9.0");
     classPath.forEach(
@@ -107,10 +108,10 @@ public class ClassPathBuilderTest {
     List<ClassPathEntry> entries = resolveClassPath("io.grpc:grpc-auth:1.15.1");
 
     Truth.assertThat(entries)
-        .comparingElementsUsing(COORDINATES)
+        .comparingElementsUsing(TestHelper.COORDINATES)
         .contains("io.grpc:grpc-auth:1.15.1");
     Truth.assertThat(entries)
-        .comparingElementsUsing(COORDINATES)
+        .comparingElementsUsing(TestHelper.COORDINATES)
         .contains("com.google.auth:google-auth-library-credentials:0.9.0");
     entries.forEach(
         entry ->
@@ -123,7 +124,8 @@ public class ClassPathBuilderTest {
   public void testResolveClassPath_optionalDependency() {
     List<ClassPathEntry> classPath =
         resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
-    Truth.assertThat(classPath).comparingElementsUsing(COORDINATES).contains("log4j:log4j:1.2.12");
+    Truth.assertThat(classPath).comparingElementsUsing(TestHelper.COORDINATES)
+        .contains("log4j:log4j:1.2.12");
   }
 
   @Test
