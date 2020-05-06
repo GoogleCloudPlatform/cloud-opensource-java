@@ -94,9 +94,8 @@ public final class ClassPathResult {
   }
   
   /**
-   * Returns the classpath entries for the specified coordinates.
-   * 
-   * TODO: Explain why this is plural. Shouldn't there be exactly one?
+   * Returns the classpath entries whose transitive dependencies contain
+   * the artifact with the specified coordinates.
    */
   public ImmutableSet<ClassPathEntry> getClassPathEntries(String coordinates) {
     ImmutableSet.Builder<ClassPathEntry> builder = ImmutableSet.builder();
