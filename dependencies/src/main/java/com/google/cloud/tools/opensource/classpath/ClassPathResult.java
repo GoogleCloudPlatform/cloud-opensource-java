@@ -60,8 +60,10 @@ public final class ClassPathResult {
     Builder<String, ClassPathEntry> builder = ImmutableSetMultimap.builder();
     for (ClassPathEntry entry : classPath) {
       for (DependencyPath dependencyPath : dependencyPaths.get(entry)) {
-        Artifact artifact = dependencyPath.get(1);
-        builder.put(Artifacts.toCoordinates(artifact), entry);
+        if (dependencyPath.size() > 1) {
+          Artifact artifact = dependencyPath.get(1);
+          builder.put(Artifacts.toCoordinates(artifact), entry);
+        }
       }
     }
     
