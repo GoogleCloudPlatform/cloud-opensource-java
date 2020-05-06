@@ -23,6 +23,7 @@ import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSetMultimap.Builder;
 import com.google.common.collect.LinkedListMultimap;
@@ -33,6 +34,7 @@ import org.eclipse.aether.artifact.Artifact;
 public final class ClassPathResult {
 
   private final ImmutableList<ClassPathEntry> classPath;
+  private ImmutableSetMultimap<String, ClassPathEntry> coordinatesToEntries;
 
   /**
    * An ordered map from class path elements to one or more Maven dependency paths.
@@ -54,6 +56,16 @@ public final class ClassPathResult {
     this.dependencyPaths = ImmutableListMultimap.copyOf(dependencyPaths);
     this.classPath = ImmutableList.copyOf(dependencyPaths.keySet());
     this.artifactProblems = ImmutableList.copyOf(artifactProblems);
+    
+    Builder<String, ClassPathEntry> builder = ImmutableSetMultimap.builder();
+    for (ClassPathEntry entry : getClassPath()) {
+      for (DependencyPath dependencyPath : getDependencyPaths(entry)) {
+        Artifact artifact = dependencyPath.get(1);
+        builder.put(Artifacts.toCoordinates(artifact), entry);
+      }
+    }
+    
+    this.coordinatesToEntries = builder.build();
   }
 
   /** Returns the resolved class path. */
@@ -62,8 +74,8 @@ public final class ClassPathResult {
   }
 
   /**
-   * Returns the dependency path to the class path entry. An empty list if the entry is not in
-   * the class path.
+   * Returns the dependency path to the class path entry or 
+   * an empty list if the entry is not in the class path.
    */
   public ImmutableList<DependencyPath> getDependencyPaths(ClassPathEntry entry) {
     return dependencyPaths.get(entry);
@@ -93,21 +105,14 @@ public final class ClassPathResult {
     }
     return message.toString();
   }
-
+  
   /**
-   * Returns mapping from the Maven coordinates to {@link ClassPathEntry}. The keys are the
-   * coordinates of the direct dependencies of the root nodes in {@link #dependencyPaths}. The
-   * values are all {@link ClassPathEntry}s in the subtree of the key.
+   * Returns the classpath entries for the specified coordinates.
+   * 
+   * TODO: Explain why this is plural. Shouldn't there be exactly one?
    */
-  public ImmutableSetMultimap<String, ClassPathEntry> coordinatesToClassPathEntry() {
-    Builder<String, ClassPathEntry> coordinatesToEntry = ImmutableSetMultimap.builder();
-    for (ClassPathEntry entry : getClassPath()) {
-      for (DependencyPath dependencyPath : getDependencyPaths(entry)) {
-        Artifact artifact = dependencyPath.get(1);
-        coordinatesToEntry.put(Artifacts.toCoordinates(artifact), entry);
-      }
-    }
-
-    return coordinatesToEntry.build();
+  public ImmutableSet<ClassPathEntry> getClassPathEntries(String coordinates) {
+    return coordinatesToEntries.get(coordinates);
   }
+  
 }

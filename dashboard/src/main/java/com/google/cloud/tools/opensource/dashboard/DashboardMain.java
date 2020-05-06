@@ -264,9 +264,6 @@ public class DashboardMain {
       ClassPathResult classPathResult,
       Bom bom) throws TemplateException {
 
-    ImmutableSetMultimap<String, ClassPathEntry> bomMemberToJars =
-        classPathResult.coordinatesToClassPathEntry();
-
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();
     for (Entry<Artifact, ArtifactInfo> entry : artifacts.entrySet()) {
@@ -279,7 +276,7 @@ public class DashboardMain {
         } else {
           Artifact artifact = entry.getKey();
           ImmutableSet<ClassPathEntry> jarsInDependencyTree =
-              bomMemberToJars.get(Artifacts.toCoordinates(artifact));
+              classPathResult.getClassPathEntries(Artifacts.toCoordinates(artifact));
           Map<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>>
               relevantSymbolProblemTable =
                   Maps.filterKeys(symbolProblemTable, jarsInDependencyTree::contains);
@@ -555,7 +552,7 @@ public class DashboardMain {
    * com.google.http-client:google-http-client} and {@code log4j:log4j}.
    */
   private static ImmutableMap<String, String> findRootCauses(ClassPathResult classPathResult) {
-    // Freemarker is not good at handling non-string key. Path object in .ftl is automatically
+    // Freemarker is not good at handling non-string keys. Path object in .ftl is automatically
     // converted to String. https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
