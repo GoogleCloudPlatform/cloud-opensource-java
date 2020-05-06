@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.common.collect.ImmutableSet;
@@ -35,7 +34,7 @@ public final class ClassPathEntry {
 
   private Path jar;
   private Artifact artifact;
-  private ImmutableSet<String> classFileNames;
+  private ImmutableSet<ClassFile> classFiles;
 
   /** An entry for a JAR file without Maven coordinates. */
   ClassPathEntry(Path jar) {
@@ -98,7 +97,7 @@ public final class ClassPathEntry {
    * class file name is usually a fully qualified class name. However a class file name may have a
    * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
    */
-  private void readClassFileNames() throws IOException {
+  private void readClassFiles() throws IOException {
     URL jarUrl = jar.toUri().toURL();
     // Setting parent as null because we don't want other classes than this jar file
     URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[] {jarUrl}, null);
@@ -108,7 +107,12 @@ public final class ClassPathEntry {
         com.google.common.reflect.ClassPath.from(classLoaderFromJar);
 
     ImmutableSet<ClassInfo> allClasses = classPath.getAllClasses();
-    classFileNames = allClasses.stream().map(ClassInfo::getName).collect(toImmutableSet());
+    
+    ImmutableSet.Builder<ClassFile> builder = ImmutableSet.builder();
+    for (ClassInfo info : allClasses) {
+      builder.add(new ClassFile(this, info.getName()));
+    }
+    classFiles = builder.build();
   }
   
   /**
@@ -117,9 +121,11 @@ public final class ClassPathEntry {
    * @throws IOException if the jar file can't be read
    */
   public synchronized ImmutableSet<String> getClassNames() throws IOException {
-    if (classFileNames == null) {
-      readClassFileNames();
+    if (classFiles == null) {
+      readClassFiles();
     }
-    return classFileNames;
+    return classFiles.stream()
+        .map(classFile -> classFile.getBinaryName())
+        .collect(ImmutableSet.toImmutableSet());
   }
 }

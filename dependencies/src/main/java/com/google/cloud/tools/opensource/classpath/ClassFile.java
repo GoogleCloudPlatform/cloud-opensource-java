@@ -31,9 +31,9 @@ public final class ClassFile {
   private final String binaryName;
 
   @VisibleForTesting
-  public ClassFile(ClassPathEntry classPathEntry, String className) {
+  public ClassFile(ClassPathEntry classPathEntry, String binaryName) {
     this.classPathEntry = checkNotNull(classPathEntry);
-    this.binaryName = checkNotNull(className);
+    this.binaryName = checkNotNull(binaryName);
   }
 
   /** Returns the class path entry containing the class. */
