@@ -24,8 +24,6 @@ import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProble
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ImmutableSetMultimap.Builder;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import org.eclipse.aether.artifact.Artifact;
@@ -34,7 +32,6 @@ import org.eclipse.aether.artifact.Artifact;
 public final class ClassPathResult {
 
   private final ImmutableList<ClassPathEntry> classPath;
-  private ImmutableSetMultimap<String, ClassPathEntry> coordinatesToEntries;
 
   /**
    * An ordered map from class path elements to one or more Maven dependency paths.
@@ -56,18 +53,6 @@ public final class ClassPathResult {
     this.dependencyPaths = ImmutableListMultimap.copyOf(dependencyPaths);
     this.classPath = ImmutableList.copyOf(dependencyPaths.keySet());
     this.artifactProblems = ImmutableList.copyOf(artifactProblems);
-    
-    Builder<String, ClassPathEntry> builder = ImmutableSetMultimap.builder();
-    for (ClassPathEntry entry : classPath) {
-      for (DependencyPath dependencyPath : dependencyPaths.get(entry)) {
-        if (dependencyPath.size() > 1) {
-          Artifact artifact = dependencyPath.get(1);
-          builder.put(Artifacts.toCoordinates(artifact), entry);
-        }
-      }
-    }
-    
-    this.coordinatesToEntries = builder.build();
   }
 
   /** Returns the resolved class path. */
@@ -114,7 +99,18 @@ public final class ClassPathResult {
    * TODO: Explain why this is plural. Shouldn't there be exactly one?
    */
   public ImmutableSet<ClassPathEntry> getClassPathEntries(String coordinates) {
-    return coordinatesToEntries.get(coordinates);
+    ImmutableSet.Builder<ClassPathEntry> builder = ImmutableSet.builder();
+    for (ClassPathEntry entry : classPath) {
+      for (DependencyPath dependencyPath : dependencyPaths.get(entry)) {
+        if (dependencyPath.size() > 1) {
+          Artifact artifact = dependencyPath.get(1);
+          if (Artifacts.toCoordinates(artifact).equals(coordinates)) {
+            builder.add(entry);
+          }
+        }
+      }
+    }
+    return builder.build();
   }
   
 }
