@@ -196,8 +196,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       try {
 
         // TODO LinkageChecker.create and LinkageChecker.findSymbolProblems
-        // should not be two separate public methods since we all call
-        // findSymbolProblems immediately after create
+        // should not be two separate public methods since we always call
+        // findSymbolProblems immediately after create.
 
         Path exclusionFile = this.exclusionFile == null ? null : Paths.get(this.exclusionFile);
         LinkageChecker linkageChecker =
