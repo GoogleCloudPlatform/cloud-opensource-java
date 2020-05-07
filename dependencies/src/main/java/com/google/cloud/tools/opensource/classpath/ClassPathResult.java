@@ -23,8 +23,7 @@ import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ImmutableSetMultimap.Builder;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import org.eclipse.aether.artifact.Artifact;
@@ -62,8 +61,8 @@ public final class ClassPathResult {
   }
 
   /**
-   * Returns the dependency path to the class path entry. An empty list if the entry is not in
-   * the class path.
+   * Returns the dependency path to the class path entry or 
+   * an empty list if the entry is not in the class path.
    */
   public ImmutableList<DependencyPath> getDependencyPaths(ClassPathEntry entry) {
     return dependencyPaths.get(entry);
@@ -93,21 +92,24 @@ public final class ClassPathResult {
     }
     return message.toString();
   }
-
+  
   /**
-   * Returns mapping from the Maven coordinates to {@link ClassPathEntry}. The keys are the
-   * coordinates of the direct dependencies of the root nodes in {@link #dependencyPaths}. The
-   * values are all {@link ClassPathEntry}s in the subtree of the key.
+   * Returns the classpath entries for the transitive dependencies of the specified
+   * artifact.
    */
-  public ImmutableSetMultimap<String, ClassPathEntry> coordinatesToClassPathEntry() {
-    Builder<String, ClassPathEntry> coordinatesToEntry = ImmutableSetMultimap.builder();
-    for (ClassPathEntry entry : getClassPath()) {
-      for (DependencyPath dependencyPath : getDependencyPaths(entry)) {
-        Artifact artifact = dependencyPath.get(1);
-        coordinatesToEntry.put(Artifacts.toCoordinates(artifact), entry);
+  public ImmutableSet<ClassPathEntry> getClassPathEntries(String coordinates) {
+    ImmutableSet.Builder<ClassPathEntry> builder = ImmutableSet.builder();
+    for (ClassPathEntry entry : classPath) {
+      for (DependencyPath dependencyPath : dependencyPaths.get(entry)) {
+        if (dependencyPath.size() > 1) {
+          Artifact artifact = dependencyPath.get(1);
+          if (Artifacts.toCoordinates(artifact).equals(coordinates)) {
+            builder.add(entry);
+          }
+        }
       }
     }
-
-    return coordinatesToEntry.build();
+    return builder.build();
   }
+  
 }

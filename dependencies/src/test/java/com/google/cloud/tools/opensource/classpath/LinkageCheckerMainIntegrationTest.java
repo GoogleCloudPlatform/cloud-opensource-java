@@ -58,7 +58,8 @@ public class LinkageCheckerMainIntegrationTest {
 
   @Test
   public void testJarFiles()
-      throws IOException, URISyntaxException, RepositoryException, TransformerException, XMLStreamException {
+      throws IOException, URISyntaxException, RepositoryException, TransformerException,
+          XMLStreamException {
 
     Path googleCloudCore = absolutePathOfResource("testdata/google-cloud-core-1.48.0.jar");
     Path googleCloudFirestore =

@@ -29,7 +29,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 
 /**
- * A sequence of Maven artifacts and dependency (scope and optional flag) in between.
+ * A sequence of Maven artifacts and dependencies (scope and optional flag) in between.
  *
  * <p>When this represents a path from the root to a leaf of a dependency tree, the first artifact
  * in the path is the root of the tree and the last artifact is the leaf. The sequence of
