@@ -27,7 +27,6 @@ import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
-import com.google.cloud.tools.opensource.dependencies.ArtifactProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
@@ -46,7 +45,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,7 +83,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   /**
    * Maven packaging values known to be irrelevant to Linkage Check for non-BOM project.
    *
-   * @see <a href="https://maven.apache.org/ref/3.6.1/maven-core/artifact-handlers.html">Maven
+   * @see <a href="https://maven.apache.org/ref/current/maven-core/artifact-handlers.html">Maven
    * Core: Default Artifact Handlers Reference</a>
    */
   private static final ImmutableSet<String> UNSUPPORTED_NONBOM_PACKAGING = ImmutableSet.of("pom",
@@ -96,8 +94,6 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
    * DependencySection#DEPENDENCIES}.
    */
   private DependencySection dependencySection = DependencySection.DEPENDENCIES;
-
-  private final List<ArtifactProblem> artifactProblems = new ArrayList<>();
 
   /**
    * Set to true to suppress linkage errors unreachable from the classes in the direct dependencies.
@@ -136,7 +132,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     this.exclusionFile = exclusionFile;
   }
 
-  private Log logger;
+  private static Log logger;
 
   @Override
   public void execute(@Nonnull EnforcerRuleHelper helper) throws EnforcerRuleException {
@@ -200,8 +196,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       try {
 
         // TODO LinkageChecker.create and LinkageChecker.findSymbolProblems
-        // should not be two separate public methods since we all call
-        // findSymbolProblems immediately after create
+        // should not be two separate public methods since we always call
+        // findSymbolProblems immediately after create.
 
         Path exclusionFile = this.exclusionFile == null ? null : Paths.get(this.exclusionFile);
         LinkageChecker linkageChecker =
@@ -251,17 +247,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       }
     } catch (ExpressionEvaluationException ex) {
       throw new EnforcerRuleException("Unable to lookup an expression " + ex.getMessage(), ex);
-    } finally {
-      for (ArtifactProblem problem : artifactProblems) {
-        // This is not error because having an unresolvable Maven artifact should not cause build
-        // failures as long as there is no linkage errors.
-        logger.warn(problem.toString());
-      }
     }
   }
 
   /** Builds a class path for {@code mavenProject}. */
-  private ClassPathResult findProjectClasspath(
+  private static ClassPathResult findProjectClasspath(
       MavenProject mavenProject, RepositorySystemSession session, EnforcerRuleHelper helper)
       throws EnforcerRuleException {
     try {
@@ -301,7 +291,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   /** Returns class path built from partial dependency graph of {@code resolutionException}. */
-  private ClassPathResult buildClasspathFromException(
+  private static ClassPathResult buildClasspathFromException(
       DependencyResolutionException resolutionException) throws EnforcerRuleException {
     DependencyResolutionResult result = resolutionException.getResult();
 
@@ -313,8 +303,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       if (cause instanceof ArtifactTransferException) {
         ArtifactTransferException artifactException = (ArtifactTransferException) cause;
         Artifact artifact = artifactException.getArtifact();
-        artifactProblems.add(
-            DependencyGraphBuilder.createUnresolvableArtifactProblem(dependencyGraph, artifact));
+        String warning = DependencyGraphBuilder.createUnresolvableArtifactProblem(
+            dependencyGraph, artifact).toString();
+        logger.warn(warning);
         break;
       }
     }
@@ -327,7 +318,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     }
   }
 
-  private ClassPathResult buildClassPathResult(DependencyResolutionResult result)
+  private static ClassPathResult buildClassPathResult(DependencyResolutionResult result)
       throws EnforcerRuleException {
     // The root node must have the project's JAR file
     File rootFile = result.getDependencyGraph().getArtifact().getFile();
