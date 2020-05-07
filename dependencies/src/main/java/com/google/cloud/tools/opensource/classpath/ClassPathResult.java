@@ -94,8 +94,8 @@ public final class ClassPathResult {
   }
   
   /**
-   * Returns the classpath entries whose transitive dependencies contain
-   * the artifact with the specified coordinates.
+   * Returns the classpath entries for the transitive dependencies of the specified
+   * artifact.
    */
   public ImmutableSet<ClassPathEntry> getClassPathEntries(String coordinates) {
     ImmutableSet.Builder<ClassPathEntry> builder = ImmutableSet.builder();
