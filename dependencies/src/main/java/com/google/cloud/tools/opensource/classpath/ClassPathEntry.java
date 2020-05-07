@@ -17,17 +17,15 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.util.Enumeration;
 import java.util.Objects;
-import org.apache.bcel.classfile.JavaClass;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import org.eclipse.aether.artifact.Artifact;
 
 /** An entry in a class path. */
@@ -98,17 +96,21 @@ public final class ClassPathEntry {
    * class file name is usually a fully qualified class name. However a class file name may have a
    * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
    */
-  private void readClassFileNames() throws IOException {
-    URL jarUrl = jar.toUri().toURL();
-    // Setting parent as null because we don't want other classes than this jar file
-    URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[] {jarUrl}, null);
-
-    // Leveraging Google Guava reflection as BCEL doesn't have API to list classes in a jar file
-    com.google.common.reflect.ClassPath classPath =
-        com.google.common.reflect.ClassPath.from(classLoaderFromJar);
-
-    ImmutableSet<ClassInfo> allClasses = classPath.getAllClasses();
-    classFileNames = allClasses.stream().map(ClassInfo::getName).collect(toImmutableSet());
+  private void readClassFileNames() throws IOException {  
+    try (JarFile jarFile = new JarFile(jar.toFile())) {
+      ImmutableSet.Builder<String> classNames = ImmutableSet.builder();
+      
+      Enumeration<JarEntry> entries = jarFile.entries();
+      while (entries.hasMoreElements()) {
+        JarEntry entry = entries.nextElement();
+        String name = entry.getName();
+        if (name.endsWith(".class")) {
+          String className = name.replace('/', '.').substring(0, name.length() - 6);
+          classNames.add(className);
+        }
+      }
+      this.classFileNames = classNames.build();
+    }
   }
   
   /**
