@@ -31,7 +31,7 @@ class DependencyMediation {
   
   private List<Artifact> artifacts = new ArrayList<>();
 
-  void put(Artifact artifact) {    
+  private void put(Artifact artifact) {    
     if (artifacts.stream().map(Artifacts::makeKey)
         .anyMatch(key -> Artifacts.makeKey(artifact).equals(key))) {
       return;
@@ -41,7 +41,7 @@ class DependencyMediation {
   }
 
   /**
-   * Returns true iff dependency mediation will select this artifact.
+   * Returns true iff dependency mediation selects this artifact.
    */
   // TODO might be a problem if there's a classifier
   boolean selects(Artifact artifact) {
