@@ -31,15 +31,6 @@ class DependencyMediation {
   
   private List<Artifact> artifacts = new ArrayList<>();
 
-  private void put(Artifact artifact) {    
-    if (artifacts.stream().map(Artifacts::makeKey)
-        .anyMatch(key -> Artifacts.makeKey(artifact).equals(key))) {
-      return;
-    }
-    
-    artifacts.add(artifact);
-  }
-
   /**
    * Returns true iff dependency mediation selects this artifact.
    */
@@ -60,4 +51,14 @@ class DependencyMediation {
     } 
     put(artifact);
   }
+
+  private void put(Artifact artifact) {    
+    if (artifacts.stream().map(Artifacts::makeKey)
+        .anyMatch(key -> Artifacts.makeKey(artifact).equals(key))) {
+      return;
+    }
+    
+    artifacts.add(artifact);
+  }
+
 }
