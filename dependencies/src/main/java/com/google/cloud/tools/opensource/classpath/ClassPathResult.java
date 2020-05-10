@@ -36,8 +36,8 @@ public final class ClassPathResult {
   /**
    * An ordered map from class path elements to one or more Maven dependency paths.
    *
-   * <p>The keys of the returned map represent Maven artifacts in the resolved class path, including
-   * ones in the transitive dependency. The return value of {@link LinkedListMultimap#keySet()}
+   * <p>The keys of the returned map represent Maven artifacts in the resolved class path,
+   * including transitive dependencies. The return value of {@link LinkedListMultimap#keySet()}
    * preserves key iteration order.
    *
    * <p>The values of the returned map for a key (class path entry) represent the different Maven
