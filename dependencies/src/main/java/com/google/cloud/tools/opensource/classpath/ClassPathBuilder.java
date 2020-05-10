@@ -21,8 +21,6 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraphResult;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
-import java.io.File;
-import java.nio.file.Path;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
 
