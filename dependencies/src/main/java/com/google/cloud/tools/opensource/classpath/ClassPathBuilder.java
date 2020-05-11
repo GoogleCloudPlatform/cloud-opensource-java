@@ -68,7 +68,7 @@ public final class ClassPathBuilder {
     // TODO should DependencyGraphResult have a mediate() method that returns a ClassPathResult?
     
     // To remove duplicates on (groupId:artifactId) for dependency mediation
-    DependencyMediation mediation = new DependencyMediation();
+    MavenDependencyMediation mediation = new MavenDependencyMediation();
 
     for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();

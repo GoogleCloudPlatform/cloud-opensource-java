@@ -27,7 +27,7 @@ import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 /**
  * Retain only the first version of a groupId:artifactId encountered.
  */
-class DependencyMediation {
+class MavenDependencyMediation {
   
   private List<Artifact> artifacts = new ArrayList<>();
 
