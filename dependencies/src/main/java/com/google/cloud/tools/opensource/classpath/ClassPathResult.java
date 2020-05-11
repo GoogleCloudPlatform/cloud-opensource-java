@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.ListMultimap;
 import org.eclipse.aether.artifact.Artifact;
 
 /** Result of class path resolution with {@link UnresolvableArtifactProblem}s if any. */
@@ -48,7 +48,7 @@ public final class ClassPathResult {
   private final ImmutableList<UnresolvableArtifactProblem> artifactProblems;
 
   public ClassPathResult(
-      Multimap<ClassPathEntry, DependencyPath> dependencyPaths,
+      ListMultimap<ClassPathEntry, DependencyPath> dependencyPaths,
       Iterable<UnresolvableArtifactProblem> artifactProblems) {
     this.dependencyPaths = ImmutableListMultimap.copyOf(dependencyPaths);
     this.classPath = ImmutableList.copyOf(dependencyPaths.keySet());
@@ -61,7 +61,7 @@ public final class ClassPathResult {
   }
 
   /**
-   * Returns the dependency path to the class path entry or 
+   * Returns all paths to the class path entry or 
    * an empty list if the entry is not in the class path.
    */
   public ImmutableList<DependencyPath> getDependencyPaths(ClassPathEntry entry) {
