@@ -256,7 +256,7 @@ public final class DependencyGraphBuilder {
   }
 
   /**
-   * Returns a dependency graph by traversing dependency tree in level-order (breadth-first search).
+   * Builds a dependency graph by traversing dependency tree in level-order (breadth-first search).
    *
    * <p>When {@code graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED, then
    * it resolves the dependency of the artifact of each node in the dependency tree; otherwise it
@@ -281,16 +281,21 @@ public final class DependencyGraphBuilder {
         // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
         // set to null
 
-        // When there's a parent dependency node with the same groupId and artifactId as
+        // When there's an ancestor dependency node with the same groupId and artifactId as
         // the dependency, Maven will not pick up the dependency. For example, if there's a
         // dependency path "g1:a1:2.0 / ... / g1:a1:1.0" (the leftmost node as root), then Maven's
-        // dependency mediation always picks up g1:a1:2.0 over g1:a1:1.0.
+        // dependency mediation always picks g1:a1:2.0 over g1:a1:1.0.
+        
+        // TODO This comment doesn't seem right. That's true for the root,
+        // but not for non-root nodes. A node elsewhere in the tree could cause the 
+        // descendant to be selected. 
+        
         String groupIdAndArtifactId = Artifacts.makeKey(artifact);
-        boolean parentHasSameKey =
+        boolean ancestorHasSameKey =
             parentPath.getArtifacts().stream()
                 .map(Artifacts::makeKey)
                 .anyMatch(key -> key.equals(groupIdAndArtifactId));
-        if (parentHasSameKey) {
+        if (ancestorHasSameKey) {
           continue;
         }
       }
