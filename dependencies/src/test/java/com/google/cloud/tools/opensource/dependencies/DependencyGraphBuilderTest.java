@@ -21,14 +21,19 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.graph.Traverser;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -304,5 +309,32 @@ public class DependencyGraphBuilderTest {
 
     assertNull(paths.get(1).get(0));
     assertEquals("com.google.api:gax:1.57.0", Artifacts.toCoordinates(paths.get(1).getLeaf()));
+  }
+
+  @Test
+  public void testResolveCompileTimeDependenciesForBeamHCatalog()
+      throws DependencyResolutionException {
+
+    System.out.println("This test may take ~50 minutes");
+    DependencyNode root = dependencyGraphBuilder.resolveCompileTimeDependencies(
+        ImmutableList.of(
+            new DefaultDependencyNode(
+                new DefaultArtifact("org.apache.beam:beam-sdks-java-io-hcatalog:2.20.0"))),
+        true
+    );
+
+    // Count the number of nodes
+    ArrayDeque<DependencyNode> queue = new ArrayDeque<>();
+    queue.add(root);
+
+    Traverser<DependencyNode> traverser = Traverser.forGraph(
+        dependencyNode -> dependencyNode.getChildren());
+
+    Iterable<DependencyNode> nodes = traverser.breadthFirst(root);
+    ImmutableList<DependencyNode> visitedNodes = ImmutableList.copyOf(nodes);
+
+    int count = visitedNodes.size();
+    System.out.println("Total visited nodes: " + count);
+    Truth.assertThat(count).isLessThan(80_000_000);
   }
 }
