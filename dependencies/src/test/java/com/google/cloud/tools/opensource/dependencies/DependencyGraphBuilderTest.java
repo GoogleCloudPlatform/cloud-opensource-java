@@ -352,22 +352,18 @@ public class DependencyGraphBuilderTest {
 
   // This method returns 79447 for org.apache.beam:beam-sdks-java-io-hcatalog:2.20.0
   int countByTraverserForGraph(DependencyNode root) {
-    // Traverser.forGraph ensures that a node is visited only once by DependencyNode's equality
-    Traverser<DependencyNode> traverser =
-        Traverser.forGraph(dependencyNode -> dependencyNode.getChildren());
+    // Traverser.forGraph ensures that a node is visited only once
+    Traverser<DependencyNode> traverser = Traverser.forGraph(DependencyNode::getChildren);
 
     Iterable<DependencyNode> nodes = traverser.breadthFirst(root);
-    ImmutableList<DependencyNode> visitedNodes = ImmutableList.copyOf(nodes);
-
-    int count = visitedNodes.size();
+    int count = Iterables.size(nodes);
     return count;
   }
 
-  // This method throws OutOfMemoryError: Java heap space at ImmutableList.copyOf
+  // This method returns 82,572,834 for org.apache.beam:beam-sdks-java-io-hcatalog:2.20.0
   int countByTraverserForTree(DependencyNode root) {
     // Traverser.forTree may visits the same node multiple times if the input is not a tree
-    Traverser<DependencyNode> traverser =
-        Traverser.forTree(dependencyNode -> dependencyNode.getChildren());
+    Traverser<DependencyNode> traverser = Traverser.forTree(DependencyNode::getChildren);
 
     Iterable<DependencyNode> nodes = traverser.breadthFirst(root);
     int count = Iterables.size(nodes);
