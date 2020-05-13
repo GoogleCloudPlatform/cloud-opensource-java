@@ -19,8 +19,11 @@ package com.google.cloud.tools.opensource.dependencies;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import com.google.common.graph.Traverser;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
@@ -28,12 +31,14 @@ import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.DependencyResolutionException;
+import org.eclipse.aether.resolution.DependencyResult;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -312,29 +317,103 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testResolveCompileTimeDependenciesForBeamHCatalog()
-      throws DependencyResolutionException {
+  public void testResolveCompileTimeDependenciesForBeamHCatalog() {
 
     System.out.println("This test may take ~50 minutes");
-    DependencyNode root = dependencyGraphBuilder.resolveCompileTimeDependencies(
-        ImmutableList.of(
-            new DefaultDependencyNode(
-                new DefaultArtifact("org.apache.beam:beam-sdks-java-io-hcatalog:2.20.0"))),
-        true
-    );
 
-    // Count the number of nodes
-    ArrayDeque<DependencyNode> queue = new ArrayDeque<>();
-    queue.add(root);
+    DependencyNode root = null;
+    try {
+      // This throws DependencyResolutionException for com.google.inject:guice:jar:no_deps:3.0
+      dependencyGraphBuilder.resolveCompileTimeDependencies(
+          ImmutableList.of(
+              new DefaultDependencyNode(
+                  new DefaultArtifact("org.apache.beam:beam-sdks-java-io-hcatalog:2.20.0"))),
+          true);
+      fail();
+    } catch (DependencyResolutionException ex) {
+      DependencyResult result = ex.getResult();
+      root = result.getRoot();
+    }
 
-    Traverser<DependencyNode> traverser = Traverser.forGraph(
-        dependencyNode -> dependencyNode.getChildren());
+    int countByGraphTraverser = countByTraverserForGraph(root);
+    System.out.println("Count by Traverser.forGraph: " + countByGraphTraverser);
+
+    int countByTreeTraverser = countByTraverserForTree(root);
+    System.out.println("Count by Traverser.forTree: " + countByTreeTraverser);
+
+    int countByBfsIdentity = countByBfsObjectIdentity(root);
+    System.out.println("Count by BFS with object identity filtering: " + countByBfsIdentity);
+
+    int countByBfs = countByBfs(root);
+    System.out.println("Count by BFS: " + countByBfs);
+
+    Truth.assertThat(countByBfs).isLessThan(80_000_000);
+  }
+
+  // This method returns 79447 for org.apache.beam:beam-sdks-java-io-hcatalog:2.20.0
+  int countByTraverserForGraph(DependencyNode root) {
+    // Traverser.forGraph ensures that a node is visited only once by DependencyNode's equality
+    Traverser<DependencyNode> traverser =
+        Traverser.forGraph(dependencyNode -> dependencyNode.getChildren());
 
     Iterable<DependencyNode> nodes = traverser.breadthFirst(root);
     ImmutableList<DependencyNode> visitedNodes = ImmutableList.copyOf(nodes);
 
     int count = visitedNodes.size();
-    System.out.println("Total visited nodes: " + count);
-    Truth.assertThat(count).isLessThan(80_000_000);
+    return count;
+  }
+
+  // This method throws OutOfMemoryError: Java heap space at ImmutableList.copyOf
+  int countByTraverserForTree(DependencyNode root) {
+    // Traverser.forTree may visits the same node multiple times if the input is not a tree
+    Traverser<DependencyNode> traverser =
+        Traverser.forTree(dependencyNode -> dependencyNode.getChildren());
+
+    Iterable<DependencyNode> nodes = traverser.breadthFirst(root);
+    int count = Iterables.size(nodes);
+    return count;
+  }
+
+  // This returns 79447 for org.apache.beam:beam-sdks-java-io-hcatalog:2.20.0
+  int countByBfsObjectIdentity(DependencyNode root) {
+    // Count the number of nodes
+    ArrayDeque<DependencyNode> queue = new ArrayDeque<>();
+    queue.add(root);
+    int count = 0;
+
+    Set<DependencyNode> visited = Sets.newIdentityHashSet();
+    while (!queue.isEmpty()) {
+      DependencyNode node = queue.poll();
+      count++;
+      if (count % 1_000_000 == 0) {
+        System.out.println("Counting " + count);
+      }
+      for (DependencyNode child : node.getChildren()) {
+        if (visited.add(child)) {
+          queue.add(child);
+        }
+      }
+    }
+    return count;
+  }
+
+  // This method returns 82,572,834 for org.apache.beam:beam-sdks-java-io-hcatalog:2.20.0
+  int countByBfs(DependencyNode root) {
+    // Count the number of nodes
+    ArrayDeque<DependencyNode> queue = new ArrayDeque<>();
+    queue.add(root);
+    int count = 0;
+
+    while (!queue.isEmpty()) {
+      DependencyNode node = queue.poll();
+      count++;
+      if (count % 1_000_000 == 0) {
+        // System.out.println("Counting " + count);
+      }
+      for (DependencyNode child : node.getChildren()) {
+        queue.add(child);
+      }
+    }
+    return count;
   }
 }
