@@ -94,7 +94,7 @@ public class ClassPathEntryTest {
     
     ClassPathEntry entry = new ClassPathEntry(artifact);
     ImmutableSet<String> classFileNames = entry.getClassFileNames();
-    
+
     Truth.assertThat(classFileNames).containsExactly(
         "com.google.common.truth.IntStreamSubject",
         "com.google.common.truth.LongStreamSubject",
