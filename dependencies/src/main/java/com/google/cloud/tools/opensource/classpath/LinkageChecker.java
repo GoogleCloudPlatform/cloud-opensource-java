@@ -149,6 +149,7 @@ public class LinkageChecker {
         classToSymbols.getClassToClassSymbols();
     
     for (ClassFile classFile : classToClassSymbols.keySet()) {
+      ClassPathEntry sourceEntry = classFile.getClassPathEntry();
       ImmutableSet<ClassSymbol> classSymbols = classToClassSymbols.get(classFile);
       for (ClassSymbol classSymbol : classSymbols) {
         if (classSymbol instanceof SuperClassSymbol) {
@@ -163,24 +164,27 @@ public class LinkageChecker {
             }
           }
         }
-        if (!classFile.getClassPathEntry().getClassNames()
-            .contains(classSymbol.getClassBinaryName())) {
 
-          if (classSymbol instanceof InterfaceSymbol) {
-            ImmutableList<SymbolProblem> problems =
-                findInterfaceProblems(classFile, (InterfaceSymbol) classSymbol);
-            if (!problems.isEmpty()) {
-              String interfaceName = classSymbol.getClassBinaryName();
-              ClassPathEntry interfaceLocation = classDumper.findClassLocation(interfaceName);
-              ClassFile interfaceClassFile = new ClassFile(interfaceLocation, interfaceName);
-              for (SymbolProblem problem : problems) {
-                problemToClass.put(problem, interfaceClassFile);
-              }
+        ClassPathEntry targetEntry = classDumper.findClassLocation(classSymbol.getClassBinaryName());
+        if (sourceEntry.equals(targetEntry)) {
+          // Skip references from within the same JAR file
+          continue;
+        }
+
+        if (classSymbol instanceof InterfaceSymbol) {
+          ImmutableList<SymbolProblem> problems =
+              findInterfaceProblems(classFile, (InterfaceSymbol) classSymbol);
+          if (!problems.isEmpty()) {
+            String interfaceName = classSymbol.getClassBinaryName();
+            ClassPathEntry interfaceLocation = classDumper.findClassLocation(interfaceName);
+            ClassFile interfaceClassFile = new ClassFile(interfaceLocation, interfaceName);
+            for (SymbolProblem problem : problems) {
+              problemToClass.put(problem, interfaceClassFile);
             }
-          } else {
-            findSymbolProblem(classFile, classSymbol)
-                .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
           }
+        } else {
+          findSymbolProblem(classFile, classSymbol)
+              .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
         }
       }    
     }
@@ -188,26 +192,32 @@ public class LinkageChecker {
     ImmutableSetMultimap<ClassFile, MethodSymbol> classToMethodSymbols =
         classToSymbols.getClassToMethodSymbols();
     for (ClassFile classFile : classToMethodSymbols.keySet()) {
+      ClassPathEntry sourceEntry = classFile.getClassPathEntry();
       ImmutableSet<MethodSymbol> methodSymbols = classToMethodSymbols.get(classFile);
       for (MethodSymbol methodSymbol : methodSymbols) {
-        if (!classFile.getClassPathEntry().getClassNames()
-            .contains(methodSymbol.getClassBinaryName())) {
-          findSymbolProblem(classFile, methodSymbol)
-              .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
+        ClassPathEntry targetEntry = classDumper.findClassLocation(methodSymbol.getClassBinaryName());
+        if (sourceEntry.equals(targetEntry)) {
+          // Skip references from within the same JAR file
+          continue;
         }
+        findSymbolProblem(classFile, methodSymbol)
+            .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
       }
     }
 
     ImmutableSetMultimap<ClassFile, FieldSymbol> classToFieldSymbols =
         classToSymbols.getClassToFieldSymbols();
     for (ClassFile classFile : classToFieldSymbols.keySet()) {
+      ClassPathEntry sourceEntry = classFile.getClassPathEntry();
       ImmutableSet<FieldSymbol> fieldSymbols = classToFieldSymbols.get(classFile);
       for (FieldSymbol fieldSymbol : fieldSymbols) {
-        if (!classFile.getClassPathEntry().getClassNames()
-            .contains(fieldSymbol.getClassBinaryName())) {
-          findSymbolProblem(classFile, fieldSymbol)
-              .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
+        ClassPathEntry targetEntry = classDumper.findClassLocation(fieldSymbol.getClassBinaryName());
+        if (sourceEntry.equals(targetEntry)) {
+          // Skip references from within the same JAR file
+          continue;
         }
+        findSymbolProblem(classFile, fieldSymbol)
+              .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
       }
     }
 

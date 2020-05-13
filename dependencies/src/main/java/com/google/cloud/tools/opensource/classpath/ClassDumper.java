@@ -315,19 +315,20 @@ class ClassDumper {
 
   /** Returns the first class path entry containing the class. Null if the location is unknown. */
   @Nullable
-  ClassPathEntry findClassLocation(String className) {
+  ClassPathEntry findClassLocation(String classBinaryName) {
     // Initially this method used classLoader.loadClass().getProtectionDomain().getCodeSource().
     // However, it required the superclass of a target class to be loadable too; otherwise
     // ClassNotFoundException was raised. It was inconvenient because we only wanted to know the
     // location of the target class, and sometimes the superclass is unavailable.
-    ClassPathEntry entry = Iterables.getFirst(classFileNameToClassPathEntry.get(className), null);
+    ClassPathEntry entry =
+        Iterables.getFirst(classFileNameToClassPathEntry.get(classBinaryName), null);
     if (entry != null) {
       return entry;
     }
 
     // Some classes have framework-specific prefix such as "WEB-INF.classes.AppWidgetset" in its
     // class file name.
-    String specialLocation = classRepository.getSpecialLocation(className);
+    String specialLocation = classRepository.getSpecialLocation(classBinaryName);
     if (specialLocation == null) {
       return null;
     }
