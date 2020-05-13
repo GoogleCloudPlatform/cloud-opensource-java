@@ -150,6 +150,8 @@ public class LinkageChecker {
     
     for (ClassFile classFile : classToClassSymbols.keySet()) {
       ImmutableSet<ClassSymbol> classSymbols = classToClassSymbols.get(classFile);
+      ImmutableSet<String> classFileNamesInSource = classFile.getClassPathEntry().getClassFileNames();
+
       for (ClassSymbol classSymbol : classSymbols) {
         if (classSymbol instanceof SuperClassSymbol) {
           ImmutableList<SymbolProblem> problems =
@@ -163,9 +165,10 @@ public class LinkageChecker {
             }
           }
         }
-        if (!classFile.getClassPathEntry().getClassNames()
-            .contains(classSymbol.getClassBinaryName())) {
 
+        String classBinaryName = classSymbol.getClassBinaryName();
+        String classFileName = classDumper.getClassFileName(classBinaryName);
+        if (!classFileNamesInSource.contains(classFileName)) {
           if (classSymbol instanceof InterfaceSymbol) {
             ImmutableList<SymbolProblem> problems =
                 findInterfaceProblems(classFile, (InterfaceSymbol) classSymbol);
@@ -189,9 +192,11 @@ public class LinkageChecker {
         classToSymbols.getClassToMethodSymbols();
     for (ClassFile classFile : classToMethodSymbols.keySet()) {
       ImmutableSet<MethodSymbol> methodSymbols = classToMethodSymbols.get(classFile);
+      ImmutableSet<String> classFileNamesInSource = classFile.getClassPathEntry().getClassFileNames();
       for (MethodSymbol methodSymbol : methodSymbols) {
-        if (!classFile.getClassPathEntry().getClassNames()
-            .contains(methodSymbol.getClassBinaryName())) {
+        String classBinaryName = methodSymbol.getClassBinaryName();
+        String classFileName = classDumper.getClassFileName(classBinaryName);
+        if (!classFileNamesInSource.contains(classFileName)) {
           findSymbolProblem(classFile, methodSymbol)
               .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
         }
@@ -202,9 +207,11 @@ public class LinkageChecker {
         classToSymbols.getClassToFieldSymbols();
     for (ClassFile classFile : classToFieldSymbols.keySet()) {
       ImmutableSet<FieldSymbol> fieldSymbols = classToFieldSymbols.get(classFile);
+      ImmutableSet<String> classFileNamesInSource = classFile.getClassPathEntry().getClassFileNames();
       for (FieldSymbol fieldSymbol : fieldSymbols) {
-        if (!classFile.getClassPathEntry().getClassNames()
-            .contains(fieldSymbol.getClassBinaryName())) {
+        String classBinaryName = fieldSymbol.getClassBinaryName();
+        String classFileName = classDumper.getClassFileName(classBinaryName);
+        if (!classFileNamesInSource.contains(classFileName)) {
           findSymbolProblem(classFile, fieldSymbol)
               .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
         }

@@ -26,6 +26,7 @@ import java.util.Enumeration;
 import java.util.Objects;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import org.apache.bcel.classfile.JavaClass;
 import org.eclipse.aether.artifact.Artifact;
 
 /** An entry in a class path. */
@@ -96,7 +97,7 @@ public final class ClassPathEntry {
    * class file name is usually a fully qualified class name. However a class file name may have a
    * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
    */
-  private void readClassFileNames() throws IOException {  
+  private void readClassFileNames() throws IOException {
     try (JarFile jarFile = new JarFile(jar.toFile())) {
       ImmutableSet.Builder<String> classNames = ImmutableSet.builder();
       
@@ -112,13 +113,18 @@ public final class ClassPathEntry {
       this.classFileNames = classNames.build();
     }
   }
-  
+
   /**
-   * Returns the fully qualified names of the classes in this entry's jar file.
-   * 
+   * Returns a list of class file names in {@link #jar} as in {@link JavaClass#getFileName()}. This
+   * class file name is usually a fully qualified class name. However a class file name may have a
+   * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
+   *
+   * <p>This function caches the result. Therefore the caller does not need to worry about the
+   * overhead of reading JAR files multiple times.
+   *
    * @throws IOException if the jar file can't be read
    */
-  public synchronized ImmutableSet<String> getClassNames() throws IOException {
+  public synchronized ImmutableSet<String> getClassFileNames() throws IOException {
     if (classFileNames == null) {
       readClassFileNames();
     }

@@ -90,7 +90,7 @@ class ClassDumper {
     
     ImmutableListMultimap.Builder<String, ClassPathEntry> builder = ImmutableListMultimap.builder();
     for (ClassPathEntry entry : entries) {
-      for (String className : entry.getClassNames()) {
+      for (String className : entry.getClassFileNames()) {
         builder.put(className, entry);
       }
     }
@@ -335,6 +335,19 @@ class ClassDumper {
   }
 
   /**
+   * Returns class file name which is a location of a class file within a JAR file. Usually it is
+   * the same as {@code classBinaryName}, however it may be different if the JAR file has framework-
+   * specific prefix such as "WEB-INF.classes".
+   */
+  String getClassFileName(String classBinaryName) {
+    String specialLocation = classRepository.getSpecialLocation(classBinaryName);
+    if (specialLocation == null) {
+      return classBinaryName;
+    }
+    return specialLocation;
+  }
+
+  /**
    * Returns a set of {@link JavaClass}es which have entries in the {@code entry} through {@link
    * #classRepository}.
    */
@@ -343,7 +356,7 @@ class ClassDumper {
 
     ImmutableList.Builder<String> corruptedClassFileNames = ImmutableList.builder();
 
-    for (String classFileName : entry.getClassNames()) {
+    for (String classFileName : entry.getClassFileNames()) {
       if (classFileName.startsWith("META-INF.versions.")) {
         // Linkage Checker does not support multi-release JAR (for Java 9+) yet
         // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/897

@@ -24,6 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
@@ -49,6 +50,7 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
 import org.junit.Before;
 import org.junit.Test;
+import sun.awt.image.ImageWatched.Link;
 
 public class LinkageCheckerTest {
 
@@ -1075,5 +1077,20 @@ public class LinkageCheckerTest {
                   (ClassFile sourceClass) -> sourceClass.getBinaryName(), "has source class name"))
           .doesNotContain(unexpectedSourceClass);
     }
+  }
+
+  @Test
+  public void testFindSymbolProblems_ensureNoSelfReferencingSymbolProblem() throws IOException, URISyntaxException {
+    ClassPathEntry jar = classPathEntryOfResource("testdata/dummy-boot-inf-prefix.jar");
+
+    LinkageChecker linkageChecker = LinkageChecker.create(ImmutableList.of(jar));
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems = linkageChecker
+        .findSymbolProblems();
+
+    symbolProblems.forEach((problem, sourceClass) -> {
+      if (sourceClass.equals(problem.getContainingClass())) {
+        fail(problem + " has a self-referencing linkage errors");
+      }
+    });
   }
 }
