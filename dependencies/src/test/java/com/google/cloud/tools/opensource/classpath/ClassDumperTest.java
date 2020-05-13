@@ -418,4 +418,31 @@ public class ClassDumperTest {
     boolean result = classDumper.catchesLinkageError("javax.mail.internet.MailDateFormat");
     assertFalse(result);
   }
+
+  @Test
+  public void testDuplicateClassesInJars() throws IOException {
+    // catchesLinkageError should not raise an exception for MailDateFormat's constructor's null
+    // code.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1352
+    List<ClassPathEntry> classPath = resolvePaths("com.google.appengine:appengine-api-1.0-sdk:1.9.71",
+        "javax.mail:mail:1.4.3");
+    ClassDumper classDumper = ClassDumper.create(classPath.subList(0, 2));
+
+    SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
+
+    ImmutableSetMultimap<ClassFile, FieldSymbol> classToFieldSymbols = symbolReferences
+        .getClassToFieldSymbols();
+
+    ImmutableSet<ClassFile> classFiles = classToFieldSymbols.keySet();
+
+    ImmutableList<ClassFile> a = classFiles.stream()
+        .filter(c -> c.getBinaryName().startsWith("javax.mail.internet.InternetHeaders"))
+        .collect(ImmutableList.toImmutableList());
+
+    Truth.assertThat(a).comparingElementsUsing(
+        Correspondence.transforming((ClassFile classFile) -> classFile.getClassPathEntry().getArtifact().getArtifactId(),
+            "class file in artifactId")
+        ).doesNotContain("mail");
+
+  }
 }

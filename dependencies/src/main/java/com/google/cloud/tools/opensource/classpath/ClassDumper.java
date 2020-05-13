@@ -28,7 +28,9 @@ import com.google.common.graph.Traverser;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.bcel.Const;
@@ -146,12 +148,22 @@ class ClassDumper {
   SymbolReferenceMaps findSymbolReferences() throws IOException {
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
 
+    Set<String> classNames = new HashSet<>();
     for (ClassPathEntry jar : inputClassPath) {
       for (JavaClass javaClass : listClasses(jar)) {
         if (!isCompatibleClassFileVersion(javaClass)) {
           continue;
         }
         String className = javaClass.getClassName();
+
+        if (!classNames.add(className)) {
+          // When the same class name appears in another JAR file in the class path already, this
+          // class file will not be used.
+          if (className.equals("javax.mail.internet.InternetHeaders")) {
+            continue;
+          }
+          continue;
+        }
         // In listClasses(jar), ClassPathRepository creates JavaClass through the first JAR file
         // that contains the class. It may be different from "jar" for an overlapping class.
         ClassFile source = new ClassFile(findClassLocation(className), className);

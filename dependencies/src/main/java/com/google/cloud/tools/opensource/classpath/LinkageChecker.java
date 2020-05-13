@@ -216,6 +216,9 @@ public class LinkageChecker {
           // Skip references from within the same JAR file
           continue;
         }
+        if (fieldSymbol.getName().equals("line")) {
+          int a = 1;
+        }
         findSymbolProblem(classFile, fieldSymbol)
               .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
       }
