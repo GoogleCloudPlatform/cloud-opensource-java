@@ -116,8 +116,8 @@ public final class ClassPathEntry {
   }
 
   /**
-   * Returns a list of class file names in {@link #jar} as in {@link JavaClass#getFileName()}. This
-   * class file name is usually a fully qualified class name. However a class file name may have a
+   * Returns class file names in {@link #jar} as in {@link JavaClass#getFileName()}. This class file
+   * name is usually a fully qualified class name. However a class file name may have a
    * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
    *
    * @throws IOException if the jar file can't be read
