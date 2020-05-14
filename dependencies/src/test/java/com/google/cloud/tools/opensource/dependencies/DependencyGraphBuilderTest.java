@@ -40,6 +40,7 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class DependencyGraphBuilderTest {
@@ -316,6 +317,7 @@ public class DependencyGraphBuilderTest {
     assertEquals("com.google.api:gax:1.57.0", Artifacts.toCoordinates(paths.get(1).getLeaf()));
   }
 
+  @Ignore
   @Test
   public void testResolveCompileTimeDependenciesForBeamHCatalog() {
 
