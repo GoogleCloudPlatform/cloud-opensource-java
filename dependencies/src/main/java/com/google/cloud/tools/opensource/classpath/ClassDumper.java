@@ -90,12 +90,8 @@ class ClassDumper {
     
     ImmutableListMultimap.Builder<String, ClassPathEntry> builder = ImmutableListMultimap.builder();
     for (ClassPathEntry entry : entries) {
-      try {
-        for (String className : entry.getClassNames()) {
-          builder.put(className, entry);
-        }
-      } catch (IOException ex) {
-        throw new RuntimeException("Could not read " + entry, ex);
+      for (String className : entry.getClassNames()) {
+        builder.put(className, entry);
       }
     }
     
@@ -150,12 +146,8 @@ class ClassDumper {
   SymbolReferenceMaps findSymbolReferences() throws IOException {
     SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
 
-    int count = 0;
     for (ClassPathEntry jar : inputClassPath) {
-      count++;
-      ImmutableSet<JavaClass> javaClasses = listClasses(jar);
-      System.out.println(count + " : " + jar + ", with " + javaClasses.size() + " classes.");
-      for (JavaClass javaClass : javaClasses) {
+      for (JavaClass javaClass : listClasses(jar)) {
         if (!isCompatibleClassFileVersion(javaClass)) {
           continue;
         }
