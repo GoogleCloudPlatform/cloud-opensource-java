@@ -24,7 +24,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -33,20 +35,27 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.graph.Traverser;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.resolution.DependencyResolutionException;
+import org.eclipse.aether.resolution.DependencyResult;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -1075,5 +1084,54 @@ public class LinkageCheckerTest {
                   (ClassFile sourceClass) -> sourceClass.getBinaryName(), "has source class name"))
           .doesNotContain(unexpectedSourceClass);
     }
+  }
+
+  @Test
+  public void testBeamHCatalogArtifact() throws IOException {
+
+    System.out.println("This test may take ~50 minutes");
+
+    DependencyNode root = null;
+    try {
+      // This throws DependencyResolutionException for com.google.inject:guice:jar:no_deps:3.0
+      dependencyGraphBuilder.resolveCompileTimeDependencies(
+          ImmutableList.of(
+              new DefaultDependencyNode(
+                  new DefaultArtifact("org.apache.beam:beam-sdks-java-io-hcatalog:2.20.0"))),
+          true);
+      fail();
+    } catch (DependencyResolutionException ex) {
+      DependencyResult result = ex.getResult();
+      root = result.getRoot();
+    }
+
+    Traverser<DependencyNode> traverser = Traverser.forGraph(DependencyNode::getChildren);
+    Iterable<DependencyNode> iterator = traverser.breadthFirst(root);
+
+    ImmutableList.Builder<ClassPathEntry> classPath = ImmutableList.builder();
+    Set<String> artifactKeys = new HashSet<>();
+    for (DependencyNode dependencyNode : iterator) {
+      Artifact artifact = dependencyNode.getArtifact();
+      if (artifact == null || artifact.getFile() == null) {
+        continue;
+      }
+      if (!artifact.getFile().toString().endsWith(".jar")) {
+        continue;
+      }
+      String key = Artifacts.makeKey(artifact);
+      if (artifactKeys.add(key)) {
+        classPath.add(new ClassPathEntry(artifact));
+      }
+    }
+
+    ImmutableList<ClassPathEntry> path = classPath.build();
+    System.out.println("class path length: " + path.size());
+
+    // java.lang.RuntimeException: Could not read org.apache.curator:apache-curator:2.6.0 ?
+    LinkageChecker linkageChecker = LinkageChecker.create(path);
+
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+    System.out.println("SymbolProblems count: " + symbolProblems.size());
   }
 }

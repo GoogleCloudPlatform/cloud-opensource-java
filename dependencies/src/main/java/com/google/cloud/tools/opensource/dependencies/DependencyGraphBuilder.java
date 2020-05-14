@@ -106,7 +106,7 @@ public final class DependencyGraphBuilder {
     this.localRepository = localRepository;
   }
 
-  DependencyNode resolveCompileTimeDependencies(
+  public DependencyNode resolveCompileTimeDependencies(
       List<DependencyNode> dependencyNodes, boolean fullDependencies)
       throws DependencyResolutionException {
 
