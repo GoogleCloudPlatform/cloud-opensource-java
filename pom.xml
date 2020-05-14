@@ -159,7 +159,7 @@
           <configuration>
             <!-- To avoid ForkedBooter loading issue -->
             <useSystemClassLoader>false</useSystemClassLoader>
-            <argLine>-Xms128m -Xmx2g</argLine>
+            <argLine>-Xms128m -Xmx4g</argLine>
           </configuration>
         </plugin>
         <plugin>
