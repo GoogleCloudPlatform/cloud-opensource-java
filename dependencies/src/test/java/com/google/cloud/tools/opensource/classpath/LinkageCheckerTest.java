@@ -1088,9 +1088,6 @@ public class LinkageCheckerTest {
 
   @Test
   public void testBeamHCatalogArtifact() throws IOException {
-
-    System.out.println("This test may take ~50 minutes");
-
     DependencyNode root = null;
     try {
       // This throws DependencyResolutionException for com.google.inject:guice:jar:no_deps:3.0
@@ -1127,11 +1124,25 @@ public class LinkageCheckerTest {
     ImmutableList<ClassPathEntry> path = classPath.build();
     System.out.println("class path length: " + path.size());
 
+    // For GC?
+    root = null;
+    classPath = null;
+
     // java.lang.RuntimeException: Could not read org.apache.curator:apache-curator:2.6.0 ?
     LinkageChecker linkageChecker = LinkageChecker.create(path);
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
     System.out.println("SymbolProblems count: " + symbolProblems.size());
+  }
+
+  @Test
+  public void testPrestoHadoop() throws IOException {
+    ImmutableList<ClassPathEntry> jars =
+        resolvePaths("com.facebook.presto.hadoop:hadoop-apache2:3.2.0-1");
+
+    // Only Presto's hadoop-apache2
+    LinkageChecker linkageChecker = LinkageChecker.create(jars.subList(0, 1));
+
   }
 }
