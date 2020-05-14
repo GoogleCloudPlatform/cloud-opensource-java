@@ -93,9 +93,10 @@ public final class ClassPathEntry {
   }
 
   /**
-   * Returns a list of class file names in {@link #jar} as in {@link JavaClass#getFileName()}. This
-   * class file name is usually a fully qualified class name. However a class file name may have a
-   * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
+   * Reads a list of class file names in {@link #jar} as in {@link JavaClass#getFileName()} and
+   * stores them to {@link #classFileNames}. This class file name is usually a fully qualified class
+   * name. However a class file name may have a framework-specific prefix. Example: {@code
+   * BOOT-INF.classes.com.google.Foo}.
    */
   private void readClassFileNames() throws IOException {
     try (JarFile jarFile = new JarFile(jar.toFile())) {
