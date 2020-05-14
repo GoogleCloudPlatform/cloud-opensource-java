@@ -49,17 +49,17 @@ import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
  * has the following attributes:
  *
  * <ul>
- *   <li>It contains at most one node for the same group ID and artifact ID. (<a
+ *   <li>It contains at most one node with the same group ID and artifact ID. (<a
  *       href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies">dependency
  *       mediation</a>)
  *   <li>The scope of a dependency affects the scope of its children's dependencies as per <a
  *       href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Scope">Maven:
  *       Dependency Scope</a>
- *   <li>It does not contain transitive provided-scope dependencies.
- *   <li>It does not contain transitive optional dependencies.
+ *   <li>It does not contain provided-scope dependencies of transitive dependencies.
+ *   <li>It does not contain optional dependencies of transitive dependencies.
  * </ul>
  *
- * <p>A full dependency graph is a dependency tree where each node's dependencies are fully resolved
+ * <p>A full dependency graph is a dependency tree where each node's dependencies are resolved
  * recursively. This graph has the following attributes:
  *
  * <ul>
