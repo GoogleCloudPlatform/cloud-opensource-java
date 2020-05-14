@@ -335,9 +335,9 @@ class ClassDumper {
   }
 
   /**
-   * Returns class file name which is a location of a class file within a JAR file. Usually it is
-   * the same as {@code classBinaryName}, however it may be different if the JAR file has framework-
-   * specific prefix such as "WEB-INF.classes".
+   * Converts a binary name to a class file name. Usually they are the same, however it may be
+   * different if the JAR file has framework-specific prefix such as "WEB-INF.classes." in class
+   * file names.
    */
   String getClassFileName(String classBinaryName) {
     String specialLocation = classRepository.getSpecialLocation(classBinaryName);
