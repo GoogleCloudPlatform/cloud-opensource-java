@@ -120,9 +120,6 @@ public final class ClassPathEntry {
    * class file name is usually a fully qualified class name. However a class file name may have a
    * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
    *
-   * <p>This function caches the result. Therefore the caller does not need to worry about the
-   * overhead of reading JAR files multiple times.
-   *
    * @throws IOException if the jar file can't be read
    */
   public synchronized ImmutableSet<String> getClassFileNames() throws IOException {
