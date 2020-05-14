@@ -52,14 +52,15 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
    *
    * <p>While class name and class file name are the same in most cases, sometimes classes are not
    * placed in the root of a JAR file to support a framework-specific JAR structure. For example,
-   * Spring Boot Gradle Java plugin places class files under "BOOT-INF/classes". To load such
+   * the Spring Boot Gradle Java plugin places class files under "BOOT-INF/classes". To load such
    * classes by class name, this mapping keeps track of the special location once they are loaded.
    *
    * <ul>
    *   <li>Key: class name (value from {@link JavaClass#getClassName()}) which has a special class
    *       file name different from its class name. Example: {@code com.google.Foo}
    *   <li>Value: the special class file name as in {@link JavaClass#getFileName()}, a path that
-   *       locates a class file in a class path. Example: {@code BOOT-INF.classes.com.google.Foo}
+   *       locates a class file in a class path entry.
+   *       Example: {@code BOOT-INF.classes.com.google.Foo}
    * </ul>
    *
    * @see <a
