@@ -34,7 +34,7 @@ public final class ClassPathEntry {
 
   private Path jar;
   private Artifact artifact;
-  private ImmutableSet<String> classFileNames;
+  private ImmutableSet<String> fileNames;
 
   /** An entry for a JAR file without Maven coordinates. */
   ClassPathEntry(Path jar) {
@@ -94,7 +94,7 @@ public final class ClassPathEntry {
 
   /**
    * Reads a list of class file names in {@link #jar} as in {@link JavaClass#getFileName()} and
-   * stores them to {@link #classFileNames}. This class file name is usually a fully qualified class
+   * stores them to {@link #fileNames}. This class file name is usually a fully qualified class
    * name. However a class file name may have a framework-specific prefix. Example: {@code
    * BOOT-INF.classes.com.google.Foo}.
    */
@@ -111,7 +111,7 @@ public final class ClassPathEntry {
           classNames.add(className);
         }
       }
-      this.classFileNames = classNames.build();
+      this.fileNames = classNames.build();
     }
   }
 
@@ -122,10 +122,10 @@ public final class ClassPathEntry {
    *
    * @throws IOException if the jar file can't be read
    */
-  public synchronized ImmutableSet<String> getClassFileNames() throws IOException {
-    if (classFileNames == null) {
+  public synchronized ImmutableSet<String> getFileNames() throws IOException {
+    if (fileNames == null) {
       readClassFileNames();
     }
-    return classFileNames;
+    return fileNames;
   }
 }
