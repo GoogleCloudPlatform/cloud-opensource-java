@@ -150,8 +150,7 @@ public class LinkageChecker {
     
     for (ClassFile classFile : classToClassSymbols.keySet()) {
       ImmutableSet<ClassSymbol> classSymbols = classToClassSymbols.get(classFile);
-      ImmutableSet<String> classFileNamesInSource =
-          classFile.getClassPathEntry().getFileNames();
+      ImmutableSet<String> classFileNamesInSource = classFile.getClassPathEntry().getFileNames();
 
       for (ClassSymbol classSymbol : classSymbols) {
         if (classSymbol instanceof SuperClassSymbol) {
@@ -193,8 +192,7 @@ public class LinkageChecker {
         classToSymbols.getClassToMethodSymbols();
     for (ClassFile classFile : classToMethodSymbols.keySet()) {
       ImmutableSet<MethodSymbol> methodSymbols = classToMethodSymbols.get(classFile);
-      ImmutableSet<String> classFileNamesInSource =
-          classFile.getClassPathEntry().getFileNames();
+      ImmutableSet<String> classFileNamesInSource = classFile.getClassPathEntry().getFileNames();
       for (MethodSymbol methodSymbol : methodSymbols) {
         String classBinaryName = methodSymbol.getClassBinaryName();
         String classFileName = classDumper.getFileName(classBinaryName);
@@ -209,8 +207,7 @@ public class LinkageChecker {
         classToSymbols.getClassToFieldSymbols();
     for (ClassFile classFile : classToFieldSymbols.keySet()) {
       ImmutableSet<FieldSymbol> fieldSymbols = classToFieldSymbols.get(classFile);
-      ImmutableSet<String> classFileNamesInSource =
-          classFile.getClassPathEntry().getFileNames();
+      ImmutableSet<String> classFileNamesInSource = classFile.getClassPathEntry().getFileNames();
       for (FieldSymbol fieldSymbol : fieldSymbols) {
         String classBinaryName = fieldSymbol.getClassBinaryName();
         String classFileName = classDumper.getFileName(classBinaryName);
