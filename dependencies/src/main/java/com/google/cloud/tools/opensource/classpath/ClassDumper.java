@@ -327,9 +327,8 @@ class ClassDumper {
   }
 
   /**
-   * Converts a binary name to a class file name. Usually they are the same, however it may be
-   * different if the JAR file has framework-specific prefix such as "WEB-INF.classes." in class
-   * file names.
+   * Converts a binary name to the file name of a class. Read {@link FixedSizeClassPathRepository}
+   * for the difference.
    */
   String getFileName(String classBinaryName) {
     return classRepository.getFileName(classBinaryName);
