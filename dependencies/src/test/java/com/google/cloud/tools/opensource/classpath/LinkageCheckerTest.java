@@ -1135,14 +1135,4 @@ public class LinkageCheckerTest {
         linkageChecker.findSymbolProblems();
     System.out.println("SymbolProblems count: " + symbolProblems.size());
   }
-
-  @Test
-  public void testPrestoHadoop() throws IOException {
-    ImmutableList<ClassPathEntry> jars =
-        resolvePaths("com.facebook.presto.hadoop:hadoop-apache2:3.2.0-1");
-
-    // Only Presto's hadoop-apache2
-    LinkageChecker linkageChecker = LinkageChecker.create(jars.subList(0, 1));
-
-  }
 }
