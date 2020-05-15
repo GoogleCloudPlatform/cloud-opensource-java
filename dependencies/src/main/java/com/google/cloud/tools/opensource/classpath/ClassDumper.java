@@ -321,6 +321,7 @@ class ClassDumper {
     // However, it required the superclass of a target class to be loadable too; otherwise
     // ClassNotFoundException was raised. It was inconvenient because we only wanted to know the
     // location of the target class, and sometimes the superclass is unavailable.
+
     String filename = classRepository.getFileName(className);
     return Iterables.getFirst(fileNameToClassPathEntry.get(filename), null);
   }
