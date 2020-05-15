@@ -168,7 +168,7 @@ public class LinkageChecker {
         }
 
         String classBinaryName = classSymbol.getClassBinaryName();
-        String classFileName = classDumper.getClassFileName(classBinaryName);
+        String classFileName = classDumper.getFileName(classBinaryName);
         if (!classFileNamesInSource.contains(classFileName)) {
           if (classSymbol instanceof InterfaceSymbol) {
             ImmutableList<SymbolProblem> problems =
@@ -197,7 +197,7 @@ public class LinkageChecker {
           classFile.getClassPathEntry().getFileNames();
       for (MethodSymbol methodSymbol : methodSymbols) {
         String classBinaryName = methodSymbol.getClassBinaryName();
-        String classFileName = classDumper.getClassFileName(classBinaryName);
+        String classFileName = classDumper.getFileName(classBinaryName);
         if (!classFileNamesInSource.contains(classFileName)) {
           findSymbolProblem(classFile, methodSymbol)
               .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
@@ -213,7 +213,7 @@ public class LinkageChecker {
           classFile.getClassPathEntry().getFileNames();
       for (FieldSymbol fieldSymbol : fieldSymbols) {
         String classBinaryName = fieldSymbol.getClassBinaryName();
-        String classFileName = classDumper.getClassFileName(classBinaryName);
+        String classFileName = classDumper.getFileName(classBinaryName);
         if (!classFileNamesInSource.contains(classFileName)) {
           findSymbolProblem(classFile, fieldSymbol)
               .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));

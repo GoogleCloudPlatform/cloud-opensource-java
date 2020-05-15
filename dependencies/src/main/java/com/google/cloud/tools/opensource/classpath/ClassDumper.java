@@ -103,12 +103,12 @@ class ClassDumper {
   private ClassDumper(
       List<ClassPathEntry> inputClassPath,
       ClassLoader extensionClassLoader,
-      ImmutableListMultimap<String, ClassPathEntry> map)
+      ImmutableListMultimap<String, ClassPathEntry> fileNameToClassPathEntry)
       throws IOException {
     this.inputClassPath = ImmutableList.copyOf(inputClassPath);
     this.classRepository = createClassRepository(inputClassPath);
     this.extensionClassLoader = extensionClassLoader;
-    this.fileNameToClassPathEntry = map;
+    this.fileNameToClassPathEntry = fileNameToClassPathEntry;
   }
 
   /**
@@ -313,25 +313,16 @@ class ClassDumper {
     return innerClassNames.build();
   }
 
-  /** Returns the first class path entry containing the class. Null if the location is unknown. */
+  /** Returns the first class path entry containing the class. Null if the class is 
+   *  not in the class path. */
   @Nullable
   ClassPathEntry findClassLocation(String className) {
     // Initially this method used classLoader.loadClass().getProtectionDomain().getCodeSource().
     // However, it required the superclass of a target class to be loadable too; otherwise
     // ClassNotFoundException was raised. It was inconvenient because we only wanted to know the
     // location of the target class, and sometimes the superclass is unavailable.
-    ClassPathEntry entry = Iterables.getFirst(fileNameToClassPathEntry.get(className), null);
-    if (entry != null) {
-      return entry;
-    }
-
-    // Some classes have framework-specific prefix such as "WEB-INF.classes.AppWidgetset" in its
-    // class file name.
-    String specialLocation = classRepository.getSpecialLocation(className);
-    if (specialLocation == null) {
-      return null;
-    }
-    return Iterables.getFirst(fileNameToClassPathEntry.get(specialLocation), null);
+    String filename = classRepository.getFileName(className);
+    return Iterables.getFirst(fileNameToClassPathEntry.get(filename), null);
   }
 
   /**
@@ -339,12 +330,8 @@ class ClassDumper {
    * different if the JAR file has framework-specific prefix such as "WEB-INF.classes." in class
    * file names.
    */
-  String getClassFileName(String classBinaryName) {
-    String specialLocation = classRepository.getSpecialLocation(classBinaryName);
-    if (specialLocation == null) {
-      return classBinaryName;
-    }
-    return specialLocation;
+  String getFileName(String classBinaryName) {
+    return classRepository.getFileName(classBinaryName);
   }
 
   /**
