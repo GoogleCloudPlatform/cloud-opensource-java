@@ -69,7 +69,7 @@ class ClassDumper {
   private final ImmutableList<ClassPathEntry> inputClassPath;
   private final FixedSizeClassPathRepository classRepository;
   private final ClassLoader extensionClassLoader;
-  private final ImmutableListMultimap<String, ClassPathEntry> classFileNameToClassPathEntry;
+  private final ImmutableListMultimap<String, ClassPathEntry> fileNameToClassPathEntry;
 
   private static FixedSizeClassPathRepository createClassRepository(List<ClassPathEntry> entries) {
     ClassPath classPath = new LinkageCheckClassPath(entries);
@@ -90,7 +90,7 @@ class ClassDumper {
     
     ImmutableListMultimap.Builder<String, ClassPathEntry> builder = ImmutableListMultimap.builder();
     for (ClassPathEntry entry : entries) {
-      for (String className : entry.getClassNames()) {
+      for (String className : entry.getFileNames()) {
         builder.put(className, entry);
       }
     }
@@ -103,12 +103,12 @@ class ClassDumper {
   private ClassDumper(
       List<ClassPathEntry> inputClassPath,
       ClassLoader extensionClassLoader,
-      ImmutableListMultimap<String, ClassPathEntry> map)
+      ImmutableListMultimap<String, ClassPathEntry> fileNameToClassPathEntry)
       throws IOException {
     this.inputClassPath = ImmutableList.copyOf(inputClassPath);
     this.classRepository = createClassRepository(inputClassPath);
     this.extensionClassLoader = extensionClassLoader;
-    this.classFileNameToClassPathEntry = map;
+    this.fileNameToClassPathEntry = fileNameToClassPathEntry;
   }
 
   /**
@@ -313,25 +313,17 @@ class ClassDumper {
     return innerClassNames.build();
   }
 
-  /** Returns the first class path entry containing the class. Null if the location is unknown. */
+  /** Returns the first class path entry containing the class. Null if the class is 
+   *  not in the class path. */
   @Nullable
   ClassPathEntry findClassLocation(String className) {
     // Initially this method used classLoader.loadClass().getProtectionDomain().getCodeSource().
     // However, it required the superclass of a target class to be loadable too; otherwise
     // ClassNotFoundException was raised. It was inconvenient because we only wanted to know the
     // location of the target class, and sometimes the superclass is unavailable.
-    ClassPathEntry entry = Iterables.getFirst(classFileNameToClassPathEntry.get(className), null);
-    if (entry != null) {
-      return entry;
-    }
 
-    // Some classes have framework-specific prefix such as "WEB-INF.classes.AppWidgetset" in its
-    // class file name.
-    String specialLocation = classRepository.getSpecialLocation(className);
-    if (specialLocation == null) {
-      return null;
-    }
-    return Iterables.getFirst(classFileNameToClassPathEntry.get(specialLocation), null);
+    String filename = classRepository.getFileName(className);
+    return Iterables.getFirst(fileNameToClassPathEntry.get(filename), null);
   }
 
   /**
@@ -343,7 +335,7 @@ class ClassDumper {
 
     ImmutableList.Builder<String> corruptedClassFileNames = ImmutableList.builder();
 
-    for (String classFileName : entry.getClassNames()) {
+    for (String classFileName : entry.getFileNames()) {
       if (classFileName.startsWith("META-INF.versions.")) {
         // Linkage Checker does not support multi-release JAR (for Java 9+) yet
         // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/897

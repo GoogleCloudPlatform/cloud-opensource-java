@@ -93,7 +93,7 @@ public class ClassPathEntryTest {
     Artifact artifact = resolveArtifact("com.google.truth.extensions:truth-java8-extension:1.0.1");
     
     ClassPathEntry entry = new ClassPathEntry(artifact);
-    ImmutableSet<String> classFileNames = entry.getClassNames();
+    ImmutableSet<String> classFileNames = entry.getFileNames();
     
     Truth.assertThat(classFileNames).containsExactly(
         "com.google.common.truth.IntStreamSubject",
@@ -113,7 +113,7 @@ public class ClassPathEntryTest {
 
     ClassPathEntry entry = TestHelper.classPathEntryOfResource(
         "testdata/conscrypt-openjdk-uber-1.4.2.jar");
-    ImmutableSet<String> classFileNames = entry.getClassNames();
+    ImmutableSet<String> classFileNames = entry.getFileNames();
     Truth.assertThat(classFileNames).containsAtLeast(
         "org.conscrypt.OpenSSLSignature$1",
         "org.conscrypt.OpenSSLContextImpl$TLSv1",
@@ -130,7 +130,7 @@ public class ClassPathEntryTest {
 
     ClassPathEntry entry = TestHelper.classPathEntryOfResource(
         "testdata/conscrypt-openjdk-uber-1.4.2.jar");
-    ImmutableSet<String> classFileNames = entry.getClassNames();
+    ImmutableSet<String> classFileNames = entry.getFileNames();
     for (String filename : classFileNames) {
       Assert.assertFalse(filename.toLowerCase(Locale.ENGLISH).contains("manifest"));
       Assert.assertFalse(filename.toLowerCase(Locale.ENGLISH).contains("meta"));
