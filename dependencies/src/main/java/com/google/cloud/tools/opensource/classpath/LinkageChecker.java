@@ -163,7 +163,7 @@ public class LinkageChecker {
             }
           }
         }
-        if (!classFile.getClassPathEntry().getClassNames()
+        if (!classFile.getClassPathEntry().getFileNames()
             .contains(classSymbol.getClassBinaryName())) {
 
           if (classSymbol instanceof InterfaceSymbol) {
@@ -190,7 +190,7 @@ public class LinkageChecker {
     for (ClassFile classFile : classToMethodSymbols.keySet()) {
       ImmutableSet<MethodSymbol> methodSymbols = classToMethodSymbols.get(classFile);
       for (MethodSymbol methodSymbol : methodSymbols) {
-        if (!classFile.getClassPathEntry().getClassNames()
+        if (!classFile.getClassPathEntry().getFileNames()
             .contains(methodSymbol.getClassBinaryName())) {
           findSymbolProblem(classFile, methodSymbol)
               .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));
@@ -203,7 +203,7 @@ public class LinkageChecker {
     for (ClassFile classFile : classToFieldSymbols.keySet()) {
       ImmutableSet<FieldSymbol> fieldSymbols = classToFieldSymbols.get(classFile);
       for (FieldSymbol fieldSymbol : fieldSymbols) {
-        if (!classFile.getClassPathEntry().getClassNames()
+        if (!classFile.getClassPathEntry().getFileNames()
             .contains(fieldSymbol.getClassBinaryName())) {
           findSymbolProblem(classFile, fieldSymbol)
               .ifPresent(problem -> problemToClass.put(problem, classFile.topLevelClassFile()));

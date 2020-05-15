@@ -33,7 +33,7 @@ public final class ClassPathEntry {
 
   private Path jar;
   private Artifact artifact;
-  private ImmutableSet<String> classFileNames;
+  private ImmutableSet<String> fileNames;
 
   /** An entry for a JAR file without Maven coordinates. */
   ClassPathEntry(Path jar) {
@@ -96,9 +96,9 @@ public final class ClassPathEntry {
    * class file name is usually a fully qualified class name. However a class file name may have a
    * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
    */
-  private void readClassFileNames() throws IOException {  
+  private void readFileNames() throws IOException {  
     try (JarFile jarFile = new JarFile(jar.toFile())) {
-      ImmutableSet.Builder<String> classNames = ImmutableSet.builder();
+      ImmutableSet.Builder<String> builder = ImmutableSet.builder();
       
       Enumeration<JarEntry> entries = jarFile.entries();
       while (entries.hasMoreElements()) {
@@ -106,22 +106,24 @@ public final class ClassPathEntry {
         String name = entry.getName();
         if (name.endsWith(".class")) {
           String className = name.replace('/', '.').substring(0, name.length() - 6);
-          classNames.add(className);
+          builder.add(className);
         }
       }
-      this.classFileNames = classNames.build();
+      this.fileNames = builder.build();
     }
   }
   
   /**
-   * Returns the fully qualified names of the classes in this entry's jar file.
+   * Returns the names of the .class files in this entry's jar file.
+   * A file name is the name of the .class file in the JAR file, without the 
+   * suffix {@code .class} and after converting each / to a period.
    * 
    * @throws IOException if the jar file can't be read
    */
-  public synchronized ImmutableSet<String> getClassNames() throws IOException {
-    if (classFileNames == null) {
-      readClassFileNames();
+  public synchronized ImmutableSet<String> getFileNames() throws IOException {
+    if (fileNames == null) {
+      readFileNames();
     }
-    return classFileNames;
+    return fileNames;
   }
 }
