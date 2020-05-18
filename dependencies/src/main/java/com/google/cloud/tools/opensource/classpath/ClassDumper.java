@@ -121,11 +121,6 @@ class ClassDumper {
     return classRepository.loadClass(className);
   }
 
-  /** Loads a system class available in JVM runtime. */
-  Class<?> loadSystemClass(String className) throws ClassNotFoundException {
-    return extensionClassLoader.loadClass(className);
-  }
-
   /** Returns true if {@code className} is available in the system class loader. */
   boolean isSystemClass(String className) {
     try {
@@ -133,7 +128,7 @@ class ClassDumper {
         // Array class
         return true;
       }
-      loadSystemClass(className);
+      extensionClassLoader.loadClass(className);
       return true;
     } catch (ClassNotFoundException ex) {
       return false;

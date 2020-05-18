@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.MoreObjects;
-import java.util.Objects;
 
 /**
  * The referent of symbolic references (class, method, or field references) in the run-time constant
@@ -47,21 +46,10 @@ abstract class Symbol {
   }
 
   @Override
-  public boolean equals(Object other) {
-    if (this == other) {
-      return true;
-    }
-    if (other == null || getClass() != other.getClass()) {
-      return false;
-    }
-    Symbol symbol = (Symbol) other;
-    return classBinaryName.equals(symbol.classBinaryName);
-  }
+  public abstract boolean equals(Object other);
 
   @Override
-  public int hashCode() {
-    return Objects.hash(classBinaryName);
-  }
+  public abstract int hashCode();
 
   @Override
   public String toString() {
