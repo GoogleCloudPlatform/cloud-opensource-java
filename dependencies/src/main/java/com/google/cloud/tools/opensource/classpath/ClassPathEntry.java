@@ -26,7 +26,6 @@ import java.util.Enumeration;
 import java.util.Objects;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import org.apache.bcel.classfile.JavaClass;
 import org.eclipse.aether.artifact.Artifact;
 
 /** An entry in a class path. */
@@ -94,7 +93,7 @@ public final class ClassPathEntry {
 
   /**
    * Populates {@link #fileNames} through the classes in {@link #jar}. These file names are usually
-   * a fully qualified class name. However a class file name may have a framework-specific prefix.
+   * fully qualified class names. However a class file name may have a framework-specific prefix.
    * Example: {@code BOOT-INF.classes.com.google.Foo}.
    */
   private void readFileNames() throws IOException {
