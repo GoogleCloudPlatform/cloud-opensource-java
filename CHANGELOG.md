@@ -1,5 +1,8 @@
 # Linkage Checker Enforcer Rule Change Log
 
+## 1.4.1
+* Fixed false positive linkage errors in Maven projects with WAR packaging
+
 ## 1.4.0
 * Linkage Checker enforcer rule shows dependency paths to problematic Maven artifacts.
 * Fixed the enforcer rule's incorrect selection of entry point JARs for reachability analysis
