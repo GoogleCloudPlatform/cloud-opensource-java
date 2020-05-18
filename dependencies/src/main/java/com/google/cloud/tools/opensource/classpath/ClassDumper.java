@@ -78,7 +78,7 @@ class ClassDumper {
 
   static ClassDumper create(List<ClassPathEntry> entries) throws IOException {
     ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
-    ClassLoader extensionClassLoader = systemClassLoader; //.getParent();
+    ClassLoader extensionClassLoader = systemClassLoader.getParent();
 
     ImmutableList<Path> unreadableFiles =
         entries.stream()
