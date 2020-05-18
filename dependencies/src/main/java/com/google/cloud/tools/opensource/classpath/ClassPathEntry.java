@@ -92,11 +92,11 @@ public final class ClassPathEntry {
   }
 
   /**
-   * Returns a list of class file names in {@link #jar} as in {@link JavaClass#getFileName()}. This
-   * class file name is usually a fully qualified class name. However a class file name may have a
-   * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
+   * Populates {@link #fileNames} through the classes in {@link #jar}. These file names are usually
+   * fully qualified class names. However a class file name may have a framework-specific prefix.
+   * Example: {@code BOOT-INF.classes.com.google.Foo}.
    */
-  private void readFileNames() throws IOException {  
+  private void readFileNames() throws IOException {
     try (JarFile jarFile = new JarFile(jar.toFile())) {
       ImmutableSet.Builder<String> builder = ImmutableSet.builder();
       
@@ -112,7 +112,7 @@ public final class ClassPathEntry {
       this.fileNames = builder.build();
     }
   }
-  
+
   /**
    * Returns the names of the .class files in this entry's jar file.
    * A file name is the name of the .class file in the JAR file, without the 

@@ -24,6 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
@@ -1075,5 +1076,29 @@ public class LinkageCheckerTest {
                   (ClassFile sourceClass) -> sourceClass.getBinaryName(), "has source class name"))
           .doesNotContain(unexpectedSourceClass);
     }
+  }
+
+  @Test
+  public void testFindSymbolProblems_ensureNoSelfReferencingSymbolProblem()
+      throws IOException, URISyntaxException {
+    // This JAR file contains com.google.firestore.v1beta1.FirestoreGrpc under BOOT-INF/classes.
+    ClassPathEntry jar = classPathEntryOfResource("testdata/dummy-boot-inf-prefix.jar");
+
+    LinkageChecker linkageChecker = LinkageChecker.create(ImmutableList.of(jar));
+    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        linkageChecker.findSymbolProblems();
+
+    // There was a problem where Linkage Checker unexpectedly reported linkage errors on classes in
+    // framework-specific class file location, such as "BOOT-INF/classes". In this test case,
+    // it should not report errors on FirestoreGrpc class just because
+    // BOOT-INF.classes.com.google.firestore.v1beta1.FirestoreGrpc (class file name) looks different
+    // from com.google.firestore.v1beta1.FirestoreGrpc (class binary name).
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1401
+    symbolProblems.forEach(
+        (problem, sourceClass) -> {
+          if (sourceClass.equals(problem.getContainingClass())) {
+            fail("Self-referencing linkage errors: " + problem);
+          }
+        });
   }
 }
