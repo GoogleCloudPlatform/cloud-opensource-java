@@ -65,18 +65,16 @@ public final class MethodSymbol extends Symbol {
     if (other == null || getClass() != other.getClass()) {
       return false;
     }
-    if (!super.equals(other)) {
-      return false;
-    }
     MethodSymbol that = (MethodSymbol) other;
     return isInterfaceMethod == that.isInterfaceMethod
         && name.equals(that.name)
-        && descriptor.equals(that.descriptor);
+        && descriptor.equals(that.descriptor)
+        && this.getClassBinaryName().equals(that.getClassBinaryName());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), name, descriptor, isInterfaceMethod);
+    return Objects.hash(this.getClassBinaryName(), name, descriptor, isInterfaceMethod);
   }
 
   @Override
