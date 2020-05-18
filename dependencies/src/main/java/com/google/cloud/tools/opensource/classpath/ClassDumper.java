@@ -322,6 +322,14 @@ class ClassDumper {
   }
 
   /**
+   * Converts a binary name to the file name of a class. Read {@link FixedSizeClassPathRepository}
+   * for the difference.
+   */
+  String getFileName(String className) {
+    return classRepository.getFileName(className);
+  }
+
+  /**
    * Returns a set of {@link JavaClass}es which have entries in the {@code entry} through {@link
    * #classRepository}.
    */
