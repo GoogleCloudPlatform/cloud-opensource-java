@@ -330,8 +330,8 @@ class ClassDumper {
    * Converts a binary name to the file name of a class. Read {@link FixedSizeClassPathRepository}
    * for the difference.
    */
-  String getFileName(String classBinaryName) {
-    return classRepository.getFileName(classBinaryName);
+  String getFileName(String className) {
+    return classRepository.getFileName(className);
   }
 
   /**
