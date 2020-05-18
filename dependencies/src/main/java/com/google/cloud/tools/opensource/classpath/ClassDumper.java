@@ -78,7 +78,7 @@ class ClassDumper {
 
   static ClassDumper create(List<ClassPathEntry> entries) throws IOException {
     ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
-    ClassLoader extensionClassLoader = systemClassLoader.getParent();
+    ClassLoader extensionClassLoader = systemClassLoader; //.getParent();
 
     ImmutableList<Path> unreadableFiles =
         entries.stream()
@@ -122,7 +122,7 @@ class ClassDumper {
   }
 
   /** Loads a system class available in JVM runtime. */
-  Class<?> loadSystemClass(String className) throws ClassNotFoundException {
+  private Class<?> loadSystemClass(String className) throws ClassNotFoundException {
     return extensionClassLoader.loadClass(className);
   }
 
@@ -323,6 +323,7 @@ class ClassDumper {
     // location of the target class, and sometimes the superclass is unavailable.
 
     String filename = classRepository.getFileName(className);
+    // todo since we always call get first this doesn't have to be a multimap
     return Iterables.getFirst(fileNameToClassPathEntry.get(filename), null);
   }
 
