@@ -21,6 +21,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.graph.Traverser;
 import java.io.IOException;
@@ -69,7 +70,7 @@ class ClassDumper {
   private final ImmutableList<ClassPathEntry> inputClassPath;
   private final FixedSizeClassPathRepository classRepository;
   private final ClassLoader extensionClassLoader;
-  private final Map<String, ClassPathEntry> fileNameToClassPathEntry;
+  private final ImmutableMap<String, ClassPathEntry> fileNameToClassPathEntry;
 
   private static FixedSizeClassPathRepository createClassRepository(List<ClassPathEntry> entries) {
     ClassPath classPath = new LinkageCheckClassPath(entries);
@@ -108,7 +109,7 @@ class ClassDumper {
     this.inputClassPath = ImmutableList.copyOf(inputClassPath);
     this.classRepository = createClassRepository(inputClassPath);
     this.extensionClassLoader = extensionClassLoader;
-    this.fileNameToClassPathEntry = fileNameToClassPathEntry;
+    this.fileNameToClassPathEntry = ImmutableMap.copyOf(fileNameToClassPathEntry);
   }
 
   /**
