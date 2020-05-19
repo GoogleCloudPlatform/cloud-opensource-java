@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.google.common.graph.Traverser;
@@ -46,7 +45,7 @@ public class ClassReferenceGraph {
   private final ImmutableSet<String> reachableClasses;
 
   static ClassReferenceGraph create(
-      SymbolReferenceMaps symbolReferenceMaps, Set<ClassPathEntry> entryPoints) throws IOException {
+      SymbolReferences symbolReferences, Set<ClassPathEntry> entryPoints) throws IOException {
 
     ImmutableSet.Builder<String> entryPointClassBuilder = ImmutableSet.builder();
     for (ClassPathEntry entry : entryPoints) {
@@ -54,23 +53,24 @@ public class ClassReferenceGraph {
         entryPointClassBuilder.add(className);
       }
     }
-    return new ClassReferenceGraph(
-        symbolReferenceMaps.getClassToClassSymbols(), entryPointClassBuilder.build());
+    return new ClassReferenceGraph(symbolReferences, entryPointClassBuilder.build());
   }
 
   private ClassReferenceGraph(
-      ImmutableSetMultimap<ClassFile, ClassSymbol> classSymbolReferences,
+      SymbolReferences symbolReferences,
       Set<String> entryPointClasses) {
     MutableGraph<String> graph = GraphBuilder.directed().allowsSelfLoops(false).build();
 
-    classSymbolReferences.forEach(
-        (classFile, classSymbol) -> {
-          String sourceClassName = classFile.getBinaryName();
-          String targetClassName = classSymbol.getClassBinaryName();
-          if (!sourceClassName.equals(targetClassName)) { // no self-loop
-            graph.putEdge(sourceClassName, targetClassName);
-          }
-        });
+    for (ClassFile classFile : symbolReferences.getClassFiles()) {
+      String sourceClassName = classFile.getBinaryName();
+      for (ClassSymbol symbol : symbolReferences.getClassSymbols(classFile)) {
+        String targetClassName = symbol.getClassBinaryName();
+        if (!sourceClassName.equals(targetClassName)) { // no self-loop
+          graph.putEdge(sourceClassName, targetClassName);
+        }
+      }
+    }
+    
     entryPointClasses.forEach(graph::addNode); // to avoid IllegalArgumentError in breadthFirst
 
     this.reachableClasses =

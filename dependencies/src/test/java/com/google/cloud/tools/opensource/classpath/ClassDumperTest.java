@@ -22,8 +22,6 @@ import static org.junit.Assert.assertFalse;
 
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.io.IOException;
@@ -105,27 +103,26 @@ public class ClassDumperTest {
   @Test
   public void testScanSymbolTableFromClassPath() throws URISyntaxException, IOException {
     ClassPathEntry path = classPathEntryOfResource(GRPC_CLOUD_FIRESTORE_JAR);
-    SymbolReferenceMaps symbolReferenceMaps =
+    SymbolReferences symbolReferences =
         ClassDumper.create(ImmutableList.of(path)).findSymbolReferences();
 
     // Class reference
+    ClassFile source = new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc");
     Truth.assertWithMessage("Class reference should have binary names defined in JLS 13.1")
-        .that(symbolReferenceMaps.getClassToClassSymbols())
-        .containsEntry(
-            new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
+        .that(symbolReferences.getClassSymbols(source))
+        .contains(
             new ClassSymbol(
                 "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreMethodDescriptorSupplier"));
 
     Truth.assertWithMessage("Reference to superclass should have SuperClassSymbol")
-        .that(symbolReferenceMaps.getClassToClassSymbols())
-        .containsEntry(
-            new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFutureStub"),
+        .that(symbolReferences.getClassSymbols(
+            new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFutureStub")))
+        .contains(
             new SuperClassSymbol("io.grpc.stub.AbstractStub"));
 
     // Method reference
-    Truth.assertThat(symbolReferenceMaps.getClassToMethodSymbols())
-        .containsEntry(
-            new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
+    Truth.assertThat(symbolReferences.getMethodSymbols(source))
+        .contains(
             new MethodSymbol(
                 "io.grpc.protobuf.ProtoUtils",
                 "marshaller",
@@ -133,9 +130,8 @@ public class ClassDumperTest {
                 false));
 
     // Field reference
-    Truth.assertThat(symbolReferenceMaps.getClassToFieldSymbols())
-        .containsEntry(
-            new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
+    Truth.assertThat(symbolReferences.getFieldSymbols(source))
+        .contains(
             new FieldSymbol(
                 "io.grpc.MethodDescriptor$MethodType",
                 "BIDI_STREAMING",
@@ -148,25 +144,27 @@ public class ClassDumperTest {
     URL jarUrl = URLClassLoader.getSystemResource("testdata/gax-1.32.0.jar");
 
     Path path = Paths.get(jarUrl.toURI());
-    SymbolReferenceMaps symbolReferenceMaps =
+    SymbolReferences symbolReferences =
         ClassDumper.create(ImmutableList.of(new ClassPathEntry(path))).findSymbolReferences();
 
-    Truth.assertThat(symbolReferenceMaps.getClassToClassSymbols().inverse().keys())
-        .comparingElementsUsing(SYMBOL_TARGET_CLASS_NAME)
-        .doesNotContain("[Ljava.lang.Object;");
+    for (ClassFile classFile : symbolReferences.getClassFiles()) {
+      Truth.assertThat(symbolReferences.getClassSymbols(classFile))
+          .comparingElementsUsing(SYMBOL_TARGET_CLASS_NAME)
+          .doesNotContain("[Ljava.lang.Object;");        
+    }
   }
 
   @Test
   public void testScanSymbolReferencesInClass_shouldPickInterfaceReference()
       throws URISyntaxException, IOException {
     ClassPathEntry entry = classPathEntryOfResource("testdata/api-common-1.7.0.jar");
-    SymbolReferenceMaps symbolReferenceMaps =
+    SymbolReferences symbolReferences =
         ClassDumper.create(ImmutableList.of(entry)).findSymbolReferences();
 
     boolean isInterfaceMethod = true;
-    Truth.assertThat(symbolReferenceMaps.getClassToMethodSymbols())
-        .containsEntry(
-            new ClassFile(entry, "com.google.api.resourcenames.UntypedResourceName"),
+    Truth.assertThat(symbolReferences.getMethodSymbols(
+        new ClassFile(entry, "com.google.api.resourcenames.UntypedResourceName")))
+        .contains(
             new MethodSymbol(
                 "java.util.Map",
                 "get",
@@ -344,15 +342,12 @@ public class ClassDumperTest {
     ClassPathEntry sisuGuicePath = classPath.get(1);
 
     ClassDumper classDumper = ClassDumper.create(classPath);
-    SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
-    ImmutableSetMultimap<ClassSymbol, ClassFile> classReferences =
-        symbolReferences.getClassToClassSymbols().inverse();
-    ImmutableSet<ClassFile> classFiles =
-        classReferences.get(new ClassSymbol("com.google.inject.internal.util.$Lists"));
-    Truth.assertThat(classFiles)
-        .doesNotContain(
-            new ClassFile(
-                sisuGuicePath, "com.google.inject.internal.InjectorImpl$BindingsMultimap"));
+    SymbolReferences symbolReferences = classDumper.findSymbolReferences();
+    
+    ClassFile classFile = new ClassFile(
+        sisuGuicePath, "com.google.inject.internal.InjectorImpl$BindingsMultimap");
+    
+    Truth.assertThat(symbolReferences.getClassSymbols(classFile)).isEmpty();
   }
 
   @Test
@@ -365,10 +360,10 @@ public class ClassDumperTest {
     ClassPathEntry kinesisJar = classPath.get(0);
 
     // This should not raise IOException
-    SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
+    SymbolReferences symbolReferences = classDumper.findSymbolReferences();
 
     Truth.assertWithMessage("Invalid files should not stop loading valid class files")
-        .that(symbolReferences.getClassToClassSymbols().keySet())
+        .that(symbolReferences.getClassFiles())
         .comparingElementsUsing(
             Correspondence.transforming(
                 (ClassFile classFile) -> classFile.getClassPathEntry(), "is in the JAR file"))
@@ -398,8 +393,8 @@ public class ClassDumperTest {
     ClassDumper classDumper = ClassDumper.create(classPath);
 
     // This should not throw ClassFormatException
-    SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
-    Truth.assertThat(symbolReferences.getClassToClassSymbols().keySet())
+    SymbolReferences symbolReferences = classDumper.findSymbolReferences();
+    Truth.assertThat(symbolReferences.getClassFiles())
         .comparingElementsUsing(
             Correspondence.transforming(
                 (ClassFile classFile) -> classFile.getBinaryName(), "has class name"))
