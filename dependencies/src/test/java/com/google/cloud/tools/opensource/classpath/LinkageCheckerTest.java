@@ -100,25 +100,24 @@ public class LinkageCheckerTest {
     List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
 
-    SymbolReferenceMaps classToSymbols = linkageChecker.getClassToSymbols();
+    SymbolReferences symbolReferences = linkageChecker.getSymbolReferences();
     // These example symbols below are picked up through javap command. For example
     // javap -classpath src/test/resources/testdata/guava-23.5-jre.jar \
     //   -v com/google/common/util/concurrent/Monitor
-    Truth.assertThat(classToSymbols.getClassToClassSymbols())
-        .containsEntry(
-            new ClassFile(guavaJar, "com.google.common.util.concurrent.Service"),
+    Truth.assertThat(symbolReferences.getClassSymbols(
+        new ClassFile(guavaJar, "com.google.common.util.concurrent.Service")))
+        .contains(
             new ClassSymbol("java.util.concurrent.TimeoutException"));
-    Truth.assertThat(classToSymbols.getClassToMethodSymbols())
-        .containsEntry(
-            new ClassFile(guavaJar, "com.google.common.util.concurrent.Monitor"),
+    ClassFile monitor = new ClassFile(guavaJar, "com.google.common.util.concurrent.Monitor");
+    Truth.assertThat(symbolReferences.getMethodSymbols(monitor))
+        .contains(
             new MethodSymbol(
                 "com.google.common.base.Preconditions",
                 "checkNotNull",
                 "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
                 false));
-    Truth.assertThat(classToSymbols.getClassToFieldSymbols())
-        .containsEntry(
-            new ClassFile(guavaJar, "com.google.common.util.concurrent.Monitor"),
+    Truth.assertThat(symbolReferences.getFieldSymbols(monitor))
+        .contains(
             new FieldSymbol("com.google.common.util.concurrent.Monitor$Guard", "waiterCount", "I"));
   }
 
@@ -140,7 +139,7 @@ public class LinkageCheckerTest {
     List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
 
-    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
+    SymbolReferences.Builder builder = new SymbolReferences.Builder();
     builder.addMethodReference(
         new ClassFile(paths.get(0), LinkageCheckerTest.class.getName()),
         new MethodSymbol(
@@ -533,7 +532,7 @@ public class LinkageCheckerTest {
     List<ClassPathEntry> paths = ImmutableList.of(firestoreJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
 
-    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
+    SymbolReferences.Builder builder = new SymbolReferences.Builder();
     builder.addClassReference(
         new ClassFile(paths.get(0), LinkageCheckerTest.class.getName()),
         // This inner class is defined as public in firestore-v1beta1-0.28.0.jar
@@ -553,7 +552,7 @@ public class LinkageCheckerTest {
         ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
 
-    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
+    SymbolReferences.Builder builder = new SymbolReferences.Builder();
     builder.addClassReference(
         new ClassFile(dummySource, LinkageCheckerTest.class.getName()),
         // This private inner class is defined in firestore-v1beta1-0.28.0.jar
@@ -581,7 +580,7 @@ public class LinkageCheckerTest {
         ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));    
     LinkageChecker linkageChecker = LinkageChecker.create(entries);
 
-    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
+    SymbolReferences.Builder builder = new SymbolReferences.Builder();
     builder.addClassReference(
         new ClassFile(dummySource, "com.google.foo.Bar$Baz"),
         // This private inner class is defined in firestore-v1beta1-0.28.0.jar
@@ -720,7 +719,7 @@ public class LinkageCheckerTest {
     pathsForJarWithVersion66First.addAll(firestoreDependencies);
     LinkageChecker linkageChecker66First = LinkageChecker.create(pathsForJarWithVersion66First);
 
-    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
+    SymbolReferences.Builder builder = new SymbolReferences.Builder();
 
     ClassFile source = new ClassFile(firestoreJar, "com.google.firestore.v1beta1.FirestoreGrpc");
 

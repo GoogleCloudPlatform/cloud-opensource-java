@@ -18,45 +18,55 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.util.Objects;
 
 /**
- * A set of symbol references. Symbol references are stored as maps from {@link ClassFile} to {@link
- * ClassSymbol}s, {@link MethodSymbol}s, and {@link FieldSymbol}s.
+ * The symbol references found in class files.
  */
-class SymbolReferenceMaps {
+class SymbolReferences {
+  
+  // TODO this is still wonky. A ClassFile should have symbol references,
+  // not be mapped to symbol references
+  
   private final ImmutableSetMultimap<ClassFile, ClassSymbol> classToClassSymbols;
   private final ImmutableSetMultimap<ClassFile, MethodSymbol> classToMethodSymbols;
   private final ImmutableSetMultimap<ClassFile, FieldSymbol> classToFieldSymbols;
+  private final ImmutableSet<ClassFile> classFiles;
 
-  ImmutableSetMultimap<ClassFile, ClassSymbol> getClassToClassSymbols() {
-    return classToClassSymbols;
+  ImmutableSet<MethodSymbol> getMethodSymbols(ClassFile classFile) {
+    return classToMethodSymbols.get(classFile);
   }
 
-  ImmutableSetMultimap<ClassFile, MethodSymbol> getClassToMethodSymbols() {
-    return classToMethodSymbols;
+  ImmutableSet<ClassFile> getClassFiles() {
+    return this.classFiles;
   }
 
-  ImmutableSetMultimap<ClassFile, FieldSymbol> getClassToFieldSymbols() {
-    return classToFieldSymbols;
+  ImmutableSet<FieldSymbol> getFieldSymbols(ClassFile classFile) {
+    return classToFieldSymbols.get(classFile);
   }
 
-  @VisibleForTesting
-  SymbolReferenceMaps(
+  ImmutableSet<ClassSymbol> getClassSymbols(ClassFile classFile) {
+    return classToClassSymbols.get(classFile);
+  }
+
+  private SymbolReferences(
+      ImmutableSet<ClassFile> classFiles,
       ImmutableSetMultimap<ClassFile, ClassSymbol> classToClassSymbols,
       ImmutableSetMultimap<ClassFile, MethodSymbol> classToMethodSymbols,
       ImmutableSetMultimap<ClassFile, FieldSymbol> classToFieldSymbols) {
     this.classToClassSymbols = checkNotNull(classToClassSymbols);
     this.classToMethodSymbols = checkNotNull(classToMethodSymbols);
     this.classToFieldSymbols = checkNotNull(classToFieldSymbols);
+    this.classFiles = checkNotNull(classFiles);
   }
 
   static class Builder {
     private final ImmutableSetMultimap.Builder<ClassFile, ClassSymbol> classToClassSymbols;
     private final ImmutableSetMultimap.Builder<ClassFile, MethodSymbol> classToMethodSymbols;
     private final ImmutableSetMultimap.Builder<ClassFile, FieldSymbol> classToFieldSymbols;
+    private final ImmutableSet.Builder<ClassFile> classFiles = ImmutableSet.builder();
 
     Builder() {
       classToClassSymbols = ImmutableSetMultimap.builder();
@@ -66,11 +76,13 @@ class SymbolReferenceMaps {
 
     Builder addClassReference(ClassFile source, ClassSymbol symbol) {
       classToClassSymbols.put(source, symbol);
+      classFiles.add(source);
       return this;
     }
 
     Builder addMethodReference(ClassFile source, MethodSymbol symbol) {
       classToMethodSymbols.put(source, symbol);
+      classFiles.add(source);
       return this;
     }
 
@@ -79,8 +91,8 @@ class SymbolReferenceMaps {
       return this;
     }
 
-    SymbolReferenceMaps build() {
-      return new SymbolReferenceMaps(
+    SymbolReferences build() {
+      return new SymbolReferences(classFiles.build(),
           classToClassSymbols.build(), classToMethodSymbols.build(), classToFieldSymbols.build());
     }
 
@@ -88,6 +100,7 @@ class SymbolReferenceMaps {
       classToClassSymbols.putAll(other.classToClassSymbols.build());
       classToMethodSymbols.putAll(other.classToMethodSymbols.build());
       classToFieldSymbols.putAll(other.classToFieldSymbols.build());
+      classFiles.addAll(other.classFiles.build());
       return this;
     }
   }
@@ -100,7 +113,7 @@ class SymbolReferenceMaps {
     if (other == null || getClass() != other.getClass()) {
       return false;
     }
-    SymbolReferenceMaps that = (SymbolReferenceMaps) other;
+    SymbolReferences that = (SymbolReferences) other;
     return classToClassSymbols.equals(that.classToClassSymbols)
         && classToMethodSymbols.equals(that.classToMethodSymbols)
         && classToFieldSymbols.equals(that.classToFieldSymbols);

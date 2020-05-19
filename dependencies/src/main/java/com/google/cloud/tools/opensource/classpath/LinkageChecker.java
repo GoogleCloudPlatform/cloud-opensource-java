@@ -52,13 +52,13 @@ public class LinkageChecker {
   
   private final ClassDumper classDumper;
   private final ImmutableList<ClassPathEntry> classPath;
-  private final SymbolReferenceMaps classToSymbols;
+  private final SymbolReferences symbolReferences;
   private final ClassReferenceGraph classReferenceGraph;
   private final ExcludedErrors excludedErrors;
 
   @VisibleForTesting
-  SymbolReferenceMaps getClassToSymbols() {
-    return classToSymbols;
+  SymbolReferences getSymbolReferences() {
+    return symbolReferences;
   }
 
   public ClassReferenceGraph getClassReferenceGraph() {
@@ -83,7 +83,7 @@ public class LinkageChecker {
       throws IOException {
     Preconditions.checkArgument(!classPath.isEmpty(), "The linkage classpath is empty.");
     ClassDumper dumper = ClassDumper.create(classPath);
-    SymbolReferenceMaps symbolReferenceMaps = dumper.findSymbolReferences();
+    SymbolReferences symbolReferenceMaps = dumper.findSymbolReferences();
 
     ClassReferenceGraph classReferenceGraph =
         ClassReferenceGraph.create(symbolReferenceMaps, ImmutableSet.copyOf(entryPoints));
@@ -116,7 +116,7 @@ public class LinkageChecker {
   }
 
   @VisibleForTesting
-  LinkageChecker cloneWith(SymbolReferenceMaps newSymbolMaps) {
+  LinkageChecker cloneWith(SymbolReferences newSymbolMaps) {
     return new LinkageChecker(
         classDumper, classPath, newSymbolMaps, classReferenceGraph, excludedErrors);
   }
@@ -124,13 +124,13 @@ public class LinkageChecker {
   private LinkageChecker(
       ClassDumper classDumper,
       List<ClassPathEntry> classPath,
-      SymbolReferenceMaps symbolReferenceMaps,
+      SymbolReferences symbolReferenceMaps,
       ClassReferenceGraph classReferenceGraph,
       ExcludedErrors excludedErrors) {
     this.classDumper = Preconditions.checkNotNull(classDumper);
     this.classPath = ImmutableList.copyOf(classPath);
     this.classReferenceGraph = Preconditions.checkNotNull(classReferenceGraph);
-    this.classToSymbols = Preconditions.checkNotNull(symbolReferenceMaps);
+    this.symbolReferences = Preconditions.checkNotNull(symbolReferenceMaps);
     this.excludedErrors = Preconditions.checkNotNull(excludedErrors);
   }
 
@@ -144,12 +144,9 @@ public class LinkageChecker {
     // Having Problem in key will dedup SymbolProblems
     ImmutableSetMultimap.Builder<SymbolProblem, ClassFile> problemToClass =
         ImmutableSetMultimap.builder();
-
-    ImmutableSetMultimap<ClassFile, ClassSymbol> classToClassSymbols =
-        classToSymbols.getClassToClassSymbols();
     
-    for (ClassFile classFile : classToClassSymbols.keySet()) {
-      ImmutableSet<ClassSymbol> classSymbols = classToClassSymbols.get(classFile);
+    for (ClassFile classFile : symbolReferences.getClassFiles()) {
+      ImmutableSet<ClassSymbol> classSymbols = symbolReferences.getClassSymbols(classFile);
 
       for (ClassSymbol classSymbol : classSymbols) {
         if (classSymbol instanceof SuperClassSymbol) {
@@ -188,10 +185,8 @@ public class LinkageChecker {
       }    
     }
     
-    ImmutableSetMultimap<ClassFile, MethodSymbol> classToMethodSymbols =
-        classToSymbols.getClassToMethodSymbols();
-    for (ClassFile classFile : classToMethodSymbols.keySet()) {
-      ImmutableSet<MethodSymbol> methodSymbols = classToMethodSymbols.get(classFile);
+    for (ClassFile classFile : symbolReferences.getClassFiles()) {
+      ImmutableSet<MethodSymbol> methodSymbols = symbolReferences.getMethodSymbols(classFile);
       ImmutableSet<String> classFileNames = classFile.getClassPathEntry().getFileNames();
       for (MethodSymbol methodSymbol : methodSymbols) {
         String classBinaryName = methodSymbol.getClassBinaryName();
@@ -203,10 +198,8 @@ public class LinkageChecker {
       }
     }
 
-    ImmutableSetMultimap<ClassFile, FieldSymbol> classToFieldSymbols =
-        classToSymbols.getClassToFieldSymbols();
-    for (ClassFile classFile : classToFieldSymbols.keySet()) {
-      ImmutableSet<FieldSymbol> fieldSymbols = classToFieldSymbols.get(classFile);
+    for (ClassFile classFile : symbolReferences.getClassFiles()) {
+      ImmutableSet<FieldSymbol> fieldSymbols = symbolReferences.getFieldSymbols(classFile);
       ImmutableSet<String> classFileNames = classFile.getClassPathEntry().getFileNames();
       for (FieldSymbol fieldSymbol : fieldSymbols) {
         String classBinaryName = fieldSymbol.getClassBinaryName();

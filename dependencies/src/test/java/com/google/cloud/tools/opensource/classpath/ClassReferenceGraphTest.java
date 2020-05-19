@@ -32,7 +32,7 @@ public class ClassReferenceGraphTest {
   private static ClassReferenceGraph createExampleGraph() throws URISyntaxException, IOException {
 
     ClassPathEntry firestoreJar = classPathEntryOfResource(GRPC_CLOUD_FIRESTORE_JAR);
-    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
+    SymbolReferences.Builder builder = new SymbolReferences.Builder();
     builder.addClassReference(
         new ClassFile(firestoreJar, "com.google.firestore.v1beta1.FirestoreGrpc"),
         new ClassSymbol("ClassA"));

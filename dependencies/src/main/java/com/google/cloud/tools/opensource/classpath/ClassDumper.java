@@ -139,8 +139,8 @@ class ClassDumper {
   /**
    * Returns a map from classes to the symbol references they contain.
    */
-  SymbolReferenceMaps findSymbolReferences() throws IOException {
-    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
+  SymbolReferences findSymbolReferences() throws IOException {
+    SymbolReferences.Builder builder = new SymbolReferences.Builder();
 
     for (ClassPathEntry jar : inputClassPath) {
       for (JavaClass javaClass : listClasses(jar)) {
@@ -170,9 +170,9 @@ class ClassDumper {
     return 45 <= classFileMajorVersion && classFileMajorVersion <= 52;
   }
 
-  private static SymbolReferenceMaps.Builder findSymbolReferences(
+  private static SymbolReferences.Builder findSymbolReferences(
       ClassFile source, JavaClass javaClass) {
-    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
+    SymbolReferences.Builder builder = new SymbolReferences.Builder();
 
     ConstantPool constantPool = javaClass.getConstantPool();
     Constant[] constants = constantPool.getConstantPool();
