@@ -21,14 +21,15 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.graph.Traverser;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.bcel.Const;
@@ -69,7 +70,7 @@ class ClassDumper {
   private final ImmutableList<ClassPathEntry> inputClassPath;
   private final FixedSizeClassPathRepository classRepository;
   private final ClassLoader extensionClassLoader;
-  private final ImmutableListMultimap<String, ClassPathEntry> fileNameToClassPathEntry;
+  private final ImmutableMap<String, ClassPathEntry> fileNameToClassPathEntry;
 
   private static FixedSizeClassPathRepository createClassRepository(List<ClassPathEntry> entries) {
     ClassPath classPath = new LinkageCheckClassPath(entries);
@@ -88,14 +89,14 @@ class ClassDumper {
     checkArgument(
         unreadableFiles.isEmpty(), "Some jar files are not readable: %s", unreadableFiles);
     
-    ImmutableListMultimap.Builder<String, ClassPathEntry> builder = ImmutableListMultimap.builder();
+    Map<String, ClassPathEntry> map = new HashMap<>();
     for (ClassPathEntry entry : entries) {
       for (String className : entry.getFileNames()) {
-        builder.put(className, entry);
+        if (!map.containsKey(className)) {
+          map.put(className, entry);
+        }
       }
     }
-    
-    ImmutableListMultimap<String, ClassPathEntry> map = builder.build();
     
     return new ClassDumper(entries, extensionClassLoader, map);
   }
@@ -103,12 +104,12 @@ class ClassDumper {
   private ClassDumper(
       List<ClassPathEntry> inputClassPath,
       ClassLoader extensionClassLoader,
-      ImmutableListMultimap<String, ClassPathEntry> fileNameToClassPathEntry)
+      Map<String, ClassPathEntry> fileNameToClassPathEntry)
       throws IOException {
     this.inputClassPath = ImmutableList.copyOf(inputClassPath);
     this.classRepository = createClassRepository(inputClassPath);
     this.extensionClassLoader = extensionClassLoader;
-    this.fileNameToClassPathEntry = fileNameToClassPathEntry;
+    this.fileNameToClassPathEntry = ImmutableMap.copyOf(fileNameToClassPathEntry);
   }
 
   /**
@@ -318,7 +319,7 @@ class ClassDumper {
     // location of the target class, and sometimes the superclass is unavailable.
 
     String filename = classRepository.getFileName(className);
-    return Iterables.getFirst(fileNameToClassPathEntry.get(filename), null);
+    return fileNameToClassPathEntry.get(filename);
   }
 
   /**
