@@ -155,7 +155,7 @@ public final class DependencyGraphBuilder {
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
-   * versions, and dependencies with 'provided' scope.
+   * versions, and dependencies with provided and optional scope.
    * In the event of I/O errors, missing artifacts, and other problems, it can
    * return an incomplete graph.
    *
