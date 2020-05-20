@@ -194,11 +194,10 @@ public final class DependencyGraphBuilder {
       node = result.getRoot();
       for (ArtifactResult artifactResult : result.getArtifactResults()) {
         Artifact resolvedArtifact = artifactResult.getArtifact();
-        if (resolvedArtifact != null) {
-          continue;
+        if (resolvedArtifact == null) {
+          Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
+          artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
         }
-        Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
-        artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
       }
     }
 
