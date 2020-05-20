@@ -48,12 +48,12 @@ public final class ClassPathBuilder {
   }
 
   /**
-   * Finds jar file paths and dependency paths for Maven artifacts and their transitive dependencies
-   * to build a list of JAR files (class path). When there are multiple versions of an artifact in
-   * the dependency tree, the closest to the root in breadth-first order is picked up. This 'pick
-   * closest' strategy follows Maven's dependency mediation.
+   * Builds a classpath from the transitive dependency graph of a list of artifacts.
+   * When there are multiple versions of an artifact in
+   * the dependency tree, the closest to the root in breadth-first order is picked up. This "pick
+   * closest" strategy follows Maven's dependency mediation.
    *
-   * @param artifacts Maven artifacts to check. They are treated as the root of the dependency tree.
+   * @param artifacts the first artifacts that appear in the classpath, in order
    */
   public ClassPathResult resolve(List<Artifact> artifacts) {
 
