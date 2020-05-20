@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.dependencies;
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.CENTRAL;
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.mavenRepositoryFromUrl;
 import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -155,9 +156,8 @@ public final class DependencyGraphBuilder {
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
-   * versions, and dependencies with provided and optional scope.
-   * In the event of I/O errors, missing artifacts, and other problems, it can
-   * return an incomplete graph.
+   * versions, and provided and optional dependencies. In the event of I/O errors, missing
+   * artifacts, and other problems, it can return an incomplete graph.
    *
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
