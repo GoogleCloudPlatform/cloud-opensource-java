@@ -19,7 +19,7 @@ package com.google.cloud.tools.opensource.dependencies;
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.CENTRAL;
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.mavenRepositoryFromUrl;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -74,7 +74,7 @@ public final class DependencyGraphBuilder {
 
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
-  /** Maven Repositories to use when resolving dependencies. */
+  /** Maven repositories to use when resolving dependencies. */
   private final ImmutableList<RemoteRepository> repositories;
   private Path localRepository;
 
@@ -102,6 +102,7 @@ public final class DependencyGraphBuilder {
   /**
    * Enable temporary repositories for tests.
    */
+  @VisibleForTesting
   void setLocalRepository(Path localRepository) {
     this.localRepository = localRepository;
   }
