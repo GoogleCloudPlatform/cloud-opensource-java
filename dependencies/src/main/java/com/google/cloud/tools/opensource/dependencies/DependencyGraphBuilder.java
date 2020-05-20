@@ -87,7 +87,7 @@ public final class DependencyGraphBuilder {
   }
 
   /**
-   * @param mavenRepositoryUrls Maven repository URLs to search for dependencies
+   * @param mavenRepositoryUrls Maven repositories to search for dependencies
    * @throws IllegalArgumentException if a URL is malformed or does not have an allowed scheme
    */
   public DependencyGraphBuilder(Iterable<String> mavenRepositoryUrls) {
