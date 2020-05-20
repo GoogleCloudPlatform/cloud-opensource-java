@@ -144,14 +144,13 @@ class ClassDumper {
 
     for (ClassPathEntry jar : inputClassPath) {
       for (JavaClass javaClass : listClasses(jar)) {
-        if (!isCompatibleClassFileVersion(javaClass)) {
-          continue;
+        if (isCompatibleClassFileVersion(javaClass)) {
+          String className = javaClass.getClassName();
+          // In listClasses(jar), ClassPathRepository creates JavaClass through the first JAR file
+          // that contains the class. It may be different from "jar" for an overlapping class.
+          ClassFile source = new ClassFile(findClassLocation(className), className);
+          builder.addAll(findSymbolReferences(source, javaClass));
         }
-        String className = javaClass.getClassName();
-        // In listClasses(jar), ClassPathRepository creates JavaClass through the first JAR file
-        // that contains the class. It may be different from "jar" for an overlapping class.
-        ClassFile source = new ClassFile(findClassLocation(className), className);
-        builder.addAll(findSymbolReferences(source, javaClass));
       }
     }
 
@@ -178,8 +177,9 @@ class ClassDumper {
     Constant[] constants = constantPool.getConstantPool();
     for (Constant constant : constants) {
       if (constant == null) {
-        continue;
+         continue;
       }
+
       byte constantTag = constant.getTag();
       switch (constantTag) {
         case Const.CONSTANT_Class:
@@ -283,27 +283,26 @@ class ClassDumper {
     String topLevelClassName = javaClass.getClassName();
     ConstantPool constantPool = javaClass.getConstantPool();
     for (Attribute attribute : javaClass.getAttributes()) {
-      if (attribute.getTag() != Const.ATTR_INNER_CLASSES) {
-        continue;
-      }
-      // This innerClasses variable does not include double-nested inner classes
-      InnerClasses innerClasses = (InnerClasses) attribute;
-      for (InnerClass innerClass : innerClasses.getInnerClasses()) {
-        int classIndex = innerClass.getInnerClassIndex();
-        String innerClassName = constantPool.getConstantString(classIndex, Const.CONSTANT_Class);
-        int outerClassIndex = innerClass.getOuterClassIndex();
-        if (outerClassIndex > 0) {
-          String outerClassName =
-              constantPool.getConstantString(outerClassIndex, Const.CONSTANT_Class);
-          String normalOuterClassName = outerClassName.replace('/', '.');
-          if (!normalOuterClassName.equals(topLevelClassName)) {
-            continue;
+      if (attribute.getTag() == Const.ATTR_INNER_CLASSES) {
+        // This innerClasses variable does not include double-nested inner classes
+        InnerClasses innerClasses = (InnerClasses) attribute;
+        for (InnerClass innerClass : innerClasses.getInnerClasses()) {
+          int classIndex = innerClass.getInnerClassIndex();
+          String innerClassName = constantPool.getConstantString(classIndex, Const.CONSTANT_Class);
+          int outerClassIndex = innerClass.getOuterClassIndex();
+          if (outerClassIndex > 0) {
+            String outerClassName =
+                constantPool.getConstantString(outerClassIndex, Const.CONSTANT_Class);
+            String normalOuterClassName = outerClassName.replace('/', '.');
+            if (!normalOuterClassName.equals(topLevelClassName)) {
+              continue;
+            }
           }
+  
+          // Class names stored in constant pool have '/' as separator. We want '.' (as binary name)
+          String normalInnerClassName = innerClassName.replace('/', '.');
+          innerClassNames.add(normalInnerClassName);
         }
-
-        // Class names stored in constant pool have '/' as separator. We want '.' (as binary name)
-        String normalInnerClassName = innerClassName.replace('/', '.');
-        innerClassNames.add(normalInnerClassName);
       }
     }
     return innerClassNames.build();
@@ -440,18 +439,18 @@ class ClassDumper {
     ImmutableSet.Builder<Integer> constantPoolIndicesForTarget = ImmutableSet.builder();
 
     ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();
-    Constant[] constantPoolEntries = sourceConstantPool.getConstantPool();
-    for (int poolIndex = 0; poolIndex < constantPoolEntries.length; poolIndex++) {
-      Constant constant = constantPoolEntries[poolIndex];
-      if (constant == null) {
-        continue; // constantPool uses index starting from 1. 0th entry is null.
-      }
-      byte constantTag = constant.getTag();
-      if (constantTag == Const.CONSTANT_Class) {
-        ConstantClass constantClass = (ConstantClass) constant;
-        ClassSymbol classSymbol = makeSymbol(constantClass, sourceConstantPool, sourceJavaClass);
-        if (targetClassName.equals(classSymbol.getClassBinaryName())) {
-          constantPoolIndicesForTarget.add(poolIndex);
+    Constant[] constantPool = sourceConstantPool.getConstantPool();
+    // constantPool indexes start from 1. 0th entry is null.
+    for (int poolIndex = 1; poolIndex < constantPool.length; poolIndex++) {
+      Constant constant = constantPool[poolIndex];
+      if (constant != null) {
+        byte constantTag = constant.getTag();
+        if (constantTag == Const.CONSTANT_Class) {
+          ConstantClass constantClass = (ConstantClass) constant;
+          ClassSymbol classSymbol = makeSymbol(constantClass, sourceConstantPool, sourceJavaClass);
+          if (targetClassName.equals(classSymbol.getClassBinaryName())) {
+            constantPoolIndicesForTarget.add(poolIndex);
+          }
         }
       }
     }
@@ -476,23 +475,21 @@ class ClassDumper {
       ClassGen classGen = new ClassGen(sourceJavaClass);
 
       for (Method method : sourceJavaClass.getMethods()) {
-        if (method.getCode() == null) {
+        if (method.getCode() != null) {
           // No need to check the presence of try-catch clause for methods without code. This guard
           // avoids NullPointerException by BCEL.
           // https://issues.apache.org/jira/browse/BCEL-336
-          continue;
-        }
-        MethodGen methodGen = new MethodGen(method, sourceClassName, classGen.getConstantPool());
-        CodeExceptionGen[] exceptionHandlers = methodGen.getExceptionHandlers();
-        for (CodeExceptionGen codeExceptionGen : exceptionHandlers) {
-          ObjectType catchType = codeExceptionGen.getCatchType();
-          if (catchType == null) {
-            continue;
-          }
-          String caughtClassName = catchType.getClassName();
-          if (ERRORS_CAUGHT_IN_SOURCE.contains(caughtClassName)) {
-            // The source class catches an error and thus will not cause a runtime error
-            return true;
+          MethodGen methodGen = new MethodGen(method, sourceClassName, classGen.getConstantPool());
+          CodeExceptionGen[] exceptionHandlers = methodGen.getExceptionHandlers();
+          for (CodeExceptionGen codeExceptionGen : exceptionHandlers) {
+            ObjectType catchType = codeExceptionGen.getCatchType();
+            if (catchType != null) {
+              String caughtClassName = catchType.getClassName();
+              if (ERRORS_CAUGHT_IN_SOURCE.contains(caughtClassName)) {
+                // The source class catches an error and thus will not cause a runtime error.
+                return true;
+              }
+            }
           }
         }
       }
@@ -597,22 +594,22 @@ class ClassDumper {
           targetClassName);
 
       ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();
-      Constant[] constantPoolEntries = sourceConstantPool.getConstantPool();
-      for (Constant constant : constantPoolEntries) {
-        if (constant == null) {
-          continue;
-        }
-        switch (constant.getTag()) {
-          case Const.CONSTANT_Methodref:
-          case Const.CONSTANT_InterfaceMethodref:
-          case Const.CONSTANT_Fieldref:
-            ConstantCP constantCp = (ConstantCP) constant;
-            int classIndex = constantCp.getClassIndex();
-            if (targetConstantPoolIndices.contains(classIndex)) {
-              // The class reference is used in another constant pool
-              return false;
-            }
-            break;
+      Constant[] constantPool = sourceConstantPool.getConstantPool();
+      // constantPool indexes start from 1. 0th entry is null.
+      for (Constant constant : constantPool) {
+        if (constant != null) {
+          switch (constant.getTag()) {
+            case Const.CONSTANT_Methodref:
+            case Const.CONSTANT_InterfaceMethodref:
+            case Const.CONSTANT_Fieldref:
+              ConstantCP constantCp = (ConstantCP) constant;
+              int classIndex = constantCp.getClassIndex();
+              if (targetConstantPoolIndices.contains(classIndex)) {
+                // The class reference is used in another constant pool
+                return false;
+              }
+              break;
+          }
         }
       }
 
@@ -671,17 +668,15 @@ class ClassDumper {
         CodeExceptionGen[] exceptionHandlers = methodGen.getExceptionHandlers();
         for (CodeExceptionGen codeExceptionGen : exceptionHandlers) {
           ObjectType catchType = codeExceptionGen.getCatchType();
-          if (catchType == null) {
-            continue;
-          }
-          String caughtClassName = catchType.getClassName();
-          if (caughtClassName != null && caughtClassName.equals(targetClassName)) {
-            // The target class is used in catch clause
-            return false;
+          if (catchType != null) {
+            String caughtClassName = catchType.getClassName();
+            if (caughtClassName != null && caughtClassName.equals(targetClassName)) {
+              // The target class is used in catch clause
+              return false;
+            }
           }
         }
       }
-
     } catch (ClassNotFoundException ex) {
       // Because the reference in the argument was extracted from the source class file,
       // the source class should be found.

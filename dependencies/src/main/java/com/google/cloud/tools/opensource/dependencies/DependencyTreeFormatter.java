@@ -63,10 +63,9 @@ public class DependencyTreeFormatter {
       depth++;
     }
     for (DependencyPath childPath : tree.get(currentNode)) {
-      if (currentNode.equals(childPath)) {
-        continue; // root node's parent is the root itself
+      if (!currentNode.equals(childPath)) { // root node's parent is the root itself
+        formatDependencyPathTree(stringBuilder, tree, childPath, depth);
       }
-      formatDependencyPathTree(stringBuilder, tree, childPath, depth);
     }
   }
 
