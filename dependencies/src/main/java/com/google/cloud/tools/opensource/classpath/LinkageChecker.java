@@ -592,19 +592,16 @@ public class LinkageChecker {
           if (!abstractMethod.isAbstract()) {
             // This abstract method has implementation. Subclass does not have to implement it.
             implementedMethods.add(abstractMethod);
-            continue;
+          } else if (!implementedMethods.contains(abstractMethod)) {
+            String unimplementedMethodName = abstractMethod.getName();
+            String unimplementedMethodDescriptor = abstractMethod.getSignature();
+  
+            MethodSymbol missingMethodOnClass =
+                new MethodSymbol(
+                    className, unimplementedMethodName, unimplementedMethodDescriptor, false);
+            builder.add(
+                new SymbolProblem(missingMethodOnClass, ErrorType.ABSTRACT_METHOD, classFile));
           }
-          if (implementedMethods.contains(abstractMethod)) {
-            continue;
-          }
-          String unimplementedMethodName = abstractMethod.getName();
-          String unimplementedMethodDescriptor = abstractMethod.getSignature();
-
-          MethodSymbol missingMethodOnClass =
-              new MethodSymbol(
-                  className, unimplementedMethodName, unimplementedMethodDescriptor, false);
-          builder.add(
-              new SymbolProblem(missingMethodOnClass, ErrorType.ABSTRACT_METHOD, classFile));
         }
         abstractClass = abstractClass.getSuperClass();
       }
