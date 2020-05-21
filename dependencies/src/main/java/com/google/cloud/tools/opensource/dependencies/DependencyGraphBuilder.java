@@ -20,6 +20,7 @@ import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.C
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.mavenRepositoryFromUrl;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -74,7 +75,7 @@ public final class DependencyGraphBuilder {
 
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
-  /** Maven Repositories to use when resolving dependencies. */
+  /** Maven repositories to use when resolving dependencies. */
   private final ImmutableList<RemoteRepository> repositories;
   private Path localRepository;
 
@@ -87,7 +88,7 @@ public final class DependencyGraphBuilder {
   }
 
   /**
-   * @param mavenRepositoryUrls Maven repository URLs to search for dependencies
+   * @param mavenRepositoryUrls remote Maven repositories to search for dependencies
    * @throws IllegalArgumentException if a URL is malformed or does not have an allowed scheme
    */
   public DependencyGraphBuilder(Iterable<String> mavenRepositoryUrls) {
@@ -102,6 +103,7 @@ public final class DependencyGraphBuilder {
   /**
    * Enable temporary repositories for tests.
    */
+  @VisibleForTesting
   void setLocalRepository(Path localRepository) {
     this.localRepository = localRepository;
   }
@@ -154,9 +156,8 @@ public final class DependencyGraphBuilder {
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
-   * versions, and dependencies with 'provided' scope.
-   * In the event of I/O errors, missing artifacts, and other problems, it can
-   * return an incomplete graph.
+   * versions, and provided and optional dependencies. In the event of I/O errors, missing
+   * artifacts, and other problems, it can return an incomplete graph.
    *
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
@@ -193,11 +194,10 @@ public final class DependencyGraphBuilder {
       node = result.getRoot();
       for (ArtifactResult artifactResult : result.getArtifactResults()) {
         Artifact resolvedArtifact = artifactResult.getArtifact();
-        if (resolvedArtifact != null) {
-          continue;
+        if (resolvedArtifact == null) {
+          Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
+          artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
         }
-        Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
-        artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
       }
     }
 

@@ -123,10 +123,7 @@ public final class Bom {
     List<Artifact> managedDependencies = new ArrayList<>();
     for (Dependency dependency : resolved.getManagedDependencies()) {
       Artifact managed = dependency.getArtifact();
-      if (shouldSkipBomMember(managed)) {
-        continue;
-      }
-      if (!managedDependencies.contains(managed)) {
+      if (!shouldSkipBomMember(managed) && !managedDependencies.contains(managed)) {
         managedDependencies.add(managed);
       }
     }
