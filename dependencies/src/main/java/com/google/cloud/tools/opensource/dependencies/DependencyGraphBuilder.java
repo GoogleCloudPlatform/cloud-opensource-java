@@ -202,6 +202,8 @@ public final class DependencyGraphBuilder {
           Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
           if (checkedArtifact.add(requestedArtifact)) {
             artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
+          } else {
+            System.out.println('s');
           }
         }
       }
@@ -218,6 +220,7 @@ public final class DependencyGraphBuilder {
   public static UnresolvableArtifactProblem createUnresolvableArtifactProblem(
       DependencyNode dependencyGraph, Artifact artifact) {
     ImmutableList<List<DependencyNode>> paths = findArtifactPaths(dependencyGraph, artifact);
+    paths.forEach(p ->     System.out.println("Paths to unresolved artifact: " + p));
     if (paths.isEmpty()) {
       // On certain conditions, Maven throws ArtifactDescriptorException even when the
       // (transformed) dependency dependencyGraph does not contain the problematic artifact any
