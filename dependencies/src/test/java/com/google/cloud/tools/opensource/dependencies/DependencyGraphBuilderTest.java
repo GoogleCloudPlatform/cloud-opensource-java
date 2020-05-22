@@ -305,4 +305,20 @@ public class DependencyGraphBuilderTest {
     assertNull(paths.get(1).get(0));
     assertEquals("com.google.api:gax:1.57.0", Artifacts.toCoordinates(paths.get(1).getLeaf()));
   }
+
+  @Test
+  public void testBuildFullDependencyGraph_avoidDuplicateMissingArtifact() {
+    DependencyGraphResult dependencyGraphResult = dependencyGraphBuilder.buildFullDependencyGraph(
+        ImmutableList.of(new DefaultArtifact(
+            "commons-vfs:commons-vfs:jar:1.0"),
+            new DefaultArtifact("cglib:cglib-nodep:jar:2.2"),
+            new DefaultArtifact("com.thoughtworks.xstream:xstream:jar:1.4.10"),
+            new DefaultArtifact("org.sonatype.sisu:sisu-guice:jar:3.1.0"))
+    );
+    ImmutableList<UnresolvableArtifactProblem> artifactProblems = dependencyGraphResult
+        .getArtifactProblems();
+
+    ImmutableList<Artifact> coordinates = artifactProblems.stream().map(ArtifactProblem::getArtifact).collect(ImmutableList.toImmutableList());
+    Truth.assertThat(coordinates).containsNoDuplicates();
+  }
 }
