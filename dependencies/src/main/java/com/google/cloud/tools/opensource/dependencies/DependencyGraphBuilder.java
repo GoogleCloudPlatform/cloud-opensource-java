@@ -200,9 +200,9 @@ public final class DependencyGraphBuilder {
         Artifact resolvedArtifact = artifactResult.getArtifact();
         if (resolvedArtifact == null) {
           Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
-          artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
           if (checkedArtifact.add(requestedArtifact)) {
-          }
+            artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
+          } 
         }
       }
     }
