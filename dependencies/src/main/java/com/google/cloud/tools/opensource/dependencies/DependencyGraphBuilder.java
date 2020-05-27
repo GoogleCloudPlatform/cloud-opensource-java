@@ -25,8 +25,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
@@ -192,11 +194,16 @@ public final class DependencyGraphBuilder {
     } catch (DependencyResolutionException ex) {
       DependencyResult result = ex.getResult();
       node = result.getRoot();
+
+      Set<Artifact> checkedArtifacts = new HashSet<>();
       for (ArtifactResult artifactResult : result.getArtifactResults()) {
         Artifact resolvedArtifact = artifactResult.getArtifact();
+
         if (resolvedArtifact == null) {
           Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
-          artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
+          if (checkedArtifacts.add(requestedArtifact)) {
+            artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
+          }
         }
       }
     }
