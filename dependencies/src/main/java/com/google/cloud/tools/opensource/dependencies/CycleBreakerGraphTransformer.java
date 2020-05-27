@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.collect.ImmutableList;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Set;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -33,6 +34,8 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
 
+  IdentityHashMap<DependencyNode, Boolean> visited = new IdentityHashMap<>();
+
   @Override
   public DependencyNode transformGraph(
       DependencyNode dependencyNode, DependencyGraphTransformationContext context)
@@ -42,13 +45,18 @@ final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
     return dependencyNode;
   }
 
-  private static void removeCycle(
+  private void removeCycle(
       DependencyNode parent, DependencyNode node, Set<Artifact> ancestors) {
+
     Artifact artifact = node.getArtifact();
 
     if (ancestors.contains(artifact)) { // Set (rather than List) gives O(1) lookup here
       // parent is not null when ancestors is not empty
       removeChildFromParent(node, parent);
+      return;
+    }
+
+    if (visited.put(node, true) != null) {
       return;
     }
 
