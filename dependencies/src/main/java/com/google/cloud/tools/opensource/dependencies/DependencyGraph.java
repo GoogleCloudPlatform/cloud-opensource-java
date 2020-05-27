@@ -25,7 +25,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import java.util.stream.Collectors;
 import org.eclipse.aether.artifact.Artifact;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -98,6 +98,13 @@ public class DependencyGraph {
    */
   public List<DependencyPath> list() {
     return new ArrayList<>(graph);
+  }
+  
+  /**
+   * @return a mutable copy of the artifacts in this graph in breadth first order
+   */
+  public List<Artifact> getArtifacts() {
+    return graph.stream().map(dependency -> dependency.getLeaf()).collect(Collectors.toList());
   }
 
   /**

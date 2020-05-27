@@ -336,8 +336,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         ImmutableListMultimap.builder();
     ImmutableList.Builder<UnresolvableArtifactProblem> problems = ImmutableList.builder();
     for (DependencyPath path : dependencyGraph.list()) {
+      // TODO unresolved artifacts should be stored as part of the 
+      // DependencyGraph or DependencyGraphResult
       Artifact artifact = path.getLeaf();
-
       if (unresolvedArtifacts.contains(artifact)) {
         problems.add(new UnresolvableArtifactProblem(artifact));
       } else {

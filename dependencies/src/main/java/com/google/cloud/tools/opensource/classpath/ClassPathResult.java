@@ -34,7 +34,7 @@ public final class ClassPathResult {
   private final ImmutableList<ClassPathEntry> classPath;
 
   /**
-   * An ordered map from class path elements to one or more Maven dependency paths.
+   * An ordered map from class path entries to one or more Maven dependency paths.
    *
    * <p>The keys of the returned map represent Maven artifacts in the resolved class path,
    * including transitive dependencies. The return value of {@link LinkedListMultimap#keySet()}
@@ -43,10 +43,13 @@ public final class ClassPathResult {
    * <p>The values of the returned map for a key (class path entry) represent the different Maven
    * dependency paths from {@code artifacts} to the Maven artifact.
    */
+  // TODO rather than a multimap this should be a DependencyGraph or a DependencyGraphResult to
+  // support alternate representations
   private final ImmutableListMultimap<ClassPathEntry, DependencyPath> dependencyPaths;
 
   private final ImmutableList<UnresolvableArtifactProblem> artifactProblems;
 
+  
   public ClassPathResult(
       ListMultimap<ClassPathEntry, DependencyPath> dependencyPaths,
       Iterable<UnresolvableArtifactProblem> artifactProblems) {
