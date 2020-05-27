@@ -42,7 +42,6 @@ import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
-import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
 
 /**
  * This class builds dependency graphs for Maven artifacts.
@@ -234,7 +233,7 @@ public final class DependencyGraphBuilder {
             node.getArtifact() != null // artifact is null at a root dummy node.
                 && Artifacts.toCoordinates(node.getArtifact()).equals(coordinates)
                 && visited.put(node, true) == null;
-    PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(filter);
+    UniquePathRecordingDependencyVisitor visitor = new UniquePathRecordingDependencyVisitor(filter);
     root.accept(visitor);
     return ImmutableList.copyOf(visitor.getPaths());
   }
