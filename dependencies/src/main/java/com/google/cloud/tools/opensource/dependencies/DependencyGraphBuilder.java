@@ -27,8 +27,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.graph.Traverser;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
@@ -197,12 +199,15 @@ public final class DependencyGraphBuilder {
       System.out.println("Node count in the graph: "
       + countNodes(node));
 
+      Set<Artifact> checked = new HashSet<>();
       for (ArtifactResult artifactResult : result.getArtifactResults()) {
         Artifact resolvedArtifact = artifactResult.getArtifact();
         if (resolvedArtifact == null) {
           Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
-          System.out.println("Recording unresolved artifactProblem for " + requestedArtifact);
-          artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
+          if (checked.add(requestedArtifact)) {
+            System.out.println("Recording unresolved artifactProblem for " + requestedArtifact);
+            artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
+          }
         }
       }
     }
