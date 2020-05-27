@@ -23,6 +23,8 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.graph.Traverser;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.List;
@@ -191,10 +193,15 @@ public final class DependencyGraphBuilder {
     } catch (DependencyResolutionException ex) {
       DependencyResult result = ex.getResult();
       node = result.getRoot();
+
+      System.out.println("Node count in the graph: "
+      + countNodes(node));
+
       for (ArtifactResult artifactResult : result.getArtifactResults()) {
         Artifact resolvedArtifact = artifactResult.getArtifact();
         if (resolvedArtifact == null) {
           Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
+          System.out.println("Recording unresolved artifactProblem for " + requestedArtifact);
           artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
         }
       }
@@ -202,6 +209,14 @@ public final class DependencyGraphBuilder {
 
     DependencyGraph graph = levelOrder(node);
     return new DependencyGraphResult(graph, artifactProblems.build());
+  }
+
+  private static int countNodes(DependencyNode node) {
+    Traverser<DependencyNode> traverser = Traverser.forGraph(DependencyNode::getChildren);
+
+    Iterable<DependencyNode> nodes = traverser.breadthFirst(node);
+    int c = Iterables.size(nodes);
+    return c;
   }
 
   /**
