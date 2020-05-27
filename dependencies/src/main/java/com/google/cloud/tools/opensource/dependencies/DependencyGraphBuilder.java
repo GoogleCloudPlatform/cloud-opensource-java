@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Queue;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -227,12 +226,10 @@ public final class DependencyGraphBuilder {
       DependencyNode root, Artifact artifact) {
     String coordinates = Artifacts.toCoordinates(artifact);
 
-    IdentityHashMap<DependencyNode, Boolean> visited = new IdentityHashMap<>();
     DependencyFilter filter =
         (node, parents) ->
             node.getArtifact() != null // artifact is null at a root dummy node.
-                && Artifacts.toCoordinates(node.getArtifact()).equals(coordinates)
-                && visited.put(node, true) == null;
+                && Artifacts.toCoordinates(node.getArtifact()).equals(coordinates);
     UniquePathRecordingDependencyVisitor visitor = new UniquePathRecordingDependencyVisitor(filter);
     root.accept(visitor);
     return ImmutableList.copyOf(visitor.getPaths());
