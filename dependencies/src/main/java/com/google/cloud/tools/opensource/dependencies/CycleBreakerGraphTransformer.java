@@ -16,9 +16,9 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.Set;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -34,7 +34,8 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
 
-  private IdentityHashMap<DependencyNode, Boolean> visited = new IdentityHashMap<>();
+  // DependencyNode inherits Object's equality. No two instances are equal to each other.
+  private Set<DependencyNode> visitedNodes = new HashSet<>();
 
   @Override
   public DependencyNode transformGraph(
@@ -45,8 +46,7 @@ final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
     return dependencyNode;
   }
 
-  private void removeCycle(
-      DependencyNode parent, DependencyNode node, Set<Artifact> ancestors) {
+  private void removeCycle(DependencyNode parent, DependencyNode node, Set<Artifact> ancestors) {
     Artifact artifact = node.getArtifact();
 
     if (ancestors.contains(artifact)) { // Set (rather than List) gives O(1) lookup here
@@ -55,16 +55,19 @@ final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
       return;
     }
 
-    if (visited.put(node, true) != null) {
-      // No need to check the children of this node because we visited this node already
-      return;
+    if (shouldCheckChildren(node)) {
+      ancestors.add(artifact);
+      for (DependencyNode child : node.getChildren()) {
+        removeCycle(node, child, ancestors);
+      }
+      ancestors.remove(artifact);
     }
+  }
 
-    ancestors.add(artifact);
-    for (DependencyNode child : node.getChildren()) {
-      removeCycle(node, child, ancestors);
-    }
-    ancestors.remove(artifact);
+  /** Returns true if {@code node} is not visited yet and marks the node as visited. */
+  @VisibleForTesting
+  boolean shouldCheckChildren(DependencyNode node) {
+    return visitedNodes.add(node);
   }
 
   private static void removeChildFromParent(DependencyNode child, DependencyNode parent) {
