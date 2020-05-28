@@ -69,8 +69,8 @@ public class CycleBreakerGraphTransformerTest {
     DependencyNode node1 = new DefaultDependencyNode(artifact);
     DependencyNode node2 = new DefaultDependencyNode(artifact);
 
-    assertTrue(transformer.shouldCheckChildren(node1));
-    assertFalse(transformer.shouldCheckChildren(node1));
-    assertTrue(transformer.shouldCheckChildren(node2));
+    assertTrue(transformer.shouldVisitChildren(node1));
+    assertFalse(transformer.shouldVisitChildren(node1));
+    assertTrue(transformer.shouldVisitChildren(node2));
   }
 }

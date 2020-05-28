@@ -55,7 +55,7 @@ final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
       return;
     }
 
-    if (shouldCheckChildren(node)) {
+    if (shouldVisitChildren(node)) {
       ancestors.add(artifact);
       for (DependencyNode child : node.getChildren()) {
         removeCycle(node, child, ancestors);
@@ -66,7 +66,7 @@ final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
 
   /** Returns true if {@code node} is not visited yet and marks the node as visited. */
   @VisibleForTesting
-  boolean shouldCheckChildren(DependencyNode node) {
+  boolean shouldVisitChildren(DependencyNode node) {
     return visitedNodes.add(node);
   }
 
