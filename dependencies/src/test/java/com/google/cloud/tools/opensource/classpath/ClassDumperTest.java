@@ -384,7 +384,7 @@ public class ClassDumperTest {
     String innerClass = "org.apache.curator.shaded.com.google.common.reflect.TypeToken$Bounds";
 
     // This should not raise an exception
-    assertFalse(classDumper.catchesLinkageError(innerClass));
+    assertFalse(classDumper.catchesLinkageErrorOnClass(innerClass));
   }
 
   @Test
@@ -410,7 +410,7 @@ public class ClassDumperTest {
     ClassDumper classDumper = ClassDumper.create(classPath);
 
     // This should not raise NullPointerException
-    boolean result = classDumper.catchesLinkageError("javax.mail.internet.MailDateFormat");
+    boolean result = classDumper.catchesLinkageErrorOnClass("javax.mail.internet.MailDateFormat");
     assertFalse(result);
   }
 }
