@@ -30,6 +30,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.bcel.Const;
@@ -458,18 +459,28 @@ class ClassDumper {
     return constantPoolIndicesForTarget.build();
   }
 
-  private static final ImmutableSet<String> ERRORS_CAUGHT_IN_SOURCE =
+  private static final ImmutableSet<String> LINKAGE_ERRORS_CAUGHT_IN_SOURCE =
       ImmutableSet.of(
           LinkageError.class.getName(),
           NoClassDefFoundError.class.getName(),
-          NoSuchMethodError.class.getName(),
           ClassNotFoundException.class.getName());
 
+  private static final ImmutableSet<String> NO_SUCH_METHOD_ERROR_CAUGHT_IN_SOURCE =
+      ImmutableSet.of(LinkageError.class.getName(), NoSuchMethodError.class.getName());
+
+  boolean catchesLinkageErrorOnClass(String sourceClassName) {
+    return catchesLinkageError(sourceClassName, LINKAGE_ERRORS_CAUGHT_IN_SOURCE);
+  }
+
+  boolean catchesLinkageErrorOnMethod(String sourceClassName) {
+    return catchesLinkageError(sourceClassName, NO_SUCH_METHOD_ERROR_CAUGHT_IN_SOURCE);
+  }
+
   /**
-   * Returns true if {@code sourceClassName} has a method that has an exception handler for {@link
-   * NoClassDefFoundError}, {@link NoSuchMethodError} or {@link LinkageError}.
+   * Returns true if {@code sourceClassName} has a method that has an exception handler for {@code
+   * errorNames}.
    */
-  boolean catchesLinkageError(String sourceClassName) {
+  private boolean catchesLinkageError(String sourceClassName, Set<String> errorNames) {
     try {
       JavaClass sourceJavaClass = loadJavaClass(sourceClassName);
       ClassGen classGen = new ClassGen(sourceJavaClass);
@@ -485,7 +496,7 @@ class ClassDumper {
             ObjectType catchType = codeExceptionGen.getCatchType();
             if (catchType != null) {
               String caughtClassName = catchType.getClassName();
-              if (ERRORS_CAUGHT_IN_SOURCE.contains(caughtClassName)) {
+              if (errorNames.contains(caughtClassName)) {
                 // The source class catches an error and thus will not cause a runtime error.
                 return true;
               }
@@ -497,7 +508,7 @@ class ClassDumper {
       String outerClassName = outerClassName(sourceJavaClass);
       if (outerClassName != null) {
         try {
-          return catchesLinkageError(outerClassName);
+          return catchesLinkageError(outerClassName, errorNames);
         } catch (ClassFormatException ex) {
           // When the outer class of an inner class does not exist in the class path, we cannot
           // say that the classes catch linkage errors.
