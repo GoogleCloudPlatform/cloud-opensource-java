@@ -1100,4 +1100,20 @@ public class LinkageCheckerTest {
           }
         });
   }
+
+  @Test
+  public void testFindSymbolProblems_grpcAndGuava() throws IOException {
+    // This pair of the library generates NoSuchMethodError at runtime.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/example-problems/no-such-method-error-signature-mismatch
+    ImmutableList<ClassPathEntry> jars =
+        resolvePaths("io.grpc:grpc-core:1.17.0", "com.google.guava:guava:20.0");
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars);
+    ImmutableSetMultimap<SymbolProblem, ClassFile> problems = linkageChecker.findSymbolProblems();
+
+    Truth.assertThat(problems.values())
+        .comparingElementsUsing(
+            Correspondence.transforming(ClassFile::getBinaryName, "has class binary name"))
+        .contains("io.grpc.internal.DnsNameResolver");
+  }
 }
