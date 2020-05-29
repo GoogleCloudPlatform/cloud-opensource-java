@@ -294,7 +294,7 @@ public class LinkageChecker {
       }
 
       // Slf4J catches LinkageError to check the existence of other classes
-      if (classDumper.catchesLinkageError(sourceClassName)) {
+      if (classDumper.catchesLinkageErrorOnMethod(sourceClassName)) {
         return Optional.empty();
       }
 
@@ -302,7 +302,7 @@ public class LinkageChecker {
       return Optional.of(
           new SymbolProblem(symbol, ErrorType.SYMBOL_NOT_FOUND, containingClassFile));
     } catch (ClassNotFoundException ex) {
-      if (classDumper.catchesLinkageError(sourceClassName)) {
+      if (classDumper.catchesLinkageErrorOnClass(sourceClassName)) {
         return Optional.empty();
       }
       ClassSymbol classSymbol = new ClassSymbol(symbol.getClassBinaryName());
@@ -401,7 +401,7 @@ public class LinkageChecker {
       return Optional.of(
           new SymbolProblem(symbol, ErrorType.SYMBOL_NOT_FOUND, containingClassFile));
     } catch (ClassNotFoundException ex) {
-      if (classDumper.catchesLinkageError(sourceClassName)) {
+      if (classDumper.catchesLinkageErrorOnClass(sourceClassName)) {
         return Optional.empty();
       }
       ClassSymbol classSymbol = new ClassSymbol(symbol.getClassBinaryName());
@@ -483,7 +483,7 @@ public class LinkageChecker {
       return Optional.empty();
     } catch (ClassNotFoundException ex) {
       if (classDumper.isUnusedClassSymbolReference(sourceClassName, symbol)
-          || classDumper.catchesLinkageError(sourceClassName)) {
+          || classDumper.catchesLinkageErrorOnClass(sourceClassName)) {
         // The class reference is unused in the source
         return Optional.empty();
       }
