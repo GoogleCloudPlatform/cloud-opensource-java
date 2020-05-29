@@ -18,7 +18,9 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Set;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -34,8 +36,8 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
 
-  // DependencyNode inherits Object's equality. No two instances are equal to each other.
-  private Set<DependencyNode> visitedNodes = new HashSet<>();
+  private final Set<DependencyNode> visitedNodes =
+      Collections.newSetFromMap(new IdentityHashMap<>());
 
   @Override
   public DependencyNode transformGraph(
