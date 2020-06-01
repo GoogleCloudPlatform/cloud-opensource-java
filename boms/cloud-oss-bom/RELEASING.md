@@ -12,7 +12,16 @@ $ git pull
 $ ../../scripts/prepare_release.sh bom <release version> [<post-release-version>]
 ```
 
-This creates a PR for the release Get it approved.
+You might see this message:
+
+```
+Notice: authentication required
+Press Enter to open github.com in your browser...
+```
+
+Press enter to open a web browser from which you can grant the script permission to create a PR for you on Github.
+
+This creates a PR for the release. Get it approved.
 
 Continue to Rapid workflow: [Cloud Tools for Java Development Practices: Releasing](
 https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md#run-the-rapid-workflow)
