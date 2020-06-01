@@ -57,6 +57,7 @@ if [[ $(git status -uno --porcelain) ]]; then
   Die 'There are uncommitted changes.'
 fi
 
+
 # Checks out a new branch for this version release (eg. 1.5.7).
 git checkout -b ${VERSION}-${SUFFIX}
 
@@ -79,9 +80,12 @@ mvn versions:set versions:commit -DnewVersion=${NEXT_SNAPSHOT} -DgenerateBackupP
 git commit -am "${NEXT_SNAPSHOT}"
 
 # Pushes the tag and release branch to Github.
-git push origin v${VERSION}-${SUFFIX}
-git push --set-upstream origin ${VERSION}-${SUFFIX}
+
+gh pr create -t "${VERSION}-${SUFFIX}" -b "${VERSION}-${SUFFIX}"
+
+# git push origin v${VERSION}-${SUFFIX}
+# git push --set-upstream origin ${VERSION}-${SUFFIX}
 
 # File a PR on Github for the new branch. Have someone LGTM it, which gives you permission to continue.
-EchoGreen 'File a PR for the new release branch:'
-echo https://github.com/GoogleCloudPlatform/cloud-opensource-java/compare/${VERSION}-${SUFFIX}
+# EchoGreen 'File a PR for the new release branch:'
+# echo https://github.com/GoogleCloudPlatform/cloud-opensource-java/compare/${VERSION}-${SUFFIX}

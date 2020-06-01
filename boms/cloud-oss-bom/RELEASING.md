@@ -1,5 +1,8 @@
 # Cloud Libraries BOM Release
 
+Install the [`gh`](https://github.com/cli/cli)
+tool if you not previously done so.
+
 Run `prepare_release.sh` with `bom` argument in `boms/cloud-oss-bom` directory:
 
 ```
@@ -9,7 +12,7 @@ $ git pull
 $ ../../scripts/prepare_release.sh bom <release version> [<post-release-version>]
 ```
 
-Create a PR for the release, and get it approved.
+This creates a PR for the release Get it approved.
 
 Continue to Rapid workflow: [Cloud Tools for Java Development Practices: Releasing](
 https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md#run-the-rapid-workflow)
