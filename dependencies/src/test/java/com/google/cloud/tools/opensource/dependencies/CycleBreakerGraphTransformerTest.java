@@ -16,12 +16,18 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
@@ -54,5 +60,17 @@ public class CycleBreakerGraphTransformerTest {
 
     // This should not raise StackOverflowError
     system.resolveDependencies(session, request);
+  }
+
+  @Test
+  public void testShouldVisitChildren() {
+    CycleBreakerGraphTransformer transformer = new CycleBreakerGraphTransformer();
+    Artifact artifact = new DefaultArtifact("g:a:1");
+    DependencyNode node1 = new DefaultDependencyNode(artifact);
+    DependencyNode node2 = new DefaultDependencyNode(artifact);
+
+    assertTrue(transformer.shouldVisitChildren(node1));
+    assertFalse(transformer.shouldVisitChildren(node1));
+    assertTrue(transformer.shouldVisitChildren(node2));
   }
 }
