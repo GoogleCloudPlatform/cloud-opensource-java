@@ -79,7 +79,7 @@ mvn versions:set versions:commit -DnewVersion=${NEXT_SNAPSHOT} -DgenerateBackupP
 # Commits this next snapshot version.
 git commit -am "${NEXT_SNAPSHOT}"
 
-# Push the tag and release branch to Github.
+# Pushes the tag and release branch to Github.
 git push origin v${VERSION}-${SUFFIX}
 git push --set-upstream origin ${VERSION}-${SUFFIX}
 
@@ -89,8 +89,8 @@ gh pr create -t "Release ${VERSION}-${SUFFIX}" -b "Release ${VERSION}-${SUFFIX}"
 # File a PR on Github for the new branch. Have someone LGTM it, which gives you permission to continue.
 EchoGreen 'Ask someone to approve this PR:'
 echo https://github.com/GoogleCloudPlatform/cloud-opensource-java/compare/${VERSION}-${SUFFIX}
-EchoGreen 'After the PR is approved, you can release the library.'
 EchoGreen 'Start the Rapid build now:'
 EchoGreen 'https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md#run-the-rapid-workflow'
+EchoGreen 'After the PR is approved and the Rapid build succeeds, you can release the library in OSSRH.'
 
 
