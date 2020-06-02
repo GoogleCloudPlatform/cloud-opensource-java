@@ -16,11 +16,11 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-
+import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -56,13 +56,15 @@ final class LinkageCheckerArguments {
   private static final HelpFormatter helpFormatter = new HelpFormatter();
 
   private final CommandLine commandLine;
-  private ImmutableList<Artifact> cachedArtifacts;
   private final ImmutableList<String> extraMavenRepositoryUrls;
   private final boolean addMavenCentral;
   private final boolean reportOnlyReachable;
+  private final boolean help;
 
+  private ImmutableList<Artifact> cachedArtifacts;
+  
   private LinkageCheckerArguments(CommandLine commandLine) {
-    this.commandLine = checkNotNull(commandLine);
+    this.commandLine = commandLine;
     this.extraMavenRepositoryUrls =
         commandLine.hasOption("m")
             ? ImmutableList.copyOf(commandLine.getOptionValues("m"))
@@ -72,7 +74,8 @@ final class LinkageCheckerArguments {
     extraMavenRepositoryUrls.forEach(RepositoryUtility::mavenRepositoryFromUrl);
 
     this.addMavenCentral = !commandLine.hasOption("nm");
-    this.reportOnlyReachable = commandLine.hasOption("-r");
+    this.reportOnlyReachable = commandLine.hasOption("r");
+    this.help = commandLine.hasOption("h");
   }
 
   static LinkageCheckerArguments readCommandLine(String... arguments) throws ParseException {
@@ -81,12 +84,10 @@ final class LinkageCheckerArguments {
     CommandLineParser parser = new DefaultParser();
 
     try {
-      return new LinkageCheckerArguments(parser.parse(options, arguments));
+      CommandLine commandLine = parser.parse(options, arguments);
+      return new LinkageCheckerArguments(commandLine);
     } catch (IllegalArgumentException ex) {
-      throw new ParseException("Invalid URL syntax in Maven repository URL");
-    } catch (ParseException ex) {
-      helpFormatter.printHelp("LinkageChecker", options);
-      throw ex;
+      throw new ParseException("Invalid URL syntax in Maven repository URL" + ex.getMessage());
     }
   }
 
@@ -94,13 +95,12 @@ final class LinkageCheckerArguments {
     Options options = new Options();
 
     OptionGroup inputGroup = new OptionGroup();
-    inputGroup.setRequired(true);
 
     Option bomOption =
         Option.builder("b")
             .longOpt("bom")
             .hasArg()
-            .desc("BOM to generate a class path, specified by its Maven coordinates")
+            .desc("Maven coordinates for a BOM")
             .build();
     inputGroup.addOption(bomOption);
 
@@ -110,7 +110,7 @@ final class LinkageCheckerArguments {
             .hasArgs()
             .valueSeparator(',')
             .desc(
-                "Maven coordinates for Maven artifacts (separated by ',') to generate a class path")
+                "Maven coordinates for artifacts (separated by ',')")
             .build();
     inputGroup.addOption(artifactOption);
 
@@ -119,7 +119,7 @@ final class LinkageCheckerArguments {
             .longOpt("jars")
             .hasArgs()
             .valueSeparator(',')
-            .desc("Jar files (separated by ',') to generate a class path")
+            .desc("Jar files (separated by ',')")
             .build();
     inputGroup.addOption(jarOption);
 
@@ -155,11 +155,38 @@ final class LinkageCheckerArguments {
             .build();
     options.addOption(reportOnlyReachable);
 
+    Option help =
+        Option.builder("h")
+            .longOpt("help")
+            .hasArg(false)
+            .desc("Show usage instructions")
+            .build();
+    options.addOption(help);
+
+    Option exclusionFile =
+        Option.builder("e")
+            .longOpt("exclusion-file")
+            .hasArg(true)
+            .desc("Exclusion file to filter out linkage errors based on conditions")
+            .build();
+    options.addOption(exclusionFile);
+
+    Option writeAsExclusionFile =
+        Option.builder("o")
+            .longOpt("output-exclusion-file")
+            .hasArg(true)
+            .desc("Output linkage errors as exclusion rules into the specified file")
+            .build();
+    options.addOption(writeAsExclusionFile);
+
     options.addOptionGroup(inputGroup);
     return options;
   }
 
-  /** Returns a list of artifacts specified in the option of BOM or coordinates list. */
+  /**
+   * Returns a list of artifacts specified in the option of BOM or coordinates list. If the argument
+   * is not specified, returns an empty list.
+   */
   ImmutableList<Artifact> getArtifacts() throws RepositoryException {
     if (cachedArtifacts != null) {
       return cachedArtifacts;
@@ -169,7 +196,7 @@ final class LinkageCheckerArguments {
       String bomCoordinates = commandLine.getOptionValue("b");
 
       return cachedArtifacts =
-          RepositoryUtility.readBom(bomCoordinates, getMavenRepositoryUrls())
+          Bom.readBom(bomCoordinates, getMavenRepositoryUrls())
               .getManagedDependencies();
     } else if (commandLine.hasOption("a")) {
       // option 'a'
@@ -179,18 +206,24 @@ final class LinkageCheckerArguments {
               .map(DefaultArtifact::new)
               .collect(toImmutableList());
     } else {
-      throw new IllegalArgumentException(
-          "The arguments must have option 'a' or 'b' to list Maven artifacts");
+      return ImmutableList.of();
     }
   }
 
-  /** Returns a list of absolute paths to files specified in the JAR file option. */
-  ImmutableList<Path> getJarFiles() {
+  /**
+   * Returns class path entries for the absolute paths of the files specified in the JAR file
+   * option.
+   * 
+   * @throws IOException if a jar file could not be read
+   */
+  ImmutableList<ClassPathEntry> getJarFiles() throws IOException {
     if (commandLine.hasOption("j")) {
       String[] jarFiles = commandLine.getOptionValues("j");
-      return Arrays.stream(jarFiles)
-          .map(name -> Paths.get(name).toAbsolutePath())
-          .collect(toImmutableList());
+      ImmutableList.Builder<ClassPathEntry> builder = ImmutableList.builder();
+      for ( String file : jarFiles) {
+        builder.add(new ClassPathEntry(Paths.get(file).toAbsolutePath()));
+      }
+      return builder.build();
     } else {
       throw new IllegalArgumentException("The arguments must have option 'j' to list JAR files");
     }
@@ -205,11 +238,42 @@ final class LinkageCheckerArguments {
     return repositories.build();
   }
 
-  boolean getAddMavenCentral() {
-    return addMavenCentral;
-  }
-
   boolean getReportOnlyReachable() {
     return reportOnlyReachable;
+  }
+
+  boolean needsHelp() {
+    return this.help;
+  }
+
+  void printHelp() {
+    helpFormatter.printHelp(
+        "java com.google.cloud.tools.opensource.classpath.LinkageChecker", options);
+  }
+
+  boolean hasInput() {
+    return commandLine.hasOption("b") || commandLine.hasOption("a") || commandLine.hasOption("j");
+  }
+
+  /**
+   * Returns the path to exclusion file specified in the argument. If the argument is not specified,
+   * {@code null}.
+   */
+  Path getInputExclusionFile() {
+    if (commandLine.hasOption("e")) {
+      return Paths.get(commandLine.getOptionValue("e"));
+    }
+    return null;
+  }
+
+  /**
+   * Returns the path to write linkage errors as exclusion file. If the argument is not specified,
+   * {@code null}.
+   */
+  Path getOutputExclusionFile() {
+    if (commandLine.hasOption("o")) {
+      return Paths.get(commandLine.getOptionValue("o"));
+    }
+    return null;
   }
 }

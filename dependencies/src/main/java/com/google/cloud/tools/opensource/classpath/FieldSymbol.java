@@ -53,16 +53,14 @@ final class FieldSymbol extends Symbol {
     if (other == null || getClass() != other.getClass()) {
       return false;
     }
-    if (!super.equals(other)) {
-      return false;
-    }
     FieldSymbol that = (FieldSymbol) other;
-    return name.equals(that.name) && descriptor.equals(that.descriptor);
+    return name.equals(that.name) && descriptor.equals(that.descriptor)
+        && this.getClassBinaryName().equals(that.getClassBinaryName());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), name, descriptor);
+    return Objects.hash(this.getClassBinaryName(), name, descriptor);
   }
 
   @Override

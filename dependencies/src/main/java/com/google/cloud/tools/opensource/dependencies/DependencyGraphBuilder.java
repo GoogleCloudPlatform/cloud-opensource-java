@@ -20,25 +20,29 @@ import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.C
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.mavenRepositoryFromUrl;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
-import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
 
 /**
  * This class builds dependency graphs for Maven artifacts.
@@ -47,17 +51,17 @@ import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
  * has the following attributes:
  *
  * <ul>
- *   <li>It contains at most one node for the same group ID and artifact ID. (<a
+ *   <li>It contains at most one node with the same group ID and artifact ID. (<a
  *       href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies">dependency
  *       mediation</a>)
  *   <li>The scope of a dependency affects the scope of its children's dependencies as per <a
  *       href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Scope">Maven:
  *       Dependency Scope</a>
- *   <li>It does not contain transitive provided-scope dependencies.
- *   <li>It does not contain transitive optional dependencies.
+ *   <li>It does not contain provided-scope dependencies of transitive dependencies.
+ *   <li>It does not contain optional dependencies of transitive dependencies.
  * </ul>
  *
- * <p>A full dependency graph is a dependency tree where each node's dependencies are fully resolved
+ * <p>A full dependency graph is a dependency tree where each node's dependencies are resolved
  * recursively. This graph has the following attributes:
  *
  * <ul>
@@ -72,8 +76,9 @@ public final class DependencyGraphBuilder {
 
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
-  /** Maven Repositories to use when resolving dependencies. */
+  /** Maven repositories to use when resolving dependencies. */
   private final ImmutableList<RemoteRepository> repositories;
+  private Path localRepository;
 
   static {
     OsProperties.detectOsProperties().forEach(System::setProperty);
@@ -84,7 +89,7 @@ public final class DependencyGraphBuilder {
   }
 
   /**
-   * @param mavenRepositoryUrls Maven repository URLs to search for dependencies
+   * @param mavenRepositoryUrls remote Maven repositories to search for dependencies
    * @throws IllegalArgumentException if a URL is malformed or does not have an allowed scheme
    */
   public DependencyGraphBuilder(Iterable<String> mavenRepositoryUrls) {
@@ -95,7 +100,15 @@ public final class DependencyGraphBuilder {
     }
     this.repositories = repositoryListBuilder.build();
   }
-
+  
+  /**
+   * Enable temporary repositories for tests.
+   */
+  @VisibleForTesting
+  void setLocalRepository(Path localRepository) {
+    this.localRepository = localRepository;
+  }
+  
   private DependencyNode resolveCompileTimeDependencies(
       List<DependencyNode> dependencyNodes, boolean fullDependencies)
       throws DependencyResolutionException {
@@ -113,10 +126,15 @@ public final class DependencyGraphBuilder {
     }
     ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
 
-    RepositorySystemSession session =
+    DefaultRepositorySystemSession session =
         fullDependencies
             ? RepositoryUtility.newSessionForFullDependency(system)
             : RepositoryUtility.newSession(system);
+            
+    if (localRepository != null) {
+      LocalRepository local = new LocalRepository(localRepository.toAbsolutePath().toString());
+      session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, local));
+    }
 
     CollectRequest collectRequest = new CollectRequest();
     if (dependencyList.size() == 1) {
@@ -139,7 +157,8 @@ public final class DependencyGraphBuilder {
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
-   * versions, and dependencies with 'provided' scope.
+   * versions, and provided and optional dependencies. In the event of I/O errors, missing
+   * artifacts, and other problems, it can return an incomplete graph.
    *
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
@@ -154,6 +173,9 @@ public final class DependencyGraphBuilder {
    * Builds the transitive dependency graph as seen by Maven. It does not include duplicates and
    * conflicting versions. That is, this resolves conflicting versions by picking the first version
    * seen. This is how Maven normally operates.
+   * 
+   * In the event of I/O errors, missing artifacts, and other problems, it can
+   * return an incomplete graph.
    */
   public DependencyGraphResult buildMavenDependencyGraph(Dependency dependency) {
     return buildDependencyGraph(
@@ -171,13 +193,17 @@ public final class DependencyGraphBuilder {
     } catch (DependencyResolutionException ex) {
       DependencyResult result = ex.getResult();
       node = result.getRoot();
+
+      Set<Artifact> checkedArtifacts = new HashSet<>();
       for (ArtifactResult artifactResult : result.getArtifactResults()) {
         Artifact resolvedArtifact = artifactResult.getArtifact();
-        if (resolvedArtifact != null) {
-          continue;
+
+        if (resolvedArtifact == null) {
+          Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
+          if (checkedArtifacts.add(requestedArtifact)) {
+            artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
+          }
         }
-        Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
-        artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
       }
     }
 
@@ -210,18 +236,20 @@ public final class DependencyGraphBuilder {
         (node, parents) ->
             node.getArtifact() != null // artifact is null at a root dummy node.
                 && Artifacts.toCoordinates(node.getArtifact()).equals(coordinates);
-    PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(filter);
+    UniquePathRecordingDependencyVisitor visitor = new UniquePathRecordingDependencyVisitor(filter);
     root.accept(visitor);
     return ImmutableList.copyOf(visitor.getPaths());
   }
 
   private static final class LevelOrderQueueItem {
     final DependencyNode dependencyNode;
-    final ArrayDeque<DependencyNode> parentNodes;
 
-    LevelOrderQueueItem(DependencyNode dependencyNode, ArrayDeque<DependencyNode> parentNodes) {
+    // Null for the first item
+    final DependencyPath parentPath;
+
+    LevelOrderQueueItem(DependencyNode dependencyNode, DependencyPath parentPath) {
       this.dependencyNode = dependencyNode;
-      this.parentNodes = parentNodes;
+      this.parentPath = parentPath;
     }
   }
 
@@ -234,7 +262,7 @@ public final class DependencyGraphBuilder {
   }
 
   /**
-   * Returns a dependency graph by traversing dependency tree in level-order (breadth-first search).
+   * Builds a dependency graph by traversing dependency tree in level-order (breadth-first search).
    *
    * <p>When {@code graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED, then
    * it resolves the dependency of the artifact of each node in the dependency tree; otherwise it
@@ -242,46 +270,51 @@ public final class DependencyGraphBuilder {
    *
    * @param firstNode node to start traversal
    */
-  private DependencyGraph levelOrder(DependencyNode firstNode) {
+  public static DependencyGraph levelOrder(DependencyNode firstNode) {
 
     DependencyGraph graph = new DependencyGraph();
 
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
-    queue.add(new LevelOrderQueueItem(firstNode, new ArrayDeque<>()));
+    queue.add(new LevelOrderQueueItem(firstNode, null));
 
     while (!queue.isEmpty()) {
       LevelOrderQueueItem item = queue.poll();
       DependencyNode dependencyNode = item.dependencyNode;
-      DependencyPath path = new DependencyPath();
-      ArrayDeque<DependencyNode> parentNodes = item.parentNodes;
-      parentNodes.forEach(
-          parentNode -> path.add(parentNode.getDependency()));
+
+      DependencyPath parentPath = item.parentPath;
       Artifact artifact = dependencyNode.getArtifact();
-      if (artifact != null) {
+      if (artifact != null && parentPath != null) {
         // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
         // set to null
 
-        // When there's a parent dependency node with the same groupId and artifactId as
+        // When there's an ancestor dependency node with the same groupId and artifactId as
         // the dependency, Maven will not pick up the dependency. For example, if there's a
         // dependency path "g1:a1:2.0 / ... / g1:a1:1.0" (the leftmost node as root), then Maven's
-        // dependency mediation always picks up g1:a1:2.0 over g1:a1:1.0.
+        // dependency mediation always picks g1:a1:2.0 over g1:a1:1.0.
+        
+        // TODO This comment doesn't seem right. That's true for the root,
+        // but not for non-root nodes. A node elsewhere in the tree could cause the 
+        // descendant to be selected. 
+        
         String groupIdAndArtifactId = Artifacts.makeKey(artifact);
-        boolean parentHasSameKey =
-            parentNodes.stream()
-                .map(node -> Artifacts.makeKey(node.getArtifact()))
+        boolean ancestorHasSameKey =
+            parentPath.getArtifacts().stream()
+                .map(Artifacts::makeKey)
                 .anyMatch(key -> key.equals(groupIdAndArtifactId));
-        if (parentHasSameKey) {
+        if (ancestorHasSameKey) {
           continue;
         }
-
-        path.add(dependencyNode.getDependency());
-        parentNodes.add(dependencyNode);
-        graph.addPath(path);
       }
-      
+
+      // parentPath is null for the first item
+      DependencyPath path =
+          parentPath == null
+              ? new DependencyPath(artifact)
+              : parentPath.append(dependencyNode.getDependency());
+      graph.addPath(path);
+
       for (DependencyNode child : dependencyNode.getChildren()) {
-        ArrayDeque<DependencyNode> clone = parentNodes.clone();
-        queue.add(new LevelOrderQueueItem(child, clone));
+        queue.add(new LevelOrderQueueItem(child, path));
       }
     }
 

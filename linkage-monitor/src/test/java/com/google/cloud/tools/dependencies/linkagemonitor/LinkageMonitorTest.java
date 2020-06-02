@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
+import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.cloud.tools.opensource.classpath.ErrorType;
@@ -41,6 +42,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Truth;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -50,6 +53,7 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.building.ModelBuildingException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
@@ -57,21 +61,39 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class LinkageMonitorTest {
+  
   private RepositorySystem system;
   private RepositorySystemSession session;
+  
+  private Artifact artifactB = new DefaultArtifact("foo:b:1.0.0")
+      .setFile(new File("foo/b-1.0.0.jar"));
+  private ClassPathEntry jarB = new ClassPathEntry(artifactB);
+
+  private SymbolProblem classNotFoundProblem =
+      new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
+  private SymbolProblem methodNotFoundProblem;
 
   @Before
-  public void setup() {
+  public void setup() throws IOException {
     system = RepositoryUtility.newRepositorySystem();
-
     session = RepositoryUtility.newSession(system);
+
+    methodNotFoundProblem =
+        new SymbolProblem(
+            new MethodSymbol(
+                "io.grpc.protobuf.ProtoUtils",
+                "marshaller",
+                "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
+                false),
+            ErrorType.SYMBOL_NOT_FOUND,
+            new ClassFile(jarB, "java.lang.Object"));
   }
 
   @Test
   public void testBomSnapshot()
       throws ModelBuildingException, ArtifactResolutionException, ArtifactDescriptorException {
 
-    Bom bom = RepositoryUtility.readBom("com.google.cloud:libraries-bom:1.2.0");
+    Bom bom = Bom.readBom("com.google.cloud:libraries-bom:1.2.0");
     Bom snapshotBom =
         LinkageMonitor.copyWithSnapshot(
             system,
@@ -95,23 +117,13 @@ public class LinkageMonitorTest {
         .inOrder();
   }
 
-  private final SymbolProblem classNotFoundProblem =
-      new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
-  private final SymbolProblem methodNotFoundProblem =
-      new SymbolProblem(
-          new MethodSymbol(
-              "io.grpc.protobuf.ProtoUtils",
-              "marshaller",
-              "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
-              false),
-          ErrorType.SYMBOL_NOT_FOUND,
-          new ClassFile(Paths.get("foo", "b-1.0.0.jar"), "java.lang.Object"));
-
   @Test
-  public void generateMessageForNewError() {
+  public void generateMessageForNewError() throws IOException {
     Set<SymbolProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
-    Path jarA = Paths.get("foo", "a-1.2.3.jar");
-    Path jarB = Paths.get("foo", "b-1.0.0.jar");
+    
+    Artifact artifactA = new DefaultArtifact("foo:a:1.2.3").setFile(new File("foo/a-1.2.3.jar"));
+    ClassPathEntry jarA = new ClassPathEntry(artifactA);
+    
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotProblems =
         ImmutableSetMultimap.of(
             classNotFoundProblem, // This is in baseline. It should not be printed
@@ -121,17 +133,12 @@ public class LinkageMonitorTest {
             methodNotFoundProblem,
             new ClassFile(jarA, "com.abc.BBB"));
 
-    DependencyPath pathToA = new DependencyPath();
-    pathToA.add(
-        new org.eclipse.aether.graph.Dependency(
-            new DefaultArtifact("foo:bar:1.0.0"), "provided", false));
-    pathToA.add(
-        new org.eclipse.aether.graph.Dependency(
-            new DefaultArtifact("foo:a:1.2.3"), "compile", true));
-    DependencyPath pathToB = new DependencyPath();
-    pathToB.add(
-        new org.eclipse.aether.graph.Dependency(
-            new DefaultArtifact("foo:b:1.2.3"), "compile", true));
+    DependencyPath pathToA =
+        new DependencyPath(new DefaultArtifact("foo:bar:1.0.0"))
+            .append(
+                new org.eclipse.aether.graph.Dependency(
+                    new DefaultArtifact("foo:a:1.2.3"), "compile", true));
+    DependencyPath pathToB = new DependencyPath(new DefaultArtifact("foo:b:1.0.0"));
 
     String message =
         LinkageMonitor.messageForNewErrors(
@@ -142,15 +149,15 @@ public class LinkageMonitorTest {
                 ImmutableList.of()));
     assertEquals(
         "Newly introduced problem:\n"
-            + "(b-1.0.0.jar) io.grpc.protobuf.ProtoUtils's method"
+            + "(foo:b:1.0.0) io.grpc.protobuf.ProtoUtils's method"
             + " marshaller(com.google.protobuf.Message arg1) is not found\n"
-            + "  referenced from com.abc.AAA (a-1.2.3.jar)\n"
-            + "  referenced from com.abc.BBB (a-1.2.3.jar)\n"
+            + "  referenced from com.abc.AAA (foo:a:1.2.3)\n"
+            + "  referenced from com.abc.BBB (foo:a:1.2.3)\n"
             + "\n"
-            + "b-1.0.0.jar is at:\n"
-            + "  foo:b:1.2.3 (compile, optional)\n"
-            + "a-1.2.3.jar is at:\n"
-            + "  foo:bar:1.0.0 (provided) / foo:a:1.2.3 (compile, optional)\n",
+            + "foo:b:1.0.0 is at:\n"
+            + "  foo:b:jar:1.0.0\n"
+            + "foo:a:1.2.3 is at:\n"
+            + "  foo:bar:jar:1.0.0 / foo:a:1.2.3 (compile, optional)\n",
         message);
   }
 
@@ -162,7 +169,7 @@ public class LinkageMonitorTest {
     assertEquals(
         "The following problems in the baseline no longer appear in the snapshot:\n"
             + "  Class java.lang.Integer is not found\n"
-            + "  (b-1.0.0.jar) io.grpc.protobuf.ProtoUtils's method "
+            + "  (foo:b:1.0.0) io.grpc.protobuf.ProtoUtils's method "
             + "marshaller(com.google.protobuf.Message arg1) is not found\n",
         message);
   }

@@ -4,6 +4,7 @@
   ],
   "ignorePaths": [
     "example-problems/**",
+    "enforcer-rules/src/it/**",
     "boms/**"
   ],
   "separateMajorMinor": false,

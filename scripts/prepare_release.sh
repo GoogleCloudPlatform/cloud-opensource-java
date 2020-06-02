@@ -57,6 +57,10 @@ if [[ $(git status -uno --porcelain) ]]; then
   Die 'There are uncommitted changes.'
 fi
 
+# Make sure client is up to date with the latest changes.
+git checkout master
+git pull
+
 # Checks out a new branch for this version release (eg. 1.5.7).
 git checkout -b ${VERSION}-${SUFFIX}
 
@@ -82,6 +86,14 @@ git commit -am "${NEXT_SNAPSHOT}"
 git push origin v${VERSION}-${SUFFIX}
 git push --set-upstream origin ${VERSION}-${SUFFIX}
 
+# Create the PR
+gh pr create -t "Release ${VERSION}-${SUFFIX}" -b "Release ${VERSION}-${SUFFIX}"
+
 # File a PR on Github for the new branch. Have someone LGTM it, which gives you permission to continue.
-EchoGreen 'File a PR for the new release branch:'
+EchoGreen 'Ask someone to approve this PR:'
 echo https://github.com/GoogleCloudPlatform/cloud-opensource-java/compare/${VERSION}-${SUFFIX}
+EchoGreen 'Start the Rapid build now:'
+EchoGreen 'https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md#run-the-rapid-workflow'
+EchoGreen 'After the PR is approved and the Rapid build succeeds, you can release the library in OSSRH.'
+
+

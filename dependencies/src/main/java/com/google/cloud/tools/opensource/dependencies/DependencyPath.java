@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -25,34 +24,62 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 
 /**
- * Path from the root to a node in a dependency tree, where a node is a dependency.
+ * A sequence of Maven artifacts and dependencies (scope and optional flag) in between.
+ *
+ * <p>When this represents a path from the root to a leaf of a dependency tree, the first artifact
+ * in the path is the root of the tree and the last artifact is the leaf. The sequence of
+ * dependencies explains why the leaf is included in the dependency tree.
+ *
+ * <p>The first node is null for the dependency trees generated for multiple artifacts by {@link
+ * DependencyGraphBuilder#buildFullDependencyGraph(List)}; otherwise the root node is not null.
  */
 public final class DependencyPath {
 
-  private List<Dependency> path = new ArrayList<>();
+  // The root of the dependency path. The project root is not a dependency.
+  private final Artifact root;
+  // Path without the root
+  private final List<Dependency> path = new ArrayList<>();
+
+  public DependencyPath(@Nullable Artifact root) {
+    this.root = root;
+  }
 
   @VisibleForTesting
-  public void add(Dependency dependency) {
-    path.add(dependency);
+  public DependencyPath append(Dependency dependency) {
+    DependencyPath copy = new DependencyPath(root);
+    copy.path.addAll(path);
+    copy.path.add(dependency);
+    return copy;
   }
 
   /** Returns the length of the path. */
   public int size() {
-    return path.size();
+    return path.size() + 1; // including the root
   }
 
-  /** Returns the artifact in the leaf (the furthest node from the node) of the path. */
+  /** Returns the artifact at the end of the path. */
   public Artifact getLeaf() {
-    return path.get(size() - 1).getArtifact();
+    if (path.isEmpty()) {
+      return root;
+    } else {
+      return path.get(path.size() - 1).getArtifact();
+    }
   }
 
-  /** Returns the list of artifact in the path. */
+  /** Returns the list of artifacts in the path. */
   public ImmutableList<Artifact> getArtifacts() {
-    return path.stream().map(Dependency::getArtifact).collect(toImmutableList());
+    ImmutableList.Builder<Artifact> builder = ImmutableList.builder();
+
+    if (root != null) {
+      builder.add(root);
+    }
+    path.stream().map(Dependency::getArtifact).forEach(builder::add);
+    return builder.build();
   }
 
   /**
@@ -60,17 +87,20 @@ public final class DependencyPath {
    * the dependency tree.
    */
   public Artifact get(int i) {
-    return path.get(i).getArtifact();
+    if (i == 0) {
+      return root;
+    }
+    return path.get(i - 1).getArtifact();
   }
 
   /**
-   * Returns the dependency path of the parent node of the leaf. Empty dependency path if the leaf
-   * does not have a parent or {@link #path} is empty.
+   * Returns the dependency path of the second to last node in the path. Empty dependency path if
+   * the leaf does not have a parent or {@link #path} is empty.
    */
   DependencyPath getParentPath() {
-    DependencyPath parent = new DependencyPath();
+    DependencyPath parent = new DependencyPath(root);
     for (int i = 0; i < path.size() - 1; i++) {
-      parent.add(path.get(i));
+      parent.path.add(path.get(i));
     }
     return parent;
   }
@@ -79,7 +109,15 @@ public final class DependencyPath {
   public String toString() {
     List<String> formatted =
         path.stream().map(DependencyPath::formatDependency).collect(Collectors.toList());
-    return Joiner.on(" / ").join(formatted);
+    StringBuilder builder = new StringBuilder();
+    if (root != null) {
+      builder.append(root);
+      if (!path.isEmpty()) {
+        builder.append(" / ");
+      }
+    }
+    builder.append(Joiner.on(" / ").join(formatted));
+    return builder.toString();
   }
 
   private static String formatDependency(Dependency dependency) {
@@ -94,7 +132,10 @@ public final class DependencyPath {
       return false;
     }
     DependencyPath other = (DependencyPath) o;
-    
+
+    if (!Objects.equals(other.root, root)) {
+      return false;
+    }
     if (other.path.size() != path.size()) {
       return false;
     }
@@ -136,6 +177,7 @@ public final class DependencyPath {
       hashCode =
           37 * hashCode
               + Objects.hash(
+                  root,
                   artifact.getGroupId(),
                   artifact.getArtifactId(),
                   artifact.getVersion(),

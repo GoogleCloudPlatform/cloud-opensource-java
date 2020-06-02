@@ -21,6 +21,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
+import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
@@ -34,6 +35,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.io.MoreFiles;
@@ -170,9 +172,9 @@ public class LinkageMonitor {
     String latestBomCoordinates =
         RepositoryUtility.findLatestCoordinates(repositorySystem, groupId, artifactId);
     logger.info("BOM Coordinates: " + latestBomCoordinates);
-    Bom baseline = RepositoryUtility.readBom(latestBomCoordinates);
+    Bom baseline = Bom.readBom(latestBomCoordinates);
     ImmutableSet<SymbolProblem> problemsInBaseline =
-        LinkageChecker.create(baseline).findSymbolProblems().keySet();
+        LinkageChecker.create(baseline, null).findSymbolProblems().keySet();
     Bom snapshot = copyWithSnapshot(repositorySystem, session, baseline, localArtifacts);
 
     // Comparing coordinates because DefaultArtifact does not override equals
@@ -188,11 +190,12 @@ public class LinkageMonitor {
 
     ImmutableList<Artifact> snapshotManagedDependencies = snapshot.getManagedDependencies();
     ClassPathResult classPathResult = (new ClassPathBuilder()).resolve(snapshotManagedDependencies);
-    ImmutableList<Path> classpath = classPathResult.getClassPath();
-    List<Path> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
+    ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
+    List<ClassPathEntry> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 
     ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems =
-        LinkageChecker.create(classpath, ImmutableSet.copyOf(entryPointJars)).findSymbolProblems();
+        LinkageChecker.create(classpath, ImmutableSet.copyOf(entryPointJars), null)
+            .findSymbolProblems();
     ImmutableSet<SymbolProblem> problemsInSnapshot = snapshotSymbolProblems.keySet();
 
     if (problemsInBaseline.equals(problemsInSnapshot)) {
@@ -231,22 +234,22 @@ public class LinkageMonitor {
         Sets.difference(snapshotSymbolProblems.keySet(), baselineProblems);
     StringBuilder message =
         new StringBuilder("Newly introduced problem" + (newProblems.size() > 1 ? "s" : "") + ":\n");
-    ImmutableSet.Builder<Path> problematicJars = ImmutableSet.builder();
+    Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
     for (SymbolProblem problem : newProblems) {
       message.append(problem + "\n");
 
       // This is null for ClassNotFound error.
       ClassFile containingClass = problem.getContainingClass();
       if (containingClass != null) {
-        problematicJars.add(containingClass.getJar());
+        problematicJars.add(containingClass.getClassPathEntry());
       }
 
       for (ClassFile classFile : snapshotSymbolProblems.get(problem)) {
         message.append(
             String.format(
                 "  referenced from %s (%s)\n",
-                classFile.getBinaryName(), classFile.getJar().getFileName()));
-        problematicJars.add(classFile.getJar());
+                classFile.getBinaryName(), classFile.getClassPathEntry()));
+        problematicJars.add(classFile.getClassPathEntry());
       }
     }
 
@@ -364,7 +367,7 @@ public class LinkageMonitor {
             .map(Dependency::getArtifact)
             .collect(toImmutableList());
     for (Artifact managedDependency : newManagedDependencies) {
-      if (RepositoryUtility.shouldSkipBomMember(managedDependency)) {
+      if (Bom.shouldSkipBomMember(managedDependency)) {
         continue;
       }
       String version =

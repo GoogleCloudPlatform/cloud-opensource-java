@@ -92,7 +92,8 @@ class ExclusionFileHandler extends DefaultHandler {
         symbolProblemMatcher.addChild(fieldMatcher);
         break;
       default:
-        throw new SAXException("Unknown tag " + localName);
+        // Not invalidating unknown tags here. Relax NG schema is responsible for the validation.
+        break;
     }
   }
 }

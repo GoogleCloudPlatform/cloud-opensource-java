@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
@@ -76,6 +77,19 @@ public class DependencyGraphBuilderTest {
     // This method should find Guava multiple times, respecting exclusion elements
     int guavaCount = countGuava(graph);
     Assert.assertEquals(29, guavaCount);
+  }
+
+  @Test
+  public void testGetCompleteDependencies_protobuf() {
+    // protobuf-java has only test dependencies.
+    // https://search.maven.org/artifact/com.google.protobuf/protobuf-java/3.11.4/bundle
+    DependencyGraph graph =
+        dependencyGraphBuilder
+            .buildFullDependencyGraph(
+                ImmutableList.of(new DefaultArtifact("com.google.protobuf:protobuf-java:3.11.4")))
+            .getDependencyGraph();
+    List<DependencyPath> paths = graph.list();
+    Truth.assertThat(paths).hasSize(1);
   }
 
   private static int countGuava(DependencyGraph graph) {
@@ -210,21 +224,6 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testConfigureAdditionalMavenRepositories_notToUseMavenCentral() {
-    DependencyGraphBuilder graphBuilder =
-        new DependencyGraphBuilder(ImmutableList.of("https://dl.google.com/dl/android/maven2"));
-
-    // This artifact does not exist in Android's repository
-    Artifact artifact = new DefaultArtifact("com.google.guava:guava:28.2-jre");
-
-    DependencyGraphResult result =
-        graphBuilder.buildFullDependencyGraph(ImmutableList.of(artifact));
-    Truth.assertThat(result.getArtifactProblems())
-        .comparingElementsUsing(problemOnArtifact)
-        .contains("com.google.guava:guava:28.2-jre");
-  }
-
-  @Test
   public void testBuildLinkageCheckDependencyGraph_catchRootException() {
     // This should not throw exception
     DependencyGraphResult result =
@@ -261,7 +260,7 @@ public class DependencyGraphBuilderTest {
     List<DependencyPath> dependencyPaths = graph.list();
 
     String expectedDependencyPathForOpencensusContribHttpUtil =
-        "io.grpc:grpc-alts:1.27.0 (compile) " // this has exclusion of Guava
+        "io.grpc:grpc-alts:jar:1.27.0 " // this has exclusion of Guava
             + "/ com.google.auth:google-auth-library-oauth2-http:0.19.0 (compile) "
             + "/ com.google.http-client:google-http-client:1.33.0 (compile) "
             + "/ io.opencensus:opencensus-contrib-http-util:0.24.0 (compile)";
@@ -276,5 +275,34 @@ public class DependencyGraphBuilderTest {
     Truth.assertThat(dependencyPaths)
         .comparingElementsUsing(dependencyPathToString)
         .doesNotContain(unexpectedDependencyPathForGuava);
+  }
+
+  @Test
+  public void testDependencyPathRoot_oneDependency() {
+    DependencyGraphResult result =
+        dependencyGraphBuilder.buildFullDependencyGraph(
+            ImmutableList.of(new DefaultArtifact("com.google.guava:guava:28.1-jre")));
+    DependencyPath firstDependencyPath = result.getDependencyGraph().list().get(0);
+    assertEquals(
+        "com.google.guava:guava:28.1-jre", Artifacts.toCoordinates(firstDependencyPath.get(0)));
+  }
+
+  @Test
+  public void testDependencyPathRoot_twoDependency() {
+    DependencyGraphResult result =
+        dependencyGraphBuilder.buildFullDependencyGraph(
+            ImmutableList.of(
+                new DefaultArtifact("com.google.guava:guava:28.1-jre"),
+                new DefaultArtifact("com.google.api:gax:1.57.0")));
+
+    List<DependencyPath> paths = result.getDependencyGraph().list();
+
+    // Because it's requesting a tree with multiple artifacts, the root of the tree is null
+    assertNull(paths.get(0).get(0));
+    assertEquals(
+        "com.google.guava:guava:28.1-jre", Artifacts.toCoordinates(paths.get(0).getLeaf()));
+
+    assertNull(paths.get(1).get(0));
+    assertEquals("com.google.api:gax:1.57.0", Artifacts.toCoordinates(paths.get(1).getLeaf()));
   }
 }

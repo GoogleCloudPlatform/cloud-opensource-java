@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.cloud.tools.opensource.classpath.ErrorType;
@@ -31,6 +32,7 @@ import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Truth;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -46,6 +48,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -54,19 +57,27 @@ import org.junit.Test;
  */
 public class FreemarkerTest {
 
-  private static Path outputDirectory;
+  private static Path outputDirectory;  
+  private static ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>>
+      symbolProblemTable;
+  
   private Builder builder = new Builder();
-  static ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable;
 
   @BeforeClass
-  public static void setUp() throws IOException {
+  public static void setUpDirectory() throws IOException {
     outputDirectory = Files.createDirectories(Paths.get("target", "dashboard"));
-
+  }
+    
+  @Before
+  public void setUp() throws IOException {
+    Artifact artifact = new DefaultArtifact("com.google:foo:1.0.0")
+        .setFile(new File("foo/bar-1.2.3.jar"));
+    ClassPathEntry entry = new ClassPathEntry(artifact);
     ImmutableSetMultimap<SymbolProblem, String> dummyProblems =
         ImmutableSetMultimap.of(
             new SymbolProblem(new ClassSymbol("com.foo.Bar"), ErrorType.CLASS_NOT_FOUND, null),
             "abc.def.G");
-    symbolProblemTable = ImmutableMap.of(Paths.get("foo", "bar-1.2.3.jar"), dummyProblems);
+    symbolProblemTable = ImmutableMap.of(entry, dummyProblems);
   }
 
   @AfterClass

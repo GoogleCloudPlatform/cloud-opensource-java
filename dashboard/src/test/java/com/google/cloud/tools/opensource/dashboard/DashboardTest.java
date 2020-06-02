@@ -19,7 +19,7 @@ package com.google.cloud.tools.opensource.dashboard;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
@@ -148,7 +148,7 @@ public class DashboardTest {
   
   @Test
   public void testArtifactDetails() throws IOException, ArtifactDescriptorException {
-    List<Artifact> artifacts = RepositoryUtility.readBom("com.google.cloud:libraries-bom:1.0.0")
+    List<Artifact> artifacts = Bom.readBom("com.google.cloud:libraries-bom:1.0.0")
         .getManagedDependencies();
     Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
 
@@ -211,17 +211,17 @@ public class DashboardTest {
     // appengine-api-sdk, shown as first item in linkage errors, has these errors
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo(
-            "106 target classes causing linkage errors referenced from 516 source classes.");
+            "91 target classes causing linkage errors referenced from 501 source classes.");
 
     Nodes dependencyPaths = details.query("//p[@class='linkage-check-dependency-paths']");
     Node dependencyPathMessageOnProblem = dependencyPaths.get(dependencyPaths.size() - 4);
     Assert.assertEquals(
-        "The following paths contain guava-jdk5-13.0.jar:",
+        "The following paths contain com.google.guava:guava-jdk5:13.0:",
         trimAndCollapseWhiteSpace(dependencyPathMessageOnProblem.getValue()));
 
     Node dependencyPathMessageOnSource = dependencyPaths.get(dependencyPaths.size() - 3);
     Assert.assertEquals(
-        "The following paths contain guava-27.1-android.jar:",
+        "The following paths contain com.google.guava:guava:27.1-android:",
         trimAndCollapseWhiteSpace(dependencyPathMessageOnSource.getValue()));
 
     Nodes nodesWithPathsSummary = details.query("//p[@class='linkage-check-dependency-paths']");
@@ -300,7 +300,7 @@ public class DashboardTest {
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
     Assert.assertEquals(1, reports.size());
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-        .isEqualTo("106 target classes causing linkage errors referenced from 516 source classes.");
+        .isEqualTo("91 target classes causing linkage errors referenced from 501 source classes.");
 
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
     Truth.assertWithMessage(

@@ -16,6 +16,9 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.common.truth.Correspondence;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,4 +32,20 @@ public class TestHelper {
   public static Path absolutePathOfResource(String resourceName) throws URISyntaxException {
     return Paths.get(ClassLoader.getSystemResource(resourceName).toURI()).toAbsolutePath();
   }
+
+  public static ClassPathEntry classPathEntryOfResource(String resourceName)
+      throws URISyntaxException, IOException {
+    ClassPathEntry entry = new ClassPathEntry(absolutePathOfResource(resourceName));
+    return entry;
+  }
+
+  static final Correspondence<Path, String> PATH_FILE_NAMES =
+      Correspondence.from(
+          (actual, expected) -> actual.getFileName().toString().equals(expected),
+          "has file name equal to");
+
+  static final Correspondence<ClassPathEntry, String> COORDINATES =
+      Correspondence.from(
+          (actual, expected) -> Artifacts.toCoordinates(actual.getArtifact()).equals(expected),
+          "has Maven coordinates equal to");
 }
