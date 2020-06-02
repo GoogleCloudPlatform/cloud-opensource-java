@@ -17,13 +17,11 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.Bom;
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimaps;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -52,7 +50,7 @@ class ArtifactCompatibilityCheck {
 
       LinkageChecker linkageChecker;
       if (artifact.getExtension().equals("pom")) {
-        Bom bom = RepositoryUtility.readBom(artifact.toString());
+        Bom bom = Bom.readBom(artifact.toString());
         ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
         artifacts.addAll(managedDependencies);
         linkageChecker = linkageCheckerOf(managedDependencies);
@@ -107,7 +105,7 @@ class ArtifactCompatibilityCheck {
     ClassPathBuilder classPathBuilder = new ClassPathBuilder();
     ClassPathResult classPathResult = classPathBuilder.resolve(artifacts);
 
-    ImmutableList<Path> classPath = classPathResult.getClassPath();
-    return LinkageChecker.create(classPath, classPath.subList(0, artifacts.size()));
+    ImmutableList<ClassPathEntry> classPath = classPathResult.getClassPath();
+    return LinkageChecker.create(classPath, classPath.subList(0, artifacts.size()), null);
   }
 }
