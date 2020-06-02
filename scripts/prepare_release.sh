@@ -57,6 +57,9 @@ if [[ $(git status -uno --porcelain) ]]; then
   Die 'There are uncommitted changes.'
 fi
 
+# Make sure client is up to date with the latest changes.
+git checkout master
+git pull
 
 # Checks out a new branch for this version release (eg. 1.5.7).
 git checkout -b ${VERSION}-${SUFFIX}

@@ -7,8 +7,6 @@ Run `prepare_release.sh` with `bom` argument in `boms/cloud-oss-bom` directory:
 
 ```
 $ cd boms/cloud-oss-bom
-$ git checkout master
-$ git pull
 $ ../../scripts/prepare_release.sh bom <release version> [<post-release-version>]
 ```
 
