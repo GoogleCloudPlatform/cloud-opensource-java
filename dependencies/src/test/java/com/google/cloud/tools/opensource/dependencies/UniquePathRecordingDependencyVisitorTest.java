@@ -29,9 +29,48 @@ import org.junit.Test;
 public class UniquePathRecordingDependencyVisitorTest {
 
   @Test
+  public void testVisitingUniqueNodes_twoPaths() {
+    // This setup creates a dependency graph like below. There are two paths from the root to node
+    // 'x': root-a-x and root-b-x. The two paths do not share intermediate nodes.
+    //
+    //    root
+    //   /   \
+    //  a     b
+    //   \   /
+    //     x
+
+    DefaultDependencyNode root = new DefaultDependencyNode(new DefaultArtifact("g:r:1"));
+    DefaultDependencyNode a = new DefaultDependencyNode(new DefaultArtifact("g:a:1"));
+    DefaultDependencyNode b = new DefaultDependencyNode(new DefaultArtifact("g:b:1"));
+    DefaultDependencyNode x = new DefaultDependencyNode(new DefaultArtifact("g:x:1"));
+
+    root.setChildren(ImmutableList.of(a, b));
+    a.setChildren(ImmutableList.of(x));
+    b.setChildren(ImmutableList.of(x));
+
+    UniquePathRecordingDependencyVisitor visitor =
+        new UniquePathRecordingDependencyVisitor(
+            (DependencyNode node, List<DependencyNode> parents) ->
+                node.getArtifact().getArtifactId().equals("x"));
+
+    root.accept(visitor);
+
+    ImmutableList<List<DependencyNode>> paths = visitor.getPaths();
+    Truth.assertThat(paths).hasSize(2);
+    assertSame(root, paths.get(0).get(0));
+    assertSame(a, paths.get(0).get(1));
+    assertSame(x, paths.get(0).get(2));
+
+    assertSame(root, paths.get(1).get(0));
+    assertSame(b, paths.get(1).get(1));
+    assertSame(x, paths.get(1).get(2));
+  }
+
+  @Test
   public void testVisitingUniqueNodes() {
     // This setup creates a dependency graph like below. There are two paths from the root to node
-    // 'y'. UniquePathRecordingDependencyVisitor avoids reporting both paths.
+    // 'y'. UniquePathRecordingDependencyVisitor does not record paths that have the same
+    // intermediate node.
     //
     //    root
     //   /   \
