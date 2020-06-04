@@ -53,7 +53,7 @@ public class ExclusionFilesIntegrationTest {
         new String[] {"-a", Artifacts.toCoordinates(artifact), "-o", exclusionFile.toString()});
 
     ClassPathBuilder classPathBuilder = new ClassPathBuilder();
-    ClassPathResult classPathResult = classPathBuilder.resolve(ImmutableList.of(artifact));
+    ClassPath classPathResult = classPathBuilder.resolve(ImmutableList.of(artifact));
 
     LinkageChecker linkagechecker =
         LinkageChecker.create(classPathResult.getClassPath(), ImmutableList.of(), exclusionFile);

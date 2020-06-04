@@ -22,7 +22,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
-import com.google.cloud.tools.opensource.classpath.ClassPathResult;
+import com.google.cloud.tools.opensource.classpath.ClassPath;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -182,7 +182,7 @@ public class DashboardMain {
 
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
-    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies);
+    ClassPath classPathResult = classPathBuilder.resolve(managedDependencies);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
 
     LinkageChecker linkageChecker = LinkageChecker.create(classpath);
@@ -204,7 +204,7 @@ public class DashboardMain {
   private static Path generateHtml(
       Bom bom,
       ArtifactCache cache,
-      ClassPathResult classPathResult,
+      ClassPath classPathResult,
       ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems)
       throws IOException, TemplateException, URISyntaxException {
 
@@ -261,7 +261,7 @@ public class DashboardMain {
       Path output,
       ArtifactCache cache,
       ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
-      ClassPathResult classPathResult,
+      ClassPath classPathResult,
       Bom bom) throws TemplateException {
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
@@ -340,7 +340,7 @@ public class DashboardMain {
       ArtifactInfo artifactInfo,
       List<DependencyGraph> globalDependencies,
       ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
-      ClassPathResult classPathResult,
+      ClassPath classPathResult,
       Bom bom)
       throws IOException, TemplateException {
 
@@ -458,7 +458,7 @@ public class DashboardMain {
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
       ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
-      ClassPathResult classPathResult,
+      ClassPath classPathResult,
       Bom bom)
       throws IOException, TemplateException {
 
@@ -551,7 +551,7 @@ public class DashboardMain {
    * example, {@code commons-logging:commons-logging}, {@code
    * com.google.http-client:google-http-client} and {@code log4j:log4j}.
    */
-  private static ImmutableMap<String, String> findRootCauses(ClassPathResult classPathResult) {
+  private static ImmutableMap<String, String> findRootCauses(ClassPath classPathResult) {
     // Freemarker is not good at handling non-string keys. Path object in .ftl is automatically
     // converted to String. https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();

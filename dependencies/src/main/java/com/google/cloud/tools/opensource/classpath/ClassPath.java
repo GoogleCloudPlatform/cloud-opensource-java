@@ -29,7 +29,7 @@ import com.google.common.collect.ListMultimap;
 import org.eclipse.aether.artifact.Artifact;
 
 /** Result of class path resolution with {@link UnresolvableArtifactProblem}s if any. */
-public final class ClassPathResult {
+public final class ClassPath {
 
   private final ImmutableList<ClassPathEntry> classPath;
 
@@ -45,9 +45,10 @@ public final class ClassPathResult {
    */
   private final ImmutableListMultimap<ClassPathEntry, DependencyPath> dependencyPaths;
 
+  // todo this is part of a dependency graph. not a classpath
   private final ImmutableList<UnresolvableArtifactProblem> artifactProblems;
 
-  public ClassPathResult(
+  public ClassPath(
       ListMultimap<ClassPathEntry, DependencyPath> dependencyPaths,
       Iterable<UnresolvableArtifactProblem> artifactProblems) {
     this.dependencyPaths = ImmutableListMultimap.copyOf(dependencyPaths);
@@ -64,16 +65,19 @@ public final class ClassPathResult {
    * Returns all paths to the class path entry or 
    * an empty list if the entry is not in the class path.
    */
+  // todo this is part of a dependency graph. not a classpath
   public ImmutableList<DependencyPath> getDependencyPaths(ClassPathEntry entry) {
     return dependencyPaths.get(entry);
   }
 
   /** Returns problems encountered while constructing the dependency graph. */
+  // todo this is part of a dependency graph. not a classpath
   public ImmutableList<UnresolvableArtifactProblem> getArtifactProblems() {
     return artifactProblems;
   }
 
   /** Returns text describing dependency paths to class path entries in the dependency tree. */
+  // todo this is part of a dependency graph. not a classpath
   public String formatDependencyPaths(Iterable<ClassPathEntry> entries) {
     StringBuilder message = new StringBuilder();
     for (ClassPathEntry entry : entries) {
@@ -97,6 +101,7 @@ public final class ClassPathResult {
    * Returns the classpath entries for the transitive dependencies of the specified
    * artifact.
    */
+  // todo this is part of a dependency graph. not a classpath
   public ImmutableSet<ClassPathEntry> getClassPathEntries(String coordinates) {
     ImmutableSet.Builder<ClassPathEntry> builder = ImmutableSet.builder();
     for (ClassPathEntry entry : classPath) {

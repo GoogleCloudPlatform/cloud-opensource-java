@@ -39,14 +39,14 @@ public class ClassPathBuilderTest {
 
   private ImmutableList<ClassPathEntry> resolveClassPath(String coordinates) {
     Artifact artifact = new DefaultArtifact(coordinates);
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(artifact));
+    ClassPath result = classPathBuilder.resolve(ImmutableList.of(artifact));
     return result.getClassPath();
   }
 
   @Test
   public void testResolve_removingDuplicates() {
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(grpcArtifact));
+    ClassPath result = classPathBuilder.resolve(ImmutableList.of(grpcArtifact));
 
     ImmutableList<ClassPathEntry> classPath = result.getClassPath();
     long jsr305Count =
@@ -131,7 +131,7 @@ public class ClassPathBuilderTest {
   @Test
   public void testResolveClassPath_invalidCoordinate() {
     Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nosuchartifact:1.2.3");
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(nonExistentArtifact));
+    ClassPath result = classPathBuilder.resolve(ImmutableList.of(nonExistentArtifact));
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
     Truth.assertThat(artifactProblems).hasSize(1);
     assertEquals(
@@ -196,7 +196,7 @@ public class ClassPathBuilderTest {
     // In the full dependency tree of hibernate-core, xerces-impl:2.6.2 and xml-apis:2.6.2 are not
     // available in Maven Central.
     Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(hibernateCore));
+    ClassPath result = classPathBuilder.resolve(ImmutableList.of(hibernateCore));
 
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
 
@@ -217,7 +217,7 @@ public class ClassPathBuilderTest {
     Artifact beamZetaSqlExtensions = new DefaultArtifact("junit:junit:jar:4.10");
 
     // This should not throw StackOverflowError
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(beamZetaSqlExtensions));
+    ClassPath result = classPathBuilder.resolve(ImmutableList.of(beamZetaSqlExtensions));
     assertNotNull(result);
   }
 }

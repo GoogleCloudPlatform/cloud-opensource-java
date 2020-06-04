@@ -27,7 +27,7 @@ import static org.junit.Assert.fail;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
-import com.google.cloud.tools.opensource.classpath.ClassPathResult;
+import com.google.cloud.tools.opensource.classpath.ClassPath;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.cloud.tools.opensource.classpath.ErrorType;
 import com.google.cloud.tools.opensource.classpath.MethodSymbol;
@@ -144,7 +144,7 @@ public class LinkageMonitorTest {
         LinkageMonitor.messageForNewErrors(
             snapshotProblems,
             baselineProblems,
-            new ClassPathResult(
+            new ClassPath(
                 ImmutableListMultimap.of(jarA, pathToA, jarB, pathToB),
                 ImmutableList.of()));
     assertEquals(

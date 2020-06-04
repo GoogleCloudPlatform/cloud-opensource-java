@@ -25,7 +25,7 @@ import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
- * Utility to build {@link ClassPathResult} that holds class path (a list of {@link ClassPathEntry})
+ * Utility to build {@link ClassPath} that holds class path (a list of {@link ClassPathEntry})
  * through a dependency tree of Maven artifacts.
  *
  * @see <a
@@ -55,11 +55,11 @@ public final class ClassPathBuilder {
    *
    * @param artifacts the first artifacts that appear in the classpath, in order
    */
-  public ClassPathResult resolve(List<Artifact> artifacts) {
+  public ClassPath resolve(List<Artifact> artifacts) {
 
     LinkedListMultimap<ClassPathEntry, DependencyPath> multimap = LinkedListMultimap.create();
     if (artifacts.isEmpty()) {
-      return new ClassPathResult(multimap, ImmutableList.of());
+      return new ClassPath(multimap, ImmutableList.of());
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraphResult result = dependencyGraphBuilder.buildFullDependencyGraph(artifacts);
@@ -79,6 +79,6 @@ public final class ClassPathBuilder {
         multimap.put(new ClassPathEntry(artifact), dependencyPath);
       }
     }
-    return new ClassPathResult(multimap, result.getArtifactProblems());
+    return new ClassPath(multimap, result.getArtifactProblems());
   }
 }

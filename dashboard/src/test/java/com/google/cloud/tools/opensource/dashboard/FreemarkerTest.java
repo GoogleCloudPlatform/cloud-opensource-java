@@ -17,7 +17,7 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
-import com.google.cloud.tools.opensource.classpath.ClassPathResult;
+import com.google.cloud.tools.opensource.classpath.ClassPath;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.cloud.tools.opensource.classpath.ErrorType;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
@@ -107,7 +107,7 @@ public class FreemarkerTest {
         table,
         globalDependencies,
         symbolProblemTable,
-        new ClassPathResult(LinkedListMultimap.create(), ImmutableList.of()),
+        new ClassPath(LinkedListMultimap.create(), ImmutableList.of()),
         new Bom("mock:artifact:1.6.7", null));
 
     Path dashboardHtml = outputDirectory.resolve("index.html");

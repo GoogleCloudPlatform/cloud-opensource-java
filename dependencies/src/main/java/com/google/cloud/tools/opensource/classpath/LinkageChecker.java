@@ -105,7 +105,7 @@ public class LinkageChecker {
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
     ClassPathBuilder classPathBuilder = new ClassPathBuilder();
-    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies);
+    ClassPath classPathResult = classPathBuilder.resolve(managedDependencies);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
 
     // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM

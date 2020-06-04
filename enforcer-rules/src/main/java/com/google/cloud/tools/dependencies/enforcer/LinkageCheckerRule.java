@@ -23,7 +23,7 @@ import static org.apache.maven.enforcer.rule.api.EnforcerLevel.WARN;
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
-import com.google.cloud.tools.opensource.classpath.ClassPathResult;
+import com.google.cloud.tools.opensource.classpath.ClassPath;
 import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
@@ -176,7 +176,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         }
       }
 
-      ClassPathResult classPathResult =
+      ClassPath classPathResult =
           readingDependencyManagementSection
               ? findBomClasspath(project, repositorySystemSession)
               : findProjectClasspath(project, repositorySystemSession, helper);
@@ -251,7 +251,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   /** Builds a class path for {@code mavenProject}. */
-  private static ClassPathResult findProjectClasspath(
+  private static ClassPath findProjectClasspath(
       MavenProject mavenProject, RepositorySystemSession session, EnforcerRuleHelper helper)
       throws EnforcerRuleException {
     try {
@@ -291,7 +291,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   /** Returns class path built from partial dependency graph of {@code resolutionException}. */
-  private static ClassPathResult buildClasspathFromException(
+  private static ClassPath buildClasspathFromException(
       DependencyResolutionException resolutionException) throws EnforcerRuleException {
     DependencyResolutionResult result = resolutionException.getResult();
 
@@ -318,7 +318,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     }
   }
 
-  private static ClassPathResult buildClassPathResult(DependencyResolutionResult result)
+  private static ClassPath buildClassPathResult(DependencyResolutionResult result)
       throws EnforcerRuleException {
     // The root node must have the project's JAR file
     File rootFile = result.getDependencyGraph().getArtifact().getFile();
@@ -344,11 +344,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         builder.put(new ClassPathEntry(artifact), path);
       }
     }
-    return new ClassPathResult(builder.build(), problems.build());
+    return new ClassPath(builder.build(), problems.build());
   }
 
   /** Builds a class path for {@code bomProject}. */
-  private ClassPathResult findBomClasspath(
+  private ClassPath findBomClasspath(
       MavenProject bomProject, RepositorySystemSession repositorySystemSession)
       throws EnforcerRuleException {
 
@@ -360,7 +360,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
             .filter(artifact -> !Bom.shouldSkipBomMember(artifact))
             .collect(toImmutableList());
 
-    ClassPathResult result = classPathBuilder.resolve(artifacts);
+    ClassPath result = classPathBuilder.resolve(artifacts);
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
     if (!artifactProblems.isEmpty()) {
       throw new EnforcerRuleException("Failed to collect dependency: " + artifactProblems);
@@ -369,7 +369,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   private String dependencyPathsOfProblematicJars(
-      ClassPathResult classPathResult, Multimap<SymbolProblem, ClassFile> symbolProblems) {
+      ClassPath classPathResult, Multimap<SymbolProblem, ClassFile> symbolProblems) {
     ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
     for (SymbolProblem problem : symbolProblems.keySet()) {
       ClassFile containingClass = problem.getContainingClass();

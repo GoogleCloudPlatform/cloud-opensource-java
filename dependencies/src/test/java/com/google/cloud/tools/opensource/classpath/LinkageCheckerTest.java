@@ -68,7 +68,7 @@ public class LinkageCheckerTest {
   static ImmutableList<ClassPathEntry> resolvePaths(String... coordinates) throws IOException {
     ImmutableList<Artifact> artifacts =
         Arrays.stream(coordinates).map(DefaultArtifact::new).collect(toImmutableList());
-    ClassPathResult result = (new ClassPathBuilder()).resolve(artifacts);
+    ClassPath result = (new ClassPathBuilder()).resolve(artifacts);
     return result.getClassPath();
   }
 

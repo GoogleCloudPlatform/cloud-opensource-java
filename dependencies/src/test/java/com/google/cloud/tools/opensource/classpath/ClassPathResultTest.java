@@ -57,7 +57,7 @@ public class ClassPathResultTest {
     ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
         ImmutableListMultimap.of(jarA, dependencyPath_A, jarB, dependencyPath_B);
 
-    ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
+    ClassPath classPathResult = new ClassPath(tree, ImmutableSet.of());
 
     String actual = classPathResult.formatDependencyPaths(ImmutableList.of(jarA));
 
@@ -69,7 +69,7 @@ public class ClassPathResultTest {
     ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
         ImmutableListMultimap.of(jarA, dependencyPath_A, jarB, dependencyPath_B);
 
-    ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
+    ClassPath classPathResult = new ClassPath(tree, ImmutableSet.of());
 
     String actual = classPathResult.formatDependencyPaths(ImmutableList.of(jarA, jarB));
 
@@ -86,7 +86,7 @@ public class ClassPathResultTest {
     ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
         ImmutableListMultimap.of(jarA, dependencyPath_A, jarA, dependencyPath_B_A);
 
-    ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
+    ClassPath classPathResult = new ClassPath(tree, ImmutableSet.of());
 
     String actual = classPathResult.formatDependencyPaths(ImmutableList.of(jarA));
 
@@ -101,7 +101,7 @@ public class ClassPathResultTest {
         ImmutableListMultimap.of(
             jarA, dependencyPath_A, jarA, dependencyPath_B_A, jarA, dependencyPath_A_B_A);
 
-    ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
+    ClassPath classPathResult = new ClassPath(tree, ImmutableSet.of());
 
     String actual = classPathResult.formatDependencyPaths(ImmutableList.of(jarA));
 
@@ -117,7 +117,7 @@ public class ClassPathResultTest {
     ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
         ImmutableListMultimap.of(jarA, dependencyPath_A);
 
-    ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
+    ClassPath classPathResult = new ClassPath(tree, ImmutableSet.of());
 
     try {
       classPathResult.formatDependencyPaths(ImmutableList.of(jarB));
@@ -135,7 +135,7 @@ public class ClassPathResultTest {
             jarB, dependencyPath_B,
             jarA, dependencyPath_A_B_A);
 
-    ClassPathResult result = new ClassPathResult(tree, ImmutableSet.of());
+    ClassPath result = new ClassPath(tree, ImmutableSet.of());
 
     ImmutableSet<ClassPathEntry> classPathEntries = result.getClassPathEntries("com.google:a:1");
     assertEquals(1, classPathEntries.size());

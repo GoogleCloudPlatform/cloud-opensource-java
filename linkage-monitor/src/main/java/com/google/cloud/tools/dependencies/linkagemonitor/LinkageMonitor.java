@@ -22,7 +22,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
-import com.google.cloud.tools.opensource.classpath.ClassPathResult;
+import com.google.cloud.tools.opensource.classpath.ClassPath;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -189,7 +189,7 @@ public class LinkageMonitor {
     }
 
     ImmutableList<Artifact> snapshotManagedDependencies = snapshot.getManagedDependencies();
-    ClassPathResult classPathResult = (new ClassPathBuilder()).resolve(snapshotManagedDependencies);
+    ClassPath classPathResult = (new ClassPathBuilder()).resolve(snapshotManagedDependencies);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
     List<ClassPathEntry> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 
@@ -229,7 +229,7 @@ public class LinkageMonitor {
   static String messageForNewErrors(
       ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems,
       Set<SymbolProblem> baselineProblems,
-      ClassPathResult classPathResult) {
+      ClassPath classPathResult) {
     Set<SymbolProblem> newProblems =
         Sets.difference(snapshotSymbolProblems.keySet(), baselineProblems);
     StringBuilder message =
