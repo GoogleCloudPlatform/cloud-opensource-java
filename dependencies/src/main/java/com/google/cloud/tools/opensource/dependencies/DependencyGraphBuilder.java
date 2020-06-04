@@ -159,7 +159,7 @@ public final class DependencyGraphBuilder {
    * @param artifacts Maven artifacts to retrieve their dependencies
    * @return dependency graph representing the tree of Maven artifacts
    */
-  public DependencyGraphResult buildFullDependencyGraph(List<Artifact> artifacts) {
+  public DependencyGraph buildFullDependencyGraph(List<Artifact> artifacts) {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
     return buildDependencyGraph(dependencyNodes, GraphTraversalOption.FULL);
@@ -173,12 +173,12 @@ public final class DependencyGraphBuilder {
    * In the event of I/O errors, missing artifacts, and other problems, it can
    * return an incomplete graph.
    */
-  public DependencyGraphResult buildMavenDependencyGraph(Dependency dependency) {
+  public DependencyGraph buildMavenDependencyGraph(Dependency dependency) {
     return buildDependencyGraph(
         ImmutableList.of(new DefaultDependencyNode(dependency)), GraphTraversalOption.MAVEN);
   }
 
-  private DependencyGraphResult buildDependencyGraph(
+  private DependencyGraph buildDependencyGraph(
       List<DependencyNode> dependencyNodes, GraphTraversalOption traversalOption) {
     boolean fullDependency = traversalOption == GraphTraversalOption.FULL;
     
@@ -203,7 +203,7 @@ public final class DependencyGraphBuilder {
     }
 
     levelOrder(node, graph);
-    return new DependencyGraphResult(graph);
+    return graph;
   }
 
   private static final class LevelOrderQueueItem {

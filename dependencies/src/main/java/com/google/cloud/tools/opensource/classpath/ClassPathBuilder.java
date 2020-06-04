@@ -16,8 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraphResult;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
@@ -62,8 +62,8 @@ public final class ClassPathBuilder {
       return new ClassPathResult(multimap, ImmutableList.of());
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
-    DependencyGraphResult result = dependencyGraphBuilder.buildFullDependencyGraph(artifacts);
-    List<DependencyPath> dependencyPaths = result.getDependencyGraph().list();
+    DependencyGraph result = dependencyGraphBuilder.buildFullDependencyGraph(artifacts);
+    List<DependencyPath> dependencyPaths = result.list();
 
     // TODO should DependencyGraphResult have a mediate() method that returns a ClassPathResult?
     
@@ -79,6 +79,6 @@ public final class ClassPathBuilder {
         multimap.put(new ClassPathEntry(artifact), dependencyPath);
       }
     }
-    return new ClassPathResult(multimap, result.getDependencyGraph().getUnresolvedArtifacts());
+    return new ClassPathResult(multimap, result.getUnresolvedArtifacts());
   }
 }

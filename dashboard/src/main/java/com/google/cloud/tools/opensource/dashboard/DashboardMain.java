@@ -29,7 +29,6 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraphResult;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
@@ -312,15 +311,13 @@ public class DashboardMain {
     List<DependencyGraph> globalDependencies = new ArrayList<>();
 
     for (Artifact artifact : artifacts) {
-      DependencyGraphResult completeDependencyResult =
+      DependencyGraph completeDependencies =
           dependencyGraphBuilder.buildFullDependencyGraph(ImmutableList.of(artifact));
-      DependencyGraph completeDependencies = completeDependencyResult.getDependencyGraph();
       globalDependencies.add(completeDependencies);
 
       // picks versions according to Maven rules
-      DependencyGraphResult transitiveDependencyResult =
+      DependencyGraph transitiveDependencies =
           dependencyGraphBuilder.buildMavenDependencyGraph(new Dependency(artifact, "compile"));
-      DependencyGraph transitiveDependencies = transitiveDependencyResult.getDependencyGraph();
 
       ArtifactInfo info = new ArtifactInfo(completeDependencies, transitiveDependencies);
       infoMap.put(artifact, info);

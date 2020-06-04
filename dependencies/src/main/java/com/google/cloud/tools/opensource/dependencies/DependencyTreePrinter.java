@@ -37,15 +37,13 @@ class DependencyTreePrinter {
   private static void printDependencyTree(String coordinates) {
     DefaultArtifact rootArtifact = new DefaultArtifact(coordinates);
     DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
-    DependencyGraphResult result = dependencyGraphBuilder.buildFullDependencyGraph(
+    DependencyGraph dependencyGraph = dependencyGraphBuilder.buildFullDependencyGraph(
         ImmutableList.of(rootArtifact));
     
-    for (UnresolvableArtifactProblem problem : result.getDependencyGraph().getUnresolvedArtifacts()) {
+    for (UnresolvableArtifactProblem problem : dependencyGraph.getUnresolvedArtifacts()) {
       System.out.println(problem);
     }
-    
-    DependencyGraph dependencyGraph =result.getDependencyGraph();
-    
+        
     System.out.println("Dependencies for " + coordinates);
     System.out.println(DependencyTreeFormatter.formatDependencyPaths(dependencyGraph.list()));
   }
