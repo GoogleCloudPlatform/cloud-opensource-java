@@ -23,9 +23,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import java.util.ArrayDeque;
 import java.util.List;
-import java.util.Queue;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
@@ -202,20 +200,7 @@ public final class DependencyGraphBuilder {
       }
     }
 
-    levelOrder(node, graph);
-    return graph;
-  }
-
-  private static final class LevelOrderQueueItem {
-    final DependencyNode dependencyNode;
-
-    // Null for the first item
-    final DependencyPath parentPath;
-
-    LevelOrderQueueItem(DependencyNode dependencyNode, DependencyPath parentPath) {
-      this.dependencyNode = dependencyNode;
-      this.parentPath = parentPath;
-    }
+    return DependencyGraph.levelOrder(graph);
   }
 
   private enum GraphTraversalOption {
@@ -224,69 +209,6 @@ public final class DependencyGraphBuilder {
 
     /** The full dependency graph */
     FULL;
-  }
-
-  /**
-   * Builds a dependency graph by traversing dependency tree in level-order (breadth-first search).
-   *
-   * <p>When {@code graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED, then
-   * it resolves the dependency of the artifact of each node in the dependency tree; otherwise it
-   * just follows the given dependency tree starting with firstNode.
-   *
-   * @param firstNode node to start traversal
-   */
-  public static DependencyGraph levelOrder(DependencyNode firstNode) {
-    DependencyGraph graph = new DependencyGraph();
-
-    return levelOrder(firstNode, graph);
-  }
-
-  private static DependencyGraph levelOrder(DependencyNode firstNode, DependencyGraph graph) {
-    Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
-    queue.add(new LevelOrderQueueItem(firstNode, null));
-
-    while (!queue.isEmpty()) {
-      LevelOrderQueueItem item = queue.poll();
-      DependencyNode dependencyNode = item.dependencyNode;
-
-      DependencyPath parentPath = item.parentPath;
-      Artifact artifact = dependencyNode.getArtifact();
-      if (artifact != null && parentPath != null) {
-        // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
-        // set to null
-
-        // When there's an ancestor dependency node with the same groupId and artifactId as
-        // the dependency, Maven will not pick up the dependency. For example, if there's a
-        // dependency path "g1:a1:2.0 / ... / g1:a1:1.0" (the leftmost node as root), then Maven's
-        // dependency mediation always picks g1:a1:2.0 over g1:a1:1.0.
-        
-        // TODO This comment doesn't seem right. That's true for the root,
-        // but not for non-root nodes. A node elsewhere in the tree could cause the 
-        // descendant to be selected. 
-        
-        String groupIdAndArtifactId = Artifacts.makeKey(artifact);
-        boolean ancestorHasSameKey =
-            parentPath.getArtifacts().stream()
-                .map(Artifacts::makeKey)
-                .anyMatch(key -> key.equals(groupIdAndArtifactId));
-        if (ancestorHasSameKey) {
-          continue;
-        }
-      }
-
-      // parentPath is null for the first item
-      DependencyPath path =
-          parentPath == null
-              ? new DependencyPath(artifact)
-              : parentPath.append(dependencyNode.getDependency());
-      graph.addPath(path);
-
-      for (DependencyNode child : dependencyNode.getChildren()) {
-        queue.add(new LevelOrderQueueItem(child, path));
-      }
-    }
-
-    return graph;
   }
 
 }
