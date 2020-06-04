@@ -197,26 +197,6 @@ public class DependencyGraph {
     }
   }
 
-  /**
-   * Returns a problem describing that {@code artifact} is unresolvable in the {@code
-   * dependencyGraph}.
-   * 
-   * @deprecated use the instance method instead
-   */
-  @Deprecated
-  public static UnresolvableArtifactProblem createUnresolvableArtifactProblem(
-      DependencyNode root, Artifact artifact) {
-    ImmutableList<List<DependencyNode>> paths = findArtifactPaths(root, artifact);
-    if (paths.isEmpty()) {
-      // On certain conditions, Maven throws ArtifactDescriptorException even when the
-      // (transformed) dependency graph does not contain the problematic artifact any more.
-      // https://issues.apache.org/jira/browse/MNG-6732
-      return new UnresolvableArtifactProblem(artifact);
-    } else {
-      return new UnresolvableArtifactProblem(paths.get(0));
-    }
-  }
-
   private static ImmutableList<List<DependencyNode>> findArtifactPaths(
       DependencyNode root, Artifact artifact) {
     String coordinates = Artifacts.toCoordinates(artifact);

@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
 import com.google.common.collect.ImmutableList;
-import java.util.Collection;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
 /** Prints the dependency tree of Maven artifacts. */
