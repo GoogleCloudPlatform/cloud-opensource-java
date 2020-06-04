@@ -174,7 +174,10 @@ public class DependencyGraph {
     return output;
   }
 
-  Iterable<UnresolvableArtifactProblem> getUnresolvableArtifactProblems() {
+  /**
+   * Returns artifacts that could not be resolved during the construction of this graph. 
+   */
+  public Set<UnresolvableArtifactProblem> getUnresolvableArtifactProblems() {
     return new HashSet<>(artifactProblems);
   }
   

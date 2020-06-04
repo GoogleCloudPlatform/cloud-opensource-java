@@ -24,12 +24,9 @@ import com.google.common.collect.ImmutableList;
 public final class DependencyGraphResult {
 
   private final DependencyGraph dependencyGraph;
-  private final ImmutableList<UnresolvableArtifactProblem> artifactProblems;
 
-  DependencyGraphResult(
-      DependencyGraph dependencyGraph, Iterable<UnresolvableArtifactProblem> artifactProblems) {
+  DependencyGraphResult(DependencyGraph dependencyGraph) {
     this.dependencyGraph = checkNotNull(dependencyGraph);
-    this.artifactProblems = ImmutableList.copyOf(artifactProblems);
   }
 
   public DependencyGraph getDependencyGraph() {
@@ -38,6 +35,6 @@ public final class DependencyGraphResult {
 
   /** Returns problems encountered while constructing the dependency graph. */
   public ImmutableList<UnresolvableArtifactProblem> getArtifactProblems() {
-    return artifactProblems;
+    return ImmutableList.copyOf(dependencyGraph.getUnresolvableArtifactProblems());
   }
 }

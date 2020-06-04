@@ -203,7 +203,7 @@ public final class DependencyGraphBuilder {
     }
 
     levelOrder(node, graph);
-    return new DependencyGraphResult(graph, graph.getUnresolvableArtifactProblems());
+    return new DependencyGraphResult(graph);
   }
 
   private static final class LevelOrderQueueItem {
