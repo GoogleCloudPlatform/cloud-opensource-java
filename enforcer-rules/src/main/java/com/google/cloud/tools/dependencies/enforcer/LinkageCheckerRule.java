@@ -295,16 +295,13 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       DependencyResolutionException resolutionException) throws EnforcerRuleException {
     DependencyResolutionResult result = resolutionException.getResult();
 
-    DependencyNode dependencyGraph = result.getDependencyGraph();
-
     for (Throwable cause = resolutionException.getCause();
         cause != null;
         cause = cause.getCause()) {
       if (cause instanceof ArtifactTransferException) {
         ArtifactTransferException artifactException = (ArtifactTransferException) cause;
         Artifact artifact = artifactException.getArtifact();
-        String warning = DependencyGraphBuilder.createUnresolvableArtifactProblem(
-            dependencyGraph, artifact).toString();
+        String warning = new UnresolvableArtifactProblem(artifact).toString();
         logger.warn(warning);
         break;
       }

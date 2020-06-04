@@ -22,20 +22,16 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
-import java.util.Set;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -185,60 +181,29 @@ public final class DependencyGraphBuilder {
   private DependencyGraphResult buildDependencyGraph(
       List<DependencyNode> dependencyNodes, GraphTraversalOption traversalOption) {
     boolean fullDependency = traversalOption == GraphTraversalOption.FULL;
+    
+    DependencyGraph graph = new DependencyGraph();
     DependencyNode node;
-    ImmutableSet.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableSet.builder();
-
     try {
       node = resolveCompileTimeDependencies(dependencyNodes, fullDependency);
+      graph.setRoot(node);
     } catch (DependencyResolutionException ex) {
       DependencyResult result = ex.getResult();
       node = result.getRoot();
+      graph.setRoot(node);
 
-      Set<Artifact> checkedArtifacts = new HashSet<>();
       for (ArtifactResult artifactResult : result.getArtifactResults()) {
         Artifact resolvedArtifact = artifactResult.getArtifact();
 
         if (resolvedArtifact == null) {
           Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
-          if (checkedArtifacts.add(requestedArtifact)) {
-            artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
-          }
+          graph.addUnresolvableArtifactProblem(requestedArtifact);
         }
       }
     }
 
-    DependencyGraph graph = levelOrder(node);
-    return new DependencyGraphResult(graph, artifactProblems.build());
-  }
-
-  /**
-   * Returns a problem describing that {@code artifact} is unresolvable in the {@code
-   * dependencyGraph}.
-   */
-  public static UnresolvableArtifactProblem createUnresolvableArtifactProblem(
-      DependencyNode dependencyGraph, Artifact artifact) {
-    ImmutableList<List<DependencyNode>> paths = findArtifactPaths(dependencyGraph, artifact);
-    if (paths.isEmpty()) {
-      // On certain conditions, Maven throws ArtifactDescriptorException even when the
-      // (transformed) dependency dependencyGraph does not contain the problematic artifact any
-      // more.
-      // https://issues.apache.org/jira/browse/MNG-6732
-      return new UnresolvableArtifactProblem(artifact);
-    } else {
-      return new UnresolvableArtifactProblem(paths.get(0));
-    }
-  }
-
-  private static ImmutableList<List<DependencyNode>> findArtifactPaths(
-      DependencyNode root, Artifact artifact) {
-    String coordinates = Artifacts.toCoordinates(artifact);
-    DependencyFilter filter =
-        (node, parents) ->
-            node.getArtifact() != null // artifact is null at a root dummy node.
-                && Artifacts.toCoordinates(node.getArtifact()).equals(coordinates);
-    UniquePathRecordingDependencyVisitor visitor = new UniquePathRecordingDependencyVisitor(filter);
-    root.accept(visitor);
-    return ImmutableList.copyOf(visitor.getPaths());
+    levelOrder(node, graph);
+    return new DependencyGraphResult(graph, graph.getUnresolvableArtifactProblems());
   }
 
   private static final class LevelOrderQueueItem {
@@ -271,9 +236,12 @@ public final class DependencyGraphBuilder {
    * @param firstNode node to start traversal
    */
   public static DependencyGraph levelOrder(DependencyNode firstNode) {
-
     DependencyGraph graph = new DependencyGraph();
 
+    return levelOrder(firstNode, graph);
+  }
+
+  private static DependencyGraph levelOrder(DependencyNode firstNode, DependencyGraph graph) {
     Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new LevelOrderQueueItem(firstNode, null));
 

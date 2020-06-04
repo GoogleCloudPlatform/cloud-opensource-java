@@ -21,15 +21,18 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.aether.artifact.Artifact;
-
+import org.eclipse.aether.graph.DependencyFilter;
+import org.eclipse.aether.graph.DependencyNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
 
@@ -50,6 +53,8 @@ public class DependencyGraph {
   // DependencyGraphBuilder builds this in breadth first order, unless explicitly stated otherwise.
   // That is, this list contains the paths to each node in breadth first order 
   private final List<DependencyPath> graph = new ArrayList<>();
+  
+  private final Set<UnresolvableArtifactProblem> artifactProblems = new HashSet<>();
 
   // map of groupId:artifactId to versions
   // TODO if versions' values were the whole coordinate string 
@@ -59,6 +64,8 @@ public class DependencyGraph {
   
   // map of groupId:artifactId:version to paths
   private SetMultimap<String, DependencyPath> paths = HashMultimap.create();
+
+  private DependencyNode root;
   
   @VisibleForTesting
   public DependencyGraph() {
@@ -161,6 +168,70 @@ public class DependencyGraph {
     }
     
     return output;
+  }
+
+  Iterable<UnresolvableArtifactProblem> getUnresolvableArtifactProblems() {
+    return new HashSet<>(artifactProblems);
+  }
+  
+  /**
+   * Creates a problem describing that {@code artifact} is unresolvable in this
+   * dependency graph.
+   */
+  public UnresolvableArtifactProblem createUnresolvableArtifactProblem(Artifact artifact) {
+    ImmutableList<List<DependencyNode>> paths = findArtifactPaths(root, artifact);
+    if (paths.isEmpty()) {
+      // On certain conditions, Maven throws ArtifactDescriptorException even when the
+      // (transformed) dependency graph does not contain the problematic artifact any more.
+      // https://issues.apache.org/jira/browse/MNG-6732
+      return new UnresolvableArtifactProblem(artifact);
+    } else {
+      return new UnresolvableArtifactProblem(paths.get(0));
+    }
+  }
+
+  /**
+   * Returns a problem describing that {@code artifact} is unresolvable in the {@code
+   * dependencyGraph}.
+   * 
+   * @deprecated use the instance method instead
+   */
+  @Deprecated
+  public static UnresolvableArtifactProblem createUnresolvableArtifactProblem(
+      DependencyNode root, Artifact artifact) {
+    ImmutableList<List<DependencyNode>> paths = findArtifactPaths(root, artifact);
+    if (paths.isEmpty()) {
+      // On certain conditions, Maven throws ArtifactDescriptorException even when the
+      // (transformed) dependency graph does not contain the problematic artifact any more.
+      // https://issues.apache.org/jira/browse/MNG-6732
+      return new UnresolvableArtifactProblem(artifact);
+    } else {
+      return new UnresolvableArtifactProblem(paths.get(0));
+    }
+  }
+
+  private static ImmutableList<List<DependencyNode>> findArtifactPaths(
+      DependencyNode root, Artifact artifact) {
+    String coordinates = Artifacts.toCoordinates(artifact);
+    DependencyFilter filter =
+        (node, parents) ->
+            node.getArtifact() != null // artifact is null at a root dummy node.
+                && Artifacts.toCoordinates(node.getArtifact()).equals(coordinates);
+    UniquePathRecordingDependencyVisitor visitor = new UniquePathRecordingDependencyVisitor(filter);
+    root.accept(visitor);
+    return ImmutableList.copyOf(visitor.getPaths());
+  }
+
+  void setRoot(DependencyNode root) {
+    this.root = root;
+  }
+
+  private final Set<Artifact> checkedArtifacts = new HashSet<>();
+  
+  void addUnresolvableArtifactProblem(Artifact artifact) {
+    if (checkedArtifacts.add(artifact)) {
+      artifactProblems.add(createUnresolvableArtifactProblem(artifact));
+    }
   }
   
 }

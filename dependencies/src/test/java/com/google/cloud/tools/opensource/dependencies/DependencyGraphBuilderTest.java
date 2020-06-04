@@ -26,6 +26,7 @@ import com.google.common.truth.Truth;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
@@ -195,17 +196,17 @@ public class DependencyGraphBuilderTest {
         dependencyGraphBuilder.buildFullDependencyGraph(ImmutableList.of(hibernateCore));
 
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
-
     Truth.assertThat(artifactProblems).hasSize(2);
-    UnresolvableArtifactProblem firstProblem = artifactProblems.get(0);
-    assertEquals("xerces:xerces-impl:jar:2.6.2", firstProblem.getArtifact().toString());
 
-    assertEquals(
+    List<String> errorMessages = artifactProblems.stream()
+        .map(x -> x.toString())
+        .collect(Collectors.toList());
+
+    Truth.assertThat(errorMessages).contains(
         "xerces:xerces-impl:jar:2.6.2 was not resolved. "
             + "Dependency path: org.hibernate:hibernate-core:jar:3.5.1-Final (compile) "
             + "> cglib:cglib:jar:2.2 (compile?) > ant:ant:jar:1.6.2 (compile?) "
-            + "> xerces:xerces-impl:jar:2.6.2 (compile?)",
-        firstProblem.toString());
+            + "> xerces:xerces-impl:jar:2.6.2 (compile?)");
   }
 
   @Test
