@@ -71,6 +71,10 @@ public class DependencyGraph {
   public DependencyGraph() {
   }
 
+  public DependencyGraph(DependencyNode root) {
+    this.root = root;
+  }
+
   void addPath(DependencyPath path) {
     Artifact leaf = path.getLeaf();
     if (leaf == null) {
@@ -222,7 +226,7 @@ public class DependencyGraph {
     return ImmutableList.copyOf(visitor.getPaths());
   }
 
-  void setRoot(DependencyNode root) {
+  public void setRoot(DependencyNode root) {
     this.root = root;
   }
 

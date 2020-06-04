@@ -299,9 +299,13 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         cause != null;
         cause = cause.getCause()) {
       if (cause instanceof ArtifactTransferException) {
+        
+        DependencyNode root = result.getDependencyGraph();
+        DependencyGraph graph = new DependencyGraph(root);
+        
         ArtifactTransferException artifactException = (ArtifactTransferException) cause;
         Artifact artifact = artifactException.getArtifact();
-        String warning = new UnresolvableArtifactProblem(artifact).toString();
+        String warning = graph.createUnresolvableArtifactProblem(artifact).toString();
         logger.warn(warning);
         break;
       }

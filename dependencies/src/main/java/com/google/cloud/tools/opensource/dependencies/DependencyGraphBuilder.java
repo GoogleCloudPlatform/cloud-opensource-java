@@ -182,15 +182,15 @@ public final class DependencyGraphBuilder {
       List<DependencyNode> dependencyNodes, GraphTraversalOption traversalOption) {
     boolean fullDependency = traversalOption == GraphTraversalOption.FULL;
     
-    DependencyGraph graph = new DependencyGraph();
+    DependencyGraph graph;
     DependencyNode node;
     try {
       node = resolveCompileTimeDependencies(dependencyNodes, fullDependency);
-      graph.setRoot(node);
+      graph = new DependencyGraph(node);
     } catch (DependencyResolutionException ex) {
       DependencyResult result = ex.getResult();
       node = result.getRoot();
-      graph.setRoot(node);
+      graph = new DependencyGraph(node);
 
       for (ArtifactResult artifactResult : result.getArtifactResults()) {
         Artifact resolvedArtifact = artifactResult.getArtifact();
