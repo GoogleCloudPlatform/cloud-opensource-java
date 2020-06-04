@@ -180,15 +180,12 @@ public final class DependencyGraphBuilder {
       List<DependencyNode> dependencyNodes, GraphTraversalOption traversalOption) {
     boolean fullDependency = traversalOption == GraphTraversalOption.FULL;
     
-    DependencyGraph graph;
-    DependencyNode node;
     try {
-      node = resolveCompileTimeDependencies(dependencyNodes, fullDependency);
-      graph = new DependencyGraph(node);
+      DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, fullDependency);
+      return DependencyGraph.from(node);
     } catch (DependencyResolutionException ex) {
       DependencyResult result = ex.getResult();
-      node = result.getRoot();
-      graph = new DependencyGraph(node);
+      DependencyGraph graph = DependencyGraph.from(result.getRoot());
 
       for (ArtifactResult artifactResult : result.getArtifactResults()) {
         Artifact resolvedArtifact = artifactResult.getArtifact();
@@ -198,9 +195,9 @@ public final class DependencyGraphBuilder {
           graph.addUnresolvableArtifactProblem(requestedArtifact);
         }
       }
+      
+      return graph;
     }
-
-    return DependencyGraph.levelOrder(graph);
   }
 
   private enum GraphTraversalOption {

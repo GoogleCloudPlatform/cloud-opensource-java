@@ -234,11 +234,13 @@ public class DependencyGraph {
   public static DependencyGraph from(DependencyNode root) {
     DependencyGraph graph = new DependencyGraph(root);
   
-    return levelOrder(graph);
+    levelOrder(graph);
+    
+    return graph;
   }
 
-  // a bit weird; this modifies the argument and returns it
-  static DependencyGraph levelOrder(DependencyGraph graph) {
+  // this modifies the argument
+  private static void levelOrder(DependencyGraph graph) {
     Queue<DependencyGraph.LevelOrderQueueItem> queue = new ArrayDeque<>();
     queue.add(new DependencyGraph.LevelOrderQueueItem(graph.root, null));
   
@@ -282,8 +284,6 @@ public class DependencyGraph {
         queue.add(new DependencyGraph.LevelOrderQueueItem(child, path));
       }
     }
-  
-    return graph;
   }
   
 }
