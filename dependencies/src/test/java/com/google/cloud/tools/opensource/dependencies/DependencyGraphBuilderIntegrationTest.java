@@ -50,7 +50,7 @@ public class DependencyGraphBuilderIntegrationTest {
 
     DependencyGraphResult result =
         graphBuilder.buildFullDependencyGraph(ImmutableList.of(artifact));
-    Truth.assertThat(result.getArtifactProblems())
+    Truth.assertThat(result.getDependencyGraph().getUnresolvedArtifacts())
         .comparingElementsUsing(problemOnArtifact)
         .contains("com.google.guava:guava:15.0-rc1");
   }

@@ -79,6 +79,6 @@ public final class ClassPathBuilder {
         multimap.put(new ClassPathEntry(artifact), dependencyPath);
       }
     }
-    return new ClassPathResult(multimap, result.getArtifactProblems());
+    return new ClassPathResult(multimap, result.getDependencyGraph().getUnresolvedArtifacts());
   }
 }

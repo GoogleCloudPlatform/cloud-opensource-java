@@ -26,6 +26,7 @@ import com.google.common.truth.Truth;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -145,7 +146,7 @@ public class DependencyGraphBuilderTest {
     DependencyGraphResult dependencyGraphResult =
         dependencyGraphBuilder.buildMavenDependencyGraph(new Dependency(nettyArtifact, ""));
 
-    Truth.assertThat(dependencyGraphResult.getArtifactProblems()).isEmpty();
+    Truth.assertThat(dependencyGraphResult.getDependencyGraph().getUnresolvedArtifacts()).isEmpty();
     Truth.assertThat(dependencyGraphResult.getDependencyGraph().list()).isNotEmpty();
   }
 
@@ -180,7 +181,7 @@ public class DependencyGraphBuilderTest {
     DependencyGraphResult result =
         dependencyGraphBuilder.buildFullDependencyGraph(ImmutableList.of(hibernateCore));
 
-    ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
+    Set<UnresolvableArtifactProblem> problems = result.getDependencyGraph().getUnresolvedArtifacts();
     for (UnresolvableArtifactProblem problem : problems) {
       Truth.assertThat(problem.toString()).doesNotContain("jboss-servlet-api_3.0");
     }
@@ -195,7 +196,7 @@ public class DependencyGraphBuilderTest {
     DependencyGraphResult result =
         dependencyGraphBuilder.buildFullDependencyGraph(ImmutableList.of(hibernateCore));
 
-    ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
+    Set<UnresolvableArtifactProblem> artifactProblems = result.getDependencyGraph().getUnresolvedArtifacts();
     Truth.assertThat(artifactProblems).hasSize(2);
 
     List<String> errorMessages = artifactProblems.stream()
@@ -231,7 +232,7 @@ public class DependencyGraphBuilderTest {
         dependencyGraphBuilder.buildFullDependencyGraph(
             ImmutableList.of(new DefaultArtifact("ant:ant:jar:1.6.2")));
 
-    ImmutableList<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
+    Set<UnresolvableArtifactProblem> problems = result.getDependencyGraph().getUnresolvedArtifacts();
 
     Truth.assertThat(problems)
         .comparingElementsUsing(problemOnArtifact)

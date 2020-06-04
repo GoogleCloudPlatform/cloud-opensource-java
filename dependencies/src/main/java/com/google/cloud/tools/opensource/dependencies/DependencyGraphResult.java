@@ -18,8 +18,6 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.collect.ImmutableList;
-
 /** Result of dependency graph building with {@link UnresolvableArtifactProblem}s if any. */
 public final class DependencyGraphResult {
 
@@ -31,10 +29,5 @@ public final class DependencyGraphResult {
 
   public DependencyGraph getDependencyGraph() {
     return dependencyGraph;
-  }
-
-  /** Returns problems encountered while constructing the dependency graph. */
-  public ImmutableList<UnresolvableArtifactProblem> getArtifactProblems() {
-    return ImmutableList.copyOf(dependencyGraph.getUnresolvableArtifactProblems());
   }
 }

@@ -177,7 +177,7 @@ public class DependencyGraph {
   /**
    * Returns artifacts that could not be resolved during the construction of this graph. 
    */
-  public Set<UnresolvableArtifactProblem> getUnresolvableArtifactProblems() {
+  public Set<UnresolvableArtifactProblem> getUnresolvedArtifacts() {
     return new HashSet<>(artifactProblems);
   }
   

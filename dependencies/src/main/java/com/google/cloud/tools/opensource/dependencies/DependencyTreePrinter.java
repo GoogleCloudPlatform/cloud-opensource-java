@@ -40,8 +40,7 @@ class DependencyTreePrinter {
     DependencyGraphResult result = dependencyGraphBuilder.buildFullDependencyGraph(
         ImmutableList.of(rootArtifact));
     
-    Collection<UnresolvableArtifactProblem> problems = result.getArtifactProblems();
-    for (UnresolvableArtifactProblem problem : problems) {
+    for (UnresolvableArtifactProblem problem : result.getDependencyGraph().getUnresolvedArtifacts()) {
       System.out.println(problem);
     }
     
