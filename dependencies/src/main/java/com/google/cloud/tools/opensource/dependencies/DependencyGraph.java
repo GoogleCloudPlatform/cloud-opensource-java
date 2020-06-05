@@ -32,6 +32,7 @@ import java.util.Set;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.SetMultimap;
@@ -84,6 +85,7 @@ public class DependencyGraph {
     this.root = root;
   }
 
+  @VisibleForTesting
   void addPath(DependencyPath path) {
     Artifact leaf = path.getLeaf();
     if (leaf == null) {
