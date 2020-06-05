@@ -29,7 +29,6 @@ import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.FilteringZipDependencySelector;
 import com.google.cloud.tools.opensource.dependencies.NonTestDependencySelector;
@@ -295,16 +294,17 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       DependencyResolutionException resolutionException) throws EnforcerRuleException {
     DependencyResolutionResult result = resolutionException.getResult();
 
-    DependencyNode dependencyGraph = result.getDependencyGraph();
-
     for (Throwable cause = resolutionException.getCause();
         cause != null;
         cause = cause.getCause()) {
       if (cause instanceof ArtifactTransferException) {
+        
+        DependencyNode root = result.getDependencyGraph();
+        DependencyGraph graph = new DependencyGraph(root);
+        
         ArtifactTransferException artifactException = (ArtifactTransferException) cause;
         Artifact artifact = artifactException.getArtifact();
-        String warning = DependencyGraphBuilder.createUnresolvableArtifactProblem(
-            dependencyGraph, artifact).toString();
+        String warning = graph.createUnresolvableArtifactProblem(artifact).toString();
         logger.warn(warning);
         break;
       }
@@ -321,7 +321,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   private static ClassPathResult buildClassPathResult(DependencyResolutionResult result)
       throws EnforcerRuleException {
     // The root node must have the project's JAR file
-    File rootFile = result.getDependencyGraph().getArtifact().getFile();
+    DependencyNode root = result.getDependencyGraph();
+    File rootFile = root.getArtifact().getFile();
     if (rootFile == null) {
       throw new EnforcerRuleException("The root project artifact is not associated with a file.");
     }
@@ -330,8 +331,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
     Set<Artifact> unresolvedArtifacts =
         unresolvedDependencies.stream().map(Dependency::getArtifact).collect(toImmutableSet());
 
-    DependencyGraph dependencyGraph =
-        DependencyGraphBuilder.levelOrder(result.getDependencyGraph());
+    DependencyGraph dependencyGraph = DependencyGraph.from(root);
     ImmutableListMultimap.Builder<ClassPathEntry, DependencyPath> builder =
         ImmutableListMultimap.builder();
     ImmutableList.Builder<UnresolvableArtifactProblem> problems = ImmutableList.builder();

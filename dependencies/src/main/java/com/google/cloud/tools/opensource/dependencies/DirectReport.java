@@ -41,19 +41,18 @@ class DirectReport {
     
     Artifact input = new DefaultArtifact(args[0]);
     DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
-    DependencyGraphResult dependencyGraphResult =
+    DependencyGraph dependencyGraph =
         dependencyGraphBuilder.buildMavenDependencyGraph(new Dependency(input, ""));
 
-    for (DependencyPath dependencyPath : dependencyGraphResult.getDependencyGraph().list()) {
-      if (dependencyPath.size() != 2) {
-        continue;
+    for (DependencyPath dependencyPath : dependencyGraph.list()) {
+      if (dependencyPath.size() == 2) {
+        Artifact artifact = dependencyPath.getLeaf();
+        System.out.println("  <dependency>");
+        System.out.println("    <groupId>" + artifact.getGroupId() + "</groupId>");
+        System.out.println("    <artifactId>" + artifact.getArtifactId() + "</artifactId>");
+        System.out.println("    <version>" + artifact.getVersion() + "</version>");
+        System.out.println("  </dependency>");
       }
-      Artifact artifact = dependencyPath.getLeaf();
-      System.out.println("  <dependency>");
-      System.out.println("    <groupId>" + artifact.getGroupId() + "</groupId>");
-      System.out.println("    <artifactId>" + artifact.getArtifactId() + "</artifactId>");
-      System.out.println("    <version>" + artifact.getVersion() + "</version>");
-      System.out.println("  </dependency>");
     }
   }
 

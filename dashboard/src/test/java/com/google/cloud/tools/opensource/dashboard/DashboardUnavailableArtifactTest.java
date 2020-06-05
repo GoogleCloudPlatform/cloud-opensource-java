@@ -74,8 +74,8 @@ public class DashboardUnavailableArtifactTest {
     Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nonexistent:jar:1.15.0");
 
     Map<Artifact, ArtifactInfo> map = new LinkedHashMap<>();
-    DependencyGraph graph1 = new DependencyGraph();
-    DependencyGraph graph2 = new DependencyGraph();
+    DependencyGraph graph1 = new DependencyGraph(null);
+    DependencyGraph graph2 = new DependencyGraph(null);
     map.put(validArtifact, new ArtifactInfo(graph1, graph2));
     map.put(nonExistentArtifact, new ArtifactInfo(new RepositoryException("foo")));
     

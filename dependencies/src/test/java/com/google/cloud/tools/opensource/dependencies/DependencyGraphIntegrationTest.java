@@ -43,8 +43,7 @@ public class DependencyGraphIntegrationTest {
 
     DependencyGraph graph =
         dependencyGraphBuilder
-            .buildFullDependencyGraph(ImmutableList.of(core))
-            .getDependencyGraph();
+            .buildFullDependencyGraph(ImmutableList.of(core));
     List<Update> updates = graph.findUpdates();
 
     // Order of updates are not important
@@ -89,9 +88,7 @@ public class DependencyGraphIntegrationTest {
         new DefaultArtifact("org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.5.0");
     DependencyGraph graph =
         dependencyGraphBuilder
-            .buildFullDependencyGraph(ImmutableList.of(beam))
-            .getDependencyGraph();
-
+            .buildFullDependencyGraph(ImmutableList.of(beam));
     // should not throw
     graph.findUpdates();
   }
@@ -100,12 +97,9 @@ public class DependencyGraphIntegrationTest {
   // a non-Google dependency graph that's well understood and thus useful for debugging
   public void testJaxen() {
 
-    DefaultArtifact jaxen =
-        new DefaultArtifact("jaxen:jaxen:1.1.6");
+    DefaultArtifact jaxen = new DefaultArtifact("jaxen:jaxen:1.1.6");
     DependencyGraph graph =
-        dependencyGraphBuilder
-            .buildFullDependencyGraph(ImmutableList.of(jaxen))
-            .getDependencyGraph();
+        dependencyGraphBuilder.buildFullDependencyGraph(ImmutableList.of(jaxen));
 
     List<Update> updates = graph.findUpdates();
     Truth.assertThat(updates).hasSize(6);
@@ -123,12 +117,10 @@ public class DependencyGraphIntegrationTest {
     DefaultArtifact grpc = new DefaultArtifact("io.grpc:grpc-auth:1.15.0");
     DependencyGraph completeDependencies =
         dependencyGraphBuilder
-            .buildFullDependencyGraph(ImmutableList.of(grpc))
-            .getDependencyGraph();
+            .buildFullDependencyGraph(ImmutableList.of(grpc));
     DependencyGraph transitiveDependencies =
         dependencyGraphBuilder
-            .buildMavenDependencyGraph(new Dependency(grpc, "compile"))
-            .getDependencyGraph();
+            .buildMavenDependencyGraph(new Dependency(grpc, "compile"));
 
     Map<String, String> complete = completeDependencies.getHighestVersionMap();
     Map<String, String> transitive =
@@ -147,8 +139,7 @@ public class DependencyGraphIntegrationTest {
     DefaultArtifact artifact = new DefaultArtifact("com.google.cloud:google-cloud-language:1.37.1");
     DependencyGraph graph =
         dependencyGraphBuilder
-            .buildFullDependencyGraph(ImmutableList.of(artifact))
-            .getDependencyGraph();
+            .buildFullDependencyGraph(ImmutableList.of(artifact));
     List<DependencyPath> conflicts = graph.findConflicts();
     List<String> leaves = new ArrayList<>();
     for (DependencyPath path : conflicts) {

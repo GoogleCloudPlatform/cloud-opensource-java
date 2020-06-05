@@ -16,20 +16,25 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 import org.eclipse.aether.artifact.Artifact;
-
+import org.eclipse.aether.graph.DependencyFilter;
+import org.eclipse.aether.graph.DependencyNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.TreeMultimap;
 
@@ -47,9 +52,23 @@ import com.google.common.collect.TreeMultimap;
  */
 public class DependencyGraph {
 
+  private static final class LevelOrderQueueItem {
+    final DependencyNode dependencyNode;
+  
+    // Null for the first item
+    final DependencyPath parentPath;
+  
+    LevelOrderQueueItem(DependencyNode dependencyNode, DependencyPath parentPath) {
+      this.dependencyNode = dependencyNode;
+      this.parentPath = parentPath;
+    }
+  }
+
   // DependencyGraphBuilder builds this in breadth first order, unless explicitly stated otherwise.
   // That is, this list contains the paths to each node in breadth first order 
   private final List<DependencyPath> graph = new ArrayList<>();
+  
+  private final Set<UnresolvableArtifactProblem> artifactProblems = new HashSet<>();
 
   // map of groupId:artifactId to versions
   // TODO if versions' values were the whole coordinate string 
@@ -59,11 +78,14 @@ public class DependencyGraph {
   
   // map of groupId:artifactId:version to paths
   private SetMultimap<String, DependencyPath> paths = HashMultimap.create();
-  
-  @VisibleForTesting
-  public DependencyGraph() {
+
+  private DependencyNode root;
+
+  public DependencyGraph(DependencyNode root) {
+    this.root = root;
   }
 
+  @VisibleForTesting
   void addPath(DependencyPath path) {
     Artifact leaf = path.getLeaf();
     if (leaf == null) {
@@ -161,6 +183,109 @@ public class DependencyGraph {
     }
     
     return output;
+  }
+
+  /**
+   * Returns artifacts that could not be resolved during the construction of this graph. 
+   */
+  public Set<UnresolvableArtifactProblem> getUnresolvedArtifacts() {
+    return new HashSet<>(artifactProblems);
+  }
+  
+  /**
+   * Creates a problem describing that {@code artifact} is unresolvable in this
+   * dependency graph.
+   */
+  public UnresolvableArtifactProblem createUnresolvableArtifactProblem(Artifact artifact) {
+    ImmutableList<List<DependencyNode>> paths = findArtifactPaths(root, artifact);
+    if (paths.isEmpty()) {
+      // On certain conditions, Maven throws ArtifactDescriptorException even when the
+      // (transformed) dependency graph does not contain the problematic artifact any more.
+      // https://issues.apache.org/jira/browse/MNG-6732
+      return new UnresolvableArtifactProblem(artifact);
+    } else {
+      return new UnresolvableArtifactProblem(paths.get(0));
+    }
+  }
+
+  private static ImmutableList<List<DependencyNode>> findArtifactPaths(
+      DependencyNode root, Artifact artifact) {
+    String coordinates = Artifacts.toCoordinates(artifact);
+    DependencyFilter filter =
+        (node, parents) ->
+            node.getArtifact() != null // artifact is null at a root dummy node.
+                && Artifacts.toCoordinates(node.getArtifact()).equals(coordinates);
+    UniquePathRecordingDependencyVisitor visitor = new UniquePathRecordingDependencyVisitor(filter);
+    root.accept(visitor);
+    return ImmutableList.copyOf(visitor.getPaths());
+  }
+
+  private final Set<Artifact> checkedArtifacts = new HashSet<>();
+  
+  void addUnresolvableArtifactProblem(Artifact artifact) {
+    if (checkedArtifacts.add(artifact)) {
+      artifactProblems.add(createUnresolvableArtifactProblem(artifact));
+    }
+  }
+
+  /**
+   * Builds a dependency graph by traversing dependency tree in level-order (breadth-first search).
+   *
+   * @param root node to start traversal
+   */
+  public static DependencyGraph from(DependencyNode root) {
+    DependencyGraph graph = new DependencyGraph(root);
+  
+    levelOrder(graph);
+    
+    return graph;
+  }
+
+  // this modifies the argument
+  private static void levelOrder(DependencyGraph graph) {
+    Queue<DependencyGraph.LevelOrderQueueItem> queue = new ArrayDeque<>();
+    queue.add(new DependencyGraph.LevelOrderQueueItem(graph.root, null));
+  
+    while (!queue.isEmpty()) {
+      DependencyGraph.LevelOrderQueueItem item = queue.poll();
+      DependencyNode dependencyNode = item.dependencyNode;
+  
+      DependencyPath parentPath = item.parentPath;
+      Artifact artifact = dependencyNode.getArtifact();
+      if (artifact != null && parentPath != null) {
+        // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
+        // set to null
+  
+        // When there's an ancestor dependency node with the same groupId and artifactId as
+        // the dependency, Maven will not pick up the dependency. For example, if there's a
+        // dependency path "g1:a1:2.0 / ... / g1:a1:1.0" (the leftmost node as root), then Maven's
+        // dependency mediation always picks g1:a1:2.0 over g1:a1:1.0.
+        
+        // TODO This comment doesn't seem right. That's true for the root,
+        // but not for non-root nodes. A node elsewhere in the tree could cause the 
+        // descendant to be selected. 
+        
+        String groupIdAndArtifactId = Artifacts.makeKey(artifact);
+        boolean ancestorHasSameKey =
+            parentPath.getArtifacts().stream()
+                .map(Artifacts::makeKey)
+                .anyMatch(key -> key.equals(groupIdAndArtifactId));
+        if (ancestorHasSameKey) {
+          continue;
+        }
+      }
+  
+      // parentPath is null for the first item
+      DependencyPath path =
+          parentPath == null
+              ? new DependencyPath(artifact)
+              : parentPath.append(dependencyNode.getDependency());
+      graph.addPath(path);
+  
+      for (DependencyNode child : dependencyNode.getChildren()) {
+        queue.add(new DependencyGraph.LevelOrderQueueItem(child, path));
+      }
+    }
   }
   
 }

@@ -75,12 +75,11 @@ public class LinkageCheckerTest {
   /** Returns the class path resolved for the transitive dependencies of {@code coordinates}. */
   private ImmutableList<ClassPathEntry> resolveTransitiveDependencyPaths(String coordinates)
       throws IOException {
-    
+
     DependencyGraph dependencies =
-        dependencyGraphBuilder
-            .buildMavenDependencyGraph(new Dependency(new DefaultArtifact(coordinates), "compile"))
-            .getDependencyGraph();
-    
+        dependencyGraphBuilder.buildMavenDependencyGraph(
+            new Dependency(new DefaultArtifact(coordinates), "compile"));
+
     ImmutableList.Builder<ClassPathEntry> builder = ImmutableList.builder();
     for (DependencyPath path : dependencies.list()) {
       builder.add(new ClassPathEntry(path.getLeaf()));
@@ -778,14 +777,12 @@ public class LinkageCheckerTest {
     DependencyGraph slf4jGraph =
         dependencyGraphBuilder
             .buildMavenDependencyGraph(
-                new Dependency(new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"), "compile"))
-            .getDependencyGraph();
+                new Dependency(new DefaultArtifact("org.slf4j:slf4j-api:1.7.26"), "compile"));
     DependencyGraph logbackGraph =
         dependencyGraphBuilder
             .buildMavenDependencyGraph(
                 new Dependency(
-                    new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"), "compile"))
-            .getDependencyGraph();
+                    new DefaultArtifact("ch.qos.logback:logback-classic:1.2.3"), "compile"));
 
     ClassPathEntry slf4jJar =
         new ClassPathEntry(slf4jGraph.list().get(0).getLeaf().getFile().toPath());

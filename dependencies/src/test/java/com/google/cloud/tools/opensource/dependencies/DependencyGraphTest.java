@@ -29,7 +29,7 @@ import org.junit.Test;
 
 public class DependencyGraphTest {
 
-  private DependencyGraph graph = new DependencyGraph();
+  private DependencyGraph graph = new DependencyGraph(null);
   private Artifact foo = new DefaultArtifact("com.google:foo:1");
   private Artifact bar = new DefaultArtifact("com.google:bar:1");
   private Artifact baz1 = new DefaultArtifact("com.google:baz:1");
