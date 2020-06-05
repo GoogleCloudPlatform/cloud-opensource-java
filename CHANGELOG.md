@@ -1,5 +1,8 @@
 # Linkage Checker Enforcer Rule Change Log
 
+## 1.4.2
+* Fixed unnecessary graph traversal logic when building dependency graphs
+
 ## 1.4.1
 * Fixed false positive linkage errors in Maven projects with WAR packaging
 
