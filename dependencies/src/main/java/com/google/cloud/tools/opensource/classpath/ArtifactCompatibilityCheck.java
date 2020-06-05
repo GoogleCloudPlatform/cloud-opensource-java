@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -102,8 +103,18 @@ class ArtifactCompatibilityCheck {
    * their dependencies.
    */
   private static LinkageChecker linkageCheckerOf(List<Artifact> artifacts) throws IOException {
-    ClassPathBuilder classPathBuilder = new ClassPathBuilder();
+
+    DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder(
+        ImmutableList.of(
+            "https://maven-central.storage-download.googleapis.com/maven2/",
+            "https://repository.apache.org/content/repositories/snapshots/"
+        )
+    );
+    ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
     ClassPathResult classPathResult = classPathBuilder.resolve(artifacts);
+    if (!classPathResult.getArtifactProblems().isEmpty()) {
+      throw new IOException("Couldn't resolve class path: " + classPathResult.getArtifactProblems());
+    }
 
     ImmutableList<ClassPathEntry> classPath = classPathResult.getClassPath();
     return LinkageChecker.create(classPath, classPath.subList(0, artifacts.size()), null);
