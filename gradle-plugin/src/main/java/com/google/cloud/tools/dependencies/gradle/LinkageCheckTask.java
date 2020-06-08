@@ -22,6 +22,9 @@ import java.io.IOException;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
 
+/**
+ * Task to run Linkage Checker for the dependencies of the Gradle project.
+ */
 public class LinkageCheckTask extends DefaultTask {
   @TaskAction
   public void run() throws IOException {
@@ -31,6 +34,7 @@ public class LinkageCheckTask extends DefaultTask {
       extension = new LinkageCheckerPluginExtension();
     }
 
+    // TODO(suztomo): run linkage checker for the dependencies of the Gradle project.
     String message = extension.getMessage();
     LinkageChecker linkageChecker = LinkageChecker.create(ImmutableList.of());
     System.out.println("Hello from " + linkageChecker + ": " + message);

@@ -19,6 +19,9 @@ package com.google.cloud.tools.dependencies.gradle;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
+/**
+ * Gradle plugin to create a "linkageCheck" in a Gradle project.
+ */
 public class LinkageCheckerPlugin implements Plugin<Project> {
   @Override
   public void apply(Project project) {

@@ -16,7 +16,13 @@
 
 package com.google.cloud.tools.dependencies.gradle;
 
+/**
+ * Properties to control the behavior of the Linakge Checker plugin.
+ *
+ * TODO(suztomo): Implement real configuration as in go/jdd-gradle-plugin.
+ */
 public class LinkageCheckerPluginExtension {
+
   private String message = "Default Greeting from Gradle";
 
   public String getMessage() {
