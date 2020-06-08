@@ -3,11 +3,11 @@
 Install the [`gh`](https://github.com/cli/cli)
 tool if you not previously done so.
 
-Run `prepare_release.sh` with `bom` argument in `boms/cloud-oss-bom` directory:
+Run `prepare_release.sh` with `bom` argument:
 
 ```
-$ cd boms/cloud-oss-bom
-$ ../../scripts/prepare_release.sh bom <release version> [<post-release-version>]
+$ cd cloud-opensource-java
+$ scripts/prepare_release.sh bom <release version> [<post-release-version>]
 ```
 
 You might see this message:
