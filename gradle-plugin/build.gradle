@@ -15,9 +15,9 @@
  */
 
 plugins {
-    id 'java-gradle-plugin'
-    id 'groovy'
-    id 'maven'
+  id 'java-gradle-plugin'
+  id 'groovy'
+  id 'maven'
 }
 
 group = 'com.google.cloud.tools'
@@ -26,22 +26,22 @@ version = '0.1.0-SNAPSHOT'
 sourceCompatibility = 1.8
 
 dependencies {
-    implementation 'com.google.cloud.tools:dependencies:1.4.2'
-    testImplementation 'junit:junit:4.12'
+  implementation 'com.google.cloud.tools:dependencies:1.4.2'
+  testImplementation 'junit:junit:4.12'
 }
 
 repositories {
-    mavenCentral()
-    mavenLocal()
+  mavenCentral()
+  mavenLocal()
 }
 
 gradlePlugin {
-    plugins {
-        linkageCheckerPlugin {
-            id = 'com.google.cloud.tools.linkageChecker'
-            displayName = 'Linkage Checker'
-            description = 'Tool to verify the compatibility of the class path'
-            implementationClass = 'com.google.cloud.tools.dependencies.gradle.LinkageCheckerPlugin'
-        }
+  plugins {
+    linkageCheckerPlugin {
+      id = 'com.google.cloud.tools.linkageChecker'
+      displayName = 'Linkage Checker'
+      description = 'Tool to verify the compatibility of the class path'
+      implementationClass = 'com.google.cloud.tools.dependencies.gradle.LinkageCheckerPlugin'
     }
+  }
 }

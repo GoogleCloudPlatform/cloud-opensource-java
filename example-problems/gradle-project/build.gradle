@@ -15,16 +15,16 @@
  */
 
 buildscript {
-    repositories {
-        mavenLocal()
-    }
-    dependencies {
-        classpath 'com.google.cloud.tools:linkage-checker-gradle-plugin:0.1.0-SNAPSHOT'
-    }
+  repositories {
+    mavenLocal()
+  }
+  dependencies {
+    classpath 'com.google.cloud.tools:linkage-checker-gradle-plugin:0.1.0-SNAPSHOT'
+  }
 }
 
 apply plugin: 'com.google.cloud.tools.linkageChecker'
 
 linkageChecker {
-    message = "Hi from an extension"
+  message = "Hi from an extension"
 }
