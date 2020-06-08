@@ -26,9 +26,8 @@ version = '0.1.0-SNAPSHOT'
 sourceCompatibility = 1.8
 
 dependencies {
-    compile gradleApi()
-
-    testCompile 'junit:junit:4.12'
+    implementation 'com.google.cloud.tools:dependencies:1.4.2'
+    testImplementation 'junit:junit:4.12'
 }
 
 repositories {

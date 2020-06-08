@@ -16,18 +16,23 @@
 
 package com.google.cloud.tools.dependencies.gradle;
 
+import com.google.cloud.tools.opensource.classpath.LinkageChecker;
+import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
 
 public class LinkageCheckTask extends DefaultTask {
   @TaskAction
-  public void greet() {
-    LinkageCheckerPluginExtension extension = getProject().getExtensions().findByType(LinkageCheckerPluginExtension.class);
+  public void run() throws IOException {
+    LinkageCheckerPluginExtension extension =
+        getProject().getExtensions().findByType(LinkageCheckerPluginExtension.class);
     if (extension == null) {
       extension = new LinkageCheckerPluginExtension();
     }
 
     String message = extension.getMessage();
-    System.out.println("Hello from plugin: " + message);
+    LinkageChecker linkageChecker = LinkageChecker.create(ImmutableList.of());
+    System.out.println("Hello from " + linkageChecker + ": " + message);
   }
 }
