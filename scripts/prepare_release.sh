@@ -64,6 +64,11 @@ git pull
 # Checks out a new branch for this version release (eg. 1.5.7).
 git checkout -b ${VERSION}-${SUFFIX}
 
+
+if [[ "${SUFFIX}" = "bom" ]]; then
+  cd boms/cloud-oss-bom
+fi
+
 # Updates the pom.xml with the version to release.
 mvn versions:set versions:commit -DnewVersion=${VERSION} -DgenerateBackupPoms=false
 
