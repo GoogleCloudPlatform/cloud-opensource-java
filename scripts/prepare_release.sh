@@ -98,7 +98,7 @@ gh pr create -t "Release ${VERSION}-${SUFFIX}" -b "Release ${VERSION}-${SUFFIX}"
 EchoGreen 'Ask someone to approve this PR:'
 echo https://github.com/GoogleCloudPlatform/cloud-opensource-java/compare/${VERSION}-${SUFFIX}
 EchoGreen 'Start the Rapid build now:'
-EchoGreen 'https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md#run-the-rapid-workflow'
+EchoGreen 'https://rapid.corp.google.com/cloud-java-tools-cloud-opensource-java-bom-kokoro-release'
 EchoGreen 'After the PR is approved and the Rapid build succeeds, you can release the library in OSSRH.'
 
 
