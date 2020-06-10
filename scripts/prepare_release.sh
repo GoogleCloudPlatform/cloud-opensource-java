@@ -95,8 +95,7 @@ git push --set-upstream origin ${VERSION}-${SUFFIX}
 gh pr create -t "Release ${VERSION}-${SUFFIX}" -b "Release ${VERSION}-${SUFFIX}"
 
 # File a PR on Github for the new branch. Have someone LGTM it, which gives you permission to continue.
-EchoGreen 'Ask someone to approve this PR:'
-echo https://github.com/GoogleCloudPlatform/cloud-opensource-java/compare/${VERSION}-${SUFFIX}
+EchoGreen 'Ask someone to approve this PR.'
 EchoGreen 'Start the Rapid build now:'
 EchoGreen 'https://rapid.corp.google.com/cloud-java-tools-cloud-opensource-java-bom-kokoro-release'
 EchoGreen 'After the PR is approved and the Rapid build succeeds, you can release the library in OSSRH.'
