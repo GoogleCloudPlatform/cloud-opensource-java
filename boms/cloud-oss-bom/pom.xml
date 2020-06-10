@@ -46,8 +46,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <guava.version>29.0-android</guava.version>
     <google.cloud.java.version>0.128.0</google.cloud.java.version>
-    <io.grpc.version>1.29.0</io.grpc.version>
-    <protobuf.version>3.12.1</protobuf.version>
+    <io.grpc.version>1.30.0</io.grpc.version>
+    <protobuf.version>3.12.2</protobuf.version>
     <http.version>1.35.0</http.version>
   </properties>
 
