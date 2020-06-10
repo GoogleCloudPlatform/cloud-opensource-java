@@ -95,25 +95,23 @@ public class LinkageCheckTask extends DefaultTask {
       }
 
       ImmutableList<ClassPathEntry> classPath = classPathBuilder.build();
-      if (classPath.isEmpty()) {
-        // No artifact for this configuration
-        continue;
+      if (!classPath.isEmpty()) {
+        // TODO(suztomo): Specify entry points if reportOnlyReachable is true.
+        LinkageChecker linkageChecker = LinkageChecker.create(classPath);
+
+        ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+            linkageChecker.findSymbolProblems();
+
+        int errorCount = symbolProblems.keySet().size();
+
+        // TODO(suztomo): Show the dependency paths to the problematic artifacts.
+        logger.error(
+            "Linkage Checker rule found {} error{}. Linkage error report:\n{}",
+            errorCount,
+            errorCount > 1 ? "s" : "",
+            SymbolProblem.formatSymbolProblems(symbolProblems));
+        foundError |= errorCount > 0;
       }
-      // TODO(suztomo): Specify entry points if reportOnlyReachable is true.
-      LinkageChecker linkageChecker = LinkageChecker.create(classPath);
-
-      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
-          linkageChecker.findSymbolProblems();
-
-      int errorCount = symbolProblems.keySet().size();
-
-      // TODO(suztomo): Show the dependency paths to the problematic artifacts.
-      logger.error(
-          "Linkage Checker rule found {} error{}. Linkage error report:\n{}",
-          errorCount,
-          errorCount > 1 ? "s" : "",
-          SymbolProblem.formatSymbolProblems(symbolProblems));
-      foundError |= errorCount > 0;
     }
 
     if (foundError) {
