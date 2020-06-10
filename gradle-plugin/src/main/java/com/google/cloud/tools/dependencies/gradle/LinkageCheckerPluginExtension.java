@@ -26,6 +26,16 @@ import java.util.List;
  */
 public class LinkageCheckerPluginExtension {
 
+  private boolean reportOnlyReachable = false;
+
+  public boolean isReportOnlyReachable() {
+    return reportOnlyReachable;
+  }
+
+  public void setReportOnlyReachable(boolean reportOnlyReachable) {
+    this.reportOnlyReachable = reportOnlyReachable;
+  }
+
   private ImmutableSet<String> configurations = ImmutableSet.of();
 
   public ImmutableSet<String> getConfigurations() {

@@ -117,7 +117,7 @@ public class LinkageCheckTask extends DefaultTask {
 
     if (foundError) {
       throw new GradleException(
-          "Linkage Checker found errors in one of configurations. See above for the details.");
+          "Linkage Checker found errors in configurations. See above for the details.");
     }
   }
 }

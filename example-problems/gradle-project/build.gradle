@@ -38,4 +38,5 @@ dependencies {
 
 linkageChecker {
   configurations = ['compile']
+  reportOnlyReachable = true
 }
