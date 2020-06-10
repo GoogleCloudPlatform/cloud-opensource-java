@@ -105,12 +105,14 @@ public class LinkageCheckTask extends DefaultTask {
         int errorCount = symbolProblems.keySet().size();
 
         // TODO(suztomo): Show the dependency paths to the problematic artifacts.
-        logger.error(
-            "Linkage Checker rule found {} error{}. Linkage error report:\n{}",
-            errorCount,
-            errorCount > 1 ? "s" : "",
-            SymbolProblem.formatSymbolProblems(symbolProblems));
-        foundError |= errorCount > 0;
+        if (errorCount > 0) {
+          logger.error(
+              "Linkage Checker rule found {} error{}. Linkage error report:\n{}",
+              errorCount,
+              errorCount > 1 ? "s" : "",
+              SymbolProblem.formatSymbolProblems(symbolProblems));
+          foundError = true;
+        }
       }
     }
 
