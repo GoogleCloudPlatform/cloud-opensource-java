@@ -14,28 +14,12 @@
  * limitations under the License.
  */
 
-buildscript {
-  repositories {
-    mavenCentral()
-    mavenLocal()
+import com.google.common.collect.ImmutableList;
+
+public class App {
+
+  public static void main(String[] arguments) {
+    ImmutableList<String> list = ImmutableList.of("hello");
+    System.out.println(list);
   }
-  dependencies {
-    classpath 'com.google.cloud.tools:linkage-checker-gradle-plugin:0.1.0-SNAPSHOT'
-  }
-}
-
-apply plugin: 'com.google.cloud.tools.linkageChecker'
-apply plugin: 'java'
-
-repositories {
-  mavenCentral()
-}
-
-dependencies {
-  compile 'com.google.cloud:google-cloud-logging:1.101.1'
-  compile 'io.grpc:grpc-core:1.29.0'
-}
-
-linkageChecker {
-  configurations = ['compile']
 }
