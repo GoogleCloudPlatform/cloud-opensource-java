@@ -16,6 +16,9 @@
 
 package com.google.cloud.tools.dependencies.gradle;
 
+import com.google.common.collect.ImmutableSet;
+import java.util.List;
+
 /**
  * Properties to control the behavior of the Linakge Checker plugin.
  *
@@ -23,13 +26,13 @@ package com.google.cloud.tools.dependencies.gradle;
  */
 public class LinkageCheckerPluginExtension {
 
-  private String message = "Default Greeting from Gradle";
+  private ImmutableSet<String> configurations = ImmutableSet.of();
 
-  public String getMessage() {
-    return message;
+  public ImmutableSet<String> getConfigurations() {
+    return configurations;
   }
 
-  public void setMessage(String message) {
-    this.message = message;
+  public void setConfigurations(List<String> configurationNames) {
+    configurations = ImmutableSet.copyOf(configurationNames);
   }
 }
