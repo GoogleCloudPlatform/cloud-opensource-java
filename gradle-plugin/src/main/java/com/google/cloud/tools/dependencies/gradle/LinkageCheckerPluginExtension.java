@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * Properties to control the behavior of the Linkage Checker plugin.
  *
- * TODO(suztomo): Implement real configuration as in go/jdd-gradle-plugin.
+ * <p>TODO(suztomo): Implement real configuration as in go/jdd-gradle-plugin.
  */
 public class LinkageCheckerPluginExtension {
 

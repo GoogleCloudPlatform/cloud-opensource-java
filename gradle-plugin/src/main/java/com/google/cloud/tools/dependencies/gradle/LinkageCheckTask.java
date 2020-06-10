@@ -74,51 +74,57 @@ public class LinkageCheckTask extends DefaultTask {
 
     boolean foundError = false;
     for (Configuration configuration : configurations) {
-      logger.info("Checking {}", configuration);
-      ImmutableList.Builder<ClassPathEntry> classPathBuilder = ImmutableList.builder();
-
-      // TODO(suztomo): Should this include optional dependencies?
-      //  Once we decide what to do with the optional dependencies, let's revisit this logic.
-      for (ResolvedArtifact resolvedArtifact :
-          configuration.getResolvedConfiguration().getResolvedArtifacts()) {
-        ModuleVersionIdentifier moduleVersionId = resolvedArtifact.getModuleVersion().getId();
-        DefaultArtifact artifact =
-            new DefaultArtifact(
-                moduleVersionId.getGroup(),
-                moduleVersionId.getName(),
-                null,
-                null,
-                moduleVersionId.getVersion(),
-                null,
-                resolvedArtifact.getFile());
-        classPathBuilder.add(new ClassPathEntry(artifact));
-      }
-
-      ImmutableList<ClassPathEntry> classPath = classPathBuilder.build();
-      if (!classPath.isEmpty()) {
-        // TODO(suztomo): Specify entry points if reportOnlyReachable is true.
-        LinkageChecker linkageChecker = LinkageChecker.create(classPath);
-
-        ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
-            linkageChecker.findSymbolProblems();
-
-        int errorCount = symbolProblems.keySet().size();
-
-        // TODO(suztomo): Show the dependency paths to the problematic artifacts.
-        if (errorCount > 0) {
-          logger.error(
-              "Linkage Checker rule found {} error{}. Linkage error report:\n{}",
-              errorCount,
-              errorCount > 1 ? "s" : "",
-              SymbolProblem.formatSymbolProblems(symbolProblems));
-          foundError = true;
-        }
-      }
+      foundError |= findLinkageErrors(configuration);
     }
 
     if (foundError) {
       throw new GradleException(
           "Linkage Checker found errors in configurations. See above for the details.");
     }
+  }
+
+  /** Returns true iff {@code configuration}'s artifacts contain linkage errors. */
+  private boolean findLinkageErrors(Configuration configuration) throws IOException {
+    ImmutableList.Builder<ClassPathEntry> classPathBuilder = ImmutableList.builder();
+
+    // TODO(suztomo): Should this include optional dependencies?
+    //  Once we decide what to do with the optional dependencies, let's revisit this logic.
+    for (ResolvedArtifact resolvedArtifact :
+        configuration.getResolvedConfiguration().getResolvedArtifacts()) {
+      ModuleVersionIdentifier moduleVersionId = resolvedArtifact.getModuleVersion().getId();
+      DefaultArtifact artifact =
+          new DefaultArtifact(
+              moduleVersionId.getGroup(),
+              moduleVersionId.getName(),
+              null,
+              null,
+              moduleVersionId.getVersion(),
+              null,
+              resolvedArtifact.getFile());
+      classPathBuilder.add(new ClassPathEntry(artifact));
+    }
+
+    ImmutableList<ClassPathEntry> classPath = classPathBuilder.build();
+    if (!classPath.isEmpty()) {
+      // TODO(suztomo): Specify entry points if reportOnlyReachable is true.
+      LinkageChecker linkageChecker = LinkageChecker.create(classPath);
+
+      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+          linkageChecker.findSymbolProblems();
+
+      int errorCount = symbolProblems.keySet().size();
+
+      // TODO(suztomo): Show the dependency paths to the problematic artifacts.
+      if (errorCount > 0) {
+        logger.error(
+            "Linkage Checker rule found {} error{}. Linkage error report:\n{}",
+            errorCount,
+            errorCount > 1 ? "s" : "",
+            SymbolProblem.formatSymbolProblems(symbolProblems));
+      }
+      return errorCount > 0;
+    }
+    // When the configuration does not have any artifacts, there's no linkage error.
+    return false;
   }
 }
