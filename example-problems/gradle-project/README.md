@@ -1,4 +1,4 @@
-# Linakge Checker Gradle Plugin Example Project
+# Linkage Checker Gradle Plugin Example Project
 
 The Linkage Checker Gradle plugin installs "linkageCheck" task to the project.
 This task finds the missing classes and discrepancy between gax and gRPC versions.
@@ -37,7 +37,7 @@ FAILURE: Build failed with an exception.
 
 * What went wrong:
 Execution failed for task ':linkageCheck'.
-> Linakge Checker found errors in one of configurations. See above for the details.
+> Linkage Checker found errors in one of configurations. See above for the details.
 
 ...
 

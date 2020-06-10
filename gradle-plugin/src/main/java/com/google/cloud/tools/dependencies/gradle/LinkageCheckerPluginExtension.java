@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableSet;
 import java.util.List;
 
 /**
- * Properties to control the behavior of the Linakge Checker plugin.
+ * Properties to control the behavior of the Linkage Checker plugin.
  *
  * TODO(suztomo): Implement real configuration as in go/jdd-gradle-plugin.
  */
