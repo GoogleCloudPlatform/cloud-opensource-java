@@ -101,7 +101,7 @@ public final class DependencyGraphBuilder {
   }
   
   private DependencyNode resolveCompileTimeDependencies(
-      List<DependencyNode> dependencyNodes, boolean fullDependencies)
+      List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session)
       throws DependencyResolutionException {
 
     ImmutableList.Builder<Dependency> dependenciesBuilder = ImmutableList.builder();
@@ -116,11 +116,6 @@ public final class DependencyGraphBuilder {
       }
     }
     ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
-
-    DefaultRepositorySystemSession session =
-        fullDependencies
-            ? RepositoryUtility.newSessionForFullDependency(system)
-            : RepositoryUtility.newSession(system);
             
     if (localRepository != null) {
       LocalRepository local = new LocalRepository(localRepository.toAbsolutePath().toString());
@@ -157,7 +152,8 @@ public final class DependencyGraphBuilder {
   public DependencyGraph buildFullDependencyGraph(List<Artifact> artifacts) {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
-    return buildDependencyGraph(dependencyNodes, GraphTraversalOption.FULL);
+    DefaultRepositorySystemSession session = RepositoryUtility.newSessionForFullDependency(system);
+    return buildDependencyGraph(dependencyNodes, session);
   }
 
   /**
@@ -170,15 +166,14 @@ public final class DependencyGraphBuilder {
    */
   public DependencyGraph buildMavenDependencyGraph(Dependency dependency) {
     return buildDependencyGraph(
-        ImmutableList.of(new DefaultDependencyNode(dependency)), GraphTraversalOption.MAVEN);
+        ImmutableList.of(new DefaultDependencyNode(dependency)), RepositoryUtility.newSession(system));
   }
 
   private DependencyGraph buildDependencyGraph(
-      List<DependencyNode> dependencyNodes, GraphTraversalOption traversalOption) {
-    boolean fullDependency = traversalOption == GraphTraversalOption.FULL;
-    
+      List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session) {
+     
     try {
-      DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, fullDependency);
+      DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, session);
       return DependencyGraph.from(node);
     } catch (DependencyResolutionException ex) {
       DependencyResult result = ex.getResult();
@@ -195,14 +190,6 @@ public final class DependencyGraphBuilder {
       
       return graph;
     }
-  }
-
-  private enum GraphTraversalOption {
-    /** Normal Maven dependency graph */
-    MAVEN,
-
-    /** The full dependency graph */
-    FULL;
   }
 
 }
