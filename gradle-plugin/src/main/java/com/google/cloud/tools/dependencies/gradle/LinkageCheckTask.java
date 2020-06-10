@@ -99,6 +99,7 @@ public class LinkageCheckTask extends DefaultTask {
         // No artifact for this configuration
         continue;
       }
+      // TODO(suztomo): Specify entry points if reportOnlyReachable is true.
       LinkageChecker linkageChecker = LinkageChecker.create(classPath);
 
       ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
