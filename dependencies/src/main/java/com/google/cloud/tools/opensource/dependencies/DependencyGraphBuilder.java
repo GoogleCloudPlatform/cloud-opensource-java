@@ -41,8 +41,7 @@ import org.eclipse.aether.resolution.DependencyResult;
 /**
  * This class builds dependency graphs for Maven artifacts.
  *
- * <p>A Maven dependency graph is the tree you see in {@code mvn dependency:tree} output. This graph
- * has the following attributes:
+ * <p>A Maven dependency graph has the following attributes:
  *
  * <ul>
  *   <li>It contains at most one node with the same group ID and artifact ID. (<a
@@ -55,12 +54,10 @@ import org.eclipse.aether.resolution.DependencyResult;
  *   <li>It does not contain optional dependencies of transitive dependencies.
  * </ul>
  *
- * <p>A full dependency graph is a dependency tree where each node's dependencies are resolved
+ * <p>In a full dependency graph each node's dependencies are resolved
  * recursively. This graph has the following attributes:
  *
  * <ul>
- *   <li>The same artifact, which has the same group:artifact:version, appears in different nodes in
- *       the graph.
  *   <li>The scope of a dependency does not affect the scope of its children's dependencies.
  *   <li>Provided-scope and optional dependencies are not treated differently than any other
  *       dependency.
