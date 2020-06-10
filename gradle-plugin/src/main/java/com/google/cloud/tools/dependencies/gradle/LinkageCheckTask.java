@@ -39,12 +39,8 @@ import org.gradle.api.tasks.TaskAction;
  */
 public class LinkageCheckTask extends DefaultTask {
 
-  Logger logger;
-
   @TaskAction
   public void run() throws IOException {
-    logger = getLogger();
-
     LinkageCheckerPluginExtension extension =
         getProject().getExtensions().findByType(LinkageCheckerPluginExtension.class);
     if (extension == null) {
@@ -55,7 +51,7 @@ public class LinkageCheckTask extends DefaultTask {
     ImmutableSet.Builder<Configuration> configurationsBuilder = ImmutableSet.builder();
     if (extension.getConfigurations().isEmpty()) {
       // Should this default to runtime?
-      logger.trace("No configuration specified, defaulting to all configurations");
+      getLogger().trace("No configuration specified, defaulting to all configurations");
       for (Configuration configuration : project.getConfigurations()) {
         if (configuration.isCanBeResolved()) {
           configurationsBuilder.add(configuration);
@@ -74,7 +70,9 @@ public class LinkageCheckTask extends DefaultTask {
 
     boolean foundError = false;
     for (Configuration configuration : configurations) {
-      foundError |= findLinkageErrors(configuration);
+      if (findLinkageErrors(configuration)) {
+        foundError = true;
+      }
     }
 
     if (foundError) {
@@ -116,7 +114,7 @@ public class LinkageCheckTask extends DefaultTask {
 
       // TODO(suztomo): Show the dependency paths to the problematic artifacts.
       if (errorCount > 0) {
-        logger.error(
+        getLogger().error(
             "Linkage Checker rule found {} error{}. Linkage error report:\n{}",
             errorCount,
             errorCount > 1 ? "s" : "",
