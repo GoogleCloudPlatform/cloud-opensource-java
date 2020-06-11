@@ -48,13 +48,32 @@ public class DependencyGraphBuilderTest {
           (UnresolvableArtifactProblem problem) -> Artifacts.toCoordinates(problem.getArtifact()),
           "has artifact");
   
+  /**
+   * jaxen-core is an optional dependency that should be included when building a dependency graph
+   * of JDOM 1.1, no matter how we build the graph.
+   */
   @Test
-  public void testOptional() {
+  public void testDirectOptional() {
+    DefaultArtifact jdom = new DefaultArtifact("org.jdom:jdom:1.1");
+
+    DependencyGraph fullGraph =
+        dependencyGraphBuilder.buildFullDependencyGraph(Arrays.asList(jdom));
+    int jaxenCount = countArtifactId(fullGraph, "jaxen-core");
+    Assert.assertEquals(1, jaxenCount);
+    
+    DependencyGraph mavenGraph =
+        dependencyGraphBuilder
+            .buildMavenDependencyGraph(new Dependency(jdom, "compile"));
+    Assert.assertEquals(1, countArtifactId(mavenGraph, "jaxen-core"));    
+  }
+
+  @Test
+  public void testTransitiveOptional() {
     // an artifact that depends on JDOM 1.1 and not much else
     DefaultArtifact jcommon = new DefaultArtifact("com.decisionlens:jcommon:1.0.0");
 
     // jaxen-core is an optional dependency of JDOM 1.1.
-    // The full dependency graph includes it. The Maven dependency graph does not.
+    // The full dependency graph of JCommon includes it. The Maven dependency graph does not.
     DependencyGraph fullGraph =
         dependencyGraphBuilder.buildFullDependencyGraph(Arrays.asList(jcommon));
     int jaxenCount = countArtifactId(fullGraph, "jaxen-core");
