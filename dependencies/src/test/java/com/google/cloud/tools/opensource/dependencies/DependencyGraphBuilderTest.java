@@ -47,6 +47,24 @@ public class DependencyGraphBuilderTest {
       Correspondence.transforming(
           (UnresolvableArtifactProblem problem) -> Artifacts.toCoordinates(problem.getArtifact()),
           "has artifact");
+  
+  @Test
+  public void testOptional() {
+    // an artifact that depends on JDOM 1.1 and not much else
+    DefaultArtifact jcommon = new DefaultArtifact("com.decisionlens:jcommon:1.0.0");
+
+    // jaxen-core is an optional dependency of JDOM 1.1.
+    // The full dependency graph includes it. The Maven dependency graph does not.
+    DependencyGraph fullGraph =
+        dependencyGraphBuilder.buildFullDependencyGraph(Arrays.asList(jcommon));
+    int jaxenCount = countArtifactId(fullGraph, "jaxen-core");
+    Assert.assertEquals(1, jaxenCount);
+    
+    DependencyGraph mavenGraph =
+        dependencyGraphBuilder
+            .buildMavenDependencyGraph(new Dependency(jcommon, "compile"));
+    Assert.assertEquals(0, countArtifactId(mavenGraph, "jaxen-core"));    
+  }
 
   @Test
   public void testGetTransitiveDependencies() {
@@ -58,7 +76,7 @@ public class DependencyGraphBuilderTest {
     Assert.assertTrue(list.size() > 10);
 
     // This method should find Guava exactly once.
-    int guavaCount = countGuava(graph);
+    int guavaCount = countArtifactId(graph, "guava");
     Assert.assertEquals(1, guavaCount);
   }
 
@@ -75,7 +93,7 @@ public class DependencyGraphBuilderTest {
     Assert.assertEquals(paths.size(), noDups.size());
 
     // This method should find Guava multiple times, respecting exclusion elements
-    int guavaCount = countGuava(graph);
+    int guavaCount = countArtifactId(graph, "guava");
     Assert.assertEquals(29, guavaCount);
   }
 
@@ -91,10 +109,10 @@ public class DependencyGraphBuilderTest {
     Truth.assertThat(paths).hasSize(1);
   }
 
-  private static int countGuava(DependencyGraph graph) {
+  private static int countArtifactId(DependencyGraph graph, String artifactId) {
     int guavaCount = 0;
     for (DependencyPath path : graph.list()) {
-      if (path.getLeaf().getArtifactId().equals("guava")) {
+      if (path.getLeaf().getArtifactId().equals(artifactId)) {
         guavaCount++;
       }
     }

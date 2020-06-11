@@ -71,7 +71,9 @@ import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransform
 import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner;
 
 /**
- * Aether initialization.
+ * Aether initialization. This is based on Apache Maven Resolver 1.4.2 or later.
+ * There are many other versions of Aether from Sonatype and the Eclipse
+ * Project, but this is the current one.
  */
 public final class RepositoryUtility {
   
