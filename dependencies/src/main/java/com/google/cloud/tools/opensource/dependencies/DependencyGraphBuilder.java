@@ -123,13 +123,12 @@ public final class DependencyGraphBuilder {
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
    * versions, and provided and optional dependencies. In the event of I/O errors, missing
-   * artifacts, and other problems, it can return an incomplete graph. Each node's dependencies
-   * are resolved recursively. This graph has the following attributes:
-   * The scope of a dependency does not affect the scope of its children's dependencies.
-   * Provided and optional dependencies are not treated differently than any other
+   * artifacts, and other problems, it can return an incomplete graph. Each node's dependencies are
+   * resolved recursively. The scope of a dependency does not affect the scope of its children's
+   * dependencies. Provided and optional dependencies are not treated differently than any other
    * dependency.
    *
-   * @param artifacts Maven artifacts to retrieve their dependencies
+   * @param artifacts Maven artifacts whose dependencies to retrieve
    * @return dependency graph representing the tree of Maven artifacts
    */
   public DependencyGraph buildFullDependencyGraph(List<Artifact> artifacts) {
