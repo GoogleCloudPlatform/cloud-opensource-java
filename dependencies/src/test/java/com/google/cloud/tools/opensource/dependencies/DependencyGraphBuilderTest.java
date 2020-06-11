@@ -47,6 +47,43 @@ public class DependencyGraphBuilderTest {
       Correspondence.transforming(
           (UnresolvableArtifactProblem problem) -> Artifacts.toCoordinates(problem.getArtifact()),
           "has artifact");
+  
+  /**
+   * jaxen-core is an optional dependency that should be included when building a dependency graph
+   * of JDOM 1.1, no matter how we build the graph.
+   */
+  @Test
+  public void testDirectOptional() {
+    DefaultArtifact jdom = new DefaultArtifact("org.jdom:jdom:1.1");
+
+    DependencyGraph fullGraph =
+        dependencyGraphBuilder.buildFullDependencyGraph(Arrays.asList(jdom));
+    int jaxenCount = countArtifactId(fullGraph, "jaxen-core");
+    Assert.assertEquals(1, jaxenCount);
+    
+    DependencyGraph mavenGraph =
+        dependencyGraphBuilder
+            .buildMavenDependencyGraph(new Dependency(jdom, "compile"));
+    Assert.assertEquals(1, countArtifactId(mavenGraph, "jaxen-core"));    
+  }
+
+  @Test
+  public void testTransitiveOptional() {
+    // an artifact that depends on JDOM 1.1 and not much else
+    DefaultArtifact jcommon = new DefaultArtifact("com.decisionlens:jcommon:1.0.0");
+
+    // jaxen-core is an optional dependency of JDOM 1.1.
+    // The full dependency graph of JCommon includes it. The Maven dependency graph does not.
+    DependencyGraph fullGraph =
+        dependencyGraphBuilder.buildFullDependencyGraph(Arrays.asList(jcommon));
+    int jaxenCount = countArtifactId(fullGraph, "jaxen-core");
+    Assert.assertEquals(1, jaxenCount);
+    
+    DependencyGraph mavenGraph =
+        dependencyGraphBuilder
+            .buildMavenDependencyGraph(new Dependency(jcommon, "compile"));
+    Assert.assertEquals(0, countArtifactId(mavenGraph, "jaxen-core"));    
+  }
 
   @Test
   public void testGetTransitiveDependencies() {
@@ -58,7 +95,7 @@ public class DependencyGraphBuilderTest {
     Assert.assertTrue(list.size() > 10);
 
     // This method should find Guava exactly once.
-    int guavaCount = countGuava(graph);
+    int guavaCount = countArtifactId(graph, "guava");
     Assert.assertEquals(1, guavaCount);
   }
 
@@ -75,7 +112,7 @@ public class DependencyGraphBuilderTest {
     Assert.assertEquals(paths.size(), noDups.size());
 
     // This method should find Guava multiple times, respecting exclusion elements
-    int guavaCount = countGuava(graph);
+    int guavaCount = countArtifactId(graph, "guava");
     Assert.assertEquals(29, guavaCount);
   }
 
@@ -91,10 +128,10 @@ public class DependencyGraphBuilderTest {
     Truth.assertThat(paths).hasSize(1);
   }
 
-  private static int countGuava(DependencyGraph graph) {
+  private static int countArtifactId(DependencyGraph graph, String artifactId) {
     int guavaCount = 0;
     for (DependencyPath path : graph.list()) {
-      if (path.getLeaf().getArtifactId().equals("guava")) {
+      if (path.getLeaf().getArtifactId().equals(artifactId)) {
         guavaCount++;
       }
     }
