@@ -13,4 +13,4 @@ mvnw.cmd -B clean install javadoc:jar
 exit /b %ERRORLEVEL%
 
 cd gradle-plugin
-gradlew.bat build install
+gradlew.bat build publishToMavenLocal

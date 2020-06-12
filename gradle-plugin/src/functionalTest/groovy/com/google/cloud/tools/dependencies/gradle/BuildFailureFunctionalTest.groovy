@@ -21,21 +21,23 @@ import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
 
-import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
+import static org.gradle.testkit.runner.TaskOutcome.FAILED
 
-class LinkageCheckerPluginFunctionalTest extends Specification {
+class BuildFailureFunctionalTest extends Specification {
   @Rule TemporaryFolder testProjectDir = new TemporaryFolder()
   File buildFile
 
   def setup() {
     buildFile = testProjectDir.newFile('build.gradle')
     buildFile << """
-apply plugin: 'com.google.cloud.tools.linkagechecker'
-apply plugin: 'java'
+        plugins {
+            id 'java'
+            id 'com.google.cloud.tools.linkagechecker'
+        }
         """
   }
 
-  def "can successfully invalidate incompatible dependencies in a project"() {
+  def "can invalidate incompatible dependencies in a project"() {
     buildFile << """
         repositories {
           mavenCentral()
@@ -50,7 +52,6 @@ apply plugin: 'java'
         
         linkageChecker {
           configurations = ['compile']
-          reportOnlyReachable = true
         }
         """
 
@@ -59,10 +60,10 @@ apply plugin: 'java'
         .withProjectDir(testProjectDir.root)
         .withArguments('linkageCheck')
         .withPluginClasspath()
-        .build()
+        .buildAndFail()
 
     then:
     result.output.contains("Class io.grpc.internal.BaseDnsNameResolverProvider is not found")
-    result.task(":linkageCheck").outcome == org.gradle.testkit.runner.TaskOutcome.SUCCESS
+    result.task(":linkageCheck").outcome == FAILED
   }
 }

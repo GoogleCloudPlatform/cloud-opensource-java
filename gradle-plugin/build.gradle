@@ -13,17 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 plugins {
   id 'java-gradle-plugin'
   id 'groovy'
   id 'maven-publish'
 }
 
+apply from: "$rootDir/gradle/functional-test.gradle"
+
 group = 'com.google.cloud.tools'
 version = '0.1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+  jcenter()
+}
 
 dependencies {
   implementation 'com.google.cloud.tools:dependencies:1.4.2'
@@ -32,38 +39,7 @@ dependencies {
   testImplementation 'org.spockframework:spock-core:1.3-groovy-2.5'
 }
 
-repositories {
-  mavenLocal()
-  mavenCentral()
-  jcenter()
-}
-
-sourceSets {
-  functionalTest {
-    groovy.srcDir file('src/functionalTest/groovy')
-    resources.srcDir file('src/functionalTest/resources')
-    compileClasspath += sourceSets.main.output + configurations.testRuntime
-    runtimeClasspath += output + compileClasspath
-  }
-}
-
-configurations {
-  functionalTestImplementation.extendsFrom testImplementation
-  functionalTestRuntimeOnly.extendsFrom testRuntimeOnly
-}
-
-task functionalTest(type: Test) {
-  description = 'Runs the functional tests.'
-  group = 'verification'
-  testClassesDirs = sourceSets.functionalTest.output.classesDirs
-  classpath = sourceSets.functionalTest.runtimeClasspath
-  mustRunAfter test
-}
-
-check.dependsOn functionalTest
-
 gradlePlugin {
-  /*
   plugins {
     linkageCheckerPlugin {
       id = 'com.google.cloud.tools.linkagechecker'
@@ -71,6 +47,5 @@ gradlePlugin {
       description = 'Tool to verify the compatibility of the class path'
       implementationClass = 'com.google.cloud.tools.dependencies.gradle.LinkageCheckerPlugin'
     }
-  } */
-  testSourceSets sourceSets.functionalTest
+  }
 }
