@@ -124,8 +124,7 @@ public class DependencyGraphBuilderTest {
     Assert.assertTrue(paths.size() > 10);
 
     // verify we didn't double count anything
-    HashSet<DependencyPath> noDups = new HashSet<>(paths);
-    Assert.assertEquals(paths.size(), noDups.size());
+    Truth.assertThat(paths).containsNoDuplicates();
 
     // This method should find Guava multiple times, respecting exclusion elements
     int guavaCount = countArtifactId(graph, "guava");
@@ -139,9 +138,8 @@ public class DependencyGraphBuilderTest {
     List<DependencyPath> paths = graph.list();
     Assert.assertTrue(paths.size() > 10);
 
-    // verify we didn't double count anything
-    HashSet<DependencyPath> noDups = new HashSet<>(paths);
-    Assert.assertEquals(paths.size(), noDups.size());
+    // verify we didn't double count anything    
+    Truth.assertThat(paths).containsNoDuplicates();
 
     // This method should find Guava multiple times, respecting exclusion elements
     int guavaCount = countArtifactId(graph, "guava");

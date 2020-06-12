@@ -140,7 +140,7 @@ public final class DependencyGraphBuilder {
   
   /**
    * Finds the full compile time, transitive dependency graph including conflicting versions and
-   * provided dependencies. t does includes direct optional dependencies of the root node but not
+   * provided dependencies. This includes direct optional dependencies of the root node but not
    * optional dependencies of transitive dependencies.
    *
    * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
