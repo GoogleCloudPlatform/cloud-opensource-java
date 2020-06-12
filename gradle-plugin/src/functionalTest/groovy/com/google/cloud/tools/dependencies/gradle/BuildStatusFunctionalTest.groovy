@@ -17,12 +17,11 @@
 package com.google.cloud.tools.dependencies.gradle
 
 import org.gradle.testkit.runner.GradleRunner
+import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
 
-import static org.gradle.testkit.runner.TaskOutcome.FAILED
-import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
 class BuildStatusFunctionalTest extends Specification {
   @Rule TemporaryFolder testProjectDir = new TemporaryFolder()
@@ -44,7 +43,7 @@ class BuildStatusFunctionalTest extends Specification {
           mavenCentral()
         }
         
-        // Guava does not have any linkage error
+        // Guava does not have any linkage errors
         dependencies {
           compile 'com.google.guava:guava:28.2-jre'
         }
@@ -62,10 +61,9 @@ class BuildStatusFunctionalTest extends Specification {
         .build()
 
     then:
-    def output = result.output
-    output.contains("Task :linkageCheck")
-    output.contains("BUILD SUCCESSFUL")
-    result.task(":linkageCheck").outcome == SUCCESS
+    result.output.contains("Task :linkageCheck")
+    result.output.contains("BUILD SUCCESSFUL")
+    result.task(":linkageCheck").outcome == TaskOutcome.SUCCESS
   }
 
   def "can invalidate incompatible dependencies in a project"() {
@@ -95,6 +93,6 @@ class BuildStatusFunctionalTest extends Specification {
 
     then:
     result.output.contains("Class io.grpc.internal.BaseDnsNameResolverProvider is not found")
-    result.task(":linkageCheck").outcome == FAILED
+    result.task(":linkageCheck").outcome == TaskOutcome.FAILED
   }
 }
