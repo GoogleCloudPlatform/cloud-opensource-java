@@ -18,6 +18,8 @@
 package org.apache.maven.dependency.graph;
 
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.DefaultArtifact;
+import org.apache.maven.artifact.handler.ArtifactHandler;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
@@ -54,10 +56,10 @@ public class DependencyGraphBuilderTest extends AbstractMojoTestCase
         DefaultRepositorySystemSession repoSession = (DefaultRepositorySystemSession) session.getRepositorySession();
         //repoSession.setLocalRepositoryManager( new SimpleLocalRepositoryManager( stubFactory.getWorkingDir() ) );
 
-        Artifact mockArtifact = mock( Artifact.class );
-        when( mockArtifact.getArtifactId() ).thenReturn( "verboseTree-maven-plugin" );
+        Artifact artifact = new DefaultArtifact( "org.com.google","artifactId", "1.0.0", "compile", "jar", "C1",
+                null);
         Set<Artifact> set = new HashSet<Artifact>();
-        set.add( mockArtifact );
+        set.add( artifact );
 
         project.setArtifacts( set );
         project.setArtifactId( "id" );
