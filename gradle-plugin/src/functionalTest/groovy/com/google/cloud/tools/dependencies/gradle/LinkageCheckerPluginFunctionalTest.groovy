@@ -30,7 +30,7 @@ class LinkageCheckerPluginFunctionalTest extends Specification {
   def setup() {
     buildFile = testProjectDir.newFile('build.gradle')
     buildFile << """
-apply plugin: 'com.google.cloud.tools.linkageChecker'
+apply plugin: 'com.google.cloud.tools.linkagechecker'
 apply plugin: 'java'
         """
   }

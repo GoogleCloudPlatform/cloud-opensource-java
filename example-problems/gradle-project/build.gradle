@@ -24,7 +24,7 @@ buildscript {
   }
 }
 
-apply plugin: 'com.google.cloud.tools.linkageChecker'
+apply plugin: 'com.google.cloud.tools.linkagechecker'
 apply plugin: 'java'
 
 repositories {

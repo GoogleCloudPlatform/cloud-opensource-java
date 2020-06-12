@@ -33,8 +33,9 @@ dependencies {
 }
 
 repositories {
-  mavenCentral()
   mavenLocal()
+  mavenCentral()
+  jcenter()
 }
 
 sourceSets {
@@ -62,13 +63,14 @@ task functionalTest(type: Test) {
 check.dependsOn functionalTest
 
 gradlePlugin {
+  /*
   plugins {
     linkageCheckerPlugin {
-      id = 'com.google.cloud.tools.linkageChecker'
+      id = 'com.google.cloud.tools.linkagechecker'
       displayName = 'Linkage Checker'
       description = 'Tool to verify the compatibility of the class path'
       implementationClass = 'com.google.cloud.tools.dependencies.gradle.LinkageCheckerPlugin'
     }
-  }
+  } */
   testSourceSets sourceSets.functionalTest
 }
