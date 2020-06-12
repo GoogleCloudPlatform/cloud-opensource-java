@@ -6,7 +6,7 @@ For usage of this plugin, see the documentation.
 
 ```
 $ cd gradle-plugin
-$ ./gradlew build install  
+$ ./gradlew build publishToMavenLocal
 ```
 
 This command installs the Linkage Checker Gradle plugin in Maven local repository.
