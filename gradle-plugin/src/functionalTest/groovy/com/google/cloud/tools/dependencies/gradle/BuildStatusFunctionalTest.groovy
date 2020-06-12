@@ -22,8 +22,9 @@ import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
 
 import static org.gradle.testkit.runner.TaskOutcome.FAILED
+import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
-class BuildFailureFunctionalTest extends Specification {
+class BuildStatusFunctionalTest extends Specification {
   @Rule TemporaryFolder testProjectDir = new TemporaryFolder()
   File buildFile
 
@@ -35,6 +36,36 @@ class BuildFailureFunctionalTest extends Specification {
             id 'com.google.cloud.tools.linkagechecker'
         }
         """
+  }
+
+  def "can validate a project with no dependency conflicts"() {
+    buildFile << """
+        repositories {
+          mavenCentral()
+        }
+        
+        // Guava does not have any linkage error
+        dependencies {
+          compile 'com.google.guava:guava:28.2-jre'
+        }
+        
+        linkageChecker {
+          configurations = ['compile']
+        }
+        """
+
+    when:
+    def result = GradleRunner.create()
+        .withProjectDir(testProjectDir.root)
+        .withArguments('linkageCheck')
+        .withPluginClasspath()
+        .build()
+
+    then:
+    def output = result.output
+    output.contains("Task :linkageCheck")
+    output.contains("BUILD SUCCESSFUL")
+    result.task(":linkageCheck").outcome == SUCCESS
   }
 
   def "can invalidate incompatible dependencies in a project"() {
