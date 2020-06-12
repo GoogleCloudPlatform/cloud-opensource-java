@@ -25,4 +25,3 @@ check.dependsOn functionalTest
 gradlePlugin {
     testSourceSets sourceSets.functionalTest
 }
-// end::source-set-config[]
