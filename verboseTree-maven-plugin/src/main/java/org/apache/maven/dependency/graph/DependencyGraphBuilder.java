@@ -15,23 +15,22 @@
  *
  */
 
-package org.example.mojo;
+package org.apache.maven.dependency.graph;
 
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.component.annotations.Component;
 
 /**
  * Gets the Project Building Request
  */
 @Mojo( name = "getBuildingRequest")
-@Component( role = GetBuildingRequestMojo.class )
-public class GetBuildingRequestMojo extends AbstractMojo
+public class DependencyGraphBuilder extends AbstractMojo
 {
 
     @Parameter( defaultValue = "${project}", readonly = true, required = true )
@@ -40,12 +39,11 @@ public class GetBuildingRequestMojo extends AbstractMojo
     @Parameter( defaultValue = "${session}", readonly = true, required = true )
     protected MavenSession session;
 
-    @org.apache.maven.plugins.annotations.Component
+    @Component
     private ArtifactHandlerManager artifactHandlerManager;
 
     public void execute() throws MojoExecutionException
     {
-        getLog().info( "Hello, world." );
         getLog().info( project.getArtifactId() );
     }
 
