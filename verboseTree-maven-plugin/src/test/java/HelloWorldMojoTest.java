@@ -15,6 +15,7 @@
  */
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.example.mojo.HelloWorldMojo;
 import org.junit.Test;
 
 public class HelloWorldMojoTest
