@@ -17,8 +17,10 @@
 plugins {
   id 'java-gradle-plugin'
   id 'groovy'
-  id 'maven'
+  id 'maven-publish'
 }
+
+apply from: "$rootDir/gradle/functional-test.gradle"
 
 group = 'com.google.cloud.tools'
 version = '0.1.0-SNAPSHOT'
@@ -27,20 +29,22 @@ sourceCompatibility = 1.8
 
 dependencies {
   implementation 'com.google.cloud.tools:dependencies:1.4.2'
+
   testImplementation 'junit:junit:4.12'
+  testImplementation 'org.spockframework:spock-core:1.3-groovy-2.5'
 }
 
 repositories {
-  mavenCentral()
   mavenLocal()
+  mavenCentral()
 }
 
 gradlePlugin {
   plugins {
     linkageCheckerPlugin {
-      id = 'com.google.cloud.tools.linkageChecker'
+      id = 'com.google.cloud.tools.linkagechecker'
       displayName = 'Linkage Checker'
-      description = 'Tool to verify the compatibility of the class path'
+      description = 'Tool to verify the compatibility of the class paths of Gradle projects'
       implementationClass = 'com.google.cloud.tools.dependencies.gradle.LinkageCheckerPlugin'
     }
   }
