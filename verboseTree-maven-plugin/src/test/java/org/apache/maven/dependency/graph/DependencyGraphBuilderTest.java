@@ -19,20 +19,15 @@ package org.apache.maven.dependency.graph;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
-import org.apache.maven.artifact.handler.ArtifactHandler;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.junit.Test;
-
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class DependencyGraphBuilderTest extends AbstractMojoTestCase
 {
@@ -43,7 +38,8 @@ public class DependencyGraphBuilderTest extends AbstractMojoTestCase
         // required for mojo lookups to work
         super.setUp();
 
-        File testPom = new File( getBasedir(), "target/test-classes/unit/GetBuildingRequestMojo.xml" );
+        File testPom = new File( getBasedir(),
+                "target/test-classes/DependencyGraphBuilderTest/DependencyGraphBuilderTest.xml" );
         mojo = (DependencyGraphBuilder) lookupMojo( "getBuildingRequest", testPom );
 
         assertNotNull( mojo );
