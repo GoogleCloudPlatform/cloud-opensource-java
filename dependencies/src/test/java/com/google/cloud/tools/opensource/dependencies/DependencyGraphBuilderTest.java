@@ -64,7 +64,12 @@ public class DependencyGraphBuilderTest {
     DependencyGraph mavenGraph =
         dependencyGraphBuilder
             .buildMavenDependencyGraph(new Dependency(jdom, "compile"));
-    Assert.assertEquals(1, countArtifactId(mavenGraph, "jaxen-core"));    
+    Assert.assertEquals(1, countArtifactId(mavenGraph, "jaxen-core"));   
+    
+    DependencyGraph verboseGraph =
+        dependencyGraphBuilder
+            .buildMavenDependencyGraph(new Dependency(jdom, "compile"));
+    Assert.assertEquals(1, countArtifactId(verboseGraph, "jaxen-core"));
   }
 
   @Test
@@ -82,14 +87,25 @@ public class DependencyGraphBuilderTest {
     DependencyGraph mavenGraph =
         dependencyGraphBuilder
             .buildMavenDependencyGraph(new Dependency(jcommon, "compile"));
-    Assert.assertEquals(0, countArtifactId(mavenGraph, "jaxen-core"));    
+    Assert.assertEquals(0, countArtifactId(mavenGraph, "jaxen-core"));
+  }
+  
+  @Test
+  public void testVerboseGraph() {
+    // an artifact that depends on JDOM 1.1 and not much else
+    DefaultArtifact jcommon = new DefaultArtifact("com.decisionlens:jcommon:1.0.0");
+
+    // jaxen-core is an optional dependency of JDOM 1.1.
+    // The unmediated dependency graph does not include it.
+    DependencyGraph verboseGraph =
+        dependencyGraphBuilder.buildVerboseDependencyGraph(new Dependency(jcommon, "compile"));
+    Assert.assertEquals(0, countArtifactId(verboseGraph, "jaxen-core"));    
   }
 
   @Test
   public void testGetTransitiveDependencies() {
-    DependencyGraph graph =
-        dependencyGraphBuilder
-            .buildMavenDependencyGraph(new Dependency(datastore, "compile"));
+    Dependency dependency = new Dependency(datastore, "compile");
+    DependencyGraph graph = dependencyGraphBuilder.buildMavenDependencyGraph(dependency);
     List<DependencyPath> list = graph.list();
 
     Assert.assertTrue(list.size() > 10);
@@ -104,6 +120,22 @@ public class DependencyGraphBuilderTest {
     DependencyGraph graph =
         dependencyGraphBuilder
             .buildFullDependencyGraph(ImmutableList.of(datastore));
+    List<DependencyPath> paths = graph.list();
+    Assert.assertTrue(paths.size() > 10);
+
+    // verify we didn't double count anything
+    HashSet<DependencyPath> noDups = new HashSet<>(paths);
+    Assert.assertEquals(paths.size(), noDups.size());
+
+    // This method should find Guava multiple times, respecting exclusion elements
+    int guavaCount = countArtifactId(graph, "guava");
+    Assert.assertEquals(29, guavaCount);
+  }
+  
+  @Test
+  public void testGetVerboseDependencies() {
+    Dependency dependency = new Dependency(datastore, "compile");
+    DependencyGraph graph = dependencyGraphBuilder.buildVerboseDependencyGraph(dependency);
     List<DependencyPath> paths = graph.list();
     Assert.assertTrue(paths.size() > 10);
 
