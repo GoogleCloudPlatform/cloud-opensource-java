@@ -66,12 +66,15 @@ import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
+import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
 import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer;
 import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner;
 
 /**
- * Aether initialization.
+ * Aether initialization. This is based on Apache Maven Resolver 1.4.2 or later.
+ * There are many other versions of Aether from Sonatype and the Eclipse
+ * Project, but this is the current one.
  */
 public final class RepositoryUtility {
   
@@ -121,8 +124,6 @@ public final class RepositoryUtility {
    * @see {@link DependencyGraphBuilder}
    */
   static DefaultRepositorySystemSession newSessionForFullDependency(RepositorySystem system) {
-    DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
-
     // This combination of DependencySelector comes from the default specified in
     // `MavenRepositorySystemUtils.newSession`.
     // LinkageChecker needs to include 'provided'-scope and optional dependencies.
@@ -133,6 +134,13 @@ public final class RepositoryUtility {
             new ScopeDependencySelector("test"),
             new ExclusionDependencySelector(),
             new FilteringZipDependencySelector());
+    
+    return newSession(system, dependencySelector);
+  }
+
+  private static DefaultRepositorySystemSession newSession(
+      RepositorySystem system, DependencySelector dependencySelector) {
+    DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
     session.setDependencySelector(dependencySelector);
 
     // By default, Maven's MavenRepositorySystemUtils.newSession() returns a session with
@@ -148,6 +156,19 @@ public final class RepositoryUtility {
     session.setDependencyManager(null);
 
     return session;
+  }
+  
+  static DefaultRepositorySystemSession newSessionForVerboseDependency(RepositorySystem system) {
+    DependencySelector dependencySelector =
+        new AndDependencySelector(
+            // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
+            // false positive in LinkageChecker.
+            new ScopeDependencySelector("test"),
+            new OptionalDependencySelector(),
+            new ExclusionDependencySelector(),
+            new FilteringZipDependencySelector());
+    
+    return newSession(system, dependencySelector);
   }
 
   private static String findLocalRepository() {
@@ -292,4 +313,5 @@ public final class RepositoryUtility {
     String highestVersion = findHighestVersion(repositorySystem, session, groupId, artifactId);
     return String.format("%s:%s:%s", groupId, artifactId, highestVersion);
   }
+
 }

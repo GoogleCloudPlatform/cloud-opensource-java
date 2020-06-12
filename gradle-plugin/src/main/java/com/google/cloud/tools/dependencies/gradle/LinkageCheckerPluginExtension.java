@@ -16,20 +16,33 @@
 
 package com.google.cloud.tools.dependencies.gradle;
 
+import com.google.common.collect.ImmutableSet;
+import java.util.List;
+
 /**
- * Properties to control the behavior of the Linakge Checker plugin.
+ * Properties to control the behavior of the Linkage Checker plugin.
  *
- * TODO(suztomo): Implement real configuration as in go/jdd-gradle-plugin.
+ * <p>TODO(suztomo): Implement real configuration as in go/jdd-gradle-plugin.
  */
 public class LinkageCheckerPluginExtension {
 
-  private String message = "Default Greeting from Gradle";
+  private boolean reportOnlyReachable = false;
 
-  public String getMessage() {
-    return message;
+  public boolean isReportOnlyReachable() {
+    return reportOnlyReachable;
   }
 
-  public void setMessage(String message) {
-    this.message = message;
+  public void setReportOnlyReachable(boolean reportOnlyReachable) {
+    this.reportOnlyReachable = reportOnlyReachable;
+  }
+
+  private ImmutableSet<String> configurations = ImmutableSet.of();
+
+  public ImmutableSet<String> getConfigurations() {
+    return configurations;
+  }
+
+  public void setConfigurations(List<String> configurationNames) {
+    configurations = ImmutableSet.copyOf(configurationNames);
   }
 }
