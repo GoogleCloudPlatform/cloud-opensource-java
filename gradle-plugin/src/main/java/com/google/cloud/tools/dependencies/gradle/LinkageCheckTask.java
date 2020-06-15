@@ -24,6 +24,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
@@ -31,18 +33,17 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.TaskAction;
 
 /**
  * Task to run Linkage Checker for the dependencies of the Gradle project.
  */
 public class LinkageCheckTask extends DefaultTask {
+  private LinkageCheckerPluginExtension extension;
 
   @TaskAction
   public void run() throws IOException {
-    LinkageCheckerPluginExtension extension =
-        getProject().getExtensions().findByType(LinkageCheckerPluginExtension.class);
+    extension = getProject().getExtensions().findByType(LinkageCheckerPluginExtension.class);
     if (extension == null) {
       extension = new LinkageCheckerPluginExtension();
     }
@@ -103,9 +104,18 @@ public class LinkageCheckTask extends DefaultTask {
     }
 
     ImmutableList<ClassPathEntry> classPath = classPathBuilder.build();
+
     if (!classPath.isEmpty()) {
-      // TODO(suztomo): Specify entry points if reportOnlyReachable is true.
-      LinkageChecker linkageChecker = LinkageChecker.create(classPath);
+      String exclusionFileName = extension.getExclusionFile();
+      Path exclusionFile = exclusionFileName == null ? null : Paths.get(exclusionFileName);
+      if (exclusionFile != null && !exclusionFile.isAbsolute()) {
+        // Relative path from the project root
+        Path projectRoot = getProject().getRootDir().toPath();
+        exclusionFile = projectRoot.resolve(exclusionFile).toAbsolutePath();
+      }
+
+      // TODO(suztomo): Specify correct entry points if reportOnlyReachable is true.
+      LinkageChecker linkageChecker = LinkageChecker.create(classPath, classPath, exclusionFile);
 
       ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
           linkageChecker.findSymbolProblems();

@@ -17,3 +17,8 @@ linkage-checker-gradle-plugin-0.1.0-SNAPSHOT.jar
 linkage-checker-gradle-plugin-0.1.0-SNAPSHOT.pom
 ```
 
+# Debug
+
+```
+./gradlew check --stacktrace  -Dorg.gradle.debug=true --no-daemon
+```
