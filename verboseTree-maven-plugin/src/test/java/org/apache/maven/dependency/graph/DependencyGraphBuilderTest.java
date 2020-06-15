@@ -31,7 +31,7 @@ import java.util.Set;
 
 public class DependencyGraphBuilderTest extends AbstractMojoTestCase
 {
-    DependencyGraphBuilder mojo;
+    private DependencyGraphBuilder mojo;
 
     protected void setUp() throws Exception
     {

@@ -12,18 +12,24 @@
   <name>VerboseTreePlugin</name>
   <description>a plugin to output the verbose dependency tree</description>
 
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <mavenVersion>3.6.3</mavenVersion>
+    <mavenResolverVersion>1.4.2</mavenResolverVersion>
+  </properties>
+
   <dependencies>
     <!-- dependencies needed for a maven plugin -->
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-plugin-api</artifactId>
-      <version>3.6.3</version>
+      <version>${mavenVersion}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-core</artifactId>
-      <version>3.6.3</version>
+      <version>${mavenVersion}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -36,13 +42,13 @@
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-util</artifactId>
-      <version>1.4.2</version>
+      <version>${mavenResolverVersion}</version>
     </dependency>
     <!-- Serializing DependencyGraph -->
     <dependency>
       <groupId>org.apache.maven.resolver</groupId>
       <artifactId>maven-resolver-api</artifactId>
-      <version>1.4.2</version>
+      <version>${mavenResolverVersion}</version>
     </dependency>
 
     <!-- Testing Dependencies -->
@@ -56,6 +62,7 @@
       <groupId>org.apache.maven.plugin-testing</groupId>
       <artifactId>maven-plugin-testing-harness</artifactId>
       <version>3.3.0</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
