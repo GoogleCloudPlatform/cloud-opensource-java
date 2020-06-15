@@ -14,4 +14,4 @@ cp settings.xml ${HOME}/.m2
 ./mvnw -B clean install javadoc:jar
 
 cd gradle-plugin
-./gradlew build install
+./gradlew build publishToMavenLocal
