@@ -47,24 +47,24 @@ public class SerializeGraph
 
         Artifact nodeArtifact = node.getArtifact();
 
-        for(int i = 0; i < level; ++i )
+        for(int i = 0; i < level - 1; ++i )
         {
             builder.append( "|  " );
         }
         builder.append( start );
         builder.append( nodeArtifact.getGroupId() + ":" + nodeArtifact.getArtifactId() +
-                ":" + nodeArtifact.getExtension() + ":" + nodeArtifact.getVersion() + System.lineSeparator());
+                ":" + nodeArtifact.getExtension() + ":" + nodeArtifact.getVersion() + "\n"); // + System.lineSeparator());
 
 
         for ( int i = 0; i < node.getChildren().size(); ++i )
         {
             if(i == node.getChildren().size() - 1)
             {
-                builder = dfs(node.getChildren().get( i ), builder, visitedNodes, level + 1, "\\-");
+                builder = dfs(node.getChildren().get( i ), builder, visitedNodes, level + 1, "\\- ");
             }
             else
             {
-                builder = dfs(node.getChildren().get( i ), builder, visitedNodes, level + 1, "+-");
+                builder = dfs(node.getChildren().get( i ), builder, visitedNodes, level + 1, "+- ");
             }
         }
 
