@@ -34,13 +34,18 @@ public class SerializeGraph
     private Map<DependencyNode, Boolean> visitedNodes;
     private Set<String> artifacts;
 
-    public String serialize( DependencyNode root, String outputType )
+    public SerializeGraph()
     {
-        this.outputType = outputType;
-        StringBuilder builder = new StringBuilder();
         visitedNodes = new IdentityHashMap<DependencyNode, Boolean>( 512 );
         artifacts = new HashSet<String>();
+    }
 
+    public String serialize( DependencyNode root, String outputType )
+    {
+        // to be injected later
+        this.outputType = outputType;
+
+        StringBuilder builder = new StringBuilder();
         return dfs( root, builder, 0, "" ).toString();
     }
 
@@ -48,7 +53,6 @@ public class SerializeGraph
     {
         builder.append( start );
         builder = appendDependency( builder, node );
-        Artifact nodeArtifact = node.getArtifact();
 
         if ( visitedNodes.containsKey( node ) )
         {
@@ -58,61 +62,27 @@ public class SerializeGraph
         else
         {
             builder.append( "\n" );
+            // System.lineSeparator());
             visitedNodes.put( node, true );
 
             for ( int i = 0; i < node.getChildren().size(); ++i )
             {
-                if ( start.equals( "" ) )
-                {
-                    if ( i == node.getChildren().size() - 1 )
-                    {
-                        builder = dfs( node.getChildren().get( i ), builder, level + 1, "\\- " );
-                    }
-                    else
-                    {
-                        builder = dfs( node.getChildren().get( i ), builder, level + 1, "+- " );
-                    }
-                }
-                else if ( start.endsWith( "+- " ) )
+                if ( start.endsWith( "+- " ) )
                 {
                     start = start.replace( "+- ", "|  " );
-                    if ( i == node.getChildren().size() - 1 )
-                    {
-                        builder = dfs( node.getChildren().get( i ), builder, level + 1,
-                                start.concat( "\\- " ) );
-                    }
-                    else
-                    {
-                        builder = dfs( node.getChildren().get( i ), builder,level + 1,
-                                start.concat( "+- " ) );
-                    }
                 }
                 else if ( start.endsWith( "\\- " ) )
                 {
                     start = start.replace( "\\- ", "   " );
-                    if ( i == node.getChildren().size() - 1 )
-                    {
-                        builder = dfs( node.getChildren().get( i ), builder, level + 1,
-                                start.concat( "\\- " ) );
-                    }
-                    else
-                    {
-                        builder = dfs( node.getChildren().get( i ), builder, level + 1,
-                                start.concat( "+- " ) );
-                    }
+                }
+
+                if ( i == node.getChildren().size() - 1 )
+                {
+                    builder = dfs( node.getChildren().get( i ), builder, level + 1, start.concat( "\\- " ) );
                 }
                 else
                 {
-                    if ( i == node.getChildren().size() - 1 )
-                    {
-                        builder = dfs( node.getChildren().get( i ), builder, level + 1,
-                                start.concat( "\\- " ) );
-                    }
-                    else
-                    {
-                        builder = dfs( node.getChildren().get( i ), builder, level + 1,
-                                start.concat( "+- " ) );
-                    }
+                    builder = dfs( node.getChildren().get( i ), builder, level + 1, start.concat( "+- " ) );
                 }
             }
         }
