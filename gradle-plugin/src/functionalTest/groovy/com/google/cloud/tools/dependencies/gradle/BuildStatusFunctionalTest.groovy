@@ -56,7 +56,7 @@ class BuildStatusFunctionalTest extends Specification {
     when:
     def result = GradleRunner.create()
         .withProjectDir(testProjectDir.root)
-        .withArguments('linkageCheck')
+        .withArguments('linkageCheck', '--stacktrace')
         .withPluginClasspath()
         .build()
 
@@ -87,7 +87,7 @@ class BuildStatusFunctionalTest extends Specification {
     when:
     def result = GradleRunner.create()
         .withProjectDir(testProjectDir.root)
-        .withArguments('linkageCheck')
+        .withArguments('linkageCheck','--stacktrace')
         .withPluginClasspath()
         .buildAndFail()
 

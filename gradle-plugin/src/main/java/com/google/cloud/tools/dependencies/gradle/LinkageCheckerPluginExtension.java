@@ -45,4 +45,14 @@ public class LinkageCheckerPluginExtension {
   public void setConfigurations(List<String> configurationNames) {
     configurations = ImmutableSet.copyOf(configurationNames);
   }
+
+  private String exclusionFile;
+
+  public String getExclusionFile() {
+    return exclusionFile;
+  }
+
+  public void setExclusionFile(String exclusionFile) {
+    this.exclusionFile = exclusionFile;
+  }
 }
