@@ -64,7 +64,7 @@ public class SerializeGraphTest extends AbstractMojoTestCase
 
         root.setChildren( Arrays.asList( left, right ) );
 
-        String result = serializer.serialize( root, "" );
+        String result = serializer.serialize( root );
         String expected = readFile( getBasedir() + "/target/test-classes/SerializerTests/BasicTree.txt",
                 Charset.defaultCharset() );
 
@@ -120,7 +120,7 @@ public class SerializeGraphTest extends AbstractMojoTestCase
 
         root.setChildren( Arrays.asList( l1left, l1right ) );
 
-        String result = serializer.serialize( root, "" );
+        String result = serializer.serialize( root );
         String expected = readFile( getBasedir() + "/target/test-classes/SerializerTests/LargeTree.txt",
                 Charset.defaultCharset() );
 
@@ -143,7 +143,7 @@ public class SerializeGraphTest extends AbstractMojoTestCase
         root.setChildren( Arrays.asList( left, right ) );
         left.setChildren( Arrays.asList( root ) );
 
-        String result = serializer.serialize( root, "" );
+        String result = serializer.serialize( root );
         String expected = readFile( getBasedir() + "/target/test-classes/SerializerTests/BasicCycle.txt",
                 Charset.defaultCharset() );
 
@@ -202,19 +202,11 @@ public class SerializeGraphTest extends AbstractMojoTestCase
         // Introduce cycles
         l5left.setChildren( Arrays.asList( l2left, l1right, l3 ) );
 
-        String result = serializer.serialize( root, "" );
+        String result = serializer.serialize( root );
         String expected = readFile( getBasedir() + "/target/test-classes/SerializerTests/LargeGraphWithCycles.txt",
                 Charset.defaultCharset() );
 
         Assert.assertEquals(expected, result);
-    }
-
-    @Test
-    public void testTreeWithDuplicates()
-    {
-        // To implement this just use another map to check if artifacts are unique
-        // Hash org:artifact:component:version string for map
-
     }
 
     @Test

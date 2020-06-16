@@ -18,7 +18,6 @@
 package org.apache.maven.dependency.graph;
 
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
 import java.util.HashSet;
@@ -32,21 +31,39 @@ public class SerializeGraph
     private String outputType;
 
     private Map<DependencyNode, Boolean> visitedNodes;
-    private Set<String> artifacts;
+    private Set<String> artifactSet;
 
-    public SerializeGraph()
+    public String serialize( DependencyNode root )
     {
         visitedNodes = new IdentityHashMap<DependencyNode, Boolean>( 512 );
-        artifacts = new HashSet<String>();
-    }
-
-    public String serialize( DependencyNode root, String outputType )
-    {
-        // to be injected later
-        this.outputType = outputType;
-
+        artifactSet = new HashSet<String>();
         StringBuilder builder = new StringBuilder();
         return dfs( root, builder, 0, "" ).toString();
+    }
+
+    private StringBuilder appendDependency( StringBuilder builder, DependencyNode node )
+    {
+        String scope = node.getDependency().getScope();
+        builder.append( getArtifactString( node.getArtifact() ) );
+
+        if ( scope != null && !scope.isEmpty() )
+        {
+            builder.append( ":" + scope );
+        }
+        return builder;
+    }
+
+    private String getArtifactString( Artifact artifact )
+    {
+        return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" +
+                artifact.getExtension() + ":" + artifact.getVersion();
+    }
+
+    private boolean artifactDuplicate( Artifact artifact )
+    {
+        String artifactString = getArtifactString( artifact );
+        if( artifactSet.contains( artifactString ) ) return true;
+        return false;
     }
 
     public StringBuilder dfs( DependencyNode node, StringBuilder builder, int level, String start )
@@ -54,13 +71,19 @@ public class SerializeGraph
         builder.append( start );
         builder = appendDependency( builder, node );
 
+
         if ( visitedNodes.containsKey( node ) )
         {
-            builder.append( " (Omitted due to cycle or duplicate artifact)\n" );
+            builder.append( " (Omitted due to cycle)\n" );
             // System.lineSeparator());
+        }
+        else if ( artifactDuplicate( node.getArtifact() ) )
+        {
+            builder.append( " (Omitted due to duplicate artifact)\n" );
         }
         else
         {
+            artifactSet.add( getArtifactString( node.getArtifact() ) );
             builder.append( "\n" );
             // System.lineSeparator());
             visitedNodes.put( node, true );
@@ -88,20 +111,4 @@ public class SerializeGraph
         }
         return builder;
     }
-
-    private StringBuilder appendDependency( StringBuilder builder, DependencyNode node )
-    {
-        Artifact nodeArtifact = node.getArtifact();
-        String scope = node.getDependency().getScope();
-
-        builder.append( nodeArtifact.getGroupId() + ":" + nodeArtifact.getArtifactId() + ":" +
-                nodeArtifact.getExtension() + ":" + nodeArtifact.getVersion());
-        if ( scope != null && !scope.isEmpty() )
-        {
-            builder.append( ":" + scope );
-        }
-        return builder;
-    }
-
-
 }
