@@ -18,56 +18,118 @@
 package org.apache.maven.dependency.graph;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.graph.DependencyVisitor;
 
-import java.io.StringWriter;
-import java.io.Writer;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class SerializeGraph
 {
     // will be injected eventually
     private String outputType;
 
+    private Map<DependencyNode, Boolean> visitedNodes;
+    private Set<String> artifacts;
+
     public String serialize( DependencyNode root, String outputType )
     {
         this.outputType = outputType;
         StringBuilder builder = new StringBuilder();
-        Map<DependencyNode, Boolean> visitedNodes = new IdentityHashMap<DependencyNode, Boolean>(512);
+        visitedNodes = new IdentityHashMap<DependencyNode, Boolean>( 512 );
+        artifacts = new HashSet<String>();
 
-        return dfs( root, builder, visitedNodes, 0, "" ).toString();
+        return dfs( root, builder, 0, "" ).toString();
     }
 
-    public StringBuilder dfs( DependencyNode node, StringBuilder builder, Map<DependencyNode, Boolean> visitedNodes,
-                              int level, String start )
+    public StringBuilder dfs( DependencyNode node, StringBuilder builder, int level, String start )
     {
-        visitedNodes.put( node, true );
-
+        builder.append( start );
+        builder = appendDependency( builder, node );
         Artifact nodeArtifact = node.getArtifact();
 
-        for(int i = 0; i < level - 1; ++i )
+        if ( visitedNodes.containsKey( node ) )
         {
-            builder.append( "|  " );
+            builder.append( " (Omitted due to cycle or duplicate artifact)\n" );
+            // System.lineSeparator());
         }
-        builder.append( start );
-        builder.append( nodeArtifact.getGroupId() + ":" + nodeArtifact.getArtifactId() +
-                ":" + nodeArtifact.getExtension() + ":" + nodeArtifact.getVersion() + "\n"); // + System.lineSeparator());
-
-
-        for ( int i = 0; i < node.getChildren().size(); ++i )
+        else
         {
-            if(i == node.getChildren().size() - 1)
+            builder.append( "\n" );
+            visitedNodes.put( node, true );
+
+            for ( int i = 0; i < node.getChildren().size(); ++i )
             {
-                builder = dfs(node.getChildren().get( i ), builder, visitedNodes, level + 1, "\\- ");
-            }
-            else
-            {
-                builder = dfs(node.getChildren().get( i ), builder, visitedNodes, level + 1, "+- ");
+                if ( start.equals( "" ) )
+                {
+                    if ( i == node.getChildren().size() - 1 )
+                    {
+                        builder = dfs( node.getChildren().get( i ), builder, level + 1, "\\- " );
+                    }
+                    else
+                    {
+                        builder = dfs( node.getChildren().get( i ), builder, level + 1, "+- " );
+                    }
+                }
+                else if ( start.endsWith( "+- " ) )
+                {
+                    start = start.replace( "+- ", "|  " );
+                    if ( i == node.getChildren().size() - 1 )
+                    {
+                        builder = dfs( node.getChildren().get( i ), builder, level + 1,
+                                start.concat( "\\- " ) );
+                    }
+                    else
+                    {
+                        builder = dfs( node.getChildren().get( i ), builder,level + 1,
+                                start.concat( "+- " ) );
+                    }
+                }
+                else if ( start.endsWith( "\\- " ) )
+                {
+                    start = start.replace( "\\- ", "   " );
+                    if ( i == node.getChildren().size() - 1 )
+                    {
+                        builder = dfs( node.getChildren().get( i ), builder, level + 1,
+                                start.concat( "\\- " ) );
+                    }
+                    else
+                    {
+                        builder = dfs( node.getChildren().get( i ), builder, level + 1,
+                                start.concat( "+- " ) );
+                    }
+                }
+                else
+                {
+                    if ( i == node.getChildren().size() - 1 )
+                    {
+                        builder = dfs( node.getChildren().get( i ), builder, level + 1,
+                                start.concat( "\\- " ) );
+                    }
+                    else
+                    {
+                        builder = dfs( node.getChildren().get( i ), builder, level + 1,
+                                start.concat( "+- " ) );
+                    }
+                }
             }
         }
+        return builder;
+    }
 
+    private StringBuilder appendDependency( StringBuilder builder, DependencyNode node )
+    {
+        Artifact nodeArtifact = node.getArtifact();
+        String scope = node.getDependency().getScope();
+
+        builder.append( nodeArtifact.getGroupId() + ":" + nodeArtifact.getArtifactId() + ":" +
+                nodeArtifact.getExtension() + ":" + nodeArtifact.getVersion());
+        if ( scope != null && !scope.isEmpty() )
+        {
+            builder.append( ":" + scope );
+        }
         return builder;
     }
 

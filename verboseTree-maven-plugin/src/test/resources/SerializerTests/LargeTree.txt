@@ -2,8 +2,10 @@ com.google:rootArtifact:jar:1.0.0
 +- org.apache:left:xml:0.1-SNAPSHOT
 |  +- org.maven:a4:jar:2.2.1
 |  \- com.google:a5:zip:0
-|  |  \- com.xyz:a6:xml:1.2.1
-|  |  |  \- com.example:a7:jar:2.2.2
-|  |  |  |  \- com.comm:a7:jar:1
+|     \- com.xyz:a6:xml:1.2.1
+|        \- com.example:a7:jar:2.2.2
+|           +- com.comm:a7:jar:1
+|           |  \- com.example:a8:xml:2.1
+|           \- com.comm:a7:jar:1
 \- org.xyz:right:zip:1
-|  \- com.xyz:a9:xml:1.2
+   \- com.xyz:a9:xml:1.2

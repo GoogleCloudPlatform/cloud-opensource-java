@@ -21,6 +21,7 @@ import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.DefaultDependencyNode;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.junit.Assert;
 import org.junit.Before;
@@ -48,35 +49,40 @@ public class SerializeGraphTest extends AbstractMojoTestCase
     }
 
     @Test
-    public void testBasicTree()
+    public void testBasicTree() throws IOException
     {
-        Artifact rootArtifact = new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0");
-        Artifact leftChildArtifact = new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" );
-        Artifact rightChildArtifact = new DefaultArtifact( "org.xyz", "right", "zip", "1" );
+        DependencyNode root = new DefaultDependencyNode(
+                new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0")
+        );
+        DependencyNode left = new DefaultDependencyNode(
+                new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" )
+        );
+        DependencyNode right = new DefaultDependencyNode(
+                new DefaultArtifact( "org.xyz", "right", "zip", "1" )
+        );
 
-        DependencyNode root = new DefaultDependencyNode( rootArtifact );
-        DependencyNode left = new DefaultDependencyNode( leftChildArtifact );
-        DependencyNode right = new DefaultDependencyNode( rightChildArtifact );
-
-        List<DependencyNode> rootChildren = new ArrayList<DependencyNode>();
-        rootChildren.add( left );
-        rootChildren.add( right );
-
-        root.setChildren( rootChildren );
+        root.setChildren( Arrays.asList( left, right ) );
 
         String result = serializer.serialize( root, "" );
+        String expected = readFile( getBasedir() + "/target/test-classes/SerializerTests/BasicTree.txt",
+                Charset.defaultCharset() );
+
+        Assert.assertEquals(expected, result);
     }
 
     @Test
     public void testLargeTree() throws IOException
     {
-        Artifact rootArtifact = new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0");
-        Artifact leftChildArtifact = new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" );
-        Artifact rightChildArtifact = new DefaultArtifact( "org.xyz", "right", "zip", "1" );
-
-        DependencyNode root = new DefaultDependencyNode( rootArtifact );
-        DependencyNode l1left = new DefaultDependencyNode( leftChildArtifact );
-        DependencyNode l1right = new DefaultDependencyNode( rightChildArtifact );
+        // Construct nodes for tree l1 = level 1 with the root being l0
+        DependencyNode root = new DefaultDependencyNode(
+                new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" )
+        );
+        DependencyNode l1left = new DefaultDependencyNode(
+                new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" )
+        );
+        DependencyNode l1right = new DefaultDependencyNode(
+                new DefaultArtifact( "org.xyz", "right", "zip", "1" )
+        );
         DependencyNode l2left = new DefaultDependencyNode(
                 new DefaultArtifact( "org.maven", "a4", "jar", "2.2.1" )
         );
@@ -92,12 +98,19 @@ public class SerializeGraphTest extends AbstractMojoTestCase
         DependencyNode l4 = new DefaultDependencyNode(
                 new DefaultArtifact( "com.example", "a7", "jar", "2.2.2" )
         );
-        DependencyNode l5 = new DefaultDependencyNode(
+        DependencyNode l5right = new DefaultDependencyNode(
                 new DefaultArtifact( "com.comm", "a7", "jar", "1" )
         );
+        DependencyNode l5left = new DefaultDependencyNode(
+                new DefaultArtifact( "com.comm", "a7", "jar", "1" )
+        );
+        DependencyNode l6left = new DefaultDependencyNode(
+                new DefaultArtifact( "com.example", "a8", "xml", "2.1" )
+        );
 
-        // chain of children
-        l4.setChildren( Arrays.asList( l5 ) );
+        // Set Node Relationships
+        l5left.setChildren( Arrays.asList( l6left ) );
+        l4.setChildren( Arrays.asList( l5left, l5right ) );
         l3.setChildren( Arrays.asList( l4 ) );
         l2middle.setChildren( Arrays.asList( l3 ) );
 
@@ -121,14 +134,99 @@ public class SerializeGraphTest extends AbstractMojoTestCase
     }
 
     @Test
-    public void testGraphWithCycle()
+    public void testSmallGraphWithCycle() throws IOException
     {
+        DependencyNode root = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), "")
+        );
+        DependencyNode left = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" ), "test" )
+        );
+        DependencyNode right = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "org.xyz", "right", "zip", "1" ), "provided" )
+        );
 
+        root.setChildren( Arrays.asList( left, right ) );
+        left.setChildren( Arrays.asList( root ) );
+
+        String result = serializer.serialize( root, "" );
+        String expected = readFile( getBasedir() + "/target/test-classes/SerializerTests/BasicCycle.txt",
+                Charset.defaultCharset() );
+
+        Assert.assertEquals(expected, result);
+    }
+
+    @Test
+    public void testLargeGraphWithCycles() throws IOException
+    {
+        // Construct nodes for tree l1 = level 1 with the root being l0
+        DependencyNode root = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), "compile" )
+        );
+        DependencyNode l1left = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" ), "test" )
+        );
+        DependencyNode l1right = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "org.xyz", "right", "zip", "1" ), "provided" )
+        );
+        DependencyNode l2left = new DefaultDependencyNode(
+                new DefaultArtifact( "org.maven", "a4", "jar", "2.2.1" )
+        );
+        DependencyNode l2middle = new DefaultDependencyNode(
+                new DefaultArtifact( "com.google", "a5", "zip", "0" )
+        );
+        DependencyNode l2right = new DefaultDependencyNode(
+                new DefaultArtifact( "com.xyz", "a9", "xml", "1.2" )
+        );
+        DependencyNode l3 = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.xyz", "a6", "xml", "1.2.1" ), "test" )
+        );
+        DependencyNode l4 = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.example", "a7", "jar", "2.2.2" ), "provided" )
+        );
+        DependencyNode l5right = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.comm", "a7", "jar", "1" ), "compile" )
+        );
+        DependencyNode l5left = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.comm", "a7", "jar", "1" ), "compile" )
+        );
+        DependencyNode l6left = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.example", "a8", "xml", "2.1" ), "test" )
+        );
+
+        // Set Node Relationships
+        l5left.setChildren( Arrays.asList( l6left ) );
+        l4.setChildren( Arrays.asList( l5left, l5right ) );
+        l3.setChildren( Arrays.asList( l4 ) );
+        l2middle.setChildren( Arrays.asList( l3 ) );
+
+        l1left.setChildren( Arrays.asList( l2left, l2middle ) );
+        l1right.setChildren( Arrays.asList( l2right ) );
+
+        root.setChildren( Arrays.asList( l1left, l1right ) );
+
+        // Introduce cycles
+        l5left.setChildren( Arrays.asList( l2left, l1right, l3 ) );
+
+        String result = serializer.serialize( root, "" );
+        String expected = readFile( getBasedir() + "/target/test-classes/SerializerTests/LargeGraphWithCycles.txt",
+                Charset.defaultCharset() );
+
+        Assert.assertEquals(expected, result);
     }
 
     @Test
     public void testTreeWithDuplicates()
     {
+        // To implement this just use another map to check if artifacts are unique
+        // Hash org:artifact:component:version string for map
 
     }
+
+    @Test
+    public void testTreeWithOptional()
+    {
+
+    }
+
 }
