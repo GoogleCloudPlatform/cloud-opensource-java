@@ -82,6 +82,10 @@ public class SerializeGraph
         {
             builder.append( " (Omitted due to duplicate artifact)" ).append( System.lineSeparator() );
         }
+        else if ( node.getDependency().isOptional() )
+        {
+            builder.append( " (Omitted due to optional dependency)" ).append( System.lineSeparator() );
+        }
         else
         {
             artifactSet.add( getArtifactString( node.getArtifact() ) );

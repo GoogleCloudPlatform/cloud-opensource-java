@@ -196,9 +196,25 @@ public class SerializeGraphTest extends AbstractMojoTestCase
     }
 
     @Test
-    public void testTreeWithOptional()
+    public void testTreeWithOptional() throws IOException
     {
+        DependencyNode root = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), "")
+        );
+        DependencyNode left = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" ), "test", true )
+        );
+        DependencyNode right = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "org.xyz", "right", "zip", "1" ), "provided" )
+        );
 
+        root.setChildren( Arrays.asList( left, right ) );
+
+        String actual = serializer.serialize( root );
+        File file = new File(getBasedir(), "/target/test-classes/SerializerTests/OptionalDependency.txt");
+        String expected = readFileToString(file);
+
+        Assert.assertEquals(expected, actual);
     }
 
 }
