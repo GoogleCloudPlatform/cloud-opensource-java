@@ -17,11 +17,14 @@
 
 package org.apache.maven.dependency.graph;
 
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 public class SerializeGraph
 {
@@ -31,33 +34,42 @@ public class SerializeGraph
     public String serialize( DependencyNode root, String outputType )
     {
         this.outputType = outputType;
-        StringWriter writer = new StringWriter();
+        StringBuilder builder = new StringBuilder();
+        Map<DependencyNode, Boolean> visitedNodes = new IdentityHashMap<DependencyNode, Boolean>(512);
 
-        DependencyVisitor visitor;
-        return "";
+        return dfs( root, builder, visitedNodes, 0, "" ).toString();
     }
 
-    /**
-     * @param writer {@link Writer}
-     * @return {@link DependencyVisitor}
-     */
-    public DependencyVisitor getSerializingDependencyNodeVisitor( Writer writer )
+    public StringBuilder dfs( DependencyNode node, StringBuilder builder, Map<DependencyNode, Boolean> visitedNodes,
+                              int level, String start )
     {
-        if ( "graphml".equals( outputType ) )
+        visitedNodes.put( node, true );
+
+        Artifact nodeArtifact = node.getArtifact();
+
+        for(int i = 0; i < level; ++i )
         {
-            return new GraphmlDependencyNodeVisitor( writer );
+            builder.append( "|  " );
         }
-        else if ( "tgf".equals( outputType ) )
+        builder.append( start );
+        builder.append( nodeArtifact.getGroupId() + ":" + nodeArtifact.getArtifactId() +
+                ":" + nodeArtifact.getExtension() + ":" + nodeArtifact.getVersion() + System.lineSeparator());
+
+
+        for ( int i = 0; i < node.getChildren().size(); ++i )
         {
-            return new TGFDependencyNodeVisitor( writer );
+            if(i == node.getChildren().size() - 1)
+            {
+                builder = dfs(node.getChildren().get( i ), builder, visitedNodes, level + 1, "\\-");
+            }
+            else
+            {
+                builder = dfs(node.getChildren().get( i ), builder, visitedNodes, level + 1, "+-");
+            }
         }
-        else if ( "dot".equals( outputType ) )
-        {
-            return new DOTDependencyNodeVisitor( writer );
-        }
-        else
-        {
-            return new SerializingDependencyNodeVisitor( writer, toGraphTokens( tokens ) );
-        }
+
+        return builder;
     }
+
+
 }
