@@ -18,7 +18,6 @@
 package org.apache.maven.dependency.graph;
 
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
-import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
@@ -27,16 +26,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class SerializeGraphTest extends AbstractMojoTestCase
 {
@@ -48,17 +42,24 @@ public class SerializeGraphTest extends AbstractMojoTestCase
         serializer = new SerializeGraph();
     }
 
+    static String readFile(String path, Charset encoding)
+            throws IOException
+    {
+        byte[] encoded = Files.readAllBytes( Paths.get(path));
+        return new String(encoded, encoding);
+    }
+
     @Test
     public void testBasicTree() throws IOException
     {
         DependencyNode root = new DefaultDependencyNode(
-                new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0")
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), null)
         );
         DependencyNode left = new DefaultDependencyNode(
-                new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" )
+                new Dependency( new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" ), "test" )
         );
         DependencyNode right = new DefaultDependencyNode(
-                new DefaultArtifact( "org.xyz", "right", "zip", "1" )
+                new Dependency( new DefaultArtifact( "org.xyz", "right", "zip", "1" ), "provided" )
         );
 
         root.setChildren( Arrays.asList( left, right ) );
@@ -75,37 +76,37 @@ public class SerializeGraphTest extends AbstractMojoTestCase
     {
         // Construct nodes for tree l1 = level 1 with the root being l0
         DependencyNode root = new DefaultDependencyNode(
-                new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" )
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), null )
         );
         DependencyNode l1left = new DefaultDependencyNode(
-                new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" )
+                new Dependency( new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" ), "test" )
         );
         DependencyNode l1right = new DefaultDependencyNode(
-                new DefaultArtifact( "org.xyz", "right", "zip", "1" )
+                new Dependency( new DefaultArtifact( "org.xyz", "right", "zip", "1" ), "provided" )
         );
         DependencyNode l2left = new DefaultDependencyNode(
-                new DefaultArtifact( "org.maven", "a4", "jar", "2.2.1" )
+                new Dependency( new DefaultArtifact( "org.maven", "a4", "jar", "2.2.1" ), "system" )
         );
         DependencyNode l2middle = new DefaultDependencyNode(
-                new DefaultArtifact( "com.google", "a5", "zip", "0" )
+                new Dependency( new DefaultArtifact( "com.google", "a5", "zip", "0" ), "import" )
         );
         DependencyNode l2right = new DefaultDependencyNode(
-                new DefaultArtifact( "com.xyz", "a9", "xml", "1.2" )
+                new Dependency( new DefaultArtifact( "com.xyz", "a9", "xml", "1.2" ), "runtime" )
         );
         DependencyNode l3 = new DefaultDependencyNode(
-                new DefaultArtifact( "com.xyz", "a6", "xml", "1.2.1" )
+                new Dependency( new DefaultArtifact( "com.xyz", "a6", "xml", "1.2.1" ), "test" )
         );
         DependencyNode l4 = new DefaultDependencyNode(
-                new DefaultArtifact( "com.example", "a7", "jar", "2.2.2" )
+                new Dependency( new DefaultArtifact( "com.example", "a7", "jar", "2.2.2" ), "provided" )
         );
         DependencyNode l5right = new DefaultDependencyNode(
-                new DefaultArtifact( "com.comm", "a7", "jar", "1" )
+                new Dependency( new DefaultArtifact( "com.comm", "a7", "jar", "1" ), "compile" )
         );
         DependencyNode l5left = new DefaultDependencyNode(
-                new DefaultArtifact( "com.comm", "a7", "jar", "1" )
+                new Dependency( new DefaultArtifact( "com.comm", "a7", "jar", "1" ), "compile" )
         );
         DependencyNode l6left = new DefaultDependencyNode(
-                new DefaultArtifact( "com.example", "a8", "xml", "2.1" )
+                new Dependency( new DefaultArtifact( "com.example", "a8", "xml", "2.1" ), "test" )
         );
 
         // Set Node Relationships
@@ -124,13 +125,6 @@ public class SerializeGraphTest extends AbstractMojoTestCase
                 Charset.defaultCharset() );
 
         Assert.assertEquals(expected, result);
-    }
-
-    static String readFile(String path, Charset encoding)
-            throws IOException
-    {
-        byte[] encoded = Files.readAllBytes( Paths.get(path));
-        return new String(encoded, encoding);
     }
 
     @Test
@@ -161,7 +155,7 @@ public class SerializeGraphTest extends AbstractMojoTestCase
     {
         // Construct nodes for tree l1 = level 1 with the root being l0
         DependencyNode root = new DefaultDependencyNode(
-                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), "compile" )
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), null )
         );
         DependencyNode l1left = new DefaultDependencyNode(
                 new Dependency( new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" ), "test" )
@@ -170,13 +164,13 @@ public class SerializeGraphTest extends AbstractMojoTestCase
                 new Dependency( new DefaultArtifact( "org.xyz", "right", "zip", "1" ), "provided" )
         );
         DependencyNode l2left = new DefaultDependencyNode(
-                new DefaultArtifact( "org.maven", "a4", "jar", "2.2.1" )
+                new Dependency( new DefaultArtifact( "org.maven", "a4", "jar", "2.2.1" ), "system" )
         );
         DependencyNode l2middle = new DefaultDependencyNode(
-                new DefaultArtifact( "com.google", "a5", "zip", "0" )
+                new Dependency( new DefaultArtifact( "com.google", "a5", "zip", "0" ), "import" )
         );
         DependencyNode l2right = new DefaultDependencyNode(
-                new DefaultArtifact( "com.xyz", "a9", "xml", "1.2" )
+                new Dependency( new DefaultArtifact( "com.xyz", "a9", "xml", "1.2" ), "runtime" )
         );
         DependencyNode l3 = new DefaultDependencyNode(
                 new Dependency( new DefaultArtifact( "com.xyz", "a6", "xml", "1.2.1" ), "test" )
