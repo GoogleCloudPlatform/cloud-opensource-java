@@ -63,7 +63,7 @@ public class SerializeGraph
                 artifact.getExtension() + ":" + artifact.getVersion();
     }
 
-    private boolean artifactDuplicate( Artifact artifact )
+    private boolean isDuplicateArtifact( Artifact artifact )
     {
         String artifactString = getArtifactString( artifact );
         return artifactSet.contains( artifactString );
@@ -78,7 +78,7 @@ public class SerializeGraph
         {
             builder.append( " (Omitted due to cycle)" ).append( System.lineSeparator() );
         }
-        else if ( artifactDuplicate( node.getArtifact() ) )
+        else if ( isDuplicateArtifact( node.getArtifact() ) )
         {
             builder.append( " (Omitted due to duplicate artifact)" ).append( System.lineSeparator() );
         }
