@@ -32,28 +32,32 @@ public class SerializeGraph
 
     private Map<DependencyNode, Boolean> visitedNodes;
     private Set<String> artifactSet;
+    private StringBuilder builder;
 
-    public String serialize( DependencyNode root )
+    public SerializeGraph()
     {
         visitedNodes = new IdentityHashMap<DependencyNode, Boolean>( 512 );
         artifactSet = new HashSet<String>();
-        StringBuilder builder = new StringBuilder();
-        return dfs( root, builder, 0, "" ).toString();
+        builder = new StringBuilder();
     }
 
-    private StringBuilder appendDependency( StringBuilder builder, DependencyNode node )
+    public String serialize( DependencyNode root )
+    {
+        return dfs( root, "" ).toString();
+    }
+
+    private static void appendDependency( StringBuilder builder, DependencyNode node )
     {
         String scope = node.getDependency().getScope();
         builder.append( getArtifactString( node.getArtifact() ) );
 
         if ( scope != null && !scope.isEmpty() )
         {
-            builder.append( ":" + scope );
+            builder.append( ":" ).append( scope );
         }
-        return builder;
     }
 
-    private String getArtifactString( Artifact artifact )
+    private static String getArtifactString( Artifact artifact )
     {
         return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" +
                 artifact.getExtension() + ":" + artifact.getVersion();
@@ -62,33 +66,29 @@ public class SerializeGraph
     private boolean artifactDuplicate( Artifact artifact )
     {
         String artifactString = getArtifactString( artifact );
-        if( artifactSet.contains( artifactString ) ) return true;
-        return false;
+        return artifactSet.contains( artifactString );
     }
 
-    public StringBuilder dfs( DependencyNode node, StringBuilder builder, int level, String start )
+    public StringBuilder dfs( DependencyNode node, String start )
     {
         builder.append( start );
-        builder = appendDependency( builder, node );
-
+        appendDependency( builder, node );
 
         if ( visitedNodes.containsKey( node ) )
         {
-            builder.append( " (Omitted due to cycle)\n" );
-            // System.lineSeparator());
+            builder.append( " (Omitted due to cycle)" ).append( System.lineSeparator() );
         }
         else if ( artifactDuplicate( node.getArtifact() ) )
         {
-            builder.append( " (Omitted due to duplicate artifact)\n" );
+            builder.append( " (Omitted due to duplicate artifact)" ).append( System.lineSeparator() );
         }
         else
         {
             artifactSet.add( getArtifactString( node.getArtifact() ) );
-            builder.append( "\n" );
-            // System.lineSeparator());
+            builder.append( System.lineSeparator() );
             visitedNodes.put( node, true );
 
-            for ( int i = 0; i < node.getChildren().size(); ++i )
+            for ( int i = 0; i < node.getChildren().size(); i++ )
             {
                 if ( start.endsWith( "+- " ) )
                 {
@@ -101,11 +101,11 @@ public class SerializeGraph
 
                 if ( i == node.getChildren().size() - 1 )
                 {
-                    builder = dfs( node.getChildren().get( i ), builder, level + 1, start.concat( "\\- " ) );
+                    builder = dfs( node.getChildren().get( i ), start.concat( "\\- " ) );
                 }
                 else
                 {
-                    builder = dfs( node.getChildren().get( i ), builder, level + 1, start.concat( "+- " ) );
+                    builder = dfs( node.getChildren().get( i ), start.concat( "+- " ) );
                 }
             }
         }

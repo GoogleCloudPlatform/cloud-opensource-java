@@ -23,31 +23,17 @@ import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
+
+import static org.apache.commons.io.FileUtils.readFileToString;
 
 public class SerializeGraphTest extends AbstractMojoTestCase
 {
-    private SerializeGraph serializer;
-
-    @Before
-    public void setUp()
-    {
-        serializer = new SerializeGraph();
-    }
-
-    static String readFile(String path, Charset encoding)
-            throws IOException
-    {
-        byte[] encoded = Files.readAllBytes( Paths.get(path));
-        return new String(encoded, encoding);
-    }
+    private SerializeGraph serializer = new SerializeGraph();
 
     @Test
     public void testBasicTree() throws IOException
@@ -64,11 +50,11 @@ public class SerializeGraphTest extends AbstractMojoTestCase
 
         root.setChildren( Arrays.asList( left, right ) );
 
-        String result = serializer.serialize( root );
-        String expected = readFile( getBasedir() + "/target/test-classes/SerializerTests/BasicTree.txt",
-                Charset.defaultCharset() );
+        String actual = serializer.serialize( root );
+        File file = new File(getBasedir(), "/target/test-classes/SerializerTests/BasicTree.txt");
+        String expected = readFileToString(file);
 
-        Assert.assertEquals(expected, result);
+        Assert.assertEquals(expected, actual);
     }
 
     @Test
@@ -120,11 +106,11 @@ public class SerializeGraphTest extends AbstractMojoTestCase
 
         root.setChildren( Arrays.asList( l1left, l1right ) );
 
-        String result = serializer.serialize( root );
-        String expected = readFile( getBasedir() + "/target/test-classes/SerializerTests/LargeTree.txt",
-                Charset.defaultCharset() );
+        String actual = serializer.serialize( root );
+        File file = new File(getBasedir(), "/target/test-classes/SerializerTests/LargeTree.txt");
+        String expected = readFileToString(file);
 
-        Assert.assertEquals(expected, result);
+        Assert.assertEquals(expected, actual);
     }
 
     @Test
@@ -143,11 +129,11 @@ public class SerializeGraphTest extends AbstractMojoTestCase
         root.setChildren( Arrays.asList( left, right ) );
         left.setChildren( Arrays.asList( root ) );
 
-        String result = serializer.serialize( root );
-        String expected = readFile( getBasedir() + "/target/test-classes/SerializerTests/BasicCycle.txt",
-                Charset.defaultCharset() );
+        String actual = serializer.serialize( root );
+        File file = new File(getBasedir(), "/target/test-classes/SerializerTests/BasicCycle.txt");
+        String expected = readFileToString(file);
 
-        Assert.assertEquals(expected, result);
+        Assert.assertEquals(expected, actual);
     }
 
     @Test
@@ -202,11 +188,11 @@ public class SerializeGraphTest extends AbstractMojoTestCase
         // Introduce cycles
         l5left.setChildren( Arrays.asList( l2left, l1right, l3 ) );
 
-        String result = serializer.serialize( root );
-        String expected = readFile( getBasedir() + "/target/test-classes/SerializerTests/LargeGraphWithCycles.txt",
-                Charset.defaultCharset() );
+        String actual = serializer.serialize( root );
+        File file = new File(getBasedir(), "/target/test-classes/SerializerTests/LargeGraphWithCycles.txt");
+        String expected = readFileToString(file);
 
-        Assert.assertEquals(expected, result);
+        Assert.assertEquals(expected, actual);
     }
 
     @Test
