@@ -17,6 +17,7 @@
 
 package org.apache.maven.dependency.graph;
 
+import com.google.inject.Inject;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -24,7 +25,17 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.DefaultDependencyResolutionRequest;
+import org.apache.maven.project.DefaultProjectBuildingRequest;
+import org.apache.maven.project.DependencyResolutionException;
+import org.apache.maven.project.DependencyResolutionRequest;
+import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectBuildingRequest;
+import org.apache.maven.project.ProjectDependenciesResolver;
+import org.eclipse.aether.graph.DependencyNode;
+
+import java.util.Collection;
 
 /**
  * Gets the Project Building Request
@@ -39,12 +50,68 @@ public class DependencyGraphBuilder extends AbstractMojo
     @Parameter( defaultValue = "${session}", readonly = true, required = true )
     protected MavenSession session;
 
+    @Inject
+    private ProjectDependenciesResolver resolver;
+
     @Component
     private ArtifactHandlerManager artifactHandlerManager;
+
+    /**
+     * The computed dependency tree root node of the Maven project.
+     */
+    private DependencyNode rootNode;
 
     public void execute() throws MojoExecutionException
     {
         getLog().info( project.getArtifactId() );
+        getLog().info( session.toString() );
+    }
+
+    public DependencyNode buildDependencyGraph()
+    {
+        ProjectBuildingRequest buildingRequest =
+                new DefaultProjectBuildingRequest( session.getProjectBuildingRequest() );
+
+        buildingRequest.setProject( project );
+
+
+        final DependencyResolutionRequest request = new DefaultDependencyResolutionRequest();
+        request.setMavenProject( project );
+        request.setRepositorySession(  );
+
+        final DependencyResolutionResult result =
+        return null;
+    }
+
+    public DependencyNode getDependencyGraph()
+    {
+        return rootNode;
+    }
+
+
+    private DependencyResolutionResult resolveDependencies( DependencyResolutionRequest request,
+                                                            Collection<MavenProject> reactorProjects )
+            throws DependencyGraphBuilderException
+    {
+        try
+        {
+            return resolver.resolve( request );
+        }
+        catch ( DependencyResolutionException e )
+        {
+            if ( reactorProjects == null )
+            {
+                throw new DependencyGraphBuilderException( "Could not resolve following dependencies: "
+                        + e.getResult().getUnresolvedDependencies(), e );
+            }
+
+            throw new DependencyGraphBuilderException(
+                    "REACTOR NOT SUPPORTED YET. Could not resolve following dependencies: "
+                    + e.getResult().getUnresolvedDependencies(), e );
+
+            // ToDo: try collecting from reactor for multi module project
+            // return collectDependenciesFromReactor( e, reactorProjects );
+        }
     }
 
     /**
