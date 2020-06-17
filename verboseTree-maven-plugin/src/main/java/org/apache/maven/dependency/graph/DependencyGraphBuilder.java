@@ -77,9 +77,9 @@ public class DependencyGraphBuilder extends AbstractMojo
 
         final DependencyResolutionRequest request = new DefaultDependencyResolutionRequest();
         request.setMavenProject( project );
-        request.setRepositorySession(  );
+        // request.setRepositorySession(  );
 
-        final DependencyResolutionResult result =
+        // inal DependencyResolutionResult result =
         return null;
     }
 
