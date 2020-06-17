@@ -161,7 +161,8 @@
             <!--
               These files contains the expected output of this component and can not contain a license header.
             -->
-            <exclude>src/it/*/expected*.txt</exclude>
+            <exclude>src/it/verbose/expected*.txt</exclude>
+            <exclude>expected*.txt</exclude>
           </excludes>
         </configuration>
         <executions>
@@ -176,32 +177,4 @@
     </plugins>
   </build>
 
-  <profiles>
-    <profile>
-      <id>run-its</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-invoker-plugin</artifactId>
-            <configuration>
-              <goals>
-                <goal>clean</goal>
-                <goal>process-sources</goal>
-              </goals>
-              <projectsDirectory>src/it</projectsDirectory>
-              <pomExcludes>
-              </pomExcludes>
-              <pomIncludes>
-                <pomInclude>*/pom.xml</pomInclude>
-              </pomIncludes>
-              <filterProperties>
-                <repository.proxy.url>${repository.proxy.url}</repository.proxy.url>
-              </filterProperties>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>
