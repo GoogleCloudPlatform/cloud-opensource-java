@@ -134,6 +134,7 @@
                 <id>integration-tests</id>
                 <goals>
                   <goal>run</goal>
+                  <goal>verify</goal>
                 </goals>
               </execution>
             </executions>
