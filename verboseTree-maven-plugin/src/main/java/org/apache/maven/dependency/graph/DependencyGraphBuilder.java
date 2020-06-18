@@ -33,6 +33,7 @@ import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.ProjectDependenciesResolver;
+import org.codehaus.plexus.PlexusTestCase;
 import org.eclipse.aether.graph.DependencyNode;
 
 import java.io.File;
@@ -44,7 +45,7 @@ import static org.apache.commons.io.FileUtils.write;
 /**
  * Gets the Project Building Request
  */
-@Mojo( name = "tree")
+@Mojo( name = "tree" )
 public class DependencyGraphBuilder extends AbstractMojo
 {
 
@@ -63,6 +64,8 @@ public class DependencyGraphBuilder extends AbstractMojo
     @Component
     private ArtifactHandlerManager artifactHandlerManager;
 
+    private SerializeGraph serializer;
+
     /**
      * The computed dependency tree root node of the Maven project.
      */
@@ -73,10 +76,11 @@ public class DependencyGraphBuilder extends AbstractMojo
         getLog().info( project.getArtifactId() );
         getLog().info( session.toString() );
 
-        File file = new File("C:\\Users\\ianla\\Maven\\cloud-opensource-java\\verboseTree-maven-plugin\\target\\its\\tree-verbose\\target\\tree.txt");
+        File file = new File( project.getBasedir().getAbsolutePath() + "\\target\\tree.txt" );
+
         try
         {
-            write(file, "sample");
+            write(file, "with absolutpath work");
         }
         catch ( IOException e )
         {

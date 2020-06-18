@@ -85,9 +85,6 @@
           <groupId>org.example</groupId>
           <artifactId>verboseTree-maven-plugin</artifactId>
           <version>1.1-SNAPSHOT</version>
-          <configuration>
-            <outputFile>target/tree.txt</outputFile>
-          </configuration>
           <executions>
             <execution>
               <id>verboseTree</id>
