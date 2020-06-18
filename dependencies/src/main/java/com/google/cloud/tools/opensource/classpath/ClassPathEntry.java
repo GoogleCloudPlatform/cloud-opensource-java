@@ -56,10 +56,10 @@ public final class ClassPathEntry {
   }
 
   /**
-   * Returns the Maven artifact associated with the JAR file, or null 
-   * if the JAR file does not have Maven coordinates.
+   * Returns the Maven artifact associated with the JAR file, or null if the JAR file does not have
+   * Maven coordinates.
    */
-  Artifact getArtifact() {
+  public Artifact getArtifact() {
     return artifact;
   }
 
