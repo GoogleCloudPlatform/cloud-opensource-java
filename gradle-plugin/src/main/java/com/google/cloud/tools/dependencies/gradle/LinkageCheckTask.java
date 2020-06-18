@@ -16,29 +16,30 @@
 
 package com.google.cloud.tools.dependencies.gradle;
 
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
-import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayDeque;
 import java.util.Set;
+import java.util.stream.Collectors;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.graph.DefaultDependencyNode;
-import org.eclipse.aether.graph.DependencyNode;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.DependencySet;
-import org.gradle.api.artifacts.ModuleIdentifier;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.result.DependencyResult;
@@ -95,47 +96,18 @@ public class LinkageCheckTask extends DefaultTask {
     }
   }
 
-  String dependencyPathToArtifacts(ResolvedComponentResult componentResult,
-      Set<ClassPathEntry> classPathEntries) {
+  String formatComponentResult(ResolvedComponentResult componentResult) {
     ModuleVersionIdentifier identifier = componentResult.getModuleVersion();
-    DependencyNode node = new DefaultDependencyNode(
-        new DefaultArtifact(identifier.getGroup(),
-            identifier.getName(),
-            null,
-            identifier.getVersion()
-            )
-    );
-    ImmutableList.Builder<DependencyNode> childrenBuilder = ImmutableList.builder();
-    for (DependencyResult dependencyResult : componentResult.getDependencies()) {
-      if (dependencyResult instanceof ResolvedDependencyResult) {
-        DependencyNode child = convert(((ResolvedDependencyResult) dependencyResult).getSelected());
-        childrenBuilder.add(child);
-      } else if (dependencyResult instanceof UnresolvedDependencyResult) {
-        UnresolvedDependencyResult unresolvedResult = (UnresolvedDependencyResult) dependencyResult;
-        getLogger().error("Could not resolve dependency: " + unresolvedResult.getAttempted().getDisplayName());
-      } else {
-        throw new IllegalStateException("Unexpected dependency result type: "+ dependencyResult);
-      }
-    }
-    node.setChildren(childrenBuilder.build());
-    return node;
-  }
-
-  private DependencyGraph createDependencyGraph(ResolvedComponentResult componentResult) {
-    DependencyNode root = convert(componentResult);
-    return DependencyGraph.from(root);
+    return identifier.toString();
   }
 
   /** Returns true iff {@code configuration}'s artifacts contain linkage errors. */
   private boolean findLinkageErrors(Configuration configuration) throws IOException {
     ImmutableList.Builder<ClassPathEntry> classPathBuilder = ImmutableList.builder();
 
-    ResolutionResult result = configuration.getIncoming().getResolutionResult();
-    ResolvedComponentResult root = result.getRoot();
-    DependencyGraph graph = createDependencyGraph(root);
-
     // TODO(suztomo): Should this include optional dependencies?
     //  Once we decide what to do with the optional dependencies, let's revisit this logic.
+    ImmutableList.Builder<Artifact> artifactsBuilder = ImmutableList.builder();
     for (ResolvedArtifact resolvedArtifact :
         configuration.getResolvedConfiguration().getResolvedArtifacts()) {
       ModuleVersionIdentifier moduleVersionId = resolvedArtifact.getModuleVersion().getId();
@@ -149,6 +121,7 @@ public class LinkageCheckTask extends DefaultTask {
               null,
               resolvedArtifact.getFile());
       classPathBuilder.add(new ClassPathEntry(artifact));
+      artifactsBuilder.add(artifact);
     }
 
     ImmutableList<ClassPathEntry> classPath = classPathBuilder.build();
@@ -178,10 +151,10 @@ public class LinkageCheckTask extends DefaultTask {
             errorCount > 1 ? "s" : "",
             SymbolProblem.formatSymbolProblems(symbolProblems));
 
-        ClassPathResult classPathResult = new ClassPathResult(graph.)
-        String dependencyPaths =
-            dependencyPathsOfProblematicJars(classPathResult, symbolProblems);
-
+        ResolutionResult result = configuration.getIncoming().getResolutionResult();
+        ResolvedComponentResult root = result.getRoot();
+        String dependencyPaths = dependencyPathsOfProblematicJars(root, symbolProblems);
+        getLogger().error(dependencyPaths);
       }
       return errorCount > 0;
     }
@@ -190,7 +163,7 @@ public class LinkageCheckTask extends DefaultTask {
   }
 
   private String dependencyPathsOfProblematicJars(
-      ClassPathResult classPathResult, Multimap<SymbolProblem, ClassFile> symbolProblems) {
+      ResolvedComponentResult componentResult, Multimap<SymbolProblem, ClassFile> symbolProblems) {
     ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
     for (SymbolProblem problem : symbolProblems.keySet()) {
       ClassFile containingClass = problem.getContainingClass();
@@ -204,8 +177,72 @@ public class LinkageCheckTask extends DefaultTask {
     }
 
     return "Problematic artifacts in the dependency tree:\n"
-        + classPathResult.formatDependencyPaths(problematicJars.build());
+        + dependencyPathToArtifacts(componentResult, problematicJars.build());
   }
 
+  private void recordDependencyPaths(
+      ImmutableListMultimap.Builder<String, String> output,
+      ArrayDeque<ResolvedComponentResult> stack,
+      ImmutableSet<String> targetCoordinates) {
+    ResolvedComponentResult item = stack.getLast();
+    ModuleVersionIdentifier identifier = item.getModuleVersion();
+    String coordinates =
+        String.format(
+            "%s:%s:%s", identifier.getGroup(), identifier.getName(), identifier.getVersion());
+    if (targetCoordinates.contains(coordinates)) {
+      String dependencyPath =
+          stack.stream().map(this::formatComponentResult).collect(Collectors.joining(" / "));
+      output.put(coordinates, dependencyPath);
+    }
 
+    for (DependencyResult dependencyResult : item.getDependencies()) {
+      if (dependencyResult instanceof ResolvedDependencyResult) {
+        ResolvedDependencyResult resolvedDependencyResult =
+            (ResolvedDependencyResult) dependencyResult;
+        ResolvedComponentResult child = resolvedDependencyResult.getSelected();
+        stack.add(child);
+        recordDependencyPaths(output, stack, targetCoordinates);
+      } else if (dependencyResult instanceof UnresolvedDependencyResult) {
+        UnresolvedDependencyResult unresolvedResult = (UnresolvedDependencyResult) dependencyResult;
+        getLogger()
+            .error(
+                "Could not resolve dependency: "
+                    + unresolvedResult.getAttempted().getDisplayName());
+      } else {
+        throw new IllegalStateException("Unexpected dependency result type: " + dependencyResult);
+      }
+    }
+
+    stack.removeLast();
+  }
+
+  private String dependencyPathToArtifacts(
+      ResolvedComponentResult componentResult, Set<ClassPathEntry> classPathEntries) {
+
+    ImmutableSet<String> targetCoordinates =
+        classPathEntries.stream()
+            .map(ClassPathEntry::getArtifact)
+            .map(Artifacts::toCoordinates)
+            .collect(toImmutableSet());
+
+    StringBuilder output = new StringBuilder();
+
+    ArrayDeque<ResolvedComponentResult> stack = new ArrayDeque<>();
+    stack.add(componentResult);
+
+    ImmutableListMultimap.Builder<String, String> coordinatesToDependencyPaths =
+        ImmutableListMultimap.builder();
+
+    recordDependencyPaths(coordinatesToDependencyPaths, stack, targetCoordinates);
+
+    ImmutableListMultimap<String, String> dependencyPaths = coordinatesToDependencyPaths.build();
+    for (String coordinates : dependencyPaths.keySet()) {
+      output.append(coordinates + " is at:\n");
+      for (String dependencyPath : dependencyPaths.get(coordinates)) {
+        output.append("  " + dependencyPath + "\n");
+      }
+    }
+
+    return output.toString();
+  }
 }

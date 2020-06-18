@@ -28,7 +28,8 @@ version = '0.1.0-SNAPSHOT'
 sourceCompatibility = 1.8
 
 dependencies {
-  implementation 'com.google.cloud.tools:dependencies:1.4.2'
+  // TODO(suztomo): Place a concrete version once ClassPathEntry.getArtifact becomes public.
+  implementation 'com.google.cloud.tools:dependencies:latest.integration'
 
   testImplementation 'junit:junit:4.13'
   testImplementation 'org.spockframework:spock-core:1.3-groovy-2.5'
