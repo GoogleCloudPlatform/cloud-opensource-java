@@ -18,6 +18,7 @@
 package org.apache.maven.dependency.graph;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -33,7 +34,7 @@ import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.ProjectDependenciesResolver;
-import org.codehaus.plexus.PlexusTestCase;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
 import java.io.File;
@@ -43,7 +44,7 @@ import java.util.Collection;
 import static org.apache.commons.io.FileUtils.write;
 
 /**
- * Gets the Project Building Request
+ * Builds the DependencyGraph
  */
 @Mojo( name = "tree" )
 public class DependencyGraphBuilder extends AbstractMojo
@@ -61,14 +62,12 @@ public class DependencyGraphBuilder extends AbstractMojo
     @Inject
     private ProjectDependenciesResolver resolver;
 
+    // replace Component with sisu guice named or singleton annotation
     @Component
     private ArtifactHandlerManager artifactHandlerManager;
 
     private SerializeGraph serializer;
 
-    /**
-     * The computed dependency tree root node of the Maven project.
-     */
     private DependencyNode rootNode;
 
     public void execute() throws MojoExecutionException
@@ -76,11 +75,22 @@ public class DependencyGraphBuilder extends AbstractMojo
         getLog().info( project.getArtifactId() );
         getLog().info( session.toString() );
 
+        try
+        {
+            buildDependencyGraph();
+        }
+        catch ( DependencyGraphBuilderException e )
+        {
+            e.printStackTrace();
+        }
+        // if outputFile not null write to outputFile
+
         File file = new File( project.getBasedir().getAbsolutePath() + "\\target\\tree.txt" );
 
         try
         {
-            write(file, "with absolutpath work");
+            // ToDo: build graph and serialize into file
+            write(file, "This is a test");
         }
         catch ( IOException e )
         {
@@ -89,20 +99,30 @@ public class DependencyGraphBuilder extends AbstractMojo
         }
     }
 
-    public DependencyNode buildDependencyGraph()
+    public DependencyNode buildDependencyGraph() throws DependencyGraphBuilderException
     {
+        // adapting the dependency-plugin code
         ProjectBuildingRequest buildingRequest =
                 new DefaultProjectBuildingRequest( session.getProjectBuildingRequest() );
 
         buildingRequest.setProject( project );
 
+        // need to configure the repositorySystemSession
+
+        // dependency plugin code that isn't needed below
+        // dependencyGraphBuilder.buildDependencyGraph( buildingRequest, artifactFilter, reactorProjects );
+
+        // now adapting the dependency-tree defaultDependencyGraphBuilder and maven31Code
 
         final DependencyResolutionRequest request = new DefaultDependencyResolutionRequest();
         request.setMavenProject( project );
         // request.setRepositorySession(  );
 
-        // inal DependencyResolutionResult result =
-        serialize();
+        final DependencyResolutionResult result = resolveDependencies( request, null );
+        DependencyNode graphRoot = result.getDependencyGraph();
+
+
+
         return null;
     }
 
