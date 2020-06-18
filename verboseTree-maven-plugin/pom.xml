@@ -74,7 +74,6 @@
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>2.2</version>
-      <scope>test</scope>
     </dependency>
 
   </dependencies>
@@ -107,6 +106,7 @@
       <id>run-its</id>
       <build>
         <plugins>
+          <!--
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-invoker-plugin</artifactId>
@@ -135,6 +135,25 @@
                 <goals>
                   <goal>run</goal>
                   <goal>verify</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          -->
+          <plugin>
+            <artifactId>maven-invoker-plugin</artifactId>
+            <version>3.2.1</version>
+            <configuration>
+              <debug>true</debug>
+              <projectsDirectory>src/it</projectsDirectory>
+              <preBuildHookScript>setup.bsh</preBuildHookScript>
+              <postBuildHookScript>verify.bsh</postBuildHookScript>
+            </configuration>
+            <executions>
+              <execution>
+                <id>integration-test</id>
+                <goals>
+                  <goal>run</goal>
                 </goals>
               </execution>
             </executions>

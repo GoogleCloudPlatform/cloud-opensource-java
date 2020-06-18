@@ -1,4 +1,4 @@
-org.apache.maven.its.dependency-tree:verbose:jar:1.0-SNAPSHOT
+org.apache.maven.its.dependency:tree-verbose:jar:1.0-SNAPSHOT
 +- org.apache.maven:maven-project:jar:2.0.6:compile
 |  +- org.apache.maven:maven-settings:jar:2.0.6:compile
 |  |  +- (org.apache.maven:maven-model:jar:2.0.5:test - version managed from 2.0.6; scope managed from compile; omitted for duplicate)

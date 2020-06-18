@@ -35,12 +35,16 @@ import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.ProjectDependenciesResolver;
 import org.eclipse.aether.graph.DependencyNode;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
+
+import static org.apache.commons.io.FileUtils.write;
 
 /**
  * Gets the Project Building Request
  */
-@Mojo( name = "getBuildingRequest")
+@Mojo( name = "tree")
 public class DependencyGraphBuilder extends AbstractMojo
 {
 
@@ -49,6 +53,9 @@ public class DependencyGraphBuilder extends AbstractMojo
 
     @Parameter( defaultValue = "${session}", readonly = true, required = true )
     protected MavenSession session;
+
+    @Parameter
+    private String outputFile;
 
     @Inject
     private ProjectDependenciesResolver resolver;
@@ -65,6 +72,17 @@ public class DependencyGraphBuilder extends AbstractMojo
     {
         getLog().info( project.getArtifactId() );
         getLog().info( session.toString() );
+
+        File file = new File("C:\\Users\\ianla\\Maven\\cloud-opensource-java\\verboseTree-maven-plugin\\target\\its\\tree-verbose\\target\\tree.txt");
+        try
+        {
+            write(file, "sample");
+        }
+        catch ( IOException e )
+        {
+            e.printStackTrace();
+            getLog().error( "Failed to write to file" );
+        }
     }
 
     public DependencyNode buildDependencyGraph()
@@ -80,7 +98,13 @@ public class DependencyGraphBuilder extends AbstractMojo
         // request.setRepositorySession(  );
 
         // inal DependencyResolutionResult result =
+        serialize();
         return null;
+    }
+
+    private void serialize()
+    {
+        File file = new File("C:\\Users\\ianla\\Maven\\cloud-opensource-java\\verboseTree-maven-plugin\\target\\its\\tree-verbose\\target\\tree.txt");
     }
 
     public DependencyNode getDependencyGraph()

@@ -40,7 +40,7 @@ public class DependencyGraphBuilderTest extends AbstractMojoTestCase
 
         File testPom = new File( getBasedir(),
                 "target/test-classes/DependencyGraphBuilderTest/DependencyGraphBuilderTest.xml" );
-        mojo = (DependencyGraphBuilder) lookupMojo( "getBuildingRequest", testPom );
+        mojo = (DependencyGraphBuilder) lookupMojo( "tree", testPom );
 
         assertNotNull( mojo );
         assertNotNull( mojo.getProject() );
