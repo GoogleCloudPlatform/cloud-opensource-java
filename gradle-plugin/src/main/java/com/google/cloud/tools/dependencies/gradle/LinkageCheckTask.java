@@ -18,21 +18,34 @@ package com.google.cloud.tools.dependencies.gradle;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
+import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Multimap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.DefaultDependencyNode;
+import org.eclipse.aether.graph.DependencyNode;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.DependencySet;
+import org.gradle.api.artifacts.ModuleIdentifier;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
+import org.gradle.api.artifacts.result.DependencyResult;
+import org.gradle.api.artifacts.result.ResolutionResult;
+import org.gradle.api.artifacts.result.ResolvedComponentResult;
+import org.gradle.api.artifacts.result.ResolvedDependencyResult;
+import org.gradle.api.artifacts.result.UnresolvedDependencyResult;
 import org.gradle.api.tasks.TaskAction;
 
 /**
@@ -82,9 +95,44 @@ public class LinkageCheckTask extends DefaultTask {
     }
   }
 
+  String dependencyPathToArtifacts(ResolvedComponentResult componentResult,
+      Set<ClassPathEntry> classPathEntries) {
+    ModuleVersionIdentifier identifier = componentResult.getModuleVersion();
+    DependencyNode node = new DefaultDependencyNode(
+        new DefaultArtifact(identifier.getGroup(),
+            identifier.getName(),
+            null,
+            identifier.getVersion()
+            )
+    );
+    ImmutableList.Builder<DependencyNode> childrenBuilder = ImmutableList.builder();
+    for (DependencyResult dependencyResult : componentResult.getDependencies()) {
+      if (dependencyResult instanceof ResolvedDependencyResult) {
+        DependencyNode child = convert(((ResolvedDependencyResult) dependencyResult).getSelected());
+        childrenBuilder.add(child);
+      } else if (dependencyResult instanceof UnresolvedDependencyResult) {
+        UnresolvedDependencyResult unresolvedResult = (UnresolvedDependencyResult) dependencyResult;
+        getLogger().error("Could not resolve dependency: " + unresolvedResult.getAttempted().getDisplayName());
+      } else {
+        throw new IllegalStateException("Unexpected dependency result type: "+ dependencyResult);
+      }
+    }
+    node.setChildren(childrenBuilder.build());
+    return node;
+  }
+
+  private DependencyGraph createDependencyGraph(ResolvedComponentResult componentResult) {
+    DependencyNode root = convert(componentResult);
+    return DependencyGraph.from(root);
+  }
+
   /** Returns true iff {@code configuration}'s artifacts contain linkage errors. */
   private boolean findLinkageErrors(Configuration configuration) throws IOException {
     ImmutableList.Builder<ClassPathEntry> classPathBuilder = ImmutableList.builder();
+
+    ResolutionResult result = configuration.getIncoming().getResolutionResult();
+    ResolvedComponentResult root = result.getRoot();
+    DependencyGraph graph = createDependencyGraph(root);
 
     // TODO(suztomo): Should this include optional dependencies?
     //  Once we decide what to do with the optional dependencies, let's revisit this logic.
@@ -129,10 +177,35 @@ public class LinkageCheckTask extends DefaultTask {
             errorCount,
             errorCount > 1 ? "s" : "",
             SymbolProblem.formatSymbolProblems(symbolProblems));
+
+        ClassPathResult classPathResult = new ClassPathResult(graph.)
+        String dependencyPaths =
+            dependencyPathsOfProblematicJars(classPathResult, symbolProblems);
+
       }
       return errorCount > 0;
     }
     // When the configuration does not have any artifacts, there's no linkage error.
     return false;
   }
+
+  private String dependencyPathsOfProblematicJars(
+      ClassPathResult classPathResult, Multimap<SymbolProblem, ClassFile> symbolProblems) {
+    ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
+    for (SymbolProblem problem : symbolProblems.keySet()) {
+      ClassFile containingClass = problem.getContainingClass();
+      if (containingClass != null) {
+        problematicJars.add(containingClass.getClassPathEntry());
+      }
+
+      for (ClassFile classFile : symbolProblems.get(problem)) {
+        problematicJars.add(classFile.getClassPathEntry());
+      }
+    }
+
+    return "Problematic artifacts in the dependency tree:\n"
+        + classPathResult.formatDependencyPaths(problematicJars.build());
+  }
+
+
 }
