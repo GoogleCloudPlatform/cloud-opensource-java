@@ -27,8 +27,6 @@ class BuildStatusFunctionalTest extends Specification {
   @Rule TemporaryFolder testProjectDir = new TemporaryFolder()
   File buildFile
 
-  File settingsFile;
-
   def setup() {
     buildFile = testProjectDir.newFile('build.gradle')
     buildFile << """
@@ -37,7 +35,7 @@ class BuildStatusFunctionalTest extends Specification {
             id 'com.google.cloud.tools.linkagechecker'
         }
         """
-    settingsFile = testProjectDir.newFile("settings.gradle")
+    File settingsFile = testProjectDir.newFile("settings.gradle")
     settingsFile << """
         rootProject.name = 'test-123'
     """

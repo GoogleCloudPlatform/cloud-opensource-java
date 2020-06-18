@@ -34,7 +34,6 @@ import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
@@ -96,18 +95,12 @@ public class LinkageCheckTask extends DefaultTask {
     }
   }
 
-  String formatComponentResult(ResolvedComponentResult componentResult) {
-    ModuleVersionIdentifier identifier = componentResult.getModuleVersion();
-    return identifier.toString();
-  }
-
   /** Returns true iff {@code configuration}'s artifacts contain linkage errors. */
   private boolean findLinkageErrors(Configuration configuration) throws IOException {
     ImmutableList.Builder<ClassPathEntry> classPathBuilder = ImmutableList.builder();
 
     // TODO(suztomo): Should this include optional dependencies?
     //  Once we decide what to do with the optional dependencies, let's revisit this logic.
-    ImmutableList.Builder<Artifact> artifactsBuilder = ImmutableList.builder();
     for (ResolvedArtifact resolvedArtifact :
         configuration.getResolvedConfiguration().getResolvedArtifacts()) {
       ModuleVersionIdentifier moduleVersionId = resolvedArtifact.getModuleVersion().getId();
@@ -121,7 +114,6 @@ public class LinkageCheckTask extends DefaultTask {
               null,
               resolvedArtifact.getFile());
       classPathBuilder.add(new ClassPathEntry(artifact));
-      artifactsBuilder.add(artifact);
     }
 
     ImmutableList<ClassPathEntry> classPath = classPathBuilder.build();
@@ -178,6 +170,11 @@ public class LinkageCheckTask extends DefaultTask {
 
     return "Problematic artifacts in the dependency tree:\n"
         + dependencyPathToArtifacts(componentResult, problematicJars.build());
+  }
+
+  String formatComponentResult(ResolvedComponentResult componentResult) {
+    ModuleVersionIdentifier identifier = componentResult.getModuleVersion();
+    return identifier.toString();
   }
 
   private void recordDependencyPaths(
