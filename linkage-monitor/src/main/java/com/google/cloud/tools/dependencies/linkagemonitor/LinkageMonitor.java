@@ -101,6 +101,9 @@ public class LinkageMonitor {
     if (errorSize > 0) {
       logger.severe(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
+      logger.info(
+          "For the details of the linkage errors, see "
+              + "https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Messages");
       System.exit(1); // notify CI tools of the failure
     } else {
       logger.info("No new problem found");
