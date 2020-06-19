@@ -147,6 +147,10 @@ public class LinkageCheckTask extends DefaultTask {
         ResolvedComponentResult root = result.getRoot();
         String dependencyPaths = dependencyPathsOfProblematicJars(root, symbolProblems);
         getLogger().error(dependencyPaths);
+        getLogger()
+            .info(
+                "For the details of the linkage errors, see "
+                    + "https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Messages");
       }
       return errorCount > 0;
     }
