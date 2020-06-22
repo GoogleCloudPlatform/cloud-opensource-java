@@ -76,12 +76,6 @@ public class DependencyGraphBuilderTest extends AbstractMojoTestCase
     }
 
     @Test
-    public void test()
-    {
-        assertEquals( 2, 2 );
-    }
-
-    @Test
     public void testGetBuildingRequestTestEnvironment() throws Exception
     {
         super.setUp();
