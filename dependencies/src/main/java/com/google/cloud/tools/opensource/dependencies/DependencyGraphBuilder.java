@@ -151,7 +151,7 @@ public final class DependencyGraphBuilder {
    * @param dependency the root
    * @return the graph as built by Maven before dependency mediation
    */
-  DependencyGraph buildVerboseDependencyGraph(Dependency dependency) {
+  public DependencyGraph buildVerboseDependencyGraph(Dependency dependency) {
     DefaultRepositorySystemSession session = RepositoryUtility.newSessionForVerboseDependency(system);
     ImmutableList<DependencyNode> roots = ImmutableList.of(new DefaultDependencyNode(dependency));
     return buildDependencyGraph(roots, session);
