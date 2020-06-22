@@ -34,6 +34,7 @@ import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.ProjectDependenciesResolver;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
@@ -69,6 +70,9 @@ public class DependencyGraphBuilder extends AbstractMojo
     private SerializeGraph serializer;
 
     private DependencyNode rootNode;
+
+    @Parameter( defaultValue = "${repositorySystemSession}" )
+    private RepositorySystemSession repositorySystemSession;
 
     public void execute() throws MojoExecutionException
     {
@@ -116,7 +120,8 @@ public class DependencyGraphBuilder extends AbstractMojo
 
         final DependencyResolutionRequest request = new DefaultDependencyResolutionRequest();
         request.setMavenProject( project );
-        // request.setRepositorySession(  );
+        request.setRepositorySession( session.getRepositorySession() );
+        // request.setRepositorySession( repositorySystemSession );
 
         final DependencyResolutionResult result = resolveDependencies( request, null );
         DependencyNode graphRoot = result.getDependencyGraph();
@@ -170,5 +175,10 @@ public class DependencyGraphBuilder extends AbstractMojo
     public MavenProject getProject()
     {
         return project;
+    }
+
+    public RepositorySystemSession getRepositorySystemSession()
+    {
+        return repositorySystemSession;
     }
 }
