@@ -75,6 +75,11 @@ public class DependencyGraphBuilderTest extends AbstractMojoTestCase
         setVariableValueToObject( mojo, "artifactHandlerManager", manager );
     }
 
+    @Test
+    public void test()
+    {
+        assertEquals( 2, 2 );
+    }
 
     @Test
     public void testGetBuildingRequestTestEnvironment() throws Exception
