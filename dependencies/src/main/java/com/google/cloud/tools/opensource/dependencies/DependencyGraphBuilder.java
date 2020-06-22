@@ -131,7 +131,7 @@ public final class DependencyGraphBuilder {
    * @param artifacts Maven artifacts whose dependencies to retrieve
    * @return dependency graph representing the tree of Maven artifacts
    */
-  DependencyGraph buildFullDependencyGraph(List<Artifact> artifacts) {
+  public DependencyGraph buildFullDependencyGraph(List<Artifact> artifacts) {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
     DefaultRepositorySystemSession session = RepositoryUtility.newSessionForFullDependency(system);
