@@ -37,6 +37,9 @@ public class SerializeGraph
     // will be injected eventually
     private String outputType;
 
+    private final String lastChildStart = "\\- ";
+    private final String notLastChildStart = "+- ";
+
     private final Map<DependencyNode, Boolean> visitedNodes;
     private final Set<String> coordinateStrings;
     private final Map<String, String> coordinateVersionMap;
@@ -149,22 +152,22 @@ public class SerializeGraph
 
             for ( int i = 0; i < node.getChildren().size(); i++ )
             {
-                if ( start.endsWith( "+- " ) )
+                if ( start.endsWith( notLastChildStart ) )
                 {
-                    start = start.replace( "+- ", "|  " );
+                    start = start.replace( notLastChildStart, "|  " );
                 }
-                else if ( start.endsWith( "\\- " ) )
+                else if ( start.endsWith( lastChildStart ) )
                 {
-                    start = start.replace( "\\- ", "   " );
+                    start = start.replace( lastChildStart, "   " );
                 }
 
                 if ( i == node.getChildren().size() - 1 )
                 {
-                    builder = dfs( node.getChildren().get( i ), start.concat( "\\- " ) );
+                    builder = dfs( node.getChildren().get( i ), start.concat( lastChildStart ) );
                 }
                 else
                 {
-                    builder = dfs( node.getChildren().get( i ), start.concat( "+- " ) );
+                    builder = dfs( node.getChildren().get( i ), start.concat( notLastChildStart ) );
                 }
             }
         }
