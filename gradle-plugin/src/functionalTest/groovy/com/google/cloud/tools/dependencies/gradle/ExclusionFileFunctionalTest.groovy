@@ -94,7 +94,8 @@ class ExclusionFileFunctionalTest extends Specification {
   }
 
   def "can suppress linkage errors listed in exclusion files (absolute path)"() {
-    Path exclusionFileNameAbsolutePath = Paths.get(exclusionFileName).toAbsolutePath()
+    File exclusionFile = testProjectDir.newFile(exclusionFileName)
+    Path exclusionFileNameAbsolutePath = exclusionFile.toPath().toAbsolutePath()
 
     buildFile << """
         repositories {
@@ -114,7 +115,6 @@ class ExclusionFileFunctionalTest extends Specification {
         }
         """
 
-    File exclusionFile = exclusionFileNameAbsolutePath.toFile()
     exclusionFile << """
         <LinkageCheckerFilter>
           <LinkageError>

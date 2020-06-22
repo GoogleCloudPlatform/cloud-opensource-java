@@ -35,6 +35,10 @@ class BuildStatusFunctionalTest extends Specification {
             id 'com.google.cloud.tools.linkagechecker'
         }
         """
+    File settingsFile = testProjectDir.newFile("settings.gradle")
+    settingsFile << """
+        rootProject.name = 'test-123'
+    """
   }
 
   def "can validate a project with no dependency conflicts"() {
@@ -71,7 +75,9 @@ class BuildStatusFunctionalTest extends Specification {
         repositories {
           mavenCentral()
         }
-        
+        group = 'g'
+        version = '0.1.0-SNAPSHOT'
+
         // These two have incompatible dependencies
         // https://github.com/grpc/grpc-java/issues/7002
         dependencies {
@@ -93,6 +99,12 @@ class BuildStatusFunctionalTest extends Specification {
 
     then:
     result.output.contains("Class io.grpc.internal.BaseDnsNameResolverProvider is not found")
+
+    result.output.contains("Problematic artifacts in the dependency tree:")
+    result.output.contains("""
+        |io.grpc:grpc-grpclb:1.28.1 is at:
+        |  g:test-123:0.1.0-SNAPSHOT / com.google.cloud:google-cloud-logging:1.101.1 / com.google.api:gax-grpc:1.56.0 / io.grpc:grpc-alts:1.28.1 / io.grpc:grpc-grpclb:1.28.1
+        |""".stripMargin())
     result.task(":linkageCheck").outcome == TaskOutcome.FAILED
   }
 }
