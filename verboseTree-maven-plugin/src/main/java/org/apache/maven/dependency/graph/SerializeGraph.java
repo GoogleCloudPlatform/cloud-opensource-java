@@ -25,6 +25,10 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Class to parse dependency graph and output in text format for end user to review
+ *
+ */
 public class SerializeGraph
 {
     // will be injected eventually
@@ -76,15 +80,15 @@ public class SerializeGraph
 
         if ( visitedNodes.containsKey( node ) )
         {
-            builder.append( " (Omitted due to cycle)" ).append( System.lineSeparator() );
+            builder.append( " (Omitted due to cycle.)" ).append( System.lineSeparator() );
         }
         else if ( isDuplicateArtifact( node.getArtifact() ) )
         {
-            builder.append( " (Omitted due to duplicate artifact)" ).append( System.lineSeparator() );
+            builder.append( " (Omitted due to duplicate artifact.)" ).append( System.lineSeparator() );
         }
         else if ( node.getDependency().isOptional() )
         {
-            builder.append( " (Omitted due to optional dependency)" ).append( System.lineSeparator() );
+            builder.append( " (Omitted due to optional dependency.)" ).append( System.lineSeparator() );
         }
         else
         {
