@@ -21,6 +21,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -37,15 +38,15 @@ public class SerializeGraph
     private String outputType;
 
     private final Map<DependencyNode, Boolean> visitedNodes;
-    private final Set<String> versionlessCoordinateStrings;
     private final Set<String> coordinateStrings;
+    private final Map<String, String> coordinateVersionMap;
     private StringBuilder builder;
 
     public SerializeGraph()
     {
         visitedNodes = new IdentityHashMap<DependencyNode, Boolean>( 512 );
-        versionlessCoordinateStrings = new HashSet<String>();
         coordinateStrings = new HashSet<String>();
+        coordinateVersionMap = new HashMap<String, String>();
         builder = new StringBuilder();
     }
 
@@ -82,14 +83,17 @@ public class SerializeGraph
         return coordinateStrings.contains( getCoordinateString( node ) );
     }
 
-    private boolean isVersionConflict( DependencyNode node )
+    private String VersionConflict( DependencyNode node )
     {
-        return versionlessCoordinateStrings.contains( getVersionlessCoordinateString( node ) );
+        if( coordinateVersionMap.containsKey( getVersionlessCoordinateString( node ) ) )
+        {
+            return coordinateVersionMap.get( getVersionlessCoordinateString( node ) );
+        }
+        return null;
     }
 
-    private boolean isScopeConflict( DependencyNode node )
+    private String ScopeConflict( DependencyNode node )
     {
-        String nodeScope = node.getDependency().getScope();
         Artifact artifact = node.getArtifact();
         List<String> scopes = Arrays.asList( "compile", "provided", "runtime", "test", "system" );
 
@@ -99,43 +103,48 @@ public class SerializeGraph
                     artifact.getExtension() + ":" + artifact.getVersion() + ":" + scope;
             if(coordinateStrings.contains( coordinate ))
             {
-                return true;
+                return scope;
             }
         }
         // check for scopeless, this probably can't happen
-        return false;
+        return null;
     }
 
-    public StringBuilder dfs( DependencyNode node, String start )
+    private StringBuilder dfs( DependencyNode node, String start )
     {
         builder.append( start );
-        builder.append( getCoordinateString( node ) );
+        String coordString = getCoordinateString( node );
 
         if ( visitedNodes.containsKey( node ) )
         {
-            builder.append( " (Omitted due to cycle.)" ).append( System.lineSeparator() );
+            builder.append( '(' ).append( coordString ).append( " - omitted due to cycle)" )
+                    .append( System.lineSeparator() );
         }
         else if ( isDuplicateCoordinateString( node ) )
         {
-            builder.append( " (Omitted due to duplicate artifact.)" ).append( System.lineSeparator() );
+            builder.append( '(' ).append( coordString ).append( " - omitted due to duplicate artifact)" )
+                    .append( System.lineSeparator() );
         }
-        else if ( isScopeConflict( node ) )
+        else if ( ScopeConflict( node ) != null )
         {
-            builder.append( " (Omitted due to scope conflict.)" ).append( System.lineSeparator() );
+            builder.append( '(' ).append( coordString ).append( " - omitted for conflict with " )
+                    .append( ScopeConflict( node ) ).append( ')' ).append( System.lineSeparator() );
         }
-        else if ( isVersionConflict( node ) )
+        else if ( VersionConflict( node ) != null )
         {
-            builder.append( " (Omitted due to version conflict.)" ).append( System.lineSeparator() );
+            builder.append( '(' ).append( coordString ).append( " - omitted for conflict with " )
+                    .append( VersionConflict( node ) ).append( ')' ).append( System.lineSeparator() );
         }
         else if ( node.getDependency().isOptional() )
         {
-            builder.append( " (Omitted due to optional dependency.)" ).append( System.lineSeparator() );
+            builder.append( '(' ).append( coordString ).append( " - omitted due to optional dependency)" )
+                    .append( System.lineSeparator() );
         }
         else
         {
             coordinateStrings.add( getCoordinateString( node ) );
-            versionlessCoordinateStrings.add( getVersionlessCoordinateString( node ) );
-            builder.append( System.lineSeparator() );
+            coordinateVersionMap.put( getVersionlessCoordinateString( node ), node.getArtifact().getVersion() );
+            builder.append( coordString ).append( System.lineSeparator() );
             visitedNodes.put( node, true );
 
             for ( int i = 0; i < node.getChildren().size(); i++ )
