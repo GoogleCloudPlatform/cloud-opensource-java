@@ -6,6 +6,6 @@ com.google:rootArtifact:jar:1.0.0
 |        \- com.example:a7:jar:2.2.2:provided
 |           +- com.comm:a7:jar:1:compile
 |           |  \- com.example:a8:xml:2.1:test
-|           \- (com.comm:a7:jar:1:compile - omitted due to duplicate artifact)
+|           \- (com.comm:a7:jar:1:compile - omitted for duplicate)
 \- org.xyz:right:zip:1:provided
    \- com.xyz:a9:xml:1.2:runtime

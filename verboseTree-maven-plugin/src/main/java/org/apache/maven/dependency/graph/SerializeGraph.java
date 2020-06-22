@@ -117,12 +117,12 @@ public class SerializeGraph
 
         if ( visitedNodes.containsKey( node ) )
         {
-            builder.append( '(' ).append( coordString ).append( " - omitted due to cycle)" )
+            builder.append( '(' ).append( coordString ).append( " - omitted for cycle)" )
                     .append( System.lineSeparator() );
         }
         else if ( isDuplicateCoordinateString( node ) )
         {
-            builder.append( '(' ).append( coordString ).append( " - omitted due to duplicate artifact)" )
+            builder.append( '(' ).append( coordString ).append( " - omitted for duplicate)" )
                     .append( System.lineSeparator() );
         }
         else if ( ScopeConflict( node ) != null )
