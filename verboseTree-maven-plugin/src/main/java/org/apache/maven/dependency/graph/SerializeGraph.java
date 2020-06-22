@@ -30,8 +30,8 @@ public class SerializeGraph
     // will be injected eventually
     private String outputType;
 
-    private Map<DependencyNode, Boolean> visitedNodes;
-    private Set<String> artifactSet;
+    private final Map<DependencyNode, Boolean> visitedNodes;
+    private final Set<String> artifactSet;
     private StringBuilder builder;
 
     public SerializeGraph()
@@ -49,7 +49,7 @@ public class SerializeGraph
     private static void appendDependency( StringBuilder builder, DependencyNode node )
     {
         String scope = node.getDependency().getScope();
-        builder.append( getArtifactString( node.getArtifact() ) );
+        builder.append( getCoordinateString( node.getArtifact() ) );
 
         if ( scope != null && !scope.isEmpty() )
         {
@@ -57,7 +57,7 @@ public class SerializeGraph
         }
     }
 
-    private static String getArtifactString( Artifact artifact )
+    private static String getCoordinateString( Artifact artifact )
     {
         return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" +
                 artifact.getExtension() + ":" + artifact.getVersion();
@@ -65,8 +65,8 @@ public class SerializeGraph
 
     private boolean isDuplicateArtifact( Artifact artifact )
     {
-        String artifactString = getArtifactString( artifact );
-        return artifactSet.contains( artifactString );
+        String coordinateString = getCoordinateString( artifact );
+        return artifactSet.contains( coordinateString );
     }
 
     public StringBuilder dfs( DependencyNode node, String start )
@@ -88,7 +88,7 @@ public class SerializeGraph
         }
         else
         {
-            artifactSet.add( getArtifactString( node.getArtifact() ) );
+            artifactSet.add( getCoordinateString( node.getArtifact() ) );
             builder.append( System.lineSeparator() );
             visitedNodes.put( node, true );
 
