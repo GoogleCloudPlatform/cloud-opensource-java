@@ -20,8 +20,10 @@ package org.apache.maven.dependency.graph;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyNode;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,13 +37,15 @@ public class SerializeGraph
     private String outputType;
 
     private final Map<DependencyNode, Boolean> visitedNodes;
-    private final Set<String> artifactSet;
+    private final Set<String> versionlessCoordinateStrings;
+    private final Set<String> coordinateStrings;
     private StringBuilder builder;
 
     public SerializeGraph()
     {
         visitedNodes = new IdentityHashMap<DependencyNode, Boolean>( 512 );
-        artifactSet = new HashSet<String>();
+        versionlessCoordinateStrings = new HashSet<String>();
+        coordinateStrings = new HashSet<String>();
         builder = new StringBuilder();
     }
 
@@ -50,41 +54,78 @@ public class SerializeGraph
         return dfs( root, "" ).toString();
     }
 
-    private static void appendDependency( StringBuilder builder, DependencyNode node )
+    private static String getCoordinateString( DependencyNode node )
     {
+        Artifact artifact = node.getArtifact();
         String scope = node.getDependency().getScope();
-        builder.append( getCoordinateString( node.getArtifact() ) );
 
-        if ( scope != null && !scope.isEmpty() )
+        if( scope != null && !scope.isEmpty() )
         {
-            builder.append( ":" ).append( scope );
+            return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" +
+                    artifact.getExtension() + ":" + artifact.getVersion() + ":" + scope;
         }
-    }
-
-    private static String getCoordinateString( Artifact artifact )
-    {
+        // the scope should theoretically not be null or empty
         return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" +
                 artifact.getExtension() + ":" + artifact.getVersion();
     }
 
-    private boolean isDuplicateArtifact( Artifact artifact )
+    private static String getVersionlessCoordinateString( DependencyNode node )
     {
-        String coordinateString = getCoordinateString( artifact );
-        return artifactSet.contains( coordinateString );
+        Artifact artifact = node.getArtifact();
+
+        // scope not included because we check for scope conflicts separately
+        return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getExtension();
+    }
+
+    private boolean isDuplicateCoordinateString( DependencyNode node )
+    {
+        return coordinateStrings.contains( getCoordinateString( node ) );
+    }
+
+    private boolean isVersionConflict( DependencyNode node )
+    {
+        return versionlessCoordinateStrings.contains( getVersionlessCoordinateString( node ) );
+    }
+
+    private boolean isScopeConflict( DependencyNode node )
+    {
+        String nodeScope = node.getDependency().getScope();
+        Artifact artifact = node.getArtifact();
+        List<String> scopes = Arrays.asList( "compile", "provided", "runtime", "test", "system" );
+
+        for( String scope:scopes )
+        {
+            String coordinate = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" +
+                    artifact.getExtension() + ":" + artifact.getVersion() + ":" + scope;
+            if(coordinateStrings.contains( coordinate ))
+            {
+                return true;
+            }
+        }
+        // check for scopeless, this probably can't happen
+        return false;
     }
 
     public StringBuilder dfs( DependencyNode node, String start )
     {
         builder.append( start );
-        appendDependency( builder, node );
+        builder.append( getCoordinateString( node ) );
 
         if ( visitedNodes.containsKey( node ) )
         {
             builder.append( " (Omitted due to cycle.)" ).append( System.lineSeparator() );
         }
-        else if ( isDuplicateArtifact( node.getArtifact() ) )
+        else if ( isDuplicateCoordinateString( node ) )
         {
             builder.append( " (Omitted due to duplicate artifact.)" ).append( System.lineSeparator() );
+        }
+        else if ( isScopeConflict( node ) )
+        {
+            builder.append( " (Omitted due to scope conflict.)" ).append( System.lineSeparator() );
+        }
+        else if ( isVersionConflict( node ) )
+        {
+            builder.append( " (Omitted due to version conflict.)" ).append( System.lineSeparator() );
         }
         else if ( node.getDependency().isOptional() )
         {
@@ -92,7 +133,8 @@ public class SerializeGraph
         }
         else
         {
-            artifactSet.add( getCoordinateString( node.getArtifact() ) );
+            coordinateStrings.add( getCoordinateString( node ) );
+            versionlessCoordinateStrings.add( getVersionlessCoordinateString( node ) );
             builder.append( System.lineSeparator() );
             visitedNodes.put( node, true );
 

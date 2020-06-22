@@ -32,7 +32,7 @@ import java.util.Arrays;
 
 public class SerializeGraphTest extends AbstractMojoTestCase
 {
-    private SerializeGraph serializer = new SerializeGraph();
+    private final SerializeGraph serializer = new SerializeGraph();
 
     @Test
     public void testBasicTree() throws IOException
@@ -211,6 +211,50 @@ public class SerializeGraphTest extends AbstractMojoTestCase
 
         String actual = serializer.serialize( root );
         File file = new File(getBasedir(), "/target/test-classes/SerializerTests/OptionalDependency.txt");
+        String expected = FileUtils.readFileToString(file);
+
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testTreeWithScopeConflict() throws IOException
+    {
+        DependencyNode root = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), "compile" )
+        );
+        DependencyNode left = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" ), "test", true )
+        );
+        DependencyNode right = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), "test" )
+        );
+
+        root.setChildren( Arrays.asList( left, right ) );
+
+        String actual = serializer.serialize( root );
+        File file = new File(getBasedir(), "/target/test-classes/SerializerTests/ScopeConflict.txt");
+        String expected = FileUtils.readFileToString(file);
+
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testTreeWithVersionConflict() throws IOException
+    {
+        DependencyNode root = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), "compile" )
+        );
+        DependencyNode left = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" ), "test", true )
+        );
+        DependencyNode right = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "2.0.0" ), "test" )
+        );
+
+        root.setChildren( Arrays.asList( left, right ) );
+
+        String actual = serializer.serialize( root );
+        File file = new File(getBasedir(), "/target/test-classes/SerializerTests/VersionConflict.txt");
         String expected = FileUtils.readFileToString(file);
 
         Assert.assertEquals(expected, actual);
