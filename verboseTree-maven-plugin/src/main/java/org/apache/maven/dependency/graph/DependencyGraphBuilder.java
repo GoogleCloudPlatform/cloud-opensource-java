@@ -81,29 +81,31 @@ public class DependencyGraphBuilder extends AbstractMojo
 
         try
         {
-            buildDependencyGraph();
+           // rootNode = buildDependencyGraph();
         }
-        catch ( DependencyGraphBuilderException e )
+        catch ( Exception e )
         {
+            // ToDo: Better error message and Exception type
             e.printStackTrace();
         }
-        // if outputFile not null write to outputFile
 
-        File file = new File( project.getBasedir().getAbsolutePath() + "\\target\\tree.txt" );
+        // ToDo: if outputFile not null write to outputFile
+        File file = new File( project.getBasedir().getAbsolutePath().replace( '\\', '/' ) + "/target/tree.txt" );
+        SerializeGraph serializer = new SerializeGraph();
 
         try
         {
-            // ToDo: build graph and serialize into file
-            write(file, "This is a test");
+            write( file, "Test" );
+            // write(file, serializer.serialize( rootNode ));
         }
         catch ( IOException e )
         {
             e.printStackTrace();
-            getLog().error( "Failed to write to file" );
+            getLog().error( "Failed to write to file:" + file.getAbsolutePath() );
         }
     }
 
-    public DependencyNode buildDependencyGraph() throws DependencyGraphBuilderException
+    public DependencyNode buildDependencyGraph() throws Exception
     {
         // adapting the dependency-plugin code
         ProjectBuildingRequest buildingRequest =
@@ -127,14 +129,9 @@ public class DependencyGraphBuilder extends AbstractMojo
         DependencyNode graphRoot = result.getDependencyGraph();
 
 
-
-        return null;
+        return graphRoot;
     }
 
-    private void serialize()
-    {
-        File file = new File("C:\\Users\\ianla\\Maven\\cloud-opensource-java\\verboseTree-maven-plugin\\target\\its\\tree-verbose\\target\\tree.txt");
-    }
 
     public DependencyNode getDependencyGraph()
     {
@@ -144,7 +141,7 @@ public class DependencyGraphBuilder extends AbstractMojo
 
     private DependencyResolutionResult resolveDependencies( DependencyResolutionRequest request,
                                                             Collection<MavenProject> reactorProjects )
-            throws DependencyGraphBuilderException
+            throws Exception
     {
         try
         {
@@ -154,11 +151,11 @@ public class DependencyGraphBuilder extends AbstractMojo
         {
             if ( reactorProjects == null )
             {
-                throw new DependencyGraphBuilderException( "Could not resolve following dependencies: "
+                throw new Exception( "Could not resolve following dependencies: "
                         + e.getResult().getUnresolvedDependencies(), e );
             }
 
-            throw new DependencyGraphBuilderException(
+            throw new Exception(
                     "REACTOR NOT SUPPORTED YET. Could not resolve following dependencies: "
                     + e.getResult().getUnresolvedDependencies(), e );
 

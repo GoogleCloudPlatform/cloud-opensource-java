@@ -112,54 +112,23 @@
       <id>run-its</id>
       <build>
         <plugins>
-          <!--
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-invoker-plugin</artifactId>
-            <configuration>
-              <goals>
-                <goal>clean</goal>
-                <goal>process-sources</goal>
-              </goals>
-              <projectsDirectory>src/it</projectsDirectory>
-              <pomIncludes>
-                <pomInclude>*/pom.xml</pomInclude>
-                <pomInclude>purge-local-repository-without-pom</pomInclude>
-              </pomIncludes>
-              <preBuildHookScript>setup</preBuildHookScript>
-              <postBuildHookScript>verify</postBuildHookScript>
-            </configuration>
-            <executions>
-              <execution>
-                <id>pre-integration-tests</id>
-                <goals>
-                  <goal>install</goal>
-                </goals>
-              </execution>
-              <execution>
-                <id>integration-tests</id>
-                <goals>
-                  <goal>run</goal>
-                  <goal>verify</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          -->
-          <plugin>
-            <artifactId>maven-invoker-plugin</artifactId>
             <version>3.2.1</version>
             <configuration>
-              <debug>true</debug>
               <projectsDirectory>src/it</projectsDirectory>
-              <preBuildHookScript>setup.bsh</preBuildHookScript>
-              <postBuildHookScript>verify.bsh</postBuildHookScript>
+              <pomIncludes>
+                <pomInclude>tree-verbose/pom.xml</pomInclude>
+              </pomIncludes>
+              <postBuildHookScript>verify</postBuildHookScript>
             </configuration>
             <executions>
               <execution>
                 <id>integration-test</id>
                 <goals>
                   <goal>run</goal>
+                  <goal>verify</goal>
                 </goals>
               </execution>
             </executions>
