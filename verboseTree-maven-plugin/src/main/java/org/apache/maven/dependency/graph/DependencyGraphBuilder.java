@@ -91,11 +91,12 @@ public class DependencyGraphBuilder extends AbstractMojo
 
         // ToDo: if outputFile not null write to outputFile
         File file = new File( project.getBasedir().getAbsolutePath().replace( '\\', '/' ) + "/target/tree.txt" );
-        /*SerializeGraph serializer = new SerializeGraph();
-        String serialized = serializer.serialize( rootNode );*/
+        SerializeGraph serializer = new SerializeGraph();
+        String serialized = serializer.serialize( rootNode );
         try
         {
-            write( file, rootNode.toString() + rootNode.getChildren().get( 0 ).getDependency().getScope() );
+            write( file, rootNode.getArtifact() + "\n" + rootNode.getChildren().get( 0 ).getArtifact() +
+                    rootNode.getChildren().get( 0 ).getDependency().getScope());
             /*write( file, "why" + rootNode.toString() + " " + rootNode.getChildren().get( 0 ).toString()
             + " " + rootNode.getChildren().get( 1 ).toString() + "\n" +
                     rootNode.getChildren().get( 2 ).toString() + " " + rootNode.getChildren().get( 3 ).toString()
