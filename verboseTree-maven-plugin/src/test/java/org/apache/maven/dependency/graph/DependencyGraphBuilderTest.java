@@ -115,7 +115,7 @@ public class DependencyGraphBuilderTest extends AbstractMojoTestCase
         assertNodeEquals( "testGroupId:project:jar:1.0:compile", rootNode );
         assertEquals( 2, rootNode.getChildren().size() );
         assertChildNodeEquals( "testGroupId:snapshot:jar:2.0-SNAPSHOT:compile", rootNode, 0 );
-        assertChildNodeEquals( "testGroupId:release:jar:1.0:compile", rootNode, 1 );
+        assertChildNodeEquals( "testGroupId:release:jar:1.0:compile", rootNode, 1 );*/
         // ToDo: when actual functionality is added make sure the artifact is what we expect before running other tests*/
     }
 

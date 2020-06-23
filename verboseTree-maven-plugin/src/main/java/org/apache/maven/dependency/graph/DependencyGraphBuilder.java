@@ -60,7 +60,7 @@ public class DependencyGraphBuilder extends AbstractMojo
     @Parameter
     private String outputFile;
 
-    @Inject
+    @Component
     private ProjectDependenciesResolver resolver;
 
     // replace Component with sisu guice named or singleton annotation
@@ -81,7 +81,7 @@ public class DependencyGraphBuilder extends AbstractMojo
 
         try
         {
-           // rootNode = buildDependencyGraph();
+            rootNode = buildDependencyGraph();
         }
         catch ( Exception e )
         {
@@ -92,11 +92,11 @@ public class DependencyGraphBuilder extends AbstractMojo
         // ToDo: if outputFile not null write to outputFile
         File file = new File( project.getBasedir().getAbsolutePath().replace( '\\', '/' ) + "/target/tree.txt" );
         SerializeGraph serializer = new SerializeGraph();
-
+        // String serialized = serializer.serialize( rootNode );
         try
         {
-            write( file, "Test" );
-            // write(file, serializer.serialize( rootNode ));
+            write( file, "why" + rootNode.toString() + " " + rootNode.getChildren().get( 0 ).toString() );
+            // write(file, serialized);
         }
         catch ( IOException e )
         {
