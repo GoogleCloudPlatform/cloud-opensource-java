@@ -19,6 +19,7 @@ package org.apache.maven.dependency.graph;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -106,7 +107,7 @@ public class DependencyGraphBuilder extends AbstractMojo
                     + " " + rootNode.getChildren().get( 3 ).getChildren().size());*/
             // write(file, serialized);
         }
-        catch ( IOException e )
+        catch ( IOException | NullPointerException e )
         {
             e.printStackTrace();
             getLog().error( "Failed to write to file:" + file.getAbsolutePath() );
