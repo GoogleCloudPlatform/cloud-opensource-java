@@ -17,6 +17,7 @@
 
 package org.apache.maven.dependency.graph;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.DefaultDependencyNode;
@@ -29,11 +30,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static org.apache.commons.io.FileUtils.readFileToString;
-
 public class SerializeGraphTest extends AbstractMojoTestCase
 {
-    private SerializeGraph serializer = new SerializeGraph();
+    private final SerializeGraph serializer = new SerializeGraph();
 
     @Test
     public void testBasicTree() throws IOException
@@ -52,7 +51,7 @@ public class SerializeGraphTest extends AbstractMojoTestCase
 
         String actual = serializer.serialize( root );
         File file = new File(getBasedir(), "/target/test-classes/SerializerTests/BasicTree.txt");
-        String expected = readFileToString(file);
+        String expected = FileUtils.readFileToString( file );
 
         Assert.assertEquals(expected, actual);
     }
@@ -108,7 +107,7 @@ public class SerializeGraphTest extends AbstractMojoTestCase
 
         String actual = serializer.serialize( root );
         File file = new File(getBasedir(), "/target/test-classes/SerializerTests/LargeTree.txt");
-        String expected = readFileToString(file);
+        String expected = FileUtils.readFileToString(file);
 
         Assert.assertEquals(expected, actual);
     }
@@ -131,7 +130,7 @@ public class SerializeGraphTest extends AbstractMojoTestCase
 
         String actual = serializer.serialize( root );
         File file = new File(getBasedir(), "/target/test-classes/SerializerTests/BasicCycle.txt");
-        String expected = readFileToString(file);
+        String expected = FileUtils.readFileToString(file);
 
         Assert.assertEquals(expected, actual);
     }
@@ -190,7 +189,7 @@ public class SerializeGraphTest extends AbstractMojoTestCase
 
         String actual = serializer.serialize( root );
         File file = new File(getBasedir(), "/target/test-classes/SerializerTests/LargeGraphWithCycles.txt");
-        String expected = readFileToString(file);
+        String expected = FileUtils.readFileToString(file);
 
         Assert.assertEquals(expected, actual);
     }
@@ -212,7 +211,51 @@ public class SerializeGraphTest extends AbstractMojoTestCase
 
         String actual = serializer.serialize( root );
         File file = new File(getBasedir(), "/target/test-classes/SerializerTests/OptionalDependency.txt");
-        String expected = readFileToString(file);
+        String expected = FileUtils.readFileToString(file);
+
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testTreeWithScopeConflict() throws IOException
+    {
+        DependencyNode root = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), "compile" )
+        );
+        DependencyNode left = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" ), "test", true )
+        );
+        DependencyNode right = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), "test" )
+        );
+
+        root.setChildren( Arrays.asList( left, right ) );
+
+        String actual = serializer.serialize( root );
+        File file = new File(getBasedir(), "/target/test-classes/SerializerTests/ScopeConflict.txt");
+        String expected = FileUtils.readFileToString(file);
+
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testTreeWithVersionConflict() throws IOException
+    {
+        DependencyNode root = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), "compile" )
+        );
+        DependencyNode left = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" ), "test", true )
+        );
+        DependencyNode right = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "2.0.0" ), "test" )
+        );
+
+        root.setChildren( Arrays.asList( left, right ) );
+
+        String actual = serializer.serialize( root );
+        File file = new File(getBasedir(), "/target/test-classes/SerializerTests/VersionConflict.txt");
+        String expected = FileUtils.readFileToString(file);
 
         Assert.assertEquals(expected, actual);
     }

@@ -232,6 +232,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           } else {
             logger.error(message);
             logger.error(dependencyPaths);
+            logger.info(
+                "For the details of the linkage errors, see "
+                    + "https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Messages");
             throw new EnforcerRuleException(
                 "Failed while checking class path. See above error report.");
           }

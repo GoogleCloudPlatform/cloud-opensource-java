@@ -1,4 +1,4 @@
 com.google:rootArtifact:jar:1.0.0
 +- org.apache:left:xml:0.1-SNAPSHOT:test
-|  \- com.google:rootArtifact:jar:1.0.0 (Omitted due to cycle)
+|  \- (com.google:rootArtifact:jar:1.0.0 - omitted for cycle)
 \- org.xyz:right:zip:1:provided
