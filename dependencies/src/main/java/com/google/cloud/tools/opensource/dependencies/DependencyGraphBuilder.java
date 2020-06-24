@@ -192,6 +192,7 @@ public final class DependencyGraphBuilder {
       node = resolveCompileTimeDependencies(dependencyNodes, fullDependency);
     } catch (DependencyResolutionException ex) {
       DependencyResult result = ex.getResult();
+      System.err.println(ex.getMessage());
       node = result.getRoot();
 
       Set<Artifact> checkedArtifacts = new HashSet<>();

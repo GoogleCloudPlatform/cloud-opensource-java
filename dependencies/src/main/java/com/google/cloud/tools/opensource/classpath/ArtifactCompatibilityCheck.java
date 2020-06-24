@@ -106,8 +106,8 @@ class ArtifactCompatibilityCheck {
 
     DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder(
         ImmutableList.of(
-            "https://maven-central.storage-download.googleapis.com/maven2/",
-            "https://repository.apache.org/content/repositories/snapshots/"
+            "https://repository.apache.org/content/repositories/snapshots/",
+            "https://maven-central.storage-download.googleapis.com/maven2/"
         )
     );
     ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
