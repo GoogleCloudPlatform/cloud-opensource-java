@@ -1,0 +1,55 @@
+/*
+ * Copyright 2020 Google LLC.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+plugins {
+  id 'java-gradle-plugin'
+  id 'groovy'
+  id 'maven-publish'
+}
+
+apply from: "$rootDir/gradle/functional-test.gradle"
+
+group = 'com.google.cloud.tools'
+version = '0.1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+dependencies {
+  // TODO(suztomo): Place a concrete version once ClassPathEntry.getArtifact becomes public.
+  implementation platform('com.google.cloud.tools:dependencies-parent:latest.integration')
+  implementation 'com.google.cloud.tools:dependencies:latest.integration'
+  implementation 'com.google.guava:guava'
+  implementation 'org.apache.maven.resolver:maven-resolver-api'
+
+  testImplementation 'junit:junit:4.13'
+  testImplementation 'org.spockframework:spock-core:1.3-groovy-2.5'
+}
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+}
+
+gradlePlugin {
+  plugins {
+    linkageCheckerPlugin {
+      id = 'com.google.cloud.tools.linkagechecker'
+      displayName = 'Linkage Checker'
+      description = 'Tool to verify the compatibility of the class paths of Gradle projects'
+      implementationClass = 'com.google.cloud.tools.dependencies.gradle.LinkageCheckerPlugin'
+    }
+  }
+}

@@ -48,9 +48,8 @@ public class DependencyGraphBuilderIntegrationTest {
     // This artifact does not exist in Android's repository
     Artifact artifact = new DefaultArtifact("com.google.guava:guava:15.0-rc1");
 
-    DependencyGraphResult result =
-        graphBuilder.buildFullDependencyGraph(ImmutableList.of(artifact));
-    Truth.assertThat(result.getArtifactProblems())
+    DependencyGraph result = graphBuilder.buildFullDependencyGraph(ImmutableList.of(artifact));
+    Truth.assertThat(result.getUnresolvedArtifacts())
         .comparingElementsUsing(problemOnArtifact)
         .contains("com.google.guava:guava:15.0-rc1");
   }

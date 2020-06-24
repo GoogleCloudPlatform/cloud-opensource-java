@@ -3,11 +3,10 @@
 Install the [`gh`](https://github.com/cli/cli)
 tool if you not previously done so.
 
-Run `prepare_release.sh` with `bom` argument in `boms/cloud-oss-bom` directory:
+Run `prepare_release.sh` with `bom` argument in `cloud-opensource-java` directory:
 
 ```
-$ cd boms/cloud-oss-bom
-$ ../../scripts/prepare_release.sh bom <release version> [<post-release-version>]
+$ ./scripts/prepare_release.sh bom <release version> [<post-release-version>]
 ```
 
 You might see this message:
@@ -20,7 +19,7 @@ Press Enter to open github.com in your browser...
 Do it. This grants the script permission to create a PR for you on Github.
 
 Ask a teammate to review the and approve the PR. While you should not push the final release until the PR is approved, you should kick off the  
-[Rapid build](http://rapid/cloud-java-tools-cloud-opensource-java-bom-kokoro-release) while you wait for approval.
+[Rapid build](https://rapid.corp.google.com/cloud-java-tools-cloud-opensource-java-bom-kokoro-release) while you wait for approval.
 The [instructions for the Rapid build are on the internal team 
 site](https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md#run-the-rapid-workflow).
 

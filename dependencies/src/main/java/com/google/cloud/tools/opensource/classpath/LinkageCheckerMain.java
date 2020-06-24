@@ -127,6 +127,9 @@ class LinkageCheckerMain {
         if (!artifactProblems.isEmpty()) {
           System.out.println("\n");
           System.out.println(ArtifactProblem.formatProblems(artifactProblems));
+          System.out.println(
+              "For the details of the linkage errors, see "
+                  + "https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Messages");
         }
 
         if (!symbolProblems.isEmpty()) {

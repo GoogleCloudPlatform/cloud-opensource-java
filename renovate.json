@@ -5,7 +5,7 @@
   "ignorePaths": [
     "example-problems/**",
     "enforcer-rules/src/it/**",
-    "boms/**"
+    "boms/convergence-check"
   ],
   "separateMajorMinor": false,
   "semanticCommits": true,
@@ -31,5 +31,7 @@
       ],
       "enabled": false
     }
-  ]
+  ],
+  "masterIssue": true,
+  "masterIssueApproval": true
 }

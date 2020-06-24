@@ -76,7 +76,7 @@ import org.mockito.ArgumentMatchers;
 
 public class LinkageCheckerRuleTest {
 
-  private LinkageCheckerRule rule;
+  private LinkageCheckerRule rule = new LinkageCheckerRule();
   private RepositorySystem repositorySystem;
   private RepositorySystemSession repositorySystemSession;
   private Artifact dummyArtifactWithFile;
@@ -93,7 +93,6 @@ public class LinkageCheckerRuleTest {
   public void setup()
       throws ExpressionEvaluationException, ComponentLookupException,
       DependencyResolutionException, URISyntaxException {
-    rule = new LinkageCheckerRule();
     repositorySystem = RepositoryUtility.newRepositorySystem();
     repositorySystemSession = RepositoryUtility.newSession(repositorySystem);
     dummyArtifactWithFile = createArtifactWithDummyFile("a:b:0.1");

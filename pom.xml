@@ -7,7 +7,7 @@
   <groupId>com.google.cloud.tools</groupId>
   <artifactId>dependencies-parent</artifactId>
   <packaging>pom</packaging>
-  <version>1.4.2-SNAPSHOT</version>
+  <version>1.4.3-SNAPSHOT</version>
 
   <name>Cloud Tools Open Source Code Hygiene Tooling</name>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/</url>
@@ -145,7 +145,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>exec-maven-plugin</artifactId>
-          <version>1.6.0</version>
+          <version>3.0.0</version>
           <configuration>
             <skip>true</skip>
             <executable>maven</executable>
