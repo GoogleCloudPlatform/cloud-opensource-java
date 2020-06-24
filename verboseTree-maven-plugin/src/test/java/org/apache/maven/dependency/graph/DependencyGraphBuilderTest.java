@@ -17,22 +17,15 @@
 
 package org.apache.maven.dependency.graph;
 
-import org.apache.maven.artifact.handler.ArtifactHandler;
-import org.apache.maven.artifact.handler.DefaultArtifactHandler;
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.DefaultArtifact;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.DefaultRepositorySystemSession;
-// doesn't work with maven project import org.eclipse.aether.artifact.Artifact;
-// import org.eclipse.aether.artifact.DefaultArtifact;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.repository.LocalRepositoryManager;
 import org.junit.Test;
-
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.DefaultArtifact;
 
 import java.io.File;
 import java.util.HashSet;

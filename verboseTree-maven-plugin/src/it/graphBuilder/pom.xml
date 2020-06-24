@@ -71,11 +71,6 @@
       <version>2.0.7</version>
       <scope>runtime</scope>
     </dependency>
-    <dependency>
-      <groupId>org.apache.xmlgraphics</groupId>
-      <artifactId>batik-bridge</artifactId>
-      <version>1.7</version>
-    </dependency>
   </dependencies>
 
   <build>

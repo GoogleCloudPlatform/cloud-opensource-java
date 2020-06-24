@@ -17,9 +17,6 @@
 
 package org.apache.maven.dependency.graph;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -36,7 +33,6 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.ProjectDependenciesResolver;
 import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
 import java.io.File;
@@ -64,7 +60,7 @@ public class DependencyGraphBuilder extends AbstractMojo
     @Component
     private ProjectDependenciesResolver resolver;
 
-    // replace Component with sisu guice named or singleton annotation
+    // replace Component with sisu guice named/inject or singleton annotation
     @Component
     private ArtifactHandlerManager artifactHandlerManager;
 
@@ -97,17 +93,7 @@ public class DependencyGraphBuilder extends AbstractMojo
         String serialized = serializer.serialize( rootNode );
         try
         {
-            write( file, project.getBasedir().getAbsolutePath() );
-            /*write( file, rootNode.getArtifact() + "\n" + rootNode.getChildren().get( 0 ).getArtifact() +
-                    rootNode.getChildren().get( 0 ).getDependency().getScope());*/
-            /*write( file, "why" + rootNode.toString() + " " + rootNode.getChildren().get( 0 ).toString()
-            + " " + rootNode.getChildren().get( 1 ).toString() + "\n" +
-                    rootNode.getChildren().get( 2 ).toString() + " " + rootNode.getChildren().get( 3 ).toString()
-            + " " + rootNode.getChildren().get( 0 ).getChildren().size()
-                    + " " + rootNode.getChildren().get( 1 ).getChildren().size()
-                    + " " + rootNode.getChildren().get( 2 ).getChildren().size()
-                    + " " + rootNode.getChildren().get( 3 ).getChildren().size());*/
-            // write(file, serialized);
+            write( file, serialized );
         }
         catch ( IOException | NullPointerException e )
         {
