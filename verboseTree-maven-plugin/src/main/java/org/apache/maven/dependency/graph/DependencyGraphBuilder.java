@@ -80,10 +80,11 @@ public class DependencyGraphBuilder extends AbstractMojo
         {
             rootNode = buildDependencyGraph();
         }
-        catch ( Exception e )
+        catch ( DependencyResolutionException e )
         {
             // ToDo: Better error message and Exception type
             e.printStackTrace();
+            getLog().error( e );
         }
 
         // ToDo: if outputFile not null write to outputFile
@@ -102,7 +103,7 @@ public class DependencyGraphBuilder extends AbstractMojo
         }
     }
 
-    public DependencyNode buildDependencyGraph() throws Exception
+    public DependencyNode buildDependencyGraph() throws DependencyResolutionException
     {
         // adapting the dependency-plugin code
         ProjectBuildingRequest buildingRequest =
@@ -138,7 +139,7 @@ public class DependencyGraphBuilder extends AbstractMojo
 
     private DependencyResolutionResult resolveDependencies( DependencyResolutionRequest request,
                                                             Collection<MavenProject> reactorProjects )
-            throws Exception
+            throws DependencyResolutionException
     {
         try
         {
@@ -148,13 +149,13 @@ public class DependencyGraphBuilder extends AbstractMojo
         {
             if ( reactorProjects == null )
             {
-                throw new Exception( "Could not resolve following dependencies: "
-                        + e.getResult().getUnresolvedDependencies(), e );
+                throw new DependencyResolutionException( e.getResult(), "Could not resolve following dependencies: "
+                        + e.getResult().getUnresolvedDependencies(), e.getCause() );
             }
 
-            throw new Exception(
+            throw new DependencyResolutionException( e.getResult(),
                     "REACTOR NOT SUPPORTED YET. Could not resolve following dependencies: "
-                    + e.getResult().getUnresolvedDependencies(), e );
+                    + e.getResult().getUnresolvedDependencies(), e.getCause() );
 
             // ToDo: try collecting from reactor for multi module project
             // return collectDependenciesFromReactor( e, reactorProjects );
