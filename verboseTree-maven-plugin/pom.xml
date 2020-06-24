@@ -122,6 +122,7 @@
                 <pomInclude>tree-verbose/pom.xml</pomInclude>
               </pomIncludes>
               <postBuildHookScript>verify</postBuildHookScript>
+              <mavenExecutable>${maven.home}/bin//mvnDebug</mavenExecutable>
             </configuration>
             <executions>
               <execution>
