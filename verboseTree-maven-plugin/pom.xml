@@ -51,6 +51,23 @@
       <version>${mavenResolverVersion}</version>
     </dependency>
 
+    <!-- Graph Builder -->
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-connector-basic</artifactId>
+      <version>1.4.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-transport-file</artifactId>
+      <version>1.4.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.resolver</groupId>
+      <artifactId>maven-resolver-transport-http</artifactId>
+      <version>1.4.2</version>
+    </dependency>
+
     <!-- Testing Dependencies -->
     <dependency>
       <groupId>junit</groupId>

@@ -33,13 +33,17 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.ProjectDependenciesResolver;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 
 import static org.apache.commons.io.FileUtils.write;
+
+import com.google.cloud.tools.opensource.dependencies.*;
 
 /**
  * Builds the DependencyGraph
@@ -123,8 +127,12 @@ public class DependencyGraphBuilder extends AbstractMojo
         request.setRepositorySession( session.getRepositorySession() );
         // request.setRepositorySession( repositorySystemSession );
 
+
+
         final DependencyResolutionResult result = resolveDependencies( request, null );
         DependencyNode graphRoot = result.getDependencyGraph();
+
+
 
 
         return graphRoot;

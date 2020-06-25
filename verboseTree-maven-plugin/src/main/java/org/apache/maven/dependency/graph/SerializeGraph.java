@@ -49,6 +49,12 @@ public class SerializeGraph
     private static String getDependencyCoordinate( DependencyNode node )
     {
         Artifact artifact = node.getArtifact();
+        if(node.getDependency() == null)
+        {
+            // should only get here if node is root
+            return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" +
+                    artifact.getExtension() + ":" + artifact.getVersion();
+        }
         String scope = node.getDependency().getScope();
         String coords = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" +
                 artifact.getExtension() + ":" + artifact.getVersion();
@@ -125,7 +131,7 @@ public class SerializeGraph
             builder.append( '(' ).append( coordString ).append( " - omitted for conflict with " )
                     .append( VersionConflict( node ) ).append( ')' ).append( System.lineSeparator() );
         }
-        else if ( node.getDependency().isOptional() )
+        else if ( node.getDependency() != null && node.getDependency().isOptional() )
         {
             builder.append( '(' ).append( coordString ).append( " - omitted due to optional dependency)" )
                     .append( System.lineSeparator() );
