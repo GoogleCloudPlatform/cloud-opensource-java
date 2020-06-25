@@ -18,12 +18,14 @@
 package org.apache.maven.dependency.graph;
 
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
+import org.apache.maven.artifact.resolver.ArtifactResolutionResult;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.DefaultDependencyResolutionRequest;
 import org.apache.maven.project.DefaultProjectBuildingRequest;
 import org.apache.maven.project.DependencyResolutionException;
@@ -36,6 +38,7 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
@@ -49,6 +52,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.apache.commons.io.FileUtils.write;
 import static org.apache.maven.dependency.graph.RepositoryUtility.CENTRAL;
@@ -63,7 +67,7 @@ import org.eclipse.aether.resolution.DependencyResult;
 /**
  * Builds the DependencyGraph
  */
-@Mojo( name = "tree" )
+@Mojo( name = "tree", requiresDependencyResolution = ResolutionScope.COMPILE )
 public class DependencyGraphBuilder extends AbstractMojo
 {
 
@@ -150,8 +154,22 @@ public class DependencyGraphBuilder extends AbstractMojo
         // ToDo: if outputFile not null write to outputFile
         File file = new File( project.getBasedir().getAbsolutePath().replace( '\\', '/' ) + "/target/tree.txt" );
 
+        List<Artifact> artifacts = new ArrayList<Artifact>();
+        Set<org.apache.maven.artifact.Artifact> artifactSet = session.getCurrentProject().getArtifacts() ;
+        Set<org.apache.maven.artifact.Artifact> projectArtifactSet = project.getArtifacts();
+
+
+        for( org.apache.maven.artifact.Artifact artifact : artifactSet )
+        {
+            Artifact newArtifact = new DefaultArtifact( artifact.getGroupId(), artifact.getArtifactId(),
+                    artifact.getClassifier(), artifact.getType(), artifact.getVersion());
+            artifacts.add( newArtifact );
+        }
+
+        DependencyNode newNode = buildFullDependencyGraph( artifacts );
+
         SerializeGraph serializer = new SerializeGraph();
-        String serialized = serializer.serialize( rootNode );
+        String serialized = serializer.serialize( newNode );
         try
         {
             write( file, serialized );
