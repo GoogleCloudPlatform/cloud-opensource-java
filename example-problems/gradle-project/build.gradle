@@ -18,6 +18,7 @@ buildscript {
   repositories {
     mavenCentral()
     mavenLocal()
+    jcenter()
   }
   dependencies {
     classpath 'com.google.cloud.tools:linkage-checker-gradle-plugin:0.1.0-SNAPSHOT'
