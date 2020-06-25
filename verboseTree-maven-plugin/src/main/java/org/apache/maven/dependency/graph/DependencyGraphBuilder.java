@@ -17,6 +17,8 @@
 
 package org.apache.maven.dependency.graph;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -32,18 +34,32 @@ import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.ProjectDependenciesResolver;
+import org.eclipse.aether.DefaultRepositorySystemSession;
+import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.commons.io.FileUtils.write;
+import static org.apache.maven.dependency.graph.RepositoryUtility.CENTRAL;
+import static org.apache.maven.dependency.graph.RepositoryUtility.mavenRepositoryFromUrl;
 
-import com.google.cloud.tools.opensource.dependencies.*;
+import org.eclipse.aether.repository.LocalRepository;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.ArtifactResult;
+import org.eclipse.aether.resolution.DependencyRequest;
+import org.eclipse.aether.resolution.DependencyResult;
 
 /**
  * Builds the DependencyGraph
@@ -72,8 +88,48 @@ public class DependencyGraphBuilder extends AbstractMojo
 
     private DependencyNode rootNode;
 
+    private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
+
+    /** Maven repositories to use when resolving dependencies. */
+    private final ImmutableList<RemoteRepository> repositories;
+    private Path localRepository;
+
+    public DependencyGraphBuilder() {
+        this(ImmutableList.of(CENTRAL.getUrl()));
+    }
+
+
+    static {
+        for ( Map.Entry<String, String> entry : OsProperties.detectOsProperties().entrySet() )
+        {
+            System.setProperty( entry.getKey(), entry.getValue() );
+        }
+        // above code replaces: OsProperties.detectOsProperties().forEach(System::setProperty); for Java 7
+    }
+
+    /**
+     * @param mavenRepositoryUrls remote Maven repositories to search for dependencies
+     * @throws IllegalArgumentException if a URL is malformed or does not have an allowed scheme
+     */
+    public DependencyGraphBuilder(Iterable<String> mavenRepositoryUrls) {
+        ImmutableList.Builder<RemoteRepository> repositoryListBuilder = ImmutableList.builder();
+        for (String mavenRepositoryUrl : mavenRepositoryUrls) {
+            RemoteRepository repository = mavenRepositoryFromUrl(mavenRepositoryUrl);
+            repositoryListBuilder.add(repository);
+        }
+        this.repositories = repositoryListBuilder.build();
+    }
+
     @Parameter( defaultValue = "${repositorySystemSession}" )
     private RepositorySystemSession repositorySystemSession;
+
+    /**
+     * Enable temporary repositories for tests.
+     */
+    @VisibleForTesting
+    void setLocalRepository(Path localRepository) {
+        this.localRepository = localRepository;
+    }
 
     public void execute() throws MojoExecutionException
     {
@@ -136,6 +192,92 @@ public class DependencyGraphBuilder extends AbstractMojo
 
 
         return graphRoot;
+    }
+
+    private DependencyNode resolveCompileTimeDependencies(
+            List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session)
+            throws org.eclipse.aether.resolution.DependencyResolutionException
+    {
+
+        ImmutableList.Builder<Dependency> dependenciesBuilder = ImmutableList.builder();
+        for (DependencyNode dependencyNode : dependencyNodes) {
+            Dependency dependency = dependencyNode.getDependency();
+            if (dependency == null) {
+                // Root DependencyNode has null dependency field.
+                dependenciesBuilder.add(new Dependency(dependencyNode.getArtifact(), "compile"));
+            } else {
+                // The dependency field carries exclusions
+                dependenciesBuilder.add(dependency.setScope("compile"));
+            }
+        }
+        ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
+
+        if (localRepository != null) {
+            LocalRepository local = new LocalRepository(localRepository.toAbsolutePath().toString());
+            session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, local));
+        }
+
+        CollectRequest collectRequest = new CollectRequest();
+        if (dependencyList.size() == 1) {
+            // With setRoot, the result includes dependencies with `optional:true` or `provided`
+            collectRequest.setRoot(dependencyList.get(0));
+        } else {
+            collectRequest.setDependencies(dependencyList);
+        }
+        for ( RemoteRepository repository : repositories) {
+            collectRequest.addRepository(repository);
+        }
+        DependencyRequest dependencyRequest = new DependencyRequest();
+        dependencyRequest.setCollectRequest(collectRequest);
+
+        // resolveDependencies equals to calling both collectDependencies (build dependency tree) and
+        // resolveArtifacts (download JAR files).
+        DependencyResult dependencyResult = system.resolveDependencies(session, dependencyRequest);
+        return dependencyResult.getRoot();
+    }
+
+    /**
+     * Finds the full compile time, transitive dependency graph including duplicates, conflicting
+     * versions, and provided and optional dependencies. In the event of I/O errors, missing
+     * artifacts, and other problems, it can return an incomplete graph. Each node's dependencies are
+     * resolved recursively. The scope of a dependency does not affect the scope of its children's
+     * dependencies. Provided and optional dependencies are not treated differently than any other
+     * dependency.
+     *
+     * @param artifacts Maven artifacts whose dependencies to retrieve
+     * @return dependency graph representing the tree of Maven artifacts
+     */
+    public DependencyNode buildFullDependencyGraph(List<Artifact> artifacts) {
+        List<DependencyNode> dependencyNodes = new ArrayList<DependencyNode>();
+        for( Artifact artifact : artifacts )
+        {
+            dependencyNodes.add( new DefaultDependencyNode( artifact ) );
+        }
+        DefaultRepositorySystemSession session = RepositoryUtility.newSessionForFullDependency(system);
+        return buildDependencyGraph(dependencyNodes, session);
+    }
+
+    private DependencyNode buildDependencyGraph(
+            List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session) {
+
+        try {
+            DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, session);
+            return node;
+        } catch ( org.eclipse.aether.resolution.DependencyResolutionException ex) {
+            DependencyResult result = ex.getResult();
+            DependencyNode graph = result.getRoot();
+
+            for ( ArtifactResult artifactResult : result.getArtifactResults()) {
+                Artifact resolvedArtifact = artifactResult.getArtifact();
+
+                if (resolvedArtifact == null) {
+                    Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
+                    // ToDo: graph.addUnresolvableArtifactProblem(requestedArtifact);
+                }
+            }
+
+            return graph;
+        }
     }
 
 
