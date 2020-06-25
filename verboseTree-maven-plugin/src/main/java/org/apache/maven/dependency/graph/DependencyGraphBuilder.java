@@ -17,8 +17,6 @@
 
 package org.apache.maven.dependency.graph;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -47,6 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -91,11 +90,12 @@ public class DependencyGraphBuilder extends AbstractMojo
     private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
     /** Maven repositories to use when resolving dependencies. */
-    private final ImmutableList<RemoteRepository> repositories;
+    private final List<RemoteRepository> repositories;
     private Path localRepository;
 
     public DependencyGraphBuilder() {
-        this(ImmutableList.of(CENTRAL.getUrl()));
+        // this(ImmutableList.of(CENTRAL.getUrl()));
+        this( Arrays.asList( CENTRAL.getUrl() ) );
     }
 
 
@@ -112,12 +112,12 @@ public class DependencyGraphBuilder extends AbstractMojo
      * @throws IllegalArgumentException if a URL is malformed or does not have an allowed scheme
      */
     public DependencyGraphBuilder(Iterable<String> mavenRepositoryUrls) {
-        ImmutableList.Builder<RemoteRepository> repositoryListBuilder = ImmutableList.builder();
+        List<RemoteRepository> repositoryList = new ArrayList<RemoteRepository>();
         for (String mavenRepositoryUrl : mavenRepositoryUrls) {
             RemoteRepository repository = mavenRepositoryFromUrl(mavenRepositoryUrl);
-            repositoryListBuilder.add(repository);
+            repositoryList.add(repository);
         }
-        this.repositories = repositoryListBuilder.build();
+        this.repositories = repositoryList;
     }
 
     @Parameter( defaultValue = "${repositorySystemSession}" )
@@ -126,7 +126,7 @@ public class DependencyGraphBuilder extends AbstractMojo
     /**
      * Enable temporary repositories for tests.
      */
-    @VisibleForTesting
+    //@VisibleForTesting
     void setLocalRepository(Path localRepository) {
         this.localRepository = localRepository;
     }
@@ -198,19 +198,18 @@ public class DependencyGraphBuilder extends AbstractMojo
             List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session)
             throws org.eclipse.aether.resolution.DependencyResolutionException
     {
+        List<Dependency> dependencyList = new ArrayList<Dependency>();
 
-        ImmutableList.Builder<Dependency> dependenciesBuilder = ImmutableList.builder();
         for (DependencyNode dependencyNode : dependencyNodes) {
             Dependency dependency = dependencyNode.getDependency();
             if (dependency == null) {
                 // Root DependencyNode has null dependency field.
-                dependenciesBuilder.add(new Dependency(dependencyNode.getArtifact(), "compile"));
+                dependencyList.add(new Dependency(dependencyNode.getArtifact(), "compile"));
             } else {
                 // The dependency field carries exclusions
-                dependenciesBuilder.add(dependency.setScope("compile"));
+                dependencyList.add(dependency.setScope("compile"));
             }
         }
-        ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
 
         if (localRepository != null) {
             LocalRepository local = new LocalRepository(localRepository.toAbsolutePath().toString());

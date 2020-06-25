@@ -16,10 +16,10 @@
 
 package org.apache.maven.dependency.graph;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.collect.ImmutableMap;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Platform-dependent project properties normalized from ${os.name} and ${os.arch}.
@@ -28,23 +28,17 @@ import java.util.Locale;
  */
 public class OsProperties
 {
-  
-  private static final CharMatcher LOWER_ALPHA_NUMERIC =
-      CharMatcher.inRange('a', 'z').or(CharMatcher.inRange('0', '9'));
 
-  public static ImmutableMap<String, String> detectOsProperties() {
-    return ImmutableMap.of(
-        "os.detected.name",
-        osDetectedName(),
-        "os.detected.arch",
-        osDetectedArch(),
-        "os.detected.classifier",
-        osDetectedName() + "-" + osDetectedArch());
+  public static Map<String, String> detectOsProperties() {
+    Map<String, String> osMap = new HashMap<String, String>();
+    osMap.put( "os.detected.name", osDetectedName() );
+    osMap.put( "os.detected.arch", osDetectedArch() );
+    osMap.put( "os.detected.classifier", osDetectedName() + "-" + osDetectedArch() );
+    return osMap;
   }
 
   private static String osDetectedName() {
-    String osNameNormalized =
-        LOWER_ALPHA_NUMERIC.retainFrom(System.getProperty("os.name").toLowerCase(Locale.ENGLISH));
+    String osNameNormalized = retainFrom(System.getProperty("os.name").toLowerCase(Locale.ENGLISH));
 
     if (osNameNormalized.startsWith("macosx") || osNameNormalized.startsWith("osx")) {
       return "osx";
@@ -57,8 +51,7 @@ public class OsProperties
   }
 
   private static String osDetectedArch() {
-    String osArchNormalized =
-        LOWER_ALPHA_NUMERIC.retainFrom(System.getProperty("os.arch").toLowerCase(Locale.ENGLISH));
+    String osArchNormalized = retainFrom(System.getProperty("os.arch").toLowerCase(Locale.ENGLISH));
     switch (osArchNormalized) {
       case "x8664":
       case "amd64":
@@ -69,6 +62,19 @@ public class OsProperties
       default:
         return "x86_32";
     }
+  }
+
+  private static String retainFrom(String str)
+  {
+    StringBuilder result = new StringBuilder();
+    for( char c : str.toCharArray() )
+    {
+      if( ( c >= 'a' && c <= 'z') || ( c >= '0' && c <= '9' ))
+      {
+        result.append( c );
+      }
+    }
+    return result.toString();
   }
 
 }

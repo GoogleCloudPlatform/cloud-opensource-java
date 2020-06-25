@@ -16,9 +16,6 @@
 
 package org.apache.maven.dependency.graph;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import org.apache.maven.execution.DefaultMavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.project.MavenProject;
@@ -68,11 +65,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Aether initialization. This is based on Apache Maven Resolver 1.4.2 or later.
@@ -81,13 +79,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public final class RepositoryUtility
 {
-  
-  public static final RemoteRepository CENTRAL =
-      new RemoteRepository.Builder("central", "default", "https://repo1.maven.org/maven2/").build();
+
+  public static final RemoteRepository CENTRAL = new RemoteRepository.Builder( "central", "default",
+          "https://repo1.maven.org/maven2/" ).build();
 
   // DefaultTransporterProvider.newTransporter checks these transporters
-  private static final ImmutableSet<String> ALLOWED_REPOSITORY_URL_SCHEMES =
-      ImmutableSet.of("file", "http", "https");
+  private static final Set<String> ALLOWED_REPOSITORY_URL_SCHEMES = new HashSet<String>(
+          Arrays.asList( "file", "http", "https" ) );
 
   private RepositoryUtility() {}
 
@@ -103,7 +101,7 @@ public final class RepositoryUtility
     return locator.getService(RepositorySystem.class);
   }
 
-  @VisibleForTesting
+  //@VisibleForTesting
   static DefaultRepositorySystemSession createDefaultRepositorySystemSession(
       RepositorySystem system) {
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
@@ -243,7 +241,7 @@ public final class RepositoryUtility
   public static RemoteRepository mavenRepositoryFromUrl(String mavenRepositoryUrl) {
     try {
       // Because the protocol is not an empty string (checked below), this URI is absolute.
-      new URI(checkNotNull(mavenRepositoryUrl));
+      new URI(mavenRepositoryUrl);
     } catch (URISyntaxException ex) {
       throw new IllegalArgumentException("Invalid URL syntax: " + mavenRepositoryUrl);
     }
@@ -251,11 +249,11 @@ public final class RepositoryUtility
     RemoteRepository repository =
         new RemoteRepository.Builder(null, "default", mavenRepositoryUrl).build();
 
-    checkArgument(
+    /*checkArgument(
         ALLOWED_REPOSITORY_URL_SCHEMES.contains(repository.getProtocol()),
         "Scheme: '%s' is not in %s",
         repository.getProtocol(),
-        ALLOWED_REPOSITORY_URL_SCHEMES);
+        ALLOWED_REPOSITORY_URL_SCHEMES);*/
     return repository;
   }
 
@@ -269,7 +267,7 @@ public final class RepositoryUtility
     Artifact artifactWithVersionRange = new DefaultArtifact(groupId, artifactId, null, "(0,]");
     VersionRangeRequest request =
         new VersionRangeRequest(
-            artifactWithVersionRange, ImmutableList.of(RepositoryUtility.CENTRAL), null);
+            artifactWithVersionRange, Arrays.asList( RepositoryUtility.CENTRAL ), null);
 
     try {
       return repositorySystem.resolveVersionRange(session, request);
@@ -279,7 +277,7 @@ public final class RepositoryUtility
   }
 
   /** Returns the highest version for {@code groupId:artifactId} in {@code repositorySystem}. */
-  @VisibleForTesting
+  //@VisibleForTesting
   static String findHighestVersion(
       RepositorySystem repositorySystem,
       RepositorySystemSession session,

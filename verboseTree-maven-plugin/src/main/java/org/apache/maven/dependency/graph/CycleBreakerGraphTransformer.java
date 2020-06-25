@@ -16,13 +16,10 @@
 
 package org.apache.maven.dependency.graph;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.DependencyGraphTransformationContext;
 import org.eclipse.aether.collection.DependencyGraphTransformer;
-import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
 import java.util.ArrayList;
@@ -71,7 +68,7 @@ final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
   }
 
   /** Returns true if {@code node} is not visited yet and marks the node as visited. */
-  @VisibleForTesting
+  //@VisibleForTesting
   boolean shouldVisitChildren(DependencyNode node) {
     return visitedNodes.add(node);
   }
