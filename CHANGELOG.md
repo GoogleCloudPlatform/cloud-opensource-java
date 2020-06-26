@@ -1,5 +1,8 @@
 # Linkage Checker Enforcer Rule Change Log
 
+## 1.4.3
+* Made ClassPathEntry.getArtifact() public for the Linkage Checker Gradle plugin
+
 ## 1.4.2
 * Fixed unnecessary graph traversal logic when building dependency graphs
 
