@@ -148,6 +148,10 @@
     </p>
 
     <p>
+      <a href="dependency_trees.html">Dependency Trees</a>
+    </p>
+
+    <p>
     <a href="unstable_artifacts.html">Pre 1.0 Artifacts</a>
     </p>
 

@@ -16,6 +16,10 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.ListMultimap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,6 +37,7 @@ public final class ArtifactResults {
   private final Map<String, Integer> results = new HashMap<>();
   private final Artifact artifact;
   private String exceptionMessage;
+  private ImmutableListMultimap<DependencyPath, DependencyPath> dependencyTree;
 
   public ArtifactResults(Artifact artifact) {
     this.artifact = artifact;
@@ -44,6 +49,18 @@ public final class ArtifactResults {
 
   void addResult(String testName, int failures) {
     results.put(testName, failures);
+  }
+
+  void setDependencyTree(ListMultimap<DependencyPath, DependencyPath> dependencyTree) {
+    this.dependencyTree = ImmutableListMultimap.copyOf(dependencyTree);
+  }
+
+  public ImmutableListMultimap<DependencyPath, DependencyPath> getDependencyTree() {
+    return dependencyTree;
+  }
+
+  public DependencyPath getDependencyRoot() {
+    return Iterables.getFirst(dependencyTree.values(), null);
   }
 
   /**

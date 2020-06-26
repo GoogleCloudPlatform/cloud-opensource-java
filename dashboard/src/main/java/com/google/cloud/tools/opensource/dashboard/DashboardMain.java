@@ -39,6 +39,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -74,6 +75,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
@@ -393,6 +395,7 @@ public class DashboardMain {
       results.addResult(TEST_NAME_GLOBAL_UPPER_BOUND, globalUpperBoundFailures.size());
       results.addResult(TEST_NAME_DEPENDENCY_CONVERGENCE, convergenceIssues.size());
       results.addResult(TEST_NAME_LINKAGE_CHECK, (int) totalLinkageErrorCount);
+      results.setDependencyTree(dependencyTree);
 
       return results;
     }
@@ -496,6 +499,13 @@ public class DashboardMain {
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(unstable), StandardCharsets.UTF_8)) {
       Template details = configuration.getTemplate("/templates/unstable_artifacts.ftl");
+      details.process(templateData, out);
+    }
+
+    File dependencyTrees = output.resolve("dependency_trees.html").toFile();
+    try (Writer out = new OutputStreamWriter(
+        new FileOutputStream(dependencyTrees), StandardCharsets.UTF_8)) {
+      Template details = configuration.getTemplate("/templates/dependency_trees.ftl");
       details.process(templateData, out);
     }
   }
