@@ -30,7 +30,6 @@ import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.Update;
@@ -39,12 +38,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
@@ -75,7 +71,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
@@ -350,20 +345,17 @@ public class DashboardMain {
         new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
 
       // includes all versions
-      DependencyGraph completeDependencies = artifactInfo.getCompleteDependencies();
-      List<Update> convergenceIssues = completeDependencies.findUpdates();
+      DependencyGraph graph = artifactInfo.getCompleteDependencies();
+      List<Update> convergenceIssues = graph.findUpdates();
 
       // picks versions according to Maven rules
       DependencyGraph transitiveDependencies = artifactInfo.getTransitiveDependencies();
 
       Map<Artifact, Artifact> upperBoundFailures =
-          findUpperBoundsFailures(completeDependencies.getHighestVersionMap(),
-              transitiveDependencies);
+          findUpperBoundsFailures(graph.getHighestVersionMap(), transitiveDependencies);
 
       Map<Artifact, Artifact> globalUpperBoundFailures = findUpperBoundsFailures(
           collectLatestVersions(globalDependencies), transitiveDependencies);
-
-      List<DependencyPath> dependencyPaths = completeDependencies.list();
 
       long totalLinkageErrorCount =
           symbolProblemTable.values().stream()
@@ -371,19 +363,15 @@ public class DashboardMain {
               .distinct()
               .count();
 
-      ListMultimap<DependencyPath, DependencyPath> dependencyTree =
-          DependencyTreeFormatter.buildDependencyPathTree(dependencyPaths);
       Template report = configuration.getTemplate("/templates/component.ftl");
 
-      DependencyPath rootNode = Iterables.getFirst(dependencyTree.values(), null);
       Map<String, Object> templateData = new HashMap<>();
       templateData.put("artifact", artifact);
       templateData.put("updates", convergenceIssues);
       templateData.put("upperBoundFailures", upperBoundFailures);
       templateData.put("globalUpperBoundFailures", globalUpperBoundFailures);
       templateData.put("lastUpdated", LocalDateTime.now());
-      templateData.put("dependencyTree", dependencyTree);
-      templateData.put("dependencyRootNode", rootNode);
+      templateData.put("dependencyGraph", graph);
       templateData.put("symbolProblems", symbolProblemTable);
       templateData.put("classPathResult", classPathResult);
       templateData.put("totalLinkageErrorCount", totalLinkageErrorCount);
@@ -395,7 +383,6 @@ public class DashboardMain {
       results.addResult(TEST_NAME_GLOBAL_UPPER_BOUND, globalUpperBoundFailures.size());
       results.addResult(TEST_NAME_DEPENDENCY_CONVERGENCE, convergenceIssues.size());
       results.addResult(TEST_NAME_LINKAGE_CHECK, (int) totalLinkageErrorCount);
-      results.setDependencyTree(dependencyTree);
 
       return results;
     }
@@ -472,6 +459,7 @@ public class DashboardMain {
     templateData.put("classPathResult", classPathResult);
     templateData.put("dependencyPathRootCauses", findRootCauses(classPathResult));
     templateData.put("coordinates", bom.getCoordinates());
+    templateData.put("dependencyGraphs", globalDependencies);
 
     // Accessing static methods from Freemarker template
     // https://freemarker.apache.org/docs/pgui_misc_beanwrapper.html#autoid_60
@@ -503,8 +491,8 @@ public class DashboardMain {
     }
 
     File dependencyTrees = output.resolve("dependency_trees.html").toFile();
-    try (Writer out = new OutputStreamWriter(
-        new FileOutputStream(dependencyTrees), StandardCharsets.UTF_8)) {
+    try (Writer out =
+        new OutputStreamWriter(new FileOutputStream(dependencyTrees), StandardCharsets.UTF_8)) {
       Template details = configuration.getTemplate("/templates/dependency_trees.ftl");
       details.process(templateData, out);
     }

@@ -10,15 +10,10 @@
   <body>
     <h1>Dependency Tree of the Artifacts in ${coordinates}</h1>
     <p class="bom-coordinates">BOM: ${coordinates?html}</p>
-    <#list table as row>
-      <h2>Dependency Tree of ${row.getCoordinates()?html}</h2>
-      <#assign dependencyTree = row.getDependencyTree() />
-      <#assign dependencyRootNode = row.getDependencyRoot() />
-      <#if dependencyRootNode?? >
-          <@formatDependencyNode dependencyRootNode dependencyRootNode />
-      <#else>
-        <p>Dependency information is unavailable</p>
-      </#if>
+    <#list dependencyGraphs as graph>
+      <#assign rootPath = graph.getRootPath() />
+      <h2>Dependency Tree of ${rootPath.getLeaf()?html}</h2>
+      <@formatDependencyGraph graph rootPath "" />
     </#list>
 
     <hr />

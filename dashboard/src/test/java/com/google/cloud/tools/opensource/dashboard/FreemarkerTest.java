@@ -23,9 +23,7 @@ import com.google.cloud.tools.opensource.classpath.ErrorType;
 import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedListMultimap;
@@ -96,15 +94,10 @@ public class FreemarkerTest {
     Artifact artifact1 = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
     ArtifactResults results1 = new ArtifactResults(artifact1);
     results1.addResult("Linkage Errors", 56);
-    DependencyPath root1 = new DependencyPath(artifact1);
-    results1.setDependencyTree(ImmutableListMultimap.of(root1, root1));
 
     Artifact artifact2 = new DefaultArtifact("grpc:grpc:1.15.0");
     ArtifactResults results2 = new ArtifactResults(artifact2);
     results2.addResult("Linkage Errors", 0);
-    DependencyPath root2 = new DependencyPath(artifact2);
-    results2.setDependencyTree(ImmutableListMultimap.of(root2, root2,
-        root2, root1));
 
     List<ArtifactResults> table = ImmutableList.of(results1, results2);
     List<DependencyGraph> globalDependencies = ImmutableList.of();
