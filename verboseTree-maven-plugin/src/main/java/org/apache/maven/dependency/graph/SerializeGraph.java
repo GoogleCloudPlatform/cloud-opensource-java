@@ -190,7 +190,7 @@ public class SerializeGraph
             }
             builder.append( coordString ).append( System.lineSeparator() );
             visitedNodes.put( node, true );
-            
+
             // ToDo: move this replicated code to its own method
             for ( int i = 0; i < node.getChildren().size(); i++ )
             {
