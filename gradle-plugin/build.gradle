@@ -27,9 +27,8 @@ group = 'com.google.cloud.tools'
 sourceCompatibility = 1.8
 
 dependencies {
-  // TODO(suztomo): Place a concrete version once ClassPathEntry.getArtifact becomes public.
-  implementation platform('com.google.cloud.tools:dependencies-parent:latest.integration')
-  implementation 'com.google.cloud.tools:dependencies:latest.integration'
+  implementation platform('com.google.cloud.tools:dependencies-parent:1.4.3')
+  implementation 'com.google.cloud.tools:dependencies:1.4.3'
   implementation 'com.google.guava:guava'
   implementation 'org.apache.maven.resolver:maven-resolver-api'
 
