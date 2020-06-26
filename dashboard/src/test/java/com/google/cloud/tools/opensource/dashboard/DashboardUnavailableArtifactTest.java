@@ -20,7 +20,9 @@ import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.io.MoreFiles;
@@ -118,12 +120,17 @@ public class DashboardUnavailableArtifactTest {
     validArtifactResult.addResult(DashboardMain.TEST_NAME_UPPER_BOUND, 0);
     validArtifactResult.addResult(DashboardMain.TEST_NAME_DEPENDENCY_CONVERGENCE, 0);
     validArtifactResult.addResult(DashboardMain.TEST_NAME_GLOBAL_UPPER_BOUND, 0);
+    DependencyPath rootValid = new DependencyPath(validArtifact);
+    validArtifactResult.setDependencyTree(ImmutableListMultimap.of(rootValid, rootValid));
 
     Artifact invalidArtifact = new DefaultArtifact("io.grpc:nonexistent:jar:1.15.0");
     ArtifactResults errorArtifactResult = new ArtifactResults(invalidArtifact);
     errorArtifactResult.setExceptionMessage(
         "Could not find artifact io.grpc:nonexistent:jar:1.15.0 in central"
             + " (https://repo1.maven.org/maven2/)");
+    DependencyPath rootInvalid = new DependencyPath(invalidArtifact);
+    errorArtifactResult.setDependencyTree(ImmutableListMultimap.of(rootInvalid, rootInvalid));
+
     List<ArtifactResults> table = new ArrayList<>();
     table.add(validArtifactResult);
     table.add(errorArtifactResult);
