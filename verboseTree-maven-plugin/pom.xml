@@ -136,10 +136,12 @@
             <configuration>
               <projectsDirectory>src/it</projectsDirectory>
               <pomIncludes>
+                <!--<pomInclude>tree-verbose/pom.xml</pomInclude>-->
                 <pomInclude>tree-verbose/pom.xml</pomInclude>
+                <pomInclude>tree-verbose2/pom.xml</pomInclude>
               </pomIncludes>
               <postBuildHookScript>verify</postBuildHookScript>
-              <mavenExecutable>${maven.home}/bin//mvnDebug</mavenExecutable>
+              <!--<mavenExecutable>${maven.home}/bin//mvnDebug</mavenExecutable>-->
             </configuration>
             <executions>
               <execution>

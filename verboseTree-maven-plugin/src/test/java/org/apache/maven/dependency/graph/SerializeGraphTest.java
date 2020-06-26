@@ -220,15 +220,19 @@ public class SerializeGraphTest extends AbstractMojoTestCase
     public void testTreeWithScopeConflict() throws IOException
     {
         DependencyNode root = new DefaultDependencyNode(
-                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), "compile" )
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), "rootScope" )
         );
         DependencyNode left = new DefaultDependencyNode(
-                new Dependency( new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" ), "test", true )
+                new Dependency( new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" ), "test" )
         );
         DependencyNode right = new DefaultDependencyNode(
                 new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), "test" )
         );
+        DependencyNode leftChild = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), "compile" )
+        );
 
+        left.setChildren( Arrays.asList( leftChild ) );
         root.setChildren( Arrays.asList( left, right ) );
 
         String actual = serializer.serialize( root );
@@ -242,15 +246,20 @@ public class SerializeGraphTest extends AbstractMojoTestCase
     public void testTreeWithVersionConflict() throws IOException
     {
         DependencyNode root = new DefaultDependencyNode(
-                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), "compile" )
+                new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "1.0.0" ), "rootScope" )
         );
         DependencyNode left = new DefaultDependencyNode(
-                new Dependency( new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" ), "test", true )
+                new Dependency( new DefaultArtifact( "org.apache", "left", "xml", "0.1-SNAPSHOT" ), "test" )
         );
         DependencyNode right = new DefaultDependencyNode(
                 new Dependency( new DefaultArtifact( "com.google", "rootArtifact", "jar", "2.0.0" ), "test" )
         );
+        // Note that as of now the serializer does not deal with conflicts with the project/root node itself
+        DependencyNode leftChild = new DefaultDependencyNode(
+                new Dependency( new DefaultArtifact( "org.apache", "left", "xml", "0.3.1" ), "test" )
+        );
 
+        left.setChildren( Arrays.asList( leftChild ) );
         root.setChildren( Arrays.asList( left, right ) );
 
         String actual = serializer.serialize( root );

@@ -40,15 +40,33 @@ public class SerializeGraph
     private final Set<String> coordinateStrings =  new HashSet<String>();
     private final Map<String, String> coordinateVersionMap = new HashMap<String, String>();
     private StringBuilder builder = new StringBuilder();
+    private boolean isRoot = true;
 
     public String serialize( DependencyNode root )
     {
-        return dfs( root, "" ).toString();
+        // deal with root first
+        Artifact rootArtifact = root.getArtifact();
+        builder.append( rootArtifact.getGroupId() + ":" + rootArtifact.getArtifactId() + ":" +
+                rootArtifact.getExtension() + ":" + rootArtifact.getVersion()).append( System.lineSeparator() );
+
+        for ( int i = 0; i < root.getChildren().size(); i++ )
+        {
+            if ( i == root.getChildren().size() - 1 )
+            {
+                builder = dfs( root.getChildren().get( i ),  LINE_START_LAST_CHILD );
+            }
+            else
+            {
+                builder = dfs( root.getChildren().get( i ), LINE_START_CHILD );
+            }
+        }
+        return builder.toString();
     }
 
     private static String getDependencyCoordinate( DependencyNode node )
     {
         Artifact artifact = node.getArtifact();
+
         if(node.getDependency() == null)
         {
             // should only get here if node is root
@@ -69,7 +87,6 @@ public class SerializeGraph
     private static String getVersionlessCoordinate( DependencyNode node )
     {
         Artifact artifact = node.getArtifact();
-
         // scope not included because we check for scope conflicts separately
         return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getExtension();
     }
@@ -109,6 +126,34 @@ public class SerializeGraph
     private StringBuilder dfs( DependencyNode node, String start )
     {
         builder.append( start );
+        if( node.getArtifact() == null )
+        {
+            /* this case happens with tree-verbose test, probably because graphBuilder returns an incomplete graph
+             * due to some error with a dependency */
+            builder.append( "Null Artifact Node" ).append( System.lineSeparator() );
+            // ToDo: move this replicated code to its own method
+            for ( int i = 0; i < node.getChildren().size(); i++ )
+            {
+                if ( start.endsWith( LINE_START_CHILD ) )
+                {
+                    start = start.replace( LINE_START_CHILD, "|  " );
+                }
+                else if ( start.endsWith( LINE_START_LAST_CHILD ) )
+                {
+                    start = start.replace( LINE_START_LAST_CHILD, "   " );
+                }
+
+                if ( i == node.getChildren().size() - 1 )
+                {
+                    builder = dfs( node.getChildren().get( i ), start.concat( LINE_START_LAST_CHILD ) );
+                }
+                else
+                {
+                    builder = dfs( node.getChildren().get( i ), start.concat( LINE_START_CHILD ) );
+                }
+            }
+            return builder;
+        }
         String coordString = getDependencyCoordinate( node );
 
         if ( visitedNodes.containsKey( node ) )
@@ -139,10 +184,14 @@ public class SerializeGraph
         else
         {
             coordinateStrings.add( getDependencyCoordinate( node ) );
-            coordinateVersionMap.put( getVersionlessCoordinate( node ), node.getArtifact().getVersion() );
+            if( node.getArtifact() != null )
+            {
+                coordinateVersionMap.put( getVersionlessCoordinate( node ), node.getArtifact().getVersion() );
+            }
             builder.append( coordString ).append( System.lineSeparator() );
             visitedNodes.put( node, true );
-
+            
+            // ToDo: move this replicated code to its own method
             for ( int i = 0; i < node.getChildren().size(); i++ )
             {
                 if ( start.endsWith( LINE_START_CHILD ) )

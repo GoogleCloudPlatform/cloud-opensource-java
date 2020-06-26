@@ -20,6 +20,7 @@ package org.apache.maven.dependency.graph;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.artifact.resolver.ArtifactResolutionResult;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Model;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
@@ -67,7 +68,7 @@ import org.eclipse.aether.resolution.DependencyResult;
 /**
  * Builds the DependencyGraph
  */
-@Mojo( name = "tree", requiresDependencyResolution = ResolutionScope.COMPILE )
+@Mojo( name = "tree", requiresDependencyResolution = ResolutionScope.TEST )
 public class DependencyGraphBuilder extends AbstractMojo
 {
 
@@ -156,20 +157,24 @@ public class DependencyGraphBuilder extends AbstractMojo
 
         List<Artifact> artifacts = new ArrayList<Artifact>();
         Set<org.apache.maven.artifact.Artifact> artifactSet = session.getCurrentProject().getArtifacts() ;
-        Set<org.apache.maven.artifact.Artifact> projectArtifactSet = project.getArtifacts();
 
 
         for( org.apache.maven.artifact.Artifact artifact : artifactSet )
         {
             Artifact newArtifact = new DefaultArtifact( artifact.getGroupId(), artifact.getArtifactId(),
                     artifact.getClassifier(), artifact.getType(), artifact.getVersion());
+            newArtifact.setFile( artifact.getFile() );
             artifacts.add( newArtifact );
         }
 
         DependencyNode newNode = buildFullDependencyGraph( artifacts );
+        Model model = project.getModel();
+        rootNode = new DefaultDependencyNode( new DefaultArtifact( model.getGroupId(),
+                model.getArtifactId(), model.getPackaging(), model.getVersion()) );
+        rootNode.setChildren( Arrays.asList( newNode ) );
 
         SerializeGraph serializer = new SerializeGraph();
-        String serialized = serializer.serialize( newNode );
+        String serialized = serializer.serialize( rootNode );
         try
         {
             write( file, serialized );
@@ -201,13 +206,8 @@ public class DependencyGraphBuilder extends AbstractMojo
         request.setRepositorySession( session.getRepositorySession() );
         // request.setRepositorySession( repositorySystemSession );
 
-
-
         final DependencyResolutionResult result = resolveDependencies( request, null );
         DependencyNode graphRoot = result.getDependencyGraph();
-
-
-
 
         return graphRoot;
     }
