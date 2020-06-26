@@ -11,7 +11,7 @@
     <h1>Dependency Tree of the Artifacts in ${coordinates}</h1>
     <p class="bom-coordinates">BOM: ${coordinates?html}</p>
     <#list table as row>
-      <h2>Dependency Tree ${row.getCoordinates()?html}</h2>
+      <h2>Dependency Tree of ${row.getCoordinates()?html}</h2>
       <#assign dependencyTree = row.getDependencyTree() />
       <#assign dependencyRootNode = row.getDependencyRoot() />
       <#if dependencyRootNode?? >

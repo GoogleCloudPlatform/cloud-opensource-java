@@ -148,10 +148,6 @@
     </p>
 
     <p>
-      <a href="dependency_trees.html">Dependency Trees</a>
-    </p>
-
-    <p>
     <a href="unstable_artifacts.html">Pre 1.0 Artifacts</a>
     </p>
 
@@ -164,7 +160,11 @@
         <li><code>${artifact}:${version}</code></li>
       </#list>
     </ul>
- 
+
+    <p>
+      <a href="dependency_trees.html">Dependency Trees</a>
+    </p>
+
     <hr />
 
     <p id='updated'>Last generated at ${lastUpdated}</p>
