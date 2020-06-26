@@ -207,10 +207,24 @@ public class DependencyGraphBuilderTest {
         dependencyGraphBuilder.buildVerboseDependencyGraph(logging);
 
     List<DependencyPath> list = graph.list();
-    DependencyPath firstElement = list.get(0);
     Assert.assertEquals(
         "commons-logging",
-        firstElement.getLeaf().getArtifactId());
+        list.get(0).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "log4j",
+        list.get(1).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "logkit",
+        list.get(2).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "avalon-framework",
+        list.get(3).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "servlet-api",
+        list.get(4).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "javaee-api",
+        list.get(5).getLeaf().getArtifactId());
     Assert.assertEquals(6, list.size()); // optional dependencies are included
   }
 
@@ -224,6 +238,7 @@ public class DependencyGraphBuilderTest {
     Assert.assertEquals(
         "commons-logging",
         firstElement.getLeaf().getArtifactId());
+    
     Assert.assertEquals(1, list.size()); // all dependencies are optional
   }
 
@@ -233,10 +248,27 @@ public class DependencyGraphBuilderTest {
         dependencyGraphBuilder.buildFullDependencyGraph(Arrays.asList(logging));
 
     List<DependencyPath> list = graph.list();
-    DependencyPath firstElement = list.get(0);
     Assert.assertEquals(
         "commons-logging",
-        firstElement.getLeaf().getArtifactId());
+        list.get(0).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "log4j",
+        list.get(1).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "logkit",
+        list.get(2).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "avalon-framework",
+        list.get(3).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "servlet-api",
+        list.get(4).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "mail",
+        list.get(5).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "javaee-api",
+        list.get(6).getLeaf().getArtifactId());
     Assert.assertEquals(9, list.size()); // optional dependencies are included
   }
 
