@@ -62,7 +62,7 @@ gradlePlugin {
     linkageCheckerPlugin {
       id = 'com.google.cloud.tools.linkagechecker'
       displayName = 'Linkage Checker'
-      description = 'Tool to detect Java diamond dependency conflicts'
+      description = 'Tool to verify the compatibility of the class paths of Gradle projects'
       implementationClass = 'com.google.cloud.tools.dependencies.gradle.LinkageCheckerPlugin'
     }
   }
