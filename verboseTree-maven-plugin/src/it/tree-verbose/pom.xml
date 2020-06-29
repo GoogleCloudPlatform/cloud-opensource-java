@@ -47,7 +47,7 @@
     </dependencies>
   </dependencyManagement>-->
 
-  <!--<dependencies>
+  <dependencies>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-project</artifactId>
@@ -59,7 +59,7 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <dependency>
+    <!--<dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-profile</artifactId>
       <version>2.0.4</version>
@@ -75,8 +75,8 @@
       <groupId>org.apache.xmlgraphics</groupId>
       <artifactId>batik-bridge</artifactId>
       <version>1.7</version>
-    </dependency>
-  </dependencies>-->
+    </dependency>-->
+  </dependencies>
 
   <build>
     <pluginManagement>

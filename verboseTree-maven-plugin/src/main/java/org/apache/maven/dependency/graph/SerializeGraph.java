@@ -128,8 +128,7 @@ public class SerializeGraph
         builder.append( start );
         if( node.getArtifact() == null )
         {
-            /* this case happens with tree-verbose test, probably because graphBuilder returns an incomplete graph
-             * due to some error with a dependency */
+            // Should never reach hit this condition with a proper graph sent in
             builder.append( "Null Artifact Node" ).append( System.lineSeparator() );
             // ToDo: move this replicated code to its own method
             for ( int i = 0; i < node.getChildren().size(); i++ )

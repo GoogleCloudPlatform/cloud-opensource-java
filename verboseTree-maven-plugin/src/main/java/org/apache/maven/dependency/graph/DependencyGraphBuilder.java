@@ -138,26 +138,11 @@ public class DependencyGraphBuilder extends AbstractMojo
 
     public void execute() throws MojoExecutionException
     {
-        getLog().info( project.getArtifactId() );
-        getLog().info( session.toString() );
-
-        try
-        {
-            rootNode = buildDependencyGraph();
-        }
-        catch ( DependencyResolutionException e )
-        {
-            // ToDo: Better error message and Exception type
-            e.printStackTrace();
-            getLog().error( e );
-        }
-
         // ToDo: if outputFile not null write to outputFile
         File file = new File( project.getBasedir().getAbsolutePath().replace( '\\', '/' ) + "/target/tree.txt" );
 
         List<Artifact> artifacts = new ArrayList<Artifact>();
         Set<org.apache.maven.artifact.Artifact> artifactSet = session.getCurrentProject().getArtifacts() ;
-
 
         for( org.apache.maven.artifact.Artifact artifact : artifactSet )
         {
@@ -167,53 +152,30 @@ public class DependencyGraphBuilder extends AbstractMojo
             artifacts.add( newArtifact );
         }
 
-        DependencyNode newNode = buildFullDependencyGraph( artifacts );
         Model model = project.getModel();
-        rootNode = new DefaultDependencyNode( new DefaultArtifact( model.getGroupId(),
-                model.getArtifactId(), model.getPackaging(), model.getVersion()) );
-        rootNode.setChildren( Arrays.asList( newNode ) );
+        Dependency rootDependency = new Dependency( new DefaultArtifact( model.getGroupId(),
+                model.getArtifactId(), model.getPackaging(), model.getVersion()), "" );
+
+        rootNode = buildFullDependencyGraph( artifacts, rootDependency );
+        // rootNode is given compile Scope by default but should not have a scope
+        rootNode.setScope( null );
 
         SerializeGraph serializer = new SerializeGraph();
         String serialized = serializer.serialize( rootNode );
+
         try
         {
             write( file, serialized );
         }
-        catch ( IOException | NullPointerException e )
+        catch ( IOException e )
         {
             e.printStackTrace();
             getLog().error( "Failed to write to file:" + file.getAbsolutePath() );
         }
     }
 
-    public DependencyNode buildDependencyGraph() throws DependencyResolutionException
-    {
-        // adapting the dependency-plugin code
-        ProjectBuildingRequest buildingRequest =
-                new DefaultProjectBuildingRequest( session.getProjectBuildingRequest() );
-
-        buildingRequest.setProject( project );
-
-        // need to configure the repositorySystemSession
-
-        // dependency plugin code that isn't needed below
-        // dependencyGraphBuilder.buildDependencyGraph( buildingRequest, artifactFilter, reactorProjects );
-
-        // now adapting the dependency-tree defaultDependencyGraphBuilder and maven31Code
-
-        final DependencyResolutionRequest request = new DefaultDependencyResolutionRequest();
-        request.setMavenProject( project );
-        request.setRepositorySession( session.getRepositorySession() );
-        // request.setRepositorySession( repositorySystemSession );
-
-        final DependencyResolutionResult result = resolveDependencies( request, null );
-        DependencyNode graphRoot = result.getDependencyGraph();
-
-        return graphRoot;
-    }
-
     private DependencyNode resolveCompileTimeDependencies(
-            List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session)
+            List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session, Dependency root)
             throws org.eclipse.aether.resolution.DependencyResolutionException
     {
         List<Dependency> dependencyList = new ArrayList<Dependency>();
@@ -235,9 +197,12 @@ public class DependencyGraphBuilder extends AbstractMojo
         }
 
         CollectRequest collectRequest = new CollectRequest();
-        if (dependencyList.size() == 1) {
+
+        collectRequest.setRoot( dependencyList.get( 0 ) );
+        if (dependencyList.size() != 1) {
             // With setRoot, the result includes dependencies with `optional:true` or `provided`
-            collectRequest.setRoot(dependencyList.get(0));
+            // collectRequest.setRoot(dependencyList.get(0));
+            collectRequest.setDependencies(dependencyList);
         } else {
             collectRequest.setDependencies(dependencyList);
         }
@@ -246,6 +211,7 @@ public class DependencyGraphBuilder extends AbstractMojo
         }
         DependencyRequest dependencyRequest = new DependencyRequest();
         dependencyRequest.setCollectRequest(collectRequest);
+         // dependencyRequest.setRoot(  );
 
         // resolveDependencies equals to calling both collectDependencies (build dependency tree) and
         // resolveArtifacts (download JAR files).
@@ -264,21 +230,23 @@ public class DependencyGraphBuilder extends AbstractMojo
      * @param artifacts Maven artifacts whose dependencies to retrieve
      * @return dependency graph representing the tree of Maven artifacts
      */
-    public DependencyNode buildFullDependencyGraph(List<Artifact> artifacts) {
+    public DependencyNode buildFullDependencyGraph(List<Artifact> artifacts, Dependency root ) {
         List<DependencyNode> dependencyNodes = new ArrayList<DependencyNode>();
+        dependencyNodes.add( new DefaultDependencyNode( root ) );
+
         for( Artifact artifact : artifacts )
         {
             dependencyNodes.add( new DefaultDependencyNode( artifact ) );
         }
         DefaultRepositorySystemSession session = RepositoryUtility.newSessionForFullDependency(system);
-        return buildDependencyGraph(dependencyNodes, session);
+        return buildDependencyGraph(dependencyNodes, session, root);
     }
 
     private DependencyNode buildDependencyGraph(
-            List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session) {
+            List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session, Dependency root) {
 
         try {
-            DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, session);
+            DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, session, root);
             return node;
         } catch ( org.eclipse.aether.resolution.DependencyResolutionException ex) {
             DependencyResult result = ex.getResult();
