@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.ListMultimap;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -81,7 +80,7 @@ public class DependencyGraph {
   // map of groupId:artifactId:version to paths
   private SetMultimap<String, DependencyPath> paths = HashMultimap.create();
 
-  private final ListMultimap<DependencyPath, DependencyPath> parentToChildren =
+  private final LinkedListMultimap<DependencyPath, DependencyPath> parentToChildren =
       LinkedListMultimap.create();
 
   private DependencyNode root;
@@ -137,7 +136,10 @@ public class DependencyGraph {
     return graph.get(0);
   }
 
-  /** Returns the dependency paths of the children of the node at {@code dependencyPath}. */
+  /**
+   * Returns dependency paths from the root to the dependencies of the node at {@code
+   * dependencyPath}.
+   */
   public List<DependencyPath> getChildPaths(DependencyPath dependencyPath) {
     return parentToChildren.get(dependencyPath);
   }
