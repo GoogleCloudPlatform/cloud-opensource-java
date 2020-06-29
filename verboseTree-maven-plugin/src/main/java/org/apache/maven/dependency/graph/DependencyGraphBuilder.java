@@ -19,22 +19,17 @@ package org.apache.maven.dependency.graph;
 
 import com.google.inject.Inject;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
-import org.apache.maven.artifact.resolver.ArtifactResolutionResult;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Model;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.DefaultDependencyResolutionRequest;
-import org.apache.maven.project.DefaultProjectBuildingRequest;
 import org.apache.maven.project.DependencyResolutionException;
 import org.apache.maven.project.DependencyResolutionRequest;
 import org.apache.maven.project.DependencyResolutionResult;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.ProjectDependenciesResolver;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -45,6 +40,11 @@ import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.repository.LocalRepository;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.ArtifactResult;
+import org.eclipse.aether.resolution.DependencyRequest;
+import org.eclipse.aether.resolution.DependencyResult;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,12 +59,6 @@ import java.util.Set;
 import static org.apache.commons.io.FileUtils.write;
 import static org.apache.maven.dependency.graph.RepositoryUtility.CENTRAL;
 import static org.apache.maven.dependency.graph.RepositoryUtility.mavenRepositoryFromUrl;
-
-import org.eclipse.aether.repository.LocalRepository;
-import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.resolution.ArtifactResult;
-import org.eclipse.aether.resolution.DependencyRequest;
-import org.eclipse.aether.resolution.DependencyResult;
 
 /**
  * Builds the DependencyGraph
@@ -144,7 +138,6 @@ public class DependencyGraphBuilder extends AbstractMojo
 
     public void execute() throws MojoExecutionException
     {
-        // ToDo: if outputFile not null write to outputFile
         File file = new File( project.getBasedir().getAbsolutePath().replace( '\\', '/' ) + "/target/tree.txt" );
 
         List<Artifact> artifacts = new ArrayList<Artifact>();
@@ -259,9 +252,9 @@ public class DependencyGraphBuilder extends AbstractMojo
         return buildDependencyGraph( dependencyNodes, session, root );
     }
 
-    private DependencyNode buildDependencyGraph( List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session, Dependency root )
+    private DependencyNode buildDependencyGraph( List<DependencyNode> dependencyNodes,
+                                                 DefaultRepositorySystemSession session, Dependency root )
     {
-
         try
         {
             DependencyNode node = resolveCompileTimeDependencies( dependencyNodes, session, root );
@@ -279,7 +272,7 @@ public class DependencyGraphBuilder extends AbstractMojo
                 if ( resolvedArtifact == null )
                 {
                     Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
-                    // ToDo: graph.addUnresolvableArtifactProblem(requestedArtifact);
+                    // ToDo: (may not be needed) graph.addUnresolvableArtifactProblem(requestedArtifact);
                 }
             }
 
@@ -294,7 +287,9 @@ public class DependencyGraphBuilder extends AbstractMojo
     }
 
 
-    private DependencyResolutionResult resolveDependencies( DependencyResolutionRequest request, Collection<MavenProject> reactorProjects ) throws DependencyResolutionException
+    private DependencyResolutionResult resolveDependencies( DependencyResolutionRequest request,
+                                                            Collection<MavenProject> reactorProjects )
+            throws DependencyResolutionException
     {
         try
         {
@@ -310,7 +305,8 @@ public class DependencyGraphBuilder extends AbstractMojo
             }
 
             throw new DependencyResolutionException( e.getResult(),
-                    "REACTOR NOT SUPPORTED YET. Could not resolve following dependencies: " + e.getResult().getUnresolvedDependencies(),
+                    "REACTOR NOT SUPPORTED YET. Could not resolve following dependencies: "
+                            + e.getResult().getUnresolvedDependencies(),
                     e.getCause() );
 
             // ToDo: try collecting from reactor for multi module project
