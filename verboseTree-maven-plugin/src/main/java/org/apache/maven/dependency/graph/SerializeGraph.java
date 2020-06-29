@@ -40,7 +40,6 @@ public class SerializeGraph
     private final Set<String> coordinateStrings = new HashSet<String>();
     private final Map<String, String> coordinateVersionMap = new HashMap<String, String>();
     private StringBuilder builder = new StringBuilder();
-    private boolean isRoot = true;
 
     public String serialize( DependencyNode root )
     {
@@ -121,8 +120,32 @@ public class SerializeGraph
                 return scope;
             }
         }
-        // check for scopeless, this probably can't happen
         return null;
+    }
+
+    private StringBuilder callDfs( DependencyNode node, String start )
+    {
+        for ( int i = 0; i < node.getChildren().size(); i++ )
+        {
+            if ( start.endsWith( LINE_START_CHILD ) )
+            {
+                start = start.replace( LINE_START_CHILD, "|  " );
+            }
+            else if ( start.endsWith( LINE_START_LAST_CHILD ) )
+            {
+                start = start.replace( LINE_START_LAST_CHILD, "   " );
+            }
+
+            if ( i == node.getChildren().size() - 1 )
+            {
+                builder = dfs( node.getChildren().get( i ), start.concat( LINE_START_LAST_CHILD ) );
+            }
+            else
+            {
+                builder = dfs( node.getChildren().get( i ), start.concat( LINE_START_CHILD ) );
+            }
+        }
+        return builder;
     }
 
     private StringBuilder dfs( DependencyNode node, String start )
@@ -132,28 +155,7 @@ public class SerializeGraph
         {
             // Should never reach hit this condition with a proper graph sent in
             builder.append( "Null Artifact Node" ).append( System.lineSeparator() );
-            // ToDo: move this replicated code to its own method
-            for ( int i = 0; i < node.getChildren().size(); i++ )
-            {
-                if ( start.endsWith( LINE_START_CHILD ) )
-                {
-                    start = start.replace( LINE_START_CHILD, "|  " );
-                }
-                else if ( start.endsWith( LINE_START_LAST_CHILD ) )
-                {
-                    start = start.replace( LINE_START_LAST_CHILD, "   " );
-                }
-
-                if ( i == node.getChildren().size() - 1 )
-                {
-                    builder = dfs( node.getChildren().get( i ), start.concat( LINE_START_LAST_CHILD ) );
-                }
-                else
-                {
-                    builder = dfs( node.getChildren().get( i ), start.concat( LINE_START_CHILD ) );
-                }
-            }
-            return builder;
+            callDfs( node, start );
         }
         String coordString = getDependencyCoordinate( node );
 
@@ -191,28 +193,7 @@ public class SerializeGraph
             }
             builder.append( coordString ).append( System.lineSeparator() );
             visitedNodes.put( node, true );
-
-            // ToDo: move this replicated code to its own method
-            for ( int i = 0; i < node.getChildren().size(); i++ )
-            {
-                if ( start.endsWith( LINE_START_CHILD ) )
-                {
-                    start = start.replace( LINE_START_CHILD, "|  " );
-                }
-                else if ( start.endsWith( LINE_START_LAST_CHILD ) )
-                {
-                    start = start.replace( LINE_START_LAST_CHILD, "   " );
-                }
-
-                if ( i == node.getChildren().size() - 1 )
-                {
-                    builder = dfs( node.getChildren().get( i ), start.concat( LINE_START_LAST_CHILD ) );
-                }
-                else
-                {
-                    builder = dfs( node.getChildren().get( i ), start.concat( LINE_START_CHILD ) );
-                }
-            }
+            callDfs( node, start );
         }
         return builder;
     }

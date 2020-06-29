@@ -55,7 +55,7 @@ final class CycleBreakerGraphTransformer implements DependencyGraphTransformer
         Artifact artifact = node.getArtifact();
 
         if ( ancestors.contains( artifact ) )
-        { // Set (rather than List) gives O(1) lookup here
+        {   // Set (rather than List) gives O(1) lookup here
             // parent is not null when ancestors is not empty
             removeChildFromParent( node, parent );
             return;

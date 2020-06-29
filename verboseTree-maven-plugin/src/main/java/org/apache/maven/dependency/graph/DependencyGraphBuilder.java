@@ -61,7 +61,7 @@ import static org.apache.maven.dependency.graph.RepositoryUtility.CENTRAL;
 import static org.apache.maven.dependency.graph.RepositoryUtility.mavenRepositoryFromUrl;
 
 /**
- * Builds the DependencyGraph
+ * Builds the DependencyGraph and for now outputs a text version of the dependency tree to a file
  */
 @Mojo( name = "tree",
        requiresDependencyResolution = ResolutionScope.TEST )
@@ -73,6 +73,9 @@ public class DependencyGraphBuilder extends AbstractMojo
 
     @Parameter( defaultValue = "${session}", readonly = true, required = true )
     protected MavenSession session;
+
+    @Parameter( defaultValue = "${repositorySystemSession}" )
+    private RepositorySystemSession repositorySystemSession;
 
     @Parameter
     private String outputFile;
@@ -100,7 +103,6 @@ public class DependencyGraphBuilder extends AbstractMojo
         this( Arrays.asList( CENTRAL.getUrl() ) );
     }
 
-
     static
     {
         for ( Map.Entry<String, String> entry : OsProperties.detectOsProperties().entrySet() )
@@ -122,18 +124,6 @@ public class DependencyGraphBuilder extends AbstractMojo
             repositoryList.add( repository );
         }
         this.repositories = repositoryList;
-    }
-
-    @Parameter( defaultValue = "${repositorySystemSession}" )
-    private RepositorySystemSession repositorySystemSession;
-
-    /**
-     * Enable temporary repositories for tests.
-     */
-    //@VisibleForTesting
-    void setLocalRepository( Path localRepository )
-    {
-        this.localRepository = localRepository;
     }
 
     public void execute() throws MojoExecutionException
@@ -257,8 +247,7 @@ public class DependencyGraphBuilder extends AbstractMojo
     {
         try
         {
-            DependencyNode node = resolveCompileTimeDependencies( dependencyNodes, session, root );
-            return node;
+            return resolveCompileTimeDependencies( dependencyNodes, session, root );
         }
         catch ( org.eclipse.aether.resolution.DependencyResolutionException ex )
         {
@@ -280,40 +269,11 @@ public class DependencyGraphBuilder extends AbstractMojo
         }
     }
 
-
     public DependencyNode getDependencyGraph()
     {
         return rootNode;
     }
-
-
-    private DependencyResolutionResult resolveDependencies( DependencyResolutionRequest request,
-                                                            Collection<MavenProject> reactorProjects )
-            throws DependencyResolutionException
-    {
-        try
-        {
-            return resolver.resolve( request );
-        }
-        catch ( DependencyResolutionException e )
-        {
-            if ( reactorProjects == null )
-            {
-                throw new DependencyResolutionException( e.getResult(),
-                        "Could not resolve following dependencies: " + e.getResult().getUnresolvedDependencies(),
-                        e.getCause() );
-            }
-
-            throw new DependencyResolutionException( e.getResult(),
-                    "REACTOR NOT SUPPORTED YET. Could not resolve following dependencies: "
-                            + e.getResult().getUnresolvedDependencies(),
-                    e.getCause() );
-
-            // ToDo: try collecting from reactor for multi module project
-            // return collectDependenciesFromReactor( e, reactorProjects );
-        }
-    }
-
+    
     /**
      * Gets the Maven project used by this mojo.
      *
