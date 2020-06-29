@@ -160,7 +160,11 @@
         <li><code>${artifact}:${version}</code></li>
       </#list>
     </ul>
- 
+
+    <p>
+      <a href="dependency_trees.html">Dependency Trees</a>
+    </p>
+
     <hr />
 
     <p id='updated'>Last generated at ${lastUpdated}</p>
