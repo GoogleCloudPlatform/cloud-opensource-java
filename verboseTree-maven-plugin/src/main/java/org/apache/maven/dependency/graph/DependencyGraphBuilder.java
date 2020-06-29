@@ -99,7 +99,6 @@ public class DependencyGraphBuilder extends AbstractMojo
     private Path localRepository;
 
     public DependencyGraphBuilder() {
-        // this(ImmutableList.of(CENTRAL.getUrl()));
         this( Arrays.asList( CENTRAL.getUrl() ) );
     }
 
@@ -109,7 +108,6 @@ public class DependencyGraphBuilder extends AbstractMojo
         {
             System.setProperty( entry.getKey(), entry.getValue() );
         }
-        // above code replaces: OsProperties.detectOsProperties().forEach(System::setProperty); for Java 7
     }
 
     /**

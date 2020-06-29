@@ -85,11 +85,5 @@ final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
     }
 
     parent.setChildren( filteredChildren );
-    /* above code replaces the Java 8 code below:
-    ImmutableList<DependencyNode> children =
-        parent.getChildren().stream()
-            .filter(node -> node != child)
-            .collect(ImmutableList.toImmutableList());
-    parent.setChildren(children);*/
   }
 }

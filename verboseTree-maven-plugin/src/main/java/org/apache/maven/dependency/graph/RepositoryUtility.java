@@ -304,17 +304,12 @@ public final class RepositoryUtility
 
     versions = findVersionRange(repositorySystem, session, groupId, artifactId).getVersions();
 
-    for(Version version : versions)
+    for( Version version : versions )
     {
       versionStrings.add( version.toString() );
     }
 
     return versionStrings;
-
-    /* above code replaces non Java 7 code:
-    return findVersionRange(repositorySystem, session, groupId, artifactId).getVersions().stream()
-        .map(version -> version.toString())
-        .collect(toImmutableList());*/
   }
 
   /**
