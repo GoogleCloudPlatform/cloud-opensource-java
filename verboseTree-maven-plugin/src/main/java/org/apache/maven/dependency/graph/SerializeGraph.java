@@ -67,7 +67,7 @@ public class SerializeGraph
     {
         Artifact artifact = node.getArtifact();
 
-        if(node.getDependency() == null)
+        if( node.getDependency() == null )
         {
             // should only get here if node is root
             return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" +
