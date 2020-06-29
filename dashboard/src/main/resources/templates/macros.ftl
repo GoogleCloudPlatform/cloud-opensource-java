@@ -79,7 +79,7 @@
   </#if>
   <p class="dependency-tree-node" title="${label}">${node.getLeaf()}</p>
   <ul>
-    <#list graph.getChildPaths(node) as childNode>
+    <#list graph.getChildren(node) as childNode>
       <#if node != childNode>
         <li class="dependency-tree-node">
             <@formatDependencyGraph graph childNode node />
