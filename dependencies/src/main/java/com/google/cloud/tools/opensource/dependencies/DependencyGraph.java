@@ -137,7 +137,7 @@ public class DependencyGraph {
   }
 
   /**
-   * Returns dependency paths from the root to the children of the node at {@code dependencyPath}.
+   * Returns dependency paths from the root to the children of {@code parent}.
    */
   public List<DependencyPath> getChildren(DependencyPath parent) {
     return parentToChildren.get(parent);
