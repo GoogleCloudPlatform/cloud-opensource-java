@@ -22,59 +22,66 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Platform-dependent project properties normalized from ${os.name} and ${os.arch}.
- * Netty uses these to select system-specific dependencies through the
+ * Platform-dependent project properties normalized from ${os.name} and ${os.arch}. Netty uses these to select
+ * system-specific dependencies through the
  * <a href='https://github.com/trustin/os-maven-plugin'>os-maven-plugin</a>.
  */
 public class OsProperties
 {
 
-  public static Map<String, String> detectOsProperties() {
-    Map<String, String> osMap = new HashMap<String, String>();
-    osMap.put( "os.detected.name", osDetectedName() );
-    osMap.put( "os.detected.arch", osDetectedArch() );
-    osMap.put( "os.detected.classifier", osDetectedName() + "-" + osDetectedArch() );
-    return osMap;
-  }
-
-  private static String osDetectedName() {
-    String osNameNormalized = retainFrom(System.getProperty("os.name").toLowerCase(Locale.ENGLISH));
-
-    if (osNameNormalized.startsWith("macosx") || osNameNormalized.startsWith("osx")) {
-      return "osx";
-    } else if (osNameNormalized.startsWith("windows")) {
-      return "windows";
-    }
-    // Since we only load the dependency graph, not actually use the
-    // dependency, it doesn't matter a great deal which one we pick.
-    return "linux";
-  }
-
-  private static String osDetectedArch() {
-    String osArchNormalized = retainFrom(System.getProperty("os.arch").toLowerCase(Locale.ENGLISH));
-    switch (osArchNormalized) {
-      case "x8664":
-      case "amd64":
-      case "ia32e":
-      case "em64t":
-      case "x64":
-        return "x86_64";
-      default:
-        return "x86_32";
-    }
-  }
-
-  private static String retainFrom(String str)
-  {
-    StringBuilder result = new StringBuilder();
-    for( char c : str.toCharArray() )
+    public static Map<String, String> detectOsProperties()
     {
-      if( ( c >= 'a' && c <= 'z') || ( c >= '0' && c <= '9' ))
-      {
-        result.append( c );
-      }
+        Map<String, String> osMap = new HashMap<String, String>();
+        osMap.put( "os.detected.name", osDetectedName() );
+        osMap.put( "os.detected.arch", osDetectedArch() );
+        osMap.put( "os.detected.classifier", osDetectedName() + "-" + osDetectedArch() );
+        return osMap;
     }
-    return result.toString();
-  }
+
+    private static String osDetectedName()
+    {
+        String osNameNormalized = retainFrom( System.getProperty( "os.name" ).toLowerCase( Locale.ENGLISH ) );
+
+        if ( osNameNormalized.startsWith( "macosx" ) || osNameNormalized.startsWith( "osx" ) )
+        {
+            return "osx";
+        }
+        else if ( osNameNormalized.startsWith( "windows" ) )
+        {
+            return "windows";
+        }
+        // Since we only load the dependency graph, not actually use the
+        // dependency, it doesn't matter a great deal which one we pick.
+        return "linux";
+    }
+
+    private static String osDetectedArch()
+    {
+        String osArchNormalized = retainFrom( System.getProperty( "os.arch" ).toLowerCase( Locale.ENGLISH ) );
+        switch ( osArchNormalized )
+        {
+            case "x8664":
+            case "amd64":
+            case "ia32e":
+            case "em64t":
+            case "x64":
+                return "x86_64";
+            default:
+                return "x86_32";
+        }
+    }
+
+    private static String retainFrom( String str )
+    {
+        StringBuilder result = new StringBuilder();
+        for ( char c : str.toCharArray() )
+        {
+            if ( ( c >= 'a' && c <= 'z' ) || ( c >= '0' && c <= '9' ) )
+            {
+                result.append( c );
+            }
+        }
+        return result.toString();
+    }
 
 }

@@ -30,60 +30,68 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Transforms a dependency graph so that it will not contain cycles.
+ * Transforms a dependency graph so that it does not contain cycles.
  *
  * <p>A cycle in a dependency graph is a situation where a path to a node from the root contains the
  * same node. For example, jaxen 1.1-beta-6 is known to have cycle with dom4j 1.6.1.
  */
-final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
+final class CycleBreakerGraphTransformer implements DependencyGraphTransformer
+{
 
-  private final Set<DependencyNode> visitedNodes =
-      Collections.newSetFromMap(new IdentityHashMap<DependencyNode, Boolean>());
+    private final Set<DependencyNode> visitedNodes = Collections.newSetFromMap(
+            new IdentityHashMap<DependencyNode, Boolean>() );
 
-  @Override
-  public DependencyNode transformGraph(
-      DependencyNode dependencyNode, DependencyGraphTransformationContext context)
-      throws RepositoryException {
-
-    removeCycle(null, dependencyNode, new HashSet<Artifact>());
-    return dependencyNode;
-  }
-
-  private void removeCycle(DependencyNode parent, DependencyNode node, Set<Artifact> ancestors) {
-    Artifact artifact = node.getArtifact();
-
-    if (ancestors.contains(artifact)) { // Set (rather than List) gives O(1) lookup here
-      // parent is not null when ancestors is not empty
-      removeChildFromParent(node, parent);
-      return;
-    }
-
-    if (shouldVisitChildren(node)) {
-      ancestors.add(artifact);
-      for (DependencyNode child : node.getChildren()) {
-        removeCycle(node, child, ancestors);
-      }
-      ancestors.remove(artifact);
-    }
-  }
-
-  /** Returns true if {@code node} is not visited yet and marks the node as visited. */
-  //@VisibleForTesting
-  boolean shouldVisitChildren(DependencyNode node) {
-    return visitedNodes.add(node);
-  }
-
-  private static void removeChildFromParent(DependencyNode child, DependencyNode parent) {
-    List<DependencyNode> filteredChildren = new ArrayList<DependencyNode>();
-
-    for(DependencyNode node : parent.getChildren() )
+    @Override
+    public DependencyNode transformGraph( DependencyNode dependencyNode, DependencyGraphTransformationContext context )
+            throws RepositoryException
     {
-      if( node != child )
-      {
-        filteredChildren.add( node );
-      }
+
+        removeCycle( null, dependencyNode, new HashSet<Artifact>() );
+        return dependencyNode;
     }
 
-    parent.setChildren( filteredChildren );
-  }
+    private void removeCycle( DependencyNode parent, DependencyNode node, Set<Artifact> ancestors )
+    {
+        Artifact artifact = node.getArtifact();
+
+        if ( ancestors.contains( artifact ) )
+        { // Set (rather than List) gives O(1) lookup here
+            // parent is not null when ancestors is not empty
+            removeChildFromParent( node, parent );
+            return;
+        }
+
+        if ( shouldVisitChildren( node ) )
+        {
+            ancestors.add( artifact );
+            for ( DependencyNode child : node.getChildren() )
+            {
+                removeCycle( node, child, ancestors );
+            }
+            ancestors.remove( artifact );
+        }
+    }
+
+    /**
+     * Returns true if {@code node} is not visited yet and marks the node as visited.
+     */
+    boolean shouldVisitChildren( DependencyNode node )
+    {
+        return visitedNodes.add( node );
+    }
+
+    private static void removeChildFromParent( DependencyNode child, DependencyNode parent )
+    {
+        List<DependencyNode> filteredChildren = new ArrayList<DependencyNode>();
+
+        for ( DependencyNode node : parent.getChildren() )
+        {
+            if ( node != child )
+            {
+                filteredChildren.add( node );
+            }
+        }
+
+        parent.setChildren( filteredChildren );
+    }
 }

@@ -37,7 +37,7 @@ public class SerializeGraph
     private static final String LINE_START_CHILD = "+- ";
 
     private final Map<DependencyNode, Boolean> visitedNodes = new IdentityHashMap<DependencyNode, Boolean>( 512 );
-    private final Set<String> coordinateStrings =  new HashSet<String>();
+    private final Set<String> coordinateStrings = new HashSet<String>();
     private final Map<String, String> coordinateVersionMap = new HashMap<String, String>();
     private StringBuilder builder = new StringBuilder();
     private boolean isRoot = true;
@@ -46,14 +46,16 @@ public class SerializeGraph
     {
         // deal with root first
         Artifact rootArtifact = root.getArtifact();
-        builder.append( rootArtifact.getGroupId() + ":" + rootArtifact.getArtifactId() + ":" +
-                rootArtifact.getExtension() + ":" + rootArtifact.getVersion()).append( System.lineSeparator() );
+        builder.append(
+                rootArtifact.getGroupId() + ":" + rootArtifact.getArtifactId() + ":" + rootArtifact.getExtension()
+                        + ":" + rootArtifact.getVersion() ).append(
+                System.lineSeparator() );
 
         for ( int i = 0; i < root.getChildren().size(); i++ )
         {
             if ( i == root.getChildren().size() - 1 )
             {
-                builder = dfs( root.getChildren().get( i ),  LINE_START_LAST_CHILD );
+                builder = dfs( root.getChildren().get( i ), LINE_START_LAST_CHILD );
             }
             else
             {
@@ -67,17 +69,17 @@ public class SerializeGraph
     {
         Artifact artifact = node.getArtifact();
 
-        if( node.getDependency() == null )
+        if ( node.getDependency() == null )
         {
             // should only get here if node is root
-            return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" +
-                    artifact.getExtension() + ":" + artifact.getVersion();
+            return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getExtension()
+                    + ":" + artifact.getVersion();
         }
         String scope = node.getDependency().getScope();
-        String coords = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" +
-                artifact.getExtension() + ":" + artifact.getVersion();
+        String coords = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getExtension()
+                + ":" + artifact.getVersion();
 
-        if( scope != null && !scope.isEmpty() )
+        if ( scope != null && !scope.isEmpty() )
         {
             coords = coords.concat( ":" + scope );
         }
@@ -98,7 +100,7 @@ public class SerializeGraph
 
     private String VersionConflict( DependencyNode node )
     {
-        if( coordinateVersionMap.containsKey( getVersionlessCoordinate( node ) ) )
+        if ( coordinateVersionMap.containsKey( getVersionlessCoordinate( node ) ) )
         {
             return coordinateVersionMap.get( getVersionlessCoordinate( node ) );
         }
@@ -110,11 +112,11 @@ public class SerializeGraph
         Artifact artifact = node.getArtifact();
         List<String> scopes = Arrays.asList( "compile", "provided", "runtime", "test", "system" );
 
-        for( String scope:scopes )
+        for ( String scope : scopes )
         {
-            String coordinate = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" +
-                    artifact.getExtension() + ":" + artifact.getVersion() + ":" + scope;
-            if( coordinateStrings.contains( coordinate ) )
+            String coordinate = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getExtension()
+                    + ":" + artifact.getVersion() + ":" + scope;
+            if ( coordinateStrings.contains( coordinate ) )
             {
                 return scope;
             }
@@ -126,7 +128,7 @@ public class SerializeGraph
     private StringBuilder dfs( DependencyNode node, String start )
     {
         builder.append( start );
-        if( node.getArtifact() == null )
+        if ( node.getArtifact() == null )
         {
             // Should never reach hit this condition with a proper graph sent in
             builder.append( "Null Artifact Node" ).append( System.lineSeparator() );
@@ -157,33 +159,33 @@ public class SerializeGraph
 
         if ( visitedNodes.containsKey( node ) )
         {
-            builder.append( '(' ).append( coordString ).append( " - omitted for cycle)" )
-                    .append( System.lineSeparator() );
+            builder.append( '(' ).append( coordString ).append( " - omitted for cycle)" ).append(
+                    System.lineSeparator() );
         }
         else if ( isDuplicateDependencyCoordinate( node ) )
         {
-            builder.append( '(' ).append( coordString ).append( " - omitted for duplicate)" )
-                    .append( System.lineSeparator() );
+            builder.append( '(' ).append( coordString ).append( " - omitted for duplicate)" ).append(
+                    System.lineSeparator() );
         }
         else if ( ScopeConflict( node ) != null )
         {
-            builder.append( '(' ).append( coordString ).append( " - omitted for conflict with " )
-                    .append( ScopeConflict( node ) ).append( ')' ).append( System.lineSeparator() );
+            builder.append( '(' ).append( coordString ).append( " - omitted for conflict with " ).append(
+                    ScopeConflict( node ) ).append( ')' ).append( System.lineSeparator() );
         }
         else if ( VersionConflict( node ) != null )
         {
-            builder.append( '(' ).append( coordString ).append( " - omitted for conflict with " )
-                    .append( VersionConflict( node ) ).append( ')' ).append( System.lineSeparator() );
+            builder.append( '(' ).append( coordString ).append( " - omitted for conflict with " ).append(
+                    VersionConflict( node ) ).append( ')' ).append( System.lineSeparator() );
         }
         else if ( node.getDependency() != null && node.getDependency().isOptional() )
         {
-            builder.append( '(' ).append( coordString ).append( " - omitted due to optional dependency)" )
-                    .append( System.lineSeparator() );
+            builder.append( '(' ).append( coordString ).append( " - omitted due to optional dependency)" ).append(
+                    System.lineSeparator() );
         }
         else
         {
             coordinateStrings.add( getDependencyCoordinate( node ) );
-            if( node.getArtifact() != null )
+            if ( node.getArtifact() != null )
             {
                 coordinateVersionMap.put( getVersionlessCoordinate( node ), node.getArtifact().getVersion() );
             }

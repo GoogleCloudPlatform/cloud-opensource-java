@@ -73,255 +73,254 @@ import java.util.Set;
 
 
 /**
- * Aether initialization. This is based on Apache Maven Resolver 1.4.2 or later.
- * There are many other versions of Aether from Sonatype and the Eclipse
- * Project, but this is the current one.
+ * Aether initialization. This is based on Apache Maven Resolver 1.4.2 or later. There are many other versions of Aether
+ * from Sonatype and the Eclipse Project, but this is the current one.
  */
 public final class RepositoryUtility
 {
 
-  public static final RemoteRepository CENTRAL = new RemoteRepository.Builder( "central", "default",
-          "https://repo1.maven.org/maven2/" ).build();
+    public static final RemoteRepository CENTRAL = new RemoteRepository.Builder( "central", "default",
+            "https://repo1.maven.org/maven2/" ).build();
 
-  // DefaultTransporterProvider.newTransporter checks these transporters
-  private static final Set<String> ALLOWED_REPOSITORY_URL_SCHEMES = new HashSet<String>(
-          Arrays.asList( "file", "http", "https" ) );
+    // DefaultTransporterProvider.newTransporter checks these transporters
+    private static final Set<String> ALLOWED_REPOSITORY_URL_SCHEMES = new HashSet<String>(
+            Arrays.asList( "file", "http", "https" ) );
 
-  private RepositoryUtility() {}
-
-  /**
-   * Creates a new system configured for file and HTTP repository resolution.
-   */
-  public static RepositorySystem newRepositorySystem() {
-    DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
-    locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
-    locator.addService(TransporterFactory.class, FileTransporterFactory.class);
-    locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
-  
-    return locator.getService(RepositorySystem.class);
-  }
-
-  //@VisibleForTesting
-  static DefaultRepositorySystemSession createDefaultRepositorySystemSession(
-      RepositorySystem system) {
-    DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
-    LocalRepository localRepository = new LocalRepository(findLocalRepository());
-    session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepository));
-    return session;
-  }
-
-  /**
-   * Opens a new Maven repository session that looks for the local repository in the
-   * customary ~/.m2 directory. If not found, it creates an initially empty repository in
-   * a temporary location.
-   */
-  public static DefaultRepositorySystemSession newSession(RepositorySystem system) {
-    DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
-    return session;
-  }
-
-  /**
-   * Open a new Maven repository session for full dependency graph resolution.
-   *
-   * @see {@link DependencyGraphBuilder}
-   */
-  static DefaultRepositorySystemSession newSessionForFullDependency(RepositorySystem system) {
-    // This combination of DependencySelector comes from the default specified in
-    // `MavenRepositorySystemUtils.newSession`.
-    // LinkageChecker needs to include 'provided'-scope and optional dependencies.
-    DependencySelector dependencySelector =
-        new AndDependencySelector(
-            // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
-            // false positive in LinkageChecker.
-            new ScopeDependencySelector(), // removed "test" parameter
-            new ExclusionDependencySelector(),
-            new FilteringZipDependencySelector());
-    
-    return newSession(system, dependencySelector);
-  }
-
-  private static DefaultRepositorySystemSession newSession(
-      RepositorySystem system, DependencySelector dependencySelector) {
-    DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
-    session.setDependencySelector(dependencySelector);
-
-    // By default, Maven's MavenRepositorySystemUtils.newSession() returns a session with
-    // ChainedDependencyGraphTransformer(ConflictResolver(...), JavaDependencyContextRefiner()).
-    // Because the full dependency graph does not resolve conflicts of versions, this session does
-    // not use ConflictResolver.
-    session.setDependencyGraphTransformer(
-        new ChainedDependencyGraphTransformer(
-            new CycleBreakerGraphTransformer(), // Avoids StackOverflowError
-            new JavaDependencyContextRefiner()));
-
-    // No dependency management in the full dependency graph
-    session.setDependencyManager(null);
-
-    return session;
-  }
-  
-  static DefaultRepositorySystemSession newSessionForVerboseDependency(RepositorySystem system) {
-    DependencySelector dependencySelector =
-        new AndDependencySelector(
-            // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
-            // false positive in LinkageChecker.
-            new ScopeDependencySelector(), // removed "test" parameter
-            new OptionalDependencySelector(),
-            new ExclusionDependencySelector(),
-            new FilteringZipDependencySelector());
-    
-    return newSession(system, dependencySelector);
-  }
-
-  private static String findLocalRepository() {
-    // TODO is there Maven code for this?
-    Path home = Paths.get(System.getProperty("user.home"));
-    Path localRepo = home.resolve(".m2").resolve("repository");
-    if (Files.isDirectory(localRepo)) {
-      return localRepo.toAbsolutePath().toString();
-    } else {
-      return makeTemporaryLocalRepository(); 
-   }
-  }
-
-  private static String makeTemporaryLocalRepository() {
-    try {
-      File temporaryDirectory = Files.createTempDirectory("m2").toFile();
-      temporaryDirectory.deleteOnExit();
-      return temporaryDirectory.getAbsolutePath();
-    } catch (IOException ex) {
-      return null;
-    }
-  }
-
-  static MavenProject createMavenProject(Path pomFile, RepositorySystemSession session)
-      throws MavenRepositoryException {
-    // MavenCli's way to instantiate PlexusContainer
-    ClassWorld classWorld =
-        new ClassWorld("plexus.core", Thread.currentThread().getContextClassLoader());
-    ContainerConfiguration containerConfiguration =
-        new DefaultContainerConfiguration()
-            .setClassWorld(classWorld)
-            .setRealm(classWorld.getClassRealm("plexus.core"))
-            .setClassPathScanning(PlexusConstants.SCANNING_INDEX)
-            .setAutoWiring(true)
-            .setJSR250Lifecycle(true)
-            .setName("linkage-checker");
-    try {
-      PlexusContainer container = new DefaultPlexusContainer(containerConfiguration);
-
-      MavenExecutionRequest mavenExecutionRequest = new DefaultMavenExecutionRequest();
-      ProjectBuildingRequest projectBuildingRequest =
-          mavenExecutionRequest.getProjectBuildingRequest();
-
-      projectBuildingRequest.setRepositorySession(session);
-
-      // Profile activation needs properties such as JDK version
-      Properties properties = new Properties(); // allowing duplicate entries
-      properties.putAll(projectBuildingRequest.getSystemProperties());
-      properties.putAll(OsProperties.detectOsProperties());
-      properties.putAll(System.getProperties());
-      projectBuildingRequest.setSystemProperties(properties);
-
-      ProjectBuilder projectBuilder = container.lookup(ProjectBuilder.class);
-      ProjectBuildingResult projectBuildingResult =
-          projectBuilder.build(pomFile.toFile(), projectBuildingRequest);
-      return projectBuildingResult.getProject();
-    } catch (PlexusContainerException | ComponentLookupException | ProjectBuildingException ex) {
-      throw new MavenRepositoryException(ex);
-    }
-  }
-
-  /**
-   * Returns Maven repository specified as {@code mavenRepositoryUrl}, after validating the syntax
-   * of the URL.
-   *
-   * @throws IllegalArgumentException if the URL is malformed for a Maven repository
-   */
-  public static RemoteRepository mavenRepositoryFromUrl(String mavenRepositoryUrl) {
-    try {
-      // Because the protocol is not an empty string (checked below), this URI is absolute.
-      new URI(mavenRepositoryUrl);
-    } catch (URISyntaxException ex) {
-      throw new IllegalArgumentException("Invalid URL syntax: " + mavenRepositoryUrl);
-    }
-
-    RemoteRepository repository =
-        new RemoteRepository.Builder(null, "default", mavenRepositoryUrl).build();
-
-    /*checkArgument(
-        ALLOWED_REPOSITORY_URL_SCHEMES.contains(repository.getProtocol()),
-        "Scheme: '%s' is not in %s",
-        repository.getProtocol(),
-        ALLOWED_REPOSITORY_URL_SCHEMES);*/
-    return repository;
-  }
-
-  private static VersionRangeResult findVersionRange(
-      RepositorySystem repositorySystem,
-      RepositorySystemSession session,
-      String groupId,
-      String artifactId)
-      throws MavenRepositoryException {
-
-    Artifact artifactWithVersionRange = new DefaultArtifact(groupId, artifactId, null, "(0,]");
-    VersionRangeRequest request =
-        new VersionRangeRequest(
-            artifactWithVersionRange, Arrays.asList( RepositoryUtility.CENTRAL ), null);
-
-    try {
-      return repositorySystem.resolveVersionRange(session, request);
-    } catch (VersionRangeResolutionException ex) {
-      throw new MavenRepositoryException(ex);
-    }
-  }
-
-  /** Returns the highest version for {@code groupId:artifactId} in {@code repositorySystem}. */
-  //@VisibleForTesting
-  static String findHighestVersion(
-      RepositorySystem repositorySystem,
-      RepositorySystemSession session,
-      String groupId,
-      String artifactId)
-      throws MavenRepositoryException {
-    return findVersionRange(repositorySystem, session, groupId, artifactId)
-        .getHighestVersion()
-        .toString();
-  }
-
-  /**
-   * Returns list of versions available for {@code groupId:artifactId} in {@code repositorySystem}.
-   * The returned list is in ascending order with regard to {@link
-   * org.eclipse.aether.util.version.GenericVersionScheme}; the highest version comes at last.
-   */
-  public static List<String> findVersions(
-      RepositorySystem repositorySystem, String groupId, String artifactId)
-      throws MavenRepositoryException {
-    RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
-    // getVersions returns a list in ascending order
-    List<Version> versions = new ArrayList<Version>();
-    List<String> versionStrings = new ArrayList<String>();
-
-    versions = findVersionRange(repositorySystem, session, groupId, artifactId).getVersions();
-
-    for( Version version : versions )
+    private RepositoryUtility()
     {
-      versionStrings.add( version.toString() );
     }
 
-    return versionStrings;
-  }
+    /**
+     * Creates a new system configured for file and HTTP repository resolution.
+     */
+    public static RepositorySystem newRepositorySystem()
+    {
+        DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
+        locator.addService( RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class );
+        locator.addService( TransporterFactory.class, FileTransporterFactory.class );
+        locator.addService( TransporterFactory.class, HttpTransporterFactory.class );
 
-  /**
-   * Returns the latest Maven coordinates for {@code groupId:artifactId} in {@code
-   * repositorySystem}.
-   */
-  public static String findLatestCoordinates(
-      RepositorySystem repositorySystem, String groupId, String artifactId)
-      throws MavenRepositoryException {
-    RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
-    String highestVersion = findHighestVersion(repositorySystem, session, groupId, artifactId);
-    return String.format("%s:%s:%s", groupId, artifactId, highestVersion);
-  }
+        return locator.getService( RepositorySystem.class );
+    }
+
+    //@VisibleForTesting
+    static DefaultRepositorySystemSession createDefaultRepositorySystemSession( RepositorySystem system )
+    {
+        DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
+        LocalRepository localRepository = new LocalRepository( findLocalRepository() );
+        session.setLocalRepositoryManager( system.newLocalRepositoryManager( session, localRepository ) );
+        return session;
+    }
+
+    /**
+     * Opens a new Maven repository session that looks for the local repository in the customary ~/.m2 directory. If not
+     * found, it creates an initially empty repository in a temporary location.
+     */
+    public static DefaultRepositorySystemSession newSession( RepositorySystem system )
+    {
+        DefaultRepositorySystemSession session = createDefaultRepositorySystemSession( system );
+        return session;
+    }
+
+    /**
+     * Open a new Maven repository session for full dependency graph resolution.
+     *
+     * @see {@link DependencyGraphBuilder}
+     */
+    static DefaultRepositorySystemSession newSessionForFullDependency( RepositorySystem system )
+    {
+        // This combination of DependencySelector comes from the default specified in
+        // `MavenRepositorySystemUtils.newSession`.
+        // LinkageChecker needs to include 'provided'-scope and optional dependencies.
+        DependencySelector dependencySelector = new AndDependencySelector(
+                // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
+                // false positive in LinkageChecker.
+                new ScopeDependencySelector(), // removed "test" parameter
+                new ExclusionDependencySelector(), new FilteringZipDependencySelector() );
+
+        return newSession( system, dependencySelector );
+    }
+
+    private static DefaultRepositorySystemSession newSession( RepositorySystem system,
+                                                              DependencySelector dependencySelector )
+    {
+        DefaultRepositorySystemSession session = createDefaultRepositorySystemSession( system );
+        session.setDependencySelector( dependencySelector );
+
+        // By default, Maven's MavenRepositorySystemUtils.newSession() returns a session with
+        // ChainedDependencyGraphTransformer(ConflictResolver(...), JavaDependencyContextRefiner()).
+        // Because the full dependency graph does not resolve conflicts of versions, this session does
+        // not use ConflictResolver.
+        session.setDependencyGraphTransformer(
+                new ChainedDependencyGraphTransformer( new CycleBreakerGraphTransformer(), // Avoids StackOverflowError
+                        new JavaDependencyContextRefiner() ) );
+
+        // No dependency management in the full dependency graph
+        session.setDependencyManager( null );
+
+        return session;
+    }
+
+    static DefaultRepositorySystemSession newSessionForVerboseDependency( RepositorySystem system )
+    {
+        DependencySelector dependencySelector = new AndDependencySelector(
+                // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
+                // false positive in LinkageChecker.
+                new ScopeDependencySelector(), // removed "test" parameter
+                new OptionalDependencySelector(), new ExclusionDependencySelector(),
+                new FilteringZipDependencySelector() );
+
+        return newSession( system, dependencySelector );
+    }
+
+    private static String findLocalRepository()
+    {
+        // TODO is there Maven code for this?
+        Path home = Paths.get( System.getProperty( "user.home" ) );
+        Path localRepo = home.resolve( ".m2" ).resolve( "repository" );
+        if ( Files.isDirectory( localRepo ) )
+        {
+            return localRepo.toAbsolutePath().toString();
+        }
+        else
+        {
+            return makeTemporaryLocalRepository();
+        }
+    }
+
+    private static String makeTemporaryLocalRepository()
+    {
+        try
+        {
+            File temporaryDirectory = Files.createTempDirectory( "m2" ).toFile();
+            temporaryDirectory.deleteOnExit();
+            return temporaryDirectory.getAbsolutePath();
+        }
+        catch ( IOException ex )
+        {
+            return null;
+        }
+    }
+
+    static MavenProject createMavenProject( Path pomFile, RepositorySystemSession session )
+            throws MavenRepositoryException
+    {
+        // MavenCli's way to instantiate PlexusContainer
+        ClassWorld classWorld = new ClassWorld( "plexus.core", Thread.currentThread().getContextClassLoader() );
+        ContainerConfiguration containerConfiguration = new DefaultContainerConfiguration().setClassWorld(
+                classWorld ).setRealm( classWorld.getClassRealm( "plexus.core" ) ).setClassPathScanning(
+                PlexusConstants.SCANNING_INDEX ).setAutoWiring( true ).setJSR250Lifecycle( true ).setName(
+                "linkage-checker" );
+        try
+        {
+            PlexusContainer container = new DefaultPlexusContainer( containerConfiguration );
+
+            MavenExecutionRequest mavenExecutionRequest = new DefaultMavenExecutionRequest();
+            ProjectBuildingRequest projectBuildingRequest = mavenExecutionRequest.getProjectBuildingRequest();
+
+            projectBuildingRequest.setRepositorySession( session );
+
+            // Profile activation needs properties such as JDK version
+            Properties properties = new Properties(); // allowing duplicate entries
+            properties.putAll( projectBuildingRequest.getSystemProperties() );
+            properties.putAll( OsProperties.detectOsProperties() );
+            properties.putAll( System.getProperties() );
+            projectBuildingRequest.setSystemProperties( properties );
+
+            ProjectBuilder projectBuilder = container.lookup( ProjectBuilder.class );
+            ProjectBuildingResult projectBuildingResult = projectBuilder.build( pomFile.toFile(),
+                    projectBuildingRequest );
+            return projectBuildingResult.getProject();
+        }
+        catch ( PlexusContainerException | ComponentLookupException | ProjectBuildingException ex )
+        {
+            throw new MavenRepositoryException( ex );
+        }
+    }
+
+    /**
+     * Returns Maven repository specified as {@code mavenRepositoryUrl}, after validating the syntax of the URL.
+     *
+     * @throws IllegalArgumentException if the URL is malformed for a Maven repository
+     */
+    public static RemoteRepository mavenRepositoryFromUrl( String mavenRepositoryUrl )
+    {
+        try
+        {
+            // Because the protocol is not an empty string (checked below), this URI is absolute.
+            new URI( mavenRepositoryUrl );
+        }
+        catch ( URISyntaxException ex )
+        {
+            throw new IllegalArgumentException( "Invalid URL syntax: " + mavenRepositoryUrl );
+        }
+
+        RemoteRepository repository = new RemoteRepository.Builder( null, "default", mavenRepositoryUrl ).build();
+
+        return repository;
+    }
+
+    private static VersionRangeResult findVersionRange( RepositorySystem repositorySystem,
+                                                        RepositorySystemSession session,
+                                                        String groupId, String artifactId )
+            throws MavenRepositoryException
+    {
+
+        Artifact artifactWithVersionRange = new DefaultArtifact( groupId, artifactId, null, "(0,]" );
+        VersionRangeRequest request = new VersionRangeRequest( artifactWithVersionRange,
+                Arrays.asList( RepositoryUtility.CENTRAL ), null );
+
+        try
+        {
+            return repositorySystem.resolveVersionRange( session, request );
+        }
+        catch ( VersionRangeResolutionException ex )
+        {
+            throw new MavenRepositoryException( ex );
+        }
+    }
+
+    /**
+     * Returns the highest version for {@code groupId:artifactId} in {@code repositorySystem}.
+     */
+    static String findHighestVersion( RepositorySystem repositorySystem, RepositorySystemSession session,
+                                      String groupId, String artifactId ) throws MavenRepositoryException
+    {
+        return findVersionRange( repositorySystem, session, groupId, artifactId ).getHighestVersion().toString();
+    }
+
+    /**
+     * Returns list of versions available for {@code groupId:artifactId} in {@code repositorySystem}. The returned list
+     * is in ascending order with regard to {@link org.eclipse.aether.util.version.GenericVersionScheme}; the highest
+     * version comes at last.
+     */
+    public static List<String> findVersions( RepositorySystem repositorySystem, String groupId, String artifactId )
+            throws MavenRepositoryException
+    {
+        RepositorySystemSession session = RepositoryUtility.newSession( repositorySystem );
+        // getVersions returns a list in ascending order
+        List<Version> versions = new ArrayList<Version>();
+        List<String> versionStrings = new ArrayList<String>();
+
+        versions = findVersionRange( repositorySystem, session, groupId, artifactId ).getVersions();
+
+        for ( Version version : versions )
+        {
+            versionStrings.add( version.toString() );
+        }
+
+        return versionStrings;
+    }
+
+    /**
+     * Returns the latest Maven coordinates for {@code groupId:artifactId} in {@code repositorySystem}.
+     */
+    public static String findLatestCoordinates( RepositorySystem repositorySystem, String groupId, String artifactId )
+            throws MavenRepositoryException
+    {
+        RepositorySystemSession session = RepositoryUtility.newSession( repositorySystem );
+        String highestVersion = findHighestVersion( repositorySystem, session, groupId, artifactId );
+        return String.format( "%s:%s:%s", groupId, artifactId, highestVersion );
+    }
 
 }

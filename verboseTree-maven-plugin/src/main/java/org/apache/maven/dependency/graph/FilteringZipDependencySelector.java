@@ -23,22 +23,26 @@ import org.eclipse.aether.graph.Dependency;
 
 import java.util.Map;
 
-/** Excludes artifacts with {@code zip} type. */
-public final class FilteringZipDependencySelector implements DependencySelector {
-  // To exclude log4j-api-java9:zip:2.11.1, which is not published.
-  // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/339
+/**
+ * Excludes artifacts with {@code zip} type.
+ */
+public final class FilteringZipDependencySelector implements DependencySelector
+{
+    // To exclude log4j-api-java9:zip:2.11.1, which is not published.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/339
 
-  @Override
-  public boolean selectDependency(Dependency dependency) {
-    Artifact artifact = dependency.getArtifact();
-    Map<String, String> properties = artifact.getProperties();
-    // Because LinkageChecker only checks jar file, zip files are not needed
-    return !"zip".equals(properties.get("type"));
-  }
+    @Override
+    public boolean selectDependency( Dependency dependency )
+    {
+        Artifact artifact = dependency.getArtifact();
+        Map<String, String> properties = artifact.getProperties();
+        // Because LinkageChecker only checks jar file, zip files are not needed
+        return !"zip".equals( properties.get( "type" ) );
+    }
 
-  @Override
-  public DependencySelector deriveChildSelector(
-      DependencyCollectionContext dependencyCollectionContext) {
-    return this;
-  }
+    @Override
+    public DependencySelector deriveChildSelector( DependencyCollectionContext dependencyCollectionContext )
+    {
+        return this;
+    }
 }

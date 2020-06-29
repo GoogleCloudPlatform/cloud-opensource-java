@@ -19,10 +19,12 @@ package org.apache.maven.dependency.graph;
 /**
  * Error interacting with a remote or local Maven repository such as artifact not found.
  */
-public class MavenRepositoryException extends Exception {
+public class MavenRepositoryException extends Exception
+{
 
-  MavenRepositoryException( Exception ex) {
-    super(ex);
-  }
-  
+    MavenRepositoryException( Exception ex )
+    {
+        super( ex );
+    }
+
 }

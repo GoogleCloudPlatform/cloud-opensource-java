@@ -36,17 +36,6 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <!--<dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.apache.maven</groupId>
-        <artifactId>maven-model</artifactId>
-        <version>2.0.5</version>
-        <scope>test</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>-->
-
   <dependencies>
     <dependency>
       <groupId>org.apache.maven</groupId>
@@ -59,7 +48,7 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <!--<dependency>
+    <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-profile</artifactId>
       <version>2.0.4</version>
@@ -75,7 +64,7 @@
       <groupId>org.apache.xmlgraphics</groupId>
       <artifactId>batik-bridge</artifactId>
       <version>1.7</version>
-    </dependency>-->
+    </dependency>
   </dependencies>
 
   <build>
@@ -85,17 +74,6 @@
           <groupId>@project.groupId@</groupId>
           <artifactId>@project.artifactId@</artifactId>
           <version>@project.version@</version>
-          <!--<groupId>org.example</groupId>
-          <artifactId>verboseTree-maven-plugin</artifactId>
-          <version>1.1-SNAPSHOT</version>-->
-          <!--<executions>
-            <execution>
-              <id>verboseTree</id>
-              <goals>
-                <goal>tree</goal>
-              </goals>
-            </execution>
-          </executions>-->
         </plugin>
       </plugins>
     </pluginManagement>
