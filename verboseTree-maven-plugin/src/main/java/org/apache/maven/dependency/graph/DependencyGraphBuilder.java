@@ -17,6 +17,7 @@
 
 package org.apache.maven.dependency.graph;
 
+import com.google.inject.Inject;
 import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
 import org.apache.maven.artifact.resolver.ArtifactResolutionResult;
 import org.apache.maven.execution.MavenSession;
@@ -81,11 +82,10 @@ public class DependencyGraphBuilder extends AbstractMojo
     @Parameter
     private String outputFile;
 
-    @Component
+    @Inject
     private ProjectDependenciesResolver resolver;
 
-    // replace Component with sisu guice named/inject or singleton annotation
-    @Component
+    @Inject
     private ArtifactHandlerManager artifactHandlerManager;
 
     private SerializeGraph serializer;
