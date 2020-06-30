@@ -309,7 +309,7 @@ public class DashboardMain {
 
     for (Artifact artifact : artifacts) {
       DependencyGraph completeDependencies =
-          dependencyGraphBuilder.buildFullDependencyGraph(ImmutableList.of(artifact));
+          dependencyGraphBuilder.buildVerboseDependencyGraph(artifact);
       globalDependencies.add(completeDependencies);
 
       // picks versions according to Maven rules
