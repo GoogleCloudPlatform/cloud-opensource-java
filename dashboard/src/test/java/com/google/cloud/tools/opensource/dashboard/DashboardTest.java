@@ -440,6 +440,17 @@ public class DashboardTest {
   }
 
   @Test
+  public void testDependencyTrees() throws IOException, ParsingException {
+    Document document = parseOutputFile("dependency_trees.html");
+    Nodes dependencyTreeParagraph = document.query("//p[@class='dependency-tree-node']");
+
+    // characterization test
+    Assert.assertEquals(38392, dependencyTreeParagraph.size());
+    Assert.assertEquals(
+        "com.google.protobuf:protobuf-java:jar:3.6.1", dependencyTreeParagraph.get(0).getValue());
+  }
+
+  @Test
   public void testOutputDirectory() {
     Assert.assertTrue(
         "The dashboard should be created at target/com.google.cloud/libraries-bom/1.0.0",

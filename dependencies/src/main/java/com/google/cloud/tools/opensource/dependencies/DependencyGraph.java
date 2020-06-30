@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.collect.LinkedListMultimap;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -79,6 +80,9 @@ public class DependencyGraph {
   // map of groupId:artifactId:version to paths
   private SetMultimap<String, DependencyPath> paths = HashMultimap.create();
 
+  private final LinkedListMultimap<DependencyPath, DependencyPath> parentToChildren =
+      LinkedListMultimap.create();
+
   private DependencyNode root;
 
   public DependencyGraph(DependencyNode root) {
@@ -115,16 +119,31 @@ public class DependencyGraph {
     return result;
   }
 
-  /**
-   * @return a mutable copy of the paths in this graph, usually in breadth first order
-   */
+  /** Returns a mutable copy of the paths in this graph, usually in breadth first order. */
   public List<DependencyPath> list() {
     return new ArrayList<>(graph);
   }
 
   /**
-   * @return all paths to the specified artifact
+   * Returns dependency path of the root node.
+   *
+   * @throws IllegalStateException if the graph is empty
    */
+  public DependencyPath getRootPath() {
+    if (graph.isEmpty()) {
+      throw new IllegalStateException("The graph is empty");
+    }
+    return graph.get(0);
+  }
+
+  /**
+   * Returns dependency paths from the root to the children of {@code parent}.
+   */
+  public List<DependencyPath> getChildren(DependencyPath parent) {
+    return parentToChildren.get(parent);
+  }
+
+  /** Returns all paths to the specified artifact. */
   public Set<DependencyPath> getPaths(String coordinates) {
     return paths.get(coordinates);
   }
@@ -281,7 +300,9 @@ public class DependencyGraph {
               ? new DependencyPath(artifact)
               : parentPath.append(dependencyNode.getDependency());
       graph.addPath(path);
-  
+
+      graph.parentToChildren.put(parentPath, path);
+
       for (DependencyNode child : dependencyNode.getChildren()) {
         queue.add(new DependencyGraph.LevelOrderQueueItem(child, path));
       }
