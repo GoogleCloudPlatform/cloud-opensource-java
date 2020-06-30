@@ -71,18 +71,18 @@
   </#if>
 </#macro>
 
-<#macro formatDependencyNode currentNode parent>
-  <#if parent == currentNode>
-    <#assign label = 'root' />
+<#macro formatDependencyGraph graph node parent>
+  <#if node == graph.getRootPath() >
+      <#assign label = 'root' />
   <#else>
-    <#assign label = 'parent: ' + parent.getLeaf() />
+      <#assign label = 'parent: ' + parent.getLeaf() />
   </#if>
-  <p class="dependency-tree-node" title="${label}">${currentNode.getLeaf()}</p>
+  <p class="dependency-tree-node" title="${label}">${node.getLeaf()}</p>
   <ul>
-    <#list dependencyTree.get(currentNode) as childNode>
-      <#if currentNode != childNode>
+    <#list graph.getChildren(node) as childNode>
+      <#if node != childNode>
         <li class="dependency-tree-node">
-            <@formatDependencyNode childNode currentNode />
+            <@formatDependencyGraph graph childNode node />
         </li>
       </#if>
     </#list>

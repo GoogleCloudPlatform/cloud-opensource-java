@@ -145,8 +145,8 @@
 
     <h2>Dependencies</h2>
 
-    <#if dependencyRootNode?? >
-      <@formatDependencyNode dependencyRootNode dependencyRootNode />
+    <#if dependencyGraph?? >
+      <@formatDependencyGraph dependencyGraph dependencyGraph.getRootPath() "" />
     <#else>
       <p>Dependency information is unavailable</p>
     </#if>
