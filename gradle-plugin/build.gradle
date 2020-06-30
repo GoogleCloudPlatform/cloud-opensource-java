@@ -78,6 +78,8 @@ pluginBundle {
 
 release {
   tagTemplate = 'v$version-gradle'
+  failOnUnversionedFiles = false
+  failOnUpdateNeeded = false
   git {
     requireBranch = /^\d+.\d+.\d+-gradle$/  //regex
   }
