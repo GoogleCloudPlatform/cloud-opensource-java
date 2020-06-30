@@ -16,7 +16,7 @@ Die() {
 }
 
 DieUsage() {
-  Die "Usage: ./prepare_release.sh <dependencies|bom> <release version> [<post-release-version>]"
+  Die "Usage: ./prepare_release.sh <dependencies|bom|gradle> <release version> [<post-release-version>]"
 }
 
 # Usage: CheckVersion <version>
@@ -38,7 +38,7 @@ EchoGreen '===== RELEASE SETUP SCRIPT ====='
 
 SUFFIX=$1
 
-if [[ "${SUFFIX}" != "dependencies" && "${SUFFIX}" != "bom" ]]; then
+if [[ "${SUFFIX}" != "dependencies" && "${SUFFIX}" != "bom" && "${SUFFIX}" != "gradle" ]]; then
   DieUsage
 fi
 
