@@ -444,7 +444,8 @@ public class DashboardTest {
     Document document = parseOutputFile("dependency_trees.html");
     Nodes dependencyTreeParagraph = document.query("//p[@class='dependency-tree-node']");
 
-    Assert.assertEquals(53144, dependencyTreeParagraph.size());
+    // characterization test
+    Assert.assertEquals(38392, dependencyTreeParagraph.size());
     Assert.assertEquals(
         "com.google.protobuf:protobuf-java:jar:3.6.1", dependencyTreeParagraph.get(0).getValue());
   }

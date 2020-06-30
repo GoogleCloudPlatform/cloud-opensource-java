@@ -148,9 +148,14 @@ public final class DependencyGraphBuilder {
    * does not affect the scope of its children's dependencies. Provided and optional dependencies
    * are not treated differently than any other dependency.
    *
-   * @param dependency the root
+   * @param artifact the root
    * @return the graph as built by Maven before dependency mediation
    */
+  public DependencyGraph buildVerboseDependencyGraph(Artifact artifact) {
+    Dependency dependency = new Dependency(artifact, "compile");
+    return buildVerboseDependencyGraph(dependency);
+  }
+  
   DependencyGraph buildVerboseDependencyGraph(Dependency dependency) {
     DefaultRepositorySystemSession session = RepositoryUtility.newSessionForVerboseDependency(system);
     ImmutableList<DependencyNode> roots = ImmutableList.of(new DefaultDependencyNode(dependency));
