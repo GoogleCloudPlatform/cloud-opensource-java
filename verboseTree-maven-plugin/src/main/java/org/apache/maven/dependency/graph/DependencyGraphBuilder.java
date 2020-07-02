@@ -252,20 +252,7 @@ public class DependencyGraphBuilder extends AbstractMojo
         catch ( org.eclipse.aether.resolution.DependencyResolutionException ex )
         {
             DependencyResult result = ex.getResult();
-            DependencyNode graph = result.getRoot();
-
-            for ( ArtifactResult artifactResult : result.getArtifactResults() )
-            {
-                Artifact resolvedArtifact = artifactResult.getArtifact();
-
-                if ( resolvedArtifact == null )
-                {
-                    Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
-                    // ToDo: (may not be needed) graph.addUnresolvableArtifactProblem(requestedArtifact);
-                }
-            }
-
-            return graph;
+            return result.getRoot();
         }
     }
 
