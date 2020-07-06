@@ -15,7 +15,7 @@ https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/1517
 
 This outputs a PR for the release. Get it approved by somebody. Proceed to
 [Rapid workflow](https://rapid.corp.google.com/#/project/cloud-java-tools-cloud-opensource-java-gradle-plugin-kokoro-release?showInactive=false)
-with the tag "vX.Y.Z-gradle".
+with "vX.Y.Z-gradle" as committish.
 
 ## Confirm the Release
 
