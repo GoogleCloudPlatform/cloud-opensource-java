@@ -61,7 +61,7 @@ repositories {
 gradlePlugin {
   plugins {
     linkageCheckerPlugin {
-      id = 'com.google.cloud.tools.linkagechecker'
+      id = 'com.google.cloud.tools.linkagechecker' // LinkageCheckerPluginTest validates this value
       displayName = 'Linkage Checker'
       description = 'Tool to verify the compatibility of the class paths of Gradle projects'
       implementationClass = 'com.google.cloud.tools.dependencies.gradle.LinkageCheckerPlugin'
