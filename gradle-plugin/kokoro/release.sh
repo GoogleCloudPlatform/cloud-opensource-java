@@ -3,14 +3,18 @@
 set -o errexit
 set -o xtrace
 
-readonly PUBLISH_KEY=$(cat "${KOKORO_KEYSTORE_DIR}/72743_gradle_publish_key")
-readonly PUBLISH_SECRET=$(cat "${KOKORO_KEYSTORE_DIR}/72743_gradle_publish_secret")
+mkdir -p $HOME/.gradle
+readonly HOME_GRADLE_PROPERTY="$HOME/.gradle/gradle.properties"
+
+# Recommended way to store API key
+# https://guides.gradle.org/publishing-plugins-to-gradle-plugin-portal/
+echo -n 'gradle.publish.key=' >> $HOME_GRADLE_PROPERTY
+cat "${KOKORO_KEYSTORE_DIR}/72743_gradle_publish_key" >> $HOME_GRADLE_PROPERTY
+echo -n 'gradle.publish.secret=' >> $HOME_GRADLE_PROPERTY
+cat "${KOKORO_KEYSTORE_DIR}/72743_gradle_publish_secret" >> $HOME_GRADLE_PROPERTY
 
 cd github/cloud-opensource-java/gradle-plugin
 
 ./gradlew build
 
-./gradlew publishPlugins \
-  -Pgradle.publish.key="${PUBLISH_KEY}" \
-  -Pgradle.publish.secret="${PUBLISH_SECRET}" \
-  --info --stacktrace
+./gradlew publishPlugins --info --stacktrace
