@@ -80,7 +80,7 @@ if [[ "${SUFFIX}" = "gradle" ]]; then
   cd gradle-plugin
   # Changes the version for release and creates the commits/tags.
   echo | ./gradlew release -Prelease.releaseVersion=${VERSION} \
-      ${NEXT_VERSION:+"-Prelease.newVersion=${NEXT_VERSION}"}
+      -Prelease.newVersion=${NEXT_SNAPSHOT}
 else
   # Updates the pom.xml with the version to release.
   mvn versions:set versions:commit -DnewVersion=${VERSION} -DgenerateBackupPoms=false
