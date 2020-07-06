@@ -8,7 +8,7 @@ readonly PUBLISH_SECRET=$(cat "${KOKORO_KEYSTORE_DIR}/72743_gradle_publish_secre
 
 cd github/cloud-opensource-java/gradle-plugin
 
-./gradlew build publishToMavenLocal
+./gradlew build
 
 ./gradlew publishPlugins \
   -Pgradle.publish.key="${PUBLISH_KEY}" \
