@@ -170,6 +170,21 @@ public final class RepositoryUtility {
     
     return newSession(system, dependencySelector);
   }
+  
+  static DefaultRepositorySystemSession newSessionForVerboseListDependency(
+      RepositorySystem system) {
+    DependencySelector dependencySelector =
+        new AndDependencySelector(
+            // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
+            // false positive in LinkageChecker.
+            new ScopeDependencySelector("test"),
+            new BanOptionalDependencySelector(),
+            new ExclusionDependencySelector(),
+            new FilteringZipDependencySelector());
+    
+    return newSession(system, dependencySelector);
+  }
+
 
   private static String findLocalRepository() {
     // TODO is there Maven code for this?

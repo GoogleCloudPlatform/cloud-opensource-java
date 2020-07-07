@@ -139,6 +139,24 @@ public final class DependencyGraphBuilder {
   }
   
   /**
+   * Finds the full compile time, transitive dependency graph including duplicates and conflicting
+   * versions, but not optional dependencies. In the event of I/O errors, missing
+   * artifacts, and other problems, it can return an incomplete graph. Each node's dependencies are
+   * resolved recursively. The scope of a dependency does not affect the scope of its children's
+   * dependencies.
+   *
+   * @param artifacts Maven artifacts whose dependencies to retrieve
+   * @return dependency graph representing the tree of Maven artifacts
+   */
+  public DependencyGraph buildVerboseDependencyGraph(List<Artifact> artifacts) {
+    ImmutableList<DependencyNode> dependencyNodes =
+        artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
+    DefaultRepositorySystemSession session =
+        RepositoryUtility.newSessionForVerboseListDependency(system);
+    return buildDependencyGraph(dependencyNodes, session);
+  }
+  
+  /**
    * Finds the full compile time, transitive dependency graph including conflicting versions and
    * provided dependencies. This includes direct optional dependencies of the root node but not
    * optional dependencies of transitive dependencies.
