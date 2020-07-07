@@ -25,7 +25,7 @@ class LinkageCheckerPluginTest {
     @Test
     public void linkage_checker_plugin_should_add_task_to_project() {
         Project project = ProjectBuilder.builder().build()
-        project.getPlugins().apply 'com.google.cloud.tools.linkageChecker'
+        project.getPlugins().apply 'com.google.cloud.tools.linkagechecker'
 
         assertTrue(project.tasks.linkageCheck instanceof LinkageCheckTask)
     }

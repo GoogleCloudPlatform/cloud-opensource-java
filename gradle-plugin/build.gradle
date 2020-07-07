@@ -18,6 +18,7 @@ plugins {
   id 'com.gradle.plugin-publish' version "0.12.0"
   id 'groovy'
   id 'java-gradle-plugin'
+  id 'net.researchgate.release' version '2.8.1'
 }
 
 apply from: "$rootDir/gradle/functional-test.gradle"
@@ -27,10 +28,9 @@ group = 'com.google.cloud.tools'
 sourceCompatibility = 1.8
 
 dependencies {
-  implementation platform('com.google.cloud.tools:dependencies-parent:1.4.3')
   implementation 'com.google.cloud.tools:dependencies:1.4.3'
-  implementation 'com.google.guava:guava'
-  implementation 'org.apache.maven.resolver:maven-resolver-api'
+  implementation 'com.google.guava:guava:29.0-jre'
+  implementation 'org.apache.maven.resolver:maven-resolver-api:1.4.2'
 
   testImplementation 'junit:junit:4.13'
   testImplementation 'org.spockframework:spock-core:1.3-groovy-2.5'
@@ -60,7 +60,7 @@ repositories {
 gradlePlugin {
   plugins {
     linkageCheckerPlugin {
-      id = 'com.google.cloud.tools.linkagechecker'
+      id = 'com.google.cloud.tools.linkagechecker' // LinkageCheckerPluginTest validates this value
       displayName = 'Linkage Checker'
       description = 'Tool to verify the compatibility of the class paths of Gradle projects'
       implementationClass = 'com.google.cloud.tools.dependencies.gradle.LinkageCheckerPlugin'
@@ -73,4 +73,13 @@ pluginBundle {
   vcsUrl = 'https://github.com/GoogleCloudPlatform/cloud-opensource-java.git'
   description = 'A plugin to detect Java diamond dependency conflicts'
   tags = ['google', 'java', 'dependency','verification']
+}
+
+release {
+  tagTemplate = 'v$version-gradle'
+  failOnUnversionedFiles = false
+  failOnUpdateNeeded = false
+  git {
+    requireBranch = /^\d+.\d+.\d+-gradle$/  //regex
+  }
 }
