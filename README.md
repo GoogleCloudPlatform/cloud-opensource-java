@@ -29,7 +29,7 @@ https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checke
 
 ## Linkage Checker Gradle Plugin
 
-[Linkage Checker Gradle Plugin](./gradle-plugin) provides "linkageCheck" task that detects
+[Linkage Checker Gradle Plugin](./gradle-plugin) provides the linkageCheck task that detects
 [linkage errors](
 ./library-best-practices/glossary.md#types-of-conflicts-and-compatibility) in the current
 Gradle project.
