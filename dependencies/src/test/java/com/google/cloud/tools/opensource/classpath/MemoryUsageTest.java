@@ -27,7 +27,7 @@ public class MemoryUsageTest {
   private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
   
   @Test
-  public void testBeamHCatalogOutOfMemoryError() {
+  public void testBeamCatalogOutOfMemoryError() {
     
     long before = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
     // Artifact catalog = new DefaultArtifact("org.apache.beam:beam-sdks-java-io-hcatalog:2.19.0");
