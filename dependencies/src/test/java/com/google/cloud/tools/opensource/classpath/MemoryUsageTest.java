@@ -28,14 +28,24 @@ public class MemoryUsageTest {
   
   @Test
   public void testBeamHCatalogOutOfMemoryError() {
-    Artifact hcatalog = new DefaultArtifact("org.apache.beam:beam-sdks-java-io-hcatalog:2.19.0");
+    
+    long before = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+    // Artifact catalog = new DefaultArtifact("org.apache.beam:beam-sdks-java-io-hcatalog:2.19.0");
+    
+    Artifact catalog = new DefaultArtifact(
+        "org.apache.beam:beam-sdks-java-extensions-sql-zetasql:jar:2.19.0");
     try {
-      ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(hcatalog));
+      ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(catalog));
+      long after = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+      double mb = (after - before) / (1024.0 * 1024.0);
+      System.err.println("Memory used: " + mb + "MB");      
+      
       assertNotNull(result);
     } catch (OutOfMemoryError failure) {
-      System.gc();
       failure.printStackTrace();
       fail("Ran out of memory");
+    } finally {
+      System.gc();      
     }
   }
   
