@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Multimap;
 import com.thaiopensource.xml.sax.DraconianErrorHandler;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,6 +26,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventWriter;
@@ -142,7 +142,7 @@ class ExclusionFiles {
   }
 
   /** Writes {@code linkageErrors} as exclusion rules into {@code outputFile}. */
-  static void write(Path outputFile, Multimap<LinkageProblem, ClassFile> linkageErrors)
+  static void write(Path outputFile, Set<LinkageProblem> linkageErrors)
       throws IOException, XMLStreamException, TransformerException {
 
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -153,10 +153,8 @@ class ExclusionFiles {
       writer.add(eventFactory.createStartDocument());
       writer.add(eventFactory.createStartElement(LINKAGE_CHECKER_FILTER_TAG, null, null));
 
-      for (LinkageProblem linkageProblem : linkageErrors.keySet()) {
-        for (ClassFile classFile : linkageErrors.get(linkageProblem)) {
-          writeXmlEvents(writer, linkageProblem, classFile);
-        }
+      for (LinkageProblem linkageProblem : linkageErrors) {
+        writeXmlEvents(writer, linkageProblem);
       }
 
       writer.add(eventFactory.createEndElement(LINKAGE_CHECKER_FILTER_TAG, null));
@@ -192,8 +190,7 @@ class ExclusionFiles {
     indentTransformer.transform(new StreamSource(inputStream), new StreamResult(outputStream));
   }
 
-  private static void writeXmlEvents(
-      XMLEventWriter writer, LinkageProblem linkageProblem, ClassFile classFile)
+  private static void writeXmlEvents(XMLEventWriter writer, LinkageProblem linkageProblem)
       throws XMLStreamException {
     writer.add(eventFactory.createStartElement(LINKAGE_ERROR_TAG, null, null));
 
@@ -202,7 +199,7 @@ class ExclusionFiles {
     writer.add(eventFactory.createEndElement(TARGET_TAG, null));
 
     writer.add(eventFactory.createStartElement(SOURCE_TAG, null, null));
-    writeXmlElement(writer, classFile);
+    writeXmlElement(writer, linkageProblem.getSourceClass());
     writer.add(eventFactory.createEndElement(SOURCE_TAG, null));
 
     writer.add(eventFactory.createEndElement(LINKAGE_ERROR_TAG, null));

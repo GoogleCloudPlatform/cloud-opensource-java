@@ -57,10 +57,10 @@ import org.junit.Test;
  */
 public class FreemarkerTest {
 
-  private static Path outputDirectory;  
+  private static Path outputDirectory;
   private static ImmutableMap<ClassPathEntry, ImmutableSetMultimap<LinkageProblem, String>>
       symbolProblemTable;
-  
+
   private Builder builder = new Builder();
 
   @BeforeClass

@@ -24,7 +24,7 @@ import static org.junit.Assert.fail;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -41,6 +41,9 @@ import org.xml.sax.SAXParseException;
 
 public class ExclusionFilesTest {
 
+  private ClassFile sourceClass =
+      new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source");
+
   private LinkageProblem methodLinkageProblem =
       new LinkageProblem(
           new MethodSymbol(
@@ -49,25 +52,25 @@ public class ExclusionFilesTest {
               "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
               false),
           ErrorType.SYMBOL_NOT_FOUND,
-          new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "java.lang.Object"));
+          new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "java.lang.Object"),
+          new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source1"));
 
   private LinkageProblem classLinkageProblem =
-      new LinkageProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
+      new LinkageProblem(
+          new ClassSymbol("java.lang.Integer"),
+          ErrorType.CLASS_NOT_FOUND,
+          null,
+          new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source2"));
 
   private LinkageProblem fieldLinkageProblem =
       new LinkageProblem(
           new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"),
           ErrorType.SYMBOL_NOT_FOUND,
-          new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "java.lang.Integer"));
-
-  private ImmutableSetMultimap<LinkageProblem, ClassFile> linkageErrors =
-      ImmutableSetMultimap.of(
-          methodLinkageProblem,
-          new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source1"),
-          fieldLinkageProblem,
-          new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source2"),
-          classLinkageProblem,
+          new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "java.lang.Integer"),
           new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source3"));
+
+  private ImmutableSet<LinkageProblem> linkageErrors =
+      ImmutableSet.of(methodLinkageProblem, fieldLinkageProblem, classLinkageProblem);
 
   private Path output;
 
@@ -87,9 +90,17 @@ public class ExclusionFilesTest {
     LinkageErrorMatcher matcher = matchers.get(0);
     boolean result =
         matcher.match(
-            null,
-            new ClassFile(
-                new ClassPathEntry(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"));
+            new LinkageProblem(
+                new MethodSymbol(
+                    "io.grpc.protobuf.ProtoUtils",
+                    "marshaller",
+                    "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
+                    false),
+                ErrorType.SYMBOL_NOT_FOUND,
+                new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "java.lang.Object"),
+                // This filter works for the line below
+                new ClassFile(
+                    new ClassPathEntry(Paths.get("dummy.jar")), "reactor.core.publisher.Traces")));
     assertTrue(result);
   }
 
@@ -104,14 +115,9 @@ public class ExclusionFilesTest {
         new LinkageProblem(
             new FieldSymbol("com.google.Foo", "fieldA", "Ljava.lang.String;"),
             ErrorType.INACCESSIBLE_MEMBER,
-            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"));
-    boolean result =
-        matchers
-            .get(0)
-            .match(
-                linkageProblemToMatch,
-                new ClassFile(
-                    new ClassPathEntry(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"));
+            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"),
+            sourceClass);
+    boolean result = matchers.get(0).match(linkageProblemToMatch);
     assertTrue(result);
   }
 
@@ -128,12 +134,9 @@ public class ExclusionFilesTest {
         new LinkageProblem(
             new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
             ErrorType.INACCESSIBLE_MEMBER,
-            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"));
-    boolean result =
-        matcher.match(
-            linkageProblemToMatch,
-            new ClassFile(
-                new ClassPathEntry(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"));
+            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"),
+            sourceClass);
+    boolean result = matcher.match(linkageProblemToMatch);
     assertTrue(result);
   }
 
@@ -150,12 +153,9 @@ public class ExclusionFilesTest {
         new LinkageProblem(
             new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
             ErrorType.INACCESSIBLE_MEMBER,
-            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"));
-    boolean result =
-        matcher.match(
-            linkageProblemToMatch,
-            new ClassFile(
-                new ClassPathEntry(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"));
+            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"),
+            sourceClass);
+    boolean result = matcher.match(linkageProblemToMatch);
     assertTrue(result);
   }
 
@@ -173,12 +173,9 @@ public class ExclusionFilesTest {
         new LinkageProblem(
             new MethodSymbol("com.google.cloud.Foo", "methodA", "()Ljava.lang.String;", false),
             ErrorType.INACCESSIBLE_MEMBER,
-            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.cloud.google.Foo"));
-    boolean result =
-        matcher.match(
-            linkageProblemToMatch,
-            new ClassFile(
-                new ClassPathEntry(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"));
+            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.cloud.google.Foo"),
+            sourceClass);
+    boolean result = matcher.match(linkageProblemToMatch);
     assertTrue(result);
   }
 
@@ -196,12 +193,9 @@ public class ExclusionFilesTest {
         new LinkageProblem(
             new MethodSymbol("com.googler.Foo", "methodA", "()Ljava.lang.String;", false),
             ErrorType.INACCESSIBLE_MEMBER,
-            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.googler.Foo"));
-    boolean result =
-        matcher.match(
-            linkageProblemToMatch,
-            new ClassFile(
-                new ClassPathEntry(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"));
+            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.googler.Foo"),
+            sourceClass);
+    boolean result = matcher.match(linkageProblemToMatch);
     assertFalse(result);
   }
 
@@ -218,12 +212,10 @@ public class ExclusionFilesTest {
         new LinkageProblem(
             new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
             ErrorType.INACCESSIBLE_MEMBER,
-            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"));
-    boolean result =
-        matcher.match(
-            linkageProblemToMatch,
+            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"),
             new ClassFile(
                 new ClassPathEntry(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"));
+    boolean result = matcher.match(linkageProblemToMatch);
     assertTrue(result);
   }
 
@@ -240,12 +232,9 @@ public class ExclusionFilesTest {
         new LinkageProblem(
             new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
             ErrorType.INACCESSIBLE_MEMBER,
-            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"));
-    boolean result =
-        matcher.match(
-            linkageProblemToMatch,
-            new ClassFile(
-                new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Bar")); // No match
+            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"),
+            new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Bar"));
+    boolean result = matcher.match(linkageProblemToMatch); // No match
     assertFalse(result);
   }
 
@@ -337,24 +326,15 @@ public class ExclusionFilesTest {
     Truth.assertThat(matchers).hasSize(3);
 
     LinkageErrorMatcher matcher0 = matchers.get(0);
-    boolean methodMatch =
-        matcher0.match(
-            methodLinkageProblem,
-            new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source1"));
+    boolean methodMatch = matcher0.match(methodLinkageProblem);
     assertTrue(methodMatch);
 
     LinkageErrorMatcher matcher1 = matchers.get(1);
-    boolean fieldMatch =
-        matcher1.match(
-            fieldLinkageProblem,
-            new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source2"));
+    boolean fieldMatch = matcher1.match(fieldLinkageProblem);
     assertTrue(fieldMatch);
 
     LinkageErrorMatcher matcher2 = matchers.get(2);
-    boolean classMatch =
-        matcher2.match(
-            classLinkageProblem,
-            new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source3"));
+    boolean classMatch = matcher2.match(classLinkageProblem);
     assertTrue(classMatch);
   }
 

@@ -19,7 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.EqualsTester;
 import com.google.common.testing.NullPointerTester;
 import com.google.common.testing.NullPointerTester.Visibility;
@@ -39,7 +39,8 @@ public class LinkageProblemTest {
         new LinkageProblem(
             new ClassSymbol("java.lang.Integer"),
             ErrorType.CLASS_NOT_FOUND,
-            new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object"));
+            new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object"),
+            new ClassFile(new ClassPathEntry(Paths.get("aaa", "bbb.jar")), "java.lang.ABC"));
     assertSame(ErrorType.CLASS_NOT_FOUND, linkageProblem.getErrorType());
     assertEquals(new ClassSymbol("java.lang.Integer"), linkageProblem.getSymbol());
     assertEquals(
@@ -61,35 +62,59 @@ public class LinkageProblemTest {
             new LinkageProblem(
                 new ClassSymbol("java.lang.Integer"),
                 ErrorType.CLASS_NOT_FOUND,
-                new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object")),
+                new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object"),
+                new ClassFile(new ClassPathEntry(Paths.get("aaa", "bbb.jar")), "java.lang.ABC")),
             new LinkageProblem(
                 new ClassSymbol("java.lang.Integer"),
                 ErrorType.CLASS_NOT_FOUND,
-                new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object")))
+                new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object"),
+                new ClassFile(new ClassPathEntry(Paths.get("aaa", "bbb.jar")), "java.lang.ABC")))
         .addEqualityGroup(
             new LinkageProblem(
                 new ClassSymbol("java.lang.Long"),
                 ErrorType.CLASS_NOT_FOUND,
-                new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object")))
+                new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object"),
+                new ClassFile(new ClassPathEntry(Paths.get("aaa", "bbb.jar")), "java.lang.ABC")))
         .addEqualityGroup(
             new LinkageProblem(
                 new ClassSymbol("java.lang.Integer"),
                 ErrorType.CLASS_NOT_FOUND,
-                new ClassFile(new ClassPathEntry(Paths.get("abc", "bar.jar")), "java.lang.Object")))
+                new ClassFile(new ClassPathEntry(Paths.get("abc", "bar.jar")), "java.lang.Object"),
+                new ClassFile(new ClassPathEntry(Paths.get("aaa", "bbb.jar")), "java.lang.ABC")))
         .addEqualityGroup(
             new LinkageProblem(
                 new ClassSymbol("java.lang.Integer"),
                 ErrorType.CLASS_NOT_FOUND,
-                new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Long")))
+                new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Long"),
+                new ClassFile(new ClassPathEntry(Paths.get("aaa", "bbb.jar")), "java.lang.Source")))
         .addEqualityGroup(
             new LinkageProblem(
-                new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null))
+                new ClassSymbol("java.lang.Integer"),
+                ErrorType.CLASS_NOT_FOUND,
+                null,
+                new ClassFile(new ClassPathEntry(Paths.get("aaa", "bbb.jar")), "java.lang.ABC")))
+        .addEqualityGroup(
+            new LinkageProblem(
+                new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null, null),
+            new LinkageProblem(
+                new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null, null))
         .testEquals();
   }
 
   @Test
   public void testFormatSymbolProblems() throws IOException {
     Path path = Paths.get("aaa", "bbb-1.2.3.jar");
+
+    Artifact artifact1 =
+        new DefaultArtifact("com.google:foo:0.0.1").setFile(new File("foo/foo.jar"));
+    ClassPathEntry entry1 = new ClassPathEntry(artifact1);
+    ClassFile source1 = new ClassFile(entry1, "java.lang.Object");
+
+    Artifact artifact2 =
+        new DefaultArtifact("com.google:bar:0.0.1").setFile(new File("bar/bar.jar"));
+    ClassPathEntry entry2 = new ClassPathEntry(artifact2);
+    ClassFile source2 = new ClassFile(entry2, "java.lang.Integer");
+
     LinkageProblem methodLinkageProblem =
         new LinkageProblem(
             new MethodSymbol(
@@ -98,41 +123,30 @@ public class LinkageProblemTest {
                 "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
                 false),
             ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(new ClassPathEntry(path), "java.lang.Object"));
+            new ClassFile(new ClassPathEntry(path), "java.lang.Object"),
+            source1);
 
-    LinkageProblem classLinkageProblem =
-        new LinkageProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
+    LinkageProblem classLinkageProblem1 =
+        new LinkageProblem(
+            new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null, source1);
+    LinkageProblem classLinkageProblem2 =
+        new LinkageProblem(
+            new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null, source2);
 
     Artifact artifact = new DefaultArtifact("com.google:ccc:1.2.3")
         .setFile(new File("ccc-1.2.3.jar"));
-    ClassPathEntry entry = new ClassPathEntry(artifact);  
-  
+    ClassPathEntry entry = new ClassPathEntry(artifact);
+
     LinkageProblem fieldLinkageProblem =
         new LinkageProblem(
             new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"),
             ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(entry, "java.lang.Integer"));
-
-    Artifact artifact1 = new DefaultArtifact("com.google:foo:0.0.1")
-        .setFile(new File("foo/foo.jar"));
-    ClassPathEntry entry1 = new ClassPathEntry(artifact1);  
-    ClassFile source1 = new ClassFile(entry1, "java.lang.Object");
-
-    Artifact artifact2 = new DefaultArtifact("com.google:bar:0.0.1")
-        .setFile(new File("bar/bar.jar"));
-    ClassPathEntry entry2 = new ClassPathEntry(artifact2);  
-    ClassFile source2 = new ClassFile(entry2, "java.lang.Integer");
-
-    ImmutableSetMultimap<LinkageProblem, ClassFile> symbolProblems =
-        ImmutableSetMultimap.of(
-            methodLinkageProblem,
-            source1,
-            classLinkageProblem,
-            source1,
-            classLinkageProblem,
-            source2,
-            fieldLinkageProblem,
+            new ClassFile(entry, "java.lang.Integer"),
             source2);
+
+    ImmutableSet<LinkageProblem> linkageProblems =
+        ImmutableSet.of(
+            methodLinkageProblem, classLinkageProblem1, classLinkageProblem2, fieldLinkageProblem);
     assertEquals(
         "("
             + path
@@ -148,6 +162,6 @@ public class LinkageProblemTest {
             + "(com.google:ccc:1.2.3) java.lang.Integer's field MAX_VALUE is not found;\n"
             + "  referenced by 1 class file\n"
             + "    java.lang.Integer (com.google:bar:0.0.1)\n",
-        LinkageProblem.formatSymbolProblems(symbolProblems));
+        LinkageProblem.formatLinkageProblems(linkageProblems));
   }
 }

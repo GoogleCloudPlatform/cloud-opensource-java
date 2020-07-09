@@ -42,11 +42,12 @@ class LinkageErrorMatcher implements SymbolProblemMatcher {
    * present.
    */
   @Override
-  public boolean match(LinkageProblem problem, ClassFile sourceClass) {
-    if (sourceMatcher != null && !sourceMatcher.match(problem, sourceClass)) {
+  public boolean match(LinkageProblem problem) {
+    ClassFile sourceClass = problem.getSourceClass();
+    if (sourceMatcher != null && !sourceMatcher.match(problem)) {
       return false;
     }
-    if (targetMatcher != null && !targetMatcher.match(problem, sourceClass)) {
+    if (targetMatcher != null && !targetMatcher.match(problem)) {
       return false;
     }
     return true;

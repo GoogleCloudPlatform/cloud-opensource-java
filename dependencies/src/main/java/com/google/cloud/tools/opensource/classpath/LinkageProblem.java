@@ -18,24 +18,31 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.Multimaps;
 import java.util.Objects;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
  * A linkage error.
  *
- * @see <a href="https://jlbp.dev/glossary.html#linkage-error">
- *     Java Dependency Glossary: Linkage Error</a>
+ * @see <a href="https://jlbp.dev/glossary.html#linkage-error">Java Dependency Glossary: Linkage
+ *     Error</a>
  */
 public final class LinkageProblem {
 
   private final ErrorType errorType;
   private final Symbol symbol;
   private final ClassFile containingClass;
+  private final ClassFile sourceClass;
 
   @VisibleForTesting
-  public LinkageProblem(Symbol symbol, ErrorType errorType, @Nullable ClassFile containingClass) {
+  public LinkageProblem(
+      Symbol symbol,
+      ErrorType errorType,
+      @Nullable ClassFile containingClass,
+      ClassFile sourceClass) {
     Preconditions.checkNotNull(symbol);
 
     // After finding symbol problem, there is no need to have SuperClassSymbol over ClassSymbol.
@@ -43,6 +50,7 @@ public final class LinkageProblem {
         symbol instanceof SuperClassSymbol ? new ClassSymbol(symbol.getClassBinaryName()) : symbol;
     this.errorType = Preconditions.checkNotNull(errorType);
     this.containingClass = containingClass;
+    this.sourceClass = sourceClass;
   }
 
   /** Returns the errorType why the symbol was not resolved. */
@@ -66,6 +74,11 @@ public final class LinkageProblem {
     return containingClass;
   }
 
+  /** Returns the source of the invalid reference which this linkage error represents. */
+  public ClassFile getSourceClass() {
+    return sourceClass;
+  }
+
   @Override
   public boolean equals(Object other) {
     if (this == other) {
@@ -77,12 +90,13 @@ public final class LinkageProblem {
     LinkageProblem that = (LinkageProblem) other;
     return errorType == that.errorType
         && symbol.equals(that.symbol)
-        && Objects.equals(containingClass, that.containingClass);
+        && Objects.equals(containingClass, that.containingClass)
+        && Objects.equals(sourceClass, that.sourceClass);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(errorType, symbol, containingClass);
+    return Objects.hash(errorType, symbol, containingClass, sourceClass);
   }
 
   @Override
@@ -92,23 +106,27 @@ public final class LinkageProblem {
     return jarInfo + getErrorType().getMessage(symbol.toString());
   }
 
-  public static String formatSymbolProblems(
-      ImmutableSetMultimap<LinkageProblem, ClassFile> symbolProblems) {
+  public static String formatLinkageProblems(Set<LinkageProblem> linkageProblems) {
     StringBuilder output = new StringBuilder();
 
-    symbolProblems
+    // Group by the symbols
+    ImmutableListMultimap<Symbol, LinkageProblem> groupBySymbols =
+        Multimaps.index(linkageProblems, problem -> problem.getSymbol());
+
+    groupBySymbols
         .asMap()
         .forEach(
-            (problem, classFiles) -> {
-              int referenceCount = classFiles.size();
+            (symbol, problems) -> {
+              int referenceCount = problems.size();
               output.append(
                   String.format(
                       "%s;\n  referenced by %d class file%s\n",
-                      problem, referenceCount, referenceCount > 1 ? "s" : ""));
-              classFiles.forEach(
-                  classFile -> {
-                    output.append("    " + classFile.getBinaryName());
-                    output.append(" (" + classFile.getClassPathEntry() + ")\n");
+                      symbol, referenceCount, referenceCount > 1 ? "s" : ""));
+              problems.forEach(
+                  problem -> {
+                    ClassFile sourceClassFile = problem.getSourceClass();
+                    output.append("    " + sourceClassFile.getBinaryName());
+                    output.append(" (" + sourceClassFile.getClassPathEntry() + ")\n");
                   });
             });
 

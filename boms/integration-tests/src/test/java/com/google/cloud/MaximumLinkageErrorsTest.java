@@ -68,7 +68,7 @@ public class MaximumLinkageErrorsTest {
       }
       Assert.fail(message.toString());
     }
-    
+
     // If that passes, check whether there are any new references to missing methods:
     for (LinkageProblem problem : currentProblems.keySet()) {
       ImmutableSet<ClassFile> oldReferences = oldProblems.get(problem);

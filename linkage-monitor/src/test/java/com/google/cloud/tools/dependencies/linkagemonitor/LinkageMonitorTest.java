@@ -120,10 +120,10 @@ public class LinkageMonitorTest {
   @Test
   public void generateMessageForNewError() throws IOException {
     Set<LinkageProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
-    
+
     Artifact artifactA = new DefaultArtifact("foo:a:1.2.3").setFile(new File("foo/a-1.2.3.jar"));
     ClassPathEntry jarA = new ClassPathEntry(artifactA);
-    
+
     ImmutableSetMultimap<LinkageProblem, ClassFile> snapshotProblems =
         ImmutableSetMultimap.of(
             classNotFoundProblem, // This is in baseline. It should not be printed

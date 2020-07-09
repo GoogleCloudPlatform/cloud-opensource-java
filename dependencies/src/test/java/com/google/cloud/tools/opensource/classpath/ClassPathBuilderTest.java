@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
@@ -175,13 +175,12 @@ public class ClassPathBuilderTest {
         .doesNotContain(
             new ClassSymbol("org.apache.http.client.entity.GZIPInputStreamFactory"));
 
-    ImmutableSetMultimap<LinkageProblem, ClassFile> symbolProblems =
-        linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findSymbolProblems();
     assertEquals(
         "Method references within the same jar file should not be reported",
         0,
-        symbolProblems.values().stream()
-            .filter(classFile -> httpClientJar.equals(classFile.getClassPathEntry()))
+        symbolProblems.stream()
+            .filter(problem -> httpClientJar.equals(problem.getSourceClass().getClassPathEntry()))
             .count());
   }
 

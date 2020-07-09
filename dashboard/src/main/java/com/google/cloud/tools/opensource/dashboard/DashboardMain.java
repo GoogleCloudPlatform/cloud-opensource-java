@@ -258,7 +258,8 @@ public class DashboardMain {
       ArtifactCache cache,
       ImmutableMap<ClassPathEntry, ImmutableSetMultimap<LinkageProblem, String>> symbolProblemTable,
       ClassPathResult classPathResult,
-      Bom bom) throws TemplateException {
+      Bom bom)
+      throws TemplateException {
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();

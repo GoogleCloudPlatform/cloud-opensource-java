@@ -222,7 +222,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           String message =
               String.format(
                   "Linkage Checker rule found %d %s. Linkage error report:\n%s",
-                  errorCount, foundError, LinkageProblem.formatSymbolProblems(symbolProblems));
+                  errorCount, foundError, LinkageProblem.formatLinkageProblems(symbolProblems));
           String dependencyPaths =
               dependencyPathsOfProblematicJars(classPathResult, symbolProblems);
 
