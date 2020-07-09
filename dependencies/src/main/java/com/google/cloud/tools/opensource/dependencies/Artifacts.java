@@ -31,12 +31,11 @@ public final class Artifacts {
    * packaging are not included.
    */
   public static String toCoordinates(Artifact artifact) {
-    return (artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion())
-        /*.intern()*/;
+    return (artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion());
   }
 
   public static String makeKey(Artifact artifact) {
-    return (artifact.getGroupId() + ":" + artifact.getArtifactId())/*.intern()*/;
+    return (artifact.getGroupId() + ":" + artifact.getArtifactId());
   }
 
 }
