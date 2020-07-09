@@ -63,7 +63,6 @@ public final class ClassPathBuilder {
       return new ClassPathResult(multimap, ImmutableList.of());
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
-    //DependencyGraph result = dependencyGraphBuilder.buildFullDependencyGraph(artifacts);
     DependencyGraph result;
     if (full) {
       result = dependencyGraphBuilder.buildFullDependencyGraph(artifacts);
