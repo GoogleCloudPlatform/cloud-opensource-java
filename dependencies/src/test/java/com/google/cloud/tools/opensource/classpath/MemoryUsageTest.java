@@ -54,6 +54,7 @@ public class MemoryUsageTest {
     }
   }
   
+  @Test
   public void testBeamZetaSqlOutOfMemoryError() {    
     long before = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
     
