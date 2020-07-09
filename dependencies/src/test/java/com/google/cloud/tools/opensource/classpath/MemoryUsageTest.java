@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+
 import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -29,6 +30,7 @@ public class MemoryUsageTest {
   @Test
   public void testBeamCatalogOutOfMemoryError() {
     
+    System.gc();
     long before = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
     // Artifact catalog = new DefaultArtifact("org.apache.beam:beam-sdks-java-io-hcatalog:2.19.0");
     

@@ -32,11 +32,11 @@ public final class Artifacts {
    */
   public static String toCoordinates(Artifact artifact) {
     return (artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion())
-        .intern();
+        /*.intern()*/;
   }
 
   public static String makeKey(Artifact artifact) {
-    return (artifact.getGroupId() + ":" + artifact.getArtifactId()).intern();
+    return (artifact.getGroupId() + ":" + artifact.getArtifactId())/*.intern()*/;
   }
 
 }
