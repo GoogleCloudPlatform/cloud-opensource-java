@@ -54,15 +54,22 @@ public final class ClassPathBuilder {
    * closest" strategy follows Maven's dependency mediation.
    *
    * @param artifacts the first artifacts that appear in the classpath, in order
+   * @param full if true all optional dependencies and their transitive dependencies are
+   *     included. If false, optional dependencies are not included.
    */
-  public ClassPathResult resolve(List<Artifact> artifacts) {
-
+  public ClassPathResult resolve(List<Artifact> artifacts, boolean full) {
     LinkedListMultimap<ClassPathEntry, DependencyPath> multimap = LinkedListMultimap.create();
     if (artifacts.isEmpty()) {
       return new ClassPathResult(multimap, ImmutableList.of());
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
-    DependencyGraph result = dependencyGraphBuilder.buildFullDependencyGraph(artifacts);
+    //DependencyGraph result = dependencyGraphBuilder.buildFullDependencyGraph(artifacts);
+    DependencyGraph result;
+    if (full) {
+      result = dependencyGraphBuilder.buildFullDependencyGraph(artifacts);
+    } else {
+      result = dependencyGraphBuilder.buildVerboseDependencyGraph(artifacts);
+    }
     List<DependencyPath> dependencyPaths = result.list();
 
     // TODO should DependencyGraphResult have a mediate() method that returns a ClassPathResult?

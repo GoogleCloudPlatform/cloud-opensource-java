@@ -40,14 +40,14 @@ public class ClassPathBuilderTest {
 
   private ImmutableList<ClassPathEntry> resolveClassPath(String coordinates) {
     Artifact artifact = new DefaultArtifact(coordinates);
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(artifact));
+    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(artifact), true);
     return result.getClassPath();
   }
 
   @Test
   public void testResolve_removingDuplicates() {
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(grpcArtifact));
+    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(grpcArtifact), true);
 
     ImmutableList<ClassPathEntry> classPath = result.getClassPath();
     long jsr305Count =
@@ -73,7 +73,7 @@ public class ClassPathBuilderTest {
         .getManagedDependencies();
 
     ImmutableList<ClassPathEntry> classPath =
-        classPathBuilder.resolve(managedDependencies).getClassPath();
+        classPathBuilder.resolve(managedDependencies, true).getClassPath();
 
     ImmutableList<ClassPathEntry> entries = ImmutableList.copyOf(classPath);
 
@@ -91,7 +91,7 @@ public class ClassPathBuilderTest {
     Artifact grpcAuth = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
 
     ImmutableList<ClassPathEntry> classPath =
-        classPathBuilder.resolve(ImmutableList.of(grpcAuth)).getClassPath();
+        classPathBuilder.resolve(ImmutableList.of(grpcAuth), true).getClassPath();
 
     Truth.assertThat(classPath)
         .comparingElementsUsing(TestHelper.COORDINATES)
@@ -132,7 +132,7 @@ public class ClassPathBuilderTest {
   @Test
   public void testResolveClassPath_invalidCoordinate() {
     Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nosuchartifact:1.2.3");
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(nonExistentArtifact));
+    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(nonExistentArtifact), true);
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
     Truth.assertThat(artifactProblems).hasSize(1);
     assertEquals(
@@ -143,7 +143,7 @@ public class ClassPathBuilderTest {
 
   @Test
   public void testResolve_emptyInput() {
-    List<ClassPathEntry> classPath = classPathBuilder.resolve(ImmutableList.of()).getClassPath();
+    List<ClassPathEntry> classPath = classPathBuilder.resolve(ImmutableList.of(), true).getClassPath();
     Truth.assertThat(classPath).isEmpty();
   }
 
@@ -197,7 +197,7 @@ public class ClassPathBuilderTest {
     // In the full dependency tree of hibernate-core, xerces-impl:2.6.2 and xml-apis:2.6.2 are not
     // available in Maven Central.
     Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(hibernateCore));
+    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(hibernateCore), true);
 
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
 
@@ -222,7 +222,7 @@ public class ClassPathBuilderTest {
     Artifact beamZetaSqlExtensions = new DefaultArtifact("junit:junit:jar:4.10");
 
     // This should not throw StackOverflowError
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(beamZetaSqlExtensions));
+    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(beamZetaSqlExtensions), true);
     assertNotNull(result);
   }
 }

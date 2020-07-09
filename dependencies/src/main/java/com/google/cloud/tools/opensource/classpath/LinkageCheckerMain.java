@@ -79,7 +79,7 @@ class LinkageCheckerMain {
           DependencyGraphBuilder dependencyGraphBuilder =
               new DependencyGraphBuilder(linkageCheckerArguments.getMavenRepositoryUrls());
           ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
-          classPathResult = classPathBuilder.resolve(artifacts);
+          classPathResult = classPathBuilder.resolve(artifacts, true);
           inputClassPath = classPathResult.getClassPath();
           artifactProblems.addAll(classPathResult.getArtifactProblems());
           entryPoints = ImmutableSet.copyOf(inputClassPath.subList(0, artifacts.size()));

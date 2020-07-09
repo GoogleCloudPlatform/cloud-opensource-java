@@ -22,22 +22,45 @@ import static org.junit.Assert.fail;
 import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.junit.Before;
 import org.junit.Test;
 
 public class MemoryUsageTest {
   private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
   
+  @Before
+  public void setUp() {
+    System.gc();
+  }
+  
   @Test
   public void testBeamCatalogOutOfMemoryError() {
-    
-    System.gc();
     long before = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-    // Artifact catalog = new DefaultArtifact("org.apache.beam:beam-sdks-java-io-hcatalog:2.19.0");
+    String coords = "org.apache.beam:beam-sdks-java-io-hcatalog:2.19.0";
     
-    Artifact catalog = new DefaultArtifact(
-        "org.apache.beam:beam-sdks-java-extensions-sql-zetasql:jar:2.19.0");
+    Artifact catalog = new DefaultArtifact(coords);
     try {
-      ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(catalog));
+      ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(catalog), false);
+      long after = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+      double mb = (after - before) / (1024.0 * 1024.0);
+      System.err.println("Memory used: " + mb + "MB");      
+      
+      assertNotNull(result);
+    } catch (OutOfMemoryError failure) {
+      failure.printStackTrace();
+      fail("Ran out of memory");
+    } finally {
+      System.gc();      
+    }
+  }
+  
+  public void testBeamZetaSqlOutOfMemoryError() {    
+    long before = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+    
+    String coords = "org.apache.beam:beam-sdks-java-extensions-sql-zetasql:jar:2.19.0";
+    Artifact catalog = new DefaultArtifact(coords);
+    try {
+      ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(catalog), true);
       long after = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
       double mb = (after - before) / (1024.0 * 1024.0);
       System.err.println("Memory used: " + mb + "MB");      

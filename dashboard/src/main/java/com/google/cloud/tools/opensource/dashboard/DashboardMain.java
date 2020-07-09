@@ -177,7 +177,7 @@ public class DashboardMain {
 
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
-    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies);
+    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies, true);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
 
     LinkageChecker linkageChecker = LinkageChecker.create(classpath);
