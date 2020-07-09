@@ -23,19 +23,19 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
- * A missing or incompatible symbol that causes a linkage error.
+ * A linkage error.
  *
  * @see <a href="https://jlbp.dev/glossary.html#linkage-error">
  *     Java Dependency Glossary: Linkage Error</a>
  */
-public final class SymbolProblem {
+public final class LinkageProblem {
 
   private final ErrorType errorType;
   private final Symbol symbol;
   private final ClassFile containingClass;
 
   @VisibleForTesting
-  public SymbolProblem(Symbol symbol, ErrorType errorType, @Nullable ClassFile containingClass) {
+  public LinkageProblem(Symbol symbol, ErrorType errorType, @Nullable ClassFile containingClass) {
     Preconditions.checkNotNull(symbol);
 
     // After finding symbol problem, there is no need to have SuperClassSymbol over ClassSymbol.
@@ -74,7 +74,7 @@ public final class SymbolProblem {
     if (other == null || getClass() != other.getClass()) {
       return false;
     }
-    SymbolProblem that = (SymbolProblem) other;
+    LinkageProblem that = (LinkageProblem) other;
     return errorType == that.errorType
         && symbol.equals(that.symbol)
         && Objects.equals(containingClass, that.containingClass);
@@ -93,7 +93,7 @@ public final class SymbolProblem {
   }
 
   public static String formatSymbolProblems(
-      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems) {
+      ImmutableSetMultimap<LinkageProblem, ClassFile> symbolProblems) {
     StringBuilder output = new StringBuilder();
 
     symbolProblems

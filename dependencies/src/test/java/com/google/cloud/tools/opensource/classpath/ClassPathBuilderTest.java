@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.classpath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.google.cloud.tools.opensource.classpath.TestHelper;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
@@ -176,7 +175,7 @@ public class ClassPathBuilderTest {
         .doesNotContain(
             new ClassSymbol("org.apache.http.client.entity.GZIPInputStreamFactory"));
 
-    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+    ImmutableSetMultimap<LinkageProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
     assertEquals(
         "Method references within the same jar file should not be reported",

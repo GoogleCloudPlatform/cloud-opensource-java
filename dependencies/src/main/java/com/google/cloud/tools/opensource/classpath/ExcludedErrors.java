@@ -64,9 +64,9 @@ class ExcludedErrors {
    * Returns true if the exclusion rules contain references to {@code symbolProblem} from {@code
    * sourceClass}.
    */
-  boolean contains(SymbolProblem symbolProblem, ClassFile sourceClass) {
+  boolean contains(LinkageProblem linkageProblem, ClassFile sourceClass) {
     for (LinkageErrorMatcher matcher : exclusionMatchers) {
-      if (matcher.match(symbolProblem, sourceClass)) {
+      if (matcher.match(linkageProblem, sourceClass)) {
         return true;
       }
     }

@@ -24,7 +24,7 @@ import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
-import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
@@ -95,9 +95,9 @@ public class LinkageMonitor {
     String bomCoordinates = arguments[0];
     List<String> coordinatesElements = Splitter.on(':').splitToList(bomCoordinates);
 
-    Set<SymbolProblem> newSymbolProblems =
+    Set<LinkageProblem> newLinkageProblems =
         new LinkageMonitor().run(coordinatesElements.get(0), coordinatesElements.get(1));
-    int errorSize = newSymbolProblems.size();
+    int errorSize = newLinkageProblems.size();
     if (errorSize > 0) {
       logger.severe(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
@@ -170,13 +170,13 @@ public class LinkageMonitor {
    * method compares the latest release of the BOM and its snapshot version which uses artifacts in
    * {@link #localArtifacts}.
    */
-  private ImmutableSet<SymbolProblem> run(String groupId, String artifactId)
+  private ImmutableSet<LinkageProblem> run(String groupId, String artifactId)
       throws RepositoryException, IOException, MavenRepositoryException, ModelBuildingException {
     String latestBomCoordinates =
         RepositoryUtility.findLatestCoordinates(repositorySystem, groupId, artifactId);
     logger.info("BOM Coordinates: " + latestBomCoordinates);
     Bom baseline = Bom.readBom(latestBomCoordinates);
-    ImmutableSet<SymbolProblem> problemsInBaseline =
+    ImmutableSet<LinkageProblem> problemsInBaseline =
         LinkageChecker.create(baseline, null).findSymbolProblems().keySet();
     Bom snapshot = copyWithSnapshot(repositorySystem, session, baseline, localArtifacts);
 
@@ -196,10 +196,10 @@ public class LinkageMonitor {
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
     List<ClassPathEntry> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 
-    ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems =
+    ImmutableSetMultimap<LinkageProblem, ClassFile> snapshotSymbolProblems =
         LinkageChecker.create(classpath, ImmutableSet.copyOf(entryPointJars), null)
             .findSymbolProblems();
-    ImmutableSet<SymbolProblem> problemsInSnapshot = snapshotSymbolProblems.keySet();
+    ImmutableSet<LinkageProblem> problemsInSnapshot = snapshotSymbolProblems.keySet();
 
     if (problemsInBaseline.equals(problemsInSnapshot)) {
       logger.info(
@@ -207,12 +207,12 @@ public class LinkageMonitor {
       return ImmutableSet.of();
     }
 
-    Set<SymbolProblem> fixedProblems = Sets.difference(problemsInBaseline, problemsInSnapshot);
+    Set<LinkageProblem> fixedProblems = Sets.difference(problemsInBaseline, problemsInSnapshot);
     if (!fixedProblems.isEmpty()) {
       logger.info(messageForFixedErrors(fixedProblems));
     }
 
-    Set<SymbolProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
+    Set<LinkageProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newProblems.isEmpty()) {
       logger.severe(
           messageForNewErrors(snapshotSymbolProblems, problemsInBaseline, classPathResult));
@@ -230,15 +230,15 @@ public class LinkageMonitor {
    */
   @VisibleForTesting
   static String messageForNewErrors(
-      ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems,
-      Set<SymbolProblem> baselineProblems,
+      ImmutableSetMultimap<LinkageProblem, ClassFile> snapshotSymbolProblems,
+      Set<LinkageProblem> baselineProblems,
       ClassPathResult classPathResult) {
-    Set<SymbolProblem> newProblems =
+    Set<LinkageProblem> newProblems =
         Sets.difference(snapshotSymbolProblems.keySet(), baselineProblems);
     StringBuilder message =
         new StringBuilder("Newly introduced problem" + (newProblems.size() > 1 ? "s" : "") + ":\n");
     Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
-    for (SymbolProblem problem : newProblems) {
+    for (LinkageProblem problem : newProblems) {
       message.append(problem + "\n");
 
       // This is null for ClassNotFound error.
@@ -264,14 +264,14 @@ public class LinkageMonitor {
 
   /** Returns a message on {@code fixedProblems}. */
   @VisibleForTesting
-  static String messageForFixedErrors(Set<SymbolProblem> fixedProblems) {
+  static String messageForFixedErrors(Set<LinkageProblem> fixedProblems) {
     int problemSize = fixedProblems.size();
     StringBuilder message =
         new StringBuilder(
             "The following problem"
                 + (problemSize > 1 ? "s" : "")
                 + " in the baseline no longer appear in the snapshot:\n");
-    for (SymbolProblem problem : fixedProblems) {
+    for (LinkageProblem problem : fixedProblems) {
       message.append("  " + problem + "\n");
     }
     return message.toString();

@@ -24,7 +24,7 @@ import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
-import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
@@ -183,7 +183,7 @@ public class DashboardMain {
 
     LinkageChecker linkageChecker = LinkageChecker.create(classpath);
 
-    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+    ImmutableSetMultimap<LinkageProblem, ClassFile> symbolProblems =
         linkageChecker.findSymbolProblems();
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
@@ -201,7 +201,7 @@ public class DashboardMain {
       Bom bom,
       ArtifactCache cache,
       ClassPathResult classPathResult,
-      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems)
+      ImmutableSetMultimap<LinkageProblem, ClassFile> symbolProblems)
       throws IOException, TemplateException, URISyntaxException {
 
     Artifact bomArtifact = new DefaultArtifact(bom.getCoordinates());
@@ -214,7 +214,7 @@ public class DashboardMain {
     copyResource(output, "css/dashboard.css");
     copyResource(output, "js/dashboard.js");
 
-    ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable =
+    ImmutableMap<ClassPathEntry, ImmutableSetMultimap<LinkageProblem, String>> symbolProblemTable =
         indexByJar(symbolProblems);
 
     List<ArtifactResults> table =
@@ -256,7 +256,7 @@ public class DashboardMain {
       Configuration configuration,
       Path output,
       ArtifactCache cache,
-      ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
+      ImmutableMap<ClassPathEntry, ImmutableSetMultimap<LinkageProblem, String>> symbolProblemTable,
       ClassPathResult classPathResult,
       Bom bom) throws TemplateException {
 
@@ -273,7 +273,7 @@ public class DashboardMain {
           Artifact artifact = entry.getKey();
           ImmutableSet<ClassPathEntry> jarsInDependencyTree =
               classPathResult.getClassPathEntries(Artifacts.toCoordinates(artifact));
-          Map<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>>
+          Map<ClassPathEntry, ImmutableSetMultimap<LinkageProblem, String>>
               relevantSymbolProblemTable =
                   Maps.filterKeys(symbolProblemTable, jarsInDependencyTree::contains);
 
@@ -333,7 +333,7 @@ public class DashboardMain {
       Artifact artifact,
       ArtifactInfo artifactInfo,
       List<DependencyGraph> globalDependencies,
-      ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
+      ImmutableMap<ClassPathEntry, ImmutableSetMultimap<LinkageProblem, String>> symbolProblemTable,
       ClassPathResult classPathResult,
       Bom bom)
       throws IOException, TemplateException {
@@ -422,10 +422,10 @@ public class DashboardMain {
    * are not null means that {@code JarX} has {@code SymbolProblemY} and that {@code JarX} contains
    * {@code classes} which reference {@code SymbolProblemY.getSymbol()}.
    */
-  private static ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>>
-      indexByJar(ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems) {
+  private static ImmutableMap<ClassPathEntry, ImmutableSetMultimap<LinkageProblem, String>>
+      indexByJar(ImmutableSetMultimap<LinkageProblem, ClassFile> symbolProblems) {
 
-    ImmutableMap<ClassPathEntry, Collection<Entry<SymbolProblem, ClassFile>>> jarMap =
+    ImmutableMap<ClassPathEntry, Collection<Entry<LinkageProblem, ClassFile>>> jarMap =
         Multimaps.index(symbolProblems.entries(), entry -> entry.getValue().getClassPathEntry())
             .asMap();
 
@@ -444,7 +444,7 @@ public class DashboardMain {
       Path output,
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
-      ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
+      ImmutableMap<ClassPathEntry, ImmutableSetMultimap<LinkageProblem, String>> symbolProblemTable,
       ClassPathResult classPathResult,
       Bom bom)
       throws IOException, TemplateException {

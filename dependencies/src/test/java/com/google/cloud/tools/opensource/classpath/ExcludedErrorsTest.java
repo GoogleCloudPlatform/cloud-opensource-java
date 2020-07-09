@@ -33,10 +33,10 @@ public class ExcludedErrorsTest {
     MethodSymbol methodSymbol =
         new MethodSymbol(targetClassName, "equals", "(Ljava/lang/Object;)Z", false);
 
-    SymbolProblem symbolProblem = new SymbolProblem(methodSymbol, ErrorType.ABSTRACT_METHOD, null);
+    LinkageProblem linkageProblem = new LinkageProblem(methodSymbol, ErrorType.ABSTRACT_METHOD, null);
 
     ClassFile sourceClass = new ClassFile(new ClassPathEntry(Paths.get("foo")), "org.graalvm.Foo");
-    assertTrue(excludedErrors.contains(symbolProblem, sourceClass));
+    assertTrue(excludedErrors.contains(linkageProblem, sourceClass));
   }
 
   @Test
@@ -47,9 +47,9 @@ public class ExcludedErrorsTest {
     MethodSymbol methodSymbol =
         new MethodSymbol(targetClassName, "equals", "(Ljava/lang/Object;)Z", false);
 
-    SymbolProblem symbolProblem = new SymbolProblem(methodSymbol, ErrorType.ABSTRACT_METHOD, null);
+    LinkageProblem linkageProblem = new LinkageProblem(methodSymbol, ErrorType.ABSTRACT_METHOD, null);
 
     ClassFile sourceClass = new ClassFile(new ClassPathEntry(Paths.get("foo")), "org.graalvm.Foo");
-    assertFalse(excludedErrors.contains(symbolProblem, sourceClass));
+    assertFalse(excludedErrors.contains(linkageProblem, sourceClass));
   }
 }

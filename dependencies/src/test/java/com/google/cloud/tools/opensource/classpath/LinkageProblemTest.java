@@ -31,58 +31,58 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Test;
 
-public class SymbolProblemTest {
+public class LinkageProblemTest {
 
   @Test
   public void testCreation() throws IOException {
-    SymbolProblem symbolProblem =
-        new SymbolProblem(
+    LinkageProblem linkageProblem =
+        new LinkageProblem(
             new ClassSymbol("java.lang.Integer"),
             ErrorType.CLASS_NOT_FOUND,
             new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object"));
-    assertSame(ErrorType.CLASS_NOT_FOUND, symbolProblem.getErrorType());
-    assertEquals(new ClassSymbol("java.lang.Integer"), symbolProblem.getSymbol());
+    assertSame(ErrorType.CLASS_NOT_FOUND, linkageProblem.getErrorType());
+    assertEquals(new ClassSymbol("java.lang.Integer"), linkageProblem.getSymbol());
     assertEquals(
         new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object"),
-        symbolProblem.getContainingClass());
+        linkageProblem.getContainingClass());
   }
 
   @Test
   public void testNull() {
     new NullPointerTester()
         .setDefault(Symbol.class, new ClassSymbol("java.lang.Integer"))
-        .testConstructors(SymbolProblem.class, Visibility.PACKAGE);
+        .testConstructors(LinkageProblem.class, Visibility.PACKAGE);
   }
 
   @Test
   public void testEquality() throws IOException {
     new EqualsTester()
         .addEqualityGroup(
-            new SymbolProblem(
+            new LinkageProblem(
                 new ClassSymbol("java.lang.Integer"),
                 ErrorType.CLASS_NOT_FOUND,
                 new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object")),
-            new SymbolProblem(
+            new LinkageProblem(
                 new ClassSymbol("java.lang.Integer"),
                 ErrorType.CLASS_NOT_FOUND,
                 new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object")))
         .addEqualityGroup(
-            new SymbolProblem(
+            new LinkageProblem(
                 new ClassSymbol("java.lang.Long"),
                 ErrorType.CLASS_NOT_FOUND,
                 new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object")))
         .addEqualityGroup(
-            new SymbolProblem(
+            new LinkageProblem(
                 new ClassSymbol("java.lang.Integer"),
                 ErrorType.CLASS_NOT_FOUND,
                 new ClassFile(new ClassPathEntry(Paths.get("abc", "bar.jar")), "java.lang.Object")))
         .addEqualityGroup(
-            new SymbolProblem(
+            new LinkageProblem(
                 new ClassSymbol("java.lang.Integer"),
                 ErrorType.CLASS_NOT_FOUND,
                 new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Long")))
         .addEqualityGroup(
-            new SymbolProblem(
+            new LinkageProblem(
                 new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null))
         .testEquals();
   }
@@ -90,8 +90,8 @@ public class SymbolProblemTest {
   @Test
   public void testFormatSymbolProblems() throws IOException {
     Path path = Paths.get("aaa", "bbb-1.2.3.jar");
-    SymbolProblem methodSymbolProblem =
-        new SymbolProblem(
+    LinkageProblem methodLinkageProblem =
+        new LinkageProblem(
             new MethodSymbol(
                 "io.grpc.protobuf.ProtoUtils.marshaller",
                 "marshaller",
@@ -100,15 +100,15 @@ public class SymbolProblemTest {
             ErrorType.SYMBOL_NOT_FOUND,
             new ClassFile(new ClassPathEntry(path), "java.lang.Object"));
 
-    SymbolProblem classSymbolProblem =
-        new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
+    LinkageProblem classLinkageProblem =
+        new LinkageProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
 
     Artifact artifact = new DefaultArtifact("com.google:ccc:1.2.3")
         .setFile(new File("ccc-1.2.3.jar"));
     ClassPathEntry entry = new ClassPathEntry(artifact);  
   
-    SymbolProblem fieldSymbolProblem =
-        new SymbolProblem(
+    LinkageProblem fieldLinkageProblem =
+        new LinkageProblem(
             new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"),
             ErrorType.SYMBOL_NOT_FOUND,
             new ClassFile(entry, "java.lang.Integer"));
@@ -123,15 +123,15 @@ public class SymbolProblemTest {
     ClassPathEntry entry2 = new ClassPathEntry(artifact2);  
     ClassFile source2 = new ClassFile(entry2, "java.lang.Integer");
 
-    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+    ImmutableSetMultimap<LinkageProblem, ClassFile> symbolProblems =
         ImmutableSetMultimap.of(
-            methodSymbolProblem,
+            methodLinkageProblem,
             source1,
-            classSymbolProblem,
+            classLinkageProblem,
             source1,
-            classSymbolProblem,
+            classLinkageProblem,
             source2,
-            fieldSymbolProblem,
+            fieldLinkageProblem,
             source2);
     assertEquals(
         "("
@@ -148,6 +148,6 @@ public class SymbolProblemTest {
             + "(com.google:ccc:1.2.3) java.lang.Integer's field MAX_VALUE is not found;\n"
             + "  referenced by 1 class file\n"
             + "    java.lang.Integer (com.google:bar:0.0.1)\n",
-        SymbolProblem.formatSymbolProblems(symbolProblems));
+        LinkageProblem.formatSymbolProblems(symbolProblems));
   }
 }

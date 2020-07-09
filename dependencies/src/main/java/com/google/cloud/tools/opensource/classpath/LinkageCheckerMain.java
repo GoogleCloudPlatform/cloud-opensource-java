@@ -88,7 +88,7 @@ class LinkageCheckerMain {
         LinkageChecker linkageChecker =
             LinkageChecker.create(
                 inputClassPath, entryPoints, linkageCheckerArguments.getInputExclusionFile());
-        ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        ImmutableSetMultimap<LinkageProblem, ClassFile> symbolProblems =
             linkageChecker.findSymbolProblems();
     
         if (linkageCheckerArguments.getReportOnlyReachable()) {
@@ -107,17 +107,17 @@ class LinkageCheckerMain {
         }
 
         if (!symbolProblems.isEmpty()) {
-          System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
+          System.out.println(LinkageProblem.formatSymbolProblems(symbolProblems));
         }
 
         if (classPathResult != null && !symbolProblems.isEmpty()) {
           Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
-          for (SymbolProblem symbolProblem : symbolProblems.keySet()) {
-            ClassFile containingClass = symbolProblem.getContainingClass();
+          for (LinkageProblem linkageProblem : symbolProblems.keySet()) {
+            ClassFile containingClass = linkageProblem.getContainingClass();
             if (containingClass != null) {
               problematicJars.add(containingClass.getClassPathEntry());
             }
-            for (ClassFile classFile : symbolProblems.get(symbolProblem)) {
+            for (ClassFile classFile : symbolProblems.get(linkageProblem)) {
               problematicJars.add(classFile.getClassPathEntry());
             }
           }

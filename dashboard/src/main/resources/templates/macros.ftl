@@ -25,14 +25,14 @@
     ${pluralize(referenceCount, "source class", "source classes")}.
   </p>
   <#assign jarsInProblem = {} >
-  <#list problemsToClasses as symbolProblem, sourceClasses>
-    <#if (symbolProblem.getContainingClass())?? >
+  <#list problemsToClasses as linkageProblem, sourceClasses>
+    <#if (linkageProblem.getContainingClass())?? >
       <!-- Freemarker's hash requires its keys to be string.
       https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys -->
       <#assign jarsInProblem = jarsInProblem
-        + { symbolProblem.getContainingClass().getClassPathEntry().toString() :  symbolProblem.getContainingClass().getClassPathEntry() } >
+        + { linkageProblem.getContainingClass().getClassPathEntry().toString() :  linkageProblem.getContainingClass().getClassPathEntry() } >
     </#if>
-    <p class="jar-linkage-report-cause">${symbolProblem?html}, referenced from ${
+    <p class="jar-linkage-report-cause">${linkageProblem?html}, referenced from ${
       pluralize(sourceClasses?size, "class", "classes")?html}
       <button onclick="toggleSourceClassListVisibility(this)"
               title="Toggle visibility of source class list">▶

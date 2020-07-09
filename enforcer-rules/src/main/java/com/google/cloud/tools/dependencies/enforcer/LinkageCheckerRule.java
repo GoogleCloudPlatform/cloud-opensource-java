@@ -26,7 +26,7 @@ import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
-import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -201,7 +201,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         Path exclusionFile = this.exclusionFile == null ? null : Paths.get(this.exclusionFile);
         LinkageChecker linkageChecker =
             LinkageChecker.create(classPath, entryPoints, exclusionFile);
-        ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+        ImmutableSetMultimap<LinkageProblem, ClassFile> symbolProblems =
             linkageChecker.findSymbolProblems();
         if (reportOnlyReachable) {
           ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
@@ -222,7 +222,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           String message =
               String.format(
                   "Linkage Checker rule found %d %s. Linkage error report:\n%s",
-                  errorCount, foundError, SymbolProblem.formatSymbolProblems(symbolProblems));
+                  errorCount, foundError, LinkageProblem.formatSymbolProblems(symbolProblems));
           String dependencyPaths =
               dependencyPathsOfProblematicJars(classPathResult, symbolProblems);
 
@@ -372,9 +372,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   private String dependencyPathsOfProblematicJars(
-      ClassPathResult classPathResult, Multimap<SymbolProblem, ClassFile> symbolProblems) {
+      ClassPathResult classPathResult, Multimap<LinkageProblem, ClassFile> symbolProblems) {
     ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
-    for (SymbolProblem problem : symbolProblems.keySet()) {
+    for (LinkageProblem problem : symbolProblems.keySet()) {
       ClassFile containingClass = problem.getContainingClass();
       if (containingClass != null) {
         problematicJars.add(containingClass.getClassPathEntry());

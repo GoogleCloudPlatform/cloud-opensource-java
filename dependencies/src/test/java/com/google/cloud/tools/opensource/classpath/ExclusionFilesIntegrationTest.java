@@ -58,7 +58,7 @@ public class ExclusionFilesIntegrationTest {
     LinkageChecker linkagechecker =
         LinkageChecker.create(classPathResult.getClassPath(), ImmutableList.of(), exclusionFile);
 
-    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
+    ImmutableSetMultimap<LinkageProblem, ClassFile> symbolProblems =
         linkagechecker.findSymbolProblems();
     Truth.assertThat(symbolProblems).isEmpty();
   }

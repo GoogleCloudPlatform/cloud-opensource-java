@@ -30,8 +30,8 @@ import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.cloud.tools.opensource.classpath.ErrorType;
+import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.classpath.MethodSymbol;
-import com.google.cloud.tools.opensource.classpath.SymbolProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -69,9 +69,9 @@ public class LinkageMonitorTest {
       .setFile(new File("foo/b-1.0.0.jar"));
   private ClassPathEntry jarB = new ClassPathEntry(artifactB);
 
-  private SymbolProblem classNotFoundProblem =
-      new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
-  private SymbolProblem methodNotFoundProblem;
+  private LinkageProblem classNotFoundProblem =
+      new LinkageProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
+  private LinkageProblem methodNotFoundProblem;
 
   @Before
   public void setup() throws IOException {
@@ -79,7 +79,7 @@ public class LinkageMonitorTest {
     session = RepositoryUtility.newSession(system);
 
     methodNotFoundProblem =
-        new SymbolProblem(
+        new LinkageProblem(
             new MethodSymbol(
                 "io.grpc.protobuf.ProtoUtils",
                 "marshaller",
@@ -119,12 +119,12 @@ public class LinkageMonitorTest {
 
   @Test
   public void generateMessageForNewError() throws IOException {
-    Set<SymbolProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
+    Set<LinkageProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
     
     Artifact artifactA = new DefaultArtifact("foo:a:1.2.3").setFile(new File("foo/a-1.2.3.jar"));
     ClassPathEntry jarA = new ClassPathEntry(artifactA);
     
-    ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotProblems =
+    ImmutableSetMultimap<LinkageProblem, ClassFile> snapshotProblems =
         ImmutableSetMultimap.of(
             classNotFoundProblem, // This is in baseline. It should not be printed
             new ClassFile(jarA, "com.abc.AAA"),

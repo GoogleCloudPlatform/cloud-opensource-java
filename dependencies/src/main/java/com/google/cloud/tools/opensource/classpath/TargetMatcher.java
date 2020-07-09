@@ -27,7 +27,7 @@ class TargetMatcher implements SymbolProblemMatcher {
   }
 
   @Override
-  public boolean match(SymbolProblem problem, ClassFile sourceClass) {
+  public boolean match(LinkageProblem problem, ClassFile sourceClass) {
     return matcher.match(problem.getSymbol());
   }
 }

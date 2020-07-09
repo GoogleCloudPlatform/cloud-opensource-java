@@ -137,12 +137,12 @@ public class LinkageChecker {
   /**
    * Searches the classpath for linkage errors.
    * 
-   * @return {@link SymbolProblem}s found in the class path and referencing classes
+   * @return {@link LinkageProblem}s found in the class path and referencing classes
    * @throws IOException I/O error reading files in the classpath
    */
-  public ImmutableSetMultimap<SymbolProblem, ClassFile> findSymbolProblems() throws IOException {
+  public ImmutableSetMultimap<LinkageProblem, ClassFile> findSymbolProblems() throws IOException {
     // Having Problem in key will dedup SymbolProblems
-    ImmutableSetMultimap.Builder<SymbolProblem, ClassFile> problemToClass =
+    ImmutableSetMultimap.Builder<LinkageProblem, ClassFile> problemToClass =
         ImmutableSetMultimap.builder();
     
     for (ClassFile classFile : symbolReferences.getClassFiles()) {
@@ -150,13 +150,13 @@ public class LinkageChecker {
 
       for (ClassSymbol classSymbol : classSymbols) {
         if (classSymbol instanceof SuperClassSymbol) {
-          ImmutableList<SymbolProblem> problems =
+          ImmutableList<LinkageProblem> problems =
               findAbstractParentProblems(classFile, (SuperClassSymbol) classSymbol);
           if (!problems.isEmpty()) {
             String superClassName = classSymbol.getClassBinaryName();
             ClassPathEntry superClassLocation = classDumper.findClassLocation(superClassName);
             ClassFile superClassFile = new ClassFile(superClassLocation, superClassName);
-            for (SymbolProblem problem : problems) {
+            for (LinkageProblem problem : problems) {
               problemToClass.put(problem, superClassFile);
             }
           }
@@ -167,13 +167,13 @@ public class LinkageChecker {
         String classFileName = classDumper.getFileName(classBinaryName);
         if (!classFileNames.contains(classFileName)) {
           if (classSymbol instanceof InterfaceSymbol) {
-            ImmutableList<SymbolProblem> problems =
+            ImmutableList<LinkageProblem> problems =
                 findInterfaceProblems(classFile, (InterfaceSymbol) classSymbol);
             if (!problems.isEmpty()) {
               String interfaceName = classSymbol.getClassBinaryName();
               ClassPathEntry interfaceLocation = classDumper.findClassLocation(interfaceName);
               ClassFile interfaceClassFile = new ClassFile(interfaceLocation, interfaceName);
-              for (SymbolProblem problem : problems) {
+              for (LinkageProblem problem : problems) {
                 problemToClass.put(problem, interfaceClassFile);
               }
             }
@@ -212,7 +212,7 @@ public class LinkageChecker {
     }
 
     // Filter classes in whitelist
-    SetMultimap<SymbolProblem, ClassFile> filteredMap =
+    SetMultimap<LinkageProblem, ClassFile> filteredMap =
         Multimaps.filterEntries(problemToClass.build(), this::problemFilter);
     return ImmutableSetMultimap.copyOf(filteredMap);
   }
@@ -221,10 +221,10 @@ public class LinkageChecker {
    * Returns true if the linkage error {@code entry} should be reported. False if it should be
    * suppressed.
    */
-  private boolean problemFilter(Map.Entry<SymbolProblem, ClassFile> entry) {
-    SymbolProblem symbolProblem = entry.getKey();
+  private boolean problemFilter(Map.Entry<LinkageProblem, ClassFile> entry) {
+    LinkageProblem linkageProblem = entry.getKey();
     ClassFile sourceClass = entry.getValue();
-    return !excludedErrors.contains(symbolProblem, sourceClass);
+    return !excludedErrors.contains(linkageProblem, sourceClass);
   }
 
   /**
@@ -238,7 +238,7 @@ public class LinkageChecker {
    *     Virtual Machine Specification: 5.4.3.4. Interface Method Resolution</a>
    */
   @VisibleForTesting
-  Optional<SymbolProblem> findSymbolProblem(ClassFile classFile, MethodSymbol symbol) {
+  Optional<LinkageProblem> findSymbolProblem(ClassFile classFile, MethodSymbol symbol) {
     String sourceClassName = classFile.getBinaryName();
     String targetClassName = symbol.getClassBinaryName();
     String methodName = symbol.getName();
@@ -256,16 +256,16 @@ public class LinkageChecker {
 
       if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
         return Optional.of(
-            new SymbolProblem(symbol, ErrorType.INACCESSIBLE_CLASS, containingClassFile));
+            new LinkageProblem(symbol, ErrorType.INACCESSIBLE_CLASS, containingClassFile));
       }
 
       if (targetJavaClass.isInterface() != symbol.isInterfaceMethod()) {
         return Optional.of(
-            new SymbolProblem(symbol, ErrorType.INCOMPATIBLE_CLASS_CHANGE, containingClassFile));
+            new LinkageProblem(symbol, ErrorType.INCOMPATIBLE_CLASS_CHANGE, containingClassFile));
       }
 
       // Check the existence of the parent class or interface for the class
-      Optional<SymbolProblem> parentSymbolProblem = findParentSymbolProblem(targetClassName);
+      Optional<LinkageProblem> parentSymbolProblem = findParentSymbolProblem(targetClassName);
       if (parentSymbolProblem.isPresent()) {
         return parentSymbolProblem;
       }
@@ -285,7 +285,7 @@ public class LinkageChecker {
               && method.getSignature().equals(symbol.getDescriptor())) {
             if (!isMemberAccessibleFrom(javaClass, method, sourceClassName)) {
               return Optional.of(
-                  new SymbolProblem(symbol, ErrorType.INACCESSIBLE_MEMBER, containingClassFile));
+                  new LinkageProblem(symbol, ErrorType.INACCESSIBLE_MEMBER, containingClassFile));
             }
             // The method is found and accessible. Returning no error.
             return Optional.empty();
@@ -300,13 +300,13 @@ public class LinkageChecker {
 
       // The class is in class path but the symbol is not found
       return Optional.of(
-          new SymbolProblem(symbol, ErrorType.SYMBOL_NOT_FOUND, containingClassFile));
+          new LinkageProblem(symbol, ErrorType.SYMBOL_NOT_FOUND, containingClassFile));
     } catch (ClassNotFoundException ex) {
       if (classDumper.catchesLinkageErrorOnClass(sourceClassName)) {
         return Optional.empty();
       }
       ClassSymbol classSymbol = new ClassSymbol(symbol.getClassBinaryName());
-      return Optional.of(new SymbolProblem(classSymbol, ErrorType.CLASS_NOT_FOUND, null));
+      return Optional.of(new LinkageProblem(classSymbol, ErrorType.CLASS_NOT_FOUND, null));
     }
   }
 
@@ -314,14 +314,14 @@ public class LinkageChecker {
    * Returns the linkage errors for unimplemented methods in {@code classFile}. Such unimplemented
    * methods manifest as {@link AbstractMethodError} in runtime.
    */
-  private ImmutableList<SymbolProblem> findInterfaceProblems(
+  private ImmutableList<LinkageProblem> findInterfaceProblems(
       ClassFile classFile, InterfaceSymbol interfaceSymbol) {
     String interfaceName = interfaceSymbol.getClassBinaryName();
     if (classDumper.isSystemClass(interfaceName)) {
       return ImmutableList.of();
     }
 
-    ImmutableList.Builder<SymbolProblem> builder = ImmutableList.builder();
+    ImmutableList.Builder<LinkageProblem> builder = ImmutableList.builder();
     try {
       JavaClass implementingClass = classDumper.loadJavaClass(classFile.getBinaryName());
       if (implementingClass.isAbstract()) {
@@ -354,7 +354,7 @@ public class LinkageChecker {
               new MethodSymbol(
                   classFile.getBinaryName(), interfaceMethodName, interfaceMethodDescriptor, false);
           builder.add(
-              new SymbolProblem(missingMethodOnClass, ErrorType.ABSTRACT_METHOD, classFile));
+              new LinkageProblem(missingMethodOnClass, ErrorType.ABSTRACT_METHOD, classFile));
         }
       }
     } catch (ClassNotFoundException ex) {
@@ -369,7 +369,7 @@ public class LinkageChecker {
    * Optional}.
    */
   @VisibleForTesting
-  Optional<SymbolProblem> findSymbolProblem(ClassFile classFile, FieldSymbol symbol) {
+  Optional<LinkageProblem> findSymbolProblem(ClassFile classFile, FieldSymbol symbol) {
     String sourceClassName = classFile.getBinaryName();
     String targetClassName = symbol.getClassBinaryName();
 
@@ -382,7 +382,7 @@ public class LinkageChecker {
 
       if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
         return Optional.of(
-            new SymbolProblem(symbol, ErrorType.INACCESSIBLE_CLASS, containingClassFile));
+            new LinkageProblem(symbol, ErrorType.INACCESSIBLE_CLASS, containingClassFile));
       }
 
       for (JavaClass javaClass : getClassHierarchy(targetJavaClass)) {
@@ -390,7 +390,7 @@ public class LinkageChecker {
           if (field.getName().equals(fieldName)) {
             if (!isMemberAccessibleFrom(javaClass, field, sourceClassName)) {
               return Optional.of(
-                  new SymbolProblem(symbol, ErrorType.INACCESSIBLE_MEMBER, containingClassFile));
+                  new LinkageProblem(symbol, ErrorType.INACCESSIBLE_MEMBER, containingClassFile));
             }
             // The field is found and accessible. Returning no error.
             return Optional.empty();
@@ -399,13 +399,13 @@ public class LinkageChecker {
       }
       // The field was not found in the class from the classpath
       return Optional.of(
-          new SymbolProblem(symbol, ErrorType.SYMBOL_NOT_FOUND, containingClassFile));
+          new LinkageProblem(symbol, ErrorType.SYMBOL_NOT_FOUND, containingClassFile));
     } catch (ClassNotFoundException ex) {
       if (classDumper.catchesLinkageErrorOnClass(sourceClassName)) {
         return Optional.empty();
       }
       ClassSymbol classSymbol = new ClassSymbol(symbol.getClassBinaryName());
-      return Optional.of(new SymbolProblem(classSymbol, ErrorType.CLASS_NOT_FOUND, null));
+      return Optional.of(new LinkageProblem(classSymbol, ErrorType.CLASS_NOT_FOUND, null));
     }
   }
 
@@ -458,7 +458,7 @@ public class LinkageChecker {
    * Optional}.
    */
   @VisibleForTesting
-  Optional<SymbolProblem> findSymbolProblem(ClassFile classFile, ClassSymbol symbol) {
+  Optional<LinkageProblem> findSymbolProblem(ClassFile classFile, ClassSymbol symbol) {
     String sourceClassName = classFile.getBinaryName();
     String targetClassName = symbol.getClassBinaryName();
 
@@ -473,12 +473,12 @@ public class LinkageChecker {
           && !ClassDumper.hasValidSuperclass(
               classDumper.loadJavaClass(sourceClassName), targetClass)) {
         return Optional.of(
-            new SymbolProblem(symbol, ErrorType.INCOMPATIBLE_CLASS_CHANGE, containingClassFile));
+            new LinkageProblem(symbol, ErrorType.INCOMPATIBLE_CLASS_CHANGE, containingClassFile));
       }
 
       if (!isClassAccessibleFrom(targetClass, sourceClassName)) {
         return Optional.of(
-            new SymbolProblem(symbol, ErrorType.INACCESSIBLE_CLASS, containingClassFile));
+            new LinkageProblem(symbol, ErrorType.INACCESSIBLE_CLASS, containingClassFile));
       }
       return Optional.empty();
     } catch (ClassNotFoundException ex) {
@@ -487,7 +487,7 @@ public class LinkageChecker {
         // The class reference is unused in the source
         return Optional.empty();
       }
-      return Optional.of(new SymbolProblem(symbol, ErrorType.CLASS_NOT_FOUND, null));
+      return Optional.of(new LinkageProblem(symbol, ErrorType.CLASS_NOT_FOUND, null));
     }
   }
 
@@ -531,7 +531,7 @@ public class LinkageChecker {
    * Returns an {@code Optional} describing the symbol problem in the parent classes or interfaces
    * of {@code baseClassName}, if any of them are missing; otherwise an empty {@code Optional}.
    */
-  private Optional<SymbolProblem> findParentSymbolProblem(String baseClassName) {
+  private Optional<LinkageProblem> findParentSymbolProblem(String baseClassName) {
     Queue<String> queue = new ArrayDeque<>();
     queue.add(baseClassName);
     while (!queue.isEmpty()) {
@@ -552,8 +552,8 @@ public class LinkageChecker {
         }
       } catch (ClassNotFoundException ex) {
         // potentiallyMissingClassName (either className or interfaceName) is missing
-        SymbolProblem problem =
-            new SymbolProblem(
+        LinkageProblem problem =
+            new LinkageProblem(
                 new ClassSymbol(potentiallyMissingClassName), ErrorType.SYMBOL_NOT_FOUND, null);
         return Optional.of(problem);
       }
@@ -561,9 +561,9 @@ public class LinkageChecker {
     return Optional.empty();
   }
 
-  private ImmutableList<SymbolProblem> findAbstractParentProblems(
+  private ImmutableList<LinkageProblem> findAbstractParentProblems(
       ClassFile classFile, SuperClassSymbol superClassSymbol) {
-    ImmutableList.Builder<SymbolProblem> builder = ImmutableList.builder();
+    ImmutableList.Builder<LinkageProblem> builder = ImmutableList.builder();
     String superClassName = superClassSymbol.getClassBinaryName();
     if (classDumper.isSystemClass(superClassName)) {
       return ImmutableList.of();
@@ -600,7 +600,7 @@ public class LinkageChecker {
                 new MethodSymbol(
                     className, unimplementedMethodName, unimplementedMethodDescriptor, false);
             builder.add(
-                new SymbolProblem(missingMethodOnClass, ErrorType.ABSTRACT_METHOD, classFile));
+                new LinkageProblem(missingMethodOnClass, ErrorType.ABSTRACT_METHOD, classFile));
           }
         }
         abstractClass = abstractClass.getSuperClass();

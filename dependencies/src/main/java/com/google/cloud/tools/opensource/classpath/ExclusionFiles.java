@@ -142,7 +142,7 @@ class ExclusionFiles {
   }
 
   /** Writes {@code linkageErrors} as exclusion rules into {@code outputFile}. */
-  static void write(Path outputFile, Multimap<SymbolProblem, ClassFile> linkageErrors)
+  static void write(Path outputFile, Multimap<LinkageProblem, ClassFile> linkageErrors)
       throws IOException, XMLStreamException, TransformerException {
 
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -153,9 +153,9 @@ class ExclusionFiles {
       writer.add(eventFactory.createStartDocument());
       writer.add(eventFactory.createStartElement(LINKAGE_CHECKER_FILTER_TAG, null, null));
 
-      for (SymbolProblem symbolProblem : linkageErrors.keySet()) {
-        for (ClassFile classFile : linkageErrors.get(symbolProblem)) {
-          writeXmlEvents(writer, symbolProblem, classFile);
+      for (LinkageProblem linkageProblem : linkageErrors.keySet()) {
+        for (ClassFile classFile : linkageErrors.get(linkageProblem)) {
+          writeXmlEvents(writer, linkageProblem, classFile);
         }
       }
 
@@ -193,12 +193,12 @@ class ExclusionFiles {
   }
 
   private static void writeXmlEvents(
-      XMLEventWriter writer, SymbolProblem symbolProblem, ClassFile classFile)
+      XMLEventWriter writer, LinkageProblem linkageProblem, ClassFile classFile)
       throws XMLStreamException {
     writer.add(eventFactory.createStartElement(LINKAGE_ERROR_TAG, null, null));
 
     writer.add(eventFactory.createStartElement(TARGET_TAG, null, null));
-    writeXmlElement(writer, symbolProblem.getSymbol());
+    writeXmlElement(writer, linkageProblem.getSymbol());
     writer.add(eventFactory.createEndElement(TARGET_TAG, null));
 
     writer.add(eventFactory.createStartElement(SOURCE_TAG, null, null));

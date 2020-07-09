@@ -19,7 +19,7 @@ package com.google.cloud;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
-import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
@@ -49,28 +49,28 @@ public class MaximumLinkageErrorsTest {
     Path bomFile = Paths.get("../cloud-oss-bom/pom.xml");
     Bom bom = Bom.readBom(bomFile);
 
-    ImmutableSetMultimap<SymbolProblem, ClassFile> oldProblems =
+    ImmutableSetMultimap<LinkageProblem, ClassFile> oldProblems =
         LinkageChecker.create(baseline).findSymbolProblems();
     LinkageChecker checker = LinkageChecker.create(bom);
-    ImmutableSetMultimap<SymbolProblem, ClassFile> currentProblems = checker.findSymbolProblems();
+    ImmutableSetMultimap<LinkageProblem, ClassFile> currentProblems = checker.findSymbolProblems();
 
     // This only tests for newly missing methods, not new references to
     // previously missing methods.
-    SetView<SymbolProblem> newProblems =
+    SetView<LinkageProblem> newProblems =
         Sets.difference(currentProblems.keySet(), oldProblems.keySet());
 
     // Check that no new linkage errors have been introduced since the baseline
     StringBuilder message = new StringBuilder("Baseline BOM: " + baselineCoordinates + "\n");
     if (!newProblems.isEmpty()) {
       message.append("Newly introduced problems:\n");
-      for (SymbolProblem problem : newProblems) {
+      for (LinkageProblem problem : newProblems) {
         message.append(problem + " referenced from " + currentProblems.get(problem) + "\n");
       }
       Assert.fail(message.toString());
     }
     
     // If that passes, check whether there are any new references to missing methods:
-    for (SymbolProblem problem : currentProblems.keySet()) {
+    for (LinkageProblem problem : currentProblems.keySet()) {
       ImmutableSet<ClassFile> oldReferences = oldProblems.get(problem);
       ImmutableSet<ClassFile> currentReferences = currentProblems.get(problem);
       SetView<ClassFile> newReferences = Sets.difference(currentReferences, oldReferences);
