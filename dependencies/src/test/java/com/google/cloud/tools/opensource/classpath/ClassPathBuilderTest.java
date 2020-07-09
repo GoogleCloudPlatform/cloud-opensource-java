@@ -18,7 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-
+import static org.junit.Assert.fail;
 import com.google.cloud.tools.opensource.classpath.TestHelper;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
@@ -42,6 +42,24 @@ public class ClassPathBuilderTest {
     Artifact artifact = new DefaultArtifact(coordinates);
     ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(artifact), true);
     return result.getClassPath();
+  }
+  
+  
+  @Test
+  public void testResolve_withoutOptionalDependencies() {
+    // an artifact with a very large dependency graph
+    String coords = "org.apache.beam:beam-sdks-java-io-hcatalog:2.19.0";
+    
+    Artifact catalog = new DefaultArtifact(coords);
+    try {
+      ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(catalog), false);
+      assertNotNull(result);
+    } catch (OutOfMemoryError failure) {
+      failure.printStackTrace();
+      fail("Ran out of memory");
+    } finally {
+      System.gc();      
+    }
   }
 
   @Test
