@@ -95,12 +95,12 @@ public class LinkageProblemTest {
                 new ClassSymbol("java.lang.Integer"),
                 ErrorType.CLASS_NOT_FOUND,
                 null,
+                new ClassFile(new ClassPathEntry(Paths.get("aaa", "bbb.jar")), "java.lang.ABC")),
+            new LinkageProblem(
+                new ClassSymbol("java.lang.Integer"),
+                ErrorType.CLASS_NOT_FOUND,
+                null,
                 new ClassFile(new ClassPathEntry(Paths.get("aaa", "bbb.jar")), "java.lang.ABC")))
-        .addEqualityGroup(
-            new LinkageProblem(
-                new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null, null),
-            new LinkageProblem(
-                new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null, null))
         .testEquals();
   }
 

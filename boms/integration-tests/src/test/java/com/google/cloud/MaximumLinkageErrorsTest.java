@@ -49,38 +49,22 @@ public class MaximumLinkageErrorsTest {
     Path bomFile = Paths.get("../cloud-oss-bom/pom.xml");
     Bom bom = Bom.readBom(bomFile);
 
-    ImmutableSetMultimap<LinkageProblem, ClassFile> oldProblems =
+    ImmutableSet<LinkageProblem> oldProblems =
         LinkageChecker.create(baseline).findSymbolProblems();
     LinkageChecker checker = LinkageChecker.create(bom);
-    ImmutableSetMultimap<LinkageProblem, ClassFile> currentProblems = checker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> currentProblems = checker.findSymbolProblems();
 
     // This only tests for newly missing methods, not new references to
     // previously missing methods.
     SetView<LinkageProblem> newProblems =
-        Sets.difference(currentProblems.keySet(), oldProblems.keySet());
+        Sets.difference(currentProblems, oldProblems);
 
     // Check that no new linkage errors have been introduced since the baseline
     StringBuilder message = new StringBuilder("Baseline BOM: " + baselineCoordinates + "\n");
     if (!newProblems.isEmpty()) {
       message.append("Newly introduced problems:\n");
-      for (LinkageProblem problem : newProblems) {
-        message.append(problem + " referenced from " + currentProblems.get(problem) + "\n");
-      }
+      message.append(LinkageProblem.formatLinkageProblems(newProblems));
       Assert.fail(message.toString());
-    }
-
-    // If that passes, check whether there are any new references to missing methods:
-    for (LinkageProblem problem : currentProblems.keySet()) {
-      ImmutableSet<ClassFile> oldReferences = oldProblems.get(problem);
-      ImmutableSet<ClassFile> currentReferences = currentProblems.get(problem);
-      SetView<ClassFile> newReferences = Sets.difference(currentReferences, oldReferences);
-      if (!newReferences.isEmpty()) {
-        message.append("Newly introduced classes linking to " + problem + ":\n");
-        for (ClassFile classFile : newReferences) {
-          message.append("Link from " + classFile + "\n");
-        }
-        Assert.fail(message.toString());
-      }
     }
   }
 
