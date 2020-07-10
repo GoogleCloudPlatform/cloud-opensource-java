@@ -224,8 +224,7 @@ public class LinkageMonitor {
   }
 
   /**
-   * Returns a message on {@code snapshotProblems} that do not exist in {@code
-   * baselineProblems}.
+   * Returns a message on {@code snapshotProblems} that do not exist in {@code baselineProblems}.
    */
   @VisibleForTesting
   static String messageForNewErrors(
