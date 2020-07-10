@@ -113,9 +113,10 @@ class LinkageCheckerMain {
         if (classPathResult != null && !linkageProblems.isEmpty()) {
           ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
           for (LinkageProblem linkageProblem : linkageProblems) {
-            ClassFile containingClass = linkageProblem.getContainingClass();
-            if (containingClass != null) {
-              problematicJars.add(containingClass.getClassPathEntry());
+            if (linkageProblem instanceof IncompatibleLinkageProblem) {
+              IncompatibleLinkageProblem incompatibleLinkageProblem =
+                  (IncompatibleLinkageProblem) linkageProblem;
+              problematicJars.add(incompatibleLinkageProblem.getTargetClass().getClassPathEntry());
             }
             ClassFile sourceClassFile = linkageProblem.getSourceClass();
             problematicJars.add(sourceClassFile.getClassPathEntry());

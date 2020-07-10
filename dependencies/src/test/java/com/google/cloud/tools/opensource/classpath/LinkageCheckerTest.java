@@ -22,7 +22,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -177,7 +176,7 @@ public class LinkageCheckerTest {
             dummySourceClass);
 
     Truth8.assertThat(linkageProblem).isPresent();
-    assertSame(ErrorType.INCOMPATIBLE_CLASS_CHANGE, linkageProblem.get().getErrorType());
+    assertTrue(linkageProblem.get() instanceof IncompatibleClassChangeProblem);
   }
 
   @Test
@@ -199,7 +198,7 @@ public class LinkageCheckerTest {
             dummySourceClass);
 
     Truth8.assertThat(problemFound).isPresent();
-    assertSame(ErrorType.INCOMPATIBLE_CLASS_CHANGE, problemFound.get().getErrorType());
+    assertTrue(problemFound.get() instanceof IncompatibleClassChangeProblem);
   }
 
   @Test
@@ -219,7 +218,7 @@ public class LinkageCheckerTest {
                 true),
             dummySourceClass);
     Truth8.assertThat(problemFound).isPresent();
-    assertSame(ErrorType.SYMBOL_NOT_FOUND, problemFound.get().getErrorType());
+    assertTrue(problemFound.get() instanceof SymbolNotFoundProblem);
   }
 
   @Test
@@ -251,7 +250,7 @@ public class LinkageCheckerTest {
             dummySourceClass);
 
     Truth8.assertThat(problemFound).isPresent();
-    assertSame(ErrorType.INACCESSIBLE_CLASS, problemFound.get().getErrorType());
+    assertTrue(problemFound.get() instanceof InaccessibleClassProblem);
   }
 
   @Test
@@ -286,7 +285,7 @@ public class LinkageCheckerTest {
                 "com.google.common.base.Absent", "readResolve", "()Ljava/lang/Object;", false),
             dummySourceClass);
     Truth8.assertThat(problemFound).isPresent();
-    assertSame(ErrorType.INACCESSIBLE_CLASS, problemFound.get().getErrorType());
+    assertTrue(problemFound.get() instanceof InaccessibleClassProblem);
   }
 
   @Test
@@ -305,7 +304,7 @@ public class LinkageCheckerTest {
                 false),
             dummySourceClass);
     Truth8.assertThat(problemFound).isPresent();
-    assertSame(ErrorType.INACCESSIBLE_MEMBER, problemFound.get().getErrorType());
+    assertTrue(problemFound.get() instanceof InaccessibleMemberProblem);
   }
 
   @Test
@@ -322,7 +321,7 @@ public class LinkageCheckerTest {
 
     Truth8.assertThat(problemFound).isPresent();
     LinkageProblem linkageProblem = problemFound.get();
-    assertSame(ErrorType.CLASS_NOT_FOUND, linkageProblem.getErrorType());
+    assertTrue(linkageProblem instanceof ClassNotFoundProblem);
     assertTrue(
         "Method reference missing class should report it as class symbol problem",
         linkageProblem.getSymbol() instanceof ClassSymbol);
@@ -360,8 +359,10 @@ public class LinkageCheckerTest {
 
     Truth8.assertThat(problemFound).isPresent();
     LinkageProblem linkageProblem = problemFound.get();
-    assertSame(ErrorType.SYMBOL_NOT_FOUND, linkageProblem.getErrorType());
-    assertEquals(firestoreJar, linkageProblem.getContainingClass().getClassPathEntry());
+    assertTrue(linkageProblem instanceof SymbolNotFoundProblem);
+    assertEquals(
+        firestoreJar,
+        ((SymbolNotFoundProblem) linkageProblem).getTargetClass().getClassPathEntry());
   }
 
   @Test
@@ -377,7 +378,6 @@ public class LinkageCheckerTest {
 
     Truth8.assertThat(problemFound).isPresent();
     LinkageProblem linkageProblem = problemFound.get();
-    assertSame(ErrorType.CLASS_NOT_FOUND, linkageProblem.getErrorType());
     assertTrue(
         "Field reference missing class should report it as class symbol problem",
         linkageProblem.getSymbol() instanceof ClassSymbol);
@@ -435,7 +435,7 @@ public class LinkageCheckerTest {
             dummySourceClass);
 
     Truth8.assertThat(problemFound).isPresent();
-    assertSame(ErrorType.INCOMPATIBLE_CLASS_CHANGE, problemFound.get().getErrorType());
+    assertTrue(problemFound.get() instanceof IncompatibleLinkageProblem);
   }
 
   @Test
@@ -454,10 +454,8 @@ public class LinkageCheckerTest {
             dummySourceClass);
 
     Truth8.assertThat(problemFound).isPresent();
-    assertSame(
-        "ClassWriter.verify, which DebuggingClassWriter overrides, is final in asm 4",
-        ErrorType.INCOMPATIBLE_CLASS_CHANGE,
-        problemFound.get().getErrorType());
+    // ClassWriter.verify, which DebuggingClassWriter overrides, is final in asm 4
+    assertTrue(problemFound.get() instanceof IncompatibleClassChangeProblem);
   }
 
   @Test
@@ -476,10 +474,8 @@ public class LinkageCheckerTest {
             dummySourceClass);
 
     Truth8.assertThat(problemFound).isPresent();
-    assertSame(
-        "PathTemplate.SLASH_SPLITTER is private field and not accessible.",
-        ErrorType.INACCESSIBLE_MEMBER,
-        problemFound.get().getErrorType());
+    // PathTemplate.SLASH_SPLITTER is private field and not accessible.
+    assertTrue(problemFound.get() instanceof InaccessibleMemberProblem);
   }
 
   @Test
@@ -509,10 +505,8 @@ public class LinkageCheckerTest {
             dummySourceClass);
     Truth8.assertThat(problemFoundDifferentPackage).isPresent();
 
-    assertSame(
-        "CharSequenceCharSource.seq is protected field and is not accessible from outside package",
-        ErrorType.INACCESSIBLE_CLASS,
-        problemFoundDifferentPackage.get().getErrorType());
+    // CharSequenceCharSource.seq is protected field and is not accessible from outside package
+    assertTrue(problemFoundDifferentPackage.get() instanceof InaccessibleClassProblem);
   }
 
   @Test
@@ -544,7 +538,7 @@ public class LinkageCheckerTest {
             new ClassFile(paths.get(0), "com.google.firestore.v1beta1.FirestoreGrpc"),
             new ClassSymbol(nonExistentClassName),
             dummySourceClass);
-    assertSame(ErrorType.CLASS_NOT_FOUND, problemFound.get().getErrorType());
+    assertTrue(problemFound.get() instanceof ClassNotFoundProblem);
     assertEquals(nonExistentClassName, problemFound.get().getSymbol().getClassBinaryName());
   }
 
@@ -583,11 +577,14 @@ public class LinkageCheckerTest {
 
     Truth.assertThat(problems).hasSize(1);
     LinkageProblem firstProblem = Iterables.getFirst(problems, null);
-    assertSame(ErrorType.INACCESSIBLE_CLASS, firstProblem.getErrorType());
-
+    assertTrue(firstProblem instanceof InaccessibleClassProblem);
     Truth.assertWithMessage(
             "When the superclass is unavailable, it should report the location of InnerService")
-        .that(firstProblem.getContainingClass().getClassPathEntry().toString())
+        .that(
+            ((InaccessibleClassProblem) firstProblem)
+                .getTargetClass()
+                .getClassPathEntry()
+                .toString())
         .contains("api-common-1.7.0.jar");
   }
 
@@ -965,25 +962,23 @@ public class LinkageCheckerTest {
 
     // The two unimplemented methods should be reported separately
     LinkageProblem expectedProblemOnNeedsCredentials =
-        new LinkageProblem(
+        new AbstractMethodProblem(
             new MethodSymbol(
                 "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
                 "needsCredentials",
                 "()Z",
                 false),
-            ErrorType.ABSTRACT_METHOD,
-            new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"),
-            transportChannelProvider);
+            transportChannelProvider,
+            new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"));
     LinkageProblem expectedProblemOnWithCredentials =
-        new LinkageProblem(
+        new AbstractMethodProblem(
             new MethodSymbol(
                 "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
                 "withCredentials",
                 "(Lcom/google/auth/Credentials;)Lcom/google/api/gax/rpc/TransportChannelProvider;",
                 false),
-            ErrorType.ABSTRACT_METHOD,
-            new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"),
-            transportChannelProvider);
+            transportChannelProvider,
+            new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"));
     Truth.assertThat(problems).contains(expectedProblemOnNeedsCredentials);
     Truth.assertThat(problems).contains(expectedProblemOnWithCredentials);
   }
@@ -1109,8 +1104,10 @@ public class LinkageCheckerTest {
     problems.forEach(
         (problem) -> {
           ClassFile sourceClass = problem.getSourceClass();
-          if (sourceClass.equals(problem.getContainingClass())) {
-            fail("Self-referencing linkage errors: " + problem);
+          if (problem instanceof IncompatibleLinkageProblem) {
+            if (sourceClass.equals(((IncompatibleLinkageProblem) problem).getTargetClass())) {
+              fail("Self-referencing linkage errors: " + problem);
+            }
           }
         });
   }
