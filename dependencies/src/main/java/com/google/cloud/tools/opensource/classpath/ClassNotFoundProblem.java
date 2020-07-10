@@ -16,11 +16,10 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-
-/** The target class of the symbol reference is not found in the class path. */
+/** The {@code classSymbol}, referenced by {@code sourceClass} is not found in the class path. */
 public class ClassNotFoundProblem extends LinkageProblem {
 
-  public ClassNotFoundProblem(ClassFile sourceClass, Symbol symbol) {
-    super("is not found", sourceClass, symbol);
+  public ClassNotFoundProblem(ClassFile sourceClass, ClassSymbol classSymbol) {
+    super("is not found", sourceClass, classSymbol);
   }
 }

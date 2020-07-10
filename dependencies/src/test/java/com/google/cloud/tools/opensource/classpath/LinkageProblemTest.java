@@ -39,8 +39,8 @@ public class LinkageProblemTest {
     // Confirming with a subclass of it
     ClassNotFoundProblem linkageProblem =
         new ClassNotFoundProblem(
-            new ClassFile(new ClassPathEntry(Paths.get("aaa", "bbb.jar")), "java.lang.ABC"), new ClassSymbol("java.lang.Integer")
-        );
+            new ClassFile(new ClassPathEntry(Paths.get("aaa", "bbb.jar")), "java.lang.ABC"),
+            new ClassSymbol("java.lang.Integer"));
     assertEquals(new ClassSymbol("java.lang.Integer"), linkageProblem.getSymbol());
   }
 
@@ -60,31 +60,28 @@ public class LinkageProblemTest {
         .addEqualityGroup(
             new ClassNotFoundProblem(
                 new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object"),
-                new ClassSymbol("java.lang.Integer")
-            ),
+                new ClassSymbol("java.lang.Integer")),
             new ClassNotFoundProblem(
                 new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object"),
-                new ClassSymbol("java.lang.Integer")
-            ))
+                new ClassSymbol("java.lang.Integer")))
         .addEqualityGroup(
             new ClassNotFoundProblem(
-                new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.ABC"), new ClassSymbol("java.lang.Integer")
-            ))
+                new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.ABC"),
+                new ClassSymbol("java.lang.Integer")))
         .addEqualityGroup(
             new ClassNotFoundProblem(
                 new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object"),
-                new ClassSymbol("java.lang.ABC")
-            ))
+                new ClassSymbol("java.lang.ABC")))
         .addEqualityGroup(
             new AbstractMethodProblem(
                 new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.A"),
-                new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.B"), new ClassSymbol("java.lang.Integer")
-            ))
+                new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.B"),
+                new ClassSymbol("java.lang.Integer")))
         .addEqualityGroup(
             new IncompatibleClassChangeProblem( // Only type is different from the one above
                 new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.A"),
-                new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.B"), new ClassSymbol("java.lang.Integer")
-            ))
+                new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.B"),
+                new ClassSymbol("java.lang.Integer")))
         .testEquals();
   }
 
@@ -103,12 +100,13 @@ public class LinkageProblemTest {
 
   private LinkageProblem methodLinkageProblem =
       new SymbolNotFoundProblem(
-          new ClassFile(new ClassPathEntry(path), "java.lang.Object"), source1, new MethodSymbol(
+          new ClassFile(new ClassPathEntry(path), "java.lang.Object"),
+          source1,
+          new MethodSymbol(
               "io.grpc.protobuf.ProtoUtils.marshaller",
               "marshaller",
               "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
-              false)
-      );
+              false));
 
   private LinkageProblem classLinkageProblem1 =
       new ClassNotFoundProblem(source1, new ClassSymbol("java.lang.Integer"));
@@ -121,9 +119,9 @@ public class LinkageProblemTest {
 
   private LinkageProblem fieldLinkageProblem =
       new SymbolNotFoundProblem(
-          new ClassFile(entry, "java.lang.Integer"), source2,
-          new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I")
-      );
+          new ClassFile(entry, "java.lang.Integer"),
+          source2,
+          new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"));
 
   private ImmutableSet<LinkageProblem> linkageProblems =
       ImmutableSet.of(

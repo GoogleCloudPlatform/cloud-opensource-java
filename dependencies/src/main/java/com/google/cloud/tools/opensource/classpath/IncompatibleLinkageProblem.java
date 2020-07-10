@@ -26,8 +26,7 @@ abstract class IncompatibleLinkageProblem extends LinkageProblem {
   private final ClassFile targetClass;
 
   IncompatibleLinkageProblem(
-      String symbolProblemMessage,
-      ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
+      String symbolProblemMessage, ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
     super(symbolProblemMessage, sourceClass, symbol);
     this.targetClass = targetClass;
   }
@@ -42,10 +41,9 @@ abstract class IncompatibleLinkageProblem extends LinkageProblem {
   /**
    * Returns the class that is expected to contain the symbol. If the symbol is a method or a field,
    * then this is the class where the symbol was expected to be found. If the symbol is an inner
-   * class, this is the outer class that was expected to contain the inner class. If the symbol is
-   * an outer class, this is null.
+   * class, this is the outer class that was expected to contain the inner class.
    */
-  public ClassFile getTargetClass() {
+  ClassFile getTargetClass() {
     return targetClass;
   }
 

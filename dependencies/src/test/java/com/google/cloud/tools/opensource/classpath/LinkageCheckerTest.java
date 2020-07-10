@@ -969,8 +969,7 @@ public class LinkageCheckerTest {
                 "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
                 "needsCredentials",
                 "()Z",
-                false)
-        );
+                false));
     LinkageProblem expectedProblemOnWithCredentials =
         new AbstractMethodProblem(
             transportChannelProvider,
@@ -979,8 +978,7 @@ public class LinkageCheckerTest {
                 "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
                 "withCredentials",
                 "(Lcom/google/auth/Credentials;)Lcom/google/api/gax/rpc/TransportChannelProvider;",
-                false)
-        );
+                false));
     Truth.assertThat(problems).contains(expectedProblemOnNeedsCredentials);
     Truth.assertThat(problems).contains(expectedProblemOnWithCredentials);
   }

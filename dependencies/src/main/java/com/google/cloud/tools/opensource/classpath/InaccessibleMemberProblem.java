@@ -17,7 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 /**
- * The target member (method or field) is inaccessible to the source class.
+ * The {@code symbol} (method or field) is inaccessible to the source class.
  *
  * <p>If the source class is in a different package, the member is not public. If the source is in
  * the same package, the class is private. If the source is a subclass of the target class, the

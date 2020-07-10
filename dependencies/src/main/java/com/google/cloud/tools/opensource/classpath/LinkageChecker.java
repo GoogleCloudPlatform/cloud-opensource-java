@@ -256,8 +256,7 @@ public class LinkageChecker {
           classPathEntry == null ? null : new ClassFile(classPathEntry, targetClassName);
 
       if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
-        return Optional.of(
-            new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol));
+        return Optional.of(new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol));
       }
 
       if (targetJavaClass.isInterface() != symbol.isInterfaceMethod()) {
@@ -382,8 +381,7 @@ public class LinkageChecker {
           classFileLocation == null ? null : new ClassFile(classFileLocation, targetClassName);
 
       if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
-        return Optional.of(
-            new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol));
+        return Optional.of(new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol));
       }
 
       for (JavaClass javaClass : getClassHierarchy(targetJavaClass)) {
@@ -478,8 +476,7 @@ public class LinkageChecker {
       }
 
       if (!isClassAccessibleFrom(targetClass, sourceClassName)) {
-        return Optional.of(
-            new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol));
+        return Optional.of(new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol));
       }
       return Optional.empty();
     } catch (ClassNotFoundException ex) {

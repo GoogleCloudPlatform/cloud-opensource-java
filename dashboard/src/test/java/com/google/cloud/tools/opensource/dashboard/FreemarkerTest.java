@@ -76,8 +76,7 @@ public class FreemarkerTest {
     ImmutableSet<LinkageProblem> dummyProblems =
         ImmutableSet.of(
             new ClassNotFoundProblem(
-                new ClassFile(entry, "abc.def.G"), new ClassSymbol("com.foo.Bar")
-            ));
+                new ClassFile(entry, "abc.def.G"), new ClassSymbol("com.foo.Bar")));
     symbolProblemTable = ImmutableMap.of(entry, dummyProblems);
   }
 
