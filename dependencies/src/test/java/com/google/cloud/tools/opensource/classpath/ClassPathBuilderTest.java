@@ -43,8 +43,7 @@ public class ClassPathBuilderTest {
     ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(artifact), true);
     return result.getClassPath();
   }
-  
-  
+
   @Test
   public void testResolve_withoutOptionalDependencies() {
     // an artifact with a very large dependency graph
