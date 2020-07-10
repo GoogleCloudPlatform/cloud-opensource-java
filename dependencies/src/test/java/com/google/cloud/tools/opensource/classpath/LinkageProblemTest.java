@@ -47,7 +47,7 @@ public class LinkageProblemTest {
   @Test
   public void testNull() {
     new NullPointerTester()
-        .setDefault(Symbol.class, new ClassSymbol("java.lang.Integer"))
+        .setDefault(ClassSymbol.class, new ClassSymbol("java.lang.Integer"))
         .setDefault(
             ClassFile.class,
             new ClassFile(new ClassPathEntry(Paths.get("aaa", "bbb.jar")), "java.lang.ABC"))
@@ -100,8 +100,8 @@ public class LinkageProblemTest {
 
   private LinkageProblem methodLinkageProblem =
       new SymbolNotFoundProblem(
-          new ClassFile(new ClassPathEntry(path), "java.lang.Object"),
           source1,
+          new ClassFile(new ClassPathEntry(path), "java.lang.Object"),
           new MethodSymbol(
               "io.grpc.protobuf.ProtoUtils.marshaller",
               "marshaller",
@@ -119,8 +119,8 @@ public class LinkageProblemTest {
 
   private LinkageProblem fieldLinkageProblem =
       new SymbolNotFoundProblem(
-          new ClassFile(entry, "java.lang.Integer"),
           source2,
+          new ClassFile(entry, "java.lang.Integer"),
           new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"));
 
   private ImmutableSet<LinkageProblem> linkageProblems =

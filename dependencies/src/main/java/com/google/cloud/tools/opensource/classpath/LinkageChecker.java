@@ -300,7 +300,7 @@ public class LinkageChecker {
       }
 
       // The class is in class path but the symbol is not found
-      return Optional.of(new SymbolNotFoundProblem(targetClassFile, sourceClassFile, symbol));
+      return Optional.of(new SymbolNotFoundProblem(sourceClassFile, targetClassFile,  symbol));
     } catch (ClassNotFoundException ex) {
       if (classDumper.catchesLinkageErrorOnClass(sourceClassName)) {
         return Optional.empty();
@@ -397,7 +397,7 @@ public class LinkageChecker {
         }
       }
       // The field was not found in the class from the classpath
-      return Optional.of(new SymbolNotFoundProblem(targetClassFile, sourceClassFile, symbol));
+      return Optional.of(new SymbolNotFoundProblem( sourceClassFile, targetClassFile, symbol));
     } catch (ClassNotFoundException ex) {
       if (classDumper.catchesLinkageErrorOnClass(sourceClassName)) {
         return Optional.empty();

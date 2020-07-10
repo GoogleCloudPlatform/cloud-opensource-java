@@ -46,8 +46,8 @@ public class ExclusionFilesTest {
 
   private LinkageProblem methodLinkageProblem =
       new SymbolNotFoundProblem(
-          new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "java.lang.Object"),
           new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source1"),
+          new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "java.lang.Object"),
           new MethodSymbol(
               "io.grpc.protobuf.ProtoUtils",
               "marshaller",
@@ -56,8 +56,8 @@ public class ExclusionFilesTest {
 
   private LinkageProblem fieldLinkageProblem =
       new SymbolNotFoundProblem(
-          new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "java.lang.Integer"),
           new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source2"),
+          new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "java.lang.Integer"),
           new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"));
 
   private LinkageProblem classLinkageProblem =
@@ -87,9 +87,9 @@ public class ExclusionFilesTest {
     boolean result =
         matcher.match(
             new SymbolNotFoundProblem(
-                new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "java.lang.Object"),
                 new ClassFile(
                     new ClassPathEntry(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"),
+                new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "java.lang.Object"),
                 new MethodSymbol(
                     "io.grpc.protobuf.ProtoUtils",
                     "marshaller",
