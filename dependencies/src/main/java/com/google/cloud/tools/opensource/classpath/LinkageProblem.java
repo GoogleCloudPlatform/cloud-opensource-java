@@ -18,8 +18,14 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -50,7 +56,7 @@ public final class LinkageProblem {
         symbol instanceof SuperClassSymbol ? new ClassSymbol(symbol.getClassBinaryName()) : symbol;
     this.errorType = Preconditions.checkNotNull(errorType);
     this.containingClass = containingClass;
-    this.sourceClass = sourceClass;
+    this.sourceClass = Preconditions.checkNotNull(sourceClass);
   }
 
   /** Returns the errorType why the symbol was not resolved. */
@@ -59,15 +65,15 @@ public final class LinkageProblem {
   }
 
   /** Returns the target symbol that was not resolved. */
-  Symbol getSymbol() {
+  public Symbol getSymbol() {
     return symbol;
   }
 
   /**
-   * Returns the class that is expected to contain the symbol. If the symbol is a method
-   * or a field, then this is the class where the symbol was expected to be found.
-   * If the symbol is an inner class, this is the outer class that was expected 
-   * to contain the inner class. If the symbol is an outer class, this is null.
+   * Returns the class that is expected to contain the symbol. If the symbol is a method or a field,
+   * then this is the class where the symbol was expected to be found. If the symbol is an inner
+   * class, this is the outer class that was expected to contain the inner class. If the symbol is
+   * an outer class, this is null.
    */
   @Nullable
   public ClassFile getContainingClass() {
@@ -101,9 +107,31 @@ public final class LinkageProblem {
 
   @Override
   public final String toString() {
+    return formatSymbolProblem() + " referenced by " + sourceClass;
+  }
+
+  /**
+   * Returns description of the problem on the symbol. This description does not include the {@code
+   * sourceClass}. This value is useful when grouping {@link LinkageProblem}s by its symbols.
+   */
+  public String formatSymbolProblem() {
     String jarInfo =
         containingClass != null ? String.format("(%s) ", containingClass.getClassPathEntry()) : "";
     return jarInfo + getErrorType().getMessage(symbol.toString());
+  }
+
+  /** Returns map from symbol problem description to the names of the source classes. */
+  public static ImmutableMap<String, ImmutableList<String>> groupBySymbolProblem(
+      Iterable<LinkageProblem> linkageProblems) {
+    ImmutableListMultimap<String, LinkageProblem> groupedMultimap =
+        Multimaps.index(linkageProblems, problem -> problem.formatSymbolProblem());
+
+    ListMultimap<String, String> symbolProblemToSourceClasses =
+        Multimaps.transformValues(
+            groupedMultimap, problem -> problem.getSourceClass().getBinaryName());
+    Map<String, ImmutableList<String>> valueTransformed =
+        Maps.transformValues(symbolProblemToSourceClasses.asMap(), ImmutableList::copyOf);
+    return ImmutableMap.copyOf(valueTransformed);
   }
 
   public static String formatLinkageProblems(Set<LinkageProblem> linkageProblems) {
@@ -117,11 +145,15 @@ public final class LinkageProblem {
         .asMap()
         .forEach(
             (symbol, problems) -> {
+              // problems all have the same symbol problem
+              LinkageProblem firstProblem = Iterables.getFirst(problems, null);
               int referenceCount = problems.size();
               output.append(
                   String.format(
                       "%s;\n  referenced by %d class file%s\n",
-                      symbol, referenceCount, referenceCount > 1 ? "s" : ""));
+                      firstProblem.formatSymbolProblem(),
+                      referenceCount,
+                      referenceCount > 1 ? "s" : ""));
               problems.forEach(
                   problem -> {
                     ClassFile sourceClassFile = problem.getSourceClass();

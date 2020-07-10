@@ -38,8 +38,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -47,7 +45,6 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
@@ -201,18 +198,19 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         Path exclusionFile = this.exclusionFile == null ? null : Paths.get(this.exclusionFile);
         LinkageChecker linkageChecker =
             LinkageChecker.create(classPath, entryPoints, exclusionFile);
-        ImmutableSetMultimap<LinkageProblem, ClassFile> symbolProblems =
-            linkageChecker.findSymbolProblems();
+        ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findSymbolProblems();
         if (reportOnlyReachable) {
           ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
           symbolProblems =
-              symbolProblems.entries().stream()
-                  .filter(entry -> classReferenceGraph.isReachable(entry.getValue().getBinaryName()))
-                  .collect(
-                      ImmutableSetMultimap.toImmutableSetMultimap(Entry::getKey, Entry::getValue));
+              symbolProblems.stream()
+                  .filter(
+                      entry ->
+                          classReferenceGraph.isReachable(entry.getSourceClass().getBinaryName()))
+                  .collect(toImmutableSet());
         }
         // Count unique SymbolProblems
-        int errorCount = symbolProblems.keySet().size();
+        long errorCount =
+            symbolProblems.stream().map(LinkageProblem::formatSymbolProblem).distinct().count();
 
         String foundError = reportOnlyReachable ? "reachable error" : "error";
         if (errorCount > 1) {
@@ -372,17 +370,16 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   private String dependencyPathsOfProblematicJars(
-      ClassPathResult classPathResult, Multimap<LinkageProblem, ClassFile> symbolProblems) {
+      ClassPathResult classPathResult, Set<LinkageProblem> symbolProblems) {
     ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
-    for (LinkageProblem problem : symbolProblems.keySet()) {
+    for (LinkageProblem problem : symbolProblems) {
       ClassFile containingClass = problem.getContainingClass();
       if (containingClass != null) {
         problematicJars.add(containingClass.getClassPathEntry());
       }
 
-      for (ClassFile classFile : symbolProblems.get(problem)) {
-        problematicJars.add(classFile.getClassPathEntry());
-      }
+      ClassFile sourceClass = problem.getSourceClass();
+      problematicJars.add(sourceClass.getClassPathEntry());
     }
 
     return "Problematic artifacts in the dependency tree:\n"

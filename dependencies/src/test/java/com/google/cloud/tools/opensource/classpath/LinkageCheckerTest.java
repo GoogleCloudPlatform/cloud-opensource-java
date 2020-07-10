@@ -612,6 +612,7 @@ public class LinkageCheckerTest {
         symbolProblems.stream()
             .map(LinkageProblem::getSourceClass)
             .map(ClassFile::getBinaryName)
+            // The referencing class should be the outer class
             .filter(className -> className.contains("$"))
             .count();
     assertEquals(0L, innerClassCount);

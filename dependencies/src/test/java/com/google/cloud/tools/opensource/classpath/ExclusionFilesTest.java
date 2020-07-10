@@ -55,18 +55,18 @@ public class ExclusionFilesTest {
           new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "java.lang.Object"),
           new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source1"));
 
-  private LinkageProblem classLinkageProblem =
-      new LinkageProblem(
-          new ClassSymbol("java.lang.Integer"),
-          ErrorType.CLASS_NOT_FOUND,
-          null,
-          new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source2"));
-
   private LinkageProblem fieldLinkageProblem =
       new LinkageProblem(
           new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"),
           ErrorType.SYMBOL_NOT_FOUND,
           new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "java.lang.Integer"),
+          new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source2"));
+
+  private LinkageProblem classLinkageProblem =
+      new LinkageProblem(
+          new ClassSymbol("java.lang.Integer"),
+          ErrorType.CLASS_NOT_FOUND,
+          null,
           new ClassFile(new ClassPathEntry(Paths.get("source.jar")), "com.foo.Source3"));
 
   private ImmutableSet<LinkageProblem> linkageErrors =

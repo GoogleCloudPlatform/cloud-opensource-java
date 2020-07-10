@@ -141,46 +141,45 @@ public class LinkageChecker {
     ImmutableSet.Builder<LinkageProblem> problemToClass = ImmutableSet.builder();
 
     // This sourceClassFile is a source of references to other symbols.
-    for (ClassFile sourceClassFile : symbolReferences.getClassFiles()) {
-      ImmutableSet<ClassSymbol> classSymbols = symbolReferences.getClassSymbols(sourceClassFile);
-
+    for (ClassFile classFile : symbolReferences.getClassFiles()) {
+      ImmutableSet<ClassSymbol> classSymbols = symbolReferences.getClassSymbols(classFile);
       for (ClassSymbol classSymbol : classSymbols) {
         if (classSymbol instanceof SuperClassSymbol) {
-          ImmutableList<LinkageProblem> problems =
-              findAbstractParentProblems(
-                  sourceClassFile, (SuperClassSymbol) classSymbol, sourceClassFile);
-          if (!problems.isEmpty()) {
-            String superClassName = classSymbol.getClassBinaryName();
-            ClassPathEntry superClassLocation = classDumper.findClassLocation(superClassName);
+          String superClassName = classSymbol.getClassBinaryName();
+          ClassPathEntry superClassLocation = classDumper.findClassLocation(superClassName);
+          if (superClassLocation != null) {
             ClassFile superClassFile = new ClassFile(superClassLocation, superClassName);
-            for (LinkageProblem problem : problems) {
-              // superClassFile?
-              problemToClass.add(problem);
+            ImmutableList<LinkageProblem> problems =
+                findAbstractParentProblems(
+                    classFile, (SuperClassSymbol) classSymbol, superClassFile);
+            if (!problems.isEmpty()) {
+              for (LinkageProblem problem : problems) {
+                problemToClass.add(problem);
+              }
             }
           }
         }
 
-        ImmutableSet<String> classFileNames = sourceClassFile.getClassPathEntry().getFileNames();
+        ImmutableSet<String> classFileNames = classFile.getClassPathEntry().getFileNames();
         String classBinaryName = classSymbol.getClassBinaryName();
         String classFileName = classDumper.getFileName(classBinaryName);
         if (!classFileNames.contains(classFileName)) {
           if (classSymbol instanceof InterfaceSymbol) {
-            ImmutableList<LinkageProblem> problems =
-                findInterfaceProblems(
-                    sourceClassFile,
-                    (InterfaceSymbol) classSymbol,
-                    sourceClassFile.topLevelClassFile());
-            if (!problems.isEmpty()) {
-              String interfaceName = classSymbol.getClassBinaryName();
-              ClassPathEntry interfaceLocation = classDumper.findClassLocation(interfaceName);
+            String interfaceName = classSymbol.getClassBinaryName();
+            ClassPathEntry interfaceLocation = classDumper.findClassLocation(interfaceName);
+            if (interfaceLocation != null) {
               ClassFile interfaceClassFile = new ClassFile(interfaceLocation, interfaceName);
-              for (LinkageProblem problem : problems) {
-                // interfaceClassFile?
-                problemToClass.add(problem);
+              ImmutableList<LinkageProblem> problems =
+                  findInterfaceProblems(
+                      classFile, (InterfaceSymbol) classSymbol, interfaceClassFile);
+              if (!problems.isEmpty()) {
+                for (LinkageProblem problem : problems) {
+                  problemToClass.add(problem);
+                }
               }
             }
           } else {
-            findLinkageProblem(sourceClassFile, classSymbol, sourceClassFile)
+            findLinkageProblem(classFile, classSymbol, classFile.topLevelClassFile())
                 .ifPresent(problemToClass::add);
           }
         }

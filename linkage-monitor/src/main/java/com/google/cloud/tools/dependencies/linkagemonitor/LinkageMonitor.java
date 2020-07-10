@@ -33,10 +33,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import com.google.common.io.MoreFiles;
 import java.io.IOException;
@@ -177,7 +178,7 @@ public class LinkageMonitor {
     logger.info("BOM Coordinates: " + latestBomCoordinates);
     Bom baseline = Bom.readBom(latestBomCoordinates);
     ImmutableSet<LinkageProblem> problemsInBaseline =
-        LinkageChecker.create(baseline, null).findSymbolProblems().keySet();
+        LinkageChecker.create(baseline, null).findSymbolProblems();
     Bom snapshot = copyWithSnapshot(repositorySystem, session, baseline, localArtifacts);
 
     // Comparing coordinates because DefaultArtifact does not override equals
@@ -196,10 +197,9 @@ public class LinkageMonitor {
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
     List<ClassPathEntry> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 
-    ImmutableSetMultimap<LinkageProblem, ClassFile> snapshotSymbolProblems =
+    ImmutableSet<LinkageProblem> problemsInSnapshot =
         LinkageChecker.create(classpath, ImmutableSet.copyOf(entryPointJars), null)
             .findSymbolProblems();
-    ImmutableSet<LinkageProblem> problemsInSnapshot = snapshotSymbolProblems.keySet();
 
     if (problemsInBaseline.equals(problemsInSnapshot)) {
       logger.info(
@@ -214,8 +214,7 @@ public class LinkageMonitor {
 
     Set<LinkageProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newProblems.isEmpty()) {
-      logger.severe(
-          messageForNewErrors(snapshotSymbolProblems, problemsInBaseline, classPathResult));
+      logger.severe(messageForNewErrors(problemsInSnapshot, problemsInBaseline, classPathResult));
     }
     return ImmutableSet.copyOf(newProblems);
   }
@@ -230,29 +229,35 @@ public class LinkageMonitor {
    */
   @VisibleForTesting
   static String messageForNewErrors(
-      ImmutableSetMultimap<LinkageProblem, ClassFile> snapshotSymbolProblems,
+      Set<LinkageProblem> snapshotProblems,
       Set<LinkageProblem> baselineProblems,
       ClassPathResult classPathResult) {
-    Set<LinkageProblem> newProblems =
-        Sets.difference(snapshotSymbolProblems.keySet(), baselineProblems);
-    StringBuilder message =
-        new StringBuilder("Newly introduced problem" + (newProblems.size() > 1 ? "s" : "") + ":\n");
+    Set<LinkageProblem> newProblems = Sets.difference(snapshotProblems, baselineProblems);
     Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
-    for (LinkageProblem problem : newProblems) {
+
+    ImmutableListMultimap<String, LinkageProblem> groupedBySymbolProblem =
+        Multimaps.index(newProblems, problem -> problem.formatSymbolProblem());
+    StringBuilder message =
+        new StringBuilder(
+            "Newly introduced problem"
+                + (groupedBySymbolProblem.keySet().size() > 1 ? "s" : "")
+                + ":\n");
+    for (String problem : groupedBySymbolProblem.keySet()) {
       message.append(problem + "\n");
 
-      // This is null for ClassNotFound error.
-      ClassFile containingClass = problem.getContainingClass();
-      if (containingClass != null) {
-        problematicJars.add(containingClass.getClassPathEntry());
-      }
+      for (LinkageProblem linkageProblem : groupedBySymbolProblem.get(problem)) {
+        // This is null for ClassNotFound error.
+        ClassFile containingClass = linkageProblem.getContainingClass();
+        if (containingClass != null) {
+          problematicJars.add(containingClass.getClassPathEntry());
+        }
 
-      for (ClassFile classFile : snapshotSymbolProblems.get(problem)) {
+        ClassFile sourceClass = linkageProblem.getSourceClass();
         message.append(
             String.format(
                 "  referenced from %s (%s)\n",
-                classFile.getBinaryName(), classFile.getClassPathEntry()));
-        problematicJars.add(classFile.getClassPathEntry());
+                sourceClass.getBinaryName(), sourceClass.getClassPathEntry()));
+        problematicJars.add(sourceClass.getClassPathEntry());
       }
     }
 
@@ -272,7 +277,7 @@ public class LinkageMonitor {
                 + (problemSize > 1 ? "s" : "")
                 + " in the baseline no longer appear in the snapshot:\n");
     for (LinkageProblem problem : fixedProblems) {
-      message.append("  " + problem + "\n");
+      message.append("  " + problem.formatSymbolProblem() + "\n");
     }
     return message.toString();
   }

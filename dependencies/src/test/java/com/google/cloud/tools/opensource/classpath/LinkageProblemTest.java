@@ -52,6 +52,9 @@ public class LinkageProblemTest {
   public void testNull() {
     new NullPointerTester()
         .setDefault(Symbol.class, new ClassSymbol("java.lang.Integer"))
+        .setDefault(
+            ClassFile.class,
+            new ClassFile(new ClassPathEntry(Paths.get("aaa", "bbb.jar")), "java.lang.ABC"))
         .testConstructors(LinkageProblem.class, Visibility.PACKAGE);
   }
 
