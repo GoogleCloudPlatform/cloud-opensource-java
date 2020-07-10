@@ -42,11 +42,11 @@
   </#list>
   <#assign jarsInProblem = {} >
   <#list linkageProblems as problem>
-    <#if (problem.getContainingClass())?? >
+    <#if (problem.getTargetClass())?? >
+      <#assign targetClassPathEntry = problem.getTargetClass().getClassPathEntry() />
       <!-- Freemarker's hash requires its keys to be string.
       https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys -->
-        <#assign jarsInProblem = jarsInProblem
-        + { problem.getContainingClass().getClassPathEntry().toString() :  problem.getContainingClass().getClassPathEntry() } >
+      <#assign jarsInProblem = jarsInProblem + { targetClassPathEntry.toString() : targetClassPathEntry } >
     </#if>
   </#list>
   <#list jarsInProblem?values as jarInProblem>

@@ -22,7 +22,7 @@ import java.util.Objects;
  * LinkageProblem caused by an invalid reference when both source class and target class are
  * present.
  */
-abstract class IncompatibleLinkageProblem extends LinkageProblem {
+public abstract class IncompatibleLinkageProblem extends LinkageProblem {
   private final ClassFile targetClass;
 
   IncompatibleLinkageProblem(
@@ -43,7 +43,7 @@ abstract class IncompatibleLinkageProblem extends LinkageProblem {
    * then this is the class where the symbol was expected to be found. If the symbol is an inner
    * class, this is the outer class that was expected to contain the inner class.
    */
-  ClassFile getTargetClass() {
+  public ClassFile getTargetClass() {
     return targetClass;
   }
 
