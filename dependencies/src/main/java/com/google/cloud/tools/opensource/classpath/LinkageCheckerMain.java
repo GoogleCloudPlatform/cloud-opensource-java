@@ -87,7 +87,7 @@ class LinkageCheckerMain {
         LinkageChecker linkageChecker =
             LinkageChecker.create(
                 inputClassPath, entryPoints, linkageCheckerArguments.getInputExclusionFile());
-        ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findSymbolProblems();
+        ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
         if (linkageCheckerArguments.getReportOnlyReachable()) {
           ClassReferenceGraph graph = linkageChecker.getClassReferenceGraph();

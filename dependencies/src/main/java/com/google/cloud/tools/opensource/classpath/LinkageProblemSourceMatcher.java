@@ -17,6 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 /** Matchers for the sources of linkage errors. */
-interface SymbolProblemSourceMatcher {
+interface LinkageProblemSourceMatcher {
   boolean match(ClassFile sourceClass);
 }

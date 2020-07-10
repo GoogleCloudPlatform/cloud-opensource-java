@@ -61,7 +61,7 @@ class ExcludedErrors {
   }
 
   /**
-   * Returns true if the exclusion rules contain references to {@code symbolProblem} from {@code
+   * Returns true if the exclusion rules contain references to {@code linkageProblem} from {@code
    * sourceClass}.
    */
   boolean contains(LinkageProblem linkageProblem) {

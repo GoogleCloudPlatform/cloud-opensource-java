@@ -198,7 +198,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         Path exclusionFile = this.exclusionFile == null ? null : Paths.get(this.exclusionFile);
         LinkageChecker linkageChecker =
             LinkageChecker.create(classPath, entryPoints, exclusionFile);
-        ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findSymbolProblems();
+        ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findLinkageProblems();
         if (reportOnlyReachable) {
           ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
           symbolProblems =

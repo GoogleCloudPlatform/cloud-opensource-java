@@ -137,7 +137,7 @@ public class LinkageChecker {
    * @return {@link LinkageProblem}s found in the class path and referencing classes
    * @throws IOException I/O error reading files in the classpath
    */
-  public ImmutableSet<LinkageProblem> findSymbolProblems() throws IOException {
+  public ImmutableSet<LinkageProblem> findLinkageProblems() throws IOException {
     ImmutableSet.Builder<LinkageProblem> problemToClass = ImmutableSet.builder();
 
     // This sourceClassFile is a source of references to other symbols.
@@ -268,10 +268,10 @@ public class LinkageChecker {
       }
 
       // Check the existence of the parent class or interface for the class
-      Optional<LinkageProblem> parentSymbolProblem =
-          findParentSymbolProblem(targetClassName, sourceClassFile);
-      if (parentSymbolProblem.isPresent()) {
-        return parentSymbolProblem;
+      Optional<LinkageProblem> parentLinkageProblem =
+          findParentClassLinkageProblem(targetClassName, sourceClassFile);
+      if (parentLinkageProblem.isPresent()) {
+        return parentLinkageProblem;
       }
 
       // Checks the target class, its parent classes, and its interfaces.
@@ -366,7 +366,7 @@ public class LinkageChecker {
         }
       }
     } catch (ClassNotFoundException ex) {
-      // Missing classes are reported by findSymbolProblem method.
+      // Missing classes are reported by findLinkageProblem method.
     }
     return builder.build();
   }
@@ -548,7 +548,7 @@ public class LinkageChecker {
    * Returns an {@code Optional} describing the symbol problem in the parent classes or interfaces
    * of {@code baseClassName}, if any of them are missing; otherwise an empty {@code Optional}.
    */
-  private Optional<LinkageProblem> findParentSymbolProblem(
+  private Optional<LinkageProblem> findParentClassLinkageProblem(
       String baseClassName, ClassFile sourceClassFile) {
     Queue<String> queue = new ArrayDeque<>();
     queue.add(baseClassName);
@@ -628,7 +628,7 @@ public class LinkageChecker {
         abstractClass = abstractClass.getSuperClass();
       }
     } catch (ClassNotFoundException ex) {
-      // Missing classes are reported by findSymbolProblem method.
+      // Missing classes are reported by findLinkageProblem method.
     }
     return builder.build();
   }

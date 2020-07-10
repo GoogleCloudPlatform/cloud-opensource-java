@@ -178,7 +178,7 @@ public class LinkageMonitor {
     logger.info("BOM Coordinates: " + latestBomCoordinates);
     Bom baseline = Bom.readBom(latestBomCoordinates);
     ImmutableSet<LinkageProblem> problemsInBaseline =
-        LinkageChecker.create(baseline, null).findSymbolProblems();
+        LinkageChecker.create(baseline, null).findLinkageProblems();
     Bom snapshot = copyWithSnapshot(repositorySystem, session, baseline, localArtifacts);
 
     // Comparing coordinates because DefaultArtifact does not override equals
@@ -199,7 +199,7 @@ public class LinkageMonitor {
 
     ImmutableSet<LinkageProblem> problemsInSnapshot =
         LinkageChecker.create(classpath, ImmutableSet.copyOf(entryPointJars), null)
-            .findSymbolProblems();
+            .findLinkageProblems();
 
     if (problemsInBaseline.equals(problemsInSnapshot)) {
       logger.info(

@@ -17,12 +17,12 @@
 package com.google.cloud.tools.opensource.classpath;
 
 /** Matcher on the target symbol of linkage errors. */
-class TargetMatcher implements SymbolProblemMatcher {
+class TargetMatcher implements LinkageProblemMatcher {
 
-  private SymbolProblemTargetMatcher matcher;
+  private LinkageProblemTargetMatcher matcher;
 
   @Override
-  public void addChild(SymbolProblemTargetMatcher child) {
+  public void addChild(LinkageProblemTargetMatcher child) {
     this.matcher = child;
   }
 

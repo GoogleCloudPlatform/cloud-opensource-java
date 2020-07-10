@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Google LLC.
+ * Copyright 2020 Google LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ public final class LinkageProblem {
     this.sourceClass = Preconditions.checkNotNull(sourceClass);
   }
 
-  /** Returns the errorType why the symbol was not resolved. */
+  /** Returns the reason why the symbol was not resolved. */
   ErrorType getErrorType() {
     return errorType;
   }
@@ -111,8 +111,9 @@ public final class LinkageProblem {
   }
 
   /**
-   * Returns description of the problem on the symbol. This description does not include the {@code
-   * sourceClass}. This value is useful when grouping {@link LinkageProblem}s by its symbols.
+   * Returns the description of the problem on the {@code symbol}. This description does not include
+   * the {@code sourceClass}. This value is useful when grouping {@link LinkageProblem}s by their
+   * {@code symbol}s.
    */
   public String formatSymbolProblem() {
     String jarInfo =
@@ -120,7 +121,7 @@ public final class LinkageProblem {
     return jarInfo + getErrorType().getMessage(symbol.toString());
   }
 
-  /** Returns map from symbol problem description to the names of the source classes. */
+  /** Returns mapping from symbol problem description to the names of the source classes. */
   public static ImmutableMap<String, ImmutableList<String>> groupBySymbolProblem(
       Iterable<LinkageProblem> linkageProblems) {
     ImmutableListMultimap<String, LinkageProblem> groupedMultimap =
@@ -134,6 +135,7 @@ public final class LinkageProblem {
     return ImmutableMap.copyOf(valueTransformed);
   }
 
+  /** Returns the formatted {@code linkageProblems} by grouping them by the {@code symbol}s. */
   public static String formatLinkageProblems(Set<LinkageProblem> linkageProblems) {
     StringBuilder output = new StringBuilder();
 

@@ -19,10 +19,13 @@ package com.google.cloud.tools.opensource.classpath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.EqualsTester;
 import com.google.common.testing.NullPointerTester;
 import com.google.common.testing.NullPointerTester.Visibility;
+import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.io.File;
 import java.nio.file.Path;
@@ -104,52 +107,65 @@ public class LinkageProblemTest {
         .testEquals();
   }
 
+  // Example linkage problems for formatting
+  private Path path = Paths.get("aaa", "bbb-1.2.3.jar");
+
+  private Artifact artifact1 =
+      new DefaultArtifact("com.google:foo:0.0.1").setFile(new File("foo/foo.jar"));
+  private ClassPathEntry entry1 = new ClassPathEntry(artifact1);
+  private ClassFile source1 = new ClassFile(entry1, "java.lang.Object");
+
+  private Artifact artifact2 =
+      new DefaultArtifact("com.google:bar:0.0.1").setFile(new File("bar/bar.jar"));
+  private ClassPathEntry entry2 = new ClassPathEntry(artifact2);
+  private ClassFile source2 = new ClassFile(entry2, "java.lang.Integer");
+
+  private LinkageProblem methodLinkageProblem =
+      new LinkageProblem(
+          new MethodSymbol(
+              "io.grpc.protobuf.ProtoUtils.marshaller",
+              "marshaller",
+              "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
+              false),
+          ErrorType.SYMBOL_NOT_FOUND,
+          new ClassFile(new ClassPathEntry(path), "java.lang.Object"),
+          source1);
+
+  private LinkageProblem classLinkageProblem1 =
+      new LinkageProblem(
+          new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null, source1);
+  private LinkageProblem classLinkageProblem2 =
+      new LinkageProblem(
+          new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null, source2);
+
+  private Artifact artifact =
+      new DefaultArtifact("com.google:ccc:1.2.3").setFile(new File("ccc-1.2.3.jar"));
+  private ClassPathEntry entry = new ClassPathEntry(artifact);
+
+  private LinkageProblem fieldLinkageProblem =
+      new LinkageProblem(
+          new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"),
+          ErrorType.SYMBOL_NOT_FOUND,
+          new ClassFile(entry, "java.lang.Integer"),
+          source2);
+
+  private ImmutableSet<LinkageProblem> linkageProblems =
+      ImmutableSet.of(
+          methodLinkageProblem, classLinkageProblem1, classLinkageProblem2, fieldLinkageProblem);
+
   @Test
-  public void testFormatSymbolProblems() throws IOException {
-    Path path = Paths.get("aaa", "bbb-1.2.3.jar");
+  public void testFormatSymbolProblem() {
+    assertEquals(
+        "Class java.lang.Integer is not found", classLinkageProblem1.formatSymbolProblem());
 
-    Artifact artifact1 =
-        new DefaultArtifact("com.google:foo:0.0.1").setFile(new File("foo/foo.jar"));
-    ClassPathEntry entry1 = new ClassPathEntry(artifact1);
-    ClassFile source1 = new ClassFile(entry1, "java.lang.Object");
+    // classLinkageProblem1 and classLinkageProblem2 are the same except the sourceClass field.
+    // formatSymbolProblem only contains the problem on symbol.
+    assertEquals(
+        classLinkageProblem1.formatSymbolProblem(), classLinkageProblem2.formatSymbolProblem());
+  }
 
-    Artifact artifact2 =
-        new DefaultArtifact("com.google:bar:0.0.1").setFile(new File("bar/bar.jar"));
-    ClassPathEntry entry2 = new ClassPathEntry(artifact2);
-    ClassFile source2 = new ClassFile(entry2, "java.lang.Integer");
-
-    LinkageProblem methodLinkageProblem =
-        new LinkageProblem(
-            new MethodSymbol(
-                "io.grpc.protobuf.ProtoUtils.marshaller",
-                "marshaller",
-                "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
-                false),
-            ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(new ClassPathEntry(path), "java.lang.Object"),
-            source1);
-
-    LinkageProblem classLinkageProblem1 =
-        new LinkageProblem(
-            new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null, source1);
-    LinkageProblem classLinkageProblem2 =
-        new LinkageProblem(
-            new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null, source2);
-
-    Artifact artifact = new DefaultArtifact("com.google:ccc:1.2.3")
-        .setFile(new File("ccc-1.2.3.jar"));
-    ClassPathEntry entry = new ClassPathEntry(artifact);
-
-    LinkageProblem fieldLinkageProblem =
-        new LinkageProblem(
-            new FieldSymbol("java.lang.Integer", "MAX_VALUE", "I"),
-            ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(entry, "java.lang.Integer"),
-            source2);
-
-    ImmutableSet<LinkageProblem> linkageProblems =
-        ImmutableSet.of(
-            methodLinkageProblem, classLinkageProblem1, classLinkageProblem2, fieldLinkageProblem);
+  @Test
+  public void testFormatLinkageProblems() {
     assertEquals(
         "("
             + path
@@ -166,5 +182,24 @@ public class LinkageProblemTest {
             + "  referenced by 1 class file\n"
             + "    java.lang.Integer (com.google:bar:0.0.1)\n",
         LinkageProblem.formatLinkageProblems(linkageProblems));
+  }
+
+  @Test
+  public void testGroupBySymbolProblems() {
+    ImmutableMap<String, ImmutableList<String>> grouped =
+        LinkageProblem.groupBySymbolProblem(linkageProblems);
+
+    Truth.assertThat(grouped.keySet())
+        .containsExactly(
+            methodLinkageProblem.formatSymbolProblem(),
+            classLinkageProblem1.formatSymbolProblem(),
+            fieldLinkageProblem.formatSymbolProblem())
+        .inOrder();
+
+    ImmutableList<String> sourceClassNames =
+        grouped.get(classLinkageProblem1.formatSymbolProblem());
+    Truth.assertThat(sourceClassNames)
+        .containsExactly("java.lang.Object", "java.lang.Integer")
+        .inOrder();
   }
 }

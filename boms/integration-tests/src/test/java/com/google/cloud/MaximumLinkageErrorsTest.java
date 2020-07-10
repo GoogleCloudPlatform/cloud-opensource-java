@@ -17,7 +17,6 @@
 
 package com.google.cloud;
 
-import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
@@ -25,7 +24,6 @@ import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import java.io.IOException;
@@ -50,14 +48,13 @@ public class MaximumLinkageErrorsTest {
     Bom bom = Bom.readBom(bomFile);
 
     ImmutableSet<LinkageProblem> oldProblems =
-        LinkageChecker.create(baseline).findSymbolProblems();
+        LinkageChecker.create(baseline).findLinkageProblems();
     LinkageChecker checker = LinkageChecker.create(bom);
-    ImmutableSet<LinkageProblem> currentProblems = checker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> currentProblems = checker.findLinkageProblems();
 
     // This only tests for newly missing methods, not new references to
     // previously missing methods.
-    SetView<LinkageProblem> newProblems =
-        Sets.difference(currentProblems, oldProblems);
+    SetView<LinkageProblem> newProblems = Sets.difference(currentProblems, oldProblems);
 
     // Check that no new linkage errors have been introduced since the baseline
     StringBuilder message = new StringBuilder("Baseline BOM: " + baselineCoordinates + "\n");

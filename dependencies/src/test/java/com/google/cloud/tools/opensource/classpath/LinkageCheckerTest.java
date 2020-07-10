@@ -129,7 +129,7 @@ public class LinkageCheckerTest {
 
     // Array's clone is available in Java runtime and thus should not be reported as linkage error
     long arraySymbolProblemCount =
-        linkageChecker.findSymbolProblems().stream()
+        linkageChecker.findLinkageProblems().stream()
             .filter(problem -> problem.getSymbol().getClassBinaryName().startsWith("["))
             .count();
     assertEquals(0, arraySymbolProblemCount);
@@ -150,7 +150,7 @@ public class LinkageCheckerTest {
             false));
 
     ImmutableSet<LinkageProblem> symbolProblems =
-        linkageChecker.cloneWith(builder.build()).findSymbolProblems();
+        linkageChecker.cloneWith(builder.build()).findLinkageProblems();
 
     Truth.assertThat(symbolProblems).isEmpty();
   }
@@ -559,7 +559,7 @@ public class LinkageCheckerTest {
         // This inner class is defined as public in firestore-v1beta1-0.28.0.jar
         new ClassSymbol("com.google.firestore.v1beta1.FirestoreGrpc$FirestoreStub"));
     ImmutableSet<LinkageProblem> symbolProblems =
-        linkageChecker.cloneWith(builder.build()).findSymbolProblems();
+        linkageChecker.cloneWith(builder.build()).findLinkageProblems();
 
     Truth.assertThat(symbolProblems).isEmpty();
   }
@@ -579,7 +579,7 @@ public class LinkageCheckerTest {
         // This private inner class is defined in firestore-v1beta1-0.28.0.jar
         new ClassSymbol("com.google.api.core.AbstractApiService$InnerService"));
     ImmutableSet<LinkageProblem> symbolProblems =
-        linkageChecker.cloneWith(builder.build()).findSymbolProblems();
+        linkageChecker.cloneWith(builder.build()).findLinkageProblems();
 
     Truth.assertThat(symbolProblems).hasSize(1);
     LinkageProblem firstProblem = Iterables.getFirst(symbolProblems, null);
@@ -606,7 +606,7 @@ public class LinkageCheckerTest {
         // This private inner class is defined in firestore-v1beta1-0.28.0.jar
         new ClassSymbol("com.google.api.core.AbstractApiService$InnerService"));
     ImmutableSet<LinkageProblem> symbolProblems =
-        linkageChecker.cloneWith(builder.build()).findSymbolProblems();
+        linkageChecker.cloneWith(builder.build()).findLinkageProblems();
 
     long innerClassCount =
         symbolProblems.stream()
@@ -754,11 +754,11 @@ public class LinkageCheckerTest {
             "()Ljava/lang/Iterable;",
             false));
     ImmutableSet<LinkageProblem> symbolProblems65First =
-        linkageChecker65First.cloneWith(builder.build()).findSymbolProblems();
+        linkageChecker65First.cloneWith(builder.build()).findLinkageProblems();
     Truth.assertThat(symbolProblems65First).hasSize(1);
 
     ImmutableSet<LinkageProblem> symbolProblems66First =
-        linkageChecker66First.cloneWith(builder.build()).findSymbolProblems();
+        linkageChecker66First.cloneWith(builder.build()).findLinkageProblems();
     Truth.assertThat(symbolProblems66First).isEmpty();
   }
 
@@ -770,7 +770,7 @@ public class LinkageCheckerTest {
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
 
-    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findLinkageProblems();
 
     Truth.assertThat(symbolProblems).isEmpty();
   }
@@ -783,7 +783,7 @@ public class LinkageCheckerTest {
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
 
-    ImmutableSet<LinkageProblem> problems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> problems = linkageChecker.findLinkageProblems();
 
     ClassPathEntry sisuJar = paths.get(0);
 
@@ -816,7 +816,7 @@ public class LinkageCheckerTest {
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
 
-    ImmutableSet<LinkageProblem> problems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> problems = linkageChecker.findLinkageProblems();
 
     ImmutableList<ClassFile> sourcesOfInvalidReferences =
         problems.stream().map(LinkageProblem::getSourceClass).collect(toImmutableList());
@@ -831,7 +831,7 @@ public class LinkageCheckerTest {
     List<ClassPathEntry> paths = ImmutableList.of(firestoreJar);
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
 
-    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findLinkageProblems();
 
     boolean hasClassSymbolProblem =
         symbolProblems.stream().anyMatch(problem -> problem.getSymbol() instanceof ClassSymbol);
@@ -861,7 +861,7 @@ public class LinkageCheckerTest {
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
 
     // This should not raise an exception
-    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findLinkageProblems();
     assertNotNull(symbolProblems);
   }
 
@@ -874,7 +874,7 @@ public class LinkageCheckerTest {
         resolveTransitiveDependencyPaths("io.projectreactor:reactor-core:3.2.11.RELEASE");
     
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
-    ImmutableSet<LinkageProblem> problems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> problems = linkageChecker.findLinkageProblems();
 
     ImmutableList<ClassFile> sourceClasses =
         problems.stream().map(LinkageProblem::getSourceClass).collect(toImmutableList());
@@ -891,7 +891,7 @@ public class LinkageCheckerTest {
     ImmutableList<ClassPathEntry> jars = resolvePaths("com.oracle.substratevm:svm:19.2.0.1");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
-    ImmutableSet<LinkageProblem> problems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> problems = linkageChecker.findLinkageProblems();
 
     assertFalse(
         "GraalVM's AnalysisType, whose interface is missing, should not be reported",
@@ -923,7 +923,7 @@ public class LinkageCheckerTest {
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
 
-    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findLinkageProblems();
     Truth.assertWithMessage("Missing classes from jdk.vm.ci should not be reported")
         .that(symbolProblems)
         .isEmpty();
@@ -940,7 +940,7 @@ public class LinkageCheckerTest {
 
     ClassSymbol unexpectedMissingSymbol =
         new ClassSymbol("org.mockito.internal.creation.bytebuddy.MockMethodDispatcher");
-    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
     assertFalse(
         linkageProblems.stream()
             .anyMatch(problem -> problem.getSymbol().equals(unexpectedMissingSymbol)));
@@ -961,7 +961,7 @@ public class LinkageCheckerTest {
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
 
-    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findLinkageProblems();
 
     // The two unimplemented methods should be reported separately
     LinkageProblem expectedProblemOnNeedsCredentials =
@@ -994,7 +994,7 @@ public class LinkageCheckerTest {
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
 
-    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findLinkageProblems();
 
     // com.oracle.svm.core.LibCHelperDirectives does not implement some methods in
     // CContext$Directives interface. But this should not be reported as an error because the
@@ -1024,7 +1024,7 @@ public class LinkageCheckerTest {
             .build();
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
 
-    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findLinkageProblems();
 
     MethodSymbol expectedMethodSymbol =
         new MethodSymbol(
@@ -1045,7 +1045,7 @@ public class LinkageCheckerTest {
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
 
-    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findLinkageProblems();
 
     // com.oracle.svm.core.genscavenge.PinnedAllocatorImpl extends an abstract class
     // com.oracle.svm.core.heap.PinnedAllocator. The superclass has native methods, such as
@@ -1068,7 +1068,7 @@ public class LinkageCheckerTest {
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
 
-    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findLinkageProblems();
 
     // BlockHound integrates with Reactor and RxJava if their classes are available in class path by
     // checking ClassNotFoundException. Therefore LinkageMonitor should not report the references to
@@ -1098,7 +1098,7 @@ public class LinkageCheckerTest {
     ClassPathEntry jar = classPathEntryOfResource("testdata/dummy-boot-inf-prefix.jar");
 
     LinkageChecker linkageChecker = LinkageChecker.create(ImmutableList.of(jar));
-    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findLinkageProblems();
 
     // There was a problem where Linkage Checker unexpectedly reported linkage errors on classes in
     // framework-specific class file location, such as "BOOT-INF/classes". In this test case,
@@ -1123,7 +1123,7 @@ public class LinkageCheckerTest {
         resolvePaths("io.grpc:grpc-core:1.17.0", "com.google.guava:guava:20.0");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
-    ImmutableSet<LinkageProblem> problems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> problems = linkageChecker.findLinkageProblems();
 
     Truth.assertThat(problems)
         .comparingElementsUsing(

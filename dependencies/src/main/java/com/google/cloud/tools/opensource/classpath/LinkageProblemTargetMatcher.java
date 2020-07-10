@@ -16,11 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-/** Matcher for SymbolProblems. */
-interface SymbolProblemMatcher {
-  boolean match(LinkageProblem problem);
-
-  default void addChild(SymbolProblemTargetMatcher child) {
-    throw new IllegalStateException("This element is not supposed to take child element");
-  }
+/** Matchers for the targets of linkage errors. */
+interface LinkageProblemTargetMatcher {
+  boolean match(Symbol symbol);
 }

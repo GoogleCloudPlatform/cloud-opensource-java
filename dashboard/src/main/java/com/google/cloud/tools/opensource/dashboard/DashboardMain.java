@@ -182,7 +182,7 @@ public class DashboardMain {
 
     LinkageChecker linkageChecker = LinkageChecker.create(classpath);
 
-    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
     Path output = generateHtml(bom, cache, classPathResult, linkageProblems);
@@ -272,7 +272,7 @@ public class DashboardMain {
           Artifact artifact = entry.getKey();
           ImmutableSet<ClassPathEntry> jarsInDependencyTree =
               classPathResult.getClassPathEntries(Artifacts.toCoordinates(artifact));
-          Map<ClassPathEntry, ImmutableSet<LinkageProblem>> relevantlinkageProblemTable =
+          Map<ClassPathEntry, ImmutableSet<LinkageProblem>> relevantLinkageProblemTable =
               Maps.filterKeys(linkageProblemTable, jarsInDependencyTree::contains);
 
           ArtifactResults results =
@@ -282,7 +282,7 @@ public class DashboardMain {
                   artifact,
                   entry.getValue(),
                   cache.getGlobalDependencies(),
-                  ImmutableMap.copyOf(relevantlinkageProblemTable),
+                  ImmutableMap.copyOf(relevantLinkageProblemTable),
                   classPathResult,
                   bom);
           table.add(results);

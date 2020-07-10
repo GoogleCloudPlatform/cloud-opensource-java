@@ -58,7 +58,7 @@ public class ExclusionFilesIntegrationTest {
     LinkageChecker linkagechecker =
         LinkageChecker.create(classPathResult.getClassPath(), ImmutableList.of(), exclusionFile);
 
-    ImmutableSet<LinkageProblem> symbolProblems = linkagechecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> symbolProblems = linkagechecker.findLinkageProblems();
     Truth.assertThat(symbolProblems).isEmpty();
   }
 }

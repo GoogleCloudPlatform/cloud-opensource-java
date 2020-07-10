@@ -175,7 +175,7 @@ public class ClassPathBuilderTest {
         .doesNotContain(
             new ClassSymbol("org.apache.http.client.entity.GZIPInputStreamFactory"));
 
-    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findLinkageProblems();
     assertEquals(
         "Method references within the same jar file should not be reported",
         0,
