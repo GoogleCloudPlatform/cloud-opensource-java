@@ -963,22 +963,24 @@ public class LinkageCheckerTest {
     // The two unimplemented methods should be reported separately
     LinkageProblem expectedProblemOnNeedsCredentials =
         new AbstractMethodProblem(
+            transportChannelProvider,
+            new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"),
             new MethodSymbol(
                 "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
                 "needsCredentials",
                 "()Z",
-                false),
-            transportChannelProvider,
-            new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"));
+                false)
+        );
     LinkageProblem expectedProblemOnWithCredentials =
         new AbstractMethodProblem(
+            transportChannelProvider,
+            new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"),
             new MethodSymbol(
                 "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
                 "withCredentials",
                 "(Lcom/google/auth/Credentials;)Lcom/google/api/gax/rpc/TransportChannelProvider;",
-                false),
-            transportChannelProvider,
-            new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"));
+                false)
+        );
     Truth.assertThat(problems).contains(expectedProblemOnNeedsCredentials);
     Truth.assertThat(problems).contains(expectedProblemOnWithCredentials);
   }

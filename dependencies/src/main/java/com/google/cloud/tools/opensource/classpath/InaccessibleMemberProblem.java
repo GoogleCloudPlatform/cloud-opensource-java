@@ -24,7 +24,7 @@ package com.google.cloud.tools.opensource.classpath;
  * member is not protected or public.
  */
 class InaccessibleMemberProblem extends IncompatibleLinkageProblem {
-  InaccessibleMemberProblem(Symbol symbol, ClassFile sourceClass, ClassFile targetClass) {
-    super("%s is not accessible", symbol, sourceClass, targetClass);
+  InaccessibleMemberProblem(ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
+    super("is not accessible", sourceClass, targetClass, symbol);
   }
 }

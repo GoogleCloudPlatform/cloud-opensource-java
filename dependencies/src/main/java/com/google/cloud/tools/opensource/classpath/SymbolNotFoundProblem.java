@@ -18,7 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 /** For a method or field reference, the symbol is not found in the target class. */
 class SymbolNotFoundProblem extends IncompatibleLinkageProblem {
-  SymbolNotFoundProblem(Symbol symbol, ClassFile targetClass, ClassFile sourceClass) {
-    super("%s is not found", symbol, targetClass, sourceClass);
+  SymbolNotFoundProblem(ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
+    super("is not found", sourceClass, targetClass , symbol);
   }
 }

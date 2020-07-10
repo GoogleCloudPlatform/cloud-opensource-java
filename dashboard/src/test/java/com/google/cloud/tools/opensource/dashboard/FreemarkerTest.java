@@ -17,10 +17,10 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
+import com.google.cloud.tools.opensource.classpath.ClassNotFoundProblem;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
-import com.google.cloud.tools.opensource.classpath.ErrorType;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
@@ -75,11 +75,9 @@ public class FreemarkerTest {
     ClassPathEntry entry = new ClassPathEntry(artifact);
     ImmutableSet<LinkageProblem> dummyProblems =
         ImmutableSet.of(
-            new LinkageProblem(
-                new ClassSymbol("com.foo.Bar"),
-                ErrorType.CLASS_NOT_FOUND,
-                null,
-                new ClassFile(entry, "abc.def.G")));
+            new ClassNotFoundProblem(
+                new ClassFile(entry, "abc.def.G"), new ClassSymbol("com.foo.Bar")
+            ));
     symbolProblemTable = ImmutableMap.of(entry, dummyProblems);
   }
 

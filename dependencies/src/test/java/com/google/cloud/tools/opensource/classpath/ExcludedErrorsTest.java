@@ -35,9 +35,9 @@ public class ExcludedErrorsTest {
     ClassFile sourceClass = new ClassFile(new ClassPathEntry(Paths.get("foo")), "org.graalvm.Foo");
     LinkageProblem linkageProblem =
         new AbstractMethodProblem(
-            methodSymbol,
-            sourceClass,
-            new ClassFile(new ClassPathEntry(Paths.get("bar")), "org.graalvm.Bar"));
+            sourceClass, new ClassFile(new ClassPathEntry(Paths.get("bar")), "org.graalvm.Bar"),
+            methodSymbol
+        );
     assertTrue(excludedErrors.contains(linkageProblem));
   }
 
@@ -52,9 +52,9 @@ public class ExcludedErrorsTest {
     ClassFile sourceClass = new ClassFile(new ClassPathEntry(Paths.get("foo")), "org.graalvm.Foo");
     LinkageProblem linkageProblem =
         new AbstractMethodProblem(
-            methodSymbol,
-            sourceClass,
-            new ClassFile(new ClassPathEntry(Paths.get("bar")), "org.graalvm.Bar"));
+            sourceClass, new ClassFile(new ClassPathEntry(Paths.get("bar")), "org.graalvm.Bar"),
+            methodSymbol
+        );
 
     assertFalse(excludedErrors.contains(linkageProblem));
   }

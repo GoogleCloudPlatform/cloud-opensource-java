@@ -38,10 +38,10 @@ public abstract class LinkageProblem {
 
   private final Symbol symbol;
   private final ClassFile sourceClass;
-  private final String symbolProblemMessageFormat;
+  private final String symbolProblemMessage;
 
   LinkageProblem(String symbolProblemMessage, ClassFile sourceClass, Symbol symbol) {
-    this.symbolProblemMessageFormat = Preconditions.checkNotNull(symbolProblemMessage);
+    this.symbolProblemMessage = Preconditions.checkNotNull(symbolProblemMessage);
     Preconditions.checkNotNull(symbol);
 
     // After finding symbol problem, there is no need to have SuperClassSymbol over ClassSymbol.
@@ -88,7 +88,7 @@ public abstract class LinkageProblem {
    * {@code symbol}s.
    */
   public String formatSymbolProblem() {
-    return String.format(symbolProblemMessageFormat, symbol.toString());
+    return symbol.toString() + " " + symbolProblemMessage;
   }
 
   /** Returns mapping from symbol problem description to the names of the source classes. */

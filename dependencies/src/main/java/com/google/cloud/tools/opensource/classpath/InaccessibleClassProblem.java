@@ -24,7 +24,7 @@ package com.google.cloud.tools.opensource.classpath;
  * private.
  */
 class InaccessibleClassProblem extends IncompatibleLinkageProblem {
-  InaccessibleClassProblem(Symbol symbol, ClassFile sourceClass, ClassFile targetClass) {
-    super("%s is not accessible", symbol, sourceClass, targetClass);
+  InaccessibleClassProblem(ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
+    super("is not accessible", sourceClass, targetClass, symbol);
   }
 }

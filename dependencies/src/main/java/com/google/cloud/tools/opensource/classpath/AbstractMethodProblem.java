@@ -21,7 +21,7 @@ package com.google.cloud.tools.opensource.classpath;
  * method. Such unimplemented methods manifest as {@link AbstractMethodError} in runtime.
  */
 class AbstractMethodProblem extends IncompatibleLinkageProblem {
-  AbstractMethodProblem(Symbol symbol, ClassFile sourceClass, ClassFile targetClass) {
-    super("%s is not accessible", symbol, sourceClass, targetClass);
+  AbstractMethodProblem(ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
+    super("is not accessible", sourceClass, targetClass, symbol);
   }
 }
