@@ -175,11 +175,11 @@ public class ClassPathBuilderTest {
         .doesNotContain(
             new ClassSymbol("org.apache.http.client.entity.GZIPInputStreamFactory"));
 
-    ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findLinkageProblems();
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
     assertEquals(
         "Method references within the same jar file should not be reported",
         0,
-        symbolProblems.stream()
+        linkageProblems.stream()
             .filter(problem -> httpClientJar.equals(problem.getSourceClass().getClassPathEntry()))
             .count());
   }

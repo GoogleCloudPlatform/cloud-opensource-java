@@ -224,7 +224,7 @@ public class LinkageMonitor {
   }
 
   /**
-   * Returns a message on {@code snapshotSymbolProblems} that do not exist in {@code
+   * Returns a message on {@code snapshotProblems} that do not exist in {@code
    * baselineProblems}.
    */
   @VisibleForTesting

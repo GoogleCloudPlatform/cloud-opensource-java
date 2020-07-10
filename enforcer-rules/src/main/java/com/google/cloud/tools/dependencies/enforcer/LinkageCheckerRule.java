@@ -191,26 +191,26 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
       try {
 
-        // TODO LinkageChecker.create and LinkageChecker.findSymbolProblems
+        // TODO LinkageChecker.create and LinkageChecker.findLinkageProblems
         // should not be two separate public methods since we always call
-        // findSymbolProblems immediately after create.
+        // findLinkageProblems immediately after create.
 
         Path exclusionFile = this.exclusionFile == null ? null : Paths.get(this.exclusionFile);
         LinkageChecker linkageChecker =
             LinkageChecker.create(classPath, entryPoints, exclusionFile);
-        ImmutableSet<LinkageProblem> symbolProblems = linkageChecker.findLinkageProblems();
+        ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
         if (reportOnlyReachable) {
           ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
-          symbolProblems =
-              symbolProblems.stream()
+          linkageProblems =
+              linkageProblems.stream()
                   .filter(
                       entry ->
                           classReferenceGraph.isReachable(entry.getSourceClass().getBinaryName()))
                   .collect(toImmutableSet());
         }
-        // Count unique SymbolProblems
+        // Count unique LinkageProblems by their symbols
         long errorCount =
-            symbolProblems.stream().map(LinkageProblem::formatSymbolProblem).distinct().count();
+            linkageProblems.stream().map(LinkageProblem::formatSymbolProblem).distinct().count();
 
         String foundError = reportOnlyReachable ? "reachable error" : "error";
         if (errorCount > 1) {
@@ -220,9 +220,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           String message =
               String.format(
                   "Linkage Checker rule found %d %s. Linkage error report:\n%s",
-                  errorCount, foundError, LinkageProblem.formatLinkageProblems(symbolProblems));
+                  errorCount, foundError, LinkageProblem.formatLinkageProblems(linkageProblems));
           String dependencyPaths =
-              dependencyPathsOfProblematicJars(classPathResult, symbolProblems);
+              dependencyPathsOfProblematicJars(classPathResult, linkageProblems);
 
           if (getLevel() == WARN) {
             logger.warn(message);
@@ -370,9 +370,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   private String dependencyPathsOfProblematicJars(
-      ClassPathResult classPathResult, Set<LinkageProblem> symbolProblems) {
+      ClassPathResult classPathResult, Set<LinkageProblem> linkageProblems) {
     ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
-    for (LinkageProblem problem : symbolProblems) {
+    for (LinkageProblem problem : linkageProblems) {
       ClassFile containingClass = problem.getContainingClass();
       if (containingClass != null) {
         problematicJars.add(containingClass.getClassPathEntry());
