@@ -23,6 +23,7 @@ import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
+import com.google.cloud.tools.opensource.classpath.IncompatibleLinkageProblem;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -246,9 +247,9 @@ public class LinkageMonitor {
 
       for (LinkageProblem linkageProblem : groupedBySymbolProblem.get(problem)) {
         // This is null for ClassNotFound error.
-        ClassFile containingClass = linkageProblem.getContainingClass();
-        if (containingClass != null) {
-          problematicJars.add(containingClass.getClassPathEntry());
+        if (linkageProblem instanceof IncompatibleLinkageProblem) {
+          problematicJars.add(
+              ((IncompatibleLinkageProblem) linkageProblem).getTargetClass().getClassPathEntry());
         }
 
         ClassFile sourceClass = linkageProblem.getSourceClass();

@@ -26,12 +26,13 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
+import com.google.cloud.tools.opensource.classpath.ClassNotFoundProblem;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
-import com.google.cloud.tools.opensource.classpath.ErrorType;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.classpath.MethodSymbol;
+import com.google.cloud.tools.opensource.classpath.SymbolNotFoundProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -73,11 +74,8 @@ public class LinkageMonitorTest {
   private ClassPathEntry jarB = new ClassPathEntry(artifactB);
 
   private LinkageProblem classNotFoundProblem =
-      new LinkageProblem(
-          new ClassSymbol("java.lang.Integer"),
-          ErrorType.CLASS_NOT_FOUND,
-          null,
-          new ClassFile(jarA, "com.abc.AAA"));
+      new ClassNotFoundProblem(
+          new ClassFile(jarA, "com.abc.AAA"), new ClassSymbol("java.lang.Integer"));
   private LinkageProblem methodNotFoundProblemFromA;
   private LinkageProblem methodNotFoundProblemFromB;
 
@@ -87,26 +85,24 @@ public class LinkageMonitorTest {
     session = RepositoryUtility.newSession(system);
 
     methodNotFoundProblemFromA =
-        new LinkageProblem(
+        new SymbolNotFoundProblem(
+            new ClassFile(jarA, "com.abc.AAA"),
+            new ClassFile(jarB, "io.grpc.protobuf.ProtoUtils"),
             new MethodSymbol(
                 "io.grpc.protobuf.ProtoUtils",
                 "marshaller",
                 "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
-                false),
-            ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(jarB, "java.lang.Object"),
-            new ClassFile(jarA, "com.abc.AAA"));
+                false));
 
     methodNotFoundProblemFromB =
-        new LinkageProblem(
+        new SymbolNotFoundProblem(
+            new ClassFile(jarA, "com.abc.BBB"),
+            new ClassFile(jarB, "io.grpc.protobuf.ProtoUtils"),
             new MethodSymbol(
                 "io.grpc.protobuf.ProtoUtils",
                 "marshaller",
                 "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
-                false),
-            ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(jarB, "java.lang.Object"),
-            new ClassFile(jarA, "com.abc.BBB"));
+                false));
   }
 
   @Test

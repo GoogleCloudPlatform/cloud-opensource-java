@@ -25,6 +25,7 @@ import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
+import com.google.cloud.tools.opensource.classpath.IncompatibleLinkageProblem;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
@@ -373,9 +374,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       ClassPathResult classPathResult, Set<LinkageProblem> linkageProblems) {
     ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
     for (LinkageProblem problem : linkageProblems) {
-      ClassFile containingClass = problem.getContainingClass();
-      if (containingClass != null) {
-        problematicJars.add(containingClass.getClassPathEntry());
+      if (problem instanceof IncompatibleLinkageProblem) {
+        problematicJars.add(
+            ((IncompatibleLinkageProblem) problem).getTargetClass().getClassPathEntry());
       }
 
       ClassFile sourceClass = problem.getSourceClass();
