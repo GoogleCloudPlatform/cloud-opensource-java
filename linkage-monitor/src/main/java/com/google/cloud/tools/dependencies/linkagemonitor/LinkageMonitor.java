@@ -192,7 +192,7 @@ public class LinkageMonitor {
     }
 
     ImmutableList<Artifact> snapshotManagedDependencies = snapshot.getManagedDependencies();
-    ClassPathResult classPathResult = (new ClassPathBuilder()).resolve(snapshotManagedDependencies);
+    ClassPathResult classPathResult = (new ClassPathBuilder()).resolve(snapshotManagedDependencies, true);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
     List<ClassPathEntry> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 

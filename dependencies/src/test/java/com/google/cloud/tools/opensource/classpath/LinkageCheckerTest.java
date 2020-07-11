@@ -68,7 +68,7 @@ public class LinkageCheckerTest {
   static ImmutableList<ClassPathEntry> resolvePaths(String... coordinates) throws IOException {
     ImmutableList<Artifact> artifacts =
         Arrays.stream(coordinates).map(DefaultArtifact::new).collect(toImmutableList());
-    ClassPathResult result = (new ClassPathBuilder()).resolve(artifacts);
+    ClassPathResult result = (new ClassPathBuilder()).resolve(artifacts, true);
     return result.getClassPath();
   }
 
@@ -603,7 +603,7 @@ public class LinkageCheckerTest {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("-b", bomCoordinates);
     ImmutableList<ClassPathEntry> inputClasspath =
-        classPathBuilder.resolve(parsedArguments.getArtifacts()).getClassPath();
+        classPathBuilder.resolve(parsedArguments.getArtifacts(), true).getClassPath();
 
     Truth.assertThat(inputClasspath).isNotEmpty();
 
@@ -632,7 +632,7 @@ public class LinkageCheckerTest {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("--artifacts", mavenCoordinates);
     List<ClassPathEntry> inputClasspath =
-        classPathBuilder.resolve(parsedArguments.getArtifacts()).getClassPath();
+        classPathBuilder.resolve(parsedArguments.getArtifacts(), true).getClassPath();
 
     Truth.assertWithMessage(
             "The first 2 items in the classpath should be the 2 artifacts in the input")
@@ -663,7 +663,7 @@ public class LinkageCheckerTest {
         LinkageCheckerArguments.readCommandLine("--artifacts", "com.google.guava:guava-gwt:20.0");
 
     ImmutableList<ClassPathEntry> inputClasspath =
-        classPathBuilder.resolve(parsedArguments.getArtifacts()).getClassPath();
+        classPathBuilder.resolve(parsedArguments.getArtifacts(), true).getClassPath();
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(COORDINATES)
@@ -681,7 +681,7 @@ public class LinkageCheckerTest {
             "--artifacts", "org.apache.tomcat:tomcat-jasper:8.0.9");
 
     ImmutableList<UnresolvableArtifactProblem> artifactProblems =
-        classPathBuilder.resolve(parsedArguments.getArtifacts()).getArtifactProblems();
+        classPathBuilder.resolve(parsedArguments.getArtifacts(), true).getArtifactProblems();
     Truth.assertThat(artifactProblems)
         .comparingElementsUsing(
             Correspondence.transforming(

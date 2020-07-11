@@ -71,17 +71,21 @@ public final class DependencyPath {
     }
   }
 
-  /** Returns the list of artifacts in the path. */
-  public ImmutableList<Artifact> getArtifacts() {
-    ImmutableList.Builder<Artifact> builder = ImmutableList.builder();
+  /** Returns the versionless coordinates of the artifacts in the path. */
+  public ImmutableList<String> getArtifactKeys() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     if (root != null) {
-      builder.add(root);
+      builder.add(Artifacts.makeKey(root));
     }
-    path.stream().map(Dependency::getArtifact).forEach(builder::add);
+    
+    for (Dependency dependency : path) {
+      builder.add(Artifacts.makeKey(dependency.getArtifact()));
+    }
+    
     return builder.build();
   }
-
+  
   /**
    * Returns the artifact at {@code i}th node in the path. The {@code 0}th element is the root of
    * the dependency tree.
