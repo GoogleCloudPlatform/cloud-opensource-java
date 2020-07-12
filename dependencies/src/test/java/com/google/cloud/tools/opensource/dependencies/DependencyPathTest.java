@@ -149,12 +149,16 @@ public class DependencyPathTest {
 
   @Test
   public void testGetArtifacts() {
-    Truth.assertThat(pathRootFooBar.getArtifacts()).containsExactly(root, foo, bar).inOrder();
+    Truth.assertThat(pathRootFooBar.getArtifactKeys())
+        .containsExactly("a:b", "com.google:foo", "com.google:bar")
+        .inOrder();
   }
 
   @Test
   public void testGetArtifacts_nullRoot() {
-    Truth.assertThat(pathNullRootFooBar.getArtifacts()).containsExactly(foo, bar).inOrder();
+    Truth.assertThat(pathNullRootFooBar.getArtifactKeys())
+        .containsExactly("com.google:foo", "com.google:bar")
+        .inOrder();
   }
 
   @Test

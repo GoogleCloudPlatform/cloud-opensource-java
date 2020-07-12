@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
@@ -177,7 +176,7 @@ public class DashboardMain {
 
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
-    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies);
+    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies, true);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
 
     LinkageChecker linkageChecker = LinkageChecker.create(classpath);
@@ -571,24 +570,18 @@ public class DashboardMain {
   private static ImmutableList<String> commonVersionlessArtifacts(
       List<DependencyPath> dependencyPaths) {
     ImmutableList<String> initialVersionlessCoordinates =
-        versionlessCoordinates(dependencyPaths.get(0));
+        dependencyPaths.get(0).getArtifactKeys();
     // LinkedHashSet remembers insertion order
     LinkedHashSet<String> versionlessCoordinatesIntersection =
         Sets.newLinkedHashSet(initialVersionlessCoordinates);
     for (DependencyPath dependencyPath : dependencyPaths) {
       // List of versionless coordinates ("groupId:artifactId")
-      ImmutableList<String> versionlessCoordinatesInPath = versionlessCoordinates(dependencyPath);
+      ImmutableList<String> versionlessCoordinatesInPath = dependencyPath.getArtifactKeys();
       // intersection of elements in DependencyPaths
       versionlessCoordinatesIntersection.retainAll(versionlessCoordinatesInPath);
     }
 
     return ImmutableList.copyOf(versionlessCoordinatesIntersection);
-  }
-
-  private static ImmutableList<String> versionlessCoordinates(DependencyPath dependencyPath) {
-    return dependencyPath.getArtifacts().stream()
-        .map(Artifacts::makeKey)
-        .collect(toImmutableList());
   }
 
   private static String summaryMessage(

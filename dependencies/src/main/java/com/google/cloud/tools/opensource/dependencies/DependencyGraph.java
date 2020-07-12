@@ -286,8 +286,7 @@ public class DependencyGraph {
         
         String groupIdAndArtifactId = Artifacts.makeKey(artifact);
         boolean ancestorHasSameKey =
-            parentPath.getArtifacts().stream()
-                .map(Artifacts::makeKey)
+            parentPath.getArtifactKeys().stream()
                 .anyMatch(key -> key.equals(groupIdAndArtifactId));
         if (ancestorHasSameKey) {
           continue;
