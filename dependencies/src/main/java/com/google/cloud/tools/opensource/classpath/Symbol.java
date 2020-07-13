@@ -27,7 +27,7 @@ import com.google.common.base.MoreObjects;
  * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.1">Java
  *     Virtual Machine Specification: The Run-Time Constant Pool</a>
  */
-abstract class Symbol {
+public abstract class Symbol {
   private final String classBinaryName;
 
   Symbol(String className) {

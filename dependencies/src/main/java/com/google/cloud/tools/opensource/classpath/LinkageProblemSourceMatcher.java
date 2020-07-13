@@ -16,18 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-/** Matcher on the source class file of linkage errors. */
-class SourceMatcher implements LinkageProblemMatcher {
-
-  private LinkageProblemSourceMatcher matcher;
-
-  @Override
-  public void addChild(LinkageProblemTargetMatcher child) {
-    this.matcher = (LinkageProblemSourceMatcher) child;
-  }
-
-  @Override
-  public boolean match(LinkageProblem problem) {
-    return matcher.match(problem.getSourceClass());
-  }
+/** Matchers for the sources of linkage errors. */
+interface LinkageProblemSourceMatcher {
+  boolean match(ClassFile sourceClass);
 }

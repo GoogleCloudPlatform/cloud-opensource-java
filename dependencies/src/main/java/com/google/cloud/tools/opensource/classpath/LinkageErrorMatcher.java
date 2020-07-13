@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import javax.annotation.Nullable;
 
 /** Matcher for linkage errors. A linkage error has a target symbol and a source class file. */
-class LinkageErrorMatcher implements SymbolProblemMatcher {
+class LinkageErrorMatcher implements LinkageProblemMatcher {
 
   /** Matcher for the source class of the linkage error. Null if no Source element. */
   @Nullable private SourceMatcher sourceMatcher;
@@ -42,11 +42,11 @@ class LinkageErrorMatcher implements SymbolProblemMatcher {
    * present.
    */
   @Override
-  public boolean match(SymbolProblem problem, ClassFile sourceClass) {
-    if (sourceMatcher != null && !sourceMatcher.match(problem, sourceClass)) {
+  public boolean match(LinkageProblem problem) {
+    if (sourceMatcher != null && !sourceMatcher.match(problem)) {
       return false;
     }
-    if (targetMatcher != null && !targetMatcher.match(problem, sourceClass)) {
+    if (targetMatcher != null && !targetMatcher.match(problem)) {
       return false;
     }
     return true;
