@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.EqualsTester;
@@ -170,8 +169,7 @@ public class LinkageProblemTest {
             fieldLinkageProblem.formatSymbolProblem())
         .inOrder();
 
-    ImmutableSet<String> sourceClassNames =
-        grouped.get(classLinkageProblem1.formatSymbolProblem());
+    ImmutableSet<String> sourceClassNames = grouped.get(classLinkageProblem1.formatSymbolProblem());
     Truth.assertThat(sourceClassNames)
         .containsExactly("java.lang.Object", "java.lang.Integer")
         .inOrder();

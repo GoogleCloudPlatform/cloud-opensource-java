@@ -23,7 +23,6 @@ package com.google.cloud.tools.opensource.classpath;
  */
 final class AbstractMethodProblem extends IncompatibleLinkageProblem {
   AbstractMethodProblem(ClassFile sourceClass, ClassFile targetClass, MethodSymbol methodSymbol) {
-    super("is not implemented in the class", sourceClass, targetClass,
-        methodSymbol);
+    super("is not implemented in the class", sourceClass, targetClass, methodSymbol);
   }
 }
