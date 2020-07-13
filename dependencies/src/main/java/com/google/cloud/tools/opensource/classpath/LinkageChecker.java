@@ -308,7 +308,7 @@ public class LinkageChecker {
 
   /**
    * Returns the linkage errors for unimplemented methods in {@code classFile}. Such unimplemented
-   * methods manifest as {@link AbstractMethodError}s in runtime.
+   * methods manifest as {@link AbstractMethodError}s at runtime.
    */
   private ImmutableList<LinkageProblem> findInterfaceProblems(
       ClassFile classFile, InterfaceSymbol interfaceSymbol, ClassFile sourceClassFile) {
