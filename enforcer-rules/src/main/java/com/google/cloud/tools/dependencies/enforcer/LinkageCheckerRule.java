@@ -363,7 +363,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
             .filter(artifact -> !Bom.shouldSkipBomMember(artifact))
             .collect(toImmutableList());
 
-    ClassPathResult result = classPathBuilder.resolve(artifacts, true);
+    ClassPathResult result = classPathBuilder.resolve(artifacts, false);
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
     if (!artifactProblems.isEmpty()) {
       throw new EnforcerRuleException("Failed to collect dependency: " + artifactProblems);
