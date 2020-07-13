@@ -299,7 +299,6 @@ public class DashboardTest {
     Document document = parseOutputFile(
         "com.google.http-client_google-http-client-appengine_1.29.1.html");
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
-    System.err.println(document.toXML());
     Assert.assertEquals(2, reports.size());
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo("100 target classes causing linkage errors referenced from 540 source classes.");
