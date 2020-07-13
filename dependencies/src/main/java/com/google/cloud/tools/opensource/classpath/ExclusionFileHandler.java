@@ -34,7 +34,7 @@ class ExclusionFileHandler extends DefaultHandler {
   private LinkageErrorMatcher linkageErrorMatcher;
 
   /** Source or Target element that this handler is currently processing. */
-  private SymbolProblemMatcher symbolProblemMatcher;
+  private LinkageProblemMatcher linkageProblemMatcher;
 
   ImmutableList<LinkageErrorMatcher> getMatchers() {
     return matchers.build();
@@ -66,30 +66,30 @@ class ExclusionFileHandler extends DefaultHandler {
       case "Source":
         SourceMatcher sourceMatcher = new SourceMatcher();
         linkageErrorMatcher.setSourceMatcher(sourceMatcher);
-        symbolProblemMatcher = sourceMatcher;
+        linkageProblemMatcher = sourceMatcher;
         break;
       case "Target":
         TargetMatcher targetMatcher = new TargetMatcher();
         linkageErrorMatcher.setTargetMatcher(targetMatcher);
-        symbolProblemMatcher = targetMatcher;
+        linkageProblemMatcher = targetMatcher;
         break;
       case "Package":
-        symbolProblemMatcher.addChild(new PackageMatcher(attributes.getValue("name")));
+        linkageProblemMatcher.addChild(new PackageMatcher(attributes.getValue("name")));
         break;
       case "Class":
         String classNameOnClass = attributes.getValue("name");
-        symbolProblemMatcher.addChild(new ClassMatcher(classNameOnClass));
+        linkageProblemMatcher.addChild(new ClassMatcher(classNameOnClass));
         break;
       case "Method":
         String classNameOnMethod = attributes.getValue("className");
         MethodMatcher methodMatcher =
             new MethodMatcher(classNameOnMethod, attributes.getValue("name"));
-        symbolProblemMatcher.addChild(methodMatcher);
+        linkageProblemMatcher.addChild(methodMatcher);
         break;
       case "Field":
         String classNameOnField = attributes.getValue("className");
         FieldMatcher fieldMatcher = new FieldMatcher(classNameOnField, attributes.getValue("name"));
-        symbolProblemMatcher.addChild(fieldMatcher);
+        linkageProblemMatcher.addChild(fieldMatcher);
         break;
       default:
         // Not invalidating unknown tags here. Relax NG schema is responsible for the validation.

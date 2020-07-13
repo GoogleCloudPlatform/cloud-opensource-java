@@ -16,18 +16,12 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-/** Matcher on the source class file of linkage errors. */
-class SourceMatcher implements LinkageProblemMatcher {
-
-  private LinkageProblemSourceMatcher matcher;
-
-  @Override
-  public void addChild(LinkageProblemTargetMatcher child) {
-    this.matcher = (LinkageProblemSourceMatcher) child;
-  }
-
-  @Override
-  public boolean match(LinkageProblem problem) {
-    return matcher.match(problem.getSourceClass());
+/**
+ * The {@code sourceClass} references the {@code symbol}, but the {@code targetClass} does not have
+ * the symbol.
+ */
+public final class SymbolNotFoundProblem extends IncompatibleLinkageProblem {
+  public SymbolNotFoundProblem(ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
+    super("is not found", sourceClass, targetClass, symbol);
   }
 }

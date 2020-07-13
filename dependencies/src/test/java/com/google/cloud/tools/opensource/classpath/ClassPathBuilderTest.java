@@ -18,12 +18,12 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
-import com.google.cloud.tools.opensource.classpath.TestHelper;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
@@ -40,14 +40,31 @@ public class ClassPathBuilderTest {
 
   private ImmutableList<ClassPathEntry> resolveClassPath(String coordinates) {
     Artifact artifact = new DefaultArtifact(coordinates);
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(artifact));
+    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(artifact), true);
     return result.getClassPath();
+  }
+
+  @Test
+  public void testResolve_withoutOptionalDependencies() {
+    // an artifact with a very large dependency graph
+    String coords = "org.apache.beam:beam-sdks-java-io-hcatalog:2.19.0";
+    
+    Artifact catalog = new DefaultArtifact(coords);
+    try {
+      ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(catalog), false);
+      assertNotNull(result);
+    } catch (OutOfMemoryError failure) {
+      failure.printStackTrace();
+      fail("Ran out of memory");
+    } finally {
+      System.gc();      
+    }
   }
 
   @Test
   public void testResolve_removingDuplicates() {
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(grpcArtifact));
+    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(grpcArtifact), true);
 
     ImmutableList<ClassPathEntry> classPath = result.getClassPath();
     long jsr305Count =
@@ -73,7 +90,7 @@ public class ClassPathBuilderTest {
         .getManagedDependencies();
 
     ImmutableList<ClassPathEntry> classPath =
-        classPathBuilder.resolve(managedDependencies).getClassPath();
+        classPathBuilder.resolve(managedDependencies, true).getClassPath();
 
     ImmutableList<ClassPathEntry> entries = ImmutableList.copyOf(classPath);
 
@@ -91,7 +108,7 @@ public class ClassPathBuilderTest {
     Artifact grpcAuth = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
 
     ImmutableList<ClassPathEntry> classPath =
-        classPathBuilder.resolve(ImmutableList.of(grpcAuth)).getClassPath();
+        classPathBuilder.resolve(ImmutableList.of(grpcAuth), true).getClassPath();
 
     Truth.assertThat(classPath)
         .comparingElementsUsing(TestHelper.COORDINATES)
@@ -132,7 +149,7 @@ public class ClassPathBuilderTest {
   @Test
   public void testResolveClassPath_invalidCoordinate() {
     Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nosuchartifact:1.2.3");
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(nonExistentArtifact));
+    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(nonExistentArtifact), true);
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
     Truth.assertThat(artifactProblems).hasSize(1);
     assertEquals(
@@ -143,7 +160,7 @@ public class ClassPathBuilderTest {
 
   @Test
   public void testResolve_emptyInput() {
-    List<ClassPathEntry> classPath = classPathBuilder.resolve(ImmutableList.of()).getClassPath();
+    List<ClassPathEntry> classPath = classPathBuilder.resolve(ImmutableList.of(), true).getClassPath();
     Truth.assertThat(classPath).isEmpty();
   }
 
@@ -176,13 +193,12 @@ public class ClassPathBuilderTest {
         .doesNotContain(
             new ClassSymbol("org.apache.http.client.entity.GZIPInputStreamFactory"));
 
-    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
-        linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
     assertEquals(
         "Method references within the same jar file should not be reported",
         0,
-        symbolProblems.values().stream()
-            .filter(classFile -> httpClientJar.equals(classFile.getClassPathEntry()))
+        linkageProblems.stream()
+            .filter(problem -> httpClientJar.equals(problem.getSourceClass().getClassPathEntry()))
             .count());
   }
 
@@ -197,7 +213,7 @@ public class ClassPathBuilderTest {
     // In the full dependency tree of hibernate-core, xerces-impl:2.6.2 and xml-apis:2.6.2 are not
     // available in Maven Central.
     Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(hibernateCore));
+    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(hibernateCore), true);
 
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
 
@@ -222,7 +238,7 @@ public class ClassPathBuilderTest {
     Artifact beamZetaSqlExtensions = new DefaultArtifact("junit:junit:jar:4.10");
 
     // This should not throw StackOverflowError
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(beamZetaSqlExtensions));
+    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(beamZetaSqlExtensions), true);
     assertNotNull(result);
   }
 }

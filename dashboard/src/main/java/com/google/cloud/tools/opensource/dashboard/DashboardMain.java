@@ -17,14 +17,13 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
-import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
@@ -40,7 +39,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
@@ -178,16 +176,15 @@ public class DashboardMain {
 
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
-    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies);
+    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies, false);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
 
     LinkageChecker linkageChecker = LinkageChecker.create(classpath);
 
-    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
-        linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
-    Path output = generateHtml(bom, cache, classPathResult, symbolProblems);
+    Path output = generateHtml(bom, cache, classPathResult, linkageProblems);
 
     return output;
   }
@@ -201,7 +198,7 @@ public class DashboardMain {
       Bom bom,
       ArtifactCache cache,
       ClassPathResult classPathResult,
-      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems)
+      ImmutableSet<LinkageProblem> linkageProblems)
       throws IOException, TemplateException, URISyntaxException {
 
     Artifact bomArtifact = new DefaultArtifact(bom.getCoordinates());
@@ -214,19 +211,19 @@ public class DashboardMain {
     copyResource(output, "css/dashboard.css");
     copyResource(output, "js/dashboard.js");
 
-    ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable =
-        indexByJar(symbolProblems);
+    ImmutableMap<ClassPathEntry, ImmutableSet<LinkageProblem>> linkageProblemTable =
+        indexByJar(linkageProblems);
 
     List<ArtifactResults> table =
         generateReports(
-            freemarkerConfiguration, output, cache, symbolProblemTable, classPathResult, bom);
+            freemarkerConfiguration, output, cache, linkageProblemTable, classPathResult, bom);
 
     generateDashboard(
         freemarkerConfiguration,
         output,
         table,
         cache.getGlobalDependencies(),
-        symbolProblemTable,
+        linkageProblemTable,
         classPathResult,
         bom);
 
@@ -256,9 +253,10 @@ public class DashboardMain {
       Configuration configuration,
       Path output,
       ArtifactCache cache,
-      ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
+      ImmutableMap<ClassPathEntry, ImmutableSet<LinkageProblem>> linkageProblemTable,
       ClassPathResult classPathResult,
-      Bom bom) throws TemplateException {
+      Bom bom)
+      throws TemplateException {
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();
@@ -273,9 +271,8 @@ public class DashboardMain {
           Artifact artifact = entry.getKey();
           ImmutableSet<ClassPathEntry> jarsInDependencyTree =
               classPathResult.getClassPathEntries(Artifacts.toCoordinates(artifact));
-          Map<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>>
-              relevantSymbolProblemTable =
-                  Maps.filterKeys(symbolProblemTable, jarsInDependencyTree::contains);
+          Map<ClassPathEntry, ImmutableSet<LinkageProblem>> relevantLinkageProblemTable =
+              Maps.filterKeys(linkageProblemTable, jarsInDependencyTree::contains);
 
           ArtifactResults results =
               generateArtifactReport(
@@ -284,7 +281,7 @@ public class DashboardMain {
                   artifact,
                   entry.getValue(),
                   cache.getGlobalDependencies(),
-                  ImmutableMap.copyOf(relevantSymbolProblemTable),
+                  ImmutableMap.copyOf(relevantLinkageProblemTable),
                   classPathResult,
                   bom);
           table.add(results);
@@ -333,7 +330,7 @@ public class DashboardMain {
       Artifact artifact,
       ArtifactInfo artifactInfo,
       List<DependencyGraph> globalDependencies,
-      ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
+      ImmutableMap<ClassPathEntry, ImmutableSet<LinkageProblem>> linkageProblemTable,
       ClassPathResult classPathResult,
       Bom bom)
       throws IOException, TemplateException {
@@ -358,24 +355,31 @@ public class DashboardMain {
           collectLatestVersions(globalDependencies), transitiveDependencies);
 
       long totalLinkageErrorCount =
-          symbolProblemTable.values().stream()
-              .flatMap(problemToClasses -> problemToClasses.keySet().stream())
-              .distinct()
+          linkageProblemTable.values().stream()
+              .flatMap(problemToClasses -> problemToClasses.stream().map(LinkageProblem::getSymbol))
+              .distinct() // The dashboard counts linkage errors by the symbols
               .count();
 
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
+
+      DefaultObjectWrapper wrapper =
+          new DefaultObjectWrapperBuilder(Configuration.VERSION_2_3_28).build();
+      TemplateHashModel staticModels = wrapper.getStaticModels();
+      templateData.put("linkageProblem", staticModels.get(LinkageProblem.class.getName()));
+
       templateData.put("artifact", artifact);
       templateData.put("updates", convergenceIssues);
       templateData.put("upperBoundFailures", upperBoundFailures);
       templateData.put("globalUpperBoundFailures", globalUpperBoundFailures);
       templateData.put("lastUpdated", LocalDateTime.now());
       templateData.put("dependencyGraph", graph);
-      templateData.put("symbolProblems", symbolProblemTable);
+      templateData.put("linkageProblems", linkageProblemTable);
       templateData.put("classPathResult", classPathResult);
       templateData.put("totalLinkageErrorCount", totalLinkageErrorCount);
       templateData.put("coordinates", bom.getCoordinates());
+
       report.process(templateData, out);
 
       ArtifactResults results = new ArtifactResults(artifact);
@@ -416,26 +420,20 @@ public class DashboardMain {
   }
 
   /**
-   * Partitions {@code symbolProblems} by the JAR file that contains the {@link ClassFile}.
+   * Partitions {@code linkageProblems} by the JAR file that contains the {@link ClassFile}.
    *
-   * <p>For example, {@code classes = result.get(JarX).get(SymbolProblemY)} where {@code classes}
-   * are not null means that {@code JarX} has {@code SymbolProblemY} and that {@code JarX} contains
-   * {@code classes} which reference {@code SymbolProblemY.getSymbol()}.
+   * <p>For example, {@code classes = result.get(JarX).get(linkageProblemY)} where {@code classes}
+   * are not null means that {@code JarX} has {@code linkageProblemY} and that {@code JarX} contains
+   * {@code classes} which reference {@code linkageProblemY.getSymbol()}.
    */
-  private static ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>>
-      indexByJar(ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems) {
+  private static ImmutableMap<ClassPathEntry, ImmutableSet<LinkageProblem>> indexByJar(
+      ImmutableSet<LinkageProblem> linkageProblems) {
 
-    ImmutableMap<ClassPathEntry, Collection<Entry<SymbolProblem, ClassFile>>> jarMap =
-        Multimaps.index(symbolProblems.entries(), entry -> entry.getValue().getClassPathEntry())
+    ImmutableMap<ClassPathEntry, Collection<LinkageProblem>> jarMap =
+        Multimaps.index(linkageProblems, problem -> problem.getSourceClass().getClassPathEntry())
             .asMap();
 
-    return ImmutableMap.copyOf(
-        Maps.transformValues(
-            jarMap,
-            entries ->
-                ImmutableSetMultimap.copyOf(
-                    Multimaps.transformValues(
-                        ImmutableSetMultimap.copyOf(entries), ClassFile::getBinaryName))));
+    return ImmutableMap.copyOf(Maps.transformValues(jarMap, ImmutableSet::copyOf));
   }
 
   @VisibleForTesting
@@ -444,7 +442,7 @@ public class DashboardMain {
       Path output,
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
-      ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
+      ImmutableMap<ClassPathEntry, ImmutableSet<LinkageProblem>> linkageProblemTable,
       ClassPathResult classPathResult,
       Bom bom)
       throws IOException, TemplateException {
@@ -455,7 +453,7 @@ public class DashboardMain {
     templateData.put("table", table);
     templateData.put("lastUpdated", LocalDateTime.now());
     templateData.put("latestArtifacts", latestArtifacts);
-    templateData.put("symbolProblems", symbolProblemTable);
+    templateData.put("linkageProblems", linkageProblemTable);
     templateData.put("classPathResult", classPathResult);
     templateData.put("dependencyPathRootCauses", findRootCauses(classPathResult));
     templateData.put("coordinates", bom.getCoordinates());
@@ -468,6 +466,7 @@ public class DashboardMain {
     TemplateHashModel staticModels = wrapper.getStaticModels();
     templateData.put("dashboardMain", staticModels.get(DashboardMain.class.getName()));
     templateData.put("pieChart", staticModels.get(PieChart.class.getName()));
+    templateData.put("linkageProblem", staticModels.get(LinkageProblem.class.getName()));
 
     File dashboardFile = output.resolve("index.html").toFile();
     try (Writer out = new OutputStreamWriter(
@@ -571,24 +570,18 @@ public class DashboardMain {
   private static ImmutableList<String> commonVersionlessArtifacts(
       List<DependencyPath> dependencyPaths) {
     ImmutableList<String> initialVersionlessCoordinates =
-        versionlessCoordinates(dependencyPaths.get(0));
+        dependencyPaths.get(0).getArtifactKeys();
     // LinkedHashSet remembers insertion order
     LinkedHashSet<String> versionlessCoordinatesIntersection =
         Sets.newLinkedHashSet(initialVersionlessCoordinates);
     for (DependencyPath dependencyPath : dependencyPaths) {
       // List of versionless coordinates ("groupId:artifactId")
-      ImmutableList<String> versionlessCoordinatesInPath = versionlessCoordinates(dependencyPath);
+      ImmutableList<String> versionlessCoordinatesInPath = dependencyPath.getArtifactKeys();
       // intersection of elements in DependencyPaths
       versionlessCoordinatesIntersection.retainAll(versionlessCoordinatesInPath);
     }
 
     return ImmutableList.copyOf(versionlessCoordinatesIntersection);
-  }
-
-  private static ImmutableList<String> versionlessCoordinates(DependencyPath dependencyPath) {
-    return dependencyPath.getArtifacts().stream()
-        .map(Artifacts::makeKey)
-        .collect(toImmutableList());
   }
 
   private static String summaryMessage(
