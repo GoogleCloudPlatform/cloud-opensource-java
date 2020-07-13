@@ -17,13 +17,14 @@
 package com.google.cloud.tools.opensource.classpath;
 
 /**
- * The {@code symbol} (method or field) is inaccessible to the source class.
+ * The {@code symbol} (method or field) defined in {@code targetClass} is inaccessible to the {@code
+ * sourceClass}.
  *
  * <p>If the source class is in a different package, the member is not public. If the source is in
  * the same package, the class is private. If the source is a subclass of the target class, the
  * member is not protected or public.
  */
-class InaccessibleMemberProblem extends IncompatibleLinkageProblem {
+final class InaccessibleMemberProblem extends IncompatibleLinkageProblem {
   InaccessibleMemberProblem(ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
     super("is not accessible", sourceClass, targetClass, symbol);
   }

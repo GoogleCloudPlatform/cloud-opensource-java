@@ -17,14 +17,15 @@
 package com.google.cloud.tools.opensource.classpath;
 
 /**
- * The target class of the symbol reference is inaccessible to the source class.
+ * The {@code classSymbol} is inaccessible to the {@code sourceClass} as per {@code sourceClass}'s
+ * definition of the class symbol.
  *
  * <p>If the source class is in a different package, the class or one of its enclosing types is not
  * public. If the source class is in the same package, the class or one of its enclosing types is
  * private.
  */
-class InaccessibleClassProblem extends IncompatibleLinkageProblem {
-  InaccessibleClassProblem(ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
-    super("is not accessible", sourceClass, targetClass, symbol);
+final class InaccessibleClassProblem extends IncompatibleLinkageProblem {
+  InaccessibleClassProblem(ClassFile sourceClass, ClassFile targetClass, Symbol classSymbol) {
+    super("is not accessible", sourceClass, targetClass, classSymbol);
   }
 }

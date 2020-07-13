@@ -17,11 +17,12 @@
 package com.google.cloud.tools.opensource.classpath;
 
 /**
- * The referenced method is not implemented in the class but the class is declared to implement the
- * method. Such unimplemented methods manifest as {@link AbstractMethodError}s in runtime.
+ * The referenced {@code methodSymbol} is not implemented in the {@code targetClass} but the class
+ * is declared to implement the method by {@code sourceClass}. Such unimplemented methods manifest
+ * as {@link AbstractMethodError}s in runtime.
  */
-class AbstractMethodProblem extends IncompatibleLinkageProblem {
-  AbstractMethodProblem(ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
-    super("is not accessible", sourceClass, targetClass, symbol);
+final class AbstractMethodProblem extends IncompatibleLinkageProblem {
+  AbstractMethodProblem(ClassFile sourceClass, ClassFile targetClass, MethodSymbol methodSymbol) {
+    super("is not accessible", sourceClass, targetClass, methodSymbol);
   }
 }

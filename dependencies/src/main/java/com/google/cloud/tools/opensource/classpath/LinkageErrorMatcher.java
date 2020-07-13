@@ -43,7 +43,6 @@ class LinkageErrorMatcher implements LinkageProblemMatcher {
    */
   @Override
   public boolean match(LinkageProblem problem) {
-    ClassFile sourceClass = problem.getSourceClass();
     if (sourceMatcher != null && !sourceMatcher.match(problem)) {
       return false;
     }

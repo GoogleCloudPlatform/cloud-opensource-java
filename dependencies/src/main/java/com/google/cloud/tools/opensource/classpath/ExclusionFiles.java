@@ -141,8 +141,8 @@ class ExclusionFiles {
     return filter;
   }
 
-  /** Writes {@code linkageErrors} as exclusion rules into {@code outputFile}. */
-  static void write(Path outputFile, Set<LinkageProblem> linkageErrors)
+  /** Writes {@code linkageProblems} as exclusion rules into {@code outputFile}. */
+  static void write(Path outputFile, Set<LinkageProblem> linkageProblems)
       throws IOException, XMLStreamException, TransformerException {
 
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -153,7 +153,7 @@ class ExclusionFiles {
       writer.add(eventFactory.createStartDocument());
       writer.add(eventFactory.createStartElement(LINKAGE_CHECKER_FILTER_TAG, null, null));
 
-      for (LinkageProblem linkageProblem : linkageErrors) {
+      for (LinkageProblem linkageProblem : linkageProblems) {
         writeXmlEvents(writer, linkageProblem);
       }
 

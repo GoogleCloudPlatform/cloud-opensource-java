@@ -17,8 +17,8 @@
 package com.google.cloud.tools.opensource.classpath;
 
 /**
- * The referenced class or interface found in the class path is not binary-compatible with the
- * source class.
+ * The {@code symbol} (class or interface) defined in {@code targetClass} is not binary-compatible
+ * with the {@code sourceClass}.
  *
  * <p>An example case of breaking binary-compatibility is when a superclass changes a method to
  * {@code final} and a subclass is still overriding the method. Another example is when there is a
@@ -29,7 +29,7 @@ package com.google.cloud.tools.opensource.classpath;
  * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.4.3.4">Java
  *     Virtual Machine Specification: 5.4.3.4. Interface Method Resolution</a>
  */
-class IncompatibleClassChangeProblem extends IncompatibleLinkageProblem {
+final class IncompatibleClassChangeProblem extends IncompatibleLinkageProblem {
 
   IncompatibleClassChangeProblem(ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
     super("has changed incompatibly", sourceClass, targetClass, symbol);

@@ -29,7 +29,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * A linkage error.
+ * A linkage error describing an invalid reference from {@code sourceClass} to {@code symbol}.
  *
  * @see <a href="https://jlbp.dev/glossary.html#linkage-error">Java Dependency Glossary: Linkage
  *     Error</a>
@@ -40,6 +40,15 @@ public abstract class LinkageProblem {
   private final ClassFile sourceClass;
   private final String symbolProblemMessage;
 
+  /**
+   * A linkage error describing an invalid reference.
+   *
+   * @param symbolProblemMessage human-friendly description of this linkage error. Used in
+   *     conjunction with {@code symbol}, this value explains why we consider the reference to
+   *     {@code symbol} as a linkage error.
+   * @param sourceClass the source of the invalid reference.
+   * @param symbol the target of the invalid reference
+   */
   LinkageProblem(String symbolProblemMessage, ClassFile sourceClass, Symbol symbol) {
     this.symbolProblemMessage = Preconditions.checkNotNull(symbolProblemMessage);
     Preconditions.checkNotNull(symbol);

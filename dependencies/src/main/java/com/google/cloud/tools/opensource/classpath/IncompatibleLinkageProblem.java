@@ -19,10 +19,10 @@ package com.google.cloud.tools.opensource.classpath;
 import java.util.Objects;
 
 /**
- * LinkageProblem caused by an invalid reference when both source class and target class are
- * present.
+ * A {@link LinkageProblem} caused by an invalid reference when both {@code sourceClass} and {@code
+ * targetClass} are present in the class path.
  */
-public abstract class IncompatibleLinkageProblem extends LinkageProblem {
+abstract class IncompatibleLinkageProblem extends LinkageProblem {
   private final ClassFile targetClass;
 
   IncompatibleLinkageProblem(
