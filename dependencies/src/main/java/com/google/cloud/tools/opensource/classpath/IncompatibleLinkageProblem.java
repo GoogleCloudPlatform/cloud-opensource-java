@@ -22,7 +22,7 @@ import java.util.Objects;
  * A {@link LinkageProblem} caused by an invalid reference when both {@code sourceClass} and {@code
  * targetClass} are present in the class path.
  */
-abstract class IncompatibleLinkageProblem extends LinkageProblem {
+public abstract class IncompatibleLinkageProblem extends LinkageProblem {
   private final ClassFile targetClass;
 
   IncompatibleLinkageProblem(
