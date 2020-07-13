@@ -230,13 +230,12 @@ public class DashboardTest {
         .comparingElementsUsing(
             Correspondence.<Node, String>transforming(
                 node -> trimAndCollapseWhiteSpace(node.getValue()), "has text"))
-        .contains(
-            "Dependency path 'commons-logging:commons-logging > javax.servlet:servlet-api' exists"
-                + " in all 1337 dependency paths. Example path:"
+        .contains("Dependency path 'org.apache.httpcomponents:httpclient >"
+                + " commons-logging:commons-logging' exists"
+                + " in all 57 dependency paths. Example path:"
                 + " com.google.http-client:google-http-client:1.29.1 (compile) /"
                 + " org.apache.httpcomponents:httpclient:4.5.5 (compile) /"
-                + " commons-logging:commons-logging:1.2 (compile) / javax.servlet:servlet-api:2.3"
-                + " (provided, optional)");
+                + " commons-logging:commons-logging:1.2 (compile)");
   }
 
   @Test
