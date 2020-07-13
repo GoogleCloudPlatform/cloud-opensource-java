@@ -357,7 +357,7 @@ public class DashboardMain {
       long totalLinkageErrorCount =
           linkageProblemTable.values().stream()
               .flatMap(problemToClasses -> problemToClasses.stream().map(LinkageProblem::getSymbol))
-              .distinct() // The dashboard count linkage errors by the symbols
+              .distinct() // The dashboard counts linkage errors by the symbols
               .count();
 
       Template report = configuration.getTemplate("/templates/component.ftl");

@@ -33,8 +33,7 @@ public abstract class IncompatibleLinkageProblem extends LinkageProblem {
 
   @Override
   public String formatSymbolProblem() {
-    String jarInfo =
-        targetClass != null ? String.format("(%s) ", targetClass.getClassPathEntry()) : "";
+    String jarInfo = "(" + targetClass.getClassPathEntry() + ") ";
     return jarInfo + super.formatSymbolProblem();
   }
 

@@ -2,7 +2,7 @@
   <#local plural = number gt 1 />
   <#return number + " " + plural?string(pluralNoun, singularNoun)>
 </#function>
-<!-- same as above but without the number -->
+<#-- same as above but without the number -->
 <#function plural number singularNoun pluralNoun>
   <#local plural = number gt 1 />
   <#return plural?string(pluralNoun, singularNoun)>
@@ -10,7 +10,7 @@
 
 <#macro formatJarLinkageReport classPathEntry linkageProblems classPathResult
     dependencyPathRootCauses>
-  <!-- problemsToClasses: ImmutableMap<LinkageProblem, ImmutableList<String>> to get key and set of
+  <#-- problemsToClasses: ImmutableMap<LinkageProblem, ImmutableList<String>> to get key and set of
     values in Freemarker -->
   <#assign problemsToClasses = linkageProblem.groupBySymbolProblem(linkageProblems) />
   <#assign symbolProblemCount = problemsToClasses?size />
@@ -44,7 +44,7 @@
   <#list linkageProblems as problem>
     <#if (problem.getTargetClass())?? >
       <#assign targetClassPathEntry = problem.getTargetClass().getClassPathEntry() />
-      <!-- Freemarker's hash requires its keys to be string.
+      <#-- Freemarker's hash requires its keys to be strings.
       https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys -->
       <#assign jarsInProblem = jarsInProblem + { targetClassPathEntry.toString() : targetClassPathEntry } >
     </#if>
