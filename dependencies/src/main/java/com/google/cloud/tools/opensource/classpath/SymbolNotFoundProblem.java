@@ -16,7 +16,10 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-/** For a method or field reference, the symbol is not found in the target class. */
+/**
+ * The {@code sourceClass} references the {@code symbol}, but the {@code targetClass} does not have
+ * the symbol.
+ */
 public final class SymbolNotFoundProblem extends IncompatibleLinkageProblem {
   public SymbolNotFoundProblem(ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
     super("is not found", sourceClass, targetClass, symbol);
