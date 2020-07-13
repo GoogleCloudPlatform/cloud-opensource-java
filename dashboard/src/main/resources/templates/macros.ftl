@@ -10,7 +10,7 @@
 
 <#macro formatJarLinkageReport classPathEntry linkageProblems classPathResult
     dependencyPathRootCauses>
-  <!-- problemsToClasses: ImmutableMap<SymbolProblem, ImmutableList<String>> to get key and set of
+  <!-- problemsToClasses: ImmutableMap<LinkageProblem, ImmutableList<String>> to get key and set of
     values in Freemarker -->
   <#assign problemsToClasses = linkageProblem.groupBySymbolProblem(linkageProblems) />
   <#assign symbolProblemCount = problemsToClasses?size />

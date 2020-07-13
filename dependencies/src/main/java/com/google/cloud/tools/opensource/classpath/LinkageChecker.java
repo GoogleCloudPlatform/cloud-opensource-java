@@ -152,10 +152,8 @@ public class LinkageChecker {
             ImmutableList<LinkageProblem> problems =
                 findAbstractParentProblems(
                     classFile, (SuperClassSymbol) classSymbol, superClassFile);
-            if (!problems.isEmpty()) {
-              for (LinkageProblem problem : problems) {
-                problemToClass.add(problem);
-              }
+            for (LinkageProblem problem : problems) {
+              problemToClass.add(problem);
             }
           }
         }
@@ -172,10 +170,8 @@ public class LinkageChecker {
               ImmutableList<LinkageProblem> problems =
                   findInterfaceProblems(
                       classFile, (InterfaceSymbol) classSymbol, interfaceClassFile);
-              if (!problems.isEmpty()) {
-                for (LinkageProblem problem : problems) {
-                  problemToClass.add(problem);
-                }
+              for (LinkageProblem problem : problems) {
+                problemToClass.add(problem);
               }
             }
           } else {

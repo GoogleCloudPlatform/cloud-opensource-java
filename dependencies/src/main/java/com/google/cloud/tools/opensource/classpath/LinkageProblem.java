@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
@@ -97,11 +98,11 @@ public abstract class LinkageProblem {
    * {@code symbol}s.
    */
   public String formatSymbolProblem() {
-    return symbol.toString() + " " + symbolProblemMessage;
+    return symbol + " " + symbolProblemMessage;
   }
 
   /** Returns mapping from symbol problem description to the names of the source classes. */
-  public static ImmutableMap<String, ImmutableList<String>> groupBySymbolProblem(
+  public static ImmutableMap<String, ImmutableSet<String>> groupBySymbolProblem(
       Iterable<LinkageProblem> linkageProblems) {
     ImmutableListMultimap<String, LinkageProblem> groupedMultimap =
         Multimaps.index(linkageProblems, problem -> problem.formatSymbolProblem());
@@ -109,8 +110,8 @@ public abstract class LinkageProblem {
     ListMultimap<String, String> symbolProblemToSourceClasses =
         Multimaps.transformValues(
             groupedMultimap, problem -> problem.getSourceClass().getBinaryName());
-    Map<String, ImmutableList<String>> valueTransformed =
-        Maps.transformValues(symbolProblemToSourceClasses.asMap(), ImmutableList::copyOf);
+    Map<String, ImmutableSet<String>> valueTransformed =
+        Maps.transformValues(symbolProblemToSourceClasses.asMap(), ImmutableSet::copyOf);
     return ImmutableMap.copyOf(valueTransformed);
   }
 

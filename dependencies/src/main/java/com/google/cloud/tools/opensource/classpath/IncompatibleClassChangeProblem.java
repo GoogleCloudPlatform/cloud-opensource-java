@@ -22,7 +22,8 @@ package com.google.cloud.tools.opensource.classpath;
  *
  * <p>An example case of breaking binary-compatibility is when a superclass changes a method to
  * {@code final} and a subclass is still overriding the method. Another example is when there is a
- * method call to an interface and the interface is changed to a class with the same name.
+ * method call to an interface and the interface is changed to a class with the same name. For
+ * details, see "Interface Method Resolution" below).
  *
  * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-13.html#jls-13.4.9">Java
  *     Language Specification: 13.4.9. final Fields and static Constant Variables</a>

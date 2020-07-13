@@ -154,7 +154,7 @@ class ExclusionFiles {
       writer.add(eventFactory.createStartElement(LINKAGE_CHECKER_FILTER_TAG, null, null));
 
       for (LinkageProblem linkageProblem : linkageProblems) {
-        writeXmlEvents(writer, linkageProblem);
+        writeXmlLinkageProblem(writer, linkageProblem);
       }
 
       writer.add(eventFactory.createEndElement(LINKAGE_CHECKER_FILTER_TAG, null));
@@ -190,7 +190,7 @@ class ExclusionFiles {
     indentTransformer.transform(new StreamSource(inputStream), new StreamResult(outputStream));
   }
 
-  private static void writeXmlEvents(XMLEventWriter writer, LinkageProblem linkageProblem)
+  private static void writeXmlLinkageProblem(XMLEventWriter writer, LinkageProblem linkageProblem)
       throws XMLStreamException {
     writer.add(eventFactory.createStartElement(LINKAGE_ERROR_TAG, null, null));
 

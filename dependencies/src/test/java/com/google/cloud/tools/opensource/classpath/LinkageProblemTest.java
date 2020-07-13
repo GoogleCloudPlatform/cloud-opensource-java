@@ -160,7 +160,7 @@ public class LinkageProblemTest {
 
   @Test
   public void testGroupBySymbolProblems() {
-    ImmutableMap<String, ImmutableList<String>> grouped =
+    ImmutableMap<String, ImmutableSet<String>> grouped =
         LinkageProblem.groupBySymbolProblem(linkageProblems);
 
     Truth.assertThat(grouped.keySet())
@@ -170,7 +170,7 @@ public class LinkageProblemTest {
             fieldLinkageProblem.formatSymbolProblem())
         .inOrder();
 
-    ImmutableList<String> sourceClassNames =
+    ImmutableSet<String> sourceClassNames =
         grouped.get(classLinkageProblem1.formatSymbolProblem());
     Truth.assertThat(sourceClassNames)
         .containsExactly("java.lang.Object", "java.lang.Integer")
