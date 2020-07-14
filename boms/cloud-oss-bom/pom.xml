@@ -7,7 +7,7 @@
 
   <groupId>com.google.cloud</groupId>
   <artifactId>libraries-bom</artifactId>
-  <version>8.0.1-SNAPSHOT</version>
+  <version>8.1.0</version>
   <packaging>pom</packaging>
 
   <name>Google Cloud Platform Supported Libraries</name>
