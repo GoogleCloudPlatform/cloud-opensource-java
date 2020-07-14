@@ -16,18 +16,11 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-/** Matcher on the source class file of linkage errors. */
-class SourceMatcher implements LinkageProblemMatcher {
+/** Matcher for LinkageProblems. */
+interface LinkageProblemMatcher {
+  boolean match(LinkageProblem problem);
 
-  private LinkageProblemSourceMatcher matcher;
-
-  @Override
-  public void addChild(LinkageProblemTargetMatcher child) {
-    this.matcher = (LinkageProblemSourceMatcher) child;
-  }
-
-  @Override
-  public boolean match(LinkageProblem problem) {
-    return matcher.match(problem.getSourceClass());
+  default void addChild(LinkageProblemTargetMatcher child) {
+    throw new IllegalStateException("This element is not supposed to take child element");
   }
 }

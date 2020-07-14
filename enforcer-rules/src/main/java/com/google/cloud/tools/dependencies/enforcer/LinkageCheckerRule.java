@@ -25,8 +25,9 @@ import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
+import com.google.cloud.tools.opensource.classpath.IncompatibleLinkageProblem;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
-import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -38,8 +39,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -47,7 +46,6 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import org.apache.maven.RepositoryUtils;
@@ -194,25 +192,26 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
       try {
 
-        // TODO LinkageChecker.create and LinkageChecker.findSymbolProblems
+        // TODO LinkageChecker.create and LinkageChecker.findLinkageProblems
         // should not be two separate public methods since we always call
-        // findSymbolProblems immediately after create.
+        // findLinkageProblems immediately after create.
 
         Path exclusionFile = this.exclusionFile == null ? null : Paths.get(this.exclusionFile);
         LinkageChecker linkageChecker =
             LinkageChecker.create(classPath, entryPoints, exclusionFile);
-        ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
-            linkageChecker.findSymbolProblems();
+        ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
         if (reportOnlyReachable) {
           ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
-          symbolProblems =
-              symbolProblems.entries().stream()
-                  .filter(entry -> classReferenceGraph.isReachable(entry.getValue().getBinaryName()))
-                  .collect(
-                      ImmutableSetMultimap.toImmutableSetMultimap(Entry::getKey, Entry::getValue));
+          linkageProblems =
+              linkageProblems.stream()
+                  .filter(
+                      entry ->
+                          classReferenceGraph.isReachable(entry.getSourceClass().getBinaryName()))
+                  .collect(toImmutableSet());
         }
-        // Count unique SymbolProblems
-        int errorCount = symbolProblems.keySet().size();
+        // Count unique LinkageProblems by their symbols
+        long errorCount =
+            linkageProblems.stream().map(LinkageProblem::formatSymbolProblem).distinct().count();
 
         String foundError = reportOnlyReachable ? "reachable error" : "error";
         if (errorCount > 1) {
@@ -222,9 +221,9 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           String message =
               String.format(
                   "Linkage Checker rule found %d %s. Linkage error report:\n%s",
-                  errorCount, foundError, SymbolProblem.formatSymbolProblems(symbolProblems));
+                  errorCount, foundError, LinkageProblem.formatLinkageProblems(linkageProblems));
           String dependencyPaths =
-              dependencyPathsOfProblematicJars(classPathResult, symbolProblems);
+              dependencyPathsOfProblematicJars(classPathResult, linkageProblems);
 
           if (getLevel() == WARN) {
             logger.warn(message);
@@ -372,17 +371,16 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   private String dependencyPathsOfProblematicJars(
-      ClassPathResult classPathResult, Multimap<SymbolProblem, ClassFile> symbolProblems) {
+      ClassPathResult classPathResult, Set<LinkageProblem> linkageProblems) {
     ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
-    for (SymbolProblem problem : symbolProblems.keySet()) {
-      ClassFile containingClass = problem.getContainingClass();
-      if (containingClass != null) {
-        problematicJars.add(containingClass.getClassPathEntry());
+    for (LinkageProblem problem : linkageProblems) {
+      if (problem instanceof IncompatibleLinkageProblem) {
+        problematicJars.add(
+            ((IncompatibleLinkageProblem) problem).getTargetClass().getClassPathEntry());
       }
 
-      for (ClassFile classFile : symbolProblems.get(problem)) {
-        problematicJars.add(classFile.getClassPathEntry());
-      }
+      ClassFile sourceClass = problem.getSourceClass();
+      problematicJars.add(sourceClass.getClassPathEntry());
     }
 
     return "Problematic artifacts in the dependency tree:\n"

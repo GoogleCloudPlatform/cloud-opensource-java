@@ -16,11 +16,13 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-/** Matcher for SymbolProblems. */
-interface SymbolProblemMatcher {
-  boolean match(SymbolProblem problem, ClassFile sourceClass);
-
-  default void addChild(SymbolProblemTargetMatcher child) {
-    throw new IllegalStateException("This element is not supposed to take child element");
+/**
+ * The referenced {@code methodSymbol} is not implemented in the {@code targetClass} but the class
+ * is declared to implement the method by {@code sourceClass}. Such unimplemented methods manifest
+ * as {@link AbstractMethodError}s at runtime.
+ */
+final class AbstractMethodProblem extends IncompatibleLinkageProblem {
+  AbstractMethodProblem(ClassFile sourceClass, ClassFile targetClass, MethodSymbol methodSymbol) {
+    super("is not implemented in the class", sourceClass, targetClass, methodSymbol);
   }
 }

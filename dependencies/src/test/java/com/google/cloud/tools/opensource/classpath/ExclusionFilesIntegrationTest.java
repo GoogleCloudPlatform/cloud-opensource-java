@@ -18,7 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -58,8 +58,7 @@ public class ExclusionFilesIntegrationTest {
     LinkageChecker linkagechecker =
         LinkageChecker.create(classPathResult.getClassPath(), ImmutableList.of(), exclusionFile);
 
-    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
-        linkagechecker.findSymbolProblems();
-    Truth.assertThat(symbolProblems).isEmpty();
+    ImmutableSet<LinkageProblem> linkageProblems = linkagechecker.findLinkageProblems();
+    Truth.assertThat(linkageProblems).isEmpty();
   }
 }
