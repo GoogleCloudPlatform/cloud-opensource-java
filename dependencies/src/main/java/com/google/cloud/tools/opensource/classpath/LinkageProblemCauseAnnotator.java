@@ -17,7 +17,6 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.common.base.Verify;
 import java.io.IOException;
 import org.eclipse.aether.artifact.Artifact;
 
@@ -29,7 +28,7 @@ public class LinkageProblemCauseAnnotator {
    *
    * @param rootResult the class path used for generating the linkage problems.
    * @param linkageProblems linkage problems to annotate
-   * @throws IOException when there is a problem in reading JAR files.
+   * @throws IOException when there is a problem reading JAR files.
    */
   static void annotate(ClassPathResult rootResult, Iterable<LinkageProblem> linkageProblems)
       throws IOException {
@@ -39,7 +38,6 @@ public class LinkageProblemCauseAnnotator {
       ClassPathEntry sourceEntry = sourceClass.getClassPathEntry();
 
       Artifact sourceArtifact = sourceEntry.getArtifact();
-      Verify.verify(sourceArtifact != null);
 
       // Resolves the dependency graph with the source artifact at the root.
       ClassPathBuilder classPathBuilder = new ClassPathBuilder();
@@ -48,7 +46,7 @@ public class LinkageProblemCauseAnnotator {
       ClassPathEntry entryInSubtree =
           findClassPathEntryForSymbol(subtreeResult, linkageProblem.getSymbol());
       if (entryInSubtree == null) {
-        linkageProblem.setCause(new UnknownCause());
+        linkageProblem.setCause(UnknownCause.getInstance());
       } else {
         Artifact artifactInSubtree = entryInSubtree.getArtifact();
         DependencyPath pathToSourceEntry = rootResult.getDependencyPaths(sourceEntry).get(0);
@@ -72,7 +70,7 @@ public class LinkageProblemCauseAnnotator {
             linkageProblem.setCause(new UnknownCause());
           }
         } else {
-          // No artifact that match groupId and artifactId in rootResult.
+          // No artifact that matches groupId and artifactId in rootResult.
           linkageProblem.setCause(new MissingDependency(pathToUnselectedEntry));
         }
       }

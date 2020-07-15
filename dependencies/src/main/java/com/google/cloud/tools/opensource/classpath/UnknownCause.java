@@ -24,6 +24,14 @@ package com.google.cloud.tools.opensource.classpath;
  */
 public class UnknownCause extends LinkageProblemCause {
 
+  private static UnknownCause instance = new UnknownCause();
+
+  static UnknownCause getInstance() {
+    return instance;
+  }
+
+  private UnknownCause() {}
+
   @Override
   public String toString() {
     return "Unknown";
@@ -31,7 +39,7 @@ public class UnknownCause extends LinkageProblemCause {
 
   @Override
   public boolean equals(Object obj) {
-    return obj instanceof UnknownCause;
+    return obj == instance;
   }
 
   @Override

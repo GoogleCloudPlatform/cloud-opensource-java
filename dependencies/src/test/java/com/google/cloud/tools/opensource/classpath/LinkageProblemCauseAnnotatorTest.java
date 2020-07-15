@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.TestHelper.resolve;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -41,7 +40,7 @@ public class LinkageProblemCauseAnnotatorTest {
     // Dom4j declares jaxen dependency as optional. Dom4j's org.dom4j.DocumentHelper references
     // jaxen's org.jaxen.VariableContext. This annotator should tell that this invalid reference
     // is caused by the missing optional dependency.
-    ImmutableList<ClassPathEntry> dom4jDependencies = resolve("org.dom4j:dom4j:2.1.3");
+    ImmutableList<ClassPathEntry> dom4jDependencies = TestHelper.resolve("org.dom4j:dom4j:2.1.3");
     ClassPathEntry dom4jEntry = dom4jDependencies.get(0);
 
     LinkageProblem problem =

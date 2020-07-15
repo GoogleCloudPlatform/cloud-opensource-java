@@ -41,7 +41,7 @@ public class LinkageProblemCauseTest {
         .addEqualityGroup(new DependencyConflict(path2, path2))
         .addEqualityGroup(new MissingDependency(path1), new MissingDependency(path1))
         .addEqualityGroup(new MissingDependency(path2))
-        .addEqualityGroup(new UnknownCause())
+        .addEqualityGroup(UnknownCause.getInstance())
         .testEquals();
   }
 }

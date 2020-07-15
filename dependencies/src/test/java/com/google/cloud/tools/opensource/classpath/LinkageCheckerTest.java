@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.TestHelper.COORDINATES;
 import static com.google.cloud.tools.opensource.classpath.TestHelper.classPathEntryOfResource;
-import static com.google.cloud.tools.opensource.classpath.TestHelper.resolve;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -246,7 +245,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindLinkageProblem_protectedConstructorFromAnonymousClass() throws IOException {
-    List<ClassPathEntry> paths = resolve("junit:junit:4.12");
+    List<ClassPathEntry> paths = TestHelper.resolve("junit:junit:4.12");
     // junit has dependency on hamcrest-core
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
 
@@ -433,7 +432,7 @@ public class LinkageCheckerTest {
   public void testFindLinkageProblem_invalidMethodOverriding() throws IOException {
     // cglib 2.2 does not work with asm 4. Stackoverflow post explaining VerifyError:
     // https://stackoverflow.com/questions/21059019/cglib-is-causing-a-java-lang-verifyerror-during-query-generation-in-intuit-partn
-    List<ClassPathEntry> paths = resolve("cglib:cglib:2.2_beta1", "org.ow2.asm:asm:4.2");
+    List<ClassPathEntry> paths = TestHelper.resolve("cglib:cglib:2.2_beta1", "org.ow2.asm:asm:4.2");
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
 
@@ -754,7 +753,7 @@ public class LinkageCheckerTest {
   public void testFindLinkageProblems_catchesNoClassDefFoundError() throws IOException {
     // SLF4J classes catch NoClassDefFoundError to detect the availability of logger backends
     // the tool should not show errors for such classes.
-    List<ClassPathEntry> paths = resolve("org.slf4j:slf4j-api:jar:1.7.21");
+    List<ClassPathEntry> paths = TestHelper.resolve("org.slf4j:slf4j-api:jar:1.7.21");
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
 
@@ -767,7 +766,8 @@ public class LinkageCheckerTest {
   public void testFindLinkageProblems_catchesLinkageError() throws IOException {
     // org.eclipse.sisu.inject.Implementations catches LinkageError to detect the availability of
     // implementation for dependency injection. The tool should not show errors for such classes.
-    List<ClassPathEntry> paths = resolve("org.eclipse.sisu:org.eclipse.sisu.inject:0.3.3");
+    List<ClassPathEntry> paths =
+        TestHelper.resolve("org.eclipse.sisu:org.eclipse.sisu.inject:0.3.3");
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
 
@@ -843,7 +843,7 @@ public class LinkageCheckerTest {
     // LinkageChecker.findLinkageErrors was not handling the case properly.
     // These two jar files are transitive dependencies of the artifacts below.
     List<ClassPathEntry> paths =
-        resolve(
+        TestHelper.resolve(
             "io.grpc:grpc-alts:jar:1.18.0", "com.google.cloud:google-cloud-nio:jar:0.81.0-alpha");
 
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
@@ -876,7 +876,7 @@ public class LinkageCheckerTest {
     // com.oracle.graal.pointsto.meta.AnalysisType (in com.oracle.substratevm:svm:19.0.0). The class
     // was in the class path but its parent class was missing.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/933
-    ImmutableList<ClassPathEntry> jars = resolve("com.oracle.substratevm:svm:19.2.0.1");
+    ImmutableList<ClassPathEntry> jars = TestHelper.resolve("com.oracle.substratevm:svm:19.2.0.1");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
     ImmutableSet<LinkageProblem> problems = linkageChecker.findLinkageProblems();
@@ -907,7 +907,7 @@ public class LinkageCheckerTest {
     // com.oracle.graal.pointsto.meta.AnalysisType (in com.oracle.substratevm:svm:19.0.0). The class
     // was in the class path but its parent class was missing.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/933
-    ImmutableList<ClassPathEntry> jars = resolve("com.oracle.substratevm:svm:19.2.0.1");
+    ImmutableList<ClassPathEntry> jars = TestHelper.resolve("com.oracle.substratevm:svm:19.2.0.1");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
 
@@ -923,7 +923,7 @@ public class LinkageCheckerTest {
     // Mockito's MockMethodDispatcher class file has ".raw" extension so that the class is only
     // loaded by Mockito's special class loader.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/407
-    ImmutableList<ClassPathEntry> jars = resolve("org.mockito:mockito-core:2.23.4");
+    ImmutableList<ClassPathEntry> jars = TestHelper.resolve("org.mockito:mockito-core:2.23.4");
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
 
     ClassSymbol unexpectedMissingSymbol =
@@ -976,7 +976,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindLinkageProblems_defaultInterfaceMethods() throws IOException {
-    ImmutableList<ClassPathEntry> jars = resolve("com.oracle.substratevm:svm:19.2.0.1");
+    ImmutableList<ClassPathEntry> jars = TestHelper.resolve("com.oracle.substratevm:svm:19.2.0.1");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
 
@@ -999,9 +999,9 @@ public class LinkageCheckerTest {
     // Netty version discrepancy between 4.0 and 4.1 causes AbstractMethodError.
     // https://github.com/netty/netty/issues/7675
     ImmutableList<ClassPathEntry> nettyTransportJars4_0 =
-        resolve("io.netty:netty-transport:jar:4.0.37.Final");
+        TestHelper.resolve("io.netty:netty-transport:jar:4.0.37.Final");
     ImmutableList<ClassPathEntry> nettyCommonJars4_1 =
-        resolve("io.netty:netty-common:jar:4.1.16.Final");
+        TestHelper.resolve("io.netty:netty-common:jar:4.1.16.Final");
 
     ImmutableList<ClassPathEntry> jars =
         ImmutableList.<ClassPathEntry>builder()
@@ -1027,7 +1027,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindLinkageProblems_nativeMethodsOnAbstractClass() throws IOException {
-    ImmutableList<ClassPathEntry> jars = resolve("com.oracle.substratevm:svm:19.2.0.1");
+    ImmutableList<ClassPathEntry> jars = TestHelper.resolve("com.oracle.substratevm:svm:19.2.0.1");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
 
@@ -1050,7 +1050,7 @@ public class LinkageCheckerTest {
     //   / io.netty:netty-common:4.1.45.Final (compile)
     //   / io.projectreactor.tools:blockhound:1.0.1.RELEASE (compile, optional)
     ImmutableList<ClassPathEntry> jars =
-        resolve("io.projectreactor.tools:blockhound:1.0.1.RELEASE");
+        TestHelper.resolve("io.projectreactor.tools:blockhound:1.0.1.RELEASE");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
 
@@ -1108,7 +1108,7 @@ public class LinkageCheckerTest {
     // This pair of the library generates NoSuchMethodError at runtime.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/example-problems/no-such-method-error-signature-mismatch
     ImmutableList<ClassPathEntry> jars =
-        resolve("io.grpc:grpc-core:1.17.0", "com.google.guava:guava:20.0");
+        TestHelper.resolve("io.grpc:grpc-core:1.17.0", "com.google.guava:guava:20.0");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
     ImmutableSet<LinkageProblem> problems = linkageChecker.findLinkageProblems();

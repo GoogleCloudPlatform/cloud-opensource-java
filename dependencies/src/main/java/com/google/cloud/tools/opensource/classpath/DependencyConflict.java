@@ -31,8 +31,8 @@ class DependencyConflict extends LinkageProblemCause {
   DependencyPath pathToSelectedArtifact;
 
   DependencyConflict(
-      DependencyPath pathToSelectedArtifact, DependencyPath pathToUnselectedArtifactFromSource) {
-    this.pathToUnselectedArtifact = checkNotNull(pathToUnselectedArtifactFromSource);
+      DependencyPath pathToSelectedArtifact, DependencyPath pathToUnselectedArtifact) {
+    this.pathToUnselectedArtifact = checkNotNull(pathToUnselectedArtifact);
     this.pathToSelectedArtifact = checkNotNull(pathToSelectedArtifact);
   }
 
