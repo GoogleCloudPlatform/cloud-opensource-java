@@ -18,6 +18,9 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.aether.artifact.Artifact;
 
 /** Annotates {@link LinkageProblem}s with {@link LinkageProblemCause}s. */
@@ -26,25 +29,33 @@ public class LinkageProblemCauseAnnotator {
   /**
    * Annotates the cause field of {@link LinkageProblem}s with the {@link LinkageProblemCause}.
    *
-   * @param rootResult the class path used for generating the linkage problems.
+   * @param rootResult the class path used for generating the linkage problems
    * @param linkageProblems linkage problems to annotate
-   * @throws IOException when there is a problem reading JAR files.
+   * @throws IOException when there is a problem reading JAR files
    */
   static void annotate(ClassPathResult rootResult, Iterable<LinkageProblem> linkageProblems)
       throws IOException {
 
+    System.out.println(new Date() + " Annotating linkage errors");
+    Map<Artifact, ClassPathResult> cache = new HashMap<>();
     for (LinkageProblem linkageProblem : linkageProblems) {
       ClassFile sourceClass = linkageProblem.getSourceClass();
       ClassPathEntry sourceEntry = sourceClass.getClassPathEntry();
 
       Artifact sourceArtifact = sourceEntry.getArtifact();
 
-      // Resolves the dependency graph with the source artifact at the root.
-      ClassPathBuilder classPathBuilder = new ClassPathBuilder();
-      ClassPathResult subtreeResult = classPathBuilder.resolveWithMaven(sourceArtifact);
+      ClassPathResult subtreeResult = cache.get(sourceArtifact);
+      if (subtreeResult == null) {
+        // Resolves the dependency graph with the source artifact at the root.
+        ClassPathBuilder classPathBuilder = new ClassPathBuilder();
+        System.out.println(new Date() + " Resolving " + sourceArtifact);
+        subtreeResult = classPathBuilder.resolveWithMaven(sourceArtifact);
+        cache.put(sourceArtifact, subtreeResult);
+        System.out.println(new Date() + " Resolved " + sourceArtifact);
+      }
 
       ClassPathEntry entryInSubtree =
-          findClassPathEntryForSymbol(subtreeResult, linkageProblem.getSymbol());
+          subtreeResult.findClassPathEntryForSymbol(linkageProblem.getSymbol());
       if (entryInSubtree == null) {
         linkageProblem.setCause(UnknownCause.getInstance());
       } else {
@@ -56,8 +67,8 @@ public class LinkageProblemCauseAnnotator {
             pathToSourceEntry.concat(pathFromSourceEntryToUnselectedEntry);
 
         ClassPathEntry selectedEntry =
-            findEntryByArtifactId(
-                rootResult, artifactInSubtree.getGroupId(), artifactInSubtree.getArtifactId());
+            rootResult.findEntryById(
+                artifactInSubtree.getGroupId(), artifactInSubtree.getArtifactId());
         if (selectedEntry != null) {
           Artifact selectedArtifact = selectedEntry.getArtifact();
           if (!selectedArtifact.getVersion().equals(artifactInSubtree.getVersion())) {
@@ -75,48 +86,6 @@ public class LinkageProblemCauseAnnotator {
         }
       }
     }
-  }
-
-  /**
-   * Returns the class path entry in {@code classPathResult} for the artifact that matches {@code
-   * groupId} and {@code artifactId}. {@code Null} if no matching artifact is found.
-   */
-  private static ClassPathEntry findEntryByArtifactId(
-      ClassPathResult classPathResult, String groupId, String artifactId) {
-    for (ClassPathEntry entry : classPathResult.getClassPath()) {
-      Artifact artifact = entry.getArtifact();
-      if (artifact.getGroupId().equals(groupId) && artifact.getArtifactId().equals(artifactId)) {
-        return entry;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Returns the {@link ClassPathEntry} in {@code classPathResult} that contains the class of {@code
-   * symbol}. {@code Null} if no matching entry is found.
-   */
-  private static ClassPathEntry findClassPathEntryForSymbol(
-      ClassPathResult classPathResult, Symbol symbol) throws IOException {
-    String className = symbol.getClassBinaryName();
-    for (ClassPathEntry entry : classPathResult.getClassPath()) {
-      if (entry.getFileNames().contains(className)) {
-        return entry;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Returns the dependency path of the first {@link ClassPathEntry} in {@code classPathResult} that
-   * contains the class of {@code symbol}. Null if no such entry is found.
-   */
-  private static DependencyPath findDependencyPathForSymbol(
-      ClassPathResult classPathResult, Symbol symbol) throws IOException {
-    ClassPathEntry entry = findClassPathEntryForSymbol(classPathResult, symbol);
-    if (entry != null) {
-      return classPathResult.getDependencyPaths(entry).get(0);
-    }
-    return null;
+    System.out.println(new Date() + " Annotated linkage errors");
   }
 }

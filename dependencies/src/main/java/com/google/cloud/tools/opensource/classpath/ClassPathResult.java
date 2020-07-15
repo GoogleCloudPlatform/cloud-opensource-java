@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
+import java.io.IOException;
 import org.eclipse.aether.artifact.Artifact;
 
 /** Result of class path resolution with {@link UnresolvableArtifactProblem}s if any. */
@@ -111,5 +112,32 @@ public final class ClassPathResult {
     }
     return builder.build();
   }
-  
+
+  /**
+   * Returns the class path entry for the artifact that matches {@code groupId} and {@code
+   * artifactId}. {@code Null} if no matching artifact is found.
+   */
+  ClassPathEntry findEntryById(String groupId, String artifactId) {
+    for (ClassPathEntry entry : getClassPath()) {
+      Artifact artifact = entry.getArtifact();
+      if (artifact.getGroupId().equals(groupId) && artifact.getArtifactId().equals(artifactId)) {
+        return entry;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Returns the class path entry that contains the class of {@code symbol}. {@code Null} if
+   * no matching entry is found.
+   */
+  ClassPathEntry findClassPathEntryForSymbol(Symbol symbol) throws IOException {
+    String className = symbol.getClassBinaryName();
+    for (ClassPathEntry entry : getClassPath()) {
+      if (entry.getFileNames().contains(className)) {
+        return entry;
+      }
+    }
+    return null;
+  }
 }

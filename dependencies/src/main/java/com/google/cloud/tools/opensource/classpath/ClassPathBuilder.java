@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.LinkedListMultimap;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
@@ -66,23 +65,23 @@ public final class ClassPathBuilder {
     } else {
       result = dependencyGraphBuilder.buildVerboseDependencyGraph(artifacts);
     }
-    return performMediation(result);
+    return mediate(result);
   }
 
   /**
-   * Builds a class path from the dependency graph with {@code artifact} as the root, in the same
+   * Builds a class path from the dependency graph with {@code rootArtifact}, in the same
    * way as Maven would do when the artifact was built.
    *
-   * <p>Compared to {@link #resolve(List, boolean)}, this method includes direct optional
-   * dependencies of {@code artifact} but excludes its transitive optional dependencies.
+   * <p>This method takes the root artifact of a dependency graph, while {@link #resolve(List,
+   * boolean)} takes a list of artifacts as the dependencies of a pseudo root artifact.
    */
-  ClassPathResult resolveWithMaven(Artifact artifact) {
+  ClassPathResult resolveWithMaven(Artifact rootArtifact) {
     DependencyGraph result =
-        dependencyGraphBuilder.buildMavenDependencyGraph(new Dependency(artifact, "compile"));
-    return performMediation(result);
+        dependencyGraphBuilder.buildMavenDependencyGraph(new Dependency(rootArtifact, "compile"));
+    return mediate(result);
   }
 
-  private ClassPathResult performMediation(DependencyGraph result) {
+  private ClassPathResult mediate(DependencyGraph result) {
     // TODO should DependencyGraphResult have a mediate() method that returns a ClassPathResult?
 
     // To remove duplicates on (groupId:artifactId) for dependency mediation
