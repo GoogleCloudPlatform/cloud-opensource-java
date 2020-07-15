@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -42,6 +43,17 @@ public class ClassPathBuilderTest {
     Artifact artifact = new DefaultArtifact(coordinates);
     ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(artifact), true);
     return result.getClassPath();
+  }
+
+  @Test
+  public void testResolve_empty() {
+    try {
+      classPathBuilder.resolve(ImmutableList.of(), false);
+      fail();
+    } catch (IllegalArgumentException ex) {
+      // pass
+      assertEquals("The artifact list cannot be empty.", ex.getMessage());
+    }
   }
 
   @Test
@@ -94,12 +106,11 @@ public class ClassPathBuilderTest {
 
     ImmutableList<ClassPathEntry> entries = ImmutableList.copyOf(classPath);
 
-    Truth.assertThat(entries.get(0).toString())
+    assertThat(entries.get(0).toString())
         .isEqualTo("com.google.api:api-common:1.7.0"); // first element in the BOM
     int bomSize = managedDependencies.size();
     String lastFileName = entries.get(bomSize - 1).toString();
-    Truth.assertThat(lastFileName)
-        .isEqualTo("com.google.api:gax-httpjson:0.57.0"); // last element in BOM
+    assertThat(lastFileName).isEqualTo("com.google.api:gax-httpjson:0.57.0"); // last element in BOM
   }
 
   @Test
@@ -110,7 +121,7 @@ public class ClassPathBuilderTest {
     ImmutableList<ClassPathEntry> classPath =
         classPathBuilder.resolve(ImmutableList.of(grpcAuth), true).getClassPath();
 
-    Truth.assertThat(classPath)
+    assertThat(classPath)
         .comparingElementsUsing(TestHelper.COORDINATES)
         .containsAtLeast(
             "io.grpc:grpc-auth:1.15.1", "com.google.auth:google-auth-library-credentials:0.9.0");
@@ -125,10 +136,10 @@ public class ClassPathBuilderTest {
   public void testResolveClassPath_validCoordinate() {
     List<ClassPathEntry> entries = resolveClassPath("io.grpc:grpc-auth:1.15.1");
 
-    Truth.assertThat(entries)
+    assertThat(entries)
         .comparingElementsUsing(TestHelper.COORDINATES)
         .contains("io.grpc:grpc-auth:1.15.1");
-    Truth.assertThat(entries)
+    assertThat(entries)
         .comparingElementsUsing(TestHelper.COORDINATES)
         .contains("com.google.auth:google-auth-library-credentials:0.9.0");
     entries.forEach(
@@ -142,7 +153,8 @@ public class ClassPathBuilderTest {
   public void testResolveClassPath_optionalDependency() {
     List<ClassPathEntry> classPath =
         resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
-    Truth.assertThat(classPath).comparingElementsUsing(TestHelper.COORDINATES)
+    assertThat(classPath)
+        .comparingElementsUsing(TestHelper.COORDINATES)
         .contains("log4j:log4j:1.2.12");
   }
 
@@ -151,7 +163,7 @@ public class ClassPathBuilderTest {
     Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nosuchartifact:1.2.3");
     ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(nonExistentArtifact), true);
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
-    Truth.assertThat(artifactProblems).hasSize(1);
+    assertThat(artifactProblems).hasSize(1);
     assertEquals(
         "io.grpc:nosuchartifact:jar:1.2.3 was not resolved. Dependency path:"
             + " io.grpc:nosuchartifact:jar:1.2.3 (compile)",
@@ -161,7 +173,7 @@ public class ClassPathBuilderTest {
   @Test
   public void testResolve_emptyInput() {
     List<ClassPathEntry> classPath = classPathBuilder.resolve(ImmutableList.of(), true).getClassPath();
-    Truth.assertThat(classPath).isEmpty();
+    assertThat(classPath).isEmpty();
   }
 
   @Test
@@ -205,7 +217,7 @@ public class ClassPathBuilderTest {
   @Test
   public void testResolveClasspath_notToGenerateRepositoryException() throws IOException {
     List<ClassPathEntry> classPath = resolveClassPath("com.google.guava:guava-gwt:jar:20.0");
-    Truth.assertThat(classPath).isNotEmpty();
+    assertThat(classPath).isNotEmpty();
   }
 
   @Test
@@ -222,8 +234,8 @@ public class ClassPathBuilderTest {
             .map(x -> x.toString())
             .collect(Collectors.toList());
 
-    Truth.assertThat(coordinates).containsExactly("xerces:xerces-impl:jar:2.6.2",
-        "xml-apis:xml-apis:jar:2.6.2");
+    assertThat(coordinates)
+        .containsExactly("xerces:xerces-impl:jar:2.6.2", "xml-apis:xml-apis:jar:2.6.2");
   }
 
   @Test

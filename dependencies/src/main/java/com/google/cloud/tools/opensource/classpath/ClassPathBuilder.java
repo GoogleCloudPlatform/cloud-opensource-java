@@ -19,7 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.LinkedListMultimap;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
@@ -49,19 +49,18 @@ public final class ClassPathBuilder {
   }
 
   /**
-   * Builds a classpath from the transitive dependency graph of a list of artifacts.
-   * When there are multiple versions of an artifact in
-   * the dependency tree, the closest to the root in breadth-first order is picked up. This "pick
-   * closest" strategy follows Maven's dependency mediation.
+   * Builds a classpath from the transitive dependency graph from {@code artifacts}. When there are
+   * multiple versions of an artifact in the dependency tree, the closest to the root in
+   * breadth-first order is picked up. This "pick closest" strategy follows Maven's dependency
+   * mediation.
    *
-   * @param artifacts the first artifacts that appear in the classpath, in order
-   * @param full if true all optional dependencies and their transitive dependencies are
-   *     included. If false, optional dependencies are not included.
+   * @param artifacts the first artifacts that appear in the classpath, in order. This cannot be
+   *     empty.
+   * @param full if true all optional dependencies and their transitive dependencies are included.
+   *     If false, optional dependencies are not included.
    */
   public ClassPathResult resolve(List<Artifact> artifacts, boolean full) {
-    if (artifacts.isEmpty()) {
-      return new ClassPathResult(LinkedListMultimap.create(), ImmutableList.of());
-    }
+    Preconditions.checkArgument(!artifacts.isEmpty(), "The artifact list cannot be empty.");
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph result;
     if (full) {

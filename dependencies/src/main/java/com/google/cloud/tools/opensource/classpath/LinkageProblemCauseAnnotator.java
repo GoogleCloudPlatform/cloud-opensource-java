@@ -67,7 +67,7 @@ public class LinkageProblemCauseAnnotator {
                     rootResult.getDependencyPaths(selectedEntry).get(0), pathToUnselectedEntry));
           } else {
             // A linkage error was already there when sourceArtifact was built.
-            linkageProblem.setCause(new UnknownCause());
+            linkageProblem.setCause(UnknownCause.getInstance());
           }
         } else {
           // No artifact that matches groupId and artifactId in rootResult.
