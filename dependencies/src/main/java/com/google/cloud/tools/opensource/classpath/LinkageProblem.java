@@ -146,17 +146,24 @@ public abstract class LinkageProblem {
                       firstProblem.formatSymbolProblem(),
                       referenceCount,
                       referenceCount > 1 ? "s" : ""));
-              ImmutableSet.Builder<LinkageProblemCause> causes = ImmutableSet.builder();
+              ImmutableSet.Builder<LinkageProblemCause> causesBuilder = ImmutableSet.builder();
               problems.forEach(
                   problem -> {
                     ClassFile sourceClassFile = problem.getSourceClass();
                     output.append("    " + sourceClassFile.getBinaryName());
                     output.append(" (" + sourceClassFile.getClassPathEntry() + ")\n");
-                    causes.add(problem.getCause());
+
+                    LinkageProblemCause cause = problem.getCause();
+                    if (cause != null) {
+                      causesBuilder.add(cause);
+                    }
                   });
-              output.append("  Cause:\n");
-              for (LinkageProblemCause cause : causes.build()) {
-                output.append("    " + cause + "\n");
+              ImmutableSet<LinkageProblemCause> causes = causesBuilder.build();
+              if (!causes.isEmpty()) {
+                output.append("  Cause:\n");
+                for (LinkageProblemCause cause : causes) {
+                  output.append("    " + cause + "\n");
+                }
               }
             });
 
