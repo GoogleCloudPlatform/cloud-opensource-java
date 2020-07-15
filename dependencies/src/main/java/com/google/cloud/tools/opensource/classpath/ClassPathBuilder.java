@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.Dependency;
 
 /**
  * Utility to build {@link ClassPathResult} that holds class path (a list of {@link ClassPathEntry})
@@ -58,9 +59,8 @@ public final class ClassPathBuilder {
    *     included. If false, optional dependencies are not included.
    */
   public ClassPathResult resolve(List<Artifact> artifacts, boolean full) {
-    LinkedListMultimap<ClassPathEntry, DependencyPath> multimap = LinkedListMultimap.create();
     if (artifacts.isEmpty()) {
-      return new ClassPathResult(multimap, ImmutableList.of());
+      return new ClassPathResult(LinkedListMultimap.create(), ImmutableList.of());
     }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph result;
@@ -69,13 +69,30 @@ public final class ClassPathBuilder {
     } else {
       result = dependencyGraphBuilder.buildVerboseDependencyGraph(artifacts);
     }
-    List<DependencyPath> dependencyPaths = result.list();
+    return performMediation(result);
+  }
 
+  /**
+   * Builds a class path from the dependency graph with {@code artifact} as the root, in the same
+   * way as Maven would do when the artifact was built.
+   *
+   * <p>Compared to {@link #resolve(List, boolean)}, this method include direct optional
+   * dependencies of {@code artifact} but this excludes its transitive optional dependencies.
+   */
+  ClassPathResult resolveWithMaven(Artifact artifact) {
+    DependencyGraph result =
+        dependencyGraphBuilder.buildMavenDependencyGraph(new Dependency(artifact, "compile"));
+    return performMediation(result);
+  }
+
+  private ClassPathResult performMediation(DependencyGraph result) {
     // TODO should DependencyGraphResult have a mediate() method that returns a ClassPathResult?
-    
+
     // To remove duplicates on (groupId:artifactId) for dependency mediation
     MavenDependencyMediation mediation = new MavenDependencyMediation();
 
+    LinkedListMultimap<ClassPathEntry, DependencyPath> multimap = LinkedListMultimap.create();
+    List<DependencyPath> dependencyPaths = result.list();
     for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();
       mediation.put(dependencyPath);

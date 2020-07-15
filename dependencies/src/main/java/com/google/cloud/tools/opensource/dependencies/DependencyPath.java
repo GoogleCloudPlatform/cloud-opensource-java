@@ -57,6 +57,13 @@ public final class DependencyPath {
     return copy;
   }
 
+  public DependencyPath concat(DependencyPath childPath) {
+    DependencyPath copy = new DependencyPath(root);
+    copy.path.addAll(path);
+    copy.path.addAll(childPath.path);
+    return copy;
+  }
+
   /** Returns the length of the path. */
   public int size() {
     return path.size() + 1; // including the root

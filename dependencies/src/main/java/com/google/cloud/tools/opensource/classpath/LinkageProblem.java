@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -39,6 +41,7 @@ public abstract class LinkageProblem {
   private final Symbol symbol;
   private final ClassFile sourceClass;
   private final String symbolProblemMessage;
+  private LinkageProblemCause cause;
 
   /**
    * A linkage error describing an invalid reference.
@@ -67,6 +70,14 @@ public abstract class LinkageProblem {
   /** Returns the source of the invalid reference which this linkage error represents. */
   public ClassFile getSourceClass() {
     return sourceClass;
+  }
+
+  void setCause(LinkageProblemCause cause) {
+    this.cause = checkNotNull(cause);
+  }
+
+  LinkageProblemCause getCause() {
+    return cause;
   }
 
   @Override
