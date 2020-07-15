@@ -160,14 +160,15 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolve_emptyInput() {
-    try {
-      classPathBuilder.resolve(ImmutableList.of(), false);
-      fail();
-    } catch (IllegalArgumentException ex) {
-      // pass
-      assertEquals("The artifact list cannot be empty.", ex.getMessage());
-    }
+  public void testResolve_emptyInput_full() {
+    List<ClassPathEntry> classPath = classPathBuilder.resolve(ImmutableList.of(), true).getClassPath();
+    Truth.assertThat(classPath).isEmpty();
+  }
+
+  @Test
+  public void testResolve_emptyInput_verbose() {
+    List<ClassPathEntry> classPath = classPathBuilder.resolve(ImmutableList.of(), false).getClassPath();
+    Truth.assertThat(classPath).isEmpty();
   }
 
   @Test

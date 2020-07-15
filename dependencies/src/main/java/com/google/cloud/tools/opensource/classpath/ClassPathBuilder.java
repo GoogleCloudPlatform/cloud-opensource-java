@@ -54,13 +54,11 @@ public final class ClassPathBuilder {
    * breadth-first order is picked up. This "pick closest" strategy follows Maven's dependency
    * mediation.
    *
-   * @param artifacts the first artifacts that appear in the classpath, in order. This cannot be
-   *     empty.
+   * @param artifacts the first artifacts that appear in the classpath, in order
    * @param full if true all optional dependencies and their transitive dependencies are included.
    *     If false, optional dependencies are not included.
    */
   public ClassPathResult resolve(List<Artifact> artifacts, boolean full) {
-    Preconditions.checkArgument(!artifacts.isEmpty(), "The artifact list cannot be empty.");
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph result;
     if (full) {
