@@ -167,7 +167,8 @@ public class ClassPathBuilderTest {
 
   @Test
   public void testResolve_emptyInput_verbose() {
-    List<ClassPathEntry> classPath = classPathBuilder.resolve(ImmutableList.of(), false).getClassPath();
+    List<ClassPathEntry> classPath =
+        classPathBuilder.resolve(ImmutableList.of(), false).getClassPath();
     Truth.assertThat(classPath).isEmpty();
   }
 

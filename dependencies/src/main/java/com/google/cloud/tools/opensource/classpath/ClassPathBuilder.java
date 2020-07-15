@@ -69,8 +69,8 @@ public final class ClassPathBuilder {
   }
 
   /**
-   * Builds a class path from the dependency graph with {@code rootArtifact}, in the same
-   * way as Maven would do when the artifact was built.
+   * Builds a class path from the dependency graph with {@code rootArtifact}, in the same way as
+   * Maven would do when the artifact was built.
    *
    * <p>This method takes the root artifact of a dependency graph, while {@link #resolve(List,
    * boolean)} takes a list of artifacts as the dependencies of a pseudo root artifact.

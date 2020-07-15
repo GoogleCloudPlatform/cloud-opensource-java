@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.aether.artifact.Artifact;
@@ -36,7 +35,6 @@ public class LinkageProblemCauseAnnotator {
   static void annotate(ClassPathResult rootResult, Iterable<LinkageProblem> linkageProblems)
       throws IOException {
 
-    System.out.println(new Date() + " Annotating linkage errors");
     Map<Artifact, ClassPathResult> cache = new HashMap<>();
     for (LinkageProblem linkageProblem : linkageProblems) {
       ClassFile sourceClass = linkageProblem.getSourceClass();
@@ -48,10 +46,8 @@ public class LinkageProblemCauseAnnotator {
       if (subtreeResult == null) {
         // Resolves the dependency graph with the source artifact at the root.
         ClassPathBuilder classPathBuilder = new ClassPathBuilder();
-        System.out.println(new Date() + " Resolving " + sourceArtifact);
         subtreeResult = classPathBuilder.resolveWithMaven(sourceArtifact);
         cache.put(sourceArtifact, subtreeResult);
-        System.out.println(new Date() + " Resolved " + sourceArtifact);
       }
 
       ClassPathEntry entryInSubtree =
@@ -86,6 +82,5 @@ public class LinkageProblemCauseAnnotator {
         }
       }
     }
-    System.out.println(new Date() + " Annotated linkage errors");
   }
 }
