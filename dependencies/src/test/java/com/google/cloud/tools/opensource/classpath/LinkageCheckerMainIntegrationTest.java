@@ -93,7 +93,7 @@ public class LinkageCheckerMainIntegrationTest {
           new String[] {"-a", "com.google.cloud:google-cloud-firestore:0.65.0-beta"});
       fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
     } catch (LinkageCheckResultException expected) {
-      assertEquals("Found 69 linkage errors", expected.getMessage());
+      assertEquals("Found 75 linkage errors", expected.getMessage());
     }
 
     String output = readCapturedStdout();
@@ -117,8 +117,8 @@ public class LinkageCheckerMainIntegrationTest {
   public void testArtifacts_noError()
       throws IOException, RepositoryException, TransformerException, XMLStreamException,
           LinkageCheckResultException {
-    // gax does not have any linkage errors
-    LinkageCheckerMain.main(new String[] {"-a", "com.google.api:gax:1.56.0"});
+    // Guava does not have any linkage errors
+    LinkageCheckerMain.main(new String[] {"-a", "com.google.guava:guava:29.0-jre"});
 
     String output = readCapturedStdout();
     Truth.assertThat(output).isEmpty();
@@ -131,7 +131,7 @@ public class LinkageCheckerMainIntegrationTest {
       LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
       fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
     } catch (LinkageCheckResultException expected) {
-      assertEquals("Found 583 linkage errors", expected.getMessage());
+      assertEquals("Found 800 linkage errors", expected.getMessage());
     }
 
     String output = readCapturedStdout();
