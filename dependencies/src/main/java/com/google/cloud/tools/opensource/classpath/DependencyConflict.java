@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import java.util.Objects;
 
 /**
  * Diamond dependency conflict caused the {@link LinkageProblem} where whe {@link LinkageProblem}'s
@@ -45,10 +46,28 @@ class DependencyConflict extends LinkageProblemCause {
 
   @Override
   public String toString() {
-    return "Dependency conflict: "
+    return "Dependency conflict: '"
         + pathToSelectedArtifact
-        + " is selected but "
+        + "' is selected but the unselected '"
         + pathToUnselectedArtifact
-        + " has a valid symbol";
+        + "' has a valid symbol";
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) {
+      return true;
+    }
+    if (other == null || getClass() != other.getClass()) {
+      return false;
+    }
+    DependencyConflict that = (DependencyConflict) other;
+    return Objects.equals(pathToUnselectedArtifact, that.pathToUnselectedArtifact)
+        && Objects.equals(pathToSelectedArtifact, that.pathToSelectedArtifact);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(pathToUnselectedArtifact, pathToSelectedArtifact);
   }
 }

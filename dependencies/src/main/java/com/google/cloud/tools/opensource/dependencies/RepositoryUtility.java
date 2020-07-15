@@ -119,13 +119,15 @@ public final class RepositoryUtility {
   }
 
   /**
-   * Opens a new Maven repository session that generates the same dependency graph as an Maven
-   * artifact would be built with.
+   * Opens a new Maven repository session that generates the same dependency graph as {@link
+   * org.apache.maven.project.ProjectDependenciesResolver} generates when it compiles a Maven
+   * project. The dependency graph has the following attributes:
    *
-   * <p>Direct optional dependencies are included. Other optional dependencies are omitted.
-   *
-   * <p>Direct provided-scope dependencies are included. Other provided-scope dependencies are
-   * omitted.
+   * <ul>
+   *   <li>Direct optional dependencies are included. Other optional dependencies are omitted.
+   *   <li>Direct provided-scope dependencies are included. Other provided-scope dependencies are
+   *       omitted.
+   * </ul>
    */
   public static DefaultRepositorySystemSession newSessionForMaven(RepositorySystem system) {
     DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);

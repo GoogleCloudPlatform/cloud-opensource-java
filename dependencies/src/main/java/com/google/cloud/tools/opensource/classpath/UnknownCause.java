@@ -22,4 +22,20 @@ package com.google.cloud.tools.opensource.classpath;
  * <p>This occurs when the POM file that used in building a library and the published POM file are
  * different.
  */
-public class UnknownCause extends LinkageProblemCause {}
+public class UnknownCause extends LinkageProblemCause {
+
+  @Override
+  public String toString() {
+    return "Unknown";
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return obj instanceof UnknownCause;
+  }
+
+  @Override
+  public int hashCode() {
+    return super.hashCode();
+  }
+}

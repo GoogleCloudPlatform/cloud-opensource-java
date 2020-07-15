@@ -99,6 +99,10 @@ class LinkageCheckerMain {
                   .collect(toImmutableSet());
         }
 
+        if (classPathResult != null) {
+          LinkageProblemCauseAnnotator.annotate(classPathResult, linkageProblems);
+        }
+
         Path writeAsExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
         if (writeAsExclusionFile != null) {
           ExclusionFiles.write(writeAsExclusionFile, linkageProblems);

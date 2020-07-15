@@ -125,6 +125,10 @@ public abstract class LinkageProblem {
     return ImmutableMap.copyOf(valueTransformed);
   }
 
+  private static void formatLinkageProblemForSymbol(Symbol symbol, Iterable<LinkageProblem> problems) {
+
+  }
+
   /** Returns the formatted {@code linkageProblems} by grouping them by the {@code symbol}s. */
   public static String formatLinkageProblems(Set<LinkageProblem> linkageProblems) {
     StringBuilder output = new StringBuilder();
@@ -146,12 +150,18 @@ public abstract class LinkageProblem {
                       firstProblem.formatSymbolProblem(),
                       referenceCount,
                       referenceCount > 1 ? "s" : ""));
+              ImmutableSet.Builder<LinkageProblemCause> causes = ImmutableSet.builder();
               problems.forEach(
                   problem -> {
                     ClassFile sourceClassFile = problem.getSourceClass();
                     output.append("    " + sourceClassFile.getBinaryName());
                     output.append(" (" + sourceClassFile.getClassPathEntry() + ")\n");
+                    causes.add(problem.getCause());
                   });
+              output.append("  Cause:\n");
+              for (LinkageProblemCause cause : causes.build()) {
+                output.append("    " + cause + "\n");
+              }
             });
 
     return output.toString();

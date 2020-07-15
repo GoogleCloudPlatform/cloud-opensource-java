@@ -105,6 +105,14 @@ public final class DependencyPath {
   }
 
   /**
+   * Returns the {@code i}th dependency. As {@link #root} is not a dependency, the {@code 0}th
+   * element is the dependency of the root in the path.
+   */
+  public Dependency getDependency(int i) {
+    return path.get(i);
+  }
+
+  /**
    * Returns the dependency path of the second to last node in the path. Empty dependency path if
    * the leaf does not have a parent or {@link #path} is empty.
    */

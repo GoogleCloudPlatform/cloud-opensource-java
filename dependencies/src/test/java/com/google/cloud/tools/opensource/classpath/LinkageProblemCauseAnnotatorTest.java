@@ -61,8 +61,8 @@ public class LinkageProblemCauseAnnotatorTest {
   @Test
   public void testAnnotate_parquetProvidedDependency() throws IOException {
 
-    // parquet-hadoop's classes reference org.apache.hadoop.conf.Configuration. The artifact
-    // depends on hadoop-client as provided dependency. Hadoop-client depends on
+    // The parquet-hadoop's classes reference org.apache.hadoop.conf.Configuration. The artifact
+    // depends on hadoop-client with 'provided' scope. The hadoop-client depends on
     // hadoop-common, which contains org.apache.hadoop.conf.Configuration class.
     ClassPathBuilder builder = new ClassPathBuilder();
     ClassPathResult classPathResult =
@@ -113,6 +113,8 @@ public class LinkageProblemCauseAnnotatorTest {
   @Test
   public void testAnnotate_googleApiClientAndGrpcConflict() throws IOException {
 
+    // The google-api-client and grpc-core have dependency conflict on Guava's Verify.verify
+    // method.
     ClassPathBuilder builder = new ClassPathBuilder();
     ClassPathResult classPathResult =
         builder.resolve(
