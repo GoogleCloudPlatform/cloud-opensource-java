@@ -59,57 +59,6 @@ public class LinkageProblemCauseAnnotatorTest {
   }
 
   @Test
-  public void testAnnotate_parquetProvidedDependency() throws IOException {
-
-    // The parquet-hadoop's classes reference org.apache.hadoop.conf.Configuration. The artifact
-    // depends on hadoop-client with 'provided' scope. The hadoop-client depends on
-    // hadoop-common, which contains org.apache.hadoop.conf.Configuration class.
-    ClassPathBuilder builder = new ClassPathBuilder();
-    ClassPathResult classPathResult =
-        builder.resolve(
-            ImmutableList.of(
-                new DefaultArtifact("org.apache.beam:beam-sdks-java-io-parquet:2.22.0")),
-            false);
-
-    ImmutableList<ClassPathEntry> classPath = classPathResult.getClassPath();
-    LinkageChecker linkageChecker = LinkageChecker.create(classPath);
-    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
-
-    Optional<LinkageProblem> foundProblem =
-        linkageProblems.stream()
-            .filter(
-                problem ->
-                    problem
-                        .getSymbol()
-                        .equals(new ClassSymbol("org.apache.hadoop.conf.Configuration")))
-            .filter(
-                problem ->
-                    problem
-                        .getSourceClass()
-                        .getBinaryName()
-                        .equals("org.apache.parquet.avro.AvroParquetReader"))
-            .findFirst();
-    LinkageProblem problem = foundProblem.get();
-
-    LinkageProblemCauseAnnotator.annotate(classPathResult, ImmutableSet.of(problem));
-
-    LinkageProblemCause cause = problem.getCause();
-    assertEquals(MissingDependency.class, cause.getClass());
-    DependencyPath pathToMissingArtifact = ((MissingDependency) cause).getPathToMissingArtifact();
-    Artifact leaf = pathToMissingArtifact.getLeaf();
-    assertEquals("hadoop-common", leaf.getArtifactId());
-    assertEquals(
-        "org.apache.beam:beam-sdks-java-io-parquet:jar:2.22.0 / "
-            + "org.apache.parquet:parquet-avro:1.10.0 (compile) / "
-            + "org.apache.hadoop:hadoop-client:2.7.3 (provided) / "
-            +
-            // hadoop-client depends on hadoop-common with "compile" scope. But this is overwritten
-            // by hadoop-common's "provided" scope by parquet-avro.
-            "org.apache.hadoop:hadoop-common:2.7.3 (provided)",
-        pathToMissingArtifact.toString());
-  }
-
-  @Test
   public void testAnnotate_googleApiClientAndGrpcConflict() throws IOException {
 
     // The google-api-client and grpc-core have dependency conflict on Guava's Verify.verify
