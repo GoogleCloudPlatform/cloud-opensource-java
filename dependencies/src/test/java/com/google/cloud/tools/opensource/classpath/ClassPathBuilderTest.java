@@ -46,17 +46,6 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolve_empty() {
-    try {
-      classPathBuilder.resolve(ImmutableList.of(), false);
-      fail();
-    } catch (IllegalArgumentException ex) {
-      // pass
-      assertEquals("The artifact list cannot be empty.", ex.getMessage());
-    }
-  }
-
-  @Test
   public void testResolve_withoutOptionalDependencies() {
     // an artifact with a very large dependency graph
     String coords = "org.apache.beam:beam-sdks-java-io-hcatalog:2.19.0";
@@ -172,8 +161,13 @@ public class ClassPathBuilderTest {
 
   @Test
   public void testResolve_emptyInput() {
-    List<ClassPathEntry> classPath = classPathBuilder.resolve(ImmutableList.of(), true).getClassPath();
-    assertThat(classPath).isEmpty();
+    try {
+      classPathBuilder.resolve(ImmutableList.of(), false);
+      fail();
+    } catch (IllegalArgumentException ex) {
+      // pass
+      assertEquals("The artifact list cannot be empty.", ex.getMessage());
+    }
   }
 
   @Test
