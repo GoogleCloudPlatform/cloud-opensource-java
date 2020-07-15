@@ -17,12 +17,20 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.common.base.Verify;
 import java.io.IOException;
 import org.eclipse.aether.artifact.Artifact;
 
 /** Annotates {@link LinkageProblem}s with {@link LinkageProblemCause}s. */
 public class LinkageProblemCauseAnnotator {
 
+  /**
+   * Annotates the cause field of {@link LinkageProblem}s with the {@link LinkageProblemCause}.
+   *
+   * @param rootResult the class path used for generating the linkage problems.
+   * @param linkageProblems linkage problems to annotate
+   * @throws IOException when there is a problem in reading JAR files.
+   */
   static void annotate(ClassPathResult rootResult, Iterable<LinkageProblem> linkageProblems)
       throws IOException {
 
@@ -31,15 +39,12 @@ public class LinkageProblemCauseAnnotator {
       ClassPathEntry sourceEntry = sourceClass.getClassPathEntry();
 
       Artifact sourceArtifact = sourceEntry.getArtifact();
-      if (sourceArtifact == null) {
-        // This
-        continue;
-      }
+      Verify.verify(sourceArtifact != null);
 
+      // Resolves the dependency graph with the source artifact at the root.
       ClassPathBuilder classPathBuilder = new ClassPathBuilder();
       ClassPathResult subtreeResult = classPathBuilder.resolveWithMaven(sourceArtifact);
 
-      // subtreeResult should contain hadoop-client but it does not
       ClassPathEntry entryInSubtree =
           findClassPathEntryForSymbol(subtreeResult, linkageProblem.getSymbol());
       if (entryInSubtree == null) {
@@ -63,10 +68,11 @@ public class LinkageProblemCauseAnnotator {
                 new DependencyConflict(
                     rootResult.getDependencyPaths(selectedEntry).get(0), pathToUnselectedEntry));
           } else {
+            // A linkage error was already there when sourceArtifact was built.
             linkageProblem.setCause(new UnknownCause());
           }
         } else {
-          // No artifact that match groupId and artifactId
+          // No artifact that match groupId and artifactId in rootResult.
           linkageProblem.setCause(new MissingDependency(pathToUnselectedEntry));
         }
       }
@@ -74,8 +80,8 @@ public class LinkageProblemCauseAnnotator {
   }
 
   /**
-   * Returns the class path entry in {@code classPathResult} that holds the artifact that matches
-   * {@code groupId} and {@code artifactId}. {@code Null} if matching artifact is not found.
+   * Returns the class path entry in {@code classPathResult} for the artifact that matches {@code
+   * groupId} and {@code artifactId}. {@code Null} if no matching artifact is found.
    */
   private static ClassPathEntry findEntryByArtifactId(
       ClassPathResult classPathResult, String groupId, String artifactId) {
@@ -90,7 +96,7 @@ public class LinkageProblemCauseAnnotator {
 
   /**
    * Returns the {@link ClassPathEntry} in {@code classPathResult} that contains the class of {@code
-   * symbol}. Null if no matching entry is found.
+   * symbol}. {@code Null} if no matching entry is found.
    */
   private static ClassPathEntry findClassPathEntryForSymbol(
       ClassPathResult classPathResult, Symbol symbol) throws IOException {

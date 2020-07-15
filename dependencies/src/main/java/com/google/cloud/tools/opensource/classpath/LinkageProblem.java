@@ -125,10 +125,6 @@ public abstract class LinkageProblem {
     return ImmutableMap.copyOf(valueTransformed);
   }
 
-  private static void formatLinkageProblemForSymbol(Symbol symbol, Iterable<LinkageProblem> problems) {
-
-  }
-
   /** Returns the formatted {@code linkageProblems} by grouping them by the {@code symbol}s. */
   public static String formatLinkageProblems(Set<LinkageProblem> linkageProblems) {
     StringBuilder output = new StringBuilder();

@@ -104,8 +104,7 @@ public class LinkageProblemCauseAnnotatorTest {
             + "org.apache.hadoop:hadoop-client:2.7.3 (provided) / "
             +
             // hadoop-client depends on hadoop-common with "compile" scope. But this is overwritten
-            // by
-            // hadoop-common's "provided" scope by parquet-avro.
+            // by hadoop-common's "provided" scope by parquet-avro.
             "org.apache.hadoop:hadoop-common:2.7.3 (provided)",
         pathToMissingArtifact.toString());
   }

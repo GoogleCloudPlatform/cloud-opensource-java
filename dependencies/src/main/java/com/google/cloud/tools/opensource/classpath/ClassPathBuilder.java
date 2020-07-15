@@ -76,8 +76,8 @@ public final class ClassPathBuilder {
    * Builds a class path from the dependency graph with {@code artifact} as the root, in the same
    * way as Maven would do when the artifact was built.
    *
-   * <p>Compared to {@link #resolve(List, boolean)}, this method include direct optional
-   * dependencies of {@code artifact} but this excludes its transitive optional dependencies.
+   * <p>Compared to {@link #resolve(List, boolean)}, this method includes direct optional
+   * dependencies of {@code artifact} but excludes its transitive optional dependencies.
    */
   ClassPathResult resolveWithMaven(Artifact artifact) {
     DependencyGraph result =

@@ -22,9 +22,9 @@ import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import java.util.Objects;
 
 /**
- * Diamond dependency conflict caused the {@link LinkageProblem} where whe {@link LinkageProblem}'s
- * invalid reference points to the symbol in {@code pathToSelectedArtifact} but a valid symbol is in
- * {@code pathToUnselectedArtifactFromSource}.
+ * Diamond dependency conflict caused a {@link LinkageProblem} where the {@link LinkageProblem}'s
+ * invalid reference points to the symbol in {@code pathToSelectedArtifact.getLeaf()} but a valid
+ * symbol is in {@code pathToUnselectedArtifact.getLeaf()}.
  */
 class DependencyConflict extends LinkageProblemCause {
   DependencyPath pathToUnselectedArtifact;
