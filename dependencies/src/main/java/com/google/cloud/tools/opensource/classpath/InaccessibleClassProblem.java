@@ -16,7 +16,16 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-/** Matchers for the sources of linkage errors. */
-interface SymbolProblemSourceMatcher {
-  boolean match(ClassFile sourceClass);
+/**
+ * The {@code classSymbol} is inaccessible to the {@code sourceClass} as per {@code sourceClass}'s
+ * definition of the class symbol.
+ *
+ * <p>If the source class is in a different package than the target class, the class or one of its
+ * enclosing types is not public. If the source class is in the same package, the class or one of
+ * its enclosing types is private.
+ */
+final class InaccessibleClassProblem extends IncompatibleLinkageProblem {
+  InaccessibleClassProblem(ClassFile sourceClass, ClassFile targetClass, Symbol classSymbol) {
+    super("is not accessible", sourceClass, targetClass, classSymbol);
+  }
 }

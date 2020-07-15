@@ -16,7 +16,7 @@ Die() {
 }
 
 DieUsage() {
-  Die "Usage: ./prepare_release.sh <dependencies|bom> <release version> [<post-release-version>]"
+  Die "Usage: ./prepare_release.sh <dependencies|bom|gradle> <release version> [<post-release-version>]"
 }
 
 # Usage: CheckVersion <version>
@@ -38,7 +38,7 @@ EchoGreen '===== RELEASE SETUP SCRIPT ====='
 
 SUFFIX=$1
 
-if [[ "${SUFFIX}" != "dependencies" && "${SUFFIX}" != "bom" ]]; then
+if [[ "${SUFFIX}" != "dependencies" && "${SUFFIX}" != "bom" && "${SUFFIX}" != "gradle" ]]; then
   DieUsage
 fi
 
@@ -65,27 +65,33 @@ git pull
 git checkout -b ${VERSION}-${SUFFIX}
 
 
-if [[ "${SUFFIX}" = "bom" ]]; then
-  cd boms/cloud-oss-bom
-fi
-
-# Updates the pom.xml with the version to release.
-mvn versions:set versions:commit -DnewVersion=${VERSION} -DgenerateBackupPoms=false
-
-# Tags a new commit for this release.
-git commit -am "preparing release ${VERSION}-${SUFFIX}"
-git tag v${VERSION}-${SUFFIX}
-
 # Updates the pom.xml with the next snapshot version.
 # For example, when releasing 1.5.7, the next snapshot version would be 1.5.8-SNAPSHOT.
 NEXT_SNAPSHOT=${NEXT_VERSION}
 if [[ "${NEXT_SNAPSHOT}" != *-SNAPSHOT ]]; then
   NEXT_SNAPSHOT=${NEXT_SNAPSHOT}-SNAPSHOT
 fi
-mvn versions:set versions:commit -DnewVersion=${NEXT_SNAPSHOT} -DgenerateBackupPoms=false
 
-# Commits this next snapshot version.
-git commit -am "${NEXT_SNAPSHOT}"
+if [[ "${SUFFIX}" = "bom" ]]; then
+  cd boms/cloud-oss-bom
+fi
+
+if [[ "${SUFFIX}" = "gradle" ]]; then
+  cd gradle-plugin
+  # Changes the version for release and creates the commits/tags.
+  echo | ./gradlew release -Prelease.releaseVersion=${VERSION} \
+      -Prelease.newVersion=${NEXT_SNAPSHOT}
+else
+  # Updates the pom.xml with the version to release.
+  mvn versions:set versions:commit -DnewVersion=${VERSION} -DgenerateBackupPoms=false
+  # Tags a new commit for this release.
+  git commit -am "preparing release ${VERSION}-${SUFFIX}"
+  git tag v${VERSION}-${SUFFIX}
+  mvn versions:set versions:commit -DnewVersion=${NEXT_SNAPSHOT} -DgenerateBackupPoms=false
+
+  # Commits this next snapshot version.
+  git commit -am "${NEXT_SNAPSHOT}"
+fi
 
 # Pushes the tag and release branch to Github.
 git push origin v${VERSION}-${SUFFIX}

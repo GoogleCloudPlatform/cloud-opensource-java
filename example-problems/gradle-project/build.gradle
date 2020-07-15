@@ -13,20 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-buildscript {
-  repositories {
-    mavenCentral()
-    mavenLocal()
-    jcenter()
-  }
-  dependencies {
-    classpath 'com.google.cloud.tools:linkage-checker-gradle-plugin:0.1.0-SNAPSHOT'
-  }
+plugins {
+  id "com.google.cloud.tools.linkagechecker" version "0.0.1"
+  id "java"
 }
-
-apply plugin: 'com.google.cloud.tools.linkagechecker'
-apply plugin: 'java'
 
 repositories {
   mavenCentral()

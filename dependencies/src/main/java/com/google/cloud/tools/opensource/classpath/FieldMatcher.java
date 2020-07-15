@@ -19,7 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /** Matcher on field symbols. */
-class FieldMatcher implements SymbolProblemTargetMatcher {
+class FieldMatcher implements LinkageProblemTargetMatcher {
 
   private final String className;
   private final String fieldName;

@@ -14,19 +14,9 @@
  * limitations under the License.
  */
 
-package com.google.cloud.tools.dependencies.gradle;
+package com.google.cloud.tools.opensource.classpath;
 
-import org.junit.Test
-import org.gradle.testfixtures.ProjectBuilder
-import org.gradle.api.Project
-import static org.junit.Assert.*
-
-class LinkageCheckerPluginTest {
-    @Test
-    public void linkage_checker_plugin_should_add_task_to_project() {
-        Project project = ProjectBuilder.builder().build()
-        project.getPlugins().apply 'com.google.cloud.tools.linkagechecker'
-
-        assertTrue(project.tasks.linkageCheck instanceof LinkageCheckTask)
-    }
+/** Matchers for the sources of linkage errors. */
+interface LinkageProblemSourceMatcher {
+  boolean match(ClassFile sourceClass);
 }

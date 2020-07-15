@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
-package com.google.cloud.tools.opensource.classpath;
+package com.google.cloud.tools.opensource.dependencies;
 
-/** Matcher on the source class file of linkage errors. */
-class SourceMatcher implements LinkageProblemMatcher {
+import org.eclipse.aether.collection.DependencyCollectionContext;
+import org.eclipse.aether.collection.DependencySelector;
+import org.eclipse.aether.graph.Dependency;
 
-  private LinkageProblemSourceMatcher matcher;
+/**
+ * A dependency selector that disallows all optional dependencies regardless of depth.
+ */
+class BanOptionalDependencySelector implements DependencySelector {
 
   @Override
-  public void addChild(LinkageProblemTargetMatcher child) {
-    this.matcher = (LinkageProblemSourceMatcher) child;
+  public boolean selectDependency(Dependency dependency) {
+      return !dependency.isOptional();
   }
 
   @Override
-  public boolean match(LinkageProblem problem) {
-    return matcher.match(problem.getSourceClass());
+  public DependencySelector deriveChildSelector(DependencyCollectionContext context) {
+    return this;
   }
 }

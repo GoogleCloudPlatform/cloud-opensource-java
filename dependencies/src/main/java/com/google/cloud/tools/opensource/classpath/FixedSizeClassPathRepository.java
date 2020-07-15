@@ -36,7 +36,7 @@ import org.apache.bcel.util.ClassPathRepository;
  *
  * <p>The default maximum size is 1000 entries. From the experiment with spring-cloud-gcp project,
  * this maximum size gives the best performance when running {@link
- * LinkageChecker#findSymbolProblems()}.
+ * LinkageChecker#findLinkageProblems()}.
  *
  * @see <a href="https://github.com/google/guava/wiki/CachesExplained#size-based-eviction">Guava
  *     CachesExplained: Size-based Eviction</a>
