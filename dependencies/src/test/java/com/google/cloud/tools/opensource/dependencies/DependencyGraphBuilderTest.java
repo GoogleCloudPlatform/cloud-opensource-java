@@ -247,7 +247,7 @@ public class DependencyGraphBuilderTest {
   public void testBuildVerboseDependencyGraph_systemScope() {
     DependencyGraph graph =
         dependencyGraphBuilder.buildVerboseDependencyGraph(
-            ImmutableList.of(new DefaultArtifact("com.google.guava:guava:29.0-jre"))
+            new DefaultArtifact("com.google.guava:guava:29.0-android")
         );
 
     for (DependencyPath path : graph.list()) {
