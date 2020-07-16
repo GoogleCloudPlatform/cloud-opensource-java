@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -207,6 +208,8 @@ public class DependencyGraphBuilderTest {
         dependencyGraphBuilder.buildVerboseDependencyGraph(logging);
 
     List<DependencyPath> list = graph.list();
+    // The list should not include provided dependencies
+    Truth.assertThat(list).hasSize(4);
     Assert.assertEquals(
         "commons-logging",
         list.get(0).getLeaf().getArtifactId());
@@ -219,13 +222,6 @@ public class DependencyGraphBuilderTest {
     Assert.assertEquals(
         "avalon-framework",
         list.get(3).getLeaf().getArtifactId());
-    Assert.assertEquals(
-        "servlet-api",
-        list.get(4).getLeaf().getArtifactId());
-    Assert.assertEquals(
-        "javaee-api",
-        list.get(5).getLeaf().getArtifactId());
-    Assert.assertEquals(6, list.size()); // optional dependencies are included
   }
 
   @Test
