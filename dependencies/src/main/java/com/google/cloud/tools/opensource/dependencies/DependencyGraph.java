@@ -292,6 +292,11 @@ public class DependencyGraph {
           continue;
         }
       }
+
+      // Guava's zipsrc dependency is not for users but for building its Javadoc properly.
+      if (artifact != null && "zipsrc".equals(artifact.getArtifactId())) {
+        continue;
+      }
   
       // parentPath is null for the first item
       DependencyPath path =
