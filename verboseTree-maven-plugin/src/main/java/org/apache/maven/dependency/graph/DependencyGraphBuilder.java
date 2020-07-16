@@ -139,10 +139,16 @@ public class DependencyGraphBuilder extends AbstractMojo
             Artifact newArtifact = new DefaultArtifact( artifact.getGroupId(), artifact.getArtifactId(),
                     artifact.getClassifier(), artifact.getType(), artifact.getVersion() );
             newArtifact.setFile( artifact.getFile() );
+
             artifacts.add( newArtifact );
         }
 
-        rootNode = buildFullDependencyGraph( artifacts, getProjectDependency() );
+        Model model = project.getModel();
+        Dependency rootDependency = new Dependency(
+                new DefaultArtifact( model.getGroupId(), model.getArtifactId(), model.getPackaging(),
+                        model.getVersion() ), "" );
+
+        rootNode = buildFullDependencyGraph( artifacts, rootDependency );
         // rootNode is given compile Scope by default but should not have a scope
         rootNode.setScope( null );
         rootNode = pruneTransitiveTestDependencies( rootNode );
