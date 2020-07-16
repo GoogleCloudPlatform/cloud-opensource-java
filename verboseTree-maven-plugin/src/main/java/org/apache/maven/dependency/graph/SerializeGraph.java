@@ -54,11 +54,11 @@ public class SerializeGraph
         {
             if ( i == root.getChildren().size() - 1 )
             {
-                builder = dfs( root.getChildren().get( i ), LINE_START_LAST_CHILD );
+                builder = dfs( root.getChildren().get( i ), LINE_START_LAST_CHILD, true );
             }
             else
             {
-                builder = dfs( root.getChildren().get( i ), LINE_START_CHILD );
+                builder = dfs( root.getChildren().get( i ), LINE_START_CHILD, true );
             }
         }
         return builder.toString();
@@ -138,17 +138,17 @@ public class SerializeGraph
 
             if ( i == node.getChildren().size() - 1 )
             {
-                builder = dfs( node.getChildren().get( i ), start.concat( LINE_START_LAST_CHILD ) );
+                builder = dfs( node.getChildren().get( i ), start.concat( LINE_START_LAST_CHILD ), false );
             }
             else
             {
-                builder = dfs( node.getChildren().get( i ), start.concat( LINE_START_CHILD ) );
+                builder = dfs( node.getChildren().get( i ), start.concat( LINE_START_CHILD ), false );
             }
         }
         return builder;
     }
 
-    private StringBuilder dfs( DependencyNode node, String start )
+    private StringBuilder dfs( DependencyNode node, String start, boolean firstLevel )
     {
         builder.append( start );
         if ( node.getArtifact() == null )
@@ -159,7 +159,12 @@ public class SerializeGraph
         }
         String coordString = getDependencyCoordinate( node );
 
-        if ( visitedNodes.containsKey( node ) )
+        if( node.getDependency().getScope() == "test" && !firstLevel )
+        {
+            // don't want transitive test dependencies included
+            return builder;
+        }
+        else if ( visitedNodes.containsKey( node ) )
         {
             builder.append( '(' ).append( coordString ).append( " - omitted for cycle)" ).append(
                     System.lineSeparator() );
