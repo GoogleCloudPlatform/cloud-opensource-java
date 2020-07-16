@@ -163,7 +163,7 @@ public final class RepositoryUtility {
         new AndDependencySelector(
             // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
             // false positive in LinkageChecker.
-            new ScopeDependencySelector("test", "system"),
+            new ScopeDependencySelector("test"),
             new OptionalDependencySelector(),
             new ExclusionDependencySelector(),
             new FilteringZipDependencySelector());
