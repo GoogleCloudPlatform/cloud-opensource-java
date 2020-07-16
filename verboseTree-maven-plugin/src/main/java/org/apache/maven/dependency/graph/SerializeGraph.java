@@ -159,12 +159,12 @@ public class SerializeGraph
         }
         String coordString = getDependencyCoordinate( node );
 
-        if( node.getDependency().getScope() == "test" && !firstLevel )
+        /*if( node.getDependency().getScope() == "test" && !firstLevel )
         {
             // don't want transitive test dependencies included
             return builder;
-        }
-        else if ( visitedNodes.containsKey( node ) )
+        }*/
+         if ( visitedNodes.containsKey( node ) )
         {
             builder.append( '(' ).append( coordString ).append( " - omitted for cycle)" ).append(
                     System.lineSeparator() );

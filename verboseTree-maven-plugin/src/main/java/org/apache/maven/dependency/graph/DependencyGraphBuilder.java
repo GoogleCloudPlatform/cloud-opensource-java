@@ -52,6 +52,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -141,14 +142,10 @@ public class DependencyGraphBuilder extends AbstractMojo
             artifacts.add( newArtifact );
         }
 
-        Model model = project.getModel();
-        Dependency rootDependency = new Dependency(
-                new DefaultArtifact( model.getGroupId(), model.getArtifactId(), model.getPackaging(),
-                        model.getVersion() ), "" );
-
-        rootNode = buildFullDependencyGraph( artifacts, rootDependency );
+        rootNode = buildFullDependencyGraph( artifacts, getProjectDependency() );
         // rootNode is given compile Scope by default but should not have a scope
         rootNode.setScope( null );
+        rootNode = pruneTransitiveTestDependencies( rootNode );
 
         SerializeGraph serializer = new SerializeGraph();
         String serialized = serializer.serialize( rootNode );
@@ -161,6 +158,50 @@ public class DependencyGraphBuilder extends AbstractMojo
         {
             e.printStackTrace();
             getLog().error( "Failed to write to file:" + file.getAbsolutePath() );
+        }
+    }
+
+    private Dependency getProjectDependency()
+    {
+        Model model = project.getModel();
+
+        return new Dependency( new DefaultArtifact( model.getGroupId(), model.getArtifactId(), model.getPackaging(),
+                        model.getVersion() ), "" );
+    }
+
+    private DependencyNode pruneTransitiveTestDependencies( DependencyNode rootNode )
+    {
+        Set<DependencyNode> visitedNodes = new HashSet<>();
+        DependencyNode newRoot = new DefaultDependencyNode( getProjectDependency() );
+        newRoot.setChildren( new ArrayList<DependencyNode>() );
+
+        for ( int i = 0; i < rootNode.getChildren().size(); i++ )
+        {
+            DependencyNode childNode = rootNode.getChildren().get( i );
+            newRoot.getChildren().add( childNode );
+
+            dfs( childNode, visitedNodes );
+        }
+
+        return newRoot;
+    }
+
+    private void dfs( DependencyNode node , Set<DependencyNode> visitedNodes )
+    {
+        if ( !visitedNodes.contains( node ) )
+        {
+            visitedNodes.add( node );
+            for ( int i = 0; i < node.getChildren().size(); i++ )
+            {
+                DependencyNode childNode = node.getChildren().get( i );
+
+                if ( childNode.getDependency().getScope().equals( "test" ) )
+                {
+                    node.getChildren().remove( childNode );
+                }
+
+                dfs( childNode, visitedNodes );
+            }
         }
     }
 
