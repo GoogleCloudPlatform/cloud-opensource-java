@@ -161,9 +161,8 @@ public final class RepositoryUtility {
   static DefaultRepositorySystemSession newSessionForVerboseDependency(RepositorySystem system) {
     DependencySelector dependencySelector =
         new AndDependencySelector(
-            // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
-            // false positive in LinkageChecker.
-            new ScopeDependencySelector("test"),
+            // ScopeDependencySelector takes exclusions.
+            new ScopeDependencySelector("test", "provided"),
             new OptionalDependencySelector(),
             new ExclusionDependencySelector(),
             new FilteringZipDependencySelector());
