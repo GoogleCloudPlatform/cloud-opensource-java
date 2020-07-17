@@ -212,7 +212,7 @@ public class DependencyGraphBuilder extends AbstractMojo
             else
             {
                 // The dependency field carries exclusions
-                dependencyList.add( dependency.setScope( "compile" ) );
+                dependencyList.add( dependency );
             }
         }
 
@@ -268,7 +268,7 @@ public class DependencyGraphBuilder extends AbstractMojo
         for ( org.apache.maven.artifact.Artifact artifact : artifacts )
         {
             Artifact newArtifact = new DefaultArtifact( artifact.getGroupId(), artifact.getArtifactId(),
-                    artifact.getScope(), artifact.getType(), artifact.getVersion() );
+                    artifact.getClassifier(), artifact.getType(), artifact.getVersion() );
             newArtifact.setFile( artifact.getFile() );
 
             Dependency dependency = new Dependency( newArtifact, artifact.getScope() );
