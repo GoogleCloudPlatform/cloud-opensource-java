@@ -51,8 +51,12 @@ class DependencyConflict extends LinkageProblemCause {
     Artifact selected = pathToSelectedArtifact.getLeaf();
     Artifact unselected = pathToUnselectedArtifact.getLeaf();
 
-    return "Dependency conflict: " + Artifacts.toCoordinates(selected) + " was in the class path "
-        + "but version '"+unselected.getVersion()+"' has a valid symbol.\n"
+    return "Dependency conflict: "
+        + Artifacts.toCoordinates(selected)
+        + " was in the class path "
+        + "but version '"
+        + unselected.getVersion()
+        + "' has a valid symbol.\n"
         + "  selected: "
         + pathToSelectedArtifact
         + "\n  unselected: "

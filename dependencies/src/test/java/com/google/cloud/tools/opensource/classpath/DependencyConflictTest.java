@@ -42,7 +42,7 @@ public class DependencyConflictTest {
 
     assertEquals(
         "Dependency conflict: com.google:foo:1 was in the class path but version '2' "
-        + "has a valid symbol.\n"
+            + "has a valid symbol.\n"
             + "  selected: a:b:jar:1 / com.google:foo:1 (compile)\n"
             + "  unselected: a:b:jar:1 / com.google:foo:2 (compile)",
         dependencyConflict.toString());
