@@ -18,8 +18,10 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import java.util.Objects;
+import org.eclipse.aether.artifact.Artifact;
 
 /**
  * Diamond dependency conflict caused a {@link LinkageProblem} where the {@link LinkageProblem}'s
@@ -46,11 +48,15 @@ class DependencyConflict extends LinkageProblemCause {
 
   @Override
   public String toString() {
-    return "Dependency conflict: '"
+    Artifact selected = pathToSelectedArtifact.getLeaf();
+    Artifact unselected = pathToUnselectedArtifact.getLeaf();
+
+    return "Dependency conflict: " + Artifacts.toCoordinates(selected) + " was in the class path "
+        + "but version '"+unselected.getVersion()+"' has a valid symbol.\n"
+        + "  selected: "
         + pathToSelectedArtifact
-        + "' is selected but the unselected '"
-        + pathToUnselectedArtifact
-        + "' has a valid symbol";
+        + "\n  unselected: "
+        + pathToUnselectedArtifact;
   }
 
   @Override

@@ -162,7 +162,8 @@ public abstract class LinkageProblem {
               if (!causes.isEmpty()) {
                 output.append("  Cause:\n");
                 for (LinkageProblemCause cause : causes) {
-                  output.append("    " + cause + "\n");
+                  String causeWithIndent = cause.toString().replaceAll("\n", "\n    ");
+                  output.append("    " + causeWithIndent + "\n");
                 }
               }
             });

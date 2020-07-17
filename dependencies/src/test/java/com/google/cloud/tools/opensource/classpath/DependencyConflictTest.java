@@ -27,10 +27,10 @@ import org.junit.Test;
 public class DependencyConflictTest {
 
   @Test
-  public void testToString() {
+  public void testToString_versionConflict() {
     Artifact root = new DefaultArtifact("a:b:1");
     Artifact foo = new DefaultArtifact("com.google:foo:1");
-    Artifact bar = new DefaultArtifact("com.google:bar:1");
+    Artifact bar = new DefaultArtifact("com.google:foo:2");
 
     DependencyPath selectedPath =
         new DependencyPath(root).append(new Dependency(foo, "compile", false));
@@ -41,8 +41,10 @@ public class DependencyConflictTest {
     DependencyConflict dependencyConflict = new DependencyConflict(selectedPath, unselectedPath);
 
     assertEquals(
-        "Dependency conflict: 'a:b:jar:1 / com.google:foo:1 (compile)' is selected"
-            + " but the unselected 'a:b:jar:1 / com.google:bar:1 (compile)' has a valid symbol",
+        "Dependency conflict: com.google:foo:1 was in the class path but version '2' "
+        + "has a valid symbol.\n"
+            + "  selected: a:b:jar:1 / com.google:foo:1 (compile)\n"
+            + "  unselected: a:b:jar:1 / com.google:foo:2 (compile)",
         dependencyConflict.toString());
   }
 }
