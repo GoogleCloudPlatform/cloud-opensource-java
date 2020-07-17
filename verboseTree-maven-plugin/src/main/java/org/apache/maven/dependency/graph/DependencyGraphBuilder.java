@@ -65,7 +65,7 @@ import static org.apache.maven.dependency.graph.RepositoryUtility.mavenRepositor
  * Builds the DependencyGraph and for now outputs a text version of the dependency tree to a file
  */
 @Mojo( name = "tree",
-       requiresDependencyResolution = ResolutionScope.TEST )
+       requiresDependencyResolution = ResolutionScope.TEST, threadSafe = true )
 public class DependencyGraphBuilder extends AbstractMojo
 {
 
@@ -131,13 +131,14 @@ public class DependencyGraphBuilder extends AbstractMojo
     {
         File file = new File( project.getBasedir().getAbsolutePath().replace( '\\', '/' ) + "/target/tree.txt" );
 
-        rootNode = buildFullDependencyGraph( session.getCurrentProject().getArtifacts() );
+        List<org.apache.maven.model.Dependency> dependencies = project.getDependencies();
+
+        rootNode = buildFullDependencyGraph( dependencies );
         // rootNode is given compile Scope by default but should not have a scope
-        rootNode.setScope( null );
-        rootNode = pruneTransitiveTestDependencies( rootNode );
+        DependencyNode prunedRoot = pruneTransitiveTestDependencies( rootNode );
 
         SerializeGraph serializer = new SerializeGraph();
-        String serialized = serializer.serialize( rootNode );
+        String serialized = serializer.serialize( prunedRoot );
 
         try
         {
@@ -203,17 +204,7 @@ public class DependencyGraphBuilder extends AbstractMojo
 
         for ( DependencyNode dependencyNode : dependencyNodes )
         {
-            Dependency dependency = dependencyNode.getDependency();
-            if ( dependency == null )
-            {
-                // Root DependencyNode has null dependency field.
-                dependencyList.add( new Dependency( dependencyNode.getArtifact(), "compile" ) );
-            }
-            else
-            {
-                // The dependency field carries exclusions
-                dependencyList.add( dependency );
-            }
+            dependencyList.add( dependencyNode.getDependency() );
         }
 
         if ( localRepository != null )
@@ -228,7 +219,7 @@ public class DependencyGraphBuilder extends AbstractMojo
         if ( dependencyList.size() != 1 )
         {
             // With setRoot, the result includes dependencies with `optional:true` or `provided`
-            // collectRequest.setRoot(dependencyList.get(0));
+            collectRequest.setRoot(dependencyList.get(0));
             collectRequest.setDependencies( dependencyList );
         }
         else
@@ -259,7 +250,7 @@ public class DependencyGraphBuilder extends AbstractMojo
      * @param artifacts Maven artifacts whose dependencies to retrieve
      * @return dependency graph representing the tree of Maven artifacts
      */
-    public DependencyNode buildFullDependencyGraph( Set<org.apache.maven.artifact.Artifact> artifacts )
+    private DependencyNode buildFullDependencyGraph( Set<org.apache.maven.artifact.Artifact> artifacts )
     {
         Dependency rootDependency = getProjectDependency();
         List<DependencyNode> dependencyNodes = new ArrayList<DependencyNode>();
@@ -275,6 +266,28 @@ public class DependencyGraphBuilder extends AbstractMojo
             DependencyNode node = new DefaultDependencyNode( dependency );
             dependencyNodes.add( node );
         }
+
+        DefaultRepositorySystemSession session = RepositoryUtility.newSessionForFullDependency( system );
+        return buildDependencyGraph( dependencyNodes, session, rootDependency );
+    }
+
+    private DependencyNode buildFullDependencyGraph( List<org.apache.maven.model.Dependency> dependencies )
+    {
+        Dependency rootDependency = getProjectDependency();
+        List<DependencyNode> dependencyNodes = new ArrayList<DependencyNode>();
+        dependencyNodes.add( new DefaultDependencyNode( rootDependency ) );
+
+        for ( org.apache.maven.model.Dependency dependency : dependencies )
+        {
+            Artifact aetherArtifact = new DefaultArtifact( dependency.getGroupId(), dependency.getArtifactId(),
+                    dependency.getClassifier(), dependency.getType(), dependency.getVersion() );
+
+            Dependency aetherDependency = new Dependency( aetherArtifact , dependency.getScope() );
+            DependencyNode node = new DefaultDependencyNode( aetherDependency );
+            node.setOptional( dependency.isOptional() );
+            dependencyNodes.add( node );
+        }
+
         DefaultRepositorySystemSession session = RepositoryUtility.newSessionForFullDependency( system );
         return buildDependencyGraph( dependencyNodes, session, rootDependency );
     }

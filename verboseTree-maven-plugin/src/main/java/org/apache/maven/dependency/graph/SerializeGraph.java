@@ -157,14 +157,15 @@ public class SerializeGraph
             builder.append( "Null Artifact Node" ).append( System.lineSeparator() );
             callDfs( node, start );
         }
+
         String coordString = getDependencyCoordinate( node );
 
-        /*if( node.getDependency().getScope() == "test" && !firstLevel )
+        if( node.getDependency().getScope().equals( "test" ) && !firstLevel )
         {
             // don't want transitive test dependencies included
             return builder;
-        }*/
-         if ( visitedNodes.containsKey( node ) )
+        }
+        else if ( visitedNodes.containsKey( node ) )
         {
             builder.append( '(' ).append( coordString ).append( " - omitted for cycle)" ).append(
                     System.lineSeparator() );

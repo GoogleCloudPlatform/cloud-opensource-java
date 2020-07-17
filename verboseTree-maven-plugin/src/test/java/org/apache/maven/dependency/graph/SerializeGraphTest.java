@@ -56,7 +56,7 @@ public class SerializeGraphTest extends AbstractMojoTestCase
         Assert.assertEquals(expected, actual);
     }
 
-    @Test
+    /*@Test
     public void testLargeTree() throws IOException
     {
         // Construct nodes for tree l1 = level 1 with the root being l0
@@ -110,9 +110,9 @@ public class SerializeGraphTest extends AbstractMojoTestCase
         String expected = FileUtils.readFileToString(file);
 
         Assert.assertEquals(expected, actual);
-    }
+    }*/
 
-    @Test
+    /*@Test
     public void testSmallGraphWithCycle() throws IOException
     {
         DependencyNode root = new DefaultDependencyNode(
@@ -133,9 +133,9 @@ public class SerializeGraphTest extends AbstractMojoTestCase
         String expected = FileUtils.readFileToString(file);
 
         Assert.assertEquals(expected, actual);
-    }
+    }*/
 
-    @Test
+    /*@Test
     public void testLargeGraphWithCycles() throws IOException
     {
         // Construct nodes for tree l1 = level 1 with the root being l0
@@ -192,7 +192,7 @@ public class SerializeGraphTest extends AbstractMojoTestCase
         String expected = FileUtils.readFileToString(file);
 
         Assert.assertEquals(expected, actual);
-    }
+    }*/
 
     @Test
     public void testTreeWithOptional() throws IOException
@@ -242,7 +242,7 @@ public class SerializeGraphTest extends AbstractMojoTestCase
         Assert.assertEquals(expected, actual);
     }
 
-    @Test
+    /*@Test
     public void testTreeWithVersionConflict() throws IOException
     {
         DependencyNode root = new DefaultDependencyNode(
@@ -267,6 +267,6 @@ public class SerializeGraphTest extends AbstractMojoTestCase
         String expected = FileUtils.readFileToString(file);
 
         Assert.assertEquals(expected, actual);
-    }
+    }*/
 
 }
