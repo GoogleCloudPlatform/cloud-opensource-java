@@ -239,6 +239,18 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
+  public void testBuildVerboseDependencyGraph_systemScope() {
+    DependencyGraph graph =
+        dependencyGraphBuilder.buildVerboseDependencyGraph(
+            new DefaultArtifact("com.google.guava:guava:29.0-android"));
+
+    for (DependencyPath path : graph.list()) {
+      Artifact leaf = path.getLeaf();
+      assertNotEquals("srczip", leaf.getArtifactId());
+    }
+  }
+
+  @Test
   public void testBuildFullDependencyGraph_optional() {
     DependencyGraph graph =
         dependencyGraphBuilder.buildFullDependencyGraph(Arrays.asList(logging));
