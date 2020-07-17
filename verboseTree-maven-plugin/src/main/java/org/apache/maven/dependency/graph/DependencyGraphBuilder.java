@@ -131,24 +131,7 @@ public class DependencyGraphBuilder extends AbstractMojo
     {
         File file = new File( project.getBasedir().getAbsolutePath().replace( '\\', '/' ) + "/target/tree.txt" );
 
-        List<Artifact> artifacts = new ArrayList<Artifact>();
-        Set<org.apache.maven.artifact.Artifact> artifactSet = session.getCurrentProject().getArtifacts();
-
-        for ( org.apache.maven.artifact.Artifact artifact : artifactSet )
-        {
-            Artifact newArtifact = new DefaultArtifact( artifact.getGroupId(), artifact.getArtifactId(),
-                    artifact.getClassifier(), artifact.getType(), artifact.getVersion() );
-            newArtifact.setFile( artifact.getFile() );
-
-            artifacts.add( newArtifact );
-        }
-
-        Model model = project.getModel();
-        Dependency rootDependency = new Dependency(
-                new DefaultArtifact( model.getGroupId(), model.getArtifactId(), model.getPackaging(),
-                        model.getVersion() ), "" );
-
-        rootNode = buildFullDependencyGraph( artifacts, rootDependency );
+        rootNode = buildFullDependencyGraph( session.getCurrentProject().getArtifacts() );
         // rootNode is given compile Scope by default but should not have a scope
         rootNode.setScope( null );
         rootNode = pruneTransitiveTestDependencies( rootNode );
@@ -276,17 +259,24 @@ public class DependencyGraphBuilder extends AbstractMojo
      * @param artifacts Maven artifacts whose dependencies to retrieve
      * @return dependency graph representing the tree of Maven artifacts
      */
-    public DependencyNode buildFullDependencyGraph( List<Artifact> artifacts, Dependency root )
+    public DependencyNode buildFullDependencyGraph( Set<org.apache.maven.artifact.Artifact> artifacts )
     {
+        Dependency rootDependency = getProjectDependency();
         List<DependencyNode> dependencyNodes = new ArrayList<DependencyNode>();
-        dependencyNodes.add( new DefaultDependencyNode( root ) );
+        dependencyNodes.add( new DefaultDependencyNode( rootDependency ) );
 
-        for ( Artifact artifact : artifacts )
+        for ( org.apache.maven.artifact.Artifact artifact : artifacts )
         {
-            dependencyNodes.add( new DefaultDependencyNode( artifact ) );
+            Artifact newArtifact = new DefaultArtifact( artifact.getGroupId(), artifact.getArtifactId(),
+                    artifact.getScope(), artifact.getType(), artifact.getVersion() );
+            newArtifact.setFile( artifact.getFile() );
+
+            Dependency dependency = new Dependency( newArtifact, artifact.getScope() );
+            DependencyNode node = new DefaultDependencyNode( dependency );
+            dependencyNodes.add( node );
         }
         DefaultRepositorySystemSession session = RepositoryUtility.newSessionForFullDependency( system );
-        return buildDependencyGraph( dependencyNodes, session, root );
+        return buildDependencyGraph( dependencyNodes, session, rootDependency );
     }
 
     private DependencyNode buildDependencyGraph( List<DependencyNode> dependencyNodes,
