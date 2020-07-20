@@ -18,14 +18,17 @@
 package org.apache.maven.dependency.graph;
 
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -36,19 +39,29 @@ public class SerializeGraph
     private static final String LINE_START_LAST_CHILD = "\\- ";
     private static final String LINE_START_CHILD = "+- ";
 
-    private final Map<DependencyNode, Boolean> visitedNodes = new IdentityHashMap<DependencyNode, Boolean>( 512 );
-    private final Set<String> coordinateStrings = new HashSet<String>();
-    private final Map<String, String> coordinateVersionMap = new HashMap<String, String>();
+    private Map<DependencyNode, String> visitedNodes = new IdentityHashMap<>( 512 );
+    private Set<String> coordinateStrings = new HashSet<>();
+    private Map<String, String> coordinateVersionMap = new HashMap<>();
+    private Map<DependencyNode, String> nodeErrors = new HashMap<>();
     private StringBuilder builder = new StringBuilder();
 
     public String serialize( DependencyNode root )
     {
+        visitedNodes = new IdentityHashMap<>( 512 );
+        coordinateStrings = new HashSet<>();
+        coordinateVersionMap = new HashMap<>();
+        nodeErrors = new HashMap<>();
+        builder = new StringBuilder();
+
+        getNodeConflictMessagesBFS( root );
+
+
+        // Use BFS to mirror how Maven resolves dependencies and use DFS to print the tree easily
+
         // deal with root first
         Artifact rootArtifact = root.getArtifact();
-        builder.append(
-                rootArtifact.getGroupId() + ":" + rootArtifact.getArtifactId() + ":" + rootArtifact.getExtension()
-                        + ":" + rootArtifact.getVersion() ).append(
-                System.lineSeparator() );
+        builder.append( rootArtifact.getGroupId() + ":" + rootArtifact.getArtifactId() + ":"
+                + rootArtifact.getExtension() + ":" + rootArtifact.getVersion() ).append( System.lineSeparator() );
 
         for ( int i = 0; i < root.getChildren().size(); i++ )
         {
@@ -71,12 +84,10 @@ public class SerializeGraph
         if ( node.getDependency() == null )
         {
             // should only get here if node is root
-            return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getExtension()
-                    + ":" + artifact.getVersion();
+            return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getExtension() + ":" + artifact.getVersion();
         }
         String scope = node.getDependency().getScope();
-        String coords = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getExtension()
-                + ":" + artifact.getVersion();
+        String coords = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getExtension() + ":" + artifact.getVersion();
 
         if ( scope != null && !scope.isEmpty() )
         {
@@ -113,8 +124,7 @@ public class SerializeGraph
 
         for ( String scope : scopes )
         {
-            String coordinate = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getExtension()
-                    + ":" + artifact.getVersion() + ":" + scope;
+            String coordinate = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getExtension() + ":" + artifact.getVersion() + ":" + scope;
             if ( coordinateStrings.contains( coordinate ) )
             {
                 return scope;
@@ -148,6 +158,172 @@ public class SerializeGraph
         return builder;
     }
 
+    private void getNodeConflictMessagesBFS( DependencyNode root )
+    {
+        Map<DependencyNode, Boolean> visitedNodes = new IdentityHashMap<>( 512 );
+        Queue<DependencyNode> queue = new LinkedList<>();
+        visitedNodes.put( root, true );
+        queue.add( root );
+        boolean isRoot = true;
+
+        while ( !queue.isEmpty() )
+        {
+            DependencyNode node = queue.poll();
+
+            if ( node == null || node.getArtifact() == null )
+            {
+                // Should never reach hit this condition with a proper graph sent in
+                nodeErrors.put( node, "Null Artifact Node" );
+            }
+
+            String coordString = getDependencyCoordinate( node );
+
+            if ( isDuplicateDependencyCoordinate( node ) )
+            {
+                nodeErrors.put( node, "(" + coordString + " - omitted for duplicate)" + System.lineSeparator() );
+            }
+            else if ( ScopeConflict( node ) != null )
+            {
+                nodeErrors.put( node, "(" + coordString + " - omitted for conflict with " + ScopeConflict( node ) + ")"
+                    + System.lineSeparator() );
+            }
+            else if ( VersionConflict( node ) != null )
+            {
+                nodeErrors.put( node, "(" + coordString + " - omitted for conflict with " + VersionConflict( node )
+                    + ")" + System.lineSeparator() );
+            }
+            else if ( node.getDependency() != null && node.getDependency().isOptional() )
+            {
+                nodeErrors.put( node, "(" + coordString + " - omitted due to optional dependency)"
+                        + System.lineSeparator() );
+            }
+            else
+            {
+                boolean ignoreNode = false;
+                nodeErrors.put( node, null );
+                coordinateStrings.add( getDependencyCoordinate( node ) );
+                if ( node.getArtifact() != null )
+                {
+                    coordinateVersionMap.put( getVersionlessCoordinate( node ), node.getArtifact().getVersion() );
+                }
+
+                for ( DependencyNode child : node.getChildren() )
+                {
+                    if ( visitedNodes.containsKey( child ) )
+                    {
+                        ignoreNode = true;
+                        nodeErrors.put( node, "(" + coordString + " - omitted for cycle" );
+                        break;
+                    }
+                }
+
+                if( !ignoreNode )
+                {
+                    for ( int i = 0; i < node.getChildren().size(); ++i )
+                    {
+                        DependencyNode child = node.getChildren().get( i );
+
+                        if ( !visitedNodes.containsKey( child ) )
+                        {
+                            visitedNodes.put( child, true );
+                            queue.add( child );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private StringBuilder bfs( DependencyNode root )
+    {
+        Queue<DependencyNode> queue = new LinkedList<>();
+        visitedNodes.put( root, "" );
+        queue.add( root );
+
+        while ( !queue.isEmpty() )
+        {
+            DependencyNode node = queue.poll();
+            builder.append( visitedNodes.get( node ) );
+
+            if ( node == null || node.getArtifact() == null )
+            {
+                // Should never reach hit this condition with a proper graph sent in
+                builder.append( "Null Artifact Node" ).append( System.lineSeparator() );
+                return builder;
+            }
+
+            String coordString = getDependencyCoordinate( node );
+
+            /*if ( visitedNodes.containsKey( node ) )
+            {
+                builder.append( '(' ).append( coordString ).append( " - omitted for cycle)" ).append(
+                        System.lineSeparator() );
+            }
+            else*/
+            if ( isDuplicateDependencyCoordinate( node ) )
+            {
+                builder.append( '(' ).append( coordString ).append( " - omitted for duplicate)" ).append(
+                        System.lineSeparator() );
+            }
+            else if ( ScopeConflict( node ) != null )
+            {
+                builder.append( '(' ).append( coordString ).append( " - omitted for conflict with " ).append(
+                        ScopeConflict( node ) ).append( ')' ).append( System.lineSeparator() );
+            }
+            else if ( VersionConflict( node ) != null )
+            {
+                builder.append( '(' ).append( coordString ).append( " - omitted for conflict with " ).append(
+                        VersionConflict( node ) ).append( ')' ).append( System.lineSeparator() );
+            }
+            else if ( node.getDependency() != null && node.getDependency().isOptional() )
+            {
+                builder.append( '(' ).append( coordString ).append( " - omitted due to optional dependency)" ).append(
+                        System.lineSeparator() );
+            }
+            else
+            {
+                coordinateStrings.add( getDependencyCoordinate( node ) );
+                if ( node.getArtifact() != null )
+                {
+                    coordinateVersionMap.put( getVersionlessCoordinate( node ), node.getArtifact().getVersion() );
+                }
+                builder.append( coordString ).append( System.lineSeparator() );
+
+                for ( int i = 0; i < node.getChildren().size(); ++i )
+                {
+                    DependencyNode child = node.getChildren().get( i );
+
+                    if ( !visitedNodes.containsKey( child ) )
+                    {
+                        String parentStart = visitedNodes.get( node );
+                        String start;
+
+                        if ( parentStart.endsWith( "+- " ) )
+                        {
+                            start = parentStart.replace( "+- ", "   |  " );
+                        }
+                        else
+                        {
+                            start = parentStart.replace( "\\-", "   " );
+                        }
+
+                        if ( i != node.getChildren().size() - 1 )
+                        {
+                            start = start.concat( "+- " );
+                        }
+                        else
+                        {
+                            start = start.concat( "\\- " );
+                        }
+                        visitedNodes.put( child, start );
+                        queue.add( child );
+                    }
+                }
+            }
+        }
+        return builder;
+    }
+
     private StringBuilder dfs( DependencyNode node, String start, boolean firstLevel )
     {
         builder.append( start );
@@ -160,12 +336,16 @@ public class SerializeGraph
 
         String coordString = getDependencyCoordinate( node );
 
-        if( node.getDependency().getScope().equals( "test" ) && !firstLevel )
+        if ( node.getDependency().getScope().equals( "test" ) && !firstLevel )
         {
             // don't want transitive test dependencies included
             return builder;
         }
-        else if ( visitedNodes.containsKey( node ) )
+        else if ( nodeErrors.get( node ) != null )
+        {
+            builder.append( nodeErrors.get( node ) );
+        }
+        /*else if ( visitedNodes.containsKey( node ) )
         {
             builder.append( '(' ).append( coordString ).append( " - omitted for cycle)" ).append(
                     System.lineSeparator() );
@@ -189,16 +369,16 @@ public class SerializeGraph
         {
             builder.append( '(' ).append( coordString ).append( " - omitted due to optional dependency)" ).append(
                     System.lineSeparator() );
-        }
+        }*/
         else
         {
-            coordinateStrings.add( getDependencyCoordinate( node ) );
-            if ( node.getArtifact() != null )
+            // coordinateStrings.add( getDependencyCoordinate( node ) );
+            /*if ( node.getArtifact() != null )
             {
                 coordinateVersionMap.put( getVersionlessCoordinate( node ), node.getArtifact().getVersion() );
-            }
+            }*/
             builder.append( coordString ).append( System.lineSeparator() );
-            visitedNodes.put( node, true );
+            // visitedNodes.put( node, "" );
             callDfs( node, start );
         }
         return builder;
