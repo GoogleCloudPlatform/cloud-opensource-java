@@ -54,8 +54,6 @@ class DependencyConflict extends LinkageProblemCause {
   public String toString() {
     Artifact selected = pathToSelectedArtifact.getLeaf();
     Artifact unselected = pathToUnselectedArtifact.getLeaf();
-    //    com.google:foo:1 (selected in the class path) does not have symbol 'java.lang.Object's
-    // method equals(Object arg1)' but version '2' has it.
     return "Dependency conflict: "
         + Artifacts.toCoordinates(selected)
         + " (selected for the class path) does not have the symbol \""
