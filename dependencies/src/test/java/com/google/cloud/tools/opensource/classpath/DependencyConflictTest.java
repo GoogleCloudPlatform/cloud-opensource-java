@@ -28,6 +28,8 @@ public class DependencyConflictTest {
 
   @Test
   public void testToString_versionConflict() {
+    MethodSymbol methodSymbol =
+        new MethodSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z", false);
     Artifact root = new DefaultArtifact("a:b:1");
     Artifact foo = new DefaultArtifact("com.google:foo:1");
     Artifact bar = new DefaultArtifact("com.google:foo:2");
@@ -38,11 +40,14 @@ public class DependencyConflictTest {
     DependencyPath unselectedPath =
         new DependencyPath(root).append(new Dependency(bar, "compile", false));
 
-    DependencyConflict dependencyConflict = new DependencyConflict(selectedPath, unselectedPath);
+    DependencyConflict dependencyConflict =
+        new DependencyConflict(methodSymbol, selectedPath, unselectedPath);
 
     assertEquals(
-        "Dependency conflict: com.google:foo:1 was in the class path but version '2' "
-            + "has a valid symbol.\n"
+        "Dependency conflict: com.google:foo:1 (selected for the class path) does not "
+            + "have the symbol \""
+            + methodSymbol
+            + "\" but com.google:foo:2 (unselected) defines it.\n"
             + "  selected: a:b:jar:1 / com.google:foo:1 (compile)\n"
             + "  unselected: a:b:jar:1 / com.google:foo:2 (compile)",
         dependencyConflict.toString());

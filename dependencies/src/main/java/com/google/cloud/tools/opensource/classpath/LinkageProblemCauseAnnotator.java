@@ -50,8 +50,8 @@ public class LinkageProblemCauseAnnotator {
         cache.put(sourceArtifact, subtreeResult);
       }
 
-      ClassPathEntry entryInSubtree =
-          subtreeResult.findClassPathEntryForSymbol(linkageProblem.getSymbol());
+      Symbol symbol = linkageProblem.getSymbol();
+      ClassPathEntry entryInSubtree = subtreeResult.findClassPathEntryForSymbol(symbol);
       if (entryInSubtree == null) {
         linkageProblem.setCause(UnknownCause.getInstance());
       } else {
@@ -71,7 +71,9 @@ public class LinkageProblemCauseAnnotator {
             // Different version of that artifact is selected in rootResult
             linkageProblem.setCause(
                 new DependencyConflict(
-                    rootResult.getDependencyPaths(selectedEntry).get(0), pathToUnselectedEntry));
+                    symbol,
+                    rootResult.getDependencyPaths(selectedEntry).get(0),
+                    pathToUnselectedEntry));
           } else {
             // A linkage error was already there when sourceArtifact was built.
             linkageProblem.setCause(UnknownCause.getInstance());

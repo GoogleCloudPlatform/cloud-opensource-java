@@ -30,15 +30,22 @@ public class LinkageProblemCauseTest {
     Artifact foo = new DefaultArtifact("com.google:foo:1");
     Artifact bar = new DefaultArtifact("com.google:bar:1");
 
+    MethodSymbol methodSymbol =
+        new MethodSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z", false);
+
+    ClassSymbol classSymbol = new ClassSymbol("java.lang.Object");
+
     DependencyPath path1 = new DependencyPath(root).append(new Dependency(foo, "compile", false));
 
     DependencyPath path2 = new DependencyPath(root).append(new Dependency(bar, "compile", false));
 
     new EqualsTester()
         .addEqualityGroup(
-            new DependencyConflict(path1, path2), new DependencyConflict(path1, path2))
-        .addEqualityGroup(new DependencyConflict(path1, path1))
-        .addEqualityGroup(new DependencyConflict(path2, path2))
+            new DependencyConflict(methodSymbol, path1, path2),
+            new DependencyConflict(methodSymbol, path1, path2))
+        .addEqualityGroup(new DependencyConflict(methodSymbol, path1, path1))
+        .addEqualityGroup(new DependencyConflict(methodSymbol, path2, path2))
+        .addEqualityGroup(new DependencyConflict(classSymbol, path2, path2))
         .addEqualityGroup(new MissingDependency(path1), new MissingDependency(path1))
         .addEqualityGroup(new MissingDependency(path2))
         .addEqualityGroup(UnknownCause.getInstance())

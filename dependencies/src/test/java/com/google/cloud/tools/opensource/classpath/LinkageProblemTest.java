@@ -144,7 +144,7 @@ public class LinkageProblemTest {
             + path
             + ") "
             + "io.grpc.protobuf.ProtoUtils.marshaller's method "
-            + "marshaller(com.google.protobuf.Message arg1) is not found;\n"
+            + "marshaller(com.google.protobuf.Message) is not found;\n"
             + "  referenced by 1 class file\n"
             + "    java.lang.Object (com.google:foo:0.0.1)\n"
             + "Class java.lang.Integer is not found;\n"

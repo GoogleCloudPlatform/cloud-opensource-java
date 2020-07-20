@@ -29,11 +29,15 @@ import org.eclipse.aether.artifact.Artifact;
  * symbol is in {@code pathToUnselectedArtifact.getLeaf()}.
  */
 class DependencyConflict extends LinkageProblemCause {
-  DependencyPath pathToUnselectedArtifact;
-  DependencyPath pathToSelectedArtifact;
+  private Symbol symbol;
+  private DependencyPath pathToUnselectedArtifact;
+  private DependencyPath pathToSelectedArtifact;
 
   DependencyConflict(
-      DependencyPath pathToSelectedArtifact, DependencyPath pathToUnselectedArtifact) {
+      Symbol symbol,
+      DependencyPath pathToSelectedArtifact,
+      DependencyPath pathToUnselectedArtifact) {
+    this.symbol = checkNotNull(symbol);
     this.pathToUnselectedArtifact = checkNotNull(pathToUnselectedArtifact);
     this.pathToSelectedArtifact = checkNotNull(pathToSelectedArtifact);
   }
@@ -50,13 +54,15 @@ class DependencyConflict extends LinkageProblemCause {
   public String toString() {
     Artifact selected = pathToSelectedArtifact.getLeaf();
     Artifact unselected = pathToUnselectedArtifact.getLeaf();
-
+    //    com.google:foo:1 (selected in the class path) does not have symbol 'java.lang.Object's
+    // method equals(Object arg1)' but version '2' has it.
     return "Dependency conflict: "
         + Artifacts.toCoordinates(selected)
-        + " was in the class path "
-        + "but version '"
-        + unselected.getVersion()
-        + "' has a valid symbol.\n"
+        + " (selected for the class path) does not have the symbol \""
+        + symbol
+        + "\" but "
+        + Artifacts.toCoordinates(unselected)
+        + " (unselected) defines it.\n"
         + "  selected: "
         + pathToSelectedArtifact
         + "\n  unselected: "
@@ -72,12 +78,13 @@ class DependencyConflict extends LinkageProblemCause {
       return false;
     }
     DependencyConflict that = (DependencyConflict) other;
-    return Objects.equals(pathToUnselectedArtifact, that.pathToUnselectedArtifact)
+    return Objects.equals(symbol, that.symbol)
+        && Objects.equals(pathToUnselectedArtifact, that.pathToUnselectedArtifact)
         && Objects.equals(pathToSelectedArtifact, that.pathToSelectedArtifact);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(pathToUnselectedArtifact, pathToSelectedArtifact);
+    return Objects.hash(symbol, pathToUnselectedArtifact, pathToSelectedArtifact);
   }
 }
