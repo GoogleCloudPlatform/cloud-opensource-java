@@ -44,10 +44,10 @@ public class DependencyConflictTest {
         new DependencyConflict(methodSymbol, selectedPath, unselectedPath);
 
     assertEquals(
-        "Dependency conflict: com.google:foo:1 (selected for the class path) does not "
-            + "have \""
+        "Dependency conflict: com.google:foo:1 does not "
+            + "define "
             + methodSymbol
-            + "\" but com.google:foo:2 (unselected) defines it.\n"
+            + " but com.google:foo:2 defines it.\n"
             + "  selected: a:b:jar:1 / com.google:foo:1 (compile)\n"
             + "  unselected: a:b:jar:1 / com.google:foo:2 (compile)",
         dependencyConflict.toString());
