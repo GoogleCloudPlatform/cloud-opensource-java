@@ -45,7 +45,7 @@ public class DependencyConflictTest {
 
     assertEquals(
         "Dependency conflict: com.google:foo:1 (selected for the class path) does not "
-            + "have the symbol \""
+            + "have \""
             + methodSymbol
             + "\" but com.google:foo:2 (unselected) defines it.\n"
             + "  selected: a:b:jar:1 / com.google:foo:1 (compile)\n"

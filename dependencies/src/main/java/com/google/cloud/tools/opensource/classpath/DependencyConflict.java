@@ -56,7 +56,7 @@ class DependencyConflict extends LinkageProblemCause {
     Artifact unselected = pathToUnselectedArtifact.getLeaf();
     return "Dependency conflict: "
         + Artifacts.toCoordinates(selected)
-        + " (selected for the class path) does not have the symbol \""
+        + " (selected for the class path) does not have \""
         + symbol
         + "\" but "
         + Artifacts.toCoordinates(unselected)
