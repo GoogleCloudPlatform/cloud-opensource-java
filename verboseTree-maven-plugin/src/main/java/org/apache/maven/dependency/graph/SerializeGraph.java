@@ -35,7 +35,7 @@ import java.util.Set;
 /**
  * Parses dependency graph and outputs in text format for end user to review.
  */
-public class SerializeGraph
+public final class SerializeGraph
 {
     private static final String LINE_START_LAST_CHILD = "\\- ";
     private static final String LINE_START_CHILD = "+- ";
@@ -99,12 +99,12 @@ public class SerializeGraph
         return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getExtension();
     }
 
-    private boolean isDuplicateDependencyCoordinate( DependencyNode node, Set<String> coordinateStrings )
+    private static boolean isDuplicateDependencyCoordinate( DependencyNode node, Set<String> coordinateStrings )
     {
         return coordinateStrings.contains( getDependencyCoordinate( node ) );
     }
 
-    private String VersionConflict( DependencyNode node, Map<String, String> coordinateVersionMap )
+    private static String VersionConflict( DependencyNode node, Map<String, String> coordinateVersionMap )
     {
         if ( coordinateVersionMap.containsKey( getVersionlessCoordinate( node ) ) )
         {
@@ -113,7 +113,7 @@ public class SerializeGraph
         return null;
     }
 
-    private String ScopeConflict( DependencyNode node, Set<String> coordinateStrings )
+    private static String ScopeConflict( DependencyNode node, Set<String> coordinateStrings )
     {
         Artifact artifact = node.getArtifact();
         List<String> scopes = Arrays.asList( "compile", "provided", "runtime", "test", "system" );
