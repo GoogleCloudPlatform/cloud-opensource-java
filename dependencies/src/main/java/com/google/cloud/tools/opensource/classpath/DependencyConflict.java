@@ -30,22 +30,31 @@ import org.eclipse.aether.artifact.Artifact;
  */
 final class DependencyConflict extends LinkageProblemCause {
   private Symbol symbol;
-  private DependencyPath pathToUnselectedArtifact;
+  private DependencyPath pathToTheArtifactThruSource;
   private DependencyPath pathToSelectedArtifact;
 
   DependencyConflict(
       Symbol symbol,
       DependencyPath pathToSelectedArtifact,
-      DependencyPath pathToUnselectedArtifact) {
+      DependencyPath pathToTheArtifactThruSource) {
     this.symbol = checkNotNull(symbol);
-    this.pathToUnselectedArtifact = checkNotNull(pathToUnselectedArtifact);
+    this.pathToTheArtifactThruSource = checkNotNull(pathToTheArtifactThruSource);
     this.pathToSelectedArtifact = checkNotNull(pathToSelectedArtifact);
   }
 
-  public DependencyPath getPathToUnselectedArtifact() {
-    return pathToUnselectedArtifact;
+  /**
+   * Returns the path from the root to the artifact which contains the target symbol and is used
+   * when building the artifact of the source class. This artifact is the first in the breadth-first
+   * traversal in the source artifact's dependency graph.
+   */
+  public DependencyPath getPathToTheArtifactThruSource() {
+    return pathToTheArtifactThruSource;
   }
 
+  /**
+   * Returns the path from the root to the artifact which caused the linkage error and is selected
+   * for the class path.
+   */
   public DependencyPath getPathToSelectedArtifact() {
     return pathToSelectedArtifact;
   }
@@ -53,7 +62,7 @@ final class DependencyConflict extends LinkageProblemCause {
   @Override
   public String toString() {
     Artifact selected = pathToSelectedArtifact.getLeaf();
-    Artifact unselected = pathToUnselectedArtifact.getLeaf();
+    Artifact unselected = pathToTheArtifactThruSource.getLeaf();
     return "Dependency conflict: "
         + Artifacts.toCoordinates(selected)
         + " does not define "
@@ -64,7 +73,7 @@ final class DependencyConflict extends LinkageProblemCause {
         + "  selected: "
         + pathToSelectedArtifact
         + "\n  unselected: "
-        + pathToUnselectedArtifact;
+        + pathToTheArtifactThruSource;
   }
 
   @Override
@@ -77,12 +86,12 @@ final class DependencyConflict extends LinkageProblemCause {
     }
     DependencyConflict that = (DependencyConflict) other;
     return Objects.equals(symbol, that.symbol)
-        && Objects.equals(pathToUnselectedArtifact, that.pathToUnselectedArtifact)
+        && Objects.equals(pathToTheArtifactThruSource, that.pathToTheArtifactThruSource)
         && Objects.equals(pathToSelectedArtifact, that.pathToSelectedArtifact);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(symbol, pathToUnselectedArtifact, pathToSelectedArtifact);
+    return Objects.hash(symbol, pathToTheArtifactThruSource, pathToSelectedArtifact);
   }
 }

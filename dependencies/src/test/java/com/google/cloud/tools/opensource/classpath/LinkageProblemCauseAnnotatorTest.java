@@ -94,7 +94,7 @@ public class LinkageProblemCauseAnnotatorTest {
     assertEquals("google-api-client", firstElementInSelected.getArtifactId());
 
     DependencyPath pathToUnselectedArtifact =
-        ((DependencyConflict) cause).getPathToUnselectedArtifact();
+        ((DependencyConflict) cause).getPathToTheArtifactThruSource();
     Artifact unselectedLeaf = pathToUnselectedArtifact.getLeaf();
     assertEquals("guava", unselectedLeaf.getArtifactId());
     assertEquals("26.0-android", unselectedLeaf.getVersion());
