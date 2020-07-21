@@ -21,6 +21,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -212,7 +213,9 @@ public class SerializeGraph
                     if ( visitedNodes.containsKey( child ) )
                     {
                         ignoreNode = true;
-                        nodeErrors.put( node, "(" + coordString + " - omitted for cycle" );
+                        nodeErrors.put( node, "(" + coordString + " - omitted for introducing a cycle with " +
+                                getDependencyCoordinate( child ) + ")" + System.lineSeparator() );
+                        node.setChildren( new ArrayList<DependencyNode>() );
                         break;
                     }
                 }
