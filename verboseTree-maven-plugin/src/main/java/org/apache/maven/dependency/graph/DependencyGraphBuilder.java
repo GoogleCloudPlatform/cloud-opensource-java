@@ -57,7 +57,7 @@ import static org.apache.maven.dependency.graph.RepositoryUtility.CENTRAL;
 import static org.apache.maven.dependency.graph.RepositoryUtility.mavenRepositoryFromUrl;
 
 /**
- * Builds the DependencyGraph and for now outputs a text version of the dependency tree to a file
+ * Builds the DependencyGraph and outputs a text version of the dependency tree to a file
  */
 @Mojo( name = "tree",
        requiresDependencyResolution = ResolutionScope.TEST, threadSafe = true )
