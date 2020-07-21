@@ -89,8 +89,6 @@ public class DependencyGraphBuilder extends AbstractMojo
 
     private SerializeGraph serializer;
 
-    private DependencyNode rootNode;
-
     private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
     /**
@@ -133,7 +131,7 @@ public class DependencyGraphBuilder extends AbstractMojo
 
         List<org.apache.maven.model.Dependency> dependencies = project.getDependencies();
 
-        rootNode = buildFullDependencyGraph( dependencies );
+        DependencyNode rootNode = buildFullDependencyGraph( dependencies );
         // rootNode is given compile Scope by default but should not have a scope
         DependencyNode prunedRoot = pruneTransitiveTestDependencies( rootNode );
 
@@ -304,11 +302,6 @@ public class DependencyGraphBuilder extends AbstractMojo
             DependencyResult result = ex.getResult();
             return result.getRoot();
         }
-    }
-
-    public DependencyNode getDependencyGraph()
-    {
-        return rootNode;
     }
     
     /**
