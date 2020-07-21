@@ -28,7 +28,7 @@ import org.eclipse.aether.artifact.Artifact;
  * invalid reference points to the symbol in {@code pathToSelectedArtifact.getLeaf()} but a valid
  * symbol is in {@code pathToUnselectedArtifact.getLeaf()}.
  */
-class DependencyConflict extends LinkageProblemCause {
+final class DependencyConflict extends LinkageProblemCause {
   private Symbol symbol;
   private DependencyPath pathToUnselectedArtifact;
   private DependencyPath pathToSelectedArtifact;

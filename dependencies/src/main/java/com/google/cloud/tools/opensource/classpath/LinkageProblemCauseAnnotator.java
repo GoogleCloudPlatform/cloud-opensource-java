@@ -23,7 +23,7 @@ import java.util.Map;
 import org.eclipse.aether.artifact.Artifact;
 
 /** Annotates {@link LinkageProblem}s with {@link LinkageProblemCause}s. */
-public class LinkageProblemCauseAnnotator {
+final public class LinkageProblemCauseAnnotator {
 
   /**
    * Annotates the cause field of {@link LinkageProblem}s with the {@link LinkageProblemCause}.
