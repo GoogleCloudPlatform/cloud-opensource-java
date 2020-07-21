@@ -162,9 +162,9 @@ public final class SerializeGraph
                                              Map<String, String> coordinateVersionMap )
     {
         Map<DependencyNode, String> nodeErrors = new HashMap<>();
-        Map<DependencyNode, Boolean> visitedNodes = new HashMap<>( 512 );
+        Set<DependencyNode> visitedNodes = new HashSet<>( 512 );
         Queue<DependencyNode> queue = new LinkedList<>();
-        visitedNodes.put( root, true );
+        visitedNodes.add( root );
         queue.add( root );
 
         while ( !queue.isEmpty() )
@@ -211,7 +211,7 @@ public final class SerializeGraph
 
                 for ( DependencyNode child : node.getChildren() )
                 {
-                    if ( visitedNodes.containsKey( child ) )
+                    if ( visitedNodes.contains( child ) )
                     {
                         ignoreNode = true;
                         nodeErrors.put( node, "(" + coordString + " - omitted for introducing a cycle with " +
@@ -227,9 +227,9 @@ public final class SerializeGraph
                     {
                         DependencyNode child = node.getChildren().get( i );
 
-                        if ( !visitedNodes.containsKey( child ) )
+                        if ( !visitedNodes.contains( child ) )
                         {
-                            visitedNodes.put( child, true );
+                            visitedNodes.add( child );
                             queue.add( child );
                         }
                     }
