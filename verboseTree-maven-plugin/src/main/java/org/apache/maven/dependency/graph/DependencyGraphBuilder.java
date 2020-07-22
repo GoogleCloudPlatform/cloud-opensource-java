@@ -122,7 +122,17 @@ public class DependencyGraphBuilder extends AbstractMojo
 
     public void execute() throws MojoExecutionException
     {
-        File file = new File( project.getBasedir().getAbsolutePath().replace( '\\', '/' ) + "/target/tree.txt" );
+        File file = null;
+
+        try
+        {
+            file = new File( project.getBasedir().getCanonicalPath() + "/target/tree.txt" );
+        }
+        catch ( IOException e )
+        {
+            getLog().error( "Failed to get canonical path for " + project.getBasedir().getAbsolutePath() );
+            e.printStackTrace();
+        }
 
         List<org.apache.maven.model.Dependency> dependencies = project.getDependencies();
 
