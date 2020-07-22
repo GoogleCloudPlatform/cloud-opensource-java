@@ -136,7 +136,7 @@ public final class RepositoryUtility
                 // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
                 // false positive in LinkageChecker.
                 new ScopeDependencySelector(), // removed "test" parameter
-                new ExclusionDependencySelector(), new FilteringZipDependencySelector() );
+                new ExclusionDependencySelector() );
 
         return newSession( system, dependencySelector );
     }
@@ -167,8 +167,7 @@ public final class RepositoryUtility
                 // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
                 // false positive in LinkageChecker.
                 new ScopeDependencySelector(), // removed "test" parameter
-                new OptionalDependencySelector(), new ExclusionDependencySelector(),
-                new FilteringZipDependencySelector() );
+                new OptionalDependencySelector(), new ExclusionDependencySelector() );
 
         return newSession( system, dependencySelector );
     }
@@ -283,10 +282,10 @@ public final class RepositoryUtility
     /**
      * Returns the highest version for {@code groupId:artifactId} in {@code repositorySystem}.
      */
-    static String findHighestVersion( RepositorySystem repositorySystem, RepositorySystemSession session,
+    static Version findHighestVersion( RepositorySystem repositorySystem, RepositorySystemSession session,
                                       String groupId, String artifactId ) throws MavenRepositoryException
     {
-        return findVersionRange( repositorySystem, session, groupId, artifactId ).getHighestVersion().toString();
+        return findVersionRange( repositorySystem, session, groupId, artifactId ).getHighestVersion();
     }
 
     /**
@@ -319,7 +318,7 @@ public final class RepositoryUtility
             throws MavenRepositoryException
     {
         RepositorySystemSession session = RepositoryUtility.newSession( repositorySystem );
-        String highestVersion = findHighestVersion( repositorySystem, session, groupId, artifactId );
+        String highestVersion = findHighestVersion( repositorySystem, session, groupId, artifactId ).toString();
         return String.format( "%s:%s:%s", groupId, artifactId, highestVersion );
     }
 
