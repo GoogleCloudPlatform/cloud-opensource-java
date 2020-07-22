@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -240,6 +241,18 @@ public class DependencyGraphBuilderTest {
         firstElement.getLeaf().getArtifactId());
     
     Assert.assertEquals(1, list.size()); // all dependencies are optional
+  }
+
+  @Test
+  public void testBuildVerboseDependencyGraph_systemScope() {
+    DependencyGraph graph =
+        dependencyGraphBuilder.buildVerboseDependencyGraph(
+            new DefaultArtifact("com.google.guava:guava:29.0-android"));
+
+    for (DependencyPath path : graph.list()) {
+      Artifact leaf = path.getLeaf();
+      assertNotEquals("srczip", leaf.getArtifactId());
+    }
   }
 
   @Test
