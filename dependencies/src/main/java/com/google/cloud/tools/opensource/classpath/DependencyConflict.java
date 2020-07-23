@@ -30,15 +30,15 @@ import org.eclipse.aether.artifact.Artifact;
  */
 final class DependencyConflict extends LinkageProblemCause {
   private Symbol symbol;
-  private DependencyPath pathToTheArtifactThruSource;
+  private DependencyPath pathToArtifactThruSource;
   private DependencyPath pathToSelectedArtifact;
 
   DependencyConflict(
       Symbol symbol,
       DependencyPath pathToSelectedArtifact,
-      DependencyPath pathToTheArtifactThruSource) {
+      DependencyPath pathToArtifactThruSource) {
     this.symbol = checkNotNull(symbol);
-    this.pathToTheArtifactThruSource = checkNotNull(pathToTheArtifactThruSource);
+    this.pathToArtifactThruSource = checkNotNull(pathToArtifactThruSource);
     this.pathToSelectedArtifact = checkNotNull(pathToSelectedArtifact);
   }
 
@@ -47,8 +47,8 @@ final class DependencyConflict extends LinkageProblemCause {
    * when building the artifact of the source class. This artifact is the first in the breadth-first
    * traversal in the source artifact's dependency graph.
    */
-  public DependencyPath getPathToTheArtifactThruSource() {
-    return pathToTheArtifactThruSource;
+  public DependencyPath getPathToArtifactThruSource() {
+    return pathToArtifactThruSource;
   }
 
   /**
@@ -62,7 +62,7 @@ final class DependencyConflict extends LinkageProblemCause {
   @Override
   public String toString() {
     Artifact selected = pathToSelectedArtifact.getLeaf();
-    Artifact unselected = pathToTheArtifactThruSource.getLeaf();
+    Artifact unselected = pathToArtifactThruSource.getLeaf();
     return "Dependency conflict: "
         + Artifacts.toCoordinates(selected)
         + " does not define "
@@ -73,7 +73,7 @@ final class DependencyConflict extends LinkageProblemCause {
         + "  selected: "
         + pathToSelectedArtifact
         + "\n  unselected: "
-        + pathToTheArtifactThruSource;
+        + pathToArtifactThruSource;
   }
 
   @Override
@@ -86,12 +86,12 @@ final class DependencyConflict extends LinkageProblemCause {
     }
     DependencyConflict that = (DependencyConflict) other;
     return Objects.equals(symbol, that.symbol)
-        && Objects.equals(pathToTheArtifactThruSource, that.pathToTheArtifactThruSource)
+        && Objects.equals(pathToArtifactThruSource, that.pathToArtifactThruSource)
         && Objects.equals(pathToSelectedArtifact, that.pathToSelectedArtifact);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(symbol, pathToTheArtifactThruSource, pathToSelectedArtifact);
+    return Objects.hash(symbol, pathToArtifactThruSource, pathToSelectedArtifact);
   }
 }
