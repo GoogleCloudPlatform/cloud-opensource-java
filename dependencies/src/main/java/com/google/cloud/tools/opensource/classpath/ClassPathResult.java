@@ -131,7 +131,7 @@ public final class ClassPathResult {
    * Returns the class path entry that contains the class of {@code symbol}. {@code Null} if no
    * matching entry is found.
    */
-  ClassPathEntry findClassPathEntryForSymbol(Symbol symbol) throws IOException {
+  ClassPathEntry findEntryBySymbol(Symbol symbol) throws IOException {
     String className = symbol.getClassBinaryName();
     for (ClassPathEntry entry : getClassPath()) {
       if (entry.getFileNames().contains(className)) {

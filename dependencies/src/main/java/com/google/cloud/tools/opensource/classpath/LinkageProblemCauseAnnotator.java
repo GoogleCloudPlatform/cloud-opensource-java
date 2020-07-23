@@ -51,7 +51,7 @@ public final class LinkageProblemCauseAnnotator {
       }
 
       Symbol symbol = linkageProblem.getSymbol();
-      ClassPathEntry entryInSubtree = subtreeResult.findClassPathEntryForSymbol(symbol);
+      ClassPathEntry entryInSubtree = subtreeResult.findEntryBySymbol(symbol);
       if (entryInSubtree == null) {
         linkageProblem.setCause(UnknownCause.getInstance());
       } else {
