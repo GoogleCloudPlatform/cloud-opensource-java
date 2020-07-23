@@ -190,7 +190,7 @@ public final class DependencyGraphBuilder {
    */
   public DependencyGraph buildMavenDependencyGraph(Dependency dependency) {
     ImmutableList<DependencyNode> roots = ImmutableList.of(new DefaultDependencyNode(dependency));
-    return buildDependencyGraph(roots, RepositoryUtility.newSession(system));
+    return buildDependencyGraph(roots, RepositoryUtility.newSessionForMaven(system));
   }
 
   private DependencyGraph buildDependencyGraph(

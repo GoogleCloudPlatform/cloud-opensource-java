@@ -57,6 +57,13 @@ public final class DependencyPath {
     return copy;
   }
 
+  public DependencyPath concat(DependencyPath childPath) {
+    DependencyPath copy = new DependencyPath(root);
+    copy.path.addAll(path);
+    copy.path.addAll(childPath.path);
+    return copy;
+  }
+
   /** Returns the length of the path. */
   public int size() {
     return path.size() + 1; // including the root
@@ -95,6 +102,14 @@ public final class DependencyPath {
       return root;
     }
     return path.get(i - 1).getArtifact();
+  }
+
+  /**
+   * Returns the {@code i}th dependency. As {@link #root} is not a dependency, the {@code 0}th
+   * element is the dependency of the root in the path.
+   */
+  public Dependency getDependency(int i) {
+    return path.get(i);
   }
 
   /**

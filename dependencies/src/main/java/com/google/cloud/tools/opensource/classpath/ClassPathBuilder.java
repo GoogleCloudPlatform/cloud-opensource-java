@@ -19,10 +19,10 @@ package com.google.cloud.tools.opensource.classpath;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.Dependency;
 
 /**
  * Utility to build {@link ClassPathResult} that holds class path (a list of {@link ClassPathEntry})
@@ -48,20 +48,16 @@ public final class ClassPathBuilder {
   }
 
   /**
-   * Builds a classpath from the transitive dependency graph of a list of artifacts.
-   * When there are multiple versions of an artifact in
-   * the dependency tree, the closest to the root in breadth-first order is picked up. This "pick
-   * closest" strategy follows Maven's dependency mediation.
+   * Builds a classpath from the transitive dependency graph from {@code artifacts}. When there are
+   * multiple versions of an artifact in the dependency tree, the closest to the root in
+   * breadth-first order is picked up. This "pick closest" strategy follows Maven's dependency
+   * mediation.
    *
    * @param artifacts the first artifacts that appear in the classpath, in order
-   * @param full if true all optional dependencies and their transitive dependencies are
-   *     included. If false, optional dependencies are not included.
+   * @param full if true all optional dependencies and their transitive dependencies are included.
+   *     If false, optional dependencies are not included.
    */
   public ClassPathResult resolve(List<Artifact> artifacts, boolean full) {
-    LinkedListMultimap<ClassPathEntry, DependencyPath> multimap = LinkedListMultimap.create();
-    if (artifacts.isEmpty()) {
-      return new ClassPathResult(multimap, ImmutableList.of());
-    }
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph result;
     if (full) {
@@ -69,13 +65,30 @@ public final class ClassPathBuilder {
     } else {
       result = dependencyGraphBuilder.buildVerboseDependencyGraph(artifacts);
     }
-    List<DependencyPath> dependencyPaths = result.list();
+    return mediate(result);
+  }
 
+  /**
+   * Builds a class path from the dependency graph with {@code rootArtifact}, in the same way as
+   * Maven would do when the artifact was built.
+   *
+   * <p>This method takes the root artifact of a dependency graph, while {@link #resolve(List,
+   * boolean)} takes a list of artifacts as the dependencies of a pseudo root artifact.
+   */
+  ClassPathResult resolveWithMaven(Artifact rootArtifact) {
+    DependencyGraph result =
+        dependencyGraphBuilder.buildMavenDependencyGraph(new Dependency(rootArtifact, "compile"));
+    return mediate(result);
+  }
+
+  private ClassPathResult mediate(DependencyGraph result) {
     // TODO should DependencyGraphResult have a mediate() method that returns a ClassPathResult?
-    
+
     // To remove duplicates on (groupId:artifactId) for dependency mediation
     MavenDependencyMediation mediation = new MavenDependencyMediation();
 
+    LinkedListMultimap<ClassPathEntry, DependencyPath> multimap = LinkedListMultimap.create();
+    List<DependencyPath> dependencyPaths = result.list();
     for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();
       mediation.put(dependencyPath);

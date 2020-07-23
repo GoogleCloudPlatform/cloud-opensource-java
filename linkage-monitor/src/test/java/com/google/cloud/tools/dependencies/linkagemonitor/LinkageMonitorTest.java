@@ -160,7 +160,7 @@ public class LinkageMonitorTest {
     assertEquals(
         "Newly introduced problem:\n"
             + "(foo:b:1.0.0) io.grpc.protobuf.ProtoUtils's method"
-            + " marshaller(com.google.protobuf.Message arg1) is not found\n"
+            + " marshaller(com.google.protobuf.Message) is not found\n"
             + "  referenced from com.abc.AAA (foo:a:1.2.3)\n"
             + "  referenced from com.abc.BBB (foo:a:1.2.3)\n"
             + "\n"
@@ -180,7 +180,7 @@ public class LinkageMonitorTest {
         "The following problems in the baseline no longer appear in the snapshot:\n"
             + "  Class java.lang.Integer is not found\n"
             + "  (foo:b:1.0.0) io.grpc.protobuf.ProtoUtils's method "
-            + "marshaller(com.google.protobuf.Message arg1) is not found\n",
+            + "marshaller(com.google.protobuf.Message) is not found\n",
         message);
   }
 

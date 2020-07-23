@@ -11,7 +11,7 @@ Class org.apache.log.Hierarchy is not found;
 Class org.apache.log.Logger is not found;
   referenced by 1 class file
     org.apache.commons.logging.impl.LogKitLogger (commons-logging:commons-logging:1.1.1)
-(com.google.guava:guava:20.0) com.google.common.base.Verify's method verify(boolean arg1, String arg2, Object arg3) is not found;
+(com.google.guava:guava:20.0) com.google.common.base.Verify's method verify(boolean, String, Object) is not found;
   referenced by 3 class files
     io.grpc.internal.ServiceConfigInterceptor (io.grpc:grpc-core:1.17.1)
     io.grpc.internal.JndiResourceResolverFactory (io.grpc:grpc-core:1.17.1)
