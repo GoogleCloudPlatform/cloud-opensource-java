@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
@@ -76,7 +77,7 @@ public abstract class LinkageProblem {
     this.cause = checkNotNull(cause);
   }
 
-  LinkageProblemCause getCause() {
+  public LinkageProblemCause getCause() {
     return cause;
   }
 
@@ -124,6 +125,16 @@ public abstract class LinkageProblem {
         Maps.transformValues(symbolProblemToSourceClasses.asMap(), ImmutableSet::copyOf);
     return ImmutableMap.copyOf(valueTransformed);
   }
+
+  public static Map<String, ImmutableSet<LinkageProblemCause>> groupCausesBySymbolProblems(Iterable<LinkageProblem> problems) {
+    ImmutableMultimap.Builder<String, LinkageProblemCause> builder = ImmutableMultimap.builder();
+    for (LinkageProblem problem : problems) {
+      builder.put(problem.formatSymbolProblem(), problem.getCause());
+    }
+    return ImmutableMap.copyOf(Maps.transformValues(builder.build().asMap(),
+        ImmutableSet::copyOf));
+  }
+
 
   /** Returns the formatted {@code linkageProblems} by grouping them by the {@code symbol}s. */
   public static String formatLinkageProblems(Set<LinkageProblem> linkageProblems) {

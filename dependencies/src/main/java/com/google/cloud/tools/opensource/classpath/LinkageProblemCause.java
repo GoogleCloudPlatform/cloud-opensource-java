@@ -17,4 +17,4 @@
 package com.google.cloud.tools.opensource.classpath;
 
 /** Annotation for {@link LinkageProblem} that explains why the invalid reference is introduced. */
-abstract class LinkageProblemCause {}
+public abstract class LinkageProblemCause {}

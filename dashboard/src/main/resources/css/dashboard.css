@@ -60,17 +60,17 @@ p.dependency-tree-node {
   margin-left: 1em;
 }
 
-p.jar-linkage-report-cause {
+p.jar-linkage-report-linkage-problem {
   margin-bottom: 0;
   margin-left: 2em;
 }
 
-ul.jar-linkage-report-cause {
+ul.jar-linkage-report-source-class, ul.jar-linkage-report-cause, p.jar-linkage-report-cause {
   margin-top: 0;
   margin-left: 3em;
 }
 
-ul.jar-linkage-report-cause > li {
+ul.jar-linkage-report-source-class > li {
   font: 1em 'Droid Sans Mono', monospace;
 }
 

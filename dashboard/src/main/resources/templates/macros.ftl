@@ -10,22 +10,13 @@
 
 <#macro formatJarLinkageReport classPathEntry linkageProblems classPathResult
     dependencyPathRootCauses>
-  <#-- problemsToClasses: ImmutableMap<LinkageProblem, ImmutableList<String>> to get key and set of
-    values in Freemarker -->
+  <#-- problemsToClasses: ImmutableMap<String, ImmutableList<String>> where the key is
+    LinkageProblem.formatSymbolProblem and the values are source classes -->
   <#assign problemsToClasses = linkageProblem.groupBySymbolProblem(linkageProblems) />
-  <#assign problemsToCauses = {} >
-  <#assign jarsInProblem = {} >
-  <#list linkageProblems as problem>
-      <#if (problem.getTargetClass())?? >
-          <#assign targetClassPathEntry = problem.getTargetClass().getClassPathEntry() />
-      <#-- Freemarker's hash requires its keys to be strings.
-      https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys -->
-          <#assign jarsInProblem = jarsInProblem + { targetClassPathEntry.toString() : targetClassPathEntry } >
-      </#if>
-      <#if (problem.getCause())?? >
-          <#assign problemsToCauses = problemsToCauses + { problem.formatSymbolProblem() : problem.getCause() } >
-      </#if>
-  </#list>
+
+  <#-- problemsToCauses: ImmutableMap<String, ImmutableList<LinkageErrorCause>> where the key is
+    LinkageProblem.formatSymbolProblem and the values are the causes of linkage errors -->
+  <#assign problemsToCauses = linkageProblem.groupCausesBySymbolProblems(linkageProblems) >
 
   <#assign symbolProblemCount = problemsToClasses?size />
   <#assign referenceCount = 0 />
@@ -40,25 +31,42 @@
     ${pluralize(referenceCount, "source class", "source classes")}.
   </p>
   <#list problemsToClasses as problem, sourceClasses>
-    <p class="jar-linkage-report-cause">${problem?html}, referenced from ${
+    <p class="jar-linkage-report-linkage-problem">${problem?html}, referenced from ${
       pluralize(sourceClasses?size, "class", "classes")?html}
-      <button onclick="toggleSourceClassListVisibility(this)"
+      <button onclick="toggleLinkageErrorDetailVisibility(this)"
               title="Toggle visibility of source class list">▶
       </button>
     </p>
 
-    <!-- The visibility of this list is toggled via the button above. Hidden by default -->
-    <ul class="jar-linkage-report-cause" style="display:none">
-      <#list sourceClasses as sourceClass>
-        <li>${sourceClass?html}</li>
-      </#list>
-    </ul>
-    <#if (problemsToCauses[problem])?? >
-      <#assign causes = problemsToCauses[problem] />
-      <#list causes as cause>
-        <p>${cause?html}</p>
-      </#list>
-    </#if>
+    <div style="display:none">
+      <!-- The visibility of this list is toggled via the button above. Hidden by default -->
+      <ul class="jar-linkage-report-source-class">
+          <#list sourceClasses as sourceClass>
+            <li>${sourceClass?html}</li>
+          </#list>
+      </ul>
+      <#if (problemsToCauses[problem])?? >
+        <#assign causes = problemsToCauses[problem] />
+        <p class="jar-linkage-report-cause">Cause:</p>
+        <ul class="jar-linkage-report-cause">
+            <#list causes as cause>
+                <#assign causeClassName = cause.class.simpleName />
+                <li>${cause?html}</li>
+            </#list>
+        </ul>
+      </#if>
+    </div>
+
+  </#list>
+
+  <#assign jarsInProblem = {} >
+  <#list linkageProblems as problem>
+      <#if (problem.getTargetClass())?? >
+          <#assign targetClassPathEntry = problem.getTargetClass().getClassPathEntry() />
+      <#-- Freemarker's hash requires its keys to be strings.
+      https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys -->
+          <#assign jarsInProblem = jarsInProblem + { targetClassPathEntry.toString() : targetClassPathEntry } >
+      </#if>
   </#list>
   <#list jarsInProblem?values as jarInProblem>
     <@showDependencyPath dependencyPathRootCauses classPathResult jarInProblem />
