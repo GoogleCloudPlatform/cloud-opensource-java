@@ -189,7 +189,7 @@ public final class RepositoryUtility {
             new OptionalDependencySelector(),
             new ExclusionDependencySelector(),
             new FilteringZipDependencySelector());
-    
+
     return newSession(system, dependencySelector);
   }
   

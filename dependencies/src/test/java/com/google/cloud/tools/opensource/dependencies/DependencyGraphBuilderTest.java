@@ -208,20 +208,15 @@ public class DependencyGraphBuilderTest {
         dependencyGraphBuilder.buildVerboseDependencyGraph(logging);
 
     List<DependencyPath> list = graph.list();
+
     // The list should not include provided dependencies
-    Truth.assertThat(list).hasSize(4);
-    Assert.assertEquals(
-        "commons-logging",
-        list.get(0).getLeaf().getArtifactId());
-    Assert.assertEquals(
-        "log4j",
-        list.get(1).getLeaf().getArtifactId());
-    Assert.assertEquals(
-        "logkit",
-        list.get(2).getLeaf().getArtifactId());
-    Assert.assertEquals(
-        "avalon-framework",
-        list.get(3).getLeaf().getArtifactId());
+    Truth.assertThat(list)
+        .comparingElementsUsing(
+            Correspondence.transforming(
+                (DependencyPath dependencyPath) -> dependencyPath.getLeaf().getArtifactId(),
+                "has a leaf with artifactID: "))
+        .containsExactly("commons-logging", "log4j", "logkit", "avalon-framework")
+        .inOrder();
   }
 
   @Test
