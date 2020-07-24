@@ -32,7 +32,7 @@ public final class LinkageProblemCauseAnnotator {
    * @param linkageProblems linkage problems to annotate
    * @throws IOException when there is a problem reading JAR files
    */
-  static void annotate(ClassPathResult rootResult, Iterable<LinkageProblem> linkageProblems)
+  public static void annotate(ClassPathResult rootResult, Iterable<LinkageProblem> linkageProblems)
       throws IOException {
 
     Map<Artifact, ClassPathResult> cache = new HashMap<>();

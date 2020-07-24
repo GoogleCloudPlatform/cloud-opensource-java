@@ -13,6 +13,20 @@
   <#-- problemsToClasses: ImmutableMap<LinkageProblem, ImmutableList<String>> to get key and set of
     values in Freemarker -->
   <#assign problemsToClasses = linkageProblem.groupBySymbolProblem(linkageProblems) />
+  <#assign problemsToCauses = {} >
+  <#assign jarsInProblem = {} >
+  <#list linkageProblems as problem>
+      <#if (problem.getTargetClass())?? >
+          <#assign targetClassPathEntry = problem.getTargetClass().getClassPathEntry() />
+      <#-- Freemarker's hash requires its keys to be strings.
+      https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys -->
+          <#assign jarsInProblem = jarsInProblem + { targetClassPathEntry.toString() : targetClassPathEntry } >
+      </#if>
+      <#if (problem.getCause())?? >
+          <#assign problemsToCauses = problemsToCauses + { problem.formatSymbolProblem() : problem.getCause() } >
+      </#if>
+  </#list>
+
   <#assign symbolProblemCount = problemsToClasses?size />
   <#assign referenceCount = 0 />
   <#list problemsToClasses?values as classes>
@@ -39,14 +53,11 @@
         <li>${sourceClass?html}</li>
       </#list>
     </ul>
-  </#list>
-  <#assign jarsInProblem = {} >
-  <#list linkageProblems as problem>
-    <#if (problem.getTargetClass())?? >
-      <#assign targetClassPathEntry = problem.getTargetClass().getClassPathEntry() />
-      <#-- Freemarker's hash requires its keys to be strings.
-      https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys -->
-      <#assign jarsInProblem = jarsInProblem + { targetClassPathEntry.toString() : targetClassPathEntry } >
+    <#if (problemsToCauses[problem])?? >
+      <#assign causes = problemsToCauses[problem] />
+      <#list causes as cause>
+        <p>${cause?html}</p>
+      </#list>
     </#if>
   </#list>
   <#list jarsInProblem?values as jarInProblem>

@@ -24,6 +24,7 @@ import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
+import com.google.cloud.tools.opensource.classpath.LinkageProblemCauseAnnotator;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
@@ -182,6 +183,8 @@ public class DashboardMain {
     LinkageChecker linkageChecker = LinkageChecker.create(classpath);
 
     ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
+
+    LinkageProblemCauseAnnotator.annotate(classPathResult, linkageProblems);
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
     Path output = generateHtml(bom, cache, classPathResult, linkageProblems);
