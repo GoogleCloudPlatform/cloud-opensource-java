@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.LinkageCheckerTest.resolvePaths;
 import static com.google.cloud.tools.opensource.classpath.TestHelper.classPathEntryOfResource;
 import static org.junit.Assert.assertFalse;
 
@@ -322,7 +321,7 @@ public class ClassDumperTest {
   public void testIsUnusedClassSymbolReference_multiReleaseJar() throws IOException {
     // org.graalvm.libgraal.LibGraal class has different implementations between Java 8 and 11 via
     // Multi-release JAR of this artifact.
-    List<ClassPathEntry> classPath = resolvePaths("org.graalvm.compiler:compiler:19.0.0");
+    List<ClassPathEntry> classPath = TestHelper.resolve("org.graalvm.compiler:compiler:19.0.0");
 
     ClassDumper classDumper = ClassDumper.create(classPath);
     classDumper.findSymbolReferences();
@@ -338,7 +337,7 @@ public class ClassDumperTest {
     // Both artifacts contain com.google.inject.internal.InjectorImpl$BindingsMultimap. The one from
     // sisu-guice should not appear in symbol references because guice supersedes in the class path.
     List<ClassPathEntry> classPath =
-        resolvePaths("com.google.inject:guice:3.0", "org.sonatype.sisu:sisu-guice:3.2.6");
+        TestHelper.resolve("com.google.inject:guice:3.0", "org.sonatype.sisu:sisu-guice:3.2.6");
     ClassPathEntry sisuGuicePath = classPath.get(1);
 
     ClassDumper classDumper = ClassDumper.create(classPath);
@@ -355,7 +354,8 @@ public class ClassDumperTest {
     // com.amazonaws:amazon-kinesis-client:1.13.0 contains an unexpected lock file
     // /unison/com/e007f77498fd27177e2ea931a06dcf50/unison/tmp/amazonaws/services/kinesis/leases/impl/LeaseTaker.class
     // https://github.com/awslabs/amazon-kinesis-client/issues/654
-    List<ClassPathEntry> classPath = resolvePaths("com.amazonaws:amazon-kinesis-client:1.13.0");
+    List<ClassPathEntry> classPath =
+        TestHelper.resolve("com.amazonaws:amazon-kinesis-client:1.13.0");
     ClassDumper classDumper = ClassDumper.create(classPath);
     ClassPathEntry kinesisJar = classPath.get(0);
 
@@ -375,7 +375,7 @@ public class ClassDumperTest {
     // Curator-client has shaded com.google.common.reflect.TypeToken$Bounds but it does not contain
     // the outer class com.google.common.reflect.TypeToken.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1092
-    List<ClassPathEntry> classPath = resolvePaths("org.apache.curator:curator-client:4.2.0");
+    List<ClassPathEntry> classPath = TestHelper.resolve("org.apache.curator:curator-client:4.2.0");
 
     ClassPathEntry curatorClientJar = classPath.get(0);
     ClassDumper classDumper = ClassDumper.create(ImmutableList.of(curatorClientJar));
@@ -389,7 +389,7 @@ public class ClassDumperTest {
 
   @Test
   public void testFindSymbolReferences_catchClassFormatException() throws IOException {
-    List<ClassPathEntry> classPath = resolvePaths("com.ibm.icu:icu4j:2.6.1");
+    List<ClassPathEntry> classPath = TestHelper.resolve("com.ibm.icu:icu4j:2.6.1");
     ClassDumper classDumper = ClassDumper.create(classPath);
 
     // This should not throw ClassFormatException
@@ -406,7 +406,7 @@ public class ClassDumperTest {
     // catchesLinkageError should not raise an exception for MailDateFormat's constructor's null
     // code.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1352
-    List<ClassPathEntry> classPath = resolvePaths("javax:javaee-api:6.0");
+    List<ClassPathEntry> classPath = TestHelper.resolve("javax:javaee-api:6.0");
     ClassDumper classDumper = ClassDumper.create(classPath);
 
     // This should not raise NullPointerException

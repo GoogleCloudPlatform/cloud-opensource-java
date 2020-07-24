@@ -16,12 +16,18 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 
 /** Utility used among tests. */
 public class TestHelper {
@@ -48,4 +54,12 @@ public class TestHelper {
       Correspondence.from(
           (actual, expected) -> Artifacts.toCoordinates(actual.getArtifact()).equals(expected),
           "has Maven coordinates equal to");
+
+  /** Returns the class path for the full dependency tree of {@code coordinates}. */
+  static ImmutableList<ClassPathEntry> resolve(String... coordinates) throws IOException {
+    ImmutableList<Artifact> artifacts =
+        Arrays.stream(coordinates).map(DefaultArtifact::new).collect(toImmutableList());
+    ClassPathResult result = (new ClassPathBuilder()).resolve(artifacts, true);
+    return result.getClassPath();
+  }
 }
