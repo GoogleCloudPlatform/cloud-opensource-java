@@ -30,7 +30,7 @@ class MissingDependency extends LinkageProblemCause {
    * The path from {@code LinkageProblem.sourceClass}'s artifact to an artifact that contains a
    * valid symbol.
    */
-  private DependencyPath pathToMissingArtifact;
+  protected DependencyPath pathToMissingArtifact;
 
   MissingDependency(DependencyPath pathToMissingArtifact) {
     this.pathToMissingArtifact = checkNotNull(pathToMissingArtifact);

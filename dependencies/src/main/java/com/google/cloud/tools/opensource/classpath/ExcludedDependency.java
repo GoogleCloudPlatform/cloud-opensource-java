@@ -22,24 +22,17 @@ import java.util.Objects;
 import org.eclipse.aether.artifact.Artifact;
 
 /** An dependency is not supplied because {@code excludingArtifact} excludes the dependency. */
-class ExcludedDependency extends MissingDependency {
+final class ExcludedDependency extends MissingDependency {
 
   /**
    * The path from {@code LinkageProblem.sourceClass}'s artifact to an artifact that contains a
    * valid symbol.
    */
-  private DependencyPath pathToMissingArtifact;
-
   private Artifact excludingArtifact;
 
   ExcludedDependency(DependencyPath pathToMissingArtifact, Artifact excludingArtifact) {
     super(pathToMissingArtifact);
-    this.pathToMissingArtifact = pathToMissingArtifact;
     this.excludingArtifact = excludingArtifact;
-  }
-
-  DependencyPath getPathToMissingArtifact() {
-    return pathToMissingArtifact;
   }
 
   /** Returns the artifact that declares the exclusion of the missing artifact. */
