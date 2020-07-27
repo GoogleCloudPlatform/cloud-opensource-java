@@ -80,7 +80,17 @@ public final class LinkageProblemCauseAnnotator {
           }
         } else {
           // No artifact that matches groupId and artifactId in rootResult.
-          linkageProblem.setCause(new MissingDependency(pathToUnselectedEntry));
+
+          // Checking exclusion elements in the dependency path
+          Artifact excludingArtifact =
+              pathToSourceEntry.findExclusion(
+                  artifactInSubtree.getGroupId(), artifactInSubtree.getArtifactId());
+          if (excludingArtifact != null) {
+            linkageProblem.setCause(
+                new ExcludedDependency(pathToUnselectedEntry, excludingArtifact));
+          } else {
+            linkageProblem.setCause(new MissingDependency(pathToUnselectedEntry));
+          }
         }
       }
     }
