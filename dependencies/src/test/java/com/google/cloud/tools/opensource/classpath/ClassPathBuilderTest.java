@@ -25,7 +25,6 @@ import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
@@ -249,23 +248,5 @@ public class ClassPathBuilderTest {
     // This should not throw StackOverflowError
     ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(beamZetaSqlExtensions), true);
     assertNotNull(result);
-  }
-
-  @Test
-  public void testResolve_shouldIncludeCompileDependencyOfProvidedDependency() {
-    Artifact nio = new DefaultArtifact("com.google.cloud:google-cloud-nio:0.121.2");
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(nio), false);
-
-    // The dependency graph should include auto-service-annotations with dependency path
-    // com.google.cloud:google-cloud-nio:0.121.2 (compile)
-    //  \ com.google.auto.value:auto-value:1.7.3 (provided)
-    //    \ com.google.auto.service:auto-service:1.0-rc6 (provided)
-    //      \ com.google.auto.service:auto-service-annotations:1.0-rc6 (compile)
-    Truth.assertThat(result.getClassPath())
-        .comparingElementsUsing(
-            Correspondence.transforming(
-                (ClassPathEntry entry) -> entry.getArtifact().getArtifactId(),
-                "that has artifactId of"))
-        .contains("auto-service-annotations");
   }
 }

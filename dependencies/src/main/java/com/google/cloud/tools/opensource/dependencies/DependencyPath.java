@@ -127,7 +127,7 @@ public final class DependencyPath {
 
   /**
    * Returns the artifact that declares an exclusion element specified for {@code groupId} and
-   * {@code artifactId}. {@code Null} if no such artifact in the dependency path.
+   * {@code artifactId}. {@code Null} if the dependency path does not have such artifact.
    */
   public Artifact findExclusion(String groupId, String artifactId) {
     Artifact previousArtifact = root;
@@ -135,8 +135,8 @@ public final class DependencyPath {
       for (Exclusion exclusion : dependency.getExclusions()) {
         if (artifactId.equals(exclusion.getArtifactId())
             && groupId.equals(exclusion.getGroupId())) {
-          // The exclusion element associated to a dependency is declared by the artifact
-          // in one-level above in the dependency path
+          // The exclusion element associated to a dependency is declared by the artifact at
+          // one-level above in the dependency path
           return previousArtifact;
         }
       }

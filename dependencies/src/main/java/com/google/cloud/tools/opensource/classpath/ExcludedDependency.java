@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import java.util.Objects;
@@ -43,6 +42,7 @@ class ExcludedDependency extends MissingDependency {
     return pathToMissingArtifact;
   }
 
+  /** Returns the artifact that declares the exclusion of the missing artifact. */
   Artifact getExcludingArtifact() {
     return excludingArtifact;
   }
