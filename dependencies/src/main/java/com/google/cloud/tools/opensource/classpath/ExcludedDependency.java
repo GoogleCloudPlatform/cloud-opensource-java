@@ -56,7 +56,9 @@ class ExcludedDependency extends MissingDependency {
         + pathToMissingArtifact
         + " but it was not selected because "
         + Artifacts.toCoordinates(excludingArtifact)
-        + " excludes it";
+        + " excludes "
+        + Artifacts.makeKey(artifactContainingValidSymbol)
+        + ".";
   }
 
   @Override
