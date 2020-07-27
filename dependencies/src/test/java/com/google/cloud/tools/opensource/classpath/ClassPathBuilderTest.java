@@ -265,7 +265,7 @@ public class ClassPathBuilderTest {
         .comparingElementsUsing(
             Correspondence.transforming(
                 (ClassPathEntry entry) -> entry.getArtifact().getArtifactId(),
-                "has class path entry that has artifactId of"))
+                "that has artifactId of"))
         .contains("auto-service-annotations");
   }
 }
