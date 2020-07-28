@@ -36,6 +36,16 @@ import org.junit.Test;
 
 public class DependencyGraphBuilderTest {
 
+  private static Correspondence<UnresolvableArtifactProblem, String> PROBLEM_ON_ARTIFACT =
+      Correspondence.transforming(
+          (UnresolvableArtifactProblem problem) -> Artifacts.toCoordinates(problem.getArtifact()),
+          "has artifact");
+
+  private static Correspondence<DependencyPath, String> LEAF_ARTIFACT_ID =
+      Correspondence.transforming(
+          (DependencyPath dependencyPath) -> dependencyPath.getLeaf().getArtifactId(),
+          "has a leaf with artifactID: ");
+
   private final DefaultArtifact logging =
       new DefaultArtifact("commons-logging:commons-logging:1.2");
   private final DefaultArtifact datastore =
@@ -45,11 +55,6 @@ public class DependencyGraphBuilderTest {
 
   private DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
 
-  private Correspondence<UnresolvableArtifactProblem, String> problemOnArtifact =
-      Correspondence.transforming(
-          (UnresolvableArtifactProblem problem) -> Artifacts.toCoordinates(problem.getArtifact()),
-          "has artifact");
-  
   /**
    * jaxen-core is an optional dependency that should be included when building a dependency graph
    * of JDOM 1.1, no matter how we build the graph.
@@ -211,10 +216,7 @@ public class DependencyGraphBuilderTest {
 
     // The list should not include provided dependencies
     Truth.assertThat(list)
-        .comparingElementsUsing(
-            Correspondence.transforming(
-                (DependencyPath dependencyPath) -> dependencyPath.getLeaf().getArtifactId(),
-                "has a leaf with artifactID: "))
+        .comparingElementsUsing(LEAF_ARTIFACT_ID)
         .containsExactly("commons-logging", "log4j", "logkit", "avalon-framework")
         .inOrder();
   }
@@ -370,7 +372,7 @@ public class DependencyGraphBuilderTest {
     Set<UnresolvableArtifactProblem> problems = result.getUnresolvedArtifacts();
 
     Truth.assertThat(problems)
-        .comparingElementsUsing(problemOnArtifact)
+        .comparingElementsUsing(PROBLEM_ON_ARTIFACT)
         .containsAtLeast("xerces:xerces-impl:2.6.2", "xml-apis:xml-apis:2.6.2");
 
     Truth.assertThat(problems).hasSize(2);
