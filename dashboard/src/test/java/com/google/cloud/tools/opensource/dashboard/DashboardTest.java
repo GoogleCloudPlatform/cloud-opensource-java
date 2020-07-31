@@ -304,7 +304,7 @@ public class DashboardTest {
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(1).getValue()))
         .isEqualTo("3 target classes causing linkage errors referenced from 3 source classes.");
 
-    Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
+    Nodes causes = document.query("//p[@class='jar-linkage-report-linkage-problem']");
     Truth.assertWithMessage(
             "google-http-client-appengine should show linkage errors for RpcStubDescriptor")
         .that(causes)
@@ -358,7 +358,8 @@ public class DashboardTest {
     // google-http-client-appengine has provided dependency to (problematic) appengine-api-1.0-sdk
     Document document = parseOutputFile(
         "com.google.http-client_google-http-client-appengine_1.29.1.html");
-    Nodes linkageCheckMessages = document.query("//ul[@class='jar-linkage-report-cause']/li");
+    Nodes linkageCheckMessages =
+        document.query("//ul[@class='jar-linkage-report-source-class']/li");
     Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
     Truth.assertThat(linkageCheckMessages.get(0).getValue())
         .contains("com.google.appengine.api.appidentity.AppIdentityServicePb");
@@ -368,7 +369,7 @@ public class DashboardTest {
   public void testLinkageErrors_ensureNoDuplicateSymbols() throws IOException, ParsingException {
     Document document =
         parseOutputFile("com.google.http-client_google-http-client-appengine_1.29.1.html");
-    Nodes linkageCheckMessages = document.query("//p[@class='jar-linkage-report-cause']");
+    Nodes linkageCheckMessages = document.query("//p[@class='jar-linkage-report-linkage-problem']");
     Truth.assertThat(linkageCheckMessages.size()).isGreaterThan(0);
 
     List<String> messages = new ArrayList<>();

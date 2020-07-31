@@ -22,8 +22,10 @@ import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
+import com.google.cloud.tools.opensource.classpath.MissingDependency;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -47,6 +49,7 @@ import nu.xom.Nodes;
 import nu.xom.ParsingException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.Dependency;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -73,10 +76,13 @@ public class FreemarkerTest {
     Artifact artifact = new DefaultArtifact("com.google:foo:1.0.0")
         .setFile(new File("foo/bar-1.2.3.jar"));
     ClassPathEntry entry = new ClassPathEntry(artifact);
-    ImmutableSet<LinkageProblem> dummyProblems =
-        ImmutableSet.of(
-            new ClassNotFoundProblem(
-                new ClassFile(entry, "abc.def.G"), new ClassSymbol("com.foo.Bar")));
+    LinkageProblem classNotFoundProblem =
+        new ClassNotFoundProblem(new ClassFile(entry, "abc.def.G"), new ClassSymbol("com.foo.Bar"));
+    classNotFoundProblem.setCause(
+        new MissingDependency(
+            new DependencyPath(new DefaultArtifact("com.google:foo:1.0.0"))
+                .append(new Dependency(new DefaultArtifact("com.google:foo:1.0.0"), "provided"))));
+    ImmutableSet<LinkageProblem> dummyProblems = ImmutableSet.of(classNotFoundProblem);
     symbolProblemTable = ImmutableMap.of(entry, dummyProblems);
   }
 

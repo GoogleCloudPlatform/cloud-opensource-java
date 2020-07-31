@@ -73,7 +73,7 @@ public abstract class LinkageProblem {
     return sourceClass;
   }
 
-  void setCause(LinkageProblemCause cause) {
+  public void setCause(LinkageProblemCause cause) {
     this.cause = checkNotNull(cause);
   }
 
@@ -126,15 +126,14 @@ public abstract class LinkageProblem {
     return ImmutableMap.copyOf(valueTransformed);
   }
 
-  public static Map<String, ImmutableSet<LinkageProblemCause>> groupCausesBySymbolProblems(Iterable<LinkageProblem> problems) {
+  public static Map<String, ImmutableSet<LinkageProblemCause>> groupCausesBySymbolProblems(
+      Iterable<LinkageProblem> problems) {
     ImmutableMultimap.Builder<String, LinkageProblemCause> builder = ImmutableMultimap.builder();
     for (LinkageProblem problem : problems) {
       builder.put(problem.formatSymbolProblem(), problem.getCause());
     }
-    return ImmutableMap.copyOf(Maps.transformValues(builder.build().asMap(),
-        ImmutableSet::copyOf));
+    return ImmutableMap.copyOf(Maps.transformValues(builder.build().asMap(), ImmutableSet::copyOf));
   }
-
 
   /** Returns the formatted {@code linkageProblems} by grouping them by the {@code symbol}s. */
   public static String formatLinkageProblems(Set<LinkageProblem> linkageProblems) {

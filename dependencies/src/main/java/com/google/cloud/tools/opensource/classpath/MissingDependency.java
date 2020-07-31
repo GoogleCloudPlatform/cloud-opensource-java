@@ -24,7 +24,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 
 /** An optional or provided-scope dependency is not supplied. */
-class MissingDependency extends LinkageProblemCause {
+public class MissingDependency extends LinkageProblemCause {
 
   /**
    * The path from {@code LinkageProblem.sourceClass}'s artifact to an artifact that contains a
@@ -32,7 +32,7 @@ class MissingDependency extends LinkageProblemCause {
    */
   protected DependencyPath pathToMissingArtifact;
 
-  MissingDependency(DependencyPath pathToMissingArtifact) {
+  public MissingDependency(DependencyPath pathToMissingArtifact) {
     this.pathToMissingArtifact = checkNotNull(pathToMissingArtifact);
   }
 
