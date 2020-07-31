@@ -101,4 +101,39 @@ public class LinkageProblemCauseAnnotatorTest {
     Artifact firstElementInUnselected = pathToUnselectedArtifact.get(1);
     assertEquals("grpc-core", firstElementInUnselected.getArtifactId());
   }
+
+  @Test
+  public void testAnnotate_autoServiceAnnotationsExclusion() throws IOException {
+
+    // Auto-value declares exclusion element for auto-service-annotations. Because of this, the
+    // dependency graph does not include auto-service-annotations, resulting in a linkage error for
+    // AutoServiceProcessor class.
+    ClassPathBuilder builder = new ClassPathBuilder();
+    ClassPathResult classPathResult =
+        builder.resolve(
+            ImmutableList.of(new DefaultArtifact("com.google.auto.value:auto-value:1.7.3")), false);
+
+    Optional<ClassPathEntry> foundAutoService =
+        classPathResult.getClassPath().stream()
+            .filter(entry -> entry.getArtifact().getArtifactId().equals("auto-service"))
+            .findFirst();
+    ClassPathEntry autoServiceEntry = foundAutoService.get();
+
+    LinkageProblem problem =
+        new ClassNotFoundProblem(
+            new ClassFile(
+                autoServiceEntry, "com.google.auto.service.processor.AutoServiceProcessor"),
+            new ClassSymbol("com.google.auto.service.AutoService"));
+
+    LinkageProblemCauseAnnotator.annotate(classPathResult, ImmutableSet.of(problem));
+
+    LinkageProblemCause cause = problem.getCause();
+    assertEquals(ExcludedDependency.class, cause.getClass());
+    ExcludedDependency excludedDependency = (ExcludedDependency) cause;
+    DependencyPath pathToMissingArtifact = excludedDependency.getPathToMissingArtifact();
+    Artifact leaf = pathToMissingArtifact.getLeaf();
+    assertEquals("auto-service-annotations", leaf.getArtifactId());
+
+    assertEquals("auto-value", excludedDependency.getExcludingArtifact().getArtifactId());
+  }
 }

@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.Exclusion;
 
 /**
  * A sequence of Maven artifacts and dependencies (scope and optional flag) in between.
@@ -122,6 +123,26 @@ public final class DependencyPath {
       parent.path.add(path.get(i));
     }
     return parent;
+  }
+
+  /**
+   * Returns the artifact that declares an exclusion element specified for {@code groupId} and
+   * {@code artifactId}. {@code Null} if the dependency path does not have such artifact.
+   */
+  public Artifact findExclusion(String groupId, String artifactId) {
+    Artifact previousArtifact = root;
+    for (Dependency dependency : path) {
+      for (Exclusion exclusion : dependency.getExclusions()) {
+        if (artifactId.equals(exclusion.getArtifactId())
+            && groupId.equals(exclusion.getGroupId())) {
+          // The exclusion element associated to a dependency is declared by the artifact at
+          // one-level above in the dependency path
+          return previousArtifact;
+        }
+      }
+      previousArtifact = dependency.getArtifact();
+    }
+    return null;
   }
 
   @Override
