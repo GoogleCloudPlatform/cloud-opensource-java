@@ -16,7 +16,11 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.SetMultimap;
+import com.google.common.collect.TreeMultimap;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,15 +33,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.TreeMultimap;
 
 /**
  * A complete non-cyclic transitive dependency graph of a Maven dependency.
@@ -53,13 +51,23 @@ import com.google.common.collect.TreeMultimap;
  */
 public class DependencyGraph {
 
-  private static final class LevelOrderQueueItem {
-    final DependencyNode dependencyNode;
-  
+  public static final class LevelOrderQueueItem<T> {
+    final T dependencyNode;
+
     // Null for the first item
     final DependencyPath parentPath;
-  
-    LevelOrderQueueItem(DependencyNode dependencyNode, DependencyPath parentPath) {
+
+    /** Returns the node in the graph traversal. */
+    public T getDependencyNode() {
+      return dependencyNode;
+    }
+
+    /** Returns the path from the root of the graph to the parent of the node. */
+    public DependencyPath getParentPath() {
+      return parentPath;
+    }
+
+    public LevelOrderQueueItem(T dependencyNode, DependencyPath parentPath) {
       this.dependencyNode = dependencyNode;
       this.parentPath = parentPath;
     }
@@ -89,8 +97,7 @@ public class DependencyGraph {
     this.root = root;
   }
 
-  @VisibleForTesting
-  void addPath(DependencyPath path) {
+  public void addPath(DependencyPath path) {
     Artifact leaf = path.getLeaf();
     if (leaf == null) {
       // No need to include a path to null leaf
@@ -262,11 +269,11 @@ public class DependencyGraph {
 
   // this modifies the argument
   private static void levelOrder(DependencyGraph graph) {
-    Queue<DependencyGraph.LevelOrderQueueItem> queue = new ArrayDeque<>();
-    queue.add(new DependencyGraph.LevelOrderQueueItem(graph.root, null));
-  
+    Queue<DependencyGraph.LevelOrderQueueItem<DependencyNode>> queue = new ArrayDeque<>();
+    queue.add(new DependencyGraph.LevelOrderQueueItem<>(graph.root, null));
+
     while (!queue.isEmpty()) {
-      DependencyGraph.LevelOrderQueueItem item = queue.poll();
+      DependencyGraph.LevelOrderQueueItem<DependencyNode> item = queue.poll();
       DependencyNode dependencyNode = item.dependencyNode;
   
       DependencyPath parentPath = item.parentPath;
