@@ -25,7 +25,18 @@ package com.google.cloud.tools.opensource.classpath;
  * its enclosing types is private.
  */
 final class InaccessibleClassProblem extends IncompatibleLinkageProblem {
+
   InaccessibleClassProblem(ClassFile sourceClass, ClassFile targetClass, Symbol classSymbol) {
-    super("is not accessible", sourceClass, targetClass, classSymbol);
+    this(sourceClass, targetClass, classSymbol, null);
+  }
+
+  private InaccessibleClassProblem(
+      ClassFile sourceClass, ClassFile targetClass, Symbol classSymbol, LinkageProblemCause cause) {
+    super("is not accessible", sourceClass, targetClass, classSymbol, cause);
+  }
+
+  @Override
+  LinkageProblem withCause(LinkageProblemCause cause) {
+    return new InaccessibleClassProblem(getSourceClass(), getTargetClass(), getSymbol(), cause);
   }
 }

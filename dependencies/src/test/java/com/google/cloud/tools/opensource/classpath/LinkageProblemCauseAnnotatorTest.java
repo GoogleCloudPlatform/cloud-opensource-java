@@ -48,9 +48,10 @@ public class LinkageProblemCauseAnnotatorTest {
             new ClassFile(dom4jEntry, "org.dom4j.DocumentHelper"),
             new ClassSymbol("org.jaxen.VariableContext"));
 
-    LinkageProblemCauseAnnotator.annotate(classPathResult, ImmutableSet.of(problem));
+    ImmutableSet<LinkageProblem> annotated =
+        LinkageProblemCauseAnnotator.annotate(classPathResult, ImmutableSet.of(problem));
 
-    LinkageProblemCause cause = problem.getCause();
+    LinkageProblemCause cause = annotated.iterator().next().getCause();
     assertEquals(MissingDependency.class, cause.getClass());
     DependencyPath pathToMissingArtifact = ((MissingDependency) cause).getPathToMissingArtifact();
     Artifact leaf = pathToMissingArtifact.getLeaf();
@@ -81,9 +82,10 @@ public class LinkageProblemCauseAnnotatorTest {
     SymbolNotFoundProblem problem = (SymbolNotFoundProblem) foundProblem.get();
     assertEquals("verify", ((MethodSymbol) problem.getSymbol()).getName());
 
-    LinkageProblemCauseAnnotator.annotate(classPathResult, ImmutableSet.of(problem));
+    ImmutableSet<LinkageProblem> annotated =
+        LinkageProblemCauseAnnotator.annotate(classPathResult, ImmutableSet.of(problem));
 
-    LinkageProblemCause cause = problem.getCause();
+    LinkageProblemCause cause = annotated.iterator().next().getCause();
     assertTrue(cause instanceof DependencyConflict);
     DependencyPath pathToSelectedArtifact =
         ((DependencyConflict) cause).getPathToSelectedArtifact();
@@ -125,9 +127,10 @@ public class LinkageProblemCauseAnnotatorTest {
                 autoServiceEntry, "com.google.auto.service.processor.AutoServiceProcessor"),
             new ClassSymbol("com.google.auto.service.AutoService"));
 
-    LinkageProblemCauseAnnotator.annotate(classPathResult, ImmutableSet.of(problem));
+    ImmutableSet<LinkageProblem> annotated =
+        LinkageProblemCauseAnnotator.annotate(classPathResult, ImmutableSet.of(problem));
 
-    LinkageProblemCause cause = problem.getCause();
+    LinkageProblemCause cause = annotated.iterator().next().getCause();
     assertEquals(ExcludedDependency.class, cause.getClass());
     ExcludedDependency excludedDependency = (ExcludedDependency) cause;
     DependencyPath pathToMissingArtifact = excludedDependency.getPathToMissingArtifact();

@@ -18,8 +18,21 @@ package com.google.cloud.tools.opensource.classpath;
 
 /** The {@code classSymbol}, referenced by {@code sourceClass} is not found in the class path. */
 public final class ClassNotFoundProblem extends LinkageProblem {
+  private final ClassSymbol classSymbol;
 
   public ClassNotFoundProblem(ClassFile sourceClass, ClassSymbol classSymbol) {
     super("is not found", sourceClass, classSymbol);
+    this.classSymbol = classSymbol;
+  }
+
+  private ClassNotFoundProblem(
+      ClassFile sourceClass, ClassSymbol classSymbol, LinkageProblemCause cause) {
+    super("is not found", sourceClass, classSymbol, cause);
+    this.classSymbol = classSymbol;
+  }
+
+  @Override
+  LinkageProblem withCause(LinkageProblemCause cause) {
+    return new ClassNotFoundProblem(getSourceClass(), classSymbol, cause);
   }
 }

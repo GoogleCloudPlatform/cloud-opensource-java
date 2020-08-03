@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
@@ -41,7 +40,7 @@ public abstract class LinkageProblem {
   private final Symbol symbol;
   private final ClassFile sourceClass;
   private final String symbolProblemMessage;
-  private LinkageProblemCause cause;
+  private final LinkageProblemCause cause;
 
   /**
    * A linkage error describing an invalid reference.
@@ -60,6 +59,18 @@ public abstract class LinkageProblem {
     this.symbol =
         symbol instanceof SuperClassSymbol ? new ClassSymbol(symbol.getClassBinaryName()) : symbol;
     this.sourceClass = Preconditions.checkNotNull(sourceClass);
+    this.cause = null;
+  }
+
+  protected LinkageProblem(
+      String symbolProblemMessage,
+      ClassFile sourceClass,
+      Symbol symbol,
+      LinkageProblemCause cause) {
+    this.symbolProblemMessage = symbolProblemMessage;
+    this.symbol = symbol;
+    this.sourceClass = sourceClass;
+    this.cause = cause;
   }
 
   /** Returns the target symbol that was not resolved. */
@@ -72,9 +83,7 @@ public abstract class LinkageProblem {
     return sourceClass;
   }
 
-  void setCause(LinkageProblemCause cause) {
-    this.cause = checkNotNull(cause);
-  }
+  abstract LinkageProblem withCause(LinkageProblemCause cause);
 
   LinkageProblemCause getCause() {
     return cause;
