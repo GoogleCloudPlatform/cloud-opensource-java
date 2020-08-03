@@ -52,28 +52,6 @@ import com.google.common.collect.TreeMultimap;
  */
 public class DependencyGraph {
 
-  public static final class LevelOrderQueueItem<T> {
-    final T dependencyNode;
-
-    // Null for the first item
-    final DependencyPath parentPath;
-
-    /** Returns the node in the graph traversal. */
-    public T getDependencyNode() {
-      return dependencyNode;
-    }
-
-    /** Returns the path from the root of the graph to the parent of the node. */
-    public DependencyPath getParentPath() {
-      return parentPath;
-    }
-
-    public LevelOrderQueueItem(T dependencyNode, DependencyPath parentPath) {
-      this.dependencyNode = dependencyNode;
-      this.parentPath = parentPath;
-    }
-  }
-
   // DependencyGraphBuilder builds this in breadth first order, unless explicitly stated otherwise.
   // That is, this list contains the paths to each node in breadth first order 
   private final List<DependencyPath> graph = new ArrayList<>();
@@ -270,14 +248,14 @@ public class DependencyGraph {
 
   // this modifies the argument
   private static void levelOrder(DependencyGraph graph) {
-    Queue<DependencyGraph.LevelOrderQueueItem<DependencyNode>> queue = new ArrayDeque<>();
-    queue.add(new DependencyGraph.LevelOrderQueueItem<>(graph.root, null));
+    Queue<LevelOrderQueueItem<DependencyNode>> queue = new ArrayDeque<>();
+    queue.add(new LevelOrderQueueItem<>(graph.root, null));
 
     while (!queue.isEmpty()) {
-      DependencyGraph.LevelOrderQueueItem<DependencyNode> item = queue.poll();
-      DependencyNode dependencyNode = item.dependencyNode;
+      LevelOrderQueueItem<DependencyNode> item = queue.poll();
+      DependencyNode dependencyNode = item.getNode();
   
-      DependencyPath parentPath = item.parentPath;
+      DependencyPath parentPath = item.getParentPath();
       Artifact artifact = dependencyNode.getArtifact();
       if (artifact != null && parentPath != null) {
         // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
@@ -316,7 +294,7 @@ public class DependencyGraph {
       graph.parentToChildren.put(parentPath, path);
 
       for (DependencyNode child : dependencyNode.getChildren()) {
-        queue.add(new DependencyGraph.LevelOrderQueueItem<>(child, path));
+        queue.add(new LevelOrderQueueItem<>(child, path));
       }
     }
   }

@@ -27,8 +27,8 @@ import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.classpath.LinkageProblemCauseAnnotator;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraph.LevelOrderQueueItem;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.cloud.tools.opensource.dependencies.LevelOrderQueueItem;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -301,7 +301,7 @@ public class LinkageCheckTask extends DefaultTask {
     Set<ResolvedDependency> visited = new HashSet<>();
     while (!queue.isEmpty()) {
       LevelOrderQueueItem<ResolvedDependency> item = queue.poll();
-      ResolvedDependency node = item.getDependencyNode();
+      ResolvedDependency node = item.getNode();
 
       DependencyPath parentPath = item.getParentPath();
 
