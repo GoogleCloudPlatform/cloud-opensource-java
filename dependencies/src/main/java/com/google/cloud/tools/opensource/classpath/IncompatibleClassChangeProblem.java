@@ -46,4 +46,4 @@ final class IncompatibleClassChangeProblem extends IncompatibleLinkageProblem {
     return new IncompatibleClassChangeProblem(
         getSourceClass(), getTargetClass(), getSymbol(), cause);
   }
-  }
+}
