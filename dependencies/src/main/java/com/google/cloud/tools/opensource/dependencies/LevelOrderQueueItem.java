@@ -19,10 +19,9 @@ package com.google.cloud.tools.opensource.dependencies;
 import java.util.Objects;
 
 /**
- * The item in the queue for the level order graph traversal when constructing {@link
- * DependencyGraph}.
+ * The item in the queue for the graph traversal when constructing {@link DependencyGraph}.
  *
- * @param <T> The type of the input graph node. It's {@code DependencyNode} for Maven's graphand
+ * @param <T> The type of the input graph node. It's {@code DependencyNode} for Maven's graph and
  *     {@code ResolvedDependency} for Gradle's graph.
  */
 public final class LevelOrderQueueItem<T> {
