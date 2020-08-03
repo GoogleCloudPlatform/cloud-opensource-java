@@ -144,7 +144,7 @@ public class LinkageCheckTask extends DefaultTask {
 
       ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
-      LinkageProblemCauseAnnotator.annotate(classPathResult, linkageProblems);
+      linkageProblems = LinkageProblemCauseAnnotator.annotate(classPathResult, linkageProblems);
 
       int errorCount = linkageProblems.size();
 

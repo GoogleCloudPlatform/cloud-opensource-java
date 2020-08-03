@@ -35,4 +35,4 @@ public final class SymbolNotFoundProblem extends IncompatibleLinkageProblem {
   LinkageProblem withCause(LinkageProblemCause cause) {
     return new SymbolNotFoundProblem(getSourceClass(), getTargetClass(), getSymbol(), cause);
   }
-  }
+}
