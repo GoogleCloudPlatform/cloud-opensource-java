@@ -254,7 +254,7 @@ public class DependencyGraph {
     while (!queue.isEmpty()) {
       LevelOrderQueueItem<DependencyNode> item = queue.poll();
       DependencyNode dependencyNode = item.getNode();
-  
+
       DependencyPath parentPath = item.getParentPath();
       Artifact artifact = dependencyNode.getArtifact();
       if (artifact != null && parentPath != null) {
