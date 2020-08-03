@@ -113,10 +113,6 @@ public class LinkageCheckTask extends DefaultTask {
         createClassPathResult(configuration.getResolvedConfiguration());
     ImmutableList.Builder<ClassPathEntry> classPathBuilder = ImmutableList.builder();
 
-    DependencyGraph graph = createDependencyGraph(configuration.getResolvedConfiguration());
-
-    // TODO(suztomo): Should this include optional dependencies?
-    //  Once we decide what to do with the optional dependencies, let's revisit this logic.
     for (ResolvedArtifact resolvedArtifact :
         configuration.getResolvedConfiguration().getResolvedArtifacts()) {
       ModuleVersionIdentifier moduleVersionId = resolvedArtifact.getModuleVersion().getId();
@@ -286,11 +282,12 @@ public class LinkageCheckTask extends DefaultTask {
   }
 
   private static DependencyGraph createDependencyGraph(ResolvedConfiguration configuration) {
-    // Why this method is not part of DependencyGraph? Because dependencies module DependencyGraph
-    // belongs to is Maven project and Gradle does not provide good Maven artifacts to develop
-    // code with Gradle-related class in Maven.
+    // Why this method is not part of the DependencyGraph? Because the dependencies module
+    // which the DependencyGraph belongs to is a Maven project, and Gradle does not provide good
+    // Maven artifacts to develop code with Gradle-related classes.
+    // For the details, see https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1556
 
-    // What's the root of the graph for Gradle? I think it's the project's artifact. Does it exist?
+    // The root Gradle project is not available in `configuration`.
     DependencyGraph graph = new DependencyGraph(null);
 
     ArrayDeque<LevelOrderQueueItem<ResolvedDependency>> queue = new ArrayDeque<>();
