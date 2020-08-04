@@ -23,8 +23,13 @@ linkage-checker-gradle-plugin-0.1.0-SNAPSHOT.pom
 ./gradlew check --stacktrace  -Dorg.gradle.debug=true --no-daemon
 ```
 
-## Debugging Tests
-For IntelliJ, install Spock Framework Enhancement to add breakpoints in the Groovy scripts.
+## Debugging Functional Tests (src/functionalTest)
 
-To enable break points in Java code during the functional tests, add
-`-Dorg.gradle.testkit.debug=true` to the VM argument.
+To enable break points in the Groovy scripts in IntelliJ, install 'Spock Framework Enhancement'.
+
+To enable break points in the Java code of the Gradle plugin during the functional tests, add
+`-Dorg.gradle.testkit.debug=true` to the VM argument (
+[Testing Build Logic with TestKit: Debugging build logic](
+https://docs.gradle.org/current/userguide/test_kit.html#sub:test-kit-debug)).
+When you see IntelliJ has outdated class files, run `./gradlew build publishToMavenLocal` to
+reflect the latest code.

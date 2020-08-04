@@ -98,7 +98,13 @@ class BuildStatusFunctionalTest extends Specification {
         .buildAndFail()
 
     then:
-    result.output.contains("Class io.grpc.internal.BaseDnsNameResolverProvider is not found")
+    result.output.contains('''Class io.grpc.internal.BaseDnsNameResolverProvider is not found;
+        |  referenced by 1 class file
+        |    io.grpc.grpclb.SecretGrpclbNameResolverProvider (io.grpc:grpc-grpclb:1.28.1)
+        |  Cause:
+        |    Dependency conflict: io.grpc:grpc-core:1.29.0 does not define Class io.grpc.internal.BaseDnsNameResolverProvider but io.grpc:grpc-core:1.28.1 defines it.
+        |      selected: io.grpc:grpc-core:1.29.0 (compile)
+        |      unselected: com.google.cloud:google-cloud-logging:1.101.1 (compile) / com.google.api:gax-grpc:1.56.0 (compile) / io.grpc:grpc-alts:1.28.1 (compile) / io.grpc:grpc-grpclb:1.28.1 (compile) / io.grpc:grpc-core:1.28.1 (compile)'''.stripMargin())
 
     result.output.contains("Problematic artifacts in the dependency tree:")
     result.output.contains("""

@@ -25,6 +25,8 @@ import org.eclipse.aether.artifact.Artifact;
 /** Annotates {@link LinkageProblem}s with {@link LinkageProblemCause}s. */
 public final class LinkageProblemCauseAnnotator {
 
+  private LinkageProblemCauseAnnotator() {}
+
   /**
    * Annotates the cause field of {@link LinkageProblem}s with the {@link LinkageProblemCause}.
    *
