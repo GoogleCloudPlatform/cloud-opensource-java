@@ -100,7 +100,7 @@ class LinkageCheckerMain {
         }
 
         if (classPathResult != null) {
-          LinkageProblemCauseAnnotator.annotate(classPathResult, linkageProblems);
+          linkageProblems = LinkageProblemCauseAnnotator.annotate(classPathResult, linkageProblems);
         }
 
         Path writeAsExclusionFile = linkageCheckerArguments.getOutputExclusionFile();

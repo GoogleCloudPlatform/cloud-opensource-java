@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +26,8 @@ import org.eclipse.aether.artifact.Artifact;
 /** Annotates {@link LinkageProblem}s with {@link LinkageProblemCause}s. */
 public final class LinkageProblemCauseAnnotator {
 
+  private LinkageProblemCauseAnnotator() {}
+
   /**
    * Annotates the cause field of {@link LinkageProblem}s with the {@link LinkageProblemCause}.
    *
@@ -32,9 +35,10 @@ public final class LinkageProblemCauseAnnotator {
    * @param linkageProblems linkage problems to annotate
    * @throws IOException when there is a problem reading JAR files
    */
-  static void annotate(ClassPathResult rootResult, Iterable<LinkageProblem> linkageProblems)
-      throws IOException {
+  public static ImmutableSet<LinkageProblem> annotate(
+      ClassPathResult rootResult, Iterable<LinkageProblem> linkageProblems) throws IOException {
 
+    ImmutableSet.Builder<LinkageProblem> problems = ImmutableSet.builder();
     Map<Artifact, ClassPathResult> cache = new HashMap<>();
     for (LinkageProblem linkageProblem : linkageProblems) {
       ClassFile sourceClass = linkageProblem.getSourceClass();
@@ -53,7 +57,7 @@ public final class LinkageProblemCauseAnnotator {
       Symbol symbol = linkageProblem.getSymbol();
       ClassPathEntry entryInSubtree = subtreeResult.findEntryBySymbol(symbol);
       if (entryInSubtree == null) {
-        linkageProblem.setCause(UnknownCause.getInstance());
+        problems.add(linkageProblem.withCause(UnknownCause.getInstance()));
       } else {
         Artifact artifactInSubtree = entryInSubtree.getArtifact();
         DependencyPath pathToSourceEntry = rootResult.getDependencyPaths(sourceEntry).get(0);
@@ -69,14 +73,15 @@ public final class LinkageProblemCauseAnnotator {
           Artifact selectedArtifact = selectedEntry.getArtifact();
           if (!selectedArtifact.getVersion().equals(artifactInSubtree.getVersion())) {
             // Different version of that artifact is selected in rootResult
-            linkageProblem.setCause(
-                new DependencyConflict(
-                    symbol,
-                    rootResult.getDependencyPaths(selectedEntry).get(0),
-                    pathToUnselectedEntry));
+            problems.add(
+                linkageProblem.withCause(
+                    new DependencyConflict(
+                        symbol,
+                        rootResult.getDependencyPaths(selectedEntry).get(0),
+                        pathToUnselectedEntry)));
           } else {
             // A linkage error was already there when sourceArtifact was built.
-            linkageProblem.setCause(UnknownCause.getInstance());
+            problems.add(linkageProblem.withCause(UnknownCause.getInstance()));
           }
         } else {
           // No artifact that matches groupId and artifactId in rootResult.
@@ -86,13 +91,16 @@ public final class LinkageProblemCauseAnnotator {
               pathToSourceEntry.findExclusion(
                   artifactInSubtree.getGroupId(), artifactInSubtree.getArtifactId());
           if (excludingArtifact != null) {
-            linkageProblem.setCause(
-                new ExcludedDependency(pathToUnselectedEntry, excludingArtifact));
+            problems.add(
+                linkageProblem.withCause(
+                    new ExcludedDependency(pathToUnselectedEntry, excludingArtifact)));
           } else {
-            linkageProblem.setCause(new MissingDependency(pathToUnselectedEntry));
+            problems.add(linkageProblem.withCause(new MissingDependency(pathToUnselectedEntry)));
           }
         }
       }
     }
+
+    return problems.build();
   }
 }

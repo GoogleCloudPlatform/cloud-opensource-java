@@ -26,6 +26,16 @@ package com.google.cloud.tools.opensource.classpath;
  */
 final class InaccessibleMemberProblem extends IncompatibleLinkageProblem {
   InaccessibleMemberProblem(ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
-    super("is not accessible", sourceClass, targetClass, symbol);
+    this(sourceClass, targetClass, symbol, null);
   }
-}
+
+  private InaccessibleMemberProblem(
+      ClassFile sourceClass, ClassFile targetClass, Symbol symbol, LinkageProblemCause cause) {
+    super("is not accessible", sourceClass, targetClass, symbol, cause);
+  }
+
+  @Override
+  LinkageProblem withCause(LinkageProblemCause cause) {
+    return new InaccessibleMemberProblem(getSourceClass(), getTargetClass(), getSymbol(), cause);
+  }
+  }

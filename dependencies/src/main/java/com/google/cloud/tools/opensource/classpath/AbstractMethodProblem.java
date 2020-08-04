@@ -22,7 +22,23 @@ package com.google.cloud.tools.opensource.classpath;
  * as {@link AbstractMethodError}s at runtime.
  */
 final class AbstractMethodProblem extends IncompatibleLinkageProblem {
+  private final MethodSymbol methodSymbol;
+
   AbstractMethodProblem(ClassFile sourceClass, ClassFile targetClass, MethodSymbol methodSymbol) {
-    super("is not implemented in the class", sourceClass, targetClass, methodSymbol);
+    this(sourceClass, targetClass, methodSymbol, null);
+  }
+
+  private AbstractMethodProblem(
+      ClassFile sourceClass,
+      ClassFile targetClass,
+      MethodSymbol methodSymbol,
+      LinkageProblemCause cause) {
+    super("is not implemented in the class", sourceClass, targetClass, methodSymbol, cause);
+    this.methodSymbol = methodSymbol;
+  }
+
+  @Override
+  LinkageProblem withCause(LinkageProblemCause cause) {
+    return new AbstractMethodProblem(getSourceClass(), getTargetClass(), methodSymbol, cause);
   }
 }

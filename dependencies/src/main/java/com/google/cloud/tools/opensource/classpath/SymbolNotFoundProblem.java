@@ -21,7 +21,18 @@ package com.google.cloud.tools.opensource.classpath;
  * the symbol.
  */
 public final class SymbolNotFoundProblem extends IncompatibleLinkageProblem {
+
   public SymbolNotFoundProblem(ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
-    super("is not found", sourceClass, targetClass, symbol);
+    this(sourceClass, targetClass, symbol, null);
+  }
+
+  private SymbolNotFoundProblem(
+      ClassFile sourceClass, ClassFile targetClass, Symbol symbol, LinkageProblemCause cause) {
+    super("is not found", sourceClass, targetClass, symbol, cause);
+  }
+
+  @Override
+  LinkageProblem withCause(LinkageProblemCause cause) {
+    return new SymbolNotFoundProblem(getSourceClass(), getTargetClass(), getSymbol(), cause);
   }
 }

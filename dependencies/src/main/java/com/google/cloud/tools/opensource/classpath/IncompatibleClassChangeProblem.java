@@ -33,6 +33,17 @@ package com.google.cloud.tools.opensource.classpath;
 final class IncompatibleClassChangeProblem extends IncompatibleLinkageProblem {
 
   IncompatibleClassChangeProblem(ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
-    super("has changed incompatibly", sourceClass, targetClass, symbol);
+    this(sourceClass, targetClass, symbol, null);
+  }
+
+  private IncompatibleClassChangeProblem(
+      ClassFile sourceClass, ClassFile targetClass, Symbol symbol, LinkageProblemCause cause) {
+    super("has changed incompatibly", sourceClass, targetClass, symbol, cause);
+  }
+
+  @Override
+  LinkageProblem withCause(LinkageProblemCause cause) {
+    return new IncompatibleClassChangeProblem(
+        getSourceClass(), getTargetClass(), getSymbol(), cause);
   }
 }

@@ -26,8 +26,12 @@ public abstract class IncompatibleLinkageProblem extends LinkageProblem {
   private final ClassFile targetClass;
 
   IncompatibleLinkageProblem(
-      String symbolProblemMessage, ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
-    super(symbolProblemMessage, sourceClass, symbol);
+      String symbolProblemMessage,
+      ClassFile sourceClass,
+      ClassFile targetClass,
+      Symbol symbol,
+      LinkageProblemCause cause) {
+    super(symbolProblemMessage, sourceClass, symbol, cause);
     this.targetClass = targetClass;
   }
 
