@@ -327,11 +327,11 @@ public class LinkageCheckTask extends DefaultTask {
     DependencyGraph dependencyGraph = createDependencyGraph(configuration);
     ImmutableListMultimap.Builder<ClassPathEntry, DependencyPath> builder =
         ImmutableListMultimap.builder();
-    ImmutableList.Builder<UnresolvableArtifactProblem> problems = ImmutableList.builder();
+
     for (DependencyPath path : dependencyGraph.list()) {
       Artifact artifact = path.getLeaf();
       builder.put(new ClassPathEntry(artifact), path);
     }
-    return new ClassPathResult(builder.build(), problems.build());
+    return new ClassPathResult(builder.build(), ImmutableList.of());
   }
 }
