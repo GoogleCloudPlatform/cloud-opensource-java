@@ -73,6 +73,7 @@ import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
+import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
 
 /** Linkage Checker Maven Enforcer Rule. */
 public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
@@ -276,6 +277,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           new AndDependencySelector(
               new NonTestDependencySelector(),
               new ExclusionDependencySelector(),
+              new OptionalDependencySelector(),
               new FilteringZipDependencySelector()));
       DependencyResolutionRequest dependencyResolutionRequest =
           new DefaultDependencyResolutionRequest(mavenProject, fullDependencyResolutionSession);
