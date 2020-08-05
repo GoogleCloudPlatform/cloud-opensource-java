@@ -28,6 +28,7 @@ import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.IncompatibleLinkageProblem;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
+import com.google.cloud.tools.opensource.classpath.LinkageProblemCauseAnnotator;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -210,6 +211,11 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
                           classReferenceGraph.isReachable(entry.getSourceClass().getBinaryName()))
                   .collect(toImmutableSet());
         }
+
+        if (classPathResult != null) {
+          LinkageProblemCauseAnnotator.annotate(classPathResult, linkageProblems);
+        }
+
         // Count unique LinkageProblems by their symbols
         long errorCount =
             linkageProblems.stream().map(LinkageProblem::formatSymbolProblem).distinct().count();
