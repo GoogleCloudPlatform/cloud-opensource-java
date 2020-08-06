@@ -4,7 +4,8 @@
 * Linkage checker no longer includes optional dependencies when building dependency graphs.
   This avoids constructing unexpectedly large dependency graphs ([#1256](
   https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1256))
-* New `LinkageProblemCauseAnnotator` annotates linkage errors with their causes.
+* Linkage errors now have `cause` field that can explain the dependency conflicts by analyzing
+  dependency graphs.
 
 ## 1.4.3
 * Made ClassPathEntry.getArtifact() public for the Linkage Checker Gradle plugin
