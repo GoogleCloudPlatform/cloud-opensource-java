@@ -1,9 +1,9 @@
 # Linkage Checker Enforcer Rule Change Log
 
 ## 1.5.0
-* Linkage checker no longer includes optional dependencies when building dependency graphs.
-  This avoids constructing unexpectedly large dependency graphs ([#1256](
-  https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1256))
+* Linkage Checker no longer includes optional dependencies when building dependency graphs.
+  This avoids constructing unexpectedly large graphs due to optional dependencies ([#1256](
+  https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1256)).
 * Linkage errors now have `cause` field that can explain the dependency conflicts by analyzing
   dependency graphs.
 
