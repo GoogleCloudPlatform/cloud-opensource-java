@@ -5,6 +5,7 @@ set -o xtrace
 
 mkdir -p $HOME/.gradle
 readonly HOME_GRADLE_PROPERTY="$HOME/.gradle/gradle.properties"
+export GRADLE_USER_HOME=$HOME/.gradle
 
 # Recommended way to store API key in
 # https://guides.gradle.org/publishing-plugins-to-gradle-plugin-portal/
