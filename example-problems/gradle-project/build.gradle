@@ -18,6 +18,9 @@ plugins {
   id "java"
 }
 
+group 'com.google.cloud.tools'
+version '0.0.1-SNAPSHOT'
+
 repositories {
   mavenCentral()
 }
