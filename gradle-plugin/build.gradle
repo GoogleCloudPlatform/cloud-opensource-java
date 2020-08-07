@@ -84,5 +84,5 @@ release {
   }
 }
 
-System.setProperty('gradle.publish.key', project.properties['gradle.publish.key'] ?: '')
-System.setProperty('gradle.publish.secret', project.properties['gradle.publish.secret'] ?: '')
+// System.setProperty('gradle.publish.key', project.properties['gradle.publish.key'] ?: '')
+// System.setProperty('gradle.publish.secret', project.properties['gradle.publish.secret'] ?: '')

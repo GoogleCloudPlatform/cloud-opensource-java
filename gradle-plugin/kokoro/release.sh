@@ -15,7 +15,10 @@ cat "${KOKORO_KEYSTORE_DIR}/72743_gradle_publish_key" >> $HOME_GRADLE_PROPERTY
 echo -n 'gradle.publish.secret=' >> $HOME_GRADLE_PROPERTY
 cat "${KOKORO_KEYSTORE_DIR}/72743_gradle_publish_secret" >> $HOME_GRADLE_PROPERTY
 
+
 cd github/cloud-opensource-java/gradle-plugin
+
+cat $HOME_GRADLE_PROPERTY >> gradle.properties
 
 ./gradlew build
 
