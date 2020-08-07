@@ -22,4 +22,4 @@ cat $HOME_GRADLE_PROPERTY >> gradle.properties
 
 ./gradlew build
 
-./gradlew publishPlugins --info --stacktrace
+./gradlew publishPlugins --debug --stacktrace
