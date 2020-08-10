@@ -16,14 +16,11 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.cloud.tools.opensource.classpath.LinkageCheckerTest.resolvePaths;
-import static com.google.cloud.tools.opensource.classpath.TestHelper.absolutePathOfResource;
+import static com.google.cloud.tools.opensource.classpath.TestHelper.classPathEntryOfResource;
 import static org.junit.Assert.assertFalse;
 
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.io.IOException;
@@ -92,7 +89,7 @@ public class ClassDumperTest {
   @Test
   public void testCreationInvalidInput() throws IOException {
     try {
-      ClassDumper.create(ImmutableList.of(Paths.get("no_such_file")));
+      ClassDumper.create(ImmutableList.of(new ClassPathEntry(Paths.get("no_such_file"))));
       Assert.fail("Empty path should generate IOException");
     } catch (IllegalArgumentException ex) {
       // pass
@@ -104,28 +101,27 @@ public class ClassDumperTest {
 
   @Test
   public void testScanSymbolTableFromClassPath() throws URISyntaxException, IOException {
-    Path path = absolutePathOfResource(GRPC_CLOUD_FIRESTORE_JAR);
-    SymbolReferenceMaps symbolReferenceMaps =
+    ClassPathEntry path = classPathEntryOfResource(GRPC_CLOUD_FIRESTORE_JAR);
+    SymbolReferences symbolReferences =
         ClassDumper.create(ImmutableList.of(path)).findSymbolReferences();
 
     // Class reference
+    ClassFile source = new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc");
     Truth.assertWithMessage("Class reference should have binary names defined in JLS 13.1")
-        .that(symbolReferenceMaps.getClassToClassSymbols())
-        .containsEntry(
-            new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
+        .that(symbolReferences.getClassSymbols(source))
+        .contains(
             new ClassSymbol(
                 "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreMethodDescriptorSupplier"));
 
     Truth.assertWithMessage("Reference to superclass should have SuperClassSymbol")
-        .that(symbolReferenceMaps.getClassToClassSymbols())
-        .containsEntry(
-            new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFutureStub"),
+        .that(symbolReferences.getClassSymbols(
+            new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc$FirestoreFutureStub")))
+        .contains(
             new SuperClassSymbol("io.grpc.stub.AbstractStub"));
 
     // Method reference
-    Truth.assertThat(symbolReferenceMaps.getClassToMethodSymbols())
-        .containsEntry(
-            new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
+    Truth.assertThat(symbolReferences.getMethodSymbols(source))
+        .contains(
             new MethodSymbol(
                 "io.grpc.protobuf.ProtoUtils",
                 "marshaller",
@@ -133,9 +129,8 @@ public class ClassDumperTest {
                 false));
 
     // Field reference
-    Truth.assertThat(symbolReferenceMaps.getClassToFieldSymbols())
-        .containsEntry(
-            new ClassFile(path, "com.google.firestore.v1beta1.FirestoreGrpc"),
+    Truth.assertThat(symbolReferences.getFieldSymbols(source))
+        .contains(
             new FieldSymbol(
                 "io.grpc.MethodDescriptor$MethodType",
                 "BIDI_STREAMING",
@@ -148,25 +143,27 @@ public class ClassDumperTest {
     URL jarUrl = URLClassLoader.getSystemResource("testdata/gax-1.32.0.jar");
 
     Path path = Paths.get(jarUrl.toURI());
-    SymbolReferenceMaps symbolReferenceMaps =
-        ClassDumper.create(ImmutableList.of(path)).findSymbolReferences();
+    SymbolReferences symbolReferences =
+        ClassDumper.create(ImmutableList.of(new ClassPathEntry(path))).findSymbolReferences();
 
-    Truth.assertThat(symbolReferenceMaps.getClassToClassSymbols().inverse().keys())
-        .comparingElementsUsing(SYMBOL_TARGET_CLASS_NAME)
-        .doesNotContain("[Ljava.lang.Object;");
+    for (ClassFile classFile : symbolReferences.getClassFiles()) {
+      Truth.assertThat(symbolReferences.getClassSymbols(classFile))
+          .comparingElementsUsing(SYMBOL_TARGET_CLASS_NAME)
+          .doesNotContain("[Ljava.lang.Object;");        
+    }
   }
 
   @Test
   public void testScanSymbolReferencesInClass_shouldPickInterfaceReference()
       throws URISyntaxException, IOException {
-    Path path = absolutePathOfResource("testdata/api-common-1.7.0.jar");
-    SymbolReferenceMaps symbolReferenceMaps =
-        ClassDumper.create(ImmutableList.of(path)).findSymbolReferences();
+    ClassPathEntry entry = classPathEntryOfResource("testdata/api-common-1.7.0.jar");
+    SymbolReferences symbolReferences =
+        ClassDumper.create(ImmutableList.of(entry)).findSymbolReferences();
 
     boolean isInterfaceMethod = true;
-    Truth.assertThat(symbolReferenceMaps.getClassToMethodSymbols())
-        .containsEntry(
-            new ClassFile(path, "com.google.api.resourcenames.UntypedResourceName"),
+    Truth.assertThat(symbolReferences.getMethodSymbols(
+        new ClassFile(entry, "com.google.api.resourcenames.UntypedResourceName")))
+        .contains(
             new MethodSymbol(
                 "java.util.Map",
                 "get",
@@ -192,42 +189,32 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testMapJarToClasses_classWithDollars() throws IOException {
-    List<Path> paths = resolvePaths("com.google.code.gson:gson:2.6.2");
-    Path gsonJar = paths.get(0);
-
-    ImmutableSetMultimap<Path, String> pathToClasses =
-        ClassDumper.mapJarToClassFileNames(paths.subList(0, 1));
-    ImmutableSet<String> classesInGsonJar = pathToClasses.get(gsonJar);
-    // Dollar character ($) is a valid character for a class name, not just for nested ones.
-    Truth.assertThat(classesInGsonJar).contains("com.google.gson.internal.$Gson$Preconditions");
-  }
-
-  @Test
   public void testFindClassLocation() throws URISyntaxException, IOException {
-    Path firestore65 = absolutePathOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar");
-    Path firestore66 = absolutePathOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar");
+    ClassPathEntry firestore65 =
+        classPathEntryOfResource("testdata/google-cloud-firestore-0.65.0-beta.jar");
+    ClassPathEntry firestore66 =
+        classPathEntryOfResource("testdata/google-cloud-firestore-0.66.0-beta.jar");
 
     // This class exists in both jar files
     String grpcClass = "com.google.cloud.firestore.spi.v1beta1.GrpcFirestoreRpc";
 
-    Path jarWith65First =
+    ClassPathEntry pathWith65First =
         ClassDumper.create(ImmutableList.of(firestore65, firestore66)).findClassLocation(grpcClass);
-    Assert.assertEquals(firestore65, jarWith65First);
+    Assert.assertEquals(firestore65, pathWith65First);
 
-    Path jarWith66First =
+    ClassPathEntry pathWith66First =
         ClassDumper.create(ImmutableList.of(firestore66, firestore65)).findClassLocation(grpcClass);
-    Assert.assertEquals(firestore66, jarWith66First);
+    Assert.assertEquals(firestore66, pathWith66First);
   }
 
   @Test
   public void testFindClassLocation_prefixedClassName() throws URISyntaxException, IOException {
     // This JAR file contains com.google.firestore.v1beta1.FirestoreGrpc under BOOT-INF/classes.
-    Path path = absolutePathOfResource("testdata/dummy-boot-inf-prefix.jar");
+    ClassPathEntry path = classPathEntryOfResource("testdata/dummy-boot-inf-prefix.jar");
     ClassDumper classDumper = ClassDumper.create(ImmutableList.of(path));
     classDumper.findSymbolReferences();
 
-    Path classLocation =
+    ClassPathEntry classLocation =
         classDumper.findClassLocation("com.google.firestore.v1beta1.FirestoreGrpc");
 
     Assert.assertEquals(path, classLocation);
@@ -236,7 +223,8 @@ public class ClassDumperTest {
   @Test
   public void testIsSystemClass() throws URISyntaxException, IOException {
     ClassDumper classDumper =
-        ClassDumper.create(ImmutableList.of(absolutePathOfResource("testdata/guava-23.5-jre.jar")));
+        ClassDumper.create(
+            ImmutableList.of(classPathEntryOfResource("testdata/guava-23.5-jre.jar")));
 
     List<String> javaRuntimeClasses =
         ImmutableList.of(
@@ -263,7 +251,8 @@ public class ClassDumperTest {
       throws IOException, URISyntaxException {
     ClassDumper classDumper =
         ClassDumper.create(
-            ImmutableList.of(absolutePathOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
+            ImmutableList.of(
+                classPathEntryOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
 
     // See the issue below for the analysis of inlined fields in Conscrypt:
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/301
@@ -279,7 +268,8 @@ public class ClassDumperTest {
       throws IOException, URISyntaxException {
     ClassDumper classDumper =
         ClassDumper.create(
-            ImmutableList.of(absolutePathOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
+            ImmutableList.of(
+                classPathEntryOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
 
     List<String> usedClassesInConscrypt =
         ImmutableList.of(
@@ -308,7 +298,8 @@ public class ClassDumperTest {
       throws IOException, URISyntaxException {
     ClassDumper classDumper =
         ClassDumper.create(
-            ImmutableList.of(absolutePathOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
+            ImmutableList.of(
+                classPathEntryOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
 
     try {
       classDumper.isUnusedClassSymbolReference(
@@ -330,9 +321,9 @@ public class ClassDumperTest {
   public void testIsUnusedClassSymbolReference_multiReleaseJar() throws IOException {
     // org.graalvm.libgraal.LibGraal class has different implementations between Java 8 and 11 via
     // Multi-release JAR of this artifact.
-    List<Path> paths = resolvePaths("org.graalvm.compiler:compiler:19.0.0");
+    List<ClassPathEntry> classPath = TestHelper.resolve("org.graalvm.compiler:compiler:19.0.0");
 
-    ClassDumper classDumper = ClassDumper.create(paths);
+    ClassDumper classDumper = ClassDumper.create(classPath);
     classDumper.findSymbolReferences();
 
     // There was VerifyError when handling multi-release JAR
@@ -345,20 +336,17 @@ public class ClassDumperTest {
   public void testFindSymbolReferences_overLappingClass() throws IOException {
     // Both artifacts contain com.google.inject.internal.InjectorImpl$BindingsMultimap. The one from
     // sisu-guice should not appear in symbol references because guice supersedes in the class path.
-    List<Path> paths =
-        resolvePaths("com.google.inject:guice:3.0", "org.sonatype.sisu:sisu-guice:3.2.6");
-    Path sisuGuicePath = paths.get(1);
+    List<ClassPathEntry> classPath =
+        TestHelper.resolve("com.google.inject:guice:3.0", "org.sonatype.sisu:sisu-guice:3.2.6");
+    ClassPathEntry sisuGuicePath = classPath.get(1);
 
-    ClassDumper classDumper = ClassDumper.create(paths);
-    SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
-    ImmutableSetMultimap<ClassSymbol, ClassFile> classReferences =
-        symbolReferences.getClassToClassSymbols().inverse();
-    ImmutableSet<ClassFile> classFiles =
-        classReferences.get(new ClassSymbol("com.google.inject.internal.util.$Lists"));
-    Truth.assertThat(classFiles)
-        .doesNotContain(
-            new ClassFile(
-                sisuGuicePath, "com.google.inject.internal.InjectorImpl$BindingsMultimap"));
+    ClassDumper classDumper = ClassDumper.create(classPath);
+    SymbolReferences symbolReferences = classDumper.findSymbolReferences();
+    
+    ClassFile classFile = new ClassFile(
+        sisuGuicePath, "com.google.inject.internal.InjectorImpl$BindingsMultimap");
+    
+    Truth.assertThat(symbolReferences.getClassSymbols(classFile)).isEmpty();
   }
 
   @Test
@@ -366,18 +354,19 @@ public class ClassDumperTest {
     // com.amazonaws:amazon-kinesis-client:1.13.0 contains an unexpected lock file
     // /unison/com/e007f77498fd27177e2ea931a06dcf50/unison/tmp/amazonaws/services/kinesis/leases/impl/LeaseTaker.class
     // https://github.com/awslabs/amazon-kinesis-client/issues/654
-    List<Path> paths = resolvePaths("com.amazonaws:amazon-kinesis-client:1.13.0");
-    ClassDumper classDumper = ClassDumper.create(paths);
-    Path kinesisJar = paths.get(0);
+    List<ClassPathEntry> classPath =
+        TestHelper.resolve("com.amazonaws:amazon-kinesis-client:1.13.0");
+    ClassDumper classDumper = ClassDumper.create(classPath);
+    ClassPathEntry kinesisJar = classPath.get(0);
 
     // This should not raise IOException
-    SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
+    SymbolReferences symbolReferences = classDumper.findSymbolReferences();
 
     Truth.assertWithMessage("Invalid files should not stop loading valid class files")
-        .that(symbolReferences.getClassToClassSymbols().keySet())
+        .that(symbolReferences.getClassFiles())
         .comparingElementsUsing(
             Correspondence.transforming(
-                (ClassFile classFile) -> classFile.getJar(), "is in the JAR file"))
+                (ClassFile classFile) -> classFile.getClassPathEntry(), "is in the JAR file"))
         .contains(kinesisJar);
   }
 
@@ -386,29 +375,42 @@ public class ClassDumperTest {
     // Curator-client has shaded com.google.common.reflect.TypeToken$Bounds but it does not contain
     // the outer class com.google.common.reflect.TypeToken.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1092
-    List<Path> paths = resolvePaths("org.apache.curator:curator-client:4.2.0");
+    List<ClassPathEntry> classPath = TestHelper.resolve("org.apache.curator:curator-client:4.2.0");
 
-    Path curatorClientJar = paths.get(0);
+    ClassPathEntry curatorClientJar = classPath.get(0);
     ClassDumper classDumper = ClassDumper.create(ImmutableList.of(curatorClientJar));
 
     // The outer class (TypeToken) does not exist in the class path.
     String innerClass = "org.apache.curator.shaded.com.google.common.reflect.TypeToken$Bounds";
 
     // This should not raise an exception
-    assertFalse(classDumper.catchesLinkageError(innerClass));
+    assertFalse(classDumper.catchesLinkageErrorOnClass(innerClass));
   }
 
   @Test
   public void testFindSymbolReferences_catchClassFormatException() throws IOException {
-    List<Path> paths = resolvePaths("com.ibm.icu:icu4j:2.6.1");
-    ClassDumper classDumper = ClassDumper.create(paths);
+    List<ClassPathEntry> classPath = TestHelper.resolve("com.ibm.icu:icu4j:2.6.1");
+    ClassDumper classDumper = ClassDumper.create(classPath);
 
     // This should not throw ClassFormatException
-    SymbolReferenceMaps symbolReferences = classDumper.findSymbolReferences();
-    Truth.assertThat(symbolReferences.getClassToClassSymbols().keySet())
+    SymbolReferences symbolReferences = classDumper.findSymbolReferences();
+    Truth.assertThat(symbolReferences.getClassFiles())
         .comparingElementsUsing(
             Correspondence.transforming(
                 (ClassFile classFile) -> classFile.getBinaryName(), "has class name"))
         .contains("com.ibm.icu.util.DateRule");
+  }
+
+  @Test
+  public void testMethodCodeNull() throws IOException {
+    // catchesLinkageError should not raise an exception for MailDateFormat's constructor's null
+    // code.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1352
+    List<ClassPathEntry> classPath = TestHelper.resolve("javax:javaee-api:6.0");
+    ClassDumper classDumper = ClassDumper.create(classPath);
+
+    // This should not raise NullPointerException
+    boolean result = classDumper.catchesLinkageErrorOnClass("javax.mail.internet.MailDateFormat");
+    assertFalse(result);
   }
 }

@@ -16,21 +16,17 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraphResult;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Maps;
-import java.io.File;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.graph.Dependency;
 
 /**
- * Utility to build a class path (a list of jar files) through a dependency tree of Maven artifacts.
+ * Utility to build {@link ClassPathResult} that holds class path (a list of {@link ClassPathEntry})
+ * through a dependency tree of Maven artifacts.
  *
  * @see <a
  *     href="https://docs.oracle.com/javase/8/docs/technotes/tools/unix/classpath.html#sthref15">
@@ -52,57 +48,56 @@ public final class ClassPathBuilder {
   }
 
   /**
-   * Finds jar file paths and dependency paths for Maven artifacts and their transitive dependencies
-   * to build a list of JAR files (class path). When there are multiple versions of an artifact in
-   * the dependency tree, the closest to the root in breadth-first order is picked up. This 'pick
-   * closest' strategy follows Maven's dependency mediation.
+   * Builds a classpath from the transitive dependency graph from {@code artifacts}. When there are
+   * multiple versions of an artifact in the dependency tree, the closest to the root in
+   * breadth-first order is picked up. This "pick closest" strategy follows Maven's dependency
+   * mediation.
    *
-   * @param artifacts Maven artifacts to check. They are treated as the root of the dependency tree.
+   * @param artifacts the first artifacts that appear in the classpath, in order
+   * @param full if true all optional dependencies and their transitive dependencies are included.
+   *     If false, optional dependencies are not included.
    */
-  public ClassPathResult resolve(List<Artifact> artifacts) {
-
-    LinkedListMultimap<Path, DependencyPath> multimap = LinkedListMultimap.create();
-    if (artifacts.isEmpty()) {
-      return new ClassPathResult(multimap, ImmutableList.of());
-    }
+  public ClassPathResult resolve(List<Artifact> artifacts, boolean full) {
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
-    DependencyGraphResult result = dependencyGraphBuilder.buildFullDependencyGraph(artifacts);
-    List<DependencyPath> dependencyPaths = result.getDependencyGraph().list();
+    DependencyGraph result;
+    if (full) {
+      result = dependencyGraphBuilder.buildFullDependencyGraph(artifacts);
+    } else {
+      result = dependencyGraphBuilder.buildVerboseDependencyGraph(artifacts);
+    }
+    return mediate(result);
+  }
+
+  /**
+   * Builds a class path from the dependency graph with {@code rootArtifact}, in the same way as
+   * Maven would do when the artifact was built.
+   *
+   * <p>This method takes the root artifact of a dependency graph, while {@link #resolve(List,
+   * boolean)} takes a list of artifacts as the dependencies of a pseudo root artifact.
+   */
+  ClassPathResult resolveWithMaven(Artifact rootArtifact) {
+    DependencyGraph result =
+        dependencyGraphBuilder.buildMavenDependencyGraph(new Dependency(rootArtifact, "compile"));
+    return mediate(result);
+  }
+
+  private ClassPathResult mediate(DependencyGraph result) {
+    // TODO should DependencyGraphResult have a mediate() method that returns a ClassPathResult?
 
     // To remove duplicates on (groupId:artifactId) for dependency mediation
-    Map<String, String> keyToFirstArtifactVersion = Maps.newHashMap();
+    MavenDependencyMediation mediation = new MavenDependencyMediation();
 
+    LinkedListMultimap<ClassPathEntry, DependencyPath> multimap = LinkedListMultimap.create();
+    List<DependencyPath> dependencyPaths = result.list();
     for (DependencyPath dependencyPath : dependencyPaths) {
       Artifact artifact = dependencyPath.getLeaf();
-      File file = artifact.getFile();
-      if (file == null) {
-        // When artifact was not downloaded, it's recorded in result.getArtifactProblems().
-        continue;
+      mediation.put(dependencyPath);
+      if (mediation.selects(artifact)) {
+        // We include multiple dependency paths to the first version of an artifact we see,
+        // but not paths to other versions of that artifact.
+        multimap.put(new ClassPathEntry(artifact), dependencyPath);
       }
-      Path jarAbsolutePath = file.toPath().toAbsolutePath();
-      if (!jarAbsolutePath.toString().endsWith(".jar")) {
-        continue;
-      }
-
-      String artifactVersion = artifact.getVersion();
-      // groupId:artifactId
-      String dependencyMediationKey = Artifacts.makeKey(artifact);
-      String firstArtifactVersionForKey = keyToFirstArtifactVersion.get(dependencyMediationKey);
-      if (firstArtifactVersionForKey != null
-          && !artifactVersion.equals(firstArtifactVersionForKey)) {
-        // Not adding this artifact if different version of the artifact (<groupId>:<artifactId> as
-        // key) is already in `multimap`.
-        // As `dependencyPaths` elements are in level order (breadth-first), this first-wins
-        // strategy follows Maven's dependency mediation.
-        // TODO(#309): add Gradle's dependency mediation
-        continue;
-      }
-      keyToFirstArtifactVersion.put(dependencyMediationKey, artifact.getVersion());
-
-      // When finding the key (groupId:artifactId) first time, or additional dependency path to
-      // the artifact of the same version is encountered, adds the dependency path to `multimap`.
-      multimap.put(jarAbsolutePath, dependencyPath);
     }
-    return new ClassPathResult(multimap, result.getArtifactProblems());
+    return new ClassPathResult(multimap, result.getUnresolvedArtifacts());
   }
 }

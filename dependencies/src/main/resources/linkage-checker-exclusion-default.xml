@@ -1,0 +1,74 @@
+<LinkageCheckerFilter>
+  <LinkageError>
+    <Source>
+      <Package name="reactor.core.publisher.Traces" />
+    </Source>
+    <Reason>
+      reactor-core's Traces catches Throwable to detect classes available in
+      Java 9+. As Linkage Checker targets Java 8, it ignores these errors to avoid
+      false positives.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/816
+    </Reason>
+  </LinkageError>
+
+  <LinkageError>
+    <Target>
+      <Package name="jdk.vm.ci" />
+    </Target>
+    <Source>
+      <Package name="com.oracle.svm" />
+    </Source>
+    <Reason>
+      GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that
+      only exists in special JDK. These missing classes are false positives, because
+      the code is only invoked when running in a GraalVM.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="jdk.vm.ci" />
+    </Target>
+    <Source>
+      <Package name="com.oracle.graal" />
+    </Source>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="jdk.vm.ci" />
+    </Target>
+    <Source>
+      <Package name="org.graalvm" />
+    </Source>
+  </LinkageError>
+
+  <LinkageError>
+    <Target>
+      <Class name="org.mockito.internal.creation.bytebuddy.MockMethodDispatcher" />
+    </Target>
+    <Source>
+      <Package name="org.mockito.internal.creation.bytebuddy" />
+    </Source>
+    <Reason>
+      Mockito's MockMethodDispatcher uses special class loader to load
+      MockMethodDispatcher.raw. The class file with "raw" suffix is in mockito-core JAR file.
+      Because Linkage Checker does not use the special class loader, it ignores the missing
+      class errors to avoid false positives.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/407
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="com.sun.jna" />
+    </Target>
+    <Source>
+      <Package name="reactor.blockhound.shaded.net.bytebuddy.agent.VirtualMachine" />
+    </Source>
+    <Reason>
+      BlockHound shades ByteBuddy's VirtualMachine class. The class uses Java Native Access (JNA)
+      only when the com.sun.jna package is available. Therefore the invalid references from the
+      VirtualMachine class to JNA classes do not cause linkage errors at runtime.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1296
+    </Reason>
+  </LinkageError>
+</LinkageCheckerFilter>

@@ -16,12 +16,26 @@ Google Cloud Java libraries. For manually generating the dashboard, see
 [Google Best Practices for Java Libraries](https://googlecloudplatform.github.io/cloud-opensource-java/)
 are rules that minimize problems for consumers of interconnected Java libraries.
 
-# Linkage Checker Enforcer Rule
+# Linkage Checker
 
-[Linkage Checker Enforcer Rule](./enforcer-rules) is a Maven enforcer rule that
-detects [linkage errors](
+## Linkage Checker Maven Enforcer Rule
+
+[Linkage Checker Enforcer Rule](./enforcer-rules) detects [linkage errors](
 ./library-best-practices/glossary.md#types-of-conflicts-and-compatibility) in
-the current project.
+the current Maven project as part of build.
+
+For its usage, see [the enforcer rule documentation](
+https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Enforcer-Rule).
+
+## Linkage Checker Gradle Plugin
+
+[Linkage Checker Gradle Plugin](./gradle-plugin) provides the linkageCheck task that detects
+[linkage errors](
+./library-best-practices/glossary.md#types-of-conflicts-and-compatibility) in the current
+Gradle project.
+
+For its usage, see [the plugin documentation](
+https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-with-Gradle).
 
 # GCP Libraries BOM
 
@@ -35,7 +49,7 @@ This project is built using _Maven_.
 
 ## Requirements
 
-1. Maven 3.5.0 or later.
+1. Maven 3.6.0 or later.
 
 1. JDK 8
 

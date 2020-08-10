@@ -23,53 +23,50 @@ import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
+import com.google.common.collect.UnmodifiableIterator;
 import java.nio.file.Paths;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
-import org.junit.Before;
 import org.junit.Test;
 
 public class ClassPathResultTest {
-  private Artifact artifactA = new DefaultArtifact("com.google:a:1");
-  private Artifact artifactB = new DefaultArtifact("com.google:b:1");
-  private DependencyPath dependencyPath_A = new DependencyPath();
-  private DependencyPath dependencyPath_B = new DependencyPath();
-  private DependencyPath dependencyPath_B_A = new DependencyPath();
-  private DependencyPath dependencyPath_A_B_A = new DependencyPath();
-  private Path jarA = Paths.get("a.jar");
-  private Path jarB = Paths.get("b.jar");
-
-  @Before
-  public void setup() {
-    dependencyPath_A.add(new Dependency(artifactA, "compile"));
-
-    dependencyPath_B.add(new Dependency(artifactB, "compile"));
-
-    dependencyPath_B_A.add(new Dependency(artifactB, "compile"));
-    dependencyPath_B_A.add(new Dependency(artifactA, "compile"));
-
-    dependencyPath_A_B_A.add(new Dependency(artifactA, "compile"));
-    dependencyPath_A_B_A.add(new Dependency(artifactB, "compile"));
-    dependencyPath_A_B_A.add(new Dependency(artifactA, "compile"));
-  }
+  private Artifact artifactA =
+      new DefaultArtifact("com.google:a:1").setFile(Paths.get("a.jar").toFile());
+  private Artifact artifactB =
+      new DefaultArtifact("com.google:b:1").setFile(Paths.get("b.jar").toFile());
+  private DependencyPath dependencyPath_A =
+      new DependencyPath(null).append(new Dependency(artifactA, "compile"));
+  private DependencyPath dependencyPath_B =
+      new DependencyPath(null).append(new Dependency(artifactB, "compile"));
+  private DependencyPath dependencyPath_B_A =
+      new DependencyPath(null)
+          .append(new Dependency(artifactB, "compile"))
+          .append(new Dependency(artifactA, "compile"));
+  private DependencyPath dependencyPath_A_B_A =
+      new DependencyPath(null)
+          .append(new Dependency(artifactA, "compile"))
+          .append(new Dependency(artifactB, "compile"))
+          .append(new Dependency(artifactA, "compile"));
+  private ClassPathEntry jarA = new ClassPathEntry(artifactA);
+  private ClassPathEntry jarB = new ClassPathEntry(artifactB);
+  ;
 
   @Test
   public void testFormatDependencyPaths_onePath() {
-    ImmutableListMultimap<Path, DependencyPath> tree =
+    ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
         ImmutableListMultimap.of(jarA, dependencyPath_A, jarB, dependencyPath_B);
 
     ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
 
     String actual = classPathResult.formatDependencyPaths(ImmutableList.of(jarA));
 
-    assertEquals("a.jar is at:\n" + "  com.google:a:1 (compile)\n", actual);
+    assertEquals("com.google:a:1 is at:\n" + "  com.google:a:1 (compile)\n", actual);
   }
 
   @Test
   public void testFormatDependencyPaths_path_A_B() {
-    ImmutableListMultimap<Path, DependencyPath> tree =
+    ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
         ImmutableListMultimap.of(jarA, dependencyPath_A, jarB, dependencyPath_B);
 
     ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
@@ -77,16 +74,16 @@ public class ClassPathResultTest {
     String actual = classPathResult.formatDependencyPaths(ImmutableList.of(jarA, jarB));
 
     assertEquals(
-        "a.jar is at:\n"
+        "com.google:a:1 is at:\n"
             + "  com.google:a:1 (compile)\n"
-            + "b.jar is at:\n"
+            + "com.google:b:1 is at:\n"
             + "  com.google:b:1 (compile)\n",
         actual);
   }
 
   @Test
   public void testFormatDependencyPaths_twoPathsForA() {
-    ImmutableListMultimap<Path, DependencyPath> tree =
+    ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
         ImmutableListMultimap.of(jarA, dependencyPath_A, jarA, dependencyPath_B_A);
 
     ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
@@ -94,12 +91,13 @@ public class ClassPathResultTest {
     String actual = classPathResult.formatDependencyPaths(ImmutableList.of(jarA));
 
     assertEquals(
-        "a.jar is at:\n" + "  com.google:a:1 (compile)\n" + "  and 1 dependency path.\n", actual);
+        "com.google:a:1 is at:\n" + "  com.google:a:1 (compile)\n" + "  and 1 dependency path.\n",
+        actual);
   }
 
   @Test
   public void testFormatDependencyPaths_threePathsForA() {
-    ImmutableListMultimap<Path, DependencyPath> tree =
+    ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
         ImmutableListMultimap.of(
             jarA, dependencyPath_A, jarA, dependencyPath_B_A, jarA, dependencyPath_A_B_A);
 
@@ -108,13 +106,15 @@ public class ClassPathResultTest {
     String actual = classPathResult.formatDependencyPaths(ImmutableList.of(jarA));
 
     assertEquals(
-        "a.jar is at:\n" + "  com.google:a:1 (compile)\n" + "  and 2 other dependency paths.\n",
+        "com.google:a:1 is at:\n"
+            + "  com.google:a:1 (compile)\n"
+            + "  and 2 other dependency paths.\n",
         actual);
   }
 
   @Test
   public void testFormatDependencyPaths_irrelevantJar() {
-    ImmutableListMultimap<Path, DependencyPath> tree =
+    ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
         ImmutableListMultimap.of(jarA, dependencyPath_A);
 
     ClassPathResult classPathResult = new ClassPathResult(tree, ImmutableSet.of());
@@ -122,9 +122,24 @@ public class ClassPathResultTest {
     try {
       classPathResult.formatDependencyPaths(ImmutableList.of(jarB));
       fail("The irrelevant JAR file should be invalidated.");
-    } catch (IllegalArgumentException ex) {
-      // pass
-      assertEquals("b.jar is not in the class path", ex.getMessage());
+    } catch (IllegalArgumentException expected) {
+      assertEquals("com.google:b:1 is not in the class path", expected.getMessage());
     }
+  }
+
+  @Test
+  public void testGetClassPathEntries() {
+    ImmutableListMultimap<ClassPathEntry, DependencyPath> tree =
+        ImmutableListMultimap.of(
+            jarA, dependencyPath_A,
+            jarB, dependencyPath_B,
+            jarA, dependencyPath_A_B_A);
+
+    ClassPathResult result = new ClassPathResult(tree, ImmutableSet.of());
+
+    ImmutableSet<ClassPathEntry> classPathEntries = result.getClassPathEntries("com.google:a:1");
+    assertEquals(1, classPathEntries.size());
+    UnmodifiableIterator<ClassPathEntry> iterator = classPathEntries.iterator();
+    assertEquals(Paths.get("a.jar"), iterator.next().getJar());
   }
 }

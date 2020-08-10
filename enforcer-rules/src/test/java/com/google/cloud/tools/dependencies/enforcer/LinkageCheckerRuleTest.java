@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -35,6 +36,7 @@ import java.net.URISyntaxException;
 import java.net.URLClassLoader;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -74,7 +76,7 @@ import org.mockito.ArgumentMatchers;
 
 public class LinkageCheckerRuleTest {
 
-  private LinkageCheckerRule rule;
+  private LinkageCheckerRule rule = new LinkageCheckerRule();
   private RepositorySystem repositorySystem;
   private RepositorySystemSession repositorySystemSession;
   private Artifact dummyArtifactWithFile;
@@ -91,11 +93,9 @@ public class LinkageCheckerRuleTest {
   public void setup()
       throws ExpressionEvaluationException, ComponentLookupException,
       DependencyResolutionException, URISyntaxException {
-    rule = new LinkageCheckerRule();
     repositorySystem = RepositoryUtility.newRepositorySystem();
     repositorySystemSession = RepositoryUtility.newSession(repositorySystem);
-    // This dummy artifact must be something that exists in a repository
-    dummyArtifactWithFile = createArtifactWithDummyFile("com.google.guava:guava:28.0-android");
+    dummyArtifactWithFile = createArtifactWithDummyFile("a:b:0.1");
     setupMock();
   }
 
@@ -162,6 +162,7 @@ public class LinkageCheckerRuleTest {
   }
 
   private void setupMockDependencyResolution(String... coordinates) throws RepositoryException {
+    // The root node is Maven artifact "a:b:0.1" that has dependencies specified as `coordinates`.
     DependencyNode rootNode = createResolvedDependencyGraph(coordinates);
     Traverser<DependencyNode> traverser = Traverser.forGraph(node -> node.getChildren());
 
@@ -228,7 +229,16 @@ public class LinkageCheckerRuleTest {
           "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
     } catch (EnforcerRuleException ex) {
       // pass
-      verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found 112 errors."));
+      ArgumentCaptor<String> errorMessageCaptor = ArgumentCaptor.forClass(String.class);
+      verify(mockLog, times(2)).error(errorMessageCaptor.capture());
+
+      List<String> errorMessages = errorMessageCaptor.getAllValues();
+      Truth.assertThat(errorMessages.get(0)).startsWith("Linkage Checker rule found 112 errors.");
+      Truth.assertThat(errorMessages.get(1))
+          .startsWith(
+              "Problematic artifacts in the dependency tree:\n"
+                  + "com.google.appengine:appengine-api-1.0-sdk:1.9.64 is at:\n"
+                  + "  a:b:jar:0.1 / com.google.appengine:appengine-api-1.0-sdk:1.9.64 (compile)");
       assertEquals("Failed while checking class path. See above error report.", ex.getMessage());
     }
   }
@@ -432,6 +442,28 @@ public class LinkageCheckerRuleTest {
     }
   }
 
+  @Test
+  public void testExecute_shouldFilterExclusionRule()
+      throws RepositoryException, URISyntaxException {
+    try {
+      // This artifact is known to contain classes missing dependencies
+      setupMockDependencyResolution("com.google.appengine:appengine-api-1.0-sdk:1.9.64");
+      String exclusionFileLocation =
+          Paths.get(ClassLoader.getSystemResource("appengine-exclusion.xml").toURI())
+              .toAbsolutePath()
+              .toString();
+      rule.setExclusionFile(exclusionFileLocation);
+      rule.execute(mockRuleHelper);
+      Assert.fail(
+          "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
+    } catch (EnforcerRuleException ex) {
+      // pass.
+      // The number of errors was 112 in testExecute_shouldFailForBadProjectWithBundlePackaging
+      verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found 93 errors."));
+      assertEquals("Failed while checking class path. See above error report.", ex.getMessage());
+    }
+  }
+
   private DependencyResolutionException createDummyResolutionException(
       Artifact missingArtifact, DependencyResolutionResult resolutionResult) {
     Throwable cause3 = new ArtifactNotFoundException(missingArtifact, null);
@@ -460,7 +492,7 @@ public class LinkageCheckerRuleTest {
       verify(mockLog)
           .warn(
               "aopalliance:aopalliance:jar:1.0 was not resolved. "
-                  + "Dependency path: com.google.guava:guava:jar:28.0-android > "
+                  + "Dependency path: a:b:jar:0.1 > "
                   + "org.apache.maven:maven-core:jar:3.5.2 (compile) > "
                   + "com.google.inject:guice:jar:no_aop:4.0 (compile) > "
                   + "aopalliance:aopalliance:jar:1.0 (compile)");

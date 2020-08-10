@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import java.util.Objects;
+
 /** Symbol for a class. */
 public class ClassSymbol extends Symbol {
   public ClassSymbol(String className) {
@@ -25,5 +27,22 @@ public class ClassSymbol extends Symbol {
   @Override
   public String toString() {
     return "Class " + getClassBinaryName();
+  }
+  
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.getClassBinaryName());
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (this == other) {
+      return true;
+    }
+    if (other == null || getClass() != other.getClass()) {
+      return false;
+    }
+    Symbol symbol = (Symbol) other;
+    return this.getClassBinaryName().equals(symbol.getClassBinaryName());
   }
 }

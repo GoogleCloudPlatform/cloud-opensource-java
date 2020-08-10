@@ -31,36 +31,36 @@ public class DependencyTreeFormatterTest {
 
     // 4 artifacts as DependencyPath dummy inputs
 
-    DependencyPath path2 = new DependencyPath();
-    path2.add(
-        new Dependency(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", false));
-    path2.add(
-        new Dependency(new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"), "compile", false));
+    DependencyPath path2 =
+        new DependencyPath(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"))
+            .append(
+                new Dependency(
+                    new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"), "compile", false));
     dependencyPathList.add(path2);
 
     // dependency1 and dependency2 are intentionally added in wrong order
     // formatDependencyPaths is responsible for sorting the items in the tree
-    DependencyPath path1 = new DependencyPath();
-    path1.add(
-        new Dependency(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", false));
+    DependencyPath path1 = new DependencyPath(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"));
     dependencyPathList.add(path1);
 
-    DependencyPath path3 = new DependencyPath();
-    path3.add(
-        new Dependency(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", false));
-    path3.add(
-        new Dependency(new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"), "compile", false));
-    path3.add(
-        new Dependency(new DefaultArtifact("io.grpc:grpc-context:jar:1.15.0"), "compile", false));
+    DependencyPath path3 =
+        new DependencyPath(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"))
+            .append(
+                new Dependency(
+                    new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"), "compile", false))
+            .append(
+                new Dependency(
+                    new DefaultArtifact("io.grpc:grpc-context:jar:1.15.0"), "compile", false));
     dependencyPathList.add(path3);
 
-    DependencyPath path4 = new DependencyPath();
-    path4.add(
-        new Dependency(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", false));
-    path4.add(
-        new Dependency(new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"), "compile", false));
-    path4.add(
-        new Dependency(new DefaultArtifact("com.google.code.gson:gson:jar:2.7"), "compile", false));
+    DependencyPath path4 =
+        new DependencyPath(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"))
+            .append(
+                new Dependency(
+                    new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"), "compile", false))
+            .append(
+                new Dependency(
+                    new DefaultArtifact("com.google.code.gson:gson:jar:2.7"), "compile", false));
     dependencyPathList.add(path4);
 
     String actualTreeOutput = DependencyTreeFormatter.formatDependencyPaths(dependencyPathList);
@@ -78,14 +78,21 @@ public class DependencyTreeFormatterTest {
   public void testDependencyTree_scopeAndOptionalFlag() {
     List<DependencyPath> dependencyPathList = new ArrayList<>();
 
-    DependencyPath path1 = new DependencyPath();
-    path1.add(new Dependency(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", true));
+    DependencyPath path1 =
+        new DependencyPath(null)
+            .append(
+                new Dependency(
+                    new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", true));
     dependencyPathList.add(path1);
 
-    DependencyPath path2 = new DependencyPath();
-    path2.add(new Dependency(new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", true));
-    path2.add(
-        new Dependency(new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"), "provided", false));
+    DependencyPath path2 =
+        new DependencyPath(null)
+            .append(
+                new Dependency(
+                    new DefaultArtifact("io.grpc:grpc-auth:jar:1.15.0"), "compile", true))
+            .append(
+                new Dependency(
+                    new DefaultArtifact("io.grpc:grpc-core:jar:1.15.0"), "provided", false));
     dependencyPathList.add(path2);
 
     String actualTreeOutput = DependencyTreeFormatter.formatDependencyPaths(dependencyPathList);

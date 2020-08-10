@@ -16,8 +16,11 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Set;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -33,6 +36,9 @@ import org.eclipse.aether.graph.DependencyNode;
  */
 final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
 
+  private final Set<DependencyNode> visitedNodes =
+      Collections.newSetFromMap(new IdentityHashMap<>());
+
   @Override
   public DependencyNode transformGraph(
       DependencyNode dependencyNode, DependencyGraphTransformationContext context)
@@ -42,8 +48,7 @@ final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
     return dependencyNode;
   }
 
-  private static void removeCycle(
-      DependencyNode parent, DependencyNode node, Set<Artifact> ancestors) {
+  private void removeCycle(DependencyNode parent, DependencyNode node, Set<Artifact> ancestors) {
     Artifact artifact = node.getArtifact();
 
     if (ancestors.contains(artifact)) { // Set (rather than List) gives O(1) lookup here
@@ -52,11 +57,19 @@ final class CycleBreakerGraphTransformer implements DependencyGraphTransformer {
       return;
     }
 
-    ancestors.add(artifact);
-    for (DependencyNode child : node.getChildren()) {
-      removeCycle(node, child, ancestors);
+    if (shouldVisitChildren(node)) {
+      ancestors.add(artifact);
+      for (DependencyNode child : node.getChildren()) {
+        removeCycle(node, child, ancestors);
+      }
+      ancestors.remove(artifact);
     }
-    ancestors.remove(artifact);
+  }
+
+  /** Returns true if {@code node} is not visited yet and marks the node as visited. */
+  @VisibleForTesting
+  boolean shouldVisitChildren(DependencyNode node) {
+    return visitedNodes.add(node);
   }
 
   private static void removeChildFromParent(DependencyNode child, DependencyNode parent) {

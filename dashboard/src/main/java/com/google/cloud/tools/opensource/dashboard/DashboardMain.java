@@ -17,20 +17,18 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
+import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
-import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
-import com.google.cloud.tools.opensource.dependencies.DependencyGraphResult;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.cloud.tools.opensource.dependencies.Update;
@@ -41,9 +39,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
@@ -162,7 +157,7 @@ public class DashboardMain {
   @VisibleForTesting
   static Path generate(String bomCoordinates)
       throws IOException, TemplateException, RepositoryException, URISyntaxException {
-    Path output = generate(RepositoryUtility.readBom(bomCoordinates));
+    Path output = generate(Bom.readBom(bomCoordinates));
     System.out.println("Wrote dashboard for " + bomCoordinates + " to " + output);
     return output;
   }
@@ -172,7 +167,7 @@ public class DashboardMain {
       throws IOException, TemplateException, URISyntaxException, MavenRepositoryException {
     checkArgument(Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
     checkArgument(Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
-    Path output = generate(RepositoryUtility.readBom(bomFile));
+    Path output = generate(Bom.readBom(bomFile));
     System.out.println("Wrote dashboard for " + bomFile + " to " + output);
     return output;
   }
@@ -181,21 +176,15 @@ public class DashboardMain {
 
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
-    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies);
-    // LinkedListMultimap preserves the key order
-    ImmutableList<Path> classpath = classPathResult.getClassPath();
+    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies, false);
+    ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
 
-    // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
-    List<Path> artifactJarsInBom = classpath.subList(0, managedDependencies.size());
-    ImmutableSet<Path> entryPoints = ImmutableSet.copyOf(artifactJarsInBom);
+    LinkageChecker linkageChecker = LinkageChecker.create(classpath);
 
-    LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints);
-
-    ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
-        linkageChecker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
-    Path output = generateHtml(bom, cache, classPathResult, symbolProblems);
+    Path output = generateHtml(bom, cache, classPathResult, linkageProblems);
 
     return output;
   }
@@ -209,7 +198,7 @@ public class DashboardMain {
       Bom bom,
       ArtifactCache cache,
       ClassPathResult classPathResult,
-      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems)
+      ImmutableSet<LinkageProblem> linkageProblems)
       throws IOException, TemplateException, URISyntaxException {
 
     Artifact bomArtifact = new DefaultArtifact(bom.getCoordinates());
@@ -222,19 +211,19 @@ public class DashboardMain {
     copyResource(output, "css/dashboard.css");
     copyResource(output, "js/dashboard.js");
 
-    ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable =
-        indexByJar(symbolProblems);
+    ImmutableMap<ClassPathEntry, ImmutableSet<LinkageProblem>> linkageProblemTable =
+        indexByJar(linkageProblems);
 
     List<ArtifactResults> table =
         generateReports(
-            freemarkerConfiguration, output, cache, symbolProblemTable, classPathResult, bom);
+            freemarkerConfiguration, output, cache, linkageProblemTable, classPathResult, bom);
 
     generateDashboard(
         freemarkerConfiguration,
         output,
         table,
         cache.getGlobalDependencies(),
-        symbolProblemTable,
+        linkageProblemTable,
         classPathResult,
         bom);
 
@@ -259,33 +248,15 @@ public class DashboardMain {
     return configuration;
   }
 
-  /**
-   * Returns mapping from the Maven coordinates of BOM members to jar files that are in the
-   * dependency tree of the BOM members.
-   */
-  private static ImmutableSetMultimap<String, Path> bomMemberToJars(
-      ClassPathResult classPathResult) {
-    ImmutableSetMultimap.Builder<String, Path> bomMemberToJars = ImmutableSetMultimap.builder();
-    for (Path path : classPathResult.getClassPath()) {
-      for (DependencyPath dependencyPath : classPathResult.getDependencyPaths(path)) {
-        Artifact artifact = dependencyPath.get(0);
-        bomMemberToJars.put(Artifacts.toCoordinates(artifact), path);
-      }
-    }
-
-    return bomMemberToJars.build();
-  }
-
   @VisibleForTesting
   static List<ArtifactResults> generateReports(
       Configuration configuration,
       Path output,
       ArtifactCache cache,
-      ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
+      ImmutableMap<ClassPathEntry, ImmutableSet<LinkageProblem>> linkageProblemTable,
       ClassPathResult classPathResult,
-      Bom bom) {
-
-    ImmutableSetMultimap<String, Path> bomMemberToJars = bomMemberToJars(classPathResult);
+      Bom bom)
+      throws TemplateException {
 
     Map<Artifact, ArtifactInfo> artifacts = cache.getInfoMap();
     List<ArtifactResults> table = new ArrayList<>();
@@ -298,10 +269,10 @@ public class DashboardMain {
           table.add(unavailable);
         } else {
           Artifact artifact = entry.getKey();
-          ImmutableSet<Path> jarsInDependencyTree =
-              bomMemberToJars.get(Artifacts.toCoordinates(artifact));
-          Map<Path, ImmutableSetMultimap<SymbolProblem, String>> relevantSymbolProblemTable =
-              Maps.filterKeys(symbolProblemTable, jarsInDependencyTree::contains);
+          ImmutableSet<ClassPathEntry> jarsInDependencyTree =
+              classPathResult.getClassPathEntries(Artifacts.toCoordinates(artifact));
+          Map<ClassPathEntry, ImmutableSet<LinkageProblem>> relevantLinkageProblemTable =
+              Maps.filterKeys(linkageProblemTable, jarsInDependencyTree::contains);
 
           ArtifactResults results =
               generateArtifactReport(
@@ -310,7 +281,7 @@ public class DashboardMain {
                   artifact,
                   entry.getValue(),
                   cache.getGlobalDependencies(),
-                  ImmutableMap.copyOf(relevantSymbolProblemTable),
+                  ImmutableMap.copyOf(relevantLinkageProblemTable),
                   classPathResult,
                   bom);
           table.add(results);
@@ -320,9 +291,6 @@ public class DashboardMain {
         unavailableTestResult.setExceptionMessage(ex.getMessage());
         // Even when there's a problem generating test result, show the error in the dashboard
         table.add(unavailableTestResult);
-      } catch (TemplateException ex) {
-        // This failure is ours. No need to report it in dashboard for an artifact
-        throw new RuntimeException("Error in template setting in this project", ex);
       }
     }
 
@@ -337,15 +305,13 @@ public class DashboardMain {
     List<DependencyGraph> globalDependencies = new ArrayList<>();
 
     for (Artifact artifact : artifacts) {
-      DependencyGraphResult completeDependencyResult =
-          dependencyGraphBuilder.buildFullDependencyGraph(ImmutableList.of(artifact));
-      DependencyGraph completeDependencies = completeDependencyResult.getDependencyGraph();
+      DependencyGraph completeDependencies =
+          dependencyGraphBuilder.buildVerboseDependencyGraph(artifact);
       globalDependencies.add(completeDependencies);
 
       // picks versions according to Maven rules
-      DependencyGraphResult transitiveDependencyResult =
+      DependencyGraph transitiveDependencies =
           dependencyGraphBuilder.buildMavenDependencyGraph(new Dependency(artifact, "compile"));
-      DependencyGraph transitiveDependencies = transitiveDependencyResult.getDependencyGraph();
 
       ArtifactInfo info = new ArtifactInfo(completeDependencies, transitiveDependencies);
       infoMap.put(artifact, info);
@@ -364,7 +330,7 @@ public class DashboardMain {
       Artifact artifact,
       ArtifactInfo artifactInfo,
       List<DependencyGraph> globalDependencies,
-      ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
+      ImmutableMap<ClassPathEntry, ImmutableSet<LinkageProblem>> linkageProblemTable,
       ClassPathResult classPathResult,
       Bom bom)
       throws IOException, TemplateException {
@@ -376,43 +342,44 @@ public class DashboardMain {
         new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
 
       // includes all versions
-      DependencyGraph completeDependencies = artifactInfo.getCompleteDependencies();
-      List<Update> convergenceIssues = completeDependencies.findUpdates();
+      DependencyGraph graph = artifactInfo.getCompleteDependencies();
+      List<Update> convergenceIssues = graph.findUpdates();
 
       // picks versions according to Maven rules
       DependencyGraph transitiveDependencies = artifactInfo.getTransitiveDependencies();
 
       Map<Artifact, Artifact> upperBoundFailures =
-          findUpperBoundsFailures(completeDependencies.getHighestVersionMap(),
-              transitiveDependencies);
+          findUpperBoundsFailures(graph.getHighestVersionMap(), transitiveDependencies);
 
       Map<Artifact, Artifact> globalUpperBoundFailures = findUpperBoundsFailures(
           collectLatestVersions(globalDependencies), transitiveDependencies);
 
-      List<DependencyPath> dependencyPaths = completeDependencies.list();
-
       long totalLinkageErrorCount =
-          symbolProblemTable.values().stream()
-              .flatMap(problemToClasses -> problemToClasses.keySet().stream())
-              .distinct()
+          linkageProblemTable.values().stream()
+              .flatMap(problemToClasses -> problemToClasses.stream().map(LinkageProblem::getSymbol))
+              .distinct() // The dashboard counts linkage errors by the symbols
               .count();
 
-      ListMultimap<DependencyPath, DependencyPath> dependencyTree =
-          DependencyTreeFormatter.buildDependencyPathTree(dependencyPaths);
       Template report = configuration.getTemplate("/templates/component.ftl");
 
       Map<String, Object> templateData = new HashMap<>();
+
+      DefaultObjectWrapper wrapper =
+          new DefaultObjectWrapperBuilder(Configuration.VERSION_2_3_28).build();
+      TemplateHashModel staticModels = wrapper.getStaticModels();
+      templateData.put("linkageProblem", staticModels.get(LinkageProblem.class.getName()));
+
       templateData.put("artifact", artifact);
       templateData.put("updates", convergenceIssues);
       templateData.put("upperBoundFailures", upperBoundFailures);
       templateData.put("globalUpperBoundFailures", globalUpperBoundFailures);
       templateData.put("lastUpdated", LocalDateTime.now());
-      templateData.put("dependencyTree", dependencyTree);
-      templateData.put("dependencyRootNode", Iterables.getFirst(dependencyTree.values(), null));
-      templateData.put("symbolProblems", symbolProblemTable);
+      templateData.put("dependencyGraph", graph);
+      templateData.put("linkageProblems", linkageProblemTable);
       templateData.put("classPathResult", classPathResult);
       templateData.put("totalLinkageErrorCount", totalLinkageErrorCount);
       templateData.put("coordinates", bom.getCoordinates());
+
       report.process(templateData, out);
 
       ArtifactResults results = new ArtifactResults(artifact);
@@ -453,25 +420,20 @@ public class DashboardMain {
   }
 
   /**
-   * Partitions {@code symbolProblems} by the JAR file that contains the {@link ClassFile}.
+   * Partitions {@code linkageProblems} by the JAR file that contains the {@link ClassFile}.
    *
-   * <p>For example, {@code classes = result.get(JarX).get(SymbolProblemY)} where {@code classes}
-   * are not null means that {@code JarX} has {@code SymbolProblemY} and that {@code JarX} contains
-   * {@code classes} which reference {@code SymbolProblemY.getSymbol()}.
+   * <p>For example, {@code classes = result.get(JarX).get(linkageProblemY)} where {@code classes}
+   * are not null means that {@code JarX} has {@code linkageProblemY} and that {@code JarX} contains
+   * {@code classes} which reference {@code linkageProblemY.getSymbol()}.
    */
-  private static ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> indexByJar(
-      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems) {
+  private static ImmutableMap<ClassPathEntry, ImmutableSet<LinkageProblem>> indexByJar(
+      ImmutableSet<LinkageProblem> linkageProblems) {
 
-    ImmutableMap<Path, Collection<Entry<SymbolProblem, ClassFile>>> jarMap =
-        Multimaps.index(symbolProblems.entries(), entry -> entry.getValue().getJar()).asMap();
+    ImmutableMap<ClassPathEntry, Collection<LinkageProblem>> jarMap =
+        Multimaps.index(linkageProblems, problem -> problem.getSourceClass().getClassPathEntry())
+            .asMap();
 
-    return ImmutableMap.copyOf(
-        Maps.transformValues(
-            jarMap,
-            entries ->
-                ImmutableSetMultimap.copyOf(
-                    Multimaps.transformValues(
-                        ImmutableSetMultimap.copyOf(entries), ClassFile::getBinaryName))));
+    return ImmutableMap.copyOf(Maps.transformValues(jarMap, ImmutableSet::copyOf));
   }
 
   @VisibleForTesting
@@ -480,7 +442,7 @@ public class DashboardMain {
       Path output,
       List<ArtifactResults> table,
       List<DependencyGraph> globalDependencies,
-      ImmutableMap<Path, ImmutableSetMultimap<SymbolProblem, String>> symbolProblemTable,
+      ImmutableMap<ClassPathEntry, ImmutableSet<LinkageProblem>> linkageProblemTable,
       ClassPathResult classPathResult,
       Bom bom)
       throws IOException, TemplateException {
@@ -491,10 +453,11 @@ public class DashboardMain {
     templateData.put("table", table);
     templateData.put("lastUpdated", LocalDateTime.now());
     templateData.put("latestArtifacts", latestArtifacts);
-    templateData.put("symbolProblems", symbolProblemTable);
+    templateData.put("linkageProblems", linkageProblemTable);
     templateData.put("classPathResult", classPathResult);
     templateData.put("dependencyPathRootCauses", findRootCauses(classPathResult));
     templateData.put("coordinates", bom.getCoordinates());
+    templateData.put("dependencyGraphs", globalDependencies);
 
     // Accessing static methods from Freemarker template
     // https://freemarker.apache.org/docs/pgui_misc_beanwrapper.html#autoid_60
@@ -503,6 +466,7 @@ public class DashboardMain {
     TemplateHashModel staticModels = wrapper.getStaticModels();
     templateData.put("dashboardMain", staticModels.get(DashboardMain.class.getName()));
     templateData.put("pieChart", staticModels.get(PieChart.class.getName()));
+    templateData.put("linkageProblem", staticModels.get(LinkageProblem.class.getName()));
 
     File dashboardFile = output.resolve("index.html").toFile();
     try (Writer out = new OutputStreamWriter(
@@ -522,6 +486,13 @@ public class DashboardMain {
     try (Writer out = new OutputStreamWriter(
         new FileOutputStream(unstable), StandardCharsets.UTF_8)) {
       Template details = configuration.getTemplate("/templates/unstable_artifacts.ftl");
+      details.process(templateData, out);
+    }
+
+    File dependencyTrees = output.resolve("dependency_trees.html").toFile();
+    try (Writer out =
+        new OutputStreamWriter(new FileOutputStream(dependencyTrees), StandardCharsets.UTF_8)) {
+      Template details = configuration.getTemplate("/templates/dependency_trees.ftl");
       details.process(templateData, out);
     }
   }
@@ -575,12 +546,12 @@ public class DashboardMain {
    * com.google.http-client:google-http-client} and {@code log4j:log4j}.
    */
   private static ImmutableMap<String, String> findRootCauses(ClassPathResult classPathResult) {
-    // Freemarker is not good at handling non-string key. Path object in .ftl is automatically
+    // Freemarker is not good at handling non-string keys. Path object in .ftl is automatically
     // converted to String. https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
-    for (Path jar : classPathResult.getClassPath()) {
-      List<DependencyPath> dependencyPaths = classPathResult.getDependencyPaths(jar);
+    for (ClassPathEntry entry : classPathResult.getClassPath()) {
+      List<DependencyPath> dependencyPaths = classPathResult.getDependencyPaths(entry);
 
       ImmutableList<String> commonVersionlessArtifacts =
           commonVersionlessArtifacts(dependencyPaths);
@@ -588,7 +559,7 @@ public class DashboardMain {
       if (dependencyPaths.size() > MINIMUM_NUMBER_DEPENDENCY_PATHS
           && commonVersionlessArtifacts.size() > 1) { // The last paths elements are always same
         builder.put(
-            jar.toString(),
+            entry.toString(),
             summaryMessage(
                 dependencyPaths.size(), commonVersionlessArtifacts, dependencyPaths.get(0)));
       }
@@ -599,24 +570,18 @@ public class DashboardMain {
   private static ImmutableList<String> commonVersionlessArtifacts(
       List<DependencyPath> dependencyPaths) {
     ImmutableList<String> initialVersionlessCoordinates =
-        versionlessCoordinates(dependencyPaths.get(0));
+        dependencyPaths.get(0).getArtifactKeys();
     // LinkedHashSet remembers insertion order
     LinkedHashSet<String> versionlessCoordinatesIntersection =
         Sets.newLinkedHashSet(initialVersionlessCoordinates);
     for (DependencyPath dependencyPath : dependencyPaths) {
       // List of versionless coordinates ("groupId:artifactId")
-      ImmutableList<String> versionlessCoordinatesInPath = versionlessCoordinates(dependencyPath);
+      ImmutableList<String> versionlessCoordinatesInPath = dependencyPath.getArtifactKeys();
       // intersection of elements in DependencyPaths
       versionlessCoordinatesIntersection.retainAll(versionlessCoordinatesInPath);
     }
 
     return ImmutableList.copyOf(versionlessCoordinatesIntersection);
-  }
-
-  private static ImmutableList<String> versionlessCoordinates(DependencyPath dependencyPath) {
-    return dependencyPath.getArtifacts().stream()
-        .map(Artifacts::makeKey)
-        .collect(toImmutableList());
   }
 
   private static String summaryMessage(
