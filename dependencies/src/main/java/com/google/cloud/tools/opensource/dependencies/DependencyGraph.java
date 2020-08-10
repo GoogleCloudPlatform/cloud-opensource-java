@@ -248,11 +248,11 @@ public class DependencyGraph {
 
   // this modifies the argument
   private static void levelOrder(DependencyGraph graph) {
-    Queue<LevelOrderQueueItem<DependencyNode>> queue = new ArrayDeque<>();
-    queue.add(new LevelOrderQueueItem<>(graph.root, null));
+    Queue<PathToNode<DependencyNode>> queue = new ArrayDeque<>();
+    queue.add(new PathToNode<>(graph.root, null));
 
     while (!queue.isEmpty()) {
-      LevelOrderQueueItem<DependencyNode> item = queue.poll();
+      PathToNode<DependencyNode> item = queue.poll();
       DependencyNode dependencyNode = item.getNode();
 
       DependencyPath parentPath = item.getParentPath();
@@ -294,7 +294,7 @@ public class DependencyGraph {
       graph.parentToChildren.put(parentPath, path);
 
       for (DependencyNode child : dependencyNode.getChildren()) {
-        queue.add(new LevelOrderQueueItem<>(child, path));
+        queue.add(new PathToNode<>(child, path));
       }
     }
   }
