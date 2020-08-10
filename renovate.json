@@ -4,7 +4,9 @@
   ],
   "ignorePaths": [
     "example-problems/**",
-    "boms/**"
+    "enforcer-rules/src/it/**",
+    "boms/convergence-check",
+    "verboseTree-maven-plugin/src/it/**"
   ],
   "separateMajorMinor": false,
   "semanticCommits": true,
@@ -30,5 +32,7 @@
       ],
       "enabled": false
     }
-  ]
+  ],
+  "masterIssue": true,
+  "masterIssueApproval": true
 }

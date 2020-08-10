@@ -19,7 +19,7 @@ package com.google.cloud.tools.opensource.dashboard;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
@@ -148,7 +148,7 @@ public class DashboardTest {
   
   @Test
   public void testArtifactDetails() throws IOException, ArtifactDescriptorException {
-    List<Artifact> artifacts = RepositoryUtility.readBom("com.google.cloud:libraries-bom:1.0.0")
+    List<Artifact> artifacts = Bom.readBom("com.google.cloud:libraries-bom:1.0.0")
         .getManagedDependencies();
     Assert.assertTrue("Not enough artifacts found", artifacts.size() > 1);
 
@@ -211,17 +211,17 @@ public class DashboardTest {
     // appengine-api-sdk, shown as first item in linkage errors, has these errors
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo(
-            "106 target classes causing linkage errors referenced from 516 source classes.");
+            "53 target classes causing linkage errors referenced from 76 source classes.");
 
     Nodes dependencyPaths = details.query("//p[@class='linkage-check-dependency-paths']");
     Node dependencyPathMessageOnProblem = dependencyPaths.get(dependencyPaths.size() - 4);
     Assert.assertEquals(
-        "The following paths contain guava-jdk5-13.0.jar:",
+        "The following paths contain com.google.guava:guava-jdk5:13.0:",
         trimAndCollapseWhiteSpace(dependencyPathMessageOnProblem.getValue()));
 
     Node dependencyPathMessageOnSource = dependencyPaths.get(dependencyPaths.size() - 3);
     Assert.assertEquals(
-        "The following paths contain guava-27.1-android.jar:",
+        "The following paths contain com.google.guava:guava:27.1-android:",
         trimAndCollapseWhiteSpace(dependencyPathMessageOnSource.getValue()));
 
     Nodes nodesWithPathsSummary = details.query("//p[@class='linkage-check-dependency-paths']");
@@ -230,13 +230,12 @@ public class DashboardTest {
         .comparingElementsUsing(
             Correspondence.<Node, String>transforming(
                 node -> trimAndCollapseWhiteSpace(node.getValue()), "has text"))
-        .contains(
-            "Dependency path 'commons-logging:commons-logging > javax.servlet:servlet-api' exists"
-                + " in all 1337 dependency paths. Example path:"
+        .contains("Dependency path 'org.apache.httpcomponents:httpclient >"
+                + " commons-logging:commons-logging' exists"
+                + " in all 57 dependency paths. Example path:"
                 + " com.google.http-client:google-http-client:1.29.1 (compile) /"
                 + " org.apache.httpcomponents:httpclient:4.5.5 (compile) /"
-                + " commons-logging:commons-logging:1.2 (compile) / javax.servlet:servlet-api:2.3"
-                + " (provided, optional)");
+                + " commons-logging:commons-logging:1.2 (compile)");
   }
 
   @Test
@@ -295,12 +294,15 @@ public class DashboardTest {
 
   @Test
   public void testComponent_linkageCheckResult() throws IOException, ParsingException {
+    // version used in libraries-bom 1.0.0
     Document document = parseOutputFile(
         "com.google.http-client_google-http-client-appengine_1.29.1.html");
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
-    Assert.assertEquals(1, reports.size());
+    Assert.assertEquals(2, reports.size());
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
-        .isEqualTo("106 target classes causing linkage errors referenced from 516 source classes.");
+        .isEqualTo("100 target classes causing linkage errors referenced from 540 source classes.");
+    Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(1).getValue()))
+        .isEqualTo("3 target classes causing linkage errors referenced from 3 source classes.");
 
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
     Truth.assertWithMessage(
@@ -437,6 +439,17 @@ public class DashboardTest {
     Assert.assertEquals(1, bomCoordinatesNodes.size());
     Assert.assertEquals(
         "BOM: com.google.cloud:libraries-bom:1.0.0", bomCoordinatesNodes.get(0).getValue());
+  }
+
+  @Test
+  public void testDependencyTrees() throws IOException, ParsingException {
+    Document document = parseOutputFile("dependency_trees.html");
+    Nodes dependencyTreeParagraph = document.query("//p[@class='dependency-tree-node']");
+
+    // characterization test
+    Assert.assertEquals(38391, dependencyTreeParagraph.size());
+    Assert.assertEquals(
+        "com.google.protobuf:protobuf-java:jar:3.6.1", dependencyTreeParagraph.get(0).getValue());
   }
 
   @Test

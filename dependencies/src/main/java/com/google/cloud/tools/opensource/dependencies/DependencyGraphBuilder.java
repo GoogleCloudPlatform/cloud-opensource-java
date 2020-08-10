@@ -20,60 +20,35 @@ import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.C
 import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.mavenRepositoryFromUrl;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import java.util.ArrayDeque;
+import java.nio.file.Path;
 import java.util.List;
-import java.util.Queue;
+import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.graph.DefaultDependencyNode;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
-import org.eclipse.aether.util.graph.visitor.PathRecordingDependencyVisitor;
 
 /**
- * This class builds dependency graphs for Maven artifacts.
- *
- * <p>A Maven dependency graph is the tree you see in {@code mvn dependency:tree} output. This graph
- * has the following attributes:
- *
- * <ul>
- *   <li>It contains at most one node for the same group ID and artifact ID. (<a
- *       href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Transitive_Dependencies">dependency
- *       mediation</a>)
- *   <li>The scope of a dependency affects the scope of its children's dependencies as per <a
- *       href="https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Scope">Maven:
- *       Dependency Scope</a>
- *   <li>It does not contain transitive provided-scope dependencies.
- *   <li>It does not contain transitive optional dependencies.
- * </ul>
- *
- * <p>A full dependency graph is a dependency tree where each node's dependencies are fully resolved
- * recursively. This graph has the following attributes:
- *
- * <ul>
- *   <li>The same artifact, which has the same group:artifact:version, appears in different nodes in
- *       the graph.
- *   <li>The scope of a dependency does not affect the scope of its children's dependencies.
- *   <li>Provided-scope and optional dependencies are not treated differently than any other
- *       dependency.
- * </ul>
+ * Builds dependency graphs for Maven artifacts by querying repositories for
+ * pom.xml files and following the dependency chains therein.
  */
 public final class DependencyGraphBuilder {
 
   private static final RepositorySystem system = RepositoryUtility.newRepositorySystem();
 
-  /** Maven Repositories to use when resolving dependencies. */
+  /** Maven repositories to use when resolving dependencies. */
   private final ImmutableList<RemoteRepository> repositories;
+  private Path localRepository;
 
   static {
     OsProperties.detectOsProperties().forEach(System::setProperty);
@@ -84,7 +59,7 @@ public final class DependencyGraphBuilder {
   }
 
   /**
-   * @param mavenRepositoryUrls Maven repository URLs to search for dependencies
+   * @param mavenRepositoryUrls remote Maven repositories to search for dependencies
    * @throws IllegalArgumentException if a URL is malformed or does not have an allowed scheme
    */
   public DependencyGraphBuilder(Iterable<String> mavenRepositoryUrls) {
@@ -95,9 +70,17 @@ public final class DependencyGraphBuilder {
     }
     this.repositories = repositoryListBuilder.build();
   }
-
+  
+  /**
+   * Enable temporary repositories for tests.
+   */
+  @VisibleForTesting
+  void setLocalRepository(Path localRepository) {
+    this.localRepository = localRepository;
+  }
+  
   private DependencyNode resolveCompileTimeDependencies(
-      List<DependencyNode> dependencyNodes, boolean fullDependencies)
+      List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session)
       throws DependencyResolutionException {
 
     ImmutableList.Builder<Dependency> dependenciesBuilder = ImmutableList.builder();
@@ -112,11 +95,11 @@ public final class DependencyGraphBuilder {
       }
     }
     ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
-
-    RepositorySystemSession session =
-        fullDependencies
-            ? RepositoryUtility.newSessionForFullDependency(system)
-            : RepositoryUtility.newSession(system);
+            
+    if (localRepository != null) {
+      LocalRepository local = new LocalRepository(localRepository.toAbsolutePath().toString());
+      session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, local));
+    }
 
     CollectRequest collectRequest = new CollectRequest();
     if (dependencyList.size() == 1) {
@@ -139,153 +122,98 @@ public final class DependencyGraphBuilder {
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
-   * versions, and dependencies with 'provided' scope.
+   * versions, and provided and optional dependencies. In the event of I/O errors, missing
+   * artifacts, and other problems, it can return an incomplete graph. Each node's dependencies are
+   * resolved recursively. The scope of a dependency does not affect the scope of its children's
+   * dependencies. Provided and optional dependencies are not treated differently than any other
+   * dependency.
    *
-   * @param artifacts Maven artifacts to retrieve their dependencies
+   * @param artifacts Maven artifacts whose dependencies to retrieve
    * @return dependency graph representing the tree of Maven artifacts
    */
-  public DependencyGraphResult buildFullDependencyGraph(List<Artifact> artifacts) {
+  public DependencyGraph buildFullDependencyGraph(List<Artifact> artifacts) {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
-    return buildDependencyGraph(dependencyNodes, GraphTraversalOption.FULL);
+    DefaultRepositorySystemSession session = RepositoryUtility.newSessionForFullDependency(system);
+    return buildDependencyGraph(dependencyNodes, session);
+  }
+  
+  /**
+   * Finds the full compile time, transitive dependency graph including duplicates and conflicting
+   * versions, but not optional dependencies. In the event of I/O errors, missing
+   * artifacts, and other problems, it can return an incomplete graph. Each node's dependencies are
+   * resolved recursively. The scope of a dependency does not affect the scope of its children's
+   * dependencies.
+   *
+   * @param artifacts Maven artifacts whose dependencies to retrieve
+   * @return dependency graph representing the tree of Maven artifacts
+   */
+  public DependencyGraph buildVerboseDependencyGraph(List<Artifact> artifacts) {
+    ImmutableList<DependencyNode> dependencyNodes =
+        artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
+    DefaultRepositorySystemSession session =
+        RepositoryUtility.newSessionForVerboseListDependency(system);
+    return buildDependencyGraph(dependencyNodes, session);
+  }
+  
+  /**
+   * Finds the full compile time, transitive dependency graph including conflicting versions and
+   * provided dependencies. This includes direct optional dependencies of the root node but not
+   * optional dependencies of transitive dependencies.
+   *
+   * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
+   * incomplete graph. Each node's dependencies are resolved recursively. The scope of a dependency
+   * does not affect the scope of its children's dependencies. Provided and optional dependencies
+   * are not treated differently than any other dependency.
+   *
+   * @param artifact the root
+   * @return the graph as built by Maven before dependency mediation
+   */
+  public DependencyGraph buildVerboseDependencyGraph(Artifact artifact) {
+    Dependency dependency = new Dependency(artifact, "compile");
+    return buildVerboseDependencyGraph(dependency);
+  }
+  
+  DependencyGraph buildVerboseDependencyGraph(Dependency dependency) {
+    DefaultRepositorySystemSession session = RepositoryUtility.newSessionForVerboseDependency(system);
+    ImmutableList<DependencyNode> roots = ImmutableList.of(new DefaultDependencyNode(dependency));
+    return buildDependencyGraph(roots, session);
   }
 
   /**
    * Builds the transitive dependency graph as seen by Maven. It does not include duplicates and
    * conflicting versions. That is, this resolves conflicting versions by picking the first version
-   * seen. This is how Maven normally operates.
+   * seen. This is how Maven normally operates. It does not contain provided-scope dependencies
+   * of transitive dependencies. It does not contain optional dependencies of transitive
+   * dependencies. In the event of I/O errors, missing artifacts, and other problems, it can
+   * return an incomplete graph.
    */
-  public DependencyGraphResult buildMavenDependencyGraph(Dependency dependency) {
-    return buildDependencyGraph(
-        ImmutableList.of(new DefaultDependencyNode(dependency)), GraphTraversalOption.MAVEN);
+  public DependencyGraph buildMavenDependencyGraph(Dependency dependency) {
+    ImmutableList<DependencyNode> roots = ImmutableList.of(new DefaultDependencyNode(dependency));
+    return buildDependencyGraph(roots, RepositoryUtility.newSessionForMaven(system));
   }
 
-  private DependencyGraphResult buildDependencyGraph(
-      List<DependencyNode> dependencyNodes, GraphTraversalOption traversalOption) {
-    boolean fullDependency = traversalOption == GraphTraversalOption.FULL;
-    DependencyNode node;
-    ImmutableSet.Builder<UnresolvableArtifactProblem> artifactProblems = ImmutableSet.builder();
-
+  private DependencyGraph buildDependencyGraph(
+      List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session) {
+     
     try {
-      node = resolveCompileTimeDependencies(dependencyNodes, fullDependency);
+      DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, session);
+      return DependencyGraph.from(node);
     } catch (DependencyResolutionException ex) {
       DependencyResult result = ex.getResult();
-      node = result.getRoot();
+      DependencyGraph graph = DependencyGraph.from(result.getRoot());
+
       for (ArtifactResult artifactResult : result.getArtifactResults()) {
         Artifact resolvedArtifact = artifactResult.getArtifact();
-        if (resolvedArtifact != null) {
-          continue;
+
+        if (resolvedArtifact == null) {
+          Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
+          graph.addUnresolvableArtifactProblem(requestedArtifact);
         }
-        Artifact requestedArtifact = artifactResult.getRequest().getArtifact();
-        artifactProblems.add(createUnresolvableArtifactProblem(node, requestedArtifact));
-      }
-    }
-
-    DependencyGraph graph = levelOrder(node);
-    return new DependencyGraphResult(graph, artifactProblems.build());
-  }
-
-  /**
-   * Returns a problem describing that {@code artifact} is unresolvable in the {@code
-   * dependencyGraph}.
-   */
-  public static UnresolvableArtifactProblem createUnresolvableArtifactProblem(
-      DependencyNode dependencyGraph, Artifact artifact) {
-    ImmutableList<List<DependencyNode>> paths = findArtifactPaths(dependencyGraph, artifact);
-    if (paths.isEmpty()) {
-      // On certain conditions, Maven throws ArtifactDescriptorException even when the
-      // (transformed) dependency dependencyGraph does not contain the problematic artifact any
-      // more.
-      // https://issues.apache.org/jira/browse/MNG-6732
-      return new UnresolvableArtifactProblem(artifact);
-    } else {
-      return new UnresolvableArtifactProblem(paths.get(0));
-    }
-  }
-
-  private static ImmutableList<List<DependencyNode>> findArtifactPaths(
-      DependencyNode root, Artifact artifact) {
-    String coordinates = Artifacts.toCoordinates(artifact);
-    DependencyFilter filter =
-        (node, parents) ->
-            node.getArtifact() != null // artifact is null at a root dummy node.
-                && Artifacts.toCoordinates(node.getArtifact()).equals(coordinates);
-    PathRecordingDependencyVisitor visitor = new PathRecordingDependencyVisitor(filter);
-    root.accept(visitor);
-    return ImmutableList.copyOf(visitor.getPaths());
-  }
-
-  private static final class LevelOrderQueueItem {
-    final DependencyNode dependencyNode;
-    final ArrayDeque<DependencyNode> parentNodes;
-
-    LevelOrderQueueItem(DependencyNode dependencyNode, ArrayDeque<DependencyNode> parentNodes) {
-      this.dependencyNode = dependencyNode;
-      this.parentNodes = parentNodes;
-    }
-  }
-
-  private enum GraphTraversalOption {
-    /** Normal Maven dependency graph */
-    MAVEN,
-
-    /** The full dependency graph */
-    FULL;
-  }
-
-  /**
-   * Returns a dependency graph by traversing dependency tree in level-order (breadth-first search).
-   *
-   * <p>When {@code graphTraversalOption} is FULL_DEPENDENCY or FULL_DEPENDENCY_WITH_PROVIDED, then
-   * it resolves the dependency of the artifact of each node in the dependency tree; otherwise it
-   * just follows the given dependency tree starting with firstNode.
-   *
-   * @param firstNode node to start traversal
-   */
-  private DependencyGraph levelOrder(DependencyNode firstNode) {
-
-    DependencyGraph graph = new DependencyGraph();
-
-    Queue<LevelOrderQueueItem> queue = new ArrayDeque<>();
-    queue.add(new LevelOrderQueueItem(firstNode, new ArrayDeque<>()));
-
-    while (!queue.isEmpty()) {
-      LevelOrderQueueItem item = queue.poll();
-      DependencyNode dependencyNode = item.dependencyNode;
-      DependencyPath path = new DependencyPath();
-      ArrayDeque<DependencyNode> parentNodes = item.parentNodes;
-      parentNodes.forEach(
-          parentNode -> path.add(parentNode.getDependency()));
-      Artifact artifact = dependencyNode.getArtifact();
-      if (artifact != null) {
-        // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
-        // set to null
-
-        // When there's a parent dependency node with the same groupId and artifactId as
-        // the dependency, Maven will not pick up the dependency. For example, if there's a
-        // dependency path "g1:a1:2.0 / ... / g1:a1:1.0" (the leftmost node as root), then Maven's
-        // dependency mediation always picks up g1:a1:2.0 over g1:a1:1.0.
-        String groupIdAndArtifactId = Artifacts.makeKey(artifact);
-        boolean parentHasSameKey =
-            parentNodes.stream()
-                .map(node -> Artifacts.makeKey(node.getArtifact()))
-                .anyMatch(key -> key.equals(groupIdAndArtifactId));
-        if (parentHasSameKey) {
-          continue;
-        }
-
-        path.add(dependencyNode.getDependency());
-        parentNodes.add(dependencyNode);
-        graph.addPath(path);
       }
       
-      for (DependencyNode child : dependencyNode.getChildren()) {
-        ArrayDeque<DependencyNode> clone = parentNodes.clone();
-        queue.add(new LevelOrderQueueItem(child, clone));
-      }
+      return graph;
     }
-
-    return graph;
   }
 
 }

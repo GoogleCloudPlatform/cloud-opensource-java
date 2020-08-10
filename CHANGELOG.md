@@ -1,5 +1,40 @@
 # Linkage Checker Enforcer Rule Change Log
 
+## 1.5.0
+* Linkage Checker no longer includes optional dependencies when building dependency graphs.
+  This avoids constructing unexpectedly large graphs due to optional dependencies ([#1256](
+  https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1256)).
+* Linkage errors now have `cause` field that can explain the dependency conflicts by analyzing
+  dependency graphs.
+
+## 1.4.3
+* Made ClassPathEntry.getArtifact() public for the Linkage Checker Gradle plugin
+
+## 1.4.2
+* Fixed unnecessary graph traversal logic when building dependency graphs
+
+## 1.4.1
+* Fixed false positive linkage errors in Maven projects with WAR packaging
+
+## 1.4.0
+* Linkage Checker enforcer rule shows dependency paths to problematic Maven artifacts.
+* Fixed the enforcer rule's incorrect selection of entry point JARs for reachability analysis
+
+## 1.3.0
+* LinkageCheckerMain has an option (`-o`) to output linkage errors into a file ([document](
+  https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/LinkageCheckerMain#exclusion-files
+  )). This feature is currently alpha; we may change the behavior/format in later releases.
+* LinkageCheckerMain throws LinkageCheckResultException if it finds linkage errors.
+
+## 1.2.1
+* Linkage Checker handles class files containing methods without a body.
+
+## 1.2.0
+* Linkage Checker takes an [exclusion file](
+https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Exclusion-File)
+  to filter out linkage errors.
+* Fixed LinkageCheckerMain's incorrect handling of JAR file input
+
 ## 1.1.4
 * Linkage Checker resolves class paths in a more efficient manner.
 

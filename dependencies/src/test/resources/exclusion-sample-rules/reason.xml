@@ -1,0 +1,8 @@
+<LinkageCheckerFilter>
+  <LinkageError>
+    <Target>
+      <Class name="reactor.core.publisher.Traces" />
+    </Target>
+    <Reason>Reactor's Trace Java 9 classes generate false positives</Reason>
+  </LinkageError>
+</LinkageCheckerFilter>

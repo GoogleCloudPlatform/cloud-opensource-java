@@ -26,19 +26,19 @@ import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
 import org.junit.Assert;
 import org.junit.Test;
+import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
-import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 
 public class BomTest {
 
   private static final Path CLOUD_OSS_BOM_PATH =
-      Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();
-
+      Paths.get("..", "boms", "cloud-oss-bom", "pom.xml").toAbsolutePath();  
+  
   @Test
   public void testArtifactsExist()
       throws IOException, MavenRepositoryException {
     List<Artifact> artifacts =
-        RepositoryUtility.readBom(CLOUD_OSS_BOM_PATH).getManagedDependencies();
+        Bom.readBom(CLOUD_OSS_BOM_PATH).getManagedDependencies();
     for (Artifact artifact : artifacts) {
       assertReachable(buildMavenCentralUrl(artifact));
     }
