@@ -65,7 +65,7 @@ public class MethodSymbolTest {
             "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
             false);
     assertEquals(
-        "io.grpc.protobuf.ProtoUtils's method marshaller(com.google.protobuf.Message arg1)",
+        "io.grpc.protobuf.ProtoUtils's method marshaller(com.google.protobuf.Message)",
         symbol.toString());
   }
 }

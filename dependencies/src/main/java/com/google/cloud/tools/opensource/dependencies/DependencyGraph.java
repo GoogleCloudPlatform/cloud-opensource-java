@@ -33,7 +33,6 @@ import java.util.Set;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.SetMultimap;
@@ -52,18 +51,6 @@ import com.google.common.collect.TreeMultimap;
  * <p>Artifacts are considered to be the same if they have the same group ID, artifact ID, and version.
  */
 public class DependencyGraph {
-
-  private static final class LevelOrderQueueItem {
-    final DependencyNode dependencyNode;
-  
-    // Null for the first item
-    final DependencyPath parentPath;
-  
-    LevelOrderQueueItem(DependencyNode dependencyNode, DependencyPath parentPath) {
-      this.dependencyNode = dependencyNode;
-      this.parentPath = parentPath;
-    }
-  }
 
   // DependencyGraphBuilder builds this in breadth first order, unless explicitly stated otherwise.
   // That is, this list contains the paths to each node in breadth first order 
@@ -89,8 +76,7 @@ public class DependencyGraph {
     this.root = root;
   }
 
-  @VisibleForTesting
-  void addPath(DependencyPath path) {
+  public void addPath(DependencyPath path) {
     Artifact leaf = path.getLeaf();
     if (leaf == null) {
       // No need to include a path to null leaf
@@ -262,14 +248,14 @@ public class DependencyGraph {
 
   // this modifies the argument
   private static void levelOrder(DependencyGraph graph) {
-    Queue<DependencyGraph.LevelOrderQueueItem> queue = new ArrayDeque<>();
-    queue.add(new DependencyGraph.LevelOrderQueueItem(graph.root, null));
-  
+    Queue<PathToNode<DependencyNode>> queue = new ArrayDeque<>();
+    queue.add(new PathToNode<>(graph.root, null));
+
     while (!queue.isEmpty()) {
-      DependencyGraph.LevelOrderQueueItem item = queue.poll();
-      DependencyNode dependencyNode = item.dependencyNode;
-  
-      DependencyPath parentPath = item.parentPath;
+      PathToNode<DependencyNode> item = queue.poll();
+      DependencyNode dependencyNode = item.getNode();
+
+      DependencyPath parentPath = item.getParentPath();
       Artifact artifact = dependencyNode.getArtifact();
       if (artifact != null && parentPath != null) {
         // When requesting dependencies of 2 or more artifacts, root DependencyNode's artifact is
@@ -286,14 +272,18 @@ public class DependencyGraph {
         
         String groupIdAndArtifactId = Artifacts.makeKey(artifact);
         boolean ancestorHasSameKey =
-            parentPath.getArtifacts().stream()
-                .map(Artifacts::makeKey)
+            parentPath.getArtifactKeys().stream()
                 .anyMatch(key -> key.equals(groupIdAndArtifactId));
         if (ancestorHasSameKey) {
           continue;
         }
       }
-  
+
+      // Guava's zipsrc dependency is not for users but for building its Javadoc properly.
+      if (artifact != null && "jdk".equals(artifact.getGroupId())) {
+        continue;
+      }
+
       // parentPath is null for the first item
       DependencyPath path =
           parentPath == null
@@ -304,7 +294,7 @@ public class DependencyGraph {
       graph.parentToChildren.put(parentPath, path);
 
       for (DependencyNode child : dependencyNode.getChildren()) {
-        queue.add(new DependencyGraph.LevelOrderQueueItem(child, path));
+        queue.add(new PathToNode<>(child, path));
       }
     }
   }

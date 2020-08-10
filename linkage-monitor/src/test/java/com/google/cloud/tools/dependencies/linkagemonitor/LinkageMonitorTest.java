@@ -26,12 +26,13 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
+import com.google.cloud.tools.opensource.classpath.ClassNotFoundProblem;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
-import com.google.cloud.tools.opensource.classpath.ErrorType;
+import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.classpath.MethodSymbol;
-import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.classpath.SymbolNotFoundProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
@@ -40,7 +41,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
@@ -64,29 +64,45 @@ public class LinkageMonitorTest {
   
   private RepositorySystem system;
   private RepositorySystemSession session;
-  
+
+  private Artifact artifactA =
+      new DefaultArtifact("foo:a:1.2.3").setFile(new File("foo/a-1.2.3.jar"));
+  private ClassPathEntry jarA = new ClassPathEntry(artifactA);
+
   private Artifact artifactB = new DefaultArtifact("foo:b:1.0.0")
       .setFile(new File("foo/b-1.0.0.jar"));
   private ClassPathEntry jarB = new ClassPathEntry(artifactB);
 
-  private SymbolProblem classNotFoundProblem =
-      new SymbolProblem(new ClassSymbol("java.lang.Integer"), ErrorType.CLASS_NOT_FOUND, null);
-  private SymbolProblem methodNotFoundProblem;
+  private LinkageProblem classNotFoundProblem =
+      new ClassNotFoundProblem(
+          new ClassFile(jarA, "com.abc.AAA"), new ClassSymbol("java.lang.Integer"));
+  private LinkageProblem methodNotFoundProblemFromA;
+  private LinkageProblem methodNotFoundProblemFromB;
 
   @Before
   public void setup() throws IOException {
     system = RepositoryUtility.newRepositorySystem();
     session = RepositoryUtility.newSession(system);
 
-    methodNotFoundProblem =
-        new SymbolProblem(
+    methodNotFoundProblemFromA =
+        new SymbolNotFoundProblem(
+            new ClassFile(jarA, "com.abc.AAA"),
+            new ClassFile(jarB, "io.grpc.protobuf.ProtoUtils"),
             new MethodSymbol(
                 "io.grpc.protobuf.ProtoUtils",
                 "marshaller",
                 "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
-                false),
-            ErrorType.SYMBOL_NOT_FOUND,
-            new ClassFile(jarB, "java.lang.Object"));
+                false));
+
+    methodNotFoundProblemFromB =
+        new SymbolNotFoundProblem(
+            new ClassFile(jarA, "com.abc.BBB"),
+            new ClassFile(jarB, "io.grpc.protobuf.ProtoUtils"),
+            new MethodSymbol(
+                "io.grpc.protobuf.ProtoUtils",
+                "marshaller",
+                "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
+                false));
   }
 
   @Test
@@ -119,19 +135,13 @@ public class LinkageMonitorTest {
 
   @Test
   public void generateMessageForNewError() throws IOException {
-    Set<SymbolProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
-    
-    Artifact artifactA = new DefaultArtifact("foo:a:1.2.3").setFile(new File("foo/a-1.2.3.jar"));
-    ClassPathEntry jarA = new ClassPathEntry(artifactA);
-    
-    ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotProblems =
-        ImmutableSetMultimap.of(
+    Set<LinkageProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
+
+    ImmutableSet<LinkageProblem> snapshotProblems =
+        ImmutableSet.of(
             classNotFoundProblem, // This is in baseline. It should not be printed
-            new ClassFile(jarA, "com.abc.AAA"),
-            methodNotFoundProblem,
-            new ClassFile(jarA, "com.abc.AAA"),
-            methodNotFoundProblem,
-            new ClassFile(jarA, "com.abc.BBB"));
+            methodNotFoundProblemFromA,
+            methodNotFoundProblemFromB);
 
     DependencyPath pathToA =
         new DependencyPath(new DefaultArtifact("foo:bar:1.0.0"))
@@ -150,7 +160,7 @@ public class LinkageMonitorTest {
     assertEquals(
         "Newly introduced problem:\n"
             + "(foo:b:1.0.0) io.grpc.protobuf.ProtoUtils's method"
-            + " marshaller(com.google.protobuf.Message arg1) is not found\n"
+            + " marshaller(com.google.protobuf.Message) is not found\n"
             + "  referenced from com.abc.AAA (foo:a:1.2.3)\n"
             + "  referenced from com.abc.BBB (foo:a:1.2.3)\n"
             + "\n"
@@ -165,12 +175,12 @@ public class LinkageMonitorTest {
   public void testGenerateMessageForFixedError() {
     String message =
         LinkageMonitor.messageForFixedErrors(
-            ImmutableSet.of(classNotFoundProblem, methodNotFoundProblem));
+            ImmutableSet.of(classNotFoundProblem, methodNotFoundProblemFromA));
     assertEquals(
         "The following problems in the baseline no longer appear in the snapshot:\n"
             + "  Class java.lang.Integer is not found\n"
             + "  (foo:b:1.0.0) io.grpc.protobuf.ProtoUtils's method "
-            + "marshaller(com.google.protobuf.Message arg1) is not found\n",
+            + "marshaller(com.google.protobuf.Message) is not found\n",
         message);
   }
 

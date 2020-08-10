@@ -16,13 +16,12 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
 import com.google.cloud.tools.opensource.dependencies.ArtifactProblem;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSet.Builder;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Multimaps;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -79,7 +78,7 @@ class LinkageCheckerMain {
           DependencyGraphBuilder dependencyGraphBuilder =
               new DependencyGraphBuilder(linkageCheckerArguments.getMavenRepositoryUrls());
           ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
-          classPathResult = classPathBuilder.resolve(artifacts);
+          classPathResult = classPathBuilder.resolve(artifacts, false);
           inputClassPath = classPathResult.getClassPath();
           artifactProblems.addAll(classPathResult.getArtifactProblems());
           entryPoints = ImmutableSet.copyOf(inputClassPath.subList(0, artifacts.size()));
@@ -88,38 +87,43 @@ class LinkageCheckerMain {
         LinkageChecker linkageChecker =
             LinkageChecker.create(
                 inputClassPath, entryPoints, linkageCheckerArguments.getInputExclusionFile());
-        ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
-            linkageChecker.findSymbolProblems();
-    
+        ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
+
         if (linkageCheckerArguments.getReportOnlyReachable()) {
           ClassReferenceGraph graph = linkageChecker.getClassReferenceGraph();
-          symbolProblems =
-              ImmutableSetMultimap.copyOf(
-                  Multimaps.filterValues(
-                      symbolProblems, classFile -> graph.isReachable(classFile.getBinaryName())));
+          linkageProblems =
+              linkageProblems.stream()
+                  .filter(
+                      (LinkageProblem problem) ->
+                          graph.isReachable(problem.getSourceClass().getBinaryName()))
+                  .collect(toImmutableSet());
+        }
+
+        if (classPathResult != null) {
+          LinkageProblemCauseAnnotator.annotate(classPathResult, linkageProblems);
         }
 
         Path writeAsExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
         if (writeAsExclusionFile != null) {
-          ExclusionFiles.write(writeAsExclusionFile, symbolProblems);
+          ExclusionFiles.write(writeAsExclusionFile, linkageProblems);
           System.out.println("Wrote the linkage errors as exclusion file: " + writeAsExclusionFile);
           return;
         }
 
-        if (!symbolProblems.isEmpty()) {
-          System.out.println(SymbolProblem.formatSymbolProblems(symbolProblems));
+        if (!linkageProblems.isEmpty()) {
+          System.out.println(LinkageProblem.formatLinkageProblems(linkageProblems));
         }
 
-        if (classPathResult != null && !symbolProblems.isEmpty()) {
-          Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
-          for (SymbolProblem symbolProblem : symbolProblems.keySet()) {
-            ClassFile containingClass = symbolProblem.getContainingClass();
-            if (containingClass != null) {
-              problematicJars.add(containingClass.getClassPathEntry());
+        if (classPathResult != null && !linkageProblems.isEmpty()) {
+          ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
+          for (LinkageProblem linkageProblem : linkageProblems) {
+            if (linkageProblem instanceof IncompatibleLinkageProblem) {
+              IncompatibleLinkageProblem incompatibleLinkageProblem =
+                  (IncompatibleLinkageProblem) linkageProblem;
+              problematicJars.add(incompatibleLinkageProblem.getTargetClass().getClassPathEntry());
             }
-            for (ClassFile classFile : symbolProblems.get(symbolProblem)) {
-              problematicJars.add(classFile.getClassPathEntry());
-            }
+            ClassFile sourceClassFile = linkageProblem.getSourceClass();
+            problematicJars.add(sourceClassFile.getClassPathEntry());
           }
           System.out.println(classPathResult.formatDependencyPaths(problematicJars.build()));
         }
@@ -132,10 +136,10 @@ class LinkageCheckerMain {
                   + "https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Messages");
         }
 
-        if (!symbolProblems.isEmpty()) {
+        if (!linkageProblems.isEmpty()) {
           // Throwing an exception is more test-friendly compared with System.exit(1). The latter
           // abruptly stops test execution.
-          throw new LinkageCheckResultException(symbolProblems.size());
+          throw new LinkageCheckResultException(linkageProblems.size());
         }
       }
     } catch (ParseException ex) {

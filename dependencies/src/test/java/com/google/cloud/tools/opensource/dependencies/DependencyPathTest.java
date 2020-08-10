@@ -16,11 +16,13 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.testing.EqualsTester;
 import com.google.common.truth.Truth;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.Exclusion;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -149,12 +151,16 @@ public class DependencyPathTest {
 
   @Test
   public void testGetArtifacts() {
-    Truth.assertThat(pathRootFooBar.getArtifacts()).containsExactly(root, foo, bar).inOrder();
+    Truth.assertThat(pathRootFooBar.getArtifactKeys())
+        .containsExactly("a:b", "com.google:foo", "com.google:bar")
+        .inOrder();
   }
 
   @Test
   public void testGetArtifacts_nullRoot() {
-    Truth.assertThat(pathNullRootFooBar.getArtifacts()).containsExactly(foo, bar).inOrder();
+    Truth.assertThat(pathNullRootFooBar.getArtifactKeys())
+        .containsExactly("com.google:foo", "com.google:bar")
+        .inOrder();
   }
 
   @Test
@@ -201,5 +207,38 @@ public class DependencyPathTest {
             .append(new Dependency(bar, "compile", null));
 
     new EqualsTester().addEqualityGroup(path1, path2).testEquals();
+  }
+
+  @Test
+  public void testFindExclusion_exclusionAtNonLeaf() {
+    DependencyPath path =
+        new DependencyPath(root)
+            .append(
+                new Dependency(
+                    foo, "compile", false, ImmutableList.of(new Exclusion("g1", "a1", null, null))))
+            .append(new Dependency(bar, "compile"));
+
+    // The root artifact declares dependency of foo with the exclusion of g1:a1
+    Assert.assertEquals(root, path.findExclusion("g1", "a1"));
+    Assert.assertNull(path.findExclusion("g1", "abc"));
+    Assert.assertNull(path.findExclusion("abc", "a1"));
+  }
+
+  @Test
+  public void testFindExclusion_exclusionAtLeaf() {
+    DependencyPath path =
+        new DependencyPath(root)
+            .append(new Dependency(foo, "compile"))
+            .append(
+                new Dependency(
+                    bar,
+                    "compile",
+                    false,
+                    ImmutableList.of(new Exclusion("g1", "a1", null, null))));
+
+    // The foo artifact declares dependency of bar with the exclusion of g1:a1
+    Assert.assertEquals(foo, path.findExclusion("g1", "a1"));
+    Assert.assertNull(path.findExclusion("g1", "abc"));
+    Assert.assertNull(path.findExclusion("abc", "a1"));
   }
 }

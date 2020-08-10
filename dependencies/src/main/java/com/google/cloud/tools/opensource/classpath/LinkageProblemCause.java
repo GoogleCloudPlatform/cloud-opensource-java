@@ -16,7 +16,5 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-/** Matchers for the targets of linkage errors. */
-interface SymbolProblemTargetMatcher {
-  boolean match(Symbol symbol);
-}
+/** Annotation for {@link LinkageProblem} that explains why the invalid reference is introduced. */
+abstract class LinkageProblemCause {}

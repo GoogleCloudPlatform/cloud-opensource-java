@@ -23,8 +23,9 @@ import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
+import com.google.cloud.tools.opensource.classpath.IncompatibleLinkageProblem;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
-import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
@@ -33,10 +34,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import com.google.common.io.MoreFiles;
 import java.io.IOException;
@@ -95,9 +97,9 @@ public class LinkageMonitor {
     String bomCoordinates = arguments[0];
     List<String> coordinatesElements = Splitter.on(':').splitToList(bomCoordinates);
 
-    Set<SymbolProblem> newSymbolProblems =
+    Set<LinkageProblem> newLinkageProblems =
         new LinkageMonitor().run(coordinatesElements.get(0), coordinatesElements.get(1));
-    int errorSize = newSymbolProblems.size();
+    int errorSize = newLinkageProblems.size();
     if (errorSize > 0) {
       logger.severe(
           String.format("Found %d new linkage error%s", errorSize, errorSize > 1 ? "s" : ""));
@@ -170,14 +172,14 @@ public class LinkageMonitor {
    * method compares the latest release of the BOM and its snapshot version which uses artifacts in
    * {@link #localArtifacts}.
    */
-  private ImmutableSet<SymbolProblem> run(String groupId, String artifactId)
+  private ImmutableSet<LinkageProblem> run(String groupId, String artifactId)
       throws RepositoryException, IOException, MavenRepositoryException, ModelBuildingException {
     String latestBomCoordinates =
         RepositoryUtility.findLatestCoordinates(repositorySystem, groupId, artifactId);
     logger.info("BOM Coordinates: " + latestBomCoordinates);
     Bom baseline = Bom.readBom(latestBomCoordinates);
-    ImmutableSet<SymbolProblem> problemsInBaseline =
-        LinkageChecker.create(baseline, null).findSymbolProblems().keySet();
+    ImmutableSet<LinkageProblem> problemsInBaseline =
+        LinkageChecker.create(baseline, null).findLinkageProblems();
     Bom snapshot = copyWithSnapshot(repositorySystem, session, baseline, localArtifacts);
 
     // Comparing coordinates because DefaultArtifact does not override equals
@@ -192,14 +194,13 @@ public class LinkageMonitor {
     }
 
     ImmutableList<Artifact> snapshotManagedDependencies = snapshot.getManagedDependencies();
-    ClassPathResult classPathResult = (new ClassPathBuilder()).resolve(snapshotManagedDependencies);
+    ClassPathResult classPathResult = (new ClassPathBuilder()).resolve(snapshotManagedDependencies, true);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
     List<ClassPathEntry> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 
-    ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems =
+    ImmutableSet<LinkageProblem> problemsInSnapshot =
         LinkageChecker.create(classpath, ImmutableSet.copyOf(entryPointJars), null)
-            .findSymbolProblems();
-    ImmutableSet<SymbolProblem> problemsInSnapshot = snapshotSymbolProblems.keySet();
+            .findLinkageProblems();
 
     if (problemsInBaseline.equals(problemsInSnapshot)) {
       logger.info(
@@ -207,15 +208,14 @@ public class LinkageMonitor {
       return ImmutableSet.of();
     }
 
-    Set<SymbolProblem> fixedProblems = Sets.difference(problemsInBaseline, problemsInSnapshot);
+    Set<LinkageProblem> fixedProblems = Sets.difference(problemsInBaseline, problemsInSnapshot);
     if (!fixedProblems.isEmpty()) {
       logger.info(messageForFixedErrors(fixedProblems));
     }
 
-    Set<SymbolProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
+    Set<LinkageProblem> newProblems = Sets.difference(problemsInSnapshot, problemsInBaseline);
     if (!newProblems.isEmpty()) {
-      logger.severe(
-          messageForNewErrors(snapshotSymbolProblems, problemsInBaseline, classPathResult));
+      logger.severe(messageForNewErrors(problemsInSnapshot, problemsInBaseline, classPathResult));
     }
     return ImmutableSet.copyOf(newProblems);
   }
@@ -225,34 +225,39 @@ public class LinkageMonitor {
   }
 
   /**
-   * Returns a message on {@code snapshotSymbolProblems} that do not exist in {@code
-   * baselineProblems}.
+   * Returns a message on {@code snapshotProblems} that do not exist in {@code baselineProblems}.
    */
   @VisibleForTesting
   static String messageForNewErrors(
-      ImmutableSetMultimap<SymbolProblem, ClassFile> snapshotSymbolProblems,
-      Set<SymbolProblem> baselineProblems,
+      Set<LinkageProblem> snapshotProblems,
+      Set<LinkageProblem> baselineProblems,
       ClassPathResult classPathResult) {
-    Set<SymbolProblem> newProblems =
-        Sets.difference(snapshotSymbolProblems.keySet(), baselineProblems);
-    StringBuilder message =
-        new StringBuilder("Newly introduced problem" + (newProblems.size() > 1 ? "s" : "") + ":\n");
+    Set<LinkageProblem> newProblems = Sets.difference(snapshotProblems, baselineProblems);
     Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
-    for (SymbolProblem problem : newProblems) {
+
+    ImmutableListMultimap<String, LinkageProblem> groupedBySymbolProblem =
+        Multimaps.index(newProblems, problem -> problem.formatSymbolProblem());
+    StringBuilder message =
+        new StringBuilder(
+            "Newly introduced problem"
+                + (groupedBySymbolProblem.keySet().size() > 1 ? "s" : "")
+                + ":\n");
+    for (String problem : groupedBySymbolProblem.keySet()) {
       message.append(problem + "\n");
 
-      // This is null for ClassNotFound error.
-      ClassFile containingClass = problem.getContainingClass();
-      if (containingClass != null) {
-        problematicJars.add(containingClass.getClassPathEntry());
-      }
+      for (LinkageProblem linkageProblem : groupedBySymbolProblem.get(problem)) {
+        // This is null for ClassNotFound error.
+        if (linkageProblem instanceof IncompatibleLinkageProblem) {
+          problematicJars.add(
+              ((IncompatibleLinkageProblem) linkageProblem).getTargetClass().getClassPathEntry());
+        }
 
-      for (ClassFile classFile : snapshotSymbolProblems.get(problem)) {
+        ClassFile sourceClass = linkageProblem.getSourceClass();
         message.append(
             String.format(
                 "  referenced from %s (%s)\n",
-                classFile.getBinaryName(), classFile.getClassPathEntry()));
-        problematicJars.add(classFile.getClassPathEntry());
+                sourceClass.getBinaryName(), sourceClass.getClassPathEntry()));
+        problematicJars.add(sourceClass.getClassPathEntry());
       }
     }
 
@@ -264,15 +269,15 @@ public class LinkageMonitor {
 
   /** Returns a message on {@code fixedProblems}. */
   @VisibleForTesting
-  static String messageForFixedErrors(Set<SymbolProblem> fixedProblems) {
+  static String messageForFixedErrors(Set<LinkageProblem> fixedProblems) {
     int problemSize = fixedProblems.size();
     StringBuilder message =
         new StringBuilder(
             "The following problem"
                 + (problemSize > 1 ? "s" : "")
                 + " in the baseline no longer appear in the snapshot:\n");
-    for (SymbolProblem problem : fixedProblems) {
-      message.append("  " + problem + "\n");
+    for (LinkageProblem problem : fixedProblems) {
+      message.append("  " + problem.formatSymbolProblem() + "\n");
     }
     return message.toString();
   }
