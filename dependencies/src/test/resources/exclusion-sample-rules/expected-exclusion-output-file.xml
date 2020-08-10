@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinkageCheckerFilter>
+  <LinkageError>
+    <Target>
+      <Method name="marshaller" className="io.grpc.protobuf.ProtoUtils"/>
+    </Target>
+    <Source>
+      <Class name="com.foo.Source1"/>
+    </Source>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Field name="MAX_VALUE" className="java.lang.Integer"/>
+    </Target>
+    <Source>
+      <Class name="com.foo.Source2"/>
+    </Source>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Class name="java.lang.Integer"/>
+    </Target>
+    <Source>
+      <Class name="com.foo.Source3"/>
+    </Source>
+  </LinkageError>
+</LinkageCheckerFilter>

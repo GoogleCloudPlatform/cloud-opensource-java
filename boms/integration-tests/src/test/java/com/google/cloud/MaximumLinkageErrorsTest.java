@@ -17,15 +17,13 @@
 
 package com.google.cloud;
 
-import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
-import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import java.io.IOException;
@@ -39,48 +37,31 @@ import org.junit.Test;
 public class MaximumLinkageErrorsTest {
 
   @Test
-  public void testMaximumLinkageErrors()
+  public void testForNewLinkageErrors()
       throws IOException, MavenRepositoryException, RepositoryException {
     // Not using RepositoryUtility.findLatestCoordinates, which may return a snapshot version
     String version = findLatestNonSnapshotVersion();
     String baselineCoordinates = "com.google.cloud:libraries-bom:" + version;
-    Bom baseline = RepositoryUtility.readBom(baselineCoordinates);
+    Bom baseline = Bom.readBom(baselineCoordinates);
 
     Path bomFile = Paths.get("../cloud-oss-bom/pom.xml");
-    Bom bom = RepositoryUtility.readBom(bomFile);
+    Bom bom = Bom.readBom(bomFile);
 
-    ImmutableSetMultimap<SymbolProblem, ClassFile> oldProblems =
-        LinkageChecker.create(baseline).findSymbolProblems();
+    ImmutableSet<LinkageProblem> oldProblems =
+        LinkageChecker.create(baseline).findLinkageProblems();
     LinkageChecker checker = LinkageChecker.create(bom);
-    ImmutableSetMultimap<SymbolProblem, ClassFile> currentProblems = checker.findSymbolProblems();
+    ImmutableSet<LinkageProblem> currentProblems = checker.findLinkageProblems();
 
     // This only tests for newly missing methods, not new references to
     // previously missing methods.
-    SetView<SymbolProblem> newProblems =
-        Sets.difference(currentProblems.keySet(), oldProblems.keySet());
+    SetView<LinkageProblem> newProblems = Sets.difference(currentProblems, oldProblems);
 
     // Check that no new linkage errors have been introduced since the baseline
     StringBuilder message = new StringBuilder("Baseline BOM: " + baselineCoordinates + "\n");
     if (!newProblems.isEmpty()) {
       message.append("Newly introduced problems:\n");
-      for (SymbolProblem problem : newProblems) {
-        message.append(problem + "\n");
-      }
+      message.append(LinkageProblem.formatLinkageProblems(newProblems));
       Assert.fail(message.toString());
-    }
-    
-    // If that passes, check whether there are any new references to missing methods:
-    for (SymbolProblem problem : currentProblems.keySet()) {
-      ImmutableSet<ClassFile> oldReferences = oldProblems.get(problem);
-      ImmutableSet<ClassFile> currentReferences = currentProblems.get(problem);
-      SetView<ClassFile> newReferences = Sets.difference(currentReferences, oldReferences);
-      if (!newReferences.isEmpty()) {
-        message.append("Newly introduced classes linking to " + problem + ":\n");
-        for (ClassFile classFile : newReferences) {
-          message.append("Link from " + classFile + "\n");
-        }
-        Assert.fail(message.toString());
-      }
     }
   }
 

@@ -1,0 +1,7 @@
+<LinkageCheckerFilter>
+  <LinkageError>
+    <Source>
+      <Package name="reactor.core.publisher" />
+    </Source>
+  </LinkageError>
+</LinkageCheckerFilter>

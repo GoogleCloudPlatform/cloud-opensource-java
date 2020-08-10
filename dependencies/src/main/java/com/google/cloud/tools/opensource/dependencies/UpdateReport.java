@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
 class UpdateReport {
@@ -30,7 +29,7 @@ class UpdateReport {
    * made at head but not published to Maven central, or dependencies
    * that have been updated but not yet incorporated in the tree.
    */
-  public static void main(String[] args) throws RepositoryException {
+  public static void main(String[] args) {
 
     if (args.length != 1 || !args[0].contains(":")) {
       System.err.println("Usage: java " + UpdateReport.class.getCanonicalName()
@@ -43,9 +42,7 @@ class UpdateReport {
 
       DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
       DependencyGraph graph =
-          dependencyGraphBuilder
-              .buildFullDependencyGraph(ImmutableList.of(artifact))
-              .getDependencyGraph();
+          dependencyGraphBuilder.buildFullDependencyGraph(ImmutableList.of(artifact));
       List<Update> updates = graph.findUpdates();
       
       if (updates.isEmpty()) {

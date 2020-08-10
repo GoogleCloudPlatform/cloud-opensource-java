@@ -16,7 +16,12 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.junit.Assert;
@@ -57,11 +62,50 @@ public class LinkageCheckerArgumentsTest {
   }
 
   @Test
-  public void testReadCommandLine_multipleJars() throws ParseException, RepositoryException {
+  public void testReadCommandLine_jarFileList_absolutePath() throws ParseException, IOException {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine(
             "-j", "/foo/bar/A.jar,/foo/bar/B.jar,/foo/bar/C.jar");
-    Truth.assertThat(parsedArguments.getInputClasspath()).hasSize(3);
+
+    Truth.assertThat(parsedArguments.getJarFiles())
+        .comparingElementsUsing(
+            Correspondence.transforming(ClassPathEntry::getJar, "has path equals to"))
+        // Using Path::toString to work in Windows
+        .containsExactly(
+            Paths.get("/foo/bar/A.jar").toAbsolutePath(),
+            Paths.get("/foo/bar/B.jar").toAbsolutePath(),
+            Paths.get("/foo/bar/C.jar").toAbsolutePath());
+  }
+
+  @Test
+  public void testReadCommandLine_jarFileList_relativePath() throws ParseException, IOException {
+
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine("--jars", "dir1/foo.jar,dir2/bar.jar,baz.jar");
+    List<ClassPathEntry> inputClasspath = parsedArguments.getJarFiles();
+
+    Truth.assertThat(inputClasspath)
+        .comparingElementsUsing(
+            Correspondence.transforming(ClassPathEntry::getJar, "has path equals to"))
+        .containsExactly(
+            Paths.get("dir1/foo.jar").toAbsolutePath(),
+            Paths.get("dir2/bar.jar").toAbsolutePath(),
+            Paths.get("baz.jar").toAbsolutePath());
+  }
+
+  @Test
+  public void testGetJarFiles_invalidOption() throws ParseException, IOException {
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine(
+            "--artifacts", "com.google.guava:guava:26.0,io.grpc:grpc-core:1.17.1");
+
+    try {
+      parsedArguments.getJarFiles();
+      Assert.fail();
+    } catch (IllegalArgumentException ex) {
+      // pass
+      Assert.assertEquals("The arguments must have option 'j' to list JAR files", ex.getMessage());
+    }
   }
 
   @Test
@@ -115,5 +159,20 @@ public class LinkageCheckerArgumentsTest {
         LinkageCheckerArguments.readCommandLine("-j", "dummy.jar", "-r");
 
     Truth.assertThat(parsedArguments.getReportOnlyReachable()).isTrue();
+  }
+
+  @Test
+  public void testReadCommandLine_exclusionFile() throws ParseException {
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine("-j", "dummy.jar", "-e", "foo/exclusion.xml");
+    Path exclusionFile = parsedArguments.getInputExclusionFile();
+    Assert.assertEquals(Paths.get("foo/exclusion.xml"), exclusionFile);
+  }
+
+  @Test
+  public void testReadCommandLine_exclusionFile_unspecified() throws ParseException {
+    LinkageCheckerArguments parsedArguments =
+        LinkageCheckerArguments.readCommandLine("-j", "dummy.jar");
+    Assert.assertNull(parsedArguments.getInputExclusionFile());
   }
 }

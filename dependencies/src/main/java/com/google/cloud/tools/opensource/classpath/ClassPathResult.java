@@ -18,52 +18,55 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
-import java.nio.file.Path;
+import com.google.common.collect.ListMultimap;
+import java.io.IOException;
+import org.eclipse.aether.artifact.Artifact;
 
 /** Result of class path resolution with {@link UnresolvableArtifactProblem}s if any. */
 public final class ClassPathResult {
 
-  private final ImmutableList<Path> classPath;
+  private final ImmutableList<ClassPathEntry> classPath;
 
   /**
-   * An ordered map of absolute paths of JAR files to one or more Maven dependency paths.
+   * An ordered map from class path elements to one or more Maven dependency paths.
    *
-   * <p>The keys of the returned map represent jar files of {@code artifacts} and their transitive
-   * dependencies. The return value of {@link LinkedListMultimap#keySet()} preserves key iteration
-   * order.
+   * <p>The keys of the returned map represent Maven artifacts in the resolved class path,
+   * including transitive dependencies. The return value of {@link LinkedListMultimap#keySet()}
+   * preserves key iteration order.
    *
-   * <p>The values of the returned map for a key (jar file) represent the different Maven dependency
-   * paths from {@code artifacts} to the Maven artifact of the jar file.
+   * <p>The values of the returned map for a key (class path entry) represent the different Maven
+   * dependency paths from {@code artifacts} to the Maven artifact.
    */
-  private final ImmutableListMultimap<Path, DependencyPath> dependencyPaths;
+  private final ImmutableListMultimap<ClassPathEntry, DependencyPath> dependencyPaths;
 
   private final ImmutableList<UnresolvableArtifactProblem> artifactProblems;
 
   public ClassPathResult(
-      Multimap<Path, DependencyPath> dependencyPaths,
+      ListMultimap<ClassPathEntry, DependencyPath> dependencyPaths,
       Iterable<UnresolvableArtifactProblem> artifactProblems) {
     this.dependencyPaths = ImmutableListMultimap.copyOf(dependencyPaths);
     this.classPath = ImmutableList.copyOf(dependencyPaths.keySet());
     this.artifactProblems = ImmutableList.copyOf(artifactProblems);
   }
 
-  /** Returns the list of absolute paths to JAR files of resolved Maven artifacts. */
-  public ImmutableList<Path> getClassPath() {
+  /** Returns the resolved class path. */
+  public ImmutableList<ClassPathEntry> getClassPath() {
     return classPath;
   }
 
   /**
-   * Returns the dependency path to the JAR file. An empty list if the JAR file is not in the class
-   * path.
+   * Returns all paths to the class path entry or 
+   * an empty list if the entry is not in the class path.
    */
-  public ImmutableList<DependencyPath> getDependencyPaths(Path jar) {
-    return dependencyPaths.get(jar);
+  public ImmutableList<DependencyPath> getDependencyPaths(ClassPathEntry entry) {
+    return dependencyPaths.get(entry);
   }
 
   /** Returns problems encountered while constructing the dependency graph. */
@@ -71,14 +74,14 @@ public final class ClassPathResult {
     return artifactProblems;
   }
 
-  /** Returns text describing dependency paths to {@code jars} in the dependency tree. */
-  public String formatDependencyPaths(Iterable<Path> jars) {
+  /** Returns text describing dependency paths to class path entries in the dependency tree. */
+  public String formatDependencyPaths(Iterable<ClassPathEntry> entries) {
     StringBuilder message = new StringBuilder();
-    for (Path jar : jars) {
-      ImmutableList<DependencyPath> dependencyPaths = getDependencyPaths(jar);
-      checkArgument(dependencyPaths.size() >= 1, "%s is not in the class path", jar);
+    for (ClassPathEntry entry : entries) {
+      ImmutableList<DependencyPath> dependencyPaths = getDependencyPaths(entry);
+      checkArgument(dependencyPaths.size() >= 1, "%s is not in the class path", entry);
 
-      message.append(jar.getFileName() + " is at:\n");
+      message.append(entry + " is at:\n");
 
       int otherCount = dependencyPaths.size() - 1;
       message.append("  " + dependencyPaths.get(0) + "\n");
@@ -89,5 +92,52 @@ public final class ClassPathResult {
       }
     }
     return message.toString();
+  }
+  
+  /**
+   * Returns the classpath entries for the transitive dependencies of the specified
+   * artifact.
+   */
+  public ImmutableSet<ClassPathEntry> getClassPathEntries(String coordinates) {
+    ImmutableSet.Builder<ClassPathEntry> builder = ImmutableSet.builder();
+    for (ClassPathEntry entry : classPath) {
+      for (DependencyPath dependencyPath : dependencyPaths.get(entry)) {
+        if (dependencyPath.size() > 1) {
+          Artifact artifact = dependencyPath.get(1);
+          if (Artifacts.toCoordinates(artifact).equals(coordinates)) {
+            builder.add(entry);
+          }
+        }
+      }
+    }
+    return builder.build();
+  }
+
+  /**
+   * Returns the class path entry for the artifact that matches {@code groupId} and {@code
+   * artifactId}. {@code Null} if no matching artifact is found.
+   */
+  ClassPathEntry findEntryById(String groupId, String artifactId) {
+    for (ClassPathEntry entry : getClassPath()) {
+      Artifact artifact = entry.getArtifact();
+      if (artifact.getGroupId().equals(groupId) && artifact.getArtifactId().equals(artifactId)) {
+        return entry;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Returns the class path entry that contains the class of {@code symbol}. {@code Null} if no
+   * matching entry is found.
+   */
+  ClassPathEntry findEntryBySymbol(Symbol symbol) throws IOException {
+    String className = symbol.getClassBinaryName();
+    for (ClassPathEntry entry : getClassPath()) {
+      if (entry.getFileNames().contains(className)) {
+        return entry;
+      }
+    }
+    return null;
   }
 }

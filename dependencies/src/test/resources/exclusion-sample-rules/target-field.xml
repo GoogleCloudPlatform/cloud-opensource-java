@@ -1,0 +1,7 @@
+<LinkageCheckerFilter>
+  <LinkageError>
+    <Target>
+      <Field className="com.google.Foo" name="fieldA" />
+    </Target>
+  </LinkageError>
+</LinkageCheckerFilter>
