@@ -35,9 +35,9 @@ public class LevelOrderQueueItemTest {
             .append(new Dependency(bar, "compile"));
 
     new EqualsTester()
-        .addEqualityGroup(new LevelOrderQueueItem<>(1, path1), new LevelOrderQueueItem<>(1, path1))
-        .addEqualityGroup(new LevelOrderQueueItem<>(1, path2))
-        .addEqualityGroup(new LevelOrderQueueItem<>(2, path2), new LevelOrderQueueItem<>(2, path2))
+        .addEqualityGroup(new PathToNode<>(1, path1), new PathToNode<>(1, path1))
+        .addEqualityGroup(new PathToNode<>(1, path2))
+        .addEqualityGroup(new PathToNode<>(2, path2), new PathToNode<>(2, path2))
         .testEquals();
   }
 }

@@ -19,12 +19,12 @@ package com.google.cloud.tools.opensource.dependencies;
 import java.util.Objects;
 
 /**
- * The item in the queue for the graph traversal when constructing {@link DependencyGraph}.
+ * A path to a node in a {@link DependencyGraph}.
  *
- * @param <T> The type of the input graph node. It's {@code DependencyNode} for Maven's graph and
- *     {@code ResolvedDependency} for Gradle's graph.
+ * @param <T> The type of the graph node. It's {@code org.eclipse.aether.graph.DependencyNode} for
+ *     Maven's graph and {@code org.gradle.api.artifacts.ResolvedDependency} for Gradle's graph.
  */
-public final class LevelOrderQueueItem<T> {
+public final class PathToNode<T> {
   private final T node;
 
   // This may be null for the root
@@ -40,7 +40,7 @@ public final class LevelOrderQueueItem<T> {
     return parentPath;
   }
 
-  public LevelOrderQueueItem(T node, DependencyPath parentPath) {
+  public PathToNode(T node, DependencyPath parentPath) {
     this.node = node;
     this.parentPath = parentPath;
   }
@@ -53,7 +53,7 @@ public final class LevelOrderQueueItem<T> {
     if (other == null || getClass() != other.getClass()) {
       return false;
     }
-    LevelOrderQueueItem<?> that = (LevelOrderQueueItem<?>) other;
+    PathToNode<?> that = (PathToNode<?>) other;
     return Objects.equals(node, that.node) && Objects.equals(parentPath, that.parentPath);
   }
 
