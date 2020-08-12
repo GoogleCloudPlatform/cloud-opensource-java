@@ -47,7 +47,7 @@
     <guava.version>29.0-android</guava.version>
     <google.cloud.java.version>0.132.0</google.cloud.java.version>
     <io.grpc.version>1.30.2</io.grpc.version>
-    <protobuf.version>3.12.2</protobuf.version>
+    <protobuf.version>3.12.4</protobuf.version>
     <http.version>1.36.0</http.version>
   </properties>
 
