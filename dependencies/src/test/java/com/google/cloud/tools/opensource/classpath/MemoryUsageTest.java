@@ -18,24 +18,26 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+
+import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.junit.Test;
 
 public class MemoryUsageTest {
   private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
   
   @Test
-  public void testBeamCatalogOutOfMemoryError() {
+  public void testSpringCloudGcpDependenciesBomOutOfMemoryError() throws ArtifactDescriptorException {
     
     long before = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-    // Artifact catalog = new DefaultArtifact("org.apache.beam:beam-sdks-java-io-hcatalog:2.19.0");
-    
-    Artifact catalog = new DefaultArtifact(
-        "org.apache.beam:beam-sdks-java-extensions-sql-zetasql:jar:2.19.0");
+
+    Bom bom = Bom.readBom("org.springframework.cloud:spring-cloud-gcp-dependencies:1.2.4.RELEASE");
+
     try {
-      ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(catalog));
+      ClassPathResult result = classPathBuilder.resolve(bom.getManagedDependencies(), false);
       long after = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
       double mb = (after - before) / (1024.0 * 1024.0);
       System.err.println("Memory used: " + mb + "MB");      
