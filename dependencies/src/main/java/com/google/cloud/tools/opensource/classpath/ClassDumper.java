@@ -532,7 +532,8 @@ class ClassDumper {
       System.out.println("Class path:");
       for (ClassPathEntry entry : inputClassPath) {
         Artifact artifact = entry.getArtifact();
-        System.out.println(artifact + " : " + entry.getJar());
+        Path jar = entry.getJar();
+        System.out.println(artifact + " : " + jar + ": exists? " + Files.exists(jar));;
       }
 
       throw new ClassFormatException(
