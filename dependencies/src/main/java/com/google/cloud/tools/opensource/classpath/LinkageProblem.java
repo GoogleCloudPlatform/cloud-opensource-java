@@ -72,6 +72,17 @@ public abstract class LinkageProblem {
   public ClassFile getSourceClass() {
     return sourceClass;
   }
+  
+  /**
+   * Returns the class that is expected to contain the symbol. If the symbol is a method or a field,
+   * then this is the class where the symbol was expected to be found. If the symbol is an inner
+   * class, this is the outer class that was expected to contain the inner class. If the target class
+   * is not known or is missing this is null.
+   */
+  @Nullable
+  public ClassFile getTargetClass() {
+    return null;
+  }
 
   void setCause(LinkageProblemCause cause) {
     this.cause = checkNotNull(cause);
@@ -91,17 +102,6 @@ public abstract class LinkageProblem {
     }
     LinkageProblem that = (LinkageProblem) other;
     return symbol.equals(that.symbol) && Objects.equals(sourceClass, that.sourceClass);
-  }
-  
-  /**
-   * Returns the class that is expected to contain the symbol. If the symbol is a method or a field,
-   * then this is the class where the symbol was expected to be found. If the symbol is an inner
-   * class, this is the outer class that was expected to contain the inner class. If thr target class
-   * is not known or is missing this is null.
-   */
-  @Nullable
-  public ClassFile getTargetClass() {
-    return null;
   }
 
   @Override
