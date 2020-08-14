@@ -537,6 +537,18 @@ class ClassDumper {
             + ", readable? " + Files.isReadable(jar));;
       }
 
+      int i = 0;
+      while(i++ < 5) {
+        try {
+          Thread.sleep(100);
+          loadJavaClass(sourceClassName);
+          System.out.println("Retrying the class loading worked somehow.");
+          break;
+        } catch (Exception ex2) {
+          System.out.println("Retrying does not work " + ex2);
+        }
+      }
+
       throw new ClassFormatException(
           "The source class in the reference is no longer available in the class path", ex);
     }
