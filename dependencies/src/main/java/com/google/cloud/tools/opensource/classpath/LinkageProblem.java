@@ -29,6 +29,7 @@ import com.google.common.collect.Multimaps;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * A linkage error describing an invalid reference from {@code sourceClass} to {@code symbol}.
@@ -90,6 +91,17 @@ public abstract class LinkageProblem {
     }
     LinkageProblem that = (LinkageProblem) other;
     return symbol.equals(that.symbol) && Objects.equals(sourceClass, that.sourceClass);
+  }
+  
+  /**
+   * Returns the class that is expected to contain the symbol. If the symbol is a method or a field,
+   * then this is the class where the symbol was expected to be found. If the symbol is an inner
+   * class, this is the outer class that was expected to contain the inner class. If thr target class
+   * is not known or is missing this is null.
+   */
+  @Nullable
+  public ClassFile getTargetClass() {
+    return null;
   }
 
   @Override

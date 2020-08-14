@@ -37,11 +37,7 @@ public abstract class IncompatibleLinkageProblem extends LinkageProblem {
     return jarInfo + super.formatSymbolProblem();
   }
 
-  /**
-   * Returns the class that is expected to contain the symbol. If the symbol is a method or a field,
-   * then this is the class where the symbol was expected to be found. If the symbol is an inner
-   * class, this is the outer class that was expected to contain the inner class.
-   */
+  @Override
   public ClassFile getTargetClass() {
     return targetClass;
   }
