@@ -60,6 +60,7 @@ import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.ObjectType;
 import org.apache.bcel.generic.Type;
 import org.apache.bcel.util.ClassPath;
+import org.eclipse.aether.artifact.Artifact;
 
 /**
  * Class to read symbol references in Java class files and to verify the availability of references
@@ -525,8 +526,14 @@ class ClassDumper {
     } catch (ClassNotFoundException ex) {
       // Because the reference in the argument was extracted from the source class file,
       // the source class should be found.
-
-      System.out.println("Input classpath: " + inputClassPath);
+      System.out.println("The somehow following class path does not provide class "+  sourceClassName);
+      String fileName = classRepository.getFileName(sourceClassName);
+      System.out.println("Filename to lookup the repository: " + fileName);
+      System.out.println("Class path:");
+      for (ClassPathEntry entry : inputClassPath) {
+        Artifact artifact = entry.getArtifact();
+        System.out.println(artifact + " : " + entry.getJar());
+      }
 
       throw new ClassFormatException(
           "The source class in the reference is no longer available in the class path", ex);
