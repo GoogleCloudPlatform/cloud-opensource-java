@@ -149,7 +149,11 @@ class ClassDumper {
           String className = javaClass.getClassName();
           // In listClasses(jar), ClassPathRepository creates JavaClass through the first JAR file
           // that contains the class. It may be different from "jar" for an overlapping class.
-          ClassFile source = new ClassFile(findClassLocation(className), className);
+          ClassPathEntry classLocation = findClassLocation(className);
+          if (className.contains("CloudVisionProperties")) {
+            System.out.println("CloudVisionProperties location:" + classLocation);
+          }
+          ClassFile source = new ClassFile(classLocation, className);
           builder.addAll(findSymbolReferences(source, javaClass));
         }
       }
@@ -521,6 +525,9 @@ class ClassDumper {
     } catch (ClassNotFoundException ex) {
       // Because the reference in the argument was extracted from the source class file,
       // the source class should be found.
+
+      System.out.println("Input classpath: " + inputClassPath);
+
       throw new ClassFormatException(
           "The source class in the reference is no longer available in the class path", ex);
     }
