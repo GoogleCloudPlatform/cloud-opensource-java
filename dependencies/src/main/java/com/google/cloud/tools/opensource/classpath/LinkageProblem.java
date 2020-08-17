@@ -29,6 +29,7 @@ import com.google.common.collect.Multimaps;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * A linkage error describing an invalid reference from {@code sourceClass} to {@code symbol}.
@@ -42,6 +43,7 @@ public abstract class LinkageProblem {
   private final ClassFile sourceClass;
   private final String symbolProblemMessage;
   private LinkageProblemCause cause;
+  private ClassFile targetClass;
 
   /**
    * A linkage error describing an invalid reference.
@@ -52,14 +54,15 @@ public abstract class LinkageProblem {
    * @param sourceClass the source of the invalid reference.
    * @param symbol the target of the invalid reference
    */
-  LinkageProblem(String symbolProblemMessage, ClassFile sourceClass, Symbol symbol) {
+  LinkageProblem(String symbolProblemMessage, ClassFile sourceClass, Symbol symbol, ClassFile targetClass) {
     this.symbolProblemMessage = Preconditions.checkNotNull(symbolProblemMessage);
     Preconditions.checkNotNull(symbol);
 
     // After finding symbol problem, there is no need to have SuperClassSymbol over ClassSymbol.
     this.symbol =
         symbol instanceof SuperClassSymbol ? new ClassSymbol(symbol.getClassBinaryName()) : symbol;
-    this.sourceClass = Preconditions.checkNotNull(sourceClass);
+      this.sourceClass = Preconditions.checkNotNull(sourceClass);
+      this.targetClass = targetClass;
   }
 
   /** Returns the target symbol that was not resolved. */
@@ -70,6 +73,17 @@ public abstract class LinkageProblem {
   /** Returns the source of the invalid reference which this linkage error represents. */
   public ClassFile getSourceClass() {
     return sourceClass;
+  }
+  
+  /**
+   * Returns the class that is expected to contain the symbol. If the symbol is a method or a field,
+   * then this is the class where the symbol was expected to be found. If the symbol is an inner
+   * class, this is the outer class that was expected to contain the inner class. If the target class
+   * is unknown or missing, this is null.
+   */
+  @Nullable
+  public ClassFile getTargetClass() {
+    return targetClass;
   }
 
   void setCause(LinkageProblemCause cause) {
@@ -89,12 +103,13 @@ public abstract class LinkageProblem {
       return false;
     }
     LinkageProblem that = (LinkageProblem) other;
-    return symbol.equals(that.symbol) && Objects.equals(sourceClass, that.sourceClass);
+    return symbol.equals(that.symbol) && Objects.equals(sourceClass, that.sourceClass)
+        && Objects.equals(targetClass, that.targetClass);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(symbol, sourceClass);
+    return Objects.hash(symbol, sourceClass, targetClass);
   }
 
   @Override
@@ -108,7 +123,13 @@ public abstract class LinkageProblem {
    * {@code symbol}s.
    */
   public String formatSymbolProblem() {
-    return symbol + " " + symbolProblemMessage;
+    String result = symbol + " " + symbolProblemMessage;
+    if (targetClass != null) {   
+      String jarInfo = "(" + getTargetClass().getClassPathEntry() + ") ";
+      result = jarInfo + result;
+    }
+    
+    return result;
   }
 
   /** Returns mapping from symbol problem description to the names of the source classes. */

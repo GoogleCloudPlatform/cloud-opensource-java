@@ -425,7 +425,7 @@ public class LinkageCheckerTest {
             dummySourceClass);
 
     Truth8.assertThat(problemFound).isPresent();
-    assertTrue(problemFound.get() instanceof IncompatibleLinkageProblem);
+    assertNotNull(problemFound.get().getTargetClass());
   }
 
   @Test
@@ -1095,8 +1095,8 @@ public class LinkageCheckerTest {
     problems.forEach(
         (problem) -> {
           ClassFile sourceClass = problem.getSourceClass();
-          if (problem instanceof IncompatibleLinkageProblem) {
-            if (sourceClass.equals(((IncompatibleLinkageProblem) problem).getTargetClass())) {
+          if (problem .getTargetClass() != null) {
+            if (sourceClass.equals(problem.getTargetClass())) {
               fail("Self-referencing linkage errors: " + problem);
             }
           }

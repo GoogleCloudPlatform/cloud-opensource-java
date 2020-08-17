@@ -24,8 +24,8 @@ package com.google.cloud.tools.opensource.classpath;
  * If the source is in the same package, the member is private. If the source is a subclass of the
  * target class, the member is not protected or public.
  */
-final class InaccessibleMemberProblem extends IncompatibleLinkageProblem {
+final class InaccessibleMemberProblem extends LinkageProblem {
   InaccessibleMemberProblem(ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
-    super("is not accessible", sourceClass, targetClass, symbol);
+    super("is not accessible", sourceClass, symbol, targetClass);
   }
 }
