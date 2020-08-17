@@ -27,6 +27,7 @@ import com.google.common.graph.Traverser;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -145,15 +146,15 @@ class ClassDumper {
     SymbolReferences.Builder builder = new SymbolReferences.Builder();
 
     for (ClassPathEntry jar : inputClassPath) {
+      if (jar.getJar().toString().contains("spring-cloud-gcp-autoconfigure")) {
+        System.out.println((new Date()) + ": Reading spring-cloud-gcp-autoconfigure:" + jar);
+      }
       for (JavaClass javaClass : listClasses(jar)) {
         if (isCompatibleClassFileVersion(javaClass)) {
           String className = javaClass.getClassName();
           // In listClasses(jar), ClassPathRepository creates JavaClass through the first JAR file
           // that contains the class. It may be different from "jar" for an overlapping class.
           ClassPathEntry classLocation = findClassLocation(className);
-          if (className.contains("CloudVisionProperties")) {
-            System.out.println("CloudVisionProperties location:" + classLocation);
-          }
           ClassFile source = new ClassFile(classLocation, className);
           builder.addAll(findSymbolReferences(source, javaClass));
         }
@@ -526,7 +527,7 @@ class ClassDumper {
     } catch (ClassNotFoundException ex) {
       // Because the reference in the argument was extracted from the source class file,
       // the source class should be found.
-      System.out.println("The somehow following class path does not provide class "+  sourceClassName);
+      System.out.println((new Date()) + ": Somehow following class path does not provide class "+  sourceClassName);
       String fileName = classRepository.getFileName(sourceClassName);
       System.out.println("Filename to lookup the repository: " + fileName);
       System.out.println("Class path:");
@@ -545,7 +546,7 @@ class ClassDumper {
           System.out.println("Retrying the class loading worked somehow.");
           break;
         } catch (Exception ex2) {
-          System.out.println("Retrying does not work " + ex2);
+          System.out.println((new Date()) + ": Retrying does not work " + ex2);
         }
       }
 
