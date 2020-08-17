@@ -30,9 +30,9 @@ package com.google.cloud.tools.opensource.classpath;
  * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.4.3.4">Java
  *     Virtual Machine Specification: 5.4.3.4. Interface Method Resolution</a>
  */
-final class IncompatibleClassChangeProblem extends IncompatibleLinkageProblem {
+final class IncompatibleClassChangeProblem extends LinkageProblem {
 
   IncompatibleClassChangeProblem(ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
-    super("has changed incompatibly", sourceClass, targetClass, symbol);
+    super("has changed incompatibly", sourceClass, symbol, targetClass);
   }
 }

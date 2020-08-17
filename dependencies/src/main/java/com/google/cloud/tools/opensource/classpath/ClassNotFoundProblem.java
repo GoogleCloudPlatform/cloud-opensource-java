@@ -20,6 +20,6 @@ package com.google.cloud.tools.opensource.classpath;
 public final class ClassNotFoundProblem extends LinkageProblem {
 
   public ClassNotFoundProblem(ClassFile sourceClass, ClassSymbol classSymbol) {
-    super("is not found", sourceClass, classSymbol);
+    super("is not found", sourceClass, classSymbol, null);
   }
 }

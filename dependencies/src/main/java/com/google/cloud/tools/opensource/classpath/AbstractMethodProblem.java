@@ -21,8 +21,8 @@ package com.google.cloud.tools.opensource.classpath;
  * is declared to implement the method by {@code sourceClass}. Such unimplemented methods manifest
  * as {@link AbstractMethodError}s at runtime.
  */
-final class AbstractMethodProblem extends IncompatibleLinkageProblem {
+final class AbstractMethodProblem extends LinkageProblem {
   AbstractMethodProblem(ClassFile sourceClass, ClassFile targetClass, MethodSymbol methodSymbol) {
-    super("is not implemented in the class", sourceClass, targetClass, methodSymbol);
+    super("is not implemented in the class", sourceClass, methodSymbol, targetClass);
   }
 }
