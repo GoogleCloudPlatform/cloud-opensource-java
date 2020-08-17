@@ -24,8 +24,8 @@ package com.google.cloud.tools.opensource.classpath;
  * enclosing types is not public. If the source class is in the same package, the class or one of
  * its enclosing types is private.
  */
-final class InaccessibleClassProblem extends IncompatibleLinkageProblem {
+final class InaccessibleClassProblem extends LinkageProblem {
   InaccessibleClassProblem(ClassFile sourceClass, ClassFile targetClass, Symbol classSymbol) {
-    super("is not accessible", sourceClass, targetClass, classSymbol);
+    super("is not accessible", sourceClass, classSymbol, targetClass);
   }
 }
