@@ -43,6 +43,7 @@ public abstract class LinkageProblem {
   private final ClassFile sourceClass;
   private final String symbolProblemMessage;
   private LinkageProblemCause cause;
+  private ClassFile targetClass;
 
   /**
    * A linkage error describing an invalid reference.
@@ -53,14 +54,15 @@ public abstract class LinkageProblem {
    * @param sourceClass the source of the invalid reference.
    * @param symbol the target of the invalid reference
    */
-  LinkageProblem(String symbolProblemMessage, ClassFile sourceClass, Symbol symbol) {
+  LinkageProblem(String symbolProblemMessage, ClassFile sourceClass, Symbol symbol, ClassFile targetClass) {
     this.symbolProblemMessage = Preconditions.checkNotNull(symbolProblemMessage);
     Preconditions.checkNotNull(symbol);
 
     // After finding symbol problem, there is no need to have SuperClassSymbol over ClassSymbol.
     this.symbol =
         symbol instanceof SuperClassSymbol ? new ClassSymbol(symbol.getClassBinaryName()) : symbol;
-    this.sourceClass = Preconditions.checkNotNull(sourceClass);
+      this.sourceClass = Preconditions.checkNotNull(sourceClass);
+      this.targetClass = targetClass;
   }
 
   /** Returns the target symbol that was not resolved. */
@@ -81,7 +83,7 @@ public abstract class LinkageProblem {
    */
   @Nullable
   public ClassFile getTargetClass() {
-    return null;
+    return targetClass;
   }
 
   void setCause(LinkageProblemCause cause) {
@@ -101,12 +103,13 @@ public abstract class LinkageProblem {
       return false;
     }
     LinkageProblem that = (LinkageProblem) other;
-    return symbol.equals(that.symbol) && Objects.equals(sourceClass, that.sourceClass);
+    return symbol.equals(that.symbol) && Objects.equals(sourceClass, that.sourceClass)
+        && Objects.equals(targetClass, that.targetClass);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(symbol, sourceClass);
+    return Objects.hash(symbol, sourceClass, targetClass);
   }
 
   @Override
@@ -120,7 +123,13 @@ public abstract class LinkageProblem {
    * {@code symbol}s.
    */
   public String formatSymbolProblem() {
-    return symbol + " " + symbolProblemMessage;
+    String result = symbol + " " + symbolProblemMessage;
+    if (targetClass != null) {   
+      String jarInfo = "(" + getTargetClass().getClassPathEntry() + ") ";
+      result = jarInfo + result;
+    }
+    
+    return result;
   }
 
   /** Returns mapping from symbol problem description to the names of the source classes. */

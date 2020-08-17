@@ -16,46 +16,15 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import java.util.Objects;
-
 /**
  * A {@link LinkageProblem} caused by an invalid reference when both {@code sourceClass} and {@code
  * targetClass} are present in the class path.
  */
 public abstract class IncompatibleLinkageProblem extends LinkageProblem {
-  private final ClassFile targetClass;
 
   IncompatibleLinkageProblem(
       String symbolProblemMessage, ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
-    super(symbolProblemMessage, sourceClass, symbol);
-    this.targetClass = targetClass;
+    super(symbolProblemMessage, sourceClass, symbol, targetClass);
   }
 
-  @Override
-  public String formatSymbolProblem() {
-    String jarInfo = "(" + targetClass.getClassPathEntry() + ") ";
-    return jarInfo + super.formatSymbolProblem();
-  }
-
-  @Override
-  public ClassFile getTargetClass() {
-    return targetClass;
-  }
-
-  @Override
-  public boolean equals(Object other) {
-    if (this == other) {
-      return true;
-    }
-    if (other == null || getClass() != other.getClass()) {
-      return false;
-    }
-    IncompatibleLinkageProblem that = (IncompatibleLinkageProblem) other;
-    return super.equals(other) && Objects.equals(targetClass, that.targetClass);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), targetClass);
-  }
 }

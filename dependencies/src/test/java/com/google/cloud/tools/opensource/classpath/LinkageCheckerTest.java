@@ -425,7 +425,7 @@ public class LinkageCheckerTest {
             dummySourceClass);
 
     Truth8.assertThat(problemFound).isPresent();
-    assertTrue(problemFound.get() instanceof IncompatibleLinkageProblem);
+    assertNotNull(problemFound.get().getTargetClass());
   }
 
   @Test
