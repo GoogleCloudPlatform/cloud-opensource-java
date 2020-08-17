@@ -38,6 +38,8 @@ import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import org.apache.commons.cli.ParseException;
@@ -1119,5 +1121,21 @@ public class LinkageCheckerTest {
                 (LinkageProblem problem) -> problem.getSourceClass().getBinaryName(),
                 "has class binary name"))
         .contains("io.grpc.internal.DnsNameResolver");
+  }
+
+  @Test
+  public void testFindLinkageProblems_referenceToSystemClass() throws IOException {
+    // tools.jar contains a linkage error. As it's internal class, Linkage Checker users cannot do
+    // any action on it.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1599
+    String javaHome = System.getProperty("java.home");
+    Path toolsJar = Paths.get(javaHome, "..", "lib","tools.jar");
+    ClassPathEntry entry = new ClassPathEntry(
+        new DefaultArtifact("com.sun:tools:1.8").setFile(toolsJar.toFile())
+    );
+
+    LinkageChecker linkageChecker = LinkageChecker.create(ImmutableList.of(entry));
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
+    Truth.assertThat(linkageProblems).isEmpty();
   }
 }

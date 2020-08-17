@@ -456,6 +456,13 @@ public class LinkageChecker {
     String sourceClassName = classFile.getBinaryName();
     String targetClassName = symbol.getClassBinaryName();
 
+    // Skip references to Java runtime class. For example,
+    // com.sun.xml.internal.ws.api.BindingID$SOAPHTTPImpl
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1599
+    if (classDumper.isSystemClass(targetClassName)) {
+      return Optional.empty();
+    }
+
     try {
       JavaClass targetClass = classDumper.loadJavaClass(targetClassName);
       ClassPathEntry classFileLocation = classDumper.findClassLocation(targetClassName);
