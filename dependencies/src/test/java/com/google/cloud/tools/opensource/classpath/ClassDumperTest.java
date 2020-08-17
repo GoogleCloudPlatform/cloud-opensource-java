@@ -17,7 +17,9 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.cloud.tools.opensource.classpath.TestHelper.classPathEntryOfResource;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
@@ -34,6 +36,7 @@ import java.util.List;
 import java.util.Set;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -412,5 +415,24 @@ public class ClassDumperTest {
     // This should not raise NullPointerException
     boolean result = classDumper.catchesLinkageErrorOnClass("javax.mail.internet.MailDateFormat");
     assertFalse(result);
+  }
+
+  @Test
+  public void testJavaToolsJarClass() throws IOException, ClassNotFoundException {
+    String javaHome = System.getProperty("java.home");
+    Path toolsJar = Paths.get(javaHome, "..", "lib","tools.jar");
+    ClassPathEntry entry = new ClassPathEntry(
+        new DefaultArtifact("com.sun:tools:1.8").setFile(toolsJar.toFile())
+    );
+
+    ClassDumper classDumper = ClassDumper.create(ImmutableList.of(entry));
+
+    String soapHttpImpl = "com.sun.xml.internal.ws.api.BindingID$SOAPHTTPImpl";
+    JavaClass javaClass = classDumper
+        .loadJavaClass(soapHttpImpl);
+    assertNotNull(javaClass);
+
+    ClassPathEntry classLocation = classDumper.findClassLocation(soapHttpImpl);
+    assertEquals(entry, classLocation);
   }
 }
