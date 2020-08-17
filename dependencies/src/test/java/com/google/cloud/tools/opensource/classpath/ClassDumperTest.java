@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Set;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
-import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
