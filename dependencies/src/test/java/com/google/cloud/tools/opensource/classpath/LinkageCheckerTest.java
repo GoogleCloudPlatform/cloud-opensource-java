@@ -1124,9 +1124,10 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_referenceToSystemClass() throws IOException {
+  public void testFindLinkageProblems_referenceFromSystemClass() throws IOException {
     // tools.jar contains a linkage error. As it's internal class, Linkage Checker users cannot do
-    // any action on it.
+    // any action on it. The reference is from com.sun.tools.internal.ws.wscompile.WsgenOptions to
+    // com.sun.xml.internal.ws.api.BindingID$SOAPHTTPImpl
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1599
     String javaHome = System.getProperty("java.home");
     Path toolsJar = Paths.get(javaHome, "..", "lib","tools.jar");

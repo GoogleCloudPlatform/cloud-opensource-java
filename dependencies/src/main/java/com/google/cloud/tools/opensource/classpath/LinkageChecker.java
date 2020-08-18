@@ -456,10 +456,11 @@ public class LinkageChecker {
     String sourceClassName = classFile.getBinaryName();
     String targetClassName = symbol.getClassBinaryName();
 
-    // Skip references to Java runtime class. For example,
-    // com.sun.xml.internal.ws.api.BindingID$SOAPHTTPImpl
+    // Skip references from Java runtime class. For example,
+    // com.sun.tools.internal.ws.wscompile.WsgenOptionsr referencing
+    // com.sun.xml.internal.ws.api.BindingID$SOAPHTTPImpl.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1599
-    if (classDumper.isSystemClass(targetClassName)) {
+    if (classDumper.isSystemClass(sourceClassName)) {
       return Optional.empty();
     }
 
