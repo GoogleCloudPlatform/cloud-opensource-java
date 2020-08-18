@@ -954,19 +954,19 @@ public class LinkageCheckerTest {
     // The two unimplemented methods should be reported separately
     LinkageProblem expectedProblemOnNeedsCredentials =
         new AbstractMethodProblem(
-            transportChannelProvider,
             new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"),
+            transportChannelProvider,
             new MethodSymbol(
-                "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
+                "com.google.api.gax.rpc.TransportChannelProvider",
                 "needsCredentials",
                 "()Z",
                 false));
     LinkageProblem expectedProblemOnWithCredentials =
         new AbstractMethodProblem(
-            transportChannelProvider,
             new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"),
+            transportChannelProvider,
             new MethodSymbol(
-                "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider",
+                "com.google.api.gax.rpc.TransportChannelProvider",
                 "withCredentials",
                 "(Lcom/google/auth/Credentials;)Lcom/google/api/gax/rpc/TransportChannelProvider;",
                 false));
@@ -1014,7 +1014,7 @@ public class LinkageCheckerTest {
 
     MethodSymbol expectedMethodSymbol =
         new MethodSymbol(
-            "io.netty.channel.nio.NioEventLoopGroup",
+            "io.netty.util.concurrent.MultithreadEventExecutorGroup",
             "newChild",
             "(Ljava/util/concurrent/Executor;[Ljava/lang/Object;)Lio/netty/util/concurrent/EventExecutor;",
             false);
