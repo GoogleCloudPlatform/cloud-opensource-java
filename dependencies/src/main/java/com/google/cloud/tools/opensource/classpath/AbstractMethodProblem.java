@@ -23,6 +23,6 @@ package com.google.cloud.tools.opensource.classpath;
  */
 final class AbstractMethodProblem extends LinkageProblem {
   AbstractMethodProblem(ClassFile sourceClass, ClassFile targetClass, MethodSymbol methodSymbol) {
-    super("is not implemented in the class", sourceClass, methodSymbol, targetClass);
+    super("is not implemented in the subclass", sourceClass, methodSymbol, targetClass);
   }
 }
