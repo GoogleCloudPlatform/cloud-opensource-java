@@ -219,7 +219,6 @@ public class LinkageChecker {
    * suppressed.
    */
   private boolean problemFilter(LinkageProblem linkageProblem) {
-    ClassFile sourceClass = linkageProblem.getSourceClass();
     return !excludedErrors.contains(linkageProblem);
   }
 
