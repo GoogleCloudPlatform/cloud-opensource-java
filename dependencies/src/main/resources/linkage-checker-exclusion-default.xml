@@ -71,4 +71,18 @@
       https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1296
     </Reason>
   </LinkageError>
+  <LinkageError>
+    <Target>
+      <Class name="com.sun.xml.internal.ws.api.BindingID$SOAPHTTPImpl" />
+    </Target>
+    <Source>
+      <Class name="com.sun.tools.internal.ws.wscompile.WsgenOptions" />
+    </Source>
+    <Reason>
+      The source class in tools.jar has invalid reference to the target class in rt.jar. Because
+      Linkage Checker users cannot take any action on the invalid reference, we suppress the linkage
+      error.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1599
+    </Reason>
+  </LinkageError>
 </LinkageCheckerFilter>
