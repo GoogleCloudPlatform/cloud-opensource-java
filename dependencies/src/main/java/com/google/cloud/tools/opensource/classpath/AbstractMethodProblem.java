@@ -17,9 +17,9 @@
 package com.google.cloud.tools.opensource.classpath;
 
 /**
- * The referenced {@code methodSymbol} is not implemented in the {@code implementationClass} but the
- * class is declared to implement the method by {@code interfaceOrAbstractClass}. Such unimplemented
- * methods manifest as {@link AbstractMethodError}s at runtime.
+ * {@code implementationClass} does not implement the abstract method {@code methodSymbol} declared
+ * by {@code interfaceOrAbstractClass}. Such unimplemented methods manifest as {@link
+ * AbstractMethodError}s at runtime.
  */
 final class AbstractMethodProblem extends LinkageProblem {
   MethodSymbol methodSymbol;
