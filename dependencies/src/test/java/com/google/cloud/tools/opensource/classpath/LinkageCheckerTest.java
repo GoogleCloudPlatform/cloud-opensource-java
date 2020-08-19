@@ -1122,8 +1122,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_referenceToNonexistentMethodForJava8() throws IOException {
-    // Protobuf-java 3.12.4 contained wrong byte code to reference non-existent method in JRE 1.8
+  public void testFindLinkageProblems_referenceToJava11Method() throws IOException {
+    // protobuf-java 3.12.4 references a Java 11 method that does not exist in Java 8
     // https://github.com/protocolbuffers/protobuf/issues/7827
     ImmutableList<ClassPathEntry> jars =
         TestHelper.resolve("com.google.protobuf:protobuf-java:3.12.4");

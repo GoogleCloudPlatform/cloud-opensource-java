@@ -240,13 +240,10 @@ public class LinkageChecker {
     String methodName = symbol.getName();
 
     if (ClassDumper.isArrayClass(targetClassName)) {
-      return Optional.empty();
-    }
-    // Skip references from Java runtime class. For example, java.lang.String.
-    // It is possible for wrongly configured Java compiler to generate bad byte code that references
-    // nonexistent method references for Java 8. For example case, see
-    // https://github.com/protocolbuffers/protobuf/issues/7827.
-    if (classDumper.isSystemClass(sourceClassName)) {
+      // Skip references to array class. However, we want to check other JDK-provided classes,
+      // because it is possible for wrongly configured Java compiler to generate bad byte code that
+      // references methods that does not exist in Java 8. For example case, see
+      // https://github.com/protocolbuffers/protobuf/issues/7827.
       return Optional.empty();
     }
 
