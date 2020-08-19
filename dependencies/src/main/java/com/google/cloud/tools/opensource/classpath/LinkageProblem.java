@@ -113,7 +113,7 @@ public abstract class LinkageProblem {
   }
 
   @Override
-  public final String toString() {
+  public String toString() {
     return formatSymbolProblem() + " referenced by " + sourceClass;
   }
 
@@ -150,9 +150,21 @@ public abstract class LinkageProblem {
   public static String formatLinkageProblems(Set<LinkageProblem> linkageProblems) {
     StringBuilder output = new StringBuilder();
 
+    // Not to group AbstractMethodProblems by symbols because they do not fit in the
+    // "... referenced by ..." format.
+    ImmutableSet.Builder<AbstractMethodProblem> abstractMethodProblems = ImmutableSet.builder();
+    ImmutableSet.Builder<LinkageProblem> problemsToGroupBySymbols = ImmutableSet.builder();
+    for (LinkageProblem linkageProblem : linkageProblems) {
+      if (linkageProblem instanceof AbstractMethodProblem) {
+        abstractMethodProblems.add((AbstractMethodProblem) linkageProblem);
+      } else {
+        problemsToGroupBySymbols.add(linkageProblem);
+      }
+    }
+
     // Group by the symbols
     ImmutableListMultimap<Symbol, LinkageProblem> groupBySymbols =
-        Multimaps.index(linkageProblems, problem -> problem.getSymbol());
+        Multimaps.index(problemsToGroupBySymbols.build(), problem -> problem.getSymbol());
 
     groupBySymbols
         .asMap()
@@ -188,6 +200,14 @@ public abstract class LinkageProblem {
                 }
               }
             });
+
+    for (AbstractMethodProblem abstractMethodProblem : abstractMethodProblems.build()) {
+      output.append(abstractMethodProblem + "\n");
+      output.append("  Cause:\n");
+      LinkageProblemCause cause = abstractMethodProblem.getCause();
+      String causeWithIndent = cause.toString().replaceAll("\n", "\n    ");
+      output.append("    " + causeWithIndent + "\n");
+    }
 
     return output.toString();
   }

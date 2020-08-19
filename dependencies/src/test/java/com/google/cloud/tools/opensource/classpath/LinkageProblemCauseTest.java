@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.testing.EqualsTester;
+import java.nio.file.Paths;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
@@ -33,7 +34,17 @@ public class LinkageProblemCauseTest {
     MethodSymbol methodSymbol =
         new MethodSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z", false);
 
-    ClassSymbol classSymbol = new ClassSymbol("java.lang.Object");
+    ClassSymbol classSymbol = new ClassSymbol("java.lang.Object$XYZ");
+    SymbolNotFoundProblem methodSymbolNotFound =
+        new SymbolNotFoundProblem(
+            new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.A"),
+            new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object"),
+            methodSymbol);
+    SymbolNotFoundProblem classSymbolNotFound =
+        new SymbolNotFoundProblem(
+            new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.A"),
+            new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.Object"),
+            classSymbol);
 
     DependencyPath path1 = new DependencyPath(root).append(new Dependency(foo, "compile", false));
 
@@ -41,11 +52,11 @@ public class LinkageProblemCauseTest {
 
     new EqualsTester()
         .addEqualityGroup(
-            new DependencyConflict(methodSymbol, path1, path2),
-            new DependencyConflict(methodSymbol, path1, path2))
-        .addEqualityGroup(new DependencyConflict(methodSymbol, path1, path1))
-        .addEqualityGroup(new DependencyConflict(methodSymbol, path2, path2))
-        .addEqualityGroup(new DependencyConflict(classSymbol, path2, path2))
+            new DependencyConflict(methodSymbolNotFound, path1, path2),
+            new DependencyConflict(methodSymbolNotFound, path1, path2))
+        .addEqualityGroup(new DependencyConflict(methodSymbolNotFound, path1, path1))
+        .addEqualityGroup(new DependencyConflict(methodSymbolNotFound, path2, path2))
+        .addEqualityGroup(new DependencyConflict(classSymbolNotFound, path2, path2))
         .addEqualityGroup(new MissingDependency(path1), new MissingDependency(path1))
         .addEqualityGroup(new ExcludedDependency(path1, foo), new ExcludedDependency(path1, foo))
         .addEqualityGroup(new ExcludedDependency(path1, bar))

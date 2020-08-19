@@ -94,4 +94,11 @@ public final class MethodSymbol extends Symbol {
         + "'s method "
         + signature;
   }
+
+  /** Returns the method name with its signature. */
+  public String getMethodNameWithSignature() {
+    String signatureWithArguments =
+        Utility.methodSignatureToString(descriptor, name, "", true, emptyLocalVariableTable);
+    return signatureWithArguments;
+  }
 }
