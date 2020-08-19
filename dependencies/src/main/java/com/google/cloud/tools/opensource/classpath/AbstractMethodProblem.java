@@ -17,15 +17,22 @@
 package com.google.cloud.tools.opensource.classpath;
 
 /**
- * The referenced {@code methodSymbol} is not implemented in the {@code sourceClass} but the class
- * is declared to implement the method by {@code targetClass}. Such unimplemented methods manifest
- * as {@link AbstractMethodError}s at runtime.
+ * The referenced {@code methodSymbol} is not implemented in the {@code implementationClass} but the
+ * class is declared to implement the method by {@code interfaceOrAbstractClass}. Such unimplemented
+ * methods manifest as {@link AbstractMethodError}s at runtime.
  */
 final class AbstractMethodProblem extends LinkageProblem {
   MethodSymbol methodSymbol;
 
-  AbstractMethodProblem(ClassFile sourceClass, ClassFile targetClass, MethodSymbol methodSymbol) {
-    super("is not implemented in the subclass", sourceClass, methodSymbol, targetClass);
+  AbstractMethodProblem(
+      ClassFile implementationClass,
+      ClassFile interfaceOrAbstractClass,
+      MethodSymbol methodSymbol) {
+    super(
+        "is not implemented in the subclass",
+        implementationClass,
+        methodSymbol,
+        interfaceOrAbstractClass);
     this.methodSymbol = methodSymbol;
   }
 
