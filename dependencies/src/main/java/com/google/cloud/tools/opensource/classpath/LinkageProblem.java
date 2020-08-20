@@ -150,7 +150,7 @@ public abstract class LinkageProblem {
   public static String formatLinkageProblems(Set<LinkageProblem> linkageProblems) {
     StringBuilder output = new StringBuilder();
 
-    // Not to group AbstractMethodProblems by symbols because they do not fit in the
+    // Don't group AbstractMethodProblems by symbols because they do not fit in the
     // "... referenced by ..." format.
     ImmutableSet.Builder<AbstractMethodProblem> abstractMethodProblems = ImmutableSet.builder();
     ImmutableSet.Builder<LinkageProblem> problemsToGroupBySymbols = ImmutableSet.builder();
