@@ -29,7 +29,7 @@ final class AbstractMethodProblem extends LinkageProblem {
       ClassFile interfaceOrAbstractClass,
       MethodSymbol methodSymbol) {
     super(
-        "is not implemented in the implementing class",
+        " does not exist in the implementing class",
         implementationClass,
         methodSymbol,
         interfaceOrAbstractClass);
