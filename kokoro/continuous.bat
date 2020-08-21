@@ -10,7 +10,7 @@ copy settings.xml %USERPROFILE%\.m2
 
 mvnw.cmd -B clean install javadoc:jar
 
-exit /b %ERRORLEVEL%
-
 cd gradle-plugin
 gradlew.bat build publishToMavenLocal
+
+exit /b %ERRORLEVEL%
