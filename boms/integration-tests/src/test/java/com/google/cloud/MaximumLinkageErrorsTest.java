@@ -52,7 +52,7 @@ public class MaximumLinkageErrorsTest {
     LinkageChecker checker = LinkageChecker.create(bom);
     ImmutableSet<LinkageProblem> currentProblems = checker.findLinkageProblems();
 
-    // This only tests for newly missing methods, not new references to
+    // This only tests for newly missing methods, not new invocations of
     // previously missing methods.
     SetView<LinkageProblem> newProblems = Sets.difference(currentProblems, oldProblems);
 

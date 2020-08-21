@@ -65,12 +65,12 @@ public abstract class LinkageProblem {
       this.targetClass = targetClass;
   }
 
-  /** Returns the target symbol that was not resolved. */
+  /** Returns the symbol that was not resolved. */
   public Symbol getSymbol() {
     return symbol;
   }
 
-  /** Returns the source of the invalid reference which this linkage error represents. */
+  /** Returns the class that cannot find a symbol it depends on. */
   public ClassFile getSourceClass() {
     return sourceClass;
   }
@@ -78,8 +78,8 @@ public abstract class LinkageProblem {
   /**
    * Returns the class that is expected to contain the symbol. If the symbol is a method or a field,
    * then this is the class where the symbol was expected to be found. If the symbol is an inner
-   * class, this is the outer class that was expected to contain the inner class. If the target class
-   * is unknown or missing, this is null.
+   * class, this is the outer class that was expected to contain the inner class. If the symbol is
+   * an outer class that is unknown or missing, this is null.
    */
   @Nullable
   public ClassFile getTargetClass() {
