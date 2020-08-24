@@ -214,12 +214,12 @@ public class DashboardTest {
             "53 target classes causing linkage errors referenced from 76 source classes.");
 
     Nodes dependencyPaths = details.query("//p[@class='linkage-check-dependency-paths']");
-    Node dependencyPathMessageOnProblem = dependencyPaths.get(dependencyPaths.size() - 4);
+    Node dependencyPathMessageOnProblem = dependencyPaths.get(dependencyPaths.size() - 1);
     Assert.assertEquals(
         "The following paths contain com.google.guava:guava-jdk5:13.0:",
         trimAndCollapseWhiteSpace(dependencyPathMessageOnProblem.getValue()));
 
-    Node dependencyPathMessageOnSource = dependencyPaths.get(dependencyPaths.size() - 3);
+    Node dependencyPathMessageOnSource = dependencyPaths.get(dependencyPaths.size() - 2);
     Assert.assertEquals(
         "The following paths contain com.google.guava:guava:27.1-android:",
         trimAndCollapseWhiteSpace(dependencyPathMessageOnSource.getValue()));

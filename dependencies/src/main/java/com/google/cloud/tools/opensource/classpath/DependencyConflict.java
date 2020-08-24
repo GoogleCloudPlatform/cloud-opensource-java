@@ -29,15 +29,15 @@ import org.eclipse.aether.artifact.Artifact;
  * symbol is in {@code pathToUnselectedArtifact.getLeaf()}.
  */
 final class DependencyConflict extends LinkageProblemCause {
-  private Symbol symbol;
+  private LinkageProblem linkageProblem;
   private DependencyPath pathToArtifactThruSource;
   private DependencyPath pathToSelectedArtifact;
 
   DependencyConflict(
-      Symbol symbol,
+      LinkageProblem linkageProblem,
       DependencyPath pathToSelectedArtifact,
       DependencyPath pathToArtifactThruSource) {
-    this.symbol = checkNotNull(symbol);
+    this.linkageProblem = checkNotNull(linkageProblem);
     this.pathToArtifactThruSource = checkNotNull(pathToArtifactThruSource);
     this.pathToSelectedArtifact = checkNotNull(pathToSelectedArtifact);
   }
@@ -61,19 +61,7 @@ final class DependencyConflict extends LinkageProblemCause {
 
   @Override
   public String toString() {
-    Artifact selected = pathToSelectedArtifact.getLeaf();
-    Artifact unselected = pathToArtifactThruSource.getLeaf();
-    return "Dependency conflict: "
-        + Artifacts.toCoordinates(selected)
-        + " does not define "
-        + symbol
-        + " but "
-        + Artifacts.toCoordinates(unselected)
-        + " defines it.\n"
-        + "  selected: "
-        + pathToSelectedArtifact
-        + "\n  unselected: "
-        + pathToArtifactThruSource;
+    return linkageProblem.describe(this);
   }
 
   @Override
@@ -85,13 +73,13 @@ final class DependencyConflict extends LinkageProblemCause {
       return false;
     }
     DependencyConflict that = (DependencyConflict) other;
-    return Objects.equals(symbol, that.symbol)
+    return Objects.equals(linkageProblem, that.linkageProblem)
         && Objects.equals(pathToArtifactThruSource, that.pathToArtifactThruSource)
         && Objects.equals(pathToSelectedArtifact, that.pathToSelectedArtifact);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(symbol, pathToArtifactThruSource, pathToSelectedArtifact);
+    return Objects.hash(linkageProblem, pathToArtifactThruSource, pathToSelectedArtifact);
   }
 }

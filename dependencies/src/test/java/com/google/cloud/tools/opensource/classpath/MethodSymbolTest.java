@@ -68,4 +68,17 @@ public class MethodSymbolTest {
         "io.grpc.protobuf.ProtoUtils's method marshaller(com.google.protobuf.Message)",
         symbol.toString());
   }
+
+  @Test
+  public void testGetMethodNameWithSignature() {
+    MethodSymbol symbol =
+        new MethodSymbol(
+            "io.grpc.protobuf.ProtoUtils",
+            "marshaller",
+            "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
+            false);
+    assertEquals(
+        "io.grpc.MethodDescriptor$Marshaller marshaller(com.google.protobuf.Message)",
+        symbol.getMethodNameWithSignature());
+  }
 }

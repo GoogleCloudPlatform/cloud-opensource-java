@@ -52,7 +52,9 @@
   <#list jarsInProblem?values as jarInProblem>
     <@showDependencyPath dependencyPathRootCauses classPathResult jarInProblem />
   </#list>
-  <@showDependencyPath dependencyPathRootCauses classPathResult classPathEntry />
+  <#if !jarsInProblem?values?seq_contains(classPathEntry) >
+    <@showDependencyPath dependencyPathRootCauses classPathResult classPathEntry />
+  </#if>
 
 </#macro>
 
