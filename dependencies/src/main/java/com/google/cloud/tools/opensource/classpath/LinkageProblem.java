@@ -70,7 +70,7 @@ public abstract class LinkageProblem {
     return symbol;
   }
 
-  /** Returns the class that cannot find a symbol it depends on. */
+  /** Returns the class that contains a symbolic reference to a symbol that is not available. */
   public ClassFile getSourceClass() {
     return sourceClass;
   }
