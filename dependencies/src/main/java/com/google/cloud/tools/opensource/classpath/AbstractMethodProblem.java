@@ -17,9 +17,9 @@
 package com.google.cloud.tools.opensource.classpath;
 
 /**
- * {@code implementationClass} (the source of an invalid reference) does not implement the abstract
- * method {@code methodSymbol} declared by {@code interfaceOrAbstractClass} (the target of the
- * reference). Such unimplemented methods manifest as {@link AbstractMethodError}s at runtime.
+ * {@code implementationClass} does not implement the abstract method {@code methodSymbol} declared
+ * by {@code interfaceOrAbstractClass}. Such unimplemented methods manifest as {@link
+ * AbstractMethodError}s at runtime.
  */
 final class AbstractMethodProblem extends LinkageProblem {
   MethodSymbol methodSymbol;
@@ -28,6 +28,9 @@ final class AbstractMethodProblem extends LinkageProblem {
       ClassFile implementationClass,
       ClassFile interfaceOrAbstractClass,
       MethodSymbol methodSymbol) {
+
+    // implementationClass is the source of the invalid symbolic reference, and
+    // interfaceOrAbstractClass is the target class of the reference.
     super(
         " does not exist in the implementing class",
         implementationClass,
