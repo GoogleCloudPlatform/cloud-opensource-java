@@ -129,7 +129,7 @@ class ExclusionFileFunctionalTest extends Specification {
     when:
     def result = GradleRunner.create()
         .withProjectDir(testProjectDir.root)
-        .withArguments('linkageCheck', '--stacktrace')
+        .withArguments('linkageCheck', '--stacktrace', '--scan')
         .withPluginClasspath()
         .buildAndFail()
 
