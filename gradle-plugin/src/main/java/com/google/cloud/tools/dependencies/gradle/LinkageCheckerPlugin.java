@@ -27,5 +27,5 @@ public class LinkageCheckerPlugin implements Plugin<Project> {
   public void apply(Project project) {
     project.getExtensions().create("linkageChecker", LinkageCheckerPluginExtension.class);
     project.getTasks().create("linkageCheck", LinkageCheckTask.class);
-//  }
+  }
 }

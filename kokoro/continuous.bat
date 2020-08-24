@@ -8,14 +8,10 @@ cd github/cloud-opensource-java
 mkdir %USERPROFILE%\.m2
 copy settings.xml %USERPROFILE%\.m2
 
-echo Running Maven
-
 call mvnw.cmd -B clean install javadoc:jar
 
 if %errorlevel% neq 0 exit /b %errorlevel%
 @echo on
-
-echo Running Gradle
 
 cd gradle-plugin
 call gradlew.bat build publishToMavenLocal
