@@ -169,7 +169,7 @@ public class LinkageChecker {
               ClassFile interfaceClassFile = new ClassFile(interfaceLocation, interfaceName);
               ImmutableList<LinkageProblem> problems =
                   findInterfaceProblems(
-                      classFile, (InterfaceSymbol) classSymbol, interfaceClassFile);
+                      interfaceClassFile, (InterfaceSymbol) classSymbol, classFile);
               for (LinkageProblem problem : problems) {
                 problemToClass.add(problem);
               }
@@ -309,7 +309,9 @@ public class LinkageChecker {
    * methods manifest as {@link AbstractMethodError}s at runtime.
    */
   private ImmutableList<LinkageProblem> findInterfaceProblems(
-      ClassFile classFile, InterfaceSymbol interfaceSymbol, ClassFile sourceClassFile) {
+      ClassFile interfaceClassFile,
+      InterfaceSymbol interfaceSymbol,
+      ClassFile implementationClassFile) {
     String interfaceName = interfaceSymbol.getClassBinaryName();
     if (classDumper.isSystemClass(interfaceName)) {
       return ImmutableList.of();
@@ -317,7 +319,8 @@ public class LinkageChecker {
 
     ImmutableList.Builder<LinkageProblem> builder = ImmutableList.builder();
     try {
-      JavaClass implementingClass = classDumper.loadJavaClass(classFile.getBinaryName());
+      JavaClass implementingClass =
+          classDumper.loadJavaClass(implementationClassFile.getBinaryName());
       if (implementingClass.isAbstract()) {
         // Abstract class does not need to implement methods in an interface.
         return ImmutableList.of();
@@ -346,8 +349,13 @@ public class LinkageChecker {
         if (!methodFound) {
           MethodSymbol missingMethodOnClass =
               new MethodSymbol(
-                  classFile.getBinaryName(), interfaceMethodName, interfaceMethodDescriptor, false);
-          builder.add(new AbstractMethodProblem(sourceClassFile, classFile, missingMethodOnClass));
+                  interfaceClassFile.getBinaryName(),
+                  interfaceMethodName,
+                  interfaceMethodDescriptor,
+                  false);
+          builder.add(
+              new AbstractMethodProblem(
+                  implementationClassFile, missingMethodOnClass, interfaceClassFile));
         }
       }
     } catch (ClassNotFoundException ex) {
@@ -554,7 +562,7 @@ public class LinkageChecker {
   }
 
   private ImmutableList<LinkageProblem> findAbstractParentProblems(
-      ClassFile classFile, SuperClassSymbol superClassSymbol, ClassFile sourceClassFile) {
+      ClassFile classFile, SuperClassSymbol superClassSymbol, ClassFile superClassFile) {
     ImmutableList.Builder<LinkageProblem> builder = ImmutableList.builder();
     String superClassName = superClassSymbol.getClassBinaryName();
     if (classDumper.isSystemClass(superClassName)) {
@@ -587,12 +595,15 @@ public class LinkageChecker {
           } else if (!implementedMethods.contains(abstractMethod)) {
             String unimplementedMethodName = abstractMethod.getName();
             String unimplementedMethodDescriptor = abstractMethod.getSignature();
-  
+
+            String abstractClassName = abstractClass.getClassName();
             MethodSymbol missingMethodOnClass =
                 new MethodSymbol(
-                    className, unimplementedMethodName, unimplementedMethodDescriptor, false);
-            builder.add(
-                new AbstractMethodProblem(sourceClassFile, classFile, missingMethodOnClass));
+                    abstractClassName,
+                    unimplementedMethodName,
+                    unimplementedMethodDescriptor,
+                    false);
+            builder.add(new AbstractMethodProblem(classFile, missingMethodOnClass, superClassFile));
           }
         }
         abstractClass = abstractClass.getSuperClass();

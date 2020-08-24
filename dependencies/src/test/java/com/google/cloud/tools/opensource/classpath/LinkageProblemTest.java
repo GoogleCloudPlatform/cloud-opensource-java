@@ -74,8 +74,9 @@ public class LinkageProblemTest {
         .addEqualityGroup(
             new AbstractMethodProblem(
                 new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.A"),
-                new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.B"),
-                new MethodSymbol("java.lang.Integer", "intValue", "()Z", false)))
+                new MethodSymbol("java.lang.Integer", "intValue", "()Z", false),
+                new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.B")
+            ))
         .addEqualityGroup(
             new IncompatibleClassChangeProblem( // Only type is different from the one above
                 new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "java.lang.A"),
