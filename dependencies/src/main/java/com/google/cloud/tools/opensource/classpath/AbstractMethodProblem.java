@@ -21,12 +21,12 @@ import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
- * {@code implementationClass} does not implement the abstract method {@code methodSymbol} declared
- * by {@code supertype} (an interface or an abstract class). Such unimplemented methods manifest as
+ * A class does not implement an abstract method declared by its supertype
+ * (an interface or an abstract class). Such unimplemented methods manifest as
  * {@link AbstractMethodError}s at runtime.
  */
 final class AbstractMethodProblem extends LinkageProblem {
-  MethodSymbol methodSymbol;
+  private MethodSymbol methodSymbol;
 
   AbstractMethodProblem(
       ClassFile implementationClass, MethodSymbol methodSymbol, ClassFile supertype) {
