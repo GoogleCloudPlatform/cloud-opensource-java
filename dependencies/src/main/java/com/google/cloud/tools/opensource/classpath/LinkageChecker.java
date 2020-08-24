@@ -356,7 +356,7 @@ public class LinkageChecker {
                   false);
           builder.add(
               new AbstractMethodProblem(
-                  implementationClassFile, interfaceClassFile, missingMethodOnClass));
+                  implementationClassFile, missingMethodOnClass, interfaceClassFile));
         }
       }
     } catch (ClassNotFoundException ex) {
@@ -604,7 +604,7 @@ public class LinkageChecker {
                     unimplementedMethodName,
                     unimplementedMethodDescriptor,
                     false);
-            builder.add(new AbstractMethodProblem(classFile, superClassFile, missingMethodOnClass));
+            builder.add(new AbstractMethodProblem(classFile, missingMethodOnClass, superClassFile));
           }
         }
         abstractClass = abstractClass.getSuperClass();

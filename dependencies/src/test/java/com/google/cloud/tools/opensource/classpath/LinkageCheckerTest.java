@@ -955,21 +955,21 @@ public class LinkageCheckerTest {
     LinkageProblem expectedProblemOnNeedsCredentials =
         new AbstractMethodProblem(
             new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"),
-            transportChannelProvider,
             new MethodSymbol(
                 "com.google.api.gax.rpc.TransportChannelProvider",
                 "needsCredentials",
                 "()Z",
-                false));
+                false), transportChannelProvider
+        );
     LinkageProblem expectedProblemOnWithCredentials =
         new AbstractMethodProblem(
             new ClassFile(gaxGrpc1_38, "com.google.api.gax.grpc.InstantiatingGrpcChannelProvider"),
-            transportChannelProvider,
             new MethodSymbol(
                 "com.google.api.gax.rpc.TransportChannelProvider",
                 "withCredentials",
                 "(Lcom/google/auth/Credentials;)Lcom/google/api/gax/rpc/TransportChannelProvider;",
-                false));
+                false), transportChannelProvider
+        );
     Truth.assertThat(problems).contains(expectedProblemOnNeedsCredentials);
     Truth.assertThat(problems).contains(expectedProblemOnWithCredentials);
   }

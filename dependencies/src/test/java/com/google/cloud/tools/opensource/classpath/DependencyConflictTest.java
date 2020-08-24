@@ -65,8 +65,8 @@ public class DependencyConflictTest {
     AbstractMethodProblem abstractMethodProblem =
         new AbstractMethodProblem(
             new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "foo.A"),
-            new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "foo.B"),
-            methodSymbol);
+            methodSymbol, new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "foo.B")
+        );
 
     Artifact root = new DefaultArtifact("a:b:1");
     Artifact foo = new DefaultArtifact("com.google:foo:1");

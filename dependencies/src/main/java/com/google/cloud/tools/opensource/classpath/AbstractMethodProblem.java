@@ -18,38 +18,37 @@ package com.google.cloud.tools.opensource.classpath;
 
 /**
  * {@code implementationClass} does not implement the abstract method {@code methodSymbol} declared
- * by {@code interfaceOrAbstractClass}. Such unimplemented methods manifest as {@link
- * AbstractMethodError}s at runtime.
+ * by {@code supertype} (an interface or an abstract class). Such unimplemented methods manifest as
+ * {@link AbstractMethodError}s at runtime.
  */
 final class AbstractMethodProblem extends LinkageProblem {
   MethodSymbol methodSymbol;
 
   AbstractMethodProblem(
       ClassFile implementationClass,
-      ClassFile interfaceOrAbstractClass,
-      MethodSymbol methodSymbol) {
+      MethodSymbol methodSymbol, ClassFile supertype) {
 
-    // implementationClass is the source of the invalid symbolic reference, and
-    // interfaceOrAbstractClass is the target class of the reference.
+    // implementationClass is the source of the invalid symbolic reference, and supertype is the
+    // target of the symbolic reference.
     super(
         " does not exist in the implementing class",
         implementationClass,
         methodSymbol,
-        interfaceOrAbstractClass);
+        supertype);
     this.methodSymbol = methodSymbol;
   }
 
   @Override
   public final String toString() {
-    ClassFile sourceClass = getSourceClass();
-    ClassPathEntry sourceClassPathEntry = sourceClass.getClassPathEntry();
-    ClassFile targetClass = getTargetClass();
+    ClassFile implementationClass = getSourceClass();
+    ClassPathEntry sourceClassPathEntry = implementationClass.getClassPathEntry();
+    ClassFile supertype = getTargetClass();
     return String.format(
         "%s (in %s) does not implement %s, required by %s (in %s)",
-        sourceClass.getBinaryName(),
+        implementationClass.getBinaryName(),
         sourceClassPathEntry,
         methodSymbol.getMethodNameWithSignature(),
-        targetClass.getBinaryName(),
-        targetClass.getClassPathEntry());
+        supertype.getBinaryName(),
+        supertype.getClassPathEntry());
   }
 }
