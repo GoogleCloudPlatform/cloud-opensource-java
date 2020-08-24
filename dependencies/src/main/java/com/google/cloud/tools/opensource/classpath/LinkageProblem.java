@@ -18,6 +18,8 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -30,6 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
+import org.eclipse.aether.artifact.Artifact;
 
 /**
  * A linkage error describing an invalid reference from {@code sourceClass} to {@code symbol}.
@@ -113,7 +116,7 @@ public abstract class LinkageProblem {
   }
 
   @Override
-  public final String toString() {
+  public String toString() {
     return formatSymbolProblem() + " referenced by " + sourceClass;
   }
 
@@ -150,9 +153,21 @@ public abstract class LinkageProblem {
   public static String formatLinkageProblems(Set<LinkageProblem> linkageProblems) {
     StringBuilder output = new StringBuilder();
 
+    // Don't group AbstractMethodProblems by symbols because they do not fit in the
+    // "... referenced by ..." format.
+    ImmutableSet.Builder<AbstractMethodProblem> abstractMethodProblems = ImmutableSet.builder();
+    ImmutableSet.Builder<LinkageProblem> problemsToGroupBySymbols = ImmutableSet.builder();
+    for (LinkageProblem linkageProblem : linkageProblems) {
+      if (linkageProblem instanceof AbstractMethodProblem) {
+        abstractMethodProblems.add((AbstractMethodProblem) linkageProblem);
+      } else {
+        problemsToGroupBySymbols.add(linkageProblem);
+      }
+    }
+
     // Group by the symbols
     ImmutableListMultimap<Symbol, LinkageProblem> groupBySymbols =
-        Multimaps.index(linkageProblems, problem -> problem.getSymbol());
+        Multimaps.index(problemsToGroupBySymbols.build(), problem -> problem.getSymbol());
 
     groupBySymbols
         .asMap()
@@ -189,6 +204,35 @@ public abstract class LinkageProblem {
               }
             });
 
+    for (AbstractMethodProblem abstractMethodProblem : abstractMethodProblems.build()) {
+      output.append(abstractMethodProblem + "\n");
+      output.append("  Cause:\n");
+      LinkageProblemCause cause = abstractMethodProblem.getCause();
+      String causeWithIndent = cause.toString().replaceAll("\n", "\n    ");
+      output.append("    " + causeWithIndent + "\n");
+    }
+
     return output.toString();
+  }
+
+  String describe(DependencyConflict conflict) {
+    DependencyPath pathToSelectedArtifact = conflict.getPathToSelectedArtifact();
+    Artifact selected = pathToSelectedArtifact.getLeaf();
+    String selectedCoordinates = Artifacts.toCoordinates(selected);
+    DependencyPath pathToArtifactThruSource = conflict.getPathToArtifactThruSource();
+    Artifact unselected = pathToArtifactThruSource.getLeaf();
+    String unselectedCoordinates = Artifacts.toCoordinates(unselected);
+
+    return "Dependency conflict: "
+        + selectedCoordinates
+        + " does not define "
+        + getSymbol()
+        + " but "
+        + unselectedCoordinates
+        + " defines it.\n"
+        + "  selected: "
+        + pathToSelectedArtifact
+        + "\n  unselected: "
+        + pathToArtifactThruSource;
   }
 }
