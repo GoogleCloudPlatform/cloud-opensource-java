@@ -18,6 +18,8 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -30,6 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
+import org.eclipse.aether.artifact.Artifact;
 
 /**
  * A linkage error describing an invalid reference from {@code sourceClass} to {@code symbol}.
@@ -210,5 +213,26 @@ public abstract class LinkageProblem {
     }
 
     return output.toString();
+  }
+
+  String describe(DependencyConflict conflict) {
+    DependencyPath pathToSelectedArtifact = conflict.getPathToSelectedArtifact();
+    Artifact selected = pathToSelectedArtifact.getLeaf();
+    String selectedCoordinates = Artifacts.toCoordinates(selected);
+    DependencyPath pathToArtifactThruSource = conflict.getPathToArtifactThruSource();
+    Artifact unselected = pathToArtifactThruSource.getLeaf();
+    String unselectedCoordinates = Artifacts.toCoordinates(unselected);
+
+    return "Dependency conflict: "
+        + selectedCoordinates
+        + " does not define "
+        + getSymbol()
+        + " but "
+        + unselectedCoordinates
+        + " defines it.\n"
+        + "  selected: "
+        + pathToSelectedArtifact
+        + "\n  unselected: "
+        + pathToArtifactThruSource;
   }
 }

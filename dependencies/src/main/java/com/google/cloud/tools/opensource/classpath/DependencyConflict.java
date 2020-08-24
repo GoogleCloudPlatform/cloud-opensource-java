@@ -61,36 +61,7 @@ final class DependencyConflict extends LinkageProblemCause {
 
   @Override
   public String toString() {
-    Artifact selected = pathToSelectedArtifact.getLeaf();
-    String selectedCoordinates = Artifacts.toCoordinates(selected);
-    Artifact unselected = pathToArtifactThruSource.getLeaf();
-    String unselectedCoordinates = Artifacts.toCoordinates(unselected);
-
-    if (linkageProblem instanceof AbstractMethodProblem) {
-      return "Dependency conflict: "
-          + selectedCoordinates
-          + " defines incompatible version of "
-          + linkageProblem.getTargetClass().getBinaryName()
-          + " but "
-          + unselectedCoordinates
-          + " defines compatible one.\n"
-          + "  selected: "
-          + pathToSelectedArtifact
-          + "\n  unselected: "
-          + pathToArtifactThruSource;
-    } else {
-      return "Dependency conflict: "
-          + selectedCoordinates
-          + " does not define "
-          + linkageProblem.getSymbol()
-          + " but "
-          + unselectedCoordinates
-          + " defines it.\n"
-          + "  selected: "
-          + pathToSelectedArtifact
-          + "\n  unselected: "
-          + pathToArtifactThruSource;
-    }
+    return linkageProblem.describe(this);
   }
 
   @Override

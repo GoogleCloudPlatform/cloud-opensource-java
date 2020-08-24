@@ -16,6 +16,10 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import org.eclipse.aether.artifact.Artifact;
+
 /**
  * {@code implementationClass} does not implement the abstract method {@code methodSymbol} declared
  * by {@code supertype} (an interface or an abstract class). Such unimplemented methods manifest as
@@ -25,16 +29,12 @@ final class AbstractMethodProblem extends LinkageProblem {
   MethodSymbol methodSymbol;
 
   AbstractMethodProblem(
-      ClassFile implementationClass,
-      MethodSymbol methodSymbol, ClassFile supertype) {
+      ClassFile implementationClass, MethodSymbol methodSymbol, ClassFile supertype) {
 
     // implementationClass is the source of the invalid symbolic reference, and supertype is the
     // target of the symbolic reference.
     super(
-        " does not exist in the implementing class",
-        implementationClass,
-        methodSymbol,
-        supertype);
+        " does not exist in the implementing class", implementationClass, methodSymbol, supertype);
     this.methodSymbol = methodSymbol;
   }
 
@@ -50,5 +50,28 @@ final class AbstractMethodProblem extends LinkageProblem {
         methodSymbol.getMethodNameWithSignature(),
         supertype.getBinaryName(),
         supertype.getClassPathEntry());
+  }
+
+  @Override
+  String describe(DependencyConflict conflict) {
+    DependencyPath pathToSelectedArtifact = conflict.getPathToSelectedArtifact();
+    Artifact selected = pathToSelectedArtifact.getLeaf();
+    String selectedCoordinates = Artifacts.toCoordinates(selected);
+    DependencyPath pathToArtifactThruSource = conflict.getPathToArtifactThruSource();
+    Artifact unselected = pathToArtifactThruSource.getLeaf();
+    String unselectedCoordinates = Artifacts.toCoordinates(unselected);
+    ClassFile supertype = getTargetClass();
+
+    return "Dependency conflict: "
+        + selectedCoordinates
+        + " defines incompatible version of "
+        + supertype.getBinaryName()
+        + " but "
+        + unselectedCoordinates
+        + " defines compatible one.\n"
+        + "  selected: "
+        + pathToSelectedArtifact
+        + "\n  unselected: "
+        + pathToArtifactThruSource;
   }
 }
