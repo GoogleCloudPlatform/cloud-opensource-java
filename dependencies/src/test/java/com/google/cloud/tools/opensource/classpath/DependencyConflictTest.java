@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static org.junit.Assert.assertEquals;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import java.nio.file.Paths;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
@@ -27,9 +28,14 @@ import org.junit.Test;
 public class DependencyConflictTest {
 
   @Test
-  public void testToString_versionConflict() {
-    MethodSymbol methodSymbol =
-        new MethodSymbol("java.lang.Object", "equals", "(Ljava/lang/Object;)Z", false);
+  public void testToString_versionConflict_missingSymbol() {
+    MethodSymbol methodSymbol = new MethodSymbol("foo.B", "equals", "(Lfoo/Object;)Z", false);
+    SymbolNotFoundProblem symbolNotFound =
+        new SymbolNotFoundProblem(
+            new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "foo.A"),
+            new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "foo.B"),
+            methodSymbol);
+
     Artifact root = new DefaultArtifact("a:b:1");
     Artifact foo = new DefaultArtifact("com.google:foo:1");
     Artifact bar = new DefaultArtifact("com.google:foo:2");
@@ -41,13 +47,43 @@ public class DependencyConflictTest {
         new DependencyPath(root).append(new Dependency(bar, "compile", false));
 
     DependencyConflict dependencyConflict =
-        new DependencyConflict(methodSymbol, selectedPath, unselectedPath);
+        new DependencyConflict(symbolNotFound, selectedPath, unselectedPath);
 
     assertEquals(
         "Dependency conflict: com.google:foo:1 does not "
             + "define "
             + methodSymbol
             + " but com.google:foo:2 defines it.\n"
+            + "  selected: a:b:jar:1 / com.google:foo:1 (compile)\n"
+            + "  unselected: a:b:jar:1 / com.google:foo:2 (compile)",
+        dependencyConflict.toString());
+  }
+
+  @Test
+  public void testToString_versionConflict_abstractMethod() {
+    MethodSymbol methodSymbol = new MethodSymbol("foo.B", "equals", "(Lfoo/Object;)Z", false);
+    AbstractMethodProblem abstractMethodProblem =
+        new AbstractMethodProblem(
+            new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "foo.A"),
+            methodSymbol, new ClassFile(new ClassPathEntry(Paths.get("foo", "bar.jar")), "foo.B")
+        );
+
+    Artifact root = new DefaultArtifact("a:b:1");
+    Artifact foo = new DefaultArtifact("com.google:foo:1");
+    Artifact bar = new DefaultArtifact("com.google:foo:2");
+
+    DependencyPath selectedPath =
+        new DependencyPath(root).append(new Dependency(foo, "compile", false));
+
+    DependencyPath unselectedPath =
+        new DependencyPath(root).append(new Dependency(bar, "compile", false));
+
+    DependencyConflict dependencyConflict =
+        new DependencyConflict(abstractMethodProblem, selectedPath, unselectedPath);
+    assertEquals(
+        "Dependency conflict: com.google:foo:1 defines "
+            + "incompatible version of foo.B"
+            + " but com.google:foo:2 defines compatible one.\n"
             + "  selected: a:b:jar:1 / com.google:foo:1 (compile)\n"
             + "  unselected: a:b:jar:1 / com.google:foo:2 (compile)",
         dependencyConflict.toString());

@@ -73,7 +73,7 @@ public final class LinkageProblemCauseAnnotator {
             // Different version of that artifact is selected in rootResult
             linkageProblem.setCause(
                 new DependencyConflict(
-                    symbol,
+                    linkageProblem,
                     rootResult.getDependencyPaths(selectedEntry).get(0),
                     pathToUnselectedEntry));
           } else {
