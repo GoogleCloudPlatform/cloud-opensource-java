@@ -96,7 +96,7 @@ class ExclusionFileFunctionalTest extends Specification {
   def "can suppress linkage errors listed in exclusion files (absolute path)"() {
     File exclusionFile = testProjectDir.newFile(exclusionFileName)
     Path exclusionFileNameAbsolutePath = exclusionFile.toPath().toAbsolutePath()
-
+    print("exclusionFile = '$exclusionFileNameAbsolutePath'")
     buildFile << """
         repositories {
           mavenCentral()
@@ -134,6 +134,7 @@ class ExclusionFileFunctionalTest extends Specification {
         .buildAndFail()
 
     then:
+    print(result.output)
     result.output.contains("Task :linkageCheck")
     result.output.contains("BUILD FAILED")
     // Ensure it outputs the linkage errors

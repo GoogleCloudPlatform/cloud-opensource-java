@@ -131,6 +131,8 @@ public class LinkageCheckTask extends DefaultTask {
     if (!classPath.isEmpty()) {
       String exclusionFileName = extension.getExclusionFile();
       Path exclusionFile = exclusionFileName == null ? null : Paths.get(exclusionFileName);
+
+      System.out.println("exclusionFile.isAbsolute()? :" + exclusionFile.isAbsolute());
       if (exclusionFile != null && !exclusionFile.isAbsolute()) {
         // Relative path from the project root
         Path projectRoot = getProject().getRootDir().toPath();
