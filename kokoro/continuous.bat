@@ -14,6 +14,6 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 @echo on
 
 cd gradle-plugin
-call gradlew.bat build publishToMavenLocal --scan
+call gradlew.bat build publishToMavenLocal
 
 exit /b %ERRORLEVEL%

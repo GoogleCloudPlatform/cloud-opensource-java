@@ -96,7 +96,9 @@ class ExclusionFileFunctionalTest extends Specification {
   def "can suppress linkage errors listed in exclusion files (absolute path)"() {
     File exclusionFile = testProjectDir.newFile(exclusionFileName)
     Path exclusionFileNameAbsolutePath = exclusionFile.toPath().toAbsolutePath()
-    print("exclusionFile = '$exclusionFileNameAbsolutePath'")
+    // Escaping for Windows. '\\\\' represents one backslash.
+    String exclusionFileEscaped = exclusionFileNameAbsolutePath.toString()
+        .replaceAll('\\\\', '\\\\\\\\')
     buildFile << """
         repositories {
           mavenCentral()
@@ -111,7 +113,7 @@ class ExclusionFileFunctionalTest extends Specification {
         
         linkageChecker {
           configurations = ['compile']
-          exclusionFile = '$exclusionFileNameAbsolutePath'
+          exclusionFile = '$exclusionFileEscaped'
         }
         """
 
@@ -129,7 +131,7 @@ class ExclusionFileFunctionalTest extends Specification {
     when:
     def result = GradleRunner.create()
         .withProjectDir(testProjectDir.root)
-        .withArguments('linkageCheck', '--stacktrace', '--scan')
+        .withArguments('linkageCheck', '--stacktrace')
         .withPluginClasspath()
         .buildAndFail()
 
