@@ -10,13 +10,14 @@ copy settings.xml %USERPROFILE%\.m2
 
 echo Running Maven
 
-mvnw.cmd -B clean install javadoc:jar
+call mvnw.cmd -B clean install javadoc:jar
 
 if %errorlevel% neq 0 exit /b %errorlevel%
+@echo on
 
 echo Running Gradle
 
 cd gradle-plugin
-gradlew.bat build publishToMavenLocal
+call gradlew.bat build publishToMavenLocal
 
 exit /b %ERRORLEVEL%
