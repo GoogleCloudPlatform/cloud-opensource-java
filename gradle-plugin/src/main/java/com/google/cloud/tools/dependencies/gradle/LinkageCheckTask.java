@@ -21,15 +21,13 @@ import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
-import com.google.cloud.tools.opensource.classpath.IncompatibleLinkageProblem;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.classpath.LinkageProblemCauseAnnotator;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.cloud.tools.opensource.dependencies.LevelOrderQueueItem;
-import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
+import com.google.cloud.tools.opensource.dependencies.PathToNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -177,8 +175,9 @@ public class LinkageCheckTask extends DefaultTask {
     ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
     for (LinkageProblem problem : symbolProblems) {
 
-      if (problem instanceof IncompatibleLinkageProblem) {
-        ClassFile targetClass = ((IncompatibleLinkageProblem) problem).getTargetClass();
+
+      ClassFile targetClass = problem.getTargetClass();
+      if (targetClass != null) {
         problematicJars.add(targetClass.getClassPathEntry());
       }
 
@@ -290,17 +289,17 @@ public class LinkageCheckTask extends DefaultTask {
     // The root Gradle project is not available in `configuration`.
     DependencyGraph graph = new DependencyGraph(null);
 
-    ArrayDeque<LevelOrderQueueItem<ResolvedDependency>> queue = new ArrayDeque<>();
+    ArrayDeque<PathToNode<ResolvedDependency>> queue = new ArrayDeque<>();
 
     DependencyPath root = new DependencyPath(null);
     for (ResolvedDependency firstLevelDependency :
         configuration.getFirstLevelModuleDependencies()) {
-      queue.add(new LevelOrderQueueItem<>(firstLevelDependency, root));
+      queue.add(new PathToNode<>(firstLevelDependency, root));
     }
 
     Set<ResolvedDependency> visited = new HashSet<>();
     while (!queue.isEmpty()) {
-      LevelOrderQueueItem<ResolvedDependency> item = queue.poll();
+      PathToNode<ResolvedDependency> item = queue.poll();
       ResolvedDependency node = item.getNode();
 
       DependencyPath parentPath = item.getParentPath();
@@ -315,7 +314,7 @@ public class LinkageCheckTask extends DefaultTask {
 
       for (ResolvedDependency child : node.getChildren()) {
         if (visited.add(child)) {
-          queue.add(new LevelOrderQueueItem<>(child, path));
+          queue.add(new PathToNode<>(child, path));
         }
       }
     }
