@@ -99,6 +99,7 @@ class ExclusionFileFunctionalTest extends Specification {
     // Escaping for Windows. '\\\\' represents one backslash.
     String exclusionFileEscaped = exclusionFileNameAbsolutePath.toString()
         .replaceAll('\\\\', '\\\\\\\\')
+
     buildFile << """
         repositories {
           mavenCentral()
@@ -136,7 +137,6 @@ class ExclusionFileFunctionalTest extends Specification {
         .buildAndFail()
 
     then:
-    print(result.output)
     result.output.contains("Task :linkageCheck")
     result.output.contains("BUILD FAILED")
     // Ensure it outputs the linkage errors
