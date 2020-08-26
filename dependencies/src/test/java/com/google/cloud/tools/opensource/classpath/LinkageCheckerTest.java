@@ -1120,4 +1120,24 @@ public class LinkageCheckerTest {
                 "has class binary name"))
         .contains("io.grpc.internal.DnsNameResolver");
   }
+
+  @Test
+  public void testFindLinkageProblems_referenceToJava11Method() throws IOException {
+    // protobuf-java 3.12.4 references a Java 11 method that does not exist in Java 8
+    // https://github.com/protocolbuffers/protobuf/issues/7827
+    ImmutableList<ClassPathEntry> jars =
+        TestHelper.resolve("com.google.protobuf:protobuf-java:3.12.4");
+
+    LinkageChecker linkageChecker = LinkageChecker.create(jars);
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
+
+    MethodSymbol methodSymbol =
+        new MethodSymbol("java.nio.CharBuffer", "flip", "()Ljava/nio/CharBuffer;", false);
+
+    SymbolNotFoundProblem expectedProblem =
+        new SymbolNotFoundProblem(
+            new ClassFile(jars.get(0), "com.google.protobuf.TextFormat"), null, methodSymbol);
+
+    Truth.assertThat(linkageProblems).contains(expectedProblem);
+  }
 }

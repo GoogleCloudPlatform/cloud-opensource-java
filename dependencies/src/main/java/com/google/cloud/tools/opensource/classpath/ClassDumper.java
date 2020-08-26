@@ -126,8 +126,7 @@ class ClassDumper {
   /** Returns true if {@code className} is available in the system class loader. */
   boolean isSystemClass(String className) {
     try {
-      if (className.startsWith("[")) {
-        // Array class
+      if (isArrayClass(className)) {
         return true;
       }
       extensionClassLoader.loadClass(className);
@@ -135,6 +134,11 @@ class ClassDumper {
     } catch (ClassNotFoundException ex) {
       return false;
     }
+  }
+
+  /** Returns true if {@code className} is a binary name for array types. */
+  static boolean isArrayClass(String className) {
+    return className.startsWith("[");
   }
 
   /**

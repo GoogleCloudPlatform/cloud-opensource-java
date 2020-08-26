@@ -239,8 +239,7 @@ public class LinkageChecker {
     String targetClassName = symbol.getClassBinaryName();
     String methodName = symbol.getName();
 
-    // Skip references to Java runtime class. For example, java.lang.String.
-    if (classDumper.isSystemClass(targetClassName)) {
+    if (ClassDumper.isArrayClass(targetClassName)) {
       return Optional.empty();
     }
 
