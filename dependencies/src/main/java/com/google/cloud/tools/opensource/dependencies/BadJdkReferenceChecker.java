@@ -26,13 +26,14 @@ import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Logger;
 import org.eclipse.aether.artifact.Artifact;
 
-class BadJdkReferenceChecker {
+public class BadJdkReferenceChecker {
 
   private static final Logger logger = Logger.getLogger(BadJdkReferenceChecker.class.getName());
 
@@ -52,13 +53,8 @@ class BadJdkReferenceChecker {
 
     int count = 1;
 
-    ImmutableSet.Builder<Artifact> problematicArtifactsBuilder = ImmutableSet.builder();
-    ImmutableSet.Builder<Artifact> artifactsWithBadReferences = ImmutableSet.builder();
+    ImmutableSetMultimap.Builder<Artifact, Artifact> badDependencies = ImmutableSetMultimap.builder();
     for (Artifact managedDependency : managedDependencies) {
-      if (managedDependency.getArtifactId().equals("appengine-api-1.0-sdk")) {
-        continue;
-      }
-
       logger.info(
           "Checking "
               + managedDependency
@@ -77,38 +73,52 @@ class BadJdkReferenceChecker {
 
       ImmutableSet<LinkageProblem> badJdkReferences =
           linkageProblems.stream()
-              .filter(problem -> problem.getSymbol().getClassBinaryName().startsWith("java."))
+              .filter(
+                  problem ->
+                      problem.getSymbol().getClassBinaryName().startsWith("java.")
+                          && !problemFromAppengineSdk(problem))
               .collect(toImmutableSet());
 
       if (!badJdkReferences.isEmpty()) {
-        problematicArtifactsBuilder.add(managedDependency);
-
         badJdkReferences.stream()
             .map(LinkageProblem::getSourceClass)
             .map(ClassFile::getClassPathEntry)
             .map(ClassPathEntry::getArtifact)
-            .forEach(artifactsWithBadReferences::add);
+            .forEach(artifact -> badDependencies.put(managedDependency, artifact));
 
         logger.severe(LinkageProblem.formatLinkageProblems(badJdkReferences));
       }
     }
 
-    ImmutableSet<Artifact> problematicArtifacts = problematicArtifactsBuilder.build();
+    ImmutableSetMultimap<Artifact, Artifact> bomMemberToBadDependencies = badDependencies.build();
 
-    if (problematicArtifacts.isEmpty()) {
+    if (bomMemberToBadDependencies.isEmpty()) {
       logger.info("No problematic artifacts");
       return;
     }
 
     StringBuilder message = new StringBuilder();
     message.append("The following artifacts contain bad references to Java 8 classes\n");
-    for (Artifact artifact : artifactsWithBadReferences.build()) {
+    for (Artifact artifact : bomMemberToBadDependencies.inverse().keySet()) {
       message.append("  " + artifact + "\n");
     }
     message.append("The following artifacts contain the bad artifacts in their dependencies\n");
-    for (Artifact problematicArtifact : problematicArtifacts) {
-      message.append("  " + problematicArtifact + "\n");
+    for (Artifact bomMember : bomMemberToBadDependencies.keySet()) {
+      ImmutableSet<Artifact> dependencies = bomMemberToBadDependencies.get(bomMember);
+      message.append("  " + bomMember + " due to "+dependencies+"\n");
     }
     logger.severe(message.toString());
+  }
+
+  private static boolean problemFromAppengineSdk(LinkageProblem problem) {
+    // appengine-api-1.0-sdk is known to contain invalid references to java.lang.MethodHandler
+    // methods, but this is not relevant to the Java 8 incompatible class file problem.
+    // https://github.com/protocolbuffers/protobuf/issues/7827
+    return problem
+        .getSourceClass()
+        .getClassPathEntry()
+        .getArtifact()
+        .getArtifactId()
+        .equals("appengine-api-1.0-sdk");
   }
 }
