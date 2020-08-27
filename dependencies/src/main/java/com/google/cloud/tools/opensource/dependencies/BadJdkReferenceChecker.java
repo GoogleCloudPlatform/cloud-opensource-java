@@ -53,7 +53,8 @@ public class BadJdkReferenceChecker {
 
     int count = 1;
 
-    ImmutableSetMultimap.Builder<Artifact, Artifact> badDependencies = ImmutableSetMultimap.builder();
+    ImmutableSetMultimap.Builder<Artifact, Artifact> badDependencies =
+        ImmutableSetMultimap.builder();
     for (Artifact managedDependency : managedDependencies) {
       logger.info(
           "Checking "
@@ -98,14 +99,16 @@ public class BadJdkReferenceChecker {
     }
 
     StringBuilder message = new StringBuilder();
-    message.append("The following artifacts contain bad references to Java 8 classes\n");
+    message.append(
+        "The following artifacts contain bad references to classes in 'java' package,"
+            + " which does not work for Java 8\n");
     for (Artifact artifact : bomMemberToBadDependencies.inverse().keySet()) {
       message.append("  " + artifact + "\n");
     }
-    message.append("The following artifacts contain the bad artifacts in their dependencies\n");
+    message.append("The following artifacts in the BOM contain the bad artifacts in their dependencies\n");
     for (Artifact bomMember : bomMemberToBadDependencies.keySet()) {
       ImmutableSet<Artifact> dependencies = bomMemberToBadDependencies.get(bomMember);
-      message.append("  " + bomMember + " due to "+dependencies+"\n");
+      message.append("  " + bomMember + " due to " + dependencies + "\n");
     }
     logger.severe(message.toString());
     System.exit(1);
