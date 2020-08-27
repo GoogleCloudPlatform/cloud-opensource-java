@@ -108,6 +108,7 @@ public class BadJdkReferenceChecker {
       message.append("  " + bomMember + " due to "+dependencies+"\n");
     }
     logger.severe(message.toString());
+    System.exit(1);
   }
 
   private static boolean problemFromAppengineSdk(LinkageProblem problem) {
