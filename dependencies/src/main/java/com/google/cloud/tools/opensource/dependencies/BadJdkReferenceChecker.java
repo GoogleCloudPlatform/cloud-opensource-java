@@ -28,6 +28,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Logger;
@@ -37,12 +39,20 @@ public class BadJdkReferenceChecker {
 
   private static final Logger logger = Logger.getLogger(BadJdkReferenceChecker.class.getName());
 
-  public static void main(String[] arguments) throws MavenRepositoryException, IOException {
+  public static void main(String[] arguments)
+      throws MavenRepositoryException, IOException, URISyntaxException {
 
     if (arguments.length != 1) {
       System.err.println("Please specify a path to the BOM file");
       System.exit(1);
     }
+
+    URI exclusionFileUri =
+        BadJdkReferenceChecker.class
+            .getClassLoader()
+            .getResource("bad-jdk-reference-check-exclusion.xml")
+            .toURI();
+    Path exclusionFile = Paths.get(exclusionFileUri).toAbsolutePath();
 
     String bomFileName = arguments[0];
 
@@ -68,16 +78,14 @@ public class BadJdkReferenceChecker {
       ClassPathBuilder classPathBuilder = new ClassPathBuilder();
       ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(managedDependency), false);
 
-      LinkageChecker linkageChecker = LinkageChecker.create(result.getClassPath());
+      LinkageChecker linkageChecker =
+          LinkageChecker.create(result.getClassPath(), result.getClassPath(), exclusionFile);
 
       ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
       ImmutableSet<LinkageProblem> badJdkReferences =
           linkageProblems.stream()
-              .filter(
-                  problem ->
-                      problem.getSymbol().getClassBinaryName().startsWith("java.")
-                          && !problemFromAppengineSdk(problem))
+              .filter(problem -> problem.getSymbol().getClassBinaryName().startsWith("java."))
               .collect(toImmutableSet());
 
       if (!badJdkReferences.isEmpty()) {
@@ -105,24 +113,13 @@ public class BadJdkReferenceChecker {
     for (Artifact artifact : bomMemberToBadDependencies.inverse().keySet()) {
       message.append("  " + artifact + "\n");
     }
-    message.append("The following artifacts in the BOM contain the bad artifacts in their dependencies\n");
+    message.append(
+        "The following artifacts in the BOM contain the bad artifacts in their dependencies\n");
     for (Artifact bomMember : bomMemberToBadDependencies.keySet()) {
       ImmutableSet<Artifact> dependencies = bomMemberToBadDependencies.get(bomMember);
       message.append("  " + bomMember + " due to " + dependencies + "\n");
     }
     logger.severe(message.toString());
     System.exit(1);
-  }
-
-  private static boolean problemFromAppengineSdk(LinkageProblem problem) {
-    // appengine-api-1.0-sdk is known to contain invalid references to java.lang.MethodHandler
-    // methods, but this is not relevant to the Java 8 incompatible class file problem.
-    // https://github.com/protocolbuffers/protobuf/issues/7827
-    return problem
-        .getSourceClass()
-        .getClassPathEntry()
-        .getArtifact()
-        .getArtifactId()
-        .equals("appengine-api-1.0-sdk");
   }
 }
