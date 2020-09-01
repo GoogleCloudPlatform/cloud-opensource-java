@@ -293,8 +293,7 @@ public class LinkageChecker {
               String argumentTypeLookingFor = parseArgumentTypeParts(expectedSignature);
               if (argumentTypeInTarget.equals(argumentTypeLookingFor)) {
                 // Not returning result yet, because there can be another supertype that has the
-                // exact
-                // method that match the name, argument types, and return type.
+                // exact method that match the name, argument types, and return type.
                 returnTypeChanged = true;
               }
             }
@@ -324,10 +323,10 @@ public class LinkageChecker {
     }
   }
 
-  /** Returns the argument type parts from {@code descriptor}. */
-  private static String parseArgumentTypeParts(String descriptor) {
+  /** Returns the argument type parts from {@code methodDescriptor}. */
+  private static String parseArgumentTypeParts(String methodDescriptor) {
     // E.g., '(Ljava/lang/String;)V' => '(Ljava/lang/String;)'
-    String argumentTypes = descriptor.substring(0, descriptor.indexOf(')') + 1);
+    String argumentTypes = methodDescriptor.substring(0, methodDescriptor.indexOf(')') + 1);
     return argumentTypes;
   }
 
