@@ -19,18 +19,18 @@ package com.google.cloud.tools.opensource.classpath;
 import javax.annotation.Nullable;
 
 /**
- * The {@code sourceClass} references the {@code methodSymbol}, but the {@code
- * methodSymbol.getClassBinaryName} has the method with a different return type {@code
- * actualTypeName}.
+ * The {@code sourceClass} references the {@code expectedMethodSymbol}, but the {@code
+ * expectedMethodSymbol.getClassBinaryName} has the method with a different return type ({@code
+ * actualTypeName}).
  */
 class ReturnTypeChangedProblem extends LinkageProblem {
-  public ReturnTypeChangedProblem(
+  ReturnTypeChangedProblem(
       ClassFile sourceClass,
       @Nullable ClassFile targetClass,
       MethodSymbol expectedMethodSymbol,
       String actualTypeName) {
     super(
-        "is not found. The expected return type does not match actual type " + actualTypeName,
+        "is not found. The expected return type does not match the actual type " + actualTypeName,
         sourceClass,
         expectedMethodSymbol,
         targetClass);
