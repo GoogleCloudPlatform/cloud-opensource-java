@@ -18,6 +18,8 @@ cat "${KOKORO_KEYSTORE_DIR}/72743_gradle_publish_secret" >> $HOME_GRADLE_PROPERT
 
 cd github/cloud-opensource-java/gradle-plugin
 
+./gradlew -v
+
 ./gradlew build
 
 ./gradlew publishPlugins --info --stacktrace
