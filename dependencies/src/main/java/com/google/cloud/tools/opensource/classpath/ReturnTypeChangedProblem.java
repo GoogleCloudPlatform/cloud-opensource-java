@@ -20,11 +20,19 @@ import javax.annotation.Nullable;
 
 /**
  * The {@code sourceClass} references the {@code methodSymbol}, but the {@code
- * methodSymbol.getClassBinaryName} has the method with a different return type.
+ * methodSymbol.getClassBinaryName} has the method with a different return type {@code
+ * actualTypeName}.
  */
 class ReturnTypeChangedProblem extends LinkageProblem {
   public ReturnTypeChangedProblem(
-      ClassFile sourceClass, @Nullable ClassFile targetClass, MethodSymbol methodSymbol) {
-    super("is not found (return type does not match)", sourceClass, methodSymbol, targetClass);
+      ClassFile sourceClass,
+      @Nullable ClassFile targetClass,
+      MethodSymbol expectedMethodSymbol,
+      String actualTypeName) {
+    super(
+        "is not found. The return type does not match actual " + actualTypeName,
+        sourceClass,
+        expectedMethodSymbol,
+        targetClass);
   }
 }

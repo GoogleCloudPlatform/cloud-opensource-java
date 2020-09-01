@@ -1136,7 +1136,10 @@ public class LinkageCheckerTest {
 
     ReturnTypeChangedProblem expectedProblem =
         new ReturnTypeChangedProblem(
-            new ClassFile(jars.get(0), "com.google.protobuf.TextFormat"), null, methodSymbol);
+            new ClassFile(jars.get(0), "com.google.protobuf.TextFormat"),
+            null,
+            methodSymbol,
+            "java.nio.CharBuffer");
 
     Truth.assertThat(linkageProblems).contains(expectedProblem);
   }

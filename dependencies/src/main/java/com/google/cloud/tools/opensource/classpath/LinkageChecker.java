@@ -40,6 +40,7 @@ import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
+import org.apache.bcel.classfile.Utility;
 import org.eclipse.aether.artifact.Artifact;
 
 /** A tool to find linkage errors in a class path. */
@@ -275,7 +276,7 @@ public class LinkageChecker {
               getClassHierarchy(targetJavaClass),
               Arrays.asList(targetJavaClass.getAllInterfaces()));
 
-      boolean returnTypeChanged = false;
+      String changedReturnTypeName = null;
       for (JavaClass javaClass : typesToCheck) {
         for (Method method : javaClass.getMethods()) {
           if (method.getName().equals(methodName)) {
@@ -289,22 +290,24 @@ public class LinkageChecker {
               // The method is found and accessible. Returning no error.
               return Optional.empty();
             } else {
-              String argumentTypeInTarget = parseArgumentTypeParts(actualSignature);
-              String argumentTypeLookingFor = parseArgumentTypeParts(expectedSignature);
-              if (argumentTypeInTarget.equals(argumentTypeLookingFor)) {
+              String actualArgumentType = parseArgumentTypeParts(actualSignature);
+              String expectedArgumentType = parseArgumentTypeParts(expectedSignature);
+              if (actualArgumentType.equals(expectedArgumentType)) {
                 // Not returning result yet, because there can be another supertype that has the
-                // exact method that match the name, argument types, and return type.
-                returnTypeChanged = true;
+                // exact method that matches the name, argument types, and return type.
+                changedReturnTypeName = Utility.methodSignatureReturnType(actualSignature);
               }
             }
           }
         }
       }
 
-      if (returnTypeChanged) {
+      if (changedReturnTypeName != null) {
         // When only the return types are different, we can report this specific problem
         // rather than more generic SymbolNotFoundProblem.
-        return Optional.of(new ReturnTypeChangedProblem(sourceClassFile, targetClassFile, symbol));
+        return Optional.of(
+            new ReturnTypeChangedProblem(
+                sourceClassFile, targetClassFile, symbol, changedReturnTypeName));
       }
 
       // Slf4J catches LinkageError to check the existence of other classes
