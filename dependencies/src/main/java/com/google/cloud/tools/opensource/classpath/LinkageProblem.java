@@ -56,8 +56,11 @@ public abstract class LinkageProblem {
    *     {@code symbol} as a linkage error.
    * @param sourceClass the source of the invalid reference.
    * @param symbol the target of the invalid reference
+   * @param targetClass the class file that contains the symbol. {@code Null} when the class does
+   *     not exist in the class path.
    */
-  LinkageProblem(String symbolProblemMessage, ClassFile sourceClass, Symbol symbol, ClassFile targetClass) {
+  LinkageProblem(
+      String symbolProblemMessage, ClassFile sourceClass, Symbol symbol, ClassFile targetClass) {
     this.symbolProblemMessage = Preconditions.checkNotNull(symbolProblemMessage);
     Preconditions.checkNotNull(symbol);
 

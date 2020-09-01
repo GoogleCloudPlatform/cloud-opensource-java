@@ -1095,7 +1095,7 @@ public class LinkageCheckerTest {
     problems.forEach(
         (problem) -> {
           ClassFile sourceClass = problem.getSourceClass();
-          if (problem .getTargetClass() != null) {
+          if (problem.getTargetClass() != null) {
             if (sourceClass.equals(problem.getTargetClass())) {
               fail("Self-referencing linkage errors: " + problem);
             }
@@ -1134,8 +1134,8 @@ public class LinkageCheckerTest {
     MethodSymbol methodSymbol =
         new MethodSymbol("java.nio.CharBuffer", "flip", "()Ljava/nio/CharBuffer;", false);
 
-    SymbolNotFoundProblem expectedProblem =
-        new SymbolNotFoundProblem(
+    MethodWithReturnTypeNotFoundProblem expectedProblem =
+        new MethodWithReturnTypeNotFoundProblem(
             new ClassFile(jars.get(0), "com.google.protobuf.TextFormat"), null, methodSymbol);
 
     Truth.assertThat(linkageProblems).contains(expectedProblem);

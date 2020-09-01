@@ -274,18 +274,38 @@ public class LinkageChecker {
           Iterables.concat(
               getClassHierarchy(targetJavaClass),
               Arrays.asList(targetJavaClass.getAllInterfaces()));
+
+      boolean methodWithDifferentReturnTypeFound = false;
       for (JavaClass javaClass : typesToCheck) {
         for (Method method : javaClass.getMethods()) {
-          if (method.getName().equals(methodName)
-              && method.getSignature().equals(symbol.getDescriptor())) {
-            if (!isMemberAccessibleFrom(javaClass, method, sourceClassName)) {
-              return Optional.of(
-                  new InaccessibleMemberProblem(sourceClassFile, targetClassFile, symbol));
+          if (method.getName().equals(methodName)) {
+            String signatureInTargetClass = method.getSignature();
+            String signatureLookingFor = symbol.getDescriptor();
+            if (signatureInTargetClass.equals(signatureLookingFor)) {
+              if (!isMemberAccessibleFrom(javaClass, method, sourceClassName)) {
+                return Optional.of(
+                    new InaccessibleMemberProblem(sourceClassFile, targetClassFile, symbol));
+              }
+              // The method is found and accessible. Returning no error.
+              return Optional.empty();
+            } else {
+              String argumentTypeInTarget = parseArgumentTypeParts(signatureInTargetClass);
+              String argumentTypeLookingFor = parseArgumentTypeParts(signatureLookingFor);
+              if (argumentTypeInTarget.equals(argumentTypeLookingFor)) {
+                // Not returning result yet, because there can be other supertype that has the exact
+                // method that match the name, argument types, and return type.
+                methodWithDifferentReturnTypeFound = true;
+              }
             }
-            // The method is found and accessible. Returning no error.
-            return Optional.empty();
           }
         }
+      }
+
+      if (methodWithDifferentReturnTypeFound) {
+        // When only the return types are different, we can report this specific problem
+        // rather than more generic SymbolNotFoundProblem.
+        return Optional.of(
+            new MethodWithReturnTypeNotFoundProblem(sourceClassFile, targetClassFile, symbol));
       }
 
       // Slf4J catches LinkageError to check the existence of other classes
@@ -302,6 +322,13 @@ public class LinkageChecker {
       ClassSymbol classSymbol = new ClassSymbol(symbol.getClassBinaryName());
       return Optional.of(new ClassNotFoundProblem(sourceClassFile, classSymbol));
     }
+  }
+
+  /** Returns the argument type parts from {@code descriptor}. */
+  private static String parseArgumentTypeParts(String descriptor) {
+    // E.g., '(Ljava/lang/String;)V' => '(Ljava/lang/String;)'
+    String argumentTypes = descriptor.substring(0, descriptor.indexOf(')') + 1);
+    return argumentTypes;
   }
 
   /**
