@@ -275,13 +275,13 @@ public class LinkageChecker {
               getClassHierarchy(targetJavaClass),
               Arrays.asList(targetJavaClass.getAllInterfaces()));
 
-      boolean methodWithDifferentReturnTypeFound = false;
+      boolean returnTypeChanged = false;
       for (JavaClass javaClass : typesToCheck) {
         for (Method method : javaClass.getMethods()) {
           if (method.getName().equals(methodName)) {
-            String signatureInTargetClass = method.getSignature();
-            String signatureLookingFor = symbol.getDescriptor();
-            if (signatureInTargetClass.equals(signatureLookingFor)) {
+            String actualSignature = method.getSignature();
+            String expectedSignature = symbol.getDescriptor();
+            if (actualSignature.equals(expectedSignature)) {
               if (!isMemberAccessibleFrom(javaClass, method, sourceClassName)) {
                 return Optional.of(
                     new InaccessibleMemberProblem(sourceClassFile, targetClassFile, symbol));
@@ -289,23 +289,23 @@ public class LinkageChecker {
               // The method is found and accessible. Returning no error.
               return Optional.empty();
             } else {
-              String argumentTypeInTarget = parseArgumentTypeParts(signatureInTargetClass);
-              String argumentTypeLookingFor = parseArgumentTypeParts(signatureLookingFor);
+              String argumentTypeInTarget = parseArgumentTypeParts(actualSignature);
+              String argumentTypeLookingFor = parseArgumentTypeParts(expectedSignature);
               if (argumentTypeInTarget.equals(argumentTypeLookingFor)) {
-                // Not returning result yet, because there can be other supertype that has the exact
+                // Not returning result yet, because there can be another supertype that has the
+                // exact
                 // method that match the name, argument types, and return type.
-                methodWithDifferentReturnTypeFound = true;
+                returnTypeChanged = true;
               }
             }
           }
         }
       }
 
-      if (methodWithDifferentReturnTypeFound) {
+      if (returnTypeChanged) {
         // When only the return types are different, we can report this specific problem
         // rather than more generic SymbolNotFoundProblem.
-        return Optional.of(
-            new MethodWithReturnTypeNotFoundProblem(sourceClassFile, targetClassFile, symbol));
+        return Optional.of(new ReturnTypeChangedProblem(sourceClassFile, targetClassFile, symbol));
       }
 
       // Slf4J catches LinkageError to check the existence of other classes

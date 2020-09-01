@@ -1134,8 +1134,8 @@ public class LinkageCheckerTest {
     MethodSymbol methodSymbol =
         new MethodSymbol("java.nio.CharBuffer", "flip", "()Ljava/nio/CharBuffer;", false);
 
-    MethodWithReturnTypeNotFoundProblem expectedProblem =
-        new MethodWithReturnTypeNotFoundProblem(
+    ReturnTypeChangedProblem expectedProblem =
+        new ReturnTypeChangedProblem(
             new ClassFile(jars.get(0), "com.google.protobuf.TextFormat"), null, methodSymbol);
 
     Truth.assertThat(linkageProblems).contains(expectedProblem);
