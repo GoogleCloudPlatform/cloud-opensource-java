@@ -7,7 +7,7 @@ set -x
 
 cd github/cloud-opensource-java/dependencies
 
-mvn -Prelease -B -U verify
+mvn -V -Prelease -B -U verify
 
 # copy pom with the name expected in the Maven repository
 ARTIFACT_ID=$(mvn -B help:evaluate -Dexpression=project.artifactId 2>/dev/null | grep -v "^\[")
