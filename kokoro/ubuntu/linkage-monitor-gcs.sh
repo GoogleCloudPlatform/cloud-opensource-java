@@ -6,7 +6,7 @@ set -e
 set -x
 
 cd github/cloud-opensource-java
-mvn -B clean install
+mvn -V -B clean install
 
 cd linkage-monitor/target
 mv linkage-monitor-*-all-deps.jar linkage-monitor-latest-all-deps.jar
