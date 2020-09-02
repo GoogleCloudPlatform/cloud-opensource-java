@@ -35,20 +35,20 @@ import java.nio.file.Paths;
 import java.util.logging.Logger;
 import org.eclipse.aether.artifact.Artifact;
 
-public class BadJdkReferenceChecker {
+public class Java8IncompatibleReferenceCheck {
 
-  private static final Logger logger = Logger.getLogger(BadJdkReferenceChecker.class.getName());
+  private static final Logger logger = Logger.getLogger(Java8IncompatibleReferenceCheck.class.getName());
 
   public static void main(String[] arguments)
       throws MavenRepositoryException, IOException, URISyntaxException {
 
     if (arguments.length != 1) {
-      System.err.println("Please specify a path to the BOM file");
+      System.err.println("Specify a path to the BOM file");
       System.exit(1);
     }
 
     URI exclusionFileUri =
-        BadJdkReferenceChecker.class
+        Java8IncompatibleReferenceCheck.class
             .getClassLoader()
             .getResource("bad-jdk-reference-check-exclusion.xml")
             .toURI();
@@ -109,7 +109,7 @@ public class BadJdkReferenceChecker {
     StringBuilder message = new StringBuilder();
     message.append(
         "The following artifacts contain bad references to classes in 'java' package,"
-            + " which does not work for Java 8\n");
+            + " which do not work for Java 8\n");
     for (Artifact artifact : bomMemberToBadDependencies.inverse().keySet()) {
       message.append("  " + artifact + "\n");
     }
