@@ -68,7 +68,7 @@ public class Java8IncompatibleReferenceCheck {
     URI exclusionFileUri =
         Java8IncompatibleReferenceCheck.class
             .getClassLoader()
-            .getResource("bad-jdk-reference-check-exclusion.xml")
+            .getResource("java8-incompatible-reference-check-exclusion.xml")
             .toURI();
     Path exclusionFile = Paths.get(exclusionFileUri).toAbsolutePath();
 
@@ -81,7 +81,8 @@ public class Java8IncompatibleReferenceCheck {
 
     int count = 1;
 
-    ImmutableSetMultimap.Builder<Artifact, Artifact> badDependencies =
+    // The BOM member to problematic dependencies
+    ImmutableSetMultimap.Builder<Artifact, Artifact> problematicDependencies =
         ImmutableSetMultimap.builder();
     for (Artifact managedDependency : managedDependencies) {
       logger.info(
@@ -101,25 +102,26 @@ public class Java8IncompatibleReferenceCheck {
 
       ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
-      ImmutableSet<LinkageProblem> badJdkReferences =
+      ImmutableSet<LinkageProblem> invalidJdkReferences =
           linkageProblems.stream()
               .filter(problem -> problem.getSymbol().getClassBinaryName().startsWith("java."))
               .collect(toImmutableSet());
 
-      if (!badJdkReferences.isEmpty()) {
-        badJdkReferences.stream()
+      if (!invalidJdkReferences.isEmpty()) {
+        invalidJdkReferences.stream()
             .map(LinkageProblem::getSourceClass)
             .map(ClassFile::getClassPathEntry)
             .map(ClassPathEntry::getArtifact)
-            .forEach(artifact -> badDependencies.put(managedDependency, artifact));
+            .forEach(artifact -> problematicDependencies.put(managedDependency, artifact));
 
-        logger.severe(LinkageProblem.formatLinkageProblems(badJdkReferences));
+        logger.severe(LinkageProblem.formatLinkageProblems(invalidJdkReferences));
       }
     }
 
-    ImmutableSetMultimap<Artifact, Artifact> bomMemberToBadDependencies = badDependencies.build();
+    ImmutableSetMultimap<Artifact, Artifact> bomMemberToProblematicDependencies =
+        problematicDependencies.build();
 
-    if (bomMemberToBadDependencies.isEmpty()) {
+    if (bomMemberToProblematicDependencies.isEmpty()) {
       logger.info("No problematic artifacts");
       return;
     }
@@ -128,13 +130,13 @@ public class Java8IncompatibleReferenceCheck {
     message.append(
         "The following artifacts contain references to classes in the core library,"
             + " which are not present in Java 8\n");
-    for (Artifact artifact : bomMemberToBadDependencies.inverse().keySet()) {
+    for (Artifact artifact : bomMemberToProblematicDependencies.inverse().keySet()) {
       message.append("  " + artifact + "\n");
     }
     message.append(
-        "The following artifacts in the BOM contain the bad artifacts in their dependencies\n");
-    for (Artifact bomMember : bomMemberToBadDependencies.keySet()) {
-      ImmutableSet<Artifact> dependencies = bomMemberToBadDependencies.get(bomMember);
+        "The following artifacts in the BOM contain the artifacts in their dependencies\n");
+    for (Artifact bomMember : bomMemberToProblematicDependencies.keySet()) {
+      ImmutableSet<Artifact> dependencies = bomMemberToProblematicDependencies.get(bomMember);
       message.append("  " + bomMember + " due to " + dependencies + "\n");
     }
     logger.severe(message.toString());

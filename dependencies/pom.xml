@@ -124,7 +124,7 @@
 
 <profiles>
   <profile>
-    <id>bad-jdk-reference-check</id>
+    <id>java8-incompatible-reference-check</id>
     <build>
       <plugins>
         <plugin>
@@ -132,7 +132,7 @@
           <artifactId>exec-maven-plugin</artifactId>
           <configuration>
             <skip>false</skip>
-            <mainClass>com.google.cloud.tools.opensource.dependencies.BadJdkReferenceChecker</mainClass>
+            <mainClass>com.google.cloud.tools.opensource.dependencies.Java8IncompatibleReferenceCheck</mainClass>
           </configuration>
         </plugin>
       </plugins>
