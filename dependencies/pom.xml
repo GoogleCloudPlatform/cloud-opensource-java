@@ -121,22 +121,21 @@
     </dependency>
   </dependencies>
 
-
-<profiles>
-  <profile>
-    <id>java8-incompatible-reference-check</id>
-    <build>
-      <plugins>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>exec-maven-plugin</artifactId>
-          <configuration>
-            <skip>false</skip>
-            <mainClass>com.google.cloud.tools.opensource.dependencies.Java8IncompatibleReferenceCheck</mainClass>
-          </configuration>
-        </plugin>
-      </plugins>
-    </build>
-  </profile>
-</profiles>
+  <profiles>
+    <profile>
+      <id>java8-incompatible-reference-check</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <configuration>
+              <skip>false</skip>
+              <mainClass>com.google.cloud.tools.opensource.dependencies.Java8IncompatibleReferenceCheck</mainClass>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
