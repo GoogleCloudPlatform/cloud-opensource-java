@@ -41,12 +41,12 @@ import org.eclipse.aether.artifact.Artifact;
  *
  * <ul>
  *   <li>The artifacts in the {@code dependencyManagement} section of the BOM
- *   <li>The artifacts in the dependency graph for each of the artifact above
+ *   <li>The artifacts in the dependency graph of each of the artifacts above
  *   <li>The latest version of the artifacts in the dependency graphs
  * </ul>
  *
- * <p>If it finds references to classes in the core library, which are not present in Java 8, it
- * exits with status code 1; otherwise it exits with status code 0.
+ * <p>If it finds references to classes in the core library (the {@code java} package) which are not
+ * present in Java 8, it exits with status code 1; otherwise it exits with status code 0.
  *
  * @see <a
  *     href="https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Java-8-incompatible-references-of-java.nio.Buffer-classes-generated-by-Java-9--compilers"
@@ -70,7 +70,6 @@ public class Java8IncompatibleReferenceCheck {
             .getClassLoader()
             .getResource("java8-incompatible-reference-check-exclusion.xml")
             .toURI();
-    Path exclusionFile = Paths.get(exclusionFileUri).toAbsolutePath();
 
     String bomFileName = arguments[0];
 
@@ -98,23 +97,24 @@ public class Java8IncompatibleReferenceCheck {
       ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(managedDependency), false);
 
       LinkageChecker linkageChecker =
-          LinkageChecker.create(result.getClassPath(), result.getClassPath(), exclusionFile);
+          LinkageChecker.create(
+              result.getClassPath(), result.getClassPath(), exclusionFileUri.toURL());
 
       ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
-      ImmutableSet<LinkageProblem> invalidJdkReferences =
+      ImmutableSet<LinkageProblem> invalidReferencesToJavaCoreLibrary =
           linkageProblems.stream()
               .filter(problem -> problem.getSymbol().getClassBinaryName().startsWith("java."))
               .collect(toImmutableSet());
 
-      if (!invalidJdkReferences.isEmpty()) {
-        invalidJdkReferences.stream()
+      if (!invalidReferencesToJavaCoreLibrary.isEmpty()) {
+        invalidReferencesToJavaCoreLibrary.stream()
             .map(LinkageProblem::getSourceClass)
             .map(ClassFile::getClassPathEntry)
             .map(ClassPathEntry::getArtifact)
             .forEach(artifact -> problematicDependencies.put(managedDependency, artifact));
 
-        logger.severe(LinkageProblem.formatLinkageProblems(invalidJdkReferences));
+        logger.severe(LinkageProblem.formatLinkageProblems(invalidReferencesToJavaCoreLibrary));
       }
     }
 

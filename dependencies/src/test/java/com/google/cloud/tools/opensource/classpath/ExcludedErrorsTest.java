@@ -20,13 +20,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
 
 public class ExcludedErrorsTest {
   @Test
   public void testDefaultRules_contains() throws IOException {
-    ExcludedErrors excludedErrors = ExcludedErrors.create(null);
+    ExcludedErrors excludedErrors = ExcludedErrors.create((Path) null);
 
     String targetClassName = "jdk.vm.ci.Bar";
     MethodSymbol methodSymbol =
@@ -43,7 +44,7 @@ public class ExcludedErrorsTest {
 
   @Test
   public void testDefaultRules_doesNotContains() throws IOException {
-    ExcludedErrors excludedErrors = ExcludedErrors.create(null);
+    ExcludedErrors excludedErrors = ExcludedErrors.create((Path) null);
 
     String targetClassName = "com.google.Bar";
     MethodSymbol methodSymbol =
