@@ -28,9 +28,9 @@ class ReturnTypeChangedProblem extends LinkageProblem {
       ClassFile sourceClass,
       @Nullable ClassFile targetClass,
       MethodSymbol expectedMethodSymbol,
-      String actualTypeName) {
+      String actualType) {
     super(
-        "is not found. The expected return type does not match the actual type " + actualTypeName,
+        "is not found. The expected return type does not match the actual type " + actualType,
         sourceClass,
         expectedMethodSymbol,
         targetClass);

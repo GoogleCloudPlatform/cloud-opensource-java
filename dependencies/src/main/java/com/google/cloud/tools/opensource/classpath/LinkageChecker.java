@@ -276,7 +276,7 @@ public class LinkageChecker {
               getClassHierarchy(targetJavaClass),
               Arrays.asList(targetJavaClass.getAllInterfaces()));
 
-      String changedReturnTypeName = null;
+      String changedReturnType = null;
       for (JavaClass javaClass : typesToCheck) {
         for (Method method : javaClass.getMethods()) {
           if (method.getName().equals(methodName)) {
@@ -295,19 +295,19 @@ public class LinkageChecker {
               if (actualArgumentType.equals(expectedArgumentType)) {
                 // Not returning result yet, because there can be another supertype that has the
                 // exact method that matches the name, argument types, and return type.
-                changedReturnTypeName = Utility.methodSignatureReturnType(actualSignature);
+                changedReturnType = Utility.methodSignatureReturnType(actualSignature);
               }
             }
           }
         }
       }
 
-      if (changedReturnTypeName != null) {
+      if (changedReturnType != null) {
         // When only the return types are different, we can report this specific problem
         // rather than more generic SymbolNotFoundProblem.
         return Optional.of(
             new ReturnTypeChangedProblem(
-                sourceClassFile, targetClassFile, symbol, changedReturnTypeName));
+                sourceClassFile, targetClassFile, symbol, changedReturnType));
       }
 
       // Slf4J catches LinkageError to check the existence of other classes
