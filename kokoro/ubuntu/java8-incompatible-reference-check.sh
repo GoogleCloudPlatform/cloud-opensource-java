@@ -8,4 +8,4 @@ set -x
 cd github/cloud-opensource-java/dependencies
 mvn -V -B clean install
 
-mvn exec:java -e -Pjava8-incompatible-reference-check -Dexec.arguments="../boms/cloud-oss-bom/pom.xml"
+mvn exec:java -e -Pjava8-incompatible-reference-check

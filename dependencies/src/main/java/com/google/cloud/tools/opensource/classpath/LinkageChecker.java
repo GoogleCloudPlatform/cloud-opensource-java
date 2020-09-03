@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -64,7 +63,7 @@ public class LinkageChecker {
   }
 
   public static LinkageChecker create(List<ClassPathEntry> classPath) throws IOException {
-    return create(classPath, ImmutableSet.copyOf(classPath), (Path) null);
+    return create(classPath, ImmutableSet.copyOf(classPath), null);
   }
 
   /**
@@ -78,24 +77,6 @@ public class LinkageChecker {
       List<ClassPathEntry> classPath,
       Iterable<ClassPathEntry> entryPoints,
       @Nullable Path exclusionFile)
-      throws IOException {
-    Preconditions.checkArgument(!classPath.isEmpty(), "The linkage classpath is empty.");
-    ClassDumper dumper = ClassDumper.create(classPath);
-    SymbolReferences symbolReferenceMaps = dumper.findSymbolReferences();
-
-    ClassReferenceGraph classReferenceGraph =
-        ClassReferenceGraph.create(symbolReferenceMaps, ImmutableSet.copyOf(entryPoints));
-
-    return new LinkageChecker(
-        dumper,
-        classPath,
-        symbolReferenceMaps,
-        classReferenceGraph,
-        ExcludedErrors.create(exclusionFile));
-  }
-
-  public static LinkageChecker create(
-      List<ClassPathEntry> classPath, Iterable<ClassPathEntry> entryPoints, URL exclusionFile)
       throws IOException {
     Preconditions.checkArgument(!classPath.isEmpty(), "The linkage classpath is empty.");
     ClassDumper dumper = ClassDumper.create(classPath);

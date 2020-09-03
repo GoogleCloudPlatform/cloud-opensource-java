@@ -28,8 +28,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Logger;
@@ -57,21 +55,15 @@ public class Java8IncompatibleReferenceCheck {
   private static final Logger logger =
       Logger.getLogger(Java8IncompatibleReferenceCheck.class.getName());
 
-  public static void main(String[] arguments)
-      throws MavenRepositoryException, IOException, URISyntaxException {
+  public static void main(String[] arguments) throws MavenRepositoryException, IOException {
 
-    if (arguments.length != 1) {
-      System.err.println("Specify a path to the BOM file");
+    if (arguments.length < 2) {
+      System.err.println("Specify a path to the BOM file and a path to the exclusion rule");
       System.exit(1);
     }
 
-    URI exclusionFileUri =
-        Java8IncompatibleReferenceCheck.class
-            .getClassLoader()
-            .getResource("java8-incompatible-reference-check-exclusion.xml")
-            .toURI();
-
     String bomFileName = arguments[0];
+    Path exclusionFile = Paths.get(arguments[1]).toAbsolutePath();
 
     Path bomFile = Paths.get(bomFileName);
     Bom bom = Bom.readBom(bomFile);
@@ -97,8 +89,7 @@ public class Java8IncompatibleReferenceCheck {
       ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(managedDependency), false);
 
       LinkageChecker linkageChecker =
-          LinkageChecker.create(
-              result.getClassPath(), result.getClassPath(), exclusionFileUri.toURL());
+          LinkageChecker.create(result.getClassPath(), result.getClassPath(), exclusionFile);
 
       ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 

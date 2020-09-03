@@ -16,8 +16,6 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.net.URL;
@@ -53,36 +51,6 @@ class ExcludedErrors {
       }
     } catch (SAXException | VerifierConfigurationException ex) {
       throw new IOException("Could not read exclusion rule file " + exclusionFile, ex);
-    }
-
-    return new ExcludedErrors(exclusionMatchers.build());
-  }
-
-  /** Creates exclusion matchers from {@code exclusionXml} with default rules. */
-  static ExcludedErrors create(URL exclusionXml) throws IOException {
-    checkNotNull(exclusionXml);
-    ImmutableList.Builder<LinkageErrorMatcher> exclusionMatchers = ImmutableList.builder();
-
-    try {
-      exclusionMatchers.addAll(ExclusionFiles.parse(exclusionXml));
-    } catch (SAXException | VerifierConfigurationException ex) {
-      throw new IOException("Could not read exclusion rule file " + exclusionXml, ex);
-    }
-
-    return createWithDefault(exclusionMatchers);
-  }
-
-  private static ExcludedErrors createWithDefault(
-      ImmutableList.Builder<LinkageErrorMatcher> exclusionMatchers) throws IOException {
-    try {
-      URL defaultRuleUrl =
-          LinkageChecker.class
-              .getClassLoader()
-              .getResource("linkage-checker-exclusion-default.xml");
-      ImmutableList<LinkageErrorMatcher> defaultMatchers = ExclusionFiles.parse(defaultRuleUrl);
-      exclusionMatchers.addAll(defaultMatchers);
-    } catch (SAXException | VerifierConfigurationException ex) {
-      throw new IOException("Could not read default exclusion rule", ex);
     }
 
     return new ExcludedErrors(exclusionMatchers.build());
