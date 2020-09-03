@@ -280,9 +280,9 @@ public class LinkageChecker {
       for (JavaClass javaClass : typesToCheck) {
         for (Method method : javaClass.getMethods()) {
           if (method.getName().equals(methodName)) {
-            String actualSignature = method.getSignature();
-            String expectedSignature = symbol.getDescriptor();
-            if (actualSignature.equals(expectedSignature)) {
+            String expectedMethodDescriptor = symbol.getDescriptor();
+            String actualMethodDescriptor = method.getSignature();
+            if (actualMethodDescriptor.equals(expectedMethodDescriptor)) {
               if (!isMemberAccessibleFrom(javaClass, method, sourceClassName)) {
                 return Optional.of(
                     new InaccessibleMemberProblem(sourceClassFile, targetClassFile, symbol));
@@ -290,12 +290,13 @@ public class LinkageChecker {
               // The method is found and accessible. Returning no error.
               return Optional.empty();
             } else {
-              String actualArgumentType = parseArgumentTypeParts(actualSignature);
-              String expectedArgumentType = parseArgumentTypeParts(expectedSignature);
-              if (actualArgumentType.equals(expectedArgumentType)) {
+              String expectedParameterDescriptors =
+                  parseParameterDescriptors(expectedMethodDescriptor);
+              String actualParameterDescriptors = parseParameterDescriptors(actualMethodDescriptor);
+              if (actualParameterDescriptors.equals(expectedParameterDescriptors)) {
                 // Not returning result yet, because there can be another supertype that has the
                 // exact method that matches the name, argument types, and return type.
-                changedReturnType = Utility.methodSignatureReturnType(actualSignature);
+                changedReturnType = Utility.methodSignatureReturnType(actualMethodDescriptor);
               }
             }
           }
@@ -326,11 +327,15 @@ public class LinkageChecker {
     }
   }
 
-  /** Returns the argument type parts from {@code methodDescriptor}. */
-  private static String parseArgumentTypeParts(String methodDescriptor) {
-    // E.g., '(Ljava/lang/String;)V' => '(Ljava/lang/String;)'
-    String argumentTypes = methodDescriptor.substring(0, methodDescriptor.indexOf(')') + 1);
-    return argumentTypes;
+  /**
+   * Returns the parameter descriptors from {@code methodDescriptor}.
+   *
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3.3" >Java
+   *     Virtual Machine Specification: 4.3.3. Method Descriptors</a>
+   */
+  private static String parseParameterDescriptors(String methodDescriptor) {
+    // E.g., '(Ljava/lang/String;)Ljava/lang/Integer;' => '(Ljava/lang/String;)'
+    return methodDescriptor.substring(0, methodDescriptor.indexOf(')') + 1);
   }
 
   /**
