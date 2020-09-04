@@ -40,6 +40,7 @@ import org.apache.bcel.classfile.Field;
 import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
+import org.apache.bcel.classfile.Utility;
 import org.eclipse.aether.artifact.Artifact;
 
 /** A tool to find linkage errors in a class path. */
@@ -274,18 +275,40 @@ public class LinkageChecker {
           Iterables.concat(
               getClassHierarchy(targetJavaClass),
               Arrays.asList(targetJavaClass.getAllInterfaces()));
+
+      String changedReturnType = null;
       for (JavaClass javaClass : typesToCheck) {
         for (Method method : javaClass.getMethods()) {
-          if (method.getName().equals(methodName)
-              && method.getSignature().equals(symbol.getDescriptor())) {
-            if (!isMemberAccessibleFrom(javaClass, method, sourceClassName)) {
-              return Optional.of(
-                  new InaccessibleMemberProblem(sourceClassFile, targetClassFile, symbol));
+          if (method.getName().equals(methodName)) {
+            String expectedMethodDescriptor = symbol.getDescriptor();
+            String actualMethodDescriptor = method.getSignature();
+            if (actualMethodDescriptor.equals(expectedMethodDescriptor)) {
+              if (!isMemberAccessibleFrom(javaClass, method, sourceClassName)) {
+                return Optional.of(
+                    new InaccessibleMemberProblem(sourceClassFile, targetClassFile, symbol));
+              }
+              // The method is found and accessible. Returning no error.
+              return Optional.empty();
+            } else {
+              String expectedParameterDescriptors =
+                  parseParameterDescriptors(expectedMethodDescriptor);
+              String actualParameterDescriptors = parseParameterDescriptors(actualMethodDescriptor);
+              if (actualParameterDescriptors.equals(expectedParameterDescriptors)) {
+                // Not returning result yet, because there can be another supertype that has the
+                // exact method that matches the name, argument types, and return type.
+                changedReturnType = Utility.methodSignatureReturnType(actualMethodDescriptor);
+              }
             }
-            // The method is found and accessible. Returning no error.
-            return Optional.empty();
           }
         }
+      }
+
+      if (changedReturnType != null) {
+        // When only the return types are different, we can report this specific problem
+        // rather than more generic SymbolNotFoundProblem.
+        return Optional.of(
+            new ReturnTypeChangedProblem(
+                sourceClassFile, targetClassFile, symbol, changedReturnType));
       }
 
       // Slf4J catches LinkageError to check the existence of other classes
@@ -302,6 +325,17 @@ public class LinkageChecker {
       ClassSymbol classSymbol = new ClassSymbol(symbol.getClassBinaryName());
       return Optional.of(new ClassNotFoundProblem(sourceClassFile, classSymbol));
     }
+  }
+
+  /**
+   * Returns the parameter descriptors from {@code methodDescriptor}.
+   *
+   * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3.3" >Java
+   *     Virtual Machine Specification: 4.3.3. Method Descriptors</a>
+   */
+  private static String parseParameterDescriptors(String methodDescriptor) {
+    // E.g., '(Ljava/lang/String;)Ljava/lang/Integer;' => '(Ljava/lang/String;)'
+    return methodDescriptor.substring(0, methodDescriptor.indexOf(')') + 1);
   }
 
   /**
