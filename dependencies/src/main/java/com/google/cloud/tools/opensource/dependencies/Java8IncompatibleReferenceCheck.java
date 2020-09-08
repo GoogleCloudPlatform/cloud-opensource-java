@@ -30,8 +30,12 @@ import com.google.common.collect.ImmutableSetMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
+import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 
 /**
  * A tool to find Java 8-incompatible references in the class files in a BOM. It checks the class
@@ -70,7 +74,12 @@ public class Java8IncompatibleReferenceCheck {
 
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
+    ImmutableSet.Builder<Artifact> checkedArtifactBuilder = ImmutableSet.builder();
+
     int count = 1;
+
+    // Step 1: Searching for invalid references in all class files in the artifacts appearing the
+    // dependency graphs
 
     // The BOM member to problematic dependencies
     ImmutableSetMultimap.Builder<Artifact, Artifact> problematicDependencies =
@@ -95,7 +104,7 @@ public class Java8IncompatibleReferenceCheck {
 
       ImmutableSet<LinkageProblem> invalidReferencesToJavaCoreLibrary =
           linkageProblems.stream()
-              .filter(problem -> problem.getSymbol().getClassBinaryName().startsWith("java."))
+              .filter(Java8IncompatibleReferenceCheck::isReferenceToJdkCoreLibrary)
               .collect(toImmutableSet());
 
       if (!invalidReferencesToJavaCoreLibrary.isEmpty()) {
@@ -107,12 +116,68 @@ public class Java8IncompatibleReferenceCheck {
 
         logger.severe(LinkageProblem.formatLinkageProblems(invalidReferencesToJavaCoreLibrary));
       }
+
+      for (ClassPathEntry entry : result.getClassPath()) {
+        Artifact artifact = entry.getArtifact();
+        if (artifact.getExtension().equals("jar")) {
+          checkedArtifactBuilder.add(artifact);
+        }
+      }
+    }
+
+    // Step 2: Searching for invalid references in the latest version of the artifacts in the
+    // dependency graphs.
+    ImmutableSet<Artifact> checkedArtifacts = checkedArtifactBuilder.build();
+
+    ImmutableSet<String> versionlessCoordinates =
+        checkedArtifacts.stream().map(Artifacts::makeKey).collect(toImmutableSet());
+    ImmutableSet<String> checkedCoordinates =
+        checkedArtifacts.stream().map(Artifacts::toCoordinates).collect(toImmutableSet());
+    RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
+    List<String> latestArtifactsWithInvalidReferences = new ArrayList<>();
+    for (String groupIdArtifactId : versionlessCoordinates) {
+      String[] ids = groupIdArtifactId.split(":");
+      String groupId = ids[0];
+      String artifactId = ids[1];
+
+      String latestCoordinates;
+      try {
+
+        latestCoordinates =
+            RepositoryUtility.findLatestCoordinates(repositorySystem, groupId, artifactId);
+      } catch (NullPointerException ex) {
+        logger.severe("Failed to find the latest version for " + groupId + ":" + artifactId);
+        continue;
+      }
+      if (!checkedCoordinates.contains(latestCoordinates)) {
+        ClassPathBuilder classPathBuilder = new ClassPathBuilder();
+        Artifact latestVersion = new DefaultArtifact(latestCoordinates);
+        ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(latestVersion), false);
+        // When checking the latest versions, we only need to check the artifact only, as its
+        // dependencies also appear in the versionlessCoordinates list.
+        ImmutableList classPath = result.getClassPath().subList(0, 1);
+        LinkageChecker linkageChecker = LinkageChecker.create(classPath, classPath, exclusionFile);
+
+        ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
+        ImmutableSet<LinkageProblem> invalidReferencesToJavaCoreLibrary =
+            linkageProblems.stream()
+                .filter(Java8IncompatibleReferenceCheck::isReferenceToJdkCoreLibrary)
+                .collect(toImmutableSet());
+        if (!invalidReferencesToJavaCoreLibrary.isEmpty()) {
+          latestArtifactsWithInvalidReferences.add(latestCoordinates);
+          logger.severe(
+              latestCoordinates
+                  + " (latest version) has the following problem:\n"
+                  + LinkageProblem.formatLinkageProblems(invalidReferencesToJavaCoreLibrary));
+        }
+      }
     }
 
     ImmutableSetMultimap<Artifact, Artifact> bomMemberToProblematicDependencies =
         problematicDependencies.build();
 
-    if (bomMemberToProblematicDependencies.isEmpty()) {
+    if (bomMemberToProblematicDependencies.isEmpty()
+        && latestArtifactsWithInvalidReferences.isEmpty()) {
       logger.info("No problematic artifacts");
       return;
     }
@@ -124,13 +189,22 @@ public class Java8IncompatibleReferenceCheck {
     for (Artifact artifact : bomMemberToProblematicDependencies.inverse().keySet()) {
       message.append("  " + artifact + "\n");
     }
-    message.append(
-        "The following artifacts in the BOM contain the artifacts in their dependencies\n");
-    for (Artifact bomMember : bomMemberToProblematicDependencies.keySet()) {
-      ImmutableSet<Artifact> dependencies = bomMemberToProblematicDependencies.get(bomMember);
-      message.append("  " + bomMember + " due to " + dependencies + "\n");
+    for (String coordinates : latestArtifactsWithInvalidReferences) {
+      message.append("  " + coordinates + " (the latest version)\n");
+    }
+    if (!bomMemberToProblematicDependencies.isEmpty()) {
+      message.append(
+          "The following artifacts in the BOM contain the artifacts in their dependencies\n");
+      for (Artifact bomMember : bomMemberToProblematicDependencies.keySet()) {
+        ImmutableSet<Artifact> dependencies = bomMemberToProblematicDependencies.get(bomMember);
+        message.append("  " + bomMember + " due to " + dependencies + "\n");
+      }
     }
     logger.severe(message.toString());
     System.exit(1);
+  }
+
+  private static boolean isReferenceToJdkCoreLibrary(LinkageProblem problem) {
+    return problem.getSymbol().getClassBinaryName().startsWith("java.");
   }
 }
