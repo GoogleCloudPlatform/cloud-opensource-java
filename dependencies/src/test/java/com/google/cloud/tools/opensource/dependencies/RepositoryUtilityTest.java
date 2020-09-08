@@ -52,6 +52,16 @@ public class RepositoryUtilityTest {
   }
 
   @Test
+  public void testFindVersions_nonSemanticVersions() throws MavenRepositoryException {
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    ImmutableList<String> versions =
+        RepositoryUtility.findVersions(system, "com.google.apis", "google-api-services-bigquery");
+    Truth.assertThat(versions)
+        .containsAtLeast("v2-rev20200818-1.30.10", "v2-rev20200827-1.30.10")
+        .inOrder(); //
+  }
+
+  @Test
   public void testFindHighestVersions()
       throws MavenRepositoryException, InvalidVersionSpecificationException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();

@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.dependencies;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
-import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
@@ -99,24 +98,24 @@ public class Java8IncompatibleReferenceCheck {
 
       LinkageChecker linkageChecker =
           LinkageChecker.create(result.getClassPath(), result.getClassPath(), exclusionFile);
+      /*
+            ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
-      ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
+            ImmutableSet<LinkageProblem> invalidReferencesToJavaCoreLibrary =
+                linkageProblems.stream()
+                    .filter(Java8IncompatibleReferenceCheck::isReferenceToJdkCoreLibrary)
+                    .collect(toImmutableSet());
 
-      ImmutableSet<LinkageProblem> invalidReferencesToJavaCoreLibrary =
-          linkageProblems.stream()
-              .filter(Java8IncompatibleReferenceCheck::isReferenceToJdkCoreLibrary)
-              .collect(toImmutableSet());
+            if (!invalidReferencesToJavaCoreLibrary.isEmpty()) {
+              invalidReferencesToJavaCoreLibrary.stream()
+                  .map(LinkageProblem::getSourceClass)
+                  .map(ClassFile::getClassPathEntry)
+                  .map(ClassPathEntry::getArtifact)
+                  .forEach(artifact -> problematicDependencies.put(managedDependency, artifact));
 
-      if (!invalidReferencesToJavaCoreLibrary.isEmpty()) {
-        invalidReferencesToJavaCoreLibrary.stream()
-            .map(LinkageProblem::getSourceClass)
-            .map(ClassFile::getClassPathEntry)
-            .map(ClassPathEntry::getArtifact)
-            .forEach(artifact -> problematicDependencies.put(managedDependency, artifact));
-
-        logger.severe(LinkageProblem.formatLinkageProblems(invalidReferencesToJavaCoreLibrary));
-      }
-
+              logger.severe(LinkageProblem.formatLinkageProblems(invalidReferencesToJavaCoreLibrary));
+            }
+      */
       for (ClassPathEntry entry : result.getClassPath()) {
         Artifact artifact = entry.getArtifact();
         if (artifact.getExtension().equals("jar")) {
