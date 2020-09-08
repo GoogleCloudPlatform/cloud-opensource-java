@@ -41,7 +41,7 @@ public abstract class Symbol {
    * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-13.html#jls-13.1">Java
    *     Language Specification: 13.1. The Form of a Binary</a>
    */
-  String getClassBinaryName() {
+  public String getClassBinaryName() {
     return classBinaryName;
   }
 
