@@ -21,11 +21,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.google.cloud.tools.opensource</groupId>
-  <artifactId>bom-with-artifact</artifactId>
+  <artifactId>parent-project</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>bom-with-artifact</name>
+  <name>parent-project</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -35,14 +35,32 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- This artifact has dependency conflict in its dependencies  -->
       <dependency>
-        <groupId>com.google.cloud.tools.opensource</groupId>
-        <artifactId>artifact-with-error</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <!-- This reactor-bom exists in Spring Milestones repository, not in Maven Central -->
+        <groupId>io.projectreactor</groupId>
+        <artifactId>reactor-bom</artifactId>
+        <version>2020.0.0-M2</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <profiles>
+    <profile>
+      <id>spring</id>
+      <repositories>
+        <repository>
+          <id>spring-milestones</id>
+          <name>Spring Milestones</name>
+          <url>https://repo.spring.io/milestone</url>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
 
   <build>
     <plugins>
