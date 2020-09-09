@@ -17,7 +17,7 @@ $ mvn verify
 Listening for transport dt_socket at address: 5005
 ```
 
-When you debug one of the integration tests in the "src/it" directory. Use the following
+When you debug one of the integration tests in the "src/it" directory, use the following
 command to specify the test case and to provide the debug parameter to Maven invoker plugin. 
 
 ```
