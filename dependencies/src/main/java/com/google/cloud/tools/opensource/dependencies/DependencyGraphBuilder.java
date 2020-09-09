@@ -192,7 +192,7 @@ public final class DependencyGraphBuilder {
       List<Artifact> artifacts, @Nullable MavenProject mavenProject) {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
-    DefaultRepositorySystemSession session = RepositoryUtility.newSessionForFullDependency(system);
+    DefaultRepositorySystemSession session = RepositoryUtility.newSessionForVerboseListDependency(system);
     return buildDependencyGraph(dependencyNodes, session, mavenProject);
   }
 
