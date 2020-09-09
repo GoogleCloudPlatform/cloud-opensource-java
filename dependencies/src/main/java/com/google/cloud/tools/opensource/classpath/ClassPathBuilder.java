@@ -22,7 +22,7 @@ import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.LinkedListMultimap;
 import java.util.List;
 import javax.annotation.Nullable;
-import org.eclipse.aether.RepositorySystemSession;
+import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 
@@ -66,24 +66,25 @@ public final class ClassPathBuilder {
 
   /**
    * Builds a classpath from the transitive dependency graph from {@code artifacts}. If {@code
-   * existingSession} is not null, it uses the session to resolve the artifacts. When there are
-   * multiple versions of an artifact in the dependency tree, the closest to the root in
-   * breadth-first order is picked up. This "pick closest" strategy follows Maven's dependency
-   * mediation.
+   * mavenProject} is not null, it uses the project's settings to resolve the artifacts.
+   *
+   * <p>When there are multiple versions of an artifact in the dependency tree, the closest to the
+   * root in breadth-first order is picked up. This "pick closest" strategy follows Maven's
+   * dependency mediation.
    *
    * @param artifacts the first artifacts that appear in the classpath, in order
-   * @param existingSession the session to resolve artifacts if one already exists
+   * @param mavenProject the session to resolve artifacts if one already exists
    * @param full if true all optional dependencies and their transitive dependencies are included.
    *     If false, optional dependencies are not included.
    */
   public ClassPathResult resolve(
-      List<Artifact> artifacts, boolean full, @Nullable RepositorySystemSession existingSession) {
+      List<Artifact> artifacts, boolean full, @Nullable MavenProject mavenProject) {
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph result;
     if (full) {
-      result = dependencyGraphBuilder.buildFullDependencyGraph(artifacts, existingSession);
+      result = dependencyGraphBuilder.buildFullDependencyGraph(artifacts, mavenProject);
     } else {
-      result = dependencyGraphBuilder.buildVerboseDependencyGraph(artifacts, existingSession);
+      result = dependencyGraphBuilder.buildVerboseDependencyGraph(artifacts, mavenProject);
     }
     return mediate(result);
   }
@@ -97,7 +98,8 @@ public final class ClassPathBuilder {
    */
   ClassPathResult resolveWithMaven(Artifact rootArtifact) {
     DependencyGraph result =
-        dependencyGraphBuilder.buildMavenDependencyGraph(new Dependency(rootArtifact, "compile"));
+        dependencyGraphBuilder.buildMavenDependencyGraph(
+            new Dependency(rootArtifact, "compile"), null);
     return mediate(result);
   }
 

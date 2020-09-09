@@ -11,3 +11,6 @@ assert !buildLog.text.contains(
     "io.projectreactor.netty:reactor-netty:jar:1.0.0-M2 was not resolved")
 
 assert !buildLog.text.contains("NullPointerException")
+
+// This agentproxy artifact does not exist in Maven Central or Spring Milestones repository
+assert buildLog.text.contains("com.jcraft:jsch.agentproxy:jar:0.0.6 was not resolved")

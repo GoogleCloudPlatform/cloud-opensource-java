@@ -25,9 +25,9 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.List;
 import javax.annotation.Nullable;
+import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.graph.DefaultDependencyNode;
@@ -82,7 +82,9 @@ public final class DependencyGraphBuilder {
   }
 
   private DependencyNode resolveCompileTimeDependencies(
-      List<DependencyNode> dependencyNodes, RepositorySystemSession session)
+      List<DependencyNode> dependencyNodes,
+      DefaultRepositorySystemSession session,
+      @Nullable MavenProject mavenProject)
       throws DependencyResolutionException {
 
     ImmutableList.Builder<Dependency> dependenciesBuilder = ImmutableList.builder();
@@ -98,10 +100,9 @@ public final class DependencyGraphBuilder {
     }
     ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
 
-    if (localRepository != null && session instanceof DefaultRepositorySystemSession) {
+    if (localRepository != null) {
       LocalRepository local = new LocalRepository(localRepository.toAbsolutePath().toString());
-      ((DefaultRepositorySystemSession) session)
-          .setLocalRepositoryManager(system.newLocalRepositoryManager(session, local));
+      session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, local));
     }
 
     CollectRequest collectRequest = new CollectRequest();
@@ -111,8 +112,14 @@ public final class DependencyGraphBuilder {
     } else {
       collectRequest.setDependencies(dependencyList);
     }
-    for (RemoteRepository repository : repositories) {
-      collectRequest.addRepository(repository);
+    if (mavenProject != null) {
+      for (RemoteRepository repository : mavenProject.getRemoteProjectRepositories()) {
+        collectRequest.addRepository(repository);
+      }
+    } else {
+      for (RemoteRepository repository : repositories) {
+        collectRequest.addRepository(repository);
+      }
     }
     DependencyRequest dependencyRequest = new DependencyRequest();
     dependencyRequest.setCollectRequest(collectRequest);
@@ -150,18 +157,15 @@ public final class DependencyGraphBuilder {
    * are not treated differently than any other dependency.
    *
    * @param artifacts Maven artifacts whose dependencies to retrieve
-   * @param existingSession the session to resolve artifacts if one already exists
+   * @param mavenProject Maven project configuration for artifact resolution
    * @return dependency graph representing the tree of Maven artifacts
    */
   public DependencyGraph buildFullDependencyGraph(
-      List<Artifact> artifacts, RepositorySystemSession existingSession) {
+      List<Artifact> artifacts, @Nullable MavenProject mavenProject) {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
-    RepositorySystemSession session =
-        existingSession != null
-            ? existingSession
-            : RepositoryUtility.newSessionForVerboseListDependency(system);
-    return buildDependencyGraph(dependencyNodes, session);
+    DefaultRepositorySystemSession session = RepositoryUtility.newSessionForFullDependency(system);
+    return buildDependencyGraph(dependencyNodes, session, mavenProject);
   }
 
   /**
@@ -173,18 +177,15 @@ public final class DependencyGraphBuilder {
    * does not affect the scope of its children's dependencies.
    *
    * @param artifacts Maven artifacts whose dependencies to retrieve
-   * @param existingSession the session to resolve artifacts if one already exists
+   * @param mavenProject Maven project configuration for artifact resolution
    * @return dependency graph representing the tree of Maven artifacts
    */
   public DependencyGraph buildVerboseDependencyGraph(
-      List<Artifact> artifacts, @Nullable RepositorySystemSession existingSession) {
+      List<Artifact> artifacts, @Nullable MavenProject mavenProject) {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
-    RepositorySystemSession session =
-        existingSession != null
-            ? existingSession
-            : RepositoryUtility.newSessionForVerboseListDependency(system);
-    return buildDependencyGraph(dependencyNodes, session);
+    DefaultRepositorySystemSession session = RepositoryUtility.newSessionForFullDependency(system);
+    return buildDependencyGraph(dependencyNodes, session, mavenProject);
   }
 
   /**
@@ -223,7 +224,7 @@ public final class DependencyGraphBuilder {
   DependencyGraph buildVerboseDependencyGraph(Dependency dependency) {
     DefaultRepositorySystemSession session = RepositoryUtility.newSessionForVerboseDependency(system);
     ImmutableList<DependencyNode> roots = ImmutableList.of(new DefaultDependencyNode(dependency));
-    return buildDependencyGraph(roots, session);
+    return buildDependencyGraph(roots, session, null);
   }
 
   /**
@@ -235,15 +236,31 @@ public final class DependencyGraphBuilder {
    * return an incomplete graph.
    */
   public DependencyGraph buildMavenDependencyGraph(Dependency dependency) {
+    return buildMavenDependencyGraph(dependency, null);
+  }
+
+  /**
+   * Builds the transitive dependency graph as seen by Maven. It uses Maven project configuration
+   * for artifact resolution if {@code mavenProject} is not null. It does not include duplicates and
+   * conflicting versions. That is, this resolves conflicting versions by picking the first version
+   * seen. This is how Maven normally operates. It does not contain provided-scope dependencies of
+   * transitive dependencies. It does not contain optional dependencies of transitive dependencies.
+   * In the event of I/O errors, missing artifacts, and other problems, it can return an incomplete
+   * graph.
+   */
+  public DependencyGraph buildMavenDependencyGraph(
+      Dependency dependency, @Nullable MavenProject mavenProject) {
     ImmutableList<DependencyNode> roots = ImmutableList.of(new DefaultDependencyNode(dependency));
-    return buildDependencyGraph(roots, RepositoryUtility.newSessionForMaven(system));
+    return buildDependencyGraph(roots, RepositoryUtility.newSessionForMaven(system), mavenProject);
   }
 
   private DependencyGraph buildDependencyGraph(
-      List<DependencyNode> dependencyNodes, RepositorySystemSession session) {
+      List<DependencyNode> dependencyNodes,
+      DefaultRepositorySystemSession session,
+      MavenProject mavenProject) {
 
     try {
-      DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, session);
+      DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, session, mavenProject);
       return DependencyGraph.from(node);
     } catch (DependencyResolutionException ex) {
       DependencyResult result = ex.getResult();
