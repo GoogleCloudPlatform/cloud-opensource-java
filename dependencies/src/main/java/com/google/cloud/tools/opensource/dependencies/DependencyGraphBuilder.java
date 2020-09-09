@@ -24,8 +24,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.graph.DefaultDependencyNode;
@@ -78,9 +80,9 @@ public final class DependencyGraphBuilder {
   void setLocalRepository(Path localRepository) {
     this.localRepository = localRepository;
   }
-  
+
   private DependencyNode resolveCompileTimeDependencies(
-      List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session)
+      List<DependencyNode> dependencyNodes, RepositorySystemSession session)
       throws DependencyResolutionException {
 
     ImmutableList.Builder<Dependency> dependenciesBuilder = ImmutableList.builder();
@@ -95,10 +97,11 @@ public final class DependencyGraphBuilder {
       }
     }
     ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
-            
-    if (localRepository != null) {
+
+    if (localRepository != null && session instanceof DefaultRepositorySystemSession) {
       LocalRepository local = new LocalRepository(localRepository.toAbsolutePath().toString());
-      session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, local));
+      ((DefaultRepositorySystemSession) session)
+          .setLocalRepositoryManager(system.newLocalRepositoryManager(session, local));
     }
 
     CollectRequest collectRequest = new CollectRequest();
@@ -122,22 +125,68 @@ public final class DependencyGraphBuilder {
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
-   * versions, and provided and optional dependencies. In the event of I/O errors, missing
-   * artifacts, and other problems, it can return an incomplete graph. Each node's dependencies are
-   * resolved recursively. The scope of a dependency does not affect the scope of its children's
-   * dependencies. Provided and optional dependencies are not treated differently than any other
-   * dependency.
+   * versions, and provided and optional dependencies.
+   *
+   * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
+   * incomplete graph. Each node's dependencies are resolved recursively. The scope of a dependency
+   * does not affect the scope of its children's dependencies. Provided and optional dependencies
+   * are not treated differently than any other dependency.
    *
    * @param artifacts Maven artifacts whose dependencies to retrieve
    * @return dependency graph representing the tree of Maven artifacts
    */
   public DependencyGraph buildFullDependencyGraph(List<Artifact> artifacts) {
+    return buildFullDependencyGraph(artifacts, null);
+  }
+
+  /**
+   * Finds the full compile time, transitive dependency graph including duplicates, conflicting
+   * versions, and provided and optional dependencies. It uses {@code existingSession} to resolve
+   * artifacts if the session is not null; otherwise it creates one.
+   *
+   * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
+   * incomplete graph. Each node's dependencies are resolved recursively. The scope of a dependency
+   * does not affect the scope of its children's dependencies. Provided and optional dependencies
+   * are not treated differently than any other dependency.
+   *
+   * @param artifacts Maven artifacts whose dependencies to retrieve
+   * @param existingSession the session to resolve artifacts if one already exists
+   * @return dependency graph representing the tree of Maven artifacts
+   */
+  public DependencyGraph buildFullDependencyGraph(
+      List<Artifact> artifacts, RepositorySystemSession existingSession) {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
-    DefaultRepositorySystemSession session = RepositoryUtility.newSessionForFullDependency(system);
+    RepositorySystemSession session =
+        existingSession != null
+            ? existingSession
+            : RepositoryUtility.newSessionForVerboseListDependency(system);
     return buildDependencyGraph(dependencyNodes, session);
   }
-  
+
+  /**
+   * Finds the full compile time, transitive dependency graph including duplicates and conflicting
+   * versions, but not optional dependencies.
+   *
+   * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
+   * incomplete graph. Each node's dependencies are resolved recursively. The scope of a dependency
+   * does not affect the scope of its children's dependencies.
+   *
+   * @param artifacts Maven artifacts whose dependencies to retrieve
+   * @param existingSession the session to resolve artifacts if one already exists
+   * @return dependency graph representing the tree of Maven artifacts
+   */
+  public DependencyGraph buildVerboseDependencyGraph(
+      List<Artifact> artifacts, @Nullable RepositorySystemSession existingSession) {
+    ImmutableList<DependencyNode> dependencyNodes =
+        artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
+    RepositorySystemSession session =
+        existingSession != null
+            ? existingSession
+            : RepositoryUtility.newSessionForVerboseListDependency(system);
+    return buildDependencyGraph(dependencyNodes, session);
+  }
+
   /**
    * Finds the full compile time, transitive dependency graph including duplicates and conflicting
    * versions, but not optional dependencies. In the event of I/O errors, missing
@@ -149,17 +198,14 @@ public final class DependencyGraphBuilder {
    * @return dependency graph representing the tree of Maven artifacts
    */
   public DependencyGraph buildVerboseDependencyGraph(List<Artifact> artifacts) {
-    ImmutableList<DependencyNode> dependencyNodes =
-        artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
-    DefaultRepositorySystemSession session =
-        RepositoryUtility.newSessionForVerboseListDependency(system);
-    return buildDependencyGraph(dependencyNodes, session);
+    return buildVerboseDependencyGraph(artifacts, null);
   }
-  
+
   /**
    * Finds the full compile time, transitive dependency graph including conflicting versions and
-   * provided dependencies. This includes direct optional dependencies of the root node but not
-   * optional dependencies of transitive dependencies.
+   * provided dependencies. It uses {@code existingSession} to resolve artifacts if the session is
+   * not null; otherwise it creates one. This includes direct optional dependencies of the root node
+   * but not optional dependencies of transitive dependencies.
    *
    * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
    * incomplete graph. Each node's dependencies are resolved recursively. The scope of a dependency
@@ -194,8 +240,8 @@ public final class DependencyGraphBuilder {
   }
 
   private DependencyGraph buildDependencyGraph(
-      List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session) {
-     
+      List<DependencyNode> dependencyNodes, RepositorySystemSession session) {
+
     try {
       DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, session);
       return DependencyGraph.from(node);

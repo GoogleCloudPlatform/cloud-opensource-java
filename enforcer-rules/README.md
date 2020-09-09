@@ -17,8 +17,8 @@ $ mvn verify
 Listening for transport dt_socket at address: 5005
 ```
 
-When you debug the one of the integration tests in the "src/it" directory. Use the following
-command to specify one test case and to provide the debug parameter to Maven invoker plugin. 
+When you debug one of the integration tests in the "src/it" directory. Use the following
+command to specify the test case and to provide the debug parameter to Maven invoker plugin. 
 
 ```
 mvn install -Dmaven.test.skip -Dinvoker.test=bom-project-using-spring-repository \

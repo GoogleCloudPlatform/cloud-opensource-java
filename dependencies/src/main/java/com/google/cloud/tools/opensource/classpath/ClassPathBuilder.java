@@ -21,6 +21,8 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.collect.LinkedListMultimap;
 import java.util.List;
+import javax.annotation.Nullable;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
 
@@ -59,11 +61,29 @@ public final class ClassPathBuilder {
    */
   public ClassPathResult resolve(List<Artifact> artifacts, boolean full) {
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
+    return resolve(artifacts, full, null);
+  }
+
+  /**
+   * Builds a classpath from the transitive dependency graph from {@code artifacts}. If {@code
+   * existingSession} is not null, it uses the session to resolve the artifacts. When there are
+   * multiple versions of an artifact in the dependency tree, the closest to the root in
+   * breadth-first order is picked up. This "pick closest" strategy follows Maven's dependency
+   * mediation.
+   *
+   * @param artifacts the first artifacts that appear in the classpath, in order
+   * @param existingSession the session to resolve artifacts if one already exists
+   * @param full if true all optional dependencies and their transitive dependencies are included.
+   *     If false, optional dependencies are not included.
+   */
+  public ClassPathResult resolve(
+      List<Artifact> artifacts, boolean full, @Nullable RepositorySystemSession existingSession) {
+    // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph result;
     if (full) {
-      result = dependencyGraphBuilder.buildFullDependencyGraph(artifacts);
+      result = dependencyGraphBuilder.buildFullDependencyGraph(artifacts, existingSession);
     } else {
-      result = dependencyGraphBuilder.buildVerboseDependencyGraph(artifacts);
+      result = dependencyGraphBuilder.buildVerboseDependencyGraph(artifacts, existingSession);
     }
     return mediate(result);
   }

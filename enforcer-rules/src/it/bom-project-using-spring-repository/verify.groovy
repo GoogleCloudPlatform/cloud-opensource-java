@@ -9,3 +9,5 @@ assert !buildLog.text.contains(
 // https://repo.spring.io/milestone/io/projectreactor/netty/reactor-netty/1.0.0-M2/
 assert !buildLog.text.contains(
     "io.projectreactor.netty:reactor-netty:jar:1.0.0-M2 was not resolved")
+
+assert !buildLog.text.contains("NullPointerException")
