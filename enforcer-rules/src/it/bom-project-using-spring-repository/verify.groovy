@@ -12,5 +12,7 @@ assert !buildLog.text.contains(
 
 assert !buildLog.text.contains("NullPointerException")
 
-// This agentproxy artifact does not exist in Maven Central or Spring Milestones repository
+// This agentproxy artifact does not exist in Maven Central or Spring Milestones repository.
+// Therefore The enforcer rule for the project still fails due to these unresolved artifacts.
+// https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1635
 assert buildLog.text.contains("com.jcraft:jsch.agentproxy:jar:0.0.6 was not resolved")
