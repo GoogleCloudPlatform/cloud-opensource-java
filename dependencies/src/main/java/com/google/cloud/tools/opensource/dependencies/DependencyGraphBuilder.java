@@ -113,6 +113,7 @@ public final class DependencyGraphBuilder {
       collectRequest.setDependencies(dependencyList);
     }
     if (mavenProject != null) {
+      // Read the `repositories` section in the pom.xml when the Maven enforcer rule is running
       for (RemoteRepository repository : mavenProject.getRemoteProjectRepositories()) {
         collectRequest.addRepository(repository);
       }
@@ -132,12 +133,13 @@ public final class DependencyGraphBuilder {
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
-   * versions, and provided and optional dependencies.
+   * versions, and provided and optional dependencies. Each node's dependencies are resolved
+   * recursively. The scope of a dependency does not affect the scope of its children's
+   * dependencies. Provided and optional dependencies are not treated differently than any other
+   * dependency.
    *
    * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
-   * incomplete graph. Each node's dependencies are resolved recursively. The scope of a dependency
-   * does not affect the scope of its children's dependencies. Provided and optional dependencies
-   * are not treated differently than any other dependency.
+   * incomplete graph.
    *
    * @param artifacts Maven artifacts whose dependencies to retrieve
    * @return dependency graph representing the tree of Maven artifacts
@@ -148,13 +150,16 @@ public final class DependencyGraphBuilder {
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
-   * versions, and provided and optional dependencies. It uses Maven project configuration for the
-   * artifact resolution if {@code mavenProject} is not null.
+   * versions, and provided and optional dependencies. Each node's dependencies are resolved
+   * recursively. The scope of a dependency does not affect the scope of its children's
+   * dependencies. Provided and optional dependencies are not treated differently than any other
+   * dependency.
+   *
+   * <p>It uses Maven project configuration for the artifact resolution if {@code mavenProject} is
+   * not null.
    *
    * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
-   * incomplete graph. Each node's dependencies are resolved recursively. The scope of a dependency
-   * does not affect the scope of its children's dependencies. Provided and optional dependencies
-   * are not treated differently than any other dependency.
+   * incomplete graph.
    *
    * @param artifacts Maven artifacts whose dependencies to retrieve
    * @param mavenProject Maven project configuration for the artifact resolution
@@ -170,12 +175,14 @@ public final class DependencyGraphBuilder {
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates and conflicting
-   * versions, but not optional dependencies. It uses Maven project configuration for the artifact
-   * resolution if {@code mavenProject} is not null.
+   * versions, but not optional dependencies. Each node's dependencies are resolved recursively. The
+   * scope of a dependency does not affect the scope of its children's dependencies.
+   *
+   * <p>It uses Maven project configuration for the artifact resolution if {@code mavenProject} is
+   * not null.
    *
    * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
-   * incomplete graph. Each node's dependencies are resolved recursively. The scope of a dependency
-   * does not affect the scope of its children's dependencies.
+   * incomplete graph.
    *
    * @param artifacts Maven artifacts whose dependencies to retrieve
    * @param mavenProject Maven project configuration for the artifact resolution
@@ -191,10 +198,11 @@ public final class DependencyGraphBuilder {
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates and conflicting
-   * versions, but not optional dependencies. In the event of I/O errors, missing
-   * artifacts, and other problems, it can return an incomplete graph. Each node's dependencies are
-   * resolved recursively. The scope of a dependency does not affect the scope of its children's
-   * dependencies.
+   * versions, but not optional dependencies. Each node's dependencies are resolved recursively. The
+   * scope of a dependency does not affect the scope of its children's dependencies.
+   *
+   * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
+   * incomplete graph.
    *
    * @param artifacts Maven artifacts whose dependencies to retrieve
    * @return dependency graph representing the tree of Maven artifacts
@@ -206,15 +214,16 @@ public final class DependencyGraphBuilder {
   /**
    * Finds the full compile time, transitive dependency graph including conflicting versions and
    * provided dependencies. This includes direct optional dependencies of the root node but not
-   * optional dependencies of transitive dependencies.
+   * optional dependencies of transitive dependencies. Each node's dependencies are resolved
+   * recursively. The scope of a dependency does not affect the scope of its children's
+   * dependencies. Provided and optional dependencies are not treated differently than any other
+   * dependency.
    *
    * <p>It uses Maven project configuration for the artifact resolution if {@code mavenProject} is
    * not null.
    *
    * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
-   * incomplete graph. Each node's dependencies are resolved recursively. The scope of a dependency
-   * does not affect the scope of its children's dependencies. Provided and optional dependencies
-   * are not treated differently than any other dependency.
+   * incomplete graph.
    *
    * @param artifact the root
    * @return the graph as built by Maven before dependency mediation

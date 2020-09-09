@@ -73,7 +73,8 @@ public final class ClassPathBuilder {
    * dependency mediation.
    *
    * @param artifacts the first artifacts that appear in the classpath, in order
-   * @param mavenProject the session to resolve artifacts if one already exists
+   * @param mavenProject Maven project configuration for the artifact resolution. Non-null iff it's
+   *     called by the Maven enforcer rule.
    * @param full if true all optional dependencies and their transitive dependencies are included.
    *     If false, optional dependencies are not included.
    */
