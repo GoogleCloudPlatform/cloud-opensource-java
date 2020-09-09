@@ -148,8 +148,8 @@ public final class DependencyGraphBuilder {
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
-   * versions, and provided and optional dependencies. It uses {@code existingSession} to resolve
-   * artifacts if the session is not null; otherwise it creates one.
+   * versions, and provided and optional dependencies. It uses Maven project configuration for the
+   * artifact resolution if {@code mavenProject} is not null.
    *
    * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
    * incomplete graph. Each node's dependencies are resolved recursively. The scope of a dependency
@@ -157,7 +157,7 @@ public final class DependencyGraphBuilder {
    * are not treated differently than any other dependency.
    *
    * @param artifacts Maven artifacts whose dependencies to retrieve
-   * @param mavenProject Maven project configuration for artifact resolution
+   * @param mavenProject Maven project configuration for the artifact resolution
    * @return dependency graph representing the tree of Maven artifacts
    */
   public DependencyGraph buildFullDependencyGraph(
@@ -170,14 +170,15 @@ public final class DependencyGraphBuilder {
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates and conflicting
-   * versions, but not optional dependencies.
+   * versions, but not optional dependencies. It uses Maven project configuration for the artifact
+   * resolution if {@code mavenProject} is not null.
    *
    * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
    * incomplete graph. Each node's dependencies are resolved recursively. The scope of a dependency
    * does not affect the scope of its children's dependencies.
    *
    * @param artifacts Maven artifacts whose dependencies to retrieve
-   * @param mavenProject Maven project configuration for artifact resolution
+   * @param mavenProject Maven project configuration for the artifact resolution
    * @return dependency graph representing the tree of Maven artifacts
    */
   public DependencyGraph buildVerboseDependencyGraph(
@@ -204,9 +205,11 @@ public final class DependencyGraphBuilder {
 
   /**
    * Finds the full compile time, transitive dependency graph including conflicting versions and
-   * provided dependencies. It uses {@code existingSession} to resolve artifacts if the session is
-   * not null; otherwise it creates one. This includes direct optional dependencies of the root node
-   * but not optional dependencies of transitive dependencies.
+   * provided dependencies. This includes direct optional dependencies of the root node but not
+   * optional dependencies of transitive dependencies.
+   *
+   * <p>It uses Maven project configuration for the artifact resolution if {@code mavenProject} is
+   * not null.
    *
    * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
    * incomplete graph. Each node's dependencies are resolved recursively. The scope of a dependency
@@ -230,23 +233,27 @@ public final class DependencyGraphBuilder {
   /**
    * Builds the transitive dependency graph as seen by Maven. It does not include duplicates and
    * conflicting versions. That is, this resolves conflicting versions by picking the first version
-   * seen. This is how Maven normally operates. It does not contain provided-scope dependencies
-   * of transitive dependencies. It does not contain optional dependencies of transitive
-   * dependencies. In the event of I/O errors, missing artifacts, and other problems, it can
-   * return an incomplete graph.
+   * seen. This is how Maven normally operates. It does not contain provided-scope dependencies of
+   * transitive dependencies. It does not contain optional dependencies of transitive dependencies.
+   *
+   * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
+   * incomplete graph.
    */
   public DependencyGraph buildMavenDependencyGraph(Dependency dependency) {
     return buildMavenDependencyGraph(dependency, null);
   }
 
   /**
-   * Builds the transitive dependency graph as seen by Maven. It uses Maven project configuration
-   * for artifact resolution if {@code mavenProject} is not null. It does not include duplicates and
+   * Builds the transitive dependency graph as seen by Maven. It does not include duplicates and
    * conflicting versions. That is, this resolves conflicting versions by picking the first version
    * seen. This is how Maven normally operates. It does not contain provided-scope dependencies of
    * transitive dependencies. It does not contain optional dependencies of transitive dependencies.
-   * In the event of I/O errors, missing artifacts, and other problems, it can return an incomplete
-   * graph.
+   *
+   * <p>It uses Maven project configuration for the artifact resolution if {@code mavenProject} is
+   * not null.
+   *
+   * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
+   * incomplete graph.
    */
   public DependencyGraph buildMavenDependencyGraph(
       Dependency dependency, @Nullable MavenProject mavenProject) {
