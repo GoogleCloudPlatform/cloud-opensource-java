@@ -24,8 +24,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.List;
-import javax.annotation.Nullable;
-import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
@@ -82,9 +80,7 @@ public final class DependencyGraphBuilder {
   }
 
   private DependencyNode resolveCompileTimeDependencies(
-      List<DependencyNode> dependencyNodes,
-      DefaultRepositorySystemSession session,
-      @Nullable MavenProject mavenProject)
+      List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session)
       throws DependencyResolutionException {
 
     ImmutableList.Builder<Dependency> dependenciesBuilder = ImmutableList.builder();
@@ -112,15 +108,8 @@ public final class DependencyGraphBuilder {
     } else {
       collectRequest.setDependencies(dependencyList);
     }
-    if (mavenProject != null) {
-      // Read the `repositories` section in the pom.xml when the Maven enforcer rule is running
-      for (RemoteRepository repository : mavenProject.getRemoteProjectRepositories()) {
-        collectRequest.addRepository(repository);
-      }
-    } else {
-      for (RemoteRepository repository : repositories) {
-        collectRequest.addRepository(repository);
-      }
+    for (RemoteRepository repository : repositories) {
+      collectRequest.addRepository(repository);
     }
     DependencyRequest dependencyRequest = new DependencyRequest();
     dependencyRequest.setCollectRequest(collectRequest);
@@ -145,55 +134,10 @@ public final class DependencyGraphBuilder {
    * @return dependency graph representing the tree of Maven artifacts
    */
   public DependencyGraph buildFullDependencyGraph(List<Artifact> artifacts) {
-    return buildFullDependencyGraph(artifacts, null);
-  }
-
-  /**
-   * Finds the full compile time, transitive dependency graph including duplicates, conflicting
-   * versions, and provided and optional dependencies. Each node's dependencies are resolved
-   * recursively. The scope of a dependency does not affect the scope of its children's
-   * dependencies. Provided and optional dependencies are not treated differently than any other
-   * dependency.
-   *
-   * <p>It uses Maven project configuration for the artifact resolution if {@code mavenProject} is
-   * not null.
-   *
-   * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
-   * incomplete graph.
-   *
-   * @param artifacts Maven artifacts whose dependencies to retrieve
-   * @param mavenProject Maven project configuration for the artifact resolution
-   * @return dependency graph representing the tree of Maven artifacts
-   */
-  public DependencyGraph buildFullDependencyGraph(
-      List<Artifact> artifacts, @Nullable MavenProject mavenProject) {
     ImmutableList<DependencyNode> dependencyNodes =
         artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
     DefaultRepositorySystemSession session = RepositoryUtility.newSessionForFullDependency(system);
-    return buildDependencyGraph(dependencyNodes, session, mavenProject);
-  }
-
-  /**
-   * Finds the full compile time, transitive dependency graph including duplicates and conflicting
-   * versions, but not optional dependencies. Each node's dependencies are resolved recursively. The
-   * scope of a dependency does not affect the scope of its children's dependencies.
-   *
-   * <p>It uses Maven project configuration for the artifact resolution if {@code mavenProject} is
-   * not null.
-   *
-   * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
-   * incomplete graph.
-   *
-   * @param artifacts Maven artifacts whose dependencies to retrieve
-   * @param mavenProject Maven project configuration for the artifact resolution
-   * @return dependency graph representing the tree of Maven artifacts
-   */
-  public DependencyGraph buildVerboseDependencyGraph(
-      List<Artifact> artifacts, @Nullable MavenProject mavenProject) {
-    ImmutableList<DependencyNode> dependencyNodes =
-        artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
-    DefaultRepositorySystemSession session = RepositoryUtility.newSessionForVerboseListDependency(system);
-    return buildDependencyGraph(dependencyNodes, session, mavenProject);
+    return buildDependencyGraph(dependencyNodes, session);
   }
 
   /**
@@ -208,7 +152,11 @@ public final class DependencyGraphBuilder {
    * @return dependency graph representing the tree of Maven artifacts
    */
   public DependencyGraph buildVerboseDependencyGraph(List<Artifact> artifacts) {
-    return buildVerboseDependencyGraph(artifacts, null);
+    ImmutableList<DependencyNode> dependencyNodes =
+        artifacts.stream().map(DefaultDependencyNode::new).collect(toImmutableList());
+    DefaultRepositorySystemSession session =
+        RepositoryUtility.newSessionForVerboseListDependency(system);
+    return buildDependencyGraph(dependencyNodes, session);
   }
 
   /**
@@ -218,9 +166,6 @@ public final class DependencyGraphBuilder {
    * recursively. The scope of a dependency does not affect the scope of its children's
    * dependencies. Provided and optional dependencies are not treated differently than any other
    * dependency.
-   *
-   * <p>It uses Maven project configuration for the artifact resolution if {@code mavenProject} is
-   * not null.
    *
    * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
    * incomplete graph.
@@ -236,7 +181,7 @@ public final class DependencyGraphBuilder {
   DependencyGraph buildVerboseDependencyGraph(Dependency dependency) {
     DefaultRepositorySystemSession session = RepositoryUtility.newSessionForVerboseDependency(system);
     ImmutableList<DependencyNode> roots = ImmutableList.of(new DefaultDependencyNode(dependency));
-    return buildDependencyGraph(roots, session, null);
+    return buildDependencyGraph(roots, session);
   }
 
   /**
@@ -249,34 +194,15 @@ public final class DependencyGraphBuilder {
    * incomplete graph.
    */
   public DependencyGraph buildMavenDependencyGraph(Dependency dependency) {
-    return buildMavenDependencyGraph(dependency, null);
-  }
-
-  /**
-   * Builds the transitive dependency graph as seen by Maven. It does not include duplicates and
-   * conflicting versions. That is, this resolves conflicting versions by picking the first version
-   * seen. This is how Maven normally operates. It does not contain provided-scope dependencies of
-   * transitive dependencies. It does not contain optional dependencies of transitive dependencies.
-   *
-   * <p>It uses Maven project configuration for the artifact resolution if {@code mavenProject} is
-   * not null.
-   *
-   * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
-   * incomplete graph.
-   */
-  public DependencyGraph buildMavenDependencyGraph(
-      Dependency dependency, @Nullable MavenProject mavenProject) {
     ImmutableList<DependencyNode> roots = ImmutableList.of(new DefaultDependencyNode(dependency));
-    return buildDependencyGraph(roots, RepositoryUtility.newSessionForMaven(system), mavenProject);
+    return buildDependencyGraph(roots, RepositoryUtility.newSessionForMaven(system));
   }
 
   private DependencyGraph buildDependencyGraph(
-      List<DependencyNode> dependencyNodes,
-      DefaultRepositorySystemSession session,
-      MavenProject mavenProject) {
+      List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session) {
 
     try {
-      DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, session, mavenProject);
+      DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, session);
       return DependencyGraph.from(node);
     } catch (DependencyResolutionException ex) {
       DependencyResult result = ex.getResult();

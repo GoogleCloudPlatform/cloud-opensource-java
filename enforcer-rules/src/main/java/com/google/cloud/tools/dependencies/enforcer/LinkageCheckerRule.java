@@ -144,8 +144,10 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       MojoExecution execution = (MojoExecution) helper.evaluate("${mojoExecution}");
       RepositorySystemSession repositorySystemSession = session.getRepositorySession();
 
-      ImmutableList<String> repositoryUrls = project.getRemoteProjectRepositories().stream()
-          .map(RemoteRepository::getUrl).collect(toImmutableList());
+      ImmutableList<String> repositoryUrls =
+          project.getRemoteProjectRepositories().stream()
+              .map(RemoteRepository::getUrl)
+              .collect(toImmutableList());
       DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder(repositoryUrls);
       classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
 
@@ -376,7 +378,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
             .filter(artifact -> !Bom.shouldSkipBomMember(artifact))
             .collect(toImmutableList());
 
-    ClassPathResult result = classPathBuilder.resolve(artifacts, false, bomProject);
+    ClassPathResult result = classPathBuilder.resolve(artifacts, false);
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
     if (!artifactProblems.isEmpty()) {
       throw new EnforcerRuleException("Failed to collect dependency: " + artifactProblems);

@@ -136,11 +136,11 @@ public class LinkageCheckerRuleTest {
             new DefaultArtifactHandler());
     rootArtifact.setFile(new File("dummy.jar"));
     when(mockProject.getArtifact()).thenReturn(rootArtifact);
-    when(mockProject.getRemoteProjectRepositories()).thenReturn(
-        ImmutableList.of(
-            new RemoteRepository.Builder("maven", "maven", "https://repo2.maven.org/").build()
-        )
-    );
+    when(mockProject.getRemoteProjectRepositories())
+        .thenReturn(
+            ImmutableList.of(
+                new RemoteRepository.Builder("maven", "maven", "https://repo2.maven.org/")
+                    .build()));
   }
 
   /**
