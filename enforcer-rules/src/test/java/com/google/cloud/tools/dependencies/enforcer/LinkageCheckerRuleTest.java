@@ -36,7 +36,6 @@ import java.net.URISyntaxException;
 import java.net.URLClassLoader;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -232,12 +231,12 @@ public class LinkageCheckerRuleTest {
     } catch (EnforcerRuleException ex) {
       // pass
       ArgumentCaptor<String> errorMessageCaptor = ArgumentCaptor.forClass(String.class);
-      verify(mockLog, times(2)).error(errorMessageCaptor.capture());
+      verify(mockLog, times(1)).error(errorMessageCaptor.capture());
 
-      List<String> errorMessages = errorMessageCaptor.getAllValues();
-      Truth.assertThat(errorMessages.get(0)).startsWith("Linkage Checker rule found 112 errors.");
-      Truth.assertThat(errorMessages.get(1))
-          .startsWith(
+      String errorMessage = errorMessageCaptor.getValue();
+      Truth.assertThat(errorMessage).startsWith("Linkage Checker rule found 112 errors.");
+      Truth.assertThat(errorMessage)
+          .contains(
               "Problematic artifacts in the dependency tree:\n"
                   + "com.google.appengine:appengine-api-1.0-sdk:1.9.64 is at:\n"
                   + "  a:b:jar:0.1 / com.google.appengine:appengine-api-1.0-sdk:1.9.64 (compile)");
