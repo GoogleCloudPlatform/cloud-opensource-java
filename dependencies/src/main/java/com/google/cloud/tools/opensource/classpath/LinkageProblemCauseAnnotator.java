@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import java.io.IOException;
 import java.util.HashMap;
@@ -40,9 +42,11 @@ public final class LinkageProblemCauseAnnotator {
       ClassPathResult rootResult,
       Iterable<LinkageProblem> linkageProblems)
       throws IOException {
+    checkNotNull(classPathBuilder);
+    checkNotNull(rootResult);
+    checkNotNull(linkageProblems);
 
     Map<Artifact, ClassPathResult> cache = new HashMap<>();
-
     for (LinkageProblem linkageProblem : linkageProblems) {
       ClassFile sourceClass = linkageProblem.getSourceClass();
       ClassPathEntry sourceEntry = sourceClass.getClassPathEntry();

@@ -57,19 +57,20 @@ class LinkageCheckerMain {
         linkageCheckerArguments.printHelp();
       }
 
-      if (linkageCheckerArguments.hasInput()) { 
-        // This is non-empty if a BOM or artifacts are specified in the argument
-        ImmutableList<Artifact> artifacts = linkageCheckerArguments.getArtifacts();
+      if (linkageCheckerArguments.hasInput()) {
+        // artifactsInArguments is not empty if a BOM or artifacts are specified in the argument.
+        // If JAR files are specified, it's empty.
+        ImmutableList<Artifact> artifactsInArguments = linkageCheckerArguments.getArtifacts();
 
-        // When JAR files are specified in the argument, artifacts are empty.
         ImmutableList<ClassPathEntry> inputClassPath;
         ImmutableSet<ClassPathEntry> entryPoints;
         List<ArtifactProblem> artifactProblems = new ArrayList<>();
-        // classPathResult is kept null if JAR files are specified in the argument
+        // classPathResult and classPathBuilder are kept null if JAR files are specified in the
+        // argument
         ClassPathResult classPathResult = null;
         ClassPathBuilder classPathBuilder = null;
 
-        if (artifacts.isEmpty()) {
+        if (artifactsInArguments.isEmpty()) {
           // When JAR files are passed as arguments, classPathResult is null, because there is no need
           // to resolve Maven dependencies.
           inputClassPath = linkageCheckerArguments.getJarFiles();
@@ -79,10 +80,10 @@ class LinkageCheckerMain {
           DependencyGraphBuilder dependencyGraphBuilder =
               new DependencyGraphBuilder(linkageCheckerArguments.getMavenRepositoryUrls());
           classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
-          classPathResult = classPathBuilder.resolve(artifacts, false);
+          classPathResult = classPathBuilder.resolve(artifactsInArguments, false);
           inputClassPath = classPathResult.getClassPath();
           artifactProblems.addAll(classPathResult.getArtifactProblems());
-          entryPoints = ImmutableSet.copyOf(inputClassPath.subList(0, artifacts.size()));
+          entryPoints = ImmutableSet.copyOf(inputClassPath.subList(0, artifactsInArguments.size()));
         }
 
         LinkageChecker linkageChecker =
@@ -100,7 +101,7 @@ class LinkageCheckerMain {
                   .collect(toImmutableSet());
         }
 
-        if (classPathResult != null) {
+        if (!artifactsInArguments.isEmpty()) {
           LinkageProblemCauseAnnotator.annotate(classPathBuilder, classPathResult, linkageProblems);
         }
 
