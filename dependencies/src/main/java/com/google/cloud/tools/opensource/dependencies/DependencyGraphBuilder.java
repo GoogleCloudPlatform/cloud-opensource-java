@@ -78,7 +78,7 @@ public final class DependencyGraphBuilder {
   void setLocalRepository(Path localRepository) {
     this.localRepository = localRepository;
   }
-  
+
   private DependencyNode resolveCompileTimeDependencies(
       List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session)
       throws DependencyResolutionException {
@@ -95,7 +95,7 @@ public final class DependencyGraphBuilder {
       }
     }
     ImmutableList<Dependency> dependencyList = dependenciesBuilder.build();
-            
+
     if (localRepository != null) {
       LocalRepository local = new LocalRepository(localRepository.toAbsolutePath().toString());
       session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, local));
@@ -122,11 +122,13 @@ public final class DependencyGraphBuilder {
 
   /**
    * Finds the full compile time, transitive dependency graph including duplicates, conflicting
-   * versions, and provided and optional dependencies. In the event of I/O errors, missing
-   * artifacts, and other problems, it can return an incomplete graph. Each node's dependencies are
-   * resolved recursively. The scope of a dependency does not affect the scope of its children's
+   * versions, and provided and optional dependencies. Each node's dependencies are resolved
+   * recursively. The scope of a dependency does not affect the scope of its children's
    * dependencies. Provided and optional dependencies are not treated differently than any other
    * dependency.
+   *
+   * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
+   * incomplete graph.
    *
    * @param artifacts Maven artifacts whose dependencies to retrieve
    * @return dependency graph representing the tree of Maven artifacts
@@ -137,13 +139,14 @@ public final class DependencyGraphBuilder {
     DefaultRepositorySystemSession session = RepositoryUtility.newSessionForFullDependency(system);
     return buildDependencyGraph(dependencyNodes, session);
   }
-  
+
   /**
    * Finds the full compile time, transitive dependency graph including duplicates and conflicting
-   * versions, but not optional dependencies. In the event of I/O errors, missing
-   * artifacts, and other problems, it can return an incomplete graph. Each node's dependencies are
-   * resolved recursively. The scope of a dependency does not affect the scope of its children's
-   * dependencies.
+   * versions, but not optional dependencies. Each node's dependencies are resolved recursively. The
+   * scope of a dependency does not affect the scope of its children's dependencies.
+   *
+   * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
+   * incomplete graph.
    *
    * @param artifacts Maven artifacts whose dependencies to retrieve
    * @return dependency graph representing the tree of Maven artifacts
@@ -155,16 +158,17 @@ public final class DependencyGraphBuilder {
         RepositoryUtility.newSessionForVerboseListDependency(system);
     return buildDependencyGraph(dependencyNodes, session);
   }
-  
+
   /**
    * Finds the full compile time, transitive dependency graph including conflicting versions and
    * provided dependencies. This includes direct optional dependencies of the root node but not
-   * optional dependencies of transitive dependencies.
+   * optional dependencies of transitive dependencies. Each node's dependencies are resolved
+   * recursively. The scope of a dependency does not affect the scope of its children's
+   * dependencies. Provided and optional dependencies are not treated differently than any other
+   * dependency.
    *
    * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
-   * incomplete graph. Each node's dependencies are resolved recursively. The scope of a dependency
-   * does not affect the scope of its children's dependencies. Provided and optional dependencies
-   * are not treated differently than any other dependency.
+   * incomplete graph.
    *
    * @param artifact the root
    * @return the graph as built by Maven before dependency mediation
@@ -183,10 +187,11 @@ public final class DependencyGraphBuilder {
   /**
    * Builds the transitive dependency graph as seen by Maven. It does not include duplicates and
    * conflicting versions. That is, this resolves conflicting versions by picking the first version
-   * seen. This is how Maven normally operates. It does not contain provided-scope dependencies
-   * of transitive dependencies. It does not contain optional dependencies of transitive
-   * dependencies. In the event of I/O errors, missing artifacts, and other problems, it can
-   * return an incomplete graph.
+   * seen. This is how Maven normally operates. It does not contain provided-scope dependencies of
+   * transitive dependencies. It does not contain optional dependencies of transitive dependencies.
+   *
+   * <p>In the event of I/O errors, missing artifacts, and other problems, it can return an
+   * incomplete graph.
    */
   public DependencyGraph buildMavenDependencyGraph(Dependency dependency) {
     ImmutableList<DependencyNode> roots = ImmutableList.of(new DefaultDependencyNode(dependency));
@@ -195,7 +200,7 @@ public final class DependencyGraphBuilder {
 
   private DependencyGraph buildDependencyGraph(
       List<DependencyNode> dependencyNodes, DefaultRepositorySystemSession session) {
-     
+
     try {
       DependencyNode node = resolveCompileTimeDependencies(dependencyNodes, session);
       return DependencyGraph.from(node);
