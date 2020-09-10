@@ -155,7 +155,7 @@ public class LinkageProblemTest {
             + "(com.google:ccc:1.2.3) java.lang.Integer's field MAX_VALUE is not found;\n"
             + "  referenced by 1 class file\n"
             + "    java.lang.Integer (com.google:bar:0.0.1)\n",
-        LinkageProblem.formatLinkageProblems(linkageProblems));
+        LinkageProblem.formatLinkageProblems(linkageProblems, null));
   }
 
   @Test

@@ -91,7 +91,7 @@ class LinkageCheckerMain {
         findLinkageProblems(linkageCheckerArguments, linkageChecker);
 
     if (!linkageProblems.isEmpty()) {
-      System.out.println(LinkageProblem.formatLinkageProblems(linkageProblems));
+      System.out.println(LinkageProblem.formatLinkageProblems(linkageProblems, null));
     }
 
     return linkageProblems;
@@ -122,20 +122,7 @@ class LinkageCheckerMain {
     LinkageProblemCauseAnnotator.annotate(classPathBuilder, classPathResult, linkageProblems);
 
     if (!linkageProblems.isEmpty()) {
-      System.out.println(LinkageProblem.formatLinkageProblems(linkageProblems));
-    }
-
-    if (!linkageProblems.isEmpty()) {
-      ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
-      for (LinkageProblem linkageProblem : linkageProblems) {
-        ClassFile targetClass = linkageProblem.getTargetClass();
-        if (targetClass != null) {
-          problematicJars.add(targetClass.getClassPathEntry());
-        }
-        ClassFile sourceClassFile = linkageProblem.getSourceClass();
-        problematicJars.add(sourceClassFile.getClassPathEntry());
-      }
-      System.out.println(classPathResult.formatDependencyPaths(problematicJars.build()));
+      System.out.println(LinkageProblem.formatLinkageProblems(linkageProblems, classPathResult));
     }
 
     if (!artifactProblems.isEmpty()) {

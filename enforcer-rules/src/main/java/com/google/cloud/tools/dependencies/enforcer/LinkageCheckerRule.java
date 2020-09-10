@@ -20,7 +20,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static org.apache.maven.enforcer.rule.api.EnforcerLevel.WARN;
 
-import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
@@ -236,16 +235,14 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
           String message =
               String.format(
                   "Linkage Checker rule found %d %s. Linkage error report:\n%s",
-                  errorCount, foundError, LinkageProblem.formatLinkageProblems(linkageProblems));
-          String dependencyPaths =
-              dependencyPathsOfProblematicJars(classPathResult, linkageProblems);
+                  errorCount,
+                  foundError,
+                  LinkageProblem.formatLinkageProblems(linkageProblems, classPathResult));
 
           if (getLevel() == WARN) {
             logger.warn(message);
-            logger.warn(dependencyPaths);
           } else {
             logger.error(message);
-            logger.error(dependencyPaths);
             logger.info(
                 "For the details of the linkage errors, see "
                     + "https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Messages");
@@ -384,21 +381,5 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       throw new EnforcerRuleException("Failed to collect dependency: " + artifactProblems);
     }
     return result;
-  }
-
-  private String dependencyPathsOfProblematicJars(
-      ClassPathResult classPathResult, Set<LinkageProblem> linkageProblems) {
-    ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
-    for (LinkageProblem problem : linkageProblems) {
-      if (problem.getTargetClass() != null) {
-        problematicJars.add(problem.getTargetClass().getClassPathEntry());
-      }
-
-      ClassFile sourceClass = problem.getSourceClass();
-      problematicJars.add(sourceClass.getClassPathEntry());
-    }
-
-    return "Problematic artifacts in the dependency tree:\n"
-        + classPathResult.formatDependencyPaths(problematicJars.build());
   }
 }
