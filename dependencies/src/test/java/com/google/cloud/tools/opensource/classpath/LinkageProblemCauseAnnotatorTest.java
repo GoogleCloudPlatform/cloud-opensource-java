@@ -153,16 +153,19 @@ public class LinkageProblemCauseAnnotatorTest {
                 "https://repo.spring.io/milestone", RepositoryUtility.CENTRAL.getUrl()));
 
     ClassPathBuilder classPathBuilderWithSpring = new ClassPathBuilder(dependencyGraphBuilder);
+
+    // io.projectreactor:reactor-core:3.4.0-M2 is in the Spring Milestones repository.
     ClassPathResult classPathResult =
         classPathBuilderWithSpring.resolve(
             ImmutableList.of(
                 new DefaultArtifact("io.projectreactor:reactor-core:3.4.0-M2"),
-                new DefaultArtifact("org.reactivestreams:reactive-streams:1.0.0")),
+                new DefaultArtifact("org.reactivestreams:reactive-streams:0.4.0")),
             false);
 
     ClassPathEntry reactorCore = classPathResult.getClassPath().get(0);
 
-    // A hypothetical problem where org.reactivestreams.Subscriber class is missing
+    // A hypothetical problem where org.reactivestreams.Subscriber class is missing because the
+    // org.reactivestreams:reactive-streams, which contains the class, has a different version.
     LinkageProblem problem =
         new ClassNotFoundProblem(
             new ClassFile(reactorCore, "reactor.util.Metrics"),
@@ -176,9 +179,8 @@ public class LinkageProblemCauseAnnotatorTest {
     assertEquals(DependencyConflict.class, cause.getClass());
     DependencyConflict conflict = (DependencyConflict) cause;
 
-    // The class path has reactive-streams:1.0.0
     assertEquals(
-        "org.reactivestreams:reactive-streams:1.0.0",
+        "org.reactivestreams:reactive-streams:0.4.0",
         Artifacts.toCoordinates(conflict.getPathToSelectedArtifact().getLeaf()));
 
     // io.projectreactor:reactor-core depends on reactive-streams 1.0.3
