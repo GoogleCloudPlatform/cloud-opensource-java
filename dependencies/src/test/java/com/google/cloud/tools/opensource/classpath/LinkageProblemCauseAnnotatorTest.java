@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
@@ -154,12 +155,14 @@ public class LinkageProblemCauseAnnotatorTest {
     ClassPathBuilder classPathBuilderWithSpring = new ClassPathBuilder(dependencyGraphBuilder);
     ClassPathResult classPathResult =
         classPathBuilderWithSpring.resolve(
-            ImmutableList.of(new DefaultArtifact("io.projectreactor:reactor-core:3.4.0-M2")),
+            ImmutableList.of(
+                new DefaultArtifact("io.projectreactor:reactor-core:3.4.0-M2"),
+                new DefaultArtifact("org.reactivestreams:reactive-streams:1.0.0")),
             false);
 
     ClassPathEntry reactorCore = classPathResult.getClassPath().get(0);
 
-    // A hypothetical problem when reactor.util.Loggers class is missing
+    // A hypothetical problem where org.reactivestreams.Subscriber class is missing
     LinkageProblem problem =
         new ClassNotFoundProblem(
             new ClassFile(reactorCore, "reactor.util.Metrics"),
@@ -170,6 +173,17 @@ public class LinkageProblemCauseAnnotatorTest {
         classPathBuilderWithSpring, classPathResult, ImmutableSet.of(problem));
 
     LinkageProblemCause cause = problem.getCause();
-    assertEquals(UnknownCause.class, cause.getClass());
+    assertEquals(DependencyConflict.class, cause.getClass());
+    DependencyConflict conflict = (DependencyConflict) cause;
+
+    // The class path has reactive-streams:1.0.0
+    assertEquals(
+        "org.reactivestreams:reactive-streams:1.0.0",
+        Artifacts.toCoordinates(conflict.getPathToSelectedArtifact().getLeaf()));
+
+    // io.projectreactor:reactor-core depends on reactive-streams 1.0.3
+    assertEquals(
+        "org.reactivestreams:reactive-streams:1.0.3",
+        Artifacts.toCoordinates(conflict.getPathToArtifactThruSource().getLeaf()));
   }
 }
