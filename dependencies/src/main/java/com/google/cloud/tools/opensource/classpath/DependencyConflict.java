@@ -18,10 +18,8 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import java.util.Objects;
-import org.eclipse.aether.artifact.Artifact;
 
 /**
  * Diamond dependency conflict caused a {@link LinkageProblem} where the {@link LinkageProblem}'s
