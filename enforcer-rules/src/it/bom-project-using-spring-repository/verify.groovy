@@ -12,4 +12,4 @@ assert !buildLog.text.contains(
 
 assert !buildLog.text.contains("NullPointerException")
 
-assert buildLog.text.contains("Linkage error report:")
+assert buildLog.text.contains("Linkage Checker rule found 854 errors:")
