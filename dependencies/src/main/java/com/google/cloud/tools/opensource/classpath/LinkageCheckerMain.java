@@ -86,51 +86,15 @@ class LinkageCheckerMain {
     LinkageChecker linkageChecker =
         LinkageChecker.create(
             inputClassPath, entryPoints, linkageCheckerArguments.getInputExclusionFile());
-    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
-    linkageProblems = filterReachable(linkageCheckerArguments, linkageChecker, linkageProblems);
-
-    if (writeExclusionFile(linkageCheckerArguments, linkageProblems)) {
-      return ImmutableSet.of();
-    }
+    ImmutableSet<LinkageProblem> linkageProblems =
+        findLinkageProblems(linkageCheckerArguments, linkageChecker);
 
     if (!linkageProblems.isEmpty()) {
       System.out.println(LinkageProblem.formatLinkageProblems(linkageProblems));
     }
 
     return linkageProblems;
-  }
-
-  private static ImmutableSet<LinkageProblem> filterReachable(
-      LinkageCheckerArguments linkageCheckerArguments,
-      LinkageChecker linkageChecker,
-      ImmutableSet<LinkageProblem> linkageProblems) {
-    if (linkageCheckerArguments.getReportOnlyReachable()) {
-      ClassReferenceGraph graph = linkageChecker.getClassReferenceGraph();
-      linkageProblems =
-          linkageProblems.stream()
-              .filter(
-                  (LinkageProblem problem) ->
-                      graph.isReachable(problem.getSourceClass().getBinaryName()))
-              .collect(toImmutableSet());
-    }
-    return linkageProblems;
-  }
-
-  /**
-   * Writes {@code linkageProblems} to a file and returns true if {@code linkageCheckerArguments}
-   * has the option; otherwise returns false.
-   */
-  private static boolean writeExclusionFile(
-      LinkageCheckerArguments linkageCheckerArguments, ImmutableSet<LinkageProblem> linkageProblems)
-      throws TransformerException, XMLStreamException, IOException {
-    Path writeAsExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
-    if (writeAsExclusionFile != null) {
-      ExclusionFiles.write(writeAsExclusionFile, linkageProblems);
-      System.out.println("Wrote the linkage errors as exclusion file: " + writeAsExclusionFile);
-      return true;
-    }
-    return false;
   }
 
   private static ImmutableSet<LinkageProblem> checkArtifacts(
@@ -152,15 +116,10 @@ class LinkageCheckerMain {
     LinkageChecker linkageChecker =
         LinkageChecker.create(
             inputClassPath, entryPoints, linkageCheckerArguments.getInputExclusionFile());
-    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
-
-    linkageProblems = filterReachable(linkageCheckerArguments, linkageChecker, linkageProblems);
+    ImmutableSet<LinkageProblem> linkageProblems =
+        findLinkageProblems(linkageCheckerArguments, linkageChecker);
 
     LinkageProblemCauseAnnotator.annotate(classPathBuilder, classPathResult, linkageProblems);
-
-    if (writeExclusionFile(linkageCheckerArguments, linkageProblems)) {
-      return ImmutableSet.of();
-    }
 
     if (!linkageProblems.isEmpty()) {
       System.out.println(LinkageProblem.formatLinkageProblems(linkageProblems));
@@ -183,6 +142,32 @@ class LinkageCheckerMain {
       System.out.println("\n");
       System.out.println(ArtifactProblem.formatProblems(artifactProblems));
     }
+    return linkageProblems;
+  }
+
+  private static ImmutableSet<LinkageProblem> findLinkageProblems(
+      LinkageCheckerArguments linkageCheckerArguments, LinkageChecker linkageChecker)
+      throws IOException, TransformerException, XMLStreamException {
+
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
+
+    if (linkageCheckerArguments.getReportOnlyReachable()) {
+      ClassReferenceGraph graph = linkageChecker.getClassReferenceGraph();
+      linkageProblems =
+          linkageProblems.stream()
+              .filter(
+                  (LinkageProblem problem) ->
+                      graph.isReachable(problem.getSourceClass().getBinaryName()))
+              .collect(toImmutableSet());
+    }
+
+    Path outputExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
+    if (outputExclusionFile != null) {
+      ExclusionFiles.write(outputExclusionFile, linkageProblems);
+      System.out.println("Wrote the linkage errors as exclusion file: " + outputExclusionFile);
+      return ImmutableSet.of();
+    }
+
     return linkageProblems;
   }
 }
