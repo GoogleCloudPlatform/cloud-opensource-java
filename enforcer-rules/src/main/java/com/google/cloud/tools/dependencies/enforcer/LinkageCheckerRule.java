@@ -30,6 +30,7 @@ import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.classpath.LinkageProblemCauseAnnotator;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.FilteringZipDependencySelector;
 import com.google.cloud.tools.opensource.dependencies.NonTestDependencySelector;
@@ -70,6 +71,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.ArtifactTypeRegistry;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
@@ -105,7 +107,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
 
   private String exclusionFile = null;
 
-  private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
+  private ClassPathBuilder classPathBuilder;
 
   @VisibleForTesting
   void setDependencySection(DependencySection dependencySection) {
@@ -141,6 +143,13 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       MavenSession session = (MavenSession) helper.evaluate("${session}");
       MojoExecution execution = (MojoExecution) helper.evaluate("${mojoExecution}");
       RepositorySystemSession repositorySystemSession = session.getRepositorySession();
+
+      ImmutableList<String> repositoryUrls =
+          project.getRemoteProjectRepositories().stream()
+              .map(RemoteRepository::getUrl)
+              .collect(toImmutableList());
+      DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder(repositoryUrls);
+      classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
 
       boolean readingDependencyManagementSection =
           dependencySection == DependencySection.DEPENDENCY_MANAGEMENT;
