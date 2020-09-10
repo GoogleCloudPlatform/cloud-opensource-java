@@ -119,7 +119,7 @@ class LinkageCheckerMain {
 
   /**
    * Writes {@code linkageProblems} to a file and returns true if {@code linkageCheckerArguments}
-   * specifies the option; otherwise returns false.
+   * has the option; otherwise returns false.
    */
   private static boolean writeExclusionFile(
       LinkageCheckerArguments linkageCheckerArguments, ImmutableSet<LinkageProblem> linkageProblems)
