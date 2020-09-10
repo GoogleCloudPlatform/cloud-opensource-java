@@ -67,8 +67,8 @@ class LinkageCheckerMain {
         List<ArtifactProblem> artifactProblems = new ArrayList<>();
         // classPathResult is kept null if JAR files are specified in the argument
         ClassPathResult classPathResult = null;
-
         ClassPathBuilder classPathBuilder = null;
+
         if (artifacts.isEmpty()) {
           // When JAR files are passed as arguments, classPathResult is null, because there is no need
           // to resolve Maven dependencies.
