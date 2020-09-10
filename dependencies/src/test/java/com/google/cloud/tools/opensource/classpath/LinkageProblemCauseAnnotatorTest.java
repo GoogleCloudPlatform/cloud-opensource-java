@@ -19,7 +19,9 @@ package com.google.cloud.tools.opensource.classpath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -29,6 +31,8 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Test;
 
 public class LinkageProblemCauseAnnotatorTest {
+
+  private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
   @Test
   public void testAnnotate_dom4jOptionalDependency() throws IOException {
@@ -48,7 +52,8 @@ public class LinkageProblemCauseAnnotatorTest {
             new ClassFile(dom4jEntry, "org.dom4j.DocumentHelper"),
             new ClassSymbol("org.jaxen.VariableContext"));
 
-    LinkageProblemCauseAnnotator.annotate(classPathResult, ImmutableSet.of(problem));
+    LinkageProblemCauseAnnotator.annotate(
+        classPathBuilder, classPathResult, ImmutableSet.of(problem));
 
     LinkageProblemCause cause = problem.getCause();
     assertEquals(MissingDependency.class, cause.getClass());
@@ -81,7 +86,8 @@ public class LinkageProblemCauseAnnotatorTest {
     SymbolNotFoundProblem problem = (SymbolNotFoundProblem) foundProblem.get();
     assertEquals("verify", ((MethodSymbol) problem.getSymbol()).getName());
 
-    LinkageProblemCauseAnnotator.annotate(classPathResult, ImmutableSet.of(problem));
+    LinkageProblemCauseAnnotator.annotate(
+        classPathBuilder, classPathResult, ImmutableSet.of(problem));
 
     LinkageProblemCause cause = problem.getCause();
     assertTrue(cause instanceof DependencyConflict);
@@ -125,7 +131,8 @@ public class LinkageProblemCauseAnnotatorTest {
                 autoServiceEntry, "com.google.auto.service.processor.AutoServiceProcessor"),
             new ClassSymbol("com.google.auto.service.AutoService"));
 
-    LinkageProblemCauseAnnotator.annotate(classPathResult, ImmutableSet.of(problem));
+    LinkageProblemCauseAnnotator.annotate(
+        classPathBuilder, classPathResult, ImmutableSet.of(problem));
 
     LinkageProblemCause cause = problem.getCause();
     assertEquals(ExcludedDependency.class, cause.getClass());
@@ -135,5 +142,34 @@ public class LinkageProblemCauseAnnotatorTest {
     assertEquals("auto-service-annotations", leaf.getArtifactId());
 
     assertEquals("auto-value", excludedDependency.getExcludingArtifact().getArtifactId());
+  }
+
+  @Test
+  public void testAnnotate_dependencyInSpringRepository() throws IOException {
+    DependencyGraphBuilder dependencyGraphBuilder =
+        new DependencyGraphBuilder(
+            ImmutableList.of(
+                "https://repo.spring.io/milestone", RepositoryUtility.CENTRAL.getUrl()));
+
+    ClassPathBuilder classPathBuilderWithSpring = new ClassPathBuilder(dependencyGraphBuilder);
+    ClassPathResult classPathResult =
+        classPathBuilderWithSpring.resolve(
+            ImmutableList.of(new DefaultArtifact("io.projectreactor:reactor-core:3.4.0-M2")),
+            false);
+
+    ClassPathEntry reactorCore = classPathResult.getClassPath().get(0);
+
+    // A hypothetical problem when reactor.util.Loggers class is missing
+    LinkageProblem problem =
+        new ClassNotFoundProblem(
+            new ClassFile(reactorCore, "reactor.util.Metrics"),
+            new ClassSymbol("org.reactivestreams.Subscriber"));
+
+    // This should not throw exception in resolving dependency graph
+    LinkageProblemCauseAnnotator.annotate(
+        classPathBuilderWithSpring, classPathResult, ImmutableSet.of(problem));
+
+    LinkageProblemCause cause = problem.getCause();
+    assertEquals(UnknownCause.class, cause.getClass());
   }
 }

@@ -221,7 +221,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         }
 
         if (classPathResult != null) {
-          LinkageProblemCauseAnnotator.annotate(classPathResult, linkageProblems);
+          LinkageProblemCauseAnnotator.annotate(classPathBuilder, classPathResult, linkageProblems);
         }
 
         // Count unique LinkageProblems by their symbols

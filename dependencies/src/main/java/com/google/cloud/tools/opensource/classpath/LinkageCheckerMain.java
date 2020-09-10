@@ -67,7 +67,8 @@ class LinkageCheckerMain {
         List<ArtifactProblem> artifactProblems = new ArrayList<>();
         // classPathResult is kept null if JAR files are specified in the argument
         ClassPathResult classPathResult = null;
-    
+
+        ClassPathBuilder classPathBuilder = null;
         if (artifacts.isEmpty()) {
           // When JAR files are passed as arguments, classPathResult is null, because there is no need
           // to resolve Maven dependencies.
@@ -77,7 +78,7 @@ class LinkageCheckerMain {
           // When a BOM or Maven artifacts are passed as arguments, resolve the dependencies.
           DependencyGraphBuilder dependencyGraphBuilder =
               new DependencyGraphBuilder(linkageCheckerArguments.getMavenRepositoryUrls());
-          ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
+          classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
           classPathResult = classPathBuilder.resolve(artifacts, false);
           inputClassPath = classPathResult.getClassPath();
           artifactProblems.addAll(classPathResult.getArtifactProblems());
@@ -100,7 +101,7 @@ class LinkageCheckerMain {
         }
 
         if (classPathResult != null) {
-          LinkageProblemCauseAnnotator.annotate(classPathResult, linkageProblems);
+          LinkageProblemCauseAnnotator.annotate(classPathBuilder, classPathResult, linkageProblems);
         }
 
         Path writeAsExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
