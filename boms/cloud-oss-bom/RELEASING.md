@@ -34,6 +34,7 @@ new release is available on Maven Central.
     * https://github.com/googleapis/google-cloud-java/blob/master/TROUBLESHOOTING.md
 * Merge the dependabot PR that updates libraries-bom in https://github.com/GoogleCloudPlatform/java-docs-samples/pulls
 * Manually edit and update any pom.xml files in https://github.com/GoogleCloudPlatform/java-docs-samples that dependabot missed
+* Search for libraries-bom in google3 to find any internal references (typically cloudite and devsite) that should be updated
 
 ## Deleting a release
 
