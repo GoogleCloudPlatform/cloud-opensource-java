@@ -184,8 +184,8 @@ final class LinkageCheckerArguments {
   }
 
   /**
-   * Returns a list of artifacts specified in the option of BOM or coordinates list. If the argument
-   * is not specified, returns an empty list.
+   * Returns a list of artifacts specified in the option of BOM or coordinates list. If neither
+   * is specified, returns an empty list.
    */
   ImmutableList<Artifact> getArtifacts() throws RepositoryException {
     if (cachedArtifacts != null) {
