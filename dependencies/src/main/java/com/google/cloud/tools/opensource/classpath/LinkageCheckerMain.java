@@ -64,13 +64,17 @@ class LinkageCheckerMain {
             artifacts.isEmpty()
                 ? checkJarFiles(linkageCheckerArguments)
                 : checkArtifacts(linkageCheckerArguments);
-        if (!linkageProblems.isEmpty() && linkageCheckerArguments.getOutputExclusionFile() == null) {
-          System.out.println(
-              "For the details of the linkage errors, see "
-                  + "https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Messages");
-          // Throwing an exception is more test-friendly compared with System.exit(1). The latter
-          // abruptly stops test execution.
-          throw new LinkageCheckResultException(linkageProblems.size());
+        if (!linkageProblems.isEmpty()) {
+          if (linkageCheckerArguments.getOutputExclusionFile() == null) {
+            System.out.println(
+                "For the details of the linkage errors, see "
+                    + "https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Messages");
+            // Throwing an exception is more test-friendly than System.exit(1). The latter
+            // abruptly stops test execution.
+            throw new LinkageCheckResultException(linkageProblems.size());
+          } else {
+          // TODO write exclusion file
+          }
         }
       }
     } catch (ParseException ex) {
@@ -91,6 +95,7 @@ class LinkageCheckerMain {
     ImmutableSet<LinkageProblem> linkageProblems =
         findLinkageProblems(linkageChecker, linkageCheckerArguments.getReportOnlyReachable());
 
+    // todo pull this up out of this method
     Path outputExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
     if (outputExclusionFile != null) {
       writeExclusionFile(outputExclusionFile, linkageProblems);
