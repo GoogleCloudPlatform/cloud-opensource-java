@@ -24,8 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.TransformerException;
 import org.apache.commons.cli.ParseException;
@@ -57,85 +55,19 @@ class LinkageCheckerMain {
         linkageCheckerArguments.printHelp();
       }
 
-      if (linkageCheckerArguments.hasInput()) { 
-        // This is non-empty if a BOM or artifacts are specified in the argument
-        ImmutableList<Artifact> artifacts = linkageCheckerArguments.getArtifacts();
+      if (linkageCheckerArguments.hasInput()) {
+        // artifactsInArguments is not empty if a BOM or artifacts are specified in the argument.
+        // If JAR files are specified, it's empty.
+        ImmutableList<Artifact> artifactsInArguments = linkageCheckerArguments.getArtifacts();
 
-        // When JAR files are specified in the argument, artifacts are empty.
-        ImmutableList<ClassPathEntry> inputClassPath;
-        ImmutableSet<ClassPathEntry> entryPoints;
-        List<ArtifactProblem> artifactProblems = new ArrayList<>();
-        // classPathResult is kept null if JAR files are specified in the argument
-        ClassPathResult classPathResult = null;
-    
-        if (artifacts.isEmpty()) {
-          // When JAR files are passed as arguments, classPathResult is null, because there is no need
-          // to resolve Maven dependencies.
-          inputClassPath = linkageCheckerArguments.getJarFiles();
-          entryPoints = ImmutableSet.copyOf(inputClassPath);
-        } else {
-          // When a BOM or Maven artifacts are passed as arguments, resolve the dependencies.
-          DependencyGraphBuilder dependencyGraphBuilder =
-              new DependencyGraphBuilder(linkageCheckerArguments.getMavenRepositoryUrls());
-          ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
-          classPathResult = classPathBuilder.resolve(artifacts, false);
-          inputClassPath = classPathResult.getClassPath();
-          artifactProblems.addAll(classPathResult.getArtifactProblems());
-          entryPoints = ImmutableSet.copyOf(inputClassPath.subList(0, artifacts.size()));
-        }
-
-        LinkageChecker linkageChecker =
-            LinkageChecker.create(
-                inputClassPath, entryPoints, linkageCheckerArguments.getInputExclusionFile());
-        ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
-
-        if (linkageCheckerArguments.getReportOnlyReachable()) {
-          ClassReferenceGraph graph = linkageChecker.getClassReferenceGraph();
-          linkageProblems =
-              linkageProblems.stream()
-                  .filter(
-                      (LinkageProblem problem) ->
-                          graph.isReachable(problem.getSourceClass().getBinaryName()))
-                  .collect(toImmutableSet());
-        }
-
-        if (classPathResult != null) {
-          LinkageProblemCauseAnnotator.annotate(classPathResult, linkageProblems);
-        }
-
-        Path writeAsExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
-        if (writeAsExclusionFile != null) {
-          ExclusionFiles.write(writeAsExclusionFile, linkageProblems);
-          System.out.println("Wrote the linkage errors as exclusion file: " + writeAsExclusionFile);
-          return;
-        }
-
+        ImmutableSet<LinkageProblem> linkageProblems =
+            artifactsInArguments.isEmpty()
+                ? checkJarFiles(linkageCheckerArguments)
+                : checkArtifacts(linkageCheckerArguments);
         if (!linkageProblems.isEmpty()) {
-          System.out.println(LinkageProblem.formatLinkageProblems(linkageProblems));
-        }
-
-        if (classPathResult != null && !linkageProblems.isEmpty()) {
-          ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
-          for (LinkageProblem linkageProblem : linkageProblems) {
-            ClassFile targetClass = linkageProblem.getTargetClass();
-            if (targetClass != null) {
-              problematicJars.add(targetClass.getClassPathEntry());
-            }
-            ClassFile sourceClassFile = linkageProblem.getSourceClass();
-            problematicJars.add(sourceClassFile.getClassPathEntry());
-          }
-          System.out.println(classPathResult.formatDependencyPaths(problematicJars.build()));
-        }
-    
-        if (!artifactProblems.isEmpty()) {
-          System.out.println("\n");
-          System.out.println(ArtifactProblem.formatProblems(artifactProblems));
           System.out.println(
               "For the details of the linkage errors, see "
                   + "https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Messages");
-        }
-
-        if (!linkageProblems.isEmpty()) {
           // Throwing an exception is more test-friendly compared with System.exit(1). The latter
           // abruptly stops test execution.
           throw new LinkageCheckResultException(linkageProblems.size());
@@ -144,5 +76,85 @@ class LinkageCheckerMain {
     } catch (ParseException ex) {
       System.err.println(ex.getMessage());
     }
+  }
+
+  private static ImmutableSet<LinkageProblem> checkJarFiles(
+      LinkageCheckerArguments linkageCheckerArguments)
+      throws IOException, TransformerException, XMLStreamException {
+    ImmutableList<ClassPathEntry> inputClassPath = linkageCheckerArguments.getJarFiles();
+    ImmutableSet<ClassPathEntry> entryPoints = ImmutableSet.copyOf(inputClassPath);
+    LinkageChecker linkageChecker =
+        LinkageChecker.create(
+            inputClassPath, entryPoints, linkageCheckerArguments.getInputExclusionFile());
+
+    ImmutableSet<LinkageProblem> linkageProblems =
+        findLinkageProblems(linkageCheckerArguments, linkageChecker);
+
+    if (!linkageProblems.isEmpty()) {
+      System.out.println(LinkageProblem.formatLinkageProblems(linkageProblems, null));
+    }
+
+    return linkageProblems;
+  }
+
+  private static ImmutableSet<LinkageProblem> checkArtifacts(
+      LinkageCheckerArguments linkageCheckerArguments)
+      throws IOException, RepositoryException, TransformerException, XMLStreamException {
+    ImmutableList<Artifact> artifactsInArguments = linkageCheckerArguments.getArtifacts();
+
+    // When a BOM or Maven artifacts are passed as arguments, resolve the dependencies.
+    DependencyGraphBuilder dependencyGraphBuilder =
+        new DependencyGraphBuilder(linkageCheckerArguments.getMavenRepositoryUrls());
+    ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
+    ClassPathResult classPathResult = classPathBuilder.resolve(artifactsInArguments, false);
+    ImmutableList<ClassPathEntry> inputClassPath = classPathResult.getClassPath();
+    ImmutableList<ArtifactProblem> artifactProblems =
+        ImmutableList.copyOf(classPathResult.getArtifactProblems());
+    ImmutableSet<ClassPathEntry> entryPoints =
+        ImmutableSet.copyOf(inputClassPath.subList(0, artifactsInArguments.size()));
+
+    LinkageChecker linkageChecker =
+        LinkageChecker.create(
+            inputClassPath, entryPoints, linkageCheckerArguments.getInputExclusionFile());
+    ImmutableSet<LinkageProblem> linkageProblems =
+        findLinkageProblems(linkageCheckerArguments, linkageChecker);
+
+    LinkageProblemCauseAnnotator.annotate(classPathBuilder, classPathResult, linkageProblems);
+
+    if (!linkageProblems.isEmpty()) {
+      System.out.println(LinkageProblem.formatLinkageProblems(linkageProblems, classPathResult));
+    }
+
+    if (!artifactProblems.isEmpty()) {
+      System.out.println("\n");
+      System.out.println(ArtifactProblem.formatProblems(artifactProblems));
+    }
+    return linkageProblems;
+  }
+
+  private static ImmutableSet<LinkageProblem> findLinkageProblems(
+      LinkageCheckerArguments linkageCheckerArguments, LinkageChecker linkageChecker)
+      throws IOException, TransformerException, XMLStreamException {
+
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
+
+    if (linkageCheckerArguments.getReportOnlyReachable()) {
+      ClassReferenceGraph graph = linkageChecker.getClassReferenceGraph();
+      linkageProblems =
+          linkageProblems.stream()
+              .filter(
+                  (LinkageProblem problem) ->
+                      graph.isReachable(problem.getSourceClass().getBinaryName()))
+              .collect(toImmutableSet());
+    }
+
+    Path outputExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
+    if (outputExclusionFile != null) {
+      ExclusionFiles.write(outputExclusionFile, linkageProblems);
+      System.out.println("Wrote the linkage errors as exclusion file: " + outputExclusionFile);
+      return ImmutableSet.of();
+    }
+
+    return linkageProblems;
   }
 }

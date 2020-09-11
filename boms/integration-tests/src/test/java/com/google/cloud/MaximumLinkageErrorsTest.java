@@ -60,7 +60,7 @@ public class MaximumLinkageErrorsTest {
     StringBuilder message = new StringBuilder("Baseline BOM: " + baselineCoordinates + "\n");
     if (!newProblems.isEmpty()) {
       message.append("Newly introduced problems:\n");
-      message.append(LinkageProblem.formatLinkageProblems(newProblems));
+      message.append(LinkageProblem.formatLinkageProblems(newProblems, null));
       Assert.fail(message.toString());
     }
   }

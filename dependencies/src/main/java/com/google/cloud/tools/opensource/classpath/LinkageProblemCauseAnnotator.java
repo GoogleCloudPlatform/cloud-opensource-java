@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import java.io.IOException;
 import java.util.HashMap;
@@ -30,12 +32,19 @@ public final class LinkageProblemCauseAnnotator {
   /**
    * Annotates the cause field of {@link LinkageProblem}s with the {@link LinkageProblemCause}.
    *
+   * @param classPathBuilder class path builder to resolve dependency graphs
    * @param rootResult the class path used for generating the linkage problems
    * @param linkageProblems linkage problems to annotate
    * @throws IOException when there is a problem reading JAR files
    */
-  public static void annotate(ClassPathResult rootResult, Iterable<LinkageProblem> linkageProblems)
+  public static void annotate(
+      ClassPathBuilder classPathBuilder,
+      ClassPathResult rootResult,
+      Iterable<LinkageProblem> linkageProblems)
       throws IOException {
+    checkNotNull(classPathBuilder);
+    checkNotNull(rootResult);
+    checkNotNull(linkageProblems);
 
     Map<Artifact, ClassPathResult> cache = new HashMap<>();
     for (LinkageProblem linkageProblem : linkageProblems) {
@@ -47,7 +56,6 @@ public final class LinkageProblemCauseAnnotator {
       ClassPathResult subtreeResult = cache.get(sourceArtifact);
       if (subtreeResult == null) {
         // Resolves the dependency graph with the source artifact at the root.
-        ClassPathBuilder classPathBuilder = new ClassPathBuilder();
         subtreeResult = classPathBuilder.resolveWithMaven(sourceArtifact);
         cache.put(sourceArtifact, subtreeResult);
       }

@@ -152,8 +152,13 @@ public abstract class LinkageProblem {
     return ImmutableMap.copyOf(valueTransformed);
   }
 
-  /** Returns the formatted {@code linkageProblems} by grouping them by the {@code symbol}s. */
-  public static String formatLinkageProblems(Set<LinkageProblem> linkageProblems) {
+  /**
+   * Returns the formatted {@code linkageProblems} by grouping them by the {@code symbol}s. If
+   * {@code classPathResult} is not null, it supplies dependency paths from the root to the
+   * artifacts in the problems.
+   */
+  public static String formatLinkageProblems(
+      Set<LinkageProblem> linkageProblems, @Nullable ClassPathResult classPathResult) {
     StringBuilder output = new StringBuilder();
 
     // Don't group AbstractMethodProblems by symbols because they do not fit in the
@@ -215,7 +220,28 @@ public abstract class LinkageProblem {
       output.append("    " + causeWithIndent + "\n");
     }
 
+    if (classPathResult != null) {
+      String dependencyPaths = dependencyPathsOfProblematicJars(classPathResult, linkageProblems);
+      output.append(dependencyPaths);
+    }
+
     return output.toString();
+  }
+
+  private static String dependencyPathsOfProblematicJars(
+      ClassPathResult classPathResult, Set<LinkageProblem> linkageProblems) {
+    ImmutableSet.Builder<ClassPathEntry> problematicJars = ImmutableSet.builder();
+    for (LinkageProblem problem : linkageProblems) {
+      if (problem.getTargetClass() != null) {
+        problematicJars.add(problem.getTargetClass().getClassPathEntry());
+      }
+
+      ClassFile sourceClass = problem.getSourceClass();
+      problematicJars.add(sourceClass.getClassPathEntry());
+    }
+
+    return "Problematic artifacts in the dependency tree:\n"
+        + classPathResult.formatDependencyPaths(problematicJars.build());
   }
 
   String describe(DependencyConflict conflict) {

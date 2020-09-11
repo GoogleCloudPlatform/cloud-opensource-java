@@ -105,7 +105,9 @@ public class Java8IncompatibleReferenceCheck {
             .map(ClassPathEntry::getArtifact)
             .forEach(artifact -> problematicDependencies.put(managedDependency, artifact));
 
-        logger.severe(LinkageProblem.formatLinkageProblems(invalidReferencesToJavaCoreLibrary));
+        // No need to supply classPath result as the artifact information is output below
+        logger.severe(
+            LinkageProblem.formatLinkageProblems(invalidReferencesToJavaCoreLibrary, null));
       }
     }
 
