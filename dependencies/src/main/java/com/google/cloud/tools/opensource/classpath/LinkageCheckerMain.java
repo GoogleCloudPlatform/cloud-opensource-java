@@ -64,7 +64,7 @@ class LinkageCheckerMain {
             artifacts.isEmpty()
                 ? checkJarFiles(linkageCheckerArguments)
                 : checkArtifacts(linkageCheckerArguments);
-        if (!linkageProblems.isEmpty()) {
+        if (!linkageProblems.isEmpty() && linkageCheckerArguments.getOutputExclusionFile() == null) {
           System.out.println(
               "For the details of the linkage errors, see "
                   + "https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Messages");
@@ -89,8 +89,13 @@ class LinkageCheckerMain {
             inputClassPath, entryPoints, linkageCheckerArguments.getInputExclusionFile());
 
     ImmutableSet<LinkageProblem> linkageProblems =
-        findLinkageProblems(linkageCheckerArguments, linkageChecker);
+        findLinkageProblems(linkageChecker, linkageCheckerArguments.getReportOnlyReachable());
 
+    Path outputExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
+    if (outputExclusionFile != null) {
+      writeExclusionFile(outputExclusionFile, linkageProblems);
+    }
+    
     if (!linkageProblems.isEmpty()) {
       System.out.println(LinkageProblem.formatLinkageProblems(linkageProblems, null));
     }
@@ -119,11 +124,19 @@ class LinkageCheckerMain {
         LinkageChecker.create(
             inputClassPath, entryPoints, linkageCheckerArguments.getInputExclusionFile());
     ImmutableSet<LinkageProblem> linkageProblems =
-        findLinkageProblems(linkageCheckerArguments, linkageChecker);
+        findLinkageProblems(linkageChecker,
+            linkageCheckerArguments.getReportOnlyReachable());
 
+    Path outputExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
+    if (outputExclusionFile != null) {
+      writeExclusionFile(outputExclusionFile, linkageProblems);
+    }
+    
     LinkageProblemCauseAnnotator.annotate(classPathBuilder, classPathResult, linkageProblems);
-
-    if (!linkageProblems.isEmpty()) {
+    
+    // TODO really uncertain about this second check. Whether to write an exclusion file is
+    // a separate issue from whether to print the linkage problems.
+    if (!linkageProblems.isEmpty() && outputExclusionFile == null) {
       System.out.println(LinkageProblem.formatLinkageProblems(linkageProblems, classPathResult));
     }
 
@@ -134,13 +147,13 @@ class LinkageCheckerMain {
     return linkageProblems;
   }
 
-  private static ImmutableSet<LinkageProblem> findLinkageProblems(
-      LinkageCheckerArguments linkageCheckerArguments, LinkageChecker linkageChecker)
+  private static ImmutableSet<LinkageProblem> findLinkageProblems(LinkageChecker linkageChecker,
+      boolean reportOnlyReachable)
       throws IOException, TransformerException, XMLStreamException {
 
     ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
-    if (linkageCheckerArguments.getReportOnlyReachable()) {
+    if (reportOnlyReachable) {
       ClassReferenceGraph graph = linkageChecker.getClassReferenceGraph();
       linkageProblems =
           linkageProblems.stream()
@@ -150,16 +163,14 @@ class LinkageCheckerMain {
               .collect(toImmutableSet());
     }
 
-    // TODO this should be a separate method; not part of findLinkageProblems
-    Path outputExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
-    if (outputExclusionFile != null) {
-      ExclusionFiles.write(outputExclusionFile, linkageProblems);
-      System.out.println("Wrote the linkage errors as exclusion file: " + outputExclusionFile);
-      
-      // TODO why do we return an empty set here?
-      return ImmutableSet.of();
-    }
-
     return linkageProblems;
+  }
+  
+  private static void writeExclusionFile(Path outputExclusionFile,
+      ImmutableSet<LinkageProblem> linkageProblems)
+      throws IOException, TransformerException, XMLStreamException {
+
+    ExclusionFiles.write(outputExclusionFile, linkageProblems);
+    System.out.println("Wrote the linkage errors as exclusion file: " + outputExclusionFile);
   }
 }
