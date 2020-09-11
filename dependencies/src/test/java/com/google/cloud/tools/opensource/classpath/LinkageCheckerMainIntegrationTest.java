@@ -157,7 +157,6 @@ public class LinkageCheckerMainIntegrationTest {
       throws IOException, RepositoryException, TransformerException, XMLStreamException,
           LinkageCheckResultException {
     
-    // TODO shouldn't the tool create the file?
     Path exclusionFile = Files.createTempFile("exclusion-file", ".xml");
     exclusionFile.toFile().deleteOnExit();
 

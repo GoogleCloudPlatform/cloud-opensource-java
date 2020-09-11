@@ -141,7 +141,10 @@ class ExclusionFiles {
     return filter;
   }
 
-  /** Writes {@code linkageProblems} as exclusion rules into {@code outputFile}. */
+  /** 
+   * Writes {@code linkageProblems} as exclusion rules into {@code outputFile}. 
+   * It creates the file if it doesn't exist, and overwrites it if it does.
+   */
   static void write(Path outputFile, Set<LinkageProblem> linkageProblems)
       throws IOException, XMLStreamException, TransformerException {
 
