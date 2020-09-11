@@ -234,7 +234,7 @@ public class LinkageCheckerRuleTest {
       verify(mockLog, times(1)).error(errorMessageCaptor.capture());
 
       String errorMessage = errorMessageCaptor.getValue();
-      Truth.assertThat(errorMessage).startsWith("Linkage Checker rule found 112 errors.");
+      Truth.assertThat(errorMessage).startsWith("Linkage Checker rule found 112 errors:");
       Truth.assertThat(errorMessage)
           .contains(
               "Problematic artifacts in the dependency tree:\n"
