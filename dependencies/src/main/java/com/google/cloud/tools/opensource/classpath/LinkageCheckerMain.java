@@ -73,7 +73,10 @@ class LinkageCheckerMain {
             // abruptly stops test execution.
             throw new LinkageCheckResultException(linkageProblems.size());
           } else {
-          // TODO write exclusion file
+            Path outputExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
+            if (outputExclusionFile != null) {
+              writeExclusionFile(outputExclusionFile, linkageProblems);
+            }
           }
         }
       }
@@ -95,12 +98,6 @@ class LinkageCheckerMain {
     ImmutableSet<LinkageProblem> linkageProblems =
         findLinkageProblems(linkageChecker, linkageCheckerArguments.getReportOnlyReachable());
 
-    // todo pull this up out of this method
-    Path outputExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
-    if (outputExclusionFile != null) {
-      writeExclusionFile(outputExclusionFile, linkageProblems);
-    }
-    
     if (!linkageProblems.isEmpty()) {
       System.out.println(LinkageProblem.formatLinkageProblems(linkageProblems, null));
     }
@@ -133,9 +130,6 @@ class LinkageCheckerMain {
             linkageCheckerArguments.getReportOnlyReachable());
 
     Path outputExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
-    if (outputExclusionFile != null) {
-      writeExclusionFile(outputExclusionFile, linkageProblems);
-    }
     
     LinkageProblemCauseAnnotator.annotate(classPathBuilder, classPathResult, linkageProblems);
     
