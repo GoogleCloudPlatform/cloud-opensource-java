@@ -1,5 +1,8 @@
 # Linkage Checker Enforcer Rule Change Log
 
+## 1.5.2
+* Linkage Checker enforcer rule works with other repositories than Maven Central.
+
 ## 1.5.1
 * Fixed the NullPointerException bug that occurs when printing certain linkage errors ([#1599](
   https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1599)).
