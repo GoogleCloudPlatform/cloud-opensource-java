@@ -20,7 +20,7 @@ assert buildLog.contains('''\
 ''')
 
 assert buildLog.contains('''\
-[ERROR] Problematic artifacts in the dependency tree:
+Problematic artifacts in the dependency tree:
 commons-logging:commons-logging:1.1.1 is at:
   com.google.cloud.tools.opensource:test-no-such-method-error-example:jar:1.0-SNAPSHOT \
 / com.google.api-client:google-api-client:1.27.0 (compile) \

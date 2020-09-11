@@ -28,7 +28,7 @@ Class org.apache.log.Logger is not found;
       unselected: io.grpc:grpc-core:1.17.1 (compile) / com.google.guava:guava:26.0-android (compile)
 ''')
 
-assert buildLog.contains('''[ERROR] Problematic artifacts in the dependency tree:
+assert buildLog.contains('''Problematic artifacts in the dependency tree:
 commons-logging:commons-logging:1.1.1 is at:
   com.google.api-client:google-api-client:1.27.0 (compile) / com.google.oauth-client:google-oauth-client:1.27.0 (compile) / com.google.http-client:google-http-client:1.27.0 (compile) / com.google.android:android:1.5_r4 (provided) / commons-logging:commons-logging:1.1.1 (compile)
   and 3 other dependency paths.
