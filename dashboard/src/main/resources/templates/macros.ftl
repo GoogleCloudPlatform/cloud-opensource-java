@@ -33,7 +33,7 @@
       </button>
     </p>
 
-    <!-- The visibility of this list is toggled via the button above. Hidden by default -->
+    <#-- The visibility of this list is toggled via the button above. Hidden by default -->
     <ul class="jar-linkage-report-cause" style="display:none">
       <#list sourceClasses as sourceClass>
         <li>${sourceClass?html}</li>
