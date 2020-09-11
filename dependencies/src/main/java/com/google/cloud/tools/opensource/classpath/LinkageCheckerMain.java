@@ -40,8 +40,8 @@ class LinkageCheckerMain {
    * that classpath.
    *
    * @throws IOException when there is a problem reading a jar file
-   * @throws RepositoryException when there is a problem resolving the Maven coordinates to jar
-   *     files
+   * @throws RepositoryException when there is a problem finding an artifact
+   *     in the Maven repository system
    */
   public static void main(String[] arguments)
       throws IOException, RepositoryException, TransformerException, XMLStreamException,
@@ -56,12 +56,12 @@ class LinkageCheckerMain {
       }
 
       if (linkageCheckerArguments.hasInput()) {
-        // artifactsInArguments is not empty if a BOM or artifacts are specified in the argument.
+        // artifacts is not empty if a BOM or Maven coordinates are specified in the argument.
         // If JAR files are specified, it's empty.
-        ImmutableList<Artifact> artifactsInArguments = linkageCheckerArguments.getArtifacts();
+        ImmutableList<Artifact> artifacts = linkageCheckerArguments.getArtifacts();
 
         ImmutableSet<LinkageProblem> linkageProblems =
-            artifactsInArguments.isEmpty()
+            artifacts.isEmpty()
                 ? checkJarFiles(linkageCheckerArguments)
                 : checkArtifacts(linkageCheckerArguments);
         if (!linkageProblems.isEmpty()) {
@@ -81,6 +81,7 @@ class LinkageCheckerMain {
   private static ImmutableSet<LinkageProblem> checkJarFiles(
       LinkageCheckerArguments linkageCheckerArguments)
       throws IOException, TransformerException, XMLStreamException {
+
     ImmutableList<ClassPathEntry> inputClassPath = linkageCheckerArguments.getJarFiles();
     ImmutableSet<ClassPathEntry> entryPoints = ImmutableSet.copyOf(inputClassPath);
     LinkageChecker linkageChecker =
@@ -100,18 +101,19 @@ class LinkageCheckerMain {
   private static ImmutableSet<LinkageProblem> checkArtifacts(
       LinkageCheckerArguments linkageCheckerArguments)
       throws IOException, RepositoryException, TransformerException, XMLStreamException {
-    ImmutableList<Artifact> artifactsInArguments = linkageCheckerArguments.getArtifacts();
+    
+    ImmutableList<Artifact> artifacts = linkageCheckerArguments.getArtifacts();
 
     // When a BOM or Maven artifacts are passed as arguments, resolve the dependencies.
     DependencyGraphBuilder dependencyGraphBuilder =
         new DependencyGraphBuilder(linkageCheckerArguments.getMavenRepositoryUrls());
     ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
-    ClassPathResult classPathResult = classPathBuilder.resolve(artifactsInArguments, false);
+    ClassPathResult classPathResult = classPathBuilder.resolve(artifacts, false);
     ImmutableList<ClassPathEntry> inputClassPath = classPathResult.getClassPath();
     ImmutableList<ArtifactProblem> artifactProblems =
         ImmutableList.copyOf(classPathResult.getArtifactProblems());
     ImmutableSet<ClassPathEntry> entryPoints =
-        ImmutableSet.copyOf(inputClassPath.subList(0, artifactsInArguments.size()));
+        ImmutableSet.copyOf(inputClassPath.subList(0, artifacts.size()));
 
     LinkageChecker linkageChecker =
         LinkageChecker.create(
@@ -148,10 +150,13 @@ class LinkageCheckerMain {
               .collect(toImmutableSet());
     }
 
+    // TODO this should be a separate method; not part of findLinkageProblems
     Path outputExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
     if (outputExclusionFile != null) {
       ExclusionFiles.write(outputExclusionFile, linkageProblems);
       System.out.println("Wrote the linkage errors as exclusion file: " + outputExclusionFile);
+      
+      // TODO why do we return an empty set here?
       return ImmutableSet.of();
     }
 
