@@ -234,11 +234,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         if (errorCount > 0) {
           String message =
               String.format(
-                  "Linkage Checker rule found %d %s. Linkage error report:\n%s",
-                  errorCount,
-                  foundError,
-                  LinkageProblem.formatLinkageProblems(linkageProblems, classPathResult));
-
+                  "Linkage Checker rule found %d %s:\n%s",
+                  errorCount, foundError, LinkageProblem.formatLinkageProblems(linkageProblems, classPathResult));
           if (getLevel() == WARN) {
             logger.warn(message);
           } else {

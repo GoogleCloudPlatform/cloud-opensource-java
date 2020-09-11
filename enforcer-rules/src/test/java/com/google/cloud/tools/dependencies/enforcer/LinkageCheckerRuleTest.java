@@ -258,7 +258,7 @@ public class LinkageCheckerRuleTest {
     } catch (EnforcerRuleException ex) {
       // pass
       verify(mockLog)
-          .error(ArgumentMatchers.startsWith("Linkage Checker rule found 1 reachable error."));
+          .error(ArgumentMatchers.startsWith("Linkage Checker rule found 1 reachable error:"));
       assertEquals(
           "Failed while checking class path. See above error report.", ex.getMessage());
     }
@@ -275,7 +275,7 @@ public class LinkageCheckerRuleTest {
     rule.setLevel(EnforcerLevel.WARN);
     rule.execute(mockRuleHelper);
     verify(mockLog)
-        .warn(ArgumentMatchers.startsWith("Linkage Checker rule found 1 reachable error."));
+        .warn(ArgumentMatchers.startsWith("Linkage Checker rule found 1 reachable error:"));
   }
 
   @Test
@@ -438,7 +438,7 @@ public class LinkageCheckerRuleTest {
           "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
     } catch (EnforcerRuleException ex) {
       // pass
-      verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found 112 errors."));
+      verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found 112 errors:"));
       assertEquals("Failed while checking class path. See above error report.", ex.getMessage());
     }
   }
@@ -460,7 +460,7 @@ public class LinkageCheckerRuleTest {
     } catch (EnforcerRuleException ex) {
       // pass.
       // The number of errors was 112 in testExecute_shouldFailForBadProjectWithBundlePackaging
-      verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found 93 errors."));
+      verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found 93 errors:"));
       assertEquals("Failed while checking class path. See above error report.", ex.getMessage());
     }
   }

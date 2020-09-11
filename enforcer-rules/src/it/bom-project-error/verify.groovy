@@ -1,7 +1,7 @@
 def buildLog = new File(basedir, "build.log").text.replaceAll("\\r\\n", "\n")
 
 assert buildLog.contains('''\
-[ERROR] Linkage Checker rule found 4 errors. Linkage error report:
+[ERROR] Linkage Checker rule found 4 errors:
 Class org.apache.avalon.framework.logger.Logger is not found;
   referenced by 1 class file
     org.apache.commons.logging.impl.AvalonLogger (commons-logging:commons-logging:1.1.1)
