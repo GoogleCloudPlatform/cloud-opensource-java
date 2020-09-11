@@ -150,7 +150,7 @@ public class LinkageCheckTask extends DefaultTask {
       if (errorCount > 0) {
         getLogger()
             .error(
-                "Linkage Checker rule found {} error{}. Linkage error report:\n{}",
+                "Linkage Checker rule found {} error{}:\n{}",
                 errorCount,
                 errorCount > 1 ? "s" : "",
                 LinkageProblem.formatLinkageProblems(linkageProblems));
