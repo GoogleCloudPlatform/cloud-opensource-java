@@ -71,13 +71,12 @@ class LinkageCheckerMain {
           // TODO really uncertain about this check. Whether to write an exclusion file is
           // a separate issue from whether to print the linkage problems.
           if (outputExclusionFile == null) {
-            printLinkageProblems(problems);
+            problems.print();
             // Throwing an exception is more test-friendly than System.exit(1). The latter
             // abruptly stops test execution.
             throw new LinkageCheckResultException(problems.linkageProblems.size());
           } else {
-            ExclusionFiles.write(outputExclusionFile, problems.linkageProblems);
-            System.out.println("Wrote the linkage errors as exclusion file: " + outputExclusionFile);
+            problems.writeExclusionFile(outputExclusionFile);
           }
         }
       }
@@ -85,20 +84,8 @@ class LinkageCheckerMain {
       System.err.println(ex.getMessage());
     }
   }
-
-  private static void printLinkageProblems(Problems problems) {
-    System.out.println(LinkageProblem.formatLinkageProblems(
-        problems.linkageProblems, problems.classPathResult));
-    if (!problems.artifactProblems.isEmpty()) {
-      System.out.println("\n");
-      System.out.println(ArtifactProblem.formatProblems(problems.artifactProblems));
-    }
-    System.out.println(
-        "For the details of the linkage errors, see "
-            + "https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Messages");
-  }
   
-  // struct for output from a check
+  // output from a check
   private static final class Problems { 
     
     private final ImmutableList<ArtifactProblem> artifactProblems;
@@ -119,6 +106,24 @@ class LinkageCheckerMain {
       this.artifactProblems = ImmutableList.of();
       this.classPathResult = null;
     }
+    
+    void print() {
+      System.out.println(LinkageProblem.formatLinkageProblems(
+          linkageProblems, classPathResult));
+      if (!artifactProblems.isEmpty()) {
+        System.out.println("\n");
+        System.out.println(ArtifactProblem.formatProblems(artifactProblems));
+      }
+      System.out.println(
+          "For the details of the linkage errors, see "
+              + "https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Messages");
+    }
+    
+    void writeExclusionFile(Path path) throws IOException, XMLStreamException, TransformerException {
+      ExclusionFiles.write(path, linkageProblems);
+      System.out.println("Wrote the linkage errors as exclusion file: " + path);
+    }
+
   }
 
   private static Problems checkJarFiles(
