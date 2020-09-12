@@ -31,7 +31,7 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 
 /**
- * A tool to find linkage errors for a class path.
+ * A tool to find linkage errors in a class path.
  */
 class LinkageCheckerMain {
 
@@ -60,22 +60,32 @@ class LinkageCheckerMain {
         // If JAR files are specified, it's empty.
         ImmutableList<Artifact> artifacts = linkageCheckerArguments.getArtifacts();
 
-        ImmutableSet<LinkageProblem> linkageProblems =
+        Problems problems =
             artifacts.isEmpty()
                 ? checkJarFiles(linkageCheckerArguments)
                 : checkArtifacts(linkageCheckerArguments);
-        if (!linkageProblems.isEmpty()) {
+
+        // All I/O happens here
+        if (!problems.linkageProblems.isEmpty()) {
+          // TODO really uncertain about this check. Whether to write an exclusion file is
+          // a separate issue from whether to print the linkage problems.
           if (linkageCheckerArguments.getOutputExclusionFile() == null) {
+            System.out.println(LinkageProblem.formatLinkageProblems(
+                problems.linkageProblems, problems.classPathResult));
+            if (!problems.artifactProblems.isEmpty()) {
+              System.out.println("\n");
+              System.out.println(ArtifactProblem.formatProblems(problems.artifactProblems));
+            }
             System.out.println(
                 "For the details of the linkage errors, see "
                     + "https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Messages");
             // Throwing an exception is more test-friendly than System.exit(1). The latter
             // abruptly stops test execution.
-            throw new LinkageCheckResultException(linkageProblems.size());
+            throw new LinkageCheckResultException(problems.linkageProblems.size());
           } else {
             Path outputExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
             if (outputExclusionFile != null) {
-              writeExclusionFile(outputExclusionFile, linkageProblems);
+              writeExclusionFile(outputExclusionFile, problems.linkageProblems);
             }
           }
         }
@@ -84,8 +94,31 @@ class LinkageCheckerMain {
       System.err.println(ex.getMessage());
     }
   }
+  
+  // struct for output from a check
+  private static final class Problems { 
+    
+    private final ImmutableList<ArtifactProblem> artifactProblems;
+    private final ImmutableSet<LinkageProblem> linkageProblems;
+    private final ClassPathResult classPathResult;
 
-  private static ImmutableSet<LinkageProblem> checkJarFiles(
+    private Problems(
+        ImmutableSet<LinkageProblem> linkageProblems,
+        ImmutableList<ArtifactProblem> artifactProblems,
+        ClassPathResult classPathResult) {
+      this.artifactProblems = artifactProblems;
+      this.linkageProblems = linkageProblems;
+      this.classPathResult = classPathResult;
+    }
+
+    private Problems(ImmutableSet<LinkageProblem> linkageProblems) {
+      this.linkageProblems = linkageProblems;
+      this.artifactProblems = ImmutableList.of();
+      this.classPathResult = null;
+    }
+  }
+
+  private static Problems checkJarFiles(
       LinkageCheckerArguments linkageCheckerArguments)
       throws IOException, TransformerException, XMLStreamException {
 
@@ -98,15 +131,10 @@ class LinkageCheckerMain {
     ImmutableSet<LinkageProblem> linkageProblems =
         findLinkageProblems(linkageChecker, linkageCheckerArguments.getReportOnlyReachable());
 
-    // todo pull up
-    if (!linkageProblems.isEmpty()) {
-      System.out.println(LinkageProblem.formatLinkageProblems(linkageProblems, null));
-    }
-
-    return linkageProblems;
+    return new Problems(linkageProblems); 
   }
 
-  private static ImmutableSet<LinkageProblem> checkArtifacts(
+  private static Problems checkArtifacts(
       LinkageCheckerArguments linkageCheckerArguments)
       throws IOException, RepositoryException, TransformerException, XMLStreamException {
     
@@ -129,22 +157,10 @@ class LinkageCheckerMain {
     ImmutableSet<LinkageProblem> linkageProblems =
         findLinkageProblems(linkageChecker,
             linkageCheckerArguments.getReportOnlyReachable());
-
-    Path outputExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
     
     LinkageProblemCauseAnnotator.annotate(classPathBuilder, classPathResult, linkageProblems);
     
-    // TODO really uncertain about this second check. Whether to write an exclusion file is
-    // a separate issue from whether to print the linkage problems.
-    if (!linkageProblems.isEmpty() && outputExclusionFile == null) {
-      System.out.println(LinkageProblem.formatLinkageProblems(linkageProblems, classPathResult));
-    }
-
-    if (!artifactProblems.isEmpty()) {
-      System.out.println("\n");
-      System.out.println(ArtifactProblem.formatProblems(artifactProblems));
-    }
-    return linkageProblems;
+    return new Problems(linkageProblems, artifactProblems, classPathResult); 
   }
 
   private static ImmutableSet<LinkageProblem> findLinkageProblems(LinkageChecker linkageChecker,
