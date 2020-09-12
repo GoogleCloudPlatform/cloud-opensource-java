@@ -98,6 +98,7 @@ class LinkageCheckerMain {
     ImmutableSet<LinkageProblem> linkageProblems =
         findLinkageProblems(linkageChecker, linkageCheckerArguments.getReportOnlyReachable());
 
+    // todo pull up
     if (!linkageProblems.isEmpty()) {
       System.out.println(LinkageProblem.formatLinkageProblems(linkageProblems, null));
     }
