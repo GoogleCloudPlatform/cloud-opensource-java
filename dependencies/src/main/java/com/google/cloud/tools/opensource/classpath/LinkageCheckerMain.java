@@ -65,11 +65,12 @@ class LinkageCheckerMain {
                 ? checkJarFiles(linkageCheckerArguments)
                 : checkArtifacts(linkageCheckerArguments);
 
+        Path outputExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
         // All I/O happens here
         if (!problems.linkageProblems.isEmpty()) {
           // TODO really uncertain about this check. Whether to write an exclusion file is
           // a separate issue from whether to print the linkage problems.
-          if (linkageCheckerArguments.getOutputExclusionFile() == null) {
+          if (outputExclusionFile == null) {
             System.out.println(LinkageProblem.formatLinkageProblems(
                 problems.linkageProblems, problems.classPathResult));
             if (!problems.artifactProblems.isEmpty()) {
@@ -83,10 +84,7 @@ class LinkageCheckerMain {
             // abruptly stops test execution.
             throw new LinkageCheckResultException(problems.linkageProblems.size());
           } else {
-            Path outputExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
-            if (outputExclusionFile != null) {
-              writeExclusionFile(outputExclusionFile, problems.linkageProblems);
-            }
+            writeExclusionFile(outputExclusionFile, problems.linkageProblems);
           }
         }
       }
