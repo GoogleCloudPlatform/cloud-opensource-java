@@ -71,26 +71,31 @@ class LinkageCheckerMain {
           // TODO really uncertain about this check. Whether to write an exclusion file is
           // a separate issue from whether to print the linkage problems.
           if (outputExclusionFile == null) {
-            System.out.println(LinkageProblem.formatLinkageProblems(
-                problems.linkageProblems, problems.classPathResult));
-            if (!problems.artifactProblems.isEmpty()) {
-              System.out.println("\n");
-              System.out.println(ArtifactProblem.formatProblems(problems.artifactProblems));
-            }
-            System.out.println(
-                "For the details of the linkage errors, see "
-                    + "https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Messages");
+            printLinkageProblems(problems);
             // Throwing an exception is more test-friendly than System.exit(1). The latter
             // abruptly stops test execution.
             throw new LinkageCheckResultException(problems.linkageProblems.size());
           } else {
-            writeExclusionFile(outputExclusionFile, problems.linkageProblems);
+            ExclusionFiles.write(outputExclusionFile, problems.linkageProblems);
+            System.out.println("Wrote the linkage errors as exclusion file: " + outputExclusionFile);
           }
         }
       }
     } catch (ParseException ex) {
       System.err.println(ex.getMessage());
     }
+  }
+
+  private static void printLinkageProblems(Problems problems) {
+    System.out.println(LinkageProblem.formatLinkageProblems(
+        problems.linkageProblems, problems.classPathResult));
+    if (!problems.artifactProblems.isEmpty()) {
+      System.out.println("\n");
+      System.out.println(ArtifactProblem.formatProblems(problems.artifactProblems));
+    }
+    System.out.println(
+        "For the details of the linkage errors, see "
+            + "https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Messages");
   }
   
   // struct for output from a check
