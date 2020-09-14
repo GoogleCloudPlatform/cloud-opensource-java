@@ -156,11 +156,12 @@ public class LinkageCheckerMainIntegrationTest {
   public void testWriteLinkageErrorsAsExclusionFile()
       throws IOException, RepositoryException, TransformerException, XMLStreamException,
           LinkageCheckResultException {
+    
     Path exclusionFile = Files.createTempFile("exclusion-file", ".xml");
     exclusionFile.toFile().deleteOnExit();
 
-    // When --output-exclusion-file is specified, the tool should not return failure (non-zero)
-    // status upon finding linkage errors.
+    // When --output-exclusion-file is specified, the tool should not throw an exception
+    // upon finding linkage errors.
     LinkageCheckerMain.main(
         new String[] {
           "-a",
