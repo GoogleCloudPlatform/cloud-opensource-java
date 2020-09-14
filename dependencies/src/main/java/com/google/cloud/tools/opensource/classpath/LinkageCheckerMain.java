@@ -66,7 +66,6 @@ class LinkageCheckerMain {
                 : checkArtifacts(linkageCheckerArguments);
 
         Path outputExclusionFile = linkageCheckerArguments.getOutputExclusionFile();
-        // All I/O happens here
         if (!problems.linkageProblems.isEmpty()) {
           // TODO really uncertain about this check. Whether to write an exclusion file is
           // a separate issue from whether to print the linkage problems.
@@ -189,12 +188,5 @@ class LinkageCheckerMain {
 
     return linkageProblems;
   }
-  
-  private static void writeExclusionFile(Path outputExclusionFile,
-      ImmutableSet<LinkageProblem> linkageProblems)
-      throws IOException, TransformerException, XMLStreamException {
 
-    ExclusionFiles.write(outputExclusionFile, linkageProblems);
-    System.out.println("Wrote the linkage errors as exclusion file: " + outputExclusionFile);
-  }
 }
