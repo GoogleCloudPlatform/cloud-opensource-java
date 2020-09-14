@@ -24,7 +24,7 @@ permalink: /glossary
 - **Linkage error**: an abnormal condition of a classpath in which a
   "class has some dependency on another class; however, the
   latter class has incompatibly changed after the compilation of the
-  former class."<sup>[1](#myfootnote1)</sup> The reference can be
+  former class."<sup>[1](#myfootnote1)</sup> The dependency can be
   through a class literal, a field access, or a method invocation.
   Linkage errors encountered at runtime manifest as a subclass of
   `LinkageError` such as `NoSuchMethodError`, `NoClassDefFoundError`,

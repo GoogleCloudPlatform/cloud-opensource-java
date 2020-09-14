@@ -27,7 +27,7 @@ import com.google.common.base.MoreObjects;
  * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.1">Java
  *     Virtual Machine Specification: The Run-Time Constant Pool</a>
  */
-abstract class Symbol {
+public abstract class Symbol {
   private final String classBinaryName;
 
   Symbol(String className) {
@@ -41,7 +41,7 @@ abstract class Symbol {
    * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-13.html#jls-13.1">Java
    *     Language Specification: 13.1. The Form of a Binary</a>
    */
-  String getClassBinaryName() {
+  public String getClassBinaryName() {
     return classBinaryName;
   }
 

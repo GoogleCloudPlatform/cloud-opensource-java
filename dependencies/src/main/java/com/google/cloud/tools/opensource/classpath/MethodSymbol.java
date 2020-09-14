@@ -19,6 +19,8 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Objects;
+import org.apache.bcel.classfile.LocalVariable;
+import org.apache.bcel.classfile.LocalVariableTable;
 import org.apache.bcel.classfile.Utility;
 
 /** Symbol for a method of class. */
@@ -77,11 +79,26 @@ public final class MethodSymbol extends Symbol {
     return Objects.hash(this.getClassBinaryName(), name, descriptor, isInterfaceMethod);
   }
 
+  // This empty table removes the argument name in toString()
+  private static LocalVariableTable emptyLocalVariableTable =
+      new LocalVariableTable(0, 0, new LocalVariable[0], null);
+
   @Override
   public String toString() {
-    // https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.4.2
-    String signaturePlusReturnType = Utility.methodSignatureToString(descriptor, name, "");
-    String signature = signaturePlusReturnType.substring(signaturePlusReturnType.indexOf(' ') + 1);
-    return (isInterfaceMethod ? "Interface " : "") + getClassBinaryName() + "'s method " + signature;
+    // Method signature https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.4.2
+    String signatureWithArguments =
+        Utility.methodSignatureToString(descriptor, name, "", true, emptyLocalVariableTable);
+    String signature = signatureWithArguments.substring(signatureWithArguments.indexOf(' ') + 1);
+    return (isInterfaceMethod ? "Interface " : "")
+        + getClassBinaryName()
+        + "'s method "
+        + signature;
+  }
+
+  /** Returns the method name with its signature. */
+  String getMethodNameWithSignature() {
+    String signatureWithArguments =
+        Utility.methodSignatureToString(descriptor, name, "", true, emptyLocalVariableTable);
+    return signatureWithArguments;
   }
 }

@@ -15,41 +15,71 @@
  */
 
 plugins {
-  id 'java-gradle-plugin'
+  id 'com.gradle.plugin-publish' version "0.12.0"
   id 'groovy'
-  id 'maven-publish'
+  id 'java-gradle-plugin'
+  id 'net.researchgate.release' version '2.8.1'
 }
 
 apply from: "$rootDir/gradle/functional-test.gradle"
 
 group = 'com.google.cloud.tools'
-version = '0.1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
 dependencies {
-  // TODO(suztomo): Place a concrete version once ClassPathEntry.getArtifact becomes public.
-  implementation platform('com.google.cloud.tools:dependencies-parent:latest.integration')
-  implementation 'com.google.cloud.tools:dependencies:latest.integration'
-  implementation 'com.google.guava:guava'
-  implementation 'org.apache.maven.resolver:maven-resolver-api'
+  implementation 'com.google.cloud.tools:dependencies:1.5.2'
+  implementation 'com.google.guava:guava:29.0-jre'
+  implementation 'org.apache.maven.resolver:maven-resolver-api:1.4.2'
 
   testImplementation 'junit:junit:4.13'
   testImplementation 'org.spockframework:spock-core:1.3-groovy-2.5'
 }
 
+// Maven-publish plugin interferes with com.gradle.plugin-publish plugin
+// https://discuss.gradle.org/t/debug-an-issue-in-publish-plugin-gradle-plugin-not-being-prepended-to-groupid/32720
+if (version.contains("SNAPSHOT")) {
+
+  apply plugin: 'maven-publish'
+
+  publishing {
+    repositories {
+      mavenLocal()
+    }
+  }
+
+  repositories {
+    mavenLocal()
+  }
+}
+
 repositories {
-  mavenLocal()
-  mavenCentral()
+  jcenter()
 }
 
 gradlePlugin {
   plugins {
     linkageCheckerPlugin {
-      id = 'com.google.cloud.tools.linkagechecker'
+      id = 'com.google.cloud.tools.linkagechecker' // LinkageCheckerPluginTest validates this value
       displayName = 'Linkage Checker'
       description = 'Tool to verify the compatibility of the class paths of Gradle projects'
       implementationClass = 'com.google.cloud.tools.dependencies.gradle.LinkageCheckerPlugin'
     }
+  }
+}
+
+pluginBundle {
+  website = 'https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-with-Gradle'
+  vcsUrl = 'https://github.com/GoogleCloudPlatform/cloud-opensource-java.git'
+  description = 'A plugin to detect Java diamond dependency conflicts'
+  tags = ['google', 'java', 'dependency','verification']
+}
+
+release {
+  tagTemplate = 'v$version-gradle'
+  failOnUnversionedFiles = false
+  failOnUpdateNeeded = false
+  git {
+    requireBranch = /^\d+.\d+.\d+-gradle$/  //regex
   }
 }

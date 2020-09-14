@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -35,9 +36,11 @@ import org.junit.Test;
 
 public class DependencyGraphBuilderTest {
 
-  private DefaultArtifact datastore =
+  private final DefaultArtifact logging =
+      new DefaultArtifact("commons-logging:commons-logging:1.2");
+  private final DefaultArtifact datastore =
       new DefaultArtifact("com.google.cloud:google-cloud-datastore:1.37.1");
-  private DefaultArtifact guava =
+  private final DefaultArtifact guava =
       new DefaultArtifact("com.google.guava:guava:25.1-jre");
 
   private DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder();
@@ -180,7 +183,7 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testBuildLinkageCheckDependencyGraph_multipleArtifacts() {
+  public void testBuildFullDependencyGraph_multipleArtifacts() {
     DependencyGraph graph =
         dependencyGraphBuilder
             .buildFullDependencyGraph(Arrays.asList(datastore, guava));
@@ -197,6 +200,89 @@ public class DependencyGraphBuilderTest {
         "Level-order should pick up guava before the dependencies of the two",
         "guava",
         secondElement.getLeaf().getArtifactId());
+  }
+
+  @Test
+  public void testBuildVerboseDependencyGraph_singleArtifact() {
+    DependencyGraph graph =
+        dependencyGraphBuilder.buildVerboseDependencyGraph(logging);
+
+    List<DependencyPath> list = graph.list();
+    Assert.assertEquals(
+        "commons-logging",
+        list.get(0).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "log4j",
+        list.get(1).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "logkit",
+        list.get(2).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "avalon-framework",
+        list.get(3).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "servlet-api",
+        list.get(4).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "javaee-api",
+        list.get(5).getLeaf().getArtifactId());
+    Assert.assertEquals(6, list.size()); // optional dependencies are included
+  }
+
+  @Test
+  public void testBuildVerboseDependencyGraph_multipleArtifacts() {
+    DependencyGraph graph =
+        dependencyGraphBuilder.buildVerboseDependencyGraph(Arrays.asList(logging));
+
+    List<DependencyPath> list = graph.list();
+    DependencyPath firstElement = list.get(0);
+    Assert.assertEquals(
+        "commons-logging",
+        firstElement.getLeaf().getArtifactId());
+    
+    Assert.assertEquals(1, list.size()); // all dependencies are optional
+  }
+
+  @Test
+  public void testBuildVerboseDependencyGraph_systemScope() {
+    DependencyGraph graph =
+        dependencyGraphBuilder.buildVerboseDependencyGraph(
+            new DefaultArtifact("com.google.guava:guava:29.0-android"));
+
+    for (DependencyPath path : graph.list()) {
+      Artifact leaf = path.getLeaf();
+      assertNotEquals("srczip", leaf.getArtifactId());
+    }
+  }
+
+  @Test
+  public void testBuildFullDependencyGraph_optional() {
+    DependencyGraph graph =
+        dependencyGraphBuilder.buildFullDependencyGraph(Arrays.asList(logging));
+
+    List<DependencyPath> list = graph.list();
+    Assert.assertEquals(
+        "commons-logging",
+        list.get(0).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "log4j",
+        list.get(1).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "logkit",
+        list.get(2).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "avalon-framework",
+        list.get(3).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "servlet-api",
+        list.get(4).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "mail",
+        list.get(5).getLeaf().getArtifactId());
+    Assert.assertEquals(
+        "javaee-api",
+        list.get(6).getLeaf().getArtifactId());
+    Assert.assertEquals(9, list.size()); // optional dependencies are included
   }
 
   @Test

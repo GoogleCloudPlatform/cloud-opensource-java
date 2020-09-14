@@ -119,6 +119,29 @@ public final class RepositoryUtility {
   }
 
   /**
+   * Opens a new Maven repository session that generates the same dependency graph as {@link
+   * org.apache.maven.project.ProjectDependenciesResolver} generates when it compiles a Maven
+   * project. The dependency graph has the following attributes:
+   *
+   * <ul>
+   *   <li>Direct optional dependencies are included. Other optional dependencies are omitted.
+   *   <li>Direct provided-scope dependencies are included. Other provided-scope dependencies are
+   *       omitted.
+   * </ul>
+   */
+  public static DefaultRepositorySystemSession newSessionForMaven(RepositorySystem system) {
+    DefaultRepositorySystemSession session = createDefaultRepositorySystemSession(system);
+    DependencySelector dependencySelector =
+        new AndDependencySelector(
+            new ScopeDependencySelector("test"),
+            new OptionalDependencySelector(),
+            new DirectProvidedDependencySelector(),
+            new ExclusionDependencySelector(),
+            new FilteringZipDependencySelector());
+    return session.setDependencySelector(dependencySelector);
+  }
+
+  /**
    * Open a new Maven repository session for full dependency graph resolution.
    *
    * @see {@link DependencyGraphBuilder}
@@ -170,6 +193,21 @@ public final class RepositoryUtility {
     
     return newSession(system, dependencySelector);
   }
+  
+  static DefaultRepositorySystemSession newSessionForVerboseListDependency(
+      RepositorySystem system) {
+    DependencySelector dependencySelector =
+        new AndDependencySelector(
+            // ScopeDependencySelector takes exclusions. 'Provided' scope is not here to avoid
+            // false positive in LinkageChecker.
+            new ScopeDependencySelector("test"),
+            new BanOptionalDependencySelector(),
+            new ExclusionDependencySelector(),
+            new FilteringZipDependencySelector());
+
+    return newSession(system, dependencySelector);
+  }
+
 
   private static String findLocalRepository() {
     // TODO is there Maven code for this?

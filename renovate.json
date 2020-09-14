@@ -5,7 +5,8 @@
   "ignorePaths": [
     "example-problems/**",
     "enforcer-rules/src/it/**",
-    "boms/convergence-check"
+    "boms/convergence-check",
+    "verboseTree-maven-plugin/src/it/**"
   ],
   "separateMajorMinor": false,
   "semanticCommits": true,

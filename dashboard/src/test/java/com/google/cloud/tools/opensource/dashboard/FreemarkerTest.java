@@ -16,16 +16,17 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.cloud.tools.opensource.classpath.ClassFile;
+import com.google.cloud.tools.opensource.classpath.ClassNotFoundProblem;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassSymbol;
-import com.google.cloud.tools.opensource.classpath.ErrorType;
-import com.google.cloud.tools.opensource.classpath.SymbolProblem;
+import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
@@ -57,26 +58,25 @@ import org.junit.Test;
  */
 public class FreemarkerTest {
 
-  private static Path outputDirectory;  
-  private static ImmutableMap<ClassPathEntry, ImmutableSetMultimap<SymbolProblem, String>>
-      symbolProblemTable;
-  
+  private static Path outputDirectory;
+  private static ImmutableMap<ClassPathEntry, ImmutableSet<LinkageProblem>> symbolProblemTable;
+
   private Builder builder = new Builder();
 
   @BeforeClass
   public static void setUpDirectory() throws IOException {
     outputDirectory = Files.createDirectories(Paths.get("target", "dashboard"));
   }
-    
+
   @Before
-  public void setUp() throws IOException {
+  public void setUp() {
     Artifact artifact = new DefaultArtifact("com.google:foo:1.0.0")
         .setFile(new File("foo/bar-1.2.3.jar"));
     ClassPathEntry entry = new ClassPathEntry(artifact);
-    ImmutableSetMultimap<SymbolProblem, String> dummyProblems =
-        ImmutableSetMultimap.of(
-            new SymbolProblem(new ClassSymbol("com.foo.Bar"), ErrorType.CLASS_NOT_FOUND, null),
-            "abc.def.G");
+    ImmutableSet<LinkageProblem> dummyProblems =
+        ImmutableSet.of(
+            new ClassNotFoundProblem(
+                new ClassFile(entry, "abc.def.G"), new ClassSymbol("com.foo.Bar")));
     symbolProblemTable = ImmutableMap.of(entry, dummyProblems);
   }
 
@@ -94,11 +94,11 @@ public class FreemarkerTest {
     Artifact artifact1 = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
     ArtifactResults results1 = new ArtifactResults(artifact1);
     results1.addResult("Linkage Errors", 56);
-    
+
     Artifact artifact2 = new DefaultArtifact("grpc:grpc:1.15.0");
     ArtifactResults results2 = new ArtifactResults(artifact2);
     results2.addResult("Linkage Errors", 0);
-    
+
     List<ArtifactResults> table = ImmutableList.of(results1, results2);
     List<DependencyGraph> globalDependencies = ImmutableList.of();
     DashboardMain.generateDashboard(

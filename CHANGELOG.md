@@ -1,5 +1,22 @@
 # Linkage Checker Enforcer Rule Change Log
 
+## 1.5.2
+* Linkage Checker enforcer rule works with other repositories than Maven Central.
+
+## 1.5.1
+* Fixed the NullPointerException bug that occurs when printing certain linkage errors ([#1599](
+  https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1599)).
+
+## 1.5.0
+* Linkage Checker no longer includes optional dependencies when building dependency graphs.
+  This avoids constructing unexpectedly large graphs due to optional dependencies ([#1256](
+  https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1256)).
+* Linkage errors now have `cause` field that can explain the dependency conflicts by analyzing
+  dependency graphs.
+
+## 1.4.3
+* Made ClassPathEntry.getArtifact() public for the Linkage Checker Gradle plugin
+
 ## 1.4.2
 * Fixed unnecessary graph traversal logic when building dependency graphs
 

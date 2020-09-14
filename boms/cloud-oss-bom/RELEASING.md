@@ -26,12 +26,15 @@ site](https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/re
 ## Update the docs
 
 Several docs in this and other repositories need to be updated once the 
-new release is available on Maven Central. Send pull requests that change the
-version in these documents:
+new release is available on Maven Central.
 
-* https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM
-* https://github.com/googleapis/google-http-java-client/blob/master/docs/setup.md
-* https://github.com/googleapis/google-cloud-java/blob/master/TROUBLESHOOTING.md
+* Send pull requests that change the version in these documents:
+    * https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM
+    * https://github.com/googleapis/google-http-java-client/blob/master/docs/setup.md
+    * https://github.com/googleapis/google-cloud-java/blob/master/TROUBLESHOOTING.md
+* Merge the dependabot PR that updates libraries-bom in https://github.com/GoogleCloudPlatform/java-docs-samples/pulls
+* Manually edit and update any pom.xml files in https://github.com/GoogleCloudPlatform/java-docs-samples that dependabot missed
+* Search for libraries-bom in google3 to find any internal references (typically cloudite and devsite) that should be updated
 
 ## Deleting a release
 

@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.Exclusion;
 
 /**
  * A sequence of Maven artifacts and dependencies (scope and optional flag) in between.
@@ -57,6 +58,13 @@ public final class DependencyPath {
     return copy;
   }
 
+  public DependencyPath concat(DependencyPath childPath) {
+    DependencyPath copy = new DependencyPath(root);
+    copy.path.addAll(path);
+    copy.path.addAll(childPath.path);
+    return copy;
+  }
+
   /** Returns the length of the path. */
   public int size() {
     return path.size() + 1; // including the root
@@ -71,17 +79,21 @@ public final class DependencyPath {
     }
   }
 
-  /** Returns the list of artifacts in the path. */
-  public ImmutableList<Artifact> getArtifacts() {
-    ImmutableList.Builder<Artifact> builder = ImmutableList.builder();
+  /** Returns the versionless coordinates of the artifacts in the path. */
+  public ImmutableList<String> getArtifactKeys() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     if (root != null) {
-      builder.add(root);
+      builder.add(Artifacts.makeKey(root));
     }
-    path.stream().map(Dependency::getArtifact).forEach(builder::add);
+    
+    for (Dependency dependency : path) {
+      builder.add(Artifacts.makeKey(dependency.getArtifact()));
+    }
+    
     return builder.build();
   }
-
+  
   /**
    * Returns the artifact at {@code i}th node in the path. The {@code 0}th element is the root of
    * the dependency tree.
@@ -94,6 +106,14 @@ public final class DependencyPath {
   }
 
   /**
+   * Returns the {@code i}th dependency. As {@link #root} is not a dependency, the {@code 0}th
+   * element is the dependency of the root in the path.
+   */
+  public Dependency getDependency(int i) {
+    return path.get(i);
+  }
+
+  /**
    * Returns the dependency path of the second to last node in the path. Empty dependency path if
    * the leaf does not have a parent or {@link #path} is empty.
    */
@@ -103,6 +123,26 @@ public final class DependencyPath {
       parent.path.add(path.get(i));
     }
     return parent;
+  }
+
+  /**
+   * Returns the artifact that declares an exclusion element specified for {@code groupId} and
+   * {@code artifactId}. {@code Null} if the dependency path does not have such artifact.
+   */
+  public Artifact findExclusion(String groupId, String artifactId) {
+    Artifact previousArtifact = root;
+    for (Dependency dependency : path) {
+      for (Exclusion exclusion : dependency.getExclusions()) {
+        if (artifactId.equals(exclusion.getArtifactId())
+            && groupId.equals(exclusion.getGroupId())) {
+          // The exclusion element associated to a dependency is declared by the artifact at
+          // one-level above in the dependency path
+          return previousArtifact;
+        }
+      }
+      previousArtifact = dependency.getArtifact();
+    }
+    return null;
   }
 
   @Override

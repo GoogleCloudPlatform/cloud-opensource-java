@@ -24,7 +24,6 @@ import java.nio.file.Paths;
 import org.junit.Test;
 
 public class ExcludedErrorsTest {
-
   @Test
   public void testDefaultRules_contains() throws IOException {
     ExcludedErrors excludedErrors = ExcludedErrors.create(null);
@@ -33,10 +32,13 @@ public class ExcludedErrorsTest {
     MethodSymbol methodSymbol =
         new MethodSymbol(targetClassName, "equals", "(Ljava/lang/Object;)Z", false);
 
-    SymbolProblem symbolProblem = new SymbolProblem(methodSymbol, ErrorType.ABSTRACT_METHOD, null);
-
     ClassFile sourceClass = new ClassFile(new ClassPathEntry(Paths.get("foo")), "org.graalvm.Foo");
-    assertTrue(excludedErrors.contains(symbolProblem, sourceClass));
+    LinkageProblem linkageProblem =
+        new AbstractMethodProblem(
+            sourceClass,
+            methodSymbol, new ClassFile(new ClassPathEntry(Paths.get("bar")), "org.graalvm.Bar")
+        );
+    assertTrue(excludedErrors.contains(linkageProblem));
   }
 
   @Test
@@ -47,9 +49,13 @@ public class ExcludedErrorsTest {
     MethodSymbol methodSymbol =
         new MethodSymbol(targetClassName, "equals", "(Ljava/lang/Object;)Z", false);
 
-    SymbolProblem symbolProblem = new SymbolProblem(methodSymbol, ErrorType.ABSTRACT_METHOD, null);
-
     ClassFile sourceClass = new ClassFile(new ClassPathEntry(Paths.get("foo")), "org.graalvm.Foo");
-    assertFalse(excludedErrors.contains(symbolProblem, sourceClass));
+    LinkageProblem linkageProblem =
+        new AbstractMethodProblem(
+            sourceClass,
+            methodSymbol, new ClassFile(new ClassPathEntry(Paths.get("bar")), "org.graalvm.Bar")
+        );
+
+    assertFalse(excludedErrors.contains(linkageProblem));
   }
 }
