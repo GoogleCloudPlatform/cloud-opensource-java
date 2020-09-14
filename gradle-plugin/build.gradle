@@ -28,7 +28,7 @@ group = 'com.google.cloud.tools'
 sourceCompatibility = 1.8
 
 dependencies {
-  implementation 'com.google.cloud.tools:dependencies:1.5.1'
+  implementation 'com.google.cloud.tools:dependencies:1.5.2'
   implementation 'com.google.guava:guava:29.0-jre'
   implementation 'org.apache.maven.resolver:maven-resolver-api:1.4.2'
 
