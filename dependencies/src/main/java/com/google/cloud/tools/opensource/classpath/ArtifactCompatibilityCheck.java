@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.common.collect.ImmutableList;
@@ -44,7 +46,7 @@ class ArtifactCompatibilityCheck {
 
     ImmutableList.Builder<Artifact> artifacts = ImmutableList.builder();
 
-    Set<Entry<SymbolProblem, ClassFile>> intrinsicErrors = new HashSet<>();
+    Set<LinkageProblem> intrinsicErrors = new HashSet<>();
 
     for (String coordinates : arguments) {
       Artifact artifact = new DefaultArtifact(coordinates);
@@ -60,42 +62,30 @@ class ArtifactCompatibilityCheck {
         linkageChecker = linkageCheckerOf(ImmutableList.of(artifact));
       }
 
-      ImmutableSetMultimap<SymbolProblem, ClassFile> symbolProblems =
-          linkageChecker.findSymbolProblems();
+      ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
-      symbolProblems = filterReachable(symbolProblems, linkageChecker);
+      linkageProblems = filterReachable(linkageProblems, linkageChecker);
       System.out.println(
-          coordinates + " intrinsic problems ('problem x source' pairs): " + symbolProblems.size());
-      intrinsicErrors.addAll(symbolProblems.entries());
+          coordinates + " intrinsic problems ('problem x source' pairs): " + linkageProblems.size());
+      intrinsicErrors.addAll(linkageProblems);
     }
 
     LinkageChecker canaryProjectChecker = linkageCheckerOf(artifacts.build());
 
-    ImmutableSetMultimap<SymbolProblem, ClassFile> canaryProjectErrors =
-        canaryProjectChecker.findSymbolProblems();
+       ImmutableSet<LinkageProblem> canaryProjectErrors=
+        canaryProjectChecker.findLinkageProblems();
     canaryProjectErrors = filterReachable(canaryProjectErrors, canaryProjectChecker);
 
-    ImmutableSetMultimap<SymbolProblem, ClassFile> canaryOnlyErrors =
-        ImmutableSetMultimap.copyOf(
-            Multimaps.filterEntries(
-                canaryProjectErrors, entry -> !intrinsicErrors.contains(entry)));
+    ImmutableSet<LinkageProblem> canaryOnlyErrors =canaryProjectErrors.stream().filter(problem -> !intrinsicErrors.contains(problem)).collect(toImmutableSet());
 
-    for (SymbolProblem symbolProblem : canaryOnlyErrors.keySet()) {
-      ImmutableSet<ClassFile> sourceClasses = canaryOnlyErrors.get(symbolProblem);
-      System.out.println(symbolProblem);
-      System.out.println("  referenced by");
-      for (ClassFile sourceClass : sourceClasses) {
-        System.out.println("    " + sourceClass);
-      }
-    }
+    System.out.println(LinkageProblem.formatLinkageProblems(canaryOnlyErrors, null));
   }
 
-  private static ImmutableSetMultimap<SymbolProblem, ClassFile> filterReachable(
-      ImmutableSetMultimap<SymbolProblem, ClassFile> problems, LinkageChecker linkageChecker) {
+  private static ImmutableSet<LinkageProblem> filterReachable(
+      Set<LinkageProblem> problems, LinkageChecker linkageChecker) {
     ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
-    return ImmutableSetMultimap.copyOf(
-        Multimaps.filterValues(
-            problems, classFile -> classReferenceGraph.isReachable(classFile.getBinaryName())));
+
+    return problems.stream().filter(problem -> classReferenceGraph.isReachable(problem.getSourceClass().getBinaryName())).collect(toImmutableSet());
   }
 
   /**
@@ -111,7 +101,7 @@ class ArtifactCompatibilityCheck {
         )
     );
     ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
-    ClassPathResult classPathResult = classPathBuilder.resolve(artifacts);
+    ClassPathResult classPathResult = classPathBuilder.resolve(artifacts, false);
     if (!classPathResult.getArtifactProblems().isEmpty()) {
       throw new IOException("Couldn't resolve class path: " + classPathResult.getArtifactProblems());
     }
