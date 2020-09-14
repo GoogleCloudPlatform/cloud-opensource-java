@@ -19,6 +19,7 @@ package com.google.cloud.tools.dependencies.gradle;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
+import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
@@ -109,7 +110,7 @@ public class LinkageCheckTask extends DefaultTask {
 
     ClassPathResult classPathResult =
         createClassPathResult(configuration.getResolvedConfiguration());
-    ImmutableList.Builder<ClassPathEntry> classPathBuilder = ImmutableList.builder();
+    ImmutableList.Builder<ClassPathEntry> classPathEntryBuilder = ImmutableList.builder();
 
     for (ResolvedArtifact resolvedArtifact :
         configuration.getResolvedConfiguration().getResolvedArtifacts()) {
@@ -123,10 +124,10 @@ public class LinkageCheckTask extends DefaultTask {
               moduleVersionId.getVersion(),
               null,
               resolvedArtifact.getFile());
-      classPathBuilder.add(new ClassPathEntry(artifact));
+      classPathEntryBuilder.add(new ClassPathEntry(artifact));
     }
 
-    ImmutableList<ClassPathEntry> classPath = classPathBuilder.build();
+    ImmutableList<ClassPathEntry> classPath = classPathEntryBuilder.build();
 
     if (!classPath.isEmpty()) {
       String exclusionFileName = extension.getExclusionFile();
@@ -142,7 +143,8 @@ public class LinkageCheckTask extends DefaultTask {
 
       ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
-      LinkageProblemCauseAnnotator.annotate(classPathResult, linkageProblems);
+      ClassPathBuilder classPathBuilder = new ClassPathBuilder();
+      LinkageProblemCauseAnnotator.annotate(classPathBuilder, classPathResult, linkageProblems);
 
       int errorCount = linkageProblems.size();
 
@@ -153,7 +155,7 @@ public class LinkageCheckTask extends DefaultTask {
                 "Linkage Checker rule found {} error{}:\n{}",
                 errorCount,
                 errorCount > 1 ? "s" : "",
-                LinkageProblem.formatLinkageProblems(linkageProblems));
+                LinkageProblem.formatLinkageProblems(linkageProblems, classPathResult));
 
         ResolutionResult result = configuration.getIncoming().getResolutionResult();
         ResolvedComponentResult root = result.getRoot();
