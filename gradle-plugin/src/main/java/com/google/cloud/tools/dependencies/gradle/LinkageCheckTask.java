@@ -110,7 +110,7 @@ public class LinkageCheckTask extends DefaultTask {
 
     ClassPathResult classPathResult =
         createClassPathResult(configuration.getResolvedConfiguration());
-    ImmutableList.Builder<ClassPathEntry> classPathEntryBuilder = ImmutableList.builder();
+    ImmutableList.Builder<ClassPathEntry> classPathEntriesBuilder = ImmutableList.builder();
 
     for (ResolvedArtifact resolvedArtifact :
         configuration.getResolvedConfiguration().getResolvedArtifacts()) {
@@ -124,10 +124,10 @@ public class LinkageCheckTask extends DefaultTask {
               moduleVersionId.getVersion(),
               null,
               resolvedArtifact.getFile());
-      classPathEntryBuilder.add(new ClassPathEntry(artifact));
+      classPathEntriesBuilder.add(new ClassPathEntry(artifact));
     }
 
-    ImmutableList<ClassPathEntry> classPath = classPathEntryBuilder.build();
+    ImmutableList<ClassPathEntry> classPath = classPathEntriesBuilder.build();
 
     if (!classPath.isEmpty()) {
       String exclusionFileName = extension.getExclusionFile();
