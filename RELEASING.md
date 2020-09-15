@@ -35,7 +35,7 @@ GCS buckets.
 
 ## Update the document
 
-Update the version of `linkage-checker-enforcer-rules` and the Gradle plugin in the wiki pages:
+Update the version of the enforcer rule and the Gradle plugin in the wiki pages:
 
 - https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Enforcer-Rule
 - https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-with-Gradle
