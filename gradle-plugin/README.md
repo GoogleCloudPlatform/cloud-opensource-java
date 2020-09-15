@@ -7,8 +7,8 @@ For usage of this plugin, see the documentation.
 This Gradle project depends on the `dependencies` module through the Maven local repository.
 
 ```
-# At the root of the cloud-opensource-java project, first install the Maven projects to Maven local
-# repository.
+# At the root of the cloud-opensource-java project, first install the Maven projects to the local
+# Maven repository
 $ mvn install
 ...
 # Then build this Gradle project
