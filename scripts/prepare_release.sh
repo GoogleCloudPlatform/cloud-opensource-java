@@ -16,7 +16,7 @@ Die() {
 }
 
 DieUsage() {
-  Die "Usage: ./prepare_release.sh <dependencies|bom|gradle> <release version> [<post-release-version>]"
+  Die "Usage: ./prepare_release.sh <dependencies|bom> <release version> [<post-release-version>]"
 }
 
 # Usage: CheckVersion <version>
@@ -38,7 +38,7 @@ EchoGreen '===== RELEASE SETUP SCRIPT ====='
 
 SUFFIX=$1
 
-if [[ "${SUFFIX}" != "dependencies" && "${SUFFIX}" != "bom" && "${SUFFIX}" != "gradle" ]]; then
+if [[ "${SUFFIX}" != "dependencies" && "${SUFFIX}" != "bom" ]]; then
   DieUsage
 fi
 
@@ -76,22 +76,24 @@ if [[ "${SUFFIX}" = "bom" ]]; then
   cd boms/cloud-oss-bom
 fi
 
-if [[ "${SUFFIX}" = "gradle" ]]; then
-  cd gradle-plugin
-  # Changes the version for release and creates the commits/tags.
-  echo | ./gradlew release -Prelease.releaseVersion=${VERSION} \
-      -Prelease.newVersion=${NEXT_SNAPSHOT}
-else
-  # Updates the pom.xml with the version to release.
-  mvn versions:set versions:commit -DnewVersion=${VERSION} -DgenerateBackupPoms=false
-  # Tags a new commit for this release.
-  git commit -am "preparing release ${VERSION}-${SUFFIX}"
-  git tag v${VERSION}-${SUFFIX}
-  mvn versions:set versions:commit -DnewVersion=${NEXT_SNAPSHOT} -DgenerateBackupPoms=false
+# Updates the pom.xml with the version to release.
+mvn versions:set versions:commit -DnewVersion=${VERSION} -DgenerateBackupPoms=false
 
-  # Commits this next snapshot version.
-  git commit -am "${NEXT_SNAPSHOT}"
+if [[ "${SUFFIX}" = "dependencies" ]]; then
+  sed -i "" "s/version = .*/version = ${VERSION}/" gradle-plugin/gradle.properties
 fi
+
+# Tags a new commit for this release.
+git commit -am "preparing release ${VERSION}-${SUFFIX}"
+git tag v${VERSION}-${SUFFIX}
+mvn versions:set versions:commit -DnewVersion=${NEXT_SNAPSHOT} -DgenerateBackupPoms=false
+
+if [[ "${SUFFIX}" = "dependencies" ]]; then
+  sed -i "" "s/version = .*/version = ${NEXT_SNAPSHOT}/" gradle-plugin/gradle.properties
+fi
+
+# Commits this next snapshot version.
+git commit -am "${NEXT_SNAPSHOT}"
 
 # Pushes the tag and release branch to Github.
 git push origin v${VERSION}-${SUFFIX}

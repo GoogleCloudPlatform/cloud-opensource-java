@@ -1,7 +1,7 @@
 # Release Steps
 
-To release artifacts 'dependencies-parent', 'dependencies', and 'linkage-checker-enforcer-rules',
-run `prepare_release.sh` with `dependencies` argument:
+To release artifacts 'dependencies-parent', 'dependencies', 'linkage-checker-enforcer-rules',
+and 'gradle-plugin', run `prepare_release.sh` with `dependencies` argument:
 
 ```
 $ cd cloud-opensource-java
@@ -27,6 +27,7 @@ Run the following Rapid release pipelines:
 |dependencies-parent| [cloud-java-tools-cloud-opensource-java-parent-kokoro-release](http://rapid/cloud-java-tools-cloud-opensource-java-parent-kokoro-release)||
 |dependencies| [cloud-java-tools-cloud-opensource-java-dependencies-kokoro-release](http://rapid/cloud-java-tools-cloud-opensource-java-dependencies-kokoro-release)|dependencies-parent|
 |linkage-checker-enforcer-rules|[cloud-java-tools-cloud-opensource-java-enforcer-rules-kokoro-release](http://rapid/cloud-java-tools-cloud-opensource-java-enforcer-rules-kokoro-release)|dependencies-parent, dependencies|
+|linkage-checker-gradle-plugin|[cloud-java-tools-cloud-opensource-java-gradle-plugin-kokoro-release](https://rapid/cloud-java-tools-cloud-opensource-java-gradle-plugin-kokoro-release)|dependencies|
 
 The release pipelines can run concurrently. For example, you don't have to wait for
 `dependencies-parent` pipeline before initiating `dependencies` pipeline. They use different
@@ -34,7 +35,8 @@ GCS buckets.
 
 ## Update the document
 
-Update the version element of `linkage-checker-enforcer-rules` dependency in the usage section of the wiki:
-https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Enforcer-Rule
+Update the version of `linkage-checker-enforcer-rules` and the Gradle plugin in the wiki pages:
 
+- https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Enforcer-Rule
+- https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-with-Gradle
 
