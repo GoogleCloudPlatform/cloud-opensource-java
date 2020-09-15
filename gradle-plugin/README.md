@@ -6,29 +6,33 @@ For usage of this plugin, see the documentation.
 
 This Gradle project depends on the `dependencies` module through the Maven local repository.
 
-```
-# At the root of the cloud-opensource-java project, first install the Maven projects to the local
-# Maven repository
-$ mvn install
-...
-# Then build this Gradle project
-$ cd gradle-plugin
-$ ./gradlew build publishToMavenLocal
-```
+At the root of the cloud-opensource-java project, first install the Maven projects to the local
+Maven repository:
+
+    ```
+    $ mvn install
+    ```
+
+Then build this Gradle project:
+
+    ```
+    $ cd gradle-plugin
+    $ ./gradlew build publishToMavenLocal
+    ```
 
 This command installs the Linkage Checker Gradle plugin in Maven local repository.
 
-```
-suztomo-macbookpro44% ls ~/.m2/repository/com/google/cloud/tools/linkage-checker-gradle-plugin/0.1.0-SNAPSHOT/
-linkage-checker-gradle-plugin-0.1.0-SNAPSHOT.jar
-linkage-checker-gradle-plugin-0.1.0-SNAPSHOT.pom
-```
-
+    ```
+    suztomo-macbookpro44% ls ~/.m2/repository/com/google/cloud/tools/linkage-checker-gradle-plugin/0.1.0-SNAPSHOT/
+    linkage-checker-gradle-plugin-0.1.0-SNAPSHOT.jar
+    linkage-checker-gradle-plugin-0.1.0-SNAPSHOT.pom
+    ```
+    
 # Debug
 
-```
-./gradlew check --stacktrace  -Dorg.gradle.debug=true --no-daemon
-```
+    ```
+    ./gradlew check --stacktrace  -Dorg.gradle.debug=true --no-daemon
+    ```
 
 ## Debugging Functional Tests (src/functionalTest)
 
