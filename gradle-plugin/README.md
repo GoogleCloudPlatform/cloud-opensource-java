@@ -4,7 +4,14 @@ For usage of this plugin, see the documentation.
 
 # Build Instruction
 
+This Gradle project depends on the `dependencies` module through the Maven local repository.
+
 ```
+# At the root of the cloud-opensource-java project, first install the Maven projects to Maven local
+# repository.
+$ mvn install
+...
+# Then build this Gradle project
 $ cd gradle-plugin
 $ ./gradlew build publishToMavenLocal
 ```
