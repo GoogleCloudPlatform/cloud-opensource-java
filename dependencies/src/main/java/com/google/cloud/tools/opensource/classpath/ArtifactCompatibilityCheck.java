@@ -66,7 +66,7 @@ class ArtifactCompatibilityCheck {
 
       linkageProblems = filterReachable(linkageProblems, linkageChecker);
       System.out.println(
-          coordinates + " intrinsic problems ('problem x source' pairs): " + linkageProblems.size());
+          coordinates + " intrinsic problems: " + linkageProblems.size());
       intrinsicErrors.addAll(linkageProblems);
     }
 
@@ -96,8 +96,8 @@ class ArtifactCompatibilityCheck {
 
     DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder(
         ImmutableList.of(
-            "https://repository.apache.org/content/repositories/snapshots/",
-            "https://maven-central.storage-download.googleapis.com/maven2/"
+            "https://maven-central.storage-download.googleapis.com/maven2/",
+            "https://repository.apache.org/content/repositories/snapshots/"
         )
     );
     ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
