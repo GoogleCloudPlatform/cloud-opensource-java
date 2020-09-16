@@ -24,6 +24,10 @@ import static org.junit.Assert.assertNull;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -371,9 +375,14 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
-  public void testConfigureAdditionalMavenRepositories_resolvingMultipleArtifacts() {
+  public void testConfigureAdditionalMavenRepositories_resolvingMultipleArtifacts()
+      throws IOException {
     // To verify the effect of the test, you need to cleanup your local Maven repository
     // $ rm -rf  ~/.m2/repository/io/projectreactor  ~/.m2/repository/io/grpc
+
+    String home = System.getProperty("home");
+    Path grpcPath = Paths.get(home, ".m2", "repository", "io", "grpc", "grpc-core");
+    Files.deleteIfExists(grpcPath);
 
     DependencyGraphBuilder graphBuilder =
         new DependencyGraphBuilder(ImmutableList.of(
