@@ -40,7 +40,7 @@ jobs:
       - run: |
           mkdir -p ~/.m2
           cp settings.xml ~/.m2/
-          ./mvnw -B -e integration-test
+          ./mvnw -B -e install
           cd gradle-plugin
           ./gradlew build publishToMavenLocal
 
