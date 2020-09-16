@@ -372,23 +372,27 @@ public class DependencyGraphBuilderTest {
 
   @Test
   public void testConfigureAdditionalMavenRepositories_resolvingMultipleArtifacts() {
+    // To verify the effect of the test, you need to cleanup your local Maven repository
+    // $ rm -rf  ~/.m2/repository/io/projectreactor  ~/.m2/repository/io/grpc
+
     DependencyGraphBuilder graphBuilder =
         new DependencyGraphBuilder(ImmutableList.of(
-            "https://dl.google.com/dl/android/maven2",
-            "https://repo.spring.io/milestone"
+            "https://repo.spring.io/milestone",
+            "https://repo.maven.apache.org/maven2"
         ));
 
-    // This artifact is in the Android repository.
-    Artifact lifecycleCommonJava = new DefaultArtifact("androidx.lifecycle:lifecycle-common-java8:2.0.0");
-
     // This artifact is in the Spring Milestones repository.
-    Artifact reactorCore = new DefaultArtifact("io.projectreactor:reactor-core:3.4.0-M2");
+    Artifact artifactInSpring = new DefaultArtifact("io.projectreactor:reactor-core:3.4.0-M2");
+
+    // This artifact is in the Maven repository.
+    Artifact artifactInMaven = new DefaultArtifact("io.grpc:grpc-core:1.25.0");
 
     // This should not raise an exception
     DependencyGraph graph = graphBuilder.buildVerboseDependencyGraph(ImmutableList.of(
-        lifecycleCommonJava, reactorCore
+        artifactInMaven, artifactInSpring
     ));
-    assertNotNull(graph);
+
+    Truth.assertThat(graph.getUnresolvedArtifacts()).isEmpty();
   }
 
   @Test
