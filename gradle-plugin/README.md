@@ -4,7 +4,7 @@ For usage of this plugin, see the documentation.
 
 # Build Instruction
 
-This Gradle project depends on the `dependencies` module through the Maven local repository.
+This Gradle project depends on the `dependencies` module through the local Maven repository.
 
 At the root of the cloud-opensource-java project, first install the Maven projects to the local
 Maven repository:
@@ -20,7 +20,7 @@ Then build this Gradle project:
    $ ./gradlew build publishToMavenLocal
    ```
 
-This command installs the Linkage Checker Gradle plugin in Maven local repository.
+This command installs the Linkage Checker Gradle plugin in the local Maven repository.
 
    ```
    suztomo-macbookpro44% ls ~/.m2/repository/com/google/cloud/tools/linkage-checker-gradle-plugin/0.1.0-SNAPSHOT/
