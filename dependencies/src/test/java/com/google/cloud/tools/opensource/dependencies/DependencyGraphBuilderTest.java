@@ -371,6 +371,27 @@ public class DependencyGraphBuilderTest {
   }
 
   @Test
+  public void testConfigureAdditionalMavenRepositories_resolvingMultipleArtifacts() {
+    DependencyGraphBuilder graphBuilder =
+        new DependencyGraphBuilder(ImmutableList.of(
+            "https://dl.google.com/dl/android/maven2",
+            "https://repo.spring.io/milestone"
+        ));
+
+    // This artifact is in the Android repository.
+    Artifact lifecycleCommonJava = new DefaultArtifact("androidx.lifecycle:lifecycle-common-java8:2.0.0");
+
+    // This artifact is in the Spring Milestones repository.
+    Artifact reactorCore = new DefaultArtifact("io.projectreactor:reactor-core:3.4.0-M2");
+
+    // This should not raise an exception
+    DependencyGraph graph = graphBuilder.buildVerboseDependencyGraph(ImmutableList.of(
+        lifecycleCommonJava, reactorCore
+    ));
+    assertNotNull(graph);
+  }
+
+  @Test
   public void testBuildLinkageCheckDependencyGraph_catchRootException() {
     // This should not throw exception
     DependencyGraph result =
