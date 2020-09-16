@@ -22,6 +22,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.io.IOException;
@@ -380,9 +382,13 @@ public class DependencyGraphBuilderTest {
     // To verify the effect of the test, you need to cleanup your local Maven repository
     // $ rm -rf  ~/.m2/repository/io/projectreactor  ~/.m2/repository/io/grpc
 
-    String home = System.getProperty("home");
-    Path grpcPath = Paths.get(home, ".m2", "repository", "io", "grpc", "grpc-core");
-    Files.deleteIfExists(grpcPath);
+    // Mac's APFS fails with InsecureRecursiveDeleteException without ALLOW_INSECURE.
+    // Still safe as this test does not use symbolic links
+    String home = System.getProperty("user.home");
+    MoreFiles.deleteRecursively(Paths.get(home, ".m2", "repository", "io", "grpc", "grpc-core"),
+        RecursiveDeleteOption.ALLOW_INSECURE);
+    MoreFiles.deleteRecursively(Paths.get(home, ".m2", "repository", "io", "projectreactor", "reactor-core"),
+        RecursiveDeleteOption.ALLOW_INSECURE);
 
     DependencyGraphBuilder graphBuilder =
         new DependencyGraphBuilder(ImmutableList.of(
