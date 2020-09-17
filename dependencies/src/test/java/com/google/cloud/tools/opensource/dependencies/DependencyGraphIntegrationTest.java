@@ -158,11 +158,12 @@ public class DependencyGraphIntegrationTest {
   }
 
   @Test
-  public void testConfigureAdditionalMavenRepositories_resolvingMultipleArtifacts()
-      throws IOException {
+  public void testArtifactResolutionInDifferentRepository() throws IOException {
+
+    // Clear the cache in the local Maven repository
     String home = System.getProperty("user.home");
     MoreFiles.deleteRecursively(
-        Paths.get(home, ".m2", "repository", "io", "grpc", "grpc-core"),
+        Paths.get(home, ".m2", "repository", "io", "grpc"),
         RecursiveDeleteOption.ALLOW_INSECURE);
 
     DependencyGraphBuilder graphBuilder =

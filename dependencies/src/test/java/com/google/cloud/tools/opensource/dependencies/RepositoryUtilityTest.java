@@ -78,7 +78,7 @@ public class RepositoryUtilityTest {
   }
 
   @Test
-  public void testmavenRepositoryFromUrl() {
+  public void testMavenRepositoryFromUrl() {
     RemoteRepository remoteRepository =
         RepositoryUtility.mavenRepositoryFromUrl("https://repo.maven.apache.org/maven2");
 
