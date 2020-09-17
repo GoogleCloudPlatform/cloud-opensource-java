@@ -1,5 +1,8 @@
 # Linkage Checker Enforcer Rule Change Log
 
+## 1.5.3
+* Linkge Checker can resolve artifacts from different repositories.
+
 ## 1.5.2
 * Linkage Checker enforcer rule works with other repositories than Maven Central.
 
