@@ -22,6 +22,8 @@ import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -161,9 +163,11 @@ public class DependencyGraphIntegrationTest {
   public void testArtifactResolutionInDifferentRepository() throws IOException {
 
     // Clear the cache in the local Maven repository
-    String home = System.getProperty("user.home");
-    MoreFiles.deleteRecursively(
-        Paths.get(home, ".m2", "repository", "io", "grpc"), RecursiveDeleteOption.ALLOW_INSECURE);
+    Path home = Paths.get(System.getProperty("user.home"));
+    Path grpcCache = home.resolve(".m2").resolve("repository").resolve("io").resolve("grpc");
+    if (Files.exists(grpcCache)) {
+      MoreFiles.deleteRecursively(grpcCache, RecursiveDeleteOption.ALLOW_INSECURE);
+    }
 
     DependencyGraphBuilder graphBuilder =
         new DependencyGraphBuilder(
