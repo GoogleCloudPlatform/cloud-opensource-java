@@ -283,7 +283,7 @@ public final class RepositoryUtility {
     }
 
     RemoteRepository repository =
-        new RemoteRepository.Builder(null, "default", mavenRepositoryUrl).build();
+        new RemoteRepository.Builder(mavenRepositoryUrl, "default", mavenRepositoryUrl).build();
 
     checkArgument(
         ALLOWED_REPOSITORY_URL_SCHEMES.contains(repository.getProtocol()),
