@@ -16,12 +16,14 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import com.google.cloud.tools.opensource.classpath.Symbol;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.io.IOException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -160,18 +162,20 @@ public class DependencyGraphIntegrationTest {
   }
 
   @Test
-  public void testArtifactResolutionInDifferentRepository() {
+  public void testArtifactResolutionInDifferentRepository() throws IOException {
 
     // Clear the cache in the local Maven repository
     Path home = Paths.get(System.getProperty("user.home"));
     Path grpcCache = home.resolve(".m2").resolve("repository").resolve("io").resolve("grpc");
     try {
       MoreFiles.deleteRecursively(grpcCache, RecursiveDeleteOption.ALLOW_INSECURE);
-    } catch (IOException ex) {
+    } catch (FileSystemException ex) {
       System.out.println(ex);
-      ex.printStackTrace();
-      Throwable cause = ex.getCause();
-      System.out.println(cause);
+
+      System.out.println("Suppressed exceptions:");
+      for (Throwable suppressedException : ex.getSuppressed()) {
+        System.out.println(suppressedException);
+      }
     }
 
     DependencyGraphBuilder graphBuilder =
