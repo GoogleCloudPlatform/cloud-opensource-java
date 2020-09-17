@@ -163,8 +163,7 @@ public class DependencyGraphIntegrationTest {
     // Clear the cache in the local Maven repository
     String home = System.getProperty("user.home");
     MoreFiles.deleteRecursively(
-        Paths.get(home, ".m2", "repository", "io", "grpc"),
-        RecursiveDeleteOption.ALLOW_INSECURE);
+        Paths.get(home, ".m2", "repository", "io", "grpc"), RecursiveDeleteOption.ALLOW_INSECURE);
 
     DependencyGraphBuilder graphBuilder =
         new DependencyGraphBuilder(
