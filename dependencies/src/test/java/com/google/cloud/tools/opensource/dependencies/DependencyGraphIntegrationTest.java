@@ -17,12 +17,17 @@
 package com.google.cloud.tools.opensource.dependencies;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
 import org.junit.Assert;
@@ -152,4 +157,29 @@ public class DependencyGraphIntegrationTest {
         "com.google.api.grpc:proto-google-common-protos:1.12.0");
   }
 
+  @Test
+  public void testConfigureAdditionalMavenRepositories_resolvingMultipleArtifacts()
+      throws IOException {
+    String home = System.getProperty("user.home");
+    MoreFiles.deleteRecursively(
+        Paths.get(home, ".m2", "repository", "io", "grpc", "grpc-core"),
+        RecursiveDeleteOption.ALLOW_INSECURE);
+
+    DependencyGraphBuilder graphBuilder =
+        new DependencyGraphBuilder(
+            ImmutableList.of(
+                "https://repo.spring.io/milestone", "https://repo.maven.apache.org/maven2"));
+
+    // This artifact is in the Spring Milestones repository.
+    Artifact artifactInSpring = new DefaultArtifact("io.projectreactor:reactor-core:3.4.0-M2");
+
+    // This artifact is in the Maven repository.
+    Artifact artifactInMaven = new DefaultArtifact("io.grpc:grpc-core:1.21.0");
+
+    DependencyGraph graph =
+        graphBuilder.buildVerboseDependencyGraph(
+            ImmutableList.of(artifactInMaven, artifactInSpring));
+
+    Truth.assertThat(graph.getUnresolvedArtifacts()).isEmpty();
+  }
 }

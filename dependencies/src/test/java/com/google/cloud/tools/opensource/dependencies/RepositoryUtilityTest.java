@@ -16,11 +16,14 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
+import static org.junit.Assert.assertEquals;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import java.io.File;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
@@ -72,5 +75,13 @@ public class RepositoryUtilityTest {
           .that(highestGuava)
           .isAtLeast(guava28);
     }
+  }
+
+  @Test
+  public void testmavenRepositoryFromUrl() {
+    RemoteRepository remoteRepository =
+        RepositoryUtility.mavenRepositoryFromUrl("https://repo.maven.apache.org/maven2");
+
+    assertEquals("https://repo.maven.apache.org/maven2", remoteRepository.getId());
   }
 }
