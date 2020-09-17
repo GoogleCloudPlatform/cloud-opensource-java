@@ -165,17 +165,10 @@ public class DependencyGraphIntegrationTest {
   public void testArtifactResolutionInDifferentRepository() throws IOException {
 
     // Clear the cache in the local Maven repository
-    Path home = Paths.get(System.getProperty("user.home"));
-    Path grpcCache = home.resolve(".m2").resolve("repository").resolve("io").resolve("grpc");
-    try {
-      MoreFiles.deleteRecursively(grpcCache, RecursiveDeleteOption.ALLOW_INSECURE);
-    } catch (FileSystemException ex) {
-      System.out.println(ex);
-
-      System.out.println("Suppressed exceptions:");
-      for (Throwable suppressedException : ex.getSuppressed()) {
-        System.out.println(suppressedException);
-      }
+    Path grpcApiCache = Paths.get(System.getProperty("user.home"),
+        ".m2", "repository", "io", "grpc", "grpc-api", "1.21.0");
+    if (Files.exists(grpcApiCache)) {
+      MoreFiles.deleteRecursively(grpcApiCache, RecursiveDeleteOption.ALLOW_INSECURE);
     }
 
     DependencyGraphBuilder graphBuilder =
@@ -186,7 +179,7 @@ public class DependencyGraphIntegrationTest {
     // This artifact is in the Spring Milestones repository.
     Artifact artifactInSpring = new DefaultArtifact("io.projectreactor:reactor-core:3.4.0-M2");
 
-    // This artifact is in the Maven repository.
+    // This artifact is in the Maven repository. This depends on grpc-api.
     Artifact artifactInMaven = new DefaultArtifact("io.grpc:grpc-core:1.21.0");
 
     DependencyGraph graph =
