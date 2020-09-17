@@ -160,13 +160,18 @@ public class DependencyGraphIntegrationTest {
   }
 
   @Test
-  public void testArtifactResolutionInDifferentRepository() throws IOException {
+  public void testArtifactResolutionInDifferentRepository() {
 
     // Clear the cache in the local Maven repository
     Path home = Paths.get(System.getProperty("user.home"));
     Path grpcCache = home.resolve(".m2").resolve("repository").resolve("io").resolve("grpc");
-    if (Files.exists(grpcCache)) {
+    try {
       MoreFiles.deleteRecursively(grpcCache, RecursiveDeleteOption.ALLOW_INSECURE);
+    } catch (IOException ex) {
+      System.out.println(ex);
+      ex.printStackTrace();
+      Throwable cause = ex.getCause();
+      System.out.println(cause);
     }
 
     DependencyGraphBuilder graphBuilder =
