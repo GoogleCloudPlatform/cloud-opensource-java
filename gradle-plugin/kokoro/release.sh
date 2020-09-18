@@ -16,7 +16,11 @@ echo >> $HOME_GRADLE_PROPERTY
 echo -n 'gradle.publish.secret=' >> $HOME_GRADLE_PROPERTY
 cat "${KOKORO_KEYSTORE_DIR}/72743_gradle_publish_secret" >> $HOME_GRADLE_PROPERTY
 
-cd github/cloud-opensource-java/gradle-plugin
+# The gradle plugin depends on the dependencies module
+cd github/cloud-opensource-java
+./mvnw -V -B clean install
+
+cd gradle-plugin
 
 ./gradlew -v
 
