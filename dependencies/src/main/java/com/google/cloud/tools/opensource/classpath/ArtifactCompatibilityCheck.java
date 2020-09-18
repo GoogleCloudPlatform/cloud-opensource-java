@@ -22,12 +22,9 @@ import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Multimaps;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -44,7 +41,7 @@ class ArtifactCompatibilityCheck {
       System.exit(1);
     }
 
-    ImmutableList.Builder<Artifact> artifacts = ImmutableList.builder();
+    ImmutableList.Builder<Artifact> artifactsBuilder = ImmutableList.builder();
 
     Set<LinkageProblem> intrinsicErrors = new HashSet<>();
 
@@ -55,11 +52,16 @@ class ArtifactCompatibilityCheck {
       if (artifact.getExtension().equals("pom")) {
         Bom bom = Bom.readBom(artifact.toString());
         ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
-        artifacts.addAll(managedDependencies);
-        linkageChecker = linkageCheckerOf(managedDependencies);
+        artifactsBuilder.addAll(managedDependencies);
+
+        ClassPathResult classPathResult = classPathResultOf(managedDependencies);
+        ImmutableList<ClassPathEntry> classPath = classPathResult.getClassPath();
+        linkageChecker = LinkageChecker.create(classPath, classPath.subList(0, managedDependencies.size()), null);
       } else {
-        artifacts.add(artifact);
-        linkageChecker = linkageCheckerOf(ImmutableList.of(artifact));
+        artifactsBuilder.add(artifact);
+        ClassPathResult classPathResult = classPathResultOf(ImmutableList.of(artifact));
+        ImmutableList<ClassPathEntry> classPath = classPathResult.getClassPath();
+        linkageChecker = LinkageChecker.create(classPath, classPath.subList(0, 1), null);
       }
 
       ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
@@ -70,15 +72,18 @@ class ArtifactCompatibilityCheck {
       intrinsicErrors.addAll(linkageProblems);
     }
 
-    LinkageChecker canaryProjectChecker = linkageCheckerOf(artifacts.build());
+    ImmutableList<Artifact> artifacts = artifactsBuilder.build();
+    ClassPathResult classPathResult = classPathResultOf(artifacts);
+    ImmutableList<ClassPathEntry> classPath = classPathResult.getClassPath();
+    LinkageChecker canaryProjectChecker = LinkageChecker.create(classPath, classPath.subList(0, artifacts.size()), null);
 
-       ImmutableSet<LinkageProblem> canaryProjectErrors=
+    ImmutableSet<LinkageProblem> canaryProjectErrors=
         canaryProjectChecker.findLinkageProblems();
     canaryProjectErrors = filterReachable(canaryProjectErrors, canaryProjectChecker);
 
     ImmutableSet<LinkageProblem> canaryOnlyErrors =canaryProjectErrors.stream().filter(problem -> !intrinsicErrors.contains(problem)).collect(toImmutableSet());
 
-    System.out.println(LinkageProblem.formatLinkageProblems(canaryOnlyErrors, null));
+    System.out.println(LinkageProblem.formatLinkageProblems(canaryOnlyErrors, classPathResult));
   }
 
   private static ImmutableSet<LinkageProblem> filterReachable(
@@ -88,16 +93,12 @@ class ArtifactCompatibilityCheck {
     return problems.stream().filter(problem -> classReferenceGraph.isReachable(problem.getSourceClass().getBinaryName())).collect(toImmutableSet());
   }
 
-  /**
-   * Returns a linkage checker that analyzes the class path generated from {@code artifacts} and
-   * their dependencies.
-   */
-  private static LinkageChecker linkageCheckerOf(List<Artifact> artifacts) throws IOException {
+  private static ClassPathResult classPathResultOf(List<Artifact> artifacts) throws IOException {
 
     DependencyGraphBuilder dependencyGraphBuilder = new DependencyGraphBuilder(
         ImmutableList.of(
-            "https://maven-central.storage-download.googleapis.com/maven2/",
-            "https://repository.apache.org/content/repositories/snapshots/"
+            "https://repository.apache.org/content/repositories/snapshots/",
+            "https://maven-central.storage-download.googleapis.com/maven2/"
         )
     );
     ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
@@ -106,7 +107,6 @@ class ArtifactCompatibilityCheck {
       throw new IOException("Couldn't resolve class path: " + classPathResult.getArtifactProblems());
     }
 
-    ImmutableList<ClassPathEntry> classPath = classPathResult.getClassPath();
-    return LinkageChecker.create(classPath, classPath.subList(0, artifacts.size()), null);
+    return classPathResult;
   }
 }
