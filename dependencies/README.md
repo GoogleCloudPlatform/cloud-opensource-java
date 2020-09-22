@@ -7,7 +7,7 @@ classes and reports any reference that cannot be satisfied.
 
 #### User Documentation
 
-We provide Linkage Checker with integrations for Maven and Gradle. Here are the user documentation:
+Linkage Checker can be used from Maven or Gradle.
 
 - For Maven, [Linkage Checker Enforcer Rule](
   https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Enforcer-Rule)
@@ -80,7 +80,7 @@ Entry point classes are different for the input of checks:
 
 ### Exclusion Files
 
-Users can specify an exclusion file to filter out known linkage errors that we know are not harmful.
+Users can specify an exclusion file to filter out known linkage errors.
 For the file format, see [exclusion files](
 https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Exclusion-File).
 
