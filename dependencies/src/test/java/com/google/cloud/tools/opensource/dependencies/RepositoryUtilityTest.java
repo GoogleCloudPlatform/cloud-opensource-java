@@ -96,10 +96,7 @@ public class RepositoryUtilityTest {
     Version highestGuava = versionScheme.parseVersion(bigqueryApiVersion);
     Version august2020Version = versionScheme.parseVersion("v2-rev20200818-1.30.10");
 
-    Truth.assertWithMessage(
-            "Latest google-api-services-bigquery release should be greater than or equal to August 2020 release")
-        .that(highestGuava)
-        .isAtLeast(august2020Version);
+    Truth.assertThat(highestGuava).isAtLeast(august2020Version);
   }
 
   @Test
