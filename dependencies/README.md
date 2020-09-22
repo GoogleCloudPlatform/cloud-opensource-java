@@ -1,6 +1,6 @@
 # Linkage Checker
 
-This is a developer note for Linkage Checker, a tool to find [linkage errors](
+Linkage Checker is a tool that finds [linkage errors](
 ../library-best-practices/glossary.md#static-linkage-error) on a class
 path. It scans the class files in the class path for references to other
 classes and reports any reference that cannot be satisfied.
