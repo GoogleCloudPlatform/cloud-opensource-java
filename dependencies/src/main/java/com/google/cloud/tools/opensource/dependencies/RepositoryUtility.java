@@ -300,7 +300,7 @@ public final class RepositoryUtility {
       String artifactId)
       throws MavenRepositoryException {
 
-    Artifact artifactWithVersionRange = new DefaultArtifact(groupId, artifactId, null, "(0,]");
+    Artifact artifactWithVersionRange = new DefaultArtifact(groupId, artifactId, null, "(,]");
     VersionRangeRequest request =
         new VersionRangeRequest(
             artifactWithVersionRange, ImmutableList.of(RepositoryUtility.CENTRAL), null);
