@@ -656,7 +656,8 @@ class ClassDumper {
             Instruction instruction = instructionHandle.getInstruction();
             if (instruction instanceof CPInstruction) {
               // Checking JVM instructions that take a symbolic reference to a class in
-              // JVM Instruction Set
+              // JVM Instruction Set: anewarray, checkcast, instanceof, ldc, ldc2_w, multianewarray,
+              // and new.
               // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5
               int classIndex = ((CPInstruction) instruction).getIndex();
               if (targetConstantPoolIndices.contains(classIndex)) {
@@ -699,7 +700,8 @@ class ClassDumper {
           "The source class in the reference is no longer available in the class path", ex);
     }
 
-    // The target class is unused
+    // The target class is unused in the source class. For example a class reference in the constant
+    // pool is used only in its InnerClasses attribute.
     return true;
   }
 

@@ -417,7 +417,7 @@ public class LinkageChecker {
           classFileLocation == null ? null : new ClassFile(classFileLocation, targetClassName);
 
       if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
-        return Optional.of(new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol));
+          return Optional.of(new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol));
       }
 
       for (JavaClass javaClass : getClassHierarchy(targetJavaClass)) {
@@ -512,7 +512,13 @@ public class LinkageChecker {
       }
 
       if (!isClassAccessibleFrom(targetClass, sourceClassName)) {
-        return Optional.of(new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol));
+        if (classDumper.isUnusedClassSymbolReference(sourceClassName, symbol)) {
+          // If the class is unused in Code attribute of the class file, then no need to report it.
+          return Optional.empty();
+        } else {
+          return Optional.of(
+              new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol));
+        }
       }
       return Optional.empty();
     } catch (ClassNotFoundException ex) {
