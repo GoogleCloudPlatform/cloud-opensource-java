@@ -5,6 +5,15 @@ Linkage Checker is a tool that finds [linkage errors](
 path. It scans the class files in the class path for references to other
 classes and reports any reference that cannot be satisfied.
 
+#### User Documentation
+
+Linkage Checker can be used from Maven or Gradle.
+
+- For Maven, [Linkage Checker Enforcer Rule](
+  https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Enforcer-Rule)
+- For Gradle, [Gradle Linkage Checker plugin](
+  https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-with-Gradle)
+
 ### Use Cases
  
 There are two use cases for Linkage Checker:
@@ -68,3 +77,14 @@ Entry point classes are different for the input of checks:
   - **Check for a list of Maven coordinates**: classes in the Maven artifacts
   - **Check for a list of class and jar files**: all classes in the input are entry points.
     This means that every linkage error is reachable.
+
+### Exclusion Files
+
+Users can specify an exclusion file to filter out known linkage errors.
+For the file format, see [exclusion files](
+https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-Exclusion-File).
+
+By default, Linkage Checker uses [linkage-checker-exclusion-default.xml](
+https://github.com/GoogleCloudPlatform/cloud-opensource-java/blob/master/dependencies/src/main/resources/linkage-checker-exclusion-default.xml)
+to filter the known linkage errors. When a user specifies an exclusion file, Linkage Checker applies
+it in addition to this default exclusion file.
