@@ -38,10 +38,13 @@ import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
 import org.junit.Before;
@@ -1142,5 +1145,19 @@ public class LinkageCheckerTest {
             "java.nio.CharBuffer");
 
     Truth.assertThat(linkageProblems).contains(expectedProblem);
+  }
+
+  @Test
+  public void testFindLinkageProblems_unusedClassReferenceInByteCode() throws IOException {
+    String javaHomeDirectory = System.getProperty("java.home");
+    Path toolsJar = Paths.get(javaHomeDirectory, "..", "lib", "tools.jar");
+    Artifact toolsArtifact =
+        new DefaultArtifact("com.sun:tools:jar:1.8").setFile(toolsJar.toFile());
+
+    LinkageChecker linkageChecker =
+        LinkageChecker.create(ImmutableList.of(new ClassPathEntry(toolsArtifact)));
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
+
+    Truth.assertThat(linkageProblems).isEmpty();
   }
 }
