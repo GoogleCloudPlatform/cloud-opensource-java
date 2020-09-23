@@ -1151,7 +1151,8 @@ public class LinkageCheckerTest {
   public void testFindLinkageProblems_unusedClassReferenceInByteCode() throws IOException {
     // JDK's tools.jar contains com.sun.tools.internal.ws.wscompile.WsgenOptions class. The class
     // has the class reference to JDK's com.sun.xml.internal.ws.api.BindingID$SOAPHTTPImpl in its
-    // constant pool section but it's not used in the JVM instructions in the class file.
+    // constant pool section. The referenced class is private but it's not used in the JVM
+    // instructions in the class file.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1608
 
     String javaHomeDirectory = System.getProperty("java.home");
