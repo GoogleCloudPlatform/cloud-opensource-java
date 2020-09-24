@@ -112,7 +112,7 @@ public class ExclusionFilesTest {
             sourceClass,
             new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"),
             new FieldSymbol("com.google.Foo", "fieldA", "Ljava.lang.String;"),
-            AccessModifier.privateAccess);
+            AccessModifier.PRIVATE);
     boolean result = matchers.get(0).match(linkageProblemToMatch);
     assertTrue(result);
   }
@@ -131,7 +131,7 @@ public class ExclusionFilesTest {
             sourceClass,
             new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"),
             new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
-            AccessModifier.privateAccess);
+            AccessModifier.PRIVATE);
     boolean result = matcher.match(linkageProblemToMatch);
     assertTrue(result);
   }
@@ -150,7 +150,7 @@ public class ExclusionFilesTest {
             sourceClass,
             new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"),
             new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
-            AccessModifier.privateAccess);
+            AccessModifier.PRIVATE);
     boolean result = matcher.match(linkageProblemToMatch);
     assertTrue(result);
   }
@@ -170,7 +170,7 @@ public class ExclusionFilesTest {
             sourceClass,
             new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.cloud.google.Foo"),
             new MethodSymbol("com.google.cloud.Foo", "methodA", "()Ljava.lang.String;", false),
-            AccessModifier.privateAccess);
+            AccessModifier.PRIVATE);
     boolean result = matcher.match(linkageProblemToMatch);
     assertTrue(result);
   }
@@ -190,7 +190,7 @@ public class ExclusionFilesTest {
             sourceClass,
             new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.googler.Foo"),
             new MethodSymbol("com.googler.Foo", "methodA", "()Ljava.lang.String;", false),
-            AccessModifier.privateAccess);
+            AccessModifier.PRIVATE);
     boolean result = matcher.match(linkageProblemToMatch);
     assertFalse(result);
   }
@@ -210,7 +210,7 @@ public class ExclusionFilesTest {
                 new ClassPathEntry(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"),
             new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"),
             new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
-            AccessModifier.privateAccess);
+            AccessModifier.PRIVATE);
     boolean result = matcher.match(linkageProblemToMatch);
     assertTrue(result);
   }
@@ -229,7 +229,7 @@ public class ExclusionFilesTest {
             new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Bar"),
             new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"),
             new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
-            AccessModifier.privateAccess);
+            AccessModifier.PRIVATE);
     boolean result = matcher.match(linkageProblemToMatch); // No match
     assertFalse(result);
   }

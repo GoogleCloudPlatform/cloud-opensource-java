@@ -38,18 +38,18 @@ final class InaccessibleClassProblem extends LinkageProblem {
     StringBuilder message = new StringBuilder();
     message.append("Class " + getTargetClass().getBinaryName());
     switch (modifier) {
-      case publicAccess:
+      case PUBLIC:
         message.append(" is public");
         break;
-      case privateAccess:
+      case PRIVATE:
         message.append(" is private");
         break;
-      case defaultAccess:
+      case DEFAULT:
         message.append(" has default access");
     }
 
     message.append(" and referenced by " + getSourceClass().getBinaryName());
-    if (modifier == AccessModifier.defaultAccess) {
+    if (modifier == AccessModifier.DEFAULT) {
       message.append("(different package)");
     }
 
@@ -70,7 +70,7 @@ final class InaccessibleClassProblem extends LinkageProblem {
 
   @Override
   protected String formatSymbolProblemWithReferenceCount(int referenceCount) {
-    if (modifier == AccessModifier.defaultAccess) {
+    if (modifier == AccessModifier.DEFAULT) {
       return String.format(
           "%s;\n  referenced by %d class file%s in a different package\n",
           formatSymbolProblem(), referenceCount, referenceCount > 1 ? "s" : "");

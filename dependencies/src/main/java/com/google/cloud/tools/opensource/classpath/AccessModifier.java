@@ -20,34 +20,30 @@ import org.apache.bcel.Const;
 
 /** A modifier that controls access to classes, fields, or methods. */
 enum AccessModifier {
-  publicAccess,
-  privateAccess,
-  protectedAccess,
-  defaultAccess;
+  PUBLIC(" is public"),
+  PRIVATE(" is private"),
+  PROTECTED(" is private"),
+  DEFAULT(" has default access");
+
+  private String description;
+
+  AccessModifier(String description) {
+    this.description = description;
+  }
 
   static AccessModifier fromFlag(int modifierFlag) {
     if ((modifierFlag & Const.ACC_PUBLIC) != 0) {
-      return publicAccess;
+      return PUBLIC;
     } else if ((modifierFlag & Const.ACC_PRIVATE) != 0) {
-      return privateAccess;
+      return PRIVATE;
     } else if ((modifierFlag & Const.ACC_PROTECTED) != 0) {
-      return protectedAccess;
+      return PROTECTED;
     } else {
-      return defaultAccess;
+      return DEFAULT;
     }
   }
 
   String describe(String item) {
-    switch (this) {
-      case publicAccess:
-        return item + " is public";
-      case privateAccess:
-        return item + " is private";
-      case protectedAccess:
-        return item + " is protected";
-      case defaultAccess:
-        return item + " has default access";
-    }
-    return item + " has unknown access";
+    return item + description;
   }
 }
