@@ -260,7 +260,7 @@ public class ClassDumperTest {
         new ClassSymbol("org.conscrypt.NativeConstants"));
     Truth.assertWithMessage(
         "As the values in NativeConstants are all inlined. "
-            + "There should not be any usage in Conscrypt").that(result).isTrue();
+            + "There should not be any usage in Conscrypt").that(result).isFalse();
   }
 
   @Test
@@ -289,7 +289,7 @@ public class ClassDumperTest {
       Truth.assertWithMessage(usedClass + " should be used in the class file")
           .that(classDumper.isClassSymbolReferenceUsed("org.conscrypt.Conscrypt",
               new ClassSymbol(usedClass)))
-          .isFalse();
+          .isTrue();
     }
   }
 
