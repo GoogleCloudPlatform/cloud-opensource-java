@@ -553,6 +553,9 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindClassReferences_inaccessibleClass() throws IOException, URISyntaxException {
+    // io.grpc.grpclb.GrpclbLoadBalancer in grpc-grpclb 0.12.0 had a reference to
+    // io.grpc.internal.SingleTransportChannel. The SingleTransportChannel became non-public in
+    // grpc-core 0.15.0.
     ClassPathBuilder classPathBuilder = new ClassPathBuilder();
     ClassPathResult classPathResult =
         classPathBuilder.resolve(
@@ -573,10 +576,14 @@ public class LinkageCheckerTest {
 
     Truth.assertThat(inaccessibleClassProblems).hasSize(1);
     LinkageProblem firstProblem = inaccessibleClassProblems.get(0);
-    Truth.assertThat(
-            Artifacts.toCoordinates(
-                firstProblem.getTargetClass().getClassPathEntry().getArtifact()))
-        .isEqualTo("io.grpc:grpc-core:0.15.0");
+
+    assertEquals(
+        "io.grpc:grpc-core:0.15.0",
+        Artifacts.toCoordinates(firstProblem.getTargetClass().getClassPathEntry().getArtifact()));
+    assertEquals(
+        "io.grpc.grpclb.GrpclbLoadBalancer", firstProblem.getSourceClass().getBinaryName());
+    assertEquals(
+        "io.grpc.internal.SingleTransportChannel", firstProblem.getTargetClass().getBinaryName());
   }
 
   @Test
