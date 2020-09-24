@@ -656,7 +656,7 @@ class ClassDumper {
             Instruction instruction = instructionHandle.getInstruction();
             if (instruction instanceof CPInstruction) {
               // Checking JVM instructions that take a symbolic reference to a class in
-              // JVM Instruction Set: anewarray, checkcast, instanceof, ldc, ldc2_w, multianewarray,
+              // JVM Instruction Set: anewarray, checkcast, instanceof, ldc, ldc_w, multianewarray,
               // and new.
               // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5
               int classIndex = ((CPInstruction) instruction).getIndex();
