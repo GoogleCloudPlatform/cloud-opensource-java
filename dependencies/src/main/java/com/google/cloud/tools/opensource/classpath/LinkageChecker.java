@@ -511,14 +511,11 @@ public class LinkageChecker {
             new IncompatibleClassChangeProblem(sourceClassFile, targetClassFile, symbol));
       }
 
-      if (isClassAccessibleFrom(targetClass, sourceClassName)
-          || classDumper.isUnusedClassSymbolReference(sourceClassName, symbol)) {
-        // If the class accessible or unused in Code attribute of the class file, no error.
-        return Optional.empty();
-      } else {
-        // The class is inaccessible and used in Code attribute of the class file.
+      if (!isClassAccessibleFrom(targetClass, sourceClassName)
+          && classDumper.isClassSymbolReferenceUsed(sourceClassName, symbol)) {
         return Optional.of(new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol));
       }
+      return Optional.empty();
     } catch (ClassNotFoundException ex) {
       if (classDumper.isUnusedClassSymbolReference(sourceClassName, symbol)
           || classDumper.catchesLinkageErrorOnClass(sourceClassName)) {

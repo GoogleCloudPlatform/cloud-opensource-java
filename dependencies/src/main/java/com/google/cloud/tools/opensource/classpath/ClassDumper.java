@@ -561,6 +561,10 @@ class ClassDumper {
     return null;
   }
 
+  boolean isClassSymbolReferenceUsed(String sourceClassName, ClassSymbol classSymbol) {
+    return !isUnusedClassSymbolReference(sourceClassName, classSymbol);
+  }
+
   /**
    * Returns true if the class symbol reference is unused in the source class file. It checks
    * following places for the usage in the source class:
