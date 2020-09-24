@@ -111,7 +111,8 @@ public class ExclusionFilesTest {
         new InaccessibleMemberProblem(
             sourceClass,
             new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"),
-            new FieldSymbol("com.google.Foo", "fieldA", "Ljava.lang.String;"));
+            new FieldSymbol("com.google.Foo", "fieldA", "Ljava.lang.String;"),
+            AccessModifier.privateAccess);
     boolean result = matchers.get(0).match(linkageProblemToMatch);
     assertTrue(result);
   }
@@ -129,7 +130,8 @@ public class ExclusionFilesTest {
         new InaccessibleMemberProblem(
             sourceClass,
             new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"),
-            new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false));
+            new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
+            AccessModifier.privateAccess);
     boolean result = matcher.match(linkageProblemToMatch);
     assertTrue(result);
   }
@@ -147,7 +149,8 @@ public class ExclusionFilesTest {
         new InaccessibleMemberProblem(
             sourceClass,
             new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"),
-            new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false));
+            new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
+            AccessModifier.privateAccess);
     boolean result = matcher.match(linkageProblemToMatch);
     assertTrue(result);
   }
@@ -166,7 +169,8 @@ public class ExclusionFilesTest {
         new InaccessibleMemberProblem(
             sourceClass,
             new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.cloud.google.Foo"),
-            new MethodSymbol("com.google.cloud.Foo", "methodA", "()Ljava.lang.String;", false));
+            new MethodSymbol("com.google.cloud.Foo", "methodA", "()Ljava.lang.String;", false),
+            AccessModifier.privateAccess);
     boolean result = matcher.match(linkageProblemToMatch);
     assertTrue(result);
   }
@@ -185,7 +189,8 @@ public class ExclusionFilesTest {
         new InaccessibleMemberProblem(
             sourceClass,
             new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.googler.Foo"),
-            new MethodSymbol("com.googler.Foo", "methodA", "()Ljava.lang.String;", false));
+            new MethodSymbol("com.googler.Foo", "methodA", "()Ljava.lang.String;", false),
+            AccessModifier.privateAccess);
     boolean result = matcher.match(linkageProblemToMatch);
     assertFalse(result);
   }
@@ -204,7 +209,8 @@ public class ExclusionFilesTest {
             new ClassFile(
                 new ClassPathEntry(Paths.get("dummy.jar")), "reactor.core.publisher.Traces"),
             new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"),
-            new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false));
+            new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
+            AccessModifier.privateAccess);
     boolean result = matcher.match(linkageProblemToMatch);
     assertTrue(result);
   }
@@ -222,7 +228,8 @@ public class ExclusionFilesTest {
         new InaccessibleMemberProblem(
             new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Bar"),
             new ClassFile(new ClassPathEntry(Paths.get("dummy.jar")), "com.google.Foo"),
-            new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false));
+            new MethodSymbol("com.google.Foo", "methodA", "()Ljava.lang.String;", false),
+            AccessModifier.privateAccess);
     boolean result = matcher.match(linkageProblemToMatch); // No match
     assertFalse(result);
   }
