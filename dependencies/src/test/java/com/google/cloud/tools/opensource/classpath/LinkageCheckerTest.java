@@ -556,9 +556,8 @@ public class LinkageCheckerTest {
     // io.grpc.grpclb.GrpclbLoadBalancer in grpc-grpclb 0.12.0 had a reference to
     // io.grpc.internal.SingleTransportChannel. The SingleTransportChannel became non-public in
     // grpc-core 0.15.0.
-    ClassPathBuilder classPathBuilder = new ClassPathBuilder();
     ClassPathResult classPathResult =
-        classPathBuilder.resolve(
+        new ClassPathBuilder().resolve(
             ImmutableList.of(
                 new DefaultArtifact("io.grpc:grpc-core:0.15.0"),
                 new DefaultArtifact("io.grpc:grpc-grpclb:0.12.0")),
