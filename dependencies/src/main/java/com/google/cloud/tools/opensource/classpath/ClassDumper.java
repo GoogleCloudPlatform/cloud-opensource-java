@@ -562,7 +562,7 @@ class ClassDumper {
   }
 
   /**
-   * Returns true if the class symbol reference is used in the source class file. It checks
+   * Returns true if the class symbol reference is used in the source class file. It checks the
    * following places for the usage in the source class:
    *
    * <ul>
