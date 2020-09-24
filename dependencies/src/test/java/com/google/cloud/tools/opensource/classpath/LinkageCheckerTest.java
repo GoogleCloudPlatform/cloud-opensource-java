@@ -557,11 +557,12 @@ public class LinkageCheckerTest {
     // io.grpc.internal.SingleTransportChannel. The SingleTransportChannel became non-public in
     // grpc-core 0.15.0.
     ClassPathResult classPathResult =
-        new ClassPathBuilder().resolve(
-            ImmutableList.of(
-                new DefaultArtifact("io.grpc:grpc-core:0.15.0"),
-                new DefaultArtifact("io.grpc:grpc-grpclb:0.12.0")),
-            false);
+        new ClassPathBuilder()
+            .resolve(
+                ImmutableList.of(
+                    new DefaultArtifact("io.grpc:grpc-core:0.15.0"),
+                    new DefaultArtifact("io.grpc:grpc-grpclb:0.12.0")),
+                false);
 
     LinkageChecker linkageChecker = LinkageChecker.create(classPathResult.getClassPath());
 
