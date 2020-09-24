@@ -256,7 +256,7 @@ public class ClassDumperTest {
 
     // See the issue below for the analysis of inlined fields in Conscrypt:
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/301
-    boolean result = classDumper.isUnusedClassSymbolReference("org.conscrypt.Conscrypt",
+    boolean result = classDumper.isClassSymbolReferenceUsed("org.conscrypt.Conscrypt",
         new ClassSymbol("org.conscrypt.NativeConstants"));
     Truth.assertWithMessage(
         "As the values in NativeConstants are all inlined. "
@@ -287,7 +287,7 @@ public class ClassDumperTest {
 
     for (String usedClass : usedClassesInConscrypt) {
       Truth.assertWithMessage(usedClass + " should be used in the class file")
-          .that(classDumper.isUnusedClassSymbolReference("org.conscrypt.Conscrypt",
+          .that(classDumper.isClassSymbolReferenceUsed("org.conscrypt.Conscrypt",
               new ClassSymbol(usedClass)))
           .isFalse();
     }
@@ -302,7 +302,7 @@ public class ClassDumperTest {
                 classPathEntryOfResource("testdata/conscrypt-openjdk-uber-1.4.2.jar")));
 
     try {
-      classDumper.isUnusedClassSymbolReference(
+      classDumper.isClassSymbolReferenceUsed(
           "org.conscrypt.Conscrypt", new ClassSymbol("dummy.NoSuchClass"));
 
       Assert.fail("It should throw VerifyException when it cannot find a class symbol reference");
@@ -328,7 +328,7 @@ public class ClassDumperTest {
 
     // There was VerifyError when handling multi-release JAR
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/890
-    classDumper.isUnusedClassSymbolReference(
+    classDumper.isClassSymbolReferenceUsed(
         "org.graalvm.libgraal.LibGraal", new ClassSymbol("jdk.vm.ci.services.Services"));
   }
 
