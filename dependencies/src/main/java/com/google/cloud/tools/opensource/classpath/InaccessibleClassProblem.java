@@ -73,11 +73,8 @@ final class InaccessibleClassProblem extends LinkageProblem {
     if (modifier == AccessModifier.defaultAccess) {
       return String.format(
           "%s;\n  referenced by %d class file%s in a different package\n",
-          formatSymbolProblem(),
-          referenceCount,
-          referenceCount > 1 ? "s" : "");
+          formatSymbolProblem(), referenceCount, referenceCount > 1 ? "s" : "");
     }
-      return super.formatSymbolProblemWithReferenceCount(referenceCount);
-
+    return super.formatSymbolProblemWithReferenceCount(referenceCount);
   }
 }
