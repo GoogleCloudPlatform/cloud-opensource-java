@@ -511,14 +511,15 @@ public class LinkageChecker {
             new IncompatibleClassChangeProblem(sourceClassFile, targetClassFile, symbol));
       }
 
-      if (!isClassAccessibleFrom(targetClass, sourceClassName)) {
+      if (!isClassAccessibleFrom(targetClass, sourceClassName)
+          && classDumper.isClassSymbolReferenceUsed(sourceClassName, symbol)) {
         return Optional.of(new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol));
       }
       return Optional.empty();
     } catch (ClassNotFoundException ex) {
-      if (classDumper.isUnusedClassSymbolReference(sourceClassName, symbol)
+      if (!classDumper.isClassSymbolReferenceUsed(sourceClassName, symbol)
           || classDumper.catchesLinkageErrorOnClass(sourceClassName)) {
-        // The class reference is unused in the source
+        // The class reference is unused in the source, or catches NoClassDefFoundError
         return Optional.empty();
       }
       return Optional.of(new ClassNotFoundProblem(sourceClassFile, symbol));

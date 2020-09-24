@@ -25,23 +25,26 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
 import org.junit.Before;
@@ -548,53 +551,56 @@ public class LinkageCheckerTest {
     Truth.assertThat(problems).isEmpty();
   }
 
-
   @Test
-  public void testFindClassReferences_privateClass() throws IOException, URISyntaxException {
-    // The superclass of AbstractApiService$InnerService (Guava's ApiService) is not in the paths
-    ClassPathEntry dummySource = firestoreJar;
-    List<ClassPathEntry> paths =
-        ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
-    LinkageChecker linkageChecker = LinkageChecker.create(paths);
+  public void testFindClassReferences_inaccessibleClass() throws IOException, URISyntaxException {
+    // io.grpc.grpclb.GrpclbLoadBalancer in grpc-grpclb 0.12.0 had a reference to
+    // io.grpc.internal.SingleTransportChannel. The SingleTransportChannel became non-public in
+    // grpc-core 0.15.0.
+    ClassPathResult classPathResult =
+        new ClassPathBuilder()
+            .resolve(
+                ImmutableList.of(
+                    new DefaultArtifact("io.grpc:grpc-core:0.15.0"),
+                    new DefaultArtifact("io.grpc:grpc-grpclb:0.12.0")),
+                false);
 
-    SymbolReferences.Builder builder = new SymbolReferences.Builder();
-    builder.addClassReference(
-        new ClassFile(dummySource, LinkageCheckerTest.class.getName()),
-        // This private inner class is defined in firestore-v1beta1-0.28.0.jar
-        new ClassSymbol("com.google.api.core.AbstractApiService$InnerService"));
-    ImmutableSet<LinkageProblem> problems =
-        linkageChecker.cloneWith(builder.build()).findLinkageProblems();
+    LinkageChecker linkageChecker = LinkageChecker.create(classPathResult.getClassPath());
 
-    Truth.assertThat(problems).hasSize(1);
-    LinkageProblem firstProblem = Iterables.getFirst(problems, null);
-    assertTrue(firstProblem instanceof InaccessibleClassProblem);
-    Truth.assertWithMessage(
-            "When the superclass is unavailable, it should report the location of InnerService")
-        .that(
-            ((InaccessibleClassProblem) firstProblem)
-                .getTargetClass()
-                .getClassPathEntry()
-                .toString())
-        .contains("api-common-1.7.0.jar");
+    ImmutableSet<LinkageProblem> problems = linkageChecker.findLinkageProblems();
+
+    ImmutableList<LinkageProblem> inaccessibleClassProblems =
+        problems.stream()
+            .filter(problem -> problem instanceof InaccessibleClassProblem)
+            .filter(problem -> problem.getSymbol() instanceof ClassSymbol)
+            .collect(toImmutableList());
+
+    Truth.assertThat(inaccessibleClassProblems).hasSize(1);
+    LinkageProblem firstProblem = inaccessibleClassProblems.get(0);
+
+    assertEquals(
+        "io.grpc:grpc-core:0.15.0",
+        Artifacts.toCoordinates(firstProblem.getTargetClass().getClassPathEntry().getArtifact()));
+    assertEquals(
+        "io.grpc.grpclb.GrpclbLoadBalancer", firstProblem.getSourceClass().getBinaryName());
+    assertEquals(
+        "io.grpc.internal.SingleTransportChannel", firstProblem.getTargetClass().getBinaryName());
   }
 
   @Test
   public void testFindLinkageProblems_shouldStripSourceInnerClasses()
       throws IOException, URISyntaxException {
     // The superclass of AbstractApiService$InnerService (Guava's ApiService) is not in the paths
-    ClassPathEntry dummySource = firestoreJar;
     List<ClassPathEntry> entries =
         ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));    
     LinkageChecker linkageChecker = LinkageChecker.create(entries);
 
-    SymbolReferences.Builder builder = new SymbolReferences.Builder();
-    builder.addClassReference(
-        new ClassFile(dummySource, "com.google.foo.Bar$Baz"),
-        // This private inner class is defined in firestore-v1beta1-0.28.0.jar
-        new ClassSymbol("com.google.api.core.AbstractApiService$InnerService"));
-    ImmutableSet<LinkageProblem> problems =
-        linkageChecker.cloneWith(builder.build()).findLinkageProblems();
+    ImmutableSet<LinkageProblem> problems = linkageChecker.findLinkageProblems();
 
+    // api-common-1.7.0 contains AbstractApiService$InnerService which has references to other
+    // classes in the dependencies. As we do not provide the dependencies in the class path, it
+    // should report the linkage errors. The source class of the error should not be reported as
+    // an inner class.
+    Truth.assertThat(problems).isNotEmpty();
     long innerClassCount =
         problems.stream()
             .map(LinkageProblem::getSourceClass)
@@ -1142,5 +1148,25 @@ public class LinkageCheckerTest {
             "java.nio.CharBuffer");
 
     Truth.assertThat(linkageProblems).contains(expectedProblem);
+  }
+
+  @Test
+  public void testFindLinkageProblems_unusedClassReferenceInByteCode() throws IOException {
+    // JDK's tools.jar contains com.sun.tools.internal.ws.wscompile.WsgenOptions class. The class
+    // has the class reference to JDK's com.sun.xml.internal.ws.api.BindingID$SOAPHTTPImpl in its
+    // constant pool section. The referenced class is private but it's not used in the JVM
+    // instructions in the class file.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1608
+
+    String javaHomeDirectory = System.getProperty("java.home");
+    Path toolsJar = Paths.get(javaHomeDirectory, "..", "lib", "tools.jar");
+    Artifact toolsArtifact =
+        new DefaultArtifact("com.sun:tools:jar:1.8").setFile(toolsJar.toFile());
+
+    LinkageChecker linkageChecker =
+        LinkageChecker.create(ImmutableList.of(new ClassPathEntry(toolsArtifact)));
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
+
+    Truth.assertThat(linkageProblems).isEmpty();
   }
 }
