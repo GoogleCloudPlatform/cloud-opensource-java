@@ -20,10 +20,10 @@ import org.apache.bcel.Const;
 
 /** A modifier that controls access to classes, fields, or methods. */
 enum AccessModifier {
-  PUBLIC(" is public"),
-  PRIVATE(" is private"),
-  PROTECTED(" is private"),
-  DEFAULT(" has default access");
+  PUBLIC("is public"),
+  PRIVATE("is private"),
+  PROTECTED("is private"),
+  DEFAULT("has default access");
 
   private String description;
 
@@ -44,6 +44,6 @@ enum AccessModifier {
   }
 
   String describe(String item) {
-    return item + description;
+    return item + " " + description;
   }
 }
