@@ -4,7 +4,7 @@ def buildLog = new File(basedir, "build.log").text.replaceAll("\\r\\n", "\n")
 // In this message below, the expectation is wrong.
 assert buildLog.contains('''\
 java.nio.ByteBuffer's method position(int) is expected to return java.nio.ByteBuffer\
- but the actual type is java.nio.Buffer;
+ but instead returns java.nio.Buffer;
   referenced by 8 class files
     com.google.protobuf.AllocatedBuffer (com.google.protobuf:protobuf-java:3.12.4)
     com.google.protobuf.BinaryWriter (com.google.protobuf:protobuf-java:3.12.4)

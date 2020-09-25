@@ -16,7 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import com.sun.org.apache.bcel.internal.classfile.Utility;
+import org.apache.bcel.classfile.Utility;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -36,7 +36,7 @@ class ReturnTypeChangedProblem extends LinkageProblem {
     super(
         "is expected to return "
             + Utility.methodSignatureReturnType(expectedMethodSymbol.getDescriptor())
-            + " but the actual type is "
+            + " but instead returns "
             + actualType,
         sourceClass,
         expectedMethodSymbol,
