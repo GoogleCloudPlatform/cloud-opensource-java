@@ -16,9 +16,9 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import org.apache.bcel.classfile.Utility;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import org.apache.bcel.classfile.Utility;
 
 /**
  * The {@code sourceClass} references the {@code expectedMethodSymbol}, but the {@code
