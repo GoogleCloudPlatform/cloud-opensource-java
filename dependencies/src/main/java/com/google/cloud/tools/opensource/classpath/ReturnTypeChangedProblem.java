@@ -34,9 +34,10 @@ class ReturnTypeChangedProblem extends LinkageProblem {
       MethodSymbol expectedMethodSymbol,
       String actualType) {
     super(
-        "is expected to return "+
-            Utility.methodSignatureReturnType(expectedMethodSymbol.getDescriptor())
-             +" but the actual type is " + actualType,
+        "is expected to return "
+            + Utility.methodSignatureReturnType(expectedMethodSymbol.getDescriptor())
+            + " but the actual type is "
+            + actualType,
         sourceClass,
         expectedMethodSymbol,
         targetClass);
@@ -50,6 +51,7 @@ class ReturnTypeChangedProblem extends LinkageProblem {
 
   @Override
   public boolean equals(Object other) {
-    return super.equals(other) && Objects.equals(actualType,((ReturnTypeChangedProblem) other).actualType);
+    return super.equals(other) // this checks the class equality
+        && Objects.equals(actualType, ((ReturnTypeChangedProblem) other).actualType);
   }
 }
