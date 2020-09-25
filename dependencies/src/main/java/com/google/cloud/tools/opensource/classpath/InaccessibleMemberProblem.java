@@ -25,7 +25,11 @@ package com.google.cloud.tools.opensource.classpath;
  * target class, the member is not protected or public.
  */
 final class InaccessibleMemberProblem extends LinkageProblem {
-  InaccessibleMemberProblem(ClassFile sourceClass, ClassFile targetClass, Symbol symbol) {
+  private AccessModifier modifier;
+
+  InaccessibleMemberProblem(
+      ClassFile sourceClass, ClassFile targetClass, Symbol symbol, AccessModifier modifier) {
     super("is not accessible", sourceClass, symbol, targetClass);
+    this.modifier = modifier;
   }
 }

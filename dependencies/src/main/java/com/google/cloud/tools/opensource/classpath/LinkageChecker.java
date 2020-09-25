@@ -251,7 +251,9 @@ public class LinkageChecker {
           classPathEntry == null ? null : new ClassFile(classPathEntry, targetClassName);
 
       if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
-        return Optional.of(new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol));
+        AccessModifier modifier = AccessModifier.fromFlag(targetJavaClass.getModifiers());
+        return Optional.of(
+            new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol, modifier));
       }
 
       if (targetJavaClass.isInterface() != symbol.isInterfaceMethod()) {
@@ -284,8 +286,10 @@ public class LinkageChecker {
             String actualMethodDescriptor = method.getSignature();
             if (actualMethodDescriptor.equals(expectedMethodDescriptor)) {
               if (!isMemberAccessibleFrom(javaClass, method, sourceClassName)) {
+                AccessModifier modifier = AccessModifier.fromFlag(method.getModifiers());
                 return Optional.of(
-                    new InaccessibleMemberProblem(sourceClassFile, targetClassFile, symbol));
+                    new InaccessibleMemberProblem(
+                        sourceClassFile, targetClassFile, symbol, modifier));
               }
               // The method is found and accessible. Returning no error.
               return Optional.empty();
@@ -417,15 +421,19 @@ public class LinkageChecker {
           classFileLocation == null ? null : new ClassFile(classFileLocation, targetClassName);
 
       if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
-        return Optional.of(new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol));
+        AccessModifier modifier = AccessModifier.fromFlag(targetJavaClass.getModifiers());
+        return Optional.of(
+            new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol, modifier));
       }
 
       for (JavaClass javaClass : getClassHierarchy(targetJavaClass)) {
         for (Field field : javaClass.getFields()) {
           if (field.getName().equals(fieldName)) {
             if (!isMemberAccessibleFrom(javaClass, field, sourceClassName)) {
+              AccessModifier modifier = AccessModifier.fromFlag(field.getModifiers());
               return Optional.of(
-                  new InaccessibleMemberProblem(sourceClassFile, targetClassFile, symbol));
+                  new InaccessibleMemberProblem(
+                      sourceClassFile, targetClassFile, symbol, modifier));
             }
             // The field is found and accessible. Returning no error.
             return Optional.empty();
@@ -513,7 +521,9 @@ public class LinkageChecker {
 
       if (!isClassAccessibleFrom(targetClass, sourceClassName)
           && classDumper.isClassSymbolReferenceUsed(sourceClassName, symbol)) {
-        return Optional.of(new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol));
+        AccessModifier modifier = AccessModifier.fromFlag(targetClass.getModifiers());
+        return Optional.of(
+            new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol, modifier));
       }
       return Optional.empty();
     } catch (ClassNotFoundException ex) {

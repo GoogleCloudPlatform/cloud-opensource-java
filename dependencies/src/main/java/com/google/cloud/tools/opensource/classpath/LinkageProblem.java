@@ -138,6 +138,12 @@ public abstract class LinkageProblem {
     return result;
   }
 
+  protected String formatSymbolProblemWithReferenceCount(int referenceCount) {
+    return String.format(
+        "%s;\n  referenced by %d class file%s\n",
+        this.formatSymbolProblem(), referenceCount, referenceCount > 1 ? "s" : "");
+  }
+
   /** Returns mapping from symbol problem description to the names of the source classes. */
   public static ImmutableMap<String, ImmutableSet<String>> groupBySymbolProblem(
       Iterable<LinkageProblem> linkageProblems) {
@@ -184,12 +190,7 @@ public abstract class LinkageProblem {
               // problems all have the same symbol problem
               LinkageProblem firstProblem = Iterables.getFirst(problems, null);
               int referenceCount = problems.size();
-              output.append(
-                  String.format(
-                      "%s;\n  referenced by %d class file%s\n",
-                      firstProblem.formatSymbolProblem(),
-                      referenceCount,
-                      referenceCount > 1 ? "s" : ""));
+              output.append(firstProblem.formatSymbolProblemWithReferenceCount(referenceCount));
               ImmutableSet.Builder<LinkageProblemCause> causesBuilder = ImmutableSet.builder();
               problems.forEach(
                   problem -> {
