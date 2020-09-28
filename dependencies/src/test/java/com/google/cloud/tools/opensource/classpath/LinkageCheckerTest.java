@@ -1145,7 +1145,7 @@ public class LinkageCheckerTest {
             new ClassFile(jars.get(0), "com.google.protobuf.TextFormat"),
             null,
             methodSymbol,
-            "java.nio.CharBuffer");
+            "java.nio.Buffer");
 
     Truth.assertThat(linkageProblems).contains(expectedProblem);
   }
