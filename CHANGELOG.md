@@ -1,5 +1,9 @@
 # Linkage Checker Enforcer Rule Change Log
 
+## 1.5.4
+* Fixed false positive linkage errors on unused private inner classes ([#1608](
+  https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1608))
+
 ## 1.5.3
 * Linkge Checker can resolve artifacts from different repositories.
 
