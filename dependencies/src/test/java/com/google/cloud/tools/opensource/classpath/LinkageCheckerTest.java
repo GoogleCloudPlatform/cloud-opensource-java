@@ -1174,9 +1174,11 @@ public class LinkageCheckerTest {
   public void testFindLinkageProblems_shouldNotReportMethodHandleInvoke() throws IOException {
     // JVM treats java.lang.invoke.MethodHandle's invoke and invokeExact in a special manner when
     // resolving its method reference. Class files have the method references with different
-    // argument types while the actual MethodHandle.invoke takes Object[]. Linkage Checker should
-    // not report the discrepancy as linkage errors.
+    // argument types while the actual MethodHandle.invoke takes {@code Object[]}. Linkage Checker
+    // should not report the discrepancy as linkage errors.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1684
+
+    // The appengine-api-1.0-sdk uses MethodHandle.invoke.
     Artifact appengineApiSdk =
         new DefaultArtifact("com.google.appengine:appengine-api-1.0-sdk:1.9.78");
     ClassPathResult classPathResult =
