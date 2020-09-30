@@ -1169,4 +1169,33 @@ public class LinkageCheckerTest {
 
     Truth.assertThat(linkageProblems).isEmpty();
   }
+
+  @Test
+  public void testFindLinkageProblems_shouldNotReportMethodHandleInvoke() throws IOException {
+    // JVM treats java.lang.invoke.MethodHandle's invoke and invokeExact in a special manner when
+    // resolving its method reference. Class files have the method references with different
+    // argument types while the actual MethodHandle.invoke takes Object[]. Linkage Checker should
+    // not report the discrepancy as linkage errors.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1684
+    Artifact appengineApiSdk =
+        new DefaultArtifact("com.google.appengine:appengine-api-1.0-sdk:1.9.78");
+    ClassPathResult classPathResult =
+        new ClassPathBuilder().resolve(ImmutableList.of(appengineApiSdk), false);
+
+    LinkageChecker linkageChecker = LinkageChecker.create(classPathResult.getClassPath());
+
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
+
+    ImmutableList<LinkageProblem> problemsOnMethodHandle =
+        linkageProblems.stream()
+            .filter(
+                problem ->
+                    problem
+                        .getSymbol()
+                        .getClassBinaryName()
+                        .equals("java.lang.invoke.MethodHandle"))
+            .collect(toImmutableList());
+
+    Truth.assertThat(problemsOnMethodHandle).isEmpty();
+  }
 }

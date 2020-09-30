@@ -57,13 +57,12 @@ public class Java8IncompatibleReferenceCheck {
 
   public static void main(String[] arguments) throws MavenRepositoryException, IOException {
 
-    if (arguments.length < 2) {
-      System.err.println("Specify a path to the BOM file and a path to the exclusion rule");
+    if (arguments.length < 1) {
+      System.err.println("Specify a path to the BOM file");
       System.exit(1);
     }
 
     String bomFileName = arguments[0];
-    Path exclusionFile = Paths.get(arguments[1]).toAbsolutePath();
 
     Path bomFile = Paths.get(bomFileName);
     Bom bom = Bom.readBom(bomFile);
@@ -88,8 +87,7 @@ public class Java8IncompatibleReferenceCheck {
       ClassPathBuilder classPathBuilder = new ClassPathBuilder();
       ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(managedDependency), false);
 
-      LinkageChecker linkageChecker =
-          LinkageChecker.create(result.getClassPath(), result.getClassPath(), exclusionFile);
+      LinkageChecker linkageChecker = LinkageChecker.create(result.getClassPath());
 
       ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 

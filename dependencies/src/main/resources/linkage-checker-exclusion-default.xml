@@ -43,62 +43,6 @@
   </LinkageError>
   <LinkageError>
     <Target>
-      <Class name="java.lang.invoke.MethodHandle" />
-    </Target>
-    <Source>
-      <Package name="com.oracle.svm" />
-    </Source>
-    <Reason>
-      GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that
-      only exists in special JDK. These missing classes are false positives, because
-      the code is only invoked when running in a GraalVM.
-      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929
-    </Reason>
-  </LinkageError>
-  <LinkageError>
-    <Target>
-      <Class name="java.lang.invoke.MethodHandle" />
-    </Target>
-    <Source>
-      <Package name="com.oracle.graal" />
-    </Source>
-    <Reason>
-      GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that
-      only exists in special JDK. These missing classes are false positives, because
-      the code is only invoked when running in a GraalVM.
-      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929
-    </Reason>
-  </LinkageError>
-  <LinkageError>
-    <Target>
-      <Class name="java.lang.invoke.MethodHandle" />
-    </Target>
-    <Source>
-      <Package name="org.graalvm" />
-    </Source>
-    <Reason>
-      GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that
-      only exists in special JDK. These missing classes are false positives, because
-      the code is only invoked when running in a GraalVM.
-      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929
-    </Reason>
-  </LinkageError>
-  <LinkageError>
-    <Target>
-      <Class name="java.lang.invoke.MethodHandle" />
-    </Target>
-    <Source>
-      <Package name="com.oracle.truffle" />
-    </Source>
-    <Reason>
-      GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that
-      only exists in special JDK. These missing classes are false positives, because
-      the code is only invoked when running in a GraalVM.
-      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929
-    </Reason>
-  </LinkageError>
-  <LinkageError>
-    <Target>
       <Class name="org.mockito.internal.creation.bytebuddy.MockMethodDispatcher" />
     </Target>
     <Source>

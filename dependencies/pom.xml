@@ -134,7 +134,6 @@
               <mainClass>com.google.cloud.tools.opensource.dependencies.Java8IncompatibleReferenceCheck</mainClass>
               <arguments>
                 <argument>../boms/cloud-oss-bom/pom.xml</argument>
-                <argument>src/main/resources/java8-incompatible-reference-check-exclusion.xml</argument>
               </arguments>
             </configuration>
           </plugin>
