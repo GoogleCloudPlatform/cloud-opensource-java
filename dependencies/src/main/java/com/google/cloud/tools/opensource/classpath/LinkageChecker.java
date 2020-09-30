@@ -228,10 +228,18 @@ public class LinkageChecker {
    * reference does not have a valid referent in the input class path; otherwise an empty {@code
    * Optional}.
    *
+   * <p>Because the Java Virtual Machine has special handling for {@link
+   * java.lang.invoke.MethodHandle#invoke(Object...)} and {@link
+   * java.lang.invoke.MethodHandle#invokeExact(Object...)}, this method does not report the
+   * references to them as linkage errors.
+   *
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.4.3.3">Java
    *     Virtual Machine Specification: 5.4.3.3. Method Resolution</a>
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.4.3.4">Java
    *     Virtual Machine Specification: 5.4.3.4. Interface Method Resolution</a>
+   * @see <a
+   *     href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5.invokevirtual>Java
+   *     Virtual Machine Specification: invokevirtual</a>
    */
   @VisibleForTesting
   Optional<LinkageProblem> findLinkageProblem(
@@ -241,6 +249,11 @@ public class LinkageChecker {
     String methodName = symbol.getName();
 
     if (ClassDumper.isArrayClass(targetClassName)) {
+      return Optional.empty();
+    }
+
+    if (targetClassName.equals("java.lang.invoke.MethodHandle")
+        && (methodName.equals("invoke") || methodName.equals("invokeExact"))) {
       return Optional.empty();
     }
 
