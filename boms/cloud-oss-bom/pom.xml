@@ -50,6 +50,8 @@
     <protobuf.version>3.13.0</protobuf.version>
     <http.version>1.36.0</http.version>
     <gax.version>1.59.0</gax.version>
+    <common.protos.version>1.18.1</protos.version>
+    <iam.protos.version>1.0.1</iam.protos.version>
   </properties>
 
   <distributionManagement>
@@ -231,22 +233,22 @@
        <dependency>
          <groupId>com.google.api.grpc</groupId>
          <artifactId>proto-google-common-protos</artifactId>
-         <version>1.18.1</version>
+         <version>${common.protos.version}</version>
        </dependency>
        <dependency>
          <groupId>com.google.api.grpc</groupId>
          <artifactId>grpc-google-common-protos</artifactId>
-         <version>1.18.1</version>
+         <version>${common.protos.version}</version>
        </dependency>
        <dependency>
          <groupId>com.google.api.grpc</groupId>
          <artifactId>proto-google-iam-v1</artifactId>
-         <version>1.0.1</version>
+         <version>${iam.protos.version}</version>
        </dependency>
        <dependency>
          <groupId>com.google.api.grpc</groupId>
          <artifactId>grpc-google-iam-v1</artifactId>
-         <version>1.0.1</version>
+         <version>${iam.protos.version}</version>
        </dependency>
 
     </dependencies>
