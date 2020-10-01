@@ -49,6 +49,9 @@
     <io.grpc.version>1.32.1</io.grpc.version>
     <protobuf.version>3.13.0</protobuf.version>
     <http.version>1.36.0</http.version>
+    <gax.version>1.59.0</gax.version>
+    <common.protos.version>1.18.1</common.protos.version>
+    <iam.protos.version>1.0.1</iam.protos.version>
   </properties>
 
   <distributionManagement>
@@ -200,6 +203,53 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      
+      <dependency>
+        <groupId>com.google.api</groupId>
+        <artifactId>api-common</artifactId>
+         <version>1.10.0</version>
+       </dependency>
+       <dependency>
+         <groupId>com.google.api</groupId>
+         <artifactId>gax-bom</artifactId>
+         <version>${gax.version}</version>
+         <type>pom</type>
+         <scope>import</scope>
+       </dependency>
+       <dependency>
+         <groupId>com.google.auth</groupId>
+         <artifactId>google-auth-library-bom</artifactId>
+         <version>0.21.1</version>
+         <type>pom</type>
+         <scope>import</scope>
+       </dependency>
+       <dependency>
+         <groupId>com.google.cloud</groupId>
+         <artifactId>google-cloud-core-bom</artifactId>
+         <version>1.93.9</version>
+         <type>pom</type>
+         <scope>import</scope>
+       </dependency>
+       <dependency>
+         <groupId>com.google.api.grpc</groupId>
+         <artifactId>proto-google-common-protos</artifactId>
+         <version>${common.protos.version}</version>
+       </dependency>
+       <dependency>
+         <groupId>com.google.api.grpc</groupId>
+         <artifactId>grpc-google-common-protos</artifactId>
+         <version>${common.protos.version}</version>
+       </dependency>
+       <dependency>
+         <groupId>com.google.api.grpc</groupId>
+         <artifactId>proto-google-iam-v1</artifactId>
+         <version>${iam.protos.version}</version>
+       </dependency>
+       <dependency>
+         <groupId>com.google.api.grpc</groupId>
+         <artifactId>grpc-google-iam-v1</artifactId>
+         <version>${iam.protos.version}</version>
+       </dependency>
 
     </dependencies>
   </dependencyManagement>
