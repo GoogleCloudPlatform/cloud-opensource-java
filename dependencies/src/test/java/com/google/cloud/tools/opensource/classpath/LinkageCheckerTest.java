@@ -195,6 +195,20 @@ public class LinkageCheckerTest {
   }
 
   @Test
+  public void testFindLinkageError_arrayReference() throws IOException {
+    List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
+    LinkageChecker linkageChecker = LinkageChecker.create(paths);
+
+    Optional<LinkageProblem> linkageProblem = linkageChecker.findLinkageProblem(
+        new ClassFile(guavaJar, "com.google.common.collect.ImmutableList"),
+        new ClassSymbol("[[Lfoo/B;"),
+        dummySourceClass
+    );
+
+    Truth8.assertThat(linkageProblem).isPresent();
+  }
+
+  @Test
   public void testCheckLinkageErrorMissingInterfaceMethodAt_missingInterfaceMethod()
       throws IOException {
     List<ClassPathEntry> paths = ImmutableList.of(guavaJar);
