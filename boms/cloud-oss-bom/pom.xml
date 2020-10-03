@@ -211,11 +211,25 @@
        </dependency>
        <dependency>
          <groupId>com.google.api</groupId>
-         <artifactId>gax-bom</artifactId>
+         <artifactId>gax</artifactId>
          <version>${gax.version}</version>
          <type>pom</type>
          <scope>import</scope>
        </dependency>
+       <dependency>
+         <groupId>com.google.api</groupId>
+         <artifactId>gax-grpc</artifactId>
+         <version>${gax.version}</version>
+         <type>pom</type>
+         <scope>import</scope>
+       </dependency>
+       <dependency>
+         <groupId>com.google.api</groupId>
+         <artifactId>gax-httpjson</artifactId>
+         <version>0.76.0</version>
+         <type>pom</type>
+         <scope>import</scope>
+       </dependency>       
        <dependency>
          <groupId>com.google.auth</groupId>
          <artifactId>google-auth-library-bom</artifactId>
