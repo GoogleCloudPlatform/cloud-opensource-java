@@ -28,7 +28,7 @@
   <#list problemsToClasses as problem, sourceClasses>
     <p class="jar-linkage-report-cause">${problem?html}, referenced from ${
       pluralize(sourceClasses?size, "class", "classes")?html}
-      <button onclick="toggleSourceClassListVisibility(this)"
+      <button onclick="toggleNextSiblingVisibility(this)"
               title="Toggle visibility of source class list">▶
       </button>
     </p>
@@ -60,15 +60,25 @@
 
 <#macro showDependencyPath dependencyPathRootCauses classPathResult classPathEntry>
   <#assign dependencyPaths = classPathResult.getDependencyPaths(classPathEntry) />
+  <#assign hasRootCause = dependencyPathRootCauses[classPathEntry]?? />
+  <#assign hideDependencyPathsByDefault = (!hasRootCause) && (dependencyPaths?size > 5) />
   <p class="linkage-check-dependency-paths">
     The following ${plural(dependencyPaths?size, "path contains", "paths contain")} ${classPathEntry?html}:
+    <#if hideDependencyPathsByDefault>
+      <#-- The dependency paths are not summarized -->
+      <button onclick="toggleNextSiblingVisibility(this)"
+              title="Toggle visibility of source class list">▶
+      </button>
+    </#if>
   </p>
 
-  <#if dependencyPathRootCauses[classPathEntry]?? >
+  <#if hasRootCause>
     <p class="linkage-check-dependency-paths">${dependencyPathRootCauses[classPathEntry]?html}
     </p>
   <#else>
-    <ul class="linkage-check-dependency-paths">
+    <!-- The visibility of this list is toggled via the button above. Hidden by default -->
+    <ul class="linkage-check-dependency-paths"
+        style="display:${hideDependencyPathsByDefault?string('none', '')}">
         <#list dependencyPaths as dependencyPath >
           <li>${dependencyPath}</li>
         </#list>

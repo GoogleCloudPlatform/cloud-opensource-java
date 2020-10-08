@@ -216,7 +216,7 @@ public class DashboardTest {
     Nodes dependencyPaths = details.query("//p[@class='linkage-check-dependency-paths']");
     Node dependencyPathMessageOnProblem = dependencyPaths.get(dependencyPaths.size() - 1);
     Assert.assertEquals(
-        "The following paths contain com.google.guava:guava-jdk5:13.0:",
+        "The following paths contain com.google.guava:guava-jdk5:13.0: ▶",
         trimAndCollapseWhiteSpace(dependencyPathMessageOnProblem.getValue()));
 
     Node dependencyPathMessageOnSource = dependencyPaths.get(dependencyPaths.size() - 2);
