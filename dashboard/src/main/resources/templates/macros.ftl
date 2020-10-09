@@ -26,19 +26,23 @@
     ${pluralize(referenceCount, "source class", "source classes")}.
   </p>
   <#list problemsToClasses as problem, sourceClasses>
-    <p class="jar-linkage-report-cause">${problem?html}, referenced from ${
-      pluralize(sourceClasses?size, "class", "classes")?html}
-      <button onclick="toggleNextSiblingVisibility(this)"
-              title="Toggle visibility of source class list">▶
-      </button>
-    </p>
-
-    <!-- The visibility of this list is toggled via the button above. Hidden by default -->
-    <ul class="jar-linkage-report-cause" style="display:none">
-      <#list sourceClasses as sourceClass>
-        <li>${sourceClass?html}</li>
-      </#list>
-    </ul>
+    <#if sourceClasses?size == 1>
+      <#assign sourceClass = sourceClasses[0] />
+      <p class="jar-linkage-report-cause">${problem?html}, referenced from ${sourceClass?html}</p>
+    <#else>
+      <p class="jar-linkage-report-cause">${problem?html}, referenced from ${
+          pluralize(sourceClasses?size, "class", "classes")?html}
+        <button onclick="toggleNextSiblingVisibility(this)"
+                title="Toggle visibility of source class list">▶
+        </button>
+      </p>
+      <!-- The visibility of this list is toggled via the button above. Hidden by default -->
+      <ul class="jar-linkage-report-cause" style="display:none">
+          <#list sourceClasses as sourceClass>
+            <li>${sourceClass?html}</li>
+          </#list>
+      </ul>
+    </#if>
   </#list>
   <#assign jarsInProblem = {} >
   <#list linkageProblems as problem>
