@@ -129,3 +129,14 @@
     </#if>
   </td>
 </#macro>
+
+<#macro pieChartSvg description ratio>
+    <#assign largeArcFlag = (ratio gt 0.5)?string("1", "0")>
+    <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
+    <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
+  <svg xmlns="http://www.w3.org/2000/svg" width="${pieSize}" height="${pieSize}">
+    <desc>${description}</desc>
+    <circle cx="100" cy="100" r="100" stroke-width="3" fill="lightgreen" />
+    <path d="M100,100 v -100 A100,100 0 ${largeArcFlag} 1 ${endPointX}, ${endPointY} z" fill="red" />
+  </svg>
+</#macro>
