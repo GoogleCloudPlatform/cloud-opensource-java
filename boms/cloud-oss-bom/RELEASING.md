@@ -34,6 +34,10 @@ new release is available on Maven Central.
     * https://github.com/googleapis/google-cloud-java/blob/master/TROUBLESHOOTING.md
 * Merge the dependabot PR that updates libraries-bom in https://github.com/GoogleCloudPlatform/java-docs-samples/pulls
 * Manually edit and update any pom.xml files in https://github.com/GoogleCloudPlatform/java-docs-samples that dependabot missed
+    * Go to go/java-live
+    * Sort by title
+    * Scroll down until you find the section with titles "chore(deps): update dependency com.google.cloud:libraries-bom to v<version>"
+   * Approve and merge these PRs.
 * In google3 run:
     * `$ g4d -f bom`
     *  `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version>oldVersion&lt;/version>" "&lt;version>newVersion&lt;/version>"`
