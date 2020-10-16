@@ -3,12 +3,12 @@
 
 ## Prerequisites 
 
-(Does not need to be repeated for each release.
+(Does not need to be repeated for each release.)
 
-Install the [`gh`](https://github.com/cli/cli)
+* Install the [`gh`](https://github.com/cli/cli)
 tool if you not previously done so.
 
-Clone this repository onto your corp desktop, Ubiquity instance, or CloudTop. Do not use a laptop or personal machine as the release requires google3 access.
+* Clone this repository onto your corp desktop, Ubiquity instance, or CloudTop. Do not use a laptop or personal machine as the release requires google3 access.
 
 ## Steps
 
