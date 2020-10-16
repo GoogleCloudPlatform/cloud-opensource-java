@@ -1,5 +1,5 @@
 #!/bin/bash -
-# Usage: ./prepare_release.sh <dependencies|bom> <release version>
+# Usage: ./release_bom.sh <dependencies|bom> <release version>
 
 set -e
 
