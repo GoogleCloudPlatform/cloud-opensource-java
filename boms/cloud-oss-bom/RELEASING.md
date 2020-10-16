@@ -8,6 +8,8 @@
 * Install the [`gh`](https://github.com/cli/cli)
 tool if you not previously done so.
 
+    * Run `gh auth login` to register your desktop with github.
+
 * Clone this repository onto your corp desktop, Ubiquity instance, or CloudTop. Do not use a laptop or personal machine as the release requires google3 access.
 
 ## Steps
