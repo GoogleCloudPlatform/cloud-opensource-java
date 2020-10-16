@@ -16,7 +16,7 @@ Die() {
 }
 
 DieUsage() {
-  Die "Usage: ./prepare_release.sh <dependencies|bom> <release version> [<post-release-version>]"
+  Die "Usage: ./release_bom.sh <dependencies|bom> <release version> [<post-release-version>]"
 }
 
 # Usage: CheckVersion <version>
@@ -105,7 +105,7 @@ gh pr create -t "Release ${VERSION}-${SUFFIX}" -b "Release ${VERSION}-${SUFFIX}"
 # File a PR on Github for the new branch. Have someone LGTM it, which gives you permission to continue.
 EchoGreen 'Ask someone to approve this PR.'
 
-g4d -f release-${VERSION}-${SUFFIX}
+p4 g4d -f release-${VERSION}-${SUFFIX}
 
 blaze run java/com/google/cloud/java/tools:ReleaseBom -- --version=${VERSION}
 
