@@ -27,7 +27,7 @@ Press Enter to open github.com in your browser...
 
 Do it. This grants the script permission to create a PR for you on Github.
 
-Ask a teammate to review the and approve the PR. 
+Ask a teammate to review and approve the PR. 
 
 ### Build the release binary with Rapid (CLI)
 
