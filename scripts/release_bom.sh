@@ -1,5 +1,5 @@
 #!/bin/bash -
-# Usage: ./release_bom.sh <dependencies|bom> <release version>
+# Usage: ./prepare_release.sh <dependencies|bom> <release version>
 
 set -e
 
@@ -16,7 +16,7 @@ Die() {
 }
 
 DieUsage() {
-  Die "Usage: ./release_bom.sh <dependencies|bom> <release version> [<post-release-version>]"
+  Die "Usage: ./prepare_release.sh <dependencies|bom> <release version> [<post-release-version>]"
 }
 
 # Usage: CheckVersion <version>
@@ -105,10 +105,12 @@ gh pr create -t "Release ${VERSION}-${SUFFIX}" -b "Release ${VERSION}-${SUFFIX}"
 # File a PR on Github for the new branch. Have someone LGTM it, which gives you permission to continue.
 EchoGreen 'Ask someone to approve this PR.'
 
-p4 g4d -f release-${VERSION}-${SUFFIX}
+# CITC client names can't contain periods
+g4d -f release-${VERSION//\.//_}-${SUFFIX}
 
 blaze run java/com/google/cloud/java/tools:ReleaseBom -- --version=${VERSION}
 
-
+# TODO print URL of Rapid Web UI for this build in case user wants to
+# follow along; possibly this should be done in the Java program ReleaseBom
 
 
