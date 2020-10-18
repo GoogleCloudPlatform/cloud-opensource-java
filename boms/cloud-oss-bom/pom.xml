@@ -7,7 +7,7 @@
 
   <groupId>com.google.cloud</groupId>
   <artifactId>libraries-bom</artifactId>
-  <version>12.2.0-SNAPSHOT</version>
+  <version>13.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Google Cloud Platform Supported Libraries</name>
@@ -44,7 +44,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <guava.version>29.0-android</guava.version>
+    <guava.version>30.0-android</guava.version>
     <google.cloud.java.version>0.140.0</google.cloud.java.version>
     <io.grpc.version>1.32.2</io.grpc.version>
     <protobuf.version>3.13.0</protobuf.version>
