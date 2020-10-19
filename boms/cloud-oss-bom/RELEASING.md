@@ -1,7 +1,18 @@
 # Cloud Libraries BOM Release
 
-Install the [`gh`](https://github.com/cli/cli)
+
+## Prerequisites 
+
+(Does not need to be repeated for each release.)
+
+* Install the [`gh`](https://github.com/cli/cli)
 tool if you not previously done so.
+
+    * Run `gh auth login` to register your desktop with github.
+
+* Clone this repository onto your corp desktop, Ubiquity instance, or CloudTop. Do not use a laptop or personal machine as the release requires google3 access.
+
+## Steps
 
 Run `prepare_release.sh` with `bom` argument in `cloud-opensource-java` directory:
 
@@ -18,10 +29,29 @@ Press Enter to open github.com in your browser...
 
 Do it. This grants the script permission to create a PR for you on Github.
 
-Ask a teammate to review the and approve the PR. While you should not push the final release until the PR is approved, you should kick off the  
+Ask a teammate to review and approve the PR. 
+
+### Build the release binary with Rapid (CLI)
+
+While you should not push the final release until the PR is approved, you should kick off the  
 [Rapid build](https://rapid.corp.google.com/cloud-java-tools-cloud-opensource-java-bom-kokoro-release) while you wait for approval.
+
+Run gcert if you have not done so in the last twelve hours or so.
+
+```
+$ g4d -f bom-version
+$ blaze run java/com/google/cloud/java/tools:ReleaseBom -- --version=<release version>
+```
+
+### Build the release binary with Rapid (Legacy web UI)
+
 The [instructions for the Rapid build are on the internal team 
 site](https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md#run-the-rapid-workflow).
+
+## OSSRH
+
+[Instructions for releasing from OSSRH are on the internal team 
+site](https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md#verify-and-release).
 
 ## Update the docs
 
