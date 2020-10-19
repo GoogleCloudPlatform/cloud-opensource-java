@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -47,8 +48,15 @@ public class MaximumLinkageErrorsTest {
     Path bomFile = Paths.get("../cloud-oss-bom/pom.xml");
     Bom bom = Bom.readBom(bomFile);
 
+    for (Artifact managedDependency : bom.getManagedDependencies()) {
+      System.out.println("BOM member: " + managedDependency);
+    }
+
     ImmutableSet<LinkageProblem> oldProblems =
         LinkageChecker.create(baseline).findLinkageProblems();
+
+    System.out.println("oldProblems size: " + oldProblems.size());
+
     LinkageChecker checker = LinkageChecker.create(bom);
     ImmutableSet<LinkageProblem> currentProblems = checker.findLinkageProblems();
 
