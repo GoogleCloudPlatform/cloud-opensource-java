@@ -106,7 +106,7 @@ gh pr create -t "Release ${VERSION}-${SUFFIX}" -b "Release ${VERSION}-${SUFFIX}"
 EchoGreen 'Ask someone to approve this PR.'
 
 # CITC client names can't contain periods
-g4d -f release-${VERSION//\.//_}-${SUFFIX}
+p4 g4d -f release-${VERSION//\.//_}-${SUFFIX}
 
 blaze run java/com/google/cloud/java/tools:ReleaseBom -- --version=${VERSION}
 
