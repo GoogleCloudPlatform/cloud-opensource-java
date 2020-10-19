@@ -108,11 +108,8 @@ EchoGreen 'Ask someone to approve this PR.'
 # CITC client names can't contain periods
 citcclient="release-${VERSION//\./_}-${SUFFIX}"
 
-echo ${citcclient}
-
 p4 g4d -f ${citcclient}
 clientdir="$(p4 g4d -- "${citcclient?}")"
-echo ${clientdir}
 
 cd "${clientdir}"
 
