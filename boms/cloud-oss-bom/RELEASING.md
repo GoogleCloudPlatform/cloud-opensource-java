@@ -86,7 +86,7 @@ problems. If so:
 2. Fetch the tags in your local client:
 
    ```
-   $ git fetch --tags --force`
+   $ git fetch --tags --force
    ```
      
 3. Delete the tag locally:
