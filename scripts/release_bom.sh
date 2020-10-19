@@ -106,7 +106,7 @@ gh pr create -t "Release ${VERSION}-${SUFFIX}" -b "Release ${VERSION}-${SUFFIX}"
 EchoGreen 'Ask someone to approve this PR.'
 
 # CITC client names can't contain periods
-citcclient="release-${VERSION//\.//_}-${SUFFIX}"
+citcclient="release-${VERSION/\./_}-${SUFFIX}"
 
 echo ${citcclient}
 
