@@ -77,7 +77,7 @@ if [[ "${SUFFIX}" = "bom" ]]; then
 fi
 
 # Updates the pom.xml with the version to release.
-mvn versions:set versions:commit -DnewVersion=${VERSION} -DgenerateBackupPoms=false
+mvn org.codehaus.mojo:versions-maven-plugin:2.7:set -DnewVersion=${VERSION} -DgenerateBackupPoms=false
 
 if [[ "${SUFFIX}" = "dependencies" ]]; then
   sed -i "" "s/version = .*/version = ${VERSION}/" gradle-plugin/gradle.properties
@@ -86,7 +86,7 @@ fi
 # Tags a new commit for this release.
 git commit -am "preparing release ${VERSION}-${SUFFIX}"
 git tag v${VERSION}-${SUFFIX}
-mvn versions:set versions:commit -DnewVersion=${NEXT_SNAPSHOT} -DgenerateBackupPoms=false
+mvn org.codehaus.mojo:versions-maven-plugin:2.7:set -DnewVersion=${NEXT_SNAPSHOT} -DgenerateBackupPoms=false
 
 if [[ "${SUFFIX}" = "dependencies" ]]; then
   sed -i "" "s/version = .*/version = ${NEXT_SNAPSHOT}/" gradle-plugin/gradle.properties
