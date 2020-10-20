@@ -37,7 +37,7 @@ IncrementVersion() {
 EchoGreen '===== RELEASE SETUP SCRIPT ====='
 
 gcertstatus --quiet --check_ssh=false --check_remaining=10m \
-  || gbash::die "Run gcert."
+  || Die "Run gcert."
 
 SUFFIX=$1
 
