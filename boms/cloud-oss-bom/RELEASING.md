@@ -14,10 +14,15 @@ tool if you not previously done so.
 
 ## Steps
 
-Run `prepare_release.sh` with `bom` argument in `cloud-opensource-java` directory:
+All on your corp desktop: 
+
+1. Run gcert if you have not done so in the last twelve hours or so.
+
+2. Run `release_bom.sh` with `bom` argument in 
+the `cloud-opensource-java` directory:
 
 ```
-$ ./scripts/prepare_release.sh bom <release version> [<post-release-version>]
+$ ./scripts/release_bom.sh.sh bom <release version> <post-release-version>
 ```
 
 You might see this message:
@@ -30,18 +35,6 @@ Press Enter to open github.com in your browser...
 Do it. This grants the script permission to create a PR for you on Github.
 
 Ask a teammate to review and approve the PR. 
-
-### Build the release binary with Rapid (CLI)
-
-While you should not push the final release until the PR is approved, you should kick off the  
-[Rapid build](https://rapid.corp.google.com/cloud-java-tools-cloud-opensource-java-bom-kokoro-release) while you wait for approval.
-
-Run gcert if you have not done so in the last twelve hours or so.
-
-```
-$ g4d -f bom-version
-$ blaze run java/com/google/cloud/java/tools:ReleaseBom -- --version=<release version>
-```
 
 ### Build the release binary with Rapid (Legacy web UI)
 
@@ -78,7 +71,7 @@ new release is available on Maven Central.
 
 ## Deleting a release
 
-Occasionally you may need to clean up after an aborted release, typically because the release script had
+Occasionally you need to clean up after an aborted release, typically because the release script had
 problems. If so:
 
 1. Delete the release branch on Github.
