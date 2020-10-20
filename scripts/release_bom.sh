@@ -36,6 +36,9 @@ IncrementVersion() {
 
 EchoGreen '===== RELEASE SETUP SCRIPT ====='
 
+gcertstatus --quiet --check_ssh=false --check_remaining=10m \
+  || Die "Run gcert."
+
 SUFFIX=$1
 
 if [[ "${SUFFIX}" != "dependencies" && "${SUFFIX}" != "bom" ]]; then
