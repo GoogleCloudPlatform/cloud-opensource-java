@@ -68,6 +68,15 @@ new release is available on Maven Central.
     * Submit on approval
 * Search for libraries-bom in google3 to find any internal references (typically cloudite and devsite) that still need to be updated.
 
+## Retrying a failed release
+
+If the GIthub steps succeed--PR created, etc.--but the Rapid release fails, you can
+run this command from a g4 client to retry the Rapid build witout going all the way
+back to the beginning:
+
+```
+$ blaze run java/com/google/cloud/java/tools:ReleaseBom -- --version=${VERSION}
+```
 
 ## Deleting a release
 
