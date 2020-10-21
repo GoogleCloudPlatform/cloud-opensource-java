@@ -71,7 +71,7 @@ new release is available on Maven Central.
 ## Retrying a failed release
 
 If the Github steps succeed--PR created, version tagged, etc.--but the Rapid release fails, you can
-run this command from a g4 client to retry the Rapid build witout going all the way
+run this command from a g4 client to retry the Rapid build without going all the way
 back to the beginning:
 
 ```
