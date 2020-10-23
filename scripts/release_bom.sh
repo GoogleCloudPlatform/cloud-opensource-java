@@ -120,9 +120,6 @@ blaze run java/com/google/cloud/java/tools:ReleaseBom -- --version=${VERSION}
 
 # TODO check status of ReleaseBom and die with instructions if it failed. Otherwise
 
-# TODO print URL of Rapid Web UI for this build in case user wants to
-# follow along; possibly this should be done in the Java program ReleaseBom
-
 # TODO print instructions for releasing from Sonatype OSSRH to Maven Central
 # Eventually we should automate this step too.
 
