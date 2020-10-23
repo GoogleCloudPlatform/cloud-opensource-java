@@ -49,6 +49,8 @@
     <io.grpc.version>1.32.2</io.grpc.version>
     <protobuf.version>3.13.0</protobuf.version>
     <http.version>1.36.0</http.version>
+    <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier.
+        When updating gax.version, update gax.httpjson.version too. -->
     <gax.version>1.60.0</gax.version>
     <gax.httpjson.version>0.77.0</gax.httpjson.version>
     <common.protos.version>1.18.1</common.protos.version>
