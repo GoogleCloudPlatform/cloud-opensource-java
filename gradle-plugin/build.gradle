@@ -29,7 +29,7 @@ sourceCompatibility = 1.8
 
 dependencies {
   implementation "com.google.cloud.tools:dependencies:$version"
-  implementation 'com.google.guava:guava:29.0-jre'
+  implementation 'com.google.guava:guava:30.0-jre'
   implementation 'org.apache.maven.resolver:maven-resolver-api:1.4.2'
 
   testImplementation 'junit:junit:4.13'
