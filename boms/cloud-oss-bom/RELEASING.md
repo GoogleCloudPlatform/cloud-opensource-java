@@ -1,37 +1,86 @@
 # Cloud Libraries BOM Release
 
-Run `prepare_release.sh` with `bom` argument in `boms/cloud-oss-bom` directory:
+
+## Prerequisites 
+
+(Does not need to be repeated for each release.)
+
+* Install the [`gh`](https://github.com/cli/cli)
+tool if you not previously done so.
+
+    * Run `gh auth login` to register your desktop with github.
+
+* Clone this repository onto your corp desktop, Ubiquity instance, or CloudTop. Do not use a laptop or personal machine as the release requires google3 access.
+
+## Steps
+
+All on your corp desktop: 
+
+1. Run gcert if you have not done so in the last twelve hours or so.
+
+2. Run `release_bom.sh` with `bom` argument in 
+the `cloud-opensource-java` directory:
 
 ```
-$ cd cloud-opensource-java/boms/cloud-oss-bom
-$ git checkout master
-$ git pull
-$ ../../scripts/prepare_release.sh bom <release version> [<post-release-version>]
+$ ./scripts/release_bom.sh.sh bom <release version> <post-release-version>
 ```
 
-Create a PR for the release, and get it approved.
+You might see this message:
 
-Continue to Rapid workflow: [Cloud Tools for Java Development Practices: Releasing](
-https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md#run-the-rapid-workflow)
+```
+Notice: authentication required
+Press Enter to open github.com in your browser...
+```
 
-## Rapid build
+Do it. This grants the script permission to create a PR for you on Github.
 
-Rapid project is [cloud-java-tools-cloud-opensource-java-bom-kokoro-release](
-http://rapid/cloud-java-tools-cloud-opensource-java-bom-kokoro-release).
+Ask a teammate to review and approve the PR. 
+
+### Build the release binary with Rapid (Legacy web UI)
+
+The [instructions for the Rapid build are on the internal team 
+site](https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md#run-the-rapid-workflow).
+
+## OSSRH
+
+[Instructions for releasing from OSSRH are on the internal team 
+site](https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md#verify-and-release).
 
 ## Update the docs
 
 Several docs in this and other repositories need to be updated once the 
-new release is available on Maven Central. Send pull requests that change the
-version in these documents:
+new release is available on Maven Central.
 
-* https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM
-* https://github.com/googleapis/google-http-java-client/blob/master/docs/setup.md
-* https://github.com/googleapis/google-cloud-java/blob/master/TROUBLESHOOTING.md
+* Send pull requests that change the version in these documents:
+    * https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM
+    * https://github.com/googleapis/google-http-java-client/blob/master/docs/setup.md
+    * https://github.com/googleapis/google-cloud-java/blob/master/TROUBLESHOOTING.md
+* Merge the dependabot PR that updates libraries-bom in https://github.com/GoogleCloudPlatform/java-docs-samples/pulls
+* Manually edit and update any pom.xml files in https://github.com/GoogleCloudPlatform/java-docs-samples that dependabot missed
+    * Go to go/java-live
+    * Sort by title
+    * Scroll down until you find the section with titles "chore(deps): update dependency com.google.cloud:libraries-bom to v<version>"
+   * Approve and merge these PRs.
+* In google3 run:
+    * `$ g4d -f bom`
+    *  `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version>oldVersion&lt;/version>" "&lt;version>newVersion&lt;/version>"`
+    * Sanity check the cl and send it for review.
+    * Submit on approval
+* Search for libraries-bom in google3 to find any internal references (typically cloudite and devsite) that still need to be updated.
+
+## Retrying a failed release
+
+If the Github steps succeed--PR created, version tagged, etc.--but the Rapid release fails, you can
+run this command from a g4 client to retry the Rapid build without going all the way
+back to the beginning:
+
+```
+$ blaze run java/com/google/cloud/java/tools:ReleaseBom -- --version=${VERSION}
+```
 
 ## Deleting a release
 
-Occasionally you may need to clean up after an aborted release, typically because the release script had
+Occasionally you need to clean up after an aborted release, typically because the release script had
 problems. If so:
 
 1. Delete the release branch on Github.
@@ -39,7 +88,7 @@ problems. If so:
 2. Fetch the tags in your local client:
 
    ```
-   $ git fetch --tags --force`
+   $ git fetch --tags --force
    ```
      
 3. Delete the tag locally:

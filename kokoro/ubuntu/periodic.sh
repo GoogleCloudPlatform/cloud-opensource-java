@@ -7,7 +7,7 @@ set -x
 
 cd github/cloud-opensource-java
 # M2_HOME is not used since Maven 3.5.0 https://maven.apache.org/docs/3.5.0/release-notes.html
-mvn -B clean install
+mvn -V -B clean install
 
 # Running target of dashboard submodule
 # https://stackoverflow.com/questions/3459928/running-a-specific-maven-plugin-goal-from-the-command-line-in-a-sub-module-of-a/26448447#26448447
@@ -15,5 +15,5 @@ mvn -B clean install
 cd dashboard
 
 # For all versions available in Maven Central and local repository
-mvn -B exec:java -Dexec.mainClass="com.google.cloud.tools.opensource.dashboard.DashboardMain" \
+mvn -V -B exec:java -Dexec.mainClass="com.google.cloud.tools.opensource.dashboard.DashboardMain" \
   -Dexec.arguments="-a com.google.cloud:libraries-bom"

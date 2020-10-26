@@ -24,32 +24,38 @@ import java.nio.file.Paths;
 import org.junit.Test;
 
 public class ExcludedErrorsTest {
-
   @Test
   public void testDefaultRules_contains() throws IOException {
-    ExcludedErrors excludedErrors = ExcludedErrors.create();
+    ExcludedErrors excludedErrors = ExcludedErrors.create(null);
 
     String targetClassName = "jdk.vm.ci.Bar";
     MethodSymbol methodSymbol =
         new MethodSymbol(targetClassName, "equals", "(Ljava/lang/Object;)Z", false);
 
-    SymbolProblem symbolProblem = new SymbolProblem(methodSymbol, ErrorType.ABSTRACT_METHOD, null);
-
-    ClassFile sourceClass = new ClassFile(Paths.get("foo"), "org.graalvm.Foo");
-    assertTrue(excludedErrors.contains(symbolProblem, sourceClass));
+    ClassFile sourceClass = new ClassFile(new ClassPathEntry(Paths.get("foo")), "org.graalvm.Foo");
+    LinkageProblem linkageProblem =
+        new AbstractMethodProblem(
+            sourceClass,
+            methodSymbol, new ClassFile(new ClassPathEntry(Paths.get("bar")), "org.graalvm.Bar")
+        );
+    assertTrue(excludedErrors.contains(linkageProblem));
   }
 
   @Test
   public void testDefaultRules_doesNotContains() throws IOException {
-    ExcludedErrors excludedErrors = ExcludedErrors.create();
+    ExcludedErrors excludedErrors = ExcludedErrors.create(null);
 
     String targetClassName = "com.google.Bar";
     MethodSymbol methodSymbol =
         new MethodSymbol(targetClassName, "equals", "(Ljava/lang/Object;)Z", false);
 
-    SymbolProblem symbolProblem = new SymbolProblem(methodSymbol, ErrorType.ABSTRACT_METHOD, null);
+    ClassFile sourceClass = new ClassFile(new ClassPathEntry(Paths.get("foo")), "org.graalvm.Foo");
+    LinkageProblem linkageProblem =
+        new AbstractMethodProblem(
+            sourceClass,
+            methodSymbol, new ClassFile(new ClassPathEntry(Paths.get("bar")), "org.graalvm.Bar")
+        );
 
-    ClassFile sourceClass = new ClassFile(Paths.get("foo"), "org.graalvm.Foo");
-    assertFalse(excludedErrors.contains(symbolProblem, sourceClass));
+    assertFalse(excludedErrors.contains(linkageProblem));
   }
 }

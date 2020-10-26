@@ -13,4 +13,9 @@ RemoteSystemsTempFiles/
 .idea
 .factorypath
 .apt_generated/
+example-problems/*/.gradle
+example-problems/*/gradle
+example-problems/*/gradlew
+example-problems/*/gradlew.bat
+gradle-plugin/.gradle/
 

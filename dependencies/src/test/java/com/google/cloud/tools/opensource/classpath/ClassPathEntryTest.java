@@ -19,17 +19,28 @@ package com.google.cloud.tools.opensource.classpath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.EqualsTester;
+import com.google.common.truth.Truth;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.resolution.ArtifactRequest;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
+import org.eclipse.aether.resolution.ArtifactResult;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class ClassPathEntryTest {
-  Path fooJar = Paths.get("foo.jar");
-  Path barJar = Paths.get("bar.jar");
+  private Path fooJar = Paths.get("foo.jar");
+  private Path barJar = Paths.get("bar.jar");
   private Artifact fooArtifact =
       new DefaultArtifact("com.google", "foo", null, "jar", "0.0.1", null, fooJar.toFile());
   private Artifact barArtifact =
@@ -37,16 +48,15 @@ public class ClassPathEntryTest {
 
   @Test
   public void testCreationJar() {
-    Path jar = Paths.get("foo.jar");
-    ClassPathEntry entry = new ClassPathEntry(jar);
-    assertEquals(jar.toString(), entry.getPath());
+    ClassPathEntry entry = new ClassPathEntry(fooJar);
+    assertEquals(fooJar, entry.getJar());
     assertNull(entry.getArtifact());
   }
 
   @Test
   public void testCreationArtifact() {
     ClassPathEntry entry = new ClassPathEntry(fooArtifact);
-    assertEquals(fooJar.toString(), entry.getPath());
+    assertEquals(fooJar, entry.getJar());
     assertEquals(entry.getArtifact(), fooArtifact);
   }
 
@@ -67,17 +77,78 @@ public class ClassPathEntryTest {
 
   @Test
   public void testToStringJar() {
-    Path fooJar = Paths.get("foo.jar");
     ClassPathEntry entry = new ClassPathEntry(fooJar);
-    assertEquals("JAR(foo.jar)", entry.toString());
+    assertEquals("foo.jar", entry.toString());
   }
 
   @Test
   public void testToStringArtifact() {
     ClassPathEntry entry = new ClassPathEntry(fooArtifact);
-    assertEquals("Artifact(com.google:foo:jar:0.0.1)", entry.toString());
+    assertEquals("com.google:foo:0.0.1", entry.toString());
   }
 
+  @Test
+  public void testGetClassNames() throws IOException, ArtifactResolutionException {
+    // copy into the local repository so we can read the jar file
+    Artifact artifact = resolveArtifact("com.google.truth.extensions:truth-java8-extension:1.0.1");
+    
+    ClassPathEntry entry = new ClassPathEntry(artifact);
+    ImmutableSet<String> classFileNames = entry.getFileNames();
+    
+    Truth.assertThat(classFileNames).containsExactly(
+        "com.google.common.truth.IntStreamSubject",
+        "com.google.common.truth.LongStreamSubject",
+        "com.google.common.truth.OptionalDoubleSubject",
+        "com.google.common.truth.OptionalSubject",
+        "com.google.common.truth.OptionalIntSubject",
+        "com.google.common.truth.OptionalLongSubject",
+        "com.google.common.truth.PathSubject",
+        "com.google.common.truth.Truth8",
+        "com.google.common.truth.StreamSubject");
+  }
+  
+  @Test
+  public void testGetClassNames_innerClasses()
+      throws IOException, ArtifactResolutionException, URISyntaxException {
+
+    ClassPathEntry entry = TestHelper.classPathEntryOfResource(
+        "testdata/conscrypt-openjdk-uber-1.4.2.jar");
+    ImmutableSet<String> classFileNames = entry.getFileNames();
+    Truth.assertThat(classFileNames).containsAtLeast(
+        "org.conscrypt.OpenSSLSignature$1",
+        "org.conscrypt.OpenSSLContextImpl$TLSv1",
+        "org.conscrypt.TrustManagerImpl$1",
+        "org.conscrypt.PeerInfoProvider",
+        "org.conscrypt.PeerInfoProvider$1",
+        "org.conscrypt.ExternalSession$Provider",
+        "org.conscrypt.OpenSSLMac");
+  }
+  
+  @Test
+  public void testGetClassNames_noManifest()
+      throws IOException, ArtifactResolutionException, URISyntaxException {
+
+    ClassPathEntry entry = TestHelper.classPathEntryOfResource(
+        "testdata/conscrypt-openjdk-uber-1.4.2.jar");
+    ImmutableSet<String> classFileNames = entry.getFileNames();
+    for (String filename : classFileNames) {
+      Assert.assertFalse(filename.toLowerCase(Locale.ENGLISH).contains("manifest"));
+      Assert.assertFalse(filename.toLowerCase(Locale.ENGLISH).contains("meta"));
+    }  
+  }
+
+  private static Artifact resolveArtifact(String coordinates) throws ArtifactResolutionException {
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
+
+    Artifact artifact = new DefaultArtifact(coordinates);    
+    ArtifactRequest artifactRequest = new ArtifactRequest();
+    artifactRequest.setArtifact(artifact);
+    ArtifactResult artifactResult = system.resolveArtifact(session, artifactRequest);
+    
+    return artifactResult.getArtifact();
+  }
+  
   @Test
   public void testFilePresenceRequirement() {
     Artifact artifactWithoutFile = new DefaultArtifact("com.google:foo:jar:1.0.0");
@@ -85,7 +156,6 @@ public class ClassPathEntryTest {
       new ClassPathEntry(artifactWithoutFile);
       fail();
     } catch (NullPointerException expected) {
-      // pass
     }
   }
 }

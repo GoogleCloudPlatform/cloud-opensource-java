@@ -18,23 +18,19 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Iterables;
 import com.google.common.graph.Traverser;
-import com.google.common.reflect.ClassPath.ClassInfo;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.bcel.Const;
@@ -72,40 +68,49 @@ import org.apache.bcel.util.ClassPath;
 class ClassDumper {
   private static final Logger logger = Logger.getLogger(ClassDumper.class.getName());
 
-  private final ImmutableList<Path> inputClassPath;
+  private final ImmutableList<ClassPathEntry> inputClassPath;
   private final FixedSizeClassPathRepository classRepository;
   private final ClassLoader extensionClassLoader;
-  private final ImmutableSetMultimap<Path, String> jarFileToClassFileNames;
-  private final ImmutableListMultimap<String, Path> classFileNameToJarFiles;
+  private final ImmutableMap<String, ClassPathEntry> fileNameToClassPathEntry;
 
-  private static FixedSizeClassPathRepository createClassRepository(List<Path> paths) {
-    ClassPath classPath = new LinkageCheckClassPath(paths);
+  private static FixedSizeClassPathRepository createClassRepository(List<ClassPathEntry> entries) {
+    ClassPath classPath = new LinkageCheckClassPath(entries);
     return new FixedSizeClassPathRepository(classPath);
   }
 
-  static ClassDumper create(List<Path> jarPaths) throws IOException {
+  static ClassDumper create(List<ClassPathEntry> entries) throws IOException {
     ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
     ClassLoader extensionClassLoader = systemClassLoader.getParent();
 
     ImmutableList<Path> unreadableFiles =
-        jarPaths.stream()
+        entries.stream()
+            .map(ClassPathEntry::getJar)
             .filter(jar -> !Files.isRegularFile(jar) || !Files.isReadable(jar))
             .collect(toImmutableList());
     checkArgument(
         unreadableFiles.isEmpty(), "Some jar files are not readable: %s", unreadableFiles);
-
-    return new ClassDumper(jarPaths, extensionClassLoader, mapJarToClassFileNames(jarPaths));
+    
+    Map<String, ClassPathEntry> map = new HashMap<>();
+    for (ClassPathEntry entry : entries) {
+      for (String className : entry.getFileNames()) {
+        if (!map.containsKey(className)) {
+          map.put(className, entry);
+        }
+      }
+    }
+    
+    return new ClassDumper(entries, extensionClassLoader, map);
   }
 
   private ClassDumper(
-      List<Path> inputClassPath,
+      List<ClassPathEntry> inputClassPath,
       ClassLoader extensionClassLoader,
-      ImmutableSetMultimap<Path, String> jarToClasses) {
+      Map<String, ClassPathEntry> fileNameToClassPathEntry)
+      throws IOException {
     this.inputClassPath = ImmutableList.copyOf(inputClassPath);
     this.classRepository = createClassRepository(inputClassPath);
     this.extensionClassLoader = extensionClassLoader;
-    this.jarFileToClassFileNames = ImmutableSetMultimap.copyOf(jarToClasses);
-    this.classFileNameToJarFiles = ImmutableListMultimap.copyOf(jarToClasses.inverse());
+    this.fileNameToClassPathEntry = ImmutableMap.copyOf(fileNameToClassPathEntry);
   }
 
   /**
@@ -118,50 +123,39 @@ class ClassDumper {
     return classRepository.loadClass(className);
   }
 
-  /** Loads a system class available in JVM runtime. */
-  Class<?> loadSystemClass(String className) throws ClassNotFoundException {
-    return extensionClassLoader.loadClass(className);
-  }
-
   /** Returns true if {@code className} is available in the system class loader. */
   boolean isSystemClass(String className) {
     try {
-      if (className.startsWith("[")) {
-        // Array class
+      if (isArrayClass(className)) {
         return true;
       }
-      loadSystemClass(className);
+      extensionClassLoader.loadClass(className);
       return true;
     } catch (ClassNotFoundException ex) {
       return false;
     }
   }
 
-  /**
-   * Returns class file names defined in the jar file.
-   *
-   * @param jarPath absolute path to the jar file
-   */
-  ImmutableSet<String> classesDefinedInJar(Path jarPath) {
-    return jarFileToClassFileNames.get(jarPath);
+  /** Returns true if {@code className} is a binary name for array types. */
+  static boolean isArrayClass(String className) {
+    return className.startsWith("[");
   }
 
   /**
    * Returns a map from classes to the symbol references they contain.
    */
-  SymbolReferenceMaps findSymbolReferences() throws IOException {
-    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
+  SymbolReferences findSymbolReferences() throws IOException {
+    SymbolReferences.Builder builder = new SymbolReferences.Builder();
 
-    for (Path jar : inputClassPath) {
+    for (ClassPathEntry jar : inputClassPath) {
       for (JavaClass javaClass : listClasses(jar)) {
-        if (!isCompatibleClassFileVersion(javaClass)) {
-          continue;
+        if (isCompatibleClassFileVersion(javaClass)) {
+          String className = javaClass.getClassName();
+          // In listClasses(jar), ClassPathRepository creates JavaClass through the first JAR file
+          // that contains the class. It may be different from "jar" for an overlapping class.
+          ClassFile source = new ClassFile(findClassLocation(className), className);
+          builder.addAll(findSymbolReferences(source, javaClass));
         }
-        String className = javaClass.getClassName();
-        // In listClasses(jar), ClassPathRepository creates JavaClass through the first JAR file
-        // that contains the class. It may be different from "jar" for an overlapping class.
-        ClassFile source = new ClassFile(findClassLocation(className), className);
-        builder.addAll(findSymbolReferences(source, javaClass));
       }
     }
 
@@ -180,16 +174,17 @@ class ClassDumper {
     return 45 <= classFileMajorVersion && classFileMajorVersion <= 52;
   }
 
-  private static SymbolReferenceMaps.Builder findSymbolReferences(
+  private static SymbolReferences.Builder findSymbolReferences(
       ClassFile source, JavaClass javaClass) {
-    SymbolReferenceMaps.Builder builder = new SymbolReferenceMaps.Builder();
+    SymbolReferences.Builder builder = new SymbolReferences.Builder();
 
     ConstantPool constantPool = javaClass.getConstantPool();
     Constant[] constants = constantPool.getConstantPool();
     for (Constant constant : constants) {
       if (constant == null) {
-        continue;
+         continue;
       }
+
       byte constantTag = constant.getTag();
       switch (constantTag) {
         case Const.CONSTANT_Class:
@@ -293,102 +288,62 @@ class ClassDumper {
     String topLevelClassName = javaClass.getClassName();
     ConstantPool constantPool = javaClass.getConstantPool();
     for (Attribute attribute : javaClass.getAttributes()) {
-      if (attribute.getTag() != Const.ATTR_INNER_CLASSES) {
-        continue;
-      }
-      // This innerClasses variable does not include double-nested inner classes
-      InnerClasses innerClasses = (InnerClasses) attribute;
-      for (InnerClass innerClass : innerClasses.getInnerClasses()) {
-        int classIndex = innerClass.getInnerClassIndex();
-        String innerClassName = constantPool.getConstantString(classIndex, Const.CONSTANT_Class);
-        int outerClassIndex = innerClass.getOuterClassIndex();
-        if (outerClassIndex > 0) {
-          String outerClassName =
-              constantPool.getConstantString(outerClassIndex, Const.CONSTANT_Class);
-          String normalOuterClassName = outerClassName.replace('/', '.');
-          if (!normalOuterClassName.equals(topLevelClassName)) {
-            continue;
+      if (attribute.getTag() == Const.ATTR_INNER_CLASSES) {
+        // This innerClasses variable does not include double-nested inner classes
+        InnerClasses innerClasses = (InnerClasses) attribute;
+        for (InnerClass innerClass : innerClasses.getInnerClasses()) {
+          int classIndex = innerClass.getInnerClassIndex();
+          String innerClassName = constantPool.getConstantString(classIndex, Const.CONSTANT_Class);
+          int outerClassIndex = innerClass.getOuterClassIndex();
+          if (outerClassIndex > 0) {
+            String outerClassName =
+                constantPool.getConstantString(outerClassIndex, Const.CONSTANT_Class);
+            String normalOuterClassName = outerClassName.replace('/', '.');
+            if (!normalOuterClassName.equals(topLevelClassName)) {
+              continue;
+            }
           }
+  
+          // Class names stored in constant pool have '/' as separator. We want '.' (as binary name)
+          String normalInnerClassName = innerClassName.replace('/', '.');
+          innerClassNames.add(normalInnerClassName);
         }
-
-        // Class names stored in constant pool have '/' as separator. We want '.' (as binary name)
-        String normalInnerClassName = innerClassName.replace('/', '.');
-        innerClassNames.add(normalInnerClassName);
       }
     }
     return innerClassNames.build();
   }
 
-  /**
-   * Returns the first jar file {@link Path} defining the class. Null if the location is unknown.
-   */
+  /** Returns the first class path entry containing the class. Null if the class is 
+   *  not in the class path. */
   @Nullable
-  Path findClassLocation(String className) {
+  ClassPathEntry findClassLocation(String className) {
     // Initially this method used classLoader.loadClass().getProtectionDomain().getCodeSource().
     // However, it required the superclass of a target class to be loadable too; otherwise
     // ClassNotFoundException was raised. It was inconvenient because we only wanted to know the
     // location of the target class, and sometimes the superclass is unavailable.
-    Path path = Iterables.getFirst(classFileNameToJarFiles.get(className), null);
-    if (path != null) {
-      return path;
-    }
 
-    // Some classes have framework-specific prefix such as "WEB-INF.classes.AppWidgetset" in its
-    // class file name.
-    String specialLocation = classRepository.getSpecialLocation(className);
-    if (specialLocation == null) {
-      return null;
-    }
-    return Iterables.getFirst(classFileNameToJarFiles.get(specialLocation), null);
+    String filename = classRepository.getFileName(className);
+    return fileNameToClassPathEntry.get(filename);
   }
 
   /**
-   * Returns mapping from jar files to class file names they contain.
-   *
-   * @param jars absolute paths to jar files
+   * Converts a binary name to the file name of a class. Read {@link FixedSizeClassPathRepository}
+   * for the difference.
    */
-  @VisibleForTesting
-  static ImmutableSetMultimap<Path, String> mapJarToClassFileNames(List<Path> jars)
-      throws IOException {
-    ImmutableSetMultimap.Builder<Path, String> pathToClasses = ImmutableSetMultimap.builder();
-    for (Path jar : jars) {
-      for (String classFileName : listClassFileNames(jar)) {
-        pathToClasses.put(jar, classFileName);
-      }
-    }
-    return pathToClasses.build();
+  String getFileName(String className) {
+    return classRepository.getFileName(className);
   }
 
   /**
-   * Returns a list of class file names in {@code jar} as in {@link JavaClass#getFileName()}. This
-   * class file name is a path ("." as element separator) that locates a class file in a class path.
-   * Usually the class name and class file name are the same. However a class file name may have a
-   * framework-specific prefix. Example: {@code BOOT-INF.classes.com.google.Foo}.
-   */
-  static ImmutableSet<String> listClassFileNames(Path jar) throws IOException {
-    URL jarUrl = jar.toUri().toURL();
-    // Setting parent as null because we don't want other classes than this jar file
-    URLClassLoader classLoaderFromJar = new URLClassLoader(new URL[] {jarUrl}, null);
-
-    // Leveraging Google Guava reflection as BCEL doesn't list classes in a jar file
-    com.google.common.reflect.ClassPath classPath =
-        com.google.common.reflect.ClassPath.from(classLoaderFromJar);
-
-    return classPath.getAllClasses().stream()
-        .map(ClassInfo::getName)
-        .collect(toImmutableSet());
-  }
-
-  /**
-   * Returns a set of {@link JavaClass}es which have entries in the {@code jar} through {@link
+   * Returns a set of {@link JavaClass}es which have entries in the {@code entry} through {@link
    * #classRepository}.
    */
-  private ImmutableSet<JavaClass> listClasses(Path jar) throws IOException {
+  private ImmutableSet<JavaClass> listClasses(ClassPathEntry entry) throws IOException {
     ImmutableSet.Builder<JavaClass> javaClasses = ImmutableSet.builder();
 
     ImmutableList.Builder<String> corruptedClassFileNames = ImmutableList.builder();
 
-    for (String classFileName : listClassFileNames(jar)) {
+    for (String classFileName : entry.getFileNames()) {
       if (classFileName.startsWith("META-INF.versions.")) {
         // Linkage Checker does not support multi-release JAR (for Java 9+) yet
         // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/897
@@ -409,7 +364,7 @@ class ClassDumper {
     if (corruptedFileCount > 0) {
       logger.warning(
           "Corrupt files in "
-              + jar
+              + entry
               + "; could not load "
               + corruptedFiles.get(0)
               + (corruptedFileCount > 1
@@ -460,7 +415,7 @@ class ClassDumper {
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.10">Java
    *     Virtual Machine Specification: 4.10. Verification of class Files</a>
    */
-  boolean hasValidSuperclass(JavaClass childJavaClass, JavaClass parentJavaClass) {
+  static boolean hasValidSuperclass(JavaClass childJavaClass, JavaClass parentJavaClass) {
     if (parentJavaClass.isFinal()) {
       return false;
     }
@@ -489,18 +444,18 @@ class ClassDumper {
     ImmutableSet.Builder<Integer> constantPoolIndicesForTarget = ImmutableSet.builder();
 
     ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();
-    Constant[] constantPoolEntries = sourceConstantPool.getConstantPool();
-    for (int poolIndex = 0; poolIndex < constantPoolEntries.length; poolIndex++) {
-      Constant constant = constantPoolEntries[poolIndex];
-      if (constant == null) {
-        continue; // constantPool uses index starting from 1. 0th entry is null.
-      }
-      byte constantTag = constant.getTag();
-      if (constantTag == Const.CONSTANT_Class) {
-        ConstantClass constantClass = (ConstantClass) constant;
-        ClassSymbol classSymbol = makeSymbol(constantClass, sourceConstantPool, sourceJavaClass);
-        if (targetClassName.equals(classSymbol.getClassBinaryName())) {
-          constantPoolIndicesForTarget.add(poolIndex);
+    Constant[] constantPool = sourceConstantPool.getConstantPool();
+    // constantPool indexes start from 1. 0th entry is null.
+    for (int poolIndex = 1; poolIndex < constantPool.length; poolIndex++) {
+      Constant constant = constantPool[poolIndex];
+      if (constant != null) {
+        byte constantTag = constant.getTag();
+        if (constantTag == Const.CONSTANT_Class) {
+          ConstantClass constantClass = (ConstantClass) constant;
+          ClassSymbol classSymbol = makeSymbol(constantClass, sourceConstantPool, sourceJavaClass);
+          if (targetClassName.equals(classSymbol.getClassBinaryName())) {
+            constantPoolIndicesForTarget.add(poolIndex);
+          }
         }
       }
     }
@@ -508,34 +463,48 @@ class ClassDumper {
     return constantPoolIndicesForTarget.build();
   }
 
-  private static final ImmutableSet<String> ERRORS_CAUGHT_IN_SOURCE =
+  private static final ImmutableSet<String> LINKAGE_ERRORS_CAUGHT_IN_SOURCE =
       ImmutableSet.of(
           LinkageError.class.getName(),
           NoClassDefFoundError.class.getName(),
-          NoSuchMethodError.class.getName(),
           ClassNotFoundException.class.getName());
 
+  private static final ImmutableSet<String> NO_SUCH_METHOD_ERROR_CAUGHT_IN_SOURCE =
+      ImmutableSet.of(LinkageError.class.getName(), NoSuchMethodError.class.getName());
+
+  boolean catchesLinkageErrorOnClass(String sourceClassName) {
+    return catchesLinkageError(sourceClassName, LINKAGE_ERRORS_CAUGHT_IN_SOURCE);
+  }
+
+  boolean catchesLinkageErrorOnMethod(String sourceClassName) {
+    return catchesLinkageError(sourceClassName, NO_SUCH_METHOD_ERROR_CAUGHT_IN_SOURCE);
+  }
+
   /**
-   * Returns true if {@code sourceClassName} has a method that has an exception handler for {@link
-   * NoClassDefFoundError}, {@link NoSuchMethodError} or {@link LinkageError}.
+   * Returns true if {@code sourceClassName} has a method that has an exception handler for {@code
+   * errorNames}.
    */
-  boolean catchesLinkageError(String sourceClassName) {
+  private boolean catchesLinkageError(String sourceClassName, Set<String> errorNames) {
     try {
       JavaClass sourceJavaClass = loadJavaClass(sourceClassName);
       ClassGen classGen = new ClassGen(sourceJavaClass);
 
       for (Method method : sourceJavaClass.getMethods()) {
-        MethodGen methodGen = new MethodGen(method, sourceClassName, classGen.getConstantPool());
-        CodeExceptionGen[] exceptionHandlers = methodGen.getExceptionHandlers();
-        for (CodeExceptionGen codeExceptionGen : exceptionHandlers) {
-          ObjectType catchType = codeExceptionGen.getCatchType();
-          if (catchType == null) {
-            continue;
-          }
-          String caughtClassName = catchType.getClassName();
-          if (ERRORS_CAUGHT_IN_SOURCE.contains(caughtClassName)) {
-            // The source class catches an error and thus will not cause a runtime error
-            return true;
+        if (method.getCode() != null) {
+          // No need to check the presence of try-catch clause for methods without code. This guard
+          // avoids NullPointerException by BCEL.
+          // https://issues.apache.org/jira/browse/BCEL-336
+          MethodGen methodGen = new MethodGen(method, sourceClassName, classGen.getConstantPool());
+          CodeExceptionGen[] exceptionHandlers = methodGen.getExceptionHandlers();
+          for (CodeExceptionGen codeExceptionGen : exceptionHandlers) {
+            ObjectType catchType = codeExceptionGen.getCatchType();
+            if (catchType != null) {
+              String caughtClassName = catchType.getClassName();
+              if (errorNames.contains(caughtClassName)) {
+                // The source class catches an error and thus will not cause a runtime error.
+                return true;
+              }
+            }
           }
         }
       }
@@ -543,7 +512,7 @@ class ClassDumper {
       String outerClassName = outerClassName(sourceJavaClass);
       if (outerClassName != null) {
         try {
-          return catchesLinkageError(outerClassName);
+          return catchesLinkageError(outerClassName, errorNames);
         } catch (ClassFormatException ex) {
           // When the outer class of an inner class does not exist in the class path, we cannot
           // say that the classes catch linkage errors.
@@ -593,7 +562,7 @@ class ClassDumper {
   }
 
   /**
-   * Returns true if the class symbol reference is unused in the source class file. It checks
+   * Returns true if the class symbol reference is used in the source class file. It checks the
    * following places for the usage in the source class:
    *
    * <ul>
@@ -612,10 +581,10 @@ class ClassDumper {
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.10">Java
    *     Virtual Machine Specification: Exceptions</a>
    */
-  boolean isUnusedClassSymbolReference(String sourceClassName, ClassSymbol classSymbol) {
+  boolean isClassSymbolReferenceUsed(String sourceClassName, ClassSymbol classSymbol) {
     if (classSymbol instanceof SuperClassSymbol) {
       // The target class is used in class inheritance
-      return false;
+      return true;
     }
 
     String targetClassName = classSymbol.getClassBinaryName();
@@ -626,7 +595,7 @@ class ClassDumper {
       for (String interfaceName: sourceJavaClass.getInterfaceNames()) {
         if (interfaceName.equals(targetClassName)) {
           // The target class is used in interfaces
-          return false;
+          return true;
         }
       }
 
@@ -640,22 +609,22 @@ class ClassDumper {
           targetClassName);
 
       ConstantPool sourceConstantPool = sourceJavaClass.getConstantPool();
-      Constant[] constantPoolEntries = sourceConstantPool.getConstantPool();
-      for (Constant constant : constantPoolEntries) {
-        if (constant == null) {
-          continue;
-        }
-        switch (constant.getTag()) {
-          case Const.CONSTANT_Methodref:
-          case Const.CONSTANT_InterfaceMethodref:
-          case Const.CONSTANT_Fieldref:
-            ConstantCP constantCp = (ConstantCP) constant;
-            int classIndex = constantCp.getClassIndex();
-            if (targetConstantPoolIndices.contains(classIndex)) {
-              // The class reference is used in another constant pool
-              return false;
-            }
-            break;
+      Constant[] constantPool = sourceConstantPool.getConstantPool();
+      // constantPool indexes start from 1. 0th entry is null.
+      for (Constant constant : constantPool) {
+        if (constant != null) {
+          switch (constant.getTag()) {
+            case Const.CONSTANT_Methodref:
+            case Const.CONSTANT_InterfaceMethodref:
+            case Const.CONSTANT_Fieldref:
+              ConstantCP constantCp = (ConstantCP) constant;
+              int classIndex = constantCp.getClassIndex();
+              if (targetConstantPoolIndices.contains(classIndex)) {
+                // The class reference is used in another constant pool
+                return true;
+              }
+              break;
+          }
         }
       }
 
@@ -663,7 +632,7 @@ class ClassDumper {
         // Type.toString returns binary name (for example, io.grpc.MethodDescriptor)
         String fieldTypeSignature = field.getType().toString();
         if (targetClassName.equals(fieldTypeSignature)) {
-          return false;
+          return true;
         }
       }
 
@@ -671,12 +640,12 @@ class ClassDumper {
       for (Method method : sourceJavaClass.getMethods()) {
 
         if (targetClassName.equals(method.getReturnType().toString())) {
-          return false;
+          return true;
         }
         for (Type argumentType : method.getArgumentTypes()) {
           String argumentTypeSignature = argumentType.toString();
           if (targetClassName.equals(argumentTypeSignature)) {
-            return false;
+            return true;
           }
         }
 
@@ -687,12 +656,13 @@ class ClassDumper {
             Instruction instruction = instructionHandle.getInstruction();
             if (instruction instanceof CPInstruction) {
               // Checking JVM instructions that take a symbolic reference to a class in
-              // JVM Instruction Set
+              // JVM Instruction Set: anewarray, checkcast, instanceof, ldc, ldc_w, multianewarray,
+              // and new.
               // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5
               int classIndex = ((CPInstruction) instruction).getIndex();
               if (targetConstantPoolIndices.contains(classIndex)) {
                 // The target class is used in a JVM instruction (including `new`).
-                return false;
+                return true;
               }
             }
           }
@@ -705,7 +675,7 @@ class ClassDumper {
           for (int exceptionIndexTableEntry : exceptionIndexTable) {
             if (targetConstantPoolIndices.contains(exceptionIndexTableEntry)) {
               // The target class is used in throws clause
-              return false;
+              return true;
             }
           }
         }
@@ -714,17 +684,15 @@ class ClassDumper {
         CodeExceptionGen[] exceptionHandlers = methodGen.getExceptionHandlers();
         for (CodeExceptionGen codeExceptionGen : exceptionHandlers) {
           ObjectType catchType = codeExceptionGen.getCatchType();
-          if (catchType == null) {
-            continue;
-          }
-          String caughtClassName = catchType.getClassName();
-          if (caughtClassName != null && caughtClassName.equals(targetClassName)) {
-            // The target class is used in catch clause
-            return false;
+          if (catchType != null) {
+            String caughtClassName = catchType.getClassName();
+            if (caughtClassName != null && caughtClassName.equals(targetClassName)) {
+              // The target class is used in catch clause
+              return true;
+            }
           }
         }
       }
-
     } catch (ClassNotFoundException ex) {
       // Because the reference in the argument was extracted from the source class file,
       // the source class should be found.
@@ -732,8 +700,9 @@ class ClassDumper {
           "The source class in the reference is no longer available in the class path", ex);
     }
 
-    // The target class is unused
-    return true;
+    // The target class is unused in the source class. For example a class reference in the constant
+    // pool is used only in its InnerClasses attribute.
+    return false;
   }
 
   /**

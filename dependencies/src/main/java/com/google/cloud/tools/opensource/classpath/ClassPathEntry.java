@@ -18,41 +18,48 @@ package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Enumeration;
 import java.util.Objects;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import org.eclipse.aether.artifact.Artifact;
 
 /** An entry in a class path. */
-final class ClassPathEntry {
+public final class ClassPathEntry {
 
   private Path jar;
   private Artifact artifact;
+  private ImmutableSet<String> fileNames;
 
-  /** An entry for a JAR file without association with a Maven artifact. */
+  /** An entry for a JAR file without Maven coordinates. */
   ClassPathEntry(Path jar) {
     this.jar = checkNotNull(jar);
   }
 
-  /** An entry for a Maven artifact. */
-  ClassPathEntry(Artifact artifact) {
-    checkNotNull(artifact.getFile());
+  /** 
+   * An entry for a Maven artifact. 
+   * 
+   * @throws NullPointerException if the artifact does not have a file
+   */
+  public ClassPathEntry(Artifact artifact) {
+    this(artifact.getFile().toPath());
     this.artifact = artifact;
   }
 
-  /** Returns the path of the entry. */
-  String getPath() {
-    if (artifact != null) {
-      return artifact.getFile().toString();
-    } else {
-      return jar.toString();
-    }
+  /** Returns the path to JAR file. */
+  Path getJar() {
+    return jar;
   }
 
   /**
-   * Returns Maven artifact associated with the JAR file. If the JAR file does not have an artifact,
-   * {@code null}.
+   * Returns the Maven artifact associated with the JAR file, or null if the JAR file does not have
+   * Maven coordinates.
    */
-  Artifact getArtifact() {
+  public Artifact getArtifact() {
     return artifact;
   }
 
@@ -76,9 +83,47 @@ final class ClassPathEntry {
   @Override
   public String toString() {
     if (artifact != null) {
-      return "Artifact(" + artifact + ")";
+      // Group ID, artifact ID and version. No extension such as "jar" or "tar.gz", because Linkage
+      // Checker uses only JAR artifacts.
+      return Artifacts.toCoordinates(artifact);
     } else {
-      return "JAR(" + jar + ")";
+      return jar.toString();
     }
+  }
+
+  /**
+   * Populates {@link #fileNames} through the classes in {@link #jar}. These file names are usually
+   * fully qualified class names. However a class file name may have a framework-specific prefix.
+   * Example: {@code BOOT-INF.classes.com.google.Foo}.
+   */
+  private void readFileNames() throws IOException {
+    try (JarFile jarFile = new JarFile(jar.toFile())) {
+      ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+      
+      Enumeration<JarEntry> entries = jarFile.entries();
+      while (entries.hasMoreElements()) {
+        JarEntry entry = entries.nextElement();
+        String name = entry.getName();
+        if (name.endsWith(".class")) {
+          String className = name.replace('/', '.').substring(0, name.length() - 6);
+          builder.add(className);
+        }
+      }
+      this.fileNames = builder.build();
+    }
+  }
+
+  /**
+   * Returns the names of the .class files in this entry's jar file.
+   * A file name is the name of the .class file in the JAR file, without the 
+   * suffix {@code .class} and after converting each / to a period.
+   * 
+   * @throws IOException if the jar file can't be read
+   */
+  public synchronized ImmutableSet<String> getFileNames() throws IOException {
+    if (fileNames == null) {
+      readFileNames();
+    }
+    return fileNames;
   }
 }

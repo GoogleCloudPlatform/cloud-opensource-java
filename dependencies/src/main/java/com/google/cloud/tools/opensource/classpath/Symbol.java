@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.MoreObjects;
-import java.util.Objects;
 
 /**
  * The referent of symbolic references (class, method, or field references) in the run-time constant
@@ -28,7 +27,7 @@ import java.util.Objects;
  * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-5.html#jvms-5.1">Java
  *     Virtual Machine Specification: The Run-Time Constant Pool</a>
  */
-abstract class Symbol {
+public abstract class Symbol {
   private final String classBinaryName;
 
   Symbol(String className) {
@@ -42,26 +41,15 @@ abstract class Symbol {
    * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-13.html#jls-13.1">Java
    *     Language Specification: 13.1. The Form of a Binary</a>
    */
-  String getClassBinaryName() {
+  public String getClassBinaryName() {
     return classBinaryName;
   }
 
   @Override
-  public boolean equals(Object other) {
-    if (this == other) {
-      return true;
-    }
-    if (other == null || getClass() != other.getClass()) {
-      return false;
-    }
-    Symbol symbol = (Symbol) other;
-    return classBinaryName.equals(symbol.classBinaryName);
-  }
+  public abstract boolean equals(Object other);
 
   @Override
-  public int hashCode() {
-    return Objects.hash(classBinaryName);
-  }
+  public abstract int hashCode();
 
   @Override
   public String toString() {

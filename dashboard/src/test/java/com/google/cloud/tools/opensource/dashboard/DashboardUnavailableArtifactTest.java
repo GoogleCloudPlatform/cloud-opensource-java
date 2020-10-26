@@ -20,6 +20,7 @@ import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.LinkedListMultimap;
@@ -44,6 +45,7 @@ import nu.xom.ParsingException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.graph.Dependency;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -68,14 +70,16 @@ public class DashboardUnavailableArtifactTest {
   }
 
   @Test
-  public void testDashboardForRepositoryException() {
+  public void testDashboardForRepositoryException() throws TemplateException {
     Configuration configuration = DashboardMain.configureFreemarker();
     Artifact validArtifact = new DefaultArtifact("io.grpc:grpc-context:1.15.0");
     Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nonexistent:jar:1.15.0");
-
+    DependencyGraphBuilder graphBuilder = new DependencyGraphBuilder();
     Map<Artifact, ArtifactInfo> map = new LinkedHashMap<>();
-    DependencyGraph graph1 = new DependencyGraph();
-    DependencyGraph graph2 = new DependencyGraph();
+    DependencyGraph graph1 =
+        graphBuilder.buildMavenDependencyGraph(new Dependency(validArtifact, "compile"));
+    DependencyGraph graph2 =
+        graphBuilder.buildMavenDependencyGraph(new Dependency(nonExistentArtifact, "compile"));
     map.put(validArtifact, new ArtifactInfo(graph1, graph2));
     map.put(nonExistentArtifact, new ArtifactInfo(new RepositoryException("foo")));
     
@@ -124,6 +128,7 @@ public class DashboardUnavailableArtifactTest {
     errorArtifactResult.setExceptionMessage(
         "Could not find artifact io.grpc:nonexistent:jar:1.15.0 in central"
             + " (https://repo1.maven.org/maven2/)");
+
     List<ArtifactResults> table = new ArrayList<>();
     table.add(validArtifactResult);
     table.add(errorArtifactResult);
@@ -132,7 +137,7 @@ public class DashboardUnavailableArtifactTest {
         configuration,
         outputDirectory,
         table,
-        null,
+        ImmutableList.of(),
         ImmutableMap.of(),
         new ClassPathResult(LinkedListMultimap.create(), ImmutableList.of()),
         bom);

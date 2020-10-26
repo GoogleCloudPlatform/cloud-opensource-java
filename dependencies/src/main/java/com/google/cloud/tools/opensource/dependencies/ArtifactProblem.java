@@ -32,6 +32,7 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 
 /** Problem in a Maven artifact in a dependency tree. */
+// TODO give an example. What kinds of problems are these?
 public abstract class ArtifactProblem {
 
   protected final Artifact artifact;

@@ -2,68 +2,87 @@
   <#local plural = number gt 1 />
   <#return number + " " + plural?string(pluralNoun, singularNoun)>
 </#function>
-<!-- same as above but without the number -->
+<#-- same as above but without the number -->
 <#function plural number singularNoun pluralNoun>
   <#local plural = number gt 1 />
   <#return plural?string(pluralNoun, singularNoun)>
 </#function>
 
-<#macro formatJarLinkageReport jar problemsWithClass classPathResult dependencyPathRootCauses>
-  <!-- problemsWithClass: ImmutableSetMultimap<SymbolProblem, String> converted to
-    ImmutableMap<SymbolProblem, Collection<String>> to get key and set of values in Freemarker -->
-  <#assign problemsToClasses = problemsWithClass.asMap() />
+<#macro formatJarLinkageReport classPathEntry linkageProblems classPathResult
+    dependencyPathRootCauses>
+  <#-- problemsToClasses: ImmutableMap<LinkageProblem, ImmutableList<String>> to get key and set of
+    values in Freemarker -->
+  <#assign problemsToClasses = linkageProblem.groupBySymbolProblem(linkageProblems) />
   <#assign symbolProblemCount = problemsToClasses?size />
   <#assign referenceCount = 0 />
   <#list problemsToClasses?values as classes>
     <#assign referenceCount += classes?size />
   </#list>
 
-  <h3>${jar.getFileName()?html}</h3>
+  <h3>${classPathEntry?html}</h3>
   <p class="jar-linkage-report">
     ${pluralize(symbolProblemCount, "target class", "target classes")}
     causing linkage errors referenced from
     ${pluralize(referenceCount, "source class", "source classes")}.
   </p>
-  <#assign jarsInProblem = {} >
-  <#list problemsToClasses as symbolProblem, sourceClasses>
-    <#if (symbolProblem.getContainingClass())?? >
-      <!-- Freemarker's hash requires its keys to be string.
-      https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys -->
-      <#assign jarsInProblem = jarsInProblem
-        + { symbolProblem.getContainingClass().getJar().toString() :  symbolProblem.getContainingClass().getJar() } >
+  <#list problemsToClasses as problem, sourceClasses>
+    <#if sourceClasses?size == 1>
+      <#assign sourceClass = sourceClasses[0] />
+      <p class="jar-linkage-report-cause">${problem?html}, referenced from ${sourceClass?html}</p>
+    <#else>
+      <p class="jar-linkage-report-cause">${problem?html}, referenced from ${
+          pluralize(sourceClasses?size, "class", "classes")?html}
+        <button onclick="toggleNextSiblingVisibility(this)"
+                title="Toggle visibility of source class list">▶
+        </button>
+      </p>
+      <!-- The visibility of this list is toggled via the button above. Hidden by default -->
+      <ul class="jar-linkage-report-cause" style="display:none">
+          <#list sourceClasses as sourceClass>
+            <li>${sourceClass?html}</li>
+          </#list>
+      </ul>
     </#if>
-    <p class="jar-linkage-report-cause">${symbolProblem?html}, referenced from ${
-      pluralize(sourceClasses?size, "class", "classes")?html}
-      <button onclick="toggleSourceClassListVisibility(this)"
-              title="Toggle visibility of source class list">▶
-      </button>
-    </p>
-
-    <!-- The visibility of this list is toggled via the button above. Hidden by default -->
-    <ul class="jar-linkage-report-cause" style="display:none">
-      <#list sourceClasses as sourceClass>
-        <li>${sourceClass?html}</li>
-      </#list>
-    </ul>
+  </#list>
+  <#assign jarsInProblem = {} >
+  <#list linkageProblems as problem>
+    <#if (problem.getTargetClass())?? >
+      <#assign targetClassPathEntry = problem.getTargetClass().getClassPathEntry() />
+      <#-- Freemarker's hash requires its keys to be strings.
+      https://freemarker.apache.org/docs/app_faq.html#faq_nonstring_keys -->
+      <#assign jarsInProblem = jarsInProblem + { targetClassPathEntry.toString() : targetClassPathEntry } >
+    </#if>
   </#list>
   <#list jarsInProblem?values as jarInProblem>
     <@showDependencyPath dependencyPathRootCauses classPathResult jarInProblem />
   </#list>
-  <@showDependencyPath dependencyPathRootCauses classPathResult jar />
+  <#if !jarsInProblem?values?seq_contains(classPathEntry) >
+    <@showDependencyPath dependencyPathRootCauses classPathResult classPathEntry />
+  </#if>
 
 </#macro>
 
-<#macro showDependencyPath dependencyPathRootCauses classPathResult jar>
-  <#assign dependencyPaths = classPathResult.getDependencyPaths(jar) />
+<#macro showDependencyPath dependencyPathRootCauses classPathResult classPathEntry>
+  <#assign dependencyPaths = classPathResult.getDependencyPaths(classPathEntry) />
+  <#assign hasRootCause = dependencyPathRootCauses[classPathEntry]?? />
+  <#assign hideDependencyPathsByDefault = (!hasRootCause) && (dependencyPaths?size > 5) />
   <p class="linkage-check-dependency-paths">
-    The following ${plural(dependencyPaths?size, "path contains", "paths contain")} ${jar.getFileName()?html}:
+    The following ${plural(dependencyPaths?size, "path contains", "paths contain")} ${classPathEntry?html}:
+    <#if hideDependencyPathsByDefault>
+      <#-- The dependency paths are not summarized -->
+      <button onclick="toggleNextSiblingVisibility(this)"
+              title="Toggle visibility of source class list">▶
+      </button>
+    </#if>
   </p>
 
-  <#if dependencyPathRootCauses[jar]?? >
-    <p class="linkage-check-dependency-paths">${dependencyPathRootCauses[jar]?html}
+  <#if hasRootCause>
+    <p class="linkage-check-dependency-paths">${dependencyPathRootCauses[classPathEntry]?html}
     </p>
   <#else>
-    <ul class="linkage-check-dependency-paths">
+    <!-- The visibility of this list is toggled via the button above. Hidden by default -->
+    <ul class="linkage-check-dependency-paths"
+        style="display:${hideDependencyPathsByDefault?string('none', '')}">
         <#list dependencyPaths as dependencyPath >
           <li>${dependencyPath}</li>
         </#list>
@@ -71,18 +90,20 @@
   </#if>
 </#macro>
 
-<#macro formatDependencyNode currentNode parent>
-  <#if parent == currentNode>
-    <#assign label = 'root' />
+<#macro formatDependencyGraph graph node parent>
+  <#if node == graph.getRootPath() >
+      <#assign label = 'root' />
   <#else>
-    <#assign label = 'parent: ' + parent.getLeaf() />
+      <#assign label = 'parent: ' + parent.getLeaf() />
   </#if>
-  <p class="dependency-tree-node" title="${label}">${currentNode.getLeaf()}</p>
+  <p class="dependency-tree-node" title="${label}">${node.getLeaf()}</p>
   <ul>
-    <#list dependencyTree.get(currentNode) as childNode>
-      <li class="dependency-tree-node">
-        <@formatDependencyNode childNode currentNode />
-      </li>
+    <#list graph.getChildren(node) as childNode>
+      <#if node != childNode>
+        <li class="dependency-tree-node">
+            <@formatDependencyGraph graph childNode node />
+        </li>
+      </#if>
     </#list>
   </ul>
 </#macro>
@@ -107,4 +128,15 @@
     <#else>UNAVAILABLE
     </#if>
   </td>
+</#macro>
+
+<#macro pieChartSvg description ratio>
+    <#assign largeArcFlag = (ratio gt 0.5)?string("1", "0")>
+    <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
+    <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
+  <svg xmlns="http://www.w3.org/2000/svg" width="${pieSize}" height="${pieSize}">
+    <desc>${description}</desc>
+    <circle cx="100" cy="100" r="100" stroke-width="3" fill="lightgreen" />
+    <path d="M100,100 v -100 A100,100 0 ${largeArcFlag} 1 ${endPointX}, ${endPointY} z" fill="red" />
+  </svg>
 </#macro>

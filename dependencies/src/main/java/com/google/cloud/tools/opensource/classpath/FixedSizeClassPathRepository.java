@@ -36,7 +36,7 @@ import org.apache.bcel.util.ClassPathRepository;
  *
  * <p>The default maximum size is 1000 entries. From the experiment with spring-cloud-gcp project,
  * this maximum size gives the best performance when running {@link
- * LinkageChecker#findSymbolProblems()}.
+ * LinkageChecker#findLinkageProblems()}.
  *
  * @see <a href="https://github.com/google/guava/wiki/CachesExplained#size-based-eviction">Guava
  *     CachesExplained: Size-based Eviction</a>
@@ -48,18 +48,23 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
   private final Cache<String, JavaClass> loadedClass;
 
   /**
-   * Mapping from class names to special class file locations.
+   * Mapping from class names to file names.
    *
-   * <p>While class name and class file name are the same in most cases, sometimes classes are not
-   * placed in the root of a JAR file to support a framework-specific JAR structure. For example,
-   * Spring Boot Gradle Java plugin places class files under "BOOT-INF/classes". To load such
-   * classes by class name, this mapping keeps track of the special location once they are loaded.
+   * <p>Class names are the fully package qualified names found in Java source code such as
+   * {@code com.google.Foo}. The byte code of this class is normally found in a JAR at the path
+   * com/google/Foo.class. In this case {@code com.google.Foo} is also the file name.
+   * 
+   * A few tools relocate classes into different directories within the JAR and use a special
+   * class loader to process these JARs. For example, Spring Boot stores the byte code
+   * for {@code com.google.Foo} in BOOT-INF/classes/com/google/Foo.class.
+   * In this case, the class name is still {@code com.google.Foo} but the file name
+   * is {@code BOOT-INF.classes.com.google.Foo}. To load such
+   * classes, this mapping keeps track of the file names for each class name.
    *
    * <ul>
-   *   <li>Key: class name (value from {@link JavaClass#getClassName()}) which has a special class
-   *       file name different from its class name. Example: {@code com.google.Foo}
-   *   <li>Value: the special class file name as in {@link JavaClass#getFileName()}, a path that
-   *       locates a class file in a class path. Example: {@code BOOT-INF.classes.com.google.Foo}
+   *   <li>Key: class name (value from {@link JavaClass#getClassName()}) such as {@code com.google.Foo}
+   *   <li>Value: file name (value from {@link JavaClass#getFileName()} such as 
+   *   {@code BOOT-INF.classes.com.google.Foo}
    * </ul>
    *
    * @see <a
@@ -85,11 +90,11 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
     loadedClass.put(className, javaClass);
     javaClass.setRepository(this);
 
-    String classFileName = javaClass.getFileName();
-    if (!className.equals(classFileName)) {
+    String fileName = javaClass.getFileName();
+    if (!className.equals(fileName)) {
       // When class file has special location not matching class name, remember it to load the class
       // file by class name.
-      classFileNames.put(className, classFileName);
+      classFileNames.put(className, fileName);
     }
   }
 
@@ -104,8 +109,8 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
     // Check special location for the class. If it's not found, lookup by className instead.
     // Usually classFileName == className. But sometimes classFileName has a framework-specific
     // prefix. Example: "BOOT-INF.classes.com.google.Foo"
-    String classFileName = classFileNames.getOrDefault(className, className);
-    return super.loadClass(classFileName);
+    String fileName = getFileName(className);
+    return super.loadClass(fileName);
   }
 
   @Override
@@ -114,11 +119,9 @@ final class FixedSizeClassPathRepository extends ClassPathRepository {
   }
 
   /**
-   * Returns the special location for {@code className}. Null if no special location is known.
-   *
-   * @see #classFileNames
+   * Returns the file name for the class.
    */
-  String getSpecialLocation(String className) {
-    return classFileNames.get(className);
+  String getFileName(String className) {
+    return classFileNames.getOrDefault(className, className);
   }
 }

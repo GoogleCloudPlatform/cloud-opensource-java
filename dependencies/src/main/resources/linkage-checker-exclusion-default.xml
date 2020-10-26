@@ -41,7 +41,6 @@
       <Package name="org.graalvm" />
     </Source>
   </LinkageError>
-
   <LinkageError>
     <Target>
       <Class name="org.mockito.internal.creation.bytebuddy.MockMethodDispatcher" />

@@ -24,7 +24,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <p>For example, {@code PackageMatcher("com.google")} matches {@code com.google.Foo} class as well
  * as {@code com.google.cloud.Bar}.
  */
-class PackageMatcher implements SymbolProblemTargetMatcher, SymbolProblemSourceMatcher {
+class PackageMatcher implements LinkageProblemTargetMatcher, LinkageProblemSourceMatcher {
 
   private final String packageName;
 

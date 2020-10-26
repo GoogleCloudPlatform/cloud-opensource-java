@@ -69,71 +69,41 @@
            ${localUpperBoundsErrorCount} out of ${totalArtifacts} artifacts 
            ${plural(localUpperBoundsErrorCount, "does not", "do not")} pick the
            latest versions of all artifacts in their own dependency tree.
-        </td>
-        <td>${globalUpperBoundsErrorCount} out of ${totalArtifacts} artifacts 
-           ${plural(globalUpperBoundsErrorCount, "does not", "do not")} select the
-           most recent version of all artifacts in the BOM.</td>
-        <td>${convergenceErrorCount} out of ${totalArtifacts} artifacts 
-           ${plural(convergenceErrorCount, "fails", "fail")} to converge.
-        </td>
-      </tr>
-      <tr>
-        <td class='pie'>    
-          <#assign linkageRatio = linkageErrorCount / totalArtifacts >
-          <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, linkageRatio)>
-          <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, linkageRatio)>
-          <svg xmlns="http://www.w3.org/2000/svg" width="${pieSize}" height="${pieSize}">
-            <desc>${linkageErrorCount} out of ${totalArtifacts} artifacts have linkage errors.</desc>
-            <circle cx="100" cy="100" r="100" stroke-width="3" fill="lightgreen" />
-            <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
-          </svg>
-       </td>
-
-       <td class='pie'>    
-        <#assign ratio = localUpperBoundsErrorCount / totalArtifacts >
-        <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
-        <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
-        
-          <svg xmlns="http://www.w3.org/2000/svg" width="${pieSize}" height="${pieSize}">
-            <desc>{localUpperBoundsErrorCount} out of ${totalArtifacts} artifacts 
-           ${plural(localUpperBoundsErrorCount, "does not", "do not")} pick the
-           latest versions of all artifacts in their own dependency tree.</desc>
-            <circle cx="100" cy="100" r="100" stroke-width="3" fill="lightgreen" />
-            <path d="M100,100 v -100 A100,100 0 0 1 ${endPointX}, ${endPointY} z" fill="red" />
-          </svg>
-        </td>
-      
-       <td class='pie'>    
-        <#assign ratio = globalUpperBoundsErrorCount / totalArtifacts >
-        <#assign largeArcFlag = "0">
-        <#if ratio gt 0.5>
-          <#assign largeArcFlag = "1">
-        </#if>
-        <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
-        <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
-          <svg xmlns="http://www.w3.org/2000/svg" width="${pieSize}" height="${pieSize}">
-            <desc>${globalUpperBoundsErrorCount} out of ${totalArtifacts} artifacts
-                 have global upper bounds errors.</desc>
-            <circle cx="100" cy="100" r="100" stroke-width="3" fill="lightgreen" />
-            <path d="M100,100 v -100 A100,100 0 ${largeArcFlag} 1 ${endPointX}, ${endPointY} z" fill="red" />
-          </svg>
-       </td>
-        
-       <td class='pie'>    
-          <#assign ratio = convergenceErrorCount / totalArtifacts >
-          <#assign largeArcFlag = "0">
-          <#if ratio gt 0.5>
-            <#assign largeArcFlag = "1">
-          </#if>
-          <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
-          <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
-          
-            <svg xmlns="http://www.w3.org/2000/svg" width="${pieSize}" height="${pieSize}">
-              <desc>${convergenceErrorCount} out of ${totalArtifacts} artifacts 
-              ${plural(convergenceErrorCount, "fails", "fail")} to converge.</desc>
-              <circle cx="100" cy="100" r="100" stroke-width="3" fill="lightgreen" />
-              <path d="M100,100 v -100 A100,100 0 ${largeArcFlag} 1 ${endPointX}, ${endPointY} z" fill="red" />
-            </svg>
+          </td>
+          <td>${globalUpperBoundsErrorCount} out of ${totalArtifacts} artifacts
+             ${plural(globalUpperBoundsErrorCount, "does not", "do not")} select the
+             most recent version of all artifacts in the BOM.</td>
+          <td>${convergenceErrorCount} out of ${totalArtifacts} artifacts
+             ${plural(convergenceErrorCount, "fails", "fail")} to converge.
+          </td>
+        </tr>
+        <tr>
+          <td class='pie'>
+            <@pieChartSvg
+                description="${linkageErrorCount} out of ${totalArtifacts} artifacts have linkage
+                    errors."
+                ratio=linkageErrorCount / totalArtifacts />
+          </td>
+          <td class='pie'>
+            <#assign doesNot=plural(localUpperBoundsErrorCount, "does not", "do not")>
+            <@pieChartSvg
+                description="${localUpperBoundsErrorCount} out of ${totalArtifacts} artifacts
+                    $doesNot pick the
+                    latest versions of all artifacts in their own dependency tree."
+                ratio=localUpperBoundsErrorCount / totalArtifacts />
+          </td>
+          <td class='pie'>
+            <@pieChartSvg
+                description="${globalUpperBoundsErrorCount} out of ${totalArtifacts} artifacts have
+                    global upper bounds errors."
+                ratio=globalUpperBoundsErrorCount / totalArtifacts />
+          </td>
+          <td class='pie'>
+            <#assign fails=plural(convergenceErrorCount, "fails", "fail")/>
+            <@pieChartSvg
+                description="${convergenceErrorCount} out of ${totalArtifacts} artifacts
+                    ${fails} to converge."
+                ratio=convergenceErrorCount / totalArtifacts />
           </td>
         </tr>
       </table>
@@ -160,7 +130,11 @@
         <li><code>${artifact}:${version}</code></li>
       </#list>
     </ul>
- 
+
+    <p>
+      <a href="dependency_trees.html">Dependency Trees</a>
+    </p>
+
     <hr />
 
     <p id='updated'>Last generated at ${lastUpdated}</p>

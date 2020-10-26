@@ -38,7 +38,11 @@ jobs:
 
       # run tests!
       - run: |
-          mvn -B -e integration-test
+          mkdir -p ~/.m2
+          cp settings.xml ~/.m2/
+          ./mvnw -B -e install
+          cd gradle-plugin
+          ./gradlew build publishToMavenLocal
 
       - run:
           name: Save test results
