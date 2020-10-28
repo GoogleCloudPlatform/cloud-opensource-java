@@ -36,6 +36,9 @@ Do it. This grants the script permission to create a PR for you on Github.
 
 Ask a teammate to review and approve the PR. 
 
+If you want the script stop asking your username and password for every invocation,
+run `git config credential.helper store`.
+
 ### Build the release binary with Rapid (Legacy web UI)
 
 The [instructions for the Rapid build are on the internal team 
