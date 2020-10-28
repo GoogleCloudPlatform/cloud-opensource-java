@@ -22,7 +22,7 @@ All on your corp desktop:
 the `cloud-opensource-java` directory:
 
 ```
-$ ./scripts/release_bom.sh.sh bom <release version> <post-release-version>
+$ ./scripts/release_bom.sh bom <release version> <post-release-version>
 ```
 
 You might see this message:
