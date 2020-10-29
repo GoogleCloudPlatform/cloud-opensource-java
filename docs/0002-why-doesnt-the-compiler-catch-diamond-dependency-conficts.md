@@ -21,8 +21,8 @@ version of library D (here, version 1), because this will be important later.
 <img src="assets/images/ddc-compiler-00.png" alt="">
 
 If T is missing, the compiler refuses to compile library D, and it is impossible
-to execute the code. If everything is in order, the compiler builds a JAR. This
-JAR can now be used by other libraries.
+to execute the code. If everything is in order, the compiler builds a JAR file.
+This JAR file can now be used by other libraries.
 
 Now let's add another library B, which depends on library D. It contains class
 U and class V. Class U refers to class V in its own library (library B) and
