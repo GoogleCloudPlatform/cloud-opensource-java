@@ -7,7 +7,7 @@
 
   <groupId>com.google.cloud</groupId>
   <artifactId>libraries-bom</artifactId>
-  <version>13.3.1-SNAPSHOT</version>
+  <version>13.4.0</version>
   <packaging>pom</packaging>
 
   <name>Google Cloud Platform Supported Libraries</name>
