@@ -48,7 +48,7 @@
     <google.cloud.java.version>0.141.0</google.cloud.java.version>
     <io.grpc.version>1.33.0</io.grpc.version>
     <protobuf.version>3.13.0</protobuf.version>
-    <http.version>1.36.0</http.version>
+    <http.version>1.37.0</http.version>
     <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier.
         When updating gax.version, update gax.httpjson.version too. -->
     <gax.version>1.60.0</gax.version>
@@ -67,6 +67,7 @@
 
   <dependencyManagement>
     <dependencies>
+
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava-bom</artifactId>
