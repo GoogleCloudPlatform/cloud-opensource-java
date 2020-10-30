@@ -22,7 +22,7 @@ All on your corp desktop:
 the `cloud-opensource-java` directory:
 
 ```
-$ ./scripts/release_bom.sh.sh bom <release version> <post-release-version>
+$ ./scripts/release_bom.sh bom <release version> <post-release-version>
 ```
 
 You might see this message:
@@ -35,6 +35,9 @@ Press Enter to open github.com in your browser...
 Do it. This grants the script permission to create a PR for you on Github.
 
 Ask a teammate to review and approve the PR. 
+
+If you want the script to stop asking your username and password for every invocation,
+run `git config credential.helper store`.
 
 ### Build the release binary with Rapid (Legacy web UI)
 
