@@ -62,11 +62,12 @@ new release is available on Maven Central.
 * Manually edit and update any pom.xml files in https://github.com/GoogleCloudPlatform/java-docs-samples that dependabot missed
     * Go to go/java-live
     * Sort by title
-    * Scroll down until you find the section with titles "chore(deps): update dependency com.google.cloud:libraries-bom to v<version>"
-   * Approve and merge these PRs.
+    * Scroll down until you find the section with titles "chore(deps): update dependency com.google.cloud:libraries-bom to v&lt;version>"
+    * Approve and merge these PRs.
+      For PRs waiting for Kokoro jobs, add the "kokoro:force-run" label.
 * In google3 run:
     * `$ g4d -f bom`
-    *  `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version>oldVersion&lt;/version>" "&lt;version>newVersion&lt;/version>"`
+    *  `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version&gt;oldVersion&lt;/version&gt;" "&lt;version&gt;newVersion&lt;/version&gt;"`
     * Sanity check the cl and send it for review.
     * Submit on approval
 * Search for libraries-bom in google3 to find any internal references (typically cloudite and devsite) that still need to be updated.
