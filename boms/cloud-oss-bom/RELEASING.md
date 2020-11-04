@@ -88,20 +88,25 @@ problems. If so:
 
 1. Delete the release branch on Github.
 
-2. Fetch the tags in your local client:
+2. Run `scripts/cancel_release.sh <version>`
+
+The script performs these steps:
+
+
+1. Fetch the tags in your local client:
 
    ```
    $ git fetch --tags --force
    ```
      
-3. Delete the tag locally:
+2. Delete the tag locally:
 
    ```
    $ git tag -d v2.6.0-bom
    Deleted tag 'v2.6.0-bom' (was 3b96602)
    ```
 
-4. Push the deleted tag:
+2. Push the deleted tag:
    
    ```
    $ git push origin :v2.6.0-bom
