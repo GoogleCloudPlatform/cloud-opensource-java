@@ -90,7 +90,11 @@ problems. If so:
 
 2. Run `scripts/cancel_release.sh <version>`
 
-The script performs these steps:
+3. If the release got as far as uploading a binary to Nexus before you cancelled, then
+login to OSSRH and drop the release.
+
+
+The `cancel_release.sh` script performs these steps:
 
 
 1. Fetch the tags in your local client:
