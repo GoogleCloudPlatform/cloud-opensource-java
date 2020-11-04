@@ -88,20 +88,29 @@ problems. If so:
 
 1. Delete the release branch on Github.
 
-2. Fetch the tags in your local client:
+2. Run `scripts/cancel_release.sh <version>`
+
+3. If the release got as far as uploading a binary to Nexus before you cancelled, then
+login to OSSRH and drop the release.
+
+
+The `cancel_release.sh` script performs these steps:
+
+
+1. Fetch the tags in your local client:
 
    ```
    $ git fetch --tags --force
    ```
      
-3. Delete the tag locally:
+2. Delete the tag locally:
 
    ```
    $ git tag -d v2.6.0-bom
    Deleted tag 'v2.6.0-bom' (was 3b96602)
    ```
 
-4. Push the deleted tag:
+2. Push the deleted tag:
    
    ```
    $ git push origin :v2.6.0-bom
