@@ -3,7 +3,7 @@ permalink: /glossary
 ---
 # Java Dependency Glossary
 
-- **Class path**: an ordered list of jar files, zip files, and directories, each of which
+- **Class path**: an ordered list of JAR files, zip files, and directories, each of which
   contains Java class files.
   A [class loader](https://docs.oracle.com/javase/7/docs/api/java/lang/ClassLoader.html)
   transforms the fully package qualified name of a Java class
@@ -75,7 +75,7 @@ permalink: /glossary
 
 - A particular conflict cannot be both a linkage error and behavior conflict.
   They are mutually exclusive.
-- A combination of jars at runtime can have any number of linkage errors and
+- A combination of JAR files at runtime can have any number of linkage errors and
   behavior conflicts.
 
 ## States of compatibility
