@@ -67,7 +67,7 @@ new release is available on Maven Central.
       For PRs waiting for Kokoro jobs, add the "kokoro:force-run" label.
 * In google3 run:
     * `$ g4d -f bom`
-    *  `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version&gt;oldVersion&lt;/version&gt;" "&lt;version&gt;newVersion&lt;/version&gt;"`
+    *  `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version>oldVersion&lt;/version>" "&lt;version>newVersion&lt;/version>"`
     * Sanity check the cl and send it for review.
     * Submit on approval
 * Search for libraries-bom in google3 to find any internal references (typically cloudite and devsite) that still need to be updated.
