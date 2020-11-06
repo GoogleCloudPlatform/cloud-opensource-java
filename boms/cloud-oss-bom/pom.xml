@@ -7,7 +7,7 @@
 
   <groupId>com.google.cloud</groupId>
   <artifactId>libraries-bom</artifactId>
-  <version>13.4.1-SNAPSHOT</version>
+  <version>15.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Google Cloud Platform Supported Libraries</name>
@@ -45,15 +45,15 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <guava.version>30.0-android</guava.version>
-    <google.cloud.java.version>0.141.0</google.cloud.java.version>
-    <io.grpc.version>1.33.0</io.grpc.version>
+    <google.cloud.java.version>0.142.0</google.cloud.java.version>
+    <io.grpc.version>1.33.1</io.grpc.version>
     <protobuf.version>3.13.0</protobuf.version>
-    <http.version>1.37.0</http.version>
+    <http.version>1.38.0</http.version>
     <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier.
         When updating gax.version, update gax.httpjson.version too. -->
     <gax.version>1.60.0</gax.version>
     <gax.httpjson.version>0.77.0</gax.httpjson.version>
-    <common.protos.version>1.18.1</common.protos.version>
+    <common.protos.version>2.0.0</common.protos.version>
     <iam.protos.version>1.0.1</iam.protos.version>
   </properties>
 
@@ -210,7 +210,7 @@
       <dependency>
         <groupId>com.google.api</groupId>
         <artifactId>api-common</artifactId>
-         <version>1.10.0</version>
+         <version>1.10.1</version>
        </dependency>
        <dependency>
          <groupId>com.google.api</groupId>
