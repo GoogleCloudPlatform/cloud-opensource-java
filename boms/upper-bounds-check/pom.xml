@@ -56,11 +56,11 @@
   <dependencies>
     <dependency>
       <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-storage</artifactId>
+      <artifactId>google-cloud-core</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-core</artifactId>
+      <artifactId>google-cloud-storage</artifactId>
     </dependency>
   </dependencies>
 
