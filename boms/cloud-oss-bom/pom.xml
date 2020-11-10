@@ -54,7 +54,7 @@
     <gax.version>1.60.0</gax.version>
     <gax.httpjson.version>0.77.0</gax.httpjson.version>
     <common.protos.version>2.0.0</common.protos.version>
-    <iam.protos.version>1.0.1</iam.protos.version>
+    <iam.protos.version>1.0.2</iam.protos.version>
   </properties>
 
   <distributionManagement>
@@ -237,7 +237,7 @@
        <dependency>
          <groupId>com.google.cloud</groupId>
          <artifactId>google-cloud-core-bom</artifactId>
-         <version>1.93.9</version>
+         <version>1.93.10</version>
          <type>pom</type>
          <scope>import</scope>
        </dependency>
