@@ -22,7 +22,7 @@ All on your corp desktop:
 the `cloud-opensource-java` directory:
 
 ```
-$ ./scripts/release_bom.sh.sh bom <release version> <post-release-version>
+$ ./scripts/release_bom.sh bom <release version> <post-release-version>
 ```
 
 You might see this message:
@@ -35,6 +35,9 @@ Press Enter to open github.com in your browser...
 Do it. This grants the script permission to create a PR for you on Github.
 
 Ask a teammate to review and approve the PR. 
+
+If you want the script to stop asking your username and password for every invocation,
+run `git config credential.helper store`.
 
 ### Build the release binary with Rapid (Legacy web UI)
 
@@ -59,8 +62,9 @@ new release is available on Maven Central.
 * Manually edit and update any pom.xml files in https://github.com/GoogleCloudPlatform/java-docs-samples that dependabot missed
     * Go to go/java-live
     * Sort by title
-    * Scroll down until you find the section with titles "chore(deps): update dependency com.google.cloud:libraries-bom to v<version>"
-   * Approve and merge these PRs.
+    * Scroll down until you find the section with titles "chore(deps): update dependency com.google.cloud:libraries-bom to v&lt;version>"
+    * Approve and merge these PRs.
+      For PRs waiting for Kokoro jobs, add the "kokoro:force-run" label.
 * In google3 run:
     * `$ g4d -f bom`
     *  `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version>oldVersion&lt;/version>" "&lt;version>newVersion&lt;/version>"`
@@ -85,20 +89,29 @@ problems. If so:
 
 1. Delete the release branch on Github.
 
-2. Fetch the tags in your local client:
+2. Run `scripts/cancel_release.sh <version>`
+
+3. If the release got as far as uploading a binary to Nexus before you cancelled, then
+login to OSSRH and drop the release.
+
+
+The `cancel_release.sh` script performs these steps:
+
+
+1. Fetch the tags in your local client:
 
    ```
    $ git fetch --tags --force
    ```
      
-3. Delete the tag locally:
+2. Delete the tag locally:
 
    ```
    $ git tag -d v2.6.0-bom
    Deleted tag 'v2.6.0-bom' (was 3b96602)
    ```
 
-4. Push the deleted tag:
+2. Push the deleted tag:
    
    ```
    $ git push origin :v2.6.0-bom
