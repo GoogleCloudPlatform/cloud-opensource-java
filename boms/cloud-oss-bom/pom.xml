@@ -53,7 +53,7 @@
         When updating gax.version, update gax.httpjson.version too. -->
     <gax.version>1.60.0</gax.version>
     <gax.httpjson.version>0.77.0</gax.httpjson.version>
-    <common.protos.version>2.0.0</common.protos.version>
+    <common.protos.version>2.0.1</common.protos.version>
     <iam.protos.version>1.0.3</iam.protos.version>
   </properties>
 
