@@ -16,14 +16,12 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import com.google.cloud.tools.opensource.classpath.Symbol;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
 import java.io.IOException;
-import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
