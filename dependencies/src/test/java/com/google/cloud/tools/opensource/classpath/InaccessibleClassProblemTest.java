@@ -18,7 +18,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,17 +32,7 @@ public class InaccessibleClassProblemTest {
       Path path = Paths.get("/usr/tmp");
       ClassPathEntry entry = new ClassPathEntry(path);
       file = new ClassFile(entry, "foo");
-      symbol = new Symbol("") {
-        @Override
-        public boolean equals(Object other) {
-          return false;
-        }
-
-        @Override
-        public int hashCode() {
-          return 0;
-        }
-      };
+      symbol = new ClassSymbol("");
 	}
 
     @Test
