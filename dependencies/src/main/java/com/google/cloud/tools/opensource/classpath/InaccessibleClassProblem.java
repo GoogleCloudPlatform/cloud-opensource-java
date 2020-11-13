@@ -42,15 +42,18 @@ final class InaccessibleClassProblem extends LinkageProblem {
         message.append(" is public");
         break;
       case PRIVATE:
-        message.append(" is private");
-        break;
+          message.append(" is private");
+          break;
+      case PROTECTED:
+          message.append(" is protected");
+          break;
       case DEFAULT:
         message.append(" has default access");
     }
 
     message.append(" and referenced by " + getSourceClass().getBinaryName());
     if (modifier == AccessModifier.DEFAULT) {
-      message.append("(different package)");
+      message.append(" (different package)");
     }
 
     return message.toString();
