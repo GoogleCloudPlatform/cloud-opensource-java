@@ -51,7 +51,7 @@ final class InaccessibleClassProblem extends LinkageProblem {
         message.append(" has default access");
     }
 
-    message.append(" and referenced by " + getSourceClass().getBinaryName());
+    message.append(" and is referenced by " + getSourceClass().getBinaryName());
     if (modifier == AccessModifier.DEFAULT) {
       message.append(" (different package)");
     }
