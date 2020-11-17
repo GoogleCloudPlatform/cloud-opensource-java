@@ -7,7 +7,7 @@
 
   <groupId>com.google.cloud</groupId>
   <artifactId>libraries-bom</artifactId>
-  <version>15.1.0-SNAPSHOT</version>
+  <version>15.1.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Google Cloud Platform Supported Libraries</name>
@@ -45,16 +45,16 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <guava.version>30.0-android</guava.version>
-    <google.cloud.java.version>0.142.0</google.cloud.java.version>
+    <google.cloud.java.version>0.144.0</google.cloud.java.version>
     <io.grpc.version>1.33.1</io.grpc.version>
-    <protobuf.version>3.13.0</protobuf.version>
+    <protobuf.version>3.14.0</protobuf.version>
     <http.version>1.38.0</http.version>
     <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier.
         When updating gax.version, update gax.httpjson.version too. -->
     <gax.version>1.60.0</gax.version>
     <gax.httpjson.version>0.77.0</gax.httpjson.version>
-    <common.protos.version>2.0.0</common.protos.version>
-    <iam.protos.version>1.0.1</iam.protos.version>
+    <common.protos.version>2.0.1</common.protos.version>
+    <iam.protos.version>1.0.3</iam.protos.version>
   </properties>
 
   <distributionManagement>
@@ -184,6 +184,11 @@
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
+        <artifactId>grpc-protobuf-lite</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
         <artifactId>grpc-services</artifactId>
         <version>${io.grpc.version}</version>
       </dependency>
@@ -206,7 +211,7 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      
+
       <dependency>
         <groupId>com.google.api</groupId>
         <artifactId>api-common</artifactId>
@@ -226,7 +231,7 @@
          <groupId>com.google.api</groupId>
          <artifactId>gax-httpjson</artifactId>
          <version>${gax.httpjson.version}</version>
-       </dependency>       
+       </dependency>
        <dependency>
          <groupId>com.google.auth</groupId>
          <artifactId>google-auth-library-bom</artifactId>
@@ -237,11 +242,11 @@
        <dependency>
          <groupId>com.google.cloud</groupId>
          <artifactId>google-cloud-core-bom</artifactId>
-         <version>1.93.9</version>
+         <version>1.94.0</version>
          <type>pom</type>
          <scope>import</scope>
        </dependency>
-       <dependency>
+      <dependency>
          <groupId>com.google.api.grpc</groupId>
          <artifactId>proto-google-common-protos</artifactId>
          <version>${common.protos.version}</version>
