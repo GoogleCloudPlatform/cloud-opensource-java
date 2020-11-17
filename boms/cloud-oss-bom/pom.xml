@@ -47,7 +47,7 @@
     <guava.version>30.0-android</guava.version>
     <google.cloud.java.version>0.143.0</google.cloud.java.version>
     <io.grpc.version>1.33.1</io.grpc.version>
-    <protobuf.version>3.13.0</protobuf.version>
+    <protobuf.version>3.14.0</protobuf.version>
     <http.version>1.38.0</http.version>
     <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier.
         When updating gax.version, update gax.httpjson.version too. -->
@@ -184,6 +184,11 @@
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
+        <artifactId>grpc-protobuf-lite</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
         <artifactId>grpc-services</artifactId>
         <version>${io.grpc.version}</version>
       </dependency>
@@ -206,7 +211,7 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      
+
       <dependency>
         <groupId>com.google.api</groupId>
         <artifactId>api-common</artifactId>
@@ -226,7 +231,7 @@
          <groupId>com.google.api</groupId>
          <artifactId>gax-httpjson</artifactId>
          <version>${gax.httpjson.version}</version>
-       </dependency>       
+       </dependency>
        <dependency>
          <groupId>com.google.auth</groupId>
          <artifactId>google-auth-library-bom</artifactId>
