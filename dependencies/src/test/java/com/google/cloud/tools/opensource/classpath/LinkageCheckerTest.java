@@ -1153,11 +1153,12 @@ public class LinkageCheckerTest {
   public void testFindLinkageProblems_unusedClassReferenceInByteCode() throws IOException {
     // com.sun.tools.ws.wscompile.WsgenOptions in jaxws-tools has the class reference to
     // com.sun.xml.ws.api.BindingID$SOAPHTTPImpl in its constant pool section. The referenced class
-    // is private but it's not used in the JVM instruction in the referencing class file.
+    // is private but it's not used in the JVM instruction in the referencing class file. Therefore
+    // the Linkage Checker should not report it as a symbol problem.
     // The problem was observed in Java 8's tools.jar (
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1608). In Java 11, the
-    // JDK does not provide the class any more. The two artifacts have the classes with different
-    // packages (they are no longer 'internal').
+    // JDK does not provide the class any more. The two artifacts below have the classes with
+    // different packages (they are no longer 'internal').
     ImmutableList<ClassPathEntry> classPath =
         TestHelper.resolve(
             "com.sun.xml.ws:jaxws-tools:2.3.3", // This contains WsgenOptions
