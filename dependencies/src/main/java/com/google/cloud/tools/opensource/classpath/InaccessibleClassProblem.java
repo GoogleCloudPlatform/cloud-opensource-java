@@ -28,7 +28,6 @@ import javax.annotation.Nullable;
  */
 final class InaccessibleClassProblem extends LinkageProblem {
   private AccessModifier modifier;
-  private ClassSymbol classSymbol;
 
   InaccessibleClassProblem(
       ClassFile sourceClass,
@@ -37,13 +36,12 @@ final class InaccessibleClassProblem extends LinkageProblem {
       AccessModifier modifier) {
     super("is not accessible", sourceClass, classSymbol, targetClass);
     this.modifier = modifier;
-    this.classSymbol = classSymbol;
   }
 
   @Override
   public final String toString() {
     StringBuilder message = new StringBuilder();
-    message.append("Class " + classSymbol.getClassBinaryName());
+    message.append("Class " + getSymbol().getClassBinaryName());
     switch (modifier) {
       case PUBLIC:
         message.append(" is public");
