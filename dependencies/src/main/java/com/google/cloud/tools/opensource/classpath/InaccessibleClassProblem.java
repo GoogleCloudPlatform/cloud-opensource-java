@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import javax.annotation.Nullable;
+
 /**
  * The {@code classSymbol} with {@code modifier} is inaccessible to the {@code sourceClass} as per
  * {@code sourceClass}'s definition of the class symbol.
@@ -26,17 +28,22 @@ package com.google.cloud.tools.opensource.classpath;
  */
 final class InaccessibleClassProblem extends LinkageProblem {
   private AccessModifier modifier;
+  private ClassSymbol classSymbol;
 
   InaccessibleClassProblem(
-      ClassFile sourceClass, ClassFile targetClass, Symbol classSymbol, AccessModifier modifier) {
+      ClassFile sourceClass,
+      @Nullable ClassFile targetClass,
+      ClassSymbol classSymbol,
+      AccessModifier modifier) {
     super("is not accessible", sourceClass, classSymbol, targetClass);
     this.modifier = modifier;
+    this.classSymbol = classSymbol;
   }
 
   @Override
   public final String toString() {
     StringBuilder message = new StringBuilder();
-    message.append("Class " + getTargetClass().getBinaryName());
+    message.append("Class " + classSymbol.getClassBinaryName());
     switch (modifier) {
       case PUBLIC:
         message.append(" is public");

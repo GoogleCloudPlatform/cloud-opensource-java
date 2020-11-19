@@ -25,42 +25,42 @@ import org.junit.Test;
 public class InaccessibleClassProblemTest {
   
   private ClassFile file;
-  private Symbol symbol;
-  
+  private ClassSymbol symbol;
+
   @Before
   public void setUp() {
     Path path = Paths.get("/usr/tmp");
     ClassPathEntry entry = new ClassPathEntry(path);
     file = new ClassFile(entry, "foo");
-    symbol = new ClassSymbol("");
+    symbol = new ClassSymbol("Foo");
   }
 
   @Test
   public void testProtected() {
     InaccessibleClassProblem problem =
         new InaccessibleClassProblem(file, file, symbol, AccessModifier.PROTECTED);
-    Assert.assertEquals("Class foo is protected and is referenced by foo", problem.toString());
+    Assert.assertEquals("Class Foo is protected and is referenced by foo", problem.toString());
   }
 
   @Test
   public void testPrivate() {
     InaccessibleClassProblem problem =
         new InaccessibleClassProblem(file, file, symbol, AccessModifier.PRIVATE);
-    Assert.assertEquals("Class foo is private and is referenced by foo", problem.toString());
+    Assert.assertEquals("Class Foo is private and is referenced by foo", problem.toString());
   }
 
   @Test
   public void testPublic() {
     InaccessibleClassProblem problem =
         new InaccessibleClassProblem(file, file, symbol, AccessModifier.PUBLIC);
-    Assert.assertEquals("Class foo is public and is referenced by foo", problem.toString());
+    Assert.assertEquals("Class Foo is public and is referenced by foo", problem.toString());
   }
 
   @Test
   public void testDefault() {
     InaccessibleClassProblem problem =
         new InaccessibleClassProblem(file, file, symbol, AccessModifier.DEFAULT);
-    Assert.assertEquals("Class foo has default access and is referenced by foo (different package)",
+    Assert.assertEquals("Class Foo has default access and is referenced by foo (different package)",
         problem.toString());
   }
 
