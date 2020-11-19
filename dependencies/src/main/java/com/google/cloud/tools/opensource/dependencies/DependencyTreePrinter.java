@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.dependencies;
 
-import com.google.cloud.tools.opensource.dependencies.DependencyTreeFormatter;
 import com.google.common.collect.ImmutableList;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
