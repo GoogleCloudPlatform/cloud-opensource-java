@@ -60,8 +60,18 @@ public class InaccessibleClassProblemTest {
   public void testDefault() {
     InaccessibleClassProblem problem =
         new InaccessibleClassProblem(file, file, symbol, AccessModifier.DEFAULT);
-    Assert.assertEquals("Class Foo has default access and is referenced by foo (different package)",
+    Assert.assertEquals(
+        "Class Foo has default access and is referenced by foo (different package)",
         problem.toString());
   }
 
+  @Test
+  public void testToString_nullTargetClass() {
+    InaccessibleClassProblem problem =
+        new InaccessibleClassProblem(file, null, symbol, AccessModifier.DEFAULT);
+
+    Assert.assertEquals(
+        "Class Foo has default access and is referenced by foo (different package)",
+        problem.toString());
+  }
 }
