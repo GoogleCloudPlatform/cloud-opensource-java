@@ -38,10 +38,9 @@ import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
@@ -1152,22 +1151,39 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindLinkageProblems_unusedClassReferenceInByteCode() throws IOException {
-    // JDK's tools.jar contains com.sun.tools.internal.ws.wscompile.WsgenOptions class. The class
-    // has the class reference to JDK's com.sun.xml.internal.ws.api.BindingID$SOAPHTTPImpl in its
-    // constant pool section. The referenced class is private but it's not used in the JVM
-    // instructions in the class file.
-    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1608
+    // com.sun.tools.ws.wscompile.WsgenOptions in jaxws-tools has the class reference to
+    // com.sun.xml.ws.api.BindingID$SOAPHTTPImpl in its constant pool section. The referenced class
+    // is private but it's not used in the JVM instruction in the referencing class file. Therefore
+    // the Linkage Checker should not report it as a symbol problem.
+    // The problem was observed in Java 8's tools.jar (
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1608). In Java 11, the
+    // JDK does not provide the class any more. The two artifacts below have the classes with
+    // different packages (they are no longer 'internal').
+    ImmutableList<ClassPathEntry> classPath =
+        TestHelper.resolve(
+            "com.sun.xml.ws:jaxws-tools:2.3.3", // This contains WsgenOptions
+            "com.sun.xml.ws:jaxws-rt:2.3.3"); // This contains BindingID$SOAPHTTPImpl
+    String wsgenOptionsClassName = "com.sun.tools.ws.wscompile.WsgenOptions";
 
-    String javaHomeDirectory = System.getProperty("java.home");
-    Path toolsJar = Paths.get(javaHomeDirectory, "..", "lib", "tools.jar");
-    Artifact toolsArtifact =
-        new DefaultArtifact("com.sun:tools:jar:1.8").setFile(toolsJar.toFile());
+    // Ensure the class path contains the two classes in the issue (#1608).
+    ClassDumper classDumper = ClassDumper.create(classPath);
+    SymbolReferences symbolReferences = classDumper.findSymbolReferences();
+    ImmutableSet<ClassSymbol> classSymbols =
+        symbolReferences.getClassSymbols(new ClassFile(classPath.get(0), wsgenOptionsClassName));
+    Truth.assertThat(classSymbols)
+        .contains(new ClassSymbol("com.sun.xml.ws.api.BindingID$SOAPHTTPImpl"));
 
-    LinkageChecker linkageChecker =
-        LinkageChecker.create(ImmutableList.of(new ClassPathEntry(toolsArtifact)));
+    LinkageChecker linkageChecker = LinkageChecker.create(classPath);
+
     ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
-    Truth.assertThat(linkageProblems).isEmpty();
+    Stream<LinkageProblem> problemsOnWsgenOptions =
+        linkageProblems.stream()
+            .filter(
+                linkageProblem ->
+                    wsgenOptionsClassName.equals(linkageProblem.getSourceClass().getBinaryName()));
+
+    Truth8.assertThat(problemsOnWsgenOptions).isEmpty();
   }
 
   @Test

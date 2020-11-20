@@ -60,7 +60,10 @@ public abstract class LinkageProblem {
    *     not exist in the class path.
    */
   LinkageProblem(
-      String symbolProblemMessage, ClassFile sourceClass, Symbol symbol, ClassFile targetClass) {
+      String symbolProblemMessage,
+      ClassFile sourceClass,
+      Symbol symbol,
+      @Nullable ClassFile targetClass) {
     this.symbolProblemMessage = Preconditions.checkNotNull(symbolProblemMessage);
     Preconditions.checkNotNull(symbol);
 
