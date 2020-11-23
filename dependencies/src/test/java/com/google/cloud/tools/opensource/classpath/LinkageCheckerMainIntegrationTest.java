@@ -90,10 +90,11 @@ public class LinkageCheckerMainIntegrationTest {
       throws IOException, RepositoryException, TransformerException, XMLStreamException {
     try {
       LinkageCheckerMain.main(
-          new String[] {"-a", "com.google.cloud:google-cloud-firestore:0.65.0-beta"});
+          // protobuf-java:3.13.0 in
+          new String[] {"-a", "com.google.cloud:google-cloud-firestore:1.35.2"});
       fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
     } catch (LinkageCheckResultException expected) {
-      assertEquals("Found 75 linkage errors", expected.getMessage());
+      assertEquals("Found 76 linkage errors", expected.getMessage());
     }
 
     String output = readCapturedStdout();
@@ -102,15 +103,14 @@ public class LinkageCheckerMainIntegrationTest {
             "Class com.jcraft.jzlib.JZlib is not found;\n"
                 + "  referenced by 4 class files\n"
                 + "    io.grpc.netty.shaded.io.netty.handler.codec.spdy.SpdyHeaderBlockJZlibEncoder"
-                + " (io.grpc:grpc-netty-shaded:1.13.1)");
+                + " (io.grpc:grpc-netty-shaded:1.30.2)");
 
     // Show the dependency path to the problematic artifact
     Truth.assertThat(output)
         .contains(
-            "io.grpc:grpc-netty-shaded:1.13.1 is at:\n"
-                + "  com.google.cloud:google-cloud-firestore:jar:0.65.0-beta /"
-                + " io.grpc:grpc-netty-shaded:1.13.1 (compile)\n"
-                + "  and 1 dependency path.");
+            "io.grpc:grpc-netty-shaded:1.30.2 is at:\n"
+                + "  com.google.cloud:google-cloud-firestore:jar:1.35.2 /"
+                + " io.grpc:grpc-netty-shaded:1.30.2 (compile)\n");
   }
 
   @Test
