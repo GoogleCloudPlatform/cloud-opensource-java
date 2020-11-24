@@ -6,7 +6,7 @@ on:
 name: ci
 jobs:
   units:
-    run-on: ubuntu-latest
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         java: [8, 11]
