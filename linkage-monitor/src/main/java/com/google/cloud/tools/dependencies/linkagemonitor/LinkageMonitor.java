@@ -90,13 +90,11 @@ public class LinkageMonitor {
   private final ImmutableMap<String, String> localArtifacts =
       findLocalArtifacts(repositorySystem, session, Paths.get(".").toAbsolutePath());
 
-  public static void main(String[] args)
+  public static void main(String[] arguments)
       throws RepositoryException, IOException, MavenRepositoryException, ModelBuildingException {
     
-    CommandLine commandLine = parseCommandLine(args);
-    List<String> arguments = commandLine.getArgList();
-    
-    String bomCoordinates = arguments.get(0);
+    CommandLine commandLine = parseCommandLine(arguments);
+    String bomCoordinates = commandLine.getArgList().get(0);
     List<String> coordinatesElements = Splitter.on(':').splitToList(bomCoordinates);
 
     if (coordinatesElements.size() != 2) {
@@ -140,7 +138,7 @@ public class LinkageMonitor {
   private static void printUsageAndDie() {
     logger.severe(
         "Usage: java com.google.cloud.tools.dependencies.linkagemonitor.LinkageMonitor"
-        + " --[no]send-analytics com.google.cloud:libraries-bom");
+        + " [--send-analytics] com.google.cloud:libraries-bom");
     System.exit(1);
   }
 
