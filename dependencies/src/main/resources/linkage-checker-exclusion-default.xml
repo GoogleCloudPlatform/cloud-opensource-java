@@ -43,6 +43,68 @@
   </LinkageError>
   <LinkageError>
     <Target>
+      <Package name="sun.text.normalizer" />
+    </Target>
+    <Source>
+      <Package name="com.oracle.svm.core.jdk8" />
+    </Source>
+    <Reason>
+      Substratevm is part of GraalVM and the virtual machine references classes in the JVM-internal
+      package 'sun.text.normalizer' that are not available in JVM runtime.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1825
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Class name="sun.util.logging.LoggingSupport" />
+    </Target>
+    <Source>
+      <Class name="com.oracle.svm.core.jdk.FormatAccessors" />
+    </Source>
+    <Reason>
+      Substratevm references the JVM-internal class 'sun.util.logging.LoggingSupport' that are not
+      available in JVM runtime.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1825
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Class name="sun.misc.JavaUtilZipFileAccess" />
+    </Target>
+    <Source>
+      <Class name="com.oracle.svm.core.jdk8.zipfile.ZipFileUtil" />
+    </Source>
+    <Reason>
+      Substratevm references the class that are only available in Java 8.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1825
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Class name="sun.misc.SharedSecrets" />
+    </Target>
+    <Source>
+      <Package name="com.oracle.svm.core.jdk8" />
+    </Source>
+    <Reason>
+      Substratevm references the class that are only available in Java 8.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1825
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Class name="sun.misc.PerfCounter" />
+    </Target>
+    <Source>
+      <Package name="com.oracle.svm.core.jdk8" />
+    </Source>
+    <Reason>
+      Substratevm references the class that are only available in Java 8.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1825
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
       <Class name="org.mockito.internal.creation.bytebuddy.MockMethodDispatcher" />
     </Target>
     <Source>
