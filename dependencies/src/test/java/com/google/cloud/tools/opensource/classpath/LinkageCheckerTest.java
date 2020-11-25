@@ -19,7 +19,6 @@ package com.google.cloud.tools.opensource.classpath;
 import static com.google.cloud.tools.opensource.classpath.TestHelper.COORDINATES;
 import static com.google.cloud.tools.opensource.classpath.TestHelper.classPathEntryOfResource;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -47,6 +46,7 @@ import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
+import org.hamcrest.core.StringStartsWith;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -1132,7 +1132,7 @@ public class LinkageCheckerTest {
   public void testFindLinkageProblems_referenceToJava11Method() throws IOException {
     // protobuf-java 3.12.4 references a Java 11 method that does not exist in Java 8
     // https://github.com/protocolbuffers/protobuf/issues/7827
-    Assume.assumeThat(System.getProperty("java.version"), startsWith("1.8.0"));
+    Assume.assumeThat(System.getProperty("java.version"), StringStartsWith.startsWith("1.8.0"));
 
     ImmutableList<ClassPathEntry> jars =
         TestHelper.resolve("com.google.protobuf:protobuf-java:3.12.4");
