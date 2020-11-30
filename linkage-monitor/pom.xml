@@ -1,143 +1,136 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ Copyright 2019 Google LLC.
-  ~
-  ~ Licensed under the Apache License, Version 2.0 (the "License");
-  ~ you may not use this file except in compliance with the License.
-  ~ You may obtain a copy of the License at
-  ~
-  ~     http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~ See the License for the specific language governing permissions and
-  ~ limitations under the License.
-  -->
+<!-- ~ Copyright 2019 Google LLC. ~ ~ Licensed under the Apache License, 
+	Version 2.0 (the "License"); ~ you may not use this file except in compliance 
+	with the License. ~ You may obtain a copy of the License at ~ ~ http://www.apache.org/licenses/LICENSE-2.0 
+	~ ~ Unless required by applicable law or agreed to in writing, software ~ 
+	distributed under the License is distributed on an "AS IS" BASIS, ~ WITHOUT 
+	WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. ~ See the 
+	License for the specific language governing permissions and ~ limitations 
+	under the License. -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>com.google.cloud.tools</groupId>
-    <artifactId>dependencies-parent</artifactId>
-    <version>1.5.5-SNAPSHOT</version>
-  </parent>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.google.cloud.tools</groupId>
+		<artifactId>dependencies-parent</artifactId>
+		<version>1.5.5-SNAPSHOT</version>
+	</parent>
 
-  <artifactId>linkage-monitor</artifactId>
+	<artifactId>linkage-monitor</artifactId>
 
-  <name>Linkage Monitor</name>
-  <description>Linkage Monitor checks compatibility of Maven artifacts with a BOM</description>
-  <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Monitor</url>
-  <organization>
-    <name>Google LLC.</name>
-    <url>https://www.google.com</url>
-  </organization>
-  <inceptionYear>2019</inceptionYear>
-  <developers>
-    <developer>
-      <name>Elliotte Rusty Harold</name>
-    </developer>
-    <developer>
-      <name>Tomo Suzuki</name>
-    </developer>
-  </developers>
+	<name>Linkage Monitor</name>
+	<description>Linkage Monitor checks compatibility of Maven artifacts with a BOM</description>
+	<url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Monitor</url>
+	<organization>
+		<name>Google LLC.</name>
+		<url>https://www.google.com</url>
+	</organization>
+	<inceptionYear>2019</inceptionYear>
+	<developers>
+		<developer>
+			<name>Elliotte Rusty Harold</name>
+		</developer>
+		<developer>
+			<name>Tomo Suzuki</name>
+		</developer>
+	</developers>
 
-  <!-- Environment Settings -->
-  <issueManagement>
-    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues</url>
-  </issueManagement>
-  <scm>
-    <connection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git</connection>
-    <developerConnection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git
+	<!-- Environment Settings -->
+	<issueManagement>
+		<url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues</url>
+	</issueManagement>
+	<scm>
+		<connection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git</connection>
+		<developerConnection>scm:git:git@github.com:GoogleCloudPlatform/cloud-opensource-java.git
     </developerConnection>
-    <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/linkage-monitor</url>
-    <tag>HEAD</tag>
-  </scm>
+		<url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/linkage-monitor</url>
+		<tag>HEAD</tag>
+	</scm>
 
-  <licenses>
-    <license>
-      <name>The Apache License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-    </license>
-  </licenses>
+	<licenses>
+		<license>
+			<name>The Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
 
-  <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-  </properties>
+	<properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+	</properties>
 
-  <dependencies>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>dependencies</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-    </dependency>
-	<dependency>
-	  <groupId>commons-cli</groupId>
-	  <artifactId>commons-cli</artifactId>
-	</dependency>
-    <dependency>
-      <groupId>com.google.truth</groupId>
-      <artifactId>truth</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>dependencies</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-cli</groupId>
+			<artifactId>commons-cli</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.truth</groupId>
+			<artifactId>truth</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.2.4</version>
-        <executions>
-          <execution>
-            <id>shade-all-deps</id>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <shadedArtifactAttached>true</shadedArtifactAttached>
-              <shadedClassifierName>all-deps</shadedClassifierName>
-              <createDependencyReducedPom>false</createDependencyReducedPom>
-              <!-- Avoid signing verification error http://stackoverflow.com/a/6743609 -->
-              <filters>
-                <filter>
-                  <artifact>*:*</artifact>
-                  <excludes>
-                    <exclude>META-INF/*.SF</exclude>
-                    <exclude>META-INF/*.DSA</exclude>
-                    <exclude>META-INF/*.RSA</exclude>
-                  </excludes>
-                </filter>
-              </filters>
-              <transformers>
-                <transformer
-                    implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>com.google.cloud.tools.dependencies.linkagemonitor.LinkageMonitor
-                  </mainClass>
-                </transformer>
-              </transformers>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.2.4</version>
+				<executions>
+					<execution>
+						<id>shade-all-deps</id>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<shadedArtifactAttached>true</shadedArtifactAttached>
+							<shadedClassifierName>all-deps</shadedClassifierName>
+							<createDependencyReducedPom>false</createDependencyReducedPom>
+							<!-- Avoid signing verification error http://stackoverflow.com/a/6743609 -->
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/*.SF</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+									</excludes>
+								</filter>
+							</filters>
+							<transformers>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>com.google.cloud.tools.dependencies.linkagemonitor.LinkageMonitor
+									</mainClass>
+								</transformer>
+							</transformers>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>
