@@ -119,9 +119,10 @@ public class LinkageMonitor {
     }
   }
 
-  private static CommandLine parseCommandLine(String[] arguments) {
+  @VisibleForTesting
+  static CommandLine parseCommandLine(String[] arguments) {
     Options options = new Options();
-    options.addOption("send-analytics", false, "track results from each run");
+    options.addOption("sa", "send-analytics", false, "track results from each run");
     CommandLineParser parser = new DefaultParser();
     try {
       CommandLine commandLine = parser.parse(options, arguments);

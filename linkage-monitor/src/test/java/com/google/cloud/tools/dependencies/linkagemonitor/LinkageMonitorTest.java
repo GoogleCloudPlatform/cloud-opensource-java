@@ -104,6 +104,12 @@ public class LinkageMonitorTest {
                 "(Lcom/google/protobuf/Message;)Lio/grpc/MethodDescriptor$Marshaller;",
                 false));
   }
+  
+  @Test
+  public void testCommandLine() {
+    String[] arguments = {"something"};
+    LinkageMonitor.parseCommandLine(arguments);
+  }
 
   @Test
   public void testBomSnapshot()
