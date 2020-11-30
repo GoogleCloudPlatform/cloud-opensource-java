@@ -107,8 +107,8 @@ public class LinkageMonitorTest {
   
   @Test
   public void testCommandLine() {
-	String[] arguments = {"something"};
-	LinkageMonitor.parseCommandLine(arguments);
+    String[] arguments = {"something"};
+    LinkageMonitor.parseCommandLine(arguments);
   }
 
   @Test
