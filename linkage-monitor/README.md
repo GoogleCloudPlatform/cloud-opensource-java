@@ -26,7 +26,7 @@ mvn install -DskipTests
 
 # Get uber JAR unless it's installed already
 curl https://storage.googleapis.com/cloud-opensource-java-linkage-monitor/linkage-monitor-latest-all-deps.jar 
-java -jar linkage-monitor-X.Y.Z-all-deps.jar com.google.cloud:libraries-bom
+java -jar linkage-monitor-latest-all-deps.jar com.google.cloud:libraries-bom
 ```
 
 # Kokoro Job to Update GCS Object
