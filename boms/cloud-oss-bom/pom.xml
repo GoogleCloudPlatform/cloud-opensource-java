@@ -12,7 +12,7 @@
 
   <name>Google Cloud Platform Supported Libraries</name>
   <description>A compatible set of Google Cloud open source libraries.</description>
-  <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java#google-library-bom</url>
+  <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM</url>
   <organization>
     <name>Google LLC</name>
     <url>https://cloud.google.com</url>
