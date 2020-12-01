@@ -9,4 +9,4 @@ cd github/cloud-opensource-java
 mvn -V -B clean install
 
 cd linkage-monitor/target
-mv linkage-monitor-*-all-deps.jar linkage-monitor-latest-all-deps.jar
+# mv linkage-monitor-*-all-deps.jar linkage-monitor-latest-all-deps.jar

@@ -10,9 +10,9 @@ https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Monito
 
 # Installation
 
-This tool will work as part of presubmit checks in the library projects in GitHub. This check will
-notify when code or a dependency changes in such a way as to introduce a new linkage error in
-[Google Cloud Libraries BOM](../README.md#google-libraries-bom);
+This tool works as part of presubmit checks in the library projects in GitHub. The check
+fails the build when code or a dependency changes in such a way as to introduce a new linkage error in
+the [Google Cloud Libraries BOM](../README.md#google-libraries-bom);
 
 Example presubmit build script:
 
@@ -25,8 +25,8 @@ mvn install -DskipTests
 # ./gradlew build publishToMavenLocal -x test
 
 # Get uber JAR unless it's installed already
-curl https://storage.googleapis.com/.../linkage-monitor-latest-all-deps.jar 
-java -jar linkage-monitor-X.Y.Z-all-deps.jar com.google.cloud:libraries-bom
+curl https://storage.googleapis.com/cloud-opensource-java-linkage-monitor/linkage-monitor-latest-all-deps.jar 
+java -jar linkage-monitor-latest-all-deps.jar com.google.cloud:libraries-bom
 ```
 
 # Kokoro Job to Update GCS Object

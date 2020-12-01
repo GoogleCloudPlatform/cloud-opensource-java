@@ -47,6 +47,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.Model;
@@ -87,15 +92,18 @@ public class LinkageMonitor {
 
   public static void main(String[] arguments)
       throws RepositoryException, IOException, MavenRepositoryException, ModelBuildingException {
-    if (arguments.length < 1 || arguments[0].split(":").length != 2) {
+    
+    CommandLine commandLine = parseCommandLine(arguments);
+    String bomCoordinates = commandLine.getArgList().get(0);
+    List<String> coordinatesElements = Splitter.on(':').splitToList(bomCoordinates);
+
+    if (coordinatesElements.size() != 2) {
       logger.severe(
           "Please specify BOM coordinates without version. Example:"
               + " com.google.cloud:libraries-bom");
       System.exit(1);
     }
-    String bomCoordinates = arguments[0];
-    List<String> coordinatesElements = Splitter.on(':').splitToList(bomCoordinates);
-
+    
     Set<LinkageProblem> newLinkageProblems =
         new LinkageMonitor().run(coordinatesElements.get(0), coordinatesElements.get(1));
     int errorSize = newLinkageProblems.size();
@@ -109,6 +117,30 @@ public class LinkageMonitor {
     } else {
       logger.info("No new problem found");
     }
+  }
+
+  @VisibleForTesting
+  static CommandLine parseCommandLine(String[] arguments) {
+    Options options = new Options();
+    options.addOption("sa", "send-analytics", false, "track results from each run");
+    CommandLineParser parser = new DefaultParser();
+    try {
+      CommandLine commandLine = parser.parse(options, arguments);
+      if (commandLine.getArgList().size() != 1) {
+        printUsageAndDie();
+      }
+      return commandLine;
+    } catch (ParseException ex) {
+      printUsageAndDie();
+      return null;
+    }
+  }
+
+  private static void printUsageAndDie() {
+    logger.severe(
+        "Usage: java com.google.cloud.tools.dependencies.linkagemonitor.LinkageMonitor"
+        + " [--send-analytics] com.google.cloud:libraries-bom");
+    System.exit(1);
   }
 
   /**

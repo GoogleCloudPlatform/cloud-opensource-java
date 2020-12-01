@@ -12,7 +12,7 @@
 
   <name>Google Cloud Platform Supported Libraries</name>
   <description>A compatible set of Google Cloud open source libraries.</description>
-  <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java#google-library-bom</url>
+  <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM</url>
   <organization>
     <name>Google LLC</name>
     <url>https://cloud.google.com</url>
@@ -51,8 +51,8 @@
     <http.version>1.38.0</http.version>
     <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier.
         When updating gax.version, update gax.httpjson.version too. -->
-    <gax.version>1.60.0</gax.version>
-    <gax.httpjson.version>0.77.0</gax.httpjson.version>
+    <gax.version>1.60.1</gax.version>
+    <gax.httpjson.version>0.77.1</gax.httpjson.version>
     <common.protos.version>2.0.1</common.protos.version>
     <iam.protos.version>1.0.3</iam.protos.version>
   </properties>
