@@ -30,7 +30,9 @@ import java.nio.file.Path;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.TransformerException;
 import org.eclipse.aether.RepositoryException;
+import org.hamcrest.core.StringStartsWith;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -125,8 +127,11 @@ public class LinkageCheckerMainIntegrationTest {
   }
 
   @Test
-  public void testBom()
+  public void testBom_java8()
       throws IOException, RepositoryException, TransformerException, XMLStreamException {
+    // The number of linkage errors differ between Java 8 and Java 11 runtime.
+    Assume.assumeThat(System.getProperty("java.version"), StringStartsWith.startsWith("1.8.0"));
+
     try {
       LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
       fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
@@ -142,6 +147,45 @@ public class LinkageCheckerMainIntegrationTest {
             "Class com.google.net.rpc3.client.RpcStubDescriptor is not found;\n"
                 + "  referenced by 21 class files\n"
                 + "    com.google.appengine.api.appidentity.AppIdentityServicePb"
+                + " (com.google.appengine:appengine-api-1.0-sdk:1.9.71)");
+
+    // Show the dependency path to the problematic artifact
+    Truth.assertThat(output)
+        .contains(
+            "com.google.appengine:appengine-api-1.0-sdk:1.9.71 is at:\n"
+                + "  com.google.http-client:google-http-client-appengine:1.29.1 (compile) "
+                + "/ com.google.appengine:appengine-api-1.0-sdk:1.9.71 (provided)");
+  }
+
+  @Test
+  public void testBom_java11()
+      throws IOException, RepositoryException, TransformerException, XMLStreamException {
+    // The number of linkage errors differ between Java 8 and Java 11 runtime.
+    Assume.assumeThat(System.getProperty("java.version"), StringStartsWith.startsWith("11."));
+
+    try {
+      LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
+      fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
+    } catch (LinkageCheckResultException expected) {
+      assertEquals("Found 823 linkage errors", expected.getMessage());
+    }
+
+    String output = readCapturedStdout();
+
+    // Appengine-api-sdk is known to have invalid references.
+    Truth.assertThat(output)
+        .contains(
+            "Class com.google.net.rpc3.client.RpcStubDescriptor is not found;\n"
+                + "  referenced by 21 class files\n"
+                + "    com.google.appengine.api.appidentity.AppIdentityServicePb"
+                + " (com.google.appengine:appengine-api-1.0-sdk:1.9.71)");
+
+    // javax.activation.DataSource has been removed in Java 11.
+    Truth.assertThat(output)
+        .contains(
+            "Class javax.activation.DataSource is not found;\n"
+                + "  referenced by 9 class files\n"
+                + "    com.google.appengine.api.utils.HttpRequestParser"
                 + " (com.google.appengine:appengine-api-1.0-sdk:1.9.71)");
 
     // Show the dependency path to the problematic artifact
