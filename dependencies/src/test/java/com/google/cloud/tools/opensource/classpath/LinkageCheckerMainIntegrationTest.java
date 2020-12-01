@@ -162,6 +162,7 @@ public class LinkageCheckerMainIntegrationTest {
       throws IOException, RepositoryException, TransformerException, XMLStreamException {
     // The number of linkage errors differs between Java 8 and Java 11 runtime.
     String javaVersion = System.getProperty("java.version");
+    // javaMajorVersion is 1 when we use Java 8. Still good indicator to ensure Java 11 or higher.
     int javaMajorVersion = Integer.parseInt(javaVersion.split("\\.")[0]);
     Assume.assumeTrue(javaMajorVersion >= 11);
 
