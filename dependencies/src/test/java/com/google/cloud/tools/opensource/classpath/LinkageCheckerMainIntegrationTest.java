@@ -130,7 +130,7 @@ public class LinkageCheckerMainIntegrationTest {
   public void testBom_java8()
       throws IOException, RepositoryException, TransformerException, XMLStreamException {
     // The number of linkage errors differ between Java 8 and Java 11 runtime.
-    Assume.assumeThat(System.getProperty("java.version"), StringStartsWith.startsWith("1.8.0"));
+    Assume.assumeThat(System.getProperty("java.version"), StringStartsWith.startsWith("1.8."));
 
     try {
       LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
@@ -160,8 +160,10 @@ public class LinkageCheckerMainIntegrationTest {
   @Test
   public void testBom_java11()
       throws IOException, RepositoryException, TransformerException, XMLStreamException {
-    // The number of linkage errors differ between Java 8 and Java 11 runtime.
-    Assume.assumeThat(System.getProperty("java.version"), StringStartsWith.startsWith("11."));
+    // The number of linkage errors differs between Java 8 and Java 11 runtime.
+    String javaVersion = System.getProperty("java.version");
+    int javaMajorVersion = Integer.parseInt(javaVersion.split("\\.")[0]);
+    Assume.assumeTrue(javaMajorVersion >= 11);
 
     try {
       LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
