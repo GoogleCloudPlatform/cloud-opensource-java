@@ -297,7 +297,7 @@ public class DashboardTest {
   @Test
   public void testComponent_linkageCheckResult_java8() throws IOException, ParsingException {
     Assume.assumeThat(System.getProperty("java.version"), StringStartsWith.startsWith("1.8."));
-    // version used in libraries-bom 1.0.0
+    // The version used in libraries-bom 1.0.0
     Document document = parseOutputFile(
         "com.google.http-client_google-http-client-appengine_1.29.1.html");
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
@@ -324,12 +324,17 @@ public class DashboardTest {
     int javaMajorVersion = Integer.parseInt(javaVersion.split("\\.")[0]);
     Assume.assumeTrue(javaMajorVersion >= 11);
 
-    // version used in libraries-bom 1.0.0
+    // The version used in libraries-bom 1.0.0. The google-http-client-appengine has been known to
+    // have linkage errors in its dependencies ("commons-logging:commons-logging:1.2" and
+    // "com.google.appengine:appengine-api-1.0-sdk:1.9.71").
     Document document = parseOutputFile(
         "com.google.http-client_google-http-client-appengine_1.29.1.html");
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
     Assert.assertEquals(2, reports.size());
-    // This number differs between Java 8 and Java 11
+
+    // This number of linkage errors differs between Java 8 and Java 11 for the javax.activation
+    // package removal (JEP 320: Remove the Java EE and CORBA Modules). For the detail, see
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1849.
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo("105 target classes causing linkage errors referenced from 562 source classes.");
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(1).getValue()))
