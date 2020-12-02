@@ -29,6 +29,7 @@ curl https://storage.googleapis.com/cloud-opensource-java-linkage-monitor/linkag
 java -jar linkage-monitor-latest-all-deps.jar com.google.cloud:libraries-bom
 ```
 
-# Kokoro Job to Update GCS Object
+# Kokoro Job to Deploy to Production
 
-Kokoro job to update the GCS object is `cloud-opensource-java/ubuntu/linkage-monitor-gcs`.
+The Kokoro job that updates the fat jar stored in Google Cloud Storage
+is `cloud-opensource-java/ubuntu/linkage-monitor-gcs`.
