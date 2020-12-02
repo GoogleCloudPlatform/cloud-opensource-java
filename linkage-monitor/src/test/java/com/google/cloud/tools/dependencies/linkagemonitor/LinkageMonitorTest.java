@@ -120,7 +120,6 @@ public class LinkageMonitorTest {
     LinkageMonitor.main(arguments);
   }
 
-
   @Test
   public void testBomSnapshot()
       throws ModelBuildingException, ArtifactResolutionException, ArtifactDescriptorException {
