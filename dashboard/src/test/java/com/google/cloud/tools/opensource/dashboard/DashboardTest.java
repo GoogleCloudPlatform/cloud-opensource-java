@@ -48,8 +48,10 @@ import nu.xom.XPathContext;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
+import org.hamcrest.core.StringStartsWith;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -293,7 +295,8 @@ public class DashboardTest {
   }
 
   @Test
-  public void testComponent_linkageCheckResult() throws IOException, ParsingException {
+  public void testComponent_linkageCheckResult_java8() throws IOException, ParsingException {
+    Assume.assumeThat(System.getProperty("java.version"), StringStartsWith.startsWith("1.8."));
     // version used in libraries-bom 1.0.0
     Document document = parseOutputFile(
         "com.google.http-client_google-http-client-appengine_1.29.1.html");
@@ -307,6 +310,34 @@ public class DashboardTest {
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
     Truth.assertWithMessage(
             "google-http-client-appengine should show linkage errors for RpcStubDescriptor")
+        .that(causes)
+        .comparingElementsUsing(NODE_VALUES)
+        .contains(
+            "Class com.google.net.rpc3.client.RpcStubDescriptor is not found,"
+                + " referenced from 21 classes ▶"); // '▶' is the toggle button
+  }
+
+  @Test
+  public void testComponent_linkageCheckResult_java11() throws IOException, ParsingException {
+    String javaVersion = System.getProperty("java.version");
+    // javaMajorVersion is 1 when we use Java 8. Still good indicator to ensure Java 11 or higher.
+    int javaMajorVersion = Integer.parseInt(javaVersion.split("\\.")[0]);
+    Assume.assumeTrue(javaMajorVersion >= 11);
+
+    // version used in libraries-bom 1.0.0
+    Document document = parseOutputFile(
+        "com.google.http-client_google-http-client-appengine_1.29.1.html");
+    Nodes reports = document.query("//p[@class='jar-linkage-report']");
+    Assert.assertEquals(2, reports.size());
+    // This number differs between Java 8 and Java 11
+    Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
+        .isEqualTo("105 target classes causing linkage errors referenced from 562 source classes.");
+    Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(1).getValue()))
+        .isEqualTo("3 target classes causing linkage errors referenced from 3 source classes.");
+
+    Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
+    Truth.assertWithMessage(
+        "google-http-client-appengine should show linkage errors for RpcStubDescriptor")
         .that(causes)
         .comparingElementsUsing(NODE_VALUES)
         .contains(
