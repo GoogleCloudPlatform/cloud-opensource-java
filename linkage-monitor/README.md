@@ -33,3 +33,6 @@ java -jar linkage-monitor-latest-all-deps.jar com.google.cloud:libraries-bom
 
 The Kokoro job that updates the fat jar stored in Google Cloud Storage
 is `cloud-opensource-java/ubuntu/linkage-monitor-gcs.sh`.
+
+The Kokoro config lives in google3 at 
+`google3/devtools/kokoro/config/prod/cloud-opensource-java/ubuntu/linkage-monitor-gcs.cfg`
