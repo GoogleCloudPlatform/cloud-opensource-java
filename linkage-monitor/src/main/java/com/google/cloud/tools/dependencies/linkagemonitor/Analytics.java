@@ -77,10 +77,14 @@ final class Analytics {
   private void start() {
     Runnable emptyQueue = new Runnable() {
       @Override
-      public void run() { 
+      public void run() {
+        // drain the queue; GA can handle our traffic without buffering
         PingEvent event = pingEventQueue.poll();
-        if (sendAnalytics && event != null) {
-          ping(event);
+        while (event != null) {
+          if (sendAnalytics && event != null) {
+            ping(event);
+          }
+          event = pingEventQueue.poll();
         }
       }
     };
@@ -89,7 +93,7 @@ final class Analytics {
     
     // getExitingScheduledExecutorService doesn't block app from exiting
     ScheduledExecutorService scheduler = MoreExecutors.getExitingScheduledExecutorService(
-        executor , 10, TimeUnit.SECONDS);
+        executor, 10, TimeUnit.SECONDS);
 
     scheduler.scheduleAtFixedRate(emptyQueue, DELAY, DELAY, TimeUnit.MILLISECONDS);
   }
