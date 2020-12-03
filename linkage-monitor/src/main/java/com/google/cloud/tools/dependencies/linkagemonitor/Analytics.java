@@ -49,8 +49,12 @@ final class Analytics {
   private static final String FIRELOG_COLLECTION_URL =
       "https://firebaselogging-pa.googleapis.com/v1/firelog/legacy/log";
 
-  private static final String CONSOLE_TYPE = "TODO ????";
-
+  // Don't change the value; this name is used as an originating "application" of usage metrics.
+  private static final String METRICS_NAME = "cloud-opensource-java-linkage-monitor";
+  
+  // for Concord Clearcut
+  private static final String CONSOLE_TYPE = "LINKAGE_MONITOR";
+  
   private static Analytics instance;
 
   private final String collectionUrl;
