@@ -214,6 +214,6 @@ final class Analytics {
 
   @VisibleForTesting
   static String getAnonymizedClientId() {
-    return "TODO fill in with what????";
+    return "clientId"; // TODO fill in with what????";
   }
 }
