@@ -235,7 +235,7 @@ public class LinkageCheckerRuleTest {
 
       String errorMessage = errorMessageCaptor.getValue();
 
-      // Java 11 removed javax.activation package. Therefore the number of expected error differs
+      // Java 11 removed javax.activation package. Therefore the number of expected errors differs
       // between Java 8 and Java 11.
       // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1856
       int expectedErrorCount = System.getProperty("java.version").startsWith("1.8.") ? 112 : 117;
@@ -445,7 +445,7 @@ public class LinkageCheckerRuleTest {
           "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
     } catch (EnforcerRuleException ex) {
 
-      // Java 11 removed javax.activation package. Therefore the number of expected error differs
+      // Java 11 removed javax.activation package. Therefore the number of expected errors differs
       // between Java 8 and Java 11.
       // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1856
       int expectedErrorCount = System.getProperty("java.version").startsWith("1.8.") ? 112 : 117;
@@ -476,7 +476,7 @@ public class LinkageCheckerRuleTest {
     } catch (EnforcerRuleException ex) {
       // pass.
 
-      // Java 11 removed javax.activation package. Therefore the number of expected error differs
+      // Java 11 removed javax.activation package. Therefore the number of expected errors differs
       // between Java 8 and Java 11.
       // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1856
       int expectedErrorCount = System.getProperty("java.version").startsWith("1.8.") ? 93 : 98;
