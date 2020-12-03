@@ -234,7 +234,14 @@ public class LinkageCheckerRuleTest {
       verify(mockLog, times(1)).error(errorMessageCaptor.capture());
 
       String errorMessage = errorMessageCaptor.getValue();
-      Truth.assertThat(errorMessage).startsWith("Linkage Checker rule found 112 errors:");
+
+      // Java 11 removed javax.activation package. Therefore the number of expected error differs
+      // between Java 8 and Java 11.
+      // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1856
+      int expectedErrorCount = System.getProperty("java.version").startsWith("1.8.") ? 112 : 117;
+
+      Truth.assertThat(errorMessage)
+          .startsWith("Linkage Checker rule found " + expectedErrorCount + " errors:");
       Truth.assertThat(errorMessage)
           .contains(
               "Problematic artifacts in the dependency tree:\n"
@@ -437,14 +444,23 @@ public class LinkageCheckerRuleTest {
       Assert.fail(
           "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
     } catch (EnforcerRuleException ex) {
+
+      // Java 11 removed javax.activation package. Therefore the number of expected error differs
+      // between Java 8 and Java 11.
+      // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1856
+      int expectedErrorCount = System.getProperty("java.version").startsWith("1.8.") ? 112 : 117;
+
       // pass
-      verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found 112 errors:"));
+      verify(mockLog)
+          .error(
+              ArgumentMatchers.startsWith(
+                  "Linkage Checker rule found " + expectedErrorCount + " errors:"));
       assertEquals("Failed while checking class path. See above error report.", ex.getMessage());
     }
   }
 
   @Test
-  public void testExecute_shouldFilterExclusionRule()
+  public void testExecute_shouldFilterExclusionRule_java8()
       throws RepositoryException, URISyntaxException {
     try {
       // This artifact is known to contain classes missing dependencies
@@ -459,8 +475,15 @@ public class LinkageCheckerRuleTest {
           "The rule should raise an EnforcerRuleException for artifacts missing dependencies");
     } catch (EnforcerRuleException ex) {
       // pass.
-      // The number of errors was 112 in testExecute_shouldFailForBadProjectWithBundlePackaging
-      verify(mockLog).error(ArgumentMatchers.startsWith("Linkage Checker rule found 93 errors:"));
+
+      // Java 11 removed javax.activation package. Therefore the number of expected error differs
+      // between Java 8 and Java 11.
+      // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1856
+      int expectedErrorCount = System.getProperty("java.version").startsWith("1.8.") ? 93 : 98;
+      verify(mockLog)
+          .error(
+              ArgumentMatchers.startsWith(
+                  "Linkage Checker rule found " + expectedErrorCount + " errors:"));
       assertEquals("Failed while checking class path. See above error report.", ex.getMessage());
     }
   }
