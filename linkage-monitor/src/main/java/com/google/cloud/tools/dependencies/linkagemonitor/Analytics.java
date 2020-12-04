@@ -37,7 +37,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Report events to Google Analytics.
+ * Report events to
+ * <a href='https://g3doc.corp.google.com/company/teams/concord/integration/quick_start.md?cl=head'>Clearcut<a/>.
  */
 final class Analytics {
 
