@@ -36,6 +36,7 @@ import com.google.cloud.tools.opensource.classpath.SymbolNotFoundProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -51,6 +52,7 @@ import java.util.Set;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.building.ModelBuildingException;
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -109,6 +111,13 @@ public class LinkageMonitorTest {
   public void testCommandLine() {
     String[] arguments = {"something"};
     LinkageMonitor.parseCommandLine(arguments);
+  }
+
+  @Test
+  public void testMain()
+      throws RepositoryException, IOException, MavenRepositoryException, ModelBuildingException {
+    String[] arguments = {"com.google.guava:guava-bom"};
+    LinkageMonitor.main(arguments);
   }
 
   @Test
