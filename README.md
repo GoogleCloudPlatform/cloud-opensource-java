@@ -51,7 +51,7 @@ This project is built using _Maven_.
 
 1. Maven 3.6.0 or later.
 
-1. JDK 8
+1. JDK 8 or 11.
 
 1. git
 
