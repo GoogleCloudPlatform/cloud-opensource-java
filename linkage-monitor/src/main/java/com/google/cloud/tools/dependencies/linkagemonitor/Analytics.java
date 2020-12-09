@@ -38,11 +38,10 @@ import java.util.logging.Logger;
 
 /**
  * Report events to
- * <a href='https://g3doc.corp.google.com/company/teams/concord/integration/quick_start.md?cl=head'>Clearcut<a/>.
+ * <a href='https://g3doc.corp.google.com/company/teams/concord/integration/quick_start.md?cl=head'>Firelog<a/>.
  */
 final class Analytics {
 
-  // TODO is this a good value?
   private static final int DELAY = 773; // a prime number
 
   private static final Logger logger = Logger.getLogger(Analytics.class.getName());
@@ -79,10 +78,10 @@ final class Analytics {
     Runnable emptyQueue = new Runnable() {
       @Override
       public void run() {
-        // drain the queue; GA can handle our traffic without buffering
+        // drain the queue; Clearcut can handle our traffic without buffering
         PingEvent event = pingEventQueue.poll();
         while (event != null) {
-          if (sendAnalytics && event != null) {
+          if (sendAnalytics) {
             ping(event);
           }
           event = pingEventQueue.poll();
@@ -112,7 +111,7 @@ final class Analytics {
   }
 
   /**
-   * Sends a usage metric to Google Analytics.
+   * Sends a usage metric to Clearcut.
    */
   void queuePing(String eventName, String metadataKey, String metadataValue) {
     Preconditions.checkNotNull(metadataKey, "metadataKey null");
@@ -124,7 +123,7 @@ final class Analytics {
   }
 
   /**
-   * Sends a usage metric to Google Analytics.
+   * Sends a usage metric to Clearcut.
    */
   void queuePing(String eventName, Map<String, String> metadata) {
     Preconditions.checkNotNull(eventName, "eventName null");
@@ -146,7 +145,7 @@ final class Analytics {
    * ultimately funnels through here. 
    */
   private void ping(PingEvent pingEvent) {
-    if (sendAnalytics && pingEvent != null) {
+    if (sendAnalytics) {
       try {
         String json = jsonEncode(pingEvent);
         int resultCode = HttpUtil.sendPost(collectionUrl, json, "application/json");
@@ -165,6 +164,7 @@ final class Analytics {
     @VisibleForTesting final String eventName;
     @VisibleForTesting final ImmutableMap<String, String> metadata;
 
+    @VisibleForTesting
     PingEvent(String eventName, ImmutableMap<String, String> metadata) {
       Preconditions.checkArgument(!Strings.isNullOrEmpty(eventName), "eventName null or empty");
       Preconditions.checkNotNull(metadata, "metadata is null");
