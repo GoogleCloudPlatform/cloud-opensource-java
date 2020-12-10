@@ -17,11 +17,13 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
+import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -179,9 +181,17 @@ public class DashboardMain {
     ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies, false);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
 
-    LinkageChecker linkageChecker = LinkageChecker.create(classpath);
+    LinkageChecker linkageChecker = LinkageChecker.create(classpath, classpath.subList(0, managedDependencies.size()), null);
 
     ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
+
+    // Report only reachable linkage errors
+    ClassReferenceGraph classReferenceGraph = linkageChecker.getClassReferenceGraph();
+    linkageProblems =
+        linkageProblems.stream()
+            .filter(
+                entry -> classReferenceGraph.isReachable(entry.getSourceClass().getBinaryName()))
+            .collect(toImmutableSet());
 
     ArtifactCache cache = loadArtifactInfo(managedDependencies);
     Path output = generateHtml(bom, cache, classPathResult, linkageProblems);
