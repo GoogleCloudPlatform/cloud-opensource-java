@@ -141,6 +141,7 @@
       As io.netty.util.internal.logging.InternalLoggerFactory finds the available logging
       implementations in the class path, the missing class references from the logging package
       do not cause runtime errors.
+      More details in https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1872
     </Reason>
   </LinkageError>
   <LinkageError>
