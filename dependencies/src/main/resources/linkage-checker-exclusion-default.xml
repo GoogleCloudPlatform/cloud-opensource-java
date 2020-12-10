@@ -132,4 +132,25 @@
       https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1296
     </Reason>
   </LinkageError>
+  <LinkageError>
+    <Source>
+      <Package name="io.netty.util.internal.logging" />
+    </Source>
+    <Reason>
+      Netty supports different logging implementation and declares the dependencies as optional.
+      As io.netty.util.internal.logging.InternalLoggerFactory finds the available logging
+      implementations in the class path, the missing class references from the logging package
+      do not cause runtime errors.
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Source>
+      <Package name="io.grpc.netty.shaded.io.netty.util.internal.logging" />
+    </Source>
+    <Reason>
+      grpc-netty-shaded has copy of the netty's internal logging classes, which detects available
+      logging implementation in the class path. The missing class references do not cause runtime
+      errors.
+    </Reason>
+  </LinkageError>
 </LinkageCheckerFilter>
