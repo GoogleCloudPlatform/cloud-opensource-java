@@ -137,8 +137,7 @@
       <Package name="io.netty.util.internal.logging" />
     </Source>
     <Reason>
-      io.netty.util.internal.logging.InternalLoggerFactory catches and handles errors caused by the
-      missing classes.
+      InternalLoggerFactory catches and handles errors caused by the missing classes.
       More details in https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1872
     </Reason>
   </LinkageError>
