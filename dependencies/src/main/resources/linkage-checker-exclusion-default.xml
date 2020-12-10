@@ -137,7 +137,6 @@
       <Package name="io.netty.util.internal.logging" />
     </Source>
     <Reason>
-      Netty supports different logging implementation and declares the dependencies as optional.
       As io.netty.util.internal.logging.InternalLoggerFactory finds the available logging
       implementations in the class path, the missing class references from the logging package
       do not cause runtime errors.
