@@ -132,4 +132,22 @@
       https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1296
     </Reason>
   </LinkageError>
+  <LinkageError>
+    <Source>
+      <Package name="io.netty.util.internal.logging" />
+    </Source>
+    <Reason>
+      InternalLoggerFactory catches and handles errors caused by the missing classes.
+      More details in https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1872
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Source>
+      <Package name="io.grpc.netty.shaded.io.netty.util.internal.logging" />
+    </Source>
+    <Reason>
+      grpc-netty-shaded has copies of the netty's internal logging classes. which catches and
+      handles errors caused by the missing classes.
+    </Reason>
+  </LinkageError>
 </LinkageCheckerFilter>
