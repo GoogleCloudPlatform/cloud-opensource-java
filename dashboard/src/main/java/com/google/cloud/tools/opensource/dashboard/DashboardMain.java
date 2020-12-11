@@ -181,7 +181,9 @@ public class DashboardMain {
     ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies, false);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
 
-    LinkageChecker linkageChecker = LinkageChecker.create(classpath, classpath.subList(0, managedDependencies.size()), null);
+    // The managed dependencies in the BOM are the entry points of the reachability analysis.
+    ImmutableList<ClassPathEntry> entryPoints = classpath.subList(0, managedDependencies.size());
+    LinkageChecker linkageChecker = LinkageChecker.create(classpath, entryPoints, null);
 
     ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
