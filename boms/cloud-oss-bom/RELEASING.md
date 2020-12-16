@@ -58,14 +58,9 @@ new release is available on Maven Central.
     * https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM
     * https://github.com/googleapis/google-http-java-client/blob/master/docs/setup.md
     * https://github.com/googleapis/google-cloud-java/blob/master/TROUBLESHOOTING.md
-* Ask someone a code owner for java-docs-samples to merge the dependabot PR
+* Ask a code owner for java-docs-samples to merge the dependabot PR
   that updates libraries-bom in https://github.com/GoogleCloudPlatform/java-docs-samples/pulls
 * Manually edit and update any pom.xml files in https://github.com/GoogleCloudPlatform/java-docs-samples that dependabot missed
-    * Go to go/java-live
-    * Sort by title
-    * Scroll down until you find the section with titles "chore(deps): update dependency com.google.cloud:libraries-bom to v&lt;version>"
-    * Approve and merge these PRs.
-      For PRs waiting for Kokoro jobs, add the "kokoro:force-run" label.
 * In google3 run:
     * `$ g4d -f bom`
     *  `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version>oldVersion&lt;/version>" "&lt;version>newVersion&lt;/version>"`
