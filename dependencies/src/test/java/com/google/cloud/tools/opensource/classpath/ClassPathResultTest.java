@@ -50,7 +50,6 @@ public class ClassPathResultTest {
           .append(new Dependency(artifactA, "compile"));
   private ClassPathEntry jarA = new ClassPathEntry(artifactA);
   private ClassPathEntry jarB = new ClassPathEntry(artifactB);
-  ;
 
   @Test
   public void testFormatDependencyPaths_onePath() {
