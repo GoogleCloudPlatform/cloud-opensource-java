@@ -54,8 +54,10 @@ site](https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/re
 Several docs in this and other repositories need to be updated once the 
 new release is available on Maven Central.
 
-* Send pull requests that change the version in these documents:
+* Edit these Wiki pages:
     * https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM
+    * https://github.com/googleapis/google-oauth-java-client/wiki/Setup-Instructions
+* Send pull requests that change the version in these documents:
     * https://github.com/googleapis/google-http-java-client/blob/master/docs/setup.md
     * https://github.com/googleapis/google-cloud-java/blob/master/TROUBLESHOOTING.md
 * Ask a code owner for java-docs-samples to merge the dependabot PR
