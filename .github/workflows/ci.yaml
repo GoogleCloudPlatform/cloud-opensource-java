@@ -23,7 +23,8 @@ jobs:
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
-    - uses: actions/cache@v2
+    - name: Cache Gradle files
+      uses: actions/cache@v2
       with:
         path: |
           ~/.gradle/caches
