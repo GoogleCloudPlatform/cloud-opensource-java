@@ -16,6 +16,13 @@ jobs:
       with:
         java-version: ${{matrix.java}}
     - run: java -version
+    - name: Cache local Maven repository
+      uses: actions/cache@v2
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
     - run: mkdir -p ~/.m2 && cp settings.xml ~/.m2/
     - run: ./mvnw -B -e install
     - run: cd gradle-plugin && ./gradlew build publishToMavenLocal
