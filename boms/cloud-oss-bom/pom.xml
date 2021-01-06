@@ -54,7 +54,7 @@
     <gax.version>1.60.1</gax.version>
     <gax.httpjson.version>0.77.1</gax.httpjson.version>
     <common.protos.version>2.0.1</common.protos.version>
-    <iam.protos.version>1.0.4</iam.protos.version>
+    <iam.protos.version>1.0.5</iam.protos.version>
   </properties>
 
   <distributionManagement>
@@ -235,7 +235,7 @@
        <dependency>
          <groupId>com.google.auth</groupId>
          <artifactId>google-auth-library-bom</artifactId>
-         <version>0.22.1</version>
+         <version>0.22.2</version>
          <type>pom</type>
          <scope>import</scope>
        </dependency>
