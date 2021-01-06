@@ -14,6 +14,6 @@ assert !buildLog.text.contains("NullPointerException")
 
 // 4 linkage errors are references to java.util.concurrent.Flow class, which does not exist in
 // Java 8 runtime yet.
-def expectedErrorCount = System.getProperty("java.version").startsWith("1.8.") ? 850 : 846
+def expectedErrorCount = System.getProperty("java.version").startsWith("1.8.") ? 841 : 837
 
 assert buildLog.text.contains("Linkage Checker rule found $expectedErrorCount errors:")

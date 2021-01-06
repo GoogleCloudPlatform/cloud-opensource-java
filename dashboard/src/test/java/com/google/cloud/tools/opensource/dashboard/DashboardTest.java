@@ -213,7 +213,7 @@ public class DashboardTest {
     // appengine-api-sdk, shown as first item in linkage errors, has these errors
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo(
-            "53 target classes causing linkage errors referenced from 76 source classes.");
+            "40 target classes causing linkage errors referenced from 61 source classes.");
 
     Nodes dependencyPaths = details.query("//p[@class='linkage-check-dependency-paths']");
     Node dependencyPathMessageOnProblem = dependencyPaths.get(dependencyPaths.size() - 1);
