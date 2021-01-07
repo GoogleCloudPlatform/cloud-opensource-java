@@ -56,6 +56,7 @@ new release is available on Maven Central.
 
 * Send pull requests that change the version in these documents:
     * https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM
+      (no PR required)
     * https://github.com/googleapis/google-http-java-client/blob/master/docs/setup.md
     * https://github.com/googleapis/google-cloud-java/blob/master/TROUBLESHOOTING.md
 * Ask a code owner for java-docs-samples to merge the dependabot PR
@@ -63,7 +64,8 @@ new release is available on Maven Central.
 * Manually edit and update any pom.xml files in https://github.com/GoogleCloudPlatform/java-docs-samples that dependabot missed
 * In google3 run:
     * `$ g4d -f bom`
-    *  `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version>oldVersion&lt;/version>" "&lt;version>newVersion&lt;/version>"`
+    * `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version>oldVersion&lt;/version>" "&lt;version>newVersion&lt;/version>"`
+    * `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version&gt;oldVersion&lt;/version&gt;" "&lt;version>newVersion&lt;/version>"`
     * Sanity check the cl and send it for review.
     * Submit on approval
 * Search for libraries-bom in google3 to find any internal references (typically cloudite and devsite) that still need to be updated.
