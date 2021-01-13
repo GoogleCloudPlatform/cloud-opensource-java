@@ -77,7 +77,9 @@ run this command from a g4 client to retry the Rapid build without going all the
 back to the beginning:
 
 ```
-$ blaze run java/com/google/cloud/java/tools:ReleaseRapidProject -- --version=${VERSION} --committish_suffix=bom
+$ blaze run java/com/google/cloud/java/tools:ReleaseRapidProject -- \
+    --project_name=cloud-java-tools-cloud-opensource-java-bom-kokoro-release \
+    --version=${VERSION} --committish_suffix=bom
 ```
 
 ## Deleting a release
