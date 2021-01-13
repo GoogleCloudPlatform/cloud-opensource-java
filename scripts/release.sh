@@ -118,6 +118,7 @@ cd "${clientdir}"
 
 RELEASE_RAPID_PROJECT=java/com/google/cloud/java/tools:ReleaseRapidProject
 blaze build "${RELEASE_RAPID_PROJECT}"
+
 release_rapid_project() {
   local project="$1"
   "blaze-bin/${RELEASE_RAPID_PROJECT/://}" \
