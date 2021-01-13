@@ -125,6 +125,7 @@ release_rapid_project() {
       --project_name="cloud-java-tools-cloud-opensource-java-${project}-release" \
       --version="${VERSION}" --committish_suffix="${SUFFIX}"
 }
+
 if [[ "${SUFFIX}" = bom ]]; then
   release_rapid_project bom-kokoro
 else
