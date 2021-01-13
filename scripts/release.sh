@@ -116,25 +116,22 @@ clientdir="$(p4 g4d -- "${citcclient?}")"
 
 cd "${clientdir}"
 
-blaze build java/com/google/cloud/java/tools:ReleaseRapidProject
-if [[ "${SUFFIX}" = "bom" ]]; then
-  blaze-bin/java/com/google/cloud/java/tools/ReleaseRapidProject \
-      --project_name=cloud-java-tools-cloud-opensource-java-bom-kokoro-release \
-      --version=${VERSION} --committish_suffix=${SUFFIX}
+RELEASE_RAPID_PROJECT=java/com/google/cloud/java/tools:ReleaseRapidProject
+blaze build "${RELEASE_RAPID_PROJECT}"
+release_rapid_project() {
+  local project="$1"
+  "blaze-bin/${RELEASE_RAPID_PROJECT/://}" \
+      --project_name="cloud-java-tools-cloud-opensource-java-${project}-release" \
+      --version="${VERSION}" --committish_suffix="${SUFFIX}"
+}
+if [[ "${SUFFIX}" = bom ]]; then
+  release_rapid_project bom-kokoro
 else
   # Run the Rapid projects concurrently
-  blaze-bin/java/com/google/cloud/java/tools/ReleaseRapidProject \
-    --project_name=cloud-java-tools-cloud-opensource-java-parent-kokoro-release \
-    --version=${VERSION} --committish_suffix=${SUFFIX} &
-  blaze-bin/java/com/google/cloud/java/tools/ReleaseRapidProject \
-    --project_name=cloud-java-tools-cloud-opensource-java-dependencies-kokoro-release \
-    --version=${VERSION} --committish_suffix=${SUFFIX} &
-  blaze-bin/java/com/google/cloud/java/tools/ReleaseRapidProject \
-    --project_name=cloud-java-tools-cloud-opensource-java-enforcer-rules-release \
-    --version=${VERSION} --committish_suffix=${SUFFIX} &
-  blaze-bin/java/com/google/cloud/java/tools/ReleaseRapidProject \
-    --project_name=cloud-java-tools-cloud-opensource-java-gradle-plugin-kokoro-release \
-    --version=${VERSION} --committish_suffix=${SUFFIX} &
+  release_rapid_project parent-kokoro &
+  release_rapid_project dependencies-kokoro &
+  release_rapid_project enforcer-rules &
+  release_rapid_project gradle-plugin-kokoro &
   wait
 fi
 
