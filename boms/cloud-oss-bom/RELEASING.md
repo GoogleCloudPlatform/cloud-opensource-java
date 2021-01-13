@@ -18,11 +18,11 @@ All on your corp desktop:
 
 1. Run gcert if you have not done so in the last twelve hours or so.
 
-2. Run `release_bom.sh` with `bom` argument in 
+2. Run `release.sh` with `bom` argument in 
 the `cloud-opensource-java` directory:
 
 ```
-$ ./scripts/release_bom.sh bom <release version> <post-release-version>
+$ ./scripts/release.sh bom <release version> <post-release-version>
 ```
 
 You might see this message:
@@ -77,7 +77,7 @@ run this command from a g4 client to retry the Rapid build without going all the
 back to the beginning:
 
 ```
-$ blaze run java/com/google/cloud/java/tools:ReleaseBom -- --version=${VERSION}
+$ blaze run java/com/google/cloud/java/tools:ReleaseRapidProject -- --version=${VERSION} --committish_suffix=bom
 ```
 
 ## Deleting a release

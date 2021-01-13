@@ -1,5 +1,5 @@
 #!/bin/bash -
-# Usage: ./prepare_release.sh <dependencies|bom> <release version>
+# Usage: ./release.sh <dependencies|bom> <release version>
 
 set -e
 
@@ -16,7 +16,7 @@ Die() {
 }
 
 DieUsage() {
-  Die "Usage: ./prepare_release.sh <dependencies|bom> <release version> [<post-release-version>]"
+  Die "Usage: ./release.sh <dependencies|bom> <release version> [<post-release-version>]"
 }
 
 # Usage: CheckVersion <version>
@@ -116,10 +116,27 @@ clientdir="$(p4 g4d -- "${citcclient?}")"
 
 cd "${clientdir}"
 
-blaze run java/com/google/cloud/java/tools:ReleaseBom -- --version=${VERSION}
+blaze build java/com/google/cloud/java/tools:ReleaseRapidProject
+if [[ "${SUFFIX}" = "bom" ]]; then
+  blaze-bin/java/com/google/cloud/java/tools/ReleaseRapidProject \
+      --project_name=cloud-java-tools-cloud-opensource-java-bom-kokoro-release \
+      --version=${VERSION} --committish_suffix=${SUFFIX}
+else
+  # Run the Rapid projects concurrently
+  blaze-bin/java/com/google/cloud/java/tools/ReleaseRapidProject \
+    --project_name=cloud-java-tools-cloud-opensource-java-parent-kokoro-release \
+    --version=${VERSION} --committish_suffix=${SUFFIX} &
+  blaze-bin/java/com/google/cloud/java/tools/ReleaseRapidProject \
+    --project_name=cloud-java-tools-cloud-opensource-java-dependencies-kokoro-release \
+    --version=${VERSION} --committish_suffix=${SUFFIX} &
+  blaze-bin/java/com/google/cloud/java/tools/ReleaseRapidProject \
+    --project_name=cloud-java-tools-cloud-opensource-java-enforcer-rules-release \
+    --version=${VERSION} --committish_suffix=${SUFFIX} &
+  blaze-bin/java/com/google/cloud/java/tools/ReleaseRapidProject \
+    --project_name=cloud-java-tools-cloud-opensource-java-gradle-plugin-kokoro-release \
+    --version=${VERSION} --committish_suffix=${SUFFIX} &
+  wait
+fi
 
-# TODO check status of ReleaseBom and die with instructions if it failed. Otherwise
-
-# TODO print instructions for releasing from Sonatype OSSRH to Maven Central
-# Eventually we should automate this step too.
-
+# TODO print instructions for releasing from Sonatype OSSRH to Maven Central when
+# ReleaseRapidProject succeeds. Eventually we should automate this step too.

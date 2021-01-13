@@ -1,22 +1,32 @@
 # Release Steps
 
+## Prerequisites 
+
+(Does not need to be repeated for each release.)
+
+* Install the [`gh`](https://github.com/cli/cli)
+tool if you not previously done so.
+
+    * Run `gh auth login` to register your desktop with github.
+
+* Clone this repository onto your corp desktop, Ubiquity instance, or CloudTop. Do not use a laptop or personal machine as the release requires google3 access.
+
+## Release
+
 To release artifacts 'dependencies-parent', 'dependencies', 'linkage-checker-enforcer-rules',
-and 'gradle-plugin', run `prepare_release.sh` with `dependencies` argument:
+and 'gradle-plugin', run `script/release.sh` with `dependencies` argument in corp desktop:
 
 ```
 $ cd cloud-opensource-java
 $ git checkout master
 $ git pull
-$ ./scripts/prepare_release.sh dependencies 1.0.0
+$ ./scripts/release.sh dependencies 1.0.0
 ```
 
 Note: Google Cloud Libraries BOM release procedure [boms/cloud-oss-bom/RELEASING.md](
 boms/cloud-oss-bom/RELEASING.md) is not part of this document.
 
-Create a PR for the release, and get it approved.
-
-Continue to Rapid workflow: [Cloud Tools for Java Development Practices: Releasing](
-https://g3doc.corp.google.com/company/teams/cloud-java/tools/developers/releasing.md#run-the-rapid-workflow)
+This script creates a PR for the release and initiates Rapid project workflows listed below.
 
 ## Rapid builds
 
