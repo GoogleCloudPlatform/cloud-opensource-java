@@ -31,4 +31,25 @@ public class VerTest {
     Assert.assertTrue(new ComparableVersion("1.38.0.1").compareTo(new ComparableVersion("1.39.0")) < 0);
   }
 
+  @Test
+  public void testTwoDigits() {
+    ComparableVersion lesser = new ComparableVersion("1.38.9.1");
+    ComparableVersion greater = new ComparableVersion("1.38.20.1");
+    Assert.assertTrue(lesser.compareTo(greater) < 0);
+  }
+  
+  @Test
+  public void testTwoDigits_2() {
+    ComparableVersion lesser = new ComparableVersion("1.38.10");
+    ComparableVersion greater = new ComparableVersion("1.38.20.1");
+    Assert.assertTrue(lesser.compareTo(greater) < 0);
+  }
+  
+  @Test
+  public void testTwoDigits_3() {
+    ComparableVersion lesser = new ComparableVersion("1.0.9.3");
+    ComparableVersion greater = new ComparableVersion("1.0.10.2");
+    Assert.assertTrue(lesser.compareTo(greater) < 0);
+  }
+ 
 }
