@@ -15,13 +15,13 @@
  */
 
 /**
- * Toggles the visibility of source class list below the button.
+ * Toggles the visibility of an HTML element below the button.
  * @param button clicked button element
  */
-function toggleSourceClassListVisibility(button) {
-  const classList = button.parentElement.nextElementSibling;
-  const currentVisibility = classList.style.display !== "none";
+function toggleNextSiblingVisibility(button) {
+  const nextSibling = button.parentElement.nextElementSibling;
+  const currentVisibility = nextSibling.style.display !== "none";
   const nextVisibility = !currentVisibility;
-  classList.style.display = nextVisibility ? "" : "none";
+  nextSibling.style.display = nextVisibility ? "" : "none";
   button.innerText = nextVisibility ? "▼" : "▶";
 }

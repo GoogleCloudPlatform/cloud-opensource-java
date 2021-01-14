@@ -43,58 +43,64 @@
   </LinkageError>
   <LinkageError>
     <Target>
-      <Class name="java.lang.invoke.MethodHandle" />
+      <Package name="sun.text.normalizer" />
     </Target>
     <Source>
-      <Package name="com.oracle.svm" />
+      <Package name="com.oracle.svm.core.jdk8" />
     </Source>
     <Reason>
-      GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that
-      only exists in special JDK. These missing classes are false positives, because
-      the code is only invoked when running in a GraalVM.
-      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929
+      Substrate VM is part of GraalVM and the virtual machine references classes in the JVM-internal
+      package 'sun.text.normalizer' that are not available in JVM runtime.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1825
     </Reason>
   </LinkageError>
   <LinkageError>
     <Target>
-      <Class name="java.lang.invoke.MethodHandle" />
+      <Class name="sun.util.logging.LoggingSupport" />
     </Target>
     <Source>
-      <Package name="com.oracle.graal" />
+      <Class name="com.oracle.svm.core.jdk.FormatAccessors" />
     </Source>
     <Reason>
-      GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that
-      only exists in special JDK. These missing classes are false positives, because
-      the code is only invoked when running in a GraalVM.
-      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929
+      Substrate VM references the JVM-internal class 'sun.util.logging.LoggingSupport' that are not
+      available in JVM runtime.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1825
     </Reason>
   </LinkageError>
   <LinkageError>
     <Target>
-      <Class name="java.lang.invoke.MethodHandle" />
+      <Class name="sun.misc.JavaUtilZipFileAccess" />
     </Target>
     <Source>
-      <Package name="org.graalvm" />
+      <Class name="com.oracle.svm.core.jdk8.zipfile.ZipFileUtil" />
     </Source>
     <Reason>
-      GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that
-      only exists in special JDK. These missing classes are false positives, because
-      the code is only invoked when running in a GraalVM.
-      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929
+      Substrate VM references the class that are only available in Java 8.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1825
     </Reason>
   </LinkageError>
   <LinkageError>
     <Target>
-      <Class name="java.lang.invoke.MethodHandle" />
+      <Class name="sun.misc.SharedSecrets" />
     </Target>
     <Source>
-      <Package name="com.oracle.truffle" />
+      <Package name="com.oracle.svm.core.jdk8" />
     </Source>
     <Reason>
-      GraalVM-related libraries depend on Java Compiler Interface (JVMCI) that
-      only exists in special JDK. These missing classes are false positives, because
-      the code is only invoked when running in a GraalVM.
-      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/929
+      Substrate VM references the class that are only available in Java 8.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1825
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Class name="sun.misc.PerfCounter" />
+    </Target>
+    <Source>
+      <Package name="com.oracle.svm.core.jdk8" />
+    </Source>
+    <Reason>
+      Substrate VM references the class that are only available in Java 8.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1825
     </Reason>
   </LinkageError>
   <LinkageError>
@@ -124,6 +130,24 @@
       only when the com.sun.jna package is available. Therefore the invalid references from the
       VirtualMachine class to JNA classes do not cause linkage errors at runtime.
       https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1296
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Source>
+      <Package name="io.netty.util.internal.logging" />
+    </Source>
+    <Reason>
+      InternalLoggerFactory catches and handles errors caused by the missing classes.
+      More details in https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1872
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Source>
+      <Package name="io.grpc.netty.shaded.io.netty.util.internal.logging" />
+    </Source>
+    <Reason>
+      grpc-netty-shaded has copies of the netty's internal logging classes. which catches and
+      handles errors caused by the missing classes.
     </Reason>
   </LinkageError>
 </LinkageCheckerFilter>

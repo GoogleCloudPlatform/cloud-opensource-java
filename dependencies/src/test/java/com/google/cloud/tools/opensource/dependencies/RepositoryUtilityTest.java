@@ -78,6 +78,28 @@ public class RepositoryUtilityTest {
   }
 
   @Test
+  public void testFindHighestVersions_nonNumericalVersion()
+      throws MavenRepositoryException, InvalidVersionSpecificationException {
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+
+    // google-api-services-bigquery's version does not follow semantic versioning. For example,
+    // the latest version as of August 2020 was "v2-rev20200818-1.30.10".
+    String bigqueryApiVersion =
+        RepositoryUtility.findHighestVersion(
+            system,
+            RepositoryUtility.newSession(system),
+            "com.google.apis",
+            "google-api-services-bigquery");
+    Assert.assertNotNull(bigqueryApiVersion);
+
+    VersionScheme versionScheme = new GenericVersionScheme();
+    Version highestGuava = versionScheme.parseVersion(bigqueryApiVersion);
+    Version august2020Version = versionScheme.parseVersion("v2-rev20200818-1.30.10");
+
+    Truth.assertThat(highestGuava).isAtLeast(august2020Version);
+  }
+
+  @Test
   public void testMavenRepositoryFromUrl() {
     RemoteRepository remoteRepository =
         RepositoryUtility.mavenRepositoryFromUrl("https://repo.maven.apache.org/maven2");

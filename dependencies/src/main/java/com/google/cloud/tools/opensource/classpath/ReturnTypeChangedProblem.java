@@ -16,7 +16,9 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import java.util.Objects;
 import javax.annotation.Nullable;
+import org.apache.bcel.classfile.Utility;
 
 /**
  * The {@code sourceClass} references the {@code expectedMethodSymbol}, but the {@code
@@ -24,15 +26,32 @@ import javax.annotation.Nullable;
  * actualTypeName}).
  */
 class ReturnTypeChangedProblem extends LinkageProblem {
+  private String actualType;
+
   ReturnTypeChangedProblem(
       ClassFile sourceClass,
       @Nullable ClassFile targetClass,
       MethodSymbol expectedMethodSymbol,
       String actualType) {
     super(
-        "is not found. The expected return type does not match the actual type " + actualType,
+        "is expected to return "
+            + Utility.methodSignatureReturnType(expectedMethodSymbol.getDescriptor())
+            + " but instead returns "
+            + actualType,
         sourceClass,
         expectedMethodSymbol,
         targetClass);
+    this.actualType = actualType;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), actualType);
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    return super.equals(other) // this checks the class equality
+        && Objects.equals(actualType, ((ReturnTypeChangedProblem) other).actualType);
   }
 }

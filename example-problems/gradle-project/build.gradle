@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 plugins {
-  id "com.google.cloud.tools.linkagechecker" version "1.0.0"
+  id "com.google.cloud.tools.linkagechecker" version "1.5.3"
   id "java"
 }
 

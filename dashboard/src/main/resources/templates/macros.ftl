@@ -26,19 +26,23 @@
     ${pluralize(referenceCount, "source class", "source classes")}.
   </p>
   <#list problemsToClasses as problem, sourceClasses>
-    <p class="jar-linkage-report-cause">${problem?html}, referenced from ${
-      pluralize(sourceClasses?size, "class", "classes")?html}
-      <button onclick="toggleSourceClassListVisibility(this)"
-              title="Toggle visibility of source class list">▶
-      </button>
-    </p>
-
-    <!-- The visibility of this list is toggled via the button above. Hidden by default -->
-    <ul class="jar-linkage-report-cause" style="display:none">
-      <#list sourceClasses as sourceClass>
-        <li>${sourceClass?html}</li>
-      </#list>
-    </ul>
+    <#if sourceClasses?size == 1>
+      <#assign sourceClass = sourceClasses[0] />
+      <p class="jar-linkage-report-cause">${problem?html}, referenced from ${sourceClass?html}</p>
+    <#else>
+      <p class="jar-linkage-report-cause">${problem?html}, referenced from ${
+          pluralize(sourceClasses?size, "class", "classes")?html}
+        <button onclick="toggleNextSiblingVisibility(this)"
+                title="Toggle visibility of source class list">▶
+        </button>
+      </p>
+      <!-- The visibility of this list is toggled via the button above. Hidden by default -->
+      <ul class="jar-linkage-report-cause" style="display:none">
+          <#list sourceClasses as sourceClass>
+            <li>${sourceClass?html}</li>
+          </#list>
+      </ul>
+    </#if>
   </#list>
   <#assign jarsInProblem = {} >
   <#list linkageProblems as problem>
@@ -60,15 +64,25 @@
 
 <#macro showDependencyPath dependencyPathRootCauses classPathResult classPathEntry>
   <#assign dependencyPaths = classPathResult.getDependencyPaths(classPathEntry) />
+  <#assign hasRootCause = dependencyPathRootCauses[classPathEntry]?? />
+  <#assign hideDependencyPathsByDefault = (!hasRootCause) && (dependencyPaths?size > 5) />
   <p class="linkage-check-dependency-paths">
     The following ${plural(dependencyPaths?size, "path contains", "paths contain")} ${classPathEntry?html}:
+    <#if hideDependencyPathsByDefault>
+      <#-- The dependency paths are not summarized -->
+      <button onclick="toggleNextSiblingVisibility(this)"
+              title="Toggle visibility of source class list">▶
+      </button>
+    </#if>
   </p>
 
-  <#if dependencyPathRootCauses[classPathEntry]?? >
+  <#if hasRootCause>
     <p class="linkage-check-dependency-paths">${dependencyPathRootCauses[classPathEntry]?html}
     </p>
   <#else>
-    <ul class="linkage-check-dependency-paths">
+    <!-- The visibility of this list is toggled via the button above. Hidden by default -->
+    <ul class="linkage-check-dependency-paths"
+        style="display:${hideDependencyPathsByDefault?string('none', '')}">
         <#list dependencyPaths as dependencyPath >
           <li>${dependencyPath}</li>
         </#list>
@@ -114,4 +128,15 @@
     <#else>UNAVAILABLE
     </#if>
   </td>
+</#macro>
+
+<#macro pieChartSvg description ratio>
+    <#assign largeArcFlag = (ratio gt 0.5)?string("1", "0")>
+    <#assign endPointX = pieChart.calculateEndPointX(100, 100, 100, ratio)>
+    <#assign endPointY = pieChart.calculateEndPointY(100, 100, 100, ratio)>
+  <svg xmlns="http://www.w3.org/2000/svg" width="${pieSize}" height="${pieSize}">
+    <desc>${description}</desc>
+    <circle cx="100" cy="100" r="100" stroke-width="3" fill="lightgreen" />
+    <path d="M100,100 v -100 A100,100 0 ${largeArcFlag} 1 ${endPointX}, ${endPointY} z" fill="red" />
+  </svg>
 </#macro>

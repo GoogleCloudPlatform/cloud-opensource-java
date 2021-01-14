@@ -16,16 +16,73 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import javax.annotation.Nullable;
+
 /**
- * The {@code classSymbol} is inaccessible to the {@code sourceClass} as per {@code sourceClass}'s
- * definition of the class symbol.
+ * The {@code classSymbol} with {@code modifier} is inaccessible to the {@code sourceClass} as per
+ * {@code sourceClass}'s definition of the class symbol.
  *
  * <p>If the source class is in a different package than the target class, the class or one of its
  * enclosing types is not public. If the source class is in the same package, the class or one of
  * its enclosing types is private.
  */
 final class InaccessibleClassProblem extends LinkageProblem {
-  InaccessibleClassProblem(ClassFile sourceClass, ClassFile targetClass, Symbol classSymbol) {
+  private AccessModifier modifier;
+
+  InaccessibleClassProblem(
+      ClassFile sourceClass,
+      @Nullable ClassFile targetClass,
+      ClassSymbol classSymbol,
+      AccessModifier modifier) {
     super("is not accessible", sourceClass, classSymbol, targetClass);
+    this.modifier = modifier;
+  }
+
+  @Override
+  public final String toString() {
+    StringBuilder message = new StringBuilder();
+    message.append("Class " + getSymbol().getClassBinaryName());
+    switch (modifier) {
+      case PUBLIC:
+        message.append(" is public");
+        break;
+      case PRIVATE:
+        message.append(" is private");
+        break;
+      case PROTECTED:
+        message.append(" is protected");
+        break;
+      case DEFAULT:
+        message.append(" has default access");
+    }
+
+    message.append(" and is referenced by " + getSourceClass().getBinaryName());
+    if (modifier == AccessModifier.DEFAULT) {
+      message.append(" (different package)");
+    }
+
+    return message.toString();
+  }
+
+  @Override
+  public String formatSymbolProblem() {
+    String result = modifier.describe(getSymbol().toString());
+    ClassFile targetClass = getTargetClass();
+    if (targetClass != null) {
+      String jarInfo = "(" + targetClass.getClassPathEntry() + ") ";
+      result = jarInfo + result;
+    }
+
+    return result;
+  }
+
+  @Override
+  protected String formatSymbolProblemWithReferenceCount(int referenceCount) {
+    if (modifier == AccessModifier.DEFAULT) {
+      return String.format(
+          "%s;\n  referenced by %d class file%s in a different package\n",
+          formatSymbolProblem(), referenceCount, referenceCount > 1 ? "s" : "");
+    }
+    return super.formatSymbolProblemWithReferenceCount(referenceCount);
   }
 }

@@ -25,13 +25,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.truth.Correspondence;
 import com.google.common.truth.Truth;
@@ -40,10 +40,14 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
+import org.hamcrest.core.StringStartsWith;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -548,53 +552,56 @@ public class LinkageCheckerTest {
     Truth.assertThat(problems).isEmpty();
   }
 
-
   @Test
-  public void testFindClassReferences_privateClass() throws IOException, URISyntaxException {
-    // The superclass of AbstractApiService$InnerService (Guava's ApiService) is not in the paths
-    ClassPathEntry dummySource = firestoreJar;
-    List<ClassPathEntry> paths =
-        ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
-    LinkageChecker linkageChecker = LinkageChecker.create(paths);
+  public void testFindClassReferences_inaccessibleClass() throws IOException, URISyntaxException {
+    // io.grpc.grpclb.GrpclbLoadBalancer in grpc-grpclb 0.12.0 had a reference to
+    // io.grpc.internal.SingleTransportChannel. The SingleTransportChannel became non-public in
+    // grpc-core 0.15.0.
+    ClassPathResult classPathResult =
+        new ClassPathBuilder()
+            .resolve(
+                ImmutableList.of(
+                    new DefaultArtifact("io.grpc:grpc-core:0.15.0"),
+                    new DefaultArtifact("io.grpc:grpc-grpclb:0.12.0")),
+                false);
 
-    SymbolReferences.Builder builder = new SymbolReferences.Builder();
-    builder.addClassReference(
-        new ClassFile(dummySource, LinkageCheckerTest.class.getName()),
-        // This private inner class is defined in firestore-v1beta1-0.28.0.jar
-        new ClassSymbol("com.google.api.core.AbstractApiService$InnerService"));
-    ImmutableSet<LinkageProblem> problems =
-        linkageChecker.cloneWith(builder.build()).findLinkageProblems();
+    LinkageChecker linkageChecker = LinkageChecker.create(classPathResult.getClassPath());
 
-    Truth.assertThat(problems).hasSize(1);
-    LinkageProblem firstProblem = Iterables.getFirst(problems, null);
-    assertTrue(firstProblem instanceof InaccessibleClassProblem);
-    Truth.assertWithMessage(
-            "When the superclass is unavailable, it should report the location of InnerService")
-        .that(
-            ((InaccessibleClassProblem) firstProblem)
-                .getTargetClass()
-                .getClassPathEntry()
-                .toString())
-        .contains("api-common-1.7.0.jar");
+    ImmutableSet<LinkageProblem> problems = linkageChecker.findLinkageProblems();
+
+    ImmutableList<LinkageProblem> inaccessibleClassProblems =
+        problems.stream()
+            .filter(problem -> problem instanceof InaccessibleClassProblem)
+            .filter(problem -> problem.getSymbol() instanceof ClassSymbol)
+            .collect(toImmutableList());
+
+    Truth.assertThat(inaccessibleClassProblems).hasSize(1);
+    LinkageProblem firstProblem = inaccessibleClassProblems.get(0);
+
+    assertEquals(
+        "io.grpc:grpc-core:0.15.0",
+        Artifacts.toCoordinates(firstProblem.getTargetClass().getClassPathEntry().getArtifact()));
+    assertEquals(
+        "io.grpc.grpclb.GrpclbLoadBalancer", firstProblem.getSourceClass().getBinaryName());
+    assertEquals(
+        "io.grpc.internal.SingleTransportChannel", firstProblem.getTargetClass().getBinaryName());
   }
 
   @Test
   public void testFindLinkageProblems_shouldStripSourceInnerClasses()
       throws IOException, URISyntaxException {
     // The superclass of AbstractApiService$InnerService (Guava's ApiService) is not in the paths
-    ClassPathEntry dummySource = firestoreJar;
     List<ClassPathEntry> entries =
         ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));    
     LinkageChecker linkageChecker = LinkageChecker.create(entries);
 
-    SymbolReferences.Builder builder = new SymbolReferences.Builder();
-    builder.addClassReference(
-        new ClassFile(dummySource, "com.google.foo.Bar$Baz"),
-        // This private inner class is defined in firestore-v1beta1-0.28.0.jar
-        new ClassSymbol("com.google.api.core.AbstractApiService$InnerService"));
-    ImmutableSet<LinkageProblem> problems =
-        linkageChecker.cloneWith(builder.build()).findLinkageProblems();
+    ImmutableSet<LinkageProblem> problems = linkageChecker.findLinkageProblems();
 
+    // api-common-1.7.0 contains AbstractApiService$InnerService which has references to other
+    // classes in the dependencies. As we do not provide the dependencies in the class path, it
+    // should report the linkage errors. The source class of the error should not be reported as
+    // an inner class.
+    Truth.assertThat(problems).isNotEmpty();
     long innerClassCount =
         problems.stream()
             .map(LinkageProblem::getSourceClass)
@@ -1125,6 +1132,8 @@ public class LinkageCheckerTest {
   public void testFindLinkageProblems_referenceToJava11Method() throws IOException {
     // protobuf-java 3.12.4 references a Java 11 method that does not exist in Java 8
     // https://github.com/protocolbuffers/protobuf/issues/7827
+    Assume.assumeThat(System.getProperty("java.version"), StringStartsWith.startsWith("1.8.0"));
+
     ImmutableList<ClassPathEntry> jars =
         TestHelper.resolve("com.google.protobuf:protobuf-java:3.12.4");
 
@@ -1139,8 +1148,76 @@ public class LinkageCheckerTest {
             new ClassFile(jars.get(0), "com.google.protobuf.TextFormat"),
             null,
             methodSymbol,
-            "java.nio.CharBuffer");
+            "java.nio.Buffer");
 
     Truth.assertThat(linkageProblems).contains(expectedProblem);
+  }
+
+  @Test
+  public void testFindLinkageProblems_unusedClassReferenceInByteCode() throws IOException {
+    // com.sun.tools.ws.wscompile.WsgenOptions in jaxws-tools has the class reference to
+    // com.sun.xml.ws.api.BindingID$SOAPHTTPImpl in its constant pool section. The referenced class
+    // is private but it's not used in the JVM instruction in the referencing class file. Therefore
+    // the Linkage Checker should not report it as a symbol problem.
+    // The problem was observed in Java 8's tools.jar (
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1608). In Java 11, the
+    // JDK does not provide the class any more. The two artifacts below have the classes with
+    // different packages (they are no longer 'internal').
+    ImmutableList<ClassPathEntry> classPath =
+        TestHelper.resolve(
+            "com.sun.xml.ws:jaxws-tools:2.3.3", // This contains WsgenOptions
+            "com.sun.xml.ws:jaxws-rt:2.3.3"); // This contains BindingID$SOAPHTTPImpl
+    String wsgenOptionsClassName = "com.sun.tools.ws.wscompile.WsgenOptions";
+
+    // Ensure the class path contains the two classes in the issue (#1608).
+    ClassDumper classDumper = ClassDumper.create(classPath);
+    SymbolReferences symbolReferences = classDumper.findSymbolReferences();
+    ImmutableSet<ClassSymbol> classSymbols =
+        symbolReferences.getClassSymbols(new ClassFile(classPath.get(0), wsgenOptionsClassName));
+    Truth.assertThat(classSymbols)
+        .contains(new ClassSymbol("com.sun.xml.ws.api.BindingID$SOAPHTTPImpl"));
+
+    LinkageChecker linkageChecker = LinkageChecker.create(classPath);
+
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
+
+    Stream<LinkageProblem> problemsOnWsgenOptions =
+        linkageProblems.stream()
+            .filter(
+                linkageProblem ->
+                    wsgenOptionsClassName.equals(linkageProblem.getSourceClass().getBinaryName()));
+
+    Truth8.assertThat(problemsOnWsgenOptions).isEmpty();
+  }
+
+  @Test
+  public void testFindLinkageProblems_shouldNotReportMethodHandleInvoke() throws IOException {
+    // JVM treats java.lang.invoke.MethodHandle's invoke and invokeExact in a special manner when
+    // resolving its method reference. Class files have the method references with different
+    // argument types while the actual MethodHandle.invoke takes {@code Object[]}. Linkage Checker
+    // should not report the discrepancy as linkage errors.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1684
+
+    // The appengine-api-1.0-sdk uses MethodHandle.invoke.
+    Artifact appengineApiSdk =
+        new DefaultArtifact("com.google.appengine:appengine-api-1.0-sdk:1.9.78");
+    ClassPathResult classPathResult =
+        new ClassPathBuilder().resolve(ImmutableList.of(appengineApiSdk), false);
+
+    LinkageChecker linkageChecker = LinkageChecker.create(classPathResult.getClassPath());
+
+    ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
+
+    ImmutableList<LinkageProblem> problemsOnMethodHandle =
+        linkageProblems.stream()
+            .filter(
+                problem ->
+                    problem
+                        .getSymbol()
+                        .getClassBinaryName()
+                        .equals("java.lang.invoke.MethodHandle"))
+            .collect(toImmutableList());
+
+    Truth.assertThat(problemsOnMethodHandle).isEmpty();
   }
 }

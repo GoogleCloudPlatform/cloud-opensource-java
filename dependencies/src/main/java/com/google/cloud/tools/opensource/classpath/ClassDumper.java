@@ -562,7 +562,7 @@ class ClassDumper {
   }
 
   /**
-   * Returns true if the class symbol reference is unused in the source class file. It checks
+   * Returns true if the class symbol reference is used in the source class file. It checks the
    * following places for the usage in the source class:
    *
    * <ul>
@@ -581,10 +581,10 @@ class ClassDumper {
    * @see <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.10">Java
    *     Virtual Machine Specification: Exceptions</a>
    */
-  boolean isUnusedClassSymbolReference(String sourceClassName, ClassSymbol classSymbol) {
+  boolean isClassSymbolReferenceUsed(String sourceClassName, ClassSymbol classSymbol) {
     if (classSymbol instanceof SuperClassSymbol) {
       // The target class is used in class inheritance
-      return false;
+      return true;
     }
 
     String targetClassName = classSymbol.getClassBinaryName();
@@ -595,7 +595,7 @@ class ClassDumper {
       for (String interfaceName: sourceJavaClass.getInterfaceNames()) {
         if (interfaceName.equals(targetClassName)) {
           // The target class is used in interfaces
-          return false;
+          return true;
         }
       }
 
@@ -621,7 +621,7 @@ class ClassDumper {
               int classIndex = constantCp.getClassIndex();
               if (targetConstantPoolIndices.contains(classIndex)) {
                 // The class reference is used in another constant pool
-                return false;
+                return true;
               }
               break;
           }
@@ -632,7 +632,7 @@ class ClassDumper {
         // Type.toString returns binary name (for example, io.grpc.MethodDescriptor)
         String fieldTypeSignature = field.getType().toString();
         if (targetClassName.equals(fieldTypeSignature)) {
-          return false;
+          return true;
         }
       }
 
@@ -640,12 +640,12 @@ class ClassDumper {
       for (Method method : sourceJavaClass.getMethods()) {
 
         if (targetClassName.equals(method.getReturnType().toString())) {
-          return false;
+          return true;
         }
         for (Type argumentType : method.getArgumentTypes()) {
           String argumentTypeSignature = argumentType.toString();
           if (targetClassName.equals(argumentTypeSignature)) {
-            return false;
+            return true;
           }
         }
 
@@ -656,12 +656,13 @@ class ClassDumper {
             Instruction instruction = instructionHandle.getInstruction();
             if (instruction instanceof CPInstruction) {
               // Checking JVM instructions that take a symbolic reference to a class in
-              // JVM Instruction Set
+              // JVM Instruction Set: anewarray, checkcast, instanceof, ldc, ldc_w, multianewarray,
+              // and new.
               // https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5
               int classIndex = ((CPInstruction) instruction).getIndex();
               if (targetConstantPoolIndices.contains(classIndex)) {
                 // The target class is used in a JVM instruction (including `new`).
-                return false;
+                return true;
               }
             }
           }
@@ -674,7 +675,7 @@ class ClassDumper {
           for (int exceptionIndexTableEntry : exceptionIndexTable) {
             if (targetConstantPoolIndices.contains(exceptionIndexTableEntry)) {
               // The target class is used in throws clause
-              return false;
+              return true;
             }
           }
         }
@@ -687,7 +688,7 @@ class ClassDumper {
             String caughtClassName = catchType.getClassName();
             if (caughtClassName != null && caughtClassName.equals(targetClassName)) {
               // The target class is used in catch clause
-              return false;
+              return true;
             }
           }
         }
@@ -699,8 +700,9 @@ class ClassDumper {
           "The source class in the reference is no longer available in the class path", ex);
     }
 
-    // The target class is unused
-    return true;
+    // The target class is unused in the source class. For example a class reference in the constant
+    // pool is used only in its InnerClasses attribute.
+    return false;
   }
 
   /**
