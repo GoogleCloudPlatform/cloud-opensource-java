@@ -88,7 +88,8 @@ fi
 
 # Tags a new commit for this release.
 git commit -am "preparing release ${VERSION}-${SUFFIX}"
-git tag v${VERSION}-${SUFFIX}
+RELEASE_TAG="v${VERSION}-${SUFFIX}"
+git tag "${RELEASE_TAG}"
 mvn org.codehaus.mojo:versions-maven-plugin:2.7:set -DnewVersion=${NEXT_SNAPSHOT} -DgenerateBackupPoms=false
 
 if [[ "${SUFFIX}" = "dependencies" ]]; then
@@ -99,7 +100,7 @@ fi
 git commit -am "${NEXT_SNAPSHOT}"
 
 # Pushes the tag and release branch to Github.
-git push origin v${VERSION}-${SUFFIX}
+git push origin "${RELEASE_TAG}"
 git push --set-upstream origin ${VERSION}-${SUFFIX}
 
 # Create the PR
@@ -123,7 +124,7 @@ release_rapid_project() {
   local project="$1"
   "blaze-bin/${RELEASE_RAPID_PROJECT/://}" \
       --project_name="cloud-java-tools-cloud-opensource-java-${project}-release" \
-      --version="${VERSION}" --suffix="${SUFFIX}"
+      --committish="${RELEASE_TAG}"
 }
 
 if [[ "${SUFFIX}" = bom ]]; then

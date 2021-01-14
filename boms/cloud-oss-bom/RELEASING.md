@@ -79,7 +79,7 @@ back to the beginning:
 ```
 $ blaze run java/com/google/cloud/java/tools:ReleaseRapidProject -- \
     --project_name=cloud-java-tools-cloud-opensource-java-bom-kokoro-release \
-    --version=${VERSION} --committish_suffix=bom
+    --committish=v${VERSION}-bom
 ```
 
 ## Deleting a release
