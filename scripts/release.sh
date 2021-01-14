@@ -123,7 +123,7 @@ release_rapid_project() {
   local project="$1"
   "blaze-bin/${RELEASE_RAPID_PROJECT/://}" \
       --project_name="cloud-java-tools-cloud-opensource-java-${project}-release" \
-      --version="${VERSION}" --committish_suffix="${SUFFIX}"
+      --version="${VERSION}" --suffix="${SUFFIX}"
 }
 
 if [[ "${SUFFIX}" = bom ]]; then

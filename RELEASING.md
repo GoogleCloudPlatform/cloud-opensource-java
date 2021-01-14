@@ -14,7 +14,7 @@ tool if you not previously done so.
 ## Release
 
 To release artifacts 'dependencies-parent', 'dependencies', 'linkage-checker-enforcer-rules',
-and 'gradle-plugin', run `script/release.sh` with `dependencies` argument in corp desktop:
+and 'gradle-plugin', run `script/release.sh` with `dependencies` argument:
 
 ```
 $ cd cloud-opensource-java
@@ -26,7 +26,7 @@ $ ./scripts/release.sh dependencies 1.0.0
 Note: Google Cloud Libraries BOM release procedure [boms/cloud-oss-bom/RELEASING.md](
 boms/cloud-oss-bom/RELEASING.md) is not part of this document.
 
-This script creates a PR for the release and initiates Rapid project workflows listed below.
+This script creates a PR for the release and initiates the Rapid workflows listed below.
 
 ## Rapid builds
 
