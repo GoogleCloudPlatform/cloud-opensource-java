@@ -83,7 +83,7 @@ fi
 mvn org.codehaus.mojo:versions-maven-plugin:2.7:set -DnewVersion=${VERSION} -DgenerateBackupPoms=false
 
 if [[ "${SUFFIX}" = "dependencies" ]]; then
-  sed -i "" "s/version = .*/version = ${VERSION}/" gradle-plugin/gradle.properties
+  sed -i -e "s/version = .*/version = ${VERSION}/" gradle-plugin/gradle.properties
 fi
 
 # Tags a new commit for this release.
@@ -93,7 +93,7 @@ git tag "${RELEASE_TAG}"
 mvn org.codehaus.mojo:versions-maven-plugin:2.7:set -DnewVersion=${NEXT_SNAPSHOT} -DgenerateBackupPoms=false
 
 if [[ "${SUFFIX}" = "dependencies" ]]; then
-  sed -i "" "s/version = .*/version = ${NEXT_SNAPSHOT}/" gradle-plugin/gradle.properties
+  sed -i -e "s/version = .*/version = ${NEXT_SNAPSHOT}/" gradle-plugin/gradle.properties
 fi
 
 # Commits this next snapshot version.
