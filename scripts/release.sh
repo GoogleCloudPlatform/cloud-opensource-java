@@ -84,7 +84,7 @@ mvn org.codehaus.mojo:versions-maven-plugin:2.7:set -DnewVersion=${VERSION} -Dge
 
 if [[ "${SUFFIX}" = "dependencies" ]]; then
   sed -i -e "s/version = .*/version = ${VERSION}/" gradle-plugin/gradle.properties
-  sed -i -e "s/linkage-monitor-.\+-all-deps/linkage-monitor-${VERSION}-all-deps/" action.yml
+  sed -i -e "s/linkage-monitor-.\+-all-deps/linkage-monitor-${VERSION}-all-deps/" linkage-monitor/action.yml
 fi
 
 # Tags a new commit for this release.
@@ -95,7 +95,7 @@ mvn org.codehaus.mojo:versions-maven-plugin:2.7:set -DnewVersion=${NEXT_SNAPSHOT
 
 if [[ "${SUFFIX}" = "dependencies" ]]; then
   sed -i -e "s/version = .*/version = ${NEXT_SNAPSHOT}/" gradle-plugin/gradle.properties
-  sed -i -e "s/linkage-monitor-.\+-all-deps/linkage-monitor-${NEXT_SNAPSHOT}-all-deps/" action.yml
+  sed -i -e "s/linkage-monitor-.\+-all-deps/linkage-monitor-${NEXT_SNAPSHOT}-all-deps/" linkage-monitor/action.yml
 fi
 
 # Commits this next snapshot version.
