@@ -137,7 +137,21 @@ else
   release_rapid_project dependencies-kokoro &
   release_rapid_project enforcer-rules &
   release_rapid_project gradle-plugin-kokoro &
+  release_rapid_project linkage-monitor-kokoro &
   wait
+fi
+
+if [[ "${SUFFIX}" = "dependencies" ]]; then
+  LINKAGE_MONITOR_JAR_URL="https://storage.googleapis.com/cloud-opensource-java-linkage-monitor/linkage-monitor-${VERSION}-all-deps.jar"
+  curl --output /dev/null $LINKAGE_MONITOR_JAR_URL
+  if [ "$?" == "0" ]; then
+    EchoGreen "Linkage Monitor uber JAR is available."
+    echo "Once the pull request is approved, update the v1-linkagemonitor tag:"
+    echo "$ git tag -a v1-linkagemonitor ${RELEASE_TAG} -m \"Linkage Monitor release on ${RELEASE_TAG}\""
+    echo "$ git push -f origin v1-linkagemonitor"
+  else
+    EchoRed "Couldn't confirm the new uber JAR at ${LINKAGE_MONITOR_JAR_URL}"
+  fi
 fi
 
 # TODO print instructions for releasing from Sonatype OSSRH to Maven Central when
