@@ -143,7 +143,7 @@ fi
 
 if [[ "${SUFFIX}" = "dependencies" ]]; then
   LINKAGE_MONITOR_JAR_URL="https://storage.googleapis.com/cloud-opensource-java-linkage-monitor/linkage-monitor-${VERSION}-all-deps.jar"
-  curl --output /dev/null $LINKAGE_MONITOR_JAR_URL
+  curl --fail --output /dev/null $LINKAGE_MONITOR_JAR_URL
   if [ "$?" == "0" ]; then
     EchoGreen "Linkage Monitor uber JAR is available."
     echo "Once the pull request is approved, update the v1-linkagemonitor tag:"
