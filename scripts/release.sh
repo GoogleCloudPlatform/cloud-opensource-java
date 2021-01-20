@@ -84,6 +84,7 @@ mvn org.codehaus.mojo:versions-maven-plugin:2.7:set -DnewVersion=${VERSION} -Dge
 
 if [[ "${SUFFIX}" = "dependencies" ]]; then
   sed -i -e "s/version = .*/version = ${VERSION}/" gradle-plugin/gradle.properties
+  sed -i -e "s/linkage-monitor-.\+-all-deps/linkage-monitor-${VERSION}-all-deps/" linkage-monitor/action.yml
 fi
 
 # Tags a new commit for this release.
@@ -94,6 +95,7 @@ mvn org.codehaus.mojo:versions-maven-plugin:2.7:set -DnewVersion=${NEXT_SNAPSHOT
 
 if [[ "${SUFFIX}" = "dependencies" ]]; then
   sed -i -e "s/version = .*/version = ${NEXT_SNAPSHOT}/" gradle-plugin/gradle.properties
+  sed -i -e "s/linkage-monitor-.\+-all-deps/linkage-monitor-${NEXT_SNAPSHOT}-all-deps/" linkage-monitor/action.yml
 fi
 
 # Commits this next snapshot version.
@@ -135,7 +137,21 @@ else
   release_rapid_project dependencies-kokoro &
   release_rapid_project enforcer-rules &
   release_rapid_project gradle-plugin-kokoro &
+  release_rapid_project linkage-monitor-kokoro &
   wait
+fi
+
+if [[ "${SUFFIX}" = "dependencies" ]]; then
+  LINKAGE_MONITOR_JAR_URL="https://storage.googleapis.com/cloud-opensource-java-linkage-monitor/linkage-monitor-${VERSION}-all-deps.jar"
+  curl --fail --output /dev/null $LINKAGE_MONITOR_JAR_URL
+  if [ "$?" == "0" ]; then
+    EchoGreen "Linkage Monitor uber JAR is available."
+    echo "Once the pull request is approved, update the v1-linkagemonitor tag:"
+    echo "$ git tag -a v1-linkagemonitor ${RELEASE_TAG} -m \"Linkage Monitor release on ${RELEASE_TAG}\""
+    echo "$ git push -f origin v1-linkagemonitor"
+  else
+    EchoRed "Couldn't confirm the new uber JAR at ${LINKAGE_MONITOR_JAR_URL}"
+  fi
 fi
 
 # TODO print instructions for releasing from Sonatype OSSRH to Maven Central when
