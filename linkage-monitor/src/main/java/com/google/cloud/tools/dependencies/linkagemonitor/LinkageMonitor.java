@@ -43,6 +43,7 @@ import com.google.common.io.MoreFiles;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -150,7 +151,8 @@ public class LinkageMonitor {
   @VisibleForTesting
   static ImmutableMap<String, String> findLocalArtifacts(
       RepositorySystem repositorySystem, RepositorySystemSession session, Path projectDirectory) {
-    ImmutableMap.Builder<String, String> artifactToVersion = ImmutableMap.builder();
+    // The same coordinates may be added multiple times by an artifact and an entry in a BOM.
+    Map<String, String> artifactToVersion = new HashMap<>();
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectDirectory);
 
     for (Path path : paths) {
@@ -188,14 +190,28 @@ public class LinkageMonitor {
       try {
         ModelBuildingResult modelBuildingResult = modelBuilder.build(modelRequest);
         Model model = modelBuildingResult.getEffectiveModel();
-        artifactToVersion.put(model.getGroupId() + ":" + model.getArtifactId(), model.getVersion());
+        String versionlessCoordinates = model.getGroupId() + ":" + model.getArtifactId();
+        artifactToVersion.put(versionlessCoordinates, model.getVersion());
+        logger.info("Found local artifact: " + model);
+        DependencyManagement dependencyManagement = model.getDependencyManagement();
+        if ("pom".equals(model.getPackaging()) && dependencyManagement != null) {
+          // Read the content of a BOM.
+          for (org.apache.maven.model.Dependency dependency :
+              dependencyManagement.getDependencies()) {
+            String managedDependencyVersionlessCoordinates =
+                dependency.getGroupId() + ":" + dependency.getArtifactId();
+            artifactToVersion.put(managedDependencyVersionlessCoordinates, dependency.getVersion());
+            logger.info("Found local artifact in the BOM: " + dependency);
+          }
+        }
+
       } catch (ModelBuildingException ex) {
         // Maven may fail to build pom.xml files found in irrelevant directories, such as "target"
         // and "test" directories of the project. Such failures can be ignored.
         logger.info("Ignoring bad model: " + path + ": " + ex.getMessage());
       }
     }
-    return artifactToVersion.build();
+    return ImmutableMap.copyOf(artifactToVersion);
   }
 
   /**
