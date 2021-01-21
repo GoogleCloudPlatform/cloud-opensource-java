@@ -7,7 +7,7 @@ runs:
       # scripts/release.sh updates the version part in the URL
       run: |
         curl --output /tmp/linkage-monitor.jar \
-        "https://storage.googleapis.com/cloud-opensource-java-linkage-monitor/linkage-monitor-1.5.5-SNAPSHOT-all-deps.jar"
+        "https://storage.googleapis.com/cloud-opensource-java-linkage-monitor/linkage-monitor-1.5.5-all-deps.jar"
       shell: bash
     - run: java -jar /tmp/linkage-monitor.jar com.google.cloud:libraries-bom
       shell: bash
