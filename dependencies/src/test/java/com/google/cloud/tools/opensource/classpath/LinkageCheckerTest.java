@@ -870,7 +870,7 @@ public class LinkageCheckerTest {
     ImmutableSetMultimap<ClassFile, SymbolProblem> problems = linkageChecker.findSymbolProblems()
         .inverse();
     Truth.assertThat(problems.keySet()).doesNotContain(
-        new ClassFile(jars.get(0), "reactor.core.publisher.Traces"));
+        new ClassFile(jars.get(0), "reactor.core.publisher.Traces"));  //
   }
 
   @Test
