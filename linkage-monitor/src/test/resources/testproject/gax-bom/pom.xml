@@ -23,7 +23,7 @@
       <dependency>
         <groupId>com.google.api</groupId>
         <artifactId>gax-grpc</artifactId>
-        <version>1.60.2-SNAPSHOT</version><!-- {x-version-update:gax-grpc:current} -->
+        <version>1.60.2-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.google.api</groupId>
