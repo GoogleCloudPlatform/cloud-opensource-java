@@ -21,6 +21,15 @@ $ cd cloud-opensource-java
 $ git checkout master
 $ git pull
 $ ./scripts/release.sh dependencies 1.0.0
+(This takes around 25 minutes)
+```
+
+Once the `release.sh` finishes and the pull request has been merged, update the "v1-linkagemonitor"
+tag to this release:
+
+```
+$ git tag -a v1-linkagemonitor v1.0.0-dependencies -m "Linkage Monitor release on v1.5.5-dependencies"
+$ git push -f origin v1-linkagemonitor
 ```
 
 Note: Google Cloud Libraries BOM release procedure [boms/cloud-oss-bom/RELEASING.md](
@@ -38,6 +47,7 @@ Run the following Rapid release pipelines:
 |dependencies| [cloud-java-tools-cloud-opensource-java-dependencies-kokoro-release](http://rapid/cloud-java-tools-cloud-opensource-java-dependencies-kokoro-release)|dependencies-parent|
 |linkage-checker-enforcer-rules|[cloud-java-tools-cloud-opensource-java-enforcer-rules-kokoro-release](http://rapid/cloud-java-tools-cloud-opensource-java-enforcer-rules-kokoro-release)|dependencies-parent, dependencies|
 |linkage-checker-gradle-plugin|[cloud-java-tools-cloud-opensource-java-gradle-plugin-kokoro-release](https://rapid/cloud-java-tools-cloud-opensource-java-gradle-plugin-kokoro-release)|dependencies|
+|linkage-monitor|[cloud-java-tools-cloud-opensource-java-linkage-monitor-kokoro-release](https://rapid/cloud-java-tools-cloud-opensource-java-linkage-monitor-kokoro-release)||
 
 The release pipelines can run concurrently. For example, you don't have to wait for
 `dependencies-parent` pipeline before initiating `dependencies` pipeline. They use different
