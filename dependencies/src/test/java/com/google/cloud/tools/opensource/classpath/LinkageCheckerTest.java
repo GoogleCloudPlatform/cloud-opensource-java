@@ -861,7 +861,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_shouldNotDetectWhitelistedClass() throws IOException {
+  public void testFindLinkageProblems_shouldNotDetectExcludedClass() throws IOException {
     // Reactor-core's Traces is known to catch Throwable to detect availability of Java 9+ classes.
     // Linkage Checker does not need to report it.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/816
