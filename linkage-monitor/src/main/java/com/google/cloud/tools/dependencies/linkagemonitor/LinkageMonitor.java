@@ -145,8 +145,8 @@ public class LinkageMonitor {
   }
 
   /**
-   * Returns a map from versionless coordinates to version for all pom.xml found in {@code
-   * projectDirectory}.
+   * Returns a map from versionless coordinates to the versions of the Maven coordinates in all
+   * pom.xml and the {@code dependencyManagement} section of BOMs found in {@code projectDirectory}.
    */
   @VisibleForTesting
   static ImmutableMap<String, String> findLocalArtifacts(
@@ -192,7 +192,7 @@ public class LinkageMonitor {
         Model model = modelBuildingResult.getEffectiveModel();
         String versionlessCoordinates = model.getGroupId() + ":" + model.getArtifactId();
         artifactToVersion.put(versionlessCoordinates, model.getVersion());
-        logger.info("Found local artifact: " + model);
+        logger.fine("Found local artifact: " + model);
         DependencyManagement dependencyManagement = model.getDependencyManagement();
         if ("pom".equals(model.getPackaging()) && dependencyManagement != null) {
           // Read the content of a BOM.
@@ -201,7 +201,7 @@ public class LinkageMonitor {
             String managedDependencyVersionlessCoordinates =
                 dependency.getGroupId() + ":" + dependency.getArtifactId();
             artifactToVersion.put(managedDependencyVersionlessCoordinates, dependency.getVersion());
-            logger.info("Found local artifact in the BOM: " + dependency);
+            logger.fine("Found local artifact in the BOM: " + dependency);
           }
         }
 

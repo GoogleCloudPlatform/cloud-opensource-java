@@ -277,10 +277,11 @@ public class LinkageMonitorTest {
         LinkageMonitor.findLocalArtifacts(
             system, session, Paths.get("src/test/resources/testproject"));
 
-    // This should not include project under "build" directory
+    // This should not include project under "build" directory, but should include the entries
+    // in the dependencyManagement section of the gax-bom/pom.xml.
     Truth.assertThat(localArtifacts).hasSize(6);
-    Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:test-project");
-    Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:test-subproject");
+    assertEquals("0.0.1-SNAPSHOT", localArtifacts.get("com.google.cloud.tools:test-project"));
+    assertEquals("0.0.2-SNAPSHOT", localArtifacts.get("com.google.cloud.tools:test-subproject"));
     assertEquals("1.60.2-SNAPSHOT", localArtifacts.get("com.google.api:gax-bom"));
     assertEquals(
         "localArtifacts should contain the dependency management section in the BOM",

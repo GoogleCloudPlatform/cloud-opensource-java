@@ -3,43 +3,22 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.api</groupId>
   <artifactId>gax-bom</artifactId>
-  <version>1.60.2-SNAPSHOT</version><!-- {x-version-update:gax-bom:current} -->
+  <version>1.60.2-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>GAX (Google Api eXtensions) for Java</name>
-  <description>Google Api eXtensions for Java</description>
-  <url>https://github.com/googleapis/gax-java</url>
-  <licenses>
-    <license>
-      <name>BSD</name>
-      <url>https://github.com/googleapis/gax-java/blob/master/LICENSE</url>
-    </license>
-  </licenses>
-  <developers>
-    <developer>
-      <id>GoogleAPIs</id>
-      <name>GoogleAPIs</name>
-      <email>googleapis@googlegroups.com</email>
-      <url>https://github.com/googleapis/gax-java</url>
-      <organization>Google, LLC</organization>
-      <organizationUrl>https://www.google.com</organizationUrl>
-    </developer>
-  </developers>
-  <scm>
-    <connection>scm:git:https://github.com/googleapis/gax-java.git</connection>
-    <url>https://github.com/googleapis/gax-java</url>
-  </scm>
+  <description>GAX BOM version 1.60.2-SNAPSHOT copied for Linkage Monitor test</description>
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>com.google.api</groupId>
         <artifactId>gax</artifactId>
-        <version>1.60.2-SNAPSHOT</version><!-- {x-version-update:gax:current} -->
+        <version>1.60.2-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.google.api</groupId>
         <artifactId>gax</artifactId>
-        <version>1.60.2-SNAPSHOT</version><!-- {x-version-update:gax:current} -->
-	<classifier>testlib</classifier>
+        <version>1.60.2-SNAPSHOT</version>
+        <classifier>testlib</classifier>
       </dependency>
       <dependency>
         <groupId>com.google.api</groupId>
@@ -49,19 +28,19 @@
       <dependency>
         <groupId>com.google.api</groupId>
         <artifactId>gax-grpc</artifactId>
-        <version>1.60.2-SNAPSHOT</version><!-- {x-version-update:gax-grpc:current} -->
-	<classifier>testlib</classifier>
+        <version>1.60.2-SNAPSHOT</version>
+        <classifier>testlib</classifier>
       </dependency>
       <dependency>
         <groupId>com.google.api</groupId>
         <artifactId>gax-httpjson</artifactId>
-        <version>0.77.2-SNAPSHOT</version><!-- {x-version-update:gax-httpjson:current} -->
+        <version>0.77.2-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.google.api</groupId>
         <artifactId>gax-httpjson</artifactId>
-        <version>0.77.2-SNAPSHOT</version><!-- {x-version-update:gax-httpjson:current} -->
-	<classifier>testlib</classifier>
+        <version>0.77.2-SNAPSHOT</version>
+        <classifier>testlib</classifier>
       </dependency>
     </dependencies>
   </dependencyManagement>
