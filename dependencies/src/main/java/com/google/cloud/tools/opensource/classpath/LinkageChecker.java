@@ -209,7 +209,7 @@ public class LinkageChecker {
       }
     }
 
-    // Filter classes in whitelist
+    // Filter classes in exclusion file
     ImmutableSet<LinkageProblem> filteredMap =
         problemToClass.build().stream().filter(this::problemFilter).collect(toImmutableSet());
     return filteredMap;
