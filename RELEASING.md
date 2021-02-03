@@ -28,6 +28,7 @@ Once the `release.sh` finishes and the pull request has been merged, update the 
 tag to this release:
 
 ```
+$ git tag -d v1-linkagemonitor
 $ git tag -a v1-linkagemonitor v1.0.0-dependencies -m "Linkage Monitor release on v1.5.5-dependencies"
 $ git push -f origin v1-linkagemonitor
 ```

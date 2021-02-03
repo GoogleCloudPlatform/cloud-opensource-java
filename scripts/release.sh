@@ -147,6 +147,7 @@ if [[ "${SUFFIX}" = "dependencies" ]]; then
   if [ "$?" == "0" ]; then
     EchoGreen "Linkage Monitor uber JAR is available."
     echo "Once the pull request is approved, update the v1-linkagemonitor tag:"
+    echo "$ git tag -d v1-linkagemonitor"
     echo "$ git tag -a v1-linkagemonitor ${RELEASE_TAG} -m \"Linkage Monitor release on ${RELEASE_TAG}\""
     echo "$ git push -f origin v1-linkagemonitor"
   else
