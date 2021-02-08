@@ -35,8 +35,9 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- These two artifacts have linkage errors that are reachable
-           https://github.com/googleapis/java-shared-dependencies/pull/248#pullrequestreview-578503417
+      <!--
+        grpc-census:1.35.0 and opencensus-api:0.28.1 have reachable linkage errors.
+        https://github.com/googleapis/java-shared-dependencies/pull/248#pullrequestreview-578503417
       -->
       <dependency>
         <groupId>io.grpc</groupId>
@@ -52,7 +53,6 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-
 
   <build>
     <plugins>
