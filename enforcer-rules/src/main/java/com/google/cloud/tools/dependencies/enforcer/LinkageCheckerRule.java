@@ -192,12 +192,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         return;
       }
 
-      // As sorted by level order, the first elements in classpath are the project and its direct
-      // non-test dependencies.
-      List<org.apache.maven.model.Dependency> dependencies = project.getDependencies();
-      long projectDependencyCount =
-          dependencies.stream().filter(dependency -> !"test".equals(dependency.getScope())).count();
-      List<ClassPathEntry> entryPoints = classPath.subList(0, (int) projectDependencyCount + 1);
+      List<ClassPathEntry> entryPoints = entryPoints(project, classPath);
 
       try {
 
@@ -367,8 +362,10 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       throws EnforcerRuleException {
 
     ArtifactTypeRegistry artifactTypeRegistry = repositorySystemSession.getArtifactTypeRegistry();
+    List<org.apache.maven.model.Dependency> managedDependencies =
+        bomProject.getDependencyManagement().getDependencies();
     ImmutableList<Artifact> artifacts =
-        bomProject.getDependencyManagement().getDependencies().stream()
+        managedDependencies.stream()
             .map(dependency -> RepositoryUtils.toDependency(dependency, artifactTypeRegistry))
             .map(Dependency::getArtifact)
             .filter(artifact -> !Bom.shouldSkipBomMember(artifact))
@@ -380,5 +377,30 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       throw new EnforcerRuleException("Failed to collect dependency: " + artifactProblems);
     }
     return result;
+  }
+
+  /**
+   * Returns class path entries that contains entry point classes.
+   *
+   * <p>For BOM projects, they are the dependencies listed in the {@code dependencyManagement}
+   * section.
+   *
+   * <p>For normal projects, they are the direct dependencies listed in the {@code dependencies}
+   * section.
+   */
+  private ImmutableList<ClassPathEntry> entryPoints(
+      MavenProject project, ImmutableList<ClassPathEntry> classPath) {
+    // As sorted by level order, the first elements in classpath are the project and its direct
+    // non-test dependencies.
+    List<org.apache.maven.model.Dependency> directDependencies =
+        dependencySection == DependencySection.DEPENDENCY_MANAGEMENT
+            ? project.getDependencyManagement().getDependencies()
+            : project.getDependencies();
+
+    long projectDependencyCount =
+        directDependencies.stream()
+            .filter(dependency -> !"test".equals(dependency.getScope()))
+            .count();
+    return classPath.subList(0, (int) projectDependencyCount + 1);
   }
 }

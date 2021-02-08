@@ -244,8 +244,9 @@ public class LinkageMonitor {
     ImmutableList<Artifact> snapshotManagedDependencies = snapshot.getManagedDependencies();
     ClassPathResult classPathResult = (new ClassPathBuilder()).resolve(snapshotManagedDependencies, true);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
-    logger.info("Class path for the snapshot BOM" +
-        classpath.stream().map(ClassPathEntry::toString).collect(Collectors.joining("\n")));
+    logger.info(
+        "Class path for the snapshot BOM"
+            + classpath.stream().map(ClassPathEntry::toString).collect(Collectors.joining("\n")));
     List<ClassPathEntry> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 
     ImmutableSet<LinkageProblem> problemsInSnapshot =

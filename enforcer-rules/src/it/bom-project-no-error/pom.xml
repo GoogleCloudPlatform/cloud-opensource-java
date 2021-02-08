@@ -35,16 +35,12 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- These two artifacts have linkage errors that are not reachable -->
+      <!-- The transitive dependency of this artifact has linkage errors on AvalonLogger. They are
+      unreachable. https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1871 -->
       <dependency>
-        <groupId>com.google.api-client</groupId>
-        <artifactId>google-api-client</artifactId>
-        <version>1.27.0</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-core</artifactId>
-        <version>1.17.1</version>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client</artifactId>
+        <version>1.38.1</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
