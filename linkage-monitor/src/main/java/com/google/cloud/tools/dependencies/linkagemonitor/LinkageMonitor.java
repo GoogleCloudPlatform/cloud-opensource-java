@@ -48,7 +48,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -244,9 +243,6 @@ public class LinkageMonitor {
     ImmutableList<Artifact> snapshotManagedDependencies = snapshot.getManagedDependencies();
     ClassPathResult classPathResult = (new ClassPathBuilder()).resolve(snapshotManagedDependencies, true);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
-    logger.info(
-        "Class path for the snapshot BOM"
-            + classpath.stream().map(ClassPathEntry::toString).collect(Collectors.joining("\n")));
     List<ClassPathEntry> entryPointJars = classpath.subList(0, snapshotManagedDependencies.size());
 
     ImmutableSet<LinkageProblem> problemsInSnapshot =
