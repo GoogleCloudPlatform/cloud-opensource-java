@@ -21,11 +21,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.google.cloud.tools.opensource</groupId>
-  <artifactId>bom-having-linkage-conflicts</artifactId>
+  <artifactId>bom-having-linkage-errors</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>bom-having-linkage-conflicts</name>
+  <name>bom-having-linkage-errors</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
