@@ -3,7 +3,7 @@
 
 ## Prerequisites 
 
-(Does not need to be repeated for each release.)
+(Do not need to be repeated for each release.)
 
 * Install the [`gh`](https://github.com/cli/cli)
 tool if you not previously done so.
@@ -11,6 +11,8 @@ tool if you not previously done so.
     * Run `gh auth login` to register your desktop with github.
 
 * Clone this repository onto your corp desktop, Ubiquity instance, or CloudTop. Do not use a laptop or personal machine as the release requires google3 access.
+
+* Install and configure the [repo tool](https://github.com/googleapis/github-repo-automation).
 
 ## Steps
 
@@ -61,6 +63,9 @@ new release is available on Maven Central.
     * https://github.com/googleapis/google-cloud-java/blob/master/TROUBLESHOOTING.md
 * Ask a code owner for java-docs-samples to merge the dependabot PR
   that updates libraries-bom in https://github.com/GoogleCloudPlatform/java-docs-samples/pulls
+* Use the repo tool to approve renovatebot updates for libraries-bom in the individual clients:
+    * `$ repo list --title .*v16.4.0`
+    * `$ repo approve --title .*v16.4.0`
 * Manually edit and update any pom.xml files in https://github.com/GoogleCloudPlatform/java-docs-samples that dependabot missed
 * In google3 run:
     * `$ g4d -f bom`
@@ -68,7 +73,7 @@ new release is available on Maven Central.
     * `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version&gt;oldVersion&lt;/version&gt;" "&lt;version>newVersion&lt;/version>"`
     * Sanity check the cl and send it for review.
     * Submit on approval
-* Search for libraries-bom in google3 to find any internal references (typically cloudite and devsite) that still need to be updated.
+* Search for libraries-bom in google3 to find any internal references (typically cloudsite and devsite) that still need to be updated.
 
 ## Retrying a failed release
 
