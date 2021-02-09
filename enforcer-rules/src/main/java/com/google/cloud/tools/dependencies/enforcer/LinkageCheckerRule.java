@@ -380,7 +380,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
   }
 
   /**
-   * Returns the class path entries that contains entry point classes.
+   * Returns the class path entries that contain entry point classes.
    *
    * <p>For BOM projects, they are the dependencies listed in the {@code dependencyManagement}
    * section.
