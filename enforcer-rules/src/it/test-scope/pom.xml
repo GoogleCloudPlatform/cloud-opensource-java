@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright 2020 Google LLC.
+  ~ Copyright 2021 Google LLC.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -34,8 +34,9 @@
 
   <dependencies>
     <!--
-      These two artifacts have reachable linkage errors. However, because one of them has test
-      scope, the conflict does not cause problems at users' runtime
+      These two artifacts have reachable linkage errors. However, the latter has test scope, the
+      conflict does not cause problems at users' runtime. Linkage Checker should not report the
+      linkage errors.
     -->
     <dependency>
       <groupId>com.google.api-client</groupId>
