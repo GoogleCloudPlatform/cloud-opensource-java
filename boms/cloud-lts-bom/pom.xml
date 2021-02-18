@@ -7,7 +7,7 @@
 
   <groupId>com.google.cloud</groupId>
   <artifactId>gcp-lts-bom</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>0.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Google Cloud LTS BOM</name>
@@ -84,7 +84,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.beam</groupId>
-        <artifactId>beam-sdks-java-extensions-google-cloud-platform</artifactId>
+        <artifactId>beam-sdks-java-io-google-cloud-platform</artifactId>
         <version>${beam.version}</version>
       </dependency>
       <dependency>
@@ -95,19 +95,18 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bigquery</artifactId>
-        <version>${beam.version}</version>
+        <version>${google.cloud.bigquery.version}</version>
       </dependency>
+      <!-- Not using guava-bom as it includes guava-gwt -->
       <dependency>
         <groupId>com.google.guava</groupId>
-        <artifactId>guava-bom</artifactId>
+        <artifactId>guava</artifactId>
         <version>${guava.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>com.google.auto.value</groupId>
         <artifactId>auto-value-annotations</artifactId>
-        <version>${google.cloud.autovalue.version}</version>
+        <version>${google.autovalue.version}</version>
       </dependency>
       <!-- Shall we use protobuf-bom? -->
       <dependency>
@@ -120,12 +119,77 @@
         <artifactId>protobuf-java-util</artifactId>
         <version>${protobuf.version}</version>
       </dependency>
+      <!-- Not using grpc-bom as it includes artifacts that are not intended for users
+        https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1074 -->
       <dependency>
         <groupId>io.grpc</groupId>
-        <artifactId>grpc-bom</artifactId>
+        <artifactId>grpc-alts</artifactId>
         <version>${io.grpc.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-api</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-auth</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-context</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-core</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-grpclb</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-netty</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-netty-shaded</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-okhttp</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-protobuf</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-protobuf-lite</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-services</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-stub</artifactId>
+        <version>${io.grpc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-testing</artifactId>
+        <version>${io.grpc.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.appengine</groupId>
@@ -160,6 +224,9 @@
         <artifactId>google-cloud-storage</artifactId>
         <version>${google.cloud.storage.version}</version>
       </dependency>
+
+      <!-- What will replace com.google.apis:google-api-services-cloudtrace ? -->
+
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-monitoring</artifactId>
@@ -202,8 +269,6 @@
         <groupId>com.google.http-client</groupId>
         <artifactId>google-http-client</artifactId>
         <version>${http.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
