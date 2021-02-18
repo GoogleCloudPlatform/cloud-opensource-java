@@ -10,8 +10,8 @@
   <version>0.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>Google Cloud LTS BOM</name>
-  <description>A set of LTS libraries</description>
+  <name>Google Cloud Long Term Support BOM</name>
+  <description>A set of Long Term Support (LTS) libraries for Google Cloud services</description>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java</url>
   <organization>
     <name>Google LLC</name>
@@ -246,6 +246,11 @@
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-spanner</artifactId>
         <version>${google.cloud.spanner.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.maps</groupId>
+        <artifactId>google-maps-services</artifactId>
+        <version>0.17.0</version>
       </dependency>
 
       <!-- API Infrastructure section -->
