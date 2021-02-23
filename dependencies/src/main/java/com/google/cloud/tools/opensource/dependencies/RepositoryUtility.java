@@ -328,7 +328,7 @@ public final class RepositoryUtility {
   /**
    * Returns list of versions available for {@code groupId:artifactId} in {@code repositorySystem}.
    * The returned list is in ascending order with regard to {@link
-   * org.eclipse.aether.util.version.GenericVersionScheme}; the highest version comes at last.
+   * org.eclipse.aether.util.version.GenericVersionScheme}. The highest version comes at last.
    */
   public static ImmutableList<String> findVersions(
       RepositorySystem repositorySystem, String groupId, String artifactId)

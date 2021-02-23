@@ -115,9 +115,11 @@ public class DashboardMain {
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
       MavenRepositoryException {
     List<String> elements = Splitter.on(':').splitToList(versionlessCoordinates);
-    checkArgument(
-        elements.size() == 2,
-        "The versionless coordinates should have one colon character: " + versionlessCoordinates);
+    if ( elements.size() != 2 ) {
+      System.err.println(
+          "Versionless coordinates should have one colon: " + versionlessCoordinates);
+      return;
+    }
     String groupId = elements.get(0);
     String artifactId = elements.get(1);
 
