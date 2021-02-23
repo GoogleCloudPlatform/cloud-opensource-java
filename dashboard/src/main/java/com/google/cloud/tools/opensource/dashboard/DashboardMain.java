@@ -115,7 +115,7 @@ public class DashboardMain {
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
       MavenRepositoryException {
     List<String> elements = Splitter.on(':').splitToList(versionlessCoordinates);
-    if ( elements.size() != 2 ) {
+    if (elements.size() != 2) {
       System.err.println(
           "Versionless coordinates should have one colon: " + versionlessCoordinates);
       return;

@@ -328,7 +328,7 @@ public final class RepositoryUtility {
   /**
    * Returns list of versions available for {@code groupId:artifactId} in {@code repositorySystem}.
    * The returned list is in ascending order with regard to {@link
-   * org.eclipse.aether.util.version.GenericVersionScheme}. The highest version comes at last.
+   * org.eclipse.aether.util.version.GenericVersionScheme}. The highest version comes last.
    */
   public static ImmutableList<String> findVersions(
       RepositorySystem repositorySystem, String groupId, String artifactId)
@@ -341,8 +341,8 @@ public final class RepositoryUtility {
   }
 
   /**
-   * Returns the latest Maven coordinates for {@code groupId:artifactId} in {@code
-   * repositorySystem}.
+   * Returns the latest Maven coordinates for {@code groupId:artifactId} in
+   * {@code repositorySystem}.
    */
   public static String findLatestCoordinates(
       RepositorySystem repositorySystem, String groupId, String artifactId)
