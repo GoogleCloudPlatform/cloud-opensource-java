@@ -1,4 +1,12 @@
-# Linkage Checker Enforcer Rule Change Log
+# Linkage Checker Enforcer Rule and Linkage Monitor Change Log
+
+## 1.5.6
+* Fixed false negative problem in Linkage Monitor where it did not find local
+  artifacts listed in a BOM ([#1919](
+  https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1919)).
+
+## 1.5.5
+* Linkage Monitor is part of the release process.
 
 ## 1.5.4
 * Fixed false positive linkage errors on unused private inner classes ([#1608](

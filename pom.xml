@@ -7,7 +7,7 @@
   <groupId>com.google.cloud.tools</groupId>
   <artifactId>dependencies-parent</artifactId>
   <packaging>pom</packaging>
-  <version>1.5.5-SNAPSHOT</version>
+  <version>1.5.7-SNAPSHOT</version>
 
   <name>Cloud Tools Open Source Code Hygiene Tooling</name>
   <url>https://github.com/GoogleCloudPlatform/cloud-opensource-java/</url>
@@ -39,7 +39,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <guava.version>30.0-jre</guava.version>
+    <guava.version>30.1-jre</guava.version>
     <javac.version>9+181-r4173-1</javac.version>
     <maven.version>3.6.3</maven.version>
     <resolver.version>1.6.1</resolver.version>

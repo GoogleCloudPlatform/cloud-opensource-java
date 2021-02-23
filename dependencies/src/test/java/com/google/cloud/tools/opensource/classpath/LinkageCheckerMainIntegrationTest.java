@@ -222,4 +222,32 @@ public class LinkageCheckerMainIntegrationTest {
         "Wrote the linkage errors as exclusion file: " + exclusionFile + System.lineSeparator(),
         output);
   }
+
+  @Test
+  public void testInvalidArgument()
+      throws IOException, RepositoryException, TransformerException, XMLStreamException,
+          LinkageCheckResultException {
+    // This is a garbled argument Gradle Kotlin DSL passed to LinkageCheckerMain in the issue below
+    // https://issues.apache.org/jira/browse/BEAM-11827
+    LinkageCheckerMain.main(new String[] {"[Ljava.lang.String;@1234"});
+
+    String output = readCapturedStdout();
+
+    // It should show help.
+    Truth.assertThat(output)
+        .contains("usage: java com.google.cloud.tools.opensource.classpath.LinkageChecker");
+  }
+
+  @Test
+  public void testEmptyArgument()
+      throws IOException, RepositoryException, TransformerException, XMLStreamException,
+          LinkageCheckResultException {
+    LinkageCheckerMain.main(new String[] {});
+
+    String output = readCapturedStdout();
+
+    // It should show help.
+    Truth.assertThat(output)
+        .contains("usage: java com.google.cloud.tools.opensource.classpath.LinkageChecker");
+  }
 }

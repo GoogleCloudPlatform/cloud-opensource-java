@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright 2020 Google LLC.
+  ~ Copyright 2021 Google LLC.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -21,11 +21,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.google.cloud.tools.opensource</groupId>
-  <artifactId>bom-project-no-error</artifactId>
+  <artifactId>bom-having-linkage-errors</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>bom-project-no-error</name>
+  <name>bom-having-linkage-errors</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -35,12 +35,21 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- The transitive dependency of this artifact has linkage errors on AvalonLogger. They are
-      unreachable. https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1871 -->
+      <!--
+        grpc-census:1.35.0 and opencensus-api:0.28.1 have reachable linkage errors.
+        https://github.com/googleapis/java-shared-dependencies/pull/248#pullrequestreview-578503417
+      -->
       <dependency>
-        <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client</artifactId>
-        <version>1.38.1</version>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-bom</artifactId>
+        <version>1.35.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.opencensus</groupId>
+        <artifactId>opencensus-api</artifactId>
+        <version>0.28.1</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
