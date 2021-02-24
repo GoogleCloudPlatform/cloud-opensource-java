@@ -22,7 +22,7 @@ For example, if the last BOM release was version 16.4.0, then run the following 
 to see the difference.
 
 ```
-git diff v16.4.0-bom -- boms/cloud-oss-bom/pom.xml`
+git diff v16.4.0-bom -- boms/cloud-oss-bom/pom.xml
 ```
 
 If the difference includes the google-cloud-bom version, then check the change in the release note
