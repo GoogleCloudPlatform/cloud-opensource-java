@@ -279,6 +279,7 @@ public class LinkageMonitorTest {
 
     // This should not include project under "build" directory, but should include the entries
     // in the dependencyManagement section of the gax-bom/pom.xml.
+    // This should not include the grpc-google-cloud-pubsub-v1 in the root testproject pom.xml
     Truth.assertThat(localArtifacts).hasSize(6);
     assertEquals("0.0.1-SNAPSHOT", localArtifacts.get("com.google.cloud.tools:test-project"));
     assertEquals("0.0.2-SNAPSHOT", localArtifacts.get("com.google.cloud.tools:test-subproject"));
@@ -287,6 +288,10 @@ public class LinkageMonitorTest {
         "localArtifacts should contain the dependency management section in the BOM",
         "1.60.2-SNAPSHOT",
         localArtifacts.get("com.google.api:gax"));
+
+    // localArtifacts should not include the dependencyManagement section of a non-BOM pom.xml
+    Truth.assertThat(localArtifacts)
+        .doesNotContainKey("com.google.api.grpc:grpc-google-cloud-pubsub-v1");
   }
 
   @Test

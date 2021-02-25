@@ -11,4 +11,13 @@
 
   <name>Test Project for LinkageMonitorTest</name>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.api.grpc</groupId>
+        <artifactId>grpc-google-cloud-pubsub-v1</artifactId>
+        <version>1.93.1</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 </project>

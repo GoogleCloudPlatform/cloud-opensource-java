@@ -194,8 +194,17 @@ public class LinkageMonitor {
         artifactToVersion.put(versionlessCoordinates, model.getVersion());
         logger.fine("Found local artifact: " + model);
         DependencyManagement dependencyManagement = model.getDependencyManagement();
-        if ("pom".equals(model.getPackaging()) && dependencyManagement != null) {
-          // Read the content of a BOM.
+
+        // For gax-java repository (Gradle), the dependencyManagement section of the gax-bom/pom.xml
+        // tells what artifacts the repository produces. However, we have to distinguish BOMs from
+        // normal parent poms
+        // (https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1958).
+        // Unfortunately the difference between a BOM and a parent POM is how we name it. Therefore
+        // this logic checks whether the artifactId of the pom.xml files has "-bom" or not.
+        if (model.getArtifactId().endsWith("-bom")
+            && "pom".equals(model.getPackaging())
+            && dependencyManagement != null) {
+          // Read the dependencyManagement section of a BOM.
           for (org.apache.maven.model.Dependency dependency :
               dependencyManagement.getDependencies()) {
             String managedDependencyVersionlessCoordinates =
