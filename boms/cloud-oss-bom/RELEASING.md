@@ -31,8 +31,8 @@ at https://github.com/googleapis/java-cloud-bom/releases as well.
 From these changes in the content of the Libraries BOM,
 determine the release version by the following logic:
 
-- If there are at least one major version bumps among the changes, it's a major version bump.
-- If there are at least one minor version bumps (no major version change), it's a minor version
+- If there is at least one major version bump among the changes, it's a major version bump.
+- If there is at least one minor version bump (no major version change), it's a minor version
   bump.
 - If there are only patch version bumps (no major or minor version change), it's a patch version
   bump.
