@@ -149,7 +149,7 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void generateMessageForNewError() throws IOException {
+  public void generateMessageForNewError() {
     Set<LinkageProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
 
     ImmutableSet<LinkageProblem> snapshotProblems =
@@ -272,7 +272,7 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void testFindLocalArtifacts() throws IOException, MavenRepositoryException {
+  public void testFindLocalArtifacts() throws IOException {
     ImmutableMap<String, String> localArtifacts =
         LinkageMonitor.findLocalArtifacts(
             system, session, Paths.get("src/test/resources/testproject"));
@@ -294,7 +294,7 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void testFindLocalArtifacts_absolutePath() throws IOException, MavenRepositoryException {
+  public void testFindLocalArtifacts_absolutePath() throws IOException {
     Path relativePath = Paths.get("src/test/resources/testproject");
     Path absolutePath = relativePath.toAbsolutePath();
     ImmutableMap<String, String> localArtifactsFromAbsolutePath =
@@ -310,7 +310,7 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void testFindLocalArtifactsFromFile() throws IOException, MavenRepositoryException {
+  public void testFindLocalArtifactsFromFile() throws IOException {
     Path artifactFile = Paths.get("src/test/resources/testproject/linkage-monitor-artifacts.txt");
     ImmutableMap<String, String> localArtifacts =
         LinkageMonitor.findLocalArtifactsFromFile(artifactFile);
@@ -321,9 +321,23 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void testFindLocalArtifactsFromFile_invalidLines()
-      throws IOException, MavenRepositoryException {
-    // This file has coordinates with versions
+  public void testFindLocalArtifactsFromFile_emptyLines() throws IOException {
+    Path artifactFile =
+        Paths.get("src/test/resources/testproject/linkage-monitor-artifacts-with-empty-line.txt");
+    ImmutableMap<String, String> localArtifacts =
+        LinkageMonitor.findLocalArtifactsFromFile(artifactFile);
+
+    Truth.assertThat(localArtifacts)
+        .containsExactlyEntriesIn(
+            ImmutableMap.of(
+                "com.google.api:gax", "1.60.0-SNAPSHOT",
+                "com.google.api:gax-grpc", "1.60.0-SNAPSHOT",
+                "com.google.api:gax-httpjson", "0.77.0-SNAPSHOT"));
+  }
+
+  @Test
+  public void testFindLocalArtifactsFromFile_invalidLines() {
+    // This file has a line without version
     Path artifactFile =
         Paths.get("src/test/resources/testproject/linkage-monitor-artifacts-invalid-format.txt");
 
@@ -336,8 +350,7 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void testFindLocalArtifactsFromFile_nonexistentCoordinates()
-      throws IOException, MavenRepositoryException {
+  public void testFindLocalArtifactsFromFile_nonexistentCoordinates() {
     // There's no such artifact with "com.google.api:gax-nonexistent-coordinates"
     Path artifactFile =
         Paths.get(
@@ -352,8 +365,7 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void testFindLocalArtifactsFromFile_nonexistentFile()
-      throws IOException, MavenRepositoryException {
+  public void testFindLocalArtifactsFromFile_nonexistentFile() throws IOException {
     // Most of the repositories do not have the file. Linkage Monitor should not throw an exception.
     Path artifactFile = Paths.get("src/test/resources/testproject/nonexistent-file");
 

@@ -98,7 +98,7 @@ public class LinkageMonitor {
   private final ImmutableMap<String, String> localArtifacts =
       findLocalArtifacts(repositorySystem, session, Paths.get(".").toAbsolutePath());
 
-  private LinkageMonitor() throws IOException, MavenRepositoryException {}
+  private LinkageMonitor() throws IOException {}
 
   public static void main(String[] arguments)
       throws RepositoryException, IOException, MavenRepositoryException, ModelBuildingException {
@@ -161,7 +161,7 @@ public class LinkageMonitor {
   @VisibleForTesting
   static ImmutableMap<String, String> findLocalArtifacts(
       RepositorySystem repositorySystem, RepositorySystemSession session, Path projectDirectory)
-      throws IOException, MavenRepositoryException {
+      throws IOException {
     Map<String, String> artifactToVersion = new HashMap<>();
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectDirectory);
 
@@ -220,44 +220,38 @@ public class LinkageMonitor {
   }
 
   /**
-   * Returns a map from versionless coordinates to the versions of the Maven coordinates by checking
-   * the latest version for the versionless coordinates listed in {@code file}. If the file does not
-   * exists, it returns an empty map.
+   * Returns a map from versionless coordinates to the versions for the Maven coordinates listed in
+   * {@code artifactListFile}. If the file does not exists, it returns an empty map.
    *
-   * @throws IOException if the file contains line in an invalid format for versionless coordinates
-   *     or there's no version found for the coordinates.
+   * @throws IOException if the artifactListFile contains line in an invalid format for versionless coordinates
    */
   @VisibleForTesting
-  static ImmutableMap<String, String> findLocalArtifactsFromFile(Path file)
-      throws IOException, MavenRepositoryException {
-    if (!Files.exists(file)) {
+  static ImmutableMap<String, String> findLocalArtifactsFromFile(Path artifactListFile) throws IOException {
+    if (!Files.exists(artifactListFile)) {
       return ImmutableMap.of();
     }
 
-    List<String> lines = Files.readAllLines(file);
+    List<String> lines = Files.readAllLines(artifactListFile);
 
     ImmutableMap.Builder<String, String> artifactToVersion = ImmutableMap.builder();
     for (String line : lines) {
+      if (line.isEmpty()) {
+        continue;
+      }
       String[] elements = line.split(":");
-      if (elements.length != 2) {
+      if (elements.length != 3) {
         throw new IOException(
             "Invalid format in "
                 + LOCAL_ARTIFACT_FILE_NAME
-                + ". The file should contain only versionless coordinates.");
+                + ". The file should contain only Maven coordinates"
+                + " (<groupId>:<artifactId>:<version>).");
       }
       String groupId = elements[0];
       String artifactId = elements[1];
-      // The latest version comes at last
-      ImmutableList<String> versions =
-          RepositoryUtility.findVersions(repositorySystem, groupId, artifactId);
-      if (versions.isEmpty()) {
-        // Not using ArtifactNotFoundException, because an artifact requires a version
-        throw new IOException("Could not find any version for " + line);
-      }
-      String latestVersion = versions.get(versions.size() - 1);
-      logger.fine("Found artifact from file: " + line + ":" + latestVersion);
+      String version = elements[2];
+      logger.fine("Found artifact from file: " + line);
 
-      artifactToVersion.put(line, latestVersion);
+      artifactToVersion.put(groupId + ":" + artifactId, version);
     }
 
     return artifactToVersion.build();
