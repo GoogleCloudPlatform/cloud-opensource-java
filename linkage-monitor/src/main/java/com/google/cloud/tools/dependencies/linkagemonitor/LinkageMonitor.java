@@ -482,6 +482,4 @@ public class LinkageMonitor {
     // "-SNAPSHOT" suffix for coordinate to distinguish easily.
     return new Bom(bom.getCoordinates() + "-SNAPSHOT", managedDependencies.build());
   }
-
-
 }
