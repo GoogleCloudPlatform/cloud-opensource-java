@@ -223,10 +223,12 @@ public class LinkageMonitor {
    * Returns a map from versionless coordinates to the versions for the Maven coordinates listed in
    * {@code artifactListFile}. If the file does not exists, it returns an empty map.
    *
-   * @throws IOException if the artifactListFile contains line in an invalid format for versionless coordinates
+   * @throws IOException if the artifactListFile contains line in an invalid format for versionless
+   *     coordinates
    */
   @VisibleForTesting
-  static ImmutableMap<String, String> findLocalArtifactsFromFile(Path artifactListFile) throws IOException {
+  static ImmutableMap<String, String> findLocalArtifactsFromFile(Path artifactListFile)
+      throws IOException {
     if (!Files.exists(artifactListFile)) {
       return ImmutableMap.of();
     }

@@ -277,20 +277,21 @@ public class LinkageMonitorTest {
         LinkageMonitor.findLocalArtifacts(
             system, session, Paths.get("src/test/resources/testproject"));
 
-    // This should not include project under "build" directory, but should include the entries
-    // in the dependencyManagement section of the gax-bom/pom.xml.
-    Truth.assertThat(localArtifacts).hasSize(6);
+    // This should not include project under "build" directory
     Truth.assertThat(localArtifacts)
         .doesNotContainKey("com.google.cloud.tools:copy-of-test-subproject-in-build");
-    assertEquals("0.0.1-SNAPSHOT", localArtifacts.get("com.google.cloud.tools:test-project"));
-    assertEquals("0.0.2-SNAPSHOT", localArtifacts.get("com.google.cloud.tools:test-subproject"));
-    assertEquals("1.60.2-SNAPSHOT", localArtifacts.get("com.google.api:gax-bom"));
 
-    // Linkage Monitor should read linkage-monitor-artifacts.txt. The file tells versionless
-    // coordinates
-    Truth.assertThat(localArtifacts).containsKey("com.google.api:gax");
-    Truth.assertThat(localArtifacts).containsKey("com.google.api:gax-grpc");
-    Truth.assertThat(localArtifacts).containsKey("com.google.api:gax-httpjson");
+    // Linkage Monitor should read linkage-monitor-artifacts.txt.
+    Truth.assertThat(localArtifacts)
+        .containsExactlyEntriesIn(
+            ImmutableMap.builder()
+                .put("com.google.cloud.tools:test-project", "0.0.1-SNAPSHOT")
+                .put("com.google.cloud.tools:test-subproject", "0.0.2-SNAPSHOT")
+                .put("com.google.api:gax-bom", "1.60.2-SNAPSHOT")
+                .put("com.google.api:gax", "1.60.0-SNAPSHOT")
+                .put("com.google.api:gax-grpc", "1.60.0-SNAPSHOT")
+                .put("com.google.api:gax-httpjson", "0.77.0-SNAPSHOT")
+                .build());
   }
 
   @Test
@@ -315,9 +316,12 @@ public class LinkageMonitorTest {
     ImmutableMap<String, String> localArtifacts =
         LinkageMonitor.findLocalArtifactsFromFile(artifactFile);
 
-    Truth.assertThat(localArtifacts.keySet())
-        .containsExactly(
-            "com.google.api:gax", "com.google.api:gax-grpc", "com.google.api:gax-httpjson");
+    Truth.assertThat(localArtifacts)
+        .containsExactlyEntriesIn(
+            ImmutableMap.of(
+                "com.google.api:gax", "1.60.0-SNAPSHOT",
+                "com.google.api:gax-grpc", "1.60.0-SNAPSHOT",
+                "com.google.api:gax-httpjson", "0.77.0-SNAPSHOT"));
   }
 
   @Test
