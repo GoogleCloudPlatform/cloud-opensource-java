@@ -1,0 +1,3 @@
+com.google.api:gax
+com.google.api:gax-grpc
+com.google.api:gax-httpjson

@@ -41,6 +41,7 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import com.google.common.io.MoreFiles;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -82,14 +83,22 @@ import org.eclipse.aether.resolution.ArtifactResult;
 public class LinkageMonitor {
   private static final Logger logger = Logger.getLogger(LinkageMonitor.class.getName());
 
+  /**
+   * The file that Linkage Monitor reads to get list of the artifacts that the repository produces.
+   */
+  private static final String LOCAL_ARTIFACT_FILE_NAME = "linkage-monitor-artifacts.txt";
+
   private static final DefaultModelBuilder modelBuilder =
       new DefaultModelBuilderFactory().newInstance();
 
   // Finding latest version requires metadata from remote repository
-  private final RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
-  private final RepositorySystemSession session = RepositoryUtility.newSession(repositorySystem);
+  private static final RepositorySystem repositorySystem = RepositoryUtility.newRepositorySystem();
+  private static final RepositorySystemSession session =
+      RepositoryUtility.newSession(repositorySystem);
   private final ImmutableMap<String, String> localArtifacts =
       findLocalArtifacts(repositorySystem, session, Paths.get(".").toAbsolutePath());
+
+  private LinkageMonitor() throws IOException, MavenRepositoryException {}
 
   public static void main(String[] arguments)
       throws RepositoryException, IOException, MavenRepositoryException, ModelBuildingException {
@@ -146,11 +155,13 @@ public class LinkageMonitor {
 
   /**
    * Returns a map from versionless coordinates to the versions of the Maven coordinates in all
-   * pom.xml and the {@code dependencyManagement} section of BOMs found in {@code projectDirectory}.
+   * pom.xml and the latest coordinates of the versionless coordinates in the artifact list file if
+   * the file exists in {@code projectDirectory}.
    */
   @VisibleForTesting
   static ImmutableMap<String, String> findLocalArtifacts(
-      RepositorySystem repositorySystem, RepositorySystemSession session, Path projectDirectory) {
+      RepositorySystem repositorySystem, RepositorySystemSession session, Path projectDirectory)
+      throws IOException, MavenRepositoryException {
     // The same coordinates may be added multiple times by an artifact and an entry in a BOM.
     Map<String, String> artifactToVersion = new HashMap<>();
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectDirectory);
@@ -193,25 +204,55 @@ public class LinkageMonitor {
         String versionlessCoordinates = model.getGroupId() + ":" + model.getArtifactId();
         artifactToVersion.put(versionlessCoordinates, model.getVersion());
         logger.fine("Found local artifact: " + model);
-        DependencyManagement dependencyManagement = model.getDependencyManagement();
-        if ("pom".equals(model.getPackaging()) && dependencyManagement != null) {
-          // Read the content of a BOM.
-          for (org.apache.maven.model.Dependency dependency :
-              dependencyManagement.getDependencies()) {
-            String managedDependencyVersionlessCoordinates =
-                dependency.getGroupId() + ":" + dependency.getArtifactId();
-            artifactToVersion.put(managedDependencyVersionlessCoordinates, dependency.getVersion());
-            logger.fine("Found local artifact in the BOM: " + dependency);
-          }
-        }
-
       } catch (ModelBuildingException ex) {
         // Maven may fail to build pom.xml files found in irrelevant directories, such as "target"
         // and "test" directories of the project. Such failures can be ignored.
         logger.info("Ignoring bad model: " + path + ": " + ex.getMessage());
       }
     }
+
+    // For gax-java (Gradle) repository, which does not have pom.xml, linkage-monitor-artifacts.txt
+    // tells which artifacts to use for the snapshot BOM.
+    ImmutableMap<String, String> localArtifactsFromFile =
+        findLocalArtifactsFromFile(projectDirectory.resolve(LOCAL_ARTIFACT_FILE_NAME));
+    artifactToVersion.putAll(localArtifactsFromFile);
+
     return ImmutableMap.copyOf(artifactToVersion);
+  }
+
+  @VisibleForTesting
+  static ImmutableMap<String, String> findLocalArtifactsFromFile(Path file)
+      throws IOException, MavenRepositoryException {
+    if (!Files.exists(file)) {
+      return ImmutableMap.of();
+    }
+
+    List<String> lines = Files.readAllLines(file);
+
+    ImmutableMap.Builder<String, String> artifactToVersion = ImmutableMap.builder();
+    for (String line : lines) {
+      String[] elements = line.split(":");
+      if (elements.length != 2) {
+        throw new IOException(
+            "Invalid format in "
+                + LOCAL_ARTIFACT_FILE_NAME
+                + ". The file should contain versionless coordinates.");
+      }
+      String groupId = elements[0];
+      String artifactId = elements[1];
+      // The latest version comes at last
+      ImmutableList<String> versions =
+          RepositoryUtility.findVersions(repositorySystem, groupId, artifactId);
+      if (versions.isEmpty()) {
+        throw new IOException("Could not find any version for " + line);
+      }
+      String latestVersion = versions.get(versions.size() - 1);
+      logger.fine("Found artifact from file: " + line + ":" + latestVersion);
+
+      artifactToVersion.put(line, latestVersion);
+    }
+
+    return artifactToVersion.build();
   }
 
   /**
@@ -433,4 +474,6 @@ public class LinkageMonitor {
     // "-SNAPSHOT" suffix for coordinate to distinguish easily.
     return new Bom(bom.getCoordinates() + "-SNAPSHOT", managedDependencies.build());
   }
+
+
 }

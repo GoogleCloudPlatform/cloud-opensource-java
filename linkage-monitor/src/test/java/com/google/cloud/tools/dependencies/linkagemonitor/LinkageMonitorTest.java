@@ -272,7 +272,7 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void testFindLocalArtifacts() {
+  public void testFindLocalArtifacts() throws IOException, MavenRepositoryException {
     ImmutableMap<String, String> localArtifacts =
         LinkageMonitor.findLocalArtifacts(
             system, session, Paths.get("src/test/resources/testproject"));
@@ -280,17 +280,21 @@ public class LinkageMonitorTest {
     // This should not include project under "build" directory, but should include the entries
     // in the dependencyManagement section of the gax-bom/pom.xml.
     Truth.assertThat(localArtifacts).hasSize(6);
+    Truth.assertThat(localArtifacts)
+        .doesNotContainKey("com.google.cloud.tools:copy-of-test-subproject-in-build");
     assertEquals("0.0.1-SNAPSHOT", localArtifacts.get("com.google.cloud.tools:test-project"));
     assertEquals("0.0.2-SNAPSHOT", localArtifacts.get("com.google.cloud.tools:test-subproject"));
     assertEquals("1.60.2-SNAPSHOT", localArtifacts.get("com.google.api:gax-bom"));
-    assertEquals(
-        "localArtifacts should contain the dependency management section in the BOM",
-        "1.60.2-SNAPSHOT",
-        localArtifacts.get("com.google.api:gax"));
+
+    // Linkage Monitor should read linkage-monitor-artifacts.txt. The file tells versionless
+    // coordinates
+    Truth.assertThat(localArtifacts).containsKey("com.google.api:gax");
+    Truth.assertThat(localArtifacts).containsKey("com.google.api:gax-grpc");
+    Truth.assertThat(localArtifacts).containsKey("com.google.api:gax-httpjson");
   }
 
   @Test
-  public void testFindLocalArtifacts_absolutePath() {
+  public void testFindLocalArtifacts_absolutePath() throws IOException, MavenRepositoryException {
     Path relativePath = Paths.get("src/test/resources/testproject");
     Path absolutePath = relativePath.toAbsolutePath();
     ImmutableMap<String, String> localArtifactsFromAbsolutePath =
@@ -303,5 +307,58 @@ public class LinkageMonitorTest {
         "findLocalArtifacts should behave the same for relative and absolute paths",
         localArtifactsFromRelativePath,
         localArtifactsFromAbsolutePath);
+  }
+
+  @Test
+  public void testFindLocalArtifactsFromFile() throws IOException, MavenRepositoryException {
+    Path artifactFile = Paths.get("src/test/resources/testproject/linkage-monitor-artifacts.txt");
+    ImmutableMap<String, String> localArtifacts =
+        LinkageMonitor.findLocalArtifactsFromFile(artifactFile);
+
+    Truth.assertThat(localArtifacts.keySet())
+        .containsExactly(
+            "com.google.api:gax", "com.google.api:gax-grpc", "com.google.api:gax-httpjson");
+  }
+
+  @Test
+  public void testFindLocalArtifactsFromFile_invalidLines()
+      throws IOException, MavenRepositoryException {
+    // This file has coordinates with versions
+    Path artifactFile =
+        Paths.get("src/test/resources/testproject/linkage-monitor-artifacts-invalid-format.txt");
+
+    try {
+      LinkageMonitor.findLocalArtifactsFromFile(artifactFile);
+      fail();
+    } catch (IOException ex) {
+      // pass
+    }
+  }
+
+  @Test
+  public void testFindLocalArtifactsFromFile_nonexistentCoordinates()
+      throws IOException, MavenRepositoryException {
+    // There's no such artifact with "com.google.api:gax-nonexistent-coordinates"
+    Path artifactFile =
+        Paths.get(
+            "src/test/resources/testproject/linkage-monitor-artifacts-nonexistent-coordinates.txt");
+
+    try {
+      LinkageMonitor.findLocalArtifactsFromFile(artifactFile);
+      fail();
+    } catch (IOException ex) {
+      // pass
+    }
+  }
+
+  @Test
+  public void testFindLocalArtifactsFromFile_nonexistentFile()
+      throws IOException, MavenRepositoryException {
+    // Most of the repositories do not have the file. Linkage Monitor should not throw an exception.
+    Path artifactFile = Paths.get("src/test/resources/testproject/nonexistent-file");
+
+    ImmutableMap<String, String> localArtifactsFromFile =
+        LinkageMonitor.findLocalArtifactsFromFile(artifactFile);
+    Truth.assertThat(localArtifactsFromFile).isEmpty();
   }
 }
