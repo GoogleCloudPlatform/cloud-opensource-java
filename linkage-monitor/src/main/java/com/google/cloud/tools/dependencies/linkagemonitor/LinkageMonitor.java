@@ -155,14 +155,13 @@ public class LinkageMonitor {
 
   /**
    * Returns a map from versionless coordinates to the versions of the Maven coordinates in all
-   * pom.xml and the latest coordinates of the versionless coordinates in the artifact list file if
-   * the file exists in {@code projectDirectory}.
+   * pom.xml. The map also contains the artifact list in the {@code linkage-monitor-artifacts.txt}
+   * if the file exists in {@code projectDirectory}.
    */
   @VisibleForTesting
   static ImmutableMap<String, String> findLocalArtifacts(
       RepositorySystem repositorySystem, RepositorySystemSession session, Path projectDirectory)
       throws IOException, MavenRepositoryException {
-    // The same coordinates may be added multiple times by an artifact and an entry in a BOM.
     Map<String, String> artifactToVersion = new HashMap<>();
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectDirectory);
 
@@ -220,6 +219,14 @@ public class LinkageMonitor {
     return ImmutableMap.copyOf(artifactToVersion);
   }
 
+  /**
+   * Returns a map from versionless coordinates to the versions of the Maven coordinates by checking
+   * the latest version for the versionless coordinates listed in {@code file}. If the file does not
+   * exists, it returns an empty map.
+   *
+   * @throws IOException if the file contains line in an invalid format for versionless coordinates
+   *     or there's no version found for the coordinates.
+   */
   @VisibleForTesting
   static ImmutableMap<String, String> findLocalArtifactsFromFile(Path file)
       throws IOException, MavenRepositoryException {
@@ -236,7 +243,7 @@ public class LinkageMonitor {
         throw new IOException(
             "Invalid format in "
                 + LOCAL_ARTIFACT_FILE_NAME
-                + ". The file should contain versionless coordinates.");
+                + ". The file should contain only versionless coordinates.");
       }
       String groupId = elements[0];
       String artifactId = elements[1];
@@ -244,6 +251,7 @@ public class LinkageMonitor {
       ImmutableList<String> versions =
           RepositoryUtility.findVersions(repositorySystem, groupId, artifactId);
       if (versions.isEmpty()) {
+        // Not using ArtifactNotFoundException, because an artifact requires a version
         throw new IOException("Could not find any version for " + line);
       }
       String latestVersion = versions.get(versions.size() - 1);
