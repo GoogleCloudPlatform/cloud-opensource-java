@@ -14,34 +14,6 @@
         <artifactId>gax</artifactId>
         <version>1.60.2-SNAPSHOT</version>
       </dependency>
-      <dependency>
-        <groupId>com.google.api</groupId>
-        <artifactId>gax</artifactId>
-        <version>1.60.2-SNAPSHOT</version>
-        <classifier>testlib</classifier>
-      </dependency>
-      <dependency>
-        <groupId>com.google.api</groupId>
-        <artifactId>gax-grpc</artifactId>
-        <version>1.60.2-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.api</groupId>
-        <artifactId>gax-grpc</artifactId>
-        <version>1.60.2-SNAPSHOT</version>
-        <classifier>testlib</classifier>
-      </dependency>
-      <dependency>
-        <groupId>com.google.api</groupId>
-        <artifactId>gax-httpjson</artifactId>
-        <version>0.77.2-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.api</groupId>
-        <artifactId>gax-httpjson</artifactId>
-        <version>0.77.2-SNAPSHOT</version>
-        <classifier>testlib</classifier>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 </project>
