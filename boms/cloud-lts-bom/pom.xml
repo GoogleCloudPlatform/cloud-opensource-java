@@ -213,6 +213,11 @@
       </dependency>
       <dependency>
         <groupId>com.google.api-client</groupId>
+        <artifactId>google-api-client-parent</artifactId>
+        <version>${google.api.client.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.api-client</groupId>
         <artifactId>google-api-client-appengine</artifactId>
         <version>${google.api.client.version}</version>
       </dependency>
