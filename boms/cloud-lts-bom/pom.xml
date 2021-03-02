@@ -53,6 +53,7 @@
     <google.cloud.monitoring.version>2.0.13</google.cloud.monitoring.version>
     <google.cloud.pubsub.version>1.111.1</google.cloud.pubsub.version>
     <google.cloud.spanner.version>4.0.1</google.cloud.spanner.version>
+    <google.cloud.bigtable.client.version>1.19.0</google.cloud.bigtable.client.version>
     <google.autovalue.version>1.7.4</google.autovalue.version>
     <google.api.client.version>1.31.2</google.api.client.version>
     <!-- JRE for Java 8. Beam's dependency (gcsio) uses JRE flavor -->
@@ -84,12 +85,17 @@
       </dependency>
       <dependency>
         <groupId>org.apache.beam</groupId>
-        <artifactId>beam-sdks-java-io-google-cloud-platform</artifactId>
+        <artifactId>beam-sdks-java-extensions-google-cloud-platform-core</artifactId>
         <version>${beam.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.beam</groupId>
         <artifactId>beam-sdks-java-extensions-google-cloud-platform-core</artifactId>
+        <version>${beam.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-sdks-java-io-google-cloud-platform</artifactId>
         <version>${beam.version}</version>
       </dependency>
       <dependency>
@@ -219,6 +225,16 @@
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-storage</artifactId>
         <version>${google.cloud.storage.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.cloud.bigtable</groupId>
+        <artifactId>bigtable-client-core</artifactId>
+        <version>${google.cloud.bigtable.client.version>}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.cloud.bigtable</groupId>
+        <artifactId>bigtable-hbase-beam</artifactId>
+        <version>${google.cloud.bigtable.client.version>}</version>
       </dependency>
 
       <!-- What will replace com.google.apis:google-api-services-cloudtrace? -->
