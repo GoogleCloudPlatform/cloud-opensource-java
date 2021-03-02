@@ -239,12 +239,12 @@
       <dependency>
         <groupId>com.google.cloud.bigtable</groupId>
         <artifactId>bigtable-client-core</artifactId>
-        <version>${google.cloud.bigtable.client.version>}</version>
+        <version>${google.cloud.bigtable.client.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.cloud.bigtable</groupId>
         <artifactId>bigtable-hbase-beam</artifactId>
-        <version>${google.cloud.bigtable.client.version>}</version>
+        <version>${google.cloud.bigtable.client.version}</version>
       </dependency>
 
       <!-- What will replace com.google.apis:google-api-services-cloudtrace? -->
