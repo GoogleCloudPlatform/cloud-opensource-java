@@ -14,6 +14,31 @@ tool if you not previously done so.
 
 * Install and configure the [repo tool](https://github.com/googleapis/github-repo-automation).
 
+## Decide the release version
+
+To decide the release version, check the changes since the last release.
+(This step ensures that you do not miss expected libraries upgrades.)
+For example, if the last BOM release was version 16.4.0, then run the following command
+to see the difference.
+
+```
+git diff v16.4.0-bom -- boms/cloud-oss-bom/pom.xml
+```
+
+If the difference includes the google-cloud-bom version, then check the change in the release note
+at https://github.com/googleapis/java-cloud-bom/releases as well.
+
+From these changes in the content of the Libraries BOM,
+determine the release version by the following logic:
+
+- If there is at least one major version bump among the changes, it's a major version bump.
+- If there is at least one minor version bump (no major version change), it's a minor version
+  bump.
+- If there are only patch version bumps (no major or minor version change), it's a patch version
+  bump.
+
+We use the release version for `release.sh` in the next steps.
+
 ## Steps
 
 All on your corp desktop: 
