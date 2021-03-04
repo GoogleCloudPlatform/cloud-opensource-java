@@ -90,7 +90,7 @@ new release is available on Maven Central.
   that updates libraries-bom in https://github.com/GoogleCloudPlatform/java-docs-samples/pulls
 * Use the repo tool to approve renovatebot updates for libraries-bom in the individual clients:
     * `$ repo list --title .*v16.4.0`
-    * Verify that the lsited PRs look correct and don't include anything you're not ready to merge. 
+    * Verify that the listed PRs look correct and don't include anything you're not ready to merge. 
     * `$ repo approve --title .*v16.4.0`
     * `$ repo --title .*v16.4.0 tag automerge`
 * Manually edit and update any pom.xml files in https://github.com/GoogleCloudPlatform/java-docs-samples that dependabot missed
