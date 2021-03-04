@@ -3,7 +3,7 @@ permalink: /glossary
 ---
 # Java Dependency Glossary
 
-- **Class path**: an ordered list of jar files, zip files, and directories, each of which
+- **Class path**: an ordered list of JAR files, zip files, and directories, each of which
   contains Java class files.
   A [class loader](https://docs.oracle.com/javase/7/docs/api/java/lang/ClassLoader.html)
   transforms the fully package qualified name of a Java class
@@ -73,9 +73,9 @@ permalink: /glossary
 
 ### Conflict relationships
 
-- A particular conflict cannot be both a linkage error and behavior conflict.
+- A particular conflict cannot be both a linkage error and a behavior conflict.
   They are mutually exclusive.
-- A combination of jars at runtime can have any number of linkage errors and
+- A class path can have any number of linkage errors and
   behavior conflicts.
 
 ## States of compatibility
@@ -106,7 +106,7 @@ permalink: /glossary
 
 <a name="class-reference-graph"></a>
 - **Class reference graph**: a possibly cyclic directed graph where each node represents
-  a class and each edge represents a method, field or class reference from the
+  a class and each edge represents a method, field, or class reference from the
   source class to the target class.
 
   For example, when 'Class A' invokes method X on 'Class B',
@@ -134,7 +134,7 @@ permalink: /glossary
   class path from which the graph is built.
 
 <a name="entry-point-class"></a>
-- **Entry point class**: a class in the set of classes used to analyze
+- **Entry point class**: a class in the class reference graph used to analyze
   the reachability of linkage errors. A graph traversal on the reachability
   of a linkage error starts with the nodes that correspond to the
   entry point classes.

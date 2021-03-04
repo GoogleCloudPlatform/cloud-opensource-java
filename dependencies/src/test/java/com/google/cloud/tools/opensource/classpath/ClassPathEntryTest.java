@@ -90,7 +90,7 @@ public class ClassPathEntryTest {
   @Test
   public void testGetClassNames() throws IOException, ArtifactResolutionException {
     // copy into the local repository so we can read the jar file
-    Artifact artifact = resolveArtifact("com.google.truth.extensions:truth-java8-extension:1.0.1");
+    Artifact artifact = resolveArtifact("com.google.truth.extensions:truth-java8-extension:1.1");
     
     ClassPathEntry entry = new ClassPathEntry(artifact);
     ImmutableSet<String> classFileNames = entry.getFileNames();

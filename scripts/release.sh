@@ -1,5 +1,5 @@
 #!/bin/bash -
-# Usage: ./prepare_release.sh <dependencies|bom> <release version>
+# Usage: ./release.sh <dependencies|bom> <release version>
 
 set -e
 
@@ -16,7 +16,7 @@ Die() {
 }
 
 DieUsage() {
-  Die "Usage: ./prepare_release.sh <dependencies|bom> <release version> [<post-release-version>]"
+  Die "Usage: ./release.sh <dependencies|bom> <release version> [<post-release-version>]"
 }
 
 # Usage: CheckVersion <version>
@@ -83,23 +83,26 @@ fi
 mvn org.codehaus.mojo:versions-maven-plugin:2.7:set -DnewVersion=${VERSION} -DgenerateBackupPoms=false
 
 if [[ "${SUFFIX}" = "dependencies" ]]; then
-  sed -i "" "s/version = .*/version = ${VERSION}/" gradle-plugin/gradle.properties
+  sed -i -e "s/version = .*/version = ${VERSION}/" gradle-plugin/gradle.properties
+  sed -i -e "s/linkage-monitor-.\+-all-deps/linkage-monitor-${VERSION}-all-deps/" linkage-monitor/action.yml
 fi
 
 # Tags a new commit for this release.
 git commit -am "preparing release ${VERSION}-${SUFFIX}"
-git tag v${VERSION}-${SUFFIX}
+RELEASE_TAG="v${VERSION}-${SUFFIX}"
+git tag "${RELEASE_TAG}"
 mvn org.codehaus.mojo:versions-maven-plugin:2.7:set -DnewVersion=${NEXT_SNAPSHOT} -DgenerateBackupPoms=false
 
 if [[ "${SUFFIX}" = "dependencies" ]]; then
-  sed -i "" "s/version = .*/version = ${NEXT_SNAPSHOT}/" gradle-plugin/gradle.properties
+  sed -i -e "s/version = .*/version = ${NEXT_SNAPSHOT}/" gradle-plugin/gradle.properties
+  sed -i -e "s/linkage-monitor-.\+-all-deps/linkage-monitor-${NEXT_SNAPSHOT}-all-deps/" linkage-monitor/action.yml
 fi
 
 # Commits this next snapshot version.
 git commit -am "${NEXT_SNAPSHOT}"
 
 # Pushes the tag and release branch to Github.
-git push origin v${VERSION}-${SUFFIX}
+git push origin "${RELEASE_TAG}"
 git push --set-upstream origin ${VERSION}-${SUFFIX}
 
 # Create the PR
@@ -116,10 +119,41 @@ clientdir="$(p4 g4d -- "${citcclient?}")"
 
 cd "${clientdir}"
 
-blaze run java/com/google/cloud/java/tools:ReleaseBom -- --version=${VERSION}
+RELEASE_RAPID_PROJECT=java/com/google/cloud/java/tools:ReleaseRapidProject
+blaze build "${RELEASE_RAPID_PROJECT}"
 
-# TODO check status of ReleaseBom and die with instructions if it failed. Otherwise
+release_rapid_project() {
+  local project="$1"
+  "blaze-bin/${RELEASE_RAPID_PROJECT/://}" \
+      --project_name="cloud-java-tools-cloud-opensource-java-${project}-release" \
+      --committish="${RELEASE_TAG}"
+}
 
-# TODO print instructions for releasing from Sonatype OSSRH to Maven Central
-# Eventually we should automate this step too.
+if [[ "${SUFFIX}" = bom ]]; then
+  release_rapid_project bom-kokoro
+else
+  # Run the Rapid projects concurrently
+  release_rapid_project parent-kokoro &
+  release_rapid_project dependencies-kokoro &
+  release_rapid_project enforcer-rules &
+  release_rapid_project gradle-plugin-kokoro &
+  release_rapid_project linkage-monitor-kokoro &
+  wait
+fi
 
+if [[ "${SUFFIX}" = "dependencies" ]]; then
+  LINKAGE_MONITOR_JAR_URL="https://storage.googleapis.com/cloud-opensource-java-linkage-monitor/linkage-monitor-${VERSION}-all-deps.jar"
+  curl --fail --output /dev/null $LINKAGE_MONITOR_JAR_URL
+  if [ "$?" == "0" ]; then
+    EchoGreen "Linkage Monitor uber JAR is available."
+    echo "Once the pull request is approved, update the v1-linkagemonitor tag:"
+    echo "$ git tag -d v1-linkagemonitor"
+    echo "$ git tag -a v1-linkagemonitor ${RELEASE_TAG} -m \"Linkage Monitor release on ${RELEASE_TAG}\""
+    echo "$ git push -f origin v1-linkagemonitor"
+  else
+    EchoRed "Couldn't confirm the new uber JAR at ${LINKAGE_MONITOR_JAR_URL}"
+  fi
+fi
+
+# TODO print instructions for releasing from Sonatype OSSRH to Maven Central when
+# ReleaseRapidProject succeeds. Eventually we should automate this step too.

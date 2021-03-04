@@ -11,7 +11,7 @@ cd github/cloud-opensource-java
 mkdir -p ${HOME}/.m2
 cp settings.xml ${HOME}/.m2
 
-./mvnw -V -B clean install javadoc:jar
+./mvnw -V -B -ntp clean install javadoc:jar
 
 cd gradle-plugin
 ./gradlew build publishToMavenLocal

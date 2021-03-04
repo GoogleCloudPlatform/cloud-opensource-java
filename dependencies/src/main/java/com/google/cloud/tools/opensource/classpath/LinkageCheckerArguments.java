@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableList;
@@ -243,7 +244,7 @@ final class LinkageCheckerArguments {
   }
 
   boolean needsHelp() {
-    return this.help;
+    return this.help || !hasInput();
   }
 
   void printHelp() {

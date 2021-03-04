@@ -209,7 +209,7 @@ public class LinkageChecker {
       }
     }
 
-    // Filter classes in whitelist
+    // Filter classes in exclusion file
     ImmutableSet<LinkageProblem> filteredMap =
         problemToClass.build().stream().filter(this::problemFilter).collect(toImmutableSet());
     return filteredMap;
@@ -266,7 +266,11 @@ public class LinkageChecker {
       if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
         AccessModifier modifier = AccessModifier.fromFlag(targetJavaClass.getModifiers());
         return Optional.of(
-            new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol, modifier));
+            new InaccessibleClassProblem(
+                sourceClassFile,
+                targetClassFile,
+                new ClassSymbol(symbol.getClassBinaryName()),
+                modifier));
       }
 
       if (targetJavaClass.isInterface() != symbol.isInterfaceMethod()) {
@@ -436,7 +440,11 @@ public class LinkageChecker {
       if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
         AccessModifier modifier = AccessModifier.fromFlag(targetJavaClass.getModifiers());
         return Optional.of(
-            new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol, modifier));
+            new InaccessibleClassProblem(
+                sourceClassFile,
+                targetClassFile,
+                new ClassSymbol(symbol.getClassBinaryName()),
+                modifier));
       }
 
       for (JavaClass javaClass : getClassHierarchy(targetJavaClass)) {
