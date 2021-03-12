@@ -48,13 +48,13 @@
     <google.cloud.java.version>0.149.0</google.cloud.java.version>
     <io.grpc.version>1.36.0</io.grpc.version>
     <http.version>1.39.0</http.version>
-    <protobuf.version>3.15.3</protobuf.version>
+    <protobuf.version>3.15.6</protobuf.version>
     <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier.
         When updating gax.version, update gax.httpjson.version too. -->
     <gax.version>1.62.0</gax.version>
     <gax.httpjson.version>0.79.0</gax.httpjson.version>
     <common.protos.version>2.1.0</common.protos.version>
-    <iam.protos.version>1.0.10</iam.protos.version>
+    <iam.protos.version>1.0.11</iam.protos.version>
   </properties>
 
   <distributionManagement>
@@ -242,7 +242,7 @@
        <dependency>
          <groupId>com.google.cloud</groupId>
          <artifactId>google-cloud-core-bom</artifactId>
-         <version>1.94.3</version>
+         <version>1.94.4</version>
          <type>pom</type>
          <scope>import</scope>
        </dependency>
