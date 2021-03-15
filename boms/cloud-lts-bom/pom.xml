@@ -53,7 +53,7 @@
     <google.cloud.monitoring.version>2.0.13</google.cloud.monitoring.version>
     <google.cloud.trace.version>1.2.12</google.cloud.trace.version>
     <google.cloud.pubsub.version>1.111.1</google.cloud.pubsub.version>
-    <google.cloud.spanner.version>4.0.1</google.cloud.spanner.version>
+    <google.cloud.spanner.version>5.1.0</google.cloud.spanner.version>
     <google.cloud.bigtable.client.version>1.19.0</google.cloud.bigtable.client.version>
     <google.autovalue.version>1.7.4</google.autovalue.version>
     <google.api.client.version>1.31.2</google.api.client.version>
