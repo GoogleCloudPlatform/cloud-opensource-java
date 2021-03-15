@@ -1,0 +1,12 @@
+bom: com.google.cloud:gcp-lts-bom:0.1.0-SNAPSHOT
+repositories:
+  - name: Beam
+    url: https://github.com/apache/beam.git
+    tag: v2.28.0
+  - name: gRPC
+    url: https://github.com/grpc/grpc-java.git
+    tag: v1.36.0
+  - name: java-spanner
+    url: https://github.com/googleapis/java-spanner.git
+    tag: 5.0.0
+
