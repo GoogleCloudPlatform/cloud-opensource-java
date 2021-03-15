@@ -51,7 +51,6 @@ if (version.contains("SNAPSHOT")) {
 
 repositories {
   mavenLocal()
-  jcenter()
 }
 
 gradlePlugin {
