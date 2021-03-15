@@ -141,9 +141,8 @@
     </Source>
     <Reason>
       If BlockHound library is present in the class path, it loads the Hidden class to enable
-      Netty-BlockHound integration that detects blocking calls. In this case, the missing classes
-      are on the class path. If BlockHound is not on the class path, nothing loads this source
-      class.
+      Netty-BlockHound integration. In this case, the target classes are on the class path.
+      If BlockHound is not on the class path, nothing loads this source class.
       https://github.com/reactor/BlockHound/blob/master/docs/custom_integrations.md
     </Reason>
   </LinkageError>
