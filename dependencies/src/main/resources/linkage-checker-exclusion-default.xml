@@ -140,9 +140,11 @@
       <Class name="io.netty.util.internal.Hidden" />
     </Source>
     <Reason>
-      Netty users can optionally add BlockHound dependency to detect blocking calls in their usage
-      of netty. The io.netty.util.internal.Hidden class implements the integration and this class
-      has references to missing classes by default.
+      If BlockHound library is present in the class path, it loads the Hidden class to enable
+      Netty-BlockHound integration that detects blocking calls. In this case, the missing classes
+      are on the class path. If BlockHound is not on the class path, nothing loads this source
+      class.
+      https://github.com/reactor/BlockHound/blob/master/docs/custom_integrations.md
     </Reason>
   </LinkageError>
   <LinkageError>
