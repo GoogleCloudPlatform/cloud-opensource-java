@@ -1,12 +1,24 @@
 bom: com.google.cloud:gcp-lts-bom:0.1.0-SNAPSHOT
 repositories:
-  - name: Beam
-    url: https://github.com/apache/beam.git
-    tag: v2.28.0
+  - name: java-spanner
+    url: https://github.com/googleapis/java-spanner.git
+    tag: v5.1.0
+    modification: Maven
+    commands: |
+      mvn -B -V -ntp test \
+          -Dclirr.skip=true \
+          -Denforcer.skip=true \
+          -Dmaven.javadoc.skip=true \
+          -Dgcloud.download.skip=true \
+          -T 1C
   - name: gRPC
     url: https://github.com/grpc/grpc-java.git
     tag: v1.36.0
-  - name: java-spanner
-    url: https://github.com/googleapis/java-spanner.git
-    tag: 5.0.0
+    commands: |
+      echo "skipCodegen=true" >> gradle.properties
+      echo "skipAndroid=true" >> gradle.properties
+      ./gradlew :grpc-protobuf:check
+#  - name: Beam
+#    url: https://github.com/apache/beam.git
+#    tag: v2.28.0
 
