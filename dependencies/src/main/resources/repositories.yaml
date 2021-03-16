@@ -14,10 +14,12 @@ repositories:
   - name: gRPC
     url: https://github.com/grpc/grpc-java.git
     tag: v1.36.0
+    modification: Gradle
     commands: |
       echo "skipCodegen=true" >> gradle.properties
       echo "skipAndroid=true" >> gradle.properties
       ./gradlew :grpc-protobuf:check
+
 #  - name: Beam
 #    url: https://github.com/apache/beam.git
 #    tag: v2.28.0

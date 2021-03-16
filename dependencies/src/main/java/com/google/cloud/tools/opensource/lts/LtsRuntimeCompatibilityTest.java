@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.FileWriteMode;
 import com.google.common.io.MoreFiles;
@@ -36,6 +37,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
@@ -72,7 +74,7 @@ public class LtsRuntimeCompatibilityTest {
     List<Map<String, Object>> repositories = (List<Map<String, Object>>) input.get("repositories");
 
     Path testRoot = Files.createTempDirectory("lts-test");
-    System.out.println("Root directory:" + testRoot);
+    System.out.println("Root directory: " + testRoot);
     // testRoot.toFile().deleteOnExit();
 
     int i = 0;
@@ -80,9 +82,11 @@ public class LtsRuntimeCompatibilityTest {
       String name = checkNotNull((String) repository.get("name"));
       URL url = new URL(checkNotNull((String) repository.get("url")));
       String gitTag = checkNotNull((String) repository.get("tag"));
+
+      String modification = checkNotNull((String) repository.get("modification"));
       String commands = checkNotNull((String) repository.get("commands"));
       // /grpc/grpc-java
-      String urlPath =  url.getPath();
+      String urlPath = url.getPath();
       // grpc-java.git
       String secondPathElement = urlPath.split("/")[2];
       String projectDirectoryName = secondPathElement.replace(".git", "");
@@ -99,16 +103,24 @@ public class LtsRuntimeCompatibilityTest {
       com.google.common.io.Files.asCharSink(projectDirectory.resolve("stdout.log").toFile(),
           Charsets.UTF_8, FileWriteMode.APPEND).writeFrom(new InputStreamReader(gitClone.getInputStream()));
       com.google.common.io.Files.asCharSink(projectDirectory.resolve("stderr.log").toFile(),
-          Charsets.UTF_8, FileWriteMode.APPEND).writeFrom(new InputStreamReader(gitClone.getErrorStream()));
+          Charsets.UTF_8, FileWriteMode.APPEND)
+          .writeFrom(new InputStreamReader(gitClone.getErrorStream()));
 
       if (checkoutStatusCode != 0) {
         System.out.println("Failed to checkout " +
-            url +". Exiting. Check the logs in " + projectDirectory);
+            url + ". Exiting. Check the logs in " + projectDirectory);
         break;
       }
 
       // Modify build file to use the BOM
-      modifyPomFiles(testRoot, bom);
+      if ("Maven".equals(modification)) {
+        modifyPomFiles(testRoot, bom);
+      } else if ("Gradle".equals(modification)) {
+        modifyGradleFiles(testRoot, bom);
+      } else {
+        System.out.println("Invalid value for modification. 'Maven' or 'Gradle'");
+        break;
+      }
 
       // Build the project
 
@@ -128,12 +140,40 @@ public class LtsRuntimeCompatibilityTest {
       int buildStatusCode = buildProcess.waitFor();
 
       if (buildStatusCode != 0) {
-        System.out.println("Failed to build " + url +". Exiting. Check the logs in " + projectDirectory);
+        System.out
+            .println("Failed to build " + url + ". Exiting. Check the logs in " + projectDirectory);
         break;
       } else {
         System.out.println(name + " passed!");
       }
     }
+  }
+
+  static void modifyGradleFiles(Path projectRoot, Bom bom) throws IOException {
+    Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectRoot);
+
+    for (Path path : paths) {
+      if (!path.getFileName().endsWith("build.gradle")) {
+        continue;
+      }
+
+      modifyGradleFile(path, bom);
+    }
+  }
+
+  static void modifyGradleFile(Path gradleFile, Bom bom) throws IOException {
+
+    List<String> lines = com.google.common.io.Files.readLines(gradleFile.toFile(), Charsets.UTF_8);
+
+    String bomCoordinates= bom.getCoordinates();
+    
+
+    
+    List<String> replacedLines = lines.stream().map(line -> line.replaceAll("^dependencies \\{",
+        "dependencies {\n    api enforcedPlatform('"+bomCoordinates+"')")).collect(Collectors.toList());
+
+    com.google.common.io.Files.asCharSink(gradleFile.toFile(),
+        Charsets.UTF_8).write(Joiner.on("\n").join(replacedLines));
   }
 
   static void modifyPomFiles(Path projectRoot, Bom bom) throws IOException, ParsingException {
@@ -145,7 +185,6 @@ public class LtsRuntimeCompatibilityTest {
       }
 
       modifyPomFile(path, bom);
-
     }
   }
 
@@ -153,7 +192,13 @@ public class LtsRuntimeCompatibilityTest {
     ImmutableMap.Builder<String, String> map = ImmutableMap.builder();
 
     for (Artifact managedDependency : bom.getManagedDependencies()) {
-      map.put(managedDependency.getGroupId() + ":" + managedDependency.getArtifactId(),
+      String artifactId = managedDependency.getArtifactId();
+      if ("guava".equals(artifactId)) {
+        // Guava JRE does not work with Yoshi's shared config.
+        // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1974#issuecomment-799862063
+        continue;
+      }
+      map.put(managedDependency.getGroupId() + ":" + artifactId,
           managedDependency.getVersion());
     }
 
@@ -191,15 +236,12 @@ public class LtsRuntimeCompatibilityTest {
           Element version = (Element) versionNode.get(0);
           version.removeChildren();
           version.appendChild(versionFromBom);
-          System.out.println("Inserted version element to " + versionlessCoordinates + " in " + pomFile);
         }
       }
     }
 
     com.google.common.io.Files.asCharSink(pomFile.toFile(),
         Charsets.UTF_8).write(document.toXML());
-
-    System.out.println("Write "+pomFile);
   }
 
 }
