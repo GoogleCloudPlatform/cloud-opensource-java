@@ -47,7 +47,7 @@
     <guava.version>30.1-android</guava.version>
     <google.cloud.java.version>0.150.0</google.cloud.java.version>
     <io.grpc.version>1.36.0</io.grpc.version>
-    <http.version>1.39.0</http.version>
+    <http.version>1.39.1</http.version>
     <protobuf.version>3.15.6</protobuf.version>
     <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier.
         When updating gax.version, update gax.httpjson.version too. -->
