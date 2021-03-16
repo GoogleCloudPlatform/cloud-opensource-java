@@ -124,7 +124,7 @@ public class LtsRuntimeCompatibilityTest {
 
       // Build the project
 
-      Path shellScript = testRoot.resolve("test_" + i + ".sh");
+      Path shellScript = testRoot.resolve("test_" + i++ + ".sh");
       String shellScriptLocation = shellScript.toAbsolutePath().toString();
       com.google.common.io.Files.asCharSink(shellScript.toFile(), Charsets.UTF_8).write(commands);
 
@@ -170,7 +170,7 @@ public class LtsRuntimeCompatibilityTest {
 
     
     List<String> replacedLines = lines.stream().map(line -> line.replaceAll("^dependencies \\{",
-        "dependencies {\n    api enforcedPlatform('"+bomCoordinates+"')")).collect(Collectors.toList());
+        "dependencies {\n    testRuntime enforcedPlatform('"+bomCoordinates+"')")).collect(Collectors.toList());
 
     com.google.common.io.Files.asCharSink(gradleFile.toFile(),
         Charsets.UTF_8).write(Joiner.on("\n").join(replacedLines));
