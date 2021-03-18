@@ -36,7 +36,7 @@ dependencies {
   testImplementation 'org.spockframework:spock-core:1.3-groovy-2.5'
 }
 
-// Maven-publipublishToMavenLocalsh plugin interferes with com.gradle.plugin-publish plugin
+// Maven-publish plugin publishToMavenLocal interferes with the com.gradle.plugin-publish plugin
 // https://discuss.gradle.org/t/debug-an-issue-in-publish-plugin-gradle-plugin-not-being-prepended-to-groupid/32720
 if (version.contains("SNAPSHOT")) {
 
@@ -69,7 +69,7 @@ pluginBundle {
   website = 'https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/Linkage-Checker-with-Gradle'
   vcsUrl = 'https://github.com/GoogleCloudPlatform/cloud-opensource-java.git'
   description = 'A plugin to detect Java diamond dependency conflicts'
-  tags = ['google', 'java', 'dependency','verification']
+  tags = ['google', 'java', 'dependency', 'verification']
 }
 
 release {
