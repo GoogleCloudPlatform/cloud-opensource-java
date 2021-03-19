@@ -7,7 +7,7 @@
 
   <groupId>com.google.cloud</groupId>
   <artifactId>libraries-bom</artifactId>
-  <version>19.2.1</version>
+  <version>19.2.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Google Cloud Platform Supported Libraries</name>
