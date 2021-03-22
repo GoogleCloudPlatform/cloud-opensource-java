@@ -37,14 +37,18 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Elements;
+import nu.xom.Node;
 import nu.xom.Nodes;
+import nu.xom.ParentNode;
 import nu.xom.ParsingException;
 import nu.xom.XPathContext;
 import org.eclipse.aether.artifact.Artifact;
@@ -252,13 +256,26 @@ public class LtsRuntimeCompatibilityTest {
   static void modifyPomFile(Path pomFile, ImmutableList<ClassPathEntry> managedDependencies)
       throws IOException, ParsingException {
     Builder builder = new Builder();
-    XPathContext context = new XPathContext("ns", "http://maven.apache.org/POM/4.0.0");
+    XPathContext context = new XPathContext("ns", mavenPomNamespaceUri);
     Document document = builder.build(pomFile.toFile());
     Nodes project = document.query("//ns:project", context);
     checkArgument(project.size() == 1);
 
     // Look at project/build/plugins/plugin for surefire plugin
-    Nodes dependencyNodes = document.query("//ns:project/ns:dependencies/ns:dependency", context);
+    Nodes classifierNodes = document.query("//ns:project/ns:dependencies/ns:dependency/ns:classifier", context);
+
+    Set<String> dependenciesWithClassifiers = new HashSet<>();
+    for (Node classifierNode : classifierNodes) {
+      String classifierValue = classifierNode.getValue();
+      if (classifierValue.isEmpty()) {
+        continue;
+      }
+      Element dependency = (Element) classifierNode.getParent();
+      // A dependency element always has an artifactId and a groupId element.
+      String artifactId = dependency.getChildElements("artifactId", mavenPomNamespaceUri).get(0).getValue();
+      String groupId = dependency.getChildElements("groupId", mavenPomNamespaceUri).get(0).getValue();
+      dependenciesWithClassifiers.add(groupId + ":" + artifactId);
+    }
 
     Element projectNode = (Element) document.query("//ns:project", context).get(0);
     Element buildNode = getOrCreateNode(projectNode, "build");
@@ -286,9 +303,15 @@ public class LtsRuntimeCompatibilityTest {
         getOrCreateNode(surefireConfigurationElement, "classpathDependencyExcludes");
     for (ClassPathEntry bomManagedDependency : managedDependencies) {
       Artifact artifact = bomManagedDependency.getArtifact();
+      String versionlessCoordinates = Artifacts.makeKey(artifact);
+      if (dependenciesWithClassifiers.contains(versionlessCoordinates)) {
+        // Because surefire configuration cannot handle classifiers (such as
+        // com.google.gax:gax-grpc:testlib), we cannot replace them
+        continue;
+      }
       Element classpathDependencyExclude =
           new Element("classpathDependencyExclude", mavenPomNamespaceUri);
-      classpathDependencyExclude.appendChild(Artifacts.makeKey(artifact));
+      classpathDependencyExclude.appendChild(versionlessCoordinates);
       classpathDependencyExcludes.appendChild(classpathDependencyExclude);
     }
 
