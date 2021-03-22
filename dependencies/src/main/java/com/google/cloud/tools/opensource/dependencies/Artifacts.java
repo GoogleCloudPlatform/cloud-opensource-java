@@ -34,6 +34,7 @@ public final class Artifacts {
     return (artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion());
   }
 
+  /** Returns the versionless coordinates of the {@code artifact}. */
   public static String makeKey(Artifact artifact) {
     return (artifact.getGroupId() + ":" + artifact.getArtifactId());
   }

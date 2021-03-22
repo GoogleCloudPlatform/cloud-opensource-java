@@ -19,16 +19,18 @@ package com.google.cloud.tools.opensource.lts;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
+import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
+import com.google.cloud.tools.opensource.classpath.ClassPathResult;
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.FileWriteMode;
 import com.google.common.io.MoreFiles;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -42,18 +44,18 @@ import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Elements;
-import nu.xom.Node;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
 import nu.xom.XPathContext;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 /**
  * Runs test for each repository of the libraries in the LTS BOM
  *
- * src/resources/repositories.yaml
+ * <p>src/resources/repositories.yaml
  */
 public class LtsRuntimeCompatibilityTest {
 
@@ -61,9 +63,8 @@ public class LtsRuntimeCompatibilityTest {
       throws IOException, ArtifactDescriptorException, InterruptedException, ParsingException {
     String inputFileName = arguments[0];
 
-    Yaml yaml = new Yaml();
-
-
+    // SafeConstructor to parse YAML only with simple values
+    Yaml yaml = new Yaml(new SafeConstructor());
 
     Path inputFile = Paths.get(inputFileName);
     Map<String, Object> input = yaml.load(new FileInputStream(inputFile.toFile()));
@@ -78,7 +79,7 @@ public class LtsRuntimeCompatibilityTest {
     // testRoot.toFile().deleteOnExit();
 
     int i = 0;
-    for (Map<String, Object> repository: repositories) {
+    for (Map<String, Object> repository : repositories) {
       String name = checkNotNull((String) repository.get("name"));
       URL url = new URL(checkNotNull((String) repository.get("url")));
       String gitTag = checkNotNull((String) repository.get("tag"));
@@ -94,21 +95,25 @@ public class LtsRuntimeCompatibilityTest {
 
       System.out.println(name + ": " + url + " at " + gitTag);
 
-      Process gitClone = Runtime.getRuntime()
-          .exec(String.format("git clone -b %s --depth=1 %s", gitTag, url),
-              null, testRoot.toFile());
+      Process gitClone =
+          Runtime.getRuntime()
+              .exec(
+                  String.format("git clone -b %s --depth=1 %s", gitTag, url),
+                  null,
+                  testRoot.toFile());
 
       int checkoutStatusCode = gitClone.waitFor();
 
-      com.google.common.io.Files.asCharSink(projectDirectory.resolve("stdout.log").toFile(),
-          Charsets.UTF_8, FileWriteMode.APPEND).writeFrom(new InputStreamReader(gitClone.getInputStream()));
-      com.google.common.io.Files.asCharSink(projectDirectory.resolve("stderr.log").toFile(),
-          Charsets.UTF_8, FileWriteMode.APPEND)
+      com.google.common.io.Files.asCharSink(
+              projectDirectory.resolve("stdout.log").toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
+          .writeFrom(new InputStreamReader(gitClone.getInputStream()));
+      com.google.common.io.Files.asCharSink(
+              projectDirectory.resolve("stderr.log").toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
           .writeFrom(new InputStreamReader(gitClone.getErrorStream()));
 
       if (checkoutStatusCode != 0) {
-        System.out.println("Failed to checkout " +
-            url + ". Exiting. Check the logs in " + projectDirectory);
+        System.out.println(
+            "Failed to checkout " + url + ". Exiting. Check the logs in " + projectDirectory);
         break;
       }
 
@@ -128,20 +133,25 @@ public class LtsRuntimeCompatibilityTest {
       String shellScriptLocation = shellScript.toAbsolutePath().toString();
       com.google.common.io.Files.asCharSink(shellScript.toFile(), Charsets.UTF_8).write(commands);
 
-      Process buildProcess = Runtime.getRuntime()
-          .exec(String.format("/bin/bash %s", shellScriptLocation),
-              null, projectDirectory.toFile());
+      Process buildProcess =
+          Runtime.getRuntime()
+              .exec(
+                  String.format("/bin/bash %s", shellScriptLocation),
+                  null,
+                  projectDirectory.toFile());
 
-      com.google.common.io.Files.asCharSink(projectDirectory.resolve("stdout.log").toFile(),
-          Charsets.UTF_8, FileWriteMode.APPEND).writeFrom(new InputStreamReader(buildProcess.getInputStream()));
-      com.google.common.io.Files.asCharSink(projectDirectory.resolve("stderr.log").toFile(),
-          Charsets.UTF_8, FileWriteMode.APPEND).writeFrom(new InputStreamReader(buildProcess.getErrorStream()));
+      com.google.common.io.Files.asCharSink(
+              projectDirectory.resolve("stdout.log").toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
+          .writeFrom(new InputStreamReader(buildProcess.getInputStream()));
+      com.google.common.io.Files.asCharSink(
+              projectDirectory.resolve("stderr.log").toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
+          .writeFrom(new InputStreamReader(buildProcess.getErrorStream()));
 
       int buildStatusCode = buildProcess.waitFor();
 
       if (buildStatusCode != 0) {
-        System.out
-            .println("Failed to build " + url + ". Exiting. Check the logs in " + projectDirectory);
+        System.out.println(
+            "Failed to build " + url + ". Exiting. Check the logs in " + projectDirectory);
         break;
       } else {
         System.out.println(name + " passed!");
@@ -165,47 +175,81 @@ public class LtsRuntimeCompatibilityTest {
 
     List<String> lines = com.google.common.io.Files.readLines(gradleFile.toFile(), Charsets.UTF_8);
 
-    String bomCoordinates= bom.getCoordinates();
-    
+    String bomCoordinates = bom.getCoordinates();
 
-    
-    List<String> replacedLines = lines.stream().map(line -> line.replaceAll("^dependencies \\{",
-        "dependencies {\n    testRuntime enforcedPlatform('"+bomCoordinates+"')")).collect(Collectors.toList());
+    List<String> replacedLines =
+        lines.stream()
+            .map(
+                line ->
+                    line.replaceAll(
+                        "^dependencies \\{",
+                        "dependencies {\n    testRuntime enforcedPlatform('"
+                            + bomCoordinates
+                            + "')"))
+            .collect(Collectors.toList());
 
-    com.google.common.io.Files.asCharSink(gradleFile.toFile(),
-        Charsets.UTF_8).write(Joiner.on("\n").join(replacedLines));
+    com.google.common.io.Files.asCharSink(gradleFile.toFile(), Charsets.UTF_8)
+        .write(Joiner.on("\n").join(replacedLines));
   }
 
   static void modifyPomFiles(Path projectRoot, Bom bom) throws IOException, ParsingException {
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectRoot);
+
+    ImmutableList<Artifact> bomManagedDependencies = bom.getManagedDependencies();
+    ClassPathBuilder classPathBuilder = new ClassPathBuilder();
+    ClassPathResult resolvedDependencies = classPathBuilder.resolve(bomManagedDependencies, false);
+    ImmutableList<ClassPathEntry> resolvedManagedDependencies =
+        resolvedDependencies.getClassPath().subList(0, bomManagedDependencies.size());
 
     for (Path path : paths) {
       if (!path.getFileName().endsWith("pom.xml")) {
         continue;
       }
 
-      modifyPomFile(path, bom);
+      modifyPomFile(path, resolvedManagedDependencies);
     }
   }
 
-  static ImmutableMap<String, String> versionlessCoordinatesToVersion(Bom bom) {
-    ImmutableMap.Builder<String, String> map = ImmutableMap.builder();
+  static String mavenPomNamespaceUri = "http://maven.apache.org/POM/4.0.0";
 
-    for (Artifact managedDependency : bom.getManagedDependencies()) {
-      String artifactId = managedDependency.getArtifactId();
-      if ("guava".equals(artifactId)) {
-        // Guava JRE does not work with Yoshi's shared config.
-        // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1974#issuecomment-799862063
-        continue;
+  static Element getOrCreateNode(Element parent, String name) {
+    Elements targetNodes = parent.getChildElements(name, mavenPomNamespaceUri);
+    if (targetNodes.size() >= 1) {
+      return targetNodes.get(0);
+    }
+    Element newNode = new Element(name, mavenPomNamespaceUri);
+    parent.appendChild(newNode);
+
+    return newNode;
+  }
+
+  static Element getOrCreateSurefirePlugin(Element pluginsNode) {
+    Elements pluginElements = pluginsNode.getChildElements();
+    for (Element pluginElement : pluginElements) {
+      Elements artifactIdElements =
+          pluginElement.getChildElements("artifactId", mavenPomNamespaceUri);
+      if (artifactIdElements.size() == 1
+          && "maven-surefire-plugin".equals(artifactIdElements.get(0).getValue())) {
+        return pluginElement;
       }
-      map.put(managedDependency.getGroupId() + ":" + artifactId,
-          managedDependency.getVersion());
     }
 
-    return map.build();
+    Element newPluginNode = new Element("plugin", mavenPomNamespaceUri);
+    Element artifactIdElement = new Element("artifactId", mavenPomNamespaceUri);
+    artifactIdElement.appendChild("maven-surefire-plugin");
+    Element groupIdElement = new Element("groupId", mavenPomNamespaceUri);
+    groupIdElement.appendChild("org.apache.maven.plugins");
+    newPluginNode.appendChild(groupIdElement);
+    newPluginNode.appendChild(artifactIdElement);
+
+    pluginsNode.appendChild(newPluginNode);
+    return newPluginNode;
   }
 
-  static void modifyPomFile(Path pomFile, Bom bom)
+  /**
+   * Modifies {@code pomFile} so that Maven uses {@code managedDependencies} when running the tests.
+   */
+  static void modifyPomFile(Path pomFile, ImmutableList<ClassPathEntry> managedDependencies)
       throws IOException, ParsingException {
     Builder builder = new Builder();
     XPathContext context = new XPathContext("ns", "http://maven.apache.org/POM/4.0.0");
@@ -213,35 +257,41 @@ public class LtsRuntimeCompatibilityTest {
     Nodes project = document.query("//ns:project", context);
     checkArgument(project.size() == 1);
 
-    ImmutableMap<String, String> bomMembers = versionlessCoordinatesToVersion(bom);
-
+    // Look at project/build/plugins/plugin for surefire plugin
     Nodes dependencyNodes = document.query("//ns:project/ns:dependencies/ns:dependency", context);
-    for (Node dependencyNode : dependencyNodes) {
-      String groupId = dependencyNode.query("ns:groupId", context).get(0).getValue();
-      String artifactId = dependencyNode.query("ns:artifactId", context).get(0).getValue();
-      Nodes versionNode = dependencyNode.query("ns:version",context);
 
-      String versionlessCoordinates = groupId + ":" + artifactId;
+    Element projectNode = (Element) document.query("//ns:project", context).get(0);
+    Element buildNode = getOrCreateNode(projectNode, "build");
+    Element pluginsNode = getOrCreateNode(buildNode, "plugins");
+    Element surefirePluginElement = getOrCreateSurefirePlugin(pluginsNode);
 
-      String versionFromBom = bomMembers.get(versionlessCoordinates);
-      if (versionFromBom != null) {
-        if (versionNode.size() == 0) {
-          // Add the version
-          Element version = new Element("version");
-          version.appendChild(versionFromBom);
-          ((Element)dependencyNode).appendChild(version);
-          System.out.println("Added version element to " + versionlessCoordinates + " in " + pomFile);
-        } else {
-          // Replace the version
-          Element version = (Element) versionNode.get(0);
-          version.removeChildren();
-          version.appendChild(versionFromBom);
-        }
-      }
+    // https://maven.apache.org/surefire/maven-surefire-plugin/examples/configuring-classpath.html
+
+    Element surefireConfigurationElement = getOrCreateNode(surefirePluginElement, "configuration");
+    Element additionalClasspathElements =
+        getOrCreateNode(surefireConfigurationElement, "additionalClasspathElements");
+
+    for (ClassPathEntry bomManagedDependency : managedDependencies) {
+      File file = bomManagedDependency.getArtifact().getFile();
+      Element additionalClasspathElement =
+          new Element("additionalClasspathElement", mavenPomNamespaceUri);
+      additionalClasspathElement.appendChild(file.getAbsolutePath());
+      additionalClasspathElements.appendChild(additionalClasspathElement);
     }
 
-    com.google.common.io.Files.asCharSink(pomFile.toFile(),
-        Charsets.UTF_8).write(document.toXML());
-  }
+    // This unexpectedly removes dependencies even if they use classifiers. For example,
+    // com.google.api.gax.grpc.testing.MockServiceHelper is in gax-grpc with testlib classifier
+    // the BOM does not supply the testlib-classifier artifacts.
+    Element classpathDependencyExcludes =
+        getOrCreateNode(surefireConfigurationElement, "classpathDependencyExcludes");
+    for (ClassPathEntry bomManagedDependency : managedDependencies) {
+      Artifact artifact = bomManagedDependency.getArtifact();
+      Element classpathDependencyExclude =
+          new Element("classpathDependencyExclude", mavenPomNamespaceUri);
+      classpathDependencyExclude.appendChild(Artifacts.makeKey(artifact));
+      classpathDependencyExcludes.appendChild(classpathDependencyExclude);
+    }
 
+    com.google.common.io.Files.asCharSink(pomFile.toFile(), Charsets.UTF_8).write(document.toXML());
+  }
 }
