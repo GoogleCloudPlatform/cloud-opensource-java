@@ -43,7 +43,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>libraries-bom</artifactId>
-        <version>10.55.51</version>
+        <version>10.55.52-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
