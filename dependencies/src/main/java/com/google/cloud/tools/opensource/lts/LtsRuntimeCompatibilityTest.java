@@ -80,6 +80,7 @@ public class LtsRuntimeCompatibilityTest {
 
     Path testRoot = Files.createTempDirectory("lts-test");
     System.out.println("Root directory: " + testRoot);
+    Path runnerLog = testRoot.resolve("runner.log");
     // testRoot.toFile().deleteOnExit();
 
     int i = 0;
@@ -106,18 +107,18 @@ public class LtsRuntimeCompatibilityTest {
                   null,
                   testRoot.toFile());
 
-      int checkoutStatusCode = gitClone.waitFor();
-
       com.google.common.io.Files.asCharSink(
-              projectDirectory.resolve("stdout.log").toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
+          runnerLog.toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
           .writeFrom(new InputStreamReader(gitClone.getInputStream()));
       com.google.common.io.Files.asCharSink(
-              projectDirectory.resolve("stderr.log").toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
+          runnerLog.toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
           .writeFrom(new InputStreamReader(gitClone.getErrorStream()));
+
+      int checkoutStatusCode = gitClone.waitFor();
 
       if (checkoutStatusCode != 0) {
         System.out.println(
-            "Failed to checkout " + url + ". Exiting. Check the logs in " + projectDirectory);
+            "Failed to checkout " + url + ". Exiting. Check the logs in " + runnerLog);
         break;
       }
 
