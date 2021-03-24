@@ -123,9 +123,9 @@ public class LtsRuntimeCompatibilityTest {
 
       // Modify build file to use the BOM
       if ("Maven".equals(modification)) {
-        modifyPomFiles(testRoot, bom);
+        modifyPomFiles(projectDirectory, bom);
       } else if ("Gradle".equals(modification)) {
-        modifyGradleFiles(testRoot, bom);
+        modifyGradleFiles(projectDirectory, bom);
       } else {
         System.out.println("Invalid value for modification. 'Maven' or 'Gradle'");
         break;
@@ -259,7 +259,10 @@ public class LtsRuntimeCompatibilityTest {
     XPathContext context = new XPathContext("ns", mavenPomNamespaceUri);
     Document document = builder.build(pomFile.toFile());
     Nodes project = document.query("//ns:project", context);
-    checkArgument(project.size() == 1);
+    if (project.size() != 1) {
+      System.err.println("Invalid pom.xml " + pomFile+"; project element size: "+project.size());
+      return;
+    }
 
     // Look at project/build/plugins/plugin for surefire plugin
     Nodes classifierNodes = document.query("//ns:project/ns:dependencies/ns:dependency/ns:classifier", context);
