@@ -67,7 +67,7 @@ public class LtsRuntimeCompatibilityTest {
       throws IOException, ArtifactDescriptorException, InterruptedException, ParsingException {
     String inputFileName = arguments[0];
 
-    // SafeConstructor to parse YAML only with simple values
+    // SafeConstructor parses YAML only with simple values.
     Yaml yaml = new Yaml(new SafeConstructor());
 
     Path inputFile = Paths.get(inputFileName);
@@ -215,7 +215,7 @@ public class LtsRuntimeCompatibilityTest {
     }
   }
 
-  static String mavenPomNamespaceUri = "http://maven.apache.org/POM/4.0.0";
+  static final String mavenPomNamespaceUri = "http://maven.apache.org/POM/4.0.0";
 
   static Element getOrCreateNode(Element parent, String name) {
     Elements targetNodes = parent.getChildElements(name, mavenPomNamespaceUri);
@@ -309,8 +309,8 @@ public class LtsRuntimeCompatibilityTest {
       Artifact artifact = bomManagedDependency.getArtifact();
       String versionlessCoordinates = Artifacts.makeKey(artifact);
       if (dependenciesWithClassifiers.contains(versionlessCoordinates)) {
-        // Because surefire configuration cannot handle classifiers (such as
-        // com.google.gax:gax-grpc:testlib), we cannot replace them
+        // Because surefire configuration cannot handle artifacts with classifiers (such as
+        // com.google.gax:gax-grpc:testlib), we cannot exclude them.
         continue;
       }
       Element classpathDependencyExclude =

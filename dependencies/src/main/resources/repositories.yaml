@@ -2,6 +2,17 @@ bom: com.google.cloud:gcp-lts-bom:0.1.0-SNAPSHOT
 # Why not using ".kokoro/build.sh"? It's because it uses realpath command, which is not available
 # in Mac.
 repositories:
+  - name: java-spanner
+    url: https://github.com/googleapis/java-spanner.git
+    tag: v5.1.0
+    modification: Maven
+    commands: |
+      mvn -B -V -ntp test \
+          -Dclirr.skip=true \
+          -Denforcer.skip=true \
+          -Dmaven.javadoc.skip=true \
+          -Dgcloud.download.skip=true \
+          -T 1C
   - name: google-maps-services-java
     url: https://github.com/googlemaps/google-maps-services-java.git
     tag: v0.18.0
@@ -9,17 +20,6 @@ repositories:
     commands: |
       perl -i -p -e 's/mavenCentral\(\)/mavenCentral\(\)\nmavenLocal\(\)/;' build.gradle
       ./gradlew test
-  - name: java-bigtable-hbase
-    url: https://github.com/googleapis/java-bigtable-hbase.git
-    # The repository will undergo overhaul. No need to investigate current v1 branch
-    tag: v1.19.1
-    modification: Maven
-    commands: |
-      mvn -B -V -ntp verify \
-          -Dclirr.skip=true \
-          -Denforcer.skip=true \
-          -Dmaven.javadoc.skip=true \
-          -Dgcloud.download.skip=true
   - name: java-storage
     url: https://github.com/googleapis/java-storage.git
     tag: v1.113.14
@@ -126,17 +126,17 @@ repositories:
           -Dmaven.javadoc.skip=true \
           -Dgcloud.download.skip=true \
           -T 1C
-  - name: java-spanner
-    url: https://github.com/googleapis/java-spanner.git
-    tag: v5.1.0
+  - name: java-bigtable-hbase
+    url: https://github.com/googleapis/java-bigtable-hbase.git
+    # The repository will undergo overhaul. No need to investigate current v1 branch
+    tag: v1.19.1
     modification: Maven
     commands: |
-      mvn -B -V -ntp test \
+      mvn -B -V -ntp verify \
           -Dclirr.skip=true \
           -Denforcer.skip=true \
           -Dmaven.javadoc.skip=true \
-          -Dgcloud.download.skip=true \
-          -T 1C
+          -Dgcloud.download.skip=true
   - name: gRPC
     url: https://github.com/grpc/grpc-java.git
     tag: v1.36.0
