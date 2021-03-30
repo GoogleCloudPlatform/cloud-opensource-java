@@ -8,9 +8,19 @@ jobs:
     strategy:
       matrix:
         repository:
-          - java-spanner
+          - google-api-java-client
+          - google-auth-library-java
+          - google-http-java-client
           - google-maps-services-java
+          - google-oauth-java-client
+          - grpc-java
+          - java-bigquery
+          - java-bigtable-hbase
+          - java-monitoring
+          - java-pubsub
+          - java-spanner
           - java-storage
+          - java-trace
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v1

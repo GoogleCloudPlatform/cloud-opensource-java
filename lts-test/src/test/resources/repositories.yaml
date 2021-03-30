@@ -2,46 +2,6 @@ bom: com.google.cloud:gcp-lts-bom:0.1.0-SNAPSHOT
 # Why not using ".kokoro/build.sh"? It's because it uses realpath command, which is not available
 # in Mac.
 repositories:
-  - name: java-spanner
-    url: https://github.com/googleapis/java-spanner.git
-    tag: v5.1.0
-    modification: Maven
-    commands: |
-      mvn -B -V -ntp test \
-          -Dclirr.skip=true \
-          -Denforcer.skip=true \
-          -Dmaven.javadoc.skip=true \
-          -Dgcloud.download.skip=true \
-          -T 1C
-  - name: google-maps-services-java
-    url: https://github.com/googlemaps/google-maps-services-java.git
-    tag: v0.18.0
-    modification: Gradle
-    commands: |
-      perl -i -p -e 's/mavenCentral\(\)/mavenCentral\(\)\nmavenLocal\(\)/;' build.gradle
-      ./gradlew test
-  - name: java-storage
-    url: https://github.com/googleapis/java-storage.git
-    tag: v1.113.14
-    modification: Maven
-    commands: |
-      mvn -B -V -ntp test \
-          -Dclirr.skip=true \
-          -Denforcer.skip=true \
-          -Dmaven.javadoc.skip=true \
-          -Dgcloud.download.skip=true \
-          -T 1C
-  - name: google-oauth-java-client
-    url: https://github.com/googleapis/google-oauth-java-client.git
-    tag: v1.31.4
-    modification: Maven
-    commands: |
-      mvn -B -V -ntp test \
-          -Dclirr.skip=true \
-          -Denforcer.skip=true \
-          -Dmaven.javadoc.skip=true \
-          -Dgcloud.download.skip=true \
-          -T 1C
   - name: google-api-java-client
     url: https://github.com/googleapis/google-api-java-client.git
     tag: v1.31.3
@@ -67,39 +27,6 @@ repositories:
           -Dmaven.javadoc.skip=true \
           -Dgcloud.download.skip=true \
           -T 1C
-  - name: java-monitoring
-    url: https://github.com/googleapis/java-monitoring.git
-    tag: v2.1.0
-    modification: Maven
-    commands: |
-      mvn -B -V -ntp test \
-          -Dclirr.skip=true \
-          -Denforcer.skip=true \
-          -Dmaven.javadoc.skip=true \
-          -Dgcloud.download.skip=true \
-          -T 1C
-  - name: java-trace
-    url: https://github.com/googleapis/java-trace.git
-    tag: v1.3.0
-    modification: Maven
-    commands: |
-      mvn -B -V -ntp test \
-          -Dclirr.skip=true \
-          -Denforcer.skip=true \
-          -Dmaven.javadoc.skip=true \
-          -Dgcloud.download.skip=true \
-          -T 1C
-  - name: java-pubsub
-    url: https://github.com/googleapis/java-pubsub.git
-    tag: v1.112.0
-    modification: Maven
-    commands: |
-      mvn -B -V -ntp test \
-          -Dclirr.skip=true \
-          -Denforcer.skip=true \
-          -Dmaven.javadoc.skip=true \
-          -Dgcloud.download.skip=true \
-          -T 1C
   - name: google-http-java-client
     url: https://github.com/googleapis/google-http-java-client.git
     tag: v1.39.1
@@ -115,6 +42,43 @@ repositories:
           -Dmaven.javadoc.skip=true \
           -Dgcloud.download.skip=true \
           -T 1C
+  - name: google-maps-services-java
+    url: https://github.com/googlemaps/google-maps-services-java.git
+    tag: v0.18.0
+    modification: Gradle
+    commands: |
+      perl -i -p -e 's/mavenCentral\(\)/mavenCentral\(\)\nmavenLocal\(\)/;' build.gradle
+      ./gradlew test
+  - name: google-oauth-java-client
+    url: https://github.com/googleapis/google-oauth-java-client.git
+    tag: v1.31.4
+    modification: Maven
+    commands: |
+      mvn -B -V -ntp test \
+          -Dclirr.skip=true \
+          -Denforcer.skip=true \
+          -Dmaven.javadoc.skip=true \
+          -Dgcloud.download.skip=true \
+          -T 1C
+  - name: grpc-java
+    url: https://github.com/grpc/grpc-java.git
+    tag: v1.36.0
+    modification: Gradle
+    # :grpc-netty:check, :grpc-okhttp:check do not work on suztomo's Mac
+    commands: |
+      echo "skipCodegen=true" >> gradle.properties
+      echo "skipAndroid=true" >> gradle.properties
+      ./gradlew :grpc-alts:check \
+        :grpc-api:check \
+        :grpc-auth:check \
+        :grpc-context:check \
+        :grpc-core:check \
+        :grpc-grpclb:check \
+        :grpc-okhttp:check \
+        :grpc-protobuf:check \
+        :grpc-services:check \
+        :grpc-stub:check \
+        :grpc-testing:check
   - name: java-bigquery
     url: https://github.com/googleapis/java-bigquery.git
     tag: v1.127.10
@@ -137,26 +101,61 @@ repositories:
           -Denforcer.skip=true \
           -Dmaven.javadoc.skip=true \
           -Dgcloud.download.skip=true
-  - name: gRPC
-    url: https://github.com/grpc/grpc-java.git
-    tag: v1.36.0
-    modification: Gradle
-    # :grpc-netty:check, :grpc-okhttp:check do not work on suztomo's Mac
+  - name: java-monitoring
+    url: https://github.com/googleapis/java-monitoring.git
+    tag: v2.1.0
+    modification: Maven
     commands: |
-      echo "skipCodegen=true" >> gradle.properties
-      echo "skipAndroid=true" >> gradle.properties
-      ./gradlew :grpc-alts:check \
-        :grpc-api:check \
-        :grpc-auth:check \
-        :grpc-context:check \
-        :grpc-core:check \
-        :grpc-grpclb:check \
-        :grpc-okhttp:check \
-        :grpc-protobuf:check \
-        :grpc-services:check \
-        :grpc-stub:check \
-        :grpc-testing:check
-
+      mvn -B -V -ntp test \
+          -Dclirr.skip=true \
+          -Denforcer.skip=true \
+          -Dmaven.javadoc.skip=true \
+          -Dgcloud.download.skip=true \
+          -T 1C
+  - name: java-pubsub
+    url: https://github.com/googleapis/java-pubsub.git
+    tag: v1.112.0
+    modification: Maven
+    commands: |
+      mvn -B -V -ntp test \
+          -Dclirr.skip=true \
+          -Denforcer.skip=true \
+          -Dmaven.javadoc.skip=true \
+          -Dgcloud.download.skip=true \
+          -T 1C
+  - name: java-spanner
+    url: https://github.com/googleapis/java-spanner.git
+    tag: v5.1.0
+    modification: Maven
+    commands: |
+      mvn -B -V -ntp test \
+          -Dclirr.skip=true \
+          -Denforcer.skip=true \
+          -Dmaven.javadoc.skip=true \
+          -Dgcloud.download.skip=true \
+          -T 1C
+  - name: java-storage
+    url: https://github.com/googleapis/java-storage.git
+    tag: v1.113.14
+    modification: Maven
+    commands: |
+      mvn -B -V -ntp test \
+          -Dclirr.skip=true \
+          -Denforcer.skip=true \
+          -Dmaven.javadoc.skip=true \
+          -Dgcloud.download.skip=true \
+          -T 1C
+  - name: java-trace
+    url: https://github.com/googleapis/java-trace.git
+    tag: v1.3.0
+    modification: Maven
+    commands: |
+      mvn -B -V -ntp test \
+          -Dclirr.skip=true \
+          -Denforcer.skip=true \
+          -Dmaven.javadoc.skip=true \
+          -Dgcloud.download.skip=true \
+          -T 1C
 #  - name: Beam
 #    url: https://github.com/apache/beam.git
 #    tag: v2.28.0
