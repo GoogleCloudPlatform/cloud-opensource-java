@@ -1,0 +1,15 @@
+name: 'LTS Library Test'
+description: 'Checks the compatibility of the libraries in the LTS BOM'
+inputs:
+  repository:
+    description: 'The repository to test in this run. Use matrix to specify the values'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - run: >
+        mvn -pl dependencies,lts-test test \
+          -Dtest=com.google.cloud.tools.opensource.lts.LtsRuntimeCompatibilityTest \
+          -Dlts.test.repository=${{ inputs.repository }} \
+          -DfailIfNoTests=false
+      shell: bash

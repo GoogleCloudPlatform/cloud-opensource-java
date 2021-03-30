@@ -1,0 +1,21 @@
+on:
+  # TODO: This should run for only pull requests for this repository's LTS branches
+  pull_request:
+name: LTS Library Test
+jobs:
+  lts-library-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        repository:
+          - java-spanner
+          - google-maps-services-java
+          - java-storage
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 8
+      - uses: ./lts-test
+        with:
+          repository: ${{ matrix.repository }}

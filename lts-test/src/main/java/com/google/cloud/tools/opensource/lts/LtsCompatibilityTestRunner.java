@@ -16,9 +16,6 @@
 
 package com.google.cloud.tools.opensource.lts;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
@@ -30,16 +27,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.FileWriteMode;
 import com.google.common.io.MoreFiles;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import nu.xom.Builder;
@@ -48,153 +41,97 @@ import nu.xom.Element;
 import nu.xom.Elements;
 import nu.xom.Node;
 import nu.xom.Nodes;
-import nu.xom.ParentNode;
 import nu.xom.ParsingException;
 import nu.xom.XPathContext;
 import org.eclipse.aether.artifact.Artifact;
-import org.eclipse.aether.resolution.ArtifactDescriptorException;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 /**
- * Runs test for each repository of the libraries in the LTS BOM
+ * Runs the test specified in the {@code testCase} with the presence of the libraries in the LTS
+ * BOM.
  *
  * <p>src/resources/repositories.yaml
  */
-public class LtsRuntimeCompatibilityTest {
+class LtsCompatibilityTestRunner {
+  private final RepositoryTestCase testCase;
 
-  public static void main(String[] arguments)
-      throws IOException, ArtifactDescriptorException, InterruptedException, ParsingException {
-    String inputFileName = arguments[0];
-
-    // SafeConstructor parses YAML only with simple values.
-    Yaml yaml = new Yaml(new SafeConstructor());
-
-    Path inputFile = Paths.get(inputFileName);
-    Map<String, Object> input = yaml.load(new FileInputStream(inputFile.toFile()));
-
-    String bomCoordinates = (String) input.get("bom");
-    Bom bom = Bom.readBom(bomCoordinates);
-
-    List<Map<String, Object>> repositories = (List<Map<String, Object>>) input.get("repositories");
-
-    Path testRoot = Files.createTempDirectory("lts-test");
-    System.out.println("Root directory: " + testRoot);
-    Path runnerLog = testRoot.resolve("runner.log");
-    // testRoot.toFile().deleteOnExit();
-
-    int i = 0;
-    for (Map<String, Object> repository : repositories) {
-      String name = checkNotNull((String) repository.get("name"));
-      URL url = new URL(checkNotNull((String) repository.get("url")));
-      String gitTag = checkNotNull((String) repository.get("tag"));
-
-      String modification = checkNotNull((String) repository.get("modification"));
-      String commands = checkNotNull((String) repository.get("commands"));
-      // /grpc/grpc-java
-      String urlPath = url.getPath();
-      // grpc-java.git
-      String secondPathElement = urlPath.split("/")[2];
-      String projectDirectoryName = secondPathElement.replace(".git", "");
-      Path projectDirectory = testRoot.resolve(projectDirectoryName);
-
-      System.out.println(name + ": " + url + " at " + gitTag);
-
-      Process gitClone =
-          Runtime.getRuntime()
-              .exec(
-                  String.format("git clone -b %s --depth=1 %s", gitTag, url),
-                  null,
-                  testRoot.toFile());
-
-      com.google.common.io.Files.asCharSink(
-          runnerLog.toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
-          .writeFrom(new InputStreamReader(gitClone.getInputStream()));
-      com.google.common.io.Files.asCharSink(
-          runnerLog.toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
-          .writeFrom(new InputStreamReader(gitClone.getErrorStream()));
-
-      int checkoutStatusCode = gitClone.waitFor();
-
-      if (checkoutStatusCode != 0) {
-        System.out.println(
-            "Failed to checkout " + url + ". Exiting. Check the logs in " + runnerLog);
-        break;
-      }
-
-      // Modify build file to use the BOM
-      if ("Maven".equals(modification)) {
-        modifyPomFiles(projectDirectory, bom);
-      } else if ("Gradle".equals(modification)) {
-        modifyGradleFiles(projectDirectory, bom);
-      } else {
-        System.out.println("Invalid value for modification. 'Maven' or 'Gradle'");
-        break;
-      }
-
-      // Build the project
-
-      Path shellScript = testRoot.resolve("test_" + i++ + ".sh");
-      String shellScriptLocation = shellScript.toAbsolutePath().toString();
-      com.google.common.io.Files.asCharSink(shellScript.toFile(), Charsets.UTF_8).write(commands);
-
-      Process buildProcess =
-          Runtime.getRuntime()
-              .exec(
-                  String.format("/bin/bash %s", shellScriptLocation),
-                  null,
-                  projectDirectory.toFile());
-
-      com.google.common.io.Files.asCharSink(
-              projectDirectory.resolve("stdout.log").toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
-          .writeFrom(new InputStreamReader(buildProcess.getInputStream()));
-      com.google.common.io.Files.asCharSink(
-              projectDirectory.resolve("stderr.log").toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
-          .writeFrom(new InputStreamReader(buildProcess.getErrorStream()));
-
-      int buildStatusCode = buildProcess.waitFor();
-
-      if (buildStatusCode != 0) {
-        System.out.println(
-            "Failed to build " + url + ". Exiting. Check the logs in " + projectDirectory);
-        break;
-      } else {
-        System.out.println(name + " passed!");
-      }
-    }
+  LtsCompatibilityTestRunner(RepositoryTestCase testCase) {
+    this.testCase = testCase;
   }
 
-  static void modifyGradleFiles(Path projectRoot, Bom bom) throws IOException {
-    Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectRoot);
+  void run(Bom bom, Path testRoot, Path runnerLog)
+      throws IOException, InterruptedException, ParsingException {
+    String name = testCase.getName();
+    String commands = testCase.getCommands();
 
-    for (Path path : paths) {
-      if (!path.getFileName().endsWith("build.gradle")) {
-        continue;
-      }
+    URL url = testCase.getGitUrl();
+    // /grpc/grpc-java
+    String urlPath = url.getPath();
+    // grpc-java.git
+    String secondPathElement = urlPath.split("/")[2];
+    String projectDirectoryName = secondPathElement.replace(".git", "");
+    Path projectDirectory = testRoot.resolve(projectDirectoryName);
 
-      modifyGradleFile(path, bom);
+    String gitTag = testCase.getGitTag();
+    System.out.println(name + ": " + url + " at " + gitTag);
+
+    Process gitClone =
+        Runtime.getRuntime()
+            .exec(
+                String.format("git clone -b %s --depth=1 %s", gitTag, url),
+                null,
+                testRoot.toFile());
+
+    com.google.common.io.Files.asCharSink(runnerLog.toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
+        .writeFrom(new InputStreamReader(gitClone.getInputStream()));
+    com.google.common.io.Files.asCharSink(runnerLog.toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
+        .writeFrom(new InputStreamReader(gitClone.getErrorStream()));
+
+    int checkoutStatusCode = gitClone.waitFor();
+
+    if (checkoutStatusCode != 0) {
+      System.out.println("Failed to checkout " + url + ". Exiting. Check the logs in " + runnerLog);
+      return;
     }
-  }
 
-  static void modifyGradleFile(Path gradleFile, Bom bom) throws IOException {
+    Modification modification = testCase.getModification();
+    // Modify build file to use the BOM
+    if (modification == Modification.MAVEN) {
+      modifyPomFiles(projectDirectory, bom);
+    } else if (modification == Modification.GRADLE) {
+      modifyGradleFiles(projectDirectory, bom);
+    } else {
+      System.err.println("Invalid value for modification. 'Maven' or 'Gradle'");
+      return;
+    }
 
-    List<String> lines = com.google.common.io.Files.readLines(gradleFile.toFile(), Charsets.UTF_8);
+    // Build the project
 
-    String bomCoordinates = bom.getCoordinates();
+    Path shellScript = projectDirectory.resolve("lts_test.sh");
+    String shellScriptLocation = shellScript.toAbsolutePath().toString();
+    com.google.common.io.Files.asCharSink(shellScript.toFile(), Charsets.UTF_8).write(commands);
 
-    List<String> replacedLines =
-        lines.stream()
-            .map(
-                line ->
-                    line.replaceAll(
-                        "^dependencies \\{",
-                        "dependencies {\n    testRuntime enforcedPlatform('"
-                            + bomCoordinates
-                            + "')"))
-            .collect(Collectors.toList());
+    Process buildProcess =
+        Runtime.getRuntime()
+            .exec(
+                String.format("/bin/bash %s", shellScriptLocation),
+                null,
+                projectDirectory.toFile());
 
-    com.google.common.io.Files.asCharSink(gradleFile.toFile(), Charsets.UTF_8)
-        .write(Joiner.on("\n").join(replacedLines));
+    com.google.common.io.Files.asCharSink(
+            projectDirectory.resolve("stdout.log").toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
+        .writeFrom(new InputStreamReader(buildProcess.getInputStream()));
+    com.google.common.io.Files.asCharSink(
+            projectDirectory.resolve("stderr.log").toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
+        .writeFrom(new InputStreamReader(buildProcess.getErrorStream()));
+
+    int buildStatusCode = buildProcess.waitFor();
+
+    if (buildStatusCode != 0) {
+      System.out.println(
+          "Failed to build " + url + ". Exiting. Check the logs in " + projectDirectory);
+    } else {
+      System.out.println(name + " passed!");
+    }
   }
 
   static void modifyPomFiles(Path projectRoot, Bom bom) throws IOException, ParsingException {
@@ -261,12 +198,14 @@ public class LtsRuntimeCompatibilityTest {
     Document document = builder.build(pomFile.toFile());
     Nodes project = document.query("//ns:project", context);
     if (project.size() != 1) {
-      System.err.println("Invalid pom.xml " + pomFile+"; project element size: "+project.size());
+      System.err.println(
+          "Invalid pom.xml " + pomFile + "; project element size: " + project.size());
       return;
     }
 
     // Look at project/build/plugins/plugin for surefire plugin
-    Nodes classifierNodes = document.query("//ns:project/ns:dependencies/ns:dependency/ns:classifier", context);
+    Nodes classifierNodes =
+        document.query("//ns:project/ns:dependencies/ns:dependency/ns:classifier", context);
 
     Set<String> dependenciesWithClassifiers = new HashSet<>();
     for (Node classifierNode : classifierNodes) {
@@ -276,8 +215,10 @@ public class LtsRuntimeCompatibilityTest {
       }
       Element dependency = (Element) classifierNode.getParent();
       // A dependency element always has an artifactId and a groupId element.
-      String artifactId = dependency.getChildElements("artifactId", mavenPomNamespaceUri).get(0).getValue();
-      String groupId = dependency.getChildElements("groupId", mavenPomNamespaceUri).get(0).getValue();
+      String artifactId =
+          dependency.getChildElements("artifactId", mavenPomNamespaceUri).get(0).getValue();
+      String groupId =
+          dependency.getChildElements("groupId", mavenPomNamespaceUri).get(0).getValue();
       dependenciesWithClassifiers.add(groupId + ":" + artifactId);
     }
 
@@ -320,5 +261,38 @@ public class LtsRuntimeCompatibilityTest {
     }
 
     com.google.common.io.Files.asCharSink(pomFile.toFile(), Charsets.UTF_8).write(document.toXML());
+  }
+
+  static void modifyGradleFiles(Path projectRoot, Bom bom) throws IOException {
+    Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectRoot);
+
+    for (Path path : paths) {
+      if (!path.getFileName().endsWith("build.gradle")) {
+        continue;
+      }
+
+      modifyGradleFile(path, bom);
+    }
+  }
+
+  static void modifyGradleFile(Path gradleFile, Bom bom) throws IOException {
+
+    List<String> lines = com.google.common.io.Files.readLines(gradleFile.toFile(), Charsets.UTF_8);
+
+    String bomCoordinates = bom.getCoordinates();
+
+    List<String> replacedLines =
+        lines.stream()
+            .map(
+                line ->
+                    line.replaceAll(
+                        "^dependencies \\{",
+                        "dependencies {\n    testRuntime enforcedPlatform('"
+                            + bomCoordinates
+                            + "')"))
+            .collect(Collectors.toList());
+
+    com.google.common.io.Files.asCharSink(gradleFile.toFile(), Charsets.UTF_8)
+        .write(Joiner.on("\n").join(replacedLines));
   }
 }
