@@ -21,7 +21,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 
-class RepositoryTestCase {
+final class RepositoryTestCase {
 
   private final URL gitUrl;
   private final String name;
