@@ -109,17 +109,17 @@
     </dependency>
   </dependencies>
 
-  <reporting>
+  <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>3.2.0</version>
         <configuration>
-          <!-- No public class in this module -->
+          <!-- Skip; otherwise it fails due to no public class in this module -->
           <skip>true</skip>
         </configuration>
       </plugin>
     </plugins>
-  </reporting>
+  </build>
 </project>
