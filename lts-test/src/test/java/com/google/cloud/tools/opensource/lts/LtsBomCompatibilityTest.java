@@ -41,6 +41,7 @@ public class LtsBomCompatibilityTest {
       throws IOException, InterruptedException, ParsingException, MavenRepositoryException {
     String targetRepositoryName = System.getProperty("lts.test.repository");
     Assume.assumeNotNull(targetRepositoryName);
+    System.out.println("lts.test.repository = " + targetRepositoryName);
 
     Path bomFile = Paths.get("..", "boms", "cloud-lts-bom", "pom.xml");
     Bom bom = Bom.readBom(bomFile);
