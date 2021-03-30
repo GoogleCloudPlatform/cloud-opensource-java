@@ -9,7 +9,7 @@ runs:
   steps:
     - run: >
         mvn -B -e -ntp -pl dependencies,lts-test test \
-          -Dtest=com.google.cloud.tools.opensource.lts.LtsRuntimeCompatibilityTest \
+          -Dtest=com.google.cloud.tools.opensource.lts.LtsBomCompatibilityTest \
           -Dlts.test.repository=${{ inputs.repository }} \
           -DfailIfNoTests=false
       shell: bash
