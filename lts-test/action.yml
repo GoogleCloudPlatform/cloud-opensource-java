@@ -8,7 +8,7 @@ runs:
   using: "composite"
   steps:
     - run: >
-        mvn -pl dependencies,lts-test test \
+        mvn -B -e -ntp -pl dependencies,lts-test test \
           -Dtest=com.google.cloud.tools.opensource.lts.LtsRuntimeCompatibilityTest \
           -Dlts.test.repository=${{ inputs.repository }} \
           -DfailIfNoTests=false
