@@ -49,7 +49,7 @@ class RepositoryTestCase {
     return modification;
   }
 
-  public RepositoryTestCase(
+  RepositoryTestCase(
       String name, URL gitUrl, String gitTag, Modification modification, String commands) {
     this.gitUrl = Preconditions.checkNotNull(gitUrl);
     this.name = Preconditions.checkNotNull(name);
