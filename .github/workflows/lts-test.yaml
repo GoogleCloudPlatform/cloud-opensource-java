@@ -9,6 +9,7 @@ jobs:
   lts-library-test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         repository:
           - beam
