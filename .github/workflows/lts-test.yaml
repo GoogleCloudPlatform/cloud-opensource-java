@@ -1,6 +1,9 @@
 on:
-  # TODO: This should run for only pull requests for this repository's LTS branches
   pull_request:
+    paths:
+      - 'src/test/resources/repositories.yaml'
+      - '.github/workflows/lts-test.yaml'
+      - 'boms/cloud-lts-bom/pom.xml'
 name: LTS Library Test
 jobs:
   lts-library-test:
