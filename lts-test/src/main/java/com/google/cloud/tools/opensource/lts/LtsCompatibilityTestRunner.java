@@ -47,8 +47,6 @@ import org.eclipse.aether.artifact.Artifact;
 /**
  * Runs the test specified in the {@code testCase} with the presence of the libraries in the LTS
  * BOM.
- *
- * <p>src/resources/repositories.yaml
  */
 class LtsCompatibilityTestRunner {
   private static final Logger logger = Logger.getLogger(LtsCompatibilityTestRunner.class.getName());
@@ -78,6 +76,7 @@ class LtsCompatibilityTestRunner {
     Process gitProcess =
         new ProcessBuilder("git", "clone", "-b", gitTag, "--depth=1", url.toString())
             .directory(testRoot.toFile())
+            .redirectErrorStream(true)
             .redirectOutput(ProcessBuilder.Redirect.INHERIT)
             .start();
 
@@ -109,6 +108,7 @@ class LtsCompatibilityTestRunner {
     Process bashProcess =
         new ProcessBuilder("/bin/bash", shellScriptLocation)
             .directory(projectDirectory.toFile())
+            .redirectErrorStream(true)
             .redirectOutput(ProcessBuilder.Redirect.INHERIT)
             .start();
 
