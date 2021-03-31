@@ -73,16 +73,20 @@ class LtsCompatibilityTestRunner {
     String gitTag = testCase.getGitTag();
     logger.info(name + ": " + url + " at " + gitTag);
 
+    File gitOutput = testRoot.resolve("lts_test_git.log").toFile();
     Process gitProcess =
         new ProcessBuilder("git", "clone", "-b", gitTag, "--depth=1", url.toString())
             .directory(testRoot.toFile())
             .redirectErrorStream(true)
-            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+            .redirectOutput(gitOutput)
             .start();
 
     int checkoutStatusCode = gitProcess.waitFor();
 
     if (checkoutStatusCode != 0) {
+      String outputContent =
+          com.google.common.io.Files.asCharSource(gitOutput, Charsets.UTF_8).read();
+      logger.severe("Failed to checkout the repository:\n" + outputContent);
       throw new TestFailureException("Could not checkout the Git URL: " + url);
     }
     logger.info("Successfully checkout the repository at " + projectDirectory);
@@ -105,16 +109,19 @@ class LtsCompatibilityTestRunner {
 
     logger.info("Running the commands");
 
+    File output = projectDirectory.resolve("lts_test.log").toFile();
     Process bashProcess =
         new ProcessBuilder("/bin/bash", shellScriptLocation)
             .directory(projectDirectory.toFile())
             .redirectErrorStream(true)
-            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+            .redirectOutput(output)
             .start();
 
     int buildStatusCode = bashProcess.waitFor();
 
     if (buildStatusCode != 0) {
+      String outputContent = com.google.common.io.Files.asCharSource(output, Charsets.UTF_8).read();
+      logger.severe("Output:\n" + outputContent);
       throw new TestFailureException("Failed to run the commands.");
     } else {
       logger.info(name + " passed.");
