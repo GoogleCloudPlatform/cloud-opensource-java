@@ -7,7 +7,7 @@ repositories:
     tag: v2.28.0
     modification: Gradle
     commands: |
-      ./gradlew  -PdisableSpotlessCheck=true \
+      ./gradlew -PdisableSpotlessCheck=true --stacktrace \
           sdks:java:io:google-cloud-platform:check
   - name: google-api-java-client
     url: https://github.com/googleapis/google-api-java-client.git
