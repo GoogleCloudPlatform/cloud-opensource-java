@@ -24,16 +24,15 @@ import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.FileWriteMode;
 import com.google.common.io.MoreFiles;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import nu.xom.Builder;
 import nu.xom.Document;
@@ -52,6 +51,8 @@ import org.eclipse.aether.artifact.Artifact;
  * <p>src/resources/repositories.yaml
  */
 class LtsCompatibilityTestRunner {
+  private static final Logger logger = Logger.getLogger(LtsCompatibilityTestRunner.class.getName());
+
   private final RepositoryTestCase testCase;
 
   LtsCompatibilityTestRunner(RepositoryTestCase testCase) {
@@ -59,39 +60,33 @@ class LtsCompatibilityTestRunner {
   }
 
   void run(Bom bom, Path testRoot, Path runnerLog)
-      throws IOException, InterruptedException, ParsingException {
+      throws IOException, InterruptedException, ParsingException, TestFailureException {
     String name = testCase.getName();
     String commands = testCase.getCommands();
 
     URL url = testCase.getGitUrl();
-    // /grpc/grpc-java
+    // Example: "/grpc/grpc-java.git"
     String urlPath = url.getPath();
-    // grpc-java.git
+    // Example: "grpc-java.git"
     String secondPathElement = urlPath.split("/")[2];
     String projectDirectoryName = secondPathElement.replace(".git", "");
     Path projectDirectory = testRoot.resolve(projectDirectoryName);
 
     String gitTag = testCase.getGitTag();
-    System.out.println(name + ": " + url + " at " + gitTag);
+    logger.info(name + ": " + url + " at " + gitTag);
 
-    Process gitClone =
-        Runtime.getRuntime()
-            .exec(
-                String.format("git clone -b %s --depth=1 %s", gitTag, url),
-                null,
-                testRoot.toFile());
+    Process gitProcess =
+        new ProcessBuilder("git", "clone", "-b", gitTag, "--depth=1", url.toString())
+            .directory(testRoot.toFile())
+            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+            .start();
 
-    com.google.common.io.Files.asCharSink(runnerLog.toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
-        .writeFrom(new InputStreamReader(gitClone.getInputStream()));
-    com.google.common.io.Files.asCharSink(runnerLog.toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
-        .writeFrom(new InputStreamReader(gitClone.getErrorStream()));
-
-    int checkoutStatusCode = gitClone.waitFor();
+    int checkoutStatusCode = gitProcess.waitFor();
 
     if (checkoutStatusCode != 0) {
-      System.out.println("Failed to checkout " + url + ". Exiting. Check the logs in " + runnerLog);
-      return;
+      throw new TestFailureException("Could not checkout the Git URL: " + url);
     }
+    logger.info("Successfully checkout the repository at " + projectDirectory);
 
     Modification modification = testCase.getModification();
     // Modify build file to use the BOM
@@ -100,37 +95,29 @@ class LtsCompatibilityTestRunner {
     } else if (modification == Modification.GRADLE) {
       modifyGradleFiles(projectDirectory, bom);
     } else {
-      System.err.println("Invalid value for modification. 'Maven' or 'Gradle'");
-      return;
+      throw new IllegalArgumentException(
+          "Invalid value for modification field. It must be 'Maven' or 'Gradle'");
     }
 
     // Build the project
-
     Path shellScript = projectDirectory.resolve("lts_test.sh");
     String shellScriptLocation = shellScript.toAbsolutePath().toString();
     com.google.common.io.Files.asCharSink(shellScript.toFile(), Charsets.UTF_8).write(commands);
 
-    Process buildProcess =
-        Runtime.getRuntime()
-            .exec(
-                String.format("/bin/bash %s", shellScriptLocation),
-                null,
-                projectDirectory.toFile());
+    logger.info("Running the commands");
 
-    com.google.common.io.Files.asCharSink(
-            projectDirectory.resolve("stdout.log").toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
-        .writeFrom(new InputStreamReader(buildProcess.getInputStream()));
-    com.google.common.io.Files.asCharSink(
-            projectDirectory.resolve("stderr.log").toFile(), Charsets.UTF_8, FileWriteMode.APPEND)
-        .writeFrom(new InputStreamReader(buildProcess.getErrorStream()));
+    Process bashProcess =
+        new ProcessBuilder("/bin/bash", shellScriptLocation)
+            .directory(projectDirectory.toFile())
+            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+            .start();
 
-    int buildStatusCode = buildProcess.waitFor();
+    int buildStatusCode = bashProcess.waitFor();
 
     if (buildStatusCode != 0) {
-      System.out.println(
-          "Failed to build " + url + ". Exiting. Check the logs in " + projectDirectory);
+      throw new TestFailureException("Failed to run the commands.");
     } else {
-      System.out.println(name + " passed!");
+      logger.info(name + " passed.");
     }
   }
 
@@ -198,8 +185,9 @@ class LtsCompatibilityTestRunner {
     Document document = builder.build(pomFile.toFile());
     Nodes project = document.query("//ns:project", context);
     if (project.size() != 1) {
-      System.err.println(
-          "Invalid pom.xml " + pomFile + "; project element size: " + project.size());
+      // When sample's XML declaration is missing namespace, this logic fails.
+      // Example: https://github.com/googleapis/java-bigquery/pull/1199
+      logger.warning("Invalid pom.xml " + pomFile + "; project element size: " + project.size());
       return;
     }
 

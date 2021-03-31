@@ -2,6 +2,13 @@ bom: com.google.cloud:gcp-lts-bom:0.1.0-SNAPSHOT
 # Why not using ".kokoro/build.sh"? It's because it uses realpath command, which is not available
 # in Mac.
 repositories:
+  - name: beam
+    url: https://github.com/apache/beam.git
+    tag: v2.28.0
+    modification: Gradle
+    commands: |
+      ./gradlew  -PdisableSpotlessCheck=true \
+          sdks:java:io:google-cloud-platform:check
   - name: google-api-java-client
     url: https://github.com/googleapis/google-api-java-client.git
     tag: v1.31.3
@@ -156,7 +163,4 @@ repositories:
           -Dmaven.javadoc.skip=true \
           -Dgcloud.download.skip=true \
           -T 1C
-#  - name: Beam
-#    url: https://github.com/apache/beam.git
-#    tag: v2.28.0
 

@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import nu.xom.ParsingException;
 import org.junit.Assume;
 import org.junit.Test;
@@ -33,15 +34,16 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 public class LtsBomCompatibilityTest {
+  private static final Logger logger = Logger.getLogger(LtsBomCompatibilityTest.class.getName());
 
   static final String INPUT_RESOURCE_NAME = "repositories.yaml";
 
   @Test
   public void testLibraryCompatibility()
-      throws IOException, InterruptedException, ParsingException, MavenRepositoryException {
+      throws IOException, InterruptedException, ParsingException, MavenRepositoryException,
+          TestFailureException {
     String targetRepositoryName = System.getProperty("lts.test.repository");
     Assume.assumeNotNull(targetRepositoryName);
-    System.out.println("lts.test.repository = " + targetRepositoryName);
 
     Path bomFile = Paths.get("..", "boms", "cloud-lts-bom", "pom.xml");
     Bom bom = Bom.readBom(bomFile);
@@ -57,7 +59,7 @@ public class LtsBomCompatibilityTest {
           (List<Map<String, Object>>) input.get("repositories");
 
       Path testRoot = Files.createTempDirectory("lts-test");
-      System.out.println("Root directory: " + testRoot);
+      logger.info("Running tests under temporary directory: " + testRoot);
       Path runnerLog = testRoot.resolve("runner.log");
 
       int i = 0;

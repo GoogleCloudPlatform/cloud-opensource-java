@@ -11,6 +11,7 @@ jobs:
     strategy:
       matrix:
         repository:
+          - beam
           - google-api-java-client
           - google-auth-library-java
           - google-http-java-client
