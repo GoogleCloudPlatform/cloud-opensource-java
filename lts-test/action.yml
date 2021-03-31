@@ -8,6 +8,15 @@ runs:
   using: "composite"
   steps:
     - run: >
+        B=$(dirname $(which javac))
+        echo $B
+        J=${B}/..
+        EXT_DIR=${J}/jre/lib/ext
+        echo ${EXT_DIR}
+        ls ${EXT_DIR}
+        echo "hello java ext directory" >> ${EXT_DIR}/hello.txt
+      shell: bash
+    - run: >
         mvn -B -e -ntp -pl dependencies,lts-test test \
           -Dtest=com.google.cloud.tools.opensource.lts.LtsBomCompatibilityTest \
           -Dlts.test.repository=${{ inputs.repository }} \
