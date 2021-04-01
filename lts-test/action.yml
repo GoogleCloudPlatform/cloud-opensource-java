@@ -17,7 +17,7 @@ runs:
         echo "hello java ext directory" >> ${EXT_DIR}/hello.txt
       shell: bash
     - run: |
-        mvn -pl boms/cloud-lts-bom install
+        mvn -B -ntp -pl boms/cloud-lts-bom install
       shell: bash
     - run: |
         mvn -B -e -ntp -pl dependencies,lts-test test \
