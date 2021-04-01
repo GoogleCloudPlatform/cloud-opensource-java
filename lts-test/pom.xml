@@ -66,6 +66,7 @@
   <properties>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
+    <mainClass>none</mainClass>
   </properties>
 
   <dependencies>
@@ -118,6 +119,16 @@
         <configuration>
           <!-- Skip; otherwise it fails due to no public class in this module -->
           <skip>true</skip>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.0.0</version>
+        <configuration>
+          <skip>false</skip>
+          <mainClass>${mainClass}</mainClass>
+          <executable>maven</executable>
         </configuration>
       </plugin>
     </plugins>
