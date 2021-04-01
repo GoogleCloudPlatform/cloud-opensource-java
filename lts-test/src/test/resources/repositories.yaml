@@ -9,8 +9,8 @@ repositories:
     commands: |
       # Beam's net.linguica.gradle.maven.settings plugin cannot work with GitHub Actions' default
       # Maven settings.xml file.
-      run: rm ~/.m2/settings.xml
-      ./gradlew -PdisableSpotlessCheck=true --stacktrace \
+      rm ~/.m2/settings.xml
+      ./gradlew --console=plain -PdisableSpotlessCheck=true --stacktrace \
           sdks:java:io:google-cloud-platform:check
   - name: google-api-java-client
     url: https://github.com/googleapis/google-api-java-client.git
@@ -68,7 +68,7 @@ repositories:
     modification: Gradle
     commands: |
       perl -i -p -e 's/mavenCentral\(\)/mavenCentral\(\)\nmavenLocal\(\)/;' build.gradle
-      ./gradlew test
+      ./gradlew --console=plain test
   - name: google-oauth-java-client
     url: https://github.com/googleapis/google-oauth-java-client.git
     tag: v1.31.4
@@ -88,17 +88,18 @@ repositories:
     commands: |
       echo "skipCodegen=true" >> gradle.properties
       echo "skipAndroid=true" >> gradle.properties
-      ./gradlew :grpc-alts:check \
-        :grpc-api:check \
-        :grpc-auth:check \
-        :grpc-context:check \
-        :grpc-core:check \
-        :grpc-grpclb:check \
-        :grpc-okhttp:check \
-        :grpc-protobuf:check \
-        :grpc-services:check \
-        :grpc-stub:check \
-        :grpc-testing:check
+      ./gradlew --console=plain \
+          :grpc-alts:check \
+          :grpc-api:check \
+          :grpc-auth:check \
+          :grpc-context:check \
+          :grpc-core:check \
+          :grpc-grpclb:check \
+          :grpc-okhttp:check \
+          :grpc-protobuf:check \
+          :grpc-services:check \
+          :grpc-stub:check \
+          :grpc-testing:check
   - name: java-bigquery
     url: https://github.com/googleapis/java-bigquery.git
     tag: v1.127.10

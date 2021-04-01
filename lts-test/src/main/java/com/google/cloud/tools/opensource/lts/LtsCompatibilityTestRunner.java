@@ -25,10 +25,12 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.MoreFiles;
+import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -110,8 +112,10 @@ class LtsCompatibilityTestRunner {
     logger.info("Running the commands");
 
     File output = projectDirectory.resolve("lts_test.log").toFile();
+
+    // "-e" to fail on errors
     Process bashProcess =
-        new ProcessBuilder("/bin/bash", shellScriptLocation)
+        new ProcessBuilder("/bin/bash", "-e", shellScriptLocation)
             .directory(projectDirectory.toFile())
             .redirectErrorStream(true)
             .redirectOutput(output)
@@ -122,6 +126,9 @@ class LtsCompatibilityTestRunner {
     if (buildStatusCode != 0) {
       String outputContent = com.google.common.io.Files.asCharSource(output, Charsets.UTF_8).read();
       logger.severe("Output:\n" + outputContent);
+
+      // Avoid messing up the log with the output and the exception
+      Uninterruptibles.sleepUninterruptibly(Duration.ofSeconds(1));
       throw new TestFailureException("Failed to run the commands.");
     } else {
       logger.info(name + " passed.");
