@@ -9,19 +9,7 @@ runs:
   steps:
     - name: Install the snapshot LTS BOM to local Maven repository
       run: |
-        mvn -B -e -ntp -pl boms/cloud-lts-bom install
-      shell: bash
-    - name: Place the libraries in the BOM to JRE's ext directory
-      run: |
-        mvn -B -e -ntp -pl dependencies,lts-test compile exec:java \
-            -DmainClass=com.google.cloud.tools.opensource.lts.BomToJreExt
-      shell: bash
-    - name: List the JAR files in JRE's ext directory
-      run: |
-        B=$(dirname $(which javac))
-        EXT_DIR=${B}/../jre/lib/ext
-        echo "The contents in ${EXT_DIR}:"
-        ls ${EXT_DIR}
+        mvn -B -ntp -pl boms/cloud-lts-bom install
       shell: bash
     - name: Run the unit tests for ${{ inputs.repository }} using repositories.yaml
       run: |

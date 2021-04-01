@@ -93,7 +93,6 @@ class LtsCompatibilityTestRunner {
     }
     logger.info("Successfully checkout the repository at " + projectDirectory);
 
-    /* No modification as the libraries in the BOM are in JRE's ext directory
     Modification modification = testCase.getModification();
     // Modify build file to use the BOM
     if (modification == Modification.MAVEN) {
@@ -104,7 +103,6 @@ class LtsCompatibilityTestRunner {
       throw new IllegalArgumentException(
           "Invalid value for modification field. It must be 'Maven' or 'Gradle'");
     }
-     */
 
     // Build the project
     Path shellScript = projectDirectory.resolve("lts_test.sh");
