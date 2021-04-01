@@ -27,7 +27,6 @@ repositories:
           -Dversion=1 \
           -Dpackaging=jar
       cd -
-
       mvn -B -V -ntp test \
           -Dclirr.skip=true \
           -Denforcer.skip=true \
