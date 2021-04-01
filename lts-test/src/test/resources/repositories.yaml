@@ -7,6 +7,9 @@ repositories:
     tag: v2.28.0
     modification: Gradle
     commands: |
+      # Beam's net.linguica.gradle.maven.settings plugin cannot work with GitHub Actions' default
+      # Maven settings.xml file.
+      run: rm ~/.m2/settings.xml
       ./gradlew -PdisableSpotlessCheck=true --stacktrace \
           sdks:java:io:google-cloud-platform:check
   - name: google-api-java-client
@@ -14,6 +17,17 @@ repositories:
     tag: v1.31.3
     modification: Maven
     commands: |
+      mkdir /tmp/foo && cd /tmp/foo
+      wget https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-basement/8.3.0/play-services-basement-8.3.0.aar
+      unzip play-services-basement-8.3.0.aar
+      mvn install:install-file \
+          -Dfile=classes.jar \
+          -DgroupId=com.google.android.google-play-services \
+          -DartifactId=google-play-services \
+          -Dversion=1 \
+          -Dpackaging=jar
+      cd -
+
       mvn -B -V -ntp test \
           -Dclirr.skip=true \
           -Denforcer.skip=true \
