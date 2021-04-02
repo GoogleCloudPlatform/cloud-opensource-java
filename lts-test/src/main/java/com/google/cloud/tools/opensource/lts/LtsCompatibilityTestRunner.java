@@ -99,6 +99,8 @@ class LtsCompatibilityTestRunner {
       modifyPomFiles(projectDirectory, bom);
     } else if (modification == Modification.GRADLE) {
       modifyGradleFiles(projectDirectory, bom);
+    } else if (modification == Modification.SKIP) {
+      // No op
     } else {
       throw new IllegalArgumentException(
           "Invalid value for modification field. It must be 'Maven' or 'Gradle'");

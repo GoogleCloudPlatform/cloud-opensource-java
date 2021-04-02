@@ -18,5 +18,6 @@ package com.google.cloud.tools.opensource.lts;
 
 enum Modification {
   MAVEN,
-  GRADLE
+  GRADLE,
+  SKIP,
 }

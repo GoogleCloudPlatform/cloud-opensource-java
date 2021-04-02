@@ -73,6 +73,8 @@ final class RepositoryTestCase {
       return Modification.MAVEN;
     } else if ("Gradle".equals(input)) {
       return Modification.GRADLE;
+    } else if ("Skip".equals(input)) {
+      return Modification.SKIP;
     }
     throw new IllegalArgumentException("Invalid input for modification: " + input);
   }
