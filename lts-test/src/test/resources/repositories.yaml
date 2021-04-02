@@ -5,12 +5,12 @@ repositories:
   - name: beam
     url: https://github.com/apache/beam.git
     tag: v2.28.0
-    modification: Gradle
+    modification: Skip
     commands: |
       # Beam's net.linguica.gradle.maven.settings plugin cannot work with GitHub Actions' default
       # Maven settings.xml file.
       rm ~/.m2/settings.xml
-      ./gradlew --console=plain -PdisableSpotlessCheck=true --stacktrace \
+      ./gradlew --scan --console=plain -PdisableSpotlessCheck=true --stacktrace \
           sdks:java:io:google-cloud-platform:check
   - name: google-api-java-client
     url: https://github.com/googleapis/google-api-java-client.git
