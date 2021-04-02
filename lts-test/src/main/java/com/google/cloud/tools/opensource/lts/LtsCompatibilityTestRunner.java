@@ -141,8 +141,12 @@ class LtsCompatibilityTestRunner {
     ImmutableList<Artifact> bomManagedDependencies = bom.getManagedDependencies();
     ClassPathBuilder classPathBuilder = new ClassPathBuilder();
     ClassPathResult resolvedDependencies = classPathBuilder.resolve(bomManagedDependencies, false);
+
+    // Include the BOM members' dependencies as well; otherwise we may get NoClassDefFoundEerror for
+    // artifacts that declare new dependencies in newer versions.
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/1982#issuecomment-812201558
     ImmutableList<ClassPathEntry> resolvedManagedDependencies =
-        resolvedDependencies.getClassPath().subList(0, bomManagedDependencies.size());
+        resolvedDependencies.getClassPath();
 
     for (Path path : paths) {
       if (!path.getFileName().endsWith("pom.xml")) {
