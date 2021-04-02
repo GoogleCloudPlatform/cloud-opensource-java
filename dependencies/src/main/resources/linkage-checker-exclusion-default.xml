@@ -274,7 +274,7 @@
       <Class name="io.grpc.netty.shaded.io.netty.handler.codec.spdy.SpdyHeaderBlockJZlibEncoder" />
     </Source>
     <Reason>
-      (For grpc-netty-shaded source)
+      (For grpc-netty-shaded source)LinkageCheckerMainIntegrationTest
       io.netty.handler.codec.spdy.SpdyHeaderBlockEncoder chooses the compression encoder based on
       the Java platform. For Java 7 or later, it does not use SpdyHeaderBlockJZlibEncoder, as the
       Zlib compression is available in JVM.

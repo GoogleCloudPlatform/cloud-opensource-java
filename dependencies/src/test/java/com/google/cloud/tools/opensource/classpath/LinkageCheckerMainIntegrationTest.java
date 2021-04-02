@@ -96,7 +96,7 @@ public class LinkageCheckerMainIntegrationTest {
           new String[] {"-a", "com.google.cloud:google-cloud-firestore:1.35.2"});
       fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
     } catch (LinkageCheckResultException expected) {
-      assertEquals("Found 61 linkage errors", expected.getMessage());
+      assertEquals("Found 3 linkage errors", expected.getMessage());
     }
 
     String output = readCapturedStdout();
@@ -170,7 +170,7 @@ public class LinkageCheckerMainIntegrationTest {
       LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
       fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
     } catch (LinkageCheckResultException expected) {
-      assertEquals("Found 713 linkage errors", expected.getMessage());
+      assertEquals("Found 656 linkage errors", expected.getMessage());
     }
 
     String output = readCapturedStdout();
