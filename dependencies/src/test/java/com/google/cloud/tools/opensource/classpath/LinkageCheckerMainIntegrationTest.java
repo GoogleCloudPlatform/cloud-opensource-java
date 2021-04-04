@@ -102,17 +102,17 @@ public class LinkageCheckerMainIntegrationTest {
     String output = readCapturedStdout();
     Truth.assertThat(output)
         .contains(
-            "Class com.jcraft.jzlib.JZlib is not found;\n"
-                + "  referenced by 4 class files\n"
-                + "    io.grpc.netty.shaded.io.netty.handler.codec.spdy.SpdyHeaderBlockJZlibEncoder"
-                + " (io.grpc:grpc-netty-shaded:1.30.2)");
+            "Class org.apache.avalon.framework.logger.Logger is not found;\n"
+                + "  referenced by 1 class file\n"
+                + "    org.apache.commons.logging.impl.AvalonLogger"
+                + " (commons-logging:commons-logging:1.2)");
 
     // Show the dependency path to the problematic artifact
     Truth.assertThat(output)
         .contains(
-            "io.grpc:grpc-netty-shaded:1.30.2 is at:\n"
+            "commons-logging:commons-logging:1.2 is at:\n"
                 + "  com.google.cloud:google-cloud-firestore:jar:1.35.2 /"
-                + " io.grpc:grpc-netty-shaded:1.30.2 (compile)\n");
+                + " commons-logging:commons-logging:1.2 (compile)\n");
   }
 
   @Test
@@ -136,7 +136,7 @@ public class LinkageCheckerMainIntegrationTest {
       LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
       fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
     } catch (LinkageCheckResultException expected) {
-      assertEquals("Found 691 linkage errors", expected.getMessage());
+      assertEquals("Found 634 linkage errors", expected.getMessage());
     }
 
     String output = readCapturedStdout();
