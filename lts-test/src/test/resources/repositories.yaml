@@ -10,6 +10,10 @@ repositories:
       # Beam's net.linguica.gradle.maven.settings plugin cannot work with GitHub Actions' default
       # Maven settings.xml file.
       rm ~/.m2/settings.xml
+
+      # In Beam, some integration tests that require credentials are misclassified as tests
+      # https://issues.apache.org/jira/browse/BEAM-11363?focusedCommentId=17242773&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-17242773
+      rm ./sdks/java/io/google-cloud-platform/src/test/java/org/apache/beam/sdk/io/gcp/healthcare/{DicomIOTest,FhirIOTest,HL7v2IOTest}.java
       ./gradlew --scan --console=plain -PdisableSpotlessCheck=true --stacktrace \
           sdks:java:io:google-cloud-platform:check
   - name: google-api-java-client
