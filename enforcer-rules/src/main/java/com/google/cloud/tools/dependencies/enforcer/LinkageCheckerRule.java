@@ -249,8 +249,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         }
       } catch (IOException ex) {
         // Maven's "-e" flag does not work for EnforcerRuleException. Print stack trace here.
-        logger.warn("Failed to run Linkage Checker", ex);
-        return; // Not failing the build.
+        logger.warn("Failed to run Linkage Checker:" + ex.getMessage(), ex);
+        throw new EnforcerRuleException("Failed to run Linkage Checker", ex);
       }
     } catch (ExpressionEvaluationException ex) {
       throw new EnforcerRuleException("Unable to lookup an expression " + ex.getMessage(), ex);
