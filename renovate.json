@@ -6,6 +6,7 @@
     "example-problems/**",
     "enforcer-rules/src/it/**",
     "boms/convergence-check",
+    "boms/cloud-lts-bom",
     "verboseTree-maven-plugin/src/it/**"
   ],
   "separateMajorMinor": false,
