@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import static com.google.cloud.tools.opensource.dependencies.RepositoryUtility.CENTRAL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
@@ -143,6 +144,7 @@ public class ClassPathEntryTest {
 
     Artifact artifact = new DefaultArtifact(coordinates);    
     ArtifactRequest artifactRequest = new ArtifactRequest();
+    artifactRequest.addRepository(CENTRAL);
     artifactRequest.setArtifact(artifact);
     ArtifactResult artifactResult = system.resolveArtifact(session, artifactRequest);
     
