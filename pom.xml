@@ -39,11 +39,11 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <guava.version>30.1-jre</guava.version>
+    <guava.version>30.1.1-jre</guava.version>
     <javac.version>9+181-r4173-1</javac.version>
     <maven.version>3.6.3</maven.version>
-    <resolver.version>1.6.1</resolver.version>
-    <truth.version>1.1</truth.version>
+    <resolver.version>1.6.2</resolver.version>
+    <truth.version>1.1.2</truth.version>
   </properties>
 
   <licenses>
@@ -113,7 +113,7 @@
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
-        <version>4.13.1</version>
+        <version>4.13.2</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -137,7 +137,7 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>3.6.28</version>
+        <version>3.8.0</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
