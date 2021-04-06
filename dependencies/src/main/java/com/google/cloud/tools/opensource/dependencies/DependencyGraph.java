@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-
+import java.util.stream.Collectors;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
@@ -108,6 +108,13 @@ public class DependencyGraph {
   /** Returns a mutable copy of the paths in this graph, usually in breadth first order. */
   public List<DependencyPath> list() {
     return new ArrayList<>(graph);
+  }
+  
+  /**
+   * @return a mutable copy of the artifacts in this graph in breadth first order
+   */
+  public List<Artifact> getArtifacts() {
+    return graph.stream().map(dependency -> dependency.getLeaf()).collect(Collectors.toList());
   }
 
   /**
