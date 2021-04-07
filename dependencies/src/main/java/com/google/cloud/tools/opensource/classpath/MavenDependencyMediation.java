@@ -16,30 +16,27 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
-import com.google.cloud.tools.opensource.dependencies.Artifacts;
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 
-/**
- * Retain only the first version of a groupId:artifactId encountered.
- */
-class MavenDependencyMediation {
-  
+/** Retain only the first version of a groupId:artifactId encountered. */
+class MavenDependencyMediation implements DependencyMediation {
+
   private List<Artifact> artifacts = new ArrayList<>();
 
-  /**
-   * Returns true iff dependency mediation selects this artifact.
-   */
+  /** Returns true iff dependency mediation selects this artifact. */
   // TODO might be a problem if there's a classifier
-  boolean selects(Artifact artifact) {
+  private boolean selects(Artifact artifact) {
     return artifacts.contains(artifact);
   }
 
-  void put(DependencyPath dependencyPath) {
+  private void put(DependencyPath dependencyPath) {
     Artifact artifact = dependencyPath.getLeaf();
     File file = artifact.getFile();
     if (file == null) {
@@ -61,4 +58,22 @@ class MavenDependencyMediation {
     artifacts.add(artifact);
   }
 
+  @Override
+  public AnnotatedClassPath mediate(DependencyGraph dependencyGraph) {
+
+    AnnotatedClassPath annotatedClassPath = new AnnotatedClassPath();
+    List<DependencyPath> dependencyPaths = dependencyGraph.list();
+    for (DependencyPath dependencyPath : dependencyPaths) {
+      // DependencyPaths have items in level-order; nearest items come first.
+      Artifact artifact = dependencyPath.getLeaf();
+      put(dependencyPath);
+      if (selects(artifact)) {
+        // We include multiple dependency paths to the first version of an artifact we see,
+        // but not paths to other versions of that artifact.
+        annotatedClassPath.put(new ClassPathEntry(artifact), dependencyPath);
+      }
+    }
+
+    return annotatedClassPath;
+  }
 }

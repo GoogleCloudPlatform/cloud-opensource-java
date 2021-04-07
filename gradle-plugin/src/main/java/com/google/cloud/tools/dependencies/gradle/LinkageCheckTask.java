@@ -18,6 +18,7 @@ package com.google.cloud.tools.dependencies.gradle;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
+import com.google.cloud.tools.opensource.classpath.AnnotatedClassPath;
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
@@ -326,13 +327,12 @@ public class LinkageCheckTask extends DefaultTask {
 
   private static ClassPathResult createClassPathResult(ResolvedConfiguration configuration) {
     DependencyGraph dependencyGraph = createDependencyGraph(configuration);
-    ImmutableListMultimap.Builder<ClassPathEntry, DependencyPath> builder =
-        ImmutableListMultimap.builder();
+    AnnotatedClassPath annotatedClassPath = new AnnotatedClassPath();
 
     for (DependencyPath path : dependencyGraph.list()) {
       Artifact artifact = path.getLeaf();
-      builder.put(new ClassPathEntry(artifact), path);
+      annotatedClassPath.put(new ClassPathEntry(artifact), path);
     }
-    return new ClassPathResult(builder.build(), ImmutableList.of());
+    return new ClassPathResult(annotatedClassPath, ImmutableList.of());
   }
 }
