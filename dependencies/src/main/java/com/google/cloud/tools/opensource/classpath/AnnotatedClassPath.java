@@ -23,8 +23,9 @@ import com.google.common.collect.ListMultimap;
 
 /**
  * A class path that consists of a list of artifacts, each of which is annotated with dependency
- * paths. The dependency paths tells where an artifact appears in the dependency graph. Note that an
- * artifact may appear in the graph multiple times.
+ * paths. The dependency paths tell where an artifact appears in the dependency graph. Note that the
+ * same artifact (having the same groupId, artifactId, and version) may appear in a graph multiple
+ * times.
  */
 public class AnnotatedClassPath {
 
@@ -35,12 +36,16 @@ public class AnnotatedClassPath {
    * transitive dependencies. The return value of {@link LinkedListMultimap#keySet()} preserves key
    * iteration order.
    *
-   * <p>The values of the returned map for a key (class path entry) represent the different Maven
+   * <p>The values of the returned map for a key (class path entry) represent the different
    * dependency paths from {@code artifacts} to the Maven artifact.
    */
   private LinkedListMultimap<ClassPathEntry, DependencyPath> classPathEntryToDependencyPaths =
       LinkedListMultimap.create();
 
+  /**
+   * Adds {@code classPathEntry} with {@code dependencyPath}. The dependency path represents a path
+   * from the root of the dependency graph to the artifact.
+   */
   public void put(ClassPathEntry classPathEntry, DependencyPath dependencyPath) {
     classPathEntryToDependencyPaths.put(classPathEntry, dependencyPath);
   }
@@ -54,7 +59,12 @@ public class AnnotatedClassPath {
     return ImmutableList.copyOf(classPathEntryToDependencyPaths.get(classPathEntry));
   }
 
-  public static AnnotatedClassPath fromMultimap(ListMultimap classPathEntryToDependencyPaths) {
+  /**
+   * Returns an {@link AnnotatedClassPath} that has class path entry and dependency paths
+   * relationship represented in {@code classPathEntryToDependencyPaths}.
+   */
+  public static AnnotatedClassPath fromMultimap(
+      ListMultimap<ClassPathEntry, DependencyPath> classPathEntryToDependencyPaths) {
     AnnotatedClassPath annotatedClassPath = new AnnotatedClassPath();
     annotatedClassPath.classPathEntryToDependencyPaths.putAll(classPathEntryToDependencyPaths);
     return annotatedClassPath;

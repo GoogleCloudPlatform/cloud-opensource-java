@@ -16,8 +16,6 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import static org.junit.Assert.*;
-
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.common.truth.Correspondence;
@@ -35,7 +33,7 @@ public class MavenDependencyMediationTest {
   Artifact artifactB1 = new DefaultArtifact("g:b:1.0.0").setFile(new File("b-1.0.0.jar"));
   MavenDependencyMediation mediation = new MavenDependencyMediation();
 
-  Correspondence<ClassPathEntry, Artifact> CLASS_PATH_ENTRY_TO_ARTIFACT_ =
+  Correspondence<ClassPathEntry, Artifact> CLASS_PATH_ENTRY_TO_ARTIFACT =
       Correspondence.transforming(ClassPathEntry::getArtifact, "has an artifact of");
 
   @Test
@@ -52,7 +50,7 @@ public class MavenDependencyMediationTest {
     Truth.assertThat(result.getClassPath()).hasSize(1);
 
     Truth.assertThat(result.getClassPath())
-        .comparingElementsUsing(CLASS_PATH_ENTRY_TO_ARTIFACT_)
+        .comparingElementsUsing(CLASS_PATH_ENTRY_TO_ARTIFACT)
         .containsExactly(artifactA1);
   }
 
@@ -68,7 +66,7 @@ public class MavenDependencyMediationTest {
     AnnotatedClassPath result = mediation.mediate(graph);
 
     Truth.assertThat(result.getClassPath())
-        .comparingElementsUsing(CLASS_PATH_ENTRY_TO_ARTIFACT_)
+        .comparingElementsUsing(CLASS_PATH_ENTRY_TO_ARTIFACT)
         .containsExactly(artifactA1, artifactB1)
         .inOrder();
   }
