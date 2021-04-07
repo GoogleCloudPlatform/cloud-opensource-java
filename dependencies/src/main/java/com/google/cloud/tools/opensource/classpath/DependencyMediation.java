@@ -21,6 +21,8 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 /**
  * Algorithm to select artifacts when there are multiple versions for the same groupId and
  * artifactId in a dependency graph.
+ *
+ * <p>The algorithm does not take classifier or extension into account.</p>
  */
 public interface DependencyMediation {
   /**
