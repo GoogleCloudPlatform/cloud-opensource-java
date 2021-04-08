@@ -37,7 +37,8 @@ final class DashboardArguments {
   private static final Options options = configureOptions();
   private static final HelpFormatter helpFormatter = new HelpFormatter();
 
-  private static final ImmutableList<String> allowsDependencyMediationValues = ImmutableList.of("maven", "gradle");
+  private static final ImmutableList<String> allowsDependencyMediationValues =
+      ImmutableList.of("maven", "gradle");
 
   private final CommandLine commandLine;
 
@@ -102,7 +103,8 @@ final class DashboardArguments {
       // Throws ParseException if required option group ('-f' or '-c') is not specified
       CommandLine commandLine = parser.parse(options, arguments);
       String dependencyMediationValue = commandLine.getOptionValue('m');
-      if (dependencyMediationValue != null && !allowsDependencyMediationValues.contains(dependencyMediationValue)) {
+      if (dependencyMediationValue != null
+          && !allowsDependencyMediationValues.contains(dependencyMediationValue)) {
         throw new ParseException("Valid values for '-m' are " + allowsDependencyMediationValues);
       }
 
@@ -114,18 +116,22 @@ final class DashboardArguments {
   }
 
   enum DependencyMediationAlgorithm {
-    MAVEN, GRADLE,
+    MAVEN,
+    GRADLE,
   }
 
   /**
-   * Returns dependency mediation algorithm. By default it's {@link DependencyMediationAlgorithm#MAVEN}.
+   * Returns dependency mediation algorithm. By default it's {@link
+   * DependencyMediationAlgorithm#MAVEN}.
    */
   DependencyMediationAlgorithm getDependencyMediation() {
     if (!commandLine.hasOption('m')) {
       return DependencyMediationAlgorithm.MAVEN;
     }
     String optionValue = commandLine.getOptionValue('m').trim();
-    return "maven".equals(optionValue) ? DependencyMediationAlgorithm.MAVEN : DependencyMediationAlgorithm.GRADLE;
+    return "maven".equals(optionValue)
+        ? DependencyMediationAlgorithm.MAVEN
+        : DependencyMediationAlgorithm.GRADLE;
   }
 
   private static Options configureOptions() {

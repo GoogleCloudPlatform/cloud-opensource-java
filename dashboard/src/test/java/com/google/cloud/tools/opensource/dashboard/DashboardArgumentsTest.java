@@ -96,7 +96,8 @@ public class DashboardArgumentsTest {
 
   @Test
   public void testParseArgument_dependencyMediation_valid() throws ParseException {
-    DashboardArguments dashboardArguments = DashboardArguments.readCommandLine("-f", "../pom.xml", "-m", "gradle");
+    DashboardArguments dashboardArguments =
+        DashboardArguments.readCommandLine("-f", "../pom.xml", "-m", "gradle");
 
     assertEquals(dashboardArguments.getDependencyMediation(), DependencyMediationAlgorithm.GRADLE);
   }
@@ -104,11 +105,12 @@ public class DashboardArgumentsTest {
   @Test
   public void testParseArgument_dependencyMediation_invalid() {
     try {
-      DashboardArguments dashboardArguments = DashboardArguments.readCommandLine("-f", "../pom.xml", "-m", "ant");
+      DashboardArguments dashboardArguments =
+          DashboardArguments.readCommandLine("-f", "../pom.xml", "-m", "ant");
       Assert.fail("The argument should validate invalid dependency mediation value");
     } catch (ParseException ex) {
       // pass
-      Truth.assertThat(ex.getMessage()).startsWith("Valid values for '-m' are ");
+      Truth.assertThat(ex.getMessage()).isEqualTo("Valid values for '-m' are [maven, gradle]");
     }
   }
 }

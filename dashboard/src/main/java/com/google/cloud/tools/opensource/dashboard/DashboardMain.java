@@ -107,7 +107,9 @@ public class DashboardMain {
     DashboardArguments dashboardArguments = DashboardArguments.readCommandLine(arguments);
 
     if (dashboardArguments.hasVersionlessCoordinates()) {
-      generateAllVersions(dashboardArguments.getVersionlessCoordinates(), dashboardArguments.getDependencyMediation());
+      generateAllVersions(
+          dashboardArguments.getVersionlessCoordinates(),
+          dashboardArguments.getDependencyMediation());
     } else if (dashboardArguments.hasFile()) {
       generate(dashboardArguments.getBomFile(), dashboardArguments.getDependencyMediation());
     } else {
@@ -132,7 +134,8 @@ public class DashboardMain {
     ImmutableList<String> versions =
         RepositoryUtility.findVersions(repositorySystem, groupId, artifactId);
     for (String version : versions) {
-      generate(String.format("%s:%s:%s", groupId, artifactId, version), dependencyMediationAlgorithm);
+      generate(
+          String.format("%s:%s:%s", groupId, artifactId, version), dependencyMediationAlgorithm);
     }
     generateVersionIndex(groupId, artifactId, versions);
   }
@@ -162,7 +165,8 @@ public class DashboardMain {
   }
 
   @VisibleForTesting
-  static Path generate(String bomCoordinates, DependencyMediationAlgorithm dependencyMediationAlgorithm)
+  static Path generate(
+      String bomCoordinates, DependencyMediationAlgorithm dependencyMediationAlgorithm)
       throws IOException, TemplateException, RepositoryException, URISyntaxException {
     Path output = generate(Bom.readBom(bomCoordinates), dependencyMediationAlgorithm);
     System.out.println("Wrote dashboard for " + bomCoordinates + " to " + output);
