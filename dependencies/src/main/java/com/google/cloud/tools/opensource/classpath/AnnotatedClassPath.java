@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -55,7 +56,7 @@ public class AnnotatedClassPath {
     return ImmutableList.copyOf(classPathEntryToDependencyPaths.keySet());
   }
 
-  ImmutableList<DependencyPath> dependencyPathOf(ClassPathEntry classPathEntry) {
+  ImmutableList<DependencyPath> pathsTo(ClassPathEntry classPathEntry) {
     return ImmutableList.copyOf(classPathEntryToDependencyPaths.get(classPathEntry));
   }
 
@@ -63,6 +64,7 @@ public class AnnotatedClassPath {
    * Returns an {@link AnnotatedClassPath} that has class path entry and dependency paths
    * relationship represented in {@code classPathEntryToDependencyPaths}.
    */
+  @VisibleForTesting
   public static AnnotatedClassPath fromMultimap(
       ListMultimap<ClassPathEntry, DependencyPath> classPathEntryToDependencyPaths) {
     AnnotatedClassPath annotatedClassPath = new AnnotatedClassPath();

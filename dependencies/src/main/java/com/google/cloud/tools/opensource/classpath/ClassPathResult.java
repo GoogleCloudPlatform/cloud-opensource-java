@@ -52,7 +52,7 @@ public final class ClassPathResult {
    * an empty list if the entry is not in the class path.
    */
   public ImmutableList<DependencyPath> getDependencyPaths(ClassPathEntry entry) {
-    return annotatedClassPath.dependencyPathOf(entry);
+    return annotatedClassPath.pathsTo(entry);
   }
 
   /** Returns problems encountered while constructing the dependency graph. */
@@ -87,7 +87,7 @@ public final class ClassPathResult {
   public ImmutableSet<ClassPathEntry> getClassPathEntries(String coordinates) {
     ImmutableSet.Builder<ClassPathEntry> builder = ImmutableSet.builder();
     for (ClassPathEntry entry : classPath) {
-      for (DependencyPath dependencyPath : annotatedClassPath.dependencyPathOf(entry)) {
+      for (DependencyPath dependencyPath : annotatedClassPath.pathsTo(entry)) {
         if (dependencyPath.size() > 1) {
           Artifact artifact = dependencyPath.get(1);
           if (Artifacts.toCoordinates(artifact).equals(coordinates)) {
