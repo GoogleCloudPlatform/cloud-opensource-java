@@ -20,7 +20,6 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import java.io.File;
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,21 +40,18 @@ class MavenDependencyMediation implements DependencyMediation {
     for (DependencyPath dependencyPath : dependencyPaths) {
       // DependencyPaths have items in level-order; nearest items come first.
       Artifact artifact = dependencyPath.getLeaf();
-      String versionlessCoordinates = Artifacts.makeKey(artifact);
 
       File file = artifact.getFile();
-      if (file != null) {
-        Path jarAbsolutePath = file.toPath().toAbsolutePath();
-        if (jarAbsolutePath.toString().endsWith(".jar")) {
-
-          if (alreadyFound.add(versionlessCoordinates)) {
-            artifacts.add(artifact);
-          }
-          if (artifacts.contains(artifact)) {
-        // We include multiple dependency paths to the first version of an artifact we see,
-        // but not paths to other versions of that artifact.
-        annotatedClassPath.put(new ClassPathEntry(artifact), dependencyPath);
-      }
+      if (file != null && file.getName().endsWith(".jar")) {
+        String versionlessCoordinates = Artifacts.makeKey(artifact);
+        if (alreadyFound.add(versionlessCoordinates)) {
+          // Adds to artifacts when versionlessCoordinates are new.
+          artifacts.add(artifact);
+        }
+        if (artifacts.contains(artifact)) {
+          // We include multiple dependency paths to the first version of an artifact we see,
+          // but not paths to other versions of that artifact.
+          annotatedClassPath.put(new ClassPathEntry(artifact), dependencyPath);
         }
       }
     }
