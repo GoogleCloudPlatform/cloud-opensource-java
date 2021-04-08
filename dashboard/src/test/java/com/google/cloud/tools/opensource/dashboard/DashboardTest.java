@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.cloud.tools.opensource.dashboard.DashboardArguments.DependencyMediationAlgorithm;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.base.CharMatcher;
@@ -76,7 +77,7 @@ public class DashboardTest {
     try {
       outputDirectory =
           DashboardMain.generate(
-              "com.google.cloud:libraries-bom:1.0.0", DashboardArguments.readCommandLine());
+              "com.google.cloud:libraries-bom:1.0.0", DependencyMediationAlgorithm.MAVEN);
     } catch (Throwable t) {
       t.printStackTrace();
       Assert.fail("Could not generate dashboard");

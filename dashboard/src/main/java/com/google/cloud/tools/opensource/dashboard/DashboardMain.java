@@ -26,6 +26,7 @@ import com.google.cloud.tools.opensource.classpath.DependencyMediation;
 import com.google.cloud.tools.opensource.classpath.GradleDependencyMediation;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
+import com.google.cloud.tools.opensource.dashboard.DashboardArguments.DependencyMediationAlgorithm;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
@@ -106,16 +107,16 @@ public class DashboardMain {
     DashboardArguments dashboardArguments = DashboardArguments.readCommandLine(arguments);
 
     if (dashboardArguments.hasVersionlessCoordinates()) {
-      generateAllVersions(dashboardArguments.getVersionlessCoordinates(), dashboardArguments);
+      generateAllVersions(dashboardArguments.getVersionlessCoordinates(), dashboardArguments.getDependencyMediation());
     } else if (dashboardArguments.hasFile()) {
-      generate(dashboardArguments.getBomFile(), dashboardArguments);
+      generate(dashboardArguments.getBomFile(), dashboardArguments.getDependencyMediation());
     } else {
-      generate(dashboardArguments.getBomCoordinates(), dashboardArguments);
+      generate(dashboardArguments.getBomCoordinates(), dashboardArguments.getDependencyMediation());
     }
   }
 
   private static void generateAllVersions(
-      String versionlessCoordinates, DashboardArguments arguments)
+      String versionlessCoordinates, DependencyMediationAlgorithm dependencyMediationAlgorithm)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
           MavenRepositoryException {
     List<String> elements = Splitter.on(':').splitToList(versionlessCoordinates);
@@ -131,7 +132,7 @@ public class DashboardMain {
     ImmutableList<String> versions =
         RepositoryUtility.findVersions(repositorySystem, groupId, artifactId);
     for (String version : versions) {
-      generate(String.format("%s:%s:%s", groupId, artifactId, version), arguments);
+      generate(String.format("%s:%s:%s", groupId, artifactId, version), dependencyMediationAlgorithm);
     }
     generateVersionIndex(groupId, artifactId, versions);
   }
@@ -161,32 +162,32 @@ public class DashboardMain {
   }
 
   @VisibleForTesting
-  static Path generate(String bomCoordinates, DashboardArguments arguments)
+  static Path generate(String bomCoordinates, DependencyMediationAlgorithm dependencyMediationAlgorithm)
       throws IOException, TemplateException, RepositoryException, URISyntaxException {
-    Path output = generate(Bom.readBom(bomCoordinates), arguments);
+    Path output = generate(Bom.readBom(bomCoordinates), dependencyMediationAlgorithm);
     System.out.println("Wrote dashboard for " + bomCoordinates + " to " + output);
     return output;
   }
 
   @VisibleForTesting
-  static Path generate(Path bomFile, DashboardArguments arguments)
+  static Path generate(Path bomFile, DependencyMediationAlgorithm dependencyMediationOption)
       throws IOException, TemplateException, URISyntaxException, MavenRepositoryException,
           InvalidVersionSpecificationException {
     checkArgument(Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
     checkArgument(Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
-    Path output = generate(Bom.readBom(bomFile), arguments);
+    Path output = generate(Bom.readBom(bomFile), dependencyMediationOption);
     System.out.println("Wrote dashboard for " + bomFile + " to " + output);
     return output;
   }
 
-  private static Path generate(Bom bom, DashboardArguments arguments)
+  private static Path generate(Bom bom, DependencyMediationAlgorithm dependencyMediationAlgorithm)
       throws IOException, TemplateException, URISyntaxException,
           InvalidVersionSpecificationException {
 
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
     DependencyMediation dependencyMediation =
-        "maven".equals(arguments.getDependencyMediation())
+        dependencyMediationAlgorithm == DependencyMediationAlgorithm.MAVEN
             ? DependencyMediation.MAVEN
             : GradleDependencyMediation.withEnforcedPlatform(bom);
 

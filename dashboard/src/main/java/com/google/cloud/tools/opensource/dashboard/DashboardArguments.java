@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.annotation.Nullable;
@@ -35,6 +36,8 @@ import org.apache.commons.cli.ParseException;
 final class DashboardArguments {
   private static final Options options = configureOptions();
   private static final HelpFormatter helpFormatter = new HelpFormatter();
+
+  private static final ImmutableList<String> allowsDependencyMediationValues = ImmutableList.of("maven", "gradle");
 
   private final CommandLine commandLine;
 
@@ -97,18 +100,32 @@ final class DashboardArguments {
 
     try {
       // Throws ParseException if required option group ('-f' or '-c') is not specified
-      return new DashboardArguments(parser.parse(options, arguments));
+      CommandLine commandLine = parser.parse(options, arguments);
+      String dependencyMediationValue = commandLine.getOptionValue('m');
+      if (dependencyMediationValue != null && !allowsDependencyMediationValues.contains(dependencyMediationValue)) {
+        throw new ParseException("Valid values for '-m' are " + allowsDependencyMediationValues);
+      }
+
+      return new DashboardArguments(commandLine);
     } catch (ParseException ex) {
       helpFormatter.printHelp("DashboardMain", options);
       throw ex;
     }
   }
 
-  String getDependencyMediation() {
+  enum DependencyMediationAlgorithm {
+    MAVEN, GRADLE,
+  }
+
+  /**
+   * Returns dependency mediation algorithm. By default it's {@link DependencyMediationAlgorithm#MAVEN}.
+   */
+  DependencyMediationAlgorithm getDependencyMediation() {
     if (!commandLine.hasOption('m')) {
-      return "maven";
+      return DependencyMediationAlgorithm.MAVEN;
     }
-    return commandLine.getOptionValue('m').trim();
+    String optionValue = commandLine.getOptionValue('m').trim();
+    return "maven".equals(optionValue) ? DependencyMediationAlgorithm.MAVEN : DependencyMediationAlgorithm.GRADLE;
   }
 
   private static Options configureOptions() {

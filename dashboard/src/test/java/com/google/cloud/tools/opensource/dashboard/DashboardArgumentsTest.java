@@ -21,6 +21,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.google.cloud.tools.opensource.dashboard.DashboardArguments.DependencyMediationAlgorithm;
+import com.google.common.truth.Truth;
 import java.nio.file.Paths;
 import org.apache.commons.cli.AlreadySelectedException;
 import org.apache.commons.cli.MissingOptionException;
@@ -35,6 +37,7 @@ public class DashboardArgumentsTest {
     DashboardArguments dashboardArguments = DashboardArguments.readCommandLine("-f", "../pom.xml");
 
     assertTrue(dashboardArguments.hasFile());
+    assertEquals(dashboardArguments.getDependencyMediation(), DependencyMediationAlgorithm.MAVEN);
     assertEquals(Paths.get("../pom.xml").toAbsolutePath(), dashboardArguments.getBomFile());
     assertNull(dashboardArguments.getBomCoordinates());
   }
@@ -88,6 +91,24 @@ public class DashboardArgumentsTest {
       Assert.fail("The argument should validate duplicate input");
     } catch (AlreadySelectedException ex) {
       // pass
+    }
+  }
+
+  @Test
+  public void testParseArgument_dependencyMediation_valid() throws ParseException {
+    DashboardArguments dashboardArguments = DashboardArguments.readCommandLine("-f", "../pom.xml", "-m", "gradle");
+
+    assertEquals(dashboardArguments.getDependencyMediation(), DependencyMediationAlgorithm.GRADLE);
+  }
+
+  @Test
+  public void testParseArgument_dependencyMediation_invalid() {
+    try {
+      DashboardArguments dashboardArguments = DashboardArguments.readCommandLine("-f", "../pom.xml", "-m", "ant");
+      Assert.fail("The argument should validate invalid dependency mediation value");
+    } catch (ParseException ex) {
+      // pass
+      Truth.assertThat(ex.getMessage()).startsWith("Valid values for '-m' are ");
     }
   }
 }
