@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Set;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -318,7 +319,8 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testIsUnusedClassSymbolReference_multiReleaseJar() throws IOException {
+  public void testIsUnusedClassSymbolReference_multiReleaseJar()
+      throws IOException, InvalidVersionSpecificationException {
     // org.graalvm.libgraal.LibGraal class has different implementations between Java 8 and 11 via
     // Multi-release JAR of this artifact.
     List<ClassPathEntry> classPath = TestHelper.resolve("org.graalvm.compiler:compiler:19.0.0");
@@ -333,7 +335,8 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testFindSymbolReferences_overLappingClass() throws IOException {
+  public void testFindSymbolReferences_overLappingClass()
+      throws IOException, InvalidVersionSpecificationException {
     // Both artifacts contain com.google.inject.internal.InjectorImpl$BindingsMultimap. The one from
     // sisu-guice should not appear in symbol references because guice supersedes in the class path.
     List<ClassPathEntry> classPath =
@@ -350,7 +353,8 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testListClasses_unexpectedNonClassFile() throws IOException {
+  public void testListClasses_unexpectedNonClassFile()
+      throws IOException, InvalidVersionSpecificationException {
     // com.amazonaws:amazon-kinesis-client:1.13.0 contains an unexpected lock file
     // /unison/com/e007f77498fd27177e2ea931a06dcf50/unison/tmp/amazonaws/services/kinesis/leases/impl/LeaseTaker.class
     // https://github.com/awslabs/amazon-kinesis-client/issues/654
@@ -371,7 +375,8 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testCatchesLinkageError_absentOuterClass() throws IOException {
+  public void testCatchesLinkageError_absentOuterClass()
+      throws IOException, InvalidVersionSpecificationException {
     // Curator-client has shaded com.google.common.reflect.TypeToken$Bounds but it does not contain
     // the outer class com.google.common.reflect.TypeToken.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1092
@@ -388,7 +393,8 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testFindSymbolReferences_catchClassFormatException() throws IOException {
+  public void testFindSymbolReferences_catchClassFormatException()
+      throws IOException, InvalidVersionSpecificationException {
     List<ClassPathEntry> classPath = TestHelper.resolve("com.ibm.icu:icu4j:2.6.1");
     ClassDumper classDumper = ClassDumper.create(classPath);
 
@@ -402,7 +408,7 @@ public class ClassDumperTest {
   }
 
   @Test
-  public void testMethodCodeNull() throws IOException {
+  public void testMethodCodeNull() throws IOException, InvalidVersionSpecificationException {
     // catchesLinkageError should not raise an exception for MailDateFormat's constructor's null
     // code.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1352

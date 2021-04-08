@@ -104,6 +104,13 @@ final class DashboardArguments {
     }
   }
 
+  String getDependencyMediation() {
+    if (!commandLine.hasOption('m')) {
+      return "maven";
+    }
+    return commandLine.getOptionValue('m').trim();
+  }
+
   private static Options configureOptions() {
     Options options = new Options();
     OptionGroup inputGroup = new OptionGroup();
@@ -131,6 +138,15 @@ final class DashboardArguments {
                     + "For example, com.google.cloud:libraries-bom")
             .build();
     inputGroup.addOption(versionlessCoordinatesOption);
+
+    Option dependencyMediationOption =
+        Option.builder("m")
+            .longOpt("dependency-mediation")
+            .hasArg()
+            .desc(
+                "The dependency mediation algorithm. Either 'maven' or 'gradle'. By default it's 'maven'.")
+            .build();
+    options.addOption(dependencyMediationOption);
 
     options.addOptionGroup(inputGroup);
     return options;

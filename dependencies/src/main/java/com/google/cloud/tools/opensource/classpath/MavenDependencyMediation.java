@@ -28,6 +28,8 @@ import org.eclipse.aether.artifact.Artifact;
 /** Retain only the first version of a groupId:artifactId encountered. */
 class MavenDependencyMediation implements DependencyMediation {
 
+  MavenDependencyMediation() {}
+
   private List<Artifact> artifacts = new ArrayList<>();
 
   /** Returns true iff dependency mediation selects this artifact. */

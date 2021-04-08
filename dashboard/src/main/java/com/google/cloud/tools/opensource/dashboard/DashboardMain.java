@@ -22,6 +22,8 @@ import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
+import com.google.cloud.tools.opensource.classpath.DependencyMediation;
+import com.google.cloud.tools.opensource.classpath.GradleDependencyMediation;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
@@ -75,6 +77,7 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 public class DashboardMain {
 
@@ -103,17 +106,18 @@ public class DashboardMain {
     DashboardArguments dashboardArguments = DashboardArguments.readCommandLine(arguments);
 
     if (dashboardArguments.hasVersionlessCoordinates()) {
-      generateAllVersions(dashboardArguments.getVersionlessCoordinates());
+      generateAllVersions(dashboardArguments.getVersionlessCoordinates(), dashboardArguments);
     } else if (dashboardArguments.hasFile()) {
-      generate(dashboardArguments.getBomFile());
+      generate(dashboardArguments.getBomFile(), dashboardArguments);
     } else {
-      generate(dashboardArguments.getBomCoordinates());
+      generate(dashboardArguments.getBomCoordinates(), dashboardArguments);
     }
   }
 
-  private static void generateAllVersions(String versionlessCoordinates)
+  private static void generateAllVersions(
+      String versionlessCoordinates, DashboardArguments arguments)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
-      MavenRepositoryException {
+          MavenRepositoryException {
     List<String> elements = Splitter.on(':').splitToList(versionlessCoordinates);
     if (elements.size() != 2) {
       System.err.println(
@@ -127,7 +131,7 @@ public class DashboardMain {
     ImmutableList<String> versions =
         RepositoryUtility.findVersions(repositorySystem, groupId, artifactId);
     for (String version : versions) {
-      generate(String.format("%s:%s:%s", groupId, artifactId, version));
+      generate(String.format("%s:%s:%s", groupId, artifactId, version), arguments);
     }
     generateVersionIndex(groupId, artifactId, versions);
   }
@@ -157,28 +161,37 @@ public class DashboardMain {
   }
 
   @VisibleForTesting
-  static Path generate(String bomCoordinates)
+  static Path generate(String bomCoordinates, DashboardArguments arguments)
       throws IOException, TemplateException, RepositoryException, URISyntaxException {
-    Path output = generate(Bom.readBom(bomCoordinates));
+    Path output = generate(Bom.readBom(bomCoordinates), arguments);
     System.out.println("Wrote dashboard for " + bomCoordinates + " to " + output);
     return output;
   }
 
   @VisibleForTesting
-  static Path generate(Path bomFile)
-      throws IOException, TemplateException, URISyntaxException, MavenRepositoryException {
+  static Path generate(Path bomFile, DashboardArguments arguments)
+      throws IOException, TemplateException, URISyntaxException, MavenRepositoryException,
+          InvalidVersionSpecificationException {
     checkArgument(Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
     checkArgument(Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
-    Path output = generate(Bom.readBom(bomFile));
+    Path output = generate(Bom.readBom(bomFile), arguments);
     System.out.println("Wrote dashboard for " + bomFile + " to " + output);
     return output;
   }
 
-  private static Path generate(Bom bom) throws IOException, TemplateException, URISyntaxException {
+  private static Path generate(Bom bom, DashboardArguments arguments)
+      throws IOException, TemplateException, URISyntaxException,
+          InvalidVersionSpecificationException {
 
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
-    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies, false);
+    DependencyMediation dependencyMediation =
+        "maven".equals(arguments.getDependencyMediation())
+            ? DependencyMediation.MAVEN
+            : GradleDependencyMediation.withEnforcedPlatform(bom);
+
+    ClassPathResult classPathResult =
+        classPathBuilder.resolve(managedDependencies, false, dependencyMediation);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
 
     LinkageChecker linkageChecker = LinkageChecker.create(classpath);

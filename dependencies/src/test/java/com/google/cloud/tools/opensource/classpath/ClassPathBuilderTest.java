@@ -34,25 +34,30 @@ import java.util.stream.Collectors;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.junit.Test;
 
 public class ClassPathBuilderTest {
   private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
-  private ImmutableList<ClassPathEntry> resolveClassPath(String coordinates) {
+  private ImmutableList<ClassPathEntry> resolveClassPath(String coordinates)
+      throws InvalidVersionSpecificationException {
     Artifact artifact = new DefaultArtifact(coordinates);
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(artifact), true);
+    ClassPathResult result =
+        classPathBuilder.resolve(ImmutableList.of(artifact), true, DependencyMediation.MAVEN);
     return result.getClassPath();
   }
 
   @Test
-  public void testResolve_withoutOptionalDependencies() {
+  public void testResolve_withoutOptionalDependencies()
+      throws InvalidVersionSpecificationException {
     // an artifact with a very large dependency graph
     String coords = "org.apache.beam:beam-sdks-java-io-hcatalog:2.19.0";
     
     Artifact catalog = new DefaultArtifact(coords);
     try {
-      ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(catalog), false);
+      ClassPathResult result =
+          classPathBuilder.resolve(ImmutableList.of(catalog), false, DependencyMediation.MAVEN);
       assertNotNull(result);
     } catch (OutOfMemoryError failure) {
       failure.printStackTrace();
@@ -63,9 +68,10 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolve_removingDuplicates() {
+  public void testResolve_removingDuplicates() throws InvalidVersionSpecificationException {
     Artifact grpcArtifact = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(grpcArtifact), true);
+    ClassPathResult result =
+        classPathBuilder.resolve(ImmutableList.of(grpcArtifact), true, DependencyMediation.MAVEN);
 
     ImmutableList<ClassPathEntry> classPath = result.getClassPath();
     long jsr305Count =
@@ -91,7 +97,9 @@ public class ClassPathBuilderTest {
         .getManagedDependencies();
 
     ImmutableList<ClassPathEntry> classPath =
-        classPathBuilder.resolve(managedDependencies, true).getClassPath();
+        classPathBuilder
+            .resolve(managedDependencies, true, DependencyMediation.MAVEN)
+            .getClassPath();
 
     ImmutableList<ClassPathEntry> entries = ImmutableList.copyOf(classPath);
 
@@ -103,12 +111,14 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolve() {
+  public void testResolve() throws InvalidVersionSpecificationException {
 
     Artifact grpcAuth = new DefaultArtifact("io.grpc:grpc-auth:1.15.1");
 
     ImmutableList<ClassPathEntry> classPath =
-        classPathBuilder.resolve(ImmutableList.of(grpcAuth), true).getClassPath();
+        classPathBuilder
+            .resolve(ImmutableList.of(grpcAuth), true, DependencyMediation.MAVEN)
+            .getClassPath();
 
     assertThat(classPath)
         .comparingElementsUsing(TestHelper.COORDINATES)
@@ -122,7 +132,7 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolveClassPath_validCoordinate() {
+  public void testResolveClassPath_validCoordinate() throws InvalidVersionSpecificationException {
     List<ClassPathEntry> entries = resolveClassPath("io.grpc:grpc-auth:1.15.1");
 
     assertThat(entries)
@@ -139,7 +149,8 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolveClassPath_optionalDependency() {
+  public void testResolveClassPath_optionalDependency()
+      throws InvalidVersionSpecificationException {
     List<ClassPathEntry> classPath =
         resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
     assertThat(classPath)
@@ -148,9 +159,11 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolveClassPath_invalidCoordinate() {
+  public void testResolveClassPath_invalidCoordinate() throws RepositoryException {
     Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nosuchartifact:1.2.3");
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(nonExistentArtifact), true);
+    ClassPathResult result =
+        classPathBuilder.resolve(
+            ImmutableList.of(nonExistentArtifact), true, DependencyMediation.MAVEN);
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
     assertThat(artifactProblems).hasSize(1);
     assertEquals(
@@ -160,21 +173,26 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolve_emptyInput_full() {
-    List<ClassPathEntry> classPath = classPathBuilder.resolve(ImmutableList.of(), true).getClassPath();
+  public void testResolve_emptyInput_full() throws InvalidVersionSpecificationException {
+    List<ClassPathEntry> classPath =
+        classPathBuilder
+            .resolve(ImmutableList.of(), true, DependencyMediation.MAVEN)
+            .getClassPath();
     Truth.assertThat(classPath).isEmpty();
   }
 
   @Test
-  public void testResolve_emptyInput_verbose() {
+  public void testResolve_emptyInput_verbose() throws InvalidVersionSpecificationException {
     List<ClassPathEntry> classPath =
-        classPathBuilder.resolve(ImmutableList.of(), false).getClassPath();
+        classPathBuilder
+            .resolve(ImmutableList.of(), false, DependencyMediation.MAVEN)
+            .getClassPath();
     Truth.assertThat(classPath).isEmpty();
   }
 
   @Test
   public void testFindInvalidReferences_selfReferenceFromAbstractClassToInterface()
-      throws IOException {
+      throws IOException, InvalidVersionSpecificationException {
     List<ClassPathEntry> classPath =
         resolveClassPath("com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha");
     ClassPathEntry httpClientJar =
@@ -211,17 +229,19 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolveClasspath_notToGenerateRepositoryException() throws IOException {
+  public void testResolveClasspath_notToGenerateRepositoryException()
+      throws InvalidVersionSpecificationException {
     List<ClassPathEntry> classPath = resolveClassPath("com.google.guava:guava-gwt:jar:20.0");
     assertThat(classPath).isNotEmpty();
   }
 
   @Test
-  public void testResolve_artifactProblems() {
+  public void testResolve_artifactProblems() throws InvalidVersionSpecificationException {
     // In the full dependency tree of hibernate-core, xerces-impl:2.6.2 and xml-apis:2.6.2 are not
     // available in Maven Central.
     Artifact hibernateCore = new DefaultArtifact("org.hibernate:hibernate-core:jar:3.5.1-Final");
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(hibernateCore), true);
+    ClassPathResult result =
+        classPathBuilder.resolve(ImmutableList.of(hibernateCore), true, DependencyMediation.MAVEN);
 
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
 
@@ -235,7 +255,8 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolve_shouldNotRaiseStackOverflowErrorOnJUnit() {
+  public void testResolve_shouldNotRaiseStackOverflowErrorOnJUnit()
+      throws InvalidVersionSpecificationException {
     // There was StackOverflowError beam-sdks-java-extensions-sql-zetasql:jar:2.19.0, which was
     // caused by a cycle of the following artifacts:
     // junit:junit:jar:4.10 (compile?)
@@ -246,7 +267,9 @@ public class ClassPathBuilderTest {
     Artifact beamZetaSqlExtensions = new DefaultArtifact("junit:junit:jar:4.10");
 
     // This should not throw StackOverflowError
-    ClassPathResult result = classPathBuilder.resolve(ImmutableList.of(beamZetaSqlExtensions), true);
+    ClassPathResult result =
+        classPathBuilder.resolve(
+            ImmutableList.of(beamZetaSqlExtensions), true, DependencyMediation.MAVEN);
     assertNotNull(result);
   }
 }

@@ -74,7 +74,9 @@ public class DashboardTest {
   public static void setUp() throws IOException, ParsingException {
     // Creates "index.html" and artifact reports in outputDirectory
     try {
-      outputDirectory = DashboardMain.generate("com.google.cloud:libraries-bom:1.0.0");
+      outputDirectory =
+          DashboardMain.generate(
+              "com.google.cloud:libraries-bom:1.0.0", DashboardArguments.readCommandLine());
     } catch (Throwable t) {
       t.printStackTrace();
       Assert.fail("Could not generate dashboard");

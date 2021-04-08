@@ -18,9 +18,11 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
+import com.google.common.base.VerifyException;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 /**
  * Utility to build {@link ClassPathResult} that holds class path (a list of {@link ClassPathEntry})
@@ -54,8 +56,12 @@ public final class ClassPathBuilder {
    * @param artifacts the first artifacts that appear in the classpath, in order
    * @param full if true all optional dependencies and their transitive dependencies are included.
    *     If false, optional dependencies are not included.
+   * @param dependencyMediation the dependency mediation algorithm used when multiple versions of
+   *     the same artifacts appears in the graph
    */
-  public ClassPathResult resolve(List<Artifact> artifacts, boolean full) {
+  public ClassPathResult resolve(
+      List<Artifact> artifacts, boolean full, DependencyMediation dependencyMediation)
+      throws InvalidVersionSpecificationException {
     // dependencyGraph holds multiple versions for one artifact key (groupId:artifactId)
     DependencyGraph result;
     if (full) {
@@ -63,7 +69,7 @@ public final class ClassPathBuilder {
     } else {
       result = dependencyGraphBuilder.buildVerboseDependencyGraph(artifacts);
     }
-    return mediate(result);
+    return mediate(result, dependencyMediation);
   }
 
   /**
@@ -71,19 +77,25 @@ public final class ClassPathBuilder {
    * Maven would do when the artifact was built.
    *
    * <p>This method takes the root artifact of a dependency graph, while {@link #resolve(List,
-   * boolean)} takes a list of artifacts as the dependencies of a pseudo root artifact.
+   * boolean, DependencyMediation)} takes a list of artifacts as the dependencies of a pseudo root
+   * artifact.
    */
   ClassPathResult resolveWithMaven(Artifact rootArtifact) {
     DependencyGraph result =
         dependencyGraphBuilder.buildMavenDependencyGraph(new Dependency(rootArtifact, "compile"));
-    return mediate(result);
+    try {
+      return mediate(result, DependencyMediation.MAVEN);
+
+    } catch (InvalidVersionSpecificationException ex) {
+      // MavenDependencyMediation does not throw this exception
+      throw new VerifyException(
+          "Maven dependency mediation unexpectedly encountered an invalid version", ex);
+    }
   }
 
-  private ClassPathResult mediate(DependencyGraph result) {
-    // To remove duplicates on (groupId:artifactId) for dependency mediation
-    MavenDependencyMediation mediation = new MavenDependencyMediation();
-
-    AnnotatedClassPath classPathAnnotatedWithDependencyPath = mediation.mediate(result);
+  private ClassPathResult mediate(DependencyGraph result, DependencyMediation dependencyMediation)
+      throws InvalidVersionSpecificationException {
+    AnnotatedClassPath classPathAnnotatedWithDependencyPath = dependencyMediation.mediate(result);
     return new ClassPathResult(
         classPathAnnotatedWithDependencyPath, result.getUnresolvedArtifacts());
   }
