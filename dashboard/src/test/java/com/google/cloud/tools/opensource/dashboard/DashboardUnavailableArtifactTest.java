@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.cloud.tools.opensource.classpath.AnnotatedClassPath;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
@@ -23,7 +24,6 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.LinkedListMultimap;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Truth;
@@ -91,7 +91,7 @@ public class DashboardUnavailableArtifactTest {
             outputDirectory,
             cache,
             ImmutableMap.of(),
-            new ClassPathResult(LinkedListMultimap.create(), ImmutableList.of()),
+            new ClassPathResult(new AnnotatedClassPath(), ImmutableList.of()),
             bom);
 
     Assert.assertEquals(
@@ -139,7 +139,7 @@ public class DashboardUnavailableArtifactTest {
         table,
         ImmutableList.of(),
         ImmutableMap.of(),
-        new ClassPathResult(LinkedListMultimap.create(), ImmutableList.of()),
+        new ClassPathResult(new AnnotatedClassPath(), ImmutableList.of()),
         bom);
 
     Path generatedHtml = outputDirectory.resolve("artifact_details.html");

@@ -22,10 +22,7 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.ListMultimap;
 import java.io.IOException;
 import org.eclipse.aether.artifact.Artifact;
 
@@ -34,25 +31,14 @@ public final class ClassPathResult {
 
   private final ImmutableList<ClassPathEntry> classPath;
 
-  /**
-   * An ordered map from class path elements to one or more Maven dependency paths.
-   *
-   * <p>The keys of the returned map represent Maven artifacts in the resolved class path,
-   * including transitive dependencies. The return value of {@link LinkedListMultimap#keySet()}
-   * preserves key iteration order.
-   *
-   * <p>The values of the returned map for a key (class path entry) represent the different Maven
-   * dependency paths from {@code artifacts} to the Maven artifact.
-   */
-  private final ImmutableListMultimap<ClassPathEntry, DependencyPath> dependencyPaths;
+  private final AnnotatedClassPath annotatedClassPath;
 
   private final ImmutableList<UnresolvableArtifactProblem> artifactProblems;
 
   public ClassPathResult(
-      ListMultimap<ClassPathEntry, DependencyPath> dependencyPaths,
-      Iterable<UnresolvableArtifactProblem> artifactProblems) {
-    this.dependencyPaths = ImmutableListMultimap.copyOf(dependencyPaths);
-    this.classPath = ImmutableList.copyOf(dependencyPaths.keySet());
+      AnnotatedClassPath dependencyPaths, Iterable<UnresolvableArtifactProblem> artifactProblems) {
+    this.annotatedClassPath = dependencyPaths;
+    this.classPath = dependencyPaths.getClassPath();
     this.artifactProblems = ImmutableList.copyOf(artifactProblems);
   }
 
@@ -66,7 +52,7 @@ public final class ClassPathResult {
    * an empty list if the entry is not in the class path.
    */
   public ImmutableList<DependencyPath> getDependencyPaths(ClassPathEntry entry) {
-    return dependencyPaths.get(entry);
+    return annotatedClassPath.pathsTo(entry);
   }
 
   /** Returns problems encountered while constructing the dependency graph. */
@@ -101,7 +87,7 @@ public final class ClassPathResult {
   public ImmutableSet<ClassPathEntry> getClassPathEntries(String coordinates) {
     ImmutableSet.Builder<ClassPathEntry> builder = ImmutableSet.builder();
     for (ClassPathEntry entry : classPath) {
-      for (DependencyPath dependencyPath : dependencyPaths.get(entry)) {
+      for (DependencyPath dependencyPath : annotatedClassPath.pathsTo(entry)) {
         if (dependencyPath.size() > 1) {
           Artifact artifact = dependencyPath.get(1);
           if (Artifacts.toCoordinates(artifact).equals(coordinates)) {

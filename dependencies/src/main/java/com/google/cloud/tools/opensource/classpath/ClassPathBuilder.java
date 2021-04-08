@@ -18,8 +18,6 @@ package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
-import com.google.cloud.tools.opensource.dependencies.DependencyPath;
-import com.google.common.collect.LinkedListMultimap;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.graph.Dependency;
@@ -82,22 +80,11 @@ public final class ClassPathBuilder {
   }
 
   private ClassPathResult mediate(DependencyGraph result) {
-    // TODO should DependencyGraphResult have a mediate() method that returns a ClassPathResult?
-
     // To remove duplicates on (groupId:artifactId) for dependency mediation
     MavenDependencyMediation mediation = new MavenDependencyMediation();
 
-    LinkedListMultimap<ClassPathEntry, DependencyPath> multimap = LinkedListMultimap.create();
-    List<DependencyPath> dependencyPaths = result.list();
-    for (DependencyPath dependencyPath : dependencyPaths) {
-      Artifact artifact = dependencyPath.getLeaf();
-      mediation.put(dependencyPath);
-      if (mediation.selects(artifact)) {
-        // We include multiple dependency paths to the first version of an artifact we see,
-        // but not paths to other versions of that artifact.
-        multimap.put(new ClassPathEntry(artifact), dependencyPath);
-      }
-    }
-    return new ClassPathResult(multimap, result.getUnresolvedArtifacts());
+    AnnotatedClassPath classPathAnnotatedWithDependencyPath = mediation.mediate(result);
+    return new ClassPathResult(
+        classPathAnnotatedWithDependencyPath, result.getUnresolvedArtifacts());
   }
 }

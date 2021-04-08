@@ -20,6 +20,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static org.apache.maven.enforcer.rule.api.EnforcerLevel.WARN;
 
+import com.google.cloud.tools.opensource.classpath.AnnotatedClassPath;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
@@ -37,7 +38,6 @@ import com.google.cloud.tools.opensource.dependencies.OsProperties;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
@@ -341,8 +341,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         unresolvedDependencies.stream().map(Dependency::getArtifact).collect(toImmutableSet());
 
     DependencyGraph dependencyGraph = DependencyGraph.from(root);
-    ImmutableListMultimap.Builder<ClassPathEntry, DependencyPath> builder =
-        ImmutableListMultimap.builder();
+    AnnotatedClassPath annotatedClassPath = new AnnotatedClassPath();
     ImmutableList.Builder<UnresolvableArtifactProblem> problems = ImmutableList.builder();
     for (DependencyPath path : dependencyGraph.list()) {
       Artifact artifact = path.getLeaf();
@@ -350,10 +349,10 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       if (unresolvedArtifacts.contains(artifact)) {
         problems.add(new UnresolvableArtifactProblem(artifact));
       } else {
-        builder.put(new ClassPathEntry(artifact), path);
+        annotatedClassPath.put(new ClassPathEntry(artifact), path);
       }
     }
-    return new ClassPathResult(builder.build(), problems.build());
+    return new ClassPathResult(annotatedClassPath, problems.build());
   }
 
   /** Builds a class path for {@code bomProject}. */
