@@ -35,8 +35,10 @@ import org.eclipse.aether.version.Version;
 /** Retain only the highest version of a groupId:artifactId encountered. */
 public class GradleDependencyMediation implements DependencyMediation {
 
-  final ImmutableMap<String, String> enforcedPlatform;
+  // Map from versionless coordinates to versions
+  private final ImmutableMap<String, String> enforcedPlatform;
 
+  // Not public. Use DependencyMediation.GRADLE.
   GradleDependencyMediation() {
     enforcedPlatform = ImmutableMap.of();
   }
@@ -60,32 +62,35 @@ public class GradleDependencyMediation implements DependencyMediation {
 
     List<DependencyPath> dependencyPaths = dependencyGraph.list();
 
+    // Step 1: Gather versions in the dependency graph.
     HashMultimap<String, Version> coordinatesToVersions = HashMultimap.create();
     GenericVersionScheme versionScheme = new GenericVersionScheme();
     for (DependencyPath dependencyPath : dependencyPaths) {
-      // DependencyPaths have items in level-order; nearest items come first.
       Artifact artifact = dependencyPath.getLeaf();
       String versionlessCoordinates = Artifacts.makeKey(artifact);
       Version version = versionScheme.parseVersion(artifact.getVersion());
       coordinatesToVersions.put(versionlessCoordinates, version);
     }
 
+    // Step 2: Select the highest version or the version in the enforcedPlatform for each
+    // versionless coordinates.
     List<String> selectedCoordinates = new ArrayList<>();
     for (String versionlessCoordinates : coordinatesToVersions.keySet()) {
-      ImmutableList<Version> versions =
-          coordinatesToVersions.get(versionlessCoordinates).stream()
-              .sorted()
-              .collect(toImmutableList());
-      Version highestVersion = versions.get(versions.size() - 1);
-      String selectedVersion =
-          enforcedPlatform.containsKey(versionlessCoordinates)
-              ? enforcedPlatform.get(versionlessCoordinates)
-              : highestVersion.toString();
-      selectedCoordinates.add(versionlessCoordinates + ":" + selectedVersion);
+      if (enforcedPlatform.containsKey(versionlessCoordinates)) {
+        String versionInEnforcedPlatform = enforcedPlatform.get(versionlessCoordinates);
+        selectedCoordinates.add(versionlessCoordinates + ":" + versionInEnforcedPlatform);
+      } else {
+        ImmutableList<Version> versions =
+            coordinatesToVersions.get(versionlessCoordinates).stream()
+                .sorted()
+                .collect(toImmutableList());
+        Version highestVersion = versions.get(versions.size() - 1);
+        selectedCoordinates.add(versionlessCoordinates + ":" + highestVersion.toString());
+      }
     }
 
+    // Step 3: Build annotated class path.
     for (DependencyPath dependencyPath : dependencyPaths) {
-      // DependencyPaths have items in level-order; nearest items come first.
       Artifact artifact = dependencyPath.getLeaf();
       if (selectedCoordinates.contains(Artifacts.toCoordinates(artifact))) {
         annotatedClassPath.put(new ClassPathEntry(artifact), dependencyPath);
