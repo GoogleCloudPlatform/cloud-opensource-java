@@ -95,7 +95,7 @@ class LtsCompatibilityTestRunner {
       logger.severe("Failed to checkout the repository:\n" + outputContent);
       throw new TestFailureException("Could not checkout the Git URL: " + url);
     }
-    logger.info("Successfully checkout the repository at " + projectDirectory);
+    logger.info("Successfully checked out the repository at " + projectDirectory);
 
     Modification modification = testCase.getModification();
     // Modify build file to use the BOM
@@ -213,7 +213,7 @@ class LtsCompatibilityTestRunner {
    * Modifies {@code pomFile} so that Maven uses {@code managedDependencies} when running the tests.
    *
    * <p>It inserts new line characters so that the items in the list is easily visible in a vertical
-   * scroll. This does not try to </p>
+   * scroll. This does not try to
    */
   static void modifyPomFile(Path pomFile, ImmutableList<ClassPathEntry> managedDependencies)
       throws IOException, ParsingException {
