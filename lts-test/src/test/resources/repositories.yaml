@@ -5,7 +5,7 @@ repositories:
   - name: beam
     url: https://github.com/apache/beam.git
     tag: v2.28.0
-    modification: Skip
+    modification: Gradle
     commands: |
       # Beam's net.linguica.gradle.maven.settings plugin cannot work with GitHub Actions' default
       # Maven settings.xml file.
