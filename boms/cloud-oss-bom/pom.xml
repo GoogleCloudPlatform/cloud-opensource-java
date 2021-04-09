@@ -242,7 +242,7 @@
        <dependency>
          <groupId>com.google.cloud</groupId>
          <artifactId>google-cloud-core-bom</artifactId>
-         <version>1.94.4</version>
+         <version>1.94.6</version>
          <type>pom</type>
          <scope>import</scope>
        </dependency>
