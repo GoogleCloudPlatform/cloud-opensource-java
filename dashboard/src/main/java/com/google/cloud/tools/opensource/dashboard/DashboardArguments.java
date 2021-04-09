@@ -37,7 +37,7 @@ final class DashboardArguments {
   private static final Options options = configureOptions();
   private static final HelpFormatter helpFormatter = new HelpFormatter();
 
-  private static final ImmutableList<String> allowsDependencyMediationValues =
+  private static final ImmutableList<String> validDependencyMediationValues =
       ImmutableList.of("maven", "gradle");
 
   private final CommandLine commandLine;
@@ -104,8 +104,8 @@ final class DashboardArguments {
       CommandLine commandLine = parser.parse(options, arguments);
       String dependencyMediationValue = commandLine.getOptionValue('m');
       if (dependencyMediationValue != null
-          && !allowsDependencyMediationValues.contains(dependencyMediationValue)) {
-        throw new ParseException("Valid values for '-m' are " + allowsDependencyMediationValues);
+          && !validDependencyMediationValues.contains(dependencyMediationValue)) {
+        throw new ParseException("Valid values for '-m' are " + validDependencyMediationValues);
       }
 
       return new DashboardArguments(commandLine);
@@ -167,7 +167,9 @@ final class DashboardArguments {
             .longOpt("dependency-mediation")
             .hasArg()
             .desc(
-                "The dependency mediation algorithm. Either 'maven' or 'gradle'. By default it's 'maven'.")
+                "The dependency mediation algorithm to choose versions. The valid values are:\n"
+                    + "- 'maven' for nearest-win strategy (default)\n"
+                    + "- 'gradle' for highest-win strategy.")
             .build();
     options.addOption(dependencyMediationOption);
 

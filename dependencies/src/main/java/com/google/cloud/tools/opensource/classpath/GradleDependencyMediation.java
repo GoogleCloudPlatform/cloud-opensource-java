@@ -32,13 +32,16 @@ import org.eclipse.aether.util.version.GenericVersionScheme;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.eclipse.aether.version.Version;
 
-/** Retain only the highest version of a groupId:artifactId encountered. */
+/**
+ * Retain only the highest version of a groupId:artifactId encountered. When you want to pin
+ * versions for the artifacts in a BOM, use {@link #withEnforcedPlatform(Bom)}.
+ */
 public class GradleDependencyMediation implements DependencyMediation {
 
-  // Map from versionless coordinates to versions
+  // Mapping from versionless coordinates to versions
   private final ImmutableMap<String, String> enforcedPlatform;
 
-  // Not public. Use DependencyMediation.GRADLE.
+  // Not public. Use DependencyMediation.GRADLE instead.
   GradleDependencyMediation() {
     enforcedPlatform = ImmutableMap.of();
   }

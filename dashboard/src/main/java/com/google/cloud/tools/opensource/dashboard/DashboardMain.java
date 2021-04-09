@@ -174,12 +174,12 @@ public class DashboardMain {
   }
 
   @VisibleForTesting
-  static Path generate(Path bomFile, DependencyMediationAlgorithm dependencyMediationOption)
+  static Path generate(Path bomFile, DependencyMediationAlgorithm dependencyMediationAlgorithm)
       throws IOException, TemplateException, URISyntaxException, MavenRepositoryException,
           InvalidVersionSpecificationException {
     checkArgument(Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
     checkArgument(Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
-    Path output = generate(Bom.readBom(bomFile), dependencyMediationOption);
+    Path output = generate(Bom.readBom(bomFile), dependencyMediationAlgorithm);
     System.out.println("Wrote dashboard for " + bomFile + " to " + output);
     return output;
   }

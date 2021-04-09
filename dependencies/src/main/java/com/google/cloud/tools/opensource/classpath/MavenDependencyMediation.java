@@ -28,7 +28,7 @@ import org.eclipse.aether.artifact.Artifact;
 /** Retain only the first version of a groupId:artifactId encountered. */
 class MavenDependencyMediation implements DependencyMediation {
 
-  // Not public. Use DependencyMediation.MAVEN.
+  // Not public. Use DependencyMediation.MAVEN instead.
   MavenDependencyMediation() {}
 
   @Override
