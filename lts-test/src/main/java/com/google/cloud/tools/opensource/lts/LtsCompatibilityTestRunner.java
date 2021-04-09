@@ -44,6 +44,7 @@ import nu.xom.Elements;
 import nu.xom.Node;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
+import nu.xom.Text;
 import nu.xom.XPathContext;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
@@ -210,6 +211,9 @@ class LtsCompatibilityTestRunner {
 
   /**
    * Modifies {@code pomFile} so that Maven uses {@code managedDependencies} when running the tests.
+   *
+   * <p>It inserts new line characters so that the items in the list is easily visible in a vertical
+   * scroll. This does not try to </p>
    */
   static void modifyPomFile(Path pomFile, ImmutableList<ClassPathEntry> managedDependencies)
       throws IOException, ParsingException {
@@ -253,13 +257,14 @@ class LtsCompatibilityTestRunner {
     Element surefireConfigurationElement = getOrCreateNode(surefirePluginElement, "configuration");
     Element additionalClasspathElements =
         getOrCreateNode(surefireConfigurationElement, "additionalClasspathElements");
-
+    additionalClasspathElements.appendChild(new Text("\n"));
     for (ClassPathEntry bomManagedDependency : managedDependencies) {
       File file = bomManagedDependency.getArtifact().getFile();
       Element additionalClasspathElement =
           new Element("additionalClasspathElement", mavenPomNamespaceUri);
       additionalClasspathElement.appendChild(file.getAbsolutePath());
       additionalClasspathElements.appendChild(additionalClasspathElement);
+      additionalClasspathElements.appendChild(new Text("\n"));
     }
 
     // This unexpectedly removes dependencies even if they use classifiers. For example,
@@ -267,6 +272,7 @@ class LtsCompatibilityTestRunner {
     // the BOM does not supply the testlib-classifier artifacts.
     Element classpathDependencyExcludes =
         getOrCreateNode(surefireConfigurationElement, "classpathDependencyExcludes");
+    classpathDependencyExcludes.appendChild(new Text("\n"));
     for (ClassPathEntry bomManagedDependency : managedDependencies) {
       Artifact artifact = bomManagedDependency.getArtifact();
       String versionlessCoordinates = Artifacts.makeKey(artifact);
@@ -279,6 +285,7 @@ class LtsCompatibilityTestRunner {
           new Element("classpathDependencyExclude", mavenPomNamespaceUri);
       classpathDependencyExclude.appendChild(versionlessCoordinates);
       classpathDependencyExcludes.appendChild(classpathDependencyExclude);
+      classpathDependencyExcludes.appendChild(new Text("\n"));
     }
 
     com.google.common.io.Files.asCharSink(pomFile.toFile(), Charsets.UTF_8).write(document.toXML());

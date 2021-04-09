@@ -43,6 +43,7 @@ public class LtsBomCompatibilityTest {
   public void testLibraryCompatibility()
       throws IOException, InterruptedException, ParsingException, MavenRepositoryException,
           TestFailureException, InvalidVersionSpecificationException {
+    // This test case does not run in normal build
     String targetRepositoryName = System.getProperty("lts.test.repository");
     Assume.assumeNotNull(targetRepositoryName);
 
