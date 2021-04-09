@@ -25,12 +25,15 @@ import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Files;
 import com.google.common.io.MoreFiles;
 import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
@@ -304,23 +307,24 @@ class LtsCompatibilityTestRunner {
   }
 
   static void modifyGradleFile(Path gradleFile, Bom bom) throws IOException {
-
-    List<String> lines = com.google.common.io.Files.readLines(gradleFile.toFile(), Charsets.UTF_8);
+    String buildGradleContent = Files.asCharSource(gradleFile.toFile(), StandardCharsets.UTF_8).read();
 
     String bomCoordinates = bom.getCoordinates();
 
-    List<String> replacedLines =
-        lines.stream()
-            .map(
-                line ->
-                    line.replaceAll(
-                        "^dependencies \\{",
-                        "dependencies {\n    testRuntime enforcedPlatform('"
-                            + bomCoordinates
-                            + "')"))
-            .collect(Collectors.toList());
+    buildGradleContent =
+        buildGradleContent.replaceAll(
+            "\ndependencies \\{",
+            "\ndependencies {\n    testRuntime enforcedPlatform('" + bomCoordinates + "')");
+
+    // Mixing multiple enforcedPlatform for testRuntime brings google_cloud_platform_libraries_bom's
+    // (outdated) dependency at runtime.
+    if (gradleFile.endsWith(Paths.get("java","io","google-cloud-platform","build.gradle"))) {
+      buildGradleContent = buildGradleContent.replaceAll(
+          "compile enforcedPlatform\\(library.java.google_cloud_platform_libraries_bom\\)",
+          "compileOnly enforcedPlatform(library.java.google_cloud_platform_libraries_bom)");
+    }
 
     com.google.common.io.Files.asCharSink(gradleFile.toFile(), Charsets.UTF_8)
-        .write(Joiner.on("\n").join(replacedLines));
+        .write(buildGradleContent);
   }
 }

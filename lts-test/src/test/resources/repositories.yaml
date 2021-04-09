@@ -1,20 +1,26 @@
 bom: com.google.cloud:gcp-lts-bom:0.1.0-SNAPSHOT
-# Why not using ".kokoro/build.sh"? It's because it uses realpath command, which is not available
-# in Mac.
+# Useful build parameters:
+#   Maven:
+#     "-DtrimStackTrace=false" to show stacktrace in the error
+#     "-B -ntp" to hide unnecessary download progress
+#   Gradle:
+#     "--scan" to examine test failures in browsers
 repositories:
   - name: beam
     url: https://github.com/apache/beam.git
     tag: v2.28.0
     modification: Gradle
     commands: |
-      # Beam's net.linguica.gradle.maven.settings plugin cannot work with GitHub Actions' default
-      # Maven settings.xml file.
-      rm ~/.m2/settings.xml
-
+      if [ "$CI" == true ]; then
+        # Beam's net.linguica.gradle.maven.settings plugin cannot work with GitHub Actions' default
+        # Maven settings.xml file. The variable CI tells whether it's in GitHub Actions or not.
+        # https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
+        rm ~/.m2/settings.xml
+      fi
       # In Beam, some integration tests that require credentials are misclassified as tests
       # https://issues.apache.org/jira/browse/BEAM-11363?focusedCommentId=17242773&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-17242773
       rm ./sdks/java/io/google-cloud-platform/src/test/java/org/apache/beam/sdk/io/gcp/healthcare/{DicomIOTest,FhirIOTest,HL7v2IOTest}.java
-      ./gradlew --scan --console=plain -PdisableSpotlessCheck=true --stacktrace \
+      ./gradlew --scan --console=plain -PdisableSpotlessCheck=true \
           sdks:java:io:google-cloud-platform:check
   - name: google-api-java-client
     url: https://github.com/googleapis/google-api-java-client.git
