@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.lts;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
+import com.google.cloud.tools.opensource.classpath.GradleDependencyMediation;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.base.Charsets;
@@ -45,6 +46,7 @@ import nu.xom.Nodes;
 import nu.xom.ParsingException;
 import nu.xom.XPathContext;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 /**
  * Runs the test specified in the {@code testCase} with the presence of the libraries in the LTS
@@ -60,7 +62,8 @@ class LtsCompatibilityTestRunner {
   }
 
   void run(Bom bom, Path testRoot, Path runnerLog)
-      throws IOException, InterruptedException, ParsingException, TestFailureException {
+      throws IOException, InterruptedException, ParsingException, TestFailureException,
+          InvalidVersionSpecificationException {
     String name = testCase.getName();
     String commands = testCase.getCommands();
 
@@ -100,7 +103,7 @@ class LtsCompatibilityTestRunner {
     } else if (modification == Modification.GRADLE) {
       modifyGradleFiles(projectDirectory, bom);
     } else if (modification == Modification.SKIP) {
-      // No op
+      logger.info("No modification to the build files");
     } else {
       throw new IllegalArgumentException(
           "Invalid value for modification field. It must be 'Maven' or 'Gradle'");
@@ -137,12 +140,15 @@ class LtsCompatibilityTestRunner {
     }
   }
 
-  static void modifyPomFiles(Path projectRoot, Bom bom) throws IOException, ParsingException {
+  static void modifyPomFiles(Path projectRoot, Bom bom)
+      throws IOException, ParsingException, InvalidVersionSpecificationException {
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectRoot);
 
     ImmutableList<Artifact> bomManagedDependencies = bom.getManagedDependencies();
     ClassPathBuilder classPathBuilder = new ClassPathBuilder();
-    ClassPathResult resolvedDependencies = classPathBuilder.resolve(bomManagedDependencies, false);
+    ClassPathResult resolvedDependencies =
+        classPathBuilder.resolve(
+            bomManagedDependencies, false, GradleDependencyMediation.withEnforcedPlatform(bom));
 
     // Include the BOM members' dependencies as well; otherwise we may get NoClassDefFoundEerror for
     // artifacts that declare new dependencies in newer versions.

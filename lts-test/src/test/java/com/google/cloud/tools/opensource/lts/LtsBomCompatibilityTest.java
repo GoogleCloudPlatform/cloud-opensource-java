@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import nu.xom.ParsingException;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.junit.Assume;
 import org.junit.Test;
 import org.yaml.snakeyaml.Yaml;
@@ -41,7 +42,7 @@ public class LtsBomCompatibilityTest {
   @Test
   public void testLibraryCompatibility()
       throws IOException, InterruptedException, ParsingException, MavenRepositoryException,
-          TestFailureException {
+          TestFailureException, InvalidVersionSpecificationException {
     String targetRepositoryName = System.getProperty("lts.test.repository");
     Assume.assumeNotNull(targetRepositoryName);
 
@@ -62,7 +63,6 @@ public class LtsBomCompatibilityTest {
       logger.info("Running tests under temporary directory: " + testRoot);
       Path runnerLog = testRoot.resolve("runner.log");
 
-      int i = 0;
       for (Map<String, Object> repository : repositories) {
         RepositoryTestCase testCase = RepositoryTestCase.fromMap(repository);
         if (!targetRepositoryName.equals(testCase.getName())) {
