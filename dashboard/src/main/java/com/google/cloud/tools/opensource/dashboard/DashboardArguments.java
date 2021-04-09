@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import javax.annotation.Nullable;
@@ -35,6 +36,9 @@ import org.apache.commons.cli.ParseException;
 final class DashboardArguments {
   private static final Options options = configureOptions();
   private static final HelpFormatter helpFormatter = new HelpFormatter();
+
+  private static final ImmutableList<String> validDependencyMediationValues =
+      ImmutableList.of("maven", "gradle");
 
   private final CommandLine commandLine;
 
@@ -97,11 +101,37 @@ final class DashboardArguments {
 
     try {
       // Throws ParseException if required option group ('-f' or '-c') is not specified
-      return new DashboardArguments(parser.parse(options, arguments));
+      CommandLine commandLine = parser.parse(options, arguments);
+      String dependencyMediationValue = commandLine.getOptionValue('m');
+      if (dependencyMediationValue != null
+          && !validDependencyMediationValues.contains(dependencyMediationValue)) {
+        throw new ParseException("Valid values for '-m' are " + validDependencyMediationValues);
+      }
+
+      return new DashboardArguments(commandLine);
     } catch (ParseException ex) {
       helpFormatter.printHelp("DashboardMain", options);
       throw ex;
     }
+  }
+
+  enum DependencyMediationAlgorithm {
+    MAVEN,
+    GRADLE,
+  }
+
+  /**
+   * Returns dependency mediation algorithm. By default it's {@link
+   * DependencyMediationAlgorithm#MAVEN}.
+   */
+  DependencyMediationAlgorithm getDependencyMediation() {
+    if (!commandLine.hasOption('m')) {
+      return DependencyMediationAlgorithm.MAVEN;
+    }
+    String optionValue = commandLine.getOptionValue('m').trim();
+    return "maven".equals(optionValue)
+        ? DependencyMediationAlgorithm.MAVEN
+        : DependencyMediationAlgorithm.GRADLE;
   }
 
   private static Options configureOptions() {
@@ -131,6 +161,17 @@ final class DashboardArguments {
                     + "For example, com.google.cloud:libraries-bom")
             .build();
     inputGroup.addOption(versionlessCoordinatesOption);
+
+    Option dependencyMediationOption =
+        Option.builder("m")
+            .longOpt("dependency-mediation")
+            .hasArg()
+            .desc(
+                "The dependency mediation algorithm to choose versions. The valid values are:\n"
+                    + "- 'maven' for nearest-win strategy (default)\n"
+                    + "- 'gradle' for highest-win strategy.")
+            .build();
+    options.addOption(dependencyMediationOption);
 
     options.addOptionGroup(inputGroup);
     return options;

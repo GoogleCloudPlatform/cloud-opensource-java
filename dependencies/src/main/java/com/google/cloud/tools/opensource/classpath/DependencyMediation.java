@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.classpath;
 
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 /**
  * Algorithm to select artifacts when there are multiple versions for the same groupId and
@@ -25,6 +26,10 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
  * <p>The algorithm does not take classifier or extension into account.
  */
 public interface DependencyMediation {
+
+  DependencyMediation MAVEN = new MavenDependencyMediation();
+  DependencyMediation GRADLE = new GradleDependencyMediation();
+
   /**
    * Returns {@link AnnotatedClassPath} after performing dependency mediation. This means that the
    * returned list of class path entries has no duplicate artifacts in terms of the groupId and
@@ -33,5 +38,6 @@ public interface DependencyMediation {
    * @param dependencyGraph dependency graph that may have duplicate artifacts that have the same
    *     groupId and artifactId combination
    */
-  AnnotatedClassPath mediate(DependencyGraph dependencyGraph);
+  AnnotatedClassPath mediate(DependencyGraph dependencyGraph)
+      throws InvalidVersionSpecificationException;
 }

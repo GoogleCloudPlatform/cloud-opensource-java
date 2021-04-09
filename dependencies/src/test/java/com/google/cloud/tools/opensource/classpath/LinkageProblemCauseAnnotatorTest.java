@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.Optional;
+import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Test;
@@ -36,11 +37,14 @@ public class LinkageProblemCauseAnnotatorTest {
   private ClassPathBuilder classPathBuilder = new ClassPathBuilder();
 
   @Test
-  public void testAnnotate_dom4jOptionalDependency() throws IOException {
+  public void testAnnotate_dom4jOptionalDependency() throws IOException, RepositoryException {
 
     ClassPathBuilder builder = new ClassPathBuilder();
     ClassPathResult classPathResult =
-        builder.resolve(ImmutableList.of(new DefaultArtifact("org.dom4j:dom4j:2.1.3")), false);
+        builder.resolve(
+            ImmutableList.of(new DefaultArtifact("org.dom4j:dom4j:2.1.3")),
+            false,
+            DependencyMediation.MAVEN);
 
     // Dom4j declares jaxen dependency as optional. Dom4j's org.dom4j.DocumentHelper references
     // jaxen's org.jaxen.VariableContext. This annotator should tell that this invalid reference
@@ -64,7 +68,8 @@ public class LinkageProblemCauseAnnotatorTest {
   }
 
   @Test
-  public void testAnnotate_googleApiClientAndGrpcConflict() throws IOException {
+  public void testAnnotate_googleApiClientAndGrpcConflict()
+      throws IOException, RepositoryException {
 
     // The google-api-client and grpc-core have dependency conflict on Guava's Verify.verify
     // method.
@@ -74,7 +79,8 @@ public class LinkageProblemCauseAnnotatorTest {
             ImmutableList.of(
                 new DefaultArtifact("com.google.api-client:google-api-client:1.27.0"),
                 new DefaultArtifact("io.grpc:grpc-core:1.17.1")),
-            false);
+            false,
+            DependencyMediation.MAVEN);
 
     LinkageChecker linkageChecker = LinkageChecker.create(classPathResult.getClassPath());
     ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
@@ -110,7 +116,8 @@ public class LinkageProblemCauseAnnotatorTest {
   }
 
   @Test
-  public void testAnnotate_autoServiceAnnotationsExclusion() throws IOException {
+  public void testAnnotate_autoServiceAnnotationsExclusion()
+      throws IOException, RepositoryException {
 
     // Auto-value declares exclusion element for auto-service-annotations. Because of this, the
     // dependency graph does not include auto-service-annotations, resulting in a linkage error for
@@ -118,7 +125,9 @@ public class LinkageProblemCauseAnnotatorTest {
     ClassPathBuilder builder = new ClassPathBuilder();
     ClassPathResult classPathResult =
         builder.resolve(
-            ImmutableList.of(new DefaultArtifact("com.google.auto.value:auto-value:1.7.3")), false);
+            ImmutableList.of(new DefaultArtifact("com.google.auto.value:auto-value:1.7.3")),
+            false,
+            DependencyMediation.MAVEN);
 
     Optional<ClassPathEntry> foundAutoService =
         classPathResult.getClassPath().stream()
@@ -146,7 +155,7 @@ public class LinkageProblemCauseAnnotatorTest {
   }
 
   @Test
-  public void testAnnotate_dependencyInSpringRepository() throws IOException {
+  public void testAnnotate_dependencyInSpringRepository() throws IOException, RepositoryException {
     DependencyGraphBuilder dependencyGraphBuilder =
         new DependencyGraphBuilder(
             ImmutableList.of(
@@ -160,7 +169,8 @@ public class LinkageProblemCauseAnnotatorTest {
             ImmutableList.of(
                 new DefaultArtifact("io.projectreactor:reactor-core:3.4.0-M2"),
                 new DefaultArtifact("org.reactivestreams:reactive-streams:0.4.0")),
-            false);
+            false,
+            DependencyMediation.MAVEN);
 
     ClassPathEntry reactorCore = classPathResult.getClassPath().get(0);
 

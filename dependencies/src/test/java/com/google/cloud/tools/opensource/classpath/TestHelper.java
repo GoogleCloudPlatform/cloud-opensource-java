@@ -28,6 +28,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 /** Utility used among tests. */
 public class TestHelper {
@@ -56,10 +57,12 @@ public class TestHelper {
           "has Maven coordinates equal to");
 
   /** Returns the class path for the full dependency tree of {@code coordinates}. */
-  static ImmutableList<ClassPathEntry> resolve(String... coordinates) throws IOException {
+  static ImmutableList<ClassPathEntry> resolve(String... coordinates)
+      throws InvalidVersionSpecificationException {
     ImmutableList<Artifact> artifacts =
         Arrays.stream(coordinates).map(DefaultArtifact::new).collect(toImmutableList());
-    ClassPathResult result = (new ClassPathBuilder()).resolve(artifacts, true);
+    ClassPathResult result =
+        (new ClassPathBuilder()).resolve(artifacts, true, DependencyMediation.MAVEN);
     return result.getClassPath();
   }
 }

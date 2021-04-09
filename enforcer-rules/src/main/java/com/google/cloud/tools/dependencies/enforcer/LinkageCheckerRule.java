@@ -25,6 +25,7 @@ import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
+import com.google.cloud.tools.opensource.classpath.DependencyMediation;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.classpath.LinkageProblemCauseAnnotator;
@@ -75,6 +76,7 @@ import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 /** Linkage Checker Maven Enforcer Rule. */
 public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
@@ -370,12 +372,17 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
             .filter(artifact -> !Bom.shouldSkipBomMember(artifact))
             .collect(toImmutableList());
 
-    ClassPathResult result = classPathBuilder.resolve(artifacts, false);
-    ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
-    if (!artifactProblems.isEmpty()) {
-      throw new EnforcerRuleException("Failed to collect dependency: " + artifactProblems);
+    try {
+      ClassPathResult result =
+          classPathBuilder.resolve(artifacts, false, DependencyMediation.MAVEN);
+      ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
+      if (!artifactProblems.isEmpty()) {
+        throw new EnforcerRuleException("Failed to collect dependency: " + artifactProblems);
+      }
+      return result;
+    } catch (InvalidVersionSpecificationException ex) {
+      throw new EnforcerRuleException("Dependency mediation failed due to invalid version", ex);
     }
-    return result;
   }
 
   /**
