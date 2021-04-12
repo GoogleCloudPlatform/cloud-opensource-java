@@ -347,7 +347,10 @@ class LtsCompatibilityTestRunner {
                   + "')\n"
                   + "    testRuntime enforcedPlatform('"
                   + bomCoordinates
-                  + "')");
+                  + "')\n"
+                  + "    testRuntime library.java.junit\n"
+                  + "    testRuntime library.java.hamcrest_core\n"
+                  + "    testRuntime library.java.hamcrest_library\n");
 
       // Tried compileOnly but analyzeTestClassesDependencies's configuratin cannot resolve
       // the dependencies.
