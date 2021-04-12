@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import nu.xom.ParsingException;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.junit.Assume;
 import org.junit.Test;
@@ -41,8 +42,7 @@ public class LtsBomCompatibilityTest {
 
   @Test
   public void testLibraryCompatibility()
-      throws IOException, InterruptedException, ParsingException, MavenRepositoryException,
-          TestFailureException, InvalidVersionSpecificationException {
+      throws Exception {
     // This test case does not run in normal build
     String targetRepositoryName = System.getProperty("lts.test.repository");
     Assume.assumeNotNull(targetRepositoryName);

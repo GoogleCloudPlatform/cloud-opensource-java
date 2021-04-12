@@ -22,8 +22,10 @@ import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.GradleDependencyMediation;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import com.google.common.io.MoreFiles;
 import com.google.common.util.concurrent.Uninterruptibles;
@@ -46,7 +48,13 @@ import nu.xom.Nodes;
 import nu.xom.ParsingException;
 import nu.xom.Text;
 import nu.xom.XPathContext;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.resolution.ArtifactRequest;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
+import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 /**
@@ -64,7 +72,7 @@ class LtsCompatibilityTestRunner {
 
   void run(Bom bom, Path testRoot, Path runnerLog)
       throws IOException, InterruptedException, ParsingException, TestFailureException,
-          InvalidVersionSpecificationException {
+      InvalidVersionSpecificationException, ArtifactResolutionException {
     String name = testCase.getName();
     String commands = testCase.getCommands();
 
@@ -142,7 +150,7 @@ class LtsCompatibilityTestRunner {
   }
 
   static void modifyPomFiles(Path projectRoot, Bom bom)
-      throws IOException, ParsingException, InvalidVersionSpecificationException {
+      throws IOException, ParsingException, InvalidVersionSpecificationException, ArtifactResolutionException {
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectRoot);
 
     ImmutableList<Artifact> bomManagedDependencies = bom.getManagedDependencies();
@@ -216,7 +224,7 @@ class LtsCompatibilityTestRunner {
    * scroll. This does not try to
    */
   static void modifyPomFile(Path pomFile, ImmutableList<ClassPathEntry> managedDependencies)
-      throws IOException, ParsingException {
+      throws IOException, ParsingException, ArtifactResolutionException {
     Builder builder = new Builder();
     XPathContext context = new XPathContext("ns", mavenPomNamespaceUri);
     Document document = builder.build(pomFile.toFile());
@@ -232,6 +240,8 @@ class LtsCompatibilityTestRunner {
     Nodes classifierNodes =
         document.query("//ns:project/ns:dependencies/ns:dependency/ns:classifier", context);
 
+    // Surefire configuration cannot distinguish artifacts' classifiers. Therefore we do not exclude
+    // artifacts with classifiers
     Set<String> dependenciesWithClassifiers = new HashSet<>();
     for (Node classifierNode : classifierNodes) {
       String classifierValue = classifierNode.getValue();
@@ -262,6 +272,40 @@ class LtsCompatibilityTestRunner {
       File file = bomManagedDependency.getArtifact().getFile();
       Element additionalClasspathElement =
           new Element("additionalClasspathElement", mavenPomNamespaceUri);
+      additionalClasspathElement.appendChild(file.getAbsolutePath());
+      additionalClasspathElements.appendChild(additionalClasspathElement);
+      additionalClasspathElements.appendChild(new Text("\n"));
+    }
+
+    ImmutableMap<String, String> versionlessCoordinatesToVersion = managedDependencies.stream()
+        .map(ClassPathEntry::getArtifact).collect(ImmutableMap.toImmutableMap(Artifacts::makeKey,
+            Artifact::getVersion));
+
+    // Google-cloud-storage depends on com.google.cloud:google-cloud-core:jar:tests:1.94.3.
+    // Because com.google.cloud:google-cloud-core is excluded at runtime, we have to add it back.
+    Nodes testJarTypeNodes =
+        document.query("//ns:project/ns:dependencies/ns:dependency/ns:type", context);
+    Set<String> dependenciesWithTarJarType = new HashSet<>();
+    for (Node dependencyNodeWithType : testJarTypeNodes) {
+      String typeValue = dependencyNodeWithType.getValue();
+      if (!"test-jar".equals(typeValue)) {
+        continue;
+      }
+      Element dependency = (Element) dependencyNodeWithType.getParent();
+      // A dependency element always has an artifactId and a groupId element.
+      String artifactId =
+          dependency.getChildElements("artifactId", mavenPomNamespaceUri).get(0).getValue();
+      String groupId =
+          dependency.getChildElements("groupId", mavenPomNamespaceUri).get(0).getValue();
+      dependenciesWithTarJarType.add(groupId + ":" + artifactId);
+    }
+
+    if (dependenciesWithTarJarType.contains("com.google.cloud:google-cloud-core")) {
+      String googleCloudCoreVersion = versionlessCoordinatesToVersion.get("com.google.cloud:google-cloud-core");
+      Artifact artifact = resolveArtifact("com.google.cloud:google-cloud-core:jar:tests:" + googleCloudCoreVersion);
+      Element additionalClasspathElement =
+          new Element("additionalClasspathElement", mavenPomNamespaceUri);
+      File file = artifact.getFile();
       additionalClasspathElement.appendChild(file.getAbsolutePath());
       additionalClasspathElements.appendChild(additionalClasspathElement);
       additionalClasspathElements.appendChild(new Text("\n"));
@@ -305,6 +349,20 @@ class LtsCompatibilityTestRunner {
         modifyBeamModulePlugin(path);
       }
     }
+  }
+
+  private static Artifact resolveArtifact(String coordinates)
+      throws ArtifactResolutionException {
+    RepositorySystem system = RepositoryUtility.newRepositorySystem();
+    RepositorySystemSession session = RepositoryUtility.newSession(system);
+
+    Artifact artifact = new DefaultArtifact(coordinates);
+    ArtifactRequest artifactRequest = new ArtifactRequest();
+    artifactRequest.addRepository(RepositoryUtility.CENTRAL);
+    artifactRequest.setArtifact(artifact);
+    ArtifactResult artifactResult = system.resolveArtifact(session, artifactRequest);
+
+    return artifactResult.getArtifact();
   }
 
   static void modifyGradleFile(Path gradleFile, Bom bom) throws IOException {
