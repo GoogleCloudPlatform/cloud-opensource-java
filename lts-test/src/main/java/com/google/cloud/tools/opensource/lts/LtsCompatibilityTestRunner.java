@@ -295,14 +295,14 @@ class LtsCompatibilityTestRunner {
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectRoot);
 
     for (Path path : paths) {
-      if (!path.getFileName().endsWith("build.gradle")) {
-        continue;
-      }
-
-      if ("beam".equals(name)) {
-        modifyBeamGradleFile(path, bom);
-      } else {
-        modifyGradleFile(path, bom);
+      if (path.endsWith("build.gradle")) {
+        if ("beam".equals(name)) {
+          modifyBeamGradleFile(path, bom);
+        } else {
+          modifyGradleFile(path, bom);
+        }
+      } else if (path.endsWith("BeamModulePlugin.groovy")) {
+        modifyBeamModulePlugin(path);
       }
     }
   }
@@ -359,5 +359,21 @@ class LtsCompatibilityTestRunner {
       com.google.common.io.Files.asCharSink(gradleFile.toFile(), Charsets.UTF_8)
           .write(buildGradleContent);
     }
+  }
+
+  static void modifyBeamModulePlugin(Path beamModulePluginFile) throws IOException {
+    // We don't want Beam to `force` dependencies when we run tests because the `force` overrides
+    // library versions in the gcp-lts-bom
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/1982#discussion_r611911325
+    String buildGradleContent =
+        Files.asCharSource(beamModulePluginFile.toFile(), StandardCharsets.UTF_8).read();
+
+    buildGradleContent =
+        buildGradleContent.replaceAll(
+            "config.getName\\(\\) != \"errorprone\"",
+            "![\"errorprone\", \"testRuntimeClasspath\"].contains(config.getName())");
+
+    com.google.common.io.Files.asCharSink(beamModulePluginFile.toFile(), Charsets.UTF_8)
+        .write(buildGradleContent);
   }
 }

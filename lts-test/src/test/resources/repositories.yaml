@@ -24,7 +24,8 @@ repositories:
           :sdks:java:core:check \
           :sdks:java:io:google-cloud-platform:check \
           :sdks:java:extensions:google-cloud-platform-core:check \
-          :runners:google-cloud-dataflow-java:check
+          :runners:google-cloud-dataflow-java:check \
+           -x analyzeClassesDependencies
   - name: google-api-java-client
     url: https://github.com/googleapis/google-api-java-client.git
     tag: v1.31.3
