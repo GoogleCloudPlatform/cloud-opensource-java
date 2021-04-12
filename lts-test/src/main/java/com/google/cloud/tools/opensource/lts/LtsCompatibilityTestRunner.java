@@ -350,6 +350,9 @@ class LtsCompatibilityTestRunner {
                   + "')\n"
                   + "    testRuntime library.java.junit\n"
                   + "    testRuntime library.java.hamcrest_core\n"
+                  // This shouldn't be needed. But without this, GcsUtilTest fails
+                  // with NoSuchMethodError on CacheBuilder.expireAfterWrite(Ljava/time/Duration;)
+                  + "    testRuntime \"com.google.guava:guava:30.1-jre\"\n"
                   + "    testRuntime library.java.hamcrest_library\n");
 
       // Tried compileOnly but analyzeTestClassesDependencies's configuratin cannot resolve
