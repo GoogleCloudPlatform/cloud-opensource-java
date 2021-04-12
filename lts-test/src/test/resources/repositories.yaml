@@ -21,7 +21,10 @@ repositories:
       # https://issues.apache.org/jira/browse/BEAM-11363?focusedCommentId=17242773&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-17242773
       rm ./sdks/java/io/google-cloud-platform/src/test/java/org/apache/beam/sdk/io/gcp/healthcare/{DicomIOTest,FhirIOTest,HL7v2IOTest}.java
       ./gradlew --scan --console=plain -PdisableSpotlessCheck=true \
-          sdks:java:io:google-cloud-platform:check
+          :sdks:java:core:check \
+          :sdks:java:io:google-cloud-platform:check \
+          :sdks:java:extensions:google-cloud-platform-core:check \
+          :runners:google-cloud-dataflow-java:check
   - name: google-api-java-client
     url: https://github.com/googleapis/google-api-java-client.git
     tag: v1.31.3
