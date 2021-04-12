@@ -23,7 +23,6 @@ import com.google.cloud.tools.opensource.classpath.GradleDependencyMediation;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.google.common.io.MoreFiles;
@@ -36,10 +35,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
@@ -105,7 +102,7 @@ class LtsCompatibilityTestRunner {
     if (modification == Modification.MAVEN) {
       modifyPomFiles(projectDirectory, bom);
     } else if (modification == Modification.GRADLE) {
-      modifyGradleFiles(projectDirectory, bom);
+      modifyGradleFiles(name, projectDirectory, bom);
     } else if (modification == Modification.SKIP) {
       logger.info("No modification to the build files");
     } else {
@@ -294,7 +291,7 @@ class LtsCompatibilityTestRunner {
     com.google.common.io.Files.asCharSink(pomFile.toFile(), Charsets.UTF_8).write(document.toXML());
   }
 
-  static void modifyGradleFiles(Path projectRoot, Bom bom) throws IOException {
+  static void modifyGradleFiles(String name, Path projectRoot, Bom bom) throws IOException {
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectRoot);
 
     for (Path path : paths) {
@@ -302,12 +299,17 @@ class LtsCompatibilityTestRunner {
         continue;
       }
 
-      modifyGradleFile(path, bom);
+      if ("beam".equals(name)) {
+        modifyBeamGradleFile(path, bom);
+      } else {
+        modifyGradleFile(path, bom);
+      }
     }
   }
 
   static void modifyGradleFile(Path gradleFile, Bom bom) throws IOException {
-    String buildGradleContent = Files.asCharSource(gradleFile.toFile(), StandardCharsets.UTF_8).read();
+    String buildGradleContent =
+        Files.asCharSource(gradleFile.toFile(), StandardCharsets.UTF_8).read();
 
     String bomCoordinates = bom.getCoordinates();
 
@@ -316,15 +318,46 @@ class LtsCompatibilityTestRunner {
             "\ndependencies \\{",
             "\ndependencies {\n    testRuntime enforcedPlatform('" + bomCoordinates + "')");
 
-    // Mixing multiple enforcedPlatform for testRuntime brings google_cloud_platform_libraries_bom's
-    // (outdated) dependency at runtime.
-    if (gradleFile.endsWith(Paths.get("java","io","google-cloud-platform","build.gradle"))) {
-      buildGradleContent = buildGradleContent.replaceAll(
-          "compile enforcedPlatform\\(library.java.google_cloud_platform_libraries_bom\\)",
-          "compileOnly enforcedPlatform(library.java.google_cloud_platform_libraries_bom)");
-    }
-
     com.google.common.io.Files.asCharSink(gradleFile.toFile(), Charsets.UTF_8)
         .write(buildGradleContent);
+  }
+
+  // build.gradle files that run as part of the test in the beam seciton of repositories.yaml
+  static final ImmutableList<Path> beamTestSubprojects =
+      ImmutableList.of(
+          Paths.get("sdks", "java", "core", "build.gradle"),
+          Paths.get("sdks", "java", "io", "google-cloud-platform", "build.gradle"),
+          Paths.get("sdks", "java", "extensions", "google-cloud-platform-core", "build.gradle"),
+          Paths.get("runners", "google-cloud-dataflow-java", "build.gradle"));
+
+  static void modifyBeamGradleFile(Path gradleFile, Bom bom) throws IOException {
+
+    // Beam already uses enforcedPlatform(google_cloud_platform_libraries_bom), which prevents
+    // gcp-lts-bom's setting gRPC library version.
+    if (beamTestSubprojects.stream().anyMatch(gradleFile::endsWith)) {
+      String buildGradleContent =
+          Files.asCharSource(gradleFile.toFile(), StandardCharsets.UTF_8).read();
+
+      String bomCoordinates = bom.getCoordinates();
+      buildGradleContent =
+          buildGradleContent.replaceAll(
+              "\ndependencies \\{",
+              "\ndependencies {\n    compile enforcedPlatform('"
+                  + bomCoordinates
+                  + "')\n"
+                  + "    testRuntime enforcedPlatform('"
+                  + bomCoordinates
+                  + "')");
+
+      // Tried compileOnly but analyzeTestClassesDependencies's configuratin cannot resolve
+      // the dependencies.
+      // https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/1982#discussion_r610878573
+      // buildGradleContent =
+      //    buildGradleContent.replaceAll(
+      //      "compile enforcedPlatform\\(library.java.google_cloud_platform_libraries_bom\\)",
+      //      "compileOnly enforcedPlatform(library.java.google_cloud_platform_libraries_bom)");
+      com.google.common.io.Files.asCharSink(gradleFile.toFile(), Charsets.UTF_8)
+          .write(buildGradleContent);
+    }
   }
 }
