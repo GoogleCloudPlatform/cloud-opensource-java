@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.cloud.tools.opensource.classpath.AnnotatedClassPath;
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassNotFoundProblem;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
@@ -149,7 +150,7 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void generateMessageForNewError() throws IOException {
+  public void generateMessageForNewError() {
     Set<LinkageProblem> baselineProblems = ImmutableSet.of(classNotFoundProblem);
 
     ImmutableSet<LinkageProblem> snapshotProblems =
@@ -170,7 +171,8 @@ public class LinkageMonitorTest {
             snapshotProblems,
             baselineProblems,
             new ClassPathResult(
-                ImmutableListMultimap.of(jarA, pathToA, jarB, pathToB),
+                AnnotatedClassPath.fromMultimap(
+                    ImmutableListMultimap.of(jarA, pathToA, jarB, pathToB)),
                 ImmutableList.of()));
     assertEquals(
         "Newly introduced problem:\n"
@@ -272,19 +274,30 @@ public class LinkageMonitorTest {
   }
 
   @Test
-  public void testFindLocalArtifacts() {
+  public void testFindLocalArtifacts() throws IOException {
     ImmutableMap<String, String> localArtifacts =
         LinkageMonitor.findLocalArtifacts(
             system, session, Paths.get("src/test/resources/testproject"));
 
     // This should not include project under "build" directory
-    Truth.assertThat(localArtifacts).hasSize(2);
-    Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:test-project");
-    Truth.assertThat(localArtifacts).containsKey("com.google.cloud.tools:test-subproject");
+    Truth.assertThat(localArtifacts)
+        .doesNotContainKey("com.google.cloud.tools:copy-of-test-subproject-in-build");
+
+    // Linkage Monitor should read linkage-monitor-artifacts.txt.
+    Truth.assertThat(localArtifacts)
+        .containsExactlyEntriesIn(
+            ImmutableMap.builder()
+                .put("com.google.cloud.tools:test-project", "0.0.1-SNAPSHOT")
+                .put("com.google.cloud.tools:test-subproject", "0.0.2-SNAPSHOT")
+                .put("com.google.api:gax-bom", "1.60.2-SNAPSHOT")
+                .put("com.google.api:gax", "1.60.0-SNAPSHOT")
+                .put("com.google.api:gax-grpc", "1.60.0-SNAPSHOT")
+                .put("com.google.api:gax-httpjson", "0.77.0-SNAPSHOT")
+                .build());
   }
 
   @Test
-  public void testFindLocalArtifacts_absolutePath() {
+  public void testFindLocalArtifacts_absolutePath() throws IOException {
     Path relativePath = Paths.get("src/test/resources/testproject");
     Path absolutePath = relativePath.toAbsolutePath();
     ImmutableMap<String, String> localArtifactsFromAbsolutePath =
@@ -297,5 +310,73 @@ public class LinkageMonitorTest {
         "findLocalArtifacts should behave the same for relative and absolute paths",
         localArtifactsFromRelativePath,
         localArtifactsFromAbsolutePath);
+  }
+
+  @Test
+  public void testFindLocalArtifactsFromFile() throws IOException {
+    Path artifactFile = Paths.get("src/test/resources/testproject/linkage-monitor-artifacts.txt");
+    ImmutableMap<String, String> localArtifacts =
+        LinkageMonitor.findLocalArtifactsFromFile(artifactFile);
+
+    Truth.assertThat(localArtifacts)
+        .containsExactlyEntriesIn(
+            ImmutableMap.of(
+                "com.google.api:gax", "1.60.0-SNAPSHOT",
+                "com.google.api:gax-grpc", "1.60.0-SNAPSHOT",
+                "com.google.api:gax-httpjson", "0.77.0-SNAPSHOT"));
+  }
+
+  @Test
+  public void testFindLocalArtifactsFromFile_emptyLines() throws IOException {
+    Path artifactFile =
+        Paths.get("src/test/resources/testproject/linkage-monitor-artifacts-with-empty-line.txt");
+    ImmutableMap<String, String> localArtifacts =
+        LinkageMonitor.findLocalArtifactsFromFile(artifactFile);
+
+    Truth.assertThat(localArtifacts)
+        .containsExactlyEntriesIn(
+            ImmutableMap.of(
+                "com.google.api:gax", "1.60.0-SNAPSHOT",
+                "com.google.api:gax-grpc", "1.60.0-SNAPSHOT",
+                "com.google.api:gax-httpjson", "0.77.0-SNAPSHOT"));
+  }
+
+  @Test
+  public void testFindLocalArtifactsFromFile_invalidLines() {
+    // This file has a line without version
+    Path artifactFile =
+        Paths.get("src/test/resources/testproject/linkage-monitor-artifacts-invalid-format.txt");
+
+    try {
+      LinkageMonitor.findLocalArtifactsFromFile(artifactFile);
+      fail();
+    } catch (IOException ex) {
+      // pass
+    }
+  }
+
+  @Test
+  public void testFindLocalArtifactsFromFile_nonexistentCoordinates() {
+    // There's no such artifact with "com.google.api:gax-nonexistent-coordinates"
+    Path artifactFile =
+        Paths.get(
+            "src/test/resources/testproject/linkage-monitor-artifacts-nonexistent-coordinates.txt");
+
+    try {
+      LinkageMonitor.findLocalArtifactsFromFile(artifactFile);
+      fail();
+    } catch (IOException ex) {
+      // pass
+    }
+  }
+
+  @Test
+  public void testFindLocalArtifactsFromFile_nonexistentFile() throws IOException {
+    // Most of the repositories do not have the file. Linkage Monitor should not throw an exception.
+    Path artifactFile = Paths.get("src/test/resources/testproject/nonexistent-file");
+
+    ImmutableMap<String, String> localArtifactsFromFile =
+        LinkageMonitor.findLocalArtifactsFromFile(artifactFile);
+    Truth.assertThat(localArtifactsFromFile).isEmpty();
   }
 }

@@ -17,3 +17,6 @@ cd dashboard
 # For all versions available in Maven Central and local repository
 mvn -V -B exec:java -Dexec.mainClass="com.google.cloud.tools.opensource.dashboard.DashboardMain" \
   -Dexec.arguments="-a com.google.cloud:libraries-bom"
+
+mvn -V -B exec:java -Dexec.mainClass="com.google.cloud.tools.opensource.dashboard.DashboardMain" \
+  -Dexec.arguments="-a com.google.cloud:gcp-lts-bom"

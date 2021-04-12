@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import com.google.cloud.tools.opensource.classpath.AnnotatedClassPath;
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassNotFoundProblem;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
@@ -27,7 +28,6 @@ import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.LinkedListMultimap;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import com.google.common.truth.Truth;
@@ -107,7 +107,7 @@ public class FreemarkerTest {
         table,
         globalDependencies,
         symbolProblemTable,
-        new ClassPathResult(LinkedListMultimap.create(), ImmutableList.of()),
+        new ClassPathResult(new AnnotatedClassPath(), ImmutableList.of()),
         new Bom("mock:artifact:1.6.7", null));
 
     Path dashboardHtml = outputDirectory.resolve("index.html");

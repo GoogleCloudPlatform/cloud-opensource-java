@@ -22,8 +22,11 @@ import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
+import com.google.cloud.tools.opensource.classpath.DependencyMediation;
+import com.google.cloud.tools.opensource.classpath.GradleDependencyMediation;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
+import com.google.cloud.tools.opensource.dashboard.DashboardArguments.DependencyMediationAlgorithm;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
@@ -75,6 +78,7 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 public class DashboardMain {
 
@@ -103,21 +107,26 @@ public class DashboardMain {
     DashboardArguments dashboardArguments = DashboardArguments.readCommandLine(arguments);
 
     if (dashboardArguments.hasVersionlessCoordinates()) {
-      generateAllVersions(dashboardArguments.getVersionlessCoordinates());
+      generateAllVersions(
+          dashboardArguments.getVersionlessCoordinates(),
+          dashboardArguments.getDependencyMediation());
     } else if (dashboardArguments.hasFile()) {
-      generate(dashboardArguments.getBomFile());
+      generate(dashboardArguments.getBomFile(), dashboardArguments.getDependencyMediation());
     } else {
-      generate(dashboardArguments.getBomCoordinates());
+      generate(dashboardArguments.getBomCoordinates(), dashboardArguments.getDependencyMediation());
     }
   }
 
-  private static void generateAllVersions(String versionlessCoordinates)
+  private static void generateAllVersions(
+      String versionlessCoordinates, DependencyMediationAlgorithm dependencyMediationAlgorithm)
       throws IOException, TemplateException, RepositoryException, URISyntaxException,
-      MavenRepositoryException {
+          MavenRepositoryException {
     List<String> elements = Splitter.on(':').splitToList(versionlessCoordinates);
-    checkArgument(
-        elements.size() == 2,
-        "The versionless coordinates should have one colon character: " + versionlessCoordinates);
+    if (elements.size() != 2) {
+      System.err.println(
+          "Versionless coordinates should have one colon: " + versionlessCoordinates);
+      return;
+    }
     String groupId = elements.get(0);
     String artifactId = elements.get(1);
 
@@ -125,7 +134,8 @@ public class DashboardMain {
     ImmutableList<String> versions =
         RepositoryUtility.findVersions(repositorySystem, groupId, artifactId);
     for (String version : versions) {
-      generate(String.format("%s:%s:%s", groupId, artifactId, version));
+      generate(
+          String.format("%s:%s:%s", groupId, artifactId, version), dependencyMediationAlgorithm);
     }
     generateVersionIndex(groupId, artifactId, versions);
   }
@@ -155,28 +165,38 @@ public class DashboardMain {
   }
 
   @VisibleForTesting
-  static Path generate(String bomCoordinates)
+  static Path generate(
+      String bomCoordinates, DependencyMediationAlgorithm dependencyMediationAlgorithm)
       throws IOException, TemplateException, RepositoryException, URISyntaxException {
-    Path output = generate(Bom.readBom(bomCoordinates));
+    Path output = generate(Bom.readBom(bomCoordinates), dependencyMediationAlgorithm);
     System.out.println("Wrote dashboard for " + bomCoordinates + " to " + output);
     return output;
   }
 
   @VisibleForTesting
-  static Path generate(Path bomFile)
-      throws IOException, TemplateException, URISyntaxException, MavenRepositoryException {
+  static Path generate(Path bomFile, DependencyMediationAlgorithm dependencyMediationAlgorithm)
+      throws IOException, TemplateException, URISyntaxException, MavenRepositoryException,
+          InvalidVersionSpecificationException {
     checkArgument(Files.isRegularFile(bomFile), "The input BOM %s is not a regular file", bomFile);
     checkArgument(Files.isReadable(bomFile), "The input BOM %s is not readable", bomFile);
-    Path output = generate(Bom.readBom(bomFile));
+    Path output = generate(Bom.readBom(bomFile), dependencyMediationAlgorithm);
     System.out.println("Wrote dashboard for " + bomFile + " to " + output);
     return output;
   }
 
-  private static Path generate(Bom bom) throws IOException, TemplateException, URISyntaxException {
+  private static Path generate(Bom bom, DependencyMediationAlgorithm dependencyMediationAlgorithm)
+      throws IOException, TemplateException, URISyntaxException,
+          InvalidVersionSpecificationException {
 
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
-    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies, false);
+    DependencyMediation dependencyMediation =
+        dependencyMediationAlgorithm == DependencyMediationAlgorithm.MAVEN
+            ? DependencyMediation.MAVEN
+            : GradleDependencyMediation.withEnforcedPlatform(bom);
+
+    ClassPathResult classPathResult =
+        classPathBuilder.resolve(managedDependencies, false, dependencyMediation);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
 
     LinkageChecker linkageChecker = LinkageChecker.create(classpath);

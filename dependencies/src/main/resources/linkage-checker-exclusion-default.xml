@@ -133,6 +133,35 @@
     </Reason>
   </LinkageError>
   <LinkageError>
+    <Target>
+      <Package name="reactor.blockhound" />
+    </Target>
+    <Source>
+      <Class name="io.netty.util.internal.Hidden" />
+    </Source>
+    <Reason>
+      If BlockHound library is present in the class path, it loads the Hidden class to enable
+      Netty-BlockHound integration. In this case, the target classes are on the class path.
+      If BlockHound is not on the class path, nothing loads this source class.
+      https://github.com/reactor/BlockHound/blob/master/docs/custom_integrations.md
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="reactor.blockhound" />
+    </Target>
+    <Source>
+      <Class name="io.grpc.netty.shaded.io.netty.util.internal.Hidden" />
+    </Source>
+    <Reason>
+      (For grpc-netty-shaded source)
+      If BlockHound library is present in the class path, it loads the Hidden class to enable
+      Netty-BlockHound integration. In this case, the target classes are on the class path.
+      If BlockHound is not on the class path, nothing loads this source class.
+      https://github.com/reactor/BlockHound/blob/master/docs/custom_integrations.md
+    </Reason>
+  </LinkageError>
+  <LinkageError>
     <Source>
       <Package name="io.netty.util.internal.logging" />
     </Source>
@@ -148,6 +177,190 @@
     <Reason>
       grpc-netty-shaded has copies of the netty's internal logging classes. which catches and
       handles errors caused by the missing classes.
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Source>
+      <Package name="io.netty.handler.codec.marshalling" />
+    </Source>
+    <Reason>
+      Netty users can optionally add JBoss Marshalling dependency to use
+      io.netty.handler.codec.marshalling package when they need the serialization algorithm.
+      By default, the classes in the package have references to missing classes.
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Source>
+      <Package name="io.grpc.netty.shaded.io.netty.handler.codec.marshalling" />
+    </Source>
+    <Reason>
+      (For grpc-netty-shaded source)
+      Netty users can optionally add JBoss Marshalling dependency to use
+      io.netty.handler.codec.marshalling package when they need the serialization algorithm.
+      By default, the classes in the package have references to missing classes.
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Source>
+      <Package name="io.netty.handler.codec.protobuf" />
+    </Source>
+    <Reason>
+      Netty users can optionally add protobuf dependency to use io.netty.handler.codec.protobuf
+      package when they need the serialization algorithm. By default, the classes in the package
+      have references to missing classes.
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Source>
+      <Package name="io.grpc.netty.shaded.io.netty.handler.codec.protobuf" />
+    </Source>
+    <Reason>
+      (For grpc-netty-shaded source)
+      Netty users can optionally add protobuf dependency to use io.netty.handler.codec.protobuf
+      package when they need the serialization algorithm. By default, the classes in the package
+      have references to missing classes.
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Source>
+      <Package name="io.netty.handler.codec.compression" />
+    </Source>
+    <Reason>
+      Netty users can optionally add corresponding dependencies to use compression algorithms (LZMA,
+      LZF, zlib). By default, the classes in the package have references to missing classes.
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Source>
+      <Package name="io.grpc.netty.shaded.io.netty.handler.codec.compression" />
+    </Source>
+    <Reason>
+      (For grpc-netty-shaded source)
+      Netty users can optionally add corresponding dependencies to use compression algorithms (LZMA,
+      LZF, zlib). By default, the classes in the package have references to missing classes.
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="io.netty.internal.tcnative" />
+    </Target>
+    <Source>
+      <Package name="io.netty.handler.ssl" />
+    </Source>
+    <Reason>
+      Netty users add the dependencies of platform-specific SSL implementations.
+      https://netty.io/wiki/forked-tomcat-native.html#wiki-h2-4
+      By default, the classes in the package have references to missing classes.
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="com.jcraft.jzlib" />
+    </Target>
+    <Source>
+      <Class name="io.netty.handler.codec.spdy.SpdyHeaderBlockJZlibEncoder" />
+    </Source>
+    <Reason>
+      io.netty.handler.codec.spdy.SpdyHeaderBlockEncoder chooses the compression encoder based on
+      the Java platform. For Java 7 or later, it does not use SpdyHeaderBlockJZlibEncoder, as the
+      Zlib compression is available in JVM.
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="com.jcraft.jzlib" />
+    </Target>
+    <Source>
+      <Class name="io.grpc.netty.shaded.io.netty.handler.codec.spdy.SpdyHeaderBlockJZlibEncoder" />
+    </Source>
+    <Reason>
+      (For grpc-netty-shaded source)LinkageCheckerMainIntegrationTest
+      io.netty.handler.codec.spdy.SpdyHeaderBlockEncoder chooses the compression encoder based on
+      the Java platform. For Java 7 or later, it does not use SpdyHeaderBlockJZlibEncoder, as the
+      Zlib compression is available in JVM.
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="org.bouncycastle" />
+    </Target>
+    <Source>
+      <Class name="io.netty.handler.ssl.util.BouncyCastleSelfSignedCertGenerator" />
+    </Source>
+    <Reason>
+      io.netty.handler.ssl.util.SelfSignedCertificate checks the availability of Bouncy Castle
+      library (http://www.bouncycastle.org/). If it's unavailable, then Netty does not use the
+      BouncyCastleSelfSignedCertGenerator.
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="org.bouncycastle" />
+    </Target>
+    <Source>
+      <Class name="io.grpc.netty.shaded.io.netty.handler.ssl.util.BouncyCastleSelfSignedCertGenerator" />
+    </Source>
+    <Reason>
+      (For grpc-netty-shaded source)
+      io.netty.handler.ssl.util.SelfSignedCertificate checks the availability of Bouncy Castle
+      library (http://www.bouncycastle.org/). If it's unavailable, then Netty does not use the
+      BouncyCastleSelfSignedCertGenerator.
+    </Reason>
+  </LinkageError>  <LinkageError>
+    <Target>
+      <Package name="org.eclipse.jetty.npn" />
+    </Target>
+    <Source>
+      <Class name="io.netty.handler.ssl.JettyNpnSslEngine" />
+    </Source>
+    <Reason>
+      The Jetty-ALPN and Jetty-NPN are the optional fallback method when Netty users cannot use
+      OpenSSL with netty-tcnative. Therefore, the JettyNpnSslEngine class has linkage errors by
+      default.
+      https://netty.io/wiki/requirements-for-4.x.html#tls-with-jdk-jetty-alpnnpn
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="org.eclipse.jetty.npn" />
+    </Target>
+    <Source>
+      <Class name="io.grpc.netty.shaded.io.netty.handler.ssl.JettyNpnSslEngine" />
+    </Source>
+    <Reason>
+      (For grpc-netty-shaded source)
+      The Jetty-ALPN and Jetty-NPN are the optional fallback method when Netty users cannot use
+      OpenSSL with netty-tcnative. Therefore, the JettyNpnSslEngine class has linkage errors by
+      default.
+      https://netty.io/wiki/requirements-for-4.x.html#tls-with-jdk-jetty-alpnnpn
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="org.eclipse.jetty.alpn" />
+    </Target>
+    <Source>
+      <Class name="io.netty.handler.ssl.JettyAlpnSslEngine" />
+    </Source>
+    <Reason>
+      The Jetty-ALPN and Jetty-NPN are the optional fallback method when Netty users cannot use
+      OpenSSL with netty-tcnative. Therefore, the JettyAlpnSslEngine class has linkage errors by
+      default.
+      https://netty.io/wiki/requirements-for-4.x.html#tls-with-jdk-jetty-alpnnpn
+    </Reason>
+  </LinkageError>
+  <LinkageError>
+    <Target>
+      <Package name="org.eclipse.jetty.alpn" />
+    </Target>
+    <Source>
+      <Class name="io.grpc.netty.shaded.io.netty.handler.ssl.JettyAlpnSslEngine" />
+    </Source>
+    <Reason>
+      The Jetty-ALPN and Jetty-NPN are the optional fallback method when Netty users cannot use
+      OpenSSL with netty-tcnative. Therefore, the JettyAlpnSslEngine class has linkage errors by
+      default.
+      https://netty.io/wiki/requirements-for-4.x.html#tls-with-jdk-jetty-alpnnpn
     </Reason>
   </LinkageError>
 </LinkageCheckerFilter>
