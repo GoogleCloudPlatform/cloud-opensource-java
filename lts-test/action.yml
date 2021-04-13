@@ -13,7 +13,7 @@ runs:
       shell: bash
     - name: Run the unit tests for ${{ inputs.repository }} using repositories.yaml
       run: |
-        mvn -B -e -ntp -pl dependencies,lts-test test \
+        mvn -B -ntp -pl dependencies,lts-test test \
           -Dtest=com.google.cloud.tools.opensource.lts.LtsBomCompatibilityTest \
           -Dlts.test.repository=${{ inputs.repository }} \
           -DfailIfNoTests=false

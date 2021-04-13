@@ -302,6 +302,8 @@ class LtsCompatibilityTestRunner {
 
     if (dependenciesWithTarJarType.contains("com.google.cloud:google-cloud-core")) {
       String googleCloudCoreVersion = versionlessCoordinatesToVersion.get("com.google.cloud:google-cloud-core");
+
+      // Where is documentation that says type:test-jar becomes classifier:tests?
       Artifact artifact = resolveArtifact("com.google.cloud:google-cloud-core:jar:tests:" + googleCloudCoreVersion);
       Element additionalClasspathElement =
           new Element("additionalClasspathElement", mavenPomNamespaceUri);
