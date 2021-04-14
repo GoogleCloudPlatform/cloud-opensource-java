@@ -36,273 +36,72 @@
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-bigquery</artifactId>
-      <version>${google.cloud.bigquery.version}</version>
-    </dependency>
-      <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>${guava.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.auto.value</groupId>
-        <artifactId>auto-value-annotations</artifactId>
-        <version>${google.autovalue.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java</artifactId>
-        <version>${protobuf.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java-util</artifactId>
-        <version>${protobuf.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-alts</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-api</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-auth</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-context</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-core</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-grpclb</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-netty</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-netty-shaded</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-okhttp</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-protobuf</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-protobuf-lite</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-services</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-stub</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-testing</artifactId>
-        <version>${io.grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.appengine</groupId>
-        <artifactId>appengine-api-1.0-sdk</artifactId>
-        <version>1.9.87</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.api-client</groupId>
-        <artifactId>google-api-client</artifactId>
-        <version>${google.api.client.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.api-client</groupId>
-        <artifactId>google-api-client-appengine</artifactId>
-        <version>${google.api.client.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.auth</groupId>
-        <artifactId>google-auth-library-oauth2-http</artifactId>
-        <version>0.25.2</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.oauth-client</groupId>
-        <artifactId>google-oauth-client</artifactId>
-        <version>1.31.4</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-storage</artifactId>
-        <version>1.113.4</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-bigtable</artifactId>
-        <version>${google.cloud.bigtable.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.cloud.bigtable</groupId>
-        <artifactId>bigtable-hbase-beam</artifactId>
-        <version>${google.cloud.bigtable.client.version}</version>
-      </dependency>
-
-      <!-- What will replace com.google.apis:google-api-services-cloudtrace? -->
-      <dependency>
-        <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-trace</artifactId>
-        <version>${google.cloud.trace.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-monitoring</artifactId>
-        <version>${google.cloud.monitoring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-pubsub</artifactId>
-        <version>${google.cloud.pubsub.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.cloud.datastore</groupId>
-        <artifactId>datastore-v1-proto-client</artifactId>
-        <version>1.6.3</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.cloud</groupId>
-        <artifactId>google-cloud-spanner</artifactId>
-        <version>${google.cloud.spanner.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.maps</groupId>
-        <artifactId>google-maps-services</artifactId>
-        <version>0.17.0</version>
-      </dependency>
-
-      <!-- API Infrastructure section -->
-      <dependency>
-        <groupId>com.google.api</groupId>
-        <artifactId>api-common</artifactId>
-        <version>1.10.1</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.api</groupId>
-        <artifactId>gax</artifactId>
-        <version>${gax.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.api</groupId>
-        <artifactId>gax-grpc</artifactId>
-        <version>${gax.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.http-client</groupId>
-        <artifactId>google-http-client</artifactId>
-        <version>${http.version}</version>
-      </dependency>
-    <dependency>
-      <groupId>com.google.truth</groupId>
-      <artifactId>truth</artifactId>
-      <version>1.1.2</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.13.2</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>2.28.2</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-storage</artifactId>
-      <version>1.113.4</version>
-      <classifier>tests</classifier>
-      <type>test-jar</type>
-    </dependency>
-    <dependency>
-      <groupId>org.easymock</groupId>
-      <artifactId>easymock</artifactId>
-      <version>3.6</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.objenesis</groupId>
-      <artifactId>objenesis</artifactId>
-      <version>2.6</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.5.13</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpmime</artifactId>
-      <version>4.5.13</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpcore</artifactId>
-      <version>4.4.14</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-core</artifactId>
-      <version>1.94.4</version>
-      <classifier>tests</classifier>
-      <type>test-jar</type>
-    </dependency>
-      <dependency>
-    <groupId>com.google.cloud</groupId>
-    <artifactId>google-cloud-kms</artifactId>
-          <version>1.41.1</version>
-
-  </dependency>
-      <dependency>
-        <groupId>com.google.api.grpc</groupId>
-        <artifactId>proto-google-cloud-kms-v1</artifactId>
-        <version>0.88.1</version><!-- {x-version-update:proto-google-cloud-kms-v1:current} -->
-      </dependency>
-      <dependency>
-        <groupId>com.google.api.grpc</groupId>
-        <artifactId>grpc-google-cloud-kms-v1</artifactId>
-        <version>0.88.1</version><!-- {x-version-update:grpc-google-cloud-kms-v1:current} -->
-      </dependency>
+<dependency><groupId>com.google.guava</groupId><artifactId>guava</artifactId><version>30.1.1-android</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.guava</groupId><artifactId>failureaccess</artifactId><version>1.0.1</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.guava</groupId><artifactId>listenablefuture</artifactId><version>9999.0-empty-to-avoid-conflict-with-guava</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.code.findbugs</groupId><artifactId>jsr305</artifactId><version>3.0.2</version><scope>compile</scope></dependency>
+<dependency><groupId>org.checkerframework</groupId><artifactId>checker-compat-qual</artifactId><version>2.5.5</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.errorprone</groupId><artifactId>error_prone_annotations</artifactId><version>2.6.0</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.j2objc</groupId><artifactId>j2objc-annotations</artifactId><version>1.3</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.http-client</groupId><artifactId>google-http-client</artifactId><version>1.39.2</version><scope>compile</scope></dependency>
+<dependency><groupId>io.opencensus</groupId><artifactId>opencensus-contrib-http-util</artifactId><version>0.28.0</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.http-client</groupId><artifactId>google-http-client-jackson2</artifactId><version>1.39.2</version><scope>compile</scope></dependency>
+<dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-core</artifactId><version>2.12.2</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.api-client</groupId><artifactId>google-api-client</artifactId><version>1.31.4</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.oauth-client</groupId><artifactId>google-oauth-client</artifactId><version>1.31.5</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.http-client</groupId><artifactId>google-http-client-gson</artifactId><version>1.39.2</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.http-client</groupId><artifactId>google-http-client-apache-v2</artifactId><version>1.39.2</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.apis</groupId><artifactId>google-api-services-storage</artifactId><version>v1-rev20210127-1.31.0</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.code.gson</groupId><artifactId>gson</artifactId><version>2.8.6</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.cloud</groupId><artifactId>google-cloud-core</artifactId><version>1.94.5</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.auto.value</groupId><artifactId>auto-value-annotations</artifactId><version>1.7.4</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.api.grpc</groupId><artifactId>proto-google-common-protos</artifactId><version>2.1.0</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.cloud</groupId><artifactId>google-cloud-core-http</artifactId><version>1.94.5</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.http-client</groupId><artifactId>google-http-client-appengine</artifactId><version>1.39.2</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.api</groupId><artifactId>gax-httpjson</artifactId><version>0.80.0</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.api</groupId><artifactId>gax</artifactId><version>1.63.0</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.auth</groupId><artifactId>google-auth-library-credentials</artifactId><version>0.25.2</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.auth</groupId><artifactId>google-auth-library-oauth2-http</artifactId><version>0.25.2</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.api</groupId><artifactId>api-common</artifactId><version>1.10.1</version><scope>compile</scope></dependency>
+<dependency><groupId>javax.annotation</groupId><artifactId>javax.annotation-api</artifactId><version>1.3.2</version><scope>compile</scope></dependency>
+<dependency><groupId>io.opencensus</groupId><artifactId>opencensus-api</artifactId><version>0.28.0</version><scope>compile</scope></dependency>
+<dependency><groupId>io.grpc</groupId><artifactId>grpc-context</artifactId><version>1.37.0</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.api.grpc</groupId><artifactId>proto-google-iam-v1</artifactId><version>1.0.11</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.protobuf</groupId><artifactId>protobuf-java</artifactId><version>3.15.8</version><scope>compile</scope></dependency>
+<dependency><groupId>com.google.protobuf</groupId><artifactId>protobuf-java-util</artifactId><version>3.15.8</version><scope>compile</scope></dependency>
+<dependency><groupId>org.threeten</groupId><artifactId>threetenbp</artifactId><version>1.5.0</version><scope>compile</scope></dependency>
+<dependency><groupId>junit</groupId><artifactId>junit</artifactId><version>4.13.2</version><scope>test</scope></dependency>
+<dependency><groupId>org.hamcrest</groupId><artifactId>hamcrest-core</artifactId><version>1.3</version><scope>test</scope></dependency>
+<dependency><groupId>io.grpc</groupId><artifactId>grpc-api</artifactId><version>1.37.0</version><scope>test</scope></dependency>
+<dependency><groupId>org.codehaus.mojo</groupId><artifactId>animal-sniffer-annotations</artifactId><version>1.20</version><scope>test</scope></dependency>
+<dependency><groupId>io.grpc</groupId><artifactId>grpc-netty-shaded</artifactId><version>1.37.0</version><scope>test</scope></dependency>
+<dependency><groupId>io.grpc</groupId><artifactId>grpc-core</artifactId><version>1.37.0</version><scope>test</scope></dependency>
+<dependency><groupId>com.google.android</groupId><artifactId>annotations</artifactId><version>4.1.1.4</version><scope>test</scope></dependency>
+<dependency><groupId>io.perfmark</groupId><artifactId>perfmark-api</artifactId><version>0.23.0</version><scope>test</scope></dependency>
+<dependency><groupId>io.grpc</groupId><artifactId>grpc-auth</artifactId><version>1.37.0</version><scope>test</scope></dependency>
+<dependency><groupId>io.grpc</groupId><artifactId>grpc-stub</artifactId><version>1.37.0</version><scope>test</scope></dependency>
+<dependency><groupId>com.google.api.grpc</groupId><artifactId>grpc-google-cloud-kms-v1</artifactId><version>0.88.2</version><scope>test</scope></dependency>
+<dependency><groupId>io.grpc</groupId><artifactId>grpc-protobuf</artifactId><version>1.37.0</version><scope>test</scope></dependency>
+<dependency><groupId>io.grpc</groupId><artifactId>grpc-protobuf-lite</artifactId><version>1.37.0</version><scope>test</scope></dependency>
+<dependency><groupId>com.google.api.grpc</groupId><artifactId>proto-google-cloud-kms-v1</artifactId><version>0.88.2</version><scope>test</scope></dependency>
+<dependency><groupId>com.google.api.grpc</groupId><artifactId>grpc-google-iam-v1</artifactId><version>1.0.11</version><scope>test</scope></dependency>
+<dependency><groupId>com.google.cloud</groupId><artifactId>google-cloud-core</artifactId><version>1.94.5</version><scope>test</scope></dependency>
+<dependency><groupId>com.google.truth</groupId><artifactId>truth</artifactId><version>1.1.2</version><scope>test</scope></dependency>
+<dependency><groupId>org.checkerframework</groupId><artifactId>checker-qual</artifactId><version>3.9.1</version><scope>test</scope></dependency>
+<dependency><groupId>org.ow2.asm</groupId><artifactId>asm</artifactId><version>9.0</version><scope>test</scope></dependency>
+<dependency><groupId>org.easymock</groupId><artifactId>easymock</artifactId><version>3.6</version><scope>test</scope></dependency>
+<dependency><groupId>org.objenesis</groupId><artifactId>objenesis</artifactId><version>2.6</version><scope>test</scope></dependency>
+<dependency><groupId>org.mockito</groupId><artifactId>mockito-core</artifactId><version>2.28.2</version><scope>test</scope></dependency>
+<dependency><groupId>net.bytebuddy</groupId><artifactId>byte-buddy</artifactId><version>1.9.10</version><scope>test</scope></dependency>
+<dependency><groupId>net.bytebuddy</groupId><artifactId>byte-buddy-agent</artifactId><version>1.9.10</version><scope>test</scope></dependency>
+<dependency><groupId>com.google.cloud</groupId><artifactId>google-cloud-conformance-tests</artifactId><version>0.0.11</version><scope>test</scope></dependency>
+<dependency><groupId>com.google.api.grpc</groupId><artifactId>proto-google-cloud-firestore-v1</artifactId><version>1.33.0</version><scope>test</scope></dependency>
+<dependency><groupId>com.google.api.grpc</groupId><artifactId>proto-google-cloud-bigtable-v2</artifactId><version>1.11.0</version><scope>test</scope></dependency>
+<dependency><groupId>org.apache.httpcomponents</groupId><artifactId>httpclient</artifactId><version>4.5.13</version><scope>test</scope></dependency>
+<dependency><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId><version>1.2</version><scope>test</scope></dependency>
+<dependency><groupId>commons-codec</groupId><artifactId>commons-codec</artifactId><version>1.15</version><scope>test</scope></dependency>
+<dependency><groupId>org.apache.httpcomponents</groupId><artifactId>httpmime</artifactId><version>4.5.13</version><scope>test</scope></dependency>
+<dependency><groupId>org.apache.httpcomponents</groupId><artifactId>httpcore</artifactId><version>4.4.14</version><scope>test</scope></dependency>
   </dependencies>
   
   <build>
