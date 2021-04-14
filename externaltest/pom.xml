@@ -83,6 +83,27 @@
 <dependency><groupId>commons-codec</groupId><artifactId>commons-codec</artifactId><version>1.15</version><scope>test</scope></dependency>
 <dependency><groupId>org.apache.httpcomponents</groupId><artifactId>httpmime</artifactId><version>4.5.13</version><scope>test</scope></dependency>
 <dependency><groupId>org.apache.httpcomponents</groupId><artifactId>httpcore</artifactId><version>4.4.14</version><scope>test</scope></dependency>
+  <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-storage</artifactId>
+      <scope>test</scope>
+      <version>1.113.15</version>
+      <classifier>tests</classifier>
+      <type>test-jar</type>
+    </dependency>
+  <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-storage</artifactId>
+      <version>1.113.15</version>
+    </dependency>
+  <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-core</artifactId>
+      <scope>test</scope>
+      <version>1.94.6</version>
+      <classifier>tests</classifier>
+      <type>test-jar</type>
+    </dependency>
   </dependencies>
   
   <build>
@@ -93,7 +114,7 @@
         <version>3.0.0-M5</version>
         <configuration>
           <dependenciesToScan>
-            <dependency>com.google.cloud:google-cloud-stzrage:test-jar:tests:*</dependency>
+            <dependency>com.google.cloud:google-cloud-storage:test-jar:tests:*</dependency>
           </dependenciesToScan>
         </configuration>
       </plugin>
