@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.cloud.tools.opensource.classpath.AnnotatedClassPath;
 import com.google.cloud.tools.opensource.classpath.ClassFile;
 import com.google.cloud.tools.opensource.classpath.ClassNotFoundProblem;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
@@ -170,7 +171,8 @@ public class LinkageMonitorTest {
             snapshotProblems,
             baselineProblems,
             new ClassPathResult(
-                ImmutableListMultimap.of(jarA, pathToA, jarB, pathToB),
+                AnnotatedClassPath.fromMultimap(
+                    ImmutableListMultimap.of(jarA, pathToA, jarB, pathToB)),
                 ImmutableList.of()));
     assertEquals(
         "Newly introduced problem:\n"

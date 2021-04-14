@@ -54,7 +54,8 @@ public class ExclusionFilesIntegrationTest {
 
     ClassPathBuilder classPathBuilder = new ClassPathBuilder();
     // The `full: false` parameter is in line with LinkageCheckerMain.checkArtifacts
-    ClassPathResult classPathResult = classPathBuilder.resolve(ImmutableList.of(artifact), false);
+    ClassPathResult classPathResult =
+        classPathBuilder.resolve(ImmutableList.of(artifact), false, DependencyMediation.MAVEN);
 
     LinkageChecker linkagechecker =
         LinkageChecker.create(classPathResult.getClassPath(), ImmutableList.of(), exclusionFile);

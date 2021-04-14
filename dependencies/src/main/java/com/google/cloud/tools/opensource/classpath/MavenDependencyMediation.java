@@ -16,49 +16,47 @@
 
 package com.google.cloud.tools.opensource.classpath;
 
-import java.io.File;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import org.eclipse.aether.artifact.Artifact;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraph;
 import com.google.cloud.tools.opensource.dependencies.DependencyPath;
+import java.io.File;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import org.eclipse.aether.artifact.Artifact;
 
-/**
- * Retain only the first version of a groupId:artifactId encountered.
- */
-class MavenDependencyMediation {
-  
-  private List<Artifact> artifacts = new ArrayList<>();
+/** Retain only the first version of a groupId:artifactId encountered. */
+class MavenDependencyMediation implements DependencyMediation {
 
-  /**
-   * Returns true iff dependency mediation selects this artifact.
-   */
-  // TODO might be a problem if there's a classifier
-  boolean selects(Artifact artifact) {
-    return artifacts.contains(artifact);
-  }
+  // Not public. Use DependencyMediation.MAVEN instead.
+  MavenDependencyMediation() {}
 
-  void put(DependencyPath dependencyPath) {
-    Artifact artifact = dependencyPath.getLeaf();
-    File file = artifact.getFile();
-    if (file == null) {
-      return;
+  @Override
+  public AnnotatedClassPath mediate(DependencyGraph dependencyGraph) {
+    Set<Artifact> artifacts = new HashSet<>();
+    Set<String> alreadyFound = new HashSet<>();
+
+    AnnotatedClassPath annotatedClassPath = new AnnotatedClassPath();
+    List<DependencyPath> dependencyPaths = dependencyGraph.list();
+    for (DependencyPath dependencyPath : dependencyPaths) {
+      // DependencyPaths have items in level-order; nearest items come first.
+      Artifact artifact = dependencyPath.getLeaf();
+
+      File file = artifact.getFile();
+      if (file != null && file.getName().endsWith(".jar")) {
+        String versionlessCoordinates = Artifacts.makeKey(artifact);
+        if (alreadyFound.add(versionlessCoordinates)) {
+          // Adds to artifacts when versionlessCoordinates are new.
+          artifacts.add(artifact);
+        }
+        if (artifacts.contains(artifact)) {
+          // We include multiple dependency paths to the first version of an artifact we see,
+          // but not paths to other versions of that artifact.
+          annotatedClassPath.put(new ClassPathEntry(artifact), dependencyPath);
+        }
+      }
     }
-    Path jarAbsolutePath = file.toPath().toAbsolutePath();
-    if (!jarAbsolutePath.toString().endsWith(".jar")) {
-      return;
-    } 
-    put(artifact);
-  }
 
-  private void put(Artifact artifact) {    
-    if (artifacts.stream().map(Artifacts::makeKey)
-        .anyMatch(key -> Artifacts.makeKey(artifact).equals(key))) {
-      return;
-    }
-    
-    artifacts.add(artifact);
+    return annotatedClassPath;
   }
-
 }

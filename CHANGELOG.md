@@ -1,5 +1,12 @@
 # Linkage Checker Enforcer Rule and Linkage Monitor Change Log
 
+## 1.5.8
+* Fixed the bug of the Linkage Checker enforcer rule not reporting failures when it cannot find
+  exclusion files ([#2006](
+  https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2006))
+* Updated the default exclusion rules with the classes referenced from Netty's optional features
+  ([#1977](https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1977))
+
 ## 1.5.7
 * Fixed the problem of Linkage Monitor recognizing a parent pom as a BOM ([#1958](
   https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1958)).

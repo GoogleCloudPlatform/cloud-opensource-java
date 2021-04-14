@@ -151,7 +151,8 @@ class LinkageCheckerMain {
     DependencyGraphBuilder dependencyGraphBuilder =
         new DependencyGraphBuilder(linkageCheckerArguments.getMavenRepositoryUrls());
     ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
-    ClassPathResult classPathResult = classPathBuilder.resolve(artifacts, false);
+    ClassPathResult classPathResult =
+        classPathBuilder.resolve(artifacts, false, DependencyMediation.MAVEN);
     ImmutableList<ClassPathEntry> inputClassPath = classPathResult.getClassPath();
     ImmutableList<ArtifactProblem> artifactProblems =
         ImmutableList.copyOf(classPathResult.getArtifactProblems());
