@@ -15,24 +15,6 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <google.cloud.bigquery.version>1.127.4</google.cloud.bigquery.version>
-    <google.cloud.monitoring.version>2.0.13</google.cloud.monitoring.version>
-    <google.cloud.trace.version>1.2.12</google.cloud.trace.version>
-    <google.cloud.pubsub.version>1.112.0</google.cloud.pubsub.version>
-    <google.cloud.spanner.version>6.0.0</google.cloud.spanner.version>
-    <google.cloud.bigtable.version>1.21.2</google.cloud.bigtable.version>
-    <google.cloud.bigtable.client.version>1.19.0</google.cloud.bigtable.client.version>
-    <google.autovalue.version>1.7.5</google.autovalue.version>
-    <google.api.client.version>1.31.2</google.api.client.version>
-    <guava.version>30.1-jre</guava.version>
-    <io.grpc.version>1.36.1</io.grpc.version>
-    <protobuf.version>3.15.6</protobuf.version>
-
-    <http.version>1.39.1</http.version>
-    <!-- We don't use gax-bom because it includes the artifacts with 'testlib' classifier.
-        When updating gax.version, update gax.httpjson.version too. -->
-    <gax.version>1.62.0</gax.version>
-    <gax.httpjson.version>0.79.0</gax.httpjson.version>
   </properties>
 
   <dependencies>
@@ -85,7 +67,6 @@
 <dependency><groupId>io.grpc</groupId><artifactId>grpc-protobuf-lite</artifactId><version>1.37.0</version><scope>test</scope></dependency>
 <dependency><groupId>com.google.api.grpc</groupId><artifactId>proto-google-cloud-kms-v1</artifactId><version>0.88.2</version><scope>test</scope></dependency>
 <dependency><groupId>com.google.api.grpc</groupId><artifactId>grpc-google-iam-v1</artifactId><version>1.0.11</version><scope>test</scope></dependency>
-<dependency><groupId>com.google.cloud</groupId><artifactId>google-cloud-core</artifactId><version>1.94.5</version><scope>test</scope></dependency>
 <dependency><groupId>com.google.truth</groupId><artifactId>truth</artifactId><version>1.1.2</version><scope>test</scope></dependency>
 <dependency><groupId>org.checkerframework</groupId><artifactId>checker-qual</artifactId><version>3.9.1</version><scope>test</scope></dependency>
 <dependency><groupId>org.ow2.asm</groupId><artifactId>asm</artifactId><version>9.0</version><scope>test</scope></dependency>
@@ -112,7 +93,7 @@
         <version>3.0.0-M5</version>
         <configuration>
           <dependenciesToScan>
-            <dependency>com.google.cloud:google-cloud-storage:test-jar:tests:*</dependency>
+            <dependency>com.google.cloud:google-cloud-stzrage:test-jar:tests:*</dependency>
           </dependenciesToScan>
         </configuration>
       </plugin>
