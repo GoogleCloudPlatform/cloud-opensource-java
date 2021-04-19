@@ -30,7 +30,9 @@ import java.nio.file.Path;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.TransformerException;
 import org.eclipse.aether.RepositoryException;
+import org.hamcrest.core.StringStartsWith;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -90,27 +92,27 @@ public class LinkageCheckerMainIntegrationTest {
       throws IOException, RepositoryException, TransformerException, XMLStreamException {
     try {
       LinkageCheckerMain.main(
-          new String[] {"-a", "com.google.cloud:google-cloud-firestore:0.65.0-beta"});
+          // protobuf-java:3.13.0 in
+          new String[] {"-a", "com.google.cloud:google-cloud-firestore:1.35.2"});
       fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
     } catch (LinkageCheckResultException expected) {
-      assertEquals("Found 75 linkage errors", expected.getMessage());
+      assertEquals("Found 3 linkage errors", expected.getMessage());
     }
 
     String output = readCapturedStdout();
     Truth.assertThat(output)
         .contains(
-            "Class com.jcraft.jzlib.JZlib is not found;\n"
-                + "  referenced by 4 class files\n"
-                + "    io.grpc.netty.shaded.io.netty.handler.codec.spdy.SpdyHeaderBlockJZlibEncoder"
-                + " (io.grpc:grpc-netty-shaded:1.13.1)");
+            "Class org.apache.avalon.framework.logger.Logger is not found;\n"
+                + "  referenced by 1 class file\n"
+                + "    org.apache.commons.logging.impl.AvalonLogger"
+                + " (commons-logging:commons-logging:1.2)");
 
     // Show the dependency path to the problematic artifact
     Truth.assertThat(output)
         .contains(
-            "io.grpc:grpc-netty-shaded:1.13.1 is at:\n"
-                + "  com.google.cloud:google-cloud-firestore:jar:0.65.0-beta /"
-                + " io.grpc:grpc-netty-shaded:1.13.1 (compile)\n"
-                + "  and 1 dependency path.");
+            "commons-logging:commons-logging:1.2 is at:\n"
+                + "  com.google.cloud:google-cloud-firestore:jar:1.35.2 /"
+                + " commons-logging:commons-logging:1.2 (compile)\n");
   }
 
   @Test
@@ -125,13 +127,16 @@ public class LinkageCheckerMainIntegrationTest {
   }
 
   @Test
-  public void testBom()
+  public void testBom_java8()
       throws IOException, RepositoryException, TransformerException, XMLStreamException {
+    // The number of linkage errors differ between Java 8 and Java 11 runtime.
+    Assume.assumeThat(System.getProperty("java.version"), StringStartsWith.startsWith("1.8."));
+
     try {
       LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
       fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
     } catch (LinkageCheckResultException expected) {
-      assertEquals("Found 801 linkage errors", expected.getMessage());
+      assertEquals("Found 634 linkage errors", expected.getMessage());
     }
 
     String output = readCapturedStdout();
@@ -142,6 +147,48 @@ public class LinkageCheckerMainIntegrationTest {
             "Class com.google.net.rpc3.client.RpcStubDescriptor is not found;\n"
                 + "  referenced by 21 class files\n"
                 + "    com.google.appengine.api.appidentity.AppIdentityServicePb"
+                + " (com.google.appengine:appengine-api-1.0-sdk:1.9.71)");
+
+    // Show the dependency path to the problematic artifact
+    Truth.assertThat(output)
+        .contains(
+            "com.google.appengine:appengine-api-1.0-sdk:1.9.71 is at:\n"
+                + "  com.google.http-client:google-http-client-appengine:1.29.1 (compile) "
+                + "/ com.google.appengine:appengine-api-1.0-sdk:1.9.71 (provided)");
+  }
+
+  @Test
+  public void testBom_java11()
+      throws IOException, RepositoryException, TransformerException, XMLStreamException {
+    // The number of linkage errors differs between Java 8 and Java 11 runtime.
+    String javaVersion = System.getProperty("java.version");
+    // javaMajorVersion is 1 when we use Java 8. Still good indicator to ensure Java 11 or higher.
+    int javaMajorVersion = Integer.parseInt(javaVersion.split("\\.")[0]);
+    Assume.assumeTrue(javaMajorVersion >= 11);
+
+    try {
+      LinkageCheckerMain.main(new String[] {"-b", "com.google.cloud:libraries-bom:1.0.0"});
+      fail("LinkageCheckerMain should throw LinkageCheckResultException upon errors");
+    } catch (LinkageCheckResultException expected) {
+      assertEquals("Found 656 linkage errors", expected.getMessage());
+    }
+
+    String output = readCapturedStdout();
+
+    // Appengine-api-sdk is known to have invalid references.
+    Truth.assertThat(output)
+        .contains(
+            "Class com.google.net.rpc3.client.RpcStubDescriptor is not found;\n"
+                + "  referenced by 21 class files\n"
+                + "    com.google.appengine.api.appidentity.AppIdentityServicePb"
+                + " (com.google.appengine:appengine-api-1.0-sdk:1.9.71)");
+
+    // javax.activation.DataSource has been removed in Java 11.
+    Truth.assertThat(output)
+        .contains(
+            "Class javax.activation.DataSource is not found;\n"
+                + "  referenced by 9 class files\n"
+                + "    com.google.appengine.api.utils.HttpRequestParser"
                 + " (com.google.appengine:appengine-api-1.0-sdk:1.9.71)");
 
     // Show the dependency path to the problematic artifact
@@ -174,5 +221,33 @@ public class LinkageCheckerMainIntegrationTest {
     assertEquals(
         "Wrote the linkage errors as exclusion file: " + exclusionFile + System.lineSeparator(),
         output);
+  }
+
+  @Test
+  public void testInvalidArgument()
+      throws IOException, RepositoryException, TransformerException, XMLStreamException,
+          LinkageCheckResultException {
+    // This is a garbled argument Gradle Kotlin DSL passed to LinkageCheckerMain in the issue below
+    // https://issues.apache.org/jira/browse/BEAM-11827
+    LinkageCheckerMain.main(new String[] {"[Ljava.lang.String;@1234"});
+
+    String output = readCapturedStdout();
+
+    // It should show help.
+    Truth.assertThat(output)
+        .contains("usage: java com.google.cloud.tools.opensource.classpath.LinkageChecker");
+  }
+
+  @Test
+  public void testEmptyArgument()
+      throws IOException, RepositoryException, TransformerException, XMLStreamException,
+          LinkageCheckResultException {
+    LinkageCheckerMain.main(new String[] {});
+
+    String output = readCapturedStdout();
+
+    // It should show help.
+    Truth.assertThat(output)
+        .contains("usage: java com.google.cloud.tools.opensource.classpath.LinkageChecker");
   }
 }

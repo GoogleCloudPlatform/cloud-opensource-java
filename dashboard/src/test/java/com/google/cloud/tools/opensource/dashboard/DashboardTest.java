@@ -18,6 +18,7 @@ package com.google.cloud.tools.opensource.dashboard;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
+import com.google.cloud.tools.opensource.dashboard.DashboardArguments.DependencyMediationAlgorithm;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.base.CharMatcher;
@@ -48,8 +49,10 @@ import nu.xom.XPathContext;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
+import org.hamcrest.core.StringStartsWith;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -72,7 +75,9 @@ public class DashboardTest {
   public static void setUp() throws IOException, ParsingException {
     // Creates "index.html" and artifact reports in outputDirectory
     try {
-      outputDirectory = DashboardMain.generate("com.google.cloud:libraries-bom:1.0.0");
+      outputDirectory =
+          DashboardMain.generate(
+              "com.google.cloud:libraries-bom:1.0.0", DependencyMediationAlgorithm.MAVEN);
     } catch (Throwable t) {
       t.printStackTrace();
       Assert.fail("Could not generate dashboard");
@@ -211,7 +216,7 @@ public class DashboardTest {
     // appengine-api-sdk, shown as first item in linkage errors, has these errors
     Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
         .isEqualTo(
-            "53 target classes causing linkage errors referenced from 76 source classes.");
+            "4 target classes causing linkage errors referenced from 4 source classes.");
 
     Nodes dependencyPaths = details.query("//p[@class='linkage-check-dependency-paths']");
     Node dependencyPathMessageOnProblem = dependencyPaths.get(dependencyPaths.size() - 1);
@@ -293,8 +298,9 @@ public class DashboardTest {
   }
 
   @Test
-  public void testComponent_linkageCheckResult() throws IOException, ParsingException {
-    // version used in libraries-bom 1.0.0
+  public void testComponent_linkageCheckResult_java8() throws IOException, ParsingException {
+    Assume.assumeThat(System.getProperty("java.version"), StringStartsWith.startsWith("1.8."));
+    // The version used in libraries-bom 1.0.0
     Document document = parseOutputFile(
         "com.google.http-client_google-http-client-appengine_1.29.1.html");
     Nodes reports = document.query("//p[@class='jar-linkage-report']");
@@ -307,6 +313,39 @@ public class DashboardTest {
     Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
     Truth.assertWithMessage(
             "google-http-client-appengine should show linkage errors for RpcStubDescriptor")
+        .that(causes)
+        .comparingElementsUsing(NODE_VALUES)
+        .contains(
+            "Class com.google.net.rpc3.client.RpcStubDescriptor is not found,"
+                + " referenced from 21 classes ▶"); // '▶' is the toggle button
+  }
+
+  @Test
+  public void testComponent_linkageCheckResult_java11() throws IOException, ParsingException {
+    String javaVersion = System.getProperty("java.version");
+    // javaMajorVersion is 1 when we use Java 8. Still good indicator to ensure Java 11 or higher.
+    int javaMajorVersion = Integer.parseInt(javaVersion.split("\\.")[0]);
+    Assume.assumeTrue(javaMajorVersion >= 11);
+
+    // The version used in libraries-bom 1.0.0. The google-http-client-appengine has been known to
+    // have linkage errors in its dependencies ("commons-logging:commons-logging:1.2" and
+    // "com.google.appengine:appengine-api-1.0-sdk:1.9.71").
+    Document document = parseOutputFile(
+        "com.google.http-client_google-http-client-appengine_1.29.1.html");
+    Nodes reports = document.query("//p[@class='jar-linkage-report']");
+    Assert.assertEquals(2, reports.size());
+
+    // This number of linkage errors differs between Java 8 and Java 11 for the javax.activation
+    // package removal (JEP 320: Remove the Java EE and CORBA Modules). For the detail, see
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1849.
+    Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(0).getValue()))
+        .isEqualTo("105 target classes causing linkage errors referenced from 562 source classes.");
+    Truth.assertThat(trimAndCollapseWhiteSpace(reports.get(1).getValue()))
+        .isEqualTo("3 target classes causing linkage errors referenced from 3 source classes.");
+
+    Nodes causes = document.query("//p[@class='jar-linkage-report-cause']");
+    Truth.assertWithMessage(
+        "google-http-client-appengine should show linkage errors for RpcStubDescriptor")
         .that(causes)
         .comparingElementsUsing(NODE_VALUES)
         .contains(

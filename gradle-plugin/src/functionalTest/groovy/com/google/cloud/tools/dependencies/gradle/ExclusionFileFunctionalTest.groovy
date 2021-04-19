@@ -84,7 +84,7 @@ class ExclusionFileFunctionalTest extends Specification {
     result.output.contains("Task :linkageCheck")
     result.output.contains("BUILD FAILED")
     // Ensure it outputs the linkage errors
-    result.output.contains("Class com.jcraft.jzlib.JZlib is not found")
+    result.output.contains("Class org.apache.avalon.framework.logger.Logger is not found")
 
     // BaseDnsNameResolverProvider is referenced by SecretGrpclbNameResolverProvider, which we
     // suppress via the exclusion file.
@@ -141,7 +141,7 @@ class ExclusionFileFunctionalTest extends Specification {
     result.output.contains("Task :linkageCheck")
     result.output.contains("BUILD FAILED")
     // Ensure it outputs the linkage errors
-    result.output.contains("Class com.jcraft.jzlib.JZlib is not found")
+    result.output.contains("Class org.apache.avalon.framework.logger.Logger is not found")
 
     // BaseDnsNameResolverProvider is referenced by SecretGrpclbNameResolverProvider, which we
     // suppress via the exclusion file.

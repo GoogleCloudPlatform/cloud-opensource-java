@@ -82,6 +82,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  *   <li>A FieldMatcher matches field symbol specified by className and name attribute.
  * </ul>
  */
+@SuppressWarnings("deprecation")
 class ExclusionFiles {
   private static final XMLEventFactory eventFactory = XMLEventFactory.newInstance();
 
@@ -176,7 +177,7 @@ class ExclusionFiles {
 
   private static void insertIndent(InputStream inputStream, OutputStream outputStream)
       throws TransformerException {
-    // Prefer Open JDK's default Transformer, rather than the one in net.sf.saxon:Saxon-HE. The
+    // Prefer OpenJDK's default Transformer, rather than the one in net.sf.saxon:Saxon-HE. The
     // latter does not recognize "{http://xml.apache.org/xslt}indent-amount" property.
     System.setProperty(
         "javax.xml.transform.TransformerFactory",

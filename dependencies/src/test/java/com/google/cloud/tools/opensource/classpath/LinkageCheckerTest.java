@@ -38,15 +38,17 @@ import com.google.common.truth.Truth;
 import com.google.common.truth.Truth8;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.apache.commons.cli.ParseException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
+import org.hamcrest.core.StringStartsWith;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -247,7 +249,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblem_protectedConstructorFromAnonymousClass() throws IOException {
+  public void testFindLinkageProblem_protectedConstructorFromAnonymousClass()
+      throws IOException, InvalidVersionSpecificationException {
     List<ClassPathEntry> paths = TestHelper.resolve("junit:junit:4.12");
     // junit has dependency on hamcrest-core
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
@@ -432,7 +435,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblem_invalidMethodOverriding() throws IOException {
+  public void testFindLinkageProblem_invalidMethodOverriding()
+      throws IOException, InvalidVersionSpecificationException {
     // cglib 2.2 does not work with asm 4. Stackoverflow post explaining VerifyError:
     // https://stackoverflow.com/questions/21059019/cglib-is-causing-a-java-lang-verifyerror-during-query-generation-in-intuit-partn
     List<ClassPathEntry> paths = TestHelper.resolve("cglib:cglib:2.2_beta1", "org.ow2.asm:asm:4.2");
@@ -452,7 +456,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblem_privateField() throws IOException, URISyntaxException {
+  public void testFindLinkageProblem_privateField()
+      throws IOException, URISyntaxException, InvalidVersionSpecificationException {
     List<ClassPathEntry> paths =
         ImmutableList.of(classPathEntryOfResource("testdata/api-common-1.7.0.jar"));
     LinkageChecker linkageChecker = LinkageChecker.create(paths);
@@ -552,7 +557,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindClassReferences_inaccessibleClass() throws IOException, URISyntaxException {
+  public void testFindClassReferences_inaccessibleClass()
+      throws IOException, InvalidVersionSpecificationException {
     // io.grpc.grpclb.GrpclbLoadBalancer in grpc-grpclb 0.12.0 had a reference to
     // io.grpc.internal.SingleTransportChannel. The SingleTransportChannel became non-public in
     // grpc-core 0.15.0.
@@ -562,7 +568,8 @@ public class LinkageCheckerTest {
                 ImmutableList.of(
                     new DefaultArtifact("io.grpc:grpc-core:0.15.0"),
                     new DefaultArtifact("io.grpc:grpc-grpclb:0.12.0")),
-                false);
+                false,
+                DependencyMediation.MAVEN);
 
     LinkageChecker linkageChecker = LinkageChecker.create(classPathResult.getClassPath());
 
@@ -613,13 +620,15 @@ public class LinkageCheckerTest {
 
   @Test
   public void testGenerateInputClasspathFromLinkageCheckOption_mavenBom()
-      throws RepositoryException, ParseException, IOException {
+      throws RepositoryException, ParseException {
     String bomCoordinates = "com.google.cloud:google-cloud-bom:0.81.0-alpha";
 
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("-b", bomCoordinates);
     ImmutableList<ClassPathEntry> inputClasspath =
-        classPathBuilder.resolve(parsedArguments.getArtifacts(), true).getClassPath();
+        classPathBuilder
+            .resolve(parsedArguments.getArtifacts(), true, DependencyMediation.MAVEN)
+            .getClassPath();
 
     Truth.assertThat(inputClasspath).isNotEmpty();
 
@@ -637,10 +646,9 @@ public class LinkageCheckerTest {
             .anyMatch(entry -> entry.getJar().toString().contains("gax-1.40.0.jar")));
   }
 
-
   @Test
   public void testGenerateInputClasspath_mavenCoordinates()
-      throws RepositoryException, ParseException, IOException {
+      throws RepositoryException, ParseException {
     String mavenCoordinates =
         "com.google.cloud:google-cloud-compute:jar:0.67.0-alpha,"
             + "com.google.cloud:google-cloud-bigtable:jar:0.66.0-alpha";
@@ -648,7 +656,9 @@ public class LinkageCheckerTest {
     LinkageCheckerArguments parsedArguments =
         LinkageCheckerArguments.readCommandLine("--artifacts", mavenCoordinates);
     List<ClassPathEntry> inputClasspath =
-        classPathBuilder.resolve(parsedArguments.getArtifacts(), true).getClassPath();
+        classPathBuilder
+            .resolve(parsedArguments.getArtifacts(), true, DependencyMediation.MAVEN)
+            .getClassPath();
 
     Truth.assertWithMessage(
             "The first 2 items in the classpath should be the 2 artifacts in the input")
@@ -665,7 +675,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testGenerateInputClasspathFromLinkageCheckOption_mavenCoordinates_missingDependency()
-      throws RepositoryException, ParseException, IOException {
+      throws RepositoryException, ParseException {
     // guava-gwt has missing transitive dependency:
     //   com.google.guava:guava-gwt:jar:20.0
     //     com.google.gwt:gwt-dev:jar:2.8.0 (provided)
@@ -679,7 +689,9 @@ public class LinkageCheckerTest {
         LinkageCheckerArguments.readCommandLine("--artifacts", "com.google.guava:guava-gwt:20.0");
 
     ImmutableList<ClassPathEntry> inputClasspath =
-        classPathBuilder.resolve(parsedArguments.getArtifacts(), true).getClassPath();
+        classPathBuilder
+            .resolve(parsedArguments.getArtifacts(), true, DependencyMediation.MAVEN)
+            .getClassPath();
 
     Truth.assertThat(inputClasspath)
         .comparingElementsUsing(COORDINATES)
@@ -697,7 +709,9 @@ public class LinkageCheckerTest {
             "--artifacts", "org.apache.tomcat:tomcat-jasper:8.0.9");
 
     ImmutableList<UnresolvableArtifactProblem> artifactProblems =
-        classPathBuilder.resolve(parsedArguments.getArtifacts(), true).getArtifactProblems();
+        classPathBuilder
+            .resolve(parsedArguments.getArtifacts(), true, DependencyMediation.MAVEN)
+            .getArtifactProblems();
     Truth.assertThat(artifactProblems)
         .comparingElementsUsing(
             Correspondence.transforming(
@@ -756,7 +770,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_catchesNoClassDefFoundError() throws IOException {
+  public void testFindLinkageProblems_catchesNoClassDefFoundError()
+      throws IOException, InvalidVersionSpecificationException {
     // SLF4J classes catch NoClassDefFoundError to detect the availability of logger backends
     // the tool should not show errors for such classes.
     List<ClassPathEntry> paths = TestHelper.resolve("org.slf4j:slf4j-api:jar:1.7.21");
@@ -769,7 +784,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_catchesLinkageError() throws IOException {
+  public void testFindLinkageProblems_catchesLinkageError()
+      throws IOException, InvalidVersionSpecificationException {
     // org.eclipse.sisu.inject.Implementations catches LinkageError to detect the availability of
     // implementation for dependency injection. The tool should not show errors for such classes.
     List<ClassPathEntry> paths =
@@ -843,7 +859,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_shouldNotFailOnDuplicateClass() throws IOException {
+  public void testFindLinkageProblems_shouldNotFailOnDuplicateClass()
+      throws IOException, InvalidVersionSpecificationException {
     // There was an issue (#495) where com.google.api.client.http.apache.ApacheHttpRequest is in
     // both google-http-client-1.19.0.jar and google-http-client-apache-2.0.0.jar.
     // LinkageChecker.findLinkageErrors was not handling the case properly.
@@ -860,7 +877,7 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_shouldNotDetectWhitelistedClass() throws IOException {
+  public void testFindLinkageProblems_shouldNotDetectExcludedClass() throws IOException {
     // Reactor-core's Traces is known to catch Throwable to detect availability of Java 9+ classes.
     // Linkage Checker does not need to report it.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/816
@@ -877,7 +894,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_shouldDetectMissingParentClass() throws IOException {
+  public void testFindLinkageProblems_shouldDetectMissingParentClass()
+      throws IOException, InvalidVersionSpecificationException {
     // There was a false positive of missing class problem of
     // com.oracle.graal.pointsto.meta.AnalysisType (in com.oracle.substratevm:svm:19.0.0). The class
     // was in the class path but its parent class was missing.
@@ -908,7 +926,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_shouldSuppressJvmCIPackage() throws IOException {
+  public void testFindLinkageProblems_shouldSuppressJvmCIPackage()
+      throws IOException, InvalidVersionSpecificationException {
     // There was a false positive of missing class problem of
     // com.oracle.graal.pointsto.meta.AnalysisType (in com.oracle.substratevm:svm:19.0.0). The class
     // was in the class path but its parent class was missing.
@@ -925,7 +944,7 @@ public class LinkageCheckerTest {
 
   @Test
   public void testFindLinkageProblems_shouldSuppressMockitoMockMethodDispatcher()
-      throws IOException {
+      throws IOException, InvalidVersionSpecificationException {
     // Mockito's MockMethodDispatcher class file has ".raw" extension so that the class is only
     // loaded by Mockito's special class loader.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/407
@@ -981,7 +1000,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_defaultInterfaceMethods() throws IOException {
+  public void testFindLinkageProblems_defaultInterfaceMethods()
+      throws IOException, InvalidVersionSpecificationException {
     ImmutableList<ClassPathEntry> jars = TestHelper.resolve("com.oracle.substratevm:svm:19.2.0.1");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
@@ -998,7 +1018,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_unimplementedAbstractMethod() throws IOException {
+  public void testFindLinkageProblems_unimplementedAbstractMethod()
+      throws IOException, InvalidVersionSpecificationException {
     // Non-abstract NioEventLoopGroup class extends MultithreadEventLoopGroup.
     // Abstract MultithreadEventLoopGroup class extends MultithreadEventExecutorGroup
     // Abstract MultithreadEventExecutorGroup class has abstract newChild method.
@@ -1032,7 +1053,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_nativeMethodsOnAbstractClass() throws IOException {
+  public void testFindLinkageProblems_nativeMethodsOnAbstractClass()
+      throws IOException, InvalidVersionSpecificationException {
     ImmutableList<ClassPathEntry> jars = TestHelper.resolve("com.oracle.substratevm:svm:19.2.0.1");
 
     LinkageChecker linkageChecker = LinkageChecker.create(jars);
@@ -1049,7 +1071,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_blockHoundClasses() throws IOException {
+  public void testFindLinkageProblems_blockHoundClasses()
+      throws IOException, InvalidVersionSpecificationException {
     // BlockHound is a tool to detect blocking method calls in nonblocking frameworks.
     // In our BOM dashboard, it appears in dependency path io.grpc:grpc-netty:1.28.0 (compile)
     //   / io.netty:netty-codec-http2:4.1.45.Final (compile)
@@ -1110,7 +1133,8 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_grpcAndGuava() throws IOException {
+  public void testFindLinkageProblems_grpcAndGuava()
+      throws IOException, InvalidVersionSpecificationException {
     // This pair of the library generates NoSuchMethodError at runtime.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/tree/master/example-problems/no-such-method-error-signature-mismatch
     ImmutableList<ClassPathEntry> jars =
@@ -1128,9 +1152,12 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_referenceToJava11Method() throws IOException {
+  public void testFindLinkageProblems_referenceToJava11Method()
+      throws IOException, InvalidVersionSpecificationException {
     // protobuf-java 3.12.4 references a Java 11 method that does not exist in Java 8
     // https://github.com/protocolbuffers/protobuf/issues/7827
+    Assume.assumeThat(System.getProperty("java.version"), StringStartsWith.startsWith("1.8.0"));
+
     ImmutableList<ClassPathEntry> jars =
         TestHelper.resolve("com.google.protobuf:protobuf-java:3.12.4");
 
@@ -1151,27 +1178,46 @@ public class LinkageCheckerTest {
   }
 
   @Test
-  public void testFindLinkageProblems_unusedClassReferenceInByteCode() throws IOException {
-    // JDK's tools.jar contains com.sun.tools.internal.ws.wscompile.WsgenOptions class. The class
-    // has the class reference to JDK's com.sun.xml.internal.ws.api.BindingID$SOAPHTTPImpl in its
-    // constant pool section. The referenced class is private but it's not used in the JVM
-    // instructions in the class file.
-    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1608
+  public void testFindLinkageProblems_unusedClassReferenceInByteCode()
+      throws IOException, InvalidVersionSpecificationException {
+    // com.sun.tools.ws.wscompile.WsgenOptions in jaxws-tools has the class reference to
+    // com.sun.xml.ws.api.BindingID$SOAPHTTPImpl in its constant pool section. The referenced class
+    // is private but it's not used in the JVM instruction in the referencing class file. Therefore
+    // the Linkage Checker should not report it as a symbol problem.
+    // The problem was observed in Java 8's tools.jar (
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1608). In Java 11, the
+    // JDK does not provide the class any more. The two artifacts below have the classes with
+    // different packages (they are no longer 'internal').
+    ImmutableList<ClassPathEntry> classPath =
+        TestHelper.resolve(
+            "com.sun.xml.ws:jaxws-tools:2.3.3", // This contains WsgenOptions
+            "com.sun.xml.ws:jaxws-rt:2.3.3"); // This contains BindingID$SOAPHTTPImpl
+    String wsgenOptionsClassName = "com.sun.tools.ws.wscompile.WsgenOptions";
 
-    String javaHomeDirectory = System.getProperty("java.home");
-    Path toolsJar = Paths.get(javaHomeDirectory, "..", "lib", "tools.jar");
-    Artifact toolsArtifact =
-        new DefaultArtifact("com.sun:tools:jar:1.8").setFile(toolsJar.toFile());
+    // Ensure the class path contains the two classes in the issue (#1608).
+    ClassDumper classDumper = ClassDumper.create(classPath);
+    SymbolReferences symbolReferences = classDumper.findSymbolReferences();
+    ImmutableSet<ClassSymbol> classSymbols =
+        symbolReferences.getClassSymbols(new ClassFile(classPath.get(0), wsgenOptionsClassName));
+    Truth.assertThat(classSymbols)
+        .contains(new ClassSymbol("com.sun.xml.ws.api.BindingID$SOAPHTTPImpl"));
 
-    LinkageChecker linkageChecker =
-        LinkageChecker.create(ImmutableList.of(new ClassPathEntry(toolsArtifact)));
+    LinkageChecker linkageChecker = LinkageChecker.create(classPath);
+
     ImmutableSet<LinkageProblem> linkageProblems = linkageChecker.findLinkageProblems();
 
-    Truth.assertThat(linkageProblems).isEmpty();
+    Stream<LinkageProblem> problemsOnWsgenOptions =
+        linkageProblems.stream()
+            .filter(
+                linkageProblem ->
+                    wsgenOptionsClassName.equals(linkageProblem.getSourceClass().getBinaryName()));
+
+    Truth8.assertThat(problemsOnWsgenOptions).isEmpty();
   }
 
   @Test
-  public void testFindLinkageProblems_shouldNotReportMethodHandleInvoke() throws IOException {
+  public void testFindLinkageProblems_shouldNotReportMethodHandleInvoke()
+      throws IOException, InvalidVersionSpecificationException {
     // JVM treats java.lang.invoke.MethodHandle's invoke and invokeExact in a special manner when
     // resolving its method reference. Class files have the method references with different
     // argument types while the actual MethodHandle.invoke takes {@code Object[]}. Linkage Checker
@@ -1182,7 +1228,8 @@ public class LinkageCheckerTest {
     Artifact appengineApiSdk =
         new DefaultArtifact("com.google.appengine:appengine-api-1.0-sdk:1.9.78");
     ClassPathResult classPathResult =
-        new ClassPathBuilder().resolve(ImmutableList.of(appengineApiSdk), false);
+        new ClassPathBuilder()
+            .resolve(ImmutableList.of(appengineApiSdk), false, DependencyMediation.MAVEN);
 
     LinkageChecker linkageChecker = LinkageChecker.create(classPathResult.getClassPath());
 

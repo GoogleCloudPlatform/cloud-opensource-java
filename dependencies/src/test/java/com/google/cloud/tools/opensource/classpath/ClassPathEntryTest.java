@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.classpath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
+
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.testing.EqualsTester;
@@ -90,7 +91,7 @@ public class ClassPathEntryTest {
   @Test
   public void testGetClassNames() throws IOException, ArtifactResolutionException {
     // copy into the local repository so we can read the jar file
-    Artifact artifact = resolveArtifact("com.google.truth.extensions:truth-java8-extension:1.0.1");
+    Artifact artifact = resolveArtifact("com.google.truth.extensions:truth-java8-extension:1.1");
     
     ClassPathEntry entry = new ClassPathEntry(artifact);
     ImmutableSet<String> classFileNames = entry.getFileNames();
@@ -143,6 +144,7 @@ public class ClassPathEntryTest {
 
     Artifact artifact = new DefaultArtifact(coordinates);    
     ArtifactRequest artifactRequest = new ArtifactRequest();
+    artifactRequest.addRepository(RepositoryUtility.CENTRAL);
     artifactRequest.setArtifact(artifact);
     ArtifactResult artifactResult = system.resolveArtifact(session, artifactRequest);
     

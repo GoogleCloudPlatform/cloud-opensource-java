@@ -30,6 +30,7 @@
 
   <modules>
     <module>cloud-oss-bom</module>
+    <module>cloud-lts-bom</module>
     <module>upper-bounds-check</module>
     <module>integration-tests</module>
   </modules>

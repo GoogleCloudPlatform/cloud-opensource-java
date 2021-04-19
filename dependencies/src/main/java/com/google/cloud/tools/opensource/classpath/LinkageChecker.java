@@ -42,6 +42,7 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.classfile.Utility;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 /** A tool to find linkage errors in a class path. */
 public class LinkageChecker {
@@ -94,16 +95,19 @@ public class LinkageChecker {
         ExcludedErrors.create(exclusionFile));
   }
 
-  public static LinkageChecker create(Bom bom) throws IOException {
+  public static LinkageChecker create(Bom bom)
+      throws IOException, InvalidVersionSpecificationException {
     return create(bom, null);
   }
 
-  public static LinkageChecker create(Bom bom, Path exclusionFile) throws IOException {
+  public static LinkageChecker create(Bom bom, Path exclusionFile)
+      throws IOException, InvalidVersionSpecificationException {
     // duplicate code from DashboardMain follows. We need to refactor to extract this.
     ImmutableList<Artifact> managedDependencies = bom.getManagedDependencies();
 
     ClassPathBuilder classPathBuilder = new ClassPathBuilder();
-    ClassPathResult classPathResult = classPathBuilder.resolve(managedDependencies, true);
+    ClassPathResult classPathResult =
+        classPathBuilder.resolve(managedDependencies, true, DependencyMediation.MAVEN);
     ImmutableList<ClassPathEntry> classpath = classPathResult.getClassPath();
 
     // When checking a BOM, entry point classes are the ones in the artifacts listed in the BOM
@@ -209,7 +213,7 @@ public class LinkageChecker {
       }
     }
 
-    // Filter classes in whitelist
+    // Filter classes in exclusion file
     ImmutableSet<LinkageProblem> filteredMap =
         problemToClass.build().stream().filter(this::problemFilter).collect(toImmutableSet());
     return filteredMap;
@@ -266,7 +270,11 @@ public class LinkageChecker {
       if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
         AccessModifier modifier = AccessModifier.fromFlag(targetJavaClass.getModifiers());
         return Optional.of(
-            new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol, modifier));
+            new InaccessibleClassProblem(
+                sourceClassFile,
+                targetClassFile,
+                new ClassSymbol(symbol.getClassBinaryName()),
+                modifier));
       }
 
       if (targetJavaClass.isInterface() != symbol.isInterfaceMethod()) {
@@ -436,7 +444,11 @@ public class LinkageChecker {
       if (!isClassAccessibleFrom(targetJavaClass, sourceClassName)) {
         AccessModifier modifier = AccessModifier.fromFlag(targetJavaClass.getModifiers());
         return Optional.of(
-            new InaccessibleClassProblem(sourceClassFile, targetClassFile, symbol, modifier));
+            new InaccessibleClassProblem(
+                sourceClassFile,
+                targetClassFile,
+                new ClassSymbol(symbol.getClassBinaryName()),
+                modifier));
       }
 
       for (JavaClass javaClass : getClassHierarchy(targetJavaClass)) {

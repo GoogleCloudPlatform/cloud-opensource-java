@@ -20,10 +20,12 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static org.apache.maven.enforcer.rule.api.EnforcerLevel.WARN;
 
+import com.google.cloud.tools.opensource.classpath.AnnotatedClassPath;
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.ClassReferenceGraph;
+import com.google.cloud.tools.opensource.classpath.DependencyMediation;
 import com.google.cloud.tools.opensource.classpath.LinkageChecker;
 import com.google.cloud.tools.opensource.classpath.LinkageProblem;
 import com.google.cloud.tools.opensource.classpath.LinkageProblemCauseAnnotator;
@@ -37,7 +39,6 @@ import com.google.cloud.tools.opensource.dependencies.OsProperties;
 import com.google.cloud.tools.opensource.dependencies.UnresolvableArtifactProblem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
@@ -75,6 +76,7 @@ import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
 /** Linkage Checker Maven Enforcer Rule. */
 public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
@@ -192,12 +194,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         return;
       }
 
-      // As sorted by level order, the first elements in classpath are the project and its direct
-      // non-test dependencies.
-      List<org.apache.maven.model.Dependency> dependencies = project.getDependencies();
-      long projectDependencyCount =
-          dependencies.stream().filter(dependency -> !"test".equals(dependency.getScope())).count();
-      List<ClassPathEntry> entryPoints = classPath.subList(0, (int) projectDependencyCount + 1);
+      List<ClassPathEntry> entryPoints = entryPoints(project, classPath);
 
       try {
 
@@ -254,8 +251,8 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         }
       } catch (IOException ex) {
         // Maven's "-e" flag does not work for EnforcerRuleException. Print stack trace here.
-        logger.warn("Failed to run Linkage Checker", ex);
-        return; // Not failing the build.
+        logger.warn("Failed to run Linkage Checker:" + ex.getMessage(), ex);
+        throw new EnforcerRuleException("Failed to run Linkage Checker", ex);
       }
     } catch (ExpressionEvaluationException ex) {
       throw new EnforcerRuleException("Unable to lookup an expression " + ex.getMessage(), ex);
@@ -346,8 +343,7 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
         unresolvedDependencies.stream().map(Dependency::getArtifact).collect(toImmutableSet());
 
     DependencyGraph dependencyGraph = DependencyGraph.from(root);
-    ImmutableListMultimap.Builder<ClassPathEntry, DependencyPath> builder =
-        ImmutableListMultimap.builder();
+    AnnotatedClassPath annotatedClassPath = new AnnotatedClassPath();
     ImmutableList.Builder<UnresolvableArtifactProblem> problems = ImmutableList.builder();
     for (DependencyPath path : dependencyGraph.list()) {
       Artifact artifact = path.getLeaf();
@@ -355,10 +351,10 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       if (unresolvedArtifacts.contains(artifact)) {
         problems.add(new UnresolvableArtifactProblem(artifact));
       } else {
-        builder.put(new ClassPathEntry(artifact), path);
+        annotatedClassPath.put(new ClassPathEntry(artifact), path);
       }
     }
-    return new ClassPathResult(builder.build(), problems.build());
+    return new ClassPathResult(annotatedClassPath, problems.build());
   }
 
   /** Builds a class path for {@code bomProject}. */
@@ -367,18 +363,50 @@ public class LinkageCheckerRule extends AbstractNonCacheableEnforcerRule {
       throws EnforcerRuleException {
 
     ArtifactTypeRegistry artifactTypeRegistry = repositorySystemSession.getArtifactTypeRegistry();
+    List<org.apache.maven.model.Dependency> managedDependencies =
+        bomProject.getDependencyManagement().getDependencies();
     ImmutableList<Artifact> artifacts =
-        bomProject.getDependencyManagement().getDependencies().stream()
+        managedDependencies.stream()
             .map(dependency -> RepositoryUtils.toDependency(dependency, artifactTypeRegistry))
             .map(Dependency::getArtifact)
             .filter(artifact -> !Bom.shouldSkipBomMember(artifact))
             .collect(toImmutableList());
 
-    ClassPathResult result = classPathBuilder.resolve(artifacts, false);
-    ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
-    if (!artifactProblems.isEmpty()) {
-      throw new EnforcerRuleException("Failed to collect dependency: " + artifactProblems);
+    try {
+      ClassPathResult result =
+          classPathBuilder.resolve(artifacts, false, DependencyMediation.MAVEN);
+      ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
+      if (!artifactProblems.isEmpty()) {
+        throw new EnforcerRuleException("Failed to collect dependency: " + artifactProblems);
+      }
+      return result;
+    } catch (InvalidVersionSpecificationException ex) {
+      throw new EnforcerRuleException("Dependency mediation failed due to invalid version", ex);
     }
-    return result;
+  }
+
+  /**
+   * Returns the class path entries that contain entry point classes.
+   *
+   * <p>For BOM projects, they are the dependencies listed in the {@code dependencyManagement}
+   * section.
+   *
+   * <p>For normal projects, they are the direct dependencies listed in the {@code dependencies}
+   * section.
+   */
+  private ImmutableList<ClassPathEntry> entryPoints(
+      MavenProject project, ImmutableList<ClassPathEntry> classPath) {
+    // As sorted by level order, the first elements in classpath are the project and its direct
+    // non-test dependencies.
+    List<org.apache.maven.model.Dependency> directDependencies =
+        dependencySection == DependencySection.DEPENDENCY_MANAGEMENT
+            ? project.getDependencyManagement().getDependencies()
+            : project.getDependencies();
+
+    long projectDependencyCount =
+        directDependencies.stream()
+            .filter(dependency -> !"test".equals(dependency.getScope()))
+            .count();
+    return classPath.subList(0, (int) projectDependencyCount + 1);
   }
 }
