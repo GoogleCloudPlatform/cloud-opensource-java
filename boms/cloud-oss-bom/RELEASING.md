@@ -100,6 +100,7 @@ new release is available on Maven Central.
       (Adjust the old and new versions)
     * `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version>${OLD}&lt;/version>" "&lt;version>${NEW}&lt;/version>"`
     * `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version&gt;${OLD}&lt;/version&gt;" "&lt;version>${NEW}&lt;/version>"`
+    * `/google/src/head/depot/google3/devtools/scripts/replace_string "&lt;version&gt;${OLD}&lt;/version>" "&lt;version>${NEW}&lt;/version>"`
     * Sanity check the cl and send it for review.
     * Submit on approval
 * Search for libraries-bom in google3 to find any internal references (typically cloudsite and devsite) that still need to be updated.
