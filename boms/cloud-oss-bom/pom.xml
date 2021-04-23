@@ -215,7 +215,7 @@
       <dependency>
         <groupId>com.google.api</groupId>
         <artifactId>api-common</artifactId>
-         <version>1.10.1</version>
+         <version>1.10.3</version>
        </dependency>
        <dependency>
          <groupId>com.google.api</groupId>
@@ -235,14 +235,14 @@
        <dependency>
          <groupId>com.google.auth</groupId>
          <artifactId>google-auth-library-bom</artifactId>
-         <version>0.25.3</version>
+         <version>0.25.5</version>
          <type>pom</type>
          <scope>import</scope>
        </dependency>
        <dependency>
          <groupId>com.google.cloud</groupId>
          <artifactId>google-cloud-core-bom</artifactId>
-         <version>1.94.7</version>
+         <version>1.94.8</version>
          <type>pom</type>
          <scope>import</scope>
        </dependency>
