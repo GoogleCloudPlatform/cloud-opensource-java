@@ -59,6 +59,7 @@
     <module>dashboard</module>
     <module>enforcer-rules</module>
     <module>linkage-monitor</module>
+    <module>externaltest</module>
   </modules>
 
   <dependencyManagement>
