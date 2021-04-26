@@ -116,6 +116,9 @@
           <dependenciesToScan>
             <dependency>com.google.cloud:google-cloud-storage:test-jar:tests:*</dependency>
           </dependenciesToScan>
+          <excludes>
+            <exclude>**/ITStorageTest.java</exclude>
+          </excludes>
         </configuration>
       </plugin>
     </plugins>
