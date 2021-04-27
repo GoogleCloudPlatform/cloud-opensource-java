@@ -57,10 +57,18 @@
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-storage</artifactId>
+      <!-- TODO: remove version once new google-cloud-bom with this version comes in -->
+      <version>1.113.16</version>
     </dependency>
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-core</artifactId>
+    </dependency>
+    <!-- TODO: remove this element once new google-cloud-bom with this version comes in -->
+    <dependency>
+      <groupId>com.google.auto.value</groupId>
+      <artifactId>auto-value-annotations</artifactId>
+      <version>1.8.1</version>
     </dependency>
   </dependencies>
 
