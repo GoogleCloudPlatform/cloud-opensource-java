@@ -2,6 +2,7 @@ Basic approach:
 
 1. Iterate through dependencies in LTS BOM dependencyManagement section.
 (Not as trivial as it sounds because of variables and included boms.
+However dashboard should already have code to do this.
 Alternately start with a manually curated flat list of the dependencies.)
 
 2. For each project in the bom:
