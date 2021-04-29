@@ -17,8 +17,6 @@
 package com.google.cloud.tools.opensource.lts;
 
 import com.google.cloud.tools.opensource.dependencies.Bom;
-import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
@@ -27,9 +25,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import nu.xom.ParsingException;
-import org.eclipse.aether.resolution.ArtifactResolutionException;
-import org.eclipse.aether.version.InvalidVersionSpecificationException;
 import org.junit.Assume;
 import org.junit.Test;
 import org.yaml.snakeyaml.Yaml;
@@ -41,8 +36,7 @@ public class LtsBomCompatibilityTest {
   static final String INPUT_RESOURCE_NAME = "repositories.yaml";
 
   @Test
-  public void testLibraryCompatibility()
-      throws Exception {
+  public void tesBomTesttLibraryCompatibility() throws Exception {
     // This test case does not run in normal build
     String targetRepositoryName = System.getProperty("lts.test.repository");
     Assume.assumeNotNull(targetRepositoryName);

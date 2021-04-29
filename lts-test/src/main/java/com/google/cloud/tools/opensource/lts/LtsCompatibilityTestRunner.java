@@ -22,6 +22,7 @@ import com.google.cloud.tools.opensource.classpath.ClassPathResult;
 import com.google.cloud.tools.opensource.classpath.GradleDependencyMediation;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
+import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -72,7 +73,7 @@ class LtsCompatibilityTestRunner {
 
   void run(Bom bom, Path testRoot, Path runnerLog)
       throws IOException, InterruptedException, ParsingException, TestFailureException,
-      InvalidVersionSpecificationException, ArtifactResolutionException {
+          InvalidVersionSpecificationException, ArtifactResolutionException {
     String name = testCase.getName();
     String commands = testCase.getCommands();
 
@@ -150,11 +151,17 @@ class LtsCompatibilityTestRunner {
   }
 
   static void modifyPomFiles(Path projectRoot, Bom bom)
-      throws IOException, ParsingException, InvalidVersionSpecificationException, ArtifactResolutionException {
+      throws IOException, ParsingException, InvalidVersionSpecificationException,
+          ArtifactResolutionException {
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectRoot);
 
     ImmutableList<Artifact> bomManagedDependencies = bom.getManagedDependencies();
-    ClassPathBuilder classPathBuilder = new ClassPathBuilder();
+    DependencyGraphBuilder dependencyGraphBuilder =
+        new DependencyGraphBuilder(
+            ImmutableList.of(
+                RepositoryUtility.CENTRAL.getUrl(),
+                "https://repository.apache.org/content/repositories/snapshots/"));
+    ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
     ClassPathResult resolvedDependencies =
         classPathBuilder.resolve(
             bomManagedDependencies, false, GradleDependencyMediation.withEnforcedPlatform(bom));
@@ -277,9 +284,10 @@ class LtsCompatibilityTestRunner {
       additionalClasspathElements.appendChild(new Text("\n"));
     }
 
-    ImmutableMap<String, String> versionlessCoordinatesToVersion = managedDependencies.stream()
-        .map(ClassPathEntry::getArtifact).collect(ImmutableMap.toImmutableMap(Artifacts::makeKey,
-            Artifact::getVersion));
+    ImmutableMap<String, String> versionlessCoordinatesToVersion =
+        managedDependencies.stream()
+            .map(ClassPathEntry::getArtifact)
+            .collect(ImmutableMap.toImmutableMap(Artifacts::makeKey, Artifact::getVersion));
 
     // Google-cloud-storage depends on com.google.cloud:google-cloud-core:jar:tests:1.94.3.
     // Because com.google.cloud:google-cloud-core is excluded at runtime, we have to add it back.
@@ -301,10 +309,12 @@ class LtsCompatibilityTestRunner {
     }
 
     if (dependenciesWithTarJarType.contains("com.google.cloud:google-cloud-core")) {
-      String googleCloudCoreVersion = versionlessCoordinatesToVersion.get("com.google.cloud:google-cloud-core");
+      String googleCloudCoreVersion =
+          versionlessCoordinatesToVersion.get("com.google.cloud:google-cloud-core");
 
       // Where is documentation that says type:test-jar becomes classifier:tests?
-      Artifact artifact = resolveArtifact("com.google.cloud:google-cloud-core:jar:tests:" + googleCloudCoreVersion);
+      Artifact artifact =
+          resolveArtifact("com.google.cloud:google-cloud-core:jar:tests:" + googleCloudCoreVersion);
       Element additionalClasspathElement =
           new Element("additionalClasspathElement", mavenPomNamespaceUri);
       File file = artifact.getFile();
@@ -353,8 +363,7 @@ class LtsCompatibilityTestRunner {
     }
   }
 
-  private static Artifact resolveArtifact(String coordinates)
-      throws ArtifactResolutionException {
+  private static Artifact resolveArtifact(String coordinates) throws ArtifactResolutionException {
     RepositorySystem system = RepositoryUtility.newRepositorySystem();
     RepositorySystemSession session = RepositoryUtility.newSession(system);
 
