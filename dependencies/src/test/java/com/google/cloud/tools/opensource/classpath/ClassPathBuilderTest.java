@@ -159,17 +159,27 @@ public class ClassPathBuilderTest {
   }
 
   @Test
-  public void testResolveClassPath_invalidCoordinate() throws RepositoryException {
+  public void testResolveClassPath_invalidCoordinate_Maven() throws RepositoryException {
+    testResolveClassPath_invalidCoordinate(DependencyMediation.MAVEN);
+  }
+
+  @Test
+  public void testResolveClassPath_invalidCoordinate_Gradle() throws RepositoryException {
+    testResolveClassPath_invalidCoordinate(DependencyMediation.GRADLE);
+  }
+
+  private void testResolveClassPath_invalidCoordinate(DependencyMediation dependencyMediation)
+      throws RepositoryException {
     Artifact nonExistentArtifact = new DefaultArtifact("io.grpc:nosuchartifact:1.2.3");
     ClassPathResult result =
-        classPathBuilder.resolve(
-            ImmutableList.of(nonExistentArtifact), true, DependencyMediation.MAVEN);
+        classPathBuilder.resolve(ImmutableList.of(nonExistentArtifact), true, dependencyMediation);
     ImmutableList<UnresolvableArtifactProblem> artifactProblems = result.getArtifactProblems();
     assertThat(artifactProblems).hasSize(1);
     assertEquals(
         "io.grpc:nosuchartifact:jar:1.2.3 was not resolved. Dependency path:"
             + " io.grpc:nosuchartifact:jar:1.2.3 (compile)",
         artifactProblems.get(0).toString());
+    Truth.assertThat(result.getClassPath()).isEmpty();
   }
 
   @Test
