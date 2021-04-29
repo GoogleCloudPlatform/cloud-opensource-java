@@ -48,7 +48,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- TODO: For each library, update the versions to the ones with "-sp.1" -->
-    <beam.version>2.28.0</beam.version>
+    <beam.version>2.30.0-SNAPSHOT</beam.version>
     <google.cloud.bigquery.version>1.127.11</google.cloud.bigquery.version>
     <google.cloud.storage.version>1.113.11</google.cloud.storage.version>
     <google.cloud.monitoring.version>2.1.0-sp.1</google.cloud.monitoring.version>
@@ -290,4 +290,18 @@
     </dependencies>
   </dependencyManagement>
 
+  <repositories>
+    <repository>
+      <!-- For Beam SNAPSHOT -->
+      <id>apache.snapshots</id>
+      <name>Apache Development Snapshot Repository</name>
+      <url>https://repository.apache.org/content/repositories/snapshots/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
 </project>
