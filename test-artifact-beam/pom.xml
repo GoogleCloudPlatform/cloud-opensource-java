@@ -558,6 +558,16 @@
       <version>3.7.7</version>
       <scope>test</scope>
     </dependency>
+
+    <!-- This is for ExpectedLog class in Beam's sdks/java/core module -->
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-sdks-java-core</artifactId>
+      <version>2.29.0</version>
+      <classifier>tests</classifier>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
