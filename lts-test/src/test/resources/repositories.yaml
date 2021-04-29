@@ -9,7 +9,8 @@ bom: com.google.cloud:gcp-lts-bom:0.1.0-SNAPSHOT
 repositories:
   - name: beam
     url: https://github.com/apache/beam.git
-    tag: v2.28.0
+    # This is a branch, not a tag. But it works
+    tag: release-2.30.0
     modification: Gradle
     commands: |
       if [ "$CI" == true ]; then
@@ -193,7 +194,7 @@ repositories:
           -T 1C
   - name: java-trace
     url: https://github.com/googleapis/java-trace.git
-    tag: v1.3.0
+    tag: v1.3.0-sp.1
     modification: Maven
     commands: |
       mvn -B -V -ntp test \
