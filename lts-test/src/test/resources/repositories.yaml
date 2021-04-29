@@ -102,12 +102,16 @@ repositories:
           -T 1C
   - name: grpc-java
     url: https://github.com/grpc/grpc-java.git
-    tag: v1.36.1
+    tag: v1.37.0
     modification: Gradle
     # :grpc-netty:check, :grpc-okhttp:check do not work on suztomo's Mac
     commands: |
       echo "skipCodegen=true" >> gradle.properties
       echo "skipAndroid=true" >> gradle.properties
+
+      # An assertion on auth test didn't work with the google-auth-library 0.25.X
+      # https://github.com/grpc/grpc-java/issues/8037 (fixed in HEAD)
+      rm ./auth/src/test/java/io/grpc/auth/GoogleAuthLibraryCallCredentialsTest.java
       ./gradlew --scan --console=plain --continue \
           :grpc-alts:check \
           :grpc-api:check \
