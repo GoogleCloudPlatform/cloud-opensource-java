@@ -55,6 +55,7 @@
 
   <modules>
     <module>boms</module>
+    <module>test-artifact-beam</module>
     <module>dependencies</module>
     <module>dashboard</module>
     <module>enforcer-rules</module>
