@@ -16,6 +16,8 @@
 
 package com.google.cloud.tools.opensource.lts;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import com.google.cloud.tools.opensource.classpath.ClassPathBuilder;
 import com.google.cloud.tools.opensource.classpath.ClassPathEntry;
 import com.google.cloud.tools.opensource.classpath.ClassPathResult;
@@ -63,6 +65,10 @@ import org.eclipse.aether.version.InvalidVersionSpecificationException;
  * BOM.
  */
 class LtsCompatibilityTestRunner {
+  // For Beam's snapshot version
+  private static final String APACHE_SNAPSHOT_REPOSITORY_URL =
+      "https://repository.apache.org/content/repositories/snapshots/";
+
   private static final Logger logger = Logger.getLogger(LtsCompatibilityTestRunner.class.getName());
 
   private final RepositoryTestCase testCase;
@@ -150,7 +156,7 @@ class LtsCompatibilityTestRunner {
     }
   }
 
-  static void modifyPomFiles(Path projectRoot, Bom bom)
+  private static void modifyPomFiles(Path projectRoot, Bom bom)
       throws IOException, ParsingException, InvalidVersionSpecificationException,
           ArtifactResolutionException {
     Iterable<Path> paths = MoreFiles.fileTraverser().breadthFirst(projectRoot);
@@ -158,18 +164,30 @@ class LtsCompatibilityTestRunner {
     ImmutableList<Artifact> bomManagedDependencies = bom.getManagedDependencies();
     DependencyGraphBuilder dependencyGraphBuilder =
         new DependencyGraphBuilder(
-            ImmutableList.of(
-                RepositoryUtility.CENTRAL.getUrl(),
-                "https://repository.apache.org/content/repositories/snapshots/"));
+            ImmutableList.of(RepositoryUtility.CENTRAL.getUrl(), APACHE_SNAPSHOT_REPOSITORY_URL));
     ClassPathBuilder classPathBuilder = new ClassPathBuilder(dependencyGraphBuilder);
     ClassPathResult resolvedDependencies =
         classPathBuilder.resolve(
             bomManagedDependencies, false, GradleDependencyMediation.withEnforcedPlatform(bom));
 
-    // Include the BOM members' dependencies as well; otherwise we may get NoClassDefFoundEerror for
-    // artifacts that declare new dependencies in newer versions.
+    // Build the class path with following points:
+    // 1. Include the BOM members' dependencies as well; otherwise we may get NoClassDefFoundEerror
+    // for
+    //    artifacts that declare new dependencies in newer versions.
+    //
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/1982#issuecomment-812201558
-    ImmutableList<ClassPathEntry> resolvedManagedDependencies = resolvedDependencies.getClassPath();
+    // 2. Exclude "com.google.android:android" artifact because grpc-api's ServiceProvider
+    //    behaves incorrectly in Android-mode in the presence of this artifact. Our audience does
+    //    not include
+    //
+    // https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/1982#issuecomment-831441247
+    ImmutableList<ClassPathEntry> resolvedManagedDependencies =
+        resolvedDependencies.getClassPath().stream()
+            .filter(
+                classPathEntry ->
+                    !"com.google.android:android"
+                        .equals(Artifacts.makeKey(classPathEntry.getArtifact())))
+            .collect(toImmutableList());
 
     StringBuilder bomDependencyMessage = new StringBuilder("Dependencies from BOM:\n");
     for (ClassPathEntry resolvedManagedDependency : resolvedManagedDependencies) {
@@ -230,7 +248,7 @@ class LtsCompatibilityTestRunner {
    * <p>It inserts new line characters so that the items in the list is easily visible in a vertical
    * scroll. This does not try to
    */
-  static void modifyPomFile(Path pomFile, ImmutableList<ClassPathEntry> managedDependencies)
+  private static void modifyPomFile(Path pomFile, ImmutableList<ClassPathEntry> managedDependencies)
       throws IOException, ParsingException, ArtifactResolutionException {
     Builder builder = new Builder();
     XPathContext context = new XPathContext("ns", mavenPomNamespaceUri);
