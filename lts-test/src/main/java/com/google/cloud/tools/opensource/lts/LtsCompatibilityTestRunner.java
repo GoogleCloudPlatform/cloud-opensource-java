@@ -171,15 +171,13 @@ class LtsCompatibilityTestRunner {
             bomManagedDependencies, false, GradleDependencyMediation.withEnforcedPlatform(bom));
 
     // Build the class path with following points:
-    // 1. Include the BOM members' dependencies as well; otherwise we may get NoClassDefFoundEerror
-    // for
-    //    artifacts that declare new dependencies in newer versions.
-    //
+    // Include the BOM members' dependencies as well; otherwise we may get NoClassDefFoundEerror
+    // for artifacts that declare new dependencies in newer versions.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/1982#issuecomment-812201558
-    // 2. Exclude "com.google.android:android" artifact because grpc-api's ServiceProvider
-    //    behaves incorrectly in Android-mode in the presence of this artifact. Our audience does
-    //    not include
     //
+    // Exclude "com.google.android:android" artifact because grpc-api's ServiceProvider
+    // behaves incorrectly in Android-mode in the presence of this artifact. Our audience does
+    // not include Android.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/1982#issuecomment-831441247
     ImmutableList<ClassPathEntry> resolvedManagedDependencies =
         resolvedDependencies.getClassPath().stream()

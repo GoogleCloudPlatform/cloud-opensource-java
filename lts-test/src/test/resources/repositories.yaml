@@ -43,7 +43,7 @@ repositories:
           -Dversion=1 \
           -Dpackaging=jar
       cd -
-      mvn -B -V -ntp test \
+      mvn --batch-mode --show-version --no-transfer-progress test \
           -DtrimStackTrace=false \
           -Dclirr.skip=true \
           -Denforcer.skip=true \
@@ -57,7 +57,7 @@ repositories:
     # appengine module doesn't work
     # https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1974#issuecomment-806153876
     commands: |
-      mvn -B -V -ntp test \
+      mvn --batch-mode --show-version --no-transfer-progress test \
           -pl oauth2_http,credentials \
           -DtrimStackTrace=false \
           -Dclirr.skip=true \
@@ -73,7 +73,7 @@ repositories:
     # but the module is not part of the BOM.
     # https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1974#issuecomment-805000604
     commands: |
-      mvn -B -V -ntp test \
+      mvn --batch-mode --show-version --no-transfer-progress test \
           -pl google-http-client \
           -DtrimStackTrace=false \
           -Dclirr.skip=true \
@@ -93,7 +93,7 @@ repositories:
     tag: v1.31.4
     modification: Maven
     commands: |
-      mvn -B -V -ntp test \
+      mvn --batch-mode --show-version --no-transfer-progress test \
           -DtrimStackTrace=false \
           -Dclirr.skip=true \
           -Denforcer.skip=true \
@@ -129,7 +129,7 @@ repositories:
     tag: v1.127.11
     modification: Maven
     commands: |
-      mvn -B -V -ntp test \
+      mvn --batch-mode --show-version --no-transfer-progress test \
           -DtrimStackTrace=false \
           -Dclirr.skip=true \
           -Denforcer.skip=true \
@@ -142,7 +142,8 @@ repositories:
     tag: v1.19.1
     modification: Maven
     commands: |
-      mvn -B -V -ntp verify \
+      mvn --batch-mode --show-version --no-transfer-progress verify \
+          --projects bigtable-dataflow-parent/bigtable-hbase-beam \
           -DtrimStackTrace=false \
           -Dclirr.skip=true \
           -Denforcer.skip=true \
@@ -153,7 +154,7 @@ repositories:
     tag: v2.1.0
     modification: Maven
     commands: |
-      mvn -B -V -ntp test \
+      mvn --batch-mode --show-version --no-transfer-progress test \
           -DtrimStackTrace=false \
           -Dclirr.skip=true \
           -Denforcer.skip=true \
@@ -165,7 +166,7 @@ repositories:
     tag: v1.112.0
     modification: Maven
     commands: |
-      mvn -B -V -ntp test \
+      mvn --batch-mode --show-version --no-transfer-progress test \
           -DtrimStackTrace=false \
           -Dclirr.skip=true \
           -Denforcer.skip=true \
@@ -177,7 +178,7 @@ repositories:
     tag: v6.0.0
     modification: Maven
     commands: |
-      mvn -B -V -ntp test \
+      mvn --batch-mode --show-version --no-transfer-progress test \
           -DtrimStackTrace=false \
           -Dclirr.skip=true \
           -Denforcer.skip=true \
@@ -189,7 +190,7 @@ repositories:
     tag: v1.113.14
     modification: Maven
     commands: |
-      mvn -B -V -ntp test \
+      mvn --batch-mode --show-version --no-transfer-progress test \
           -DtrimStackTrace=false \
           -Dclirr.skip=true \
           -Denforcer.skip=true \
@@ -201,11 +202,10 @@ repositories:
     tag: v1.3.0-sp.1
     modification: Maven
     commands: |
-      mvn -B -V -ntp test \
+      mvn --batch-mode --show-version --no-transfer-progress test \
           -DtrimStackTrace=false \
           -Dclirr.skip=true \
           -Denforcer.skip=true \
           -Dmaven.javadoc.skip=true \
           -Dgcloud.download.skip=true \
           -T 1C
-
