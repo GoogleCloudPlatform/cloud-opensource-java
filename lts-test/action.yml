@@ -10,13 +10,13 @@ runs:
     - name: Install the snapshot LTS BOM (${{ github.action_path }}) to local Maven repository
       run: |
         cd ..
-        mvn -B -ntp -pl ../boms/cloud-lts-bom install
+        mvn -B -ntp -pl boms/cloud-lts-bom install
       shell: bash
       working-directory: ${{ github.action_path }}
     - name: Run the unit tests for ${{ inputs.repository }} using repositories.yaml
       run: |
         cd ..
-        mvn -B -ntp -pl ../dependencies,../lts-test test \
+        mvn -B -ntp -pl dependencies,lts-test test \
           -Dtest=com.google.cloud.tools.opensource.lts.LtsBomCompatibilityTest \
           -Dlts.test.repository=${{ inputs.repository }} \
           -DfailIfNoTests=false
