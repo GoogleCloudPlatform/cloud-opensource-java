@@ -17,6 +17,7 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -27,10 +28,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.MavenRepositoryException;
-import com.google.common.io.ByteStreams;
+import com.google.common.io.CharStreams;
 
 class LtsBomIntegrationTest {
   
@@ -70,7 +72,24 @@ class LtsBomIntegrationTest {
     ProcessBuilder builder = new ProcessBuilder("/opt/java/maven/bin/mvn", "dependency:list");
     builder.directory(temp.toFile());
     Process process = builder.start();
-    ByteStreams.copy(process.getInputStream(), System.out);
+    
+    // todo what charset does maven use?
+    InputStreamReader reader = new InputStreamReader(process.getInputStream());
+    
+    CoordinatesExtractor processor = new CoordinatesExtractor();
+    CharStreams.readLines(reader, processor);
+    
+    for (String coordinates : processor.getResult()) {
+      System.out.println(coordinates);
+      DefaultArtifact original = new DefaultArtifact(coordinates);
+      String key = Artifacts.makeKey(original);
+      String newVersion = bomVersions.get(key);
+      if (newVersion != null) {
+        coordinates = key + ":" + newVersion;
+      }
+      DefaultArtifact modified = new DefaultArtifact(coordinates);
+      System.out.println(modified);
+    }
     
     // make pom.xml to run tests
     
@@ -78,19 +97,13 @@ class LtsBomIntegrationTest {
   }
   
   private static String buildTestJarUrl(Artifact artifact) {
-    
     String fileName = artifact.getArtifactId() + "-" + artifact.getVersion() + "-tests.jar";
-    
     return MavenCentral.buildUrl(artifact) + fileName;
   }
   
   private static URL buildPomUrl(Artifact artifact) throws MalformedURLException {
-    
-    String fileName = artifact.getArtifactId() + "-" + artifact.getVersion() + ".pom";
-    
+    String fileName = artifact.getArtifactId() + "-" + artifact.getVersion() + ".pom"; 
     return new URL(MavenCentral.buildUrl(artifact) + fileName);
   }
-
-
 
 }
