@@ -24,6 +24,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +80,7 @@ class LtsBomIntegrationTest {
     CoordinatesExtractor processor = new CoordinatesExtractor();
     CharStreams.readLines(reader, processor);
     
+    List<Artifact> dependencies = new ArrayList<>();
     for (String coordinates : processor.getResult()) {
       System.out.println(coordinates);
       DefaultArtifact original = new DefaultArtifact(coordinates);
@@ -88,10 +90,12 @@ class LtsBomIntegrationTest {
         coordinates = key + ":" + newVersion;
       }
       DefaultArtifact modified = new DefaultArtifact(coordinates);
+      dependencies.add(modified);
       System.out.println(modified);
     }
     
     // make pom.xml to run tests
+    Path directory = TestPom.create(artifact, dependencies);
     
     // run tests
   }
