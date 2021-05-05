@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,8 +28,12 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.junit.Test;
 import nu.xom.Builder;
 import nu.xom.Document;
+import nu.xom.Element;
+import nu.xom.Node;
+import nu.xom.Nodes;
 import nu.xom.ParsingException;
 import nu.xom.ValidityException;
+import nu.xom.XPathContext;
 
 public class TestPomTest {
 
@@ -42,6 +47,19 @@ public class TestPomTest {
     Builder builder = new Builder();
     Document pom = builder.build(created.toFile());
     
+    XPathContext context = new XPathContext();
+    context.addNamespace("pom", "http://maven.apache.org/POM/4.0.0");
+    
+    Nodes dependencyElements = pom.query("/pom:project/pom:dependencies/pom:dependency", context);
+    assertEquals(1, dependencyElements.size());
+    Element element = (Element) dependencyElements.get(0);
+    String groupId = element.getFirstChildElement("groupId", "http://maven.apache.org/POM/4.0.0").getValue();
+    String artifactId = element.getFirstChildElement("artifactId", "http://maven.apache.org/POM/4.0.0").getValue();
+    String version = element.getFirstChildElement("version", "http://maven.apache.org/POM/4.0.0").getValue();
+    
+    assertEquals("com.google.guava", groupId);
+    assertEquals("guava", artifactId);
+    assertEquals("30.1.1-android", version);
   }
   
 }

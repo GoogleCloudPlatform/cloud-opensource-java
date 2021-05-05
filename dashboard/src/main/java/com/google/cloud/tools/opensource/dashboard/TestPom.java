@@ -33,6 +33,21 @@ public class TestPom {
     Path local = temp.resolve("pom.xml");
     Element root = new Element("project", "http://maven.apache.org/POM/4.0.0");
     Document pom = new Document(root);
+    
+    Element dependenciesElement = new Element("dependencies", "http://maven.apache.org/POM/4.0.0");
+    Element dependencyElement = new Element("dependency", "http://maven.apache.org/POM/4.0.0");
+    Element groupId = new Element("groupId", "http://maven.apache.org/POM/4.0.0");
+    groupId.appendChild(artifact.getGroupId());
+    Element artifactId = new Element("artifactId", "http://maven.apache.org/POM/4.0.0");
+    Element version = new Element("version", "http://maven.apache.org/POM/4.0.0");
+    artifactId.appendChild(artifact.getArtifactId());
+    version.appendChild(artifact.getVersion());
+    
+    root.appendChild(dependenciesElement);
+    dependenciesElement.appendChild(dependencyElement);
+    dependencyElement.appendChild(groupId);
+    dependencyElement.appendChild(artifactId);
+    dependencyElement.appendChild(version);
 
     try (OutputStream out = Files.newOutputStream(local)) {
       Serializer serializer = new Serializer(out);
