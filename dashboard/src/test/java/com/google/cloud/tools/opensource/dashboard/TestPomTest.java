@@ -17,9 +17,7 @@
 package com.google.cloud.tools.opensource.dashboard;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,13 +28,14 @@ import org.junit.Test;
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
+import nu.xom.Node;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
-import nu.xom.ValidityException;
 import nu.xom.XPathContext;
 
 public class TestPomTest {
   
+  private static final String MAVEN_NAMESPACE = "http://maven.apache.org/POM/4.0.0";
   private XPathContext context = new XPathContext();
   private Document pom;
   
@@ -48,25 +47,32 @@ public class TestPomTest {
     Builder builder = new Builder();
     pom = builder.build(created.toFile());
     
-    context.addNamespace("pom", "http://maven.apache.org/POM/4.0.0");
-    
+    context.addNamespace("pom", MAVEN_NAMESPACE);
   }
 
   @Test
   public void testMainDependency() {
-    Nodes dependencyElements = pom.query("/pom:project/pom:dependencies/pom:dependency", context);
-    assertEquals(1, dependencyElements.size());
-    Element element = (Element) dependencyElements.get(0);
-    String groupId =
-        element.getFirstChildElement("groupId", "http://maven.apache.org/POM/4.0.0").getValue();
-    String artifactId =
-        element.getFirstChildElement("artifactId", "http://maven.apache.org/POM/4.0.0").getValue();
-    String version =
-        element.getFirstChildElement("version", "http://maven.apache.org/POM/4.0.0").getValue();
-
-    assertEquals("com.google.guava", groupId);
-    assertEquals("guava", artifactId);
-    assertEquals("30.1.1-android", version);
+    Nodes dependencyElements = pom.query(
+        "/pom:project/pom:dependencies/pom:dependency[pom:artifactId='guava']", context);
+    assertEquals(2, dependencyElements.size());
+    for (Node node : dependencyElements) {
+      Element element = (Element) node;
+      String groupId = element.getFirstChildElement("groupId", MAVEN_NAMESPACE).getValue();
+      String artifactId = element.getFirstChildElement("artifactId", MAVEN_NAMESPACE).getValue();
+      String version = element.getFirstChildElement("version", MAVEN_NAMESPACE).getValue();
+  
+      assertEquals("com.google.guava", groupId);
+      assertEquals("guava", artifactId);
+      assertEquals("30.1.1-android", version);
+    }
+    
+    Element testLib = (Element) dependencyElements.get(1);
+    String scope = testLib.getFirstChildElement("scope", MAVEN_NAMESPACE).getValue();
+    String type = testLib.getFirstChildElement("type", MAVEN_NAMESPACE).getValue();
+    String classifier = testLib.getFirstChildElement("classifier", MAVEN_NAMESPACE).getValue();
+    assertEquals("test", scope);
+    assertEquals("tests", classifier);
+    assertEquals("test-jar", type);
   }
   
   @Test

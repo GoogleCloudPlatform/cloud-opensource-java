@@ -41,21 +41,21 @@ public class TestPom {
     appendChildElement(root, "artifactId", artifact.getArtifactId() + "-ltstest");
     appendChildElement(root, "version", "1.0.0");
     
+    
     Element dependenciesElement = new Element("dependencies", MAVEN_NAMESPACE);
-    Element dependencyElement = new Element("dependency", MAVEN_NAMESPACE);
-    Element groupId = new Element("groupId", MAVEN_NAMESPACE);
-    groupId.appendChild(artifact.getGroupId());
-    Element artifactId = new Element("artifactId", MAVEN_NAMESPACE);
-    Element version = new Element("version", MAVEN_NAMESPACE);
-    artifactId.appendChild(artifact.getArtifactId());
-    version.appendChild(artifact.getVersion());
     
+    // dependency element for the artifact under test
+    Element mainDependencyElement = makeDependencyElement(artifact);
+    
+    // testlib dependency element for the artifact under test
+    Element testDependencyElement = makeDependencyElement(artifact);
+    appendChildElement(testDependencyElement, "classifier", "tests");
+    appendChildElement(testDependencyElement, "scope", "test");
+    appendChildElement(testDependencyElement, "type", "test-jar");
+    
+    dependenciesElement.appendChild(mainDependencyElement);
+    dependenciesElement.appendChild(testDependencyElement);
     root.appendChild(dependenciesElement);
-    
-    dependenciesElement.appendChild(dependencyElement);
-    dependencyElement.appendChild(groupId);
-    dependencyElement.appendChild(artifactId);
-    dependencyElement.appendChild(version);
 
     try (OutputStream out = Files.newOutputStream(local)) {
       Serializer serializer = new Serializer(out);
@@ -66,10 +66,24 @@ public class TestPom {
     return local;    
   }
 
-  private static void appendChildElement(Element root, String name, String value) {
+  private static Element makeDependencyElement(Artifact artifact) {
+    Element dependencyElement = new Element("dependency", MAVEN_NAMESPACE);
+    Element groupId = new Element("groupId", MAVEN_NAMESPACE);
+    groupId.appendChild(artifact.getGroupId());
+    Element artifactId = new Element("artifactId", MAVEN_NAMESPACE);
+    Element version = new Element("version", MAVEN_NAMESPACE);
+    artifactId.appendChild(artifact.getArtifactId());
+    version.appendChild(artifact.getVersion());
+    dependencyElement.appendChild(groupId);
+    dependencyElement.appendChild(artifactId);
+    dependencyElement.appendChild(version);
+    return dependencyElement;
+  }
+
+  private static void appendChildElement(Element parent, String name, String value) {
     Element modelVersion = new Element(name, MAVEN_NAMESPACE);
     modelVersion.appendChild(value);
-    root.appendChild(modelVersion);
+    parent.appendChild(modelVersion);
   }
 
 }
