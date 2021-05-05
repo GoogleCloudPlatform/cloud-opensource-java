@@ -28,22 +28,30 @@ import nu.xom.Serializer;
 
 public class TestPom {
 
+  private static final String MAVEN_NAMESPACE = "http://maven.apache.org/POM/4.0.0";
+
   static Path create(Artifact artifact, List<Artifact> dependencies) throws IOException {
     Path temp = Files.createTempDirectory("pom");
     Path local = temp.resolve("pom.xml");
-    Element root = new Element("project", "http://maven.apache.org/POM/4.0.0");
+    Element root = new Element("project", MAVEN_NAMESPACE);
     Document pom = new Document(root);
     
-    Element dependenciesElement = new Element("dependencies", "http://maven.apache.org/POM/4.0.0");
-    Element dependencyElement = new Element("dependency", "http://maven.apache.org/POM/4.0.0");
-    Element groupId = new Element("groupId", "http://maven.apache.org/POM/4.0.0");
+    appendChildElement(root, "modelVersion", "4.0.0");
+    appendChildElement(root, "groupId", "com.google.cloud.tools");
+    appendChildElement(root, "artifactId", artifact.getArtifactId() + "-ltstest");
+    appendChildElement(root, "version", "1.0.0");
+    
+    Element dependenciesElement = new Element("dependencies", MAVEN_NAMESPACE);
+    Element dependencyElement = new Element("dependency", MAVEN_NAMESPACE);
+    Element groupId = new Element("groupId", MAVEN_NAMESPACE);
     groupId.appendChild(artifact.getGroupId());
-    Element artifactId = new Element("artifactId", "http://maven.apache.org/POM/4.0.0");
-    Element version = new Element("version", "http://maven.apache.org/POM/4.0.0");
+    Element artifactId = new Element("artifactId", MAVEN_NAMESPACE);
+    Element version = new Element("version", MAVEN_NAMESPACE);
     artifactId.appendChild(artifact.getArtifactId());
     version.appendChild(artifact.getVersion());
     
     root.appendChild(dependenciesElement);
+    
     dependenciesElement.appendChild(dependencyElement);
     dependencyElement.appendChild(groupId);
     dependencyElement.appendChild(artifactId);
@@ -56,6 +64,12 @@ public class TestPom {
     }
     
     return local;    
+  }
+
+  private static void appendChildElement(Element root, String name, String value) {
+    Element modelVersion = new Element(name, MAVEN_NAMESPACE);
+    modelVersion.appendChild(value);
+    root.appendChild(modelVersion);
   }
 
 }

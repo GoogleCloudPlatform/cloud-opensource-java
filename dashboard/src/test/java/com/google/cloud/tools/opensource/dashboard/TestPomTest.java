@@ -25,41 +25,54 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.junit.Before;
 import org.junit.Test;
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
-import nu.xom.Node;
 import nu.xom.Nodes;
 import nu.xom.ParsingException;
 import nu.xom.ValidityException;
 import nu.xom.XPathContext;
 
 public class TestPomTest {
-
-  @Test
-  public void testCreate() throws IOException, ValidityException, ParsingException {
+  
+  private XPathContext context = new XPathContext();
+  private Document pom;
+  
+  @Before 
+  public void setUp() throws IOException, ParsingException {
     List<Artifact> dependencies = new ArrayList<>();
     Artifact artifact = new DefaultArtifact("com.google.guava:guava:30.1.1-android");
-    Path created = TestPom.create(artifact, dependencies);
-    assertTrue(Files.isRegularFile(created));
-    
+    Path created = TestPom.create(artifact, dependencies);    
     Builder builder = new Builder();
-    Document pom = builder.build(created.toFile());
+    pom = builder.build(created.toFile());
     
-    XPathContext context = new XPathContext();
     context.addNamespace("pom", "http://maven.apache.org/POM/4.0.0");
     
+  }
+
+  @Test
+  public void testMainDependency() {
     Nodes dependencyElements = pom.query("/pom:project/pom:dependencies/pom:dependency", context);
     assertEquals(1, dependencyElements.size());
     Element element = (Element) dependencyElements.get(0);
-    String groupId = element.getFirstChildElement("groupId", "http://maven.apache.org/POM/4.0.0").getValue();
-    String artifactId = element.getFirstChildElement("artifactId", "http://maven.apache.org/POM/4.0.0").getValue();
-    String version = element.getFirstChildElement("version", "http://maven.apache.org/POM/4.0.0").getValue();
-    
+    String groupId =
+        element.getFirstChildElement("groupId", "http://maven.apache.org/POM/4.0.0").getValue();
+    String artifactId =
+        element.getFirstChildElement("artifactId", "http://maven.apache.org/POM/4.0.0").getValue();
+    String version =
+        element.getFirstChildElement("version", "http://maven.apache.org/POM/4.0.0").getValue();
+
     assertEquals("com.google.guava", groupId);
     assertEquals("guava", artifactId);
     assertEquals("30.1.1-android", version);
+  }
+  
+  @Test
+  public void testModelVersion() {
+    Nodes modelVersion = pom.query("/pom:project/pom:modelVersion", context);
+    assertEquals("4.0.0", modelVersion.get(0).getValue());
   }
   
 }
