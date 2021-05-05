@@ -48,18 +48,8 @@ public class BomTest {
   private void checkBom(Path bomPath) throws MavenRepositoryException, IOException {
     List<Artifact> artifacts = Bom.readBom(bomPath).getManagedDependencies();
     for (Artifact artifact : artifacts) {
-      assertReachable(buildMavenCentralUrl(artifact));
+      assertReachable( MavenCentral.buildUrl(artifact));
     }
-  }
-
-  private static String buildMavenCentralUrl(Artifact artifact) {
-    return "https://repo1.maven.org/maven2/"
-        + artifact.getGroupId().replace('.', '/')
-        + "/"
-        + artifact.getArtifactId()
-        + "/"
-        + artifact.getVersion()
-        + "/";
   }
 
   private static void assertReachable(String url) throws IOException {
