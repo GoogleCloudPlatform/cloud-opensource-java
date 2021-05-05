@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.opensource.dashboard;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -69,20 +70,16 @@ class LtsBomIntegrationTest {
     Path local = temp.resolve("pom.xml");
     Files.copy(remote.openStream(), local);
     
-    // todo how to locate maven?
-    ProcessBuilder builder = new ProcessBuilder("/opt/java/maven/bin/mvn", "dependency:list");
-    builder.directory(temp.toFile());
-    Process process = builder.start();
+    Process listProcess = runMaven(temp, "dependency:list");
     
     // todo what charset does maven use?
-    InputStreamReader reader = new InputStreamReader(process.getInputStream());
+    InputStreamReader reader = new InputStreamReader(listProcess.getInputStream());
     
     CoordinatesExtractor processor = new CoordinatesExtractor();
     CharStreams.readLines(reader, processor);
     
     List<Artifact> dependencies = new ArrayList<>();
     for (String coordinates : processor.getResult()) {
-      System.out.println(coordinates);
       DefaultArtifact original = new DefaultArtifact(coordinates);
       String key = Artifacts.makeKey(original);
       String newVersion = bomVersions.get(key);
@@ -91,13 +88,25 @@ class LtsBomIntegrationTest {
       }
       DefaultArtifact modified = new DefaultArtifact(coordinates);
       dependencies.add(modified);
-      System.out.println(modified);
     }
     
     // make pom.xml to run tests
-    Path directory = TestPom.create(artifact, dependencies);
+    Path pomFile = TestPom.create(artifact, dependencies);
     
     // run tests
+    Process testProcess = runMaven(pomFile.getParent(), "test");
+    BufferedReader testReader = new BufferedReader(new InputStreamReader(testProcess.getInputStream()));
+    for (String line = testReader.readLine(); line != null; line = testReader.readLine()) {
+      System.err.println(line);
+    }
+  }
+
+  private static Process runMaven(Path temp, String command) throws IOException {
+    // todo how to locate maven?
+    ProcessBuilder builder = new ProcessBuilder("/opt/java/maven/bin/mvn", command);
+    builder.directory(temp.toFile());
+    Process process = builder.start();
+    return process;
   }
   
   private static String buildTestJarUrl(Artifact artifact) {
