@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
+import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Serializer;
@@ -33,13 +34,13 @@ public class TestPom {
   static Path create(Artifact artifact, List<Artifact> dependencies) throws IOException {
     Path temp = Files.createTempDirectory("pom");
     Path local = temp.resolve("pom.xml");
-    Element root = new Element("project", MAVEN_NAMESPACE);
-    Document pom = new Document(root);
+    Element project = new Element("project", MAVEN_NAMESPACE);
+    Document pom = new Document(project);
     
-    appendChildElement(root, "modelVersion", "4.0.0");
-    appendChildElement(root, "groupId", "com.google.cloud.tools");
-    appendChildElement(root, "artifactId", artifact.getArtifactId() + "-ltstest");
-    appendChildElement(root, "version", "1.0.0");
+    appendChildElement(project, "modelVersion", "4.0.0");
+    appendChildElement(project, "groupId", "com.google.cloud.tools");
+    appendChildElement(project, "artifactId", artifact.getArtifactId() + "-ltstest");
+    appendChildElement(project, "version", "1.0.0");
     
     
     Element dependenciesElement = new Element("dependencies", MAVEN_NAMESPACE);
@@ -55,7 +56,41 @@ public class TestPom {
     
     dependenciesElement.appendChild(mainDependencyElement);
     dependenciesElement.appendChild(testDependencyElement);
-    root.appendChild(dependenciesElement);
+    project.appendChild(dependenciesElement);
+    
+    /*
+    
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0-M5</version>
+        <configuration>
+          <dependenciesToScan>
+            <dependency>com.google.cloud:google-cloud-storage:test-jar:tests:*</dependency>
+          </dependenciesToScan>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+     */
+    
+    Element buildElement = new Element("build", MAVEN_NAMESPACE);
+    Element pluginsElement = new Element("plugins", MAVEN_NAMESPACE);
+    Element pluginElement = new Element("plugin", MAVEN_NAMESPACE);
+    appendChildElement(pluginElement, "groupId", "org.apache.maven.plugins");
+    appendChildElement(pluginElement, "artifactId", "maven-surefire-plugin");
+    appendChildElement(pluginElement, "version", "3.0.0-M5");
+    Element configurationElement = new Element("configuration", MAVEN_NAMESPACE);
+    Element dependenciesToScan = new Element("dependenciesToScan", MAVEN_NAMESPACE);
+    String dependencyToScan = Artifacts.makeKey(artifact) + ":test-jar:tests:*";
+    appendChildElement(dependenciesToScan, "dependency", dependencyToScan);
+    configurationElement.appendChild(dependenciesToScan);
+    pluginElement.appendChild(configurationElement);
+    pluginsElement.appendChild(pluginElement);
+    buildElement.appendChild(pluginsElement);
+    project.appendChild(buildElement);
 
     try (OutputStream out = Files.newOutputStream(local)) {
       Serializer serializer = new Serializer(out);

@@ -64,6 +64,25 @@ class LtsBomIntegrationTest {
   }
 
   private static void testArtifact(Artifact artifact) throws IOException {
+    List<Artifact> dependencies = readDependencies(artifact);
+    
+    // make pom.xml to run tests
+    Path pomFile = TestPom.create(artifact, dependencies);    
+    
+    // run tests
+    Process testProcess = runMaven(pomFile.getParent(), "test");
+    BufferedReader testReader = new BufferedReader(new InputStreamReader(testProcess.getInputStream()));
+    for (String line = testReader.readLine(); line != null; line = testReader.readLine()) {
+      System.err.println(line);
+    }
+  }
+
+  /**
+   * Use Maven dependency plugin to list the dependencies for a project.
+   * Update these dependencies to the versions in the LTS BOM.
+   */
+  private static List<Artifact> readDependencies(Artifact artifact)
+      throws MalformedURLException, IOException {
     // download the pom.xml from Maven Central
     URL remote = buildPomUrl(artifact);
     Path temp = Files.createTempDirectory("pom");
@@ -89,21 +108,12 @@ class LtsBomIntegrationTest {
       DefaultArtifact modified = new DefaultArtifact(coordinates);
       dependencies.add(modified);
     }
-    
-    // make pom.xml to run tests
-    Path pomFile = TestPom.create(artifact, dependencies);
-    
-    // run tests
-    Process testProcess = runMaven(pomFile.getParent(), "test");
-    BufferedReader testReader = new BufferedReader(new InputStreamReader(testProcess.getInputStream()));
-    for (String line = testReader.readLine(); line != null; line = testReader.readLine()) {
-      System.err.println(line);
-    }
+    return dependencies;
   }
 
   private static Process runMaven(Path temp, String command) throws IOException {
     // todo how to locate maven?
-    ProcessBuilder builder = new ProcessBuilder("/opt/java/maven/bin/mvn", command);
+    ProcessBuilder builder = new ProcessBuilder("/opt/java/maven/bin/mvn", "-ntp", command);
     builder.directory(temp.toFile());
     Process process = builder.start();
     return process;
