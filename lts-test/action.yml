@@ -7,7 +7,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Install the snapshot LTS BOM to local Maven repository
+    - name: Install the snapshot LTS BOM (${{ github.action_path }}) to local Maven repository
       run: |
         mvn -B -ntp -pl boms/cloud-lts-bom install
       shell: bash
