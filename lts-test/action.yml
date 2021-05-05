@@ -4,6 +4,15 @@ inputs:
   repository:
     description: 'The repository to test in this run. Use matrix to specify the values'
     required: true
+  version_override_key:
+    description: 'The property name in the LTS BOM to test a certain version of a library'
+    required: false
+    # Any default value is fine as long as it does not conflict with values in the BOM
+    default: 'com.google.unspecified'
+  version_override_value:
+    description: 'The version to test its compatibility with other libraries in the LTS BOM'
+    required: false
+    default: '0.1.0-SNAPSHOT'
 runs:
   using: "composite"
   steps:
@@ -19,6 +28,7 @@ runs:
         mvn -B -ntp -pl dependencies,lts-test test \
           -Dtest=com.google.cloud.tools.opensource.lts.LtsBomCompatibilityTest \
           -Dlts.test.repository=${{ inputs.repository }} \
+          -D${{ inputs.version_override_key }}=${{ inputs.version_override_value }} \
           -DfailIfNoTests=false
       shell: bash
       working-directory: ${{ github.action_path }}
