@@ -17,8 +17,11 @@ runs:
   using: "composite"
   steps:
     - name: Modify a version of a library in the LTS BOM if version override is specified
-      if: ${{ inputs.version_override_key != 'unspecified' }}
       run: |
+        if [[ "${{ inputs.version_override_key }}" == "unspecified" ]]; then
+          echo "inputs.version_override_key is unspecified. Skipping this step."
+          exit
+        fi
         cd ..
         sudo apt-get install libxml2-utils
         xmllint --shell boms/cloud-lts-bom/pom.xml  << EOF
