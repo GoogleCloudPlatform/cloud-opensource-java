@@ -27,6 +27,7 @@ import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
 import com.google.common.base.Charsets;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
@@ -144,12 +145,13 @@ class LtsCompatibilityTestRunner {
 
     int buildStatusCode = bashProcess.waitFor();
 
-    if (buildStatusCode != 0) {
-      String outputContent = com.google.common.io.Files.asCharSource(output, Charsets.UTF_8).read();
-      logger.severe("Output:\n" + outputContent);
+    String outputContent = com.google.common.io.Files.asCharSource(output, Charsets.UTF_8).read();
+    logger.severe("Output:\n" + outputContent);
 
-      // Avoid messing up the log with the output and the exception
-      Uninterruptibles.sleepUninterruptibly(Duration.ofSeconds(1));
+    // Avoid messing up the log with the output and the exception
+    Uninterruptibles.sleepUninterruptibly(Duration.ofSeconds(1));
+
+    if (buildStatusCode != 0) {
       throw new TestFailureException("Failed to run the commands.");
     } else {
       logger.info(name + " passed.");
@@ -453,18 +455,21 @@ class LtsCompatibilityTestRunner {
   }
 
   static void modifyBeamModulePlugin(Path beamModulePluginFile) throws IOException {
-    // We don't want Beam to `force` dependencies when we run tests because the `force` overrides
-    // library versions in the gcp-lts-bom
+    // We don't want Beam to `force` dependencies when we run tests, because the `force` overrides
+    // library versions set in the gcp-lts-bom.
     // https://github.com/GoogleCloudPlatform/cloud-opensource-java/pull/1982#discussion_r611911325
     String buildGradleContent =
         Files.asCharSource(beamModulePluginFile.toFile(), StandardCharsets.UTF_8).read();
 
-    buildGradleContent =
+    String buildGradleContentTestRuntimeClassPathModified =
         buildGradleContent.replaceAll(
             "config.getName\\(\\) != \"errorprone\"",
             "![\"errorprone\", \"testRuntimeClasspath\"].contains(config.getName())");
 
+    Verify.verify(!buildGradleContentTestRuntimeClassPathModified.equals(buildGradleContent),
+        "The step should modify BeamModulePlugin.groovy");
+
     com.google.common.io.Files.asCharSink(beamModulePluginFile.toFile(), Charsets.UTF_8)
-        .write(buildGradleContent);
+        .write(buildGradleContentTestRuntimeClassPathModified);
   }
 }
