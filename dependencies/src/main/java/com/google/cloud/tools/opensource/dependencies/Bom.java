@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.apache.maven.RepositoryUtils;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.project.MavenProject;

@@ -258,11 +258,6 @@ public final class RepositoryUtility {
       properties.putAll(OsProperties.detectOsProperties());
       properties.putAll(System.getProperties());
       projectBuildingRequest.setSystemProperties(properties);
-      // Let the system property passed to Maven (example "-Dgoogle.cloud.monitoring.version=1.2.3)
-      // override the value in the pom.xml. This is useful when testing a library with a slightly
-      // modified BOM.
-      // https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/1974
-      projectBuildingRequest.setUserProperties(properties);
 
       ProjectBuilder projectBuilder = container.lookup(ProjectBuilder.class);
       ProjectBuildingResult projectBuildingResult =
