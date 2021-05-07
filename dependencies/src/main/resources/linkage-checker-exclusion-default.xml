@@ -363,4 +363,17 @@
       https://netty.io/wiki/requirements-for-4.x.html#tls-with-jdk-jetty-alpnnpn
     </Reason>
   </LinkageError>
+  <LinkageError>
+    <Target>
+      <Method className="com.google.api.VisibilityProto" name="getDescriptor" />
+    </Target>
+    <Source>
+      <Package name="com.google.appengine.repackaged.com.google" />
+    </Source>
+    <Reason>
+      The appengine-api-1.0-sdk shades certain classes, creating method references that does not
+      match original unshaded classes from the proto-google-common-protos artifact.
+      https://github.com/GoogleCloudPlatform/cloud-opensource-java/issues/2045
+    </Reason>
+  </LinkageError>
 </LinkageCheckerFilter>
