@@ -36,7 +36,7 @@ public class LtsBomCompatibilityTest {
   static final String INPUT_RESOURCE_NAME = "repositories.yaml";
 
   @Test
-  public void tesBomTesttLibraryCompatibility() throws Exception {
+  public void testBomTesttLibraryCompatibility() throws Exception {
     // This test case does not run in normal build
     String targetRepositoryName = System.getProperty("lts.test.repository");
     Assume.assumeNotNull(targetRepositoryName);

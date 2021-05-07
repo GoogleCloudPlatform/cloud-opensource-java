@@ -5,12 +5,15 @@ inputs:
     description: 'The repository to test in this run. Use matrix to specify the values'
     required: true
   version_override_key:
-    description: 'The property name in the LTS BOM to test a certain version of a library'
+    description: >
+      The property name in the LTS BOM to test a certain version of a library. Use this input
+      when you check the compatibility of a library against other libraries in the LTS BOM.
     required: false
-    # Any default value is fine as long as it does not conflict with values in the BOM
     default: 'unspecified'
   version_override_value:
-    description: 'The version to test its compatibility with other libraries in the LTS BOM'
+    description: >
+      The version to test its compatibility with other libraries in the LTS BOM. The value must be
+      unavailable in Maven Central because Gradle might not read local Maven repository first.
     required: false
     default: '0.1.0-SNAPSHOT'
 runs:
