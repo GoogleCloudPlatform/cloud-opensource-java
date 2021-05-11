@@ -16,14 +16,9 @@
 
 package com.google.cloud.tools.opensource.lts;
 
-/** An exception indicating the test did not succeed. */
-class TestFailureException extends Exception {
-  TestFailureException(String message) {
-    super(message);
-  }
-
-  TestFailureException(String message, Throwable cause) {
+/** An exception indicating the failure in setting up test environment. */
+class TestSetupFailureException extends Exception {
+  TestSetupFailureException(String message, Throwable cause) {
     super(message, cause);
   }
-
 }

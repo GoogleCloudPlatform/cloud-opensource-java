@@ -1,9 +1,10 @@
 on:
   pull_request:
     paths:
-      - 'src/test/resources/repositories.yaml'
       - '.github/workflows/lts-test.yaml'
       - 'boms/cloud-lts-bom/pom.xml'
+      - 'lts-test/**'
+      - 'src/test/resources/repositories.yaml'
 name: LTS Library Test
 jobs:
   lts-library-test:

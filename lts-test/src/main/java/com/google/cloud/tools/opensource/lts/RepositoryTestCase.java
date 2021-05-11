@@ -19,6 +19,7 @@ package com.google.cloud.tools.opensource.lts;
 import com.google.common.base.Preconditions;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Objects;
 import java.util.Map;
 
 final class RepositoryTestCase {
@@ -73,9 +74,30 @@ final class RepositoryTestCase {
       return Modification.MAVEN;
     } else if ("Gradle".equals(input)) {
       return Modification.GRADLE;
-    } else if ("Skip".equals(input)) {
-      return Modification.SKIP;
     }
     throw new IllegalArgumentException("Invalid input for modification: " + input);
+  }
+
+  public boolean equals(Object object) {
+    if (this == object) {
+      return true;
+    }
+    if (object == null || getClass() != object.getClass()) {
+      return false;
+    }
+    if (!super.equals(object)) {
+      return false;
+    }
+
+    RepositoryTestCase that = (RepositoryTestCase) object;
+    return java.util.Objects.equals(gitUrl, that.gitUrl) && java.util.Objects
+        .equals(name, that.name)
+        && java.util.Objects.equals(gitTag, that.gitTag) && java.util.Objects
+        .equals(modification, that.modification) && java.util.Objects
+        .equals(commands, that.commands);
+  }
+
+  public int hashCode() {
+    return Objects.hash(gitUrl, name, gitTag, modification, commands);
   }
 }

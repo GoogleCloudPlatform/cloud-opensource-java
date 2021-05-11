@@ -16,8 +16,19 @@
 
 package com.google.cloud.tools.opensource.lts;
 
+import com.google.common.base.VerifyException;
+
 enum Modification {
   MAVEN,
-  GRADLE,
-  SKIP,
+  GRADLE;
+
+  BuildFileModifier getModifier() {
+    if (this == MAVEN) {
+      return new MavenProjectModifier();
+    } else if (this == GRADLE) {
+      return new GradleProjectModifier();
+    } else {
+      throw new VerifyException("Unexpected modifier: " + this);
+    }
+   }
 }

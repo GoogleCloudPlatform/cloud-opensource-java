@@ -16,14 +16,13 @@
 
 package com.google.cloud.tools.opensource.lts;
 
-/** An exception indicating the test did not succeed. */
-class TestFailureException extends Exception {
-  TestFailureException(String message) {
-    super(message);
-  }
+import com.google.cloud.tools.opensource.dependencies.Bom;
+import java.io.IOException;
+import java.nio.file.Path;
+import nu.xom.ParsingException;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
+import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
-  TestFailureException(String message, Throwable cause) {
-    super(message, cause);
-  }
-
+interface BuildFileModifier {
+  void modifyFiles(String name, Path projectDirectory, Bom bom) throws TestSetupFailureException;
 }

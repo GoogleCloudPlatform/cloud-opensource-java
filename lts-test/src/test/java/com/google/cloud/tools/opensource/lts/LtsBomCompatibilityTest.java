@@ -48,7 +48,7 @@ public class LtsBomCompatibilityTest {
     Yaml yaml = new Yaml(new SafeConstructor());
 
     URL resource =
-        LtsCompatibilityTestRunner.class.getClassLoader().getResource(INPUT_RESOURCE_NAME);
+        LtsCompatibilityChecker.class.getClassLoader().getResource(INPUT_RESOURCE_NAME);
     try (InputStream yamlInputStream = resource.openStream()) {
       Map<String, Object> input = yaml.load(yamlInputStream);
       List<Map<String, Object>> repositories =
@@ -56,7 +56,6 @@ public class LtsBomCompatibilityTest {
 
       Path testRoot = Files.createTempDirectory("lts-test");
       logger.info("Running tests under temporary directory: " + testRoot);
-      Path runnerLog = testRoot.resolve("runner.log");
 
       for (Map<String, Object> repository : repositories) {
         RepositoryTestCase testCase = RepositoryTestCase.fromMap(repository);
@@ -64,8 +63,8 @@ public class LtsBomCompatibilityTest {
           continue;
         }
 
-        LtsCompatibilityTestRunner runner = new LtsCompatibilityTestRunner(testCase);
-        runner.run(bom, testRoot, runnerLog);
+        LtsCompatibilityChecker runner = new LtsCompatibilityChecker(testCase);
+        runner.run(bom, testRoot);
       }
     }
   }
