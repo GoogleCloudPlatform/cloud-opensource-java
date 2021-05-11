@@ -30,7 +30,7 @@ repositories:
            -x analyzeClassesDependencies
   - name: google-api-java-client
     url: https://github.com/googleapis/google-api-java-client.git
-    tag: v1.31.4
+    tag: v1.31.5
     modification: Maven
     commands: |
       mkdir /tmp/foo && cd /tmp/foo
