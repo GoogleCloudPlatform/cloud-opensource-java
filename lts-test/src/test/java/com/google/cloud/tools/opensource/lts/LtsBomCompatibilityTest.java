@@ -30,6 +30,10 @@ import org.junit.Test;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 
+/**
+ * The entry point of the LTS test with modify-build-file approach. To run this test, set the system
+ * property 'lts.test.repository' to one of the repository names in repositories.yaml.
+ */
 public class LtsBomCompatibilityTest {
   private static final Logger logger = Logger.getLogger(LtsBomCompatibilityTest.class.getName());
 

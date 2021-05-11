@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.lts;
 
-
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.base.Charsets;
 import com.google.common.util.concurrent.Uninterruptibles;

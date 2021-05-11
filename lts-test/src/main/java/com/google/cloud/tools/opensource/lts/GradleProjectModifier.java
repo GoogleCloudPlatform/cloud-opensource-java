@@ -16,7 +16,6 @@
 
 package com.google.cloud.tools.opensource.lts;
 
-
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.common.base.Charsets;
 import com.google.common.base.Verify;
@@ -27,16 +26,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.logging.Logger;
 
+/** Modifies build.gradle files to use the libraries in the BOM when running the unit tests. */
 class GradleProjectModifier implements BuildFileModifier {
-  private static final Logger logger = Logger.getLogger(GradleProjectModifier.class.getName());
-
-  // For Beam's snapshot version
-  private static final String APACHE_SNAPSHOT_REPOSITORY_URL =
-      "https://repository.apache.org/content/repositories/snapshots/";
-  private static final String MAVEN_POM_NAMESPACE_URL = "http://maven.apache.org/POM/4.0.0";
-
   @Override
   public void modifyFiles(String name, Path projectDirectory, Bom bom)
       throws TestSetupFailureException {

@@ -22,6 +22,7 @@ import java.net.URL;
 import java.util.Map;
 import java.util.Objects;
 
+/** A test case for a Git repository with how to run its tests. */
 final class RepositoryTestCase {
 
   private final URL gitUrl;

@@ -26,6 +26,7 @@ import com.google.cloud.tools.opensource.dependencies.Artifacts;
 import com.google.cloud.tools.opensource.dependencies.Bom;
 import com.google.cloud.tools.opensource.dependencies.DependencyGraphBuilder;
 import com.google.cloud.tools.opensource.dependencies.RepositoryUtility;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -54,13 +55,19 @@ import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.version.InvalidVersionSpecificationException;
 
+/**
+ * Modifies pom.xml files to use the libraries in the BOM when running the unit tests with the Maven
+ * surefire plugin.
+ */
 class MavenProjectModifier implements BuildFileModifier {
   private static final Logger logger = Logger.getLogger(MavenProjectModifier.class.getName());
 
   // For Beam's snapshot version
   private static final String APACHE_SNAPSHOT_REPOSITORY_URL =
       "https://repository.apache.org/content/repositories/snapshots/";
-  private static final String MAVEN_POM_NAMESPACE_URL = "http://maven.apache.org/POM/4.0.0";
+
+  @VisibleForTesting
+  static final String MAVEN_POM_NAMESPACE_URL = "http://maven.apache.org/POM/4.0.0";
 
   @Override
   public void modifyFiles(String name, Path projectDirectory, Bom bom)
@@ -134,7 +141,7 @@ class MavenProjectModifier implements BuildFileModifier {
     return newNode;
   }
 
-  static Element getOrCreateSurefirePlugin(Element pluginsNode) {
+  private static Element getOrCreateSurefirePlugin(Element pluginsNode) {
     Elements pluginElements = pluginsNode.getChildElements();
     for (Element pluginElement : pluginElements) {
       Elements artifactIdElements =
